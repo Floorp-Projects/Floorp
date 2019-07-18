@@ -7,6 +7,7 @@
 
 """ Usage:
     make_intl_data.py langtags [language-subtag-registry.txt]
+    make_intl_data.py cldr-langtags [ldmlSupplemental.dtd supplementalMetadata.xml]
     make_intl_data.py tzdata
     make_intl_data.py currency
 
@@ -22,6 +23,13 @@
     https://tools.ietf.org/html/rfc5646#section-3
 
 
+    Target "cldr-langtags":
+    This script extracts information about mappings between deprecated and
+    current Unicode BCP 47 locale identifiers from CLDR and converts it to
+    JavaScript object definitions in LangTagMappingsGenerated.js. The
+    definitions are used in Intl.js.
+
+
     Target "tzdata":
     This script computes which time zone informations are not up-to-date in ICU
     and provides the necessary mappings to workaround this problem.
@@ -33,9 +41,12 @@
 """
 
 from __future__ import print_function
+import contextlib
 import os
 import re
 import io
+import shutil
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -48,11 +59,11 @@ from operator import attrgetter, itemgetter
 if sys.version_info.major == 2:
     from itertools import ifilter as filter, ifilterfalse as filterfalse, imap as map
     from urllib2 import urlopen, Request as UrlRequest
-    from urlparse import urlsplit
+    from urlparse import urlsplit, urlunsplit
 else:
     from itertools import filterfalse
     from urllib.request import urlopen, Request as UrlRequest
-    from urllib.parse import urlsplit
+    from urllib.parse import urlsplit, urlunsplit
 
 
 def readRegistryRecord(registry):
@@ -230,16 +241,16 @@ def readRegistry(registry):
             "variantMappings": variantMappings}
 
 
-def writeMappingHeader(println, description, fileDate, url):
+def writeMappingHeader(println, description, source, url):
     if type(description) is not list:
         description = [description]
     for desc in description:
         println(u"// {0}".format(desc))
-    println(u"// Derived from IANA Language Subtag Registry, file date {0}.".format(fileDate))
+    println(u"// Derived from {0}.".format(source))
     println(u"// {0}".format(url))
 
 
-def writeMappingsVar(println, mapping, name, description, fileDate, url):
+def writeMappingsVar(println, mapping, name, description, source, url):
     """ Writes a variable definition with a mapping table.
 
         Writes the contents of dictionary |mapping| through the |println|
@@ -247,7 +258,7 @@ def writeMappingsVar(println, mapping, name, description, fileDate, url):
         fileDate, and URL.
     """
     println(u"")
-    writeMappingHeader(println, description, fileDate, url)
+    writeMappingHeader(println, description, source, url)
     println(u"var {0} = {{".format(name))
     for key in sorted(mapping):
         if not isinstance(mapping[key], dict):
@@ -264,12 +275,12 @@ def writeMappingsVar(println, mapping, name, description, fileDate, url):
 
 
 def writeMappingsFunction(println, variantMappings, redundantMappings, description,
-                          fileDate, url):
+                          source, url):
     """ Writes a function definition which performs language tag mapping.
 
         Processes the contents of dictionaries |variantMappings| and
         |redundantMappings| through the |println| function with the given
-        function name and a comment with description, fileDate, and URL.
+        function name and a comment with description, source, and URL.
     """
 
     class Subtag(object):
@@ -490,7 +501,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, descripti
 
     println(u"")
     println(u"/* eslint-disable complexity */")
-    writeMappingHeader(println, description, fileDate, url)
+    writeMappingHeader(println, description, source, url)
     println(u"function updateLangTagMappings(tag) {")
     println(u'    assert(IsObject(tag), "tag is an object");')
     println(u'    assert(!hasOwn("grandfathered", tag), "tag is not a grandfathered tag");')
@@ -516,7 +527,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, descripti
 def writeLanguageTagData(println, data, url):
     """ Writes the language tag data to the Intl data file. """
 
-    fileDate = data["fileDate"]
+    source = u"IANA Language Subtag Registry, file date {}".format(data["fileDate"])
     grandfatheredMappings = data["grandfatheredMappings"]
     redundantMappings = data["redundantMappings"]
     languageMappings = data["languageMappings"]
@@ -524,13 +535,13 @@ def writeLanguageTagData(println, data, url):
     variantMappings = data["variantMappings"]
 
     writeMappingsFunction(println, variantMappings, redundantMappings,
-                          "Mappings from complete tags to preferred values.", fileDate, url)
-    writeMappingsVar(println, grandfatheredMappings, "grandfatheredMappings",
-                     "Mappings from grandfathered tags to preferred values.", fileDate, url)
-    writeMappingsVar(println, languageMappings, "languageMappings",
-                     "Mappings from language subtags to preferred values.", fileDate, url)
-    writeMappingsVar(println, regionMappings, "regionMappings",
-                     "Mappings from region subtags to preferred values.", fileDate, url)
+                          "Mappings from complete tags to preferred values.", source, url)
+    # writeMappingsVar(println, grandfatheredMappings, "grandfatheredMappings",
+    #                  "Mappings from grandfathered tags to preferred values.", source, url)
+    # writeMappingsVar(println, languageMappings, "languageMappings",
+    #                  "Mappings from language subtags to preferred values.", source, url)
+    # writeMappingsVar(println, regionMappings, "regionMappings",
+    #                  "Mappings from region subtags to preferred values.", source, url)
 
 
 def updateLangTags(args):
@@ -566,6 +577,295 @@ def updateLangTags(args):
 
         println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
         writeLanguageTagData(println, data, url)
+
+
+@contextlib.contextmanager
+def TemporaryDirectory():
+    tmpDir = tempfile.mkdtemp()
+    try:
+        yield tmpDir
+    finally:
+        shutil.rmtree(tmpDir)
+
+
+def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file):
+    """ Reads CLDR Supplemental Data and extracts information for Intl.js.
+
+        Information extracted:
+        - grandfatheredMappings: mappings from grandfathered tags to preferred
+          complete language tags
+        - languageMappings: mappings from language subtags to preferred subtags
+        - regionMappings: mappings from region subtags to preferred subtags
+        Returns these three mappings as dictionaries.
+    """
+    import xml.etree.ElementTree as ET
+
+    # <!ATTLIST version cldrVersion CDATA #FIXED "36" >
+    re_cldr_version = re.compile(
+        r"""<!ATTLIST version cldrVersion CDATA #FIXED "(?P<version>[\d|\.]+)" >""")
+
+    with io.open(supplemental_dtd_file, mode="r", encoding="utf-8") as f:
+        version_match = re_cldr_version.search(f.read())
+        assert version_match is not None, "CLDR version string not found"
+        cldr_version = version_match.group("version")
+
+    # From Unicode BCP 47 locale identifier <https://unicode.org/reports/tr35/>.
+    re_unicode_language_id = re.compile(
+        r"""
+        ^
+        # unicode_language_id = unicode_language_subtag
+        #     unicode_language_subtag = alpha{2,3} | alpha{5,8}
+        (?P<language>[a-z]{2,3}|[a-z]{5,8})
+
+        # (sep unicode_script_subtag)?
+        #     unicode_script_subtag = alpha{4}
+        (?:-(?P<script>[a-z]{4}))?
+
+        # (sep unicode_region_subtag)?
+        #     unicode_region_subtag = (alpha{2} | digit{3})
+        (?:-(?P<region>([a-z]{2}|[0-9]{3})))?
+
+        # (sep unicode_variant_subtag)*
+        #     unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
+        (?P<variants>(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))+)?
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    re_unicode_language_subtag = re.compile(
+        r"""
+        ^
+        # unicode_language_subtag = alpha{2,3} | alpha{5,8}
+        ([a-z]{2,3}|[a-z]{5,8})
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    re_unicode_region_subtag = re.compile(
+        r"""
+        ^
+        # unicode_region_subtag = (alpha{2} | digit{3})
+        ([a-z]{2}|[0-9]{3})
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    # The fixed list of BCP 47 grandfathered language tags.
+    grandfathered_tags = (
+        "art-lojban",
+        "cel-gaulish",
+        "en-GB-oed",
+        "i-ami",
+        "i-bnn",
+        "i-default",
+        "i-enochian",
+        "i-hak",
+        "i-klingon",
+        "i-lux",
+        "i-mingo",
+        "i-navajo",
+        "i-pwn",
+        "i-tao",
+        "i-tay",
+        "i-tsu",
+        "no-bok",
+        "no-nyn",
+        "sgn-BE-FR",
+        "sgn-BE-NL",
+        "sgn-CH-DE",
+        "zh-guoyu",
+        "zh-hakka",
+        "zh-min",
+        "zh-min-nan",
+        "zh-xiang",
+    )
+
+    # The list of grandfathered tags which are valid Unicode BCP 47 locale identifiers.
+    unicode_bcp47_grandfathered_tags = {tag for tag in grandfathered_tags
+                                        if re_unicode_language_id.match(tag)}
+
+    # Dictionary of simple language subtag mappings, e.g. "in" -> "id".
+    language_mappings = {}
+
+    # Dictionary of complex language subtag mappings, modifying more than one
+    # subtag, e.g. "sh" -> ("sr", "Latn", None) and "cnr" -> ("sr", None, "ME").
+    complex_language_mappings = {}
+
+    # Dictionary of simple region subtag mappings, e.g. "DD" -> "DE".
+    region_mappings = {}
+
+    # Dictionary of complex region subtag mappings, containing more than one
+    # replacement, e.g. "SU" -> ("RU", ["AM", "AZ", "BY", ...]).
+    complex_region_mappings = {}
+
+    # Dictionary of grandfathered mappings to preferred values.
+    grandfathered_mappings = {}
+
+    # CLDR uses "_" as the separator for some elements. Replace it with "-".
+    def bcp47_id(cldr_id):
+        return cldr_id.replace("_", "-")
+
+    # CLDR uses the canonical case for most entries, but there are some
+    # exceptions, like:
+    #   <languageAlias type="drw" replacement="fa_af" reason="deprecated"/>
+    # Therefore canonicalize all tags to be on the safe side.
+    def bcp47_canonical(language, script, region):
+        # Canonical case for language subtags is lower case.
+        # Canonical case for script subtags is title case.
+        # Canonical case for region subtags is upper case.
+        return (language.lower() if language else None,
+                script.title() if script else None,
+                region.upper() if region else None)
+
+    tree = ET.parse(supplemental_metadata_file)
+
+    for language_alias in tree.iterfind(".//languageAlias"):
+        type = bcp47_id(language_alias.get("type"))
+        replacement = bcp47_id(language_alias.get("replacement"))
+
+        # Handle grandfathered mappings first.
+        if type in unicode_bcp47_grandfathered_tags:
+            grandfathered_mappings[type] = replacement
+            continue
+
+        # We're only interested in language subtag matches, so ignore any
+        # entries which have additional subtags.
+        if re_unicode_language_subtag.match(type) is None:
+            continue
+
+        if re_unicode_language_subtag.match(replacement) is not None:
+            # Canonical case for language subtags is lower-case.
+            language_mappings[type] = replacement.lower()
+        else:
+            replacement_match = re_unicode_language_id.match(replacement)
+            assert replacement_match is not None, (
+                   "{} invalid Unicode BCP 47 locale identifier".format(replacement))
+            assert replacement_match.group("variants") is None, (
+                   "{}: unexpected variant subtags in {}".format(type, replacement))
+
+            complex_language_mappings[type] = bcp47_canonical(replacement_match.group("language"),
+                                                              replacement_match.group("script"),
+                                                              replacement_match.group("region"))
+
+    for territory_alias in tree.iterfind(".//territoryAlias"):
+        type = territory_alias.get("type")
+        replacement = territory_alias.get("replacement")
+
+        # We're only interested in region subtag matches, so ignore any entries
+        # which contain legacy formats, e.g. three letter region codes.
+        if re_unicode_region_subtag.match(type) is None:
+            continue
+
+        if re_unicode_region_subtag.match(replacement) is not None:
+            # Canonical case for region subtags is upper-case.
+            region_mappings[type] = replacement.upper()
+        else:
+            # Canonical case for region subtags is upper-case.
+            replacements = [r.upper() for r in replacement.split(" ")]
+            assert all(
+                re_unicode_region_subtag.match(loc) is not None for loc in replacements
+            ), "{} invalid region subtags".format(replacement)
+            complex_region_mappings[type] = replacements
+
+    return {"version": cldr_version,
+            "grandfatheredMappings": grandfathered_mappings,
+            "languageMappings": language_mappings,
+            "regionMappings": region_mappings,
+            }
+
+
+def writeCLDRLanguageTagData(println, data, url):
+    """ Writes the language tag data to the Intl data file. """
+
+    source = u"CLDR Supplemental Data, version {}".format(data["version"])
+    grandfathered_mappings = data["grandfatheredMappings"]
+    language_mappings = data["languageMappings"]
+    region_mappings = data["regionMappings"]
+
+    writeMappingsVar(println, grandfathered_mappings, "grandfatheredMappings",
+                     "Mappings from grandfathered tags to preferred values.", source, url)
+    writeMappingsVar(println, language_mappings, "languageMappings",
+                     "Mappings from language subtags to preferred values.", source, url)
+    writeMappingsVar(println, region_mappings, "regionMappings",
+                     "Mappings from region subtags to preferred values.", source, url)
+
+
+def updateCLDRLangTags(args):
+    """ Update the LangTagMappingsCLDRGenerated.js file. """
+    url = args.url
+    branch = args.branch
+    revision = args.revision
+    out = args.out
+    files = args.files
+
+    print("Arguments:")
+    print("\tDownload url: %s" % url)
+    print("\tBranch: %s" % branch)
+    print("\tRevision: %s" % revision)
+    print("\tLocal supplemental data: %s" % files)
+    print("\tOutput file: %s" % out)
+    print("")
+
+    if files:
+        if len(files) != 2:
+            raise Exception("Expected two files, but got: {}".format(files))
+
+        print(("Always make sure you have the newest ldmlSupplemental.dtd "
+               "and supplementalMetadata.xml!"))
+
+        supplemental_dtd_file = files[0]
+        supplemental_metadata_file = files[1]
+    else:
+        print("Downloading CLDR supplemental data...")
+
+        supplemental_dtd_filename = "ldmlSupplemental.dtd"
+        supplemental_dtd_path = "common/dtd/{}".format(supplemental_dtd_filename)
+        supplemental_dtd_file = os.path.join(os.getcwd(), supplemental_dtd_filename)
+
+        supplemental_metadata_filename = "supplementalMetadata.xml"
+        supplemental_metadata_path = "common/supplemental/{}".format(
+            supplemental_metadata_filename)
+        supplemental_metadata_file = os.path.join(os.getcwd(), supplemental_metadata_filename)
+
+
+        # Try to download the raw file directly from GitHub if possible.
+        split = urlsplit(url)
+        if split.netloc == "github.com" and split.path.endswith(".git") and revision == "HEAD":
+            def download(path, file):
+                urlpath = "{}/raw/{}/{}".format(urlsplit(url).path[:-4], branch, path)
+                raw_url = urlunsplit((split.scheme, split.netloc, urlpath, split.query,
+                                      split.fragment))
+
+                with closing(urlopen(raw_url)) as reader:
+                    text = reader.read().decode("utf-8")
+                with io.open(file, "w", encoding="utf-8") as saved_file:
+                    saved_file.write(text)
+
+            download(supplemental_dtd_path, supplemental_dtd_file)
+            download(supplemental_metadata_path, supplemental_metadata_file)
+        else:
+            # Download the requested branch in a temporary directory.
+            with TemporaryDirectory() as inDir:
+                if revision == "HEAD":
+                    subprocess.check_call(["git", "clone", "--depth=1",
+                                           "--branch=%s" % branch, url, inDir])
+                else:
+                    subprocess.check_call(["git", "clone", "--single-branch",
+                                           "--branch=%s" % branch, url, inDir])
+                    subprocess.check_call(["git", "-C", inDir, "reset", "--hard", revision])
+
+                    shutil.copyfile(os.path.join(inDir, supplemental_dtd_path),
+                                    supplemental_dtd_file)
+                    shutil.copyfile(os.path.join(inDir, supplemental_metadata_path),
+                                    supplemental_metadata_file)
+
+    print("Processing CLDR supplemental data...")
+    data = readSupplementalData(supplemental_dtd_file,
+                                supplemental_metadata_file)
+
+    print("Writing Intl data...")
+    with io.open(out, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
+        writeCLDRLanguageTagData(println, data, url)
 
 
 def flines(filepath, encoding="utf-8"):
@@ -1450,6 +1750,24 @@ if __name__ == "__main__":
                              nargs="?",
                              help="Local language-subtag-registry.txt file, if omitted uses <URL>")
     parser_tags.set_defaults(func=updateLangTags)
+
+    parser_cldr_tags = subparsers.add_parser("cldr-langtags",
+                                             help="Update CLDR language tags data")
+    parser_cldr_tags.add_argument("--url",
+                                  metavar="URL",
+                                  default="https://github.com/unicode-org/cldr.git",
+                                  help="URL to git repository (default: %(default)s)")
+    parser_cldr_tags.add_argument("--branch", default="latest",
+                                  help="Git branch (default: %(default)s)")
+    parser_cldr_tags.add_argument("--revision", default="HEAD",
+                                  help="Git revision (default: %(default)s)")
+    parser_cldr_tags.add_argument("--out",
+                                  default="LangTagMappingsGenerated.js",
+                                  help="Output file (default: %(default)s)")
+    parser_cldr_tags.add_argument("files",
+                                  nargs="*",
+                                  help="Local ldmlSupplemental.dtd and supplementalMetadata.xml files, if omitted uses <URL>")
+    parser_cldr_tags.set_defaults(func=updateCLDRLangTags)
 
     parser_tz = subparsers.add_parser("tzdata", help="Update tzdata")
     parser_tz.add_argument("--tz",
