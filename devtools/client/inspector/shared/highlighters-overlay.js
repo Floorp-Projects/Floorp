@@ -34,7 +34,7 @@ class HighlightersOverlay {
    */
   constructor(inspector) {
     this.inspector = inspector;
-    this.inspectorFront = this.inspector.inspector;
+    this.inspectorFront = this.inspector.inspectorFront;
     this.store = this.inspector.store;
     this.target = this.inspector.target;
     this.telemetry = this.inspector.telemetry;
