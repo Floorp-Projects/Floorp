@@ -17,13 +17,16 @@ permalink: /changelog/
 * **browser-icons**
   * Added `BrowserIcons.loadIntoView` to automatically load an icon into an `ImageView`.
 
+* **feature-push**
+  * Updated the default autopush service endpoint to `updates.push.services.mozilla.com`.
+
 * **service-glean**
   * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
   * ⚠️ **This is a breaking change**: Timespan values are returned in their configured time unit in the testing API.
 
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
-  
+
 # 4.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v4.0.1)
@@ -33,7 +36,7 @@ permalink: /changelog/
 
 * **service-glean**
   * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
-  
+
 * Imported latest state of translations.
 
 # 4.0.0
