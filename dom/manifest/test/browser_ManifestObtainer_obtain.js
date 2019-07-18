@@ -1,6 +1,7 @@
 // Used by JSHint:
 /* global ok, is, Cu, BrowserTestUtils, add_task, gBrowser, makeTestURL, requestLongerTimeout*/
 "use strict";
+
 const { ManifestObtainer } = ChromeUtils.import(
   "resource://gre/modules/ManifestObtainer.jsm"
 );
@@ -155,6 +156,41 @@ add_task(async function() {
       }
     };
   }
+});
+
+add_task(async () => {
+  // This loads a generic html page.
+  const url = new URL(defaultURL);
+  // The body get injected into the page on the server.
+  const body = `<link rel="manifest" href='resource.sjs?body={"name": "conformance check"}'>`;
+  url.searchParams.set("body", encodeURIComponent(body));
+
+  // Let's open a tab!
+  const tabOpts = {
+    gBrowser,
+    url: url.href,
+  };
+  // Let's do the test
+  await BrowserTestUtils.withNewTab(tabOpts, async aBrowser => {
+    const obtainerOpts = {
+      checkConformance: true, // gives us back "moz_manifest_url" member
+    };
+    const manifest = await ManifestObtainer.browserObtainManifest(
+      aBrowser,
+      obtainerOpts
+    );
+    is(manifest.name, "conformance check");
+    ok("moz_manifest_url" in manifest, "Has a moz_manifest_url member");
+    const testString = defaultURL.origin + defaultURL.pathname;
+    ok(
+      manifest.moz_manifest_url.startsWith(testString),
+      `Expect to start with with the testString, but got ${
+        manifest.moz_manifest_url
+      } instead,`
+    );
+    // Clean up!
+    gBrowser.removeTab(gBrowser.getTabForBrowser(aBrowser));
+  });
 });
 
 /*

@@ -672,6 +672,7 @@ void nsFieldSetFrame::AppendFrames(ChildListID aListID,
 }
 
 void nsFieldSetFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                   const nsLineList::iterator* aPrevFrameLine,
                                    nsFrameList& aFrameList) {
   MOZ_CRASH("nsFieldSetFrame::InsertFrames not supported");
 }

@@ -7,7 +7,8 @@
 #include "mozilla/mscom/EnsureMTA.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticPtr.h"
+#include "mozilla/SystemGroup.h"
+#include "mozilla/UniquePtr.h"
 #include "nsThreadUtils.h"
 
 #include "private/pprthred.h"
@@ -53,17 +54,34 @@ class BackgroundMTAData {
 
 }  // anonymous namespace
 
-static mozilla::StaticAutoPtr<BackgroundMTAData> sMTAData;
-
 namespace mozilla {
 namespace mscom {
 
 /* static */
 nsCOMPtr<nsIThread> EnsureMTA::GetMTAThread() {
-  if (!sMTAData) {
-    sMTAData = new BackgroundMTAData();
-    ClearOnShutdown(&sMTAData, ShutdownPhase::ShutdownThreads);
-  }
+  static UniquePtr<BackgroundMTAData> sMTAData =
+      []() -> UniquePtr<BackgroundMTAData> {
+    auto bgData = MakeUnique<BackgroundMTAData>();
+
+    auto setClearOnShutdown = [ptr = &sMTAData]() -> void {
+      ClearOnShutdown(ptr, ShutdownPhase::ShutdownThreads);
+    };
+
+    if (NS_IsMainThread()) {
+      setClearOnShutdown();
+      return bgData;
+    }
+
+    SystemGroup::Dispatch(
+        TaskCategory::Other,
+        NS_NewRunnableFunction("mscom::EnsureMTA::GetMTAThread",
+                               setClearOnShutdown));
+
+    return bgData;
+  }();
+
+  MOZ_ASSERT(sMTAData);
+
   return sMTAData->GetThread();
 }
 
