@@ -673,7 +673,8 @@ void BrowsingContext::Location(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aLocation,
                                ErrorResult& aError) {
   aError.MightThrowJSException();
-  sSingleton.GetProxyObject(aCx, &mLocation, aLocation);
+  sSingleton.GetProxyObject(aCx, &mLocation, /* aTransplantTo = */ nullptr,
+                            aLocation);
   if (!aLocation) {
     aError.StealExceptionFromJSContext(aCx);
   }
