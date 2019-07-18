@@ -117,6 +117,7 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
    */
   void GetOrCreateProxyObject(JSContext* aCx, void* aNative,
                               const js::Class* aClasp,
+                              JS::Handle<JSObject*> aTransplantTo,
                               JS::MutableHandle<JSObject*> aProxy,
                               bool& aNewObjectCreated) const;
 
@@ -149,9 +150,11 @@ class RemoteObjectProxy : public RemoteObjectProxyBase {
   }
 
   void GetProxyObject(JSContext* aCx, Native* aNative,
+                      JS::Handle<JSObject*> aTransplantTo,
                       JS::MutableHandle<JSObject*> aProxy) const {
     bool objectCreated = false;
-    GetOrCreateProxyObject(aCx, aNative, &sClass, aProxy, objectCreated);
+    GetOrCreateProxyObject(aCx, aNative, &sClass, aTransplantTo, aProxy,
+                           objectCreated);
     if (objectCreated) {
       NS_ADDREF(aNative);
     }
