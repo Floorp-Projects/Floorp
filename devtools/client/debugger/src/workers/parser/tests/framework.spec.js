@@ -51,5 +51,15 @@ cases(
       file: "frameworks/vueFileComponent",
       value: "Vue",
     },
+    {
+      name: "recognizes the react library file",
+      file: "framework/reactLibrary",
+      value: "React",
+    },
+    {
+      name: "recognizes the redux library file",
+      file: "framework/reduxLibrary",
+      value: "React",
+    },
   ]
 );

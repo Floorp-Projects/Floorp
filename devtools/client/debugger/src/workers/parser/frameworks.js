@@ -20,11 +20,13 @@ export function getFramework(symbols: SymbolDeclarations): ?string {
   }
 }
 
-function isReactComponent({ imports, classes, callExpressions }) {
+function isReactComponent({ imports, classes, callExpressions, identifiers }) {
   return (
     importsReact(imports) ||
     requiresReact(callExpressions) ||
-    extendsReactComponent(classes)
+    extendsReactComponent(classes) ||
+    isReact(identifiers) ||
+    isRedux(identifiers)
   );
 }
 
@@ -64,4 +66,14 @@ function isAngularComponent({ memberExpressions }) {
 
 function isVueComponent({ identifiers }) {
   return identifiers.some(identifier => identifier.name == "Vue");
+}
+
+/* This identifies the react lib file */
+function isReact(identifiers) {
+  return identifiers.some(identifier => identifier.name == "isReactComponent");
+}
+
+/* This identifies the redux lib file */
+function isRedux(identifiers) {
+  return identifiers.some(identifier => identifier.name == "Redux");
 }
