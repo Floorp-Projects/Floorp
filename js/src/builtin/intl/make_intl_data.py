@@ -101,7 +101,6 @@ def writeUpdateLocaleIdMappingsFunction(println,
 /* eslint-disable complexity */
 function updateLocaleIdMappings(tag) {
     assert(IsObject(tag), "tag is an object");
-    assert(!hasOwn("grandfathered", tag), "tag is not a grandfathered tag");
 
     // Replace deprecated language tags with their preferred values.
     var language = tag.language;
@@ -228,6 +227,154 @@ function updateLocaleIdMappings(tag) {
 }
 /* eslint-enable complexity */
 """.strip("\n"))
+
+
+def writeGrandfatheredMappingsFunction(println,
+                                       grandfathered_mappings,
+                                       description, source, url):
+    """ Writes a function definition that maps grandfathered language tags. """
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""\
+function updateGrandfatheredMappings(tag) {
+    assert(IsObject(tag), "tag is an object");
+
+    // We're mapping regular grandfathered tags to non-grandfathered form here.
+    // Other tags remain unchanged.
+    //
+    // regular       = "art-lojban"
+    //               / "cel-gaulish"
+    //               / "no-bok"
+    //               / "no-nyn"
+    //               / "zh-guoyu"
+    //               / "zh-hakka"
+    //               / "zh-min"
+    //               / "zh-min-nan"
+    //               / "zh-xiang"
+    //
+    // Therefore we can quickly exclude most tags by checking every
+    // |unicode_locale_id| subcomponent for characteristics not shared by any of
+    // the regular grandfathered (RG) tags:
+    //
+    //   * Real-world |unicode_language_subtag|s are all two or three letters,
+    //     so don't waste time running a useless |language.length > 3| fast-path.
+    //   * No RG tag has a "script"-looking component.
+    //   * No RG tag has a "region"-looking component.
+    //   * The RG tags that match |unicode_locale_id| (art-lojban, cel-gaulish,
+    //     zh-guoyu, zh-hakka, zh-xiang) have exactly one "variant". (no-bok,
+    //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
+    //     that |unicode_locale_id| doesn't support.)
+    //   * No RG tag contains |extensions| or |pu_extensions|.
+    if (tag.script !== undefined ||
+        tag.region !== undefined ||
+        tag.variants.length !== 1 ||
+        tag.extensions.length !== 0 ||
+        tag.privateuse !== undefined)
+    {
+        return;
+    }""")
+
+    # From Unicode BCP 47 locale identifier <https://unicode.org/reports/tr35/>.
+    #
+    # Doesn't allow any 'extensions' subtags.
+    re_unicode_locale_id = re.compile(
+        r"""
+        ^
+        # unicode_language_id = unicode_language_subtag
+        #     unicode_language_subtag = alpha{2,3} | alpha{5,8}
+        (?P<language>[a-z]{2,3}|[a-z]{5,8})
+
+        # (sep unicode_script_subtag)?
+        #     unicode_script_subtag = alpha{4}
+        (?:-(?P<script>[a-z]{4}))?
+
+        # (sep unicode_region_subtag)?
+        #     unicode_region_subtag = (alpha{2} | digit{3})
+        (?:-(?P<region>([a-z]{2}|[0-9]{3})))?
+
+        # (sep unicode_variant_subtag)*
+        #     unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
+        (?P<variants>(-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))+)?
+
+        # pu_extensions?
+        #     pu_extensions = sep [xX] (sep alphanum{1,8})+
+        (?:-(?P<privateuse>x(-[a-z0-9]{1,8})+))?
+        $
+        """, re.IGNORECASE | re.VERBOSE)
+
+    is_first = True
+
+    for (tag, modern) in sorted(grandfathered_mappings.items(), key=itemgetter(0)):
+        tag_match = re_unicode_locale_id.match(tag)
+        assert tag_match is not None
+
+        tag_language = tag_match.group("language")
+        assert tag_match.group("script") is None, (
+               "{} does not contain a script subtag".format(tag))
+        assert tag_match.group("region") is None, (
+               "{} does not contain a region subtag".format(tag))
+        tag_variants = tag_match.group("variants")
+        assert tag_variants is not None, (
+               "{} contains a variant subtag".format(tag))
+        assert tag_match.group("privateuse") is None, (
+               "{} does not contain a privateuse subtag".format(tag))
+
+        tag_variant = tag_variants[1:]
+        assert "-" not in tag_variant, (
+               "{} contains only a single variant".format(tag))
+
+        modern_match = re_unicode_locale_id.match(modern)
+        assert modern_match is not None
+
+        modern_language = modern_match.group("language")
+        modern_script = modern_match.group("script")
+        modern_region = modern_match.group("region")
+        modern_variants = modern_match.group("variants")
+        modern_privateuse = modern_match.group("privateuse")
+
+        println(u"""
+    // {} -> {}
+""".format(tag, modern).rstrip())
+
+        println(u"""
+    {}if (tag.language === "{}" && tag.variants[0] === "{}") {{
+        """.format("" if is_first else "else ", tag_language, tag_variant).rstrip().strip("\n"))
+
+        is_first = False
+
+        println(u"""
+        tag.language = "{}";
+        """.format(modern_language).rstrip().strip("\n"))
+
+        if modern_script is not None:
+            println(u"""
+        tag.script = "{}";
+        """.format(modern_script).rstrip().strip("\n"))
+
+        if modern_region is not None:
+            println(u"""
+        tag.region = "{}";
+        """.format(modern_region).rstrip().strip("\n"))
+
+        if modern_variants is not None:
+            println(u"""
+        tag.variants = {};
+        """.format(sorted(modern_variants[1:].split("-"))).rstrip().strip("\n"))
+        else:
+            println(u"""
+        tag.variants.length = 0;
+        """.rstrip().strip("\n"))
+
+        if modern_privateuse is not None:
+            println(u"""
+        tag.privateuse = "{}";
+        """.format(modern_privateuse).rstrip().strip("\n"))
+
+        println(u"""
+    }""".rstrip().strip("\n"))
+
+    println(u"""
+}""".lstrip("\n"))
 
 
 @contextlib.contextmanager
@@ -514,6 +661,9 @@ def writeCLDRLanguageTagData(println, data, url):
                                         complex_region_mappings,
                                         "Canonicalize Unicode BCP 47 locale identifiers.",
                                         source, url)
+    writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
+                                       "Canonicalize grandfathered locale identifiers.",
+                                       source, url)
 
 
 def updateCLDRLangTags(args):
