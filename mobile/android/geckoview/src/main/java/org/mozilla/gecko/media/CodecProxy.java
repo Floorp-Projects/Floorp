@@ -263,7 +263,9 @@ public final class CodecProxy {
         SampleBuffer buffer = mInputBuffers.get(bufferId);
         if (buffer == null) {
             buffer = mRemote.getInputBuffer(bufferId);
-            mInputBuffers.put(bufferId, buffer);
+            if (buffer != null) {
+                mInputBuffers.put(bufferId, buffer);
+            }
         }
         buffer.readFromByteBuffer(bytes, offset, size);
     }
