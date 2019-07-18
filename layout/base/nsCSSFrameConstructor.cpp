@@ -6761,12 +6761,12 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
     return;
   }
 
-  if (parentFrame->IsFrameOfType(nsIFrame::eMathML)) {
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(parentFrame->GetContent(), InsertionKind::Async);
+  LAYOUT_PHASE_TEMP_EXIT();
+  if (WipeInsertionParent(parentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
 #ifdef DEBUG
   if (gNoisyContentUpdates && IsFramePartOfIBSplit(parentFrame)) {
@@ -7162,15 +7162,12 @@ void nsCSSFrameConstructor::ContentRangeInserted(
     return;
   }
 
-  // FIXME(emilio): This looks terribly inefficient if you insert elements deep
-  // in a MathML subtree.
-  if (insertion.mParentFrame->IsFrameOfType(nsIFrame::eMathML)) {
-    LAYOUT_PHASE_TEMP_EXIT();
-    RecreateFramesForContent(insertion.mParentFrame->GetContent(),
-                             InsertionKind::Async);
+  LAYOUT_PHASE_TEMP_EXIT();
+  if (WipeInsertionParent(insertion.mParentFrame)) {
     LAYOUT_PHASE_TEMP_REENTER();
     return;
   }
+  LAYOUT_PHASE_TEMP_REENTER();
 
   nsFrameConstructorState state(
       mPresShell, GetAbsoluteContainingBlock(insertion.mParentFrame, FIXED_POS),
@@ -11283,6 +11280,64 @@ static bool IsSafeToAppendToIBSplitInline(nsIFrame* aParentFrame,
   return true;
 }
 
+bool nsCSSFrameConstructor::WipeInsertionParent(nsContainerFrame* aFrame) {
+#define TRACE(reason)                                                \
+  PROFILER_TRACING("Layout", "WipeInsertionParent: " reason, LAYOUT, \
+                   TRACING_EVENT)
+
+  const LayoutFrameType frameType = aFrame->Type();
+
+  // FIXME(emilio): This looks terribly inefficient if you insert elements deep
+  // in a MathML subtree.
+  if (aFrame->IsFrameOfType(nsIFrame::eMathML)) {
+    TRACE("MathML");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
+
+  // A ruby-related frame that's getting new children.
+  // The situation for ruby is complex, especially when interacting with
+  // spaces. It contains these two special cases apart from tables:
+  // 1) There are effectively three types of white spaces in ruby frames
+  //    we handle differently: leading/tailing/inter-level space,
+  //    inter-base/inter-annotation space, and inter-segment space.
+  //    These three types of spaces can be converted to each other when
+  //    their sibling changes.
+  // 2) The first effective child of a ruby frame must always be a ruby
+  //    base container. It should be created or destroyed accordingly.
+  if (IsRubyPseudo(aFrame) || frameType == LayoutFrameType::Ruby ||
+      RubyUtils::IsRubyContainerBox(frameType)) {
+    // We want to optimize it better, and avoid reframing as much as
+    // possible. But given the cases above, and the fact that a ruby
+    // usually won't be very large, it should be fine to reframe it.
+    TRACE("Ruby");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
+
+  // A <details> that's getting new children. When inserting
+  // elements into <details>, we reframe the <details> and let frame constructor
+  // move the main <summary> to the front when constructing the frame
+  // construction items.
+  if (aFrame->IsDetailsFrame()) {
+    TRACE("Details / Summary");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
+
+  // Reframe the multi-column container whenever elements insert/append
+  // into it because we need to reconstruct column-span split.
+  if (aFrame->IsColumnSetWrapperFrame()) {
+    TRACE("Multi-column");
+    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
+    return true;
+  }
+
+  return false;
+
+#undef TRACE
+}
+
 bool nsCSSFrameConstructor::WipeContainingBlock(
     nsFrameConstructorState& aState, nsIFrame* aContainingBlock,
     nsIFrame* aFrame, FrameConstructionItemList& aItems, bool aIsAppend,
@@ -11374,27 +11429,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     // an anonymous flex or grid item.  That's where it's already going - good!
   }
 
-  // Situation #4 is a ruby-related frame that's getting new children.
-  // The situation for ruby is complex, especially when interacting with
-  // spaces. It contains these two special cases apart from tables:
-  // 1) There are effectively three types of white spaces in ruby frames
-  //    we handle differently: leading/tailing/inter-level space,
-  //    inter-base/inter-annotation space, and inter-segment space.
-  //    These three types of spaces can be converted to each other when
-  //    their sibling changes.
-  // 2) The first effective child of a ruby frame must always be a ruby
-  //    base container. It should be created or destroyed accordingly.
-  if (IsRubyPseudo(aFrame) || frameType == LayoutFrameType::Ruby ||
-      RubyUtils::IsRubyContainerBox(frameType)) {
-    // We want to optimize it better, and avoid reframing as much as
-    // possible. But given the cases above, and the fact that a ruby
-    // usually won't be very large, it should be fine to reframe it.
-    TRACE("Ruby");
-    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
-    return true;
-  }
-
-  // Situation #5 is a case when table pseudo-frames don't work out right
+  // Situation #4 is a case when table pseudo-frames don't work out right
   ParentType parentType = GetParentType(aFrame);
   // If all the kids want a parent of the type that aFrame is, then we're all
   // set to go.  Indeed, there won't be any table pseudo-frames created between
@@ -11563,25 +11598,7 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
     }
   }
 
-  // Situation #6 is a <details> that's getting new children. When inserting
-  // elements into <details>, we reframe the <details> and let frame constructor
-  // move the main <summary> to the front when constructing the frame
-  // construction items.
-  if (aFrame->IsDetailsFrame()) {
-    TRACE("Details / Summary");
-    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
-    return true;
-  }
-
-  // Situation #7 is a column hierarchy that's getting new children.
-  if (aFrame->IsColumnSetWrapperFrame()) {
-    // Reframe the multi-column container whenever elements insert/append
-    // into it.
-    TRACE("Multi-column");
-    RecreateFramesForContent(aFrame->GetContent(), InsertionKind::Async);
-    return true;
-  }
-
+  // Situation #5 is a frame in multicol subtree that's getting new children.
   if (aFrame->HasAnyStateBits(NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR)) {
     MOZ_ASSERT(!aFrame->IsDetailsFrame(),
                "Inserting elements into <details> should have been reframed!");
