@@ -43,11 +43,6 @@ class Session {
     this.target = target;
     this.id = id;
 
-    this.destructor = this.destructor.bind(this);
-
-    this.connection.registerSession(this);
-    this.connection.transport.on("close", this.destructor);
-
     this.domains = new Domains(this, ParentProcessDomains);
   }
 
