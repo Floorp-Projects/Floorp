@@ -109,6 +109,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
       destroyPrincipals(nullptr),
       readPrincipals(nullptr),
       warningReporter(nullptr),
+      selfHostedLazyScript(),
       geckoProfiler_(thisFromCtor()),
       trustedPrincipals_(nullptr),
       wrapObjectCallbacks(&DefaultWrapObjectCallbacks),

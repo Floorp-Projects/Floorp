@@ -10,7 +10,7 @@ const { Domain } = ChromeUtils.import(
   "chrome://remote/content/domains/Domain.jsm"
 );
 const { TabManager } = ChromeUtils.import(
-  "chrome://remote/content/WindowManager.jsm"
+  "chrome://remote/content/domains/parent/target/TabManager.jsm"
 );
 const { TabSession } = ChromeUtils.import(
   "chrome://remote/content/sessions/TabSession.jsm"
@@ -51,14 +51,14 @@ class Target extends Domain {
   setDiscoverTargets({ discover }) {
     const { targets } = this.session.target;
     if (discover) {
-      targets.on("connect", this.onTargetCreated);
-      targets.on("disconnect", this.onTargetDestroyed);
+      targets.on("target-created", this.onTargetCreated);
+      targets.on("target-destroyed", this.onTargetDestroyed);
     } else {
-      targets.off("connect", this.onTargetCreated);
-      targets.off("disconnect", this.onTargetDestroyed);
+      targets.off("target-created", this.onTargetCreated);
+      targets.off("target-destroyed", this.onTargetDestroyed);
     }
     for (const target of targets) {
-      this.onTargetCreated("connect", target);
+      this.onTargetCreated("target-created", target);
     }
   }
 
@@ -81,7 +81,7 @@ class Target extends Domain {
 
   async createTarget({ browserContextId }) {
     const { targets } = this.session.target;
-    const onTarget = targets.once("connect");
+    const onTarget = targets.once("target-created");
     const tab = TabManager.addTab({ userContextId: browserContextId });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
@@ -105,20 +105,21 @@ class Target extends Domain {
       return new Error(`Unable to find target with id '${targetId}'`);
     }
 
-    const session = new TabSession(
+    const tabSession = new TabSession(
       this.session.connection,
       target,
       sessionIds++
     );
+    this.session.connection.registerSession(tabSession);
     this.emit("Target.attachedToTarget", {
       targetInfo: {
         type: "page",
       },
-      sessionId: session.id,
+      sessionId: tabSession.id,
     });
 
     return {
-      sessionId: session.id,
+      sessionId: tabSession.id,
     };
   }
 

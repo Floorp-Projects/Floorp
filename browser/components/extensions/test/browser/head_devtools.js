@@ -7,14 +7,17 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "gDevTools",
-  "resource://devtools/client/framework/gDevTools.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "devtools",
+  "loader",
   "resource://devtools/shared/Loader.jsm"
 );
+XPCOMUtils.defineLazyGetter(this, "gDevTools", () => {
+  const { gDevTools } = loader.require("devtools/client/framework/devtools");
+  return gDevTools;
+});
+XPCOMUtils.defineLazyGetter(this, "TargetFactory", () => {
+  const { TargetFactory } = loader.require("devtools/client/framework/target");
+  return TargetFactory;
+});
 
 const TOOLBOX_BLANK_PANEL_ID = "testBlankPanel";
 
@@ -48,7 +51,7 @@ async function registerBlankToolboxPanel() {
 }
 
 function getToolboxTargetForTab(tab) {
-  return devtools.TargetFactory.forTab(tab);
+  return TargetFactory.forTab(tab);
 }
 
 async function openToolboxForTab(tab, panelId = TOOLBOX_BLANK_PANEL_ID) {

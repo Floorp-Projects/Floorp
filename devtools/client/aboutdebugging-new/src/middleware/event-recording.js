@@ -36,6 +36,17 @@ function recordEvent(method, details) {
   // Add the session id to the event details.
   const eventDetails = Object.assign({}, details, { session_id: sessionId });
   telemetry.recordEvent(method, "aboutdebugging", null, eventDetails);
+
+  // For close and open events, also ping the regular telemetry helpers used
+  // for all DevTools UIs.
+  if (method === "open_adbg") {
+    telemetry.toolOpened("aboutdebugging", sessionId, window.AboutDebugging);
+  } else if (method === "close_adbg") {
+    // XXX: Note that aboutdebugging has no histogram created for
+    // TIME_ACTIVE_SECOND, so calling toolClosed will not actually
+    // record anything.
+    telemetry.toolClosed("aboutdebugging", sessionId, window.AboutDebugging);
+  }
 }
 
 const telemetryRuntimeIds = new Map();

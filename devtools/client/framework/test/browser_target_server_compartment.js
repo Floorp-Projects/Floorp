@@ -80,8 +80,9 @@ async function testMainProcess() {
   const { DevToolsLoader } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
-  const customLoader = new DevToolsLoader();
-  customLoader.invisibleToDebugger = true;
+  const customLoader = new DevToolsLoader({
+    invisibleToDebugger: true,
+  });
   const { DebuggerServer } = customLoader.require("devtools/server/main");
   const { DebuggerClient } = require("devtools/shared/client/debugger-client");
 

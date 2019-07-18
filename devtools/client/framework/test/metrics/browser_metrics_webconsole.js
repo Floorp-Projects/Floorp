@@ -20,7 +20,7 @@ add_task(async function() {
 
   // Retrieve the browser loader dedicated to the WebConsole.
   const webconsoleLoader = panel._frameWindow.getBrowserLoaderForWindow();
-  const loaders = [loader.provider.loader, webconsoleLoader.loader];
+  const loaders = [loader.loader, webconsoleLoader.loader];
 
   runMetricsTest({
     filterString: "devtools/client/webconsole",

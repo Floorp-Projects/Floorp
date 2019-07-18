@@ -17425,8 +17425,8 @@ function getFramework(symbols) {
    * License, v. 2.0. If a copy of the MPL was not distributed with this
    * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function isReactComponent({ imports, classes, callExpressions }) {
-  return importsReact(imports) || requiresReact(callExpressions) || extendsReactComponent(classes);
+function isReactComponent({ imports, classes, callExpressions, identifiers }) {
+  return importsReact(imports) || requiresReact(callExpressions) || extendsReactComponent(classes) || isReact(identifiers) || isRedux(identifiers);
 }
 
 function importsReact(imports) {
@@ -17447,6 +17447,16 @@ function isAngularComponent({ memberExpressions }) {
 
 function isVueComponent({ identifiers }) {
   return identifiers.some(identifier => identifier.name == "Vue");
+}
+
+/* This identifies the react lib file */
+function isReact(identifiers) {
+  return identifiers.some(identifier => identifier.name == "isReactComponent");
+}
+
+/* This identifies the redux lib file */
+function isRedux(identifiers) {
+  return identifiers.some(identifier => identifier.name == "Redux");
 }
 
 /***/ }),

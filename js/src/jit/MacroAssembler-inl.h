@@ -369,10 +369,15 @@ void MacroAssembler::branchTestFunctionFlags(Register fun, uint32_t flags,
 void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
                                                    bool isConstructing,
                                                    Label* label) {
-  int32_t flags = JSFunction::INTERPRETED;
+  int32_t flags = JSFunction::INTERPRETED | JSFunction::INTERPRETED_LAZY;
   if (!isConstructing) {
     flags |= JSFunction::WASM_JIT_ENTRY;
   }
+  branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
+}
+
+void MacroAssembler::branchIfFunctionHasNoScript(Register fun, Label* label) {
+  int32_t flags = JSFunction::INTERPRETED;
   branchTestFunctionFlags(fun, flags, Assembler::Zero, label);
 }
 

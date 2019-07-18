@@ -711,6 +711,7 @@ bool nsHttpResponseHead::MustValidate() {
       // Success codes
     case 200:
     case 203:
+    case 204:
     case 206:
       // Cacheable redirects
     case 300:

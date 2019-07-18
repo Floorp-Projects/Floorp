@@ -384,9 +384,9 @@ add_task(async function test_context_menu_open_management() {
     async function(browser) {
       await openPasswordContextMenu(browser, "#test-password-1");
 
-      gContextMenu.openPasswordManager();
+      let openingFunc = () => gContextMenu.openPasswordManager();
       // wait until the management UI opens
-      let dialogWindow = await waitForPasswordManagerDialog();
+      let passwordManager = await openPasswordManager(openingFunc);
       info("Management UI dialog was opened");
 
       TelemetryTestUtils.assertEvents(
@@ -394,7 +394,7 @@ add_task(async function test_context_menu_open_management() {
         { category: "pwmgr", method: "open_management" }
       );
 
-      dialogWindow.close();
+      await passwordManager.close();
       CONTEXT_MENU.hidePopup();
     }
   );

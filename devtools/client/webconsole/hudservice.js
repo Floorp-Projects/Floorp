@@ -158,8 +158,9 @@ HUDService.prototype = {
       const { DevToolsLoader } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      const loader = new DevToolsLoader();
-      loader.freshCompartment = true;
+      const loader = new DevToolsLoader({
+        freshCompartment: true,
+      });
       const { DebuggerServer } = loader.require("devtools/server/main");
 
       DebuggerServer.init();

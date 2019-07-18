@@ -137,6 +137,7 @@ reftest:
     max-run-time:
         by-test-platform:
             android-em.*: 7200
+            windows7-32-mingwclang/debug: 5400
             windows10-64-ccov/debug: 5400
             windows10-64-asan/opt: 5400
             macosx.*64-ccov/debug: 5400
