@@ -200,7 +200,7 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest) {
     mViewer->GetDocument()->SetIsBeingUsedAsImage();
     StopAnimation();  // otherwise animations start automatically in helper doc
 
-    rv = mViewer->Init(nullptr, nsIntRect(0, 0, 0, 0));
+    rv = mViewer->Init(nullptr, nsIntRect(0, 0, 0, 0), nullptr);
     if (NS_SUCCEEDED(rv)) {
       rv = mViewer->Open(nullptr, nullptr);
     }
