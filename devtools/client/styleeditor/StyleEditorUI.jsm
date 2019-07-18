@@ -158,7 +158,7 @@ StyleEditorUI.prototype = {
     this._walker = this._toolbox.walker;
 
     try {
-      this._highlighter = await this._toolbox.inspector.getHighlighterByType(
+      this._highlighter = await this._toolbox.inspectorFront.getHighlighterByType(
         SELECTOR_HIGHLIGHTER_TYPE
       );
     } catch (e) {

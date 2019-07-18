@@ -22,7 +22,7 @@ const TEST_URL = URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  const front = inspector.inspector;
+  const front = inspector.inspectorFront;
 
   const highlighter = await front.getHighlighterByType(
     "CssTransformHighlighter"

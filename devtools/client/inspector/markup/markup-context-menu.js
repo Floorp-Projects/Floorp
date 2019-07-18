@@ -79,7 +79,7 @@ class MarkupContextMenu {
    * This method is here for the benefit of copying links.
    */
   _copyAttributeLink(link) {
-    this.inspector.inspector
+    this.inspector.inspectorFront
       .resolveRelativeURL(link, this.selection.nodeFront)
       .then(url => {
         clipboardHelper.copyString(url);

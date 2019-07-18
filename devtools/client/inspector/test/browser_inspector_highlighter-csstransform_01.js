@@ -23,7 +23,7 @@ add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(
     "data:text/html;charset=utf-8," + encodeURI(TEST_URL)
   );
-  const front = inspector.inspector;
+  const front = inspector.inspectorFront;
 
   const highlighter = await front.getHighlighterByType(
     "CssTransformHighlighter"

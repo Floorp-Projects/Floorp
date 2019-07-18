@@ -28,7 +28,7 @@ add_task(async function() {
 
   info("Waiting for element picker to become active.");
   toolbox.win.focus();
-  await toolbox.inspector.nodePicker.start();
+  await toolbox.inspectorFront.nodePicker.start();
 
   info("Moving mouse over div.");
   await moveMouseOver("#maindiv", 1, 1);
@@ -50,6 +50,6 @@ add_task(async function() {
       y,
       options: { type: "mousemove" },
     });
-    return inspector.inspector.nodePicker.once("picker-node-hovered");
+    return inspector.inspectorFront.nodePicker.once("picker-node-hovered");
   }
 });

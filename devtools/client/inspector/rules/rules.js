@@ -322,7 +322,7 @@ CssRuleView.prototype = {
     }
 
     try {
-      const front = this.inspector.inspector;
+      const front = this.inspector.inspectorFront;
       const h = await front.getHighlighterByType("SelectorHighlighter");
       this.selectorHighlighter = h;
       return h;

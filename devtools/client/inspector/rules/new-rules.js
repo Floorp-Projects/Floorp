@@ -328,7 +328,7 @@ class RulesView {
     }
 
     try {
-      const front = this.inspector.inspector;
+      const front = this.inspector.inspectorFront;
       this._selectorHighlighter = await front.getHighlighterByType(
         "SelectorHighlighter"
       );

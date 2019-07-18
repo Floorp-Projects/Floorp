@@ -42,7 +42,7 @@ requestLongerTimeout(5);
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  const front = inspector.inspector;
+  const front = inspector.inspectorFront;
   const highlighter = await front.getHighlighterByType("SelectorHighlighter");
 
   for (const { inIframe, selector, containerCount } of TEST_DATA) {

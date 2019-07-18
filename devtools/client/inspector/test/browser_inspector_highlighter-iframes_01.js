@@ -70,7 +70,7 @@ add_task(async function() {
   );
 
   info("Waiting for element picker to deactivate.");
-  await inspector.inspector.nodePicker.stop();
+  await inspector.inspectorFront.nodePicker.stop();
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
@@ -80,6 +80,8 @@ add_task(async function() {
         options: { type: "mousemove" },
         center: true,
       })
-      .then(() => inspector.inspector.nodePicker.once("picker-node-hovered"));
+      .then(() =>
+        inspector.inspectorFront.nodePicker.once("picker-node-hovered")
+      );
   }
 });
