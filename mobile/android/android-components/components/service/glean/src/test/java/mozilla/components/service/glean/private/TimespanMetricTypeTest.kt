@@ -179,7 +179,7 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan",
             listOf("store1"),
-            timeUnit = TimeUnit.Second
+            timeUnit = TimeUnit.Nanosecond
         )
 
         metric.setRawNanos(timespanNanos)
@@ -196,7 +196,7 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan",
             listOf("store1"),
-            timeUnit = TimeUnit.Second
+            timeUnit = TimeUnit.Nanosecond
         )
 
         metric.setRawNanos(timespanNanos)
@@ -220,7 +220,7 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan_1",
             listOf("store1"),
-            timeUnit = TimeUnit.Second
+            timeUnit = TimeUnit.Nanosecond
         )
 
         metric.start()
@@ -240,7 +240,7 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan",
             listOf("store1"),
-            timeUnit = TimeUnit.Second
+            timeUnit = TimeUnit.Nanosecond
         )
 
         TimingManager.getElapsedNanos = { 0 }

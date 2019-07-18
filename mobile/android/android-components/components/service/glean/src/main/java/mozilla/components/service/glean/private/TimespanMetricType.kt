@@ -150,11 +150,11 @@ data class TimespanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testHasValue(pingName: String = sendInPings.first()): Boolean {
-        return TimespansStorageEngine.getSnapshot(pingName, false)?.get(identifier) != null
+        return TimespansStorageEngine.getSnapshotWithTimeUnit(pingName, false)?.get(identifier) != null
     }
 
     /**
-     * Returns the stored value for testing purposes only
+     * Returns the stored value for testing purposes only, in the metric's time unit.
      *
      * @param pingName represents the name of the ping to retrieve the metric for.  Defaults
      *                 to the either the first value in [defaultStorageDestinations] or the first
@@ -164,6 +164,6 @@ data class TimespanMetricType(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     fun testGetValue(pingName: String = sendInPings.first()): Long {
-        return TimespansStorageEngine.getSnapshot(pingName, false)!![identifier]!!
+        return TimespansStorageEngine.getSnapshotWithTimeUnit(pingName, false)!![identifier]!!.second
     }
 }
