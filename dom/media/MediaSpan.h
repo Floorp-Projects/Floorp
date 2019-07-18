@@ -78,15 +78,15 @@ class MediaSpan {
       // append the new data into it.
       RefPtr<MediaByteBuffer> buffer =
           new MediaByteBuffer(mLength + aBuffer->Length());
-      if (!buffer->AppendElements(Elements(), Length()) ||
-          !buffer->AppendElements(*aBuffer)) {
+      if (!buffer->AppendElements(Elements(), Length(), fallible) ||
+          !buffer->AppendElements(*aBuffer, fallible)) {
         return false;
       }
       mBuffer = buffer;
       mLength += aBuffer->Length();
       return true;
     }
-    if (!mBuffer->AppendElements(*aBuffer)) {
+    if (!mBuffer->AppendElements(*aBuffer, fallible)) {
       return false;
     }
     mLength += aBuffer->Length();
