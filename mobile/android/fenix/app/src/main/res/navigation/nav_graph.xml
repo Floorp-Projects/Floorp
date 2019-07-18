@@ -335,11 +335,6 @@
         android:name="org.mozilla.fenix.settings.TurnOnSyncFragment"
         android:label="@string/preferences_sync">
         <action
-            android:id="@+id/action_turnOnSyncFragment_to_browserFragment"
-            app:destination="@id/browserFragment"
-            app:popUpTo="@+id/settingsFragment"
-            app:popUpToInclusive="true" />
-        <action
             android:id="@+id/action_turnOnSyncFragment_to_pairFragment"
             app:destination="@id/pairFragment" />
     </fragment>
@@ -348,11 +343,6 @@
         android:id="@+id/pairFragment"
         android:name="org.mozilla.fenix.settings.PairFragment"
         android:label="@string/preferences_sync">
-        <action
-            android:id="@+id/action_pairFragment_to_browserFragment"
-            app:destination="@id/browserFragment"
-            app:popUpTo="@+id/settingsFragment"
-            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
@@ -385,7 +375,7 @@
     <fragment
         android:id="@+id/deleteBrowsingDataFragment"
         android:name="org.mozilla.fenix.settings.DeleteBrowsingDataFragment"
-        android:label="@string/preferences_delete_browsing_data"></fragment>
+        android:label="@string/preferences_delete_browsing_data"/>
     <fragment
         android:id="@+id/exceptionsFragment"
         android:name="org.mozilla.fenix.exceptions.ExceptionsFragment"
@@ -457,9 +447,6 @@
             android:id="@+id/action_accountProblemFragment_to_signOutFragment"
             app:destination="@id/signOutFragment" />
     </fragment>
-    <action
-        android:id="@+id/action_accountProblemFragment_to_browserFragment"
-        app:destination="@id/browserFragment" />
     <dialog
         android:id="@+id/signOutFragment"
         android:name="org.mozilla.fenix.settings.SignOutFragment" />

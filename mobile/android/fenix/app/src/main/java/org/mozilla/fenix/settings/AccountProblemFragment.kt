@@ -14,8 +14,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
@@ -58,9 +56,6 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
             // session history stack.
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
-            view?.let {
-                (activity as HomeActivity).openToBrowser(BrowserDirection.FromAccountProblem)
-            }
             true
         }
     }

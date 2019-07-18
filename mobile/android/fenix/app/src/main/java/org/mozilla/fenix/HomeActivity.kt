@@ -43,10 +43,7 @@ import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
 import org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragmentDirections
 import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
-import org.mozilla.fenix.settings.AccountProblemFragmentDirections
-import org.mozilla.fenix.settings.PairFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
-import org.mozilla.fenix.settings.TurnOnSyncFragmentDirections
 import org.mozilla.fenix.share.ShareFragment
 import org.mozilla.fenix.utils.Settings
 
@@ -252,18 +249,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                     fragmentId = R.id.historyFragment
                     HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
                 }
-                BrowserDirection.FromPair -> {
-                    fragmentId = R.id.pairFragment
-                    PairFragmentDirections.actionPairFragmentToBrowserFragment(customTabSessionId)
-                }
-                BrowserDirection.FromTurnOnSync -> {
-                    fragmentId = R.id.turnOnSyncFragment
-                    TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToBrowserFragment(customTabSessionId)
-                }
-                BrowserDirection.FromAccountProblem -> {
-                    fragmentId = R.id.turnOnSyncFragment
-                    AccountProblemFragmentDirections.actionAccountProblemFragmentToBrowserFragment(customTabSessionId)
-                }
             }
         } else {
             null
@@ -392,6 +377,5 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
 enum class BrowserDirection {
     FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks,
-    FromBookmarksFolderSelect, FromHistory, FromPair, FromTurnOnSync,
-    FromAccountProblem
+    FromBookmarksFolderSelect, FromHistory
 }
