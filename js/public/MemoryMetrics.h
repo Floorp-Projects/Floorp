@@ -10,6 +10,7 @@
 // These declarations are highly likely to change in the future. Depend on them
 // at your own risk.
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TypeTraits.h"
 
@@ -524,17 +525,7 @@ struct RuntimeSizes {
         code(),
         gc(),
         notableScriptSources() {
-    allScriptSources = js_new<ScriptSourcesHashMap>();
-    if (!allScriptSources) {
-      MOZ_CRASH("oom");
-    }
-  }
-
-  ~RuntimeSizes() {
-    // |allScriptSources| is usually deleted and set to nullptr before this
-    // destructor runs. But there are failure cases due to OOMs that may
-    // prevent that, so it doesn't hurt to try again here.
-    js_delete(allScriptSources);
+    allScriptSources.emplace();
   }
 
   void addToServoSizes(ServoSizes* sizes) const {
@@ -561,7 +552,7 @@ struct RuntimeSizes {
   // it is filled with info about every script source in the runtime.  It's
   // then used to fill in |notableScriptSources| (which actually gets
   // reported), and immediately discarded afterwards.
-  ScriptSourcesHashMap* allScriptSources;
+  mozilla::Maybe<ScriptSourcesHashMap> allScriptSources;
   js::Vector<NotableScriptSourceInfo, 0, js::SystemAllocPolicy>
       notableScriptSources;
 
@@ -687,7 +678,6 @@ struct ZoneStats {
         stringInfo(),
         shapeInfo(),
         extra(),
-        allStrings(nullptr),
         notableStrings(),
         isTotals(true) {}
 
@@ -697,21 +687,13 @@ struct ZoneStats {
         stringInfo(std::move(other.stringInfo)),
         shapeInfo(std::move(other.shapeInfo)),
         extra(other.extra),
-        allStrings(other.allStrings),
+        allStrings(std::move(other.allStrings)),
         notableStrings(std::move(other.notableStrings)),
         isTotals(other.isTotals) {
-    other.allStrings = nullptr;
     MOZ_ASSERT(!other.isTotals);
   }
 
-  ~ZoneStats() {
-    // |allStrings| is usually deleted and set to nullptr before this
-    // destructor runs. But there are failure cases due to OOMs that may
-    // prevent that, so it doesn't hurt to try again here.
-    js_delete(allStrings);
-  }
-
-  bool initStrings();
+  void initStrings();
 
   void addSizes(const ZoneStats& other) {
     MOZ_ASSERT(isTotals);
@@ -765,7 +747,7 @@ struct ZoneStats {
   // filled with info about every string in the zone.  It's then used to fill
   // in |notableStrings| (which actually gets reported), and immediately
   // discarded afterwards.
-  StringsHashMap* allStrings;
+  mozilla::Maybe<StringsHashMap> allStrings;
   js::Vector<NotableStringInfo, 0, js::SystemAllocPolicy> notableStrings;
   bool isTotals;
 
@@ -802,30 +784,21 @@ struct RealmStats {
   RealmStats()
       : FOR_EACH_SIZE(ZERO_SIZE) classInfo(),
         extra(),
-        allClasses(nullptr),
         notableClasses(),
         isTotals(true) {}
 
   RealmStats(RealmStats&& other)
       : FOR_EACH_SIZE(COPY_OTHER_SIZE) classInfo(std::move(other.classInfo)),
         extra(other.extra),
-        allClasses(other.allClasses),
+        allClasses(std::move(other.allClasses)),
         notableClasses(std::move(other.notableClasses)),
         isTotals(other.isTotals) {
-    other.allClasses = nullptr;
     MOZ_ASSERT(!other.isTotals);
   }
 
   RealmStats(const RealmStats&) = delete;  // disallow copying
 
-  ~RealmStats() {
-    // |allClasses| is usually deleted and set to nullptr before this
-    // destructor runs. But there are failure cases due to OOMs that may
-    // prevent that, so it doesn't hurt to try again here.
-    js_delete(allClasses);
-  }
-
-  bool initClasses();
+  void initClasses();
 
   void addSizes(const RealmStats& other) {
     MOZ_ASSERT(isTotals);
@@ -865,7 +838,7 @@ struct RealmStats {
       ClassesHashMap;
 
   // These are similar to |allStrings| and |notableStrings| in ZoneStats.
-  ClassesHashMap* allClasses;
+  mozilla::Maybe<ClassesHashMap> allClasses;
   js::Vector<NotableClassInfo, 0, js::SystemAllocPolicy> notableClasses;
   bool isTotals;
 
