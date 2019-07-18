@@ -727,7 +727,7 @@ input[type="color"]:-moz-focusring::-moz-focus-inner,
 input[type="reset"]:-moz-focusring::-moz-focus-inner,
 input[type="button"]:-moz-focusring::-moz-focus-inner,
 input[type="submit"]:-moz-focusring::-moz-focus-inner {
-  border-color: ButtonText;
+  border-color: currentColor;
 }
 
 button:disabled:active, button:disabled,
