@@ -69,6 +69,7 @@ class ConsoleTable extends Component {
           {
             className: "new-consoletable-header",
             role: "columnheader",
+            key,
           },
           value
         )
@@ -88,6 +89,7 @@ class ConsoleTable extends Component {
             {
               role: "gridcell",
               className: index % 2 ? "odd" : "even",
+              key,
             },
             GripMessageBody({
               grip: item[key],
@@ -191,11 +193,11 @@ function getTableItems(data = {}, type, headers = null) {
       const { preview } = property;
       const entries = preview.ownProperties || preview.items;
       if (entries) {
-        for (const key of Object.keys(entries)) {
-          const entry = entries[key];
-          item[key] = Object.prototype.hasOwnProperty.call(entry, "value")
-            ? entry.value
-            : entry;
+        for (const [key, entry] of Object.entries(entries)) {
+          item[key] =
+            entry && Object.prototype.hasOwnProperty.call(entry, "value")
+              ? entry.value
+              : entry;
         }
       } else {
         if (preview.key) {
