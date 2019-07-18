@@ -3982,13 +3982,6 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(
   }
 }
 
-// Should have an identical argument signature to the above ctor
-uint16_t nsDisplayBackgroundImage::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aInitData,
-    nsIFrame* aFrameForBounds) {
-  return aInitData.layer;
-}
-
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage() {
 #ifdef NS_BUILD_REFCNT_LOGGING
   MOZ_COUNT_DTOR(nsDisplayBackgroundImage);
@@ -4805,14 +4798,6 @@ nsDisplayTableBackgroundImage::nsDisplayTableBackgroundImage(
   }
 }
 
-// Should have an identical argument signature to the above ctor
-uint16_t nsDisplayTableBackgroundImage::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, const InitData& aData,
-    nsIFrame* aCellFrame) {
-  return CalculateTablePerFrameKey(aData.layer,
-                                   GetTableTypeFromFrame(aCellFrame));
-}
-
 nsDisplayTableBackgroundImage::~nsDisplayTableBackgroundImage() {
   if (mStyleFrame) {
     mStyleFrame->RemoveDisplayItem(this);
@@ -5462,14 +5447,6 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
   InitializeScrollTarget(aBuilder);
 }
 
-// Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    const mozilla::gfx::CompositorHitTestInfo& aHitTestFlags, uint16_t aIndex,
-    const mozilla::Maybe<nsRect>& aArea) {
-  return aIndex;
-}
-
 nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
     nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
     mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo)
@@ -5479,13 +5456,6 @@ nsDisplayCompositorHitTestInfo::nsDisplayCompositorHitTestInfo(
   MOZ_COUNT_CTOR(nsDisplayCompositorHitTestInfo);
   SetHitTestInfo(std::move(aHitTestInfo));
   InitializeScrollTarget(aBuilder);
-}
-
-// Should have the same argument signature as the above ctor
-uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameIndex(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-    mozilla::UniquePtr<HitTestInfo>&& aHitTestInfo) {
-  return 0;
 }
 
 void nsDisplayCompositorHitTestInfo::InitializeScrollTarget(
@@ -5540,6 +5510,10 @@ bool nsDisplayCompositorHitTestInfo::CreateWebRenderCommands(
   aBuilder.ClearHitTestInfo();
 
   return true;
+}
+
+uint16_t nsDisplayCompositorHitTestInfo::CalculatePerFrameKey() const {
+  return mIndex;
 }
 
 int32_t nsDisplayCompositorHitTestInfo::ZIndex() const {
