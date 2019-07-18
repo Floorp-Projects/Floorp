@@ -68,6 +68,9 @@ bool Compartment::putWrapper(JSContext* cx, const CrossCompartmentKey& wrapped,
                              const js::Value& wrapper) {
   MOZ_ASSERT(wrapped.is<JSString*>() == wrapper.isString());
   MOZ_ASSERT_IF(!wrapped.is<JSString*>(), wrapper.isObject());
+  MOZ_ASSERT(!wrapper.isObject() || !js::IsProxy(&wrapper.toObject()) ||
+             js::GetProxyHandler(&wrapper.toObject())->family() !=
+                 js::GetDOMRemoteProxyHandlerFamily());
 
   if (!crossCompartmentWrappers.put(wrapped, wrapper)) {
     ReportOutOfMemory(cx);
