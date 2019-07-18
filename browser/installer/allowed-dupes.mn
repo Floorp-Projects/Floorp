@@ -62,12 +62,6 @@ browser/chrome/devtools/skin/images/tool-storage.svg
 browser/chrome/devtools/skin/images/tool-styleeditor.svg
 browser/chrome/devtools/skin/promisedebugger.css
 browser/chrome/devtools/skin/variables.css
-modules/devtools/Console.jsm
-modules/devtools/Loader.jsm
-modules/devtools/shared/Console.jsm
-modules/devtools/shared/Loader.jsm
-browser/modules/devtools/client/framework/gDevTools.jsm
-browser/modules/devtools/gDevTools.jsm
 browser/chrome/icons/default/default16.png
 browser/chrome/icons/default/default32.png
 browser/chrome/icons/default/default48.png

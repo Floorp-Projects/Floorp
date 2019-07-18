@@ -56,10 +56,10 @@ Example:
 
 Example:
 
-* File: `/devtools/client/framework/gDevTools.jsm`
+* File: `/toolkit/mozapps/extensions/AddonManager.jsm`
 * Usage (prefer lazy in most cases):
-  * `loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm")`
-  * `const { gDevTools } = ChromeUtils.import("resource://devtools/client/framework/gDevTools.jsm")`
+  * `loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm")`
+  * `const { AddonManager } = ChromeUtils.import("resource://gre/modules/AddonManager.jsm")`
 
 ## Chrome Content
 
