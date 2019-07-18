@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: awami;
+  src: url(../fonts/sil/AwamiNastaliq-Regular.woff);
+}
+div {
+  font: 36px/3 awami;
+  text-align: center;
+}
+</style>
+Both lines should be the same, with no clipping of either green or blue glyphs:
+<div dir=rtl>
+<p style="color:blue"><span style="color:green">دیکھتی</span> کنسلٹنٹس</p>
+<p style="color:green">دیکھتی <span style="color:blue">کنسلٹنٹس</span></p>
