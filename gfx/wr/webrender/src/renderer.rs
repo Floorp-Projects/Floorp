@@ -62,8 +62,6 @@ use crate::glyph_cache::GlyphCache;
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterizer};
 use crate::gpu_cache::{GpuBlockData, GpuCacheUpdate, GpuCacheUpdateList};
 use crate::gpu_cache::{GpuCacheDebugChunk, GpuCacheDebugCmd};
-#[cfg(feature = "pathfinder")]
-use crate::gpu_glyph_renderer::GpuGlyphRenderer;
 use crate::gpu_types::{PrimitiveHeaderI, PrimitiveHeaderF, ScalingInstance, SvgFilterInstance, TransformData, ResolveInstanceData};
 use crate::internal_types::{TextureSource, ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE, ResourceCacheError};
 use crate::internal_types::{CacheTextureId, DebugOutput, FastHashMap, FastHashSet, LayerIndex, RenderedDocument, ResultMsg};
@@ -107,8 +105,6 @@ use thread_profiler::{register_thread_with_profiler, write_profile};
 use crate::tiling::{AlphaRenderTarget, ColorRenderTarget, PictureCacheTarget};
 use crate::tiling::{BlitJob, BlitJobSource, RenderPassKind, RenderTargetList};
 use crate::tiling::{Frame, RenderTarget, RenderTargetKind, TextureCacheRenderTarget};
-#[cfg(not(feature = "pathfinder"))]
-use crate::tiling::GlyphJob;
 use time::precise_time_ns;
 
 cfg_if! {
@@ -897,19 +893,6 @@ impl CpuProfile {
     }
 }
 
-#[cfg(not(feature = "pathfinder"))]
-pub struct GpuGlyphRenderer;
-
-#[cfg(not(feature = "pathfinder"))]
-impl GpuGlyphRenderer {
-    fn new(_: &mut Device, _: &VAO, _: ShaderPrecacheFlags) -> Result<GpuGlyphRenderer, RendererError> {
-        Ok(GpuGlyphRenderer)
-    }
-}
-
-#[cfg(not(feature = "pathfinder"))]
-struct StenciledGlyphPage;
-
 /// A Texture that has been initialized by the `device` module and is ready to
 /// be used.
 struct ActiveTexture {
@@ -1683,8 +1666,6 @@ pub struct Renderer {
 
     shaders: Rc<RefCell<Shaders>>,
 
-    pub gpu_glyph_renderer: GpuGlyphRenderer,
-
     max_recorded_profiles: usize,
 
     clear_color: Option<ColorF>,
@@ -1999,10 +1980,6 @@ impl Renderer {
         device.update_vao_indices(&prim_vao, &quad_indices, VertexUsageHint::Static);
         device.update_vao_main_vertices(&prim_vao, &quad_vertices, VertexUsageHint::Static);
 
-        let gpu_glyph_renderer = r#try!(GpuGlyphRenderer::new(&mut device,
-                                                            &prim_vao,
-                                                            options.precache_flags));
-
         let blur_vao = device.create_vao_with_new_instances(&desc::BLUR, &prim_vao);
         let clip_vao = device.create_vao_with_new_instances(&desc::CLIP, &prim_vao);
         let border_vao = device.create_vao_with_new_instances(&desc::BORDER, &prim_vao);
@@ -2235,7 +2212,6 @@ impl Renderer {
             enable_advanced_blend_barriers: !ext_blend_equation_advanced_coherent,
             last_time: 0,
             gpu_profile,
-            gpu_glyph_renderer,
             vaos: RendererVAOs {
                 prim_vao,
                 blur_vao,
@@ -3274,7 +3250,7 @@ impl Renderer {
         // the batch.
         debug_assert!(!data.is_empty());
 
-        let vao = get_vao(vertex_array_kind, &self.vaos, &self.gpu_glyph_renderer);
+        let vao = get_vao(vertex_array_kind, &self.vaos);
 
         self.device.bind_vao(vao);
 
@@ -4112,29 +4088,26 @@ impl Renderer {
         stats: &mut RendererStats,
     ) {
         let texture_source = TextureSource::TextureCache(*texture);
-        let (target_size, projection) = {
+        let projection = {
             let texture = self.texture_resolver
                 .resolve(&texture_source)
                 .expect("BUG: invalid target texture");
             let target_size = texture.get_dimensions();
-            let projection = Transform3D::ortho(
+
+            Transform3D::ortho(
                 0.0,
                 target_size.width as f32,
                 0.0,
                 target_size.height as f32,
                 ORTHO_NEAR_PLANE,
                 ORTHO_FAR_PLANE,
-            );
-            (target_size, projection)
+            )
         };
 
         self.device.disable_depth();
         self.device.disable_depth_write();
 
         self.set_blend(false, FramebufferKind::Other);
-
-        // Handle any Pathfinder glyphs.
-        let stencil_page = self.stencil_glyphs(&target.glyphs, &projection, &target_size, stats);
 
         {
             let texture = self.texture_resolver
@@ -4270,28 +4243,7 @@ impl Renderer {
                 stats,
             );
         }
-
-        // Blit any Pathfinder glyphs to the cache texture.
-        if let Some(stencil_page) = stencil_page {
-            self.cover_glyphs(stencil_page, &projection, stats);
-        }
     }
-
-    #[cfg(not(feature = "pathfinder"))]
-    fn stencil_glyphs(&mut self,
-                      _: &[GlyphJob],
-                      _: &Transform3D<f32>,
-                      _: &DeviceIntSize,
-                      _: &mut RendererStats)
-                      -> Option<StenciledGlyphPage> {
-        None
-    }
-
-    #[cfg(not(feature = "pathfinder"))]
-    fn cover_glyphs(&mut self,
-                    _: StenciledGlyphPage,
-                    _: &Transform3D<f32>,
-                    _: &mut RendererStats) {}
 
     fn update_deferred_resolves(&mut self, deferred_resolves: &[DeferredResolve]) -> Option<GpuCacheUpdateList> {
         // The first thing we do is run through any pending deferred
@@ -6042,30 +5994,8 @@ impl Renderer {
     }
 }
 
-#[cfg(feature = "pathfinder")]
 fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
-               vaos: &'a RendererVAOs,
-               gpu_glyph_renderer: &'a GpuGlyphRenderer)
-               -> &'a VAO {
-    match vertex_array_kind {
-        VertexArrayKind::Primitive => &vaos.prim_vao,
-        VertexArrayKind::Clip => &vaos.clip_vao,
-        VertexArrayKind::Blur => &vaos.blur_vao,
-        VertexArrayKind::VectorStencil => &gpu_glyph_renderer.vector_stencil_vao,
-        VertexArrayKind::VectorCover => &gpu_glyph_renderer.vector_cover_vao,
-        VertexArrayKind::Border => &vaos.border_vao,
-        VertexArrayKind::Scale => &vaos.scale_vao,
-        VertexArrayKind::LineDecoration => &vaos.line_vao,
-        VertexArrayKind::Gradient => &vaos.gradient_vao,
-        VertexArrayKind::Resolve => &vaos.resolve_vao,
-        VertexArrayKind::SvgFilter => &vaos.svg_filter_vao,
-    }
-}
-
-#[cfg(not(feature = "pathfinder"))]
-fn get_vao<'a>(vertex_array_kind: VertexArrayKind,
-               vaos: &'a RendererVAOs,
-               _: &'a GpuGlyphRenderer)
+               vaos: &'a RendererVAOs)
                -> &'a VAO {
     match vertex_array_kind {
         VertexArrayKind::Primitive => &vaos.prim_vao,
