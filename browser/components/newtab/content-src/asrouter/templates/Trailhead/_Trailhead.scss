@@ -401,7 +401,7 @@
 
 .inline-onboarding {
   &.activity-stream.welcome {
-    overflow-y: scroll;
+    overflow-y: hidden;
   }
 
   .modalOverlayInner {

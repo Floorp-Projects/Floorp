@@ -7,6 +7,7 @@ import { combineReducers, createStore } from "redux";
 import { GlobalOverrider } from "test/unit/utils";
 import { INITIAL_STATE, reducers } from "common/Reducers.jsm";
 import { cardContextTypes } from "content-src/components/Card/types";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import { Provider } from "react-redux";
 import React from "react";
@@ -149,18 +150,22 @@ describe("<Card>", () => {
     const title = '"fluent"';
     const link = { ...DEFAULT_PROPS.link, title };
 
-    wrapper = shallow(<Card {...DEFAULT_PROPS} link={link} />);
-    let button = wrapper.find(
-      "button[data-l10n-id='newtab-menu-content-tooltip']"
-    );
+    wrapper = mountCardWithProps({ ...DEFAULT_PROPS, link });
+    let button = wrapper.find(ContextMenuButton).find("button");
 
     assert.equal(button.prop("data-l10n-args"), JSON.stringify({ title }));
   });
   it("should have .active class, on card-outer if context menu is open", () => {
-    const button = wrapper.find(".context-menu-button");
-    assert.isFalse(wrapper.find(".card-outer").hasClass("active"));
+    const button = wrapper.find(ContextMenuButton);
+    assert.isFalse(
+      wrapper.find(".card-outer").hasClass("active"),
+      "does not have active class"
+    );
     button.simulate("click", { preventDefault: () => {} });
-    assert.isTrue(wrapper.find(".card-outer").hasClass("active"));
+    assert.isTrue(
+      wrapper.find(".card-outer").hasClass("active"),
+      "has active class"
+    );
   });
   it("should send SHOW_DOWNLOAD_FILE if we clicked on a download", () => {
     const downloadLink = {
@@ -382,7 +387,7 @@ describe("<Card>", () => {
     });
     it("should not have a context menu button or LinkMenu", () => {
       assert.isFalse(
-        wrapper.find(".context-menu-button").exists(),
+        wrapper.find(ContextMenuButton).exists(),
         "context menu button"
       );
       assert.isFalse(wrapper.find(LinkMenu).exists(), "LinkMenu");
