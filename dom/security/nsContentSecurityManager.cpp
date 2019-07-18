@@ -201,27 +201,30 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     return;
   }
 
+  nsAutoCString fileName;
   JS::AutoFilename scriptFilename;
   if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
-    nsDependentCSubstring fileName(scriptFilename.get(),
-                                   strlen(scriptFilename.get()));
-
-    ToLowerCase(fileName);
+    nsDependentCSubstring fileName_(scriptFilename.get(),
+                                    strlen(scriptFilename.get()));
+    ToLowerCase(fileName_);
     // Extract file name alone if scriptFilename contains line number
     // separated by multiple space delimiters in few cases.
-    int32_t fileNameIndex = fileName.FindChar(' ');
+    int32_t fileNameIndex = fileName_.FindChar(' ');
     if (fileNameIndex != -1) {
-      fileName.SetLength(fileNameIndex);
+      fileName_.SetLength(fileNameIndex);
     }
 
     for (const nsLiteralCString& whitelistEntry : evalWhitelist) {
-      if (fileName.Equals(whitelistEntry)) {
+      if (fileName_.Equals(whitelistEntry)) {
         return;
       }
     }
+
+    fileName = fileName_;
   }
 
-  MOZ_ASSERT(false, "do not use eval with system privileges");
+  MOZ_CRASH_UNSAFE_PRINTF("do not use eval with system privileges: %s",
+                          fileName.get());
 }
 
 /* static */
