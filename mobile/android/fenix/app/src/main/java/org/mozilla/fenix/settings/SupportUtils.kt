@@ -28,7 +28,8 @@ object SupportUtils {
     ) {
         HELP("faq-android"),
         PRIVATE_BROWSING_MYTHS("common-myths-about-private-browsing"),
-        YOUR_RIGHTS("your-rights")
+        YOUR_RIGHTS("your-rights"),
+        TRACKING_PROTECTION("tracking-protection-firefox-preview")
     }
 
     fun getSumoURLForTopic(context: Context, topic: SumoTopic): String {

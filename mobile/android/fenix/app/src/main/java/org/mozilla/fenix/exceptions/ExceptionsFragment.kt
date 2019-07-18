@@ -17,11 +17,14 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.FenixViewModelProvider
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import org.mozilla.fenix.settings.SupportUtils
 
 class ExceptionsFragment : Fragment() {
     private lateinit var exceptionsComponent: ExceptionsComponent
@@ -56,6 +59,14 @@ class ExceptionsFragment : Fragment() {
         getAutoDisposeObservable<ExceptionsAction>()
             .subscribe {
                 when (it) {
+                    is ExceptionsAction.LearnMore -> {
+                        (activity as HomeActivity).openToBrowserAndLoad(
+                            searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
+                                (SupportUtils.SumoTopic.TRACKING_PROTECTION),
+                            newTab = true,
+                            from = BrowserDirection.FromExceptions
+                        )
+                    }
                     is ExceptionsAction.Delete.All -> viewLifecycleOwner.lifecycleScope.launch(IO) {
                         val domains = ExceptionDomains.load(context!!)
                         ExceptionDomains.remove(context!!, domains)

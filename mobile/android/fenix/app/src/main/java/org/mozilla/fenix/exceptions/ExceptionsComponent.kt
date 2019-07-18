@@ -5,13 +5,13 @@
 package org.mozilla.fenix.exceptions
 
 import android.view.ViewGroup
-import org.mozilla.fenix.mvi.ViewState
-import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
+import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.test.Mockable
 
 data class ExceptionsItem(val url: String)
@@ -38,6 +38,7 @@ class ExceptionsComponent(
 data class ExceptionsState(val items: List<ExceptionsItem>) : ViewState
 
 sealed class ExceptionsAction : Action {
+    object LearnMore : ExceptionsAction()
     sealed class Delete : ExceptionsAction() {
         object All : Delete()
         data class One(val item: ExceptionsItem) : Delete()

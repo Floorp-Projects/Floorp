@@ -11,7 +11,6 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import org.mozilla.fenix.R
-import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.utils.Settings
@@ -34,7 +33,8 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         preferenceTP?.isChecked = Settings.getInstance(context!!).shouldUseTrackingProtection
         preferenceTP?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { _, newValue ->
-                Settings.getInstance(requireContext()).setTrackingProtection(newValue = newValue as Boolean)
+                Settings.getInstance(requireContext())
+                    .setTrackingProtection(newValue = newValue as Boolean)
                 with(requireComponents) {
                     val policy = core.createTrackingProtectionPolicy(newValue)
                     useCases.settingsUseCases.updateTrackingProtection.invoke(policy)
@@ -43,20 +43,16 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                 true
             }
 
-        context?.let {
-            val exceptionsEmpty = ExceptionDomains.load(it).isEmpty()
-            val exceptions =
-                it.getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
-            val preferenceExceptions = findPreference<Preference>(exceptions)
-            preferenceExceptions?.shouldDisableView = true
-            preferenceExceptions?.isEnabled = !exceptionsEmpty
-            preferenceExceptions?.onPreferenceClickListener = getClickListenerForExceptions()
-        }
+        val exceptions =
+            context!!.getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
+        val preferenceExceptions = findPreference<Preference>(exceptions)
+        preferenceExceptions?.onPreferenceClickListener = getClickListenerForExceptions()
     }
 
     private fun getClickListenerForExceptions(): Preference.OnPreferenceClickListener {
         return Preference.OnPreferenceClickListener {
-            val directions = TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
+            val directions =
+                TrackingProtectionFragmentDirections.actionTrackingProtectionFragmentToExceptionsFragment()
             Navigation.findNavController(view!!).navigate(directions)
             true
         }

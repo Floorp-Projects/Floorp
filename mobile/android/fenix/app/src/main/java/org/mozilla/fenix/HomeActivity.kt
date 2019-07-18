@@ -35,6 +35,7 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.exceptions.ExceptionsFragmentDirections
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getRootView
 import org.mozilla.fenix.ext.nav
@@ -230,15 +231,21 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                 }
                 BrowserDirection.FromSearch -> {
                     fragmentId = R.id.searchFragment
-                    SearchFragmentDirections.actionSearchFragmentToBrowserFragment(customTabSessionId)
+                    SearchFragmentDirections.actionSearchFragmentToBrowserFragment(
+                        customTabSessionId
+                    )
                 }
                 BrowserDirection.FromSettings -> {
                     fragmentId = R.id.settingsFragment
-                    SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(customTabSessionId)
+                    SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(
+                        customTabSessionId
+                    )
                 }
                 BrowserDirection.FromBookmarks -> {
                     fragmentId = R.id.bookmarkFragment
-                    BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(customTabSessionId)
+                    BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(
+                        customTabSessionId
+                    )
                 }
                 BrowserDirection.FromBookmarksFolderSelect -> {
                     fragmentId = R.id.bookmarkSelectFolderFragment
@@ -247,7 +254,9 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                 }
                 BrowserDirection.FromHistory -> {
                     fragmentId = R.id.historyFragment
-                    HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(customTabSessionId)
+                    HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(
+                        customTabSessionId
+                    )
                 }
             }
         } else {
@@ -259,7 +268,12 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         }
     }
 
-    private fun load(searchTermOrURL: String, newTab: Boolean, engine: SearchEngine?, forceSearch: Boolean) {
+    private fun load(
+        searchTermOrURL: String,
+        newTab: Boolean,
+        engine: SearchEngine?,
+        forceSearch: Boolean
+    ) {
         val isPrivate = this.browsingModeManager.isPrivate
 
         val loadUrlUseCase = if (newTab) {
@@ -273,7 +287,13 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         val searchUseCase: (String) -> Unit = { searchTerms ->
             if (newTab) {
                 components.useCases.searchUseCases.newTabSearch
-                    .invoke(searchTerms, Session.Source.USER_ENTERED, true, isPrivate, searchEngine = engine)
+                    .invoke(
+                        searchTerms,
+                        Session.Source.USER_ENTERED,
+                        true,
+                        isPrivate,
+                        searchEngine = engine
+                    )
             } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
         }
 
@@ -377,5 +397,5 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
 enum class BrowserDirection {
     FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks,
-    FromBookmarksFolderSelect, FromHistory
+    FromBookmarksFolderSelect, FromHistory, FromExceptions
 }

@@ -197,6 +197,8 @@
     <string name="preferences_tracking_protection_exceptions_description">Tracking Protection is off for these websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Turn on for all sites</string>
+    <!-- Text displayed when there are no exceptions, includes a learn more link that brings users to a tracking protection SUMO page -->
+    <string name="exceptions_empty_message">Exceptions let you disable tracking protection for selected sites.\n\nLearn more</string>
     <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
     <string name="preferences_tracking_protection_turned_off_globally">Turned off globally, go to Settings to turn it on.</string>
 
