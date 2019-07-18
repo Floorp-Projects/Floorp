@@ -66,10 +66,6 @@ class RemoteAgentClass {
       // an unregisterPathHandler method on nsHttpServer.
       delete this.server._handler._overridePaths[target.path];
     });
-
-    // Start watching for targets *after* registering the target listeners
-    // as this will fire event for already-existing targets.
-    await this.targets.watchForTargets();
   }
 
   get listening() {
@@ -96,6 +92,10 @@ class RemoteAgentClass {
     }
 
     await this.init();
+
+    // Start watching for targets *after* registering the target listeners
+    // as this will fire event for already-existing targets.
+    await this.targets.watchForTargets();
 
     try {
       // Immediatly instantiate the main process target in order
