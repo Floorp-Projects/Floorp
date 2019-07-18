@@ -60,4 +60,3 @@ powershell.exe 'iex (Get-Content -Raw ci-scripts\set-screenresolution.ps1); Set-
 export CARGOFLAGS='--verbose --frozen'
 export FREETYPE_CMAKE_GENERATOR=Ninja
 cmd.exe /c 'ci-scripts\windows-tests.cmd'
-cmd.exe /c 'ci-scripts\windows-pathfinder.cmd'

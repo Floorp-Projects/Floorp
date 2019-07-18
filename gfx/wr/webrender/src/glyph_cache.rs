@@ -2,18 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#[cfg(feature = "pathfinder")]
-use crate::api::units::DeviceIntPoint;
 use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::internal_types::FastHashMap;
 use crate::render_backend::{FrameId, FrameStamp};
 use crate::render_task::RenderTaskCache;
-#[cfg(feature = "pathfinder")]
-use crate::render_task::RenderTaskCacheKey;
 use crate::resource_cache::ResourceClassCache;
 use std::sync::Arc;
 use crate::texture_cache::{EvictionNotice, TextureCache};
-#[cfg(not(feature = "pathfinder"))]
 use crate::texture_cache::TextureCacheHandle;
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -21,12 +16,7 @@ use crate::texture_cache::TextureCacheHandle;
 #[derive(Clone, Debug)]
 pub struct CachedGlyphInfo {
     pub format: GlyphFormat,
-    #[cfg(not(feature = "pathfinder"))]
     pub texture_cache_handle: TextureCacheHandle,
-    #[cfg(feature = "pathfinder")]
-    pub render_task_cache_key: RenderTaskCacheKey,
-    #[cfg(feature = "pathfinder")]
-    pub origin: DeviceIntPoint,
 }
 
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -43,26 +33,6 @@ pub enum GlyphCacheEntry {
 }
 
 impl GlyphCacheEntry {
-    #[cfg(feature = "pathfinder")]
-    fn get_allocated_size(&self, texture_cache: &TextureCache, render_task_cache: &RenderTaskCache)
-                          -> Option<usize> {
-        match *self {
-            GlyphCacheEntry::Cached(ref glyph) => {
-                let render_task_cache_key = &glyph.render_task_cache_key;
-                render_task_cache.get_allocated_size_for_render_task(texture_cache,
-                                                                     &render_task_cache_key)
-            }
-            GlyphCacheEntry::Pending => Some(0),
-            // If the cache only has blank glyphs left, just get rid of it.
-            GlyphCacheEntry::Blank => None,
-        }
-    }
-
-    #[cfg(feature = "pathfinder")]
-    fn mark_unused(&self, _: &mut TextureCache) {
-    }
-
-    #[cfg(not(feature = "pathfinder"))]
     fn get_allocated_size(&self, texture_cache: &TextureCache, _: &RenderTaskCache)
                           -> Option<usize> {
         match *self {
@@ -75,13 +45,11 @@ impl GlyphCacheEntry {
         }
     }
 
-    #[cfg(not(feature = "pathfinder"))]
     fn mark_unused(&self, texture_cache: &mut TextureCache) {
         if let GlyphCacheEntry::Cached(ref glyph) = *self {
             texture_cache.mark_unused(&glyph.texture_cache_handle);
         }
-    }
-}
+    }}
 
 #[allow(dead_code)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
