@@ -1373,38 +1373,50 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
 };
 
 /*
- * A Handler represents a reference to a handler function. These handler
- * functions are called by the Debugger API to notify the user of certain
- * events. For each event type, we define a separate subclass of Handler. This
- * allows users to define a single reference to an object that implements
- * multiple handlers, by inheriting from the appropriate subclasses.
+ * A Handler represents a Debugger API reflection object's handler function,
+ * like a Debugger.Frame's onStep handler. These handler functions are called by
+ * the Debugger API to notify the user of certain events. For each event type,
+ * we define a separate subclass of Handler.
  *
- * A Handler can be stored on a reflection object, in which case the reflection
- * object becomes responsible for managing the lifetime of the Handler. To aid
- * with this, the Handler base class defines several methods, which are to be
- * called by the reflection object at the appropriate time (see below).
+ * When a reflection object accepts a Handler, it calls its 'hold' method; and
+ * if the Handler is replaced by another, or the reflection object is finalized,
+ * the reflection object calls the Handler's 'drop' method. The reflection
+ * object does not otherwise manage the Handler's lifetime, say, by calling its
+ * destructor or freeing its memory. A simple Handler implementation might have
+ * an empty 'hold' method, and have its 'drop' method delete the Handler. A more
+ * complex Handler might process many kinds of events, and thus inherit from
+ * many Handler subclasses and be held by many reflection objects
+ * simultaneously; a handler like this could use 'hold' and 'drop' to manage a
+ * reference count.
+ *
+ * To support SpiderMonkey's memory use tracking, 'hold' and 'drop' also require
+ * a pointer to the owning reflection object, so that the Holder implementation
+ * can properly report changes in ownership to functions using the
+ * js::gc::MemoryUse categories.
  */
 struct Handler {
   virtual ~Handler() {}
 
   /*
-   * If the Handler is a reference to a callable JSObject, this method returns
-   * the latter. This allows the Handler to be used from JS. Otherwise, this
-   * method returns nullptr.
+   * If this Handler is a reference to a callable JSObject, return that
+   * JSObject. Otherwise, this method returns nullptr.
+   *
+   * The JavaScript getters for handler properties on reflection objects use
+   * this method to obtain the callable the handler represents. When a Handler's
+   * 'object' method returns nullptr, that handler is simply not visible to
+   * JavaScript.
    */
   virtual JSObject* object() const = 0;
 
-  /*
-   * Drops the reference to the handler. This method will be called by the
-   * reflection object on which the reference is stored when the former is
-   * finalized, or the latter replaced.
-   */
-  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) = 0;
+  /* Report that this Handler is now held by owner. See comment above. */
+  virtual void hold(JSObject* owner) = 0;
+
+  /* Report that this Handler is no longer held by owner. See comment above. */
+  virtual void drop(js::FreeOp* fop, JSObject* owner) = 0;
 
   /*
-   * Traces the reference to the handler. This method will be called
-   * by the reflection object on which the reference is stored whenever the
-   * former is traced.
+   * Trace the reference to the handler. This method will be called by the
+   * reflection object holding this Handler whenever the former is traced.
    */
   virtual void trace(JSTracer* tracer) = 0;
 
