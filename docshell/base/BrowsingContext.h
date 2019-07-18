@@ -499,8 +499,13 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
  * lives in this process, and a same-process WindowProxy should be used (see
  * nsGlobalWindowOuter). This should only be called by bindings code, ToJSValue
  * is the right API to get a WindowProxy for a BrowsingContext.
+ *
+ * If aTransplantTo is non-null, then the WindowProxy object will eventually be
+ * transplanted onto it. Therefore it should be used as the value in the remote
+ * proxy map.
  */
 extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
+                                      JS::Handle<JSObject*> aTransplantTo,
                                       JS::MutableHandle<JSObject*> aRetVal);
 
 typedef BrowsingContext::Transaction BrowsingContextTransaction;
