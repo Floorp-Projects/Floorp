@@ -89,6 +89,7 @@ class HistoryFragment : Fragment(), BackHandler {
         lifecycleScope.launch {
             val storage = context?.components?.core?.historyStorage
             for (item in items) {
+                context?.components?.analytics?.metrics?.track(Event.HistoryItemRemoved)
                 storage?.deleteVisit(item.url, item.visitedAt)
             }
             reloadData()
@@ -173,6 +174,7 @@ class HistoryFragment : Fragment(), BackHandler {
                 (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
             requireComponents.useCases.tabsUseCases.addTab.let { useCase ->
                 for (selectedItem in selectedHistory) {
+                    requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
                     useCase.invoke(selectedItem.url)
                 }
             }
@@ -192,6 +194,7 @@ class HistoryFragment : Fragment(), BackHandler {
                 (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()
             requireComponents.useCases.tabsUseCases.addPrivateTab.let { useCase ->
                 for (selectedItem in selectedHistory) {
+                    requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
                     useCase.invoke(selectedItem.url)
                 }
             }
