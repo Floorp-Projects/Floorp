@@ -23,7 +23,7 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
     Actor.prototype.initialize.call(this, conn);
 
     this.targetActor = targetActor;
-    this.listening = false;
+    this.innerWindowID = null;
 
     // Each connection's webSocketSerialID is mapped to a httpChannelId
     this.connections = new Map();
@@ -54,22 +54,20 @@ const WebSocketActor = ActorClassWithSpec(webSocketSpec, {
   // Actor API
 
   startListening: function() {
-    // Register WS listener
-    if (!this.listening) {
-      const innerWindowID = this.targetActor.window.windowUtils
-        .currentInnerWindowID;
-      webSocketEventService.addListener(innerWindowID, this);
-      this.listening = true;
-    }
+    this.stopListening();
+    this.innerWindowID = this.targetActor.window.windowUtils.currentInnerWindowID;
+    webSocketEventService.addListener(this.innerWindowID, this);
   },
 
   stopListening() {
-    if (this.listening) {
-      const innerWindowID = this.targetActor.window.windowUtils
-        .currentInnerWindowID;
-      webSocketEventService.removeListener(innerWindowID, this);
-      this.listening = false;
+    if (!this.innerWindowID) {
+      return;
     }
+    if (webSocketEventService.hasListenerFor(this.innerWindowID)) {
+      webSocketEventService.removeListener(this.innerWindowID, this);
+    }
+
+    this.innerWindowID = null;
   },
 
   // nsIWebSocketEventService
