@@ -22,14 +22,10 @@ use freetype::freetype::{FT_FACE_FLAG_MULTIPLE_MASTERS};
 use freetype::succeeded;
 use crate::glyph_rasterizer::{FontInstance, GlyphFormat, GlyphKey};
 use crate::glyph_rasterizer::{GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-#[cfg(feature = "pathfinder")]
-use crate::glyph_rasterizer::NativeFontHandleWrapper;
 use crate::internal_types::{FastHashMap, ResourceCacheError};
 #[cfg(any(not(target_os = "android"), feature = "no_static_freetype"))]
 use libc::{dlsym, RTLD_DEFAULT};
 use libc::free;
-#[cfg(feature = "pathfinder")]
-use pathfinder_font_renderer::freetype as pf_freetype;
 use std::{cmp, mem, ptr, slice};
 use std::cmp::max;
 use std::collections::hash_map::Entry;
@@ -770,7 +766,6 @@ impl FontContext {
         }
     }
 
-    #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (slot, scale) = self.load_glyph(font, key).ok_or(GlyphRasterError::LoadFailed)?;
 
@@ -975,14 +970,5 @@ impl Drop for FontContext {
         unsafe {
             FT_Done_FreeType(self.lib);
         }
-    }
-}
-
-#[cfg(feature = "pathfinder")]
-impl<'a> Into<pf_freetype::FontDescriptor> for NativeFontHandleWrapper<'a> {
-    fn into(self) -> pf_freetype::FontDescriptor {
-        let NativeFontHandleWrapper(font_handle) = self;
-        let str = font_handle.path.as_os_str().to_str().unwrap();
-        pf_freetype::FontDescriptor::new(str.into(), font_handle.index)
     }
 }
