@@ -896,6 +896,8 @@ struct MOZ_STATIC_CLASS Class {
     return isJSFunction() || getCall();
   }
 
+  bool isGlobal() const { return flags & JSCLASS_IS_GLOBAL; }
+
   bool isProxy() const { return flags & JSCLASS_IS_PROXY; }
 
   bool isDOMClass() const { return flags & JSCLASS_IS_DOMJSCLASS; }
