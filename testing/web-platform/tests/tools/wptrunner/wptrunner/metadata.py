@@ -54,7 +54,7 @@ class RunInfo(object):
 
 def update_expected(test_paths, serve_root, log_file_names,
                     update_properties, rev_old=None, rev_new="HEAD",
-                    full_update=False, sync_root=None, stability=None):
+                    full_update=False, sync_root=None, disable_intermittent=None):
     """Update the metadata files for web-platform-tests based on
     the results obtained in a previous run or runs
 
@@ -66,12 +66,12 @@ def update_expected(test_paths, serve_root, log_file_names,
 
     for metadata_path, updated_ini in update_from_logs(id_test_map,
                                                        update_properties,
-                                                       stability,
+                                                       disable_intermittent,
                                                        full_update,
                                                        *log_file_names):
 
         write_new_expected(metadata_path, updated_ini)
-        if stability:
+        if disable_intermittent:
             for test in updated_ini.iterchildren():
                 for subtest in test.iterchildren():
                     if subtest.new_disabled:
@@ -217,7 +217,7 @@ def load_test_data(test_paths):
     return id_test_map
 
 
-def update_from_logs(id_test_map, update_properties, stability, full_update,
+def update_from_logs(id_test_map, update_properties, disable_intermittent, full_update,
                      *log_filenames):
 
     updater = ExpectedUpdater(id_test_map)
@@ -227,11 +227,16 @@ def update_from_logs(id_test_map, update_properties, stability, full_update,
         with open(log_filename) as f:
             updater.update_from_log(f)
 
-    for item in update_results(id_test_map, update_properties, stability, full_update):
+    for item in update_results(id_test_map, update_properties, disable_intermittent, full_update):
         yield item
 
 
-def update_results(id_test_map, update_properties, stability, full_update):
+def update_results(id_test_map,
+                   update_properties,
+                   full_update,
+                   disable_intermittent,
+                   update_intermittent=False,
+                   remove_intermittent=False):
     test_file_items = set(id_test_map.itervalues())
 
     default_expected_by_type = {}
@@ -242,8 +247,9 @@ def update_results(id_test_map, update_properties, stability, full_update):
             default_expected_by_type[(test_type, True)] = test_cls.subtest_result_cls.default_expected
 
     for test_file in test_file_items:
-        updated_expected = test_file.update(default_expected_by_type, update_properties, stability,
-                                            full_update)
+        updated_expected = test_file.update(default_expected_by_type, update_properties,
+                                            full_update, disable_intermittent,
+                                            update_intermittent, remove_intermittent)
         if updated_expected is not None and updated_expected.modified:
             yield test_file.metadata_path, updated_expected
 
@@ -334,11 +340,11 @@ class ExpectedUpdater(object):
                                            "subtest": subtest["name"],
                                            "status": subtest["status"],
                                            "expected": subtest.get("expected"),
-                                           "known_intermittent": subtest.get("known_intermittent")})
+                                           "known_intermittent": subtest.get("known_intermittent", [])})
             action_map["test_end"]({"test": test["test"],
                                     "status": test["status"],
                                     "expected": test.get("expected"),
-                                    "known_intermittent": test.get("known_intermittent")})
+                                    "known_intermittent": test.get("known_intermittent", [])})
             if "asserts" in test:
                 asserts = test["asserts"]
                 action_map["assertion_count"]({"test": test["test"],
@@ -587,7 +593,8 @@ class TestFileData(object):
         return rv
 
     def update(self, default_expected_by_type, update_properties,
-               stability=None, full_update=False):
+               full_update=False, disable_intermittent=None, update_intermittent=False,
+               remove_intermittent=False):
         # If we are doing a full update, we may need to prune missing nodes
         # even if the expectations didn't change
         if not self.requires_update and not full_update:
@@ -644,11 +651,20 @@ class TestFileData(object):
                     elif prop == "asserts":
                         item_expected.set_asserts(run_info, value)
 
-        expected.update(stability=stability, full_update=full_update)
+        expected.update(full_update=full_update,
+                        disable_intermittent=disable_intermittent,
+                        update_intermittent=update_intermittent,
+                        remove_intermittent=remove_intermittent)
         for test in expected.iterchildren():
             for subtest in test.iterchildren():
-                subtest.update(stability=stability, full_update=full_update)
-            test.update(stability=stability, full_update=full_update)
+                subtest.update(full_update=full_update,
+                               disable_intermittent=disable_intermittent,
+                               update_intermittent=update_intermittent,
+                               remove_intermittent=remove_intermittent)
+            test.update(full_update=full_update,
+                        disable_intermittent=disable_intermittent,
+                        update_intermittent=update_intermittent,
+                        remove_intermittent=remove_intermittent)
 
         return expected
 

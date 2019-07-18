@@ -561,7 +561,8 @@ class TestRunnerManager(threading.Thread):
             if test.disabled(result.name):
                 continue
             expected = test.expected(result.name)
-            is_unexpected = expected != result.status
+            known_intermittent = test.known_intermittent(result.name)
+            is_unexpected = expected != result.status and result.status not in known_intermittent
 
             if is_unexpected:
                 self.unexpected_count += 1
@@ -572,6 +573,7 @@ class TestRunnerManager(threading.Thread):
                                     result.status,
                                     message=result.message,
                                     expected=expected,
+                                    known_intermittent=known_intermittent,
                                     stack=result.stack)
 
         # We have a couple of status codes that are used internally, but not exposed to the
@@ -583,13 +585,14 @@ class TestRunnerManager(threading.Thread):
         status_subns = {"INTERNAL-ERROR": "ERROR",
                         "EXTERNAL-TIMEOUT": "TIMEOUT"}
         expected = test.expected()
+        known_intermittent = test.known_intermittent()
         status = status_subns.get(file_result.status, file_result.status)
 
         if self.browser.check_crash(test.id) and status != "CRASH":
             self.logger.info("Found a crash dump; should change status from %s to CRASH but this causes instability" % (status,))
 
         self.test_count += 1
-        is_unexpected = expected != status
+        is_unexpected = expected != status and status not in known_intermittent
         if is_unexpected:
             self.unexpected_count += 1
             self.logger.debug("Unexpected count in this thread %i" % self.unexpected_count)
@@ -608,6 +611,7 @@ class TestRunnerManager(threading.Thread):
                              status,
                              message=file_result.message,
                              expected=expected,
+                             known_intermittent=known_intermittent,
                              extra=file_result.extra,
                              stack=file_result.stack)
 

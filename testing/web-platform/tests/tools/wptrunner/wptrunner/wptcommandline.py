@@ -611,7 +611,7 @@ def create_parser_update(product_choices=None):
                         help="Sync the tests with the latest from upstream (implies --patch)")
     parser.add_argument("--full", action="store_true", default=False,
                         help=("For all tests that are updated, remove any existing conditions and missing subtests"))
-    parser.add_argument("--stability", nargs="?", action="store", const="unstable", default=None,
+    parser.add_argument("--disable_intermittent", nargs="?", action="store", const="unstable", default=None,
         help=("Reason for disabling tests. When updating test results, disable tests that have "
               "inconsistent results across many runs with the given reason."))
     parser.add_argument("--no-remove-obsolete", action="store_false", dest="remove_obsolete", default=True,
