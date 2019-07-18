@@ -94,6 +94,8 @@ class TabObserver {
     EventEmitter.decorate(this);
     this.onWindowOpen = this.onWindowOpen.bind(this);
     this.onWindowClose = this.onWindowClose.bind(this);
+    this.onTabOpen = this.onTabOpen.bind(this);
+    this.onTabClose = this.onTabClose.bind(this);
   }
 
   async start() {
@@ -106,14 +108,19 @@ class TabObserver {
     this.windows.off("open", this.onWindowOpen);
     this.windows.off("close", this.onWindowClose);
     this.windows.stop();
+
+    // Stop listening for events on still opened windows
+    for (const window of Services.wm.getEnumerator("navigator:browser")) {
+      this.onWindowClose(window);
+    }
   }
 
-  onTabOpen(tab) {
-    this.emit("open", tab);
+  onTabOpen({ target }) {
+    this.emit("open", target);
   }
 
-  onTabClose(tab) {
-    this.emit("close", tab);
+  onTabClose({ target }) {
+    this.emit("close", target);
   }
 
   // WindowObserver
@@ -129,16 +136,17 @@ class TabObserver {
       if (!tab.linkedBrowser) {
         continue;
       }
-      this.onTabOpen(tab);
+      this.onTabOpen({ target: tab });
     }
 
-    window.addEventListener("TabOpen", ({ target }) => this.onTabOpen(target));
-    window.addEventListener("TabClose", ({ target }) =>
-      this.onTabClose(target)
-    );
+    window.addEventListener("TabOpen", this.onTabOpen);
+    window.addEventListener("TabClose", this.onTabClose);
   }
 
   onWindowClose(window) {
     // TODO(ato): Is TabClose fired when the window closes?
+
+    window.removeEventListener("TabOpen", this.onTabOpen);
+    window.removeEventListener("TabClose", this.onTabClose);
   }
 }
