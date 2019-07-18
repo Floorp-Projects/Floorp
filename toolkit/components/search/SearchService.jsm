@@ -608,6 +608,54 @@ SearchService.prototype = {
    */
   _engines: null,
 
+  /**
+   * An array of engine short names sorted into display order.
+   */
+  __sortedEngines: null,
+
+  /**
+   * This holds the current list of visible engines from the configuration,
+   * and is used to update the cache. If the cache value is different to those
+   * in the configuration, then the configuration has changed. The engines
+   * are loaded using both the new set, and the user's current set (if they
+   * still exist).
+   */
+  _visibleDefaultEngines: [],
+
+  /**
+   * The short name of the suggested default search engine from the configuration.
+   */
+  _searchDefault: null,
+
+  /**
+   * The suggested order of engines from the configuration.
+   */
+  _searchOrder: [],
+
+  /**
+   * A Set of installed search extensions reported by AddonManager
+   * startup before SearchSevice has started. Will be installed
+   * during init().
+   */
+  _startupExtensions: new Set(),
+
+  /**
+   * The current metadata stored in the cache. This stores:
+   *   - current
+   *       The current user-set default engine
+   *   - searchDefault
+   *       The current default engine (if any) specified by the region server.
+   *   - searchDefaultExpir
+   *       The expiry time for the default engine when the region server should
+   *       be re-checked.
+   *   - visibleDefaultEngines
+   *       The list of visible default engines supplied by the region server.
+   *
+   * All of the above except `searchDefaultExpir` have associated hash fields
+   * to validate the value is set by the application.
+   */
+  _metaData: {},
+
   // If initialization has not been completed yet, perform synchronous
   // initialization.
   // Throws in case of initialization error.
@@ -829,7 +877,6 @@ SearchService.prototype = {
     return false;
   },
 
-  _metaData: {},
   setGlobalAttr(name, val) {
     this._metaData[name] = val;
     this.batchTask.disarm();
@@ -856,15 +903,6 @@ SearchService.prototype = {
     (AppConstants.platform == "android"
       ? APP_SEARCH_PREFIX
       : EXT_SEARCH_PREFIX) + "list.json",
-
-  __sortedEngines: null,
-  _visibleDefaultEngines: [],
-  _searchDefault: null,
-  _searchOrder: [],
-  // A Set of installed search extensions reported by AddonManager
-  // startup before SearchSevice has started. Will be installed
-  // during init().
-  _startupExtensions: new Set(),
 
   get _sortedEngines() {
     if (!this.__sortedEngines) {
