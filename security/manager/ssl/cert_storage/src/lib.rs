@@ -23,7 +23,7 @@ extern crate tempfile;
 
 use byteorder::{NetworkEndian, ReadBytesExt, WriteBytesExt};
 use crossbeam_utils::atomic::AtomicCell;
-use lmdb::{EnvironmentFlags, Error as LmdbError};
+use lmdb::Error as LmdbError;
 use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
@@ -125,11 +125,10 @@ impl SecurityState {
 
         let store_path = get_store_path(&self.profile_path)?;
 
-        // Open the store in read-write mode initially to create it (if needed)
-        // and migrate data from the old store (if any).
-        // If opening initially fails, try to remove and recreate the database.
-        // Consumers will repopulate the database as necessary if this happens.
-        // (See bug 1546361.)
+        // Open the store in read-write mode to create it (if needed) and migrate data from the old
+        // store (if any).
+        // If opening initially fails, try to remove and recreate the database. Consumers will
+        // repopulate the database as necessary if this happens (see bug 1546361).
         let env = make_env(store_path.as_path()).or_else(|_| {
             remove_db(store_path.as_path())?;
             make_env(store_path.as_path())
@@ -151,10 +150,7 @@ impl SecurityState {
             )),
             None => Ok(()),
         }?;
-
-        // Now reopen the store in read-only mode to conserve memory.
-        // We'll reopen it again in read-write mode when making changes.
-        self.reopen_store_read_only()
+        Ok(())
     }
 
     fn migrate(
@@ -219,36 +215,6 @@ impl SecurityState {
         Ok(())
     }
 
-    fn reopen_store_read_write(&mut self) -> Result<(), SecurityStateError> {
-        let store_path = get_store_path(&self.profile_path)?;
-
-        // Move out and drop the EnvAndStore first so we don't have
-        // two LMDB environments open at the same time.
-        drop(self.env_and_store.take());
-
-        let env = make_env(store_path.as_path())?;
-        let store = env.open_single("cert_storage", StoreOptions::create())?;
-        self.env_and_store.replace(EnvAndStore { env, store });
-        Ok(())
-    }
-
-    fn reopen_store_read_only(&mut self) -> Result<(), SecurityStateError> {
-        let store_path = get_store_path(&self.profile_path)?;
-
-        // Move out and drop the EnvAndStore first so we don't have
-        // two LMDB environments open at the same time.
-        drop(self.env_and_store.take());
-
-        let mut builder = Rkv::environment_builder();
-        builder.set_max_dbs(2);
-        builder.set_flags(EnvironmentFlags::READ_ONLY);
-
-        let env = Rkv::from_env(store_path.as_path(), builder)?;
-        let store = env.open_single("cert_storage", StoreOptions::default())?;
-        self.env_and_store.replace(EnvAndStore { env, store });
-        Ok(())
-    }
-
     fn read_entry(&self, key: &[u8]) -> Result<Option<i16>, SecurityStateError> {
         let env_and_store = match self.env_and_store.as_ref() {
             Some(env_and_store) => env_and_store,
@@ -297,29 +263,25 @@ impl SecurityState {
         entries: &[(Vec<u8>, i16)],
         typ: u8,
     ) -> Result<(), SecurityStateError> {
-        self.reopen_store_read_write()?;
-        {
-            let env_and_store = match self.env_and_store.as_mut() {
-                Some(env_and_store) => env_and_store,
-                None => return Err(SecurityStateError::from("env and store not initialized?")),
-            };
-            let mut writer = env_and_store.env.write()?;
-            // Make a note that we have prior data of the given type now.
-            env_and_store.store.put(
-                &mut writer,
-                &make_key!(PREFIX_DATA_TYPE, &[typ]),
-                &Value::Bool(true),
-            )?;
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        // Make a note that we have prior data of the given type now.
+        env_and_store.store.put(
+            &mut writer,
+            &make_key!(PREFIX_DATA_TYPE, &[typ]),
+            &Value::Bool(true),
+        )?;
 
-            for entry in entries {
-                env_and_store
-                    .store
-                    .put(&mut writer, &entry.0, &Value::I64(entry.1 as i64))?;
-            }
-
-            writer.commit()?;
+        for entry in entries {
+            env_and_store
+                .store
+                .put(&mut writer, &entry.0, &Value::I64(entry.1 as i64))?;
         }
-        self.reopen_store_read_only()?;
+
+        writer.commit()?;
         Ok(())
     }
 
@@ -427,52 +389,48 @@ impl SecurityState {
         &mut self,
         certs: &[(Vec<u8>, Vec<u8>, i16)],
     ) -> Result<(), SecurityStateError> {
-        self.reopen_store_read_write()?;
-        {
-            let env_and_store = match self.env_and_store.as_mut() {
-                Some(env_and_store) => env_and_store,
-                None => return Err(SecurityStateError::from("env and store not initialized?")),
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        // Make a note that we have prior cert data now.
+        env_and_store.store.put(
+            &mut writer,
+            &make_key!(
+                PREFIX_DATA_TYPE,
+                &[nsICertStorage::DATA_TYPE_CERTIFICATE as u8]
+            ),
+            &Value::Bool(true),
+        )?;
+
+        for (cert_der, subject, trust) in certs {
+            let mut digest = Sha256::default();
+            digest.input(cert_der);
+            let cert_hash = digest.result();
+            let cert_key = make_key!(PREFIX_CERT, &cert_hash);
+            let cert = Cert::new(cert_der, subject, *trust)?;
+            env_and_store
+                .store
+                .put(&mut writer, &cert_key, &Value::Blob(&cert.to_bytes()?))?;
+            let subject_key = make_key!(PREFIX_SUBJECT, subject);
+            let empty_vec = Vec::new();
+            let old_cert_hash_list = match env_and_store.store.get(&writer, &subject_key)? {
+                Some(Value::Blob(hashes)) => hashes.to_owned(),
+                Some(_) => empty_vec,
+                None => empty_vec,
             };
-            let mut writer = env_and_store.env.write()?;
-            // Make a note that we have prior cert data now.
-            env_and_store.store.put(
-                &mut writer,
-                &make_key!(
-                    PREFIX_DATA_TYPE,
-                    &[nsICertStorage::DATA_TYPE_CERTIFICATE as u8]
-                ),
-                &Value::Bool(true),
-            )?;
-
-            for (cert_der, subject, trust) in certs {
-                let mut digest = Sha256::default();
-                digest.input(cert_der);
-                let cert_hash = digest.result();
-                let cert_key = make_key!(PREFIX_CERT, &cert_hash);
-                let cert = Cert::new(cert_der, subject, *trust)?;
-                env_and_store
-                    .store
-                    .put(&mut writer, &cert_key, &Value::Blob(&cert.to_bytes()?))?;
-                let subject_key = make_key!(PREFIX_SUBJECT, subject);
-                let empty_vec = Vec::new();
-                let old_cert_hash_list = match env_and_store.store.get(&writer, &subject_key)? {
-                    Some(Value::Blob(hashes)) => hashes.to_owned(),
-                    Some(_) => empty_vec,
-                    None => empty_vec,
-                };
-                let new_cert_hash_list = CertHashList::add(&old_cert_hash_list, &cert_hash)?;
-                if new_cert_hash_list.len() != old_cert_hash_list.len() {
-                    env_and_store.store.put(
-                        &mut writer,
-                        &subject_key,
-                        &Value::Blob(&new_cert_hash_list),
-                    )?;
-                }
+            let new_cert_hash_list = CertHashList::add(&old_cert_hash_list, &cert_hash)?;
+            if new_cert_hash_list.len() != old_cert_hash_list.len() {
+                env_and_store.store.put(
+                    &mut writer,
+                    &subject_key,
+                    &Value::Blob(&new_cert_hash_list),
+                )?;
             }
-
-            writer.commit()?;
         }
-        self.reopen_store_read_only()?;
+
+        writer.commit()?;
         Ok(())
     }
 
@@ -481,50 +439,46 @@ impl SecurityState {
     // appear in. If that list contains the given hash, we remove it and update the CertHashList.
     // Finally we delete the Cert entry.
     pub fn remove_certs_by_hashes(&mut self, hashes: &[Vec<u8>]) -> Result<(), SecurityStateError> {
-        self.reopen_store_read_write()?;
-        {
-            let env_and_store = match self.env_and_store.as_mut() {
-                Some(env_and_store) => env_and_store,
-                None => return Err(SecurityStateError::from("env and store not initialized?")),
-            };
-            let mut writer = env_and_store.env.write()?;
-            let reader = env_and_store.env.read()?;
+        let env_and_store = match self.env_and_store.as_mut() {
+            Some(env_and_store) => env_and_store,
+            None => return Err(SecurityStateError::from("env and store not initialized?")),
+        };
+        let mut writer = env_and_store.env.write()?;
+        let reader = env_and_store.env.read()?;
 
-            for hash in hashes {
-                let cert_key = make_key!(PREFIX_CERT, hash);
-                if let Some(Value::Blob(cert_bytes)) =
-                    env_and_store.store.get(&reader, &cert_key)?
-                {
-                    if let Ok(cert) = Cert::from_bytes(cert_bytes) {
-                        let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
-                        let empty_vec = Vec::new();
-                        // We have to use the writer here to make sure we have an up-to-date view of
-                        // the cert hash list.
-                        let old_cert_hash_list =
-                            match env_and_store.store.get(&writer, &subject_key)? {
-                                Some(Value::Blob(hashes)) => hashes.to_owned(),
-                                Some(_) => empty_vec,
-                                None => empty_vec,
-                            };
-                        let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, hash)?;
-                        if new_cert_hash_list.len() != old_cert_hash_list.len() {
-                            env_and_store.store.put(
-                                &mut writer,
-                                &subject_key,
-                                &Value::Blob(&new_cert_hash_list),
-                            )?;
-                        }
+        for hash in hashes {
+            let cert_key = make_key!(PREFIX_CERT, hash);
+            if let Some(Value::Blob(cert_bytes)) =
+                env_and_store.store.get(&reader, &cert_key)?
+            {
+                if let Ok(cert) = Cert::from_bytes(cert_bytes) {
+                    let subject_key = make_key!(PREFIX_SUBJECT, &cert.subject);
+                    let empty_vec = Vec::new();
+                    // We have to use the writer here to make sure we have an up-to-date view of
+                    // the cert hash list.
+                    let old_cert_hash_list =
+                        match env_and_store.store.get(&writer, &subject_key)? {
+                            Some(Value::Blob(hashes)) => hashes.to_owned(),
+                            Some(_) => empty_vec,
+                            None => empty_vec,
+                        };
+                    let new_cert_hash_list = CertHashList::remove(&old_cert_hash_list, hash)?;
+                    if new_cert_hash_list.len() != old_cert_hash_list.len() {
+                        env_and_store.store.put(
+                            &mut writer,
+                            &subject_key,
+                            &Value::Blob(&new_cert_hash_list),
+                        )?;
                     }
                 }
-                match env_and_store.store.delete(&mut writer, &cert_key) {
-                    Ok(()) => {}
-                    Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {}
-                    Err(e) => return Err(SecurityStateError::from(e)),
-                };
             }
-            writer.commit()?;
+            match env_and_store.store.delete(&mut writer, &cert_key) {
+                Ok(()) => {}
+                Err(StoreError::LmdbError(lmdb::Error::NotFound)) => {}
+                Err(e) => return Err(SecurityStateError::from(e)),
+            };
         }
-        self.reopen_store_read_only()?;
+        writer.commit()?;
         Ok(())
     }
 
