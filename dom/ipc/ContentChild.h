@@ -520,9 +520,10 @@ class ContentChild final : public PContentChild,
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
 
   mozilla::ipc::IPCResult RecvConstructBrowser(
-      ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
+      ManagedEndpoint<PBrowserChild>&& aBrowserEp,
+      ManagedEndpoint<PWindowGlobalChild>&& aWindowEp, const TabId& aTabId,
       const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+      const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
       const ContentParentId& aCpID, const bool& aIsForBrowser,
       const bool& aIsTopLevel);
 

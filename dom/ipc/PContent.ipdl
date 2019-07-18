@@ -37,6 +37,7 @@ include protocol PJavaScript;
 include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
+include protocol PWindowGlobal;
 include protocol PPresentation;
 include protocol PURLClassifier;
 include protocol PURLClassifierLocal;
@@ -388,9 +389,10 @@ parent:
 
 child:
     async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
+                           ManagedEndpoint<PWindowGlobalChild> windowEp,
                            TabId tabId, TabId sameTabGroupAs,
                            IPCTabContext context,
-                           BrowsingContext browsingContext,
+                           WindowGlobalInit windowInit,
                            uint32_t chromeFlags, ContentParentId cpId,
                            bool isForBrowser, bool isTopLevel);
 
