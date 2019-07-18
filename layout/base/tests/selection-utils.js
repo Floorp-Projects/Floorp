@@ -26,15 +26,15 @@ function dragSelectPointsWithData() {
   var x2 = arguments[4];
   var y2 = arguments[5];
   dir = x2 > x1 ? 1 : -1;
-  event["type"] = "mousedown";
+  event.type = "mousedown";
   synthesizeMouse(e, x1, y1, event);
-  event["type"] = "mousemove";
+  event.type = "mousemove";
   synthesizeMouse(e, x1 + dir, y1, event);
   for (var i = 6; i < arguments.length; ++i) {
     synthesizeMouse(e, arguments[i], y1, event);
   }
   synthesizeMouse(e, x2 - dir, y2, event);
-  event["type"] = "mouseup";
+  event.type = "mouseup";
   synthesizeMouse(e, x2, y2, event);
 }
 

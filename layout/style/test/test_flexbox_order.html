@@ -175,7 +175,7 @@ function main() {
 
   // Initial sanity-check: should be in expected document order
   let initialSnapshot = snapshotWindow(window, false);
-  complainIfSnapshotsDiffer(initialSnapshot, gRefSnapshots["abc"],
+  complainIfSnapshotsDiffer(initialSnapshot, gRefSnapshots.abc,
                             "initial flex container rendering, " +
                             "no 'order' value yet");
 
