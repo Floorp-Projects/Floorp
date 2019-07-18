@@ -7,6 +7,7 @@ package mozilla.components.support.ktx.kotlin
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import mozilla.components.support.base.log.logger.Logger
+import java.security.MessageDigest
 
 /**
  * Checks whether the given [test] byte sequence exists at the [offset] of this [ByteArray]
@@ -53,4 +54,33 @@ fun ByteArray.toBitmap(
         Logger.warn("OutOfMemoryError while decoding byte array", e)
         null
     }
+}
+
+fun ByteArray.toSha256Digest(): ByteArray {
+    return MessageDigest.getInstance("SHA-256").digest(this)
+}
+
+fun ByteArray.toHexString(): String {
+    return toHexString(2 * this.size)
+}
+
+@Suppress("MagicNumber")
+fun ByteArray.toHexString(hexLength: Int): String {
+    val hs = StringBuilder(Math.max(2 * this.size, hexLength))
+    var stmp: String
+
+    for (n in 0 until hexLength - 2 * this.size) {
+        hs.append("0")
+    }
+
+    for (n in this.indices) {
+        stmp = Integer.toHexString(this[n].toInt() and 0XFF)
+
+        if (stmp.length == 1) {
+            hs.append("0")
+        }
+        hs.append(stmp)
+    }
+
+    return hs.toString()
 }

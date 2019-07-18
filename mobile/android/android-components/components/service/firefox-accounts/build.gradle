@@ -36,6 +36,7 @@ dependencies {
 
     // Observable is part of public API of the FxaAccountManager.
     api project(':support-base')
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines

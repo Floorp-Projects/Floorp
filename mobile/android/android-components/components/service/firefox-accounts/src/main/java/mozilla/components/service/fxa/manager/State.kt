@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.manager
 
 import mozilla.components.concept.sync.AuthException
+import mozilla.components.service.fxa.sharing.ShareableAccount
 
 /**
  * States of the [FxaAccountManager].
@@ -45,6 +46,12 @@ internal sealed class Event {
             return this.javaClass.simpleName
         }
     }
+    data class SignInShareableAccount(val account: ShareableAccount) : Event() {
+        override fun toString(): String {
+            return this.javaClass.simpleName
+        }
+    }
+    object SignedInShareableAccount : Event()
     object RecoveredFromAuthenticationProblem : Event()
     object FetchProfile : Event()
     object FetchedProfile : Event()

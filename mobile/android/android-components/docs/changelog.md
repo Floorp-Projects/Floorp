@@ -107,6 +107,9 @@ permalink: /changelog/
   * Added the implementation for it to Firebase Push implementation.
   * Added `forceRegistrationRenewal` to the AutopushFeature for situations where our current registration token may be invalid for us to use.
 
+* **service-firefox-accounts**
+  * Added `AccountMigration`, which may be used to query trusted FxA Auth providers and automatically sign-in into available accounts.
+
 # 4.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v4.0.1)

@@ -34,6 +34,7 @@ interface OAuthAccount : AutoCloseable {
     fun checkAuthorizationStatusAsync(singleScope: String): Deferred<Boolean?>
     fun getTokenServerEndpointURL(): String
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
+    fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
     fun deviceConstellation(): DeviceConstellation
     fun toJSONString(): String
 }

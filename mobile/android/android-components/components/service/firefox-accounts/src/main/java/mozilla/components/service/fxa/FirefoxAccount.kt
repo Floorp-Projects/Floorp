@@ -137,6 +137,14 @@ class FirefoxAccount internal constructor(
         }
     }
 
+    override fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean> {
+        return scope.async {
+            handleFxaExceptions(logger, "migrateFromSessionToken") {
+                inner.migrateFromSessionToken(sessionToken, kSync, kXCS)
+            }
+        }
+    }
+
     /**
      * Convenience method to fetch the profile from a cached account by default, but fall back
      * to retrieval from the server.
