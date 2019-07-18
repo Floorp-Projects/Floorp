@@ -6,52 +6,82 @@ package mozilla.components.browser.icons.decoder
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Size
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.browser.icons.DesiredSize
 import mozilla.components.support.base.log.logger.Logger
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.min
 
 /**
  * [IconDecoder] that will use Android's [BitmapFactory] in order to decode the byte data.
  */
-class AndroidIconDecoder(
-    private val ignoreSize: Boolean = false
-) : IconDecoder {
+class AndroidIconDecoder : IconDecoder {
     private val logger = Logger("AndroidIconDecoder")
 
     override fun decode(data: ByteArray, desiredSize: DesiredSize): Bitmap? =
         try {
-            val (targetSize, maxSize, maxScaleFactor) = desiredSize
-            val bitmap = decodeBitmap(data)
+            val bounds = decodeBitmapBounds(data)
+            val maxBoundLength = max(bounds.width, bounds.height).toFloat()
 
-            when {
-                bitmap == null -> null
+            val sampleSize = floor(maxBoundLength / desiredSize.targetSize.toFloat()).toInt()
 
-                bitmap.width <= 0 || bitmap.height <= 0 -> {
-                    logger.debug("BitmapFactory returned too small bitmap with width or height <= 0")
-                    null
-                }
-
-                !ignoreSize && min(bitmap.width, bitmap.height) * maxScaleFactor < targetSize -> {
-                    logger.debug("BitmapFactory returned too small bitmap")
-                    null
-                }
-
-                !ignoreSize && max(bitmap.width, bitmap.height) * (1.0f / maxScaleFactor) > maxSize -> {
-                    logger.debug("BitmapFactory returned way too large image")
-                    null
-                }
-
-                else -> bitmap
+            if (isGoodSize(bounds, desiredSize)) {
+                decodeBitmap(data, sampleSize)
+            } else {
+                null
             }
         } catch (e: OutOfMemoryError) {
             null
         }
 
+    private fun isGoodSize(bounds: Size, desiredSize: DesiredSize): Boolean {
+        val (targetSize, maxSize, maxScaleFactor) = desiredSize
+        return when {
+            min(bounds.width, bounds.height) <= 0 -> {
+                logger.debug("BitmapFactory returned too small bitmap with width or height <= 0")
+                false
+            }
+
+            min(bounds.width, bounds.height) * maxScaleFactor < targetSize -> {
+                logger.debug("BitmapFactory returned too small bitmap")
+                false
+            }
+
+            max(bounds.width, bounds.height) * (1f / maxScaleFactor) > maxSize -> {
+                logger.debug("BitmapFactory returned way too large image")
+                false
+            }
+
+            else -> true
+        }
+    }
+
+    /**
+     * Decodes the width and height of a bitmap without loading it into memory.
+     */
     @VisibleForTesting(otherwise = PRIVATE)
-    internal fun decodeBitmap(data: ByteArray): Bitmap? {
-        return BitmapFactory.decodeByteArray(data, 0, data.size)
+    internal fun decodeBitmapBounds(data: ByteArray): Size {
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true
+        }
+        BitmapFactory.decodeByteArray(data, 0, data.size, options)
+        return Size(options.outWidth, options.outHeight)
+    }
+
+    /**
+     * Decodes a bitmap image.
+     *
+     * @param data Image bytes to decode.
+     * @param sampleSize Scale factor for the image.
+     */
+    @VisibleForTesting(otherwise = PRIVATE)
+    internal fun decodeBitmap(data: ByteArray, sampleSize: Int): Bitmap? {
+        val options = BitmapFactory.Options().apply {
+            inSampleSize = sampleSize
+        }
+        return BitmapFactory.decodeByteArray(data, 0, data.size, options)
     }
 }

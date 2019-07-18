@@ -191,7 +191,7 @@ private fun webAppIcons(
         DataUriIconLoader()
     ),
     decoders = listOf(
-        AndroidIconDecoder(ignoreSize = true),
+        AndroidIconDecoder(),
         ICOIconDecoder()
     ),
     processors = listOf(
