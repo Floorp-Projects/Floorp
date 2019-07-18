@@ -14,7 +14,6 @@ remote.jar:
   content/Protocol.jsm (Protocol.jsm)
   content/RecommendedPreferences.jsm (RecommendedPreferences.jsm)
   content/Sync.jsm (Sync.jsm)
-  content/WindowManager.jsm (WindowManager.jsm)
 
   # sessions
   content/sessions/frame-script.js (sessions/frame-script.js)
@@ -25,6 +24,7 @@ remote.jar:
 
   # targets
   content/targets/MainProcessTarget.jsm (targets/MainProcessTarget.jsm)
+  content/targets/TabObserver.jsm (targets/TabObserver.jsm)
   content/targets/TabTarget.jsm (targets/TabTarget.jsm)
   content/targets/Target.jsm (targets/Target.jsm)
   content/targets/Targets.jsm (targets/Targets.jsm)
@@ -51,6 +51,7 @@ remote.jar:
   content/domains/parent/network/NetworkObserver.jsm (domains/parent/network/NetworkObserver.jsm)
   content/domains/parent/Page.jsm (domains/parent/Page.jsm)
   content/domains/parent/Target.jsm (domains/parent/Target.jsm)
+  content/domains/parent/target/TabManager.jsm (domains/parent/target/TabManager.jsm)
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)

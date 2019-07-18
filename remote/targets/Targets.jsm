@@ -18,44 +18,91 @@ const { TabTarget } = ChromeUtils.import(
 const { MainProcessTarget } = ChromeUtils.import(
   "chrome://remote/content/targets/MainProcessTarget.jsm"
 );
+const { TabObserver } = ChromeUtils.import(
+  "chrome://remote/content/targets/TabObserver.jsm"
+);
 
 class Targets {
   constructor() {
-    // browser context ID -> Target<XULElement>
+    // Target ID -> Target
     this._targets = new Map();
 
     EventEmitter.decorate(this);
   }
 
-  /** @param {BrowserElement} browser */
-  async connect(browser) {
-    // The tab may just have been created and not fully initialized yet.
-    // Target class expects BrowserElement.browsingContext to be defined
-    // whereas it is asynchronously set by the custom element class.
-    // At least ensure that this property is set before instantiating the target.
-    if (!browser.browsingContext) {
-      await new MessagePromise(browser.messageManager, "Browser:Init");
-    }
-
-    const target = new TabTarget(this, browser);
-    target.connect();
-    this._targets.set(target.id, target);
-    this.emit("connect", target);
+  /**
+   * Start listing and listening for all the debuggable targets
+   */
+  async watchForTargets() {
+    await this.watchForTabs();
   }
 
-  /** @param {BrowserElement} browser */
-  disconnect(browser) {
-    // Ignore the browsers that haven't had time to initialize.
-    if (!browser.browsingContext) {
-      return;
-    }
+  unwatchForTargets() {
+    this.unwatchForTabs();
+  }
 
-    const target = this._targets.get(browser.browsingContext.id);
-    if (target) {
-      this.emit("disconnect", target);
-      target.destructor();
-      this._targets.delete(target.id);
+  /**
+   * Watch for all existing and new tabs being opened.
+   * So that we can create the related TabTarget instance for
+   * each of them.
+   */
+  async watchForTabs() {
+    if (this.tabObserver) {
+      throw new Error("Targets is already watching for new tabs");
     }
+    this.tabObserver = new TabObserver({ registerExisting: true });
+    this.tabObserver.on("open", async (eventName, tab) => {
+      const browser = tab.linkedBrowser;
+      // The tab may just have been created and not fully initialized yet.
+      // Target class expects BrowserElement.browsingContext to be defined
+      // whereas it is asynchronously set by the custom element class.
+      // At least ensure that this property is set before instantiating the target.
+      if (!browser.browsingContext) {
+        await new MessagePromise(browser.messageManager, "Browser:Init");
+      }
+      const target = new TabTarget(this, browser);
+      this.registerTarget(target);
+    });
+    this.tabObserver.on("close", (eventName, tab) => {
+      const browser = tab.linkedBrowser;
+      // Ignore the browsers that haven't had time to initialize.
+      if (!browser.browsingContext) {
+        return;
+      }
+      const target = this.getById(browser.browsingContext.id);
+      if (target) {
+        this.destroyTarget(target);
+      }
+    });
+    await this.tabObserver.start();
+  }
+
+  unwatchForTabs() {
+    if (this.tabObserver) {
+      this.tabObserver.stop();
+      this.tabObserver = null;
+    }
+  }
+
+  /**
+   * To be called right after instantiating a new Target instance.
+   * This will hold the new instance in the list and notify about
+   * its creation.
+   */
+  registerTarget(target) {
+    this._targets.set(target.id, target);
+    this.emit("target-created", target);
+  }
+
+  /**
+   * To be called when the debuggable target has been destroy.
+   * So that we can notify it no longer exists and disconnect
+   * all connecting made to debug it.
+   */
+  destroyTarget(target) {
+    target.destructor();
+    this._targets.delete(target.id);
+    this.emit("target-destroyed", target);
   }
 
   /**
@@ -64,17 +111,14 @@ class Targets {
    */
   destructor() {
     for (const target of this) {
-      // The main process target doesn't have a `browser` and so would fail here.
-      // Ignore it here, and instead destroy it individually right after this.
-      if (target != this.mainProcessTarget) {
-        this.disconnect(target.browser);
-      }
+      this.destroyTarget(target);
     }
     this._targets.clear();
     if (this.mainProcessTarget) {
-      this.mainProcessTarget.destructor();
       this.mainProcessTarget = null;
     }
+
+    this.unwatchForTargets();
   }
 
   get size() {
@@ -97,8 +141,7 @@ class Targets {
   getMainProcessTarget() {
     if (!this.mainProcessTarget) {
       this.mainProcessTarget = new MainProcessTarget(this);
-      this._targets.set(this.mainProcessTarget.id, this.mainProcessTarget);
-      this.emit("connect", this.mainProcessTarget);
+      this.registerTarget(this.mainProcessTarget);
     }
     return this.mainProcessTarget;
   }
