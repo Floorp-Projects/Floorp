@@ -318,6 +318,10 @@ class MessageChannel : HasResultCodes, MessageLoop::DestructionObserver {
    */
   bool IsCrossProcess() const { return mIsCrossProcess; }
 
+  // Return whether a message definitely originated from a middleman process,
+  // due to its sequence number.
+  static bool MessageOriginatesFromMiddleman(const Message& aMessage);
+
 #ifdef OS_WIN
   struct MOZ_STACK_CLASS SyncStackFrame {
     SyncStackFrame(MessageChannel* channel, bool interrupt);
