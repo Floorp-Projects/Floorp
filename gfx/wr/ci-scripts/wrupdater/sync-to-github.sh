@@ -92,7 +92,7 @@ git log --graph --stat moz-gfx/wrupdater..wrupdater
 set +e
 FIXES=$(
     git log master..wrupdater |
-    grep "\[import-pr\] From https://github.com/servo/webrender/pull" |
+    grep "\[import_pr\] From https://github.com/servo/webrender/pull" |
     sed -e "s%.*pull/% Fixes #%" |
     uniq |
     tr '\n' ','
