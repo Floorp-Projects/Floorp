@@ -97,8 +97,24 @@ body[focuseddatatype=cryptominer] {
   background-color: var(--blue-80);
 }
 
-.report-card.lockwise-card .card-header {
+.report-card.lockwise-card .card-header,
+.report-card.monitor-card.no-logins .card-header {
   grid-template-columns: 2fr 6fr 7fr;
+}
+
+
+/* We want to hide certain components depending on its state. */
+a.hidden,
+.card-body.hidden,
+.lockwise-card.hidden,
+#lockwise-body-content .has-logins.hidden,
+#lockwise-body-content .no-logins.hidden,
+.monitor-card.hidden,
+.monitor-card.no-logins .card-body,
+.monitor-card.no-logins #monitor-header-content a,
+.monitor-card.no-logins .inline-text-icon.monitor-scanned-text,
+.monitor-card.has-logins #sign-up-for-monitor-button {
+  display: none;
 }
 
 .icon {
@@ -114,6 +130,10 @@ body[focuseddatatype=cryptominer] {
 
 .lockwise-card .icon {
   background: url("chrome://browser/content/logos/lockwise.svg") no-repeat center/cover;
+}
+
+.monitor-card .icon {
+  background: url("chrome://browser/content/logos/monitor.svg") no-repeat center/cover;
 }
 
 .report-card {
@@ -389,13 +409,6 @@ label:hover {
   grid-gap: 10px;
 }
 
-a.hidden,
-.lockwise-card.hidden,
-#lockwise-body-content .has-logins.hidden,
-#lockwise-body-content .no-logins.hidden {
-  display: none;
-}
-
 .number-of-logins {
   background-color: var(--dark-grey);
 }
@@ -404,7 +417,7 @@ a.hidden,
   background-color: var(--orange);
 }
 
-.lockwise-text-icon {
+.inline-text-icon {
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-position-x: 3px;
@@ -427,10 +440,6 @@ a.hidden,
   background-image: url("chrome://browser/skin/sync.svg");
 }
 
-.non-logged-in-user-content {
-  grid-column: 2;
-}
-
 .block {
   border-radius: 4px;
   text-align: center;
@@ -442,4 +451,109 @@ a.hidden,
 
 #lockwise-body-content .has-logins a {
   margin-inline-start: 10px;
+}
+
+/* Monitor card */
+
+#monitor-body-content .monitor-breached-passwords {
+  grid: 1fr / minmax(70px, auto) 1fr;
+  grid-row: 3;
+  grid-column: span 3;
+  display: grid;
+  align-items: center;
+  font-size: 0.85rem;
+  border-top: var(--card-divider);
+  padding-top: 20px;
+  line-height: 18px;
+  grid-column-gap: 10px;
+}
+
+.monitor-scanned-text {
+  background-image: url("chrome://browser/skin/reload.svg");
+  font-size: 0.85rem;
+}
+
+.monitor-card #monitor-header-content > a {
+  display: block;
+  margin-block-start: 5px;
+}
+
+.monitor-card.has-logins #monitor-body-content {
+  display: grid;
+  grid: 2fr 1fr auto / repeat(3, 160px);
+  grid-column-gap: 12px;
+  align-items: center;
+}
+
+.monitor-block {
+  display: flex;
+  flex-direction: column;
+  border-radius: 4px;
+  color: #FFFFFF;
+  text-align: center;
+  padding: 25px 5px 25px 5px;
+}
+
+.email {
+  background: linear-gradient(162.33deg, #AB71FF 0%, #9059FF 100%);
+}
+
+.email .monitor-icon {
+  background-image: url(chrome://browser/skin/mail.svg);
+}
+
+.breaches {
+  background: linear-gradient(162.33deg, #9059FF 0%, #7542E5 100%);
+}
+
+.breaches .monitor-icon {
+  background-image: url(chrome://browser/skin/fxa/avatar.svg);
+}
+
+.passwords {
+  background: linear-gradient(162.33deg, #7542E5 0%, #592ACB 100%);
+}
+
+.passwords .monitor-icon {
+  background-image: url(chrome://browser/skin/login.svg);
+}
+
+.monitor-view-full-report {
+  grid-row: 2;
+  grid-column: span 2;
+  font-size: 0.85rem;
+}
+
+.monitor-stat {
+  display: flex;
+  font-size: 1.75rem;
+  font-weight: bold;
+  margin-block-end: 5px;
+  word-break: break-all;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.monitor-stat .monitor-icon {
+  background-size: 24px 24px;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill,fill-opacity;
+  fill: white;
+  fill-opacity: 0.65;
+  width: 24px;
+  height: 24px;
+  display: block;
+  padding: 5px;
+  background-position-y: center;
+}
+
+.info-text {
+  font-size: .69rem;
+  line-height: 13px;
+  margin-block-start: 5px;
+}
+
+.number-of-breaches.block {
+  background-color: var(--orange);
+  padding: 15px;
 }
