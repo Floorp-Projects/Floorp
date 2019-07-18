@@ -144,11 +144,22 @@ function getUnicodeExtensions(locale) {
     if (!callFunction(ts.nextToken, ts))    \
         return null;
 
+#define NEXT_TOKEN_OR_ASSERT(ts)            \
+    if (!callFunction(ts.nextToken, ts))    \
+        assert(false, "unexpected invalid subtag");
+
 // Assigns the current subtag part transformed to lower-case to the target.
 #define SUBTAG_VAR_OR_RETURN_NULL(ts, target)                                   \
     {                                                                           \
         target = Substring(ts.localeLowercase, ts.tokenStart, ts.tokenLength);  \
         NEXT_TOKEN_OR_RETURN_NULL(ts);                                          \
+    }
+
+// Assigns the current subtag part transformed to lower-case to the target.
+#define SUBTAG_VAR_OR_ASSERT(ts, target)                                        \
+    {                                                                           \
+        target = Substring(ts.localeLowercase, ts.tokenStart, ts.tokenLength);  \
+        NEXT_TOKEN_OR_ASSERT(ts)                                                \
     }
 
 /**
@@ -561,6 +572,109 @@ function parseLanguageTag(locale) {
         privateuse,
     };
 }
+
+/**
+ * Return the locale and fields components of the given valid Transform
+ * extension subtag.
+ */
+function TransformExtensionComponents(extension) {
+    assert(typeof extension === "string", "extension is a String value");
+    assert(callFunction(std_String_startsWith, extension, "t-"),
+           "extension starts with 't-'");
+
+    var ts = new BCP47TokenStream(Substring(extension, 2, extension.length - 2));
+    NEXT_TOKEN_OR_ASSERT(ts);
+
+    // `tfield` starts with `tkey`, which in turn is `alpha digit`, so
+    // an alpha-only token must be a `tlang`.
+    var localeObj;
+    if (ts.token === ALPHA) {
+        // `unicode_language_subtag`
+        assert((2 <= ts.tokenLength && ts.tokenLength <= 3) ||
+                (5 <= ts.tokenLength && ts.tokenLength <= 8),
+                "language subtags have 2-3 or 5-8 letters");
+
+        var language;
+        SUBTAG_VAR_OR_ASSERT(ts, language);
+
+        // unicode_script_subtag = alpha{4} ;
+        var script;
+        if (ts.tokenLength === 4 && ts.token === ALPHA) {
+            SUBTAG_VAR_OR_ASSERT(ts, script);
+
+            // The first character of a script code needs to be capitalized.
+            // "hans" -> "Hans"
+            script = callFunction(std_String_toUpperCase, script[0]) +
+                     Substring(script, 1, script.length - 1);
+        }
+
+        // unicode_region_subtag = (alpha{2} | digit{3}) ;
+        var region;
+        if ((ts.tokenLength === 2 && ts.token === ALPHA) ||
+            (ts.tokenLength === 3 && ts.token === DIGIT))
+        {
+            SUBTAG_VAR_OR_ASSERT(ts, region);
+
+            // Region codes need to be in upper-case. "bu" -> "BU"
+            region = callFunction(std_String_toUpperCase, region);
+        }
+
+        // unicode_variant_subtag = (alphanum{5,8}
+        //                        | digit alphanum{3}) ;
+        //
+        // alphanum               = [0-9 A-Z a-z] ;
+        var variants = [];
+        while ((5 <= ts.tokenLength && ts.tokenLength <= 8) ||
+               (ts.tokenLength === 4 && callFunction(ts.isDigitAt, ts, 0)))
+        {
+            var variant;
+            SUBTAG_VAR_OR_ASSERT(ts, variant);
+
+            _DefineDataProperty(variants, variants.length, variant);
+        }
+
+        localeObj = {
+            language,
+            script,
+            region,
+            variants,
+            extensions: [],
+            privateuse: undefined,
+        };
+    }
+
+    // Trailing `tfield` subtags. (Any other trailing subtags are an error,
+    // because we're guaranteed to only see a valid tranform extension here.)
+    var fields = [];
+    while (ts.tokenLength === 2) {
+        // `tkey` is `alpha digit`.
+        assert(!callFunction(ts.isDigitAt, ts, 0) && callFunction(ts.isDigitAt, ts, 1),
+               "unexpected invalid tkey subtag");
+
+        var key;
+        SUBTAG_VAR_OR_ASSERT(ts, key);
+
+        // `tfield` requires at least one `tvalue`.
+        assert(3 <= ts.tokenLength && ts.tokenLength <= 8,
+               "unexpected invalid tvalue subtag");
+
+        var value;
+        SUBTAG_VAR_OR_ASSERT(ts, value);
+
+        while (3 <= ts.tokenLength && ts.tokenLength <= 8) {
+            var part;
+            SUBTAG_VAR_OR_ASSERT(ts, part);
+            value += "-" + part;
+        }
+
+        _DefineDataProperty(fields, fields.length, {key, value});
+    }
+
+    assert(ts.token === NONE,
+           "unexpected trailing characters in promised-to-be-valid transform extension");
+
+    return {locale: localeObj, fields};
+}
 /* eslint-enable complexity */
 
 #undef NONE
@@ -578,7 +692,9 @@ function parseLanguageTag(locale) {
 #undef LOWER_X
 #undef LOWER_Z
 
+#undef SUBTAG_VAR_OR_ASSERT
 #undef SUBTAG_VAR_OR_RETURN_NULL
+#undef NEXT_TOKEN_OR_ASSERT
 #undef NEXT_TOKEN_OR_RETURN_NULL
 
 /**
@@ -716,10 +832,13 @@ function CanonicalizeLanguageTagObject(localeObj) {
             if (ext[0] === "u") {
                 var {attributes, keywords} = UnicodeExtensionComponents(ext);
                 extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords);
-                break;
             }
 
-            // TODO: Canonicalize Unicode BCP 47 T extension if present.
+            // Canonicalize Unicode BCP 47 T extension if present.
+            if (ext[0] === "t") {
+                var {locale, fields} = TransformExtensionComponents(ext);
+                extensions[i] = CanonicalizeTransformExtension(locale, fields);
+            }
         }
     }
 
@@ -899,6 +1018,77 @@ function CanonicalizeUnicodeExtension(attributes, keywords) {
         // Type value "true" is removed.
         if (value !== "" && value !== "true")
             extension += "-" + value;
+    }
+
+    return extension;
+}
+
+/**
+ * CanonicalizeTransformExtension
+ *
+ * Canonical form per <https://unicode.org/reports/tr35/#BCP47_T_Extension>:
+ *
+ * - These subtags are all in lowercase (that is the canonical casing for these
+ *   subtags), [...].
+ *
+ * And per <https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers>:
+ *
+ * - All keywords and tfields are sorted by alphabetical order of their keys,
+ *   within their respective extensions.
+ */
+function CanonicalizeTransformExtension(localeObj, fields) {
+    assert(localeObj !== undefined || fields.length > 0,
+           "unexpected empty Transform locale extension components");
+
+    if (fields.length > 0) {
+        function TransformKeySort(left, right) {
+            var leftKey = left.key;
+            var rightKey = right.key;
+            assert(leftKey.length === 2, "left key is a Transform key");
+            assert(rightKey.length === 2, "right key is a Transform key");
+
+            // Compare both strings using charCodeAt(), because relational
+            // string comparison always calls into the VM, whereas charCodeAt
+            // can be inlined by Ion.
+            var diff = callFunction(std_String_charCodeAt, leftKey, 0) -
+                       callFunction(std_String_charCodeAt, rightKey, 0);
+            if (diff === 0) {
+                diff = callFunction(std_String_charCodeAt, leftKey, 1) -
+                       callFunction(std_String_charCodeAt, rightKey, 1);
+            }
+            return diff;
+        }
+
+        callFunction(ArraySort, fields, TransformKeySort);
+    }
+
+    var extension = "t";
+
+    // Append the language subtag if present.
+    if (localeObj !== undefined) {
+        // [1] is a bit unclear whether or not the `tlang` subtag also needs
+        // to be canonicalized (and case-adjusted). For now simply append it as
+        // is and change it to all lower-case. If we switch to [2], the `tlang`
+        // subtag also needs to be canonicalized according to the same rules as
+        // `unicode_language_id` subtags are canonicalized. Also see [3].
+        //
+        // [1] https://unicode.org/reports/tr35/#Language_Tag_to_Locale_Identifier
+        // [2] https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
+        // [3] https://github.com/tc39/ecma402/issues/330
+        var localeStr = StringFromLanguageTagObject(localeObj);
+        extension += "-" + callFunction(std_String_toLowerCase, localeStr);
+    }
+
+    // Append all fields.
+    for (var i = 0; i < fields.length; i++) {
+        // UTS 35, 3.2.1 specifies:
+        // - Any type or tfield value "true" is removed.
+        //
+        // But the `tvalue` subtag is mandatory in `tfield: tkey tvalue`, so
+        // ignore this apparently invalid part of the UTS 35 specification and
+        // simply append all `tfield` subtags.
+        var {key, value} = fields[i];
+        extension += "-" + key + "-" + value;
     }
 
     return extension;
