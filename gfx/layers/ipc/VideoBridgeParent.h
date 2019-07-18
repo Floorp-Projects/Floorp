@@ -33,11 +33,6 @@ class VideoBridgeParent final : public PVideoBridgeParent,
                                       const uint64_t& aSerial);
   bool DeallocPTextureParent(PTextureParent* actor);
 
-  mozilla::ipc::IPCResult RecvFlush(FlushResolver&& aResolver) {
-    aResolver(true);
-    return IPC_OK();
-  }
-
   // HostIPCAllocator
   base::ProcessId GetChildProcessId() override { return OtherPid(); }
   void NotifyNotUsed(PTextureParent* aTexture,
