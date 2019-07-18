@@ -203,10 +203,11 @@ class BlocklistDescriptor(object):
         """
         seen = set()
         for e in defs:
-            if e not in seen:
-                seen.add(e)
+            name = e.get_name()
+            if name not in seen:
+                seen.add(name)
             else:
-                raise ValueError('Duplicate entry found: %s' % e.get_name())
+                raise ValueError('Duplicate entry found: %s' % name)
 
     @staticmethod
     def get_test_entries(exec_env, blocklist):

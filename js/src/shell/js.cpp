@@ -4251,37 +4251,41 @@ static void WatchdogMain(JSContext* cx) {
 
   ShellContext* sc = GetShellContext(cx);
 
-  LockGuard<Mutex> guard(sc->watchdogLock);
-  while (sc->watchdogThread) {
-    auto now = TimeStamp::Now();
-    if (sc->watchdogTimeout && now >= sc->watchdogTimeout.value()) {
-      /*
-       * The timeout has just expired. Request an interrupt callback
-       * outside the lock.
-       */
-      sc->watchdogTimeout = Nothing();
-      {
-        UnlockGuard<Mutex> unlock(guard);
-        CancelExecution(cx);
-      }
-
-      /* Wake up any threads doing sleep. */
-      sc->sleepWakeup.notify_all();
-    } else {
-      if (sc->watchdogTimeout) {
+  {
+    LockGuard<Mutex> guard(sc->watchdogLock);
+    while (sc->watchdogThread) {
+      auto now = TimeStamp::Now();
+      if (sc->watchdogTimeout && now >= sc->watchdogTimeout.value()) {
         /*
-         * Time hasn't expired yet. Simulate an interrupt callback
-         * which doesn't abort execution.
+         * The timeout has just expired. Request an interrupt callback
+         * outside the lock.
          */
-        JS_RequestInterruptCallback(cx);
-      }
+        sc->watchdogTimeout = Nothing();
+        {
+          UnlockGuard<Mutex> unlock(guard);
+          CancelExecution(cx);
+        }
 
-      TimeDuration sleepDuration = sc->watchdogTimeout
-                                       ? TimeDuration::FromSeconds(0.1)
-                                       : TimeDuration::Forever();
-      sc->watchdogWakeup.wait_for(guard, sleepDuration);
+        /* Wake up any threads doing sleep. */
+        sc->sleepWakeup.notify_all();
+      } else {
+        if (sc->watchdogTimeout) {
+          /*
+           * Time hasn't expired yet. Simulate an interrupt callback
+           * which doesn't abort execution.
+           */
+          JS_RequestInterruptCallback(cx);
+        }
+
+        TimeDuration sleepDuration = sc->watchdogTimeout
+                                         ? TimeDuration::FromSeconds(0.1)
+                                         : TimeDuration::Forever();
+        sc->watchdogWakeup.wait_for(guard, sleepDuration);
+      }
     }
   }
+
+  Mutex::ShutDown();
 }
 
 static bool ScheduleWatchdog(JSContext* cx, double t) {

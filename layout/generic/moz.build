@@ -110,6 +110,7 @@ EXPORTS += [
     'nsIScrollableFrame.h',
     'nsIScrollPositionListener.h',
     'nsIStatefulFrame.h',
+    'nsLineBox.h',
     'nsPageSequenceFrame.h',
     'nsPluginFrame.h',
     'nsQueryFrame.h',

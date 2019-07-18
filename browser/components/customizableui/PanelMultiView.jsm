@@ -1731,7 +1731,11 @@ var PanelView = class extends AssociatedToNode {
         }
       // Fall-through...
       case "Tab": {
-        if (isContextMenuOpen()) {
+        if (
+          isContextMenuOpen() ||
+          // Tab in an open menulist should close it.
+          (focus && focus.localName == "menulist" && focus.open)
+        ) {
           break;
         }
         stop();

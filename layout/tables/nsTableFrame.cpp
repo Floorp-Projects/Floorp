@@ -2272,6 +2272,7 @@ struct ChildListInsertions {
 };
 
 void nsTableFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                const nsLineList::iterator* aPrevFrameLine,
                                 nsFrameList& aFrameList) {
   // The frames in aFrameList can be a mix of row group frames and col group
   // frames. The problem is that they should go in separate child lists so

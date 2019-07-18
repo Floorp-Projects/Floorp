@@ -67,6 +67,7 @@ class nsRootBoxFrame final : public nsBoxFrame, public nsIPopupContainer {
   virtual void AppendFrames(ChildListID aListID,
                             nsFrameList& aFrameList) override;
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
 
@@ -124,6 +125,7 @@ void nsRootBoxFrame::AppendFrames(ChildListID aListID,
 }
 
 void nsRootBoxFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                  const nsLineList::iterator* aPrevFrameLine,
                                   nsFrameList& aFrameList) {
   // Because we only support a single child frame inserting is the same
   // as appending.
