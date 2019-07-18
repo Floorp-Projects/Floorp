@@ -9,6 +9,7 @@ var passwordsDialog;
 
 add_task(async function test_setup() {
   Services.logins.removeAllLogins();
+  Services.prefs.setCharPref(PREF_MANAGEMENT_URI, "");
 
   // add login data
   let nsLoginInfo = new Components.Constructor(
