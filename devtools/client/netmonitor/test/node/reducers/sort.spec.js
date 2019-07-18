@@ -3,8 +3,11 @@
 
 "use strict";
 
-const { Sort, sortReducer } = require("../../src/reducers/sort");
-const { SORT_BY } = require("../../src/constants");
+const {
+  Sort,
+  sortReducer,
+} = require("devtools/client/netmonitor/src/reducers/sort");
+const { SORT_BY } = require("devtools/client/netmonitor/src/constants");
 
 describe("sorting reducer", () => {
   it("it should sort by sort type", () => {
