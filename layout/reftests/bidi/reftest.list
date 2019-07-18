@@ -178,3 +178,4 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == 1426042-1.html 1426042-1
 == clone-intrinsic-size-bidi.html clone-intrinsic-size-bidi-ref.html
 == slice-intrinsic-size-bidi.html slice-intrinsic-size-bidi-ref.html
 == 1556414-1.html 1556414-1-ref.html
+== 1567036-1.html 1567036-1-ref.html
