@@ -2,7 +2,7 @@ use {Intersection, Plane, Polygon, Splitter};
 use is_zero;
 
 use binary_space_partition::{BspNode, Plane as BspPlane, PlaneCut};
-use euclid::{TypedPoint3D, TypedVector3D};
+use euclid::{Point3D, Vector3D};
 use euclid::approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
 
@@ -127,10 +127,10 @@ impl<T, U> Splitter<T, U> for BspSplitter<T, U> where
         self.tree.insert(poly);
     }
 
-    fn sort(&mut self, view: TypedVector3D<T, U>) -> &[Polygon<T, U>] {
+    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U>] {
         //debug!("\t\ttree before sorting {:?}", self.tree);
         let poly = Polygon {
-            points: [TypedPoint3D::origin(); 4],
+            points: [Point3D::origin(); 4],
             plane: Plane {
                 normal: -view, //Note: BSP `order()` is back to front
                 offset: T::zero(),
