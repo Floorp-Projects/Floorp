@@ -35,6 +35,8 @@ function getPrefsService(hud) {
       Services.prefs.getIntPref(getPrefName(pref), deflt),
     setBoolPref: (pref, value) =>
       Services.prefs.setBoolPref(getPrefName(pref), value),
+    setIntPref: (pref, value) =>
+      Services.prefs.setIntPref(getPrefName(pref), value),
     clearUserPref: pref => Services.prefs.clearUserPref(getPrefName(pref)),
     getPrefName,
   };

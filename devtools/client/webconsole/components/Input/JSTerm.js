@@ -114,6 +114,7 @@ class JSTerm extends Component {
       autocompleteData: PropTypes.object.isRequired,
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
+      editorWidth: PropTypes.number,
       autocomplete: PropTypes.bool,
     };
   }
@@ -154,6 +155,10 @@ class JSTerm extends Component {
   }
 
   componentDidMount() {
+    if (this.props.editorMode) {
+      this.setEditorWidth(this.props.editorWidth);
+    }
+
     const autocompleteOptions = {
       onSelect: this.onAutocompleteSelect.bind(this),
       onClick: this.acceptProposedCompletion.bind(this),
@@ -539,8 +544,33 @@ class JSTerm extends Component {
       this.updateAutocompletionPopup(nextProps.autocompleteData);
     }
 
-    if (this.editor && nextProps.editorMode !== this.props.editorMode) {
-      this.editor.setOption("lineNumbers", nextProps.editorMode);
+    if (nextProps.editorMode !== this.props.editorMode) {
+      if (this.editor) {
+        this.editor.setOption("lineNumbers", nextProps.editorMode);
+      }
+
+      if (nextProps.editorMode && nextProps.editorWidth) {
+        this.setEditorWidth(nextProps.editorWidth);
+      } else {
+        this.setEditorWidth(null);
+      }
+    }
+  }
+
+  /**
+   *
+   * @param {Number|null} editorWidth: The width to set the node to. If null, removes any
+   *                                   `width` property on node style.
+   */
+  setEditorWidth(editorWidth) {
+    if (!this.node) {
+      return;
+    }
+
+    if (editorWidth) {
+      this.node.style.width = `${editorWidth}px`;
+    } else {
+      this.node.style.removeProperty("width");
     }
   }
 
@@ -1795,6 +1825,9 @@ class JSTerm extends Component {
         key: "jsterm-container",
         style: { direction: "ltr" },
         "aria-live": "off",
+        ref: node => {
+          this.node = node;
+        },
       },
       dom.textarea({
         className: "jsterm-complete-node devtools-monospace",

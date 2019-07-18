@@ -47,6 +47,7 @@ const actionTypes = {
   PAUSED_EXCECUTION_POINT: "PAUSED_EXCECUTION_POINT",
   WARNING_GROUPS_TOGGLE: "WARNING_GROUPS_TOGGLE",
   WILL_NAVIGATE: "WILL_NAVIGATE",
+  EDITOR_SET_WIDTH: "EDITOR_SET_WIDTH",
 };
 
 const prefs = {
@@ -74,6 +75,8 @@ const prefs = {
       CONTENT_MESSAGES: "devtools.browserconsole.contentMessages",
       // Display timestamp in messages.
       MESSAGE_TIMESTAMP: "devtools.webconsole.timestampMessages",
+      // Store the editor width.
+      EDITOR_WIDTH: "input.editorWidth",
     },
     FEATURES: {
       // We use the same pref to enable the sidebar on webconsole and browser console.
