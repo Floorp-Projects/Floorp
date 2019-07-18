@@ -52,6 +52,10 @@ class WebAppShortcutManager(
     @VisibleForTesting
     internal val icons = webAppIcons(context, httpClient)
 
+    private val fallbackLabel = {
+        context.getString(R.string.mozac_feature_pwa_default_shortcut_label)
+    }
+
     /**
      * Request to create a new shortcut on the home screen.
      */
@@ -95,7 +99,7 @@ class WebAppShortcutManager(
         }
 
         val builder = ShortcutInfoCompat.Builder(context, session.url)
-            .setShortLabel(session.title)
+            .setShortLabel(session.title.ifBlank(fallbackLabel))
             .setIntent(shortcutIntent)
 
         session.icon?.let {
@@ -114,11 +118,12 @@ class WebAppShortcutManager(
             data = manifest.startUrl.toUri()
         }
 
+        val shortLabel = manifest.shortName ?: manifest.name
         storage.saveManifest(manifest)
 
         return ShortcutInfoCompat.Builder(context, manifest.startUrl)
             .setLongLabel(manifest.name)
-            .setShortLabel(manifest.shortName ?: manifest.name)
+            .setShortLabel(shortLabel.ifBlank(fallbackLabel))
             .setIcon(buildIconFromManifest(manifest))
             .setIntent(shortcutIntent)
             .build()
