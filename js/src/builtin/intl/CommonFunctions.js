@@ -948,16 +948,17 @@ function UnicodeExtensionComponents(extension) {
 /**
  * CanonicalizeUnicodeExtension( attributes, keywords )
  *
- * Canonical form per <https://unicode.org/reports/tr35/#u_Extension>:
+ * Canonical syntax per <https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers>:
  *
- * - All attributes are sorted in alphabetical order.
- * - All keywords are sorted by alphabetical order of keys.
- * - All keywords are in lowercase.
+ * - All attributes and keywords are in lowercase.
  *   - Note: The parser already converted keywords to lowercase.
+ * - All attributes are sorted in alphabetical order.
+ * - All keywords are sorted by alphabetical order of their keys.
+ * - Any type value "true" is removed.
+ *
+ * Canonical form:
  * - All keys and types use the canonical form (from the name attribute;
  *   see Section 3.6.4 U Extension Data Files).
- *   - Note: Not yet implemented (bug 1522070).
- * - Type value "true" is removed.
  */
 function CanonicalizeUnicodeExtension(attributes, keywords) {
     assert(attributes.length > 0 || keywords.length > 0,
