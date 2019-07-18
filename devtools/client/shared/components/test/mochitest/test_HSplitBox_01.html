@@ -40,7 +40,7 @@ window.onload = async function () {
 
     const newSizes = [];
 
-    function renderBox(props) {
+    async function renderBox(props) {
       const boxProps = Object.assign({
         start: "hello!",
         end: "world!",
@@ -49,10 +49,15 @@ window.onload = async function () {
           newSizes.push(newSize);
         }
       }, props);
-      return ReactDOM.render(HSplitBox(boxProps), window.document.body);
+      const el = ReactDOM.render(HSplitBox(boxProps), window.document.body);
+      // wait until the element is rendered.
+      await SimpleTest.promiseWaitForCondition(
+        () => document.querySelector(".devtools-side-splitter")
+      );
+      return el;
     }
 
-    const box = renderBox();
+    const box = await renderBox();
 
     // Test that we properly rendered our two panes.
 
@@ -65,7 +70,7 @@ window.onload = async function () {
 
     // Now change the left width and assert that the changes are reflected.
 
-    renderBox({ startWidth: .25 });
+    await renderBox({ startWidth: .25 });
     panes = document.querySelectorAll(".h-split-box-pane");
     is(panes.length, 2, "Should still have two panes");
     is(panes[0].style.flexGrow, "0.25", "First pane's width should be .25");

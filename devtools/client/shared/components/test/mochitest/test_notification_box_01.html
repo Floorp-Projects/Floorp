@@ -30,26 +30,19 @@ window.onload = async function () {
     const renderedBox = shallowRenderComponent(NotificationBox, {});
     is(renderedBox.type, "div", "NotificationBox is rendered as <div>");
 
-    // Test rendering
+    info("Test rendering NotificationBox with default props");
     let boxElement = React.createElement(NotificationBox);
     let notificationBox = TestUtils.renderIntoDocument(boxElement);
     let notificationNode = ReactDOM.findDOMNode(notificationBox);
 
-    is(notificationNode.className, "notificationbox",
-      "NotificationBox has expected classname");
+    ok(notificationNode.classList.contains("notificationbox"),
+      "NotificationBox has expected class");
+    ok(notificationNode.classList.contains("border-bottom"),
+      "NotificationBox has expected class");
     is(notificationNode.textContent, "",
       "Empty NotificationBox has no text content");
 
     checkNumberOfNotifications(notificationBox, 0);
-
-    // Append wrapping classname to the dom element when passing wrapping prop
-    const renderedBoxWrapped = shallowRenderComponent(NotificationBox, {});
-    let boxElementWrapped = React.createElement(NotificationBox, {wrapping: true});
-    let notificationBoxWrapped = TestUtils.renderIntoDocument(boxElementWrapped);
-    let wrappedNotificationNode = ReactDOM.findDOMNode(notificationBoxWrapped);
-
-    is(wrappedNotificationNode.className, "notificationbox wrapping",
-      "Wrapped notificationBox has expected classname");
 
     // Append a notification
     notificationBox.appendNotification(
@@ -100,6 +93,28 @@ window.onload = async function () {
 
     notificationBox.getNotificationWithValue("id3").close();
     checkNumberOfNotifications(notificationBox, 0);
+
+    info(`Check "wrapping" prop works as expected`);
+    // Append wrapping classname to the dom element when passing wrapping prop
+    let boxElementWrapped = React.createElement(NotificationBox, {wrapping: true});
+    let notificationBoxWrapped = TestUtils.renderIntoDocument(boxElementWrapped);
+    let wrappedNotificationNode = ReactDOM.findDOMNode(notificationBoxWrapped);
+
+    ok(wrappedNotificationNode.classList.contains("wrapping"),
+      "Wrapped notificationBox has expected class");
+
+    info(`Check "displayBorderTop/displayBorderBottom" props work as expected`);
+    let element = React.createElement(NotificationBox, {
+      displayBorderTop: true,
+      displayBorderBottom: false,
+    });
+    let renderedElement = TestUtils.renderIntoDocument(element);
+    let elementNode = ReactDOM.findDOMNode(renderedElement);
+
+    ok(elementNode.classList.contains("border-top"),
+      "truthy displayBorderTop render a border-top className");
+    ok(!elementNode.classList.contains("border-bottom"),
+      "falsy displayBorderBottom does not render a border-bottom className");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

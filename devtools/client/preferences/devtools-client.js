@@ -290,6 +290,10 @@ pref("devtools.webconsole.features.editor", false);
 // Saved editor mode state in the console.
 pref("devtools.webconsole.input.editor", false);
 
+// Editor width for webconsole and browserconsole
+pref("devtools.webconsole.input.editorWidth", 0);
+pref("devtools.browserconsole.input.editorWidth", 0);
+
 // Disable the new performance recording panel by default
 pref("devtools.performance.new-panel-enabled", false);
 

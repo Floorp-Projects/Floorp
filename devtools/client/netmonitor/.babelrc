@@ -1,7 +1,0 @@
-{
-  "plugins": [
-    "transform-react-jsx",
-    "transform-object-rest-spread",
-    "transform-flow-strip-types",
-  ],
-}

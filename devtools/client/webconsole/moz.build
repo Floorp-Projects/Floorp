@@ -18,7 +18,6 @@ DevToolsModules(
     'browser-console.js',
     'constants.js',
     'hudservice.js',
-    'main.js',
     'panel.js',
     'store.js',
     'types.js',

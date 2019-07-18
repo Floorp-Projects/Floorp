@@ -257,6 +257,16 @@
       Type.fsblkcnt_t = Type.uintn_t(Const.OSFILE_SIZEOF_FSBLKCNT_T).withName(
         "fsblkcnt_t"
       );
+      // There is no guarantee of the size or order of members in sys-header structs
+      // It mostly is "unsigned long", but can be "unsigned int" as well.
+      // So it has its own "type".
+      // NOTE: This is still only partially correct, as signedness is also not guaranteed,
+      //       so assuming an unsigned int might still be wrong here.
+      //       But unsigned seems to have worked all those years, even though its signed
+      //       on various platforms.
+      Type.statvfs_f_frsize = Type.uintn_t(
+        Const.OSFILE_SIZEOF_STATVFS_F_FRSIZE
+      ).withName("statvfs_f_rsize");
 
       // Structure |statvfs|
       // Use an hollow structure
@@ -269,7 +279,7 @@
         statvfs.add_field_at(
           Const.OSFILE_OFFSETOF_STATVFS_F_FRSIZE,
           "f_frsize",
-          Type.unsigned_long.implementation
+          Type.statvfs_f_frsize.implementation
         );
         statvfs.add_field_at(
           Const.OSFILE_OFFSETOF_STATVFS_F_BAVAIL,
