@@ -1674,6 +1674,13 @@ void MacroAssembler::assertRectifierFrameParentType(Register frameType) {
 }
 
 void MacroAssembler::loadJitCodeRaw(Register func, Register dest) {
+  static_assert(
+      JSScript::offsetOfJitCodeRaw() == LazyScript::offsetOfJitCodeRaw(),
+      "LazyScript and JSScript must use same layout for jitCodeRaw_");
+  static_assert(
+      JSScript::offsetOfJitCodeRaw() ==
+          SelfHostedLazyScript::offsetOfJitCodeRaw(),
+      "SelfHostedLazyScript and JSScript must use same layout for jitCodeRaw_");
   loadPtr(Address(func, JSFunction::offsetOfScript()), dest);
   loadPtr(Address(dest, JSScript::offsetOfJitCodeRaw()), dest);
 }
@@ -2920,8 +2927,10 @@ void MacroAssembler::moveRegPair(Register src0, Register src1, Register dst0,
 void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
                                                        Register scratch,
                                                        Label* label) {
-  // First, ensure it's a scripted function.
-  branchTestFunctionFlags(fun, JSFunction::INTERPRETED, Assembler::Zero, label);
+  // First, ensure it's a scripted function. It is fine if it is still lazy.
+  branchTestFunctionFlags(
+      fun, JSFunction::INTERPRETED | JSFunction::INTERPRETED_LAZY,
+      Assembler::Zero, label);
 
   // Check if the CONSTRUCTOR bit is set.
   branchTestFunctionFlags(fun, JSFunction::CONSTRUCTOR, Assembler::Zero, label);

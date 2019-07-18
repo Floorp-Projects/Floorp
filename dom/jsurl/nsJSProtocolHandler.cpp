@@ -129,6 +129,25 @@ static nsIScriptGlobalObject* GetGlobalObject(nsIChannel* aChannel) {
   return global;
 }
 
+static bool AllowedByCSP(nsIContentSecurityPolicy* aCSP) {
+  if (!aCSP) {
+    return true;
+  }
+
+  bool allowsInlineScript = true;
+  nsresult rv = aCSP->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
+                                      EmptyString(),  // aNonce
+                                      true,           // aParserCreated
+                                      nullptr,        // aElement,
+                                      nullptr,        // nsICSPEventListener
+                                      EmptyString(),  // aContent
+                                      0,              // aLineNumber
+                                      0,              // aColumnNumber
+                                      &allowsInlineScript);
+
+  return (NS_SUCCEEDED(rv) && allowsInlineScript);
+}
+
 nsresult nsJSThunk::EvaluateScript(
     nsIChannel* aChannel,
     mozilla::dom::PopupBlocker::PopupControlState aPopupState,
@@ -158,43 +177,15 @@ nsresult nsJSThunk::EvaluateScript(
 
   nsresult rv;
 
-  // CSP check: javascript: URIs disabled unless "inline" scripts are
-  // allowed.  Here we use the CSP of the thing that started the load,
-  // which is the CSPToInherit of the loadInfo.
+  // CSP check: javascript: URIs are disabled unless "inline" scripts
+  // are allowed by both the CSP of the thing that started the load
+  // (which is the CSPToInherit of the loadinfo) and the CSP of the
+  // target document.  The target document check is performed below,
+  // once we have determined the target document.
   nsCOMPtr<nsIContentSecurityPolicy> csp = loadInfo->GetCspToInherit();
-  if (csp) {
-    bool allowsInlineScript = true;
-    rv = csp->GetAllowsInline(nsIContentPolicy::TYPE_SCRIPT,
-                              EmptyString(),  // aNonce
-                              true,           // aParserCreated
-                              nullptr,        // aElement,
-                              nullptr,        // nsICSPEventListener
-                              EmptyString(),  // aContent
-                              0,              // aLineNumber
-                              0,              // aColumnNumber
-                              &allowsInlineScript);
-
-    // return early if inline scripts are not allowed
-    if (NS_FAILED(rv) || !allowsInlineScript) {
-      return NS_ERROR_DOM_RETVAL_UNDEFINED;
-    }
+  if (!AllowedByCSP(csp)) {
+    return NS_ERROR_DOM_RETVAL_UNDEFINED;
   }
-
-  // Based on the outcome of https://github.com/whatwg/html/issues/4651 we may
-  // want to also test against the CSP of the document we'll be running against
-  // (which is targetDoc below).  If we do that, we should make sure to only do
-  // that test if targetDoc->NodePrincipal() subsumes
-  // loadInfo->TriggeringPrincipal().  If it doesn't, then someone
-  // more-privileged (our UI or an extension) started the load and the load
-  // should not be subject to the target document's CSP.
-  //
-  // The "more privileged" assumption is safe, because if the triggering
-  // principal does not subsume targetDoc->NodePrincipal() we won't run the
-  // script at all.  More precisely, we test that "principal" subsumes the
-  // target's principal, but "principal" should never be higher-privilege than
-  // the triggering principal here: it's either the triggering principal, or the
-  // principal of the document we started the load against if the triggering
-  // principal is system.
 
   // Get the global object we should be running on.
   nsIScriptGlobalObject* global = GetGlobalObject(aChannel);
@@ -212,10 +203,34 @@ nsresult nsJSThunk::EvaluateScript(
 
   mozilla::dom::Document* targetDoc = innerWin->GetExtantDoc();
 
-  // Sandboxed document check: javascript: URI execution is disabled
-  // in a sandboxed document unless 'allow-scripts' was specified.
-  if (targetDoc && targetDoc->HasScriptsBlockedBySandbox()) {
-    return NS_ERROR_DOM_RETVAL_UNDEFINED;
+  if (targetDoc) {
+    // Sandboxed document check: javascript: URI execution is disabled
+    // in a sandboxed document unless 'allow-scripts' was specified.
+    if (targetDoc->HasScriptsBlockedBySandbox()) {
+      return NS_ERROR_DOM_RETVAL_UNDEFINED;
+    }
+
+    // Perform a Security check against the CSP of the document we are
+    // running against. javascript: URIs are disabled unless "inline"
+    // scripts are allowed. We only do that if targetDoc->NodePrincipal()
+    // subsumes loadInfo->TriggeringPrincipal(). If it doesn't, then
+    // someone more-privileged (our UI or an extension) started the
+    // load and hence the load should not be subject to the target
+    // document's CSP.
+    //
+    // The "more privileged" assumption is safe, because if the triggering
+    // principal does not subsume targetDoc->NodePrincipal() we won't run the
+    // script at all.  More precisely, we test that "principal" subsumes the
+    // target's principal, but "principal" should never be higher-privilege
+    // than the triggering principal here: it's either the triggering
+    // principal, or the principal of the document we started the load
+    // against if the triggering principal is system.
+    if (targetDoc->NodePrincipal()->Subsumes(loadInfo->TriggeringPrincipal())) {
+      nsCOMPtr<nsIContentSecurityPolicy> targetCSP = targetDoc->GetCsp();
+      if (!AllowedByCSP(targetCSP)) {
+        return NS_ERROR_DOM_RETVAL_UNDEFINED;
+      }
+    }
   }
 
   // Push our popup control state

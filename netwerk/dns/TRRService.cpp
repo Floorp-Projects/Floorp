@@ -531,22 +531,23 @@ bool TRRService::IsTRRBlacklisted(const nsACString& aHost,
 }
 
 bool TRRService::IsExcludedFromTRR(const nsACString& aHost) {
-  if (mExcludedDomains.GetEntry(aHost)) {
-    LOG(("Host [%s] Is Excluded From TRR via pref\n", aHost.BeginReading()));
-    return true;
-  }
+  int32_t dot = 0;
+  // iteratively check the sub-domain of |aHost|
+  while (dot < static_cast<int32_t>(aHost.Length())) {
+    nsDependentCSubstring subdomain =
+        Substring(aHost, dot, aHost.Length() - dot);
 
-  int32_t dot = aHost.FindChar('.');
-  if (dot != kNotFound) {
-    // there was a dot, check the parent first
-    dot++;
-    nsDependentCSubstring domain = Substring(aHost, dot, aHost.Length() - dot);
-    nsAutoCString check(domain);
-
-    // recursively check the domain part of this name
-    if (IsExcludedFromTRR(check)) {
+    if (mExcludedDomains.GetEntry(subdomain)) {
+      LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
+           subdomain.BeginReading(), aHost.BeginReading()));
       return true;
     }
+
+    dot = aHost.FindChar('.', dot + 1);
+    if (dot == kNotFound) {
+      break;
+    }
+    dot++;
   }
 
   return false;

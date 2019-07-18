@@ -14,6 +14,7 @@
     <link rel="icon" href="chrome://global/skin/icons/warning.svg">
     <script type="module" src="chrome://browser/content/protections.js"></script>
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
+    <script type="module" src="chrome://browser/content/monitor-card.js"></script>
     <title>Protection Report</title>
   </head>
 
@@ -82,6 +83,75 @@
           </div>
         </div>
       </div>
+     <!-- Markup for Monitor card. -->
+      <section class="report-card monitor-card hidden">
+          <div class="card-header">
+            <div class="icon"></div>
+            <div class="wrapper">
+              <h3 id="monitor-title" class="card-title">
+                Look out for data breaches
+              </h3>
+              <p id="monitor-header-content" class="content">
+                <span>
+                  <!-- Insert Monitor header content here. -->
+                </span>
+                <a href="">How it works</a>
+              </p>
+              <span class="inline-text-icon monitor-scanned-text">
+                Automatically scanned today
+              </span>
+            </div>
+            <button id="sign-up-for-monitor-button">
+              <!-- Insert Monitor button content here. -->
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="body-wrapper">
+              <div id="monitor-body-content">
+                <div class="monitor-block email">
+                  <span class="monitor-stat">
+                    <span class="monitor-icon"></span>
+                    <span data-type="stored-emails">
+                      <!-- Display number of stored emails here. -->
+                    </span>
+                  </span>
+                  <span class="info-text">Email address being monitored</span>
+                </div>
+                <div class="monitor-block breaches">
+                  <span class="monitor-stat">
+                    <span class="monitor-icon"></span>
+                    <span data-type="known-breaches">
+                      <!-- Display number of known breaches here. -->
+                    </span>
+                  </span>
+                  <span class="info-text">Known data breaches have exposed your information</span>
+                </div>
+                <div class="monitor-block passwords">
+                  <span class="monitor-stat">
+                      <span class="monitor-icon"></span>
+                      <span data-type="exposed-passwords">
+                        <!-- Display number of exposed passwords here. -->
+                      </span>
+                  </span>
+                  <span class="info-text">Passwords exposed across all breaches</span>
+                </div>
+                <div class="monitor-view-full-report">
+                  <span>View full report on</span>
+                  <a href="">Firefox Monitor</a>
+                </div>
+                <div class="monitor-breached-passwords">
+                  <span class="number-of-breaches block">
+                    <!-- Display number of exposed stored passwords here. -->
+                  </span>
+                  <span class="">
+                    Saved passwords have appeared in known data breaches. Change these passwords to protect your accounts.
+                    <a href="">Open Lockwise</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+      </section>
       <!-- Markup for Lockwise card. -->
       <section class="report-card lockwise-card hidden">
         <div class="card-header">
@@ -109,14 +179,14 @@
               <span class="number-of-logins block">
                 <!-- Display number of stored logins here. -->
               </span>
-              <span class="lockwise-text-icon passwords-stored-text">
+              <span class="inline-text-icon passwords-stored-text">
                 Passwords stored securely.
                 <a href="">How it works</a>
               </span>
               <span class="number-of-synced-devices block">
                 <!-- Display number of synced devices here. -->
               </span>
-              <span class="lockwise-text-icon synced-devices-text">
+              <span class="inline-text-icon synced-devices-text">
                 <span>
                   <!-- Display message for status of synced devices here. -->
                 </span>

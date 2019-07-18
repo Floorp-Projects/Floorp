@@ -796,7 +796,7 @@ static void InterpretedFunctionFilenameAndLineNumber(JSFunction* fun,
   if (fun->hasScript()) {
     *filename = fun->nonLazyScript()->maybeForwardedScriptSource()->filename();
     *lineno = Some((unsigned)fun->nonLazyScript()->lineno());
-  } else if (fun->lazyScriptOrNull()) {
+  } else if (fun->hasLazyScript()) {
     *filename = fun->lazyScript()->maybeForwardedScriptSource()->filename();
     *lineno = Some((unsigned)fun->lazyScript()->lineno());
   } else {

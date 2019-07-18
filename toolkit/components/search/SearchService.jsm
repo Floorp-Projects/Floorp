@@ -569,6 +569,7 @@ const gEmptyParseSubmissionResult = Object.freeze(
  */
 function SearchService() {
   this._initObservers = PromiseUtils.defer();
+  this._engines = new Map();
 }
 
 SearchService.prototype = {
@@ -601,6 +602,59 @@ SearchService.prototype = {
    * in this list. The list is controlled via remote settings.
    */
   _loadPathIgnoreList: [],
+
+  /**
+   * A map of engine short names to `SearchEngine`.
+   */
+  _engines: null,
+
+  /**
+   * An array of engine short names sorted into display order.
+   */
+  __sortedEngines: null,
+
+  /**
+   * This holds the current list of visible engines from the configuration,
+   * and is used to update the cache. If the cache value is different to those
+   * in the configuration, then the configuration has changed. The engines
+   * are loaded using both the new set, and the user's current set (if they
+   * still exist).
+   */
+  _visibleDefaultEngines: [],
+
+  /**
+   * The short name of the suggested default search engine from the configuration.
+   */
+  _searchDefault: null,
+
+  /**
+   * The suggested order of engines from the configuration.
+   */
+  _searchOrder: [],
+
+  /**
+   * A Set of installed search extensions reported by AddonManager
+   * startup before SearchSevice has started. Will be installed
+   * during init().
+   */
+  _startupExtensions: new Set(),
+
+  /**
+   * The current metadata stored in the cache. This stores:
+   *   - current
+   *       The current user-set default engine
+   *   - searchDefault
+   *       The current default engine (if any) specified by the region server.
+   *   - searchDefaultExpir
+   *       The expiry time for the default engine when the region server should
+   *       be re-checked.
+   *   - visibleDefaultEngines
+   *       The list of visible default engines supplied by the region server.
+   *
+   * All of the above except `searchDefaultExpir` have associated hash fields
+   * to validate the value is set by the application.
+   */
+  _metaData: {},
 
   // If initialization has not been completed yet, perform synchronous
   // initialization.
@@ -783,8 +837,7 @@ SearchService.prototype = {
     // We try to remove engines manually, as this should be more efficient and
     // we don't really want to cause a re-init as this upsets unit tests.
     let engineRemoved = false;
-    for (let name in this._engines) {
-      let engine = this._engines[name];
+    for (let engine of this._engines.values()) {
       if (this._engineMatchesIgnoreLists(engine)) {
         await this.removeEngine(engine);
         engineRemoved = true;
@@ -793,7 +846,7 @@ SearchService.prototype = {
     // If we've removed an engine, and we don't have any left, we need to do
     // a re-init - it is possible the cache just had one engine in it, and that
     // is now empty, so we need to load from our main list.
-    if (engineRemoved && !Object.keys(this._engines).length) {
+    if (engineRemoved && !this._engines.size) {
       this._reInit();
     }
   },
@@ -824,7 +877,6 @@ SearchService.prototype = {
     return false;
   },
 
-  _metaData: {},
   setGlobalAttr(name, val) {
     this._metaData[name] = val;
     this.batchTask.disarm();
@@ -851,16 +903,6 @@ SearchService.prototype = {
     (AppConstants.platform == "android"
       ? APP_SEARCH_PREFIX
       : EXT_SEARCH_PREFIX) + "list.json",
-
-  _engines: {},
-  __sortedEngines: null,
-  _visibleDefaultEngines: [],
-  _searchDefault: null,
-  _searchOrder: [],
-  // A Set of installed search extensions reported by AddonManager
-  // startup before SearchSevice has started. Will be installed
-  // during init().
-  _startupExtensions: new Set(),
 
   get _sortedEngines() {
     if (!this.__sortedEngines) {
@@ -941,11 +983,7 @@ SearchService.prototype = {
 
     cache.visibleDefaultEngines = this._visibleDefaultEngines;
     cache.metaData = this._metaData;
-    cache.engines = [];
-
-    for (let name in this._engines) {
-      cache.engines.push(this._engines[name]);
-    }
+    cache.engines = [...this._engines.values()];
 
     try {
       if (!cache.engines.length) {
@@ -1029,7 +1067,7 @@ SearchService.prototype = {
     if (!rebuildCache) {
       SearchUtils.log("_loadEngines: loading from cache directories");
       this._loadEnginesFromCache(cache);
-      if (Object.keys(this._engines).length) {
+      if (this._engines.size) {
         SearchUtils.log("_loadEngines: done using existing cache");
         return;
       }
@@ -1219,7 +1257,7 @@ SearchService.prototype = {
         }
 
         // Clear the engines, too, so we don't stick with the stale ones.
-        this._engines = {};
+        this._engines.clear();
         this.__sortedEngines = null;
         this._currentEngine = null;
         this._visibleDefaultEngines = [];
@@ -1289,7 +1327,7 @@ SearchService.prototype = {
     this._initObservers = PromiseUtils.defer();
     this._initStarted = this.__sortedEngines = this._currentEngine = this._searchDefault = null;
     this._startupExtensions = new Set();
-    this._engines = {};
+    this._engines.clear();
     this._visibleDefaultEngines = [];
     this._searchOrder = [];
     this._metaData = {};
@@ -1353,7 +1391,7 @@ SearchService.prototype = {
     // engine is updating another engine, it's allowed to have the same name.
     var hasSameNameAsUpdate =
       engine._engineToUpdate && engine.name == engine._engineToUpdate.name;
-    if (engine.name in this._engines && !hasSameNameAsUpdate) {
+    if (this._engines.has(engine.name) && !hasSameNameAsUpdate) {
       SearchUtils.log("_addEngineToStore: Duplicate engine found, aborting!");
       return;
     }
@@ -1364,7 +1402,7 @@ SearchService.prototype = {
 
       // Remove the old engine from the hash, since it's keyed by name, and our
       // name might change (the update might have a new name).
-      delete this._engines[oldEngine.name];
+      this._engines.delete(oldEngine.name);
 
       // Hack: we want to replace the old engine with the new one, but since
       // people may be holding refs to the nsISearchEngine objects themselves,
@@ -1379,11 +1417,11 @@ SearchService.prototype = {
       engine._engineToUpdate = null;
 
       // Add the engine back
-      this._engines[engine.name] = engine;
+      this._engines.set(engine.name, engine);
       SearchUtils.notifyAction(engine, SearchUtils.MODIFIED_TYPE.CHANGED);
     } else {
       // Not an update, just add the new engine.
-      this._engines[engine.name] = engine;
+      this._engines.set(engine.name, engine);
       // Only add the engine to the list of sorted engines if the initial list
       // has already been built (i.e. if this.__sortedEngines is non-null). If
       // it hasn't, we're loading engines from disk and the sorted engine list
@@ -1410,11 +1448,11 @@ SearchService.prototype = {
 
     for (let engine of cache.engines) {
       let name = engine._name;
-      if (name in this._engines) {
+      if (this._engines.has(name)) {
         SearchUtils.log(
           "_loadEnginesMetadataFromCache, transfering metadata for " + name
         );
-        this._engines[name]._metaData = engine._metaData || {};
+        this._engines.get(name)._metaData = engine._metaData || {};
       }
     }
   },
@@ -1541,10 +1579,10 @@ SearchService.prototype = {
         });
         await engine._initFromURI(uri);
         // If there is an existing engine with the same name then update that engine.
-        // Only do this during reloads so it doesnt interfere with distribution
+        // Only do this during reloads so it doesn't interfere with distribution
         // engines
-        if (isReload && engine.name in this._engines) {
-          engine._engineToUpdate = this._engines[engine.name];
+        if (isReload && this._engines.has(engine.name)) {
+          engine._engineToUpdate = this._engines.get(engine.name);
         }
         engines.push(engine);
       } catch (ex) {
@@ -1796,8 +1834,7 @@ SearchService.prototype = {
       // Flag to keep track of whether or not we need to call _saveSortedEngineList.
       let needToSaveEngineList = false;
 
-      for (let name in this._engines) {
-        let engine = this._engines[name];
+      for (let engine of this._engines.values()) {
         var orderNumber = engine.getAttr("order");
 
         // Since the DB isn't regularly cleared, and engine files may disappear
@@ -1847,7 +1884,7 @@ SearchService.prototype = {
           for (prefName of extras) {
             let engineName = Services.prefs.getCharPref(prefName);
 
-            let engine = this._engines[engineName];
+            let engine = this._engines.get(engineName);
             if (!engine || engine.name in addedEngines) {
               continue;
             }
@@ -1864,7 +1901,7 @@ SearchService.prototype = {
             break;
           }
 
-          let engine = this._engines[engineName];
+          let engine = this._engines.get(engineName);
           if (!engine || engine.name in addedEngines) {
             continue;
           }
@@ -1875,7 +1912,7 @@ SearchService.prototype = {
       }
 
       for (let engineName of this._searchOrder) {
-        let engine = this._engines[engineName];
+        let engine = this._engines.get(engineName);
         if (!engine || engine.name in addedEngines) {
           continue;
         }
@@ -1888,10 +1925,9 @@ SearchService.prototype = {
     // Array for the remaining engines, alphabetically sorted.
     let alphaEngines = [];
 
-    for (let name in this._engines) {
-      let engine = this._engines[name];
+    for (let engine of this._engines.values()) {
       if (!(engine.name in addedEngines)) {
-        alphaEngines.push(this._engines[engine.name]);
+        alphaEngines.push(engine);
       }
     }
 
@@ -2065,13 +2101,12 @@ SearchService.prototype = {
 
   getEngineByName(engineName) {
     this._ensureInitialized();
-    return this._engines[engineName] || null;
+    return this._engines.get(engineName) || null;
   },
 
   getEngineByAlias(alias) {
     this._ensureInitialized();
-    for (var engineName in this._engines) {
-      var engine = this._engines[engineName];
+    for (var engine of this._engines.values()) {
       if (
         engine &&
         (engine.alias == alias || engine._internalAliases.includes(alias))
@@ -2100,7 +2135,7 @@ SearchService.prototype = {
     if (!params.template) {
       SearchUtils.fail("Invalid template passed to addEngineWithDetails!");
     }
-    let existingEngine = this._engines[name];
+    let existingEngine = this._engines.get(name);
     if (existingEngine) {
       if (
         params.extensionID &&
@@ -2299,9 +2334,9 @@ SearchService.prototype = {
     }
 
     var engineToRemove = null;
-    for (var e in this._engines) {
-      if (engine.wrappedJSObject == this._engines[e]) {
-        engineToRemove = this._engines[e];
+    for (var e of this._engines.values()) {
+      if (engine.wrappedJSObject == e) {
+        engineToRemove = e;
       }
     }
 
@@ -2343,7 +2378,7 @@ SearchService.prototype = {
       this.__sortedEngines.splice(index, 1);
 
       // Remove the engine from the internal store
-      delete this._engines[engineToRemove.name];
+      this._engines.delete(engineToRemove.name);
 
       // Since we removed an engine, we need to update the preferences.
       this._saveSortedEngineList();
@@ -2423,8 +2458,7 @@ SearchService.prototype = {
 
   restoreDefaultEngines() {
     this._ensureInitialized();
-    for (let name in this._engines) {
-      let e = this._engines[name];
+    for (let e of this._engines.values()) {
       // Unhide all default engines
       if (e.hidden && e._isDefault) {
         e.hidden = false;
@@ -2648,8 +2682,7 @@ SearchService.prototype = {
         // ... or engines that are the same domain as a default engine.
         let engineHost = engine._getURLOfType(SearchUtils.URL_TYPE.SEARCH)
           .templateHost;
-        for (let name in this._engines) {
-          let innerEngine = this._engines[name];
+        for (let innerEngine of this._engines.values()) {
           if (!innerEngine._isDefault) {
             continue;
           }
@@ -2977,8 +3010,8 @@ SearchService.prototype = {
     // Therefore, we need to walk our engine-list, looking for expired engines
     var currentTime = Date.now();
     SearchUtils.log("currentTime: " + currentTime);
-    for (let name in this._engines) {
-      let engine = this._engines[name].wrappedJSObject;
+    for (let e of this._engines.values()) {
+      let engine = e.wrappedJSObject;
       if (!engine._hasUpdates) {
         continue;
       }

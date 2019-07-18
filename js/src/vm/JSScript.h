@@ -3243,6 +3243,11 @@ class alignas(uintptr_t) LazyScriptData final {
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
 class LazyScript : public gc::TenuredCell {
+  // Pointer to interpreter trampoline. This field is stored at same location
+  // as in JSScript, allowing the JIT to directly call LazyScripts in the same
+  // way as JSScripts.
+  uint8_t* jitCodeRaw_ = nullptr;
+
   // If non-nullptr, the script has been compiled and this is a forwarding
   // pointer to the result. This is a weak pointer: after relazification, we
   // can collect the script if there are no other pointers to it.
@@ -3369,10 +3374,10 @@ class LazyScript : public gc::TenuredCell {
   uint32_t lineno_;
   uint32_t column_;
 
-  LazyScript(JSFunction* fun, ScriptSourceObject& sourceObject,
-             LazyScriptData* data, uint32_t immutableFlags,
-             uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
-             uint32_t lineno, uint32_t column);
+  LazyScript(JSFunction* fun, uint8_t* stubEntry,
+             ScriptSourceObject& sourceObject, LazyScriptData* data,
+             uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
+             uint32_t toStringStart, uint32_t lineno, uint32_t column);
 
   // Create a LazyScript without initializing the closedOverBindings and the
   // innerFunctions. To be GC-safe, the caller must initialize both vectors
@@ -3615,6 +3620,10 @@ class LazyScript : public gc::TenuredCell {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(lazyData_);
+  }
+
+  static constexpr size_t offsetOfJitCodeRaw() {
+    return offsetof(LazyScript, jitCodeRaw_);
   }
 
   uint32_t immutableFlags() const { return immutableFlags_; }

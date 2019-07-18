@@ -10,7 +10,7 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::MediaSource::Enabled"]
+[Pref="media.mediasource.enabled"]
 interface SourceBufferList : EventTarget {
   readonly attribute unsigned long length;
   attribute EventHandler onaddsourcebuffer;

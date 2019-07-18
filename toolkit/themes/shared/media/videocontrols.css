@@ -477,6 +477,10 @@
   opacity: 0.8;
 }
 
+.controlsOverlay:hover[hidetoggle="true"] > .pictureInPictureToggleButton:not(:hover) {
+  opacity: 0;
+}
+
 .controlsOverlay:hover > .pictureInPictureToggleButton:hover {
   opacity: 1;
   transform: translateY(-50%) translateX(0);

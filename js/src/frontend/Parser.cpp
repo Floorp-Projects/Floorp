@@ -2024,6 +2024,7 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
   }
   if (isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
+    MOZ_ASSERT(!fun->isInterpretedLazy());
   }
   return fun;
 }

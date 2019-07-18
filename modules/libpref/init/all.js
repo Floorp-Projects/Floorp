@@ -411,21 +411,6 @@ pref("media.webvtt.pseudo.enabled", true);
 // WebVTT debug logging.
 pref("media.webvtt.debug.logging", false);
 
-// Whether to enable MediaSource support.
-pref("media.mediasource.enabled", true);
-
-pref("media.mediasource.mp4.enabled", true);
-
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
-pref("media.mediasource.webm.enabled", false);
-#else
-pref("media.mediasource.webm.enabled", true);
-#endif
-pref("media.mediasource.webm.audio.enabled", true);
-
-// Whether to enable MediaSource v2 support.
-pref("media.mediasource.experimental.enabled", false);
-
 pref("media.benchmark.vp9.threshold", 150);
 pref("media.benchmark.frames", 300);
 pref("media.benchmark.timeout", 1000);

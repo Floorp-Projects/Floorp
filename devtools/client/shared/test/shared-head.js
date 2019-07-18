@@ -25,8 +25,9 @@ if (DEBUG_ALLOCATIONS) {
   const { DevToolsLoader } = ChromeUtils.import(
     "resource://devtools/shared/Loader.jsm"
   );
-  const loader = new DevToolsLoader();
-  loader.invisibleToDebugger = true;
+  const loader = new DevToolsLoader({
+    invisibleToDebugger: true,
+  });
 
   const { allocationTracker } = loader.require(
     "devtools/shared/test-helpers/allocation-tracker"

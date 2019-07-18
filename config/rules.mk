@@ -934,21 +934,6 @@ endif
 EMPTY :=
 SPACE := $(EMPTY) $(EMPTY)
 
-# MSYS has its own special path form, but javac expects the source and class
-# paths to be in the DOS form (i.e. e:/builds/...).  This function does the
-# appropriate conversion on Windows, but is a noop on other systems.
-ifeq ($(HOST_OS_ARCH),WINNT)
-#  We use 'pwd -W' to get DOS form of the path.  However, since the given path
-#  could be a file or a non-existent path, we cannot call 'pwd -W' directly
-#  on the path.  Instead, we extract the root path (i.e. "c:/"), call 'pwd -W'
-#  on it, then merge with the rest of the path.
-root-path = $(shell echo $(1) | sed -e 's|\(/[^/]*\)/\?\(.*\)|\1|')
-non-root-path = $(shell echo $(1) | sed -e 's|\(/[^/]*\)/\?\(.*\)|\2|')
-normalizepath = $(foreach p,$(1),$(if $(filter /%,$(1)),$(patsubst %/,%,$(shell cd $(call root-path,$(1)) && pwd -W))/$(call non-root-path,$(1)),$(1)))
-else
-normalizepath = $(1)
-endif
-
 ###############################################################################
 # Bunch of things that extend the 'export' rule (in order):
 ###############################################################################

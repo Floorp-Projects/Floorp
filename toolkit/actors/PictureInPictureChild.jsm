@@ -31,6 +31,7 @@ const TOGGLE_ENABLED_PREF =
 const TOGGLE_TESTING_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.testing";
 const MOUSEMOVE_PROCESSING_DELAY_MS = 50;
+const TOGGLE_HIDING_TIMEOUT_MS = 2000;
 
 // A weak reference to the most recent <video> in this content
 // process that is being viewed in Picture-in-Picture.
@@ -91,6 +92,9 @@ class PictureInPictureToggleChild extends ActorChild {
         // suppressed ("click" events don't fire if a "mouseup" occurs on a different
         // element from the "pointerdown" / "mousedown" event).
         clickedElement: null,
+        // This is a DeferredTask to hide the toggle after a period of mouse
+        // inactivity.
+        hideToggleDeferredTask: null,
       };
       this.weakDocStates.set(this.content.document, state);
     }
@@ -332,6 +336,11 @@ class PictureInPictureToggleChild extends ActorChild {
    * @param {Event} event The mousemove event.
    */
   onPointerDown(event) {
+    // The toggle ignores non-primary mouse clicks.
+    if (event.button != 0) {
+      return;
+    }
+
     let state = this.docState;
 
     let video = state.weakOverVideo && state.weakOverVideo.get();
@@ -402,6 +411,11 @@ class PictureInPictureToggleChild extends ActorChild {
    * @param {Event} event A mousedown, pointerup, mouseup or click event.
    */
   onMouseButtonEvent(event) {
+    // The toggle ignores non-primary mouse clicks.
+    if (event.button != 0) {
+      return;
+    }
+
     let state = this.docState;
     if (state.isClickingToggle) {
       event.stopImmediatePropagation();
@@ -434,6 +448,12 @@ class PictureInPictureToggleChild extends ActorChild {
    */
   onMouseMove(event) {
     let state = this.docState;
+
+    if (state.hideToggleDeferredTask) {
+      state.hideToggleDeferredTask.disarm();
+      state.hideToggleDeferredTask.arm();
+    }
+
     state.lastMouseMoveEvent = event;
     state.mousemoveDeferredTask.arm();
   }
@@ -505,6 +525,21 @@ class PictureInPictureToggleChild extends ActorChild {
     }
 
     let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
+    let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+    controlsOverlay.removeAttribute("hidetoggle");
+
+    // The hideToggleDeferredTask we create here is for automatically hiding
+    // the toggle after a period of no mousemove activity for
+    // TOGGLE_HIDING_TIMEOUT_MS. If the mouse moves, then the DeferredTask
+    // timer is reset.
+    //
+    // We disable the toggle hiding timeout during testing to reduce
+    // non-determinism from timers when testing the toggle.
+    if (!state.hideToggleDeferredTask && !this.toggleTesting) {
+      state.hideToggleDeferredTask = new DeferredTask(() => {
+        controlsOverlay.setAttribute("hidetoggle", true);
+      }, TOGGLE_HIDING_TIMEOUT_MS);
+    }
 
     if (oldOverVideo) {
       if (oldOverVideo == video) {
@@ -520,7 +555,6 @@ class PictureInPictureToggleChild extends ActorChild {
     }
 
     state.weakOverVideo = Cu.getWeakReference(video);
-    let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
     InspectorUtils.addPseudoClassLock(controlsOverlay, ":hover");
 
     // Now that we're hovering the video, we'll check to see if we're
@@ -562,6 +596,8 @@ class PictureInPictureToggleChild extends ActorChild {
     }
 
     state.weakOverVideo = null;
+    state.hideToggleDeferredTask.disarm();
+    state.hideToggleDeferredTask = null;
   }
 
   /**

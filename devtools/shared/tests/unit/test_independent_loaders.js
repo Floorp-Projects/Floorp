@@ -17,6 +17,6 @@ function run_test() {
 
   Assert.ok(indent1 !== indent2);
 
-  Assert.ok(loader1._provider !== loader2._provider);
-  Assert.ok(loader1._provider.loader !== loader2._provider.loader);
+  Assert.ok(loader1.loader !== loader2.loader);
+  Assert.ok(loader1.id !== loader2.id);
 }
