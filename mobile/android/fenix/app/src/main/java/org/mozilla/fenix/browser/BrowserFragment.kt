@@ -310,7 +310,7 @@ class BrowserFragment : Fragment(), BackHandler {
                         .setAnchorView(toolbarComponent.uiView.view)
                         .setText(getString(R.string.full_screen_notification))
                         .show()
-                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                     activity?.enterToImmersiveMode()
                     toolbar.visibility = View.GONE
                     nestedScrollQuickAction.visibility = View.GONE
