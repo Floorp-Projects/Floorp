@@ -395,11 +395,10 @@ function runOMTATest(aTestFunction, aOnSkip, specialPowersForPrefs) {
       }
       if (next.done) {
         return Promise.resolve(next.value);
-      } else {
-        return Promise.resolve(next.value).then(step, function(err) {
-          throw err;
-        });
       }
+      return Promise.resolve(next.value).then(step, function(err) {
+        throw err;
+      });
     }
 
     // Put refresh driver under test control
@@ -695,9 +694,8 @@ const ExpectComparisonTo = {
       return convertArrayTo3dMatrix(matrixLike);
     } else if (typeof matrixLike == "object") {
       return convertObjectTo3dMatrix(matrixLike);
-    } else {
-      return null;
     }
+    return null;
   };
 
   // In future most of these methods should be able to be replaced
@@ -747,9 +745,8 @@ const ExpectComparisonTo = {
         array.slice(8, 12),
         array.slice(12, 16),
       ];
-    } else {
-      return null;
     }
+    return null;
   }
 
   // Return the first defined value in args.
@@ -797,17 +794,16 @@ const ExpectComparisonTo = {
         ].join(", ") +
         ")"
       );
-    } else {
-      return (
-        "matrix3d(" +
-        matrix
-          .reduce(function(outer, inner) {
-            return outer.concat(inner);
-          })
-          .join(", ") +
-        ")"
-      );
     }
+    return (
+      "matrix3d(" +
+      matrix
+        .reduce(function(outer, inner) {
+          return outer.concat(inner);
+        })
+        .join(", ") +
+      ")"
+    );
   }
 
   function is2d(matrix) {

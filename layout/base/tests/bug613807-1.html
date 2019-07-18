@@ -25,7 +25,7 @@
       return rval;
     };
     function addLoadEvent(func) {
-      var existing = window["onload"];
+      var existing = window.onload;
       var regfunc = existing;
       if (!(typeof(existing) == 'function'
             && typeof(existing.callStack) == "object"
@@ -34,7 +34,7 @@
         if (typeof(existing) == 'function') {
           regfunc.callStack.push(existing);
         }
-        window["onload"] = regfunc;
+        window.onload = regfunc;
       }
       regfunc.callStack.push(func);
     };

@@ -626,7 +626,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1508420
     // and we'll probably want to remove this test function, along with the
     // IsXULBoxFrame() check that this test function is targeting in
     // ReflowInput::InitDynamicReflowRoot.
-    is(gFWindow.getComputedStyle(mozBox, "").display, "-moz-box",
+    is(gFWindow.getComputedStyle(mozBox).display, "-moz-box",
        "'display:-moz-box' should be honored and show up in computed style");
 
     let tweakFunc = function() {
