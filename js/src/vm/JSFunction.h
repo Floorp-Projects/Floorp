@@ -340,7 +340,9 @@ class JSFunction : public js::NativeObject {
 
     return nonLazyScript()->hasJitScript();
   }
-  bool hasJitEntry() const { return hasScript() || isNativeWithJitEntry(); }
+  bool hasJitEntry() const {
+    return hasScript() || isInterpretedLazy() || isNativeWithJitEntry();
+  }
 
   /* Compound attributes: */
   bool isBuiltin() const { return isBuiltinNative() || isSelfHostedBuiltin(); }
