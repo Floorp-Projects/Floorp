@@ -98,8 +98,6 @@ mod gamma_lut;
 mod glyph_cache;
 mod glyph_rasterizer;
 mod gpu_cache;
-#[cfg(feature = "pathfinder")]
-mod gpu_glyph_renderer;
 mod gpu_types;
 mod hit_test;
 mod image;
@@ -174,14 +172,6 @@ pub extern crate euclid;
 extern crate fxhash;
 extern crate gleam;
 extern crate num_traits;
-#[cfg(feature = "pathfinder")]
-extern crate pathfinder_font_renderer;
-#[cfg(feature = "pathfinder")]
-extern crate pathfinder_gfx_utils;
-#[cfg(feature = "pathfinder")]
-extern crate pathfinder_partitioner;
-#[cfg(feature = "pathfinder")]
-extern crate pathfinder_path_utils;
 extern crate plane_split;
 extern crate rayon;
 #[cfg(feature = "ron")]
