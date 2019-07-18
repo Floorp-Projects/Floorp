@@ -1303,6 +1303,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing,
                                             Label* label);
+  inline void branchIfFunctionHasNoScript(Register fun, Label* label);
   inline void branchIfInterpreted(Register fun, bool isConstructing,
                                   Label* label);
 
