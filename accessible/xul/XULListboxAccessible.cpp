@@ -73,7 +73,7 @@ XULListboxAccessible::XULListboxAccessible(nsIContent* aContent,
   nsIContent* parentContent = mContent->GetFlattenedTreeParent();
   if (parentContent) {
     nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
-        do_QueryInterface(parentContent);
+        parentContent->AsElement()->AsAutoCompletePopup();
     if (autoCompletePopupElm) mGenericTypes |= eAutoCompletePopup;
   }
 
@@ -377,13 +377,15 @@ bool XULListboxAccessible::IsWidget() const { return true; }
 
 bool XULListboxAccessible::IsActiveWidget() const {
   if (IsAutoCompletePopup()) {
-    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
-        do_QueryInterface(mContent->GetParent());
-
-    if (autoCompletePopupElm) {
-      bool isOpen = false;
-      autoCompletePopupElm->GetPopupOpen(&isOpen);
-      return isOpen;
+    nsIContent* parentContent = mContent->GetParent();
+    if (parentContent) {
+      nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+          parentContent->AsElement()->AsAutoCompletePopup();
+      if (autoCompletePopupElm) {
+        bool isOpen = false;
+        autoCompletePopupElm->GetPopupOpen(&isOpen);
+        return isOpen;
+      }
     }
   }
   return FocusMgr()->HasDOMFocus(mContent);
@@ -391,13 +393,15 @@ bool XULListboxAccessible::IsActiveWidget() const {
 
 bool XULListboxAccessible::AreItemsOperable() const {
   if (IsAutoCompletePopup()) {
-    nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
-        do_QueryInterface(mContent->GetParent());
-
-    if (autoCompletePopupElm) {
-      bool isOpen = false;
-      autoCompletePopupElm->GetPopupOpen(&isOpen);
-      return isOpen;
+    nsIContent* parentContent = mContent->GetParent();
+    if (parentContent) {
+      nsCOMPtr<nsIAutoCompletePopup> autoCompletePopupElm =
+          parentContent->AsElement()->AsAutoCompletePopup();
+      if (autoCompletePopupElm) {
+        bool isOpen = false;
+        autoCompletePopupElm->GetPopupOpen(&isOpen);
+        return isOpen;
+      }
     }
   }
   return true;
