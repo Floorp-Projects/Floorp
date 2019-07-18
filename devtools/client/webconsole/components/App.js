@@ -301,11 +301,13 @@ class App extends Component {
   }
 
   renderNotificationBox() {
-    const { notifications } = this.props;
+    const { notifications, editorMode } = this.props;
 
     return NotificationBox({
       id: "webconsole-notificationbox",
       key: "notification-box",
+      displayBorderTop: !editorMode,
+      displayBorderBottom: editorMode,
       wrapping: true,
       notifications,
     });
