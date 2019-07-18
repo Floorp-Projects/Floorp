@@ -5,24 +5,17 @@
 use api::{ImageDescriptor, ImageFormat, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
 use api::{LineStyle, LineOrientation, ClipMode, DirtyRect, MixBlendMode, ColorF, ColorSpace};
 use api::units::*;
-#[cfg(feature = "pathfinder")]
-use api::FontRenderMode;
 use crate::border::BorderSegmentCacheKey;
 use crate::box_shadow::{BoxShadowCacheKey};
 use crate::clip::{ClipDataStore, ClipItem, ClipStore, ClipNodeRange, ClipNodeFlags};
 use crate::clip_scroll_tree::SpatialNodeIndex;
 use crate::device::TextureFilter;
-#[cfg(feature = "pathfinder")]
-use euclid::{TypedPoint2D, TypedVector2D};
 use crate::filterdata::SFilterData;
 use crate::frame_builder::FrameBuilderConfig;
 use crate::freelist::{FreeList, FreeListHandle, WeakFreeListHandle};
-use crate::glyph_rasterizer::GpuGlyphCacheKey;
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
 use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind, SnapOffsets};
 use crate::internal_types::{CacheTextureId, FastHashMap, LayerIndex, SavedTargetIndex, TextureSource};
-#[cfg(feature = "pathfinder")]
-use pathfinder_partitioner::mesh::Mesh;
 use crate::prim_store::{PictureIndex, PrimitiveVisibilityMask};
 use crate::prim_store::image::ImageCacheKey;
 use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey};
@@ -549,25 +542,6 @@ pub struct ScalingTask {
     uv_rect_kind: UvRectKind,
 }
 
-#[derive(Debug)]
-#[cfg(feature = "pathfinder")]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GlyphTask {
-    /// After job building, this becomes `None`.
-    pub mesh: Option<Mesh>,
-    pub origin: DeviceIntPoint,
-    pub subpixel_offset: TypedPoint2D<f32, DevicePixel>,
-    pub render_mode: FontRenderMode,
-    pub embolden_amount: TypedVector2D<f32, DevicePixel>,
-}
-
-#[cfg(not(feature = "pathfinder"))]
-#[derive(Debug)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GlyphTask;
-
 // Where the source data for a blit task can be found.
 #[derive(Debug)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -658,8 +632,6 @@ pub enum RenderTaskKind {
     ClipRegion(ClipRegionTask),
     VerticalBlur(BlurTask),
     HorizontalBlur(BlurTask),
-    #[allow(dead_code)]
-    Glyph(GlyphTask),
     Readback(DeviceIntRect),
     Scaling(ScalingTask),
     Blit(BlitTask),
@@ -679,7 +651,6 @@ impl RenderTaskKind {
             RenderTaskKind::ClipRegion(..) => "ClipRegion",
             RenderTaskKind::VerticalBlur(..) => "VerticalBlur",
             RenderTaskKind::HorizontalBlur(..) => "HorizontalBlur",
-            RenderTaskKind::Glyph(..) => "Glyph",
             RenderTaskKind::Readback(..) => "Readback",
             RenderTaskKind::Scaling(..) => "Scaling",
             RenderTaskKind::Blit(..) => "Blit",
@@ -1481,30 +1452,6 @@ impl RenderTask {
         )
     }
 
-    #[cfg(feature = "pathfinder")]
-    pub fn new_glyph(
-        location: RenderTaskLocation,
-        mesh: Mesh,
-        origin: &DeviceIntPoint,
-        subpixel_offset: &TypedPoint2D<f32, DevicePixel>,
-        render_mode: FontRenderMode,
-        embolden_amount: &TypedVector2D<f32, DevicePixel>,
-    ) -> Self {
-        RenderTask {
-            children: vec![],
-            location,
-            kind: RenderTaskKind::Glyph(GlyphTask {
-                mesh: Some(mesh),
-                origin: *origin,
-                subpixel_offset: *subpixel_offset,
-                render_mode,
-                embolden_amount: *embolden_amount,
-            }),
-            clear_mode: ClearMode::Transparent,
-            saved_index: None,
-        }
-    }
-
     fn uv_rect_kind(&self) -> UvRectKind {
         match self.kind {
             RenderTaskKind::CacheMask(..) |
@@ -1530,7 +1477,6 @@ impl RenderTask {
             }
 
             RenderTaskKind::ClipRegion(..) |
-            RenderTaskKind::Glyph(_) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::Gradient(..) |
             RenderTaskKind::LineDecoration(..) |
@@ -1587,9 +1533,6 @@ impl RenderTask {
                     0.0,
                     0.0,
                 ]
-            }
-            RenderTaskKind::Glyph(_) => {
-                [0.0, 1.0, 0.0]
             }
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Scaling(..) |
@@ -1656,8 +1599,7 @@ impl RenderTask {
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::Gradient(..) |
-            RenderTaskKind::LineDecoration(..) |
-            RenderTaskKind::Glyph(..) => {
+            RenderTaskKind::LineDecoration(..) => {
                 panic!("texture handle not supported for this task kind");
             }
             #[cfg(test)]
@@ -1720,7 +1662,6 @@ impl RenderTask {
         match self.kind {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::Readback(..) |
-            RenderTaskKind::Glyph(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::Gradient(..) |
             RenderTaskKind::Picture(..) |
@@ -1772,8 +1713,7 @@ impl RenderTask {
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::Gradient(..) |
-            RenderTaskKind::LineDecoration(..) |
-            RenderTaskKind::Glyph(..) => {
+            RenderTaskKind::LineDecoration(..) => {
                 return;
             }
             #[cfg(test)]
@@ -1862,9 +1802,6 @@ impl RenderTask {
                 pt.new_level("Blit".to_owned());
                 pt.add_item(format!("source: {:?}", task.source));
             }
-            RenderTaskKind::Glyph(..) => {
-                pt.new_level("Glyph".to_owned());
-            }
             RenderTaskKind::Gradient(..) => {
                 pt.new_level("Gradient".to_owned());
             }
@@ -1912,8 +1849,6 @@ impl RenderTask {
 pub enum RenderTaskCacheKeyKind {
     BoxShadow(BoxShadowCacheKey),
     Image(ImageCacheKey),
-    #[allow(dead_code)]
-    Glyph(GpuGlyphCacheKey),
     BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
     Gradient(GradientCacheKey),

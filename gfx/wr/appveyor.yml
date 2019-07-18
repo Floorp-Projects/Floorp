@@ -17,4 +17,3 @@ build: false
 
 test_script:
   - cmd.exe /c ci-scripts\windows-tests.cmd
-  - cmd.exe /c ci-scripts\windows-pathfinder.cmd
