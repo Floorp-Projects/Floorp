@@ -23,6 +23,7 @@ const {
   WARNING_GROUPS_TOGGLE,
   FILTERBAR_DISPLAY_MODE_SET,
   EDITOR_TOGGLE,
+  EDITOR_SET_WIDTH,
 } = require("devtools/client/webconsole/constants");
 
 function persistToggle() {
@@ -98,6 +99,16 @@ function editorToggle() {
   };
 }
 
+function setEditorWidth(width) {
+  return ({ dispatch, prefsService }) => {
+    dispatch({
+      type: EDITOR_SET_WIDTH,
+      width,
+    });
+    prefsService.setIntPref(PREFS.UI.EDITOR_WIDTH, width);
+  };
+}
+
 /**
  * Dispatches a SHOW_OBJECT_IN_SIDEBAR action, with a grip property corresponding to the
  * {actor} parameter in the {messageId} message.
@@ -148,6 +159,7 @@ module.exports = {
   persistToggle,
   reverseSearchInputToggle,
   selectNetworkMessageTab,
+  setEditorWidth,
   showMessageObjectInSidebar,
   showObjectInSidebar,
   sidebarClose,

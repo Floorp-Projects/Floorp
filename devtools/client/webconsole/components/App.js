@@ -46,6 +46,9 @@ const ConfirmDialog = createFactory(
 const NotificationBox = createFactory(
   require("devtools/client/shared/components/NotificationBox").NotificationBox
 );
+const GridElementWidthResizer = createFactory(
+  require("devtools/client/shared/components/splitter/GridElementWidthResizer")
+);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
@@ -82,6 +85,7 @@ class App extends Component {
       reverseSearchInputVisible: PropTypes.bool,
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
+      editorWidth: PropTypes.number,
       hideShowContentMessagesCheckbox: PropTypes.bool,
       sidebarVisible: PropTypes.bool.isRequired,
       filterBarDisplayMode: PropTypes.oneOf([
@@ -265,6 +269,7 @@ class App extends Component {
       jstermCodeMirror,
       autocomplete,
       editorMode,
+      editorWidth,
     } = this.props;
 
     return JSTerm({
@@ -275,6 +280,7 @@ class App extends Component {
       codeMirrorEnabled: jstermCodeMirror,
       autocomplete,
       editorMode,
+      editorWidth,
     });
   }
 
@@ -292,7 +298,6 @@ class App extends Component {
 
   renderSideBar() {
     const { serviceContainer, sidebarVisible } = this.props;
-
     return SideBar({
       key: "sidebar",
       serviceContainer,
@@ -349,7 +354,7 @@ class App extends Component {
   }
 
   render() {
-    const { webConsoleUI, editorMode } = this.props;
+    const { webConsoleUI, editorMode, dispatch } = this.props;
 
     const filterBar = this.renderFilterBar();
     const consoleOutput = this.renderConsoleOutput();
@@ -373,6 +378,13 @@ class App extends Component {
         notificationBox,
         jsterm
       ),
+      GridElementWidthResizer({
+        enabled: editorMode,
+        position: "end",
+        className: "editor-resizer",
+        getControlledElementNode: () => webConsoleUI.jsterm.node,
+        onResizeEnd: width => dispatch(actions.setEditorWidth(width)),
+      }),
       reverseSearch,
       sidebar,
       confirmDialog,
@@ -385,6 +397,7 @@ const mapStateToProps = state => ({
   reverseSearchInputVisible: state.ui.reverseSearchInputVisible,
   reverseSearchInitialValue: state.ui.reverseSearchInitialValue,
   editorMode: state.ui.editor,
+  editorWidth: state.ui.editorWidth,
   sidebarVisible: state.ui.sidebarVisible,
   filterBarDisplayMode: state.ui.filterBarDisplayMode,
 });
