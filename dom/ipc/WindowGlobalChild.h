@@ -57,6 +57,9 @@ class WindowGlobalChild final : public WindowGlobalActor,
   // in the chrome process.
   bool IsInProcess() { return XRE_IsParentProcess(); }
 
+  nsIURI* GetDocumentURI() override { return mDocumentURI; }
+  void SetDocumentURI(nsIURI* aDocumentURI);
+
   // The Window ID for this WindowGlobal
   uint64_t InnerWindowId() { return mInnerWindowId; }
   uint64_t OuterWindowId() { return mOuterWindowId; }
@@ -90,10 +93,12 @@ class WindowGlobalChild final : public WindowGlobalActor,
   static already_AddRefed<WindowGlobalChild> Create(
       nsGlobalWindowInner* aWindow);
 
+  WindowGlobalChild(const WindowGlobalInit& aInit,
+                    nsGlobalWindowInner* aWindow);
+
   nsISupports* GetParentObject();
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
-  nsIURI* GetDocumentURI() override;
 
  protected:
   const nsAString& GetRemoteType() override;
@@ -118,12 +123,13 @@ class WindowGlobalChild final : public WindowGlobalActor,
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
-  WindowGlobalChild(nsGlobalWindowInner* aWindow, dom::BrowsingContext* aBc);
   ~WindowGlobalChild();
 
   RefPtr<nsGlobalWindowInner> mWindowGlobal;
   RefPtr<dom::BrowsingContext> mBrowsingContext;
   nsRefPtrHashtable<nsStringHashKey, JSWindowActorChild> mWindowActors;
+  nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  nsCOMPtr<nsIURI> mDocumentURI;
   uint64_t mInnerWindowId;
   uint64_t mOuterWindowId;
   int64_t mBeforeUnloadListeners;
