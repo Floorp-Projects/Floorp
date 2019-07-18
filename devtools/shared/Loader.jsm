@@ -68,7 +68,6 @@ BuiltinProvider.prototype = {
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
       freshCompartment: this.freshCompartment,
-      sharedGlobal: true,
       sandboxName: "DevTools (Module loader)",
       requireHook: (id, require) => {
         if (id.startsWith("raw!") || id.startsWith("theme-loader!")) {

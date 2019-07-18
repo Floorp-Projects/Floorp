@@ -132,7 +132,6 @@ function BrowserLoaderBuilder({
   }
 
   const opts = {
-    sharedGlobal: true,
     sandboxPrototype: window,
     sandboxName: "DevTools (UI loader)",
     paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
