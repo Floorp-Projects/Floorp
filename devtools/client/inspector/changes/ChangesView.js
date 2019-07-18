@@ -27,11 +27,8 @@ const ChangesApp = createFactory(require("./components/ChangesApp"));
 const { getChangesStylesheet } = require("./selectors/changes");
 
 const {
-  TELEMETRY_SCALAR_CONTEXTMENU,
-  TELEMETRY_SCALAR_CONTEXTMENU_COPY,
   TELEMETRY_SCALAR_CONTEXTMENU_COPY_DECLARATION,
   TELEMETRY_SCALAR_CONTEXTMENU_COPY_RULE,
-  TELEMETRY_SCALAR_COPY,
   TELEMETRY_SCALAR_COPY_ALL_CHANGES,
   TELEMETRY_SCALAR_COPY_RULE,
 } = require("./constants");
@@ -50,7 +47,6 @@ class ChangesView {
     this.onClearChanges = this.onClearChanges.bind(this);
     this.onChangesFront = this.onChangesFront.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
-    this.onCopy = this.onCopy.bind(this);
     this.onCopyAllChanges = this.copyAllChanges.bind(this);
     this.onCopyRule = this.copyRule.bind(this);
     this.destroy = this.destroy.bind(this);
@@ -69,7 +65,6 @@ class ChangesView {
   init() {
     const changesApp = ChangesApp({
       onContextMenu: this.onContextMenu,
-      onCopy: this.onCopy,
       onCopyAllChanges: this.onCopyAllChanges,
       onCopyRule: this.onCopyRule,
     });
@@ -211,7 +206,6 @@ class ChangesView {
    */
   copySelection() {
     clipboardHelper.copyString(this.window.getSelection().toString());
-    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU_COPY, 1);
   }
 
   onAddChange(change) {
@@ -229,15 +223,6 @@ class ChangesView {
    */
   onContextMenu(e) {
     this.contextMenu.show(e);
-    this.telemetry.scalarAdd(TELEMETRY_SCALAR_CONTEXTMENU, 1);
-  }
-
-  /**
-   * Event handler for the "copy" event fired when content is copied to the clipboard.
-   * We don't change the default behavior. We only log the increment count of this action.
-   */
-  onCopy() {
-    this.telemetry.scalarAdd(TELEMETRY_SCALAR_COPY, 1);
   }
 
   /**

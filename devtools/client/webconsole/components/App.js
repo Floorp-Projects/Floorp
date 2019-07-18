@@ -46,6 +46,9 @@ const ConfirmDialog = createFactory(
 const NotificationBox = createFactory(
   require("devtools/client/shared/components/NotificationBox").NotificationBox
 );
+const GridElementWidthResizer = createFactory(
+  require("devtools/client/shared/components/splitter/GridElementWidthResizer")
+);
 
 const l10n = require("devtools/client/webconsole/webconsole-l10n");
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
@@ -82,6 +85,7 @@ class App extends Component {
       reverseSearchInputVisible: PropTypes.bool,
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
+      editorWidth: PropTypes.number,
       hideShowContentMessagesCheckbox: PropTypes.bool,
       sidebarVisible: PropTypes.bool.isRequired,
       filterBarDisplayMode: PropTypes.oneOf([
@@ -231,40 +235,111 @@ class App extends Component {
     input.addEventListener("keyup", pasteKeyUpHandler);
   }
 
-  // Rendering
-
-  render() {
+  renderFilterBar() {
     const {
       webConsoleUI,
-      notifications,
-      onFirstMeaningfulPaint,
-      serviceContainer,
       closeSplitConsole,
-      jstermCodeMirror,
-      autocomplete,
-      reverseSearchInitialValue,
-      editorMode,
       filterBarDisplayMode,
-      sidebarVisible,
       hideShowContentMessagesCheckbox,
     } = this.props;
 
+    return FilterBar({
+      key: "filterbar",
+      hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
+      hideShowContentMessagesCheckbox,
+      closeSplitConsole,
+      displayMode: filterBarDisplayMode,
+    });
+  }
+
+  renderConsoleOutput() {
+    const { onFirstMeaningfulPaint, serviceContainer } = this.props;
+
+    return ConsoleOutput({
+      key: "console-output",
+      serviceContainer,
+      onFirstMeaningfulPaint,
+    });
+  }
+
+  renderJsTerm() {
+    const {
+      webConsoleUI,
+      serviceContainer,
+      jstermCodeMirror,
+      autocomplete,
+      editorMode,
+      editorWidth,
+    } = this.props;
+
+    return JSTerm({
+      key: "jsterm",
+      webConsoleUI,
+      serviceContainer,
+      onPaste: this.onPaste,
+      codeMirrorEnabled: jstermCodeMirror,
+      autocomplete,
+      editorMode,
+      editorWidth,
+    });
+  }
+
+  renderReverseSearch() {
+    const { serviceContainer, reverseSearchInitialValue } = this.props;
+
+    return ReverseSearchInput({
+      key: "reverse-search-input",
+      setInputValue: serviceContainer.setInputValue,
+      focusInput: serviceContainer.focusInput,
+      evaluateInput: serviceContainer.evaluateInput,
+      initialValue: reverseSearchInitialValue,
+    });
+  }
+
+  renderSideBar() {
+    const { serviceContainer, sidebarVisible } = this.props;
+    return SideBar({
+      key: "sidebar",
+      serviceContainer,
+      visible: sidebarVisible,
+    });
+  }
+
+  renderNotificationBox() {
+    const { notifications, editorMode } = this.props;
+
+    return NotificationBox({
+      id: "webconsole-notificationbox",
+      key: "notification-box",
+      displayBorderTop: !editorMode,
+      displayBorderBottom: editorMode,
+      wrapping: true,
+      notifications,
+    });
+  }
+
+  renderConfirmDialog() {
+    const { webConsoleUI, serviceContainer, jstermCodeMirror } = this.props;
+
+    return ConfirmDialog({
+      webConsoleUI,
+      serviceContainer,
+      codeMirrorEnabled: jstermCodeMirror,
+      key: "confirm-dialog",
+    });
+  }
+
+  renderRootElement(children) {
+    const { jstermCodeMirror, editorMode } = this.props;
+
     const classNames = ["webconsole-app"];
-    if (jstermCodeMirror) {
-      classNames.push("jsterm-cm");
-    }
     if (editorMode) {
       classNames.push("jsterm-editor");
     }
+    if (jstermCodeMirror) {
+      classNames.push("jsterm-cm");
+    }
 
-    // Render the entire Console panel. The panel consists
-    // from the following parts:
-    // * FilterBar - Buttons & free text for content filtering
-    // * Content - List of logs & messages
-    // * NotificationBox - Notifications for JSTerm (self-xss warning at the moment)
-    // * JSTerm - Input command line.
-    // * ReverseSearchInput - Reverse search input.
-    // * SideBar - Object inspector
     return div(
       {
         className: classNames.join(" "),
@@ -274,52 +349,46 @@ class App extends Component {
           this.node = node;
         },
       },
-      div(
-        { className: "webconsole-wrapper" },
-        FilterBar({
-          hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
-          hideShowContentMessagesCheckbox,
-          closeSplitConsole,
-          displayMode: filterBarDisplayMode,
-        }),
-        ConsoleOutput({
-          serviceContainer,
-          onFirstMeaningfulPaint,
-        }),
-        NotificationBox({
-          id: "webconsole-notificationbox",
-          wrapping: true,
-          notifications,
-        }),
-        EditorToolbar({
-          editorMode,
-          webConsoleUI,
-        }),
-        JSTerm({
-          webConsoleUI,
-          serviceContainer,
-          onPaste: this.onPaste,
-          codeMirrorEnabled: jstermCodeMirror,
-          autocomplete,
-          editorMode,
-        }),
-        ReverseSearchInput({
-          setInputValue: serviceContainer.setInputValue,
-          focusInput: serviceContainer.focusInput,
-          evaluateInput: serviceContainer.evaluateInput,
-          initialValue: reverseSearchInitialValue,
-        })
-      ),
-      SideBar({
-        serviceContainer,
-        visible: sidebarVisible,
-      }),
-      ConfirmDialog({
-        webConsoleUI,
-        serviceContainer,
-        codeMirrorEnabled: jstermCodeMirror,
-      })
+      ...children
     );
+  }
+
+  render() {
+    const { webConsoleUI, editorMode, dispatch } = this.props;
+
+    const filterBar = this.renderFilterBar();
+    const consoleOutput = this.renderConsoleOutput();
+    const notificationBox = this.renderNotificationBox();
+    const jsterm = this.renderJsTerm();
+    const reverseSearch = this.renderReverseSearch();
+    const sidebar = this.renderSideBar();
+    const confirmDialog = this.renderConfirmDialog();
+
+    return this.renderRootElement([
+      filterBar,
+      editorMode
+        ? EditorToolbar({
+            editorMode,
+            webConsoleUI,
+          })
+        : null,
+      dom.div(
+        { className: "flexible-output-input" },
+        consoleOutput,
+        notificationBox,
+        jsterm
+      ),
+      GridElementWidthResizer({
+        enabled: editorMode,
+        position: "end",
+        className: "editor-resizer",
+        getControlledElementNode: () => webConsoleUI.jsterm.node,
+        onResizeEnd: width => dispatch(actions.setEditorWidth(width)),
+      }),
+      reverseSearch,
+      sidebar,
+      confirmDialog,
+    ]);
   }
 }
 
@@ -328,6 +397,7 @@ const mapStateToProps = state => ({
   reverseSearchInputVisible: state.ui.reverseSearchInputVisible,
   reverseSearchInitialValue: state.ui.reverseSearchInitialValue,
   editorMode: state.ui.editor,
+  editorWidth: state.ui.editorWidth,
   sidebarVisible: state.ui.sidebarVisible,
   filterBarDisplayMode: state.ui.filterBarDisplayMode,
 });
