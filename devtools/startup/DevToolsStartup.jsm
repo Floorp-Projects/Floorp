@@ -1010,8 +1010,9 @@ DevToolsStartup.prototype = {
       // actors and DebuggingServer itself, especially since we can mark
       // serverLoader as invisible to the debugger (unlike the usual loader
       // settings).
-      const serverLoader = new DevToolsLoader();
-      serverLoader.invisibleToDebugger = true;
+      const serverLoader = new DevToolsLoader({
+        invisibleToDebugger: true,
+      });
       const { DebuggerServer: debuggerServer } = serverLoader.require(
         "devtools/server/main"
       );
