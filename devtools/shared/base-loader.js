@@ -155,46 +155,37 @@ function load(loader, module) {
     },
   };
 
-  let sandbox;
-  if (loader.useSharedGlobalSandbox) {
-    // Create a new object in this sandbox, that will be used as
-    // the scope object for this particular module
-    sandbox = new loader.sharedGlobalSandbox.Object();
-    descriptors.lazyRequire = {
-      configurable: true,
-      value: lazyRequire.bind(sandbox),
-    };
-    descriptors.lazyRequireModule = {
-      configurable: true,
-      value: lazyRequireModule.bind(sandbox),
-    };
+  // Create a new object in this sandbox, that will be used as
+  // the scope object for this particular module
+  const sandbox = new loader.sharedGlobalSandbox.Object();
+  descriptors.lazyRequire = {
+    configurable: true,
+    value: lazyRequire.bind(sandbox),
+  };
+  descriptors.lazyRequireModule = {
+    configurable: true,
+    value: lazyRequireModule.bind(sandbox),
+  };
 
-    if ("console" in globals) {
-      descriptors.console = {
-        configurable: true,
-        get() {
-          return globals.console;
-        },
-      };
-    }
-    const define = Object.getOwnPropertyDescriptor(globals, "define");
-    if (define && define.value) {
-      descriptors.define = define;
-    }
-    if ("DOMParser" in globals) {
-      descriptors.DOMParser = Object.getOwnPropertyDescriptor(
-        globals,
-        "DOMParser"
-      );
-    }
-    Object.defineProperties(sandbox, descriptors);
-  } else {
-    sandbox = Sandbox({
-      name: module.uri,
-      prototype: Object.create(globals, descriptors),
-      invisibleToDebugger: loader.invisibleToDebugger,
-    });
+  if ("console" in globals) {
+    descriptors.console = {
+      configurable: true,
+      get() {
+        return globals.console;
+      },
+    };
   }
+  const define = Object.getOwnPropertyDescriptor(globals, "define");
+  if (define && define.value) {
+    descriptors.define = define;
+  }
+  if ("DOMParser" in globals) {
+    descriptors.DOMParser = Object.getOwnPropertyDescriptor(
+      globals,
+      "DOMParser"
+    );
+  }
+  Object.defineProperties(sandbox, descriptors);
   sandboxes[module.uri] = sandbox;
 
   const originalExports = module.exports;
@@ -551,8 +542,6 @@ function unload(loader, reason) {
 // - `paths`: Mandatory dictionary of require path mapped to absolute URIs.
 //   Object keys are path prefix used in require(), values are URIs where each
 //   prefix should be mapped to.
-// - `sharedGlobal`: Boolean, if True, loads all module in a single, shared
-//   global in order to create only one global and compartment.
 // - `globals`: Optional map of globals, that all module scopes will inherit
 //   from. Map is also exposed under `globals` property of the returned loader
 //   so it can be extended further later. Defaults to `{}`.
@@ -565,7 +554,7 @@ function unload(loader, reason) {
 //   from loader. This function receive the module path as first argument,
 //   and native require method as second argument.
 function Loader(options) {
-  let { paths, sharedGlobal, globals } = options;
+  let { paths, globals } = options;
   if (!globals) {
     globals = {};
   }
@@ -648,7 +637,6 @@ function Loader(options) {
     mappingCache: { enumerable: false, value: new Map() },
     // Map of module objects indexed by module URIs.
     modules: { enumerable: false, value: modules },
-    useSharedGlobalSandbox: { enumerable: false, value: !!sharedGlobal },
     sharedGlobalSandbox: { enumerable: false, value: sharedGlobalSandbox },
     // Map of module sandboxes indexed by module URIs.
     sandboxes: { enumerable: false, value: {} },
