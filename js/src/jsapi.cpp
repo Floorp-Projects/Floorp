@@ -667,7 +667,6 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
   MOZ_ASSERT(origobj != target);
   MOZ_ASSERT(!origobj->is<CrossCompartmentWrapperObject>());
   MOZ_ASSERT(!target->is<CrossCompartmentWrapperObject>());
-  MOZ_ASSERT(origobj->getClass() == target->getClass());
   ReleaseAssertObjectHasNoWrappers(cx, target);
   JS::AssertCellIsNotGray(origobj);
   JS::AssertCellIsNotGray(target);
@@ -726,9 +725,11 @@ JS_PUBLIC_API JSObject* JS_TransplantObject(JSContext* cx, HandleObject origobj,
     }
     MOZ_ASSERT(Wrapper::wrappedObject(newIdentityWrapper) == newIdentity);
     JSObject::swap(cx, origobj, newIdentityWrapper);
-    if (!origobj->compartment()->putWrapper(
-            cx, CrossCompartmentKey(newIdentity), origv)) {
-      MOZ_CRASH();
+    if (origobj->compartment()->lookupWrapper(newIdentity)) {
+      MOZ_ASSERT(origobj->is<CrossCompartmentWrapperObject>());
+      if (!origobj->compartment()->putWrapper(cx, CrossCompartmentKey(newIdentity), origv)) {
+        MOZ_CRASH();
+      }
     }
   }
 
