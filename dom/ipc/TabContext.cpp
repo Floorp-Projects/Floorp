@@ -23,7 +23,8 @@ TabContext::TabContext()
       mIsMozBrowserElement(false),
       mChromeOuterWindowID(0),
       mJSPluginID(-1),
-      mShowFocusRings(UIStateChangeType_NoChange) {}
+      mShowFocusRings(UIStateChangeType_NoChange),
+      mMaxTouchPoints(0) {}
 
 bool TabContext::IsMozBrowserElement() const { return mIsMozBrowserElement; }
 
@@ -84,7 +85,8 @@ bool TabContext::SetTabContext(bool aIsMozBrowserElement,
                                uint64_t aChromeOuterWindowID,
                                UIStateChangeType aShowFocusRings,
                                const OriginAttributes& aOriginAttributes,
-                               const nsAString& aPresentationURL) {
+                               const nsAString& aPresentationURL,
+                               uint32_t aMaxTouchPoints) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   mInitialized = true;
@@ -93,6 +95,7 @@ bool TabContext::SetTabContext(bool aIsMozBrowserElement,
   mOriginAttributes = aOriginAttributes;
   mPresentationURL = aPresentationURL;
   mShowFocusRings = aShowFocusRings;
+  mMaxTouchPoints = aMaxTouchPoints;
   return true;
 }
 
@@ -111,7 +114,7 @@ IPCTabContext TabContext::AsIPCTabContext() const {
 
   return IPCTabContext(FrameIPCTabContext(
       mOriginAttributes, mIsMozBrowserElement, mChromeOuterWindowID,
-      mPresentationURL, mShowFocusRings));
+      mPresentationURL, mShowFocusRings, mMaxTouchPoints));
 }
 
 MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
@@ -122,6 +125,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   OriginAttributes originAttributes;
   nsAutoString presentationURL;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
+  uint32_t maxTouchPoints = 0;
 
   switch (aParams.type()) {
     case IPCTabContext::TPopupIPCTabContext: {
@@ -192,6 +196,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       presentationURL = ipcContext.presentationURL();
       showFocusRings = ipcContext.showFocusRings();
       originAttributes = ipcContext.originAttributes();
+      maxTouchPoints = ipcContext.maxTouchPoints();
       break;
     }
     case IPCTabContext::TUnsafeIPCTabContext: {
@@ -217,7 +222,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   } else {
     rv = mTabContext.SetTabContext(isMozBrowserElement, chromeOuterWindowID,
                                    showFocusRings, originAttributes,
-                                   presentationURL);
+                                   presentationURL, maxTouchPoints);
   }
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";

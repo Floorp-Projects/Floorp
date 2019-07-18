@@ -4967,10 +4967,10 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateWindow(
 
   nsCOMPtr<nsIWidget> widget = newTab->GetWidget();
   if (widget) {
-    cwi.maxTouchPoints() = widget->GetMaxTouchPoints();
     cwi.dimensions() = newTab->GetDimensionInfo();
   }
 
+  cwi.maxTouchPoints() = newTab->GetMaxTouchPoints();
   cwi.hasSiblings() = (openLocation == nsIBrowserDOMWindow::OPEN_NEWTAB);
 
   return IPC_OK();

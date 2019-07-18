@@ -424,14 +424,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   const EffectsInfo& GetEffectsInfo() const { return mEffectsInfo; }
 
-  void GetMaxTouchPoints(uint32_t* aTouchPoints) {
-    *aTouchPoints = mMaxTouchPoints;
-  }
-
-  void SetMaxTouchPoints(uint32_t aMaxTouchPoints) {
-    mMaxTouchPoints = aMaxTouchPoints;
-  }
-
   hal::ScreenOrientation GetOrientation() const { return mOrientation; }
 
   void SetBackgroundColor(const nscolor& aColor);

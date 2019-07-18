@@ -51,6 +51,9 @@ struct FrameIPCTabContext
 
   // Keyboard indicator state inherited from the parent.
   UIStateChangeType showFocusRings;
+
+  // Maximum number of touch points on the screen.
+  uint32_t maxTouchPoints;
 };
 
 struct JSPluginFrameIPCTabContext
