@@ -68,11 +68,15 @@ class ManifestMessagesChild extends ActorChild {
    * @param {Object} aMsg The IPC message, which is destructured to just
    *                      get the id.
    */
-  async obtainManifest({ data: { id } }) {
+  async obtainManifest(message) {
+    const {
+      data: { id, checkConformance },
+    } = message;
     const response = makeMsgResponse(id);
     try {
       response.result = await ManifestObtainer.contentObtainManifest(
-        this.mm.content
+        this.mm.content,
+        { checkConformance }
       );
       response.success = true;
     } catch (err) {

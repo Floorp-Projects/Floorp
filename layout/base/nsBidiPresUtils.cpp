@@ -512,12 +512,14 @@ static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
       }
 
       // The parent's continuation adopts the siblings after the split.
-      newParent->InsertFrames(nsIFrame::kNoReflowPrincipalList, nullptr, tail);
+      newParent->InsertFrames(nsIFrame::kNoReflowPrincipalList, nullptr,
+                              nullptr, tail);
 
       // The list name kNoReflowPrincipalList would indicate we don't want
       // reflow
       nsFrameList temp(newParent, newParent);
-      grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent, temp);
+      grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent,
+                                nullptr, temp);
     }
 
     frame = parent;
@@ -603,7 +605,7 @@ static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
   // The list name kNoReflowPrincipalList would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
   nsFrameList temp(*aNewFrame, *aNewFrame);
-  parent->InsertFrames(nsIFrame::kNoReflowPrincipalList, aFrame, temp);
+  parent->InsertFrames(nsIFrame::kNoReflowPrincipalList, aFrame, nullptr, temp);
 
   if (!aIsFluid) {
     // Split inline ancestor frames

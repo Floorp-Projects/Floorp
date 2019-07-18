@@ -36,6 +36,7 @@ class nsPopupSetFrame final : public nsBoxFrame {
                             nsFrameList& aFrameList) override;
   virtual void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override;
 
   virtual const nsFrameList& GetChildList(ChildListID aList) const override;

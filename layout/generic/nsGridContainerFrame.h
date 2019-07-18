@@ -151,6 +151,7 @@ class nsGridContainerFrame final : public nsContainerFrame {
   bool DrainSelfOverflowList() override;
   void AppendFrames(ChildListID aListID, nsFrameList& aFrameList) override;
   void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                    const nsLineList::iterator* aPrevFrameLine,
                     nsFrameList& aFrameList) override;
   void RemoveFrame(ChildListID aListID, nsIFrame* aOldFrame) override;
   uint16_t CSSAlignmentForAbsPosChild(const ReflowInput& aChildRI,

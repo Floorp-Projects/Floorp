@@ -706,9 +706,9 @@ void nsMathMLContainerFrame::AppendFrames(ChildListID aListID,
   ChildListChanged(dom::MutationEvent_Binding::ADDITION);
 }
 
-void nsMathMLContainerFrame::InsertFrames(ChildListID aListID,
-                                          nsIFrame* aPrevFrame,
-                                          nsFrameList& aFrameList) {
+void nsMathMLContainerFrame::InsertFrames(
+    ChildListID aListID, nsIFrame* aPrevFrame,
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aFrameList) {
   MOZ_ASSERT(aListID == kPrincipalList);
   mFrames.InsertFrames(this, aPrevFrame, aFrameList);
   ChildListChanged(dom::MutationEvent_Binding::ADDITION);

@@ -5013,7 +5013,7 @@ bool nsBlockFrame::DrainOverflowLines() {
       mLines.splice(mLines.begin(), overflowLines->mLines);
       NS_ASSERTION(overflowLines->mLines.empty(), "splice should empty list");
       delete overflowLines;
-      AddFrames(ocContinuations, mFrames.LastChild());
+      AddFrames(ocContinuations, mFrames.LastChild(), nullptr);
       didFindOverflow = true;
     }
   }
@@ -5339,7 +5339,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
     GetParent()->AddStateBits(NS_STATE_SVG_TEXT_CORRESPONDENCE_DIRTY);
   }
 
-  AddFrames(aFrameList, lastKid);
+  AddFrames(aFrameList, lastKid, nullptr);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
         this, IntrinsicDirty::TreeChange,
@@ -5348,6 +5348,7 @@ void nsBlockFrame::AppendFrames(ChildListID aListID, nsFrameList& aFrameList) {
 }
 
 void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                                const nsLineList::iterator* aPrevFrameLine,
                                 nsFrameList& aFrameList) {
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");
@@ -5374,7 +5375,7 @@ void nsBlockFrame::InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
   printf("\n");
 #endif
 
-  AddFrames(aFrameList, aPrevFrame);
+  AddFrames(aFrameList, aPrevFrame, aPrevFrameLine);
   if (aListID != kNoReflowPrincipalList) {
     PresShell()->FrameNeedsReflow(
         this, IntrinsicDirty::TreeChange,
@@ -5435,7 +5436,8 @@ static bool ShouldPutNextSiblingOnNewLine(nsIFrame* aLastFrame) {
   return false;
 }
 
-void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling) {
+void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
+                             const nsLineList::iterator* aPrevSiblingLine) {
   // Clear our line cursor, since our lines may change.
   ClearLineCursor();
 
@@ -5446,36 +5448,69 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling) {
   // Attempt to find the line that contains the previous sibling
   nsLineList* lineList = &mLines;
   nsFrameList* frames = &mFrames;
-  nsLineList::iterator prevSibLine = lineList->end();
-  int32_t prevSiblingIndex = -1;
-  if (aPrevSibling) {
-    // XXX_perf This is technically O(N^2) in some cases, but by using
-    // RFind instead of Find, we make it O(N) in the most common case,
-    // which is appending content.
-
-    // Find the line that contains the previous sibling
-    if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
-                                        prevSibLine, mFrames.LastChild(),
-                                        &prevSiblingIndex)) {
-      // Not in mLines - try overflow lines.
-      FrameLines* overflowLines = GetOverflowLines();
-      bool found = false;
-      if (overflowLines) {
-        prevSibLine = overflowLines->mLines.end();
-        prevSiblingIndex = -1;
-        found = nsLineBox::RFindLineContaining(
-            aPrevSibling, overflowLines->mLines.begin(), prevSibLine,
-            overflowLines->mFrames.LastChild(), &prevSiblingIndex);
+  nsLineList::iterator prevSibLine;
+  int32_t prevSiblingIndex;
+  if (aPrevSiblingLine) {
+    MOZ_ASSERT(aPrevSibling);
+    prevSibLine = *aPrevSiblingLine;
+    FrameLines* overflowLines = GetOverflowLines();
+    MOZ_ASSERT(prevSibLine.IsInSameList(mLines.begin()) ||
+                   (overflowLines &&
+                    prevSibLine.IsInSameList(overflowLines->mLines.begin())),
+               "must be one of our line lists");
+    if (overflowLines) {
+      // We need to find out which list it's actually in.  Assume that
+      // *if* we have overflow lines, that our primary lines aren't
+      // huge, but our overflow lines might be.
+      nsLineList::iterator line = mLines.begin(), lineEnd = mLines.end();
+      while (line != lineEnd) {
+        if (line == prevSibLine) {
+          break;
+        }
+        ++line;
       }
-      if (MOZ_LIKELY(found)) {
+      if (line == lineEnd) {
+        // By elimination, the line must be in our overflow lines.
         lineList = &overflowLines->mLines;
         frames = &overflowLines->mFrames;
-      } else {
-        // Note: defensive code! RFindLineContaining must not return
-        // false in this case, so if it does...
-        MOZ_ASSERT_UNREACHABLE("prev sibling not in line list");
-        aPrevSibling = nullptr;
-        prevSibLine = lineList->end();
+      }
+    }
+    // FIXME: Should this IndexOf search from the end?
+    prevSiblingIndex = prevSibLine->IndexOf(aPrevSibling);
+    MOZ_ASSERT(prevSiblingIndex >= 0,
+               "aPrevSibling must be in aPrevSiblingLine");
+  } else {
+    prevSibLine = lineList->end();
+    prevSiblingIndex = -1;
+    if (aPrevSibling) {
+      // XXX_perf This is technically O(N^2) in some cases, but by using
+      // RFind instead of Find, we make it O(N) in the most common case,
+      // which is appending content.
+
+      // Find the line that contains the previous sibling
+      if (!nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+                                          prevSibLine, mFrames.LastChild(),
+                                          &prevSiblingIndex)) {
+        // Not in mLines - try overflow lines.
+        FrameLines* overflowLines = GetOverflowLines();
+        bool found = false;
+        if (overflowLines) {
+          prevSibLine = overflowLines->mLines.end();
+          prevSiblingIndex = -1;
+          found = nsLineBox::RFindLineContaining(
+              aPrevSibling, overflowLines->mLines.begin(), prevSibLine,
+              overflowLines->mFrames.LastChild(), &prevSiblingIndex);
+        }
+        if (MOZ_LIKELY(found)) {
+          lineList = &overflowLines->mLines;
+          frames = &overflowLines->mFrames;
+        } else {
+          // Note: defensive code! RFindLineContaining must not return
+          // false in this case, so if it does...
+          MOZ_ASSERT_UNREACHABLE("prev sibling not in line list");
+          aPrevSibling = nullptr;
+          prevSibLine = lineList->end();
+        }
       }
     }
   }
@@ -7026,7 +7061,7 @@ void nsBlockFrame::SetInitialChildList(ChildListID aListID,
                  "NS_BLOCK_HAS_FIRST_LETTER_STYLE state out of sync");
 #endif
 
-    AddFrames(aChildList, nullptr);
+    AddFrames(aChildList, nullptr, nullptr);
   } else {
     nsContainerFrame::SetInitialChildList(aListID, aChildList);
   }

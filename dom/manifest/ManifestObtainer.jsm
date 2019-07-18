@@ -39,16 +39,22 @@ var ManifestObtainer = {
    * Public interface for obtaining a web manifest from a XUL browser, to use
    * on the parent process.
    * @param  {XULBrowser} The browser to check for the manifest.
+   * @param {Object} aOptions
+   * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
+   *                                            Adds proprietary moz_* members to manifest.
    * @return {Promise<Object>} The processed manifest.
    */
-  async browserObtainManifest(aBrowser) {
+  async browserObtainManifest(
+    aBrowser,
+    aOptions = { checkConformance: false }
+  ) {
     if (!isXULBrowser(aBrowser)) {
       throw new TypeError("Invalid input. Expected XUL browser.");
     }
     const mm = aBrowser.messageManager;
     const {
       data: { success, result },
-    } = await PromiseMessage.send(mm, "DOM:ManifestObtainer:Obtain");
+    } = await PromiseMessage.send(mm, "DOM:ManifestObtainer:Obtain", aOptions);
     if (!success) {
       const error = toError(result);
       throw error;
@@ -60,6 +66,7 @@ var ManifestObtainer = {
    * @param {Window} aContent A content Window from which to extract the manifest.
    * @param {Object} aOptions
    * @param {Boolean} aOptions.checkConformance If spec conformance messages should be collected.
+   *                                            Adds proprietary moz_* members to manifest.
    * @return {Promise<Object>} The processed manifest.
    */
   contentObtainManifest(aContent, aOptions = { checkConformance: false }) {

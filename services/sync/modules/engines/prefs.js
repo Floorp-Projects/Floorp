@@ -31,6 +31,12 @@ XPCOMUtils.defineLazyGetter(this, "PREFS_GUID", () =>
   CommonUtils.encodeBase64URL(Services.appinfo.ID)
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "AddonManager",
+  "resource://gre/modules/AddonManager.jsm"
+);
+
 // In bug 1538015, we decided that it isn't always safe to allow all "incoming"
 // preferences to be applied locally. So we have introduced another preference,
 // which if false (the default) will ignore all incoming preferences which don't
@@ -200,6 +206,10 @@ PrefStore.prototype = {
   },
 
   _setAllPrefs(values) {
+    const selectedThemeIDPref = "extensions.activeThemeID";
+    let selectedThemeIDBefore = this._prefs.get(selectedThemeIDPref, null);
+    let selectedThemeIDAfter = selectedThemeIDBefore;
+
     // Update 'services.sync.prefs.sync.foo.pref' before 'foo.pref', otherwise
     // _isSynced returns false when 'foo.pref' doesn't exist (e.g., on a new device).
     let prefs = Object.keys(values).sort(
@@ -250,16 +260,54 @@ PrefStore.prototype = {
         continue;
       }
 
-      if (value == null) {
-        // Pref has gone missing. The best we can do is reset it.
-        this._prefs.reset(pref);
-      } else {
-        try {
-          this._prefs.set(pref, value);
-        } catch (ex) {
-          this._log.trace(`Failed to set pref: ${pref}`, ex);
-        }
+      switch (pref) {
+        // Some special prefs we don't want to set directly.
+        case selectedThemeIDPref:
+          selectedThemeIDAfter = value;
+          break;
+
+        // default is to just set the pref
+        default:
+          if (value == null) {
+            // Pref has gone missing. The best we can do is reset it.
+            this._prefs.reset(pref);
+          } else {
+            try {
+              this._prefs.set(pref, value);
+            } catch (ex) {
+              this._log.trace(`Failed to set pref: ${pref}`, ex);
+            }
+          }
       }
+    }
+    // Themes are a little messy. Themes which have been installed are handled
+    // by the addons engine - but default themes aren't seen by that engine.
+    // So if there's a new default theme ID and that ID corresponds to a
+    // system addon, then we arrange to enable that addon here.
+    if (selectedThemeIDBefore != selectedThemeIDAfter) {
+      this._maybeEnableBuiltinTheme(selectedThemeIDAfter).catch(e => {
+        this._log.error("Failed to maybe update the default theme", e);
+      });
+    }
+  },
+
+  async _maybeEnableBuiltinTheme(themeId) {
+    let addon = null;
+    try {
+      addon = await AddonManager.getAddonByID(themeId);
+    } catch (ex) {
+      this._log.trace(
+        `There's no addon with ID '${themeId} - it can't be a builtin theme`
+      );
+      return;
+    }
+    if (addon && addon.isBuiltin && addon.type == "theme") {
+      this._log.trace(`Enabling builtin theme '${themeId}'`);
+      await addon.enable();
+    } else {
+      this._log.trace(
+        `Have incoming theme ID of '${themeId}' but it's not a builtin theme`
+      );
     }
   },
 

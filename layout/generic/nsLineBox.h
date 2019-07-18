@@ -525,10 +525,8 @@ class nsLineBox final : public nsLineLink {
 
   void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const;
 
- private:
   int32_t IndexOf(nsIFrame* aFrame) const;
 
- public:
   bool Contains(nsIFrame* aFrame) const {
     return MOZ_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Contains(aFrame)
                                                  : IndexOf(aFrame) >= 0;
@@ -831,6 +829,12 @@ class nsLineList_iterator {
     return mCurrent != aOther.mCurrent;
   }
 
+#ifdef DEBUG
+  bool IsInSameList(const iterator_self_type aOther) const {
+    return mListLink == aOther.mListLink;
+  }
+#endif
+
  private:
   link_type* mCurrent;
 #ifdef DEBUG
@@ -964,6 +968,12 @@ class nsLineList_reverse_iterator {
     return mCurrent != aOther.mCurrent;
   }
 
+#ifdef DEBUG
+  bool IsInSameList(const iterator_self_type aOther) const {
+    return mListLink == aOther.mListLink;
+  }
+#endif
+
  private:
   link_type* mCurrent;
 #ifdef DEBUG
@@ -1094,6 +1104,12 @@ class nsLineList_const_iterator {
     return mCurrent != aOther.mCurrent;
   }
 
+#ifdef DEBUG
+  bool IsInSameList(const iterator_self_type aOther) const {
+    return mListLink == aOther.mListLink;
+  }
+#endif
+
  private:
   const link_type* mCurrent;
 #ifdef DEBUG
@@ -1213,6 +1229,12 @@ class nsLineList_const_reverse_iterator {
                  "comparing iterators over different lists");
     return mCurrent != aOther.mCurrent;
   }
+
+#ifdef DEBUG
+  bool IsInSameList(const iterator_self_type aOther) const {
+    return mListLink == aOther.mListLink;
+  }
+#endif
 
   // private:
   const link_type* mCurrent;

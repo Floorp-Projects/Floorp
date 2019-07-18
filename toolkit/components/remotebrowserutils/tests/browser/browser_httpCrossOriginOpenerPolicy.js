@@ -33,7 +33,7 @@ async function test_coop(start, target, expectedProcessSwitch) {
       waitForStateStop: true,
     },
     async function(_browser) {
-      info(`Test tab ready: ${start}`);
+      info(`test_coop: Test tab ready: ${start}`);
 
       await new Promise(resolve => setTimeout(resolve, 20));
       let browser = gBrowser.selectedBrowser;
@@ -81,6 +81,88 @@ async function test_coop(start, target, expectedProcessSwitch) {
           `from: ${start} to ${target}`
         );
       }
+    }
+  );
+}
+
+function waitForDownloadWindow() {
+  return new Promise(resolve => {
+    var listener = {
+      onOpenWindow: aXULWindow => {
+        info("Download window shown...");
+        Services.wm.removeListener(listener);
+
+        function downloadOnLoad() {
+          domwindow.removeEventListener("load", downloadOnLoad, true);
+
+          is(
+            domwindow.document.location.href,
+            "chrome://mozapps/content/downloads/unknownContentType.xul",
+            "Download page appeared"
+          );
+          resolve(domwindow);
+        }
+
+        var domwindow = aXULWindow.docShell.domWindow;
+        domwindow.addEventListener("load", downloadOnLoad, true);
+      },
+      onCloseWindow: aXULWindow => {},
+    };
+
+    Services.wm.addListener(listener);
+  });
+}
+
+async function test_download_from(initCoop, downloadCoop) {
+  let start = httpURL(
+    "coop_header.sjs?downloadPage&" + initCoop,
+    "https://example.com"
+  );
+  return BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      waitForStateStop: true,
+    },
+    async function(_browser) {
+      info(`test_download: Test tab ready`);
+
+      let browser = gBrowser.selectedBrowser;
+      await performLoad(
+        browser,
+        {
+          url: start,
+          maybeErrorPage: false,
+        },
+        async () => {
+          BrowserTestUtils.loadURI(browser, start);
+          info(`test_download: Loading download page ${start}`);
+
+          // Wait for process switch even the page is load from a new tab.
+          if (initCoop != "") {
+            await BrowserTestUtils.waitForEvent(
+              gBrowser.getTabForBrowser(browser),
+              "SSTabRestored"
+            );
+          }
+        }
+      );
+
+      info(`test_download: Download page ready ${start}`);
+
+      await new Promise(resolve => setTimeout(resolve, 20));
+
+      info(`Downloading ${downloadCoop}`);
+
+      let winPromise = waitForDownloadWindow();
+      browser = gBrowser.selectedBrowser;
+      ContentTask.spawn(browser, downloadCoop, downloadCoop => {
+        content.document.getElementById(downloadCoop).click();
+      });
+
+      // if the download page doesn't appear, the promise leads a timeout.
+      let win = await winPromise;
+
+      await BrowserTestUtils.closeWindow(win);
     }
   );
 }
@@ -237,4 +319,28 @@ add_task(async function test_enabled() {
     httpURL("coop_header.sjs?same-site#2", "https://example.org"),
     true
   );
+});
+
+add_task(async function test_download() {
+  requestLongerTimeout(4);
+  await SpecialPowers.pushPrefEnv({ set: [[PREF_NAME, true]] });
+
+  let initCoopArray = ["", "same-site", "same-origin"];
+
+  let downloadCoopArray = [
+    "no-coop",
+    "same-site",
+    "same-origin",
+    "same-site%20unsafe-allow-outgoing",
+    "same-origin%20unsafe-allow-outgoing",
+  ];
+
+  // If the coop mismatch between current page and download link, clicking the
+  // download link will make the page empty and popup the download window. That
+  // forces us to reload the page every time.
+  for (var initCoop of initCoopArray) {
+    for (var downloadCoop of downloadCoopArray) {
+      await test_download_from(initCoop, downloadCoop);
+    }
+  }
 });

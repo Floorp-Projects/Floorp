@@ -1503,9 +1503,9 @@ void nsTableRowGroupFrame::AppendFrames(ChildListID aListID,
   }
 }
 
-void nsTableRowGroupFrame::InsertFrames(ChildListID aListID,
-                                        nsIFrame* aPrevFrame,
-                                        nsFrameList& aFrameList) {
+void nsTableRowGroupFrame::InsertFrames(
+    ChildListID aListID, nsIFrame* aPrevFrame,
+    const nsLineList::iterator* aPrevFrameLine, nsFrameList& aFrameList) {
   NS_ASSERTION(aListID == kPrincipalList, "unexpected child list");
   NS_ASSERTION(!aPrevFrame || aPrevFrame->GetParent() == this,
                "inserting after sibling frame with different parent");

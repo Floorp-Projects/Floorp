@@ -1909,6 +1909,19 @@ class nsCSSFrameConstructor final : public nsFrameManager {
                              bool aItemIsWithinSVGText,
                              bool aItemAllowsTextPathChild);
 
+  // Determine whether we need to wipe out aFrame (the insertion parent) and
+  // rebuild the entire subtree when we insert or append new content under
+  // aFrame.
+  //
+  // This is similar to WipeContainingBlock(), but is called before constructing
+  // any frame construction items. Any container frames which need reframing
+  // regardless of the content inserted or appended can add a check in this
+  // method.
+  //
+  // @return true if we reconstructed the insertion parent frame; false
+  // otherwise
+  bool WipeInsertionParent(nsContainerFrame* aFrame);
+
   // Determine whether we need to wipe out what we just did and start over
   // because we're doing something like adding block kids to an inline frame
   // (and therefore need an {ib} split).  aPrevSibling must be correct, even in

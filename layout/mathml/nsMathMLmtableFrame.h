@@ -80,8 +80,9 @@ class nsMathMLmtableFrame final : public nsTableFrame {
   }
 
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override {
-    nsTableFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+    nsTableFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine, aFrameList);
     RestyleTable();
   }
 
@@ -175,8 +176,10 @@ class nsMathMLmtrFrame final : public nsTableRowFrame {
   }
 
   virtual void InsertFrames(ChildListID aListID, nsIFrame* aPrevFrame,
+                            const nsLineList::iterator* aPrevFrameLine,
                             nsFrameList& aFrameList) override {
-    nsTableRowFrame::InsertFrames(aListID, aPrevFrame, aFrameList);
+    nsTableRowFrame::InsertFrames(aListID, aPrevFrame, aPrevFrameLine,
+                                  aFrameList);
     RestyleTable();
   }
 
