@@ -45,35 +45,32 @@ def _extract_and_check_timestamps(archive_filename, regex):
         )
 
     date, clock = timestamp.split('.')
-    return date, clock, buildno
+
+    return {
+            'date': date,
+            'clock': clock,
+            'buildno': buildno
+    }
 
 
 def _extract_old_timestamp(files):
     """Function to find and ensure that a single timestamp has been used
     across a component's related files"""
-    identifiers_collection = set()
-    for file_ in files:
-        (date, clock, bno) = _extract_and_check_timestamps(file_,
-                                                           SNAPSHOT_TIMESTAMP_REGEX)
-        _args = {
-            'date': date,
-            'clock': clock,
-            'buildno': bno
-        }
-        identifiers_collection.add(frozenset(_args.items()))
-
-    if len(identifiers_collection) > 1:
+    identifiers = {frozenset(_extract_and_check_timestamps(file_,
+                                                           SNAPSHOT_TIMESTAMP_REGEX).items())
+                   for file_ in files}
+    if len(identifiers) > 1:
         # bail if there are different timestamps/buildnumbers across the files
         raise Exception('Different buildnumbers/timestamps identified within the files')
-    elif len(identifiers_collection) == 0:
+    elif len(identifiers) == 0:
         # bail if no valid timestamp was found
         raise Exception('No valid timestamp was identified within the files')
 
-    old_timestamp_dict = dict(next(iter(identifiers_collection)))
+    old_timestamp_dict = dict(identifiers.pop())
     return '{date}.{clock}-{buildno}'.format(**old_timestamp_dict)
 
 
-def is_snapshot_timestamped_file(filename):
+def does_file_name_contain_timestamp(filename):
     """Function to filter out filenames that are part of the snapshot releae but
     they are not timestamped."""
 
@@ -84,30 +81,29 @@ def is_snapshot_timestamped_file(filename):
 
 
 def process_snapshots_artifacts(path, timestamp):
-    files = []
-    # gather all the files recursively
-    for (dirpath, dirnames, filenames) in os.walk(args.path):
-        if filenames:
-            files.extend(filenames)
-
-    # exclude files that are not timestamped such as metadata.xml
-    files = filter(lambda f: is_snapshot_timestamped_file(f), files)
+    timestamped_files = [
+        file_name
+        for (_, __, file_names) in os.walk(path)
+        if file_names
+        for file_name in file_names
+        if does_file_name_contain_timestamp(file_name)
+    ]
 
     # extract their timestamps and ensure it's unique
-    old_timestamp = _extract_old_timestamp(files)
+    old_timestamp = _extract_old_timestamp(timestamped_files)
 
     # walk recursively again and rename the files accordingly
-    for (dirpath, dirnames, filenames) in os.walk(args.path):
+    for (dirpath, _, filenames) in os.walk(args.path):
         for filename in filenames:
             if old_timestamp in filename:
                 new_filename = filename.replace(old_timestamp, timestamp)
                 os.rename(os.path.join(dirpath, filename),
-                        os.path.join(dirpath, new_filename))
+                          os.path.join(dirpath, new_filename))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description='Rename SNAPSHOT artifacts to unieque runtime TIMESTAMP'
+        description='Rename SNAPSHOT artifacts to unique runtime TIMESTAMP'
     )
     parser.add_argument(
         '--path',
