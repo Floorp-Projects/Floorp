@@ -10,8 +10,4 @@ let promisesFound = [];
 dbg.onNewPromise = p => { promisesFound.push(p); };
 
 let p1 = new g.Promise(function (){});
-dbg.enabled = false;
-let p2 = new g.Promise(function (){});
-
 assertEq(promisesFound.indexOf(gw.makeDebuggeeValue(p1)) != -1, true);
-assertEq(promisesFound.indexOf(gw.makeDebuggeeValue(p2)) == -1, true);
