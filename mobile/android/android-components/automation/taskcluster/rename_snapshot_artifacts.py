@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 """
 Script to rename snapshots artifacts to a runtime centralized TIMESTAMP
 """
@@ -89,7 +93,7 @@ def process_snapshots_artifacts(path, timestamp):
     # exclude files that are not timestamped such as metadata.xml
     files = filter(lambda f: is_snapshot_timestamped_file(f), files)
 
-    # extract their timestamps
+    # extract their timestamps and ensure it's unique
     old_timestamp = _extract_old_timestamp(files)
 
     # walk recursively again and rename the files accordingly
