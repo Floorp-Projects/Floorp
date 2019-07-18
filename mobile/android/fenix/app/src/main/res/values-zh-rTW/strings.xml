@@ -336,6 +336,11 @@
     <string name="collection_rename">更名收藏集</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">開啟分頁</string>
+    <!-- Text for the button to delete a single session -->
+    <string name="session_item_delete">刪除</string>
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
+    <string name="session_items_more">還有 %1$d 個網站…</string>
 
 
     <!-- History -->
@@ -597,7 +602,7 @@
 
 
     <!-- Sample text for accessibility font size -->
-    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+    <string name="accessibility_text_size_sample_text">The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. 
 中文字型測試：「永東國酬，愛鬱。靈鷹袋！」</string>
     <!-- Summary for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_text_size_summary">放大或縮小網站上的文字</string>

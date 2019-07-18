@@ -23,9 +23,9 @@
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_explanation">%1$s borra tus búsquedas e historial de navegación cuando cierras una sesión privada
-        Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet,
+        Aunque no te hace anónimo para los sitios web o proveedor de servicios de Internet, 
         te ayuda a mantener en privado lo que haces en línea frente a cualquier otra persona que use este dispositivo. \n\nMitos comunes sobre la navegación privada
-
+        
     </string>
     <!-- Delete session button to erase your history in a private session -->
     <string name="private_browsing_delete_session">Eliminar sesión</string>
@@ -331,6 +331,12 @@
     <string name="collection_rename">Cambiar nombre a colección</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Abrir pestañas</string>
+    <!-- Text for the button to delete a single session -->
+    <string name="session_item_delete">Eliminar</string>
+
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
+    <string name="session_items_more">Sitios %1$d…</string>
 
 
     <!-- History -->

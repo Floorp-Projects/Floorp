@@ -330,6 +330,11 @@
     <string name="collection_rename">모음집 이름 변경</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">열린 탭</string>
+    <!-- Text for the button to delete a single session -->
+    <string name="session_item_delete">삭제</string>
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
+    <string name="session_items_more">사이트 %1$d개…</string>
 
 
     <!-- History -->
@@ -677,9 +682,9 @@
     <string name="onboarding_privacy_notice_header">개인 정보 보호</string>
     <!-- text for the privacy notice onboarding card description
     The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">우리는 %s가 무엇을 온라인에서 공유하고 우리와 공유할지
+    <string name="onboarding_privacy_notice_description">우리는 %s가 무엇을 온라인에서 공유하고 우리와 공유할지 
          사용자가 제어할 수 있게 만들었습니다.
-
+    
     </string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">개인 정보 보호 정책 읽기</string>
