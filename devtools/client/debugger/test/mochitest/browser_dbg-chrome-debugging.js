@@ -11,8 +11,9 @@ var gClient, gThreadFront;
 var gNewChromeSource = promise.defer();
 
 var { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-var customLoader = new DevToolsLoader();
-customLoader.invisibleToDebugger = true;
+var customLoader = new DevToolsLoader({
+  invisibleToDebugger: true,
+});
 var { DebuggerServer } = customLoader.require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/debugger-client");
 

@@ -32,8 +32,9 @@ function setupServer(mm) {
   // Init a custom, invisible DebuggerServer, in order to not pollute the
   // debugger with all devtools modules, nor break the debugger itself with
   // using it in the same process.
-  gLoader = new DevToolsLoader();
-  gLoader.invisibleToDebugger = true;
+  gLoader = new DevToolsLoader({
+    invisibleToDebugger: true,
+  });
   const { DebuggerServer } = gLoader.require("devtools/server/main");
 
   DebuggerServer.init();
