@@ -201,12 +201,6 @@ parent:
     async PPaymentRequest();
 
     /**
-     * Construct a new WindowGlobal actor for a window global in the given
-     * BrowsingContext and with the given principal.
-     */
-    async PWindowGlobal(WindowGlobalInit init);
-
-    /**
      * Construct a new Remote iframe actor.
      */
     async PBrowserBridge(nsString aPresentationURL, nsString aRemoteType,
@@ -1019,6 +1013,12 @@ parent:
 
     /** Fetches the visited status for an array of URIs (Android-only). */
     async QueryVisitedState(URIParams[] aURIs);
+
+    /**
+     * Construct a new WindowGlobal for an existing global in the content process
+     */
+    async NewWindowGlobal(ManagedEndpoint<PWindowGlobalParent> aEndpoint,
+                          WindowGlobalInit aInit);
 
 /*
  * FIXME: write protocol!
