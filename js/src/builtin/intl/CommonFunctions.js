@@ -10,7 +10,8 @@
         let localeObj = parseLanguageTag(locale); \
         assert(localeObj !== null, \
                `${desc} is a structurally valid language tag`); \
-        assert(StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj)) === locale, \
+        CanonicalizeLanguageTagObject(localeObj); \
+        assert(StringFromLanguageTagObject(localeObj) === locale, \
                `${desc} is a canonicalized language tag`); \
     } while (false)
 #else
@@ -297,14 +298,8 @@ MakeConstructible(BCP47TokenStream, {
  * ----------------------------------------------------------------------------
  *
  * Returns null if |locale| can't be parsed as a `unicode_locale_id`. If the
- * input is a grandfathered language tag, the object
- *
- *   {
- *     locale: locale (normalized to canonical form),
- *     grandfathered: true,
- *   }
- *
- * is returned. Otherwise the returned object has the following structure:
+ * input is a grandfathered language tag, it is directly canonicalized to its
+ * modern form. The returned object has the following structure:
  *
  *   {
  *     language: `unicode_language_subtag`,
@@ -544,6 +539,18 @@ function parseLanguageTag(locale) {
     if (ts.token !== NONE)
         return null;
 
+    var tagObj = {
+        language,
+        script,
+        region,
+        variants,
+        extensions,
+        privateuse,
+    };
+
+    // Handle grandfathered tags right away, so we don't need to have extra
+    // paths for grandfathered tags later on.
+    //
     // grandfathered = "art-lojban"     ; non-redundant tags registered
     //               / "cel-gaulish"    ; during the RFC 3066 era
     //               / "zh-guoyu"       ; these tags match the 'langtag'
@@ -554,23 +561,11 @@ function parseLanguageTag(locale) {
     //                                  ; and all of these are deprecated
     //                                  ; in favor of a more modern
     //                                  ; subtag or sequence of subtags
-    if (hasOwn(ts.localeLowercase, grandfatheredMappings)) {
-        return {
-            locale: grandfatheredMappings[ts.localeLowercase],
-            grandfathered: true,
-        };
-    }
+    if (hasOwn(ts.localeLowercase, grandfatheredMappings))
+        updateGrandfatheredMappings(tagObj);
 
-    // Return if the complete input was successfully parsed and it is not a
-    // regular grandfathered language tag.
-    return {
-        language,
-        script,
-        region,
-        variants,
-        extensions,
-        privateuse,
-    };
+    // Return if the complete input was successfully parsed.
+    return tagObj;
 }
 
 /**
@@ -744,18 +739,6 @@ function IsStructurallyValidLanguageTag(locale) {
 function CanonicalizeLanguageTagObject(localeObj) {
     assert(IsObject(localeObj), "CanonicalizeLanguageTagObject");
 
-    // Handle grandfathered language tags.
-    if (hasOwn("grandfathered", localeObj)) {
-        // If the grandfathered tag has a modern form, it is already stored in
-        // |localeObj.locale|, so we only need to reparse it again to retrieve
-        // the canonical form.
-        // TODO: Change to in-place update instead of creating a new object?
-        localeObj = parseLanguageTag(localeObj.locale);
-        assert(localeObj !== null,
-               "grandfathered language tags are well-formed");
-        return localeObj;
-    }
-
     // Per UTS 35, 3.3.1, the very first step is to canonicalize the syntax by
     // normalizing the case and ordering all subtags. The canonical syntax form
     // itself is specified in UTS 35, 3.2.1.
@@ -849,8 +832,6 @@ function CanonicalizeLanguageTagObject(localeObj) {
     // The two final steps in 3.3.1, handling irregular grandfathered and
     // private-use only language tags, don't apply, because these two forms
     // can't occur in Unicode BCP 47 locale identifiers.
-
-    return localeObj;
 }
 
 /**
@@ -1105,7 +1086,9 @@ function CanonicalizeLanguageTag(locale) {
     var localeObj = parseLanguageTag(locale);
     assert(localeObj !== null, "CanonicalizeLanguageTag");
 
-    return StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj));
+    CanonicalizeLanguageTagObject(localeObj);
+
+    return StringFromLanguageTagObject(localeObj);
 }
 
 /**
@@ -1113,10 +1096,6 @@ function CanonicalizeLanguageTag(locale) {
  */
 function StringFromLanguageTagObject(localeObj) {
     assert(IsObject(localeObj), "StringFromLanguageTagObject");
-
-    // Handle grandfathered language tags.
-    if (hasOwn("grandfathered", localeObj))
-        return localeObj.locale;
 
     var {
         language,
@@ -1198,7 +1177,9 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
     if (localeObj === null)
         ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, locale);
 
-    return StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj));
+    CanonicalizeLanguageTagObject(localeObj)
+
+    return StringFromLanguageTagObject(localeObj);
 }
 
 // The last-ditch locale is used if none of the available locales satisfies a
@@ -1250,7 +1231,9 @@ function DefaultLocaleIgnoringAvailableLocales() {
     if (candidate === null) {
         candidate = lastDitchLocale();
     } else {
-        candidate = StringFromLanguageTagObject(CanonicalizeLanguageTagObject(candidate));
+        CanonicalizeLanguageTagObject(candidate);
+
+        candidate = StringFromLanguageTagObject(candidate);
 
         // The default locale must be in [[availableLocales]], and that list
         // must not contain any locales with Unicode extension sequences, so
