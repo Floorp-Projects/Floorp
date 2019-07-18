@@ -527,6 +527,9 @@ class BaselineCompilerHandler {
   CompilerFrameInfo frame_;
   TempAllocator& alloc_;
   BytecodeAnalysis analysis_;
+#ifdef DEBUG
+  const MacroAssembler& masm_;
+#endif
   FixedList<Label> labels_;
   RetAddrEntryVector retAddrEntries_;
   JSScript* script_;
@@ -583,14 +586,7 @@ class BaselineCompilerHandler {
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
 
   MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
-                                       uint32_t retOffset) {
-    if (!retAddrEntries_.emplaceBack(script_->pcToOffset(pc_), kind,
-                                     CodeOffset(retOffset))) {
-      ReportOutOfMemory(cx);
-      return false;
-    }
-    return true;
-  }
+                                       uint32_t retOffset);
 
   // If a script has more |nslots| than this the stack check must account
   // for these slots explicitly.
