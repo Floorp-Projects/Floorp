@@ -76,6 +76,7 @@
                 android:layout_marginStart="47dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:padding="12dp"
                 android:text="@string/search_hint"
                 android:textColor="?primaryText"

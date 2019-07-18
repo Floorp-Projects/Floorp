@@ -265,6 +265,7 @@ class HomeFragment : Fragment(), AccountObserver {
             nav(R.id.homeFragment, directions)
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
+        view.toolbar.requestFocus()
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
