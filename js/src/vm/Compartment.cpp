@@ -185,7 +185,7 @@ bool Compartment::wrap(JSContext* cx, MutableHandleBigInt bi) {
 }
 
 bool Compartment::getNonWrapperObjectForCurrentCompartment(
-    JSContext* cx, MutableHandleObject obj) {
+    JSContext* cx, HandleObject origObj, MutableHandleObject obj) {
   // Ensure that we have entered a realm.
   MOZ_ASSERT(cx->global());
 
@@ -263,7 +263,7 @@ bool Compartment::getNonWrapperObjectForCurrentCompartment(
     return false;
   }
   if (preWrap) {
-    preWrap(cx, cx->global(), obj, objectPassedToWrap, obj);
+    preWrap(cx, cx->global(), origObj, obj, objectPassedToWrap, obj);
     if (!obj) {
       return false;
     }
@@ -330,7 +330,8 @@ bool Compartment::wrap(JSContext* cx, MutableHandleObject obj) {
 
   // The passed object may already be wrapped, or may fit a number of special
   // cases that we need to check for and manually correct.
-  if (!getNonWrapperObjectForCurrentCompartment(cx, obj)) {
+  if (!getNonWrapperObjectForCurrentCompartment(cx, /* origObj = */ nullptr,
+                                                obj)) {
     return false;
   }
 
@@ -368,8 +369,11 @@ bool Compartment::rewrap(JSContext* cx, MutableHandleObject obj,
   }
 
   // The passed object may already be wrapped, or may fit a number of special
-  // cases that we need to check for and manually correct.
-  if (!getNonWrapperObjectForCurrentCompartment(cx, obj)) {
+  // cases that we need to check for and manually correct. We pass in
+  // |existingArg| instead of |existing|, because the purpose is to get the
+  // address of the object we are transplanting onto, not to find a wrapper
+  // to reuse.
+  if (!getNonWrapperObjectForCurrentCompartment(cx, existingArg, obj)) {
     return false;
   }
 

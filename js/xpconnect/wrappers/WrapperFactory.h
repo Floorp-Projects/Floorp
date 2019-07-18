@@ -89,7 +89,7 @@ class WrapperFactory {
 
   // Prepare a given object for wrapping in a new compartment.
   static void PrepareForWrapping(JSContext* cx, JS::HandleObject scope,
-                                 JS::HandleObject obj,
+                                 JS::HandleObject origObj, JS::HandleObject obj,
                                  JS::HandleObject objectPassedToWrap,
                                  JS::MutableHandleObject retObj);
 
