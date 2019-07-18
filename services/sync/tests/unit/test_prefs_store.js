@@ -11,6 +11,9 @@ const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 
 const PREFS_GUID = CommonUtils.encodeBase64URL(Services.appinfo.ID);
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const COMPACT_THEME_ID = "firefox-compact-light@mozilla.org";
+
 AddonTestUtils.init(this);
 AddonTestUtils.createAppInfo(
   "xpcshell@tests.mozilla.org",
@@ -19,18 +22,29 @@ AddonTestUtils.createAppInfo(
   "1.9.2"
 );
 AddonTestUtils.overrideCertDB();
-AddonTestUtils.awaitPromise(AddonTestUtils.promiseStartupManager());
-
-function makePersona(id) {
-  return {
-    id: id || Math.random().toString(),
-    name: Math.random().toString(),
-    headerURL: "http://localhost:1234/a",
-  };
-}
 
 add_task(async function run_test() {
   _("Test fixtures.");
+  // Part of this test ensures the default theme, via the preference
+  // extensions.activeThemeID, is synced correctly - so we do a little
+  // addons initialization to allow this to work.
+
+  // Enable application scopes to ensure the builtin theme is going to
+  // be installed as part of the the addon manager startup.
+  Preferences.set("extensions.enabledScopes", AddonManager.SCOPE_APPLICATION);
+  await AddonTestUtils.promiseStartupManager();
+
+  // Install another built-in theme.
+  await AddonManager.installBuiltinAddon("resource:///modules/themes/light/");
+
+  const defaultThemeAddon = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
+  ok(defaultThemeAddon, "Got an addon wrapper for the default theme");
+
+  const otherThemeAddon = await AddonManager.getAddonByID(COMPACT_THEME_ID);
+  ok(otherThemeAddon, "Got an addon wrapper for the compact theme");
+
+  await otherThemeAddon.enable();
+
   // read our custom prefs file before doing anything.
   Services.prefs.readDefaultPrefsFromFile(
     do_get_file("prefs_test_prefs_store.js")
@@ -40,6 +54,9 @@ add_task(async function run_test() {
   let store = engine._store;
   let prefs = new Preferences();
   try {
+    _("Expect the compact light theme to be active");
+    Assert.strictEqual(prefs.get("extensions.activeThemeID"), COMPACT_THEME_ID);
+
     _("The GUID corresponds to XUL App ID.");
     let allIDs = await store.getAllIDs();
     let ids = Object.keys(allIDs);
@@ -142,6 +159,7 @@ add_task(async function run_test() {
     );
     record = new PrefRec("prefs", PREFS_GUID);
     record.value = {
+      "extensions.activeThemeID": DEFAULT_THEME_ID,
       "testing.int": 42,
       "testing.string": "im in ur prefs",
       "testing.bool": false,
@@ -160,6 +178,9 @@ add_task(async function run_test() {
       "services.sync.prefs.dangerously_allow_arbitrary": true,
       "services.sync.prefs.sync.services.sync.prefs.dangerously_allow_arbitrary": true,
     };
+
+    const onceAddonEnabled = AddonTestUtils.promiseAddonEvent("onEnabled");
+
     await store.update(record);
     Assert.strictEqual(prefs.get("testing.int"), 42);
     Assert.strictEqual(prefs.get("testing.string"), "im in ur prefs");
@@ -199,6 +220,16 @@ add_task(async function run_test() {
         "services.sync.prefs.sync.services.sync.prefs.dangerously_allow_arbitrary"
       ),
       undefined
+    );
+
+    await onceAddonEnabled;
+    ok(
+      !defaultThemeAddon.userDisabled,
+      "the default theme should have been enabled"
+    );
+    ok(
+      otherThemeAddon.userDisabled,
+      "the compact theme should have been disabled"
     );
 
     _("Only the current app's preferences are applied.");
