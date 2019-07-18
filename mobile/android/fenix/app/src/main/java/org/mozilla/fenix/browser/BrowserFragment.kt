@@ -375,6 +375,10 @@ class BrowserFragment : Fragment(), BackHandler {
                 view.readerViewControlsBar
             ) {
                 getManagedEmitter<QuickActionChange>().apply {
+                    if (it) {
+                        requireComponents.analytics.metrics.track(Event.ReaderModeAvailable)
+                    }
+
                     onNext(QuickActionChange.ReadableStateChange(it))
                     onNext(
                         QuickActionChange.ReaderActiveStateChange(
@@ -527,11 +531,12 @@ class BrowserFragment : Fragment(), BackHandler {
                             } else {
                                 feature.showReaderView()
                                 actionEmitter.onNext(QuickActionChange.ReaderActiveStateChange(true))
+                                requireComponents.analytics.metrics.track(Event.ReaderModeOpened)
                             }
                         }
                     }
                     is QuickActionAction.ReadAppearancePressed -> {
-                        // TODO telemetry: https://github.com/mozilla-mobile/fenix/issues/2267
+                        requireComponents.analytics.metrics.track(Event.ReaderModeAppearanceOpened)
                         readerViewFeature.withFeature { feature ->
                             feature.showControls()
                         }

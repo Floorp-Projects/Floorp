@@ -98,6 +98,9 @@ sealed class Event {
     object HistoryItemOpened : Event()
     object HistoryItemRemoved : Event()
     object HistoryAllItemsRemoved : Event()
+    object ReaderModeAvailable : Event()
+    object ReaderModeOpened : Event()
+    object ReaderModeAppearanceOpened : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(

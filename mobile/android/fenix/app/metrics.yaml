@@ -907,3 +907,37 @@ history:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+reader_mode:
+  available:
+    type: event
+    description: >
+      Reader mode is available for the current page
+    bugs:
+      - 2267
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3941
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  opened:
+    type: event
+    description: >
+      A user opened reader mode
+    bugs:
+      - 2267
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3941
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  appearance:
+    type: event
+    description: >
+      A user tapped the appearance button
+    bugs:
+      - 2267
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3941
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"

@@ -705,7 +705,6 @@ tracking_protection</td>
 </table>
 </pre>
 
-
 ## history
 
 <pre>
@@ -761,6 +760,45 @@ tracking_protection</td>
 </table>
 </pre>
 
+
+## reader_mode
+
+<pre>
+<table style="width: 100%">
+    <tr>
+        <th>key</th>
+        <th>type</th>
+        <th>description</th>
+        <th>data deview</th>
+        <th>extras</th>
+        <th>expires</th>
+    </tr>
+    <tr>
+        <td>available</td>
+        <td>event</td>
+        <td>Reader mode is available for the current page</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3941">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user opened reader mode</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3941">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>appearance</td>
+        <td>event</td>
+        <td>A user tapped the appearance button</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3941">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+</table>
+</pre>
 
 ## Metrics
 
