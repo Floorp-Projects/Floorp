@@ -60,6 +60,7 @@ class GeckoViewContent extends GeckoViewModule {
     );
 
     Services.obs.addObserver(this, "oop-frameloader-crashed");
+    Services.obs.addObserver(this, "ipc:content-shutdown");
   }
 
   onDisable() {
@@ -89,6 +90,7 @@ class GeckoViewContent extends GeckoViewModule {
     );
 
     Services.obs.removeObserver(this, "oop-frameloader-crashed");
+    Services.obs.removeObserver(this, "ipc:content-shutdown");
   }
 
   // Bundle event handler.
@@ -195,17 +197,38 @@ class GeckoViewContent extends GeckoViewModule {
   // nsIObserver event handler
   observe(aSubject, aTopic, aData) {
     debug`observe: ${aTopic}`;
+    this._contentCrashed = false;
+    const browser = aSubject.ownerElement;
 
     switch (aTopic) {
       case "oop-frameloader-crashed": {
-        const browser = aSubject.ownerElement;
         if (!browser || browser != this.browser) {
           return;
         }
-
-        this.eventDispatcher.sendRequest({
-          type: "GeckoView:ContentCrash",
-        });
+        this.window.setTimeout(() => {
+          if (this._contentCrashed) {
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:ContentCrash",
+            });
+          } else {
+            this.eventDispatcher.sendRequest({
+              type: "GeckoView:ContentKill",
+            });
+          }
+        }, 250);
+        break;
+      }
+      case "ipc:content-shutdown": {
+        aSubject.QueryInterface(Ci.nsIPropertyBag2);
+        if (aSubject.get("dumpID")) {
+          if (
+            browser &&
+            aSubject.get("childID") != browser.frameLoader.childID
+          ) {
+            return;
+          }
+          this._contentCrashed = true;
+        }
         break;
       }
     }
