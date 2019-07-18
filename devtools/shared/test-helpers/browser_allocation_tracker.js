@@ -9,9 +9,10 @@
 const { DevToolsLoader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
-const loader = new DevToolsLoader();
-loader.invisibleToDebugger = true;
-loader.freshCompartment = true;
+const loader = new DevToolsLoader({
+  invisibleToDebugger: true,
+  freshCompartment: true,
+});
 const { allocationTracker } = loader.require(
   "chrome://mochitests/content/browser/devtools/shared/test-helpers/allocation-tracker"
 );
