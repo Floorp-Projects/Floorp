@@ -189,12 +189,9 @@ typedef JSObject* (*JSWrapObjectCallback)(JSContext* cx,
 /**
  * Callback used by the wrap hook to ask the embedding to prepare an object
  * for wrapping in a context. This might include unwrapping other wrappers
- * or even finding a more suitable object for the new compartment. If |origObj|
- * is non-null, then it is the original object we are going to swap into during
- * a transplant.
+ * or even finding a more suitable object for the new compartment.
  */
 typedef void (*JSPreWrapCallback)(JSContext* cx, JS::HandleObject scope,
-                                  JS::HandleObject origObj,
                                   JS::HandleObject obj,
                                   JS::HandleObject objectPassedToWrap,
                                   JS::MutableHandleObject retObj);

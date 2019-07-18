@@ -60,8 +60,7 @@ js::DOMProxyShadowsResult DOMProxyShadows(JSContext* cx,
 struct SetDOMProxyInformation {
   SetDOMProxyInformation() {
     js::SetDOMProxyInformation((const void*)&DOMProxyHandler::family,
-                               DOMProxyShadows,
-                               &RemoteObjectProxyBase::sCrossOriginProxyFamily);
+                               DOMProxyShadows);
   }
 };
 
