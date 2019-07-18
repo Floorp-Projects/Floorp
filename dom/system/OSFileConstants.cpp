@@ -11,6 +11,14 @@
 
 #include "prsystem.h"
 
+// Short macro to get the size of a member of a
+// given struct at compile time.
+// t is the type of struct, m the name of the
+// member:
+// DOM_SIZEOF_MEMBER(struct mystruct, myint)
+// will give you the size of the type of myint.
+#define DOM_SIZEOF_MEMBER(t, m) sizeof(((t*)0)->m)
+
 #if defined(XP_UNIX)
 #  include "unistd.h"
 #  include "dirent.h"
@@ -602,6 +610,9 @@ static const dom::ConstantSpec gLibcProperties[] = {
 
     {"OSFILE_SIZEOF_STATVFS", JS::Int32Value(sizeof(struct statvfs))},
 
+    // We have no guarantee how big "f_frsize" is, so we have to calculate that.
+    {"OSFILE_SIZEOF_STATVFS_F_FRSIZE",
+     JS::Int32Value(DOM_SIZEOF_MEMBER(struct statvfs, f_frsize))},
     {"OSFILE_OFFSETOF_STATVFS_F_FRSIZE",
      JS::Int32Value(offsetof(struct statvfs, f_frsize))},
     {"OSFILE_OFFSETOF_STATVFS_F_BAVAIL",
