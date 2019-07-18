@@ -8,23 +8,15 @@ use dwrote;
 use crate::gamma_lut::ColorLut;
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 use crate::internal_types::{FastHashMap, FastHashSet, ResourceCacheError};
+use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
+use crate::gamma_lut::GammaLut;
 use std::borrow::Borrow;
 use std::collections::hash_map::Entry;
 use std::hash::{Hash, Hasher};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
-
-cfg_if! {
-    if #[cfg(feature = "pathfinder")] {
-        use pathfinder_font_renderer::{PathfinderComPtr, IDWriteFontFace};
-        use crate::glyph_rasterizer::NativeFontHandleWrapper;
-    } else if #[cfg(not(feature = "pathfinder"))] {
-        use api::FontInstancePlatformOptions;
-        use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
-        use crate::gamma_lut::GammaLut;
-        use std::mem;
-    }
-}
+use api::FontInstancePlatformOptions;
+use std::mem;
 
 lazy_static! {
     static ref DEFAULT_FONT_DESCRIPTOR: dwrote::FontDescriptor = dwrote::FontDescriptor {
@@ -80,7 +72,6 @@ struct FontFace {
 pub struct FontContext {
     fonts: FastHashMap<FontKey, FontFace>,
     variations: FastHashMap<(FontKey, dwrote::DWRITE_FONT_SIMULATIONS, Vec<FontVariation>), dwrote::FontFace>,
-    #[cfg(not(feature = "pathfinder"))]
     gamma_luts: FastHashMap<(u16, u16), GammaLut>,
 }
 
@@ -148,7 +139,6 @@ impl FontContext {
         Ok(FontContext {
             fonts: FastHashMap::default(),
             variations: FastHashMap::default(),
-            #[cfg(not(feature = "pathfinder"))]
             gamma_luts: FastHashMap::default(),
         })
     }
@@ -442,7 +432,6 @@ impl FontContext {
     }
 
     // DWrite ClearType gives us values in RGB, but WR expects BGRA.
-    #[cfg(not(feature = "pathfinder"))]
     fn convert_to_bgra(
         &self,
         pixels: &[u8],
@@ -511,7 +500,6 @@ impl FontContext {
         }
     }
 
-    #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let scale = font.oversized_scale_factor(x_scale, y_scale);
@@ -603,18 +591,5 @@ impl FontContext {
             format,
             bytes: bgra_pixels,
         })
-    }
-}
-
-#[cfg(feature = "pathfinder")]
-impl<'a> From<NativeFontHandleWrapper<'a>> for PathfinderComPtr<IDWriteFontFace> {
-    fn from(font_handle: NativeFontHandleWrapper<'a>) -> Self {
-        if let Some(file) = dwrote::FontFile::new_from_path(&font_handle.0.path) {
-            let index = font_handle.0.index;
-            if let Ok(face) = file.create_face(index, dwrote::DWRITE_FONT_SIMULATIONS_NONE) {
-                return unsafe { PathfinderComPtr::new(face.as_ptr()) };
-            }
-        }
-        panic!("missing font {:?}", font_handle.0)
     }
 }

@@ -31,7 +31,6 @@ cargo check ${CARGOFLAGS} --no-default-features
 cargo check ${CARGOFLAGS} --no-default-features --features capture
 cargo check ${CARGOFLAGS} --features capture,profiler
 cargo check ${CARGOFLAGS} --features replay
-cargo check ${CARGOFLAGS} --no-default-features --features pathfinder
 popd
 
 pushd wrench

@@ -10,7 +10,6 @@ DIRS += [
 
 DevToolsModules(
     'AbstractTreeItem.jsm',
-    'BarGraphWidget.js',
     'Chart.js',
     'CubicBezierPresets.js',
     'CubicBezierWidget.js',

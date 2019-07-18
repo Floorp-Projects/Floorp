@@ -20,7 +20,6 @@ use crate::capture::CaptureConfig;
 use crate::device::TextureFilter;
 use euclid::{point2, size2};
 use crate::glyph_cache::GlyphCache;
-#[cfg(not(feature = "pathfinder"))]
 use crate::glyph_cache::GlyphCacheEntry;
 use crate::glyph_rasterizer::{BaseFontInstance, FontInstance, GlyphFormat, GlyphKey, GlyphRasterizer};
 use crate::gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle};
@@ -1429,57 +1428,6 @@ impl ResourceCache {
         self.texture_cache.pending_updates()
     }
 
-    #[cfg(feature = "pathfinder")]
-    pub fn fetch_glyphs<F>(
-        &self,
-        mut font: FontInstance,
-        glyph_keys: &[GlyphKey],
-        fetch_buffer: &mut Vec<GlyphFetchResult>,
-        gpu_cache: &mut GpuCache,
-        mut f: F,
-    ) where
-        F: FnMut(TextureSource, GlyphFormat, &[GlyphFetchResult]),
-    {
-        debug_assert_eq!(self.state, State::QueryResources);
-
-        self.glyph_rasterizer.prepare_font(&mut font);
-
-        let mut current_texture_id = TextureSource::Invalid;
-        let mut current_glyph_format = GlyphFormat::Subpixel;
-        debug_assert!(fetch_buffer.is_empty());
-
-        for (loop_index, key) in glyph_keys.iter().enumerate() {
-           let (cache_item, glyph_format) =
-                match self.glyph_rasterizer.get_cache_item_for_glyph(key,
-                                                                     &font,
-                                                                     &self.cached_glyphs,
-                                                                     &self.texture_cache,
-                                                                     &self.cached_render_tasks) {
-                    None => continue,
-                    Some(result) => result,
-                };
-            if current_texture_id != cache_item.texture_id ||
-                current_glyph_format != glyph_format {
-                if !fetch_buffer.is_empty() {
-                    f(current_texture_id, current_glyph_format, fetch_buffer);
-                    fetch_buffer.clear();
-                }
-                current_texture_id = cache_item.texture_id;
-                current_glyph_format = glyph_format;
-            }
-            fetch_buffer.push(GlyphFetchResult {
-                index_in_text_run: loop_index as i32,
-                uv_rect_address: gpu_cache.get_address(&cache_item.uv_rect_handle),
-            });
-        }
-
-        if !fetch_buffer.is_empty() {
-            f(current_texture_id, current_glyph_format, fetch_buffer);
-            fetch_buffer.clear();
-        }
-    }
-
-    #[cfg(not(feature = "pathfinder"))]
     pub fn fetch_glyphs<F>(
         &self,
         mut font: FontInstance,
