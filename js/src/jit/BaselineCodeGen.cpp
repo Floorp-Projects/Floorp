@@ -677,6 +677,7 @@ void BaselineInterpreterCodeGen::storeFrameSizeAndPushDescriptor(
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
+                                              RetAddrEntry::Kind kind,
                                               CallVMPhase phase) {
 #ifdef DEBUG
   // Assert prepareVMCall() has been called.
@@ -745,14 +746,15 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   }
 #endif
 
-  return handler.appendRetAddrEntry(cx, RetAddrEntry::Kind::CallVM, callOffset);
+  return handler.appendRetAddrEntry(cx, kind, callOffset);
 }
 
 template <typename Handler>
 template <typename Fn, Fn fn>
-bool BaselineCodeGen<Handler>::callVM(CallVMPhase phase) {
+bool BaselineCodeGen<Handler>::callVM(RetAddrEntry::Kind kind,
+                                      CallVMPhase phase) {
   VMFunctionId fnId = VMFunctionToId<Fn, fn>::id;
-  return callVMInternal(fnId, phase);
+  return callVMInternal(fnId, kind, phase);
 }
 
 template <typename Handler>
@@ -777,13 +779,12 @@ bool BaselineCodeGen<Handler>::emitStackCheck() {
   pushArg(R1.scratchReg());
 
   const CallVMPhase phase = CallVMPhase::BeforePushingLocals;
+  const RetAddrEntry::Kind kind = RetAddrEntry::Kind::StackCheck;
 
   using Fn = bool (*)(JSContext*, BaselineFrame*);
-  if (!callVMNonOp<Fn, CheckOverRecursedBaseline>(phase)) {
+  if (!callVM<Fn, CheckOverRecursedBaseline>(kind, phase)) {
     return false;
   }
-
-  handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::StackCheck);
 
   masm.bind(&skipCall);
   return true;
@@ -1109,13 +1110,12 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
+    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugPrologue;
+
     using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
-    if (!callVM<Fn, jit::DebugPrologue>()) {
+    if (!callVM<Fn, jit::DebugPrologue>(kind)) {
       return false;
     }
-
-    // Fix up the RetAddrEntry appended by callVM for on-stack recompilation.
-    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::DebugPrologue);
 
     // If the stub returns |true|, we have to return the value stored in the
     // frame's return value slot.
@@ -1382,13 +1382,12 @@ bool BaselineCompilerCodeGen::emitWarmUpCounterIncrement() {
     pushBytecodePCArg();
     masm.PushBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
+    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::WarmupCounter;
+
     using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
-    if (!callVM<Fn, IonCompileScriptForBaseline>()) {
+    if (!callVM<Fn, IonCompileScriptForBaseline>(kind)) {
       return false;
     }
-
-    // Annotate the RetAddrEntry as warmup counter.
-    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::WarmupCounter);
   }
   masm.bind(&skipCall);
 
@@ -5162,13 +5161,12 @@ bool BaselineCodeGen<Handler>::emitReturn() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
+    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugEpilogue;
+
     using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*);
-    if (!callVM<Fn, jit::DebugEpilogueOnBaselineReturn>()) {
+    if (!callVM<Fn, jit::DebugEpilogueOnBaselineReturn>(kind)) {
       return false;
     }
-
-    // Fix up the RetAddrEntry appended by callVM for on-stack recompilation.
-    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::DebugEpilogue);
 
     masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
     return true;
@@ -5963,12 +5961,12 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
     pushBytecodePCArg();
     pushArg(R0.scratchReg());
 
+    const RetAddrEntry::Kind kind = RetAddrEntry::Kind::DebugAfterYield;
+
     using Fn = bool (*)(JSContext*, BaselineFrame*, jsbytecode*, bool*);
-    if (!callVM<Fn, jit::DebugAfterYield>()) {
+    if (!callVM<Fn, jit::DebugAfterYield>(kind)) {
       return false;
     }
-
-    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::DebugAfterYield);
 
     Label done;
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
