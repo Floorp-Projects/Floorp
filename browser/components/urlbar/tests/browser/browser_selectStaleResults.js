@@ -7,6 +7,20 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  UrlbarView: "resource:///modules/UrlbarView.jsm",
+});
+
+add_task(async function init() {
+  // Increase the timeout of the remove-stale-rows timer so that it doesn't
+  // interfere with the tests.
+  let originalRemoveStaleRowsTimeout = UrlbarView.removeStaleRowsTimeout;
+  UrlbarView.removeStaleRowsTimeout = 1000;
+  registerCleanupFunction(() => {
+    UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
+  });
+});
+
 // This tests the case where queryContext.results.length < the number of rows in
 // the view, i.e., the view contains stale rows.
 add_task(async function viewContainsStaleRows() {
@@ -62,6 +76,7 @@ add_task(async function viewContainsStaleRows() {
   // Type another "x" so that we search for "xx", but don't wait for the search
   // to finish.  Instead, wait for the row's stale attribute to be removed.
   EventUtils.synthesizeKey("x");
+  info("Waiting for 'stale' attribute to be removed... ");
   await mutationPromise;
 
   // Now arrow down.  The search, which is still ongoing, will now stop and the
@@ -69,6 +84,7 @@ add_task(async function viewContainsStaleRows() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   // Wait for the search to stop.
+  info("Waiting for the search to stop... ");
   await gURLBar.lastQueryContextPromise;
 
   // The query context for the last search ("xx") should contain only
@@ -130,8 +146,8 @@ add_task(async function staleReplacedWithFresh() {
   //
   // NB: If this test ends up failing, it may be because the remove-stale-rows
   // timer fires before the history results are added.  i.e., steps 2 and 3
-  // above happen out of order.  If that happens, we'll need a way to force the
-  // timer not to fire until we want it to.
+  // above happen out of order.  If that happens, try increasing
+  // UrlbarView.removeStaleRowsTimeout above.
 
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -227,6 +243,7 @@ add_task(async function staleReplacedWithFresh() {
   // Now type a "t" so that we search for "test", but only wait for history
   // results to be added, as described above.
   EventUtils.synthesizeKey("t");
+  info("Waiting for the 'test2' row... ");
   await mutationPromise;
 
   // Now arrow down.  The search, which is still ongoing, will now stop and the
@@ -234,6 +251,7 @@ add_task(async function staleReplacedWithFresh() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   // Wait for the search to stop.
+  info("Waiting for the search to stop... ");
   await gURLBar.lastQueryContextPromise;
 
   // Sanity check the results.  They should be as described above.
