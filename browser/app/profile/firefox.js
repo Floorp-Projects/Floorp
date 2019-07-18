@@ -1747,7 +1747,12 @@ pref("signon.generation.enabled", true);
 pref("signon.schemeUpgrades", true);
 pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
+#ifdef NIGHTLY_BUILD
+pref("signon.management.page.enabled", true);
+pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
+#else
 pref("signon.management.page.enabled", false);
+#endif
 #ifdef NIGHTLY_BUILD
 // Bug 1563330 tracks shipping this by default.
 pref("signon.showAutoCompleteOrigins", true);

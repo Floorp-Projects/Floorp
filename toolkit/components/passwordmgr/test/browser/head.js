@@ -206,14 +206,53 @@ async function checkDoorhangerUsernamePassword(username, password) {
 
 // End popup notification (doorhanger) functions //
 
-async function waitForPasswordManagerDialog() {
+async function waitForPasswordManagerDialog(openingFunc) {
   let win;
+  await openingFunc();
   await TestUtils.waitForCondition(() => {
     win = Services.wm.getMostRecentWindow("Toolkit:PasswordManager");
     return win && win.document.getElementById("filter");
   }, "Waiting for the password manager dialog to open");
 
-  return win;
+  return {
+    filterValue: win.document.getElementById("filter").value,
+    async close() {
+      await BrowserTestUtils.closeWindow(win);
+    },
+  };
+}
+
+async function waitForPasswordManagerTab(openingFunc, waitForFilter) {
+  info("waiting for new tab to open");
+  let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, null);
+  await openingFunc();
+  let tab = await tabPromise;
+  ok(tab, "got password management tab");
+  let filterValue;
+  if (waitForFilter) {
+    filterValue = await ContentTask.spawn(tab.linkedBrowser, null, async () => {
+      let loginFilter = Cu.waiveXrays(
+        content.document.querySelector("login-filter")
+      );
+      await ContentTaskUtils.waitForCondition(
+        () => !!loginFilter.value,
+        "wait for login-filter to have a value"
+      );
+      return loginFilter.value;
+    });
+  }
+  return {
+    filterValue,
+    close() {
+      BrowserTestUtils.removeTab(tab);
+    },
+  };
+}
+
+function openPasswordManager(openingFunc, waitForFilter) {
+  return Services.prefs.getCharPref("signon.management.overrideURI")
+    ? waitForPasswordManagerTab(openingFunc, waitForFilter)
+    : waitForPasswordManagerDialog(openingFunc);
 }
 
 // Contextmenu functions //

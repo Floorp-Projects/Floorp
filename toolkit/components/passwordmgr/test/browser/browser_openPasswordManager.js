@@ -7,10 +7,12 @@ function resetPrefs() {
 registerCleanupFunction(resetPrefs);
 
 add_task(async function test_noFilter() {
-  LoginHelper.openPasswordManager(window, { entryPoint: "mainmenu" });
-  let win = await waitForPasswordManagerDialog();
-  ok(win, "Login dialog was opened");
-  await BrowserTestUtils.closeWindow(win);
+  let openingFunc = () =>
+    LoginHelper.openPasswordManager(window, { entryPoint: "mainmenu" });
+  let passwordManager = await openPasswordManager(openingFunc);
+
+  ok(passwordManager, "Login dialog was opened");
+  await passwordManager.close();
   await TestUtils.waitForCondition(() => {
     return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") === null;
   }, "Waiting for the password manager dialog to close");
@@ -19,16 +21,18 @@ add_task(async function test_noFilter() {
 add_task(async function test_filter() {
   // Greek IDN for example.test
   let domain = "παράδειγμα.δοκιμή";
-  LoginHelper.openPasswordManager(window, {
-    filterString: domain,
-    entryPoint: "mainmenu",
-  });
-  let win = await waitForPasswordManagerDialog();
-  await TestUtils.waitForCondition(() => {
-    return win.document.getElementById("filter").value == domain;
-  }, "Waiting for the search string to filter logins");
-  ok(win, "Login dialog was opened with a domain filter");
-  await BrowserTestUtils.closeWindow(win);
+  let openingFunc = () =>
+    LoginHelper.openPasswordManager(window, {
+      filterString: domain,
+      entryPoint: "mainmenu",
+    });
+  let passwordManager = await openPasswordManager(openingFunc, true);
+  is(
+    passwordManager.filterValue,
+    domain,
+    "search string to filter logins should match expectation"
+  );
+  await passwordManager.close();
   await TestUtils.waitForCondition(() => {
     return Services.wm.getMostRecentWindow("Toolkit:PasswordManager") === null;
   }, "Waiting for the password manager dialog to close");
