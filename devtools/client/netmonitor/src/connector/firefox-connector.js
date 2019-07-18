@@ -179,7 +179,6 @@ class FirefoxConnector {
           this.dataProvider.onFrameReceived
         );
         this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
-        this.webSocketFront.stopListening();
       }
     }
     if (this.webConsoleClient) {
