@@ -55,6 +55,7 @@
 #include "mozilla/dom/ServiceWorkerManager.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/URLClassifierChild.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/dom/ipc/SharedMap.h"
@@ -974,9 +975,10 @@ nsresult ContentChild::ProvideWindowCommon(
       nullptr, openerBC, aName, BrowsingContext::Type::Content);
 
   TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
-  RefPtr<BrowserChild> newChild =
-      new BrowserChild(this, tabId, tabGroup, newTabContext, browsingContext,
-                       aChromeFlags, /* aIsTopLevel */ true);
+
+  auto newChild = MakeRefPtr<BrowserChild>(
+      this, tabId, tabGroup, newTabContext, browsingContext,
+      /* aInitialWindowChild */ nullptr, aChromeFlags, /* aIsTopLevel */ true);
 
   if (aTabOpener) {
     MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
@@ -1807,9 +1809,10 @@ bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
-    ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
+    ManagedEndpoint<PBrowserChild>&& aBrowserEp,
+    ManagedEndpoint<PWindowGlobalChild>&& aWindowEp, const TabId& aTabId,
     const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
-    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+    const WindowGlobalInit& aWindowInit, const uint32_t& aChromeFlags,
     const ContentParentId& aCpID, const bool& aIsForBrowser,
     const bool& aIsTopLevel) {
   MOZ_ASSERT(!IsShuttingDown());
@@ -1840,9 +1843,11 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     MOZ_CRASH("Invalid TabContext received from the parent process.");
   }
 
-  RefPtr<BrowserChild> browserChild =
-      BrowserChild::Create(this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
-                           aBrowsingContext, aChromeFlags, aIsTopLevel);
+  auto windowChild = MakeRefPtr<WindowGlobalChild>(aWindowInit, nullptr);
+
+  RefPtr<BrowserChild> browserChild = BrowserChild::Create(
+      this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
+      aWindowInit.browsingContext(), aChromeFlags, aIsTopLevel);
 
   // Bind the created BrowserChild to IPC to actually link the actor. The ref
   // here is released in DeallocPBrowserChild.
@@ -1851,6 +1856,14 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     return IPC_FAIL(this, "BindPBrowserEndpoint failed");
   }
 
+  // The ref here is released in DeallocPWindowGlobalChild.
+  if (NS_WARN_IF(!browserChild->BindPWindowGlobalEndpoint(
+          std::move(aWindowEp), do_AddRef(windowChild).take()))) {
+    return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
+  }
+  windowChild->Init();
+
+  // Ensure that a TabGroup is set for our BrowserChild before running `Init`.
   if (!browserChild->mTabGroup) {
     browserChild->mTabGroup = TabGroup::GetFromActor(browserChild);
 
@@ -1860,7 +1873,8 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
     }
   }
 
-  if (NS_WARN_IF(NS_FAILED(browserChild->Init(/* aOpener */ nullptr)))) {
+  if (NS_WARN_IF(
+          NS_FAILED(browserChild->Init(/* aOpener */ nullptr, windowChild)))) {
     return IPC_FAIL(browserChild, "BrowserChild::Init failed");
   }
 
@@ -2069,14 +2083,17 @@ already_AddRefed<RemoteBrowser> ContentChild::CreateBrowser(
     chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME;
   }
 
+  WindowGlobalInit windowInit = WindowGlobalActor::AboutBlankInitializer(
+      aBrowsingContext, owner->NodePrincipal());
+
   TabId tabId(nsContentUtils::GenerateTabId());
   RefPtr<BrowserBridgeChild> browserBridge =
       new BrowserBridgeChild(aFrameLoader, aBrowsingContext, tabId);
   // Reference is freed in BrowserChild::DeallocPBrowserBridgeChild.
   browserChild->SendPBrowserBridgeConstructor(
       do_AddRef(browserBridge).take(),
-      PromiseFlatString(aContext.PresentationURL()), aRemoteType,
-      aBrowsingContext, chromeFlags, tabId);
+      PromiseFlatString(aContext.PresentationURL()), aRemoteType, windowInit,
+      chromeFlags, tabId);
   browserBridge->mIPCOpen = true;
 
 #if defined(ACCESSIBILITY)
@@ -3733,9 +3750,14 @@ already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
       // our newly created actor, and sameTabGroupAs is needed to determine if
       // we're going to join an existing TabGroup.
       ManagedEndpoint<PBrowserChild> endpoint;
+      ManagedEndpoint<PWindowGlobalChild> windowGlobalEndpoint;
       TabId tabId, sameTabGroupAs;
       PickleIterator iter(aMsg);
       if (NS_WARN_IF(!IPC::ReadParam(&aMsg, &iter, &endpoint))) {
+        return nullptr;
+      }
+      aMsg.IgnoreSentinel(&iter);
+      if (NS_WARN_IF(!IPC::ReadParam(&aMsg, &iter, &windowGlobalEndpoint))) {
         return nullptr;
       }
       aMsg.IgnoreSentinel(&iter);
