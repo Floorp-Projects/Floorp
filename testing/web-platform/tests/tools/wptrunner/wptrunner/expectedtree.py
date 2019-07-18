@@ -11,7 +11,7 @@ class Node(object):
 
         # Populated for leaf nodes
         self.run_info = set()
-        self.result_values = set()
+        self.result_values = defaultdict(int)
 
     def add(self, node):
         self.children.add(node)
@@ -76,13 +76,15 @@ def build_tree(properties, dependent_props, results, tree=None):
 
     prop_index = {prop: i for i, prop in enumerate(properties)}
 
-    all_results = set()
+    all_results = defaultdict(int)
     for result_values in results.itervalues():
-        all_results |= result_values
+        for result_value, count in result_values.iteritems():
+            all_results[result_value] += count
 
     # If there is only one result we are done
     if not properties or len(all_results) == 1:
-        tree.result_values |= all_results
+        for value, count in all_results.iteritems():
+            tree.result_values[value] += count
         tree.run_info |= set(results.keys())
         return tree
 
@@ -107,7 +109,8 @@ def build_tree(properties, dependent_props, results, tree=None):
 
     # In the case that no properties partition the space
     if not results_partitions:
-        tree.result_values |= all_results
+        for value, count in all_results.iteritems():
+            tree.result_values[value] += count
         tree.run_info |= set(results.keys())
         return tree
 

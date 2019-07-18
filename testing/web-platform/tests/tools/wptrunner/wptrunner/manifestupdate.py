@@ -178,9 +178,12 @@ class ExpectedManifest(ManifestItem):
         :param result: Total number of bytes leaked"""
         self.update_properties.leak_threshold.set(run_info, result)
 
-    def update(self, stability, full_update):
+    def update(self, full_update, disable_intermittent, update_intermittent, remove_intermittent):
         for prop_update in self.update_properties:
-            prop_update.update(stability, full_update)
+            prop_update.update(full_update,
+                               disable_intermittent,
+                               update_intermittent,
+                               remove_intermittent)
 
 
 class TestNode(ManifestItem):
@@ -276,9 +279,12 @@ class TestNode(ManifestItem):
             self.append(subtest)
             return subtest
 
-    def update(self, stability, full_update):
+    def update(self, full_update, disable_intermittent, update_intermittent, remove_intermittent):
         for prop_update in self.update_properties:
-            prop_update.update(stability, full_update)
+            prop_update.update(full_update,
+                               disable_intermittent,
+                               update_intermittent,
+                               remove_intermittent)
 
 
 class SubtestNode(TestNode):
@@ -306,8 +312,9 @@ def build_conditional_tree(_, run_info_properties, results):
 
 def build_unconditional_tree(_, run_info_properties, results):
     root = expectedtree.Node(None, None)
-    for run_info, value in results.iteritems():
-        root.result_values |= value
+    for run_info, values in results.iteritems():
+        for value, count in values.iteritems():
+            root.result_values[value] += count
         root.run_info.add(run_info)
     return root
 
@@ -322,7 +329,9 @@ class PropertyUpdate(object):
         self.node = node
         self.default_value = self.cls_default_value
         self.has_result = False
-        self.results = defaultdict(set)
+        self.results = defaultdict(lambda: defaultdict(int))
+        self.update_intermittent = False
+        self.remove_intermittent = False
 
     def run_info_by_condition(self, run_info_index, conditions):
         run_info_by_condition = defaultdict(list)
@@ -340,7 +349,7 @@ class PropertyUpdate(object):
         self.node.has_result = True
         self.check_default(value)
         value = self.from_result_value(value)
-        self.results[run_info].add(value)
+        self.results[run_info][value] += 1
 
     def check_default(self, result):
         return
@@ -373,7 +382,11 @@ class PropertyUpdate(object):
             unconditional_value = self.default_value
         return unconditional_value
 
-    def update(self, stability=None, full_update=False):
+    def update(self,
+               full_update=False,
+               disable_intermittent=None,
+               update_intermittent=False,
+               remove_intermittent=False):
         """Update the underlying manifest AST for this test based on all the
         added results.
 
@@ -384,8 +397,16 @@ class PropertyUpdate(object):
 
         Conditionals not matched by any added result are not changed.
 
-        When `stability` is not None, disable any test that shows multiple
+        When `disable_intermittent` is not None, disable any test that shows multiple
         unexpected results for the same set of parameters.
+
+        When `update_intermittent` is True, intermittent statuses will be recorded
+        as `expected` in the test metadata.
+
+        When `remove_intermittent` is True, old intermittent statuses will be removed
+        if no longer intermittent. This is only relevant if `update_intermittent` is 
+        also True, because if False, the metadata will simply update one `expected`
+        status.
         """
         if not self.has_result:
             return
@@ -393,12 +414,15 @@ class PropertyUpdate(object):
         property_tree = self.property_builder(self.node.root.run_info_properties,
                                               self.results)
 
-        conditions, errors = self.update_conditions(property_tree, full_update)
+        conditions, errors = self.update_conditions(property_tree,
+                                                    full_update,
+                                                    update_intermittent,
+                                                    remove_intermittent)
 
         for e in errors:
-            if stability:
+            if disable_intermittent:
                 condition = e.cond.children[0] if e.cond else None
-                msg = stability if isinstance(stability, (str, unicode)) else "unstable"
+                msg = disable_intermittent if isinstance(disable_intermittent, (str, unicode)) else "unstable"
                 self.node.set("disabled", msg, condition)
                 self.node.new_disabled = True
             else:
@@ -432,7 +456,11 @@ class PropertyUpdate(object):
                               self.to_ini_value(value),
                               condition)
 
-    def update_conditions(self, property_tree, full_update):
+    def update_conditions(self,
+                          property_tree,
+                          full_update,
+                          update_intermittent,
+                          remove_intermittent):
         # This is complicated because the expected behaviour is complex
         # The complexity arises from the fact that there are two ways of running
         # the tool, with a full set of runs (full_update=True) or with partial metadata
@@ -461,6 +489,8 @@ class PropertyUpdate(object):
         # * Otherwise add conditionals for the run_info that doesn't match any
         #   remaining conditions
         prev_default = None
+        self.update_intermittent = update_intermittent
+        self.remove_intermittent = remove_intermittent
 
         current_conditions = self.node.get_conditions(self.property_name)
 
@@ -474,6 +504,8 @@ class PropertyUpdate(object):
         # value for all run_info, proceed as for a full update
         if not current_conditions:
             return self._update_conditions_full(property_tree,
+                                                update_intermittent,
+                                                remove_intermittent,
                                                 prev_default=prev_default)
 
         conditions = []
@@ -505,6 +537,8 @@ class PropertyUpdate(object):
                     conditions.append((condition.condition_node,
                                        self.from_ini_value(condition.value)))
             new_conditions, errors = self._update_conditions_full(property_tree,
+                                                                  update_intermittent,
+                                                                  remove_intermittent,
                                                                   prev_default=prev_default)
             conditions.extend(new_conditions)
             return conditions, errors
@@ -527,7 +561,7 @@ class PropertyUpdate(object):
             nodes = [node_by_run_info[run_info] for run_info in run_infos
                      if run_info in node_by_run_info]
             # If all the values are the same, update the value
-            if nodes and all(node.result_values == nodes[0].result_values for node in nodes):
+            if nodes and all(set(node.result_values.keys()) == set(nodes[0].result_values.keys()) for node in nodes):
                 current_value = self.from_ini_value(condition.value)
                 try:
                     new_value = self.updated_value(current_value,
@@ -545,6 +579,8 @@ class PropertyUpdate(object):
 
         new_conditions, new_errors = self.build_tree_conditions(property_tree,
                                                                 run_info_with_condition,
+                                                                update_intermittent,
+                                                                remove_intermittent,
                                                                 prev_default)
         if new_conditions:
             self.node.modified = True
@@ -554,15 +590,31 @@ class PropertyUpdate(object):
 
         return conditions, errors
 
-    def _update_conditions_full(self, property_tree, prev_default=None):
+    def _update_conditions_full(self,
+                                property_tree,
+                                update_intermittent,
+                                remove_intermittent,
+                                prev_default=None):
         self.node.modified = True
-        conditions, errors = self.build_tree_conditions(property_tree, set(), prev_default)
+        conditions, errors = self.build_tree_conditions(property_tree,
+                                                        set(),
+                                                        update_intermittent,
+                                                        remove_intermittent,
+                                                        prev_default)
 
         return conditions, errors
 
-    def build_tree_conditions(self, property_tree, run_info_with_condition, prev_default=None):
+    def build_tree_conditions(self,
+                              property_tree,
+                              run_info_with_condition,
+                              update_intermittent,
+                              remove_intermittent,
+                              prev_default=None):
         conditions = []
         errors = []
+
+        self.update_intermittent = update_intermittent
+        self.remove_intermittent = remove_intermittent
 
         value_count = defaultdict(int)
 
@@ -650,10 +702,39 @@ class ExpectedUpdate(PropertyUpdate):
     def from_result_value(self, result):
         return result.status
 
+    def to_ini_value(self, value):
+        if isinstance(value, list):
+            return [str(item) for item in value]
+        return str(value)
+
     def updated_value(self, current, new):
-        if len(new) > 1:
+        if len(new) > 1 and not self.update_intermittent and not isinstance(current, list):
             raise ConditionError
-        return list(new)[0]
+
+        if not (self.update_intermittent or isinstance(current, list)):
+            return list(new)[0]
+
+        statuses = ["OK", "PASS", "FAIL", "ERROR", "TIMEOUT", "CRASH"]
+        status_priority = {value: i for i, value in enumerate(statuses)}
+        sorted_new = sorted(new.iteritems(), key=lambda x:(-1 * x[1],
+                                                           status_priority.get(x[0],
+                                                           len(status_priority))))
+        expected = [status for status, _ in sorted_new]
+        if self.update_intermittent:
+            if not self.remove_intermittent:
+                # If we are not removing existing recorded intermittents that don't 
+                # appear in new, manually add them back in to expected.
+                if isinstance(current, list):
+                    expected.extend([status for status in current if status not in expected])
+            if len(expected) == 1:
+                return expected[0]
+            return expected
+
+        # If nothing has changed and not self.update_intermittent, preserve existing 
+        # intermittent.
+        if set(expected).issubset(set(current)):
+            return current
+        return expected[0]
 
 
 class MaxAssertsUpdate(PropertyUpdate):
