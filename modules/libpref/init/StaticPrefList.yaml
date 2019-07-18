@@ -4466,6 +4466,39 @@
   mirror: always
 #undef PREF_VALUE
 
+# MediaSource
+
+# Whether to enable MediaSource support.
+- name: media.mediasource.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: media.mediasource.mp4.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+- name: media.mediasource.webm.enabled
+  type: RelaxedAtomicBool
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
+- name: media.mediasource.webm.audio.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Whether to enable MediaSource v2 support.
+- name: media.mediasource.experimental.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # VideoSink
 - name: media.ruin-av-sync.enabled
   type: RelaxedAtomicBool
