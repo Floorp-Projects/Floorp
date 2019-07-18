@@ -1264,26 +1264,10 @@ class nsDisplayXULEventRedirector final : public nsDisplayWrapList {
                               nsDisplayItem* aItem, nsIFrame* aTargetFrame)
       : nsDisplayWrapList(aBuilder, aFrame, aItem),
         mTargetFrame(aTargetFrame) {}
-
-  // Should have an identical argument signature to the above ctor
-  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, nsDisplayItem* aItem,
-                                         nsIFrame* aTargetFrame) {
-    return 0;
-  }
-
   nsDisplayXULEventRedirector(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                               nsDisplayList* aList, nsIFrame* aTargetFrame)
       : nsDisplayWrapList(aBuilder, aFrame, aList),
         mTargetFrame(aTargetFrame) {}
-
-  // Should have an identical argument signature to the above ctor
-  static uint16_t CalculatePerFrameIndex(nsDisplayListBuilder* aBuilder,
-                                         nsIFrame* aFrame, nsDisplayList* aList,
-                                         nsIFrame* aTargetFrame) {
-    return 0;
-  }
-
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
                        nsTArray<nsIFrame*>* aOutFrames) override;
