@@ -37,9 +37,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=553917
         if (name != "MMultiscriptsErrors") {
           return g_bundl.formatStringFromName(name,g_errorInfo[name].args[idx]);
         }
-        else {
-          return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);
-        }
+        return g_bundl.GetStringFromName(g_errorInfo[name].args[idx]);
       }
     
     /** Checks the roll call to see if all expected error messages were present. */

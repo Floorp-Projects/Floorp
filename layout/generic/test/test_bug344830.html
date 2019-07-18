@@ -22,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=344830
 
 /** Test for Bug 344830 **/
 function getSVG() {
- var embed = document.embeds["svg1"];
+ var embed = document.embeds.svg1;
  var svgDocument = embed.getSVGDocument();
  var element = svgDocument.getElementById("g1");
  ok(embed, "document.embeds[] works with SVG");
