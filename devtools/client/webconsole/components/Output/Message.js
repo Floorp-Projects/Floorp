@@ -90,8 +90,8 @@ class Message extends Component {
         openLink: PropTypes.func.isRequired,
         sourceMapService: PropTypes.any,
         canRewind: PropTypes.func.isRequired,
-        jumpToExecutionPoint: PropTypes.func.isRequired,
-        onMessageHover: PropTypes.func.isRequired,
+        jumpToExecutionPoint: PropTypes.func,
+        onMessageHover: PropTypes.func,
       }),
       notes: PropTypes.arrayOf(
         PropTypes.shape({
@@ -418,6 +418,7 @@ class Message extends Component {
             sourceMapService: serviceContainer
               ? serviceContainer.sourceMapService
               : undefined,
+            messageSource: source,
           })
         : null
     );

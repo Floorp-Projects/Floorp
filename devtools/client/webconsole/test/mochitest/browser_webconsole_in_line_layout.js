@@ -28,9 +28,11 @@ async function performTests() {
   const { ui } = hud;
   const { document } = ui;
   const appNode = document.querySelector(".webconsole-app");
-  const [filterBarNode, outputNode, , inputNode] = appNode.querySelector(
-    ".webconsole-wrapper"
-  ).childNodes;
+  const filterBarNode = appNode.querySelector(
+    ".webconsole-filteringbar-wrapper"
+  );
+  const outputNode = appNode.querySelector(".webconsole-output");
+  const inputNode = appNode.querySelector(".jsterm-input-container");
 
   testLayout(appNode);
 

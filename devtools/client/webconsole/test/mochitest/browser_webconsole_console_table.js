@@ -51,6 +51,15 @@ add_task(async function() {
       },
     },
     {
+      info: "Testing when data argument has holey array",
+      // eslint-disable-next-line no-sparse-arrays
+      input: [[1, , 2]],
+      expected: {
+        columns: ["(index)", "0", "1", "2"],
+        rows: [["0", "1", "undefined", "2"]],
+      },
+    },
+    {
       info: "Testing when data argument is an object",
       input: new Person("John", "Smith"),
       expected: {
@@ -147,6 +156,15 @@ add_task(async function() {
         rows: [["0", "apples"], ["1", "oranges"], ["2", "bananas"]],
       },
     },
+    {
+      info: "Testing overflow-y",
+      input: Array.from({ length: 50 }, (_, i) => `item-${i}`),
+      expected: {
+        columns: ["(index)", "Values"],
+        rows: Array.from({ length: 50 }, (_, i) => [i.toString(), `item-${i}`]),
+        overflow: true,
+      },
+    },
   ];
 
   await ContentTask.spawn(gBrowser.selectedBrowser, testCases, function(tests) {
@@ -199,6 +217,11 @@ function testItem(testCase, node) {
     const rowCells = cells.slice(startIndex, startIndex + columnsNumber);
     is(rowCells.map(x => x.textContent).join(" | "), expectedRow.join(" | "));
   });
+
+  if (testCase.expected.overflow) {
+    ok(node.scrollHeight > node.clientHeight, "table overflows");
+    ok(getComputedStyle(node).overflowY !== "hidden", "table can be scrolled");
+  }
 }
 
 function findConsoleTable(node, index) {

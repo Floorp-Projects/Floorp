@@ -38,7 +38,7 @@ const SUITES = {
     type: TEST_TYPES.JEST,
   },
   netmonitor: {
-    path: "../netmonitor",
+    path: "../netmonitor/test/node",
     type: TEST_TYPES.JEST,
   },
   webconsole: {

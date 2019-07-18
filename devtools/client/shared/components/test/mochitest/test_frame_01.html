@@ -66,6 +66,21 @@ window.onload = async function () {
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js:55",
     });
 
+    // Check when there's an error in CSS (View source in Style Editor)
+    await checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/cafebabe.css",
+        line: 13,
+      },
+      messageSource: "css",
+    }, {
+        file: "cafebabe.css",
+        line: 13,
+        shouldLink: true,
+        tooltip: "View source in Style Editor → http://myfile.com/cafebabe.css:13",
+    });
+
+
     // Check when there's no parseable URL source;
     // should not link but should render line/columns
     await checkFrameComponent({

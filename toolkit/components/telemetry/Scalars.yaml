@@ -2309,24 +2309,6 @@ devtools.changesview:
     record_in_processes:
       - 'main'
 
-  copy:
-    bug_numbers:
-      - 1522843
-    description: >
-      Number of times any text content from the Changes panel is copied to the clipboard.
-    expires: "69"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
   copy_all_changes:
     bug_numbers:
       - 1532583
@@ -2351,42 +2333,6 @@ devtools.changesview:
     description: >
       Number of times the Copy Rule button is used in the Changes panel.
     expires: "70"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
-  contextmenu:
-    bug_numbers:
-      - 1522843
-    description: >
-      Number of times the Changes panel context menu is shown.
-    expires: "69"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - mbalfanz@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
-    record_in_processes:
-      - 'main'
-
-  contextmenu_copy:
-    bug_numbers:
-      - 1522843
-    description: >
-      Number of times the Copy option is picked from the Changes panel context menu.
-    expires: "69"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org

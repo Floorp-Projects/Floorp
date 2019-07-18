@@ -1,0 +1,15 @@
+{
+  "name": "netmonitor-tests",
+  "license": "MPL-2.0",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=8.9.4"
+  },
+  "scripts": {
+    "test": "jest",
+    "test-ci": "jest --json"
+  },
+  "dependencies": {
+    "jest": "^24.6.0"
+  }
+}

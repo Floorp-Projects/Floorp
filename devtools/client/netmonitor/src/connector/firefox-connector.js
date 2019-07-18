@@ -88,12 +88,12 @@ class FirefoxConnector {
     }
   }
 
-  async disconnect() {
+  disconnect() {
     if (this.actions) {
       this.actions.batchReset();
     }
 
-    await this.removeListeners();
+    this.removeListeners();
 
     if (this.emulationFront) {
       this.emulationFront.destroy();
@@ -162,7 +162,7 @@ class FirefoxConnector {
     await this.webConsoleClient.startListeners(["DocumentEvents"]);
   }
 
-  async removeListeners() {
+  removeListeners() {
     if (this.tabTarget) {
       this.tabTarget.off("close", this.disconnect);
       if (this.webSocketFront) {
@@ -179,7 +179,6 @@ class FirefoxConnector {
           this.dataProvider.onFrameReceived
         );
         this.webSocketFront.off("frameSent", this.dataProvider.onFrameSent);
-        this.webSocketFront.stopListening();
       }
     }
     if (this.webConsoleClient) {
