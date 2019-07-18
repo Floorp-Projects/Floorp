@@ -418,6 +418,7 @@ class Message extends Component {
             sourceMapService: serviceContainer
               ? serviceContainer.sourceMapService
               : undefined,
+            messageSource: source,
           })
         : null
     );
