@@ -40,13 +40,21 @@ namespace dom {
 typedef nsRefPtrHashtable<nsUint64HashKey, WindowGlobalChild> WGCByIdMap;
 static StaticAutoPtr<WGCByIdMap> gWindowGlobalChildById;
 
-WindowGlobalChild::WindowGlobalChild(nsGlobalWindowInner* aWindow,
-                                     dom::BrowsingContext* aBrowsingContext)
+WindowGlobalChild::WindowGlobalChild(const WindowGlobalInit& aInit,
+                                     nsGlobalWindowInner* aWindow)
     : mWindowGlobal(aWindow),
-      mBrowsingContext(aBrowsingContext),
-      mInnerWindowId(aWindow->WindowID()),
-      mOuterWindowId(aWindow->GetOuterWindow()->WindowID()),
-      mBeforeUnloadListeners(0) {}
+      mBrowsingContext(aInit.browsingContext()),
+      mDocumentPrincipal(aInit.principal()),
+      mDocumentURI(aInit.documentURI()),
+      mInnerWindowId(aInit.innerWindowId()),
+      mOuterWindowId(aInit.outerWindowId()),
+      mBeforeUnloadListeners(0) {
+  MOZ_DIAGNOSTIC_ASSERT(mBrowsingContext);
+  MOZ_DIAGNOSTIC_ASSERT(mDocumentPrincipal);
+
+  MOZ_ASSERT(mInnerWindowId == aWindow->WindowID());
+  MOZ_ASSERT(mOuterWindowId == aWindow->GetOuterWindow()->WindowID());
+}
 
 already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     nsGlobalWindowInner* aWindow) {
@@ -69,7 +77,11 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     bc->SetOpenerPolicy(policy);
   }
 
-  RefPtr<WindowGlobalChild> wgc = new WindowGlobalChild(aWindow, bc);
+  WindowGlobalInit init(principal, aWindow->GetDocumentURI(), bc,
+                        aWindow->WindowID(),
+                        aWindow->GetOuterWindow()->WindowID());
+
+  auto wgc = MakeRefPtr<WindowGlobalChild>(init, aWindow);
 
   // If we have already closed our browsing context, return a pre-destroyed
   // WindowGlobalChild actor.
@@ -77,9 +89,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
     wgc->ActorDestroy(FailedConstructor);
     return wgc.forget();
   }
-
-  WindowGlobalInit init(principal, aWindow->GetDocumentURI(), bc,
-                        wgc->mInnerWindowId, wgc->mOuterWindowId);
 
   // Send the link constructor over PInProcessChild or PBrowser.
   if (XRE_IsParentProcess()) {
@@ -337,8 +346,9 @@ void WindowGlobalChild::ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
   }
 }
 
-nsIURI* WindowGlobalChild::GetDocumentURI() {
-  return mWindowGlobal->GetDocumentURI();
+void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
+  mDocumentURI = aDocumentURI;
+  SendUpdateDocumentURI(aDocumentURI);
 }
 
 const nsAString& WindowGlobalChild::GetRemoteType() {
