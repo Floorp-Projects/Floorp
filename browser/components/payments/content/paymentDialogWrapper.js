@@ -608,9 +608,12 @@ var paymentDialogWrapper = {
       );
       return;
     }
-    let { gDevToolsBrowser } = ChromeUtils.import(
-      "resource://devtools/client/framework/gDevTools.jsm"
+    const { require } = ChromeUtils.import(
+      "resource://devtools/shared/Loader.jsm"
     );
+    const {
+      gDevToolsBrowser,
+    } = require("devtools/client/framework/devtools-browser");
     gDevToolsBrowser.openContentProcessToolbox({
       selectedBrowser: this.frameWeakRef.get(),
     });
