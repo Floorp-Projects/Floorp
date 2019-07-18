@@ -332,6 +332,11 @@ class PictureInPictureToggleChild extends ActorChild {
    * @param {Event} event The mousemove event.
    */
   onPointerDown(event) {
+    // The toggle ignores non-primary mouse clicks.
+    if (event.button != 0) {
+      return;
+    }
+
     let state = this.docState;
 
     let video = state.weakOverVideo && state.weakOverVideo.get();
@@ -402,6 +407,11 @@ class PictureInPictureToggleChild extends ActorChild {
    * @param {Event} event A mousedown, pointerup, mouseup or click event.
    */
   onMouseButtonEvent(event) {
+    // The toggle ignores non-primary mouse clicks.
+    if (event.button != 0) {
+      return;
+    }
+
     let state = this.docState;
     if (state.isClickingToggle) {
       event.stopImmediatePropagation();
