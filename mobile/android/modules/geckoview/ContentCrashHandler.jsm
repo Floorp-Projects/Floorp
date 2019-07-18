@@ -65,7 +65,7 @@ var ContentCrashHandler = {
     const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
 
     EventDispatcher.instance.sendRequest({
-      type: "GeckoView:ContentCrash",
+      type: "GeckoView:ContentCrashReport",
       minidumpPath,
       extrasPath,
       success: true,
