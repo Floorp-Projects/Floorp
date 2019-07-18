@@ -843,10 +843,13 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
     if (uri) {
-      if (aLinkTypes & nsStyleLinkElement::ePRELOAD) {
+      bool preload = !!(aLinkTypes & nsStyleLinkElement::ePRELOAD);
+      nsContentPolicyType policyType;
+
+      if (preload) {
         nsAttrValue asAttr;
         Link::ParseAsValue(aAs, asAttr);
-        nsContentPolicyType policyType = Link::AsValueToContentPolicy(asAttr);
+        policyType = Link::AsValueToContentPolicy(asAttr);
 
         if (policyType == nsIContentPolicy::TYPE_INVALID) {
           // Ignore preload with a wrong or empty as attribute.
@@ -860,11 +863,18 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
                                                 mDocument)) {
           policyType = nsIContentPolicy::TYPE_INVALID;
         }
+      }
 
-        prefetchService->PreloadURI(uri, mDocumentURI, aSource, policyType);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithNode(aSource);
+      referrerInfo = static_cast<ReferrerInfo*>(referrerInfo.get())
+                         ->CloneWithNewOriginalReferrer(mDocumentURI);
+
+      if (preload) {
+        prefetchService->PreloadURI(uri, referrerInfo, aSource, policyType);
       } else {
         prefetchService->PrefetchURI(
-            uri, mDocumentURI, aSource,
+            uri, referrerInfo, aSource,
             aLinkTypes & nsStyleLinkElement::ePREFETCH);
       }
     }
