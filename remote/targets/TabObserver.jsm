@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TabManager", "TabObserver", "WindowObserver"];
+var EXPORTED_SYMBOLS = ["TabObserver"];
 
 const { DOMContentLoadedPromise } = ChromeUtils.import(
   "chrome://remote/content/Sync.jsm"
@@ -13,12 +13,6 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-/**
- * The WindowManager provides tooling for application-agnostic
- * observation of windows, tabs, and content browsers as they are
- * created and destroyed.
- */
 
 // TODO(ato):
 //
@@ -146,16 +140,3 @@ class TabObserver {
     // TODO(ato): Is TabClose fired when the window closes?
   }
 }
-
-var TabManager = {
-  addTab({ userContextId }) {
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    const { gBrowser } = window;
-    const tab = gBrowser.addTab("about:blank", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      userContextId,
-    });
-    gBrowser.selectedTab = tab;
-    return tab;
-  },
-};
