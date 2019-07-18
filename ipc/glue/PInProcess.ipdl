@@ -22,13 +22,6 @@ namespace ipc {
 async protocol PInProcess
 {
   manages PWindowGlobal;
-
-parent:
-  /**
-   * Construct a new WindowGlobal actor for a window global in the given
-   * BrowsingContext and with the given principal.
-   */
-  async PWindowGlobal(WindowGlobalInit init);
 };
 
 } // namespace ipc

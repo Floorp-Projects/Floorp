@@ -974,7 +974,7 @@ class GatherDecls(TcheckVisitor):
             managed.manager = p
             managed.accept(self)
 
-        if 0 == len(p.managers) and 0 == len(p.messageDecls):
+        if not (p.managers or p.messageDecls or p.managesStmts):
             self.error(p.loc,
                        "top-level protocol `%s' cannot be empty",
                        p.name)
