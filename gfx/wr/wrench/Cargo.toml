@@ -39,7 +39,6 @@ core-foundation = "0.6"
 [features]
 default = [ "env_logger" ]
 headless = [ "osmesa-sys", "osmesa-src" ]
-pathfinder = [ "webrender/pathfinder" ]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 dwrote = "0.9"
