@@ -7,6 +7,7 @@
 GeckoProgram('gdb-tests', linkage=None)
 
 include('../js-cxxflags.mozbuild')
+include('../js-standalone.mozbuild')
 
 SOURCES += [
     # This file must not be unified with any of the test files, or the use()
@@ -40,13 +41,6 @@ LOCAL_INCLUDES += [
 USE_LIBS += [
     'static:js',
 ]
-
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    USE_LIBS += [
-        'jsrust'
-    ]
-
-OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR
 FINAL_TARGET_PP_FILES += ['gdb-tests-gdb.py.in']

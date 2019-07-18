@@ -98,6 +98,7 @@ define(function(require, exports, module) {
           getLabel: PropTypes.func,
           getValue: PropTypes.func,
           getKey: PropTypes.func,
+          getLevel: PropTypes.func,
           getType: PropTypes.func,
         }).isRequired,
         // Tree decorator (see also the interface above)

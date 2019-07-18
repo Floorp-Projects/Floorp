@@ -19,16 +19,15 @@
 
   <body>
     <div class="player-holder">
-      <xul:browser type="content" primary="true" remote="true" remoteType="web" id="browser"></xul:browser>
+      <xul:browser type="content" primary="true" remote="true" remoteType="web" id="browser" tabindex="-1"></xul:browser>
     </div>
     <div id="controls">
-      <div id="close" class="control-item"></div>
+      <button id="close" class="control-item" tabindex="3"></button>
 
       <div id="controls-bottom">
-        <div id="unpip" class="control-item"></div>
+        <button id="unpip" class="control-item" tabindex="2"></button>
         <div id="gap"></div>
-        <div id="pause" class="control-item"></div>
-        <div id="play" class="control-item"></div>
+        <button id="playpause" class="control-item" tabindex="1" autofocus="true"></button>
       </div>
     </div>
   </body>

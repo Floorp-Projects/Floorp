@@ -224,6 +224,11 @@ nsresult TabGroup::FindItemWithName(const nsAString& aName,
       continue;
     }
 
+    BrowsingContext* bc = outerWindow->GetBrowsingContext();
+    if (!bc || !bc->IsTargetable()) {
+      continue;
+    }
+
     nsCOMPtr<nsIDocShellTreeItem> root;
     docshell->GetSameTypeRootTreeItem(getter_AddRefs(root));
     MOZ_RELEASE_ASSERT(docshell == root);

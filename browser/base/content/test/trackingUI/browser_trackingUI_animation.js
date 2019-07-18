@@ -41,7 +41,10 @@ add_task(async function testShieldAnimation() {
 
   await promiseTabLoadEvent(tab, BENIGN_PAGE);
   ok(BrowserTestUtils.is_hidden(animationIcon), "the animated icon is hidden");
-  ok(BrowserTestUtils.is_hidden(noAnimationIcon), "the default icon is hidden");
+  ok(
+    BrowserTestUtils.is_visible(noAnimationIcon),
+    "the default icon is visible"
+  );
 
   Services.prefs.setBoolPref(ANIMATIONS_PREF, false);
   await Promise.all([

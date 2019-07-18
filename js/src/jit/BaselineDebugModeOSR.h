@@ -7,7 +7,7 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"

@@ -25,7 +25,7 @@ XPIDL_SOURCES += [
 XPIDL_MODULE = 'pref'
 
 EXPORTS.mozilla += [
-    'init/StaticPrefList.h',
+    '!init/StaticPrefList.h',
     'init/StaticPrefList_accessibility.h',
     'init/StaticPrefListAll.h',
     'init/StaticPrefListBegin.h',
@@ -37,9 +37,23 @@ EXPORTS.mozilla += [
     'StaticPrefsBase.h',
 ]
 
+GENERATED_FILES += [
+    'init/StaticPrefList.h',
+]
+
 UNIFIED_SOURCES += [
     'Preferences.cpp',
     'SharedPrefMap.cpp',
+]
+
+static_pref_list = GENERATED_FILES['init/StaticPrefList.h']
+static_pref_list.script = 'init/generate_static_pref_list.py:emit_header'
+static_pref_list.inputs = [
+    'init/StaticPrefList.yaml',
+]
+
+PYTHON_UNITTEST_MANIFESTS += [
+    'test/python.ini',
 ]
 
 XPCOM_MANIFESTS += [

@@ -42,7 +42,7 @@
 #ifdef ENABLE_TYPED_OBJECTS
 #  include "builtin/TypedObject.h"
 #endif
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "gc/FreeOp.h"
 #include "gc/Marking.h"

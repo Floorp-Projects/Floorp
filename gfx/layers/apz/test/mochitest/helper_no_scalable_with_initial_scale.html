@@ -20,11 +20,6 @@
   <div style="width: 400%; height: 400%; background: red;"></div>
   <div style="width: 100%; height: 100%; background-color: blue"></div>
   <script type="application/javascript">
-    function waitForFrame() {
-      return new Promise(resolve => {
-          window.requestAnimationFrame(resolve);
-      });
-    }
     const utils = SpecialPowers.getDOMWindowUtils(window);
 
     async function test(testDriver) {

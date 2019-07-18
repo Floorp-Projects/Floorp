@@ -60,6 +60,8 @@ if CONFIG['OS_TARGET'] == 'Darwin':
             'cubeb_osx_run_loop.c',
         ]
     DEFINES['USE_AUDIOUNIT'] = True
+    if CONFIG['MOZ_AUDIOUNIT_RUST']:
+        DEFINES['USE_AUDIOUNIT_RUST'] = True
 
 if CONFIG['OS_TARGET'] == 'WINNT':
     SOURCES += [

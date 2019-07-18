@@ -1746,7 +1746,7 @@ nsEventStatus APZCTreeManager::ProcessTouchInput(
     // a scrollbar mouse-drag.
     mInScrollbarTouchDrag =
         StaticPrefs::apz_drag_enabled() &&
-        StaticPrefs::apz_touch_drag_enabled() && hitScrollbarNode &&
+        StaticPrefs::apz_drag_touch_enabled() && hitScrollbarNode &&
         hitScrollbarNode->IsScrollThumbNode() &&
         hitScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable;
 

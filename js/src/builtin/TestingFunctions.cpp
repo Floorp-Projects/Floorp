@@ -37,7 +37,7 @@
 #  include "irregexp/RegExpEngine.h"
 #  include "irregexp/RegExpParser.h"
 #endif
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
@@ -84,7 +84,7 @@
 #include "wasm/WasmTextToBinary.h"
 #include "wasm/WasmTypes.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSContext-inl.h"

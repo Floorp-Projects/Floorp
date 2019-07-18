@@ -50,12 +50,7 @@ add_task(async function proxyState() {
 
 async function clickDropmarker() {
   await UrlbarTestUtils.promisePopupOpen(window, () => {
-    let historyDropMarker = window.document.getAnonymousElementByAttribute(
-      gURLBar.textbox,
-      "anonid",
-      "historydropmarker"
-    );
-    EventUtils.synthesizeMouseAtCenter(historyDropMarker, {}, window);
+    EventUtils.synthesizeMouseAtCenter(gURLBar.dropmarker, {}, window);
   });
   let queryContext = await gURLBar.lastQueryContextPromise;
   return queryContext;

@@ -10,7 +10,7 @@
 
 #include "jsutil.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
@@ -37,7 +37,7 @@
 #include "wasm/WasmBuiltins.h"
 #include "wasm/WasmInstance.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "gc/Nursery-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/JSScript-inl.h"

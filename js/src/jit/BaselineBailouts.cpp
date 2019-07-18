@@ -8,7 +8,7 @@
 
 #include "jsutil.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"

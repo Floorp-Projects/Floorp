@@ -14,7 +14,7 @@ AddonTestUtils.createAppInfo(
   "1",
   "42"
 );
-AddonTestUtils.usePrivilegedSignatures = false;
+AddonTestUtils.usePrivilegedSignatures = id => id.startsWith("privileged");
 
 // Assert on the expected "addonsManager.action" telemetry events (and optional filter events to verify
 // by using a given actionType).
@@ -229,4 +229,74 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
     "Got the expected telemetry events for the grandfathered extensions",
     { actionType: "privateBrowsingAllowed" }
   );
+});
+
+add_task(async function test_extension_privileged_not_allowed() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+
+  let addonId = "privileged_not_allowed@mochi.test";
+  let extensionData = {
+    manifest: {
+      version: "1.0",
+      applications: { gecko: { id: addonId } },
+      incognito: "not_allowed",
+    },
+    useAddonManager: "permanent",
+    isPrivileged: true,
+  };
+  let wrapper = ExtensionTestUtils.loadExtension(extensionData);
+  await wrapper.startup();
+  let policy = WebExtensionPolicy.getByID(addonId);
+  equal(
+    policy.extension.isPrivileged,
+    true,
+    "The test extension is privileged"
+  );
+  equal(
+    policy.privateBrowsingAllowed,
+    false,
+    "privateBrowsingAllowed is false"
+  );
+
+  await wrapper.unload();
+});
+
+// Test that we remove pb permission if an extension is updated to not_allowed.
+add_task(async function test_extension_upgrade_not_allowed() {
+  Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+
+  let addonId = "upgrade@mochi.test";
+  let extensionData = {
+    manifest: {
+      version: "1.0",
+      applications: { gecko: { id: addonId } },
+      incognito: "spanning",
+    },
+    useAddonManager: "permanent",
+    incognitoOverride: "spanning",
+  };
+  let wrapper = ExtensionTestUtils.loadExtension(extensionData);
+  await wrapper.startup();
+
+  let policy = WebExtensionPolicy.getByID(addonId);
+
+  equal(
+    policy.privateBrowsingAllowed,
+    true,
+    "privateBrowsingAllowed in extension"
+  );
+
+  extensionData.manifest.version = "2.0";
+  extensionData.manifest.incognito = "not_allowed";
+  await wrapper.upgrade(extensionData);
+
+  equal(wrapper.version, "2.0", "Expected extension version");
+  policy = WebExtensionPolicy.getByID(addonId);
+  equal(
+    policy.privateBrowsingAllowed,
+    false,
+    "privateBrowsingAllowed is false"
+  );
+
+  await wrapper.unload();
 });

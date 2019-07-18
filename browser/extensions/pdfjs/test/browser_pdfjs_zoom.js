@@ -232,19 +232,31 @@ add_task(async function test_browser_zoom() {
       const initialWidth = await waitForRenderAndGetWidth(newTabBrowser);
 
       // Zoom in
+      let newWidthPromise = waitForRenderAndGetWidth(newTabBrowser);
       FullZoom.enlarge();
-      let newWidth = await waitForRenderAndGetWidth(newTabBrowser);
-      ok(newWidth > initialWidth, "Zoom in makes the page bigger.");
+      ok(
+        (await newWidthPromise) > initialWidth,
+        "Zoom in makes the page bigger."
+      );
 
       // Reset
+      newWidthPromise = waitForRenderAndGetWidth(newTabBrowser);
       FullZoom.reset();
-      newWidth = await waitForRenderAndGetWidth(newTabBrowser);
-      is(newWidth, initialWidth, "Zoom reset restores page.");
+      is(await newWidthPromise, initialWidth, "Zoom reset restores page.");
 
       // Zoom out
+      newWidthPromise = waitForRenderAndGetWidth(newTabBrowser);
       FullZoom.reduce();
-      newWidth = await waitForRenderAndGetWidth(newTabBrowser);
-      ok(newWidth < initialWidth, "Zoom out makes the page smaller.");
+      ok(
+        (await newWidthPromise) < initialWidth,
+        "Zoom out makes the page smaller."
+      );
+
+      // Clean-up after the PDF viewer.
+      await ContentTask.spawn(newTabBrowser, null, function() {
+        const viewer = content.wrappedJSObject.PDFViewerApplication;
+        return viewer.close();
+      });
     }
   );
 });

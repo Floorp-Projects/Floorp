@@ -142,7 +142,7 @@ add_task(async function() {
         }
 
         // Focus chrome
-        document.getElementById("urlbar").focus();
+        gURLBar.focus();
         let originalFocus = Services.focus.focusedElement;
 
         // Load about:blank just to make sure that everything works nicely

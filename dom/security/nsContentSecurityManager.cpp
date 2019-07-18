@@ -34,6 +34,35 @@ NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
 
 static mozilla::LazyLogModule sCSMLog("CSMLog");
 
+// This whitelist contains files that are permanently allowed to use eval()-like
+// functions. It is supposed to be restricted to files that are exclusively used
+// in testing contexts.
+static nsLiteralCString evalWhitelist[] = {
+    // Test-only third-party library
+    NS_LITERAL_CSTRING("resource://testing-common/sinon-7.2.7.js"),
+    // Test-only third-party library
+    NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
+    // Test-only utility
+    NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
+
+    // The following files are NOT supposed to stay on this whitelist.
+    // Bug numbers indicate planned removal of each file.
+
+    // Bug 1498560
+    NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
+    // Bug 1550485
+    NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/redux.js"),
+    // Bug 1550489
+    NS_LITERAL_CSTRING(
+        "resource://devtools/client/shared/vendor/react-redux.js"),
+    // Bug 1550463
+    NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/lodash.js"),
+    // Bug 1550471
+    NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/jszip.js"),
+    // Bug 1550476
+    NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/jsol.js"),
+};
+
 /* static */
 bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     nsIChannel* aChannel) {
@@ -167,36 +196,26 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     return;
   }
 
-  if (Preferences::GetBool("security.allow_eval_with_system_principal")) {
+  // Use static pref for performance reasons.
+  if (StaticPrefs::security_allow_eval_with_system_principal()) {
     return;
   }
 
-  static StaticAutoPtr<nsTArray<nsCString>> sUrisAllowEval;
   JS::AutoFilename scriptFilename;
   if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
-    if (!sUrisAllowEval) {
-      sUrisAllowEval = new nsTArray<nsCString>();
-      nsAutoCString urisAllowEval;
-      Preferences::GetCString("security.uris_using_eval_with_system_principal",
-                              urisAllowEval);
-      for (const nsACString& filenameString : urisAllowEval.Split(',')) {
-        sUrisAllowEval->AppendElement(filenameString);
-      }
-      ClearOnShutdown(&sUrisAllowEval);
-    }
+    nsDependentCSubstring fileName(scriptFilename.get(),
+                                   strlen(scriptFilename.get()));
 
-    nsAutoCString fileName;
-    fileName = nsAutoCString(scriptFilename.get());
+    ToLowerCase(fileName);
     // Extract file name alone if scriptFilename contains line number
     // separated by multiple space delimiters in few cases.
     int32_t fileNameIndex = fileName.FindChar(' ');
     if (fileNameIndex != -1) {
-      fileName = Substring(fileName, 0, fileNameIndex);
+      fileName.SetLength(fileNameIndex);
     }
-    ToLowerCase(fileName);
 
-    for (auto& uriEntry : *sUrisAllowEval) {
-      if (StringEndsWith(fileName, uriEntry)) {
+    for (const nsLiteralCString& whitelistEntry : evalWhitelist) {
+      if (fileName.Equals(whitelistEntry)) {
         return;
       }
     }

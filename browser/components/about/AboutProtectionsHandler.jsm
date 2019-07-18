@@ -123,32 +123,36 @@ var AboutProtectionsHandler = {
         win.openTrustedLinkIn("about:preferences#sync", "tab");
         break;
       case "FetchContentBlockingEvents":
-        TrackingDBService.getEventsByDateRange(
+        let sumEvents = await TrackingDBService.sumAllEvents();
+        let earliestDate = await TrackingDBService.getEarliestRecordedDate();
+        let eventsByDate = await TrackingDBService.getEventsByDateRange(
           aMessage.data.from,
           aMessage.data.to
-        ).then(results => {
-          let dataToSend = {};
-          let largest = 0;
-          for (let result of results) {
-            let count = result.getResultByName("count");
-            let type = result.getResultByName("type");
-            let timestamp = result.getResultByName("timestamp");
-            dataToSend[timestamp] = dataToSend[timestamp] || { total: 0 };
-            dataToSend[timestamp][idToTextMap.get(type)] = count;
-            dataToSend[timestamp].total += count;
-            // Record the largest amount of tracking events found per day,
-            // to create the tallest column on the graph and compare other days to.
-            if (largest < dataToSend[timestamp].total) {
-              largest = dataToSend[timestamp].total;
-            }
+        );
+        let dataToSend = {};
+        let largest = 0;
+
+        for (let result of eventsByDate) {
+          let count = result.getResultByName("count");
+          let type = result.getResultByName("type");
+          let timestamp = result.getResultByName("timestamp");
+          dataToSend[timestamp] = dataToSend[timestamp] || { total: 0 };
+          dataToSend[timestamp][idToTextMap.get(type)] = count;
+          dataToSend[timestamp].total += count;
+          // Record the largest amount of tracking events found per day,
+          // to create the tallest column on the graph and compare other days to.
+          if (largest < dataToSend[timestamp].total) {
+            largest = dataToSend[timestamp].total;
           }
           dataToSend.largest = largest;
-          this.sendMessage(
-            aMessage.target,
-            "SendContentBlockingRecords",
-            dataToSend
-          );
-        });
+        }
+        dataToSend.earliestDate = earliestDate;
+        dataToSend.sumEvents = sumEvents;
+        this.sendMessage(
+          aMessage.target,
+          "SendContentBlockingRecords",
+          dataToSend
+        );
         break;
       case "FetchUserLoginsData":
         this.sendMessage(

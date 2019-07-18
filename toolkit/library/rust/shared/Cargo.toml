@@ -18,6 +18,7 @@ prefs_parser = { path = "../../../../modules/libpref/parser" }
 profiler_helper = { path = "../../../../tools/profiler/rust-helper", optional = true }
 mozurl = { path = "../../../../netwerk/base/mozurl" }
 webrender_bindings = { path = "../../../../gfx/webrender_bindings", optional = true }
+cubeb-coreaudio = { path = "../../../../media/libcubeb/cubeb-coreaudio-rs", optional = true }
 cubeb-pulse = { path = "../../../../media/libcubeb/cubeb-pulse-rs", optional = true, features=["pulse-dlopen"] }
 cubeb-sys = { version = "0.5.0", optional = true, features=["gecko-in-tree"] }
 encoding_c = "0.9.0"
@@ -51,6 +52,7 @@ servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
 webrender_debugger = ["webrender_bindings/webrender_debugger"]
 cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server"]
+cubeb_coreaudio_rust = ["cubeb-sys", "cubeb-coreaudio"]
 cubeb_pulse_rust = ["cubeb-sys", "cubeb-pulse"]
 gecko_debug = ["geckoservo/gecko_debug", "nsstring/gecko_debug"]
 gecko_refcount_logging = ["geckoservo/gecko_refcount_logging"]

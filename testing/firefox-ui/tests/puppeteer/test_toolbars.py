@@ -95,16 +95,10 @@ class TestLocationBar(PuppeteerMixin, MarionetteTestCase):
         self.assertEqual(self.locationbar.identity_organization_label.get_property('localName'),
                          'label')
         self.assertEqual(self.locationbar.identity_icon.get_property('localName'), 'image')
-        self.assertEqual(self.locationbar.history_drop_marker.get_property('localName'),
-                         'dropmarker')
         self.assertEqual(self.locationbar.reload_button.get_property('localName'),
                          'toolbarbutton')
         self.assertEqual(self.locationbar.stop_button.get_property('localName'),
                          'toolbarbutton')
-
-        self.assertEqual(self.locationbar.contextmenu.get_property('localName'), 'menupopup')
-        self.assertEqual(self.locationbar.get_contextmenu_entry('paste').get_attribute('cmd'),
-                         'cmd_paste')
 
     def test_reload(self):
         event_types = ["shortcut", "shortcut2", "button"]

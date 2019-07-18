@@ -159,6 +159,8 @@ class Driver {
                     this.readyTrigger();
                     if (typeof tpRecordTime !== "undefined")
                         tpRecordTime(this._values.join(','), 0, this._names.join(','));
+
+                    this.sendResultsToRaptor();
                 } else
                     print("Success! Benchmark is now finished.");
                 return;
@@ -216,5 +218,37 @@ class Driver {
             this._statusCell.innerHTML = "Running Tests... " + ( this._startIterations - this._numIterations ) + "/" + this._startIterations;
         }
         
+    }
+
+    sendResultsToRaptor()
+    {
+        // this contains all test names = [ "Air_firstIteration", "Air_averageWorstCase", ...]
+        var allNames = this._names;
+        // this contains all test metrics = [ 111, 83.5, 21.78894472361809, ...]
+        var allValues = this._values;
+        // this object will store name:[value1, value2, ...] pairs for the arrays above
+        var measuredValuesByFullName = {};
+        for (var i = 0, len = allNames.length; i < len; i++) {
+            if (measuredValuesByFullName[allNames[i]] === undefined) {
+                measuredValuesByFullName[allNames[i]] = [];
+            }
+        }
+
+        allNames.map(function(name, index) {
+            // now we save all the values for each test
+            // ex.: measuredValuesByFullName['Air_firstIteration'].push(111);
+            //      measuredValuesByFullName['Air_firstIteration'].push(107);
+            measuredValuesByFullName[name].push(allValues[index]);
+        });
+
+        // delete the geomean array - this will be calculated by raptor
+        delete measuredValuesByFullName.geomean;
+
+        if (location.search === '?raptor') {
+            var _data = ['raptor-benchmark', 'ares6', measuredValuesByFullName];
+            console.log('ares6 source is about to post results to the raptor webext');
+            window.postMessage(_data, '*');
+        }
+
     }
 }

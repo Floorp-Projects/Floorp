@@ -7,6 +7,7 @@
 GeckoProgram('fuzz-tests', linkage=None)
 
 include('../js-cxxflags.mozbuild')
+include('../js-standalone.mozbuild')
 
 UNIFIED_SOURCES += [
     'testExample.cpp',
@@ -43,15 +44,5 @@ if CONFIG['LIBFUZZER']:
 USE_LIBS += [
     'static:js',
 ]
-
-if CONFIG['ENABLE_WASM_CRANELIFT']:
-    USE_LIBS += [
-        'jsrust'
-    ]
-
-if CONFIG['MOZ_NEEDS_LIBATOMIC']:
-    OS_LIBS += ['atomic']
-
-OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 DEFINES['topsrcdir'] = '%s/js/src' % TOPSRCDIR

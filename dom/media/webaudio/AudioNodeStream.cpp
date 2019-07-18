@@ -52,6 +52,10 @@ AudioNodeStream::~AudioNodeStream() {
   MOZ_COUNT_DTOR(AudioNodeStream);
 }
 
+void AudioNodeStream::NotifyForcedShutdown() {
+  mEngine->NotifyForcedShutdown();
+}
+
 void AudioNodeStream::DestroyImpl() {
   // These are graph thread objects, so clean up on graph thread.
   mInputChunks.Clear();

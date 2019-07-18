@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals
 import argparse
 import collections
 import inspect
+import sys
 import types
 
 from .base import MachError
@@ -114,7 +115,8 @@ def CommandProvider(cls):
     # Tell mach driver whether to pass context argument to __init__.
     pass_context = False
 
-    if inspect.ismethod(cls.__init__):
+    isfunc = inspect.ismethod if sys.version_info < (3, 0) else inspect.isfunction
+    if isfunc(cls.__init__):
         spec = inspect.getargspec(cls.__init__)
 
         if len(spec.args) > 2:

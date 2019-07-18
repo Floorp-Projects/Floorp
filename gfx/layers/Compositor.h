@@ -442,6 +442,8 @@ class Compositor : public TextureSourceProvider {
 
   virtual void CancelFrame(bool aNeedFlush = true) { ReadUnlockTextures(); }
 
+  virtual void WaitForGPU() {}
+
   /**
    * Whether textures created by this compositor can receive partial updates.
    */

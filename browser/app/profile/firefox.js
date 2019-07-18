@@ -1358,14 +1358,10 @@ pref("security.insecure_password.ui.enabled", true);
 // Show in-content login form warning UI for insecure login fields
 pref("security.insecure_field_warning.contextual.enabled", true);
 
-// Show degraded UI for http pages; disabled for now
-pref("security.insecure_connection_icon.enabled", false);
-// Show degraded UI for http pages in private mode only for Nightly: Bug 1434626
-#if defined(NIGHTLY_BUILD)
+// Show degraded UI for http pages.
+pref("security.insecure_connection_icon.enabled", true);
+// Show degraded UI for http pages in private mode.
 pref("security.insecure_connection_icon.pbmode.enabled", true);
-#else
-pref("security.insecure_connection_icon.pbmode.enabled", false);
-#endif
 
 // Show "Not Secure" text for http pages; disabled for now
 pref("security.insecure_connection_text.enabled", false);

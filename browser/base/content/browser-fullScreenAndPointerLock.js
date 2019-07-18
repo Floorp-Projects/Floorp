@@ -317,7 +317,13 @@ var FullScreen = {
     if (enterFS) {
       gNavToolbox.setAttribute("inFullscreen", true);
       document.documentElement.setAttribute("inFullscreen", true);
-      if (!document.fullscreenElement && this.useLionFullScreen) {
+      let alwaysUsesNativeFullscreen =
+        AppConstants.platform == "macosx" &&
+        Services.prefs.getBoolPref("full-screen-api.macos-native-full-screen");
+      if (
+        (alwaysUsesNativeFullscreen || !document.fullscreenElement) &&
+        this.useLionFullScreen
+      ) {
         document.documentElement.setAttribute("OSXLionFullscreen", true);
       }
     } else {

@@ -19,6 +19,7 @@ class AudioWorkletImpl;
 namespace dom {
 
 class AudioWorkletProcessorConstructor;
+class StructuredCloneHolder;
 
 class AudioWorkletGlobalScope final : public WorkletGlobalScope {
  public:
@@ -42,6 +43,13 @@ class AudioWorkletGlobalScope final : public WorkletGlobalScope {
   double CurrentTime() const;
 
   float SampleRate() const;
+
+  // If successful, returns true and sets aRetProcessor, which will be in the
+  // compartment for the realm of this global.  Returns false on failure.
+  MOZ_CAN_RUN_SCRIPT
+  bool ConstructProcessor(const nsAString& aName,
+                          NotNull<StructuredCloneHolder*> aOptionsSerialization,
+                          JS::MutableHandle<JSObject*> aRetProcessor);
 
  private:
   ~AudioWorkletGlobalScope() = default;

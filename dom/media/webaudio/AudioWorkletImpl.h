@@ -8,6 +8,7 @@
 #define AudioWorkletImpl_h
 
 #include "mozilla/dom/WorkletImpl.h"
+#include "mozilla/dom/AudioWorkletGlobalScope.h"
 
 namespace mozilla {
 
@@ -28,6 +29,12 @@ class AudioWorkletImpl final : public WorkletImpl {
                         JS::Handle<JSObject*> aGivenProto) override;
 
   nsresult SendControlMessage(already_AddRefed<nsIRunnable> aRunnable) override;
+
+  // Execution thread only.
+  dom::AudioWorkletGlobalScope* GetGlobalScope() {
+    return static_cast<dom::AudioWorkletGlobalScope*>(
+        WorkletImpl::GetGlobalScope());
+  }
 
   // Any thread:
   AudioNodeStream* DestinationStream() { return mDestinationStream; }

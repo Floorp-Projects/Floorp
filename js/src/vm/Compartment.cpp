@@ -12,7 +12,7 @@
 
 #include "jsfriendapi.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "js/Date.h"
