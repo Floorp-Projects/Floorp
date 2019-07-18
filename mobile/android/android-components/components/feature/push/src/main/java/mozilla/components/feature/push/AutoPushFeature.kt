@@ -308,7 +308,7 @@ data class AutoPushSubscription(val type: PushType, val endpoint: String, val pu
  */
 data class PushConfig(
     val senderId: String,
-    val serverHost: String = "push.service.mozilla.com",
+    val serverHost: String = "updates.push.services.mozilla.com",
     val protocol: Protocol = Protocol.HTTPS,
     val serviceType: ServiceType = ServiceType.FCM
 )
