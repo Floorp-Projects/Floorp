@@ -342,13 +342,13 @@
         case KeyEvent.DOM_VK_SPACE:
           if (visibleTabs[lastFocusedTabIndex].multiselected) {
             gBrowser.removeFromMultiSelectedTabs(
-              visibleTabs[lastFocusedTabIndex],
-              { isLastMultiSelectChange: false }
+              visibleTabs[lastFocusedTabIndex]
             );
           } else {
-            gBrowser.addToMultiSelectedTabs(visibleTabs[lastFocusedTabIndex], {
-              isLastMultiSelectChange: false,
-            });
+            gBrowser.addToMultiSelectedTabs(
+              visibleTabs[lastFocusedTabIndex],
+              false
+            );
           }
           break;
         default:
