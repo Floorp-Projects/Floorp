@@ -87,6 +87,21 @@ this.DevToolsShim = {
   },
 
   /**
+   * Returns the array of the existing toolboxes. This method is part of the compatibility
+   * layer for webextensions.
+   *
+   * @return {Array<Toolbox>}
+   *   An array of toolboxes.
+   */
+  getToolboxes: function() {
+    if (this.isInitialized()) {
+      return this._gDevTools.getToolboxes();
+    }
+
+    return [];
+  },
+
+  /**
    * Register an instance of gDevTools. Should be called by DevTools during startup.
    *
    * @param {DevTools} a devtools instance (from client/framework/devtools)
@@ -303,7 +318,6 @@ const webExtensionsMethods = [
   "getTargetForTab",
   "getTheme",
   "openBrowserConsole",
-  "getToolboxes",
 ];
 
 for (const method of webExtensionsMethods) {

@@ -37,9 +37,6 @@ class WebSocketFront extends FrontClassWithSpec(webSocketSpec) {
    *
    */
   destroy() {
-    if (!this._client) {
-      return null;
-    }
     this.off("serverWebSocketOpened");
     this.off("serverWebSocketClosed");
     this.off("serverFrameSent");

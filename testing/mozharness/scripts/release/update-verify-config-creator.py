@@ -7,6 +7,8 @@ import re
 import sys
 from urlparse import urljoin
 
+from mozilla_version.gecko import GeckoVersion
+from mozilla_version.version import VersionType
 
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
@@ -205,17 +207,18 @@ class UpdateVerifyConfigCreator(BaseScript):
             pattern, override_str = override.split(",", 1)
             self.config["mar_channel_id_overrides"][pattern] = override_str
 
-    def _get_branch_url(self, category, branch_prefix, version):
+    def _get_branch_url(self, branch_prefix, version):
+        version = GeckoVersion.parse(version)
         branch = None
-        if category == "dev":
+        if version.version_type == VersionType.BETA:
             branch = "releases/{}-beta".format(branch_prefix)
-        elif category == "esr":
-            branch = "releases/{}-esr{}".format(branch_prefix, version[:2])
-        elif category in ("major", "stability"):
+        elif version.version_type == VersionType.ESR:
+            branch = "releases/{}-esr{}".format(branch_prefix, version.major_number)
+        elif version.version_type == VersionType.RELEASE:
             if branch_prefix == "comm":
                 # Thunderbird does not have ESR releases, regular releases
                 # go in an ESR branch
-                branch = "releases/{}-esr{}".format(branch_prefix, version[:2])
+                branch = "releases/{}-esr{}".format(branch_prefix, version.major_number)
             else:
                 branch = "releases/{}-release".format(branch_prefix)
         if not branch:
@@ -245,14 +248,7 @@ class UpdateVerifyConfigCreator(BaseScript):
             # we need to use releases_name instead of release_info since esr
             # string is included in the name. later we rely on this.
             product, version = release_name.split('-', 1)
-            category = release_info['category']
             tag = "{}_{}_RELEASE".format(product.upper(), version.replace(".", "_"))
-            # Product details has a "category" for releases that we can use to
-            # determine the repo path. This will fail if any previous releases
-            # were built from a project branch - but that's not something we do
-            # at the time of writing.
-            branch = self._get_branch_url(category, self.config["branch_prefix"],
-                                          version)
 
             # Exclude any releases that don't match one of our include version
             # regexes. This is generally to avoid including versions from other
@@ -302,6 +298,8 @@ class UpdateVerifyConfigCreator(BaseScript):
             self.log("Retrieving buildid from info file: %s" % info_file_url, level=DEBUG)
             ret = self._retry_download(info_file_url, "WARNING")
             buildID = ret.read().split("=")[1].strip()
+
+            branch = self._get_branch_url(self.config["branch_prefix"], version)
 
             shipped_locales_url = urljoin(
                 self.config["hg_server"],

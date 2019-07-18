@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["TabManager", "TabObserver", "WindowObserver"];
+var EXPORTED_SYMBOLS = ["TabObserver"];
 
 const { DOMContentLoadedPromise } = ChromeUtils.import(
   "chrome://remote/content/Sync.jsm"
@@ -13,12 +13,6 @@ const { EventEmitter } = ChromeUtils.import(
   "resource://gre/modules/EventEmitter.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
-/**
- * The WindowManager provides tooling for application-agnostic
- * observation of windows, tabs, and content browsers as they are
- * created and destroyed.
- */
 
 // TODO(ato):
 //
@@ -98,26 +92,35 @@ class TabObserver {
   constructor({ registerExisting = false } = {}) {
     this.windows = new WindowObserver({ registerExisting });
     EventEmitter.decorate(this);
+    this.onWindowOpen = this.onWindowOpen.bind(this);
+    this.onWindowClose = this.onWindowClose.bind(this);
+    this.onTabOpen = this.onTabOpen.bind(this);
+    this.onTabClose = this.onTabClose.bind(this);
   }
 
   async start() {
-    this.windows.on("open", this.onWindowOpen.bind(this));
-    this.windows.on("close", this.onWindowClose.bind(this));
+    this.windows.on("open", this.onWindowOpen);
+    this.windows.on("close", this.onWindowClose);
     await this.windows.start();
   }
 
   stop() {
-    this.windows.off("open");
-    this.windows.off("close");
+    this.windows.off("open", this.onWindowOpen);
+    this.windows.off("close", this.onWindowClose);
     this.windows.stop();
+
+    // Stop listening for events on still opened windows
+    for (const window of Services.wm.getEnumerator("navigator:browser")) {
+      this.onWindowClose(window);
+    }
   }
 
-  onTabOpen(tab) {
-    this.emit("open", tab);
+  onTabOpen({ target }) {
+    this.emit("open", target);
   }
 
-  onTabClose(tab) {
-    this.emit("close", tab);
+  onTabClose({ target }) {
+    this.emit("close", target);
   }
 
   // WindowObserver
@@ -133,29 +136,17 @@ class TabObserver {
       if (!tab.linkedBrowser) {
         continue;
       }
-      this.onTabOpen(tab);
+      this.onTabOpen({ target: tab });
     }
 
-    window.addEventListener("TabOpen", ({ target }) => this.onTabOpen(target));
-    window.addEventListener("TabClose", ({ target }) =>
-      this.onTabClose(target)
-    );
+    window.addEventListener("TabOpen", this.onTabOpen);
+    window.addEventListener("TabClose", this.onTabClose);
   }
 
   onWindowClose(window) {
     // TODO(ato): Is TabClose fired when the window closes?
+
+    window.removeEventListener("TabOpen", this.onTabOpen);
+    window.removeEventListener("TabClose", this.onTabClose);
   }
 }
-
-var TabManager = {
-  addTab({ userContextId }) {
-    const window = Services.wm.getMostRecentWindow("navigator:browser");
-    const { gBrowser } = window;
-    const tab = gBrowser.addTab("about:blank", {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      userContextId,
-    });
-    gBrowser.selectedTab = tab;
-    return tab;
-  },
-};

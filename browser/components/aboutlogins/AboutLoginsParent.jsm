@@ -38,6 +38,12 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("AboutLoginsParent");
 });
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "BREACH_ALERTS_ENABLED",
+  "signon.management.page.breach-alerts.enabled",
+  false
+);
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
@@ -182,17 +188,22 @@ var AboutLoginsParent = {
         this._subscribers.add(message.target);
 
         let messageManager = message.target.messageManager;
-        const logins = await this.getAllLogins();
-        messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-        const breaches = await RemoteSettings("fxmonitor-breaches").get();
-        const breachesByLoginGUID = await this.getBreachesForLogins(
-          logins,
-          breaches
-        );
-        messageManager.sendAsyncMessage(
-          "AboutLogins:UpdateBreaches",
-          breachesByLoginGUID
-        );
+        this.getAllLogins().then(async logins => {
+          messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
+          if (!BREACH_ALERTS_ENABLED) {
+            return;
+          }
+
+          const breaches = await RemoteSettings("fxmonitor-breaches").get();
+          const breachesByLoginGUID = await this.getBreachesForLogins(
+            logins,
+            breaches
+          );
+          messageManager.sendAsyncMessage(
+            "AboutLogins:UpdateBreaches",
+            breachesByLoginGUID
+          );
+        });
         break;
       }
       case "AboutLogins:UpdateLogin": {

@@ -23,7 +23,6 @@ DevToolsModules(
     'browser-menus.js',
     'devtools-browser.js',
     'devtools.js',
-    'gDevTools.jsm',
     'menu-item.js',
     'menu.js',
     'selection.js',

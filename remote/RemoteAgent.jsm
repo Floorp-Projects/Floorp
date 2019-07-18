@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Observer: "chrome://remote/content/Observer.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   RecommendedPreferences: "chrome://remote/content/RecommendedPreferences.jsm",
-  TabObserver: "chrome://remote/content/WindowManager.jsm",
   Targets: "chrome://remote/content/targets/Targets.jsm",
 });
 XPCOMUtils.defineLazyGetter(this, "log", Log.get);
@@ -33,7 +32,7 @@ const DEFAULT_PORT = 9222;
 const LOOPBACKS = ["localhost", "127.0.0.1", "[::1]"];
 
 class RemoteAgentClass {
-  init() {
+  async init() {
     if (!Preferences.get(ENABLED, false)) {
       throw new Error("Remote agent is disabled by its preference");
     }
@@ -50,23 +49,19 @@ class RemoteAgentClass {
     this.server = new HttpServer();
     this.targets = new Targets();
 
+    // Register the static HTTP endpoints like /json/version or /json/list
     this.server.registerPrefixHandler("/json/", new JSONHandler(this));
 
-    this.tabs = new TabObserver({ registerExisting: true });
-    this.tabs.on("open", (eventName, tab) => {
-      this.targets.connect(tab.linkedBrowser);
-    });
-    this.tabs.on("close", (eventName, tab) => {
-      this.targets.disconnect(tab.linkedBrowser);
-    });
-
-    this.targets.on("connect", (eventName, target) => {
+    // Register the dynamic HTTP endpoint of each target.
+    // These are WebSocket URL where the HTTP request will be morphed
+    // into a WebSocket connectiong after an handshake.
+    this.targets.on("target-created", (eventName, target) => {
       if (!target.path) {
         throw new Error(`Target is missing 'path' attribute: ${target}`);
       }
       this.server.registerPathHandler(target.path, target);
     });
-    this.targets.on("disconnect", (eventName, target) => {
+    this.targets.on("target-destroyed", (eventName, target) => {
       // TODO: This removes the entry added by registerPathHandler, should rather expose
       // an unregisterPathHandler method on nsHttpServer.
       delete this.server._handler._overridePaths[target.path];
@@ -96,9 +91,11 @@ class RemoteAgentClass {
       return;
     }
 
-    this.init();
+    await this.init();
 
-    await this.tabs.start();
+    // Start watching for targets *after* registering the target listeners
+    // as this will fire event for already-existing targets.
+    await this.targets.watchForTargets();
 
     try {
       // Immediatly instantiate the main process target in order
@@ -124,8 +121,6 @@ class RemoteAgentClass {
         await this.server.stop();
 
         Preferences.reset(Object.keys(RecommendedPreferences));
-
-        this.tabs.stop();
       } catch (e) {
         throw new Error(`Unable to stop agent: ${e.message}`, e);
       }
@@ -202,8 +197,6 @@ class RemoteAgentClass {
       cmdLine.preventDefault = true;
       return;
     }
-
-    this.init();
 
     await Observer.once("sessionstore-windows-restored");
 

@@ -5091,8 +5091,6 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
   if (isSpecialized) {
     // Ensure callee matches this stub's callee
     calleeOffset = writer.guardSpecificFunction(calleeObjId, calleeFunc);
-    // Guard against relazification
-    writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
   } else {
     // Guard that object is a scripted function
     writer.guardClass(calleeObjId, GuardClassKind::JSFunction);

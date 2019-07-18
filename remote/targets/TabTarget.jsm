@@ -42,9 +42,7 @@ class TabTarget extends Target {
 
     // Define the HTTP path to query this target
     this.path = `/devtools/page/${this.id}`;
-  }
 
-  connect() {
     Services.obs.addObserver(this, "message-manager-disconnect");
   }
 

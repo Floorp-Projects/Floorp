@@ -25,16 +25,25 @@ class Target {
    * @param Class sessionClass
    */
   constructor(targets, sessionClass) {
+    // Save a reference to Targets instance in order to expose it to:
+    // domains/parent/Target.jsm
     this.targets = targets;
+
+    // When a new connection is made to this target,
+    // we will instantiate a new session based on this given class.
+    // The session class is specific to each target's kind and is passed
+    // by the inheriting class.
     this.sessionClass = sessionClass;
-    this.sessions = new Map();
+
+    // There can be more than one connection if multiple clients connect to the remote agent.
+    this.connections = new Set();
   }
 
   /**
    * Close all active connections made to this target.
    */
   destructor() {
-    for (const [conn] of this.sessions) {
+    for (const conn of this.connections) {
       conn.close();
     }
   }
@@ -45,7 +54,9 @@ class Target {
     const so = await WebSocketHandshake.upgrade(request, response);
     const transport = new WebSocketTransport(so);
     const conn = new Connection(transport, response._connection);
-    this.sessions.set(conn, new this.sessionClass(conn, this));
+    const session = new this.sessionClass(conn, this);
+    conn.registerSession(session);
+    this.connections.add(conn);
   }
 
   // XPCOM

@@ -11936,11 +11936,13 @@ ravendb.run
 bpl.biz
 orx.biz
 ng.city
-ng.ink
 biz.gl
+ng.ink
 col.ng
+firm.ng
 gen.ng
 ltd.ng
+ng.school
 sch.so
 
 // Häkkinen.fi
@@ -12075,6 +12077,10 @@ svn-repos.de
 leadpages.co
 lpages.co
 lpusercontent.com
+
+// Lelux.fi : https://lelux.fi/
+// Submitted by Lelux Admin <publisuffix@lelux.site>
+lelux.site
 
 // Lifetime Hosting : https://Lifetime.Hosting/
 // Submitted by Mike Fillator <support@lifetime.hosting>
@@ -12913,6 +12919,10 @@ voorloper.cloud
 // Submitted by Masayuki Note <masa@blade.wafflecell.com>
 wafflecell.com
 
+// WebHare bv: https://www.webhare.com/
+// Submitted by Arnold Hendriks <info@webhare.com>
+*.webhare.dev
+
 // WeDeploy by Liferay, Inc. : https://www.wedeploy.com
 // Submitted by Henrique Vicente <security@wedeploy.com>
 wedeploy.io
@@ -12942,6 +12952,12 @@ u2-local.xnbay.com
 cistron.nl
 demon.nl
 xs4all.space
+
+// Yandex.Cloud LLC: https://cloud.yandex.com
+// Submitted by Alexander Lodin <security+psl@yandex-team.ru>
+yandexcloud.net
+storage.yandexcloud.net
+website.yandexcloud.net
 
 // YesCourse Pty Ltd : https://yescourse.com
 // Submitted by Atul Bhouraskar <atul@yescourse.com>

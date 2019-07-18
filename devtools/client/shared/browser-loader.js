@@ -4,13 +4,13 @@
 "use strict";
 
 const loaders = ChromeUtils.import("resource://devtools/shared/base-loader.js");
-const { devtools, loader } = ChromeUtils.import(
+const { require: devtoolsRequire, loader } = ChromeUtils.import(
   "resource://devtools/shared/Loader.jsm"
 );
-const flags = devtools.require("devtools/shared/flags");
-const { joinURI } = devtools.require("devtools/shared/path");
-const { assert } = devtools.require("devtools/shared/DevToolsUtils");
-const { AppConstants } = devtools.require(
+const flags = devtoolsRequire("devtools/shared/flags");
+const { joinURI } = devtoolsRequire("devtools/shared/path");
+const { assert } = devtoolsRequire("devtools/shared/DevToolsUtils");
+const { AppConstants } = devtoolsRequire(
   "resource://gre/modules/AppConstants.jsm"
 );
 
@@ -115,7 +115,7 @@ function BrowserLoaderBuilder({
     "Cannot use both `baseURI` and `useOnlyShared`."
   );
 
-  const loaderOptions = devtools.require("@loader/options");
+  const loaderOptions = devtoolsRequire("@loader/options");
   const dynamicPaths = {};
 
   if (AppConstants.DEBUG_JS_MODULES) {
@@ -132,7 +132,6 @@ function BrowserLoaderBuilder({
   }
 
   const opts = {
-    sharedGlobal: true,
     sandboxPrototype: window,
     sandboxName: "DevTools (UI loader)",
     paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
@@ -140,8 +139,8 @@ function BrowserLoaderBuilder({
     requireHook: (id, require) => {
       // If |id| requires special handling, simply defer to devtools
       // immediately.
-      if (devtools.isLoaderPluginId(id)) {
-        return devtools.require(id);
+      if (loader.isLoaderPluginId(id)) {
+        return devtoolsRequire(id);
       }
 
       const uri = require.resolve(id);
@@ -166,7 +165,7 @@ function BrowserLoaderBuilder({
         uri.match(browserBasedDirsRegExp) != null;
 
       if ((useOnlyShared || !uri.startsWith(baseURI)) && !isBrowserDir) {
-        return devtools.require(uri);
+        return devtoolsRequire(uri);
       }
 
       return require(uri);
@@ -193,9 +192,9 @@ function BrowserLoaderBuilder({
       },
       // Allow modules to use the DevToolsLoader lazy loading helpers.
       loader: {
-        lazyGetter: devtools.lazyGetter,
-        lazyImporter: devtools.lazyImporter,
-        lazyServiceGetter: devtools.lazyServiceGetter,
+        lazyGetter: loader.lazyGetter,
+        lazyImporter: loader.lazyImporter,
+        lazyServiceGetter: loader.lazyServiceGetter,
         lazyRequireGetter: this.lazyRequireGetter.bind(this),
       },
     },
@@ -226,7 +225,7 @@ BrowserLoaderBuilder.prototype = {
    *    Pass true if the property name is a member of the module's exports.
    */
   lazyRequireGetter: function(obj, property, module, destructure) {
-    devtools.lazyGetter(obj, property, () => {
+    loader.lazyGetter(obj, property, () => {
       return destructure
         ? this.require(module)[property]
         : this.require(module || property);

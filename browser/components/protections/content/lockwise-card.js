@@ -36,13 +36,11 @@ export default class LockwiseCard {
       );
       lockwiseCard.classList.remove("hidden");
     });
-
-    // Dispatch messages to retrieve data for the Lockwise  card.
-    RPMSendAsyncMessage("FetchUserLoginsData");
   }
 
   buildContent(data) {
-    const { isLoggedIn, numberOfLogins, numberOfSyncedDevices } = data;
+    const { hasFxa, numLogins, numSyncedDevices } = data;
+    const isLoggedIn = numLogins > 0 || hasFxa;
     const title = this.doc.getElementById("lockwise-title");
     const headerContent = this.doc.getElementById("lockwise-header-content");
     const lockwiseBodyContent = this.doc.getElementById(
@@ -60,11 +58,7 @@ export default class LockwiseCard {
       title.textContent = "Firefox Lockwise";
       headerContent.textContent =
         "Securely store and sync your passwords to all your devices.";
-      this.renderContentForLoggedInUser(
-        container,
-        numberOfLogins,
-        numberOfSyncedDevices
-      );
+      this.renderContentForLoggedInUser(container, numLogins, numSyncedDevices);
     } else {
       title.textContent = "Never forget a password again";
       headerContent.textContent =

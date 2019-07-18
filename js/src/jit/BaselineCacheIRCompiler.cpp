@@ -492,18 +492,9 @@ bool BaselineCacheIRCompiler::emitCallScriptedGetterResultShared(
   AutoScratchRegister callee(allocator, masm);
   AutoScratchRegister scratch(allocator, masm);
 
-  // First, ensure our getter is non-lazy.
-  {
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-      return false;
-    }
-
-    masm.loadPtr(getterAddr, callee);
-    masm.branchIfFunctionHasNoJitEntry(callee, /* constructing */ false,
-                                       failure->label());
-    masm.loadJitCodeRaw(callee, code);
-  }
+  // First, retrieve jitCodeRaw for getter.
+  masm.loadPtr(getterAddr, callee);
+  masm.loadJitCodeRaw(callee, code);
 
   allocator.discardStack(masm);
 
@@ -1547,18 +1538,8 @@ bool BaselineCacheIRCompiler::emitCallScriptedSetter() {
   ValueOperand val = allocator.useValueRegister(masm, reader.valOperandId());
   bool isSameRealm = reader.readBool();
 
-  // First, ensure our setter is non-lazy. This also loads the callee in
-  // scratch1.
-  {
-    FailurePath* failure;
-    if (!addFailurePath(&failure)) {
-      return false;
-    }
-
-    masm.loadPtr(setterAddr, scratch1);
-    masm.branchIfFunctionHasNoJitEntry(scratch1, /* constructing */ false,
-                                       failure->label());
-  }
+  // First, load the callee in scratch1.
+  masm.loadPtr(setterAddr, scratch1);
 
   allocator.discardStack(masm);
 

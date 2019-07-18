@@ -19,6 +19,7 @@
 namespace js {
 
 class FunctionExtended;
+struct SelfHostedLazyScript;
 
 typedef JSNative Native;
 }  // namespace js
@@ -162,6 +163,7 @@ class JSFunction : public js::NativeObject {
         JSScript* script_;     /* interpreted bytecode descriptor or
                                   null; use the accessor! */
         js::LazyScript* lazy_; /* lazily compiled script, or nullptr */
+        js::SelfHostedLazyScript* selfHostedLazy_;
       } s;
     } scripted;
   } u;
@@ -295,14 +297,17 @@ class JSFunction : public js::NativeObject {
   bool isLambda() const { return flags() & LAMBDA; }
   bool isInterpretedLazy() const { return flags() & INTERPRETED_LAZY; }
 
-  // This method doesn't check the non-nullness of u.scripted.s.script_,
-  // because it's guaranteed to be non-null when this has INTERPRETED flag,
-  // for live JSFunctions.
-  //
-  // When this JSFunction instance is reached via GC iteration, the above
-  // doesn't hold, and hasUncompletedScript should also be checked.
-  // (see the comment above hasUncompletedScript for more details).
+  // These methods determine which of the u.scripted.s union arms are active.
+  // For live JSFunctions the pointer values will always be non-null, but due
+  // to partial initialization the GC (and other features that scan the heap
+  // directly) may still return a null pointer.
   bool hasScript() const { return flags() & INTERPRETED; }
+  bool hasLazyScript() const {
+    return isInterpretedLazy() && !isSelfHostedOrIntrinsic();
+  }
+  bool hasSelfHostedLazyScript() const {
+    return isInterpretedLazy() && isSelfHostedOrIntrinsic();
+  }
 
   // Arrow functions store their lexical new.target in the first extended slot.
   bool isArrow() const { return kind() == Arrow; }
@@ -335,7 +340,9 @@ class JSFunction : public js::NativeObject {
 
     return nonLazyScript()->hasJitScript();
   }
-  bool hasJitEntry() const { return hasScript() || isNativeWithJitEntry(); }
+  bool hasJitEntry() const {
+    return hasScript() || isInterpretedLazy() || isNativeWithJitEntry();
+  }
 
   /* Compound attributes: */
   bool isBuiltin() const { return isBuiltinNative() || isSelfHostedBuiltin(); }
@@ -594,7 +601,7 @@ class JSFunction : public js::NativeObject {
     if (hasScript()) {
       return nonLazyScript()->functionNonDelazifying();
     }
-    if (isInterpretedLazy() && !isSelfHostedBuiltin()) {
+    if (hasLazyScript()) {
       return lazyScript()->functionNonDelazifying();
     }
     return nullptr;
@@ -620,13 +627,17 @@ class JSFunction : public js::NativeObject {
                         uint16_t* length);
 
   js::LazyScript* lazyScript() const {
-    MOZ_ASSERT(isInterpretedLazy() && u.scripted.s.lazy_);
+    MOZ_ASSERT(hasLazyScript() && u.scripted.s.lazy_);
+    return u.scripted.s.lazy_;
+  }
+  js::LazyScript* maybeLazyScript() const {
+    MOZ_ASSERT(hasLazyScript());
     return u.scripted.s.lazy_;
   }
 
-  js::LazyScript* lazyScriptOrNull() const {
-    MOZ_ASSERT(isInterpretedLazy());
-    return u.scripted.s.lazy_;
+  js::SelfHostedLazyScript* selfHostedLazyScript() const {
+    MOZ_ASSERT(hasSelfHostedLazyScript() && u.scripted.s.selfHostedLazy_);
+    return u.scripted.s.selfHostedLazy_;
   }
 
   js::GeneratorKind generatorKind() const {
@@ -636,8 +647,8 @@ class JSFunction : public js::NativeObject {
     if (hasScript()) {
       return nonLazyScript()->generatorKind();
     }
-    if (js::LazyScript* lazy = lazyScriptOrNull()) {
-      return lazy->generatorKind();
+    if (hasLazyScript()) {
+      return lazyScript()->generatorKind();
     }
     MOZ_ASSERT(isSelfHostedBuiltin());
     return js::GeneratorKind::NotGenerator;
@@ -654,8 +665,8 @@ class JSFunction : public js::NativeObject {
     if (hasScript()) {
       return nonLazyScript()->asyncKind();
     }
-    if (js::LazyScript* lazy = lazyScriptOrNull()) {
-      return lazy->asyncKind();
+    if (hasLazyScript()) {
+      return lazyScript()->asyncKind();
     }
     MOZ_ASSERT(isSelfHostedBuiltin());
     return js::FunctionAsyncKind::SyncFunction;
@@ -677,9 +688,9 @@ class JSFunction : public js::NativeObject {
 
   void setUnlazifiedScript(JSScript* script) {
     MOZ_ASSERT(isInterpretedLazy());
-    if (lazyScriptOrNull()) {
+    if (hasLazyScript()) {
       // Trigger a pre barrier on the lazy script being overwritten.
-      js::LazyScript::writeBarrierPre(lazyScriptOrNull());
+      js::LazyScript::writeBarrierPre(lazyScript());
       if (!lazyScript()->maybeScript()) {
         lazyScript()->initScript(script);
       }
@@ -694,6 +705,14 @@ class JSFunction : public js::NativeObject {
     flags_ &= ~INTERPRETED;
     flags_ |= INTERPRETED_LAZY;
     u.scripted.s.lazy_ = lazy;
+  }
+
+  void initSelfHostLazyScript(js::SelfHostedLazyScript* lazy) {
+    MOZ_ASSERT(isInterpreted());
+    MOZ_ASSERT(isSelfHostedBuiltin());
+    flags_ &= ~INTERPRETED;
+    flags_ |= INTERPRETED_LAZY;
+    u.scripted.s.selfHostedLazy_ = lazy;
   }
 
   JSNative native() const {

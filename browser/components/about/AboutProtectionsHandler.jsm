@@ -41,12 +41,15 @@ var AboutProtectionsHandler = {
     "OpenSyncPreferences",
     // Fetching data
     "FetchContentBlockingEvents",
+    "FetchMonitorData",
     "FetchUserLoginsData",
     // Getting prefs
-    "GetEnabledLockwiseCard",
+    "GetEnabledPrefs",
   ],
-
-  PREF_LOCKWISE_CARD_ENABLED: "browser.contentblocking.report.lockwise.enabled",
+  _prefs: {
+    LockwiseCard: "browser.contentblocking.report.lockwise.enabled",
+    MonitorCard: "browser.contentblocking.report.monitor.enabled",
+  },
 
   init() {
     this.receiveMessage = this.receiveMessage.bind(this);
@@ -70,24 +73,43 @@ var AboutProtectionsHandler = {
   /**
    * Retrieves login data for the user.
    *
-   * @return {{ isLoggedIn: Boolean,
-   *            numberOfLogins: Number,
-   *            numberOfSyncedDevices: Number }}
+   * @return {{ hasFxa: Boolean,
+   *            numLogins: Number,
+   *            numSyncedDevices: Number }}
    *         The login data.
    */
   async getLoginData() {
-    const loginCount = Services.logins.countLogins("", "", "");
     let syncedDevices = [];
-    const isLoggedWithFxa = await fxAccounts.accountStatus();
+    const hasFxa = await fxAccounts.accountStatus();
 
-    if (isLoggedWithFxa) {
+    if (hasFxa) {
       syncedDevices = await fxAccounts.getDeviceList();
     }
 
     return {
-      isLoggedIn: loginCount > 0 || syncedDevices.length > 0,
-      numberOfLogins: loginCount,
-      numberOfSyncedDevices: syncedDevices.length,
+      hasFxa,
+      numLogins: Services.logins.countLogins("", "", ""),
+      numSyncedDevices: syncedDevices.length,
+    };
+  },
+
+  /**
+   * Retrieves monitor data for the user.
+   *
+   * @return {{ monitoredEmails: Number,
+   *            numBreaches: Number,
+   *            passwords: Number,
+   *            error: Boolean }}
+   *         Monitor data.
+   */
+  async getMonitorData() {
+    // TODO: Fetch real data for endpoints in Bug 1559424.
+    return {
+      monitoredEmails: 1,
+      numBreaches: 11,
+      passwords: 8,
+      lockwisePasswords: 2,
+      error: false,
     };
   },
 
@@ -154,6 +176,13 @@ var AboutProtectionsHandler = {
           dataToSend
         );
         break;
+      case "FetchMonitorData":
+        this.sendMessage(
+          aMessage.target,
+          "SendMonitorData",
+          await this.getMonitorData()
+        );
+        break;
       case "FetchUserLoginsData":
         this.sendMessage(
           aMessage.target,
@@ -161,13 +190,17 @@ var AboutProtectionsHandler = {
           await this.getLoginData()
         );
         break;
-      case "GetEnabledLockwiseCard":
-        const enabled = Services.prefs.getBoolPref(
-          this.PREF_LOCKWISE_CARD_ENABLED
-        );
-        this.sendMessage(aMessage.target, "SendEnabledLockWiseCardPref", {
-          isEnabled: enabled,
-        });
+      case "GetEnabledPrefs":
+        const prefs = Object.keys(this._prefs);
+
+        // Get all the enabled prefs and send separate messages depending on their names.
+        for (let name of prefs) {
+          const message = `SendEnabled${name}Pref`;
+          const isEnabled = Services.prefs.getBoolPref(this._prefs[name]);
+          this.sendMessage(aMessage.target, message, {
+            isEnabled,
+          });
+        }
         break;
     }
   },

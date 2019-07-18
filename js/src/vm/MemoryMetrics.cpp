@@ -266,9 +266,7 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone) {
   // CollectRuntimeStats reserves enough space.
   MOZ_ALWAYS_TRUE(rtStats->zoneStatsVector.growBy(1));
   ZoneStats& zStats = rtStats->zoneStatsVector.back();
-  if (!zStats.initStrings()) {
-    MOZ_CRASH("oom");
-  }
+  zStats.initStrings();
   rtStats->initExtraZoneStats(zone, &zStats);
   rtStats->currZoneStats = &zStats;
 
@@ -288,9 +286,7 @@ static void StatsRealmCallback(JSContext* cx, void* data,
   // CollectRuntimeStats reserves enough space.
   MOZ_ALWAYS_TRUE(rtStats->realmStatsVector.growBy(1));
   RealmStats& realmStats = rtStats->realmStatsVector.back();
-  if (!realmStats.initClasses()) {
-    MOZ_CRASH("oom");
-  }
+  realmStats.initClasses();
   rtStats->initExtraRealmStats(realm, &realmStats);
 
   realm->setRealmStats(&realmStats);
@@ -573,26 +569,14 @@ static void StatsCellCallback(JSRuntime* rt, void* data, void* thing,
   zStats->unusedGCThings.addToKind(traceKind, -thingSize);
 }
 
-bool ZoneStats::initStrings() {
+void ZoneStats::initStrings() {
   isTotals = false;
-  allStrings = js_new<StringsHashMap>();
-  if (!allStrings) {
-    js_delete(allStrings);
-    allStrings = nullptr;
-    return false;
-  }
-  return true;
+  allStrings.emplace();
 }
 
-bool RealmStats::initClasses() {
+void RealmStats::initClasses() {
   isTotals = false;
-  allClasses = js_new<ClassesHashMap>();
-  if (!allClasses) {
-    js_delete(allClasses);
-    allClasses = nullptr;
-    return false;
-  }
-  return true;
+  allClasses.emplace();
 }
 
 static bool FindNotableStrings(ZoneStats& zStats) {
@@ -620,10 +604,9 @@ static bool FindNotableStrings(ZoneStats& zStats) {
     // subtract it out of the non-notable tallies.
     zStats.stringInfo.subtract(info);
   }
-  // Delete |allStrings| now, rather than waiting for zStats's destruction,
-  // to reduce peak memory consumption during reporting.
-  js_delete(zStats.allStrings);
-  zStats.allStrings = nullptr;
+  // Release |allStrings| now, rather than waiting for zStats's destruction, to
+  // reduce peak memory consumption during reporting.
+  zStats.allStrings.reset();
   return true;
 }
 
@@ -654,10 +637,9 @@ static bool FindNotableClasses(RealmStats& realmStats) {
     // subtract it out of the non-notable tallies.
     realmStats.classInfo.subtract(info);
   }
-  // Delete |allClasses| now, rather than waiting for zStats's destruction,
-  // to reduce peak memory consumption during reporting.
-  js_delete(realmStats.allClasses);
-  realmStats.allClasses = nullptr;
+  // Release |allClasses| now, rather than waiting for zStats's destruction, to
+  // reduce peak memory consumption during reporting.
+  realmStats.allClasses.reset();
   return true;
 }
 
@@ -688,10 +670,9 @@ static bool FindNotableScriptSources(JS::RuntimeSizes& runtime) {
     // bucket, so subtract its sizes from the non-notable tallies.
     runtime.scriptSourceInfo.subtract(info);
   }
-  // Delete |allScriptSources| now, rather than waiting for zStats's
+  // Release |allScriptSources| now, rather than waiting for zStats's
   // destruction, to reduce peak memory consumption during reporting.
-  js_delete(runtime.allScriptSources);
-  runtime.allScriptSources = nullptr;
+  runtime.allScriptSources.reset();
   return true;
 }
 

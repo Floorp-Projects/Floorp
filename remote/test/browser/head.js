@@ -110,7 +110,7 @@ async function setupTestForUri(uri) {
   const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
   // Start the CDP server
-  RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+  await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
 
   // Retrieve the chrome-remote-interface library object
   const CDP = await getCDP();

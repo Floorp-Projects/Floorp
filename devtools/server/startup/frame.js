@@ -29,8 +29,9 @@ try {
       const { DevToolsLoader } = ChromeUtils.import(
         "resource://devtools/shared/Loader.jsm"
       );
-      loader = new DevToolsLoader();
-      loader.invisibleToDebugger = true;
+      loader = new DevToolsLoader({
+        invisibleToDebugger: true,
+      });
       customLoader = true;
     } else {
       // Otherwise, use the shared loader.

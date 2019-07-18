@@ -37,12 +37,10 @@ const TEST_LOGIN2 = new nsLoginInfo(
 // Modify AboutProtectionsHandler's getLoginData method to fake returning a specified
 // number of devices.
 const mockGetLoginDataWithSyncedDevices = deviceCount => async () => {
-  const loginCount = Services.logins.countLogins("", "", "");
-
   return {
-    isLoggedIn: loginCount > 0 || deviceCount > 0,
-    numberOfLogins: loginCount,
-    numberOfSyncedDevices: deviceCount,
+    hasFxa: true,
+    numLogins: Services.logins.countLogins("", "", ""),
+    numSyncedDevices: deviceCount,
   };
 };
 
@@ -56,7 +54,9 @@ add_task(async function() {
   info("Check that the correct content is displayed for non-logged in users.");
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await ContentTaskUtils.waitForCondition(() => {
-      const noLogins = content.document.querySelector(".no-logins");
+      const noLogins = content.document.querySelector(
+        "#lockwise-body-content .no-logins"
+      );
       return ContentTaskUtils.is_visible(noLogins);
     }, "Lockwise card for user with no logins is shown.");
 
@@ -83,7 +83,9 @@ add_task(async function() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await ContentTaskUtils.waitForCondition(() => {
-      const hasLogins = content.document.querySelector(".has-logins");
+      const hasLogins = content.document.querySelector(
+        "#lockwise-body-content .has-logins"
+      );
       return ContentTaskUtils.is_visible(hasLogins);
     }, "Lockwise card for user with logins is shown.");
 
@@ -149,7 +151,9 @@ add_task(async function() {
 
   await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
     await ContentTaskUtils.waitForCondition(() => {
-      const hasLogins = content.document.querySelector(".has-logins");
+      const hasLogins = content.document.querySelector(
+        "#lockwise-body-content .has-logins"
+      );
       return ContentTaskUtils.is_visible(hasLogins);
     }, "Lockwise card for user with logins is shown.");
 

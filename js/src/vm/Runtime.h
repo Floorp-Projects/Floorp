@@ -216,6 +216,23 @@ using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
 class AutoLockScriptData;
 
+// Self-hosted lazy functions do not maintain a LazyScript as we can compile
+// from the copy in the self-hosting zone. To allow these functions to be
+// called by the JITs, we need a minimal script object. There is one instance
+// per runtime.
+struct SelfHostedLazyScript {
+  SelfHostedLazyScript() = default;
+
+  // Pointer to interpreter trampoline. This field is stored at same location
+  // as in JSScript, allowing the JIT to directly call LazyScripts in the same
+  // way as JSScripts.
+  uint8_t* jitCodeRaw_ = nullptr;
+
+  static constexpr size_t offsetOfJitCodeRaw() {
+    return offsetof(SelfHostedLazyScript, jitCodeRaw_);
+  }
+};
+
 }  // namespace js
 
 struct JSRuntime : public js::MallocProvider<JSRuntime> {
@@ -383,6 +400,11 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 
   /* Optional warning reporter. */
   js::MainThreadData<JS::WarningReporter> warningReporter;
+
+  // Lazy self-hosted functions use a shared SelfHostedLazyScript instead
+  // instead of a LazyScript. This contains the minimal trampolines for the
+  // scripts to perform direct calls.
+  js::UnprotectedData<js::SelfHostedLazyScript> selfHostedLazyScript;
 
  private:
   /* Gecko profiling metadata */

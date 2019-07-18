@@ -4,6 +4,7 @@
 
 browser.jar:
     content/browser/lockwise-card.js                      (content/lockwise-card.js)
+    content/browser/monitor-card.js                       (content/monitor-card.js)
     content/browser/protections.css                       (content/protections.css)
     content/browser/protections.html                      (content/protections.html)
     content/browser/protections.js                        (content/protections.js)

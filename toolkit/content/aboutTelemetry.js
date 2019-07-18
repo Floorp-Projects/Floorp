@@ -343,12 +343,12 @@ var PingPicker = {
       controls.classList.add("hidden");
       document.l10n.setAttributes(
         pingType,
-        "about-telemetry-current-ping-sidebar"
+        "about-telemetry-current-data-sidebar"
       );
       // Change home page text.
       document.l10n.setAttributes(
         pingExplanation,
-        "about-telemetry-ping-details-current"
+        "about-telemetry-data-details-current"
       );
     }
 
