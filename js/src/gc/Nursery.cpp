@@ -15,7 +15,7 @@
 #include "jsutil.h"
 
 #include "builtin/MapObject.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"

@@ -42,6 +42,7 @@ class ListItemClass extends Component {
       current: PropTypes.bool,
       onClick: PropTypes.func,
       item: PropTypes.shape({
+        key: PropTypes.string,
         component: PropTypes.object,
         componentProps: PropTypes.object,
         className: PropTypes.string,

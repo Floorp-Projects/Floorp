@@ -45,6 +45,16 @@ interface nsITrackingDBService : nsISupports
    */
   Promise getEventsByDateRange(in int64_t dateFrom, in int64_t dateTo);
 
+  /**
+   * Return a count of all tracking events.
+   */
+  Promise sumAllEvents();
+
+  /**
+   * Return the earliest recorded date.
+   */
+  Promise getEarliestRecordedDate();
+
   const unsigned long OTHER_COOKIES_BLOCKED_ID = 0;
   const unsigned long TRACKERS_ID = 1;
   const unsigned long TRACKING_COOKIES_ID = 2;

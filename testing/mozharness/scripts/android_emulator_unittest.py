@@ -26,7 +26,7 @@ from mozharness.mozilla.testing.codecoverage import (
     code_coverage_config_options
 )
 
-SUITE_DEFAULT_E10S = ['geckoview-junit', 'mochitest', 'reftest']
+SUITE_DEFAULT_E10S = ['geckoview-junit', 'mochitest', 'reftest', 'robocop']
 SUITE_NO_E10S = ['cppunittest', 'geckoview-junit', 'xpcshell']
 SUITE_REPEATABLE = ['mochitest', 'reftest']
 

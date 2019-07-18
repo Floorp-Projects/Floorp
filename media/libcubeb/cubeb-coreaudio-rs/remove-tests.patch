@@ -1,0 +1,11 @@
+diff --git a/media/libcubeb/cubeb-coreaudio-rs/src/backend/mod.rs b/media/libcubeb/cubeb-coreaudio-rs/src/backend/mod.rs
+index f2da36fee65b..d9c402ee14b8 100644
+--- a/media/libcubeb/cubeb-coreaudio-rs/src/backend/mod.rs
++++ b/media/libcubeb/cubeb-coreaudio-rs/src/backend/mod.rs
+@@ -4118,6 +4118,3 @@ impl<'ctx> StreamOps for AudioUnitStream<'ctx> {
+ // An unsafe workaround to pass AudioUnitStream across threads.
+ unsafe impl<'ctx> Send for AudioUnitStream<'ctx> {}
+ unsafe impl<'ctx> Sync for AudioUnitStream<'ctx> {}
+-
+-#[cfg(test)]
+-mod tests;

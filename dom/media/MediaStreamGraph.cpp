@@ -1347,6 +1347,12 @@ void MediaStreamGraphImpl::Process() {
 
 bool MediaStreamGraphImpl::UpdateMainThreadState() {
   MOZ_ASSERT(OnGraphThread());
+  if (mForceShutDown) {
+    for (MediaStream* stream : AllStreams()) {
+      stream->NotifyForcedShutdown();
+    }
+  }
+
   MonitorAutoLock lock(mMonitor);
   bool finalUpdate =
       mForceShutDown || (IsEmpty() && mBackMessageQueue.IsEmpty());

@@ -491,7 +491,7 @@ pref("media.cubeb.sandbox", false);
 pref("media.audiograph.single_thread.enabled", false);
 
 #ifdef MOZ_AV1
-#if defined(XP_WIN) && !defined(_ARM64_) && !defined(__MINGW32__)
+#if defined(XP_WIN) && !defined(_ARM64_)
 pref("media.av1.enabled", true);
 pref("media.av1.use-dav1d", true);
 #elif defined(XP_MACOSX)
@@ -741,6 +741,7 @@ pref("gfx.webrender.program-binary-disk", true);
 
 #ifdef XP_MACOSX
 pref("gfx.compositor.glcontext.opaque", false);
+pref("gfx.core-animation.enabled", false);
 #endif
 
 pref("gfx.webrender.highlight-painted-layers", false);
@@ -2465,9 +2466,6 @@ pref("csp.about_uris_without_csp", "blank,printpreview,srcdoc,addons,config,down
 // the following prefs are for testing purposes only.
 pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
-// assertion flag will be set to false after fixing Bug 1473549
-pref("security.allow_eval_with_system_principal", false);
-pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,jsol.js");
 #endif
 
 #ifdef EARLY_BETA_OR_EARLIER
@@ -4870,6 +4868,10 @@ pref("alerts.useSystemBackend", true);
 #endif
 
 // DOM full-screen API.
+#ifdef XP_MACOSX
+// Whether to use macOS native full screen for Fullscreen API
+pref("full-screen-api.macos-native-full-screen", false);
+#endif
 // whether to prevent the top level widget from going fullscreen
 pref("full-screen-api.ignore-widgets", false);
 pref("full-screen-api.pointer-lock.enabled", true);

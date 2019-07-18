@@ -25,7 +25,7 @@
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
 #include "builtin/WeakSetObject.h"
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "js/ProtoKey.h"
 #include "vm/DateObject.h"

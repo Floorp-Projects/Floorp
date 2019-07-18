@@ -19,7 +19,7 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"

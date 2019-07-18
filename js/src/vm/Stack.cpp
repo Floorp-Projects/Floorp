@@ -8,7 +8,7 @@
 
 #include <utility>
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"

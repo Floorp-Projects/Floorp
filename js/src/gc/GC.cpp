@@ -213,7 +213,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"

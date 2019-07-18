@@ -316,22 +316,16 @@
   height: 30px;
 }
 
-.urlbar-icon:not([disabled]):hover,
+:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover,
 .urlbar-icon-wrapper:not([disabled]):hover {
   background-color: hsla(0,0%,70%,.2);
 }
 
-.urlbar-icon[open],
-.urlbar-icon-wrapper[open],
-.urlbar-icon:not([disabled]):hover:active,
-.urlbar-icon-wrapper:hover:active {
+:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled])[open],
+:not(.urlbar-icon-wrapper) > .urlbar-icon:not([disabled]):hover:active,
+.urlbar-icon-wrapper:not([disabled])[open],
+.urlbar-icon-wrapper:not([disabled]):hover:active {
   background-color: hsla(0,0%,70%,.3);
-}
-
-.urlbar-icon-wrapper[open] > .urlbar-icon,
-.urlbar-icon-wrapper > .urlbar-icon:hover,
-.urlbar-icon-wrapper > .urlbar-icon:hover:active {
-  background-color: transparent;
 }
 
 .urlbar-icon:-moz-focusring,
@@ -354,15 +348,6 @@
 .urlbar-history-dropmarker {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
   transition: opacity 0.15s ease;
-}
-
-#urlbar[hidedropmarker] > .urlbar-history-dropmarker {
-  display: none;
-}
-
-/* Avoid re-opening the popup when the dropmarker is clicked while the popup is still open. */
-#urlbar[quantumbar="false"] > .urlbar-history-dropmarker[open] {
-  pointer-events: none;
 }
 
 #urlbar[switchingtabs] > .urlbar-history-dropmarker {

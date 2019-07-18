@@ -20,7 +20,7 @@
 
 #include "mozilla/BinarySearch.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "ds/Sort.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/MacroAssembler.h"

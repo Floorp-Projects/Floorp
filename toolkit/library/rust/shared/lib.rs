@@ -19,6 +19,8 @@ extern crate profiler_helper;
 extern crate mozurl;
 #[cfg(feature = "quantum_render")]
 extern crate webrender_bindings;
+#[cfg(feature = "cubeb_coreaudio_rust")]
+extern crate cubeb_coreaudio;
 #[cfg(feature = "cubeb_pulse_rust")]
 extern crate cubeb_pulse;
 extern crate encoding_c;

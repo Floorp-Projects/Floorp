@@ -383,6 +383,10 @@ void BrowsingContext::RestoreChildren(Children&& aChildren, bool aFromIPC) {
 
 bool BrowsingContext::IsCached() { return mGroup->IsContextCached(this); }
 
+bool BrowsingContext::IsTargetable() {
+  return !mClosed && !mIsDiscarded && !IsCached();
+}
+
 bool BrowsingContext::HasOpener() const {
   return sBrowsingContexts->Contains(mOpenerId);
 }
@@ -432,7 +436,7 @@ BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
         // contexts in the same browsing context group.
         siblings = &mGroup->Toplevels();
       } else if (parent->NameEquals(aName) && CanAccess(parent) &&
-                 parent->IsActive()) {
+                 parent->IsTargetable()) {
         found = parent;
         break;
       } else {
@@ -471,7 +475,7 @@ BrowsingContext* BrowsingContext::FindChildWithName(const nsAString& aName) {
   }
 
   for (BrowsingContext* child : mChildren) {
-    if (child->NameEquals(aName) && CanAccess(child) && child->IsActive()) {
+    if (child->NameEquals(aName) && CanAccess(child) && child->IsTargetable()) {
       return child;
     }
   }
@@ -504,7 +508,8 @@ BrowsingContext* BrowsingContext::FindWithNameInSubtree(
     const nsAString& aName, BrowsingContext* aRequestingContext) {
   MOZ_DIAGNOSTIC_ASSERT(!aName.IsEmpty());
 
-  if (NameEquals(aName) && aRequestingContext->CanAccess(this) && IsActive()) {
+  if (NameEquals(aName) && aRequestingContext->CanAccess(this) &&
+      IsTargetable()) {
     return this;
   }
 
@@ -523,26 +528,6 @@ bool BrowsingContext::CanAccess(BrowsingContext* aContext) {
   // temporary, we should implement a replacement for this in
   // BrowsingContext. See Bug 151590.
   return aContext && nsDocShell::CanAccessItem(aContext->mDocShell, mDocShell);
-}
-
-bool BrowsingContext::IsActive() const {
-  // TODO(farre): Mimicking the bahaviour from
-  // ItemIsActive(nsIDocShellTreeItem* aItem) is temporary, we should
-  // implement a replacement for this using mClosed only. See Bug
-  // 1527321.
-
-  if (!mDocShell) {
-    return mClosed;
-  }
-
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocShell->GetWindow()) {
-    auto* win = nsGlobalWindowOuter::Cast(window);
-    if (!win->GetClosedOuter()) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 BrowsingContext::~BrowsingContext() {

@@ -29,10 +29,9 @@ add_task(async function test_support_selection() {
   });
 
   await extension.startup();
-  let urlBar = document.querySelector("#urlbar");
 
   let fields = [
-    document.getAnonymousElementByAttribute(urlBar, "anonid", "input"),
+    gURLBar.inputField,
     document.querySelector("#searchbar .searchbar-textbox"),
   ].filter(field => {
     let bounds = field.getBoundingClientRect();

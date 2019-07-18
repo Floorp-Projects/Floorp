@@ -10,9 +10,7 @@
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
 // is within the `Prefs starting with "network."` section). Sections must be
-// kept in alphabetical order, but prefs within sections need not be. Please
-// follow the existing naming convention when considering adding a new pref and
-// whether you need a new section.
+// kept in alphabetical order, but prefs within sections need not be.
 //
 // Basics
 // ------
@@ -28,88 +26,87 @@
 // new pref, and don't invent a new first segment unless it's appropriate and
 // there are likely to be multiple prefs with that same first segment.
 //
-// Normal prefs
+// Definitions
+// -----------
+// A pref definition looks like this:
+//
+//   - name: <pref-name>                    # mandatory
+//     type: <cpp-type>                     # mandatory
+//     value: <default-value>               # mandatory
+//     mirror: <never | once | live>        # mandatory
+//     do_not_use_directly: <True | False>  # optional
+//
+// - `name` is the name of the pref, without double-quotes, as it appears
+//   in about:config. It is used in most libpref API functions (from both C++
+//   and JS code).
+//
+// - `type` is one of `bool`, `int32_t`, `uint32_t`, `float`, an atomic version
+//   of one of those, or `String`. Note that float prefs are stored internally
+//   as strings. The C++ preprocessor doesn't like template syntax in a macro
+//   argument, so use the typedefs defined in StaticPrefsBase.h; for example,
+//   use `RelaxedAtomicBool` instead of `Atomic<bool, Relaxed>`.
+//
+// - `value` is the default value. Its type should be appropriate for
+//   <cpp-type>, otherwise the generated code will fail to compile. A complex
+//   C++ numeric expressions like `60 * 60` (which the YAML parser cannot treat
+//   as an integer or float) is treated as a string and passed through without
+//   change, which is useful.
+//
+// - `mirror` indicates how the pref value is mirrored into a C++ variable.
+//
+//   * `never`: There is no global variable mirror. The pref value can only be
+//     accessed via the standard libpref API functions.
+//
+//   * `once`: The pref value is mirrored into a variable at startup; the
+//     mirror variable is left unchanged after that. (The exact point at which
+//     all `once` mirror variables are set is when the first `once` mirror
+//     variable is accessed, via its getter function.) This is mostly useful
+//     for graphics prefs where we often don't want a new pref value to apply
+//     until restart. Otherwise, this update policy is best avoided because its
+//     behaviour can cause confusion and bugs.
+//
+//   * `always`: The mirror value is always kept in sync with the pref value.
+//     This is the most common choice.
+//
+//   The getter function's name is the same as the pref's name, but with '.' or
+//   '-' chars converted to '_', to make a valid identifier. For example, the
+//   getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear, and
+//   you can search for both the pref name and the getter using the regexp
+//   /foo.bar.baz/.
+//
+//   Using the getter function to read the pref's value has the two following
+//   advantages over the normal API functions.
+//
+//   * A direct variable access is faster than a hash table lookup.
+//
+//   * A variable can be accessed off the main thread. If a pref *is* accessed
+//     off the main thread, it should have an atomic type. Assertions enforce
+//     this.
+//
+//   Note that Rust code must access the global variable directly, rather than
+//   via the getter.
+//
+// - `do_not_use_directly` dictates if `_do_not_use_directly` should be
+//   appended to the name of the getter function. This is simply a naming
+//   convention indicating that there is some other wrapper getter function
+//   that should be used in preference to the normal static pref getter.
+//   Defaults to `false` if not present. Cannot be used with a `never` mirror
+//   value, because there is no getter function in that case.
+//
+// Preprocessor
 // ------------
-// Definitions of normal prefs in this file have the following form.
+// Note finally that this file is preprocessed by preprocessor.py, not the C++
+// preprocessor. As a result, the following things may be surprising.
 //
-//   PREF(<pref-name-string>, <cpp-type>, <default-value>)
+// - YAML comments start with a '#', so putting a comment on the same line as a
+//   preprocessor directive is dubious. E.g. avoid lines like `#define X 3 #
+//   three` because the ` # three` will be part of `X`.
 //
-// - <pref-name-string> is the name of the pref, as it appears in about:config.
-//   It is used in most libpref API functions (from both C++ and JS code).
+// - '@' use is required for substitutions to occur. E.g. with `#define FOO 1`,
+//   `FOO` won't be replaced with `1` unless it has '@' chars around it.
 //
-// - <cpp-type> is one of bool, int32_t, float, or String (which is just a
-//   typedef for `const char*` in StaticPrefs.h). Note that float prefs are
-//   stored internally as strings.
-//
-// - <default-value> is the default value. Its type should match <cpp-type>.
-//
-// VarCache prefs
-// --------------
-// A VarCache pref is a special type of pref. It can be accessed via the normal
-// pref hash table lookup functions, but it also has:
-//
-// - an associated global variable (the VarCache) that mirrors the pref value
-//   in the prefs hash table (unless the update policy is `Once`, see below);
-//   and
-//
-// - a getter function that reads that global variable.
-//
-// Using the getter to read the pref's value has the two following advantages
-// over the normal API functions.
-//
-// - A direct global variable access is faster than a hash table lookup.
-//
-// - A global variable can be accessed off the main thread. If a pref *is*
-//   accessed off the main thread, it should use an atomic type. (But note that
-//   many VarCaches that should be atomic are not, in particular because
-//   Atomic<float> is not available, alas.)
-//
-// Definitions of VarCache prefs in this file has the following form.
-//
-//   VARCACHE_PREF(
-//     <update-policy>,
-//     <pref-name-string>,
-//      <pref-name-id>,  // indented one space to align with <pref-name-string>
-//     <cpp-type>, <default-value>
-//   )
-//
-// - <update-policy> is one of the following:
-//
-//   * Live: Evaluate the pref and set callback so it stays current/live. This
-//     is the normal policy.
-//
-//   * Once: Set the value once at startup, and then leave it unchanged after
-//     that. (The exact point at which all Once pref values is set is when the
-//     first Once getter is called.) This is useful for graphics prefs where we
-//     often don't want a new pref value to apply until restart. Otherwise, this
-//     update policy is best avoided because its behaviour can cause confusion
-//     and bugs.
-//
-// - <pref-name-string> is the same as for normal prefs.
-//
-// - <pref-name-id> is the name of the static getter function generated within
-//   the StaticPrefs class. For consistency, the identifier for every pref
-//   should be created by starting with <pref-name-string> and converting any
-//   '.' or '-' chars to '_'. For example, "foo.bar_baz" becomes
-//   `foo_bar_baz`. This is arguably ugly, but clear, and you can search for
-//   both using the regexp /foo.bar.baz/. Some getter functions have
-//   `_do_not_use_directly` appended to indicate that there is some other
-//   wrapper getter that should be used in preference to the normal static pref
-//   getter.
-//
-// - <cpp-type> is one of bool, int32_t, uint32_t, float, or an Atomic version
-//   of one of those. The C++ preprocessor doesn't like template syntax in a
-//   macro argument, so use the typedefs defines in StaticPrefs.h; for example,
-//   use `ReleaseAcquireAtomicBool` instead of `Atomic<bool, ReleaseAcquire>`.
-//   A pref with a `Once` policy should be non-atomic as it is only ever
-//   written to once during the parent process startup. A pref with a Live
-//   policy must be made Atomic if ever accessed outside the main thread;
-//   assertions are in place to ensure this.
-//
-// - <default-value> is the same as for normal prefs.
-//
-// Note that Rust code must access the global variable directly, rather than via
-// the getter.
+// - Spaces aren't permitted between the leading '#' and the name of a
+//   directive, e.g. `#ifdef XYZ` works but `# ifdef XYZ` does not.
 
 // clang-format off
 
@@ -184,7 +181,7 @@ VARCACHE_PREF(
   Live,
   "apz.axis_lock.breakout_angle",
    apz_axis_lock_breakout_angle,
-  AtomicFloat, float(M_PI / 8.0) /* 22.5 degrees */
+  AtomicFloat, float(M_PI / 8.0)  // 22.5 degrees
 )
 
 VARCACHE_PREF(
@@ -198,14 +195,14 @@ VARCACHE_PREF(
   Live,
   "apz.axis_lock.direct_pan_angle",
    apz_axis_lock_direct_pan_angle,
-  AtomicFloat, float(M_PI / 3.0) /* 60 degrees */
+  AtomicFloat, float(M_PI / 3.0)  // 60 degrees
 )
 
 VARCACHE_PREF(
   Live,
   "apz.axis_lock.lock_angle",
    apz_axis_lock_lock_angle,
-  AtomicFloat, float(M_PI / 6.0) /* 30 degrees */
+  AtomicFloat, float(M_PI / 6.0)  // 30 degrees
 )
 
 VARCACHE_PREF(
@@ -267,7 +264,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "apz.drag.touch.enabled",
-   apz_touch_drag_enabled,
+   apz_drag_touch_enabled,
   RelaxedAtomicBool, false
 )
 
@@ -749,9 +746,9 @@ VARCACHE_PREF(
    browser_cache_memory_capacity,
   RelaxedAtomicInt32,
 #ifdef ANDROID
-  1024  // kilobytes
+  1024
 #else
-  -1    // determine dynamically
+  -1
 #endif
 )
 
@@ -1721,8 +1718,7 @@ VARCACHE_PREF(
 // How long a content process can take before closing its IPC channel
 // after shutdown is initiated.  If the process exceeds the timeout,
 // we fear the worst and kill it.
-#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && \
-    !defined(MOZ_TSAN)
+#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && !defined(MOZ_TSAN)
 # define PREF_VALUE 5
 #else
 # define PREF_VALUE 0
@@ -1918,7 +1914,6 @@ VARCACHE_PREF(
   dom_performance_children_results_ipc_timeout,
   uint32_t, 1000
 )
-#undef PREF_VALUE
 
 // Enable notification of performance timing
 VARCACHE_PREF(
@@ -1989,7 +1984,11 @@ VARCACHE_PREF(
 
 // Presentation API
 #if defined(ANDROID)
-# define PREF_VALUE NOT_IN_RELEASE_OR_BETA_VALUE
+# ifdef RELEASE_OR_BETA
+#  define PREF_VALUE false
+# else
+#  define PREF_VALUE true
+# endif
 #else
 # define PREF_VALUE false
 #endif
@@ -1999,14 +1998,12 @@ VARCACHE_PREF(
   dom_presentation_enabled,
   bool, PREF_VALUE
 )
-
 VARCACHE_PREF(
   Live,
   "dom.presentation.controller.enabled",
   dom_presentation_controller_enabled,
   bool, PREF_VALUE
 )
-
 VARCACHE_PREF(
   Live,
   "dom.presentation.receiver.enabled",
@@ -2136,18 +2133,6 @@ VARCACHE_PREF(
   bool, true
 )
 
-VARCACHE_PREF(
-  Live,
-  "idle_period.min",
-   idle_period_min,
-  uint32_t, 3)
-
-VARCACHE_PREF(
-  Live,
-  "idle_period.during_page_load.min",
-   idle_period_during_page_load_min,
-  uint32_t, 12)
-
 #ifdef JS_BUILD_BINAST
 VARCACHE_PREF(
   Live,
@@ -2220,7 +2205,6 @@ VARCACHE_PREF(
   dom_security_featurePolicy_enabled,
   bool, PREF_VALUE
 )
-
 // This pref enables the featurePolicy header support.
 VARCACHE_PREF(
   Live,
@@ -2228,7 +2212,6 @@ VARCACHE_PREF(
   dom_security_featurePolicy_header_enabled,
   bool, PREF_VALUE
 )
-
 // Expose the 'policy' attribute in document and HTMLIFrameElement
 VARCACHE_PREF(
   Live,
@@ -2732,7 +2715,7 @@ VARCACHE_PREF(
   Live,
   "dom.worker.canceling.timeoutMilliseconds",
   dom_worker_canceling_timeoutMilliseconds,
-  RelaxedAtomicUint32, 30000 /* 30 seconds */
+  RelaxedAtomicUint32, 30000  // 30 seconds
 )
 
 // Is support for compiling DOM worker scripts directly from UTF-8 (without ever
@@ -2791,8 +2774,7 @@ VARCACHE_PREF(
   bool, false
 )
 
-// WebIDL test prefs
-
+// WebIDL test prefs.
 VARCACHE_PREF(
   Live,
   "dom.webidl.test1",
@@ -3169,6 +3151,13 @@ VARCACHE_PREF(
   "gfx.compositor.glcontext.opaque",
    gfx_compositor_glcontext_opaque,
   RelaxedAtomicBool, false
+)
+
+VARCACHE_PREF(
+  Once,
+  "gfx.core-animation.enabled",
+  gfx_core_animation_enabled,
+  bool, false
 )
 
 #if defined(MOZ_WIDGET_ANDROID)
@@ -3740,6 +3729,24 @@ VARCACHE_PREF(
 
 VARCACHE_PREF(
   Live,
+  "idle_period.min",
+   idle_period_min,
+  uint32_t, 3
+)
+
+VARCACHE_PREF(
+  Live,
+  "idle_period.during_page_load.min",
+   idle_period_during_page_load_min,
+  uint32_t, 12
+)
+
+//---------------------------------------------------------------------------
+// Prefs starting with "image."
+//---------------------------------------------------------------------------
+
+VARCACHE_PREF(
+  Live,
   "image.animated.decode-on-demand.threshold-kb",
    image_animated_decode_on_demand_threshold_kb,
   RelaxedAtomicUint32, 20480
@@ -3946,6 +3953,19 @@ VARCACHE_PREF(
 )
 
 //---------------------------------------------------------------------------
+// Prefs starting with "intl."
+//---------------------------------------------------------------------------
+
+// Whether ISO-2022-JP is a permitted content-based encoding detection
+// outcome.
+VARCACHE_PREF(
+  Live,
+  "intl.charset.detector.iso2022jp.allowed",
+   intl_charset_detector_iso2022jp_allowed,
+  bool, true
+)
+
+//---------------------------------------------------------------------------
 // Prefs starting with "javascript."
 //---------------------------------------------------------------------------
 
@@ -3965,11 +3985,11 @@ VARCACHE_PREF(
 )
 
 // The default amount of time to wait from the user being idle to starting a
-// shrinking GC.
+// shrinking GC. Measured in milliseconds.
 #ifdef NIGHTLY_BUILD
-# define PREF_VALUE  15000  // ms
+# define PREF_VALUE  15000
 #else
-# define PREF_VALUE 300000  // ms
+# define PREF_VALUE 300000
 #endif
 VARCACHE_PREF(
   Live,
@@ -4033,15 +4053,6 @@ VARCACHE_PREF(
   "javascript.options.streams",
   javascript_options_streams,
   RelaxedAtomicBool, false
-)
-
-// Whether ISO-2022-JP is a permitted content-based encoding detection
-// outcome.
-VARCACHE_PREF(
-  Live,
-  "intl.charset.detector.iso2022jp.allowed",
-   intl_charset_detector_iso2022jp_allowed,
-  bool, true
 )
 
 //---------------------------------------------------------------------------
@@ -4270,7 +4281,7 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
-#if defined(XP_MACOSX) || defined (OS_OPENBSD)
+#if defined(XP_MACOSX) || defined (XP_OPENBSD)
 #define PREF_VALUE true
 #else
 #define PREF_VALUE false
@@ -5497,7 +5508,7 @@ VARCACHE_PREF(
   Live,
   "layout.min-active-layer-size",
    layout_min_active_layer_size,
-  int, 64
+  int32_t, 64
 )
 
 VARCACHE_PREF(
@@ -5861,7 +5872,7 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 #if defined(XP_WIN)
-# if defined(_ARM64_) || defined(__MINGW32__)
+# if defined(_ARM64_)
 #  define PREF_VALUE false
 # else
 #  define PREF_VALUE true
@@ -6071,7 +6082,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "media.wmf.low-latency.force-disabled",
-   media_mwf_low_latency_force_disabled,
+   media_wmf_low_latency_force_disabled,
   RelaxedAtomicBool, false
 )
 
@@ -6346,7 +6357,7 @@ VARCACHE_PREF(
 # define PREF_VALUE true
 #elif defined(XP_MACOSX)
 # define PREF_VALUE true
-#elif defined(XP_UNIX) && !defined(Android)
+#elif defined(XP_UNIX) && !defined(ANDROID)
 # define PREF_VALUE true
 #else
 # define PREF_VALUE false
@@ -6367,7 +6378,7 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 #elif defined(XP_MACOSX)
   RelaxedAtomicBool, true
-#elif defined(XP_UNIX) && !defined(Android)
+#elif defined(XP_UNIX) && !defined(ANDROID)
   RelaxedAtomicBool, true
 #else
   RelaxedAtomicBool, false
@@ -6617,13 +6628,12 @@ VARCACHE_PREF(
 #undef PREF_VALUE
 
 // Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
-// acceleration for decoding.
+// acceleration for decoding. False on Android due to bug 1509316.
 # if defined(ANDROID)
-#  define PREF_VALUE false // Bug 1509316
+#  define PREF_VALUE false
 # else
 #  define PREF_VALUE true
 # endif
-
 VARCACHE_PREF(
   Live,
   "media.navigator.mediadatadecoder_h264_enabled",
@@ -7273,19 +7283,19 @@ VARCACHE_PREF(
   uint32_t, 1800 // 30 minutes (in seconds)
 )
 
-// Maximum client-side cookie life-time cap
-#ifdef NIGHTLY_BUILD
-# define PREF_VALUE 604800 // 7 days
-#else
-# define PREF_VALUE 0
-#endif
+// Maximum client-side cookie life-time cap. Measured in seconds, set to 0 to
+// disable.
 VARCACHE_PREF(
   Live,
   "privacy.documentCookies.maxage",
   privacy_documentCookies_maxage,
-  uint32_t, PREF_VALUE // (in seconds, set to 0 to disable)
+  uint32_t,
+#ifdef NIGHTLY_BUILD
+  7 * 24 * 60 * 60
+#else
+  0
+#endif
 )
-#undef PREF_VALUE
 
 // Anti-fingerprinting, disabled by default
 VARCACHE_PREF(
@@ -7360,6 +7370,13 @@ VARCACHE_PREF(
   "security.csp.reporting.script-sample.max-length",
   security_csp_reporting_script_sample_max_length,
   int32_t, 40
+)
+
+VARCACHE_PREF(
+  Live,
+  "security.allow_eval_with_system_principal",
+  security_allow_eval_with_system_principal,
+  bool, false
 )
 
 // Whether strict file origin policy is in effect.

@@ -5,15 +5,20 @@
 %endif
 
 #identity-box {
-  padding-inline-start: 8px;
+  padding-inline-start: 4px;
   padding-inline-end: 4px;
   margin-inline-end: 4px;
   /* Set default fill for icons in the identity block.
      Individual icons can override this. */
   fill: currentColor;
   fill-opacity: .6;
-  /* This is for tracking-protection-icon's slide-in animation. */
-  overflow: hidden;
+}
+
+/* The tracking protection icon will be hidden if it is a chrome page. There
+   will be only the brand icon in the url bar. So, we need to change the padding
+   start for proper positing the icon. */
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI {
+  padding-inline-start: 8px;
 }
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
@@ -27,13 +32,15 @@
   -moz-user-focus: ignore;
 }
 
-#identity-box:hover:not(.no-hover):not([open=true]) {
+#identity-box:hover:not(.no-hover):not([open=true]),
+#tracking-protection-icon-container:hover:not([open=true]) {
   background-color: hsla(0,0%,70%,.2);
   fill-opacity: .8;
 }
 
 #identity-box:hover:active:not(.no-hover),
-#identity-box[open=true] {
+#identity-box[open=true],
+#tracking-protection-icon-container[open=true] {
   background-color: hsla(0,0%,70%,.3);
   fill-opacity: .8;
 }
@@ -101,10 +108,8 @@
 #sharing-icon,
 #identity-icon,
 #tracking-protection-icon,
-#connection-icon,
 .notification-anchor-icon,
-#blocked-permissions-container > .blocked-permission-icon,
-#extension-icon {
+#blocked-permissions-container > .blocked-permission-icon {
   width: 16px;
   height: 16px;
   margin-inline-start: 4px;
@@ -115,10 +120,6 @@
 #identity-icon {
   margin-inline-start: 0;
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
-}
-
-#identity-box.grantedPermissions > #identity-icon {
-  list-style-image: url(chrome://browser/skin/identity-icon-notice.svg);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
@@ -132,6 +133,33 @@
 
 #urlbar[actiontype="extension"] > #identity-box > #identity-icon {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
+}
+
+#urlbar[pageproxystate="valid"] #identity-box.extensionPage > #identity-icon {
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #identity-icon {
+  list-style-image: url(chrome://browser/skin/connection-secure.svg);
+  -moz-context-properties: fill;
+  fill: #12BC00;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #identity-icon {
+  list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
+  fill: unset;
+  -moz-context-properties: fill, fill-opacity;
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.notSecure > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #identity-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #identity-icon {
+  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
 }
 
 /* SHARING ICON */
@@ -164,26 +192,26 @@
 
 /* TRACKING PROTECTION ICON */
 
+#tracking-protection-icon-container {
+  margin-inline-start: 3px;
+  padding-inline-end: 4px;
+  fill-opacity: .3;
+  fill: currentColor;
+}
+
+#urlbar[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {
+  display: none;
+}
+
 #tracking-protection-icon-box {
-  visibility: collapse;
   overflow: hidden;
   width: 20px;
   height: 20px;
-  margin-inline-end: -20px;
-}
-
-#tracking-protection-icon-box[active],
-#tracking-protection-icon-box[hasException] {
-  margin-inline-end: 0px;
-  visibility: visible;
-}
-
-#tracking-protection-icon-box[animationsenabled][animate] {
-  transition: margin-left 200ms ease-out, margin-right 200ms ease-out;
 }
 
 #tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
-#tracking-protection-icon-box:not([animationsenabled]) > #tracking-protection-icon-animatable-box {
+#tracking-protection-icon-box:not([animationsenabled]) > #tracking-protection-icon-animatable-box,
+#tracking-protection-icon-box:not([active]) > #tracking-protection-icon-animatable-box {
   display: none;
 }
 
@@ -224,7 +252,7 @@
   animation-name: tp-icon-animation-rtl;
 }
 
-#tracking-protection-icon-box[active] > #tracking-protection-icon {
+#urlbar[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box > #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
 }
 
@@ -232,8 +260,7 @@
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
-#urlbar[pageproxystate="invalid"] > #identity-box > #extension-icon,
-#urlbar[pageproxystate="invalid"] > #identity-box > #tracking-protection-icon-box {
+#urlbar[pageproxystate="invalid"] > #tracking-protection-icon-container {
   visibility: collapse;
 }
 
@@ -255,41 +282,10 @@
   }
 }
 
-/* CONNECTION ICON, EXTENSION ICON, REMOTE CONTROL ICON */
+/* REMOTE CONTROL ICON */
 
-#connection-icon,
-#extension-icon,
 #remote-control-icon {
   visibility: collapse;
-}
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
-  list-style-image: url(chrome://browser/skin/connection-secure.svg);
-  visibility: visible;
-  -moz-context-properties: fill;
-  fill: #12BC00;
-}
-#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.certUserOverridden > #connection-icon {
-  list-style-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
-  visibility: visible;
-  fill: unset;
-  -moz-context-properties: fill, fill-opacity;
-}
-
-#urlbar[pageproxystate="valid"] > #identity-box.notSecure > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
-#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
-  list-style-image: url(chrome://browser/skin/connection-mixed-active-loaded.svg);
-  visibility: visible;
-}
-
-#identity-box.extensionPage > #extension-icon {
-  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
-  visibility: visible;
 }
 
 :root[remotecontrol] #remote-control-icon {

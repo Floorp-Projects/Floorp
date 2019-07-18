@@ -324,14 +324,18 @@ class AudioNodeEngine {
    * of silence.
    */
   virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                                    const OutputChunks& aInput,
-                                    OutputChunks& aOutput, bool* aFinished);
+                                    Span<const AudioBlock> aInput,
+                                    Span<AudioBlock> aOutput, bool* aFinished);
 
   // IsActive() returns true if the engine needs to continue processing an
   // unfinished stream even when it has silent or no input connections.  This
   // includes tail-times and when sources have been scheduled to start.  If
   // returning false, then the stream can be suspended.
   virtual bool IsActive() const { return false; }
+
+  // Called on forced shutdown of the MediaStreamGraph before handing ownership
+  // from graph thread to main thread.
+  virtual void NotifyForcedShutdown() {}
 
   bool HasNode() const {
     MOZ_ASSERT(NS_IsMainThread());

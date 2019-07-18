@@ -35,10 +35,14 @@ class KnowsCompositorVideo : public layers::KnowsCompositor {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(KnowsCompositorVideo, override)
 
-  layers::TextureForwarder* GetTextureForwarder() override {
+  VideoBridgeChild* GetVideoBridge() {
     return mTextureFactoryIdentifier.mParentProcessType == GeckoProcessType_GPU
                ? VideoBridgeChild::GetSingletonToGPUProcess()
                : VideoBridgeChild::GetSingletonToParentProcess();
+  }
+
+  layers::TextureForwarder* GetTextureForwarder() override {
+    return GetVideoBridge();
   }
   layers::LayersIPCActor* GetLayersIPCActor() override {
     return GetTextureForwarder();
@@ -405,7 +409,18 @@ MediaResult RemoteVideoDecoderParent::ProcessDecodedData(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
         video->mDisplay, size, sd, video->mFrameID);
-    Unused << SendOutput(output);
+    if (mKnowsCompositor) {
+      RefPtr<RemoteVideoDecoderParent> parent = this;
+      mKnowsCompositor->GetVideoBridge()->SendFlush()->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [parent, output](bool) { Unused << parent->SendOutput(output); },
+          [parent](ResponseRejectReason&& aReason) {
+            parent->Error(NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER);
+          });
+
+    } else {
+      Unused << SendOutput(output);
+    }
   }
 
   return NS_OK;

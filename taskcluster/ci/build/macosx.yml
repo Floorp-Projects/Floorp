@@ -32,7 +32,7 @@ macosx64/debug:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -72,7 +72,7 @@ macosx64/opt:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -200,7 +200,7 @@ macosx64-devedition-nightly/opt:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -240,7 +240,7 @@ macosx64-noopt/debug:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -280,7 +280,7 @@ macosx64-add-on-devel/opt:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -324,7 +324,7 @@ macosx64-shippable/opt:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -405,7 +405,7 @@ macosx64-gcp/debug:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil
@@ -446,7 +446,7 @@ macosx64-gcp/opt:
     toolchains:
         - linux64-binutils
         - linux64-cctools-port
-        - linux64-clang
+        - linux64-clang-macosx-cross
         - linux64-hfsplus
         - linux64-libdmg
         - linux64-llvm-dsymutil

@@ -117,12 +117,9 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
    */
   void BindRenderTarget();
 
-  bool IsWindow() { return GetFBO() == 0; }
+  bool IsWindow() { return mFBO == 0; }
 
-  GLuint GetFBO() const {
-    MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);
-    return mFBO;
-  }
+  GLuint GetFBO() const;
 
   GLuint GetTextureHandle() const {
     MOZ_ASSERT(mInitParams.mStatus == InitParams::INITIALIZED);

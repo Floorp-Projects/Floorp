@@ -56,9 +56,6 @@ import java.util.AbstractSequentialList;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
-import org.mozilla.gecko.util.BundleEventListener;
-import org.mozilla.gecko.util.EventCallback;
-import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.geckoview.AllowOrDeny;
 import org.mozilla.geckoview.CompositorController;
 import org.mozilla.geckoview.ContentBlocking;
@@ -1108,7 +1105,7 @@ package org.mozilla.geckoview {
     method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
   }
 
-  public class WebExtensionController implements BundleEventListener {
+  public class WebExtensionController {
     ctor protected WebExtensionController(GeckoRuntime, WebExtensionEventDispatcher);
     method @UiThread @Nullable public WebExtensionController.TabDelegate getTabDelegate();
     method @UiThread public void setTabDelegate(@Nullable WebExtensionController.TabDelegate);

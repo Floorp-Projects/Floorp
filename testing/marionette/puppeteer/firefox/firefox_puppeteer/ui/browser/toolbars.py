@@ -90,11 +90,6 @@ class LocationBar(UIBaseLib):
             lambda _: self.value == '',
             message='Contents of location bar could not be cleared.')
 
-    def close_context_menu(self):
-        """Closes the Location Bar context menu by a key event."""
-        # TODO: This method should be implemented via the menu API.
-        self.contextmenu.send_keys(keys.Keys.ESCAPE)
-
     @property
     def connection_icon(self):
         """ Provides access to the urlbar connection icon.
@@ -102,16 +97,6 @@ class LocationBar(UIBaseLib):
         :returns: Reference to the connection icon element.
         """
         return self.marionette.find_element(By.ID, 'connection-icon')
-
-    @property
-    def contextmenu(self):
-        """Provides access to the urlbar context menu.
-
-        :returns: Reference to the urlbar context menu.
-        """
-        # TODO: This method should be implemented via the menu API.
-        parent = self.urlbar.find_element(By.ANON_ATTRIBUTE, {'anonid': 'moz-input-box'})
-        return parent.find_element(By.ANON_ATTRIBUTE, {'anonid': 'input-box-contextmenu'})
 
     @property
     def focused(self):
@@ -146,27 +131,6 @@ class LocationBar(UIBaseLib):
         Wait(self.marionette).until(
             lambda _: self.focused,
             message='Location bar has not be focused.')
-
-    def get_contextmenu_entry(self, action):
-        """Retrieves the urlbar context menu entry corresponding
-        to the given action.
-
-        :param action: The action corresponding to the retrieved value.
-        :returns: Reference to the urlbar contextmenu entry.
-        """
-        # TODO: This method should be implemented via the menu API.
-        entries = self.contextmenu.find_elements(By.CSS_SELECTOR, 'menuitem')
-        filter_on = 'cmd_%s' % action
-        found = [e for e in entries if e.get_attribute('cmd') == filter_on]
-        return found[0] if len(found) else None
-
-    @property
-    def history_drop_marker(self):
-        """Provides access to the history drop marker.
-
-        :returns: Reference to the history drop marker.
-        """
-        return self.urlbar.find_element(By.ANON_ATTRIBUTE, {'anonid': 'historydropmarker'})
 
     @property
     def identity_box(self):
@@ -279,7 +243,7 @@ class LocationBar(UIBaseLib):
 
         :returns: Reference to the urlbar input.
         """
-        return self.urlbar.find_element(By.ANON_ATTRIBUTE, {'anonid': 'input'})
+        return self.urlbar.find_element(By.CLASS_NAME, 'urlbar-input')
 
     @property
     def value(self):
@@ -287,7 +251,7 @@ class LocationBar(UIBaseLib):
 
         :returns: The urlbar value.
         """
-        return self.urlbar.get_property('value')
+        return self.urlbar_input.get_property('value')
 
 
 class AutocompleteResults(UIBaseLib):

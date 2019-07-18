@@ -916,6 +916,14 @@ impl TextureCache {
         self.entries.get_opt(handle).is_some()
     }
 
+    // Return the allocated size of the texture handle's associated data,
+    // or otherwise indicate the handle is invalid.
+    pub fn get_allocated_size(&self, handle: &TextureCacheHandle) -> Option<usize> {
+        self.entries.get_opt(handle).map(|entry| {
+            (entry.format.bytes_per_pixel() * entry.size.area()) as usize
+        })
+    }
+
     // Retrieve the details of an item in the cache. This is used
     // during batch creation to provide the resource rect address
     // to the shaders and texture ID to the batching logic.
@@ -1308,7 +1316,6 @@ impl TextureCache {
         &mut self,
         tile_size: DeviceIntSize,
         handle: &mut TextureCacheHandle,
-        uv_rect_kind: UvRectKind,
         gpu_cache: &mut GpuCache,
     ) {
         debug_assert!(self.now.is_valid());
@@ -1340,11 +1347,10 @@ impl TextureCache {
         }
 
         // Upload the resource rect and texture array layer.
-        let entry = self.entries
+        self.entries
             .get_opt_mut(handle)
-            .expect("BUG: handle must be valid now");
-        entry.uv_rect_kind = uv_rect_kind;
-        entry.update_gpu_cache(gpu_cache);
+            .expect("BUG: handle must be valid now")
+            .update_gpu_cache(gpu_cache);
     }
 }
 

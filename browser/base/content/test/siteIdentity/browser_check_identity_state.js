@@ -74,11 +74,11 @@ async function webpageTestTextWarning(secureCheck) {
   if (secureCheck) {
     is(
       getIdentityMode(),
-      "unknownIdentity notSecureText",
+      "notSecure notSecureText",
       "Identity should have not secure text"
     );
   } else {
-    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+    is(getIdentityMode(), "notSecure", "Identity should be not secure");
   }
 
   gBrowser.selectedTab = oldTab;
@@ -88,11 +88,11 @@ async function webpageTestTextWarning(secureCheck) {
   if (secureCheck) {
     is(
       getIdentityMode(),
-      "unknownIdentity notSecureText",
+      "notSecure notSecureText",
       "Identity should have not secure text"
     );
   } else {
-    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+    is(getIdentityMode(), "notSecure", "Identity should be not secure");
   }
 
   gBrowser.removeTab(newTab);
@@ -422,8 +422,8 @@ async function dataUriTest(secureCheck) {
 }
 
 add_task(async function test_data_uri() {
-  dataUriTest(true);
-  dataUriTest(false);
+  await dataUriTest(true);
+  await dataUriTest(false);
 });
 
 async function pbModeTest(prefs, secureCheck) {

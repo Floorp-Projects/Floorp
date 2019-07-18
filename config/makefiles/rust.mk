@@ -244,10 +244,12 @@ $(RUST_LIBRARY_FILE): force-cargo-library-build
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
+ifndef MOZ_PROFILE_GENERATE
 ifndef DEVELOPER_OPTIONS
 ifndef MOZ_DEBUG_RUST
 ifeq ($(OS_ARCH), Linux)
 	$(call py_action,check_binary,--target --networking $@)
+endif
 endif
 endif
 endif

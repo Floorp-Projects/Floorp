@@ -17,7 +17,7 @@
 #include "jsfriendapi.h"  // js::GetErrorMessage
 #include "jstypes.h"      // JS_PUBLIC_API
 
-#include "dbg/Debugger.h"                  // js::Debugger
+#include "debugger/Debugger.h"             // js::Debugger
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/FullParseHandler.h"     // frontend::FullParseHandler
 #include "frontend/ParseContext.h"         // frontend::UsedNameTracker
