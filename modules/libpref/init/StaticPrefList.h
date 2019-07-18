@@ -10,9 +10,7 @@
 // The file is separated into sections, where the sections are determined by
 // the first segment of the prefnames within (e.g. "network.predictor.enabled"
 // is within the `Prefs starting with "network."` section). Sections must be
-// kept in alphabetical order, but prefs within sections need not be. Please
-// follow the existing naming convention when considering adding a new pref and
-// whether you need a new section.
+// kept in alphabetical order, but prefs within sections need not be.
 //
 // Basics
 // ------
@@ -28,88 +26,87 @@
 // new pref, and don't invent a new first segment unless it's appropriate and
 // there are likely to be multiple prefs with that same first segment.
 //
-// Normal prefs
+// Definitions
+// -----------
+// A pref definition looks like this:
+//
+//   - name: <pref-name>                    # mandatory
+//     type: <cpp-type>                     # mandatory
+//     value: <default-value>               # mandatory
+//     mirror: <never | once | live>        # mandatory
+//     do_not_use_directly: <True | False>  # optional
+//
+// - `name` is the name of the pref, without double-quotes, as it appears
+//   in about:config. It is used in most libpref API functions (from both C++
+//   and JS code).
+//
+// - `type` is one of `bool`, `int32_t`, `uint32_t`, `float`, an atomic version
+//   of one of those, or `String`. Note that float prefs are stored internally
+//   as strings. The C++ preprocessor doesn't like template syntax in a macro
+//   argument, so use the typedefs defined in StaticPrefsBase.h; for example,
+//   use `RelaxedAtomicBool` instead of `Atomic<bool, Relaxed>`.
+//
+// - `value` is the default value. Its type should be appropriate for
+//   <cpp-type>, otherwise the generated code will fail to compile. A complex
+//   C++ numeric expressions like `60 * 60` (which the YAML parser cannot treat
+//   as an integer or float) is treated as a string and passed through without
+//   change, which is useful.
+//
+// - `mirror` indicates how the pref value is mirrored into a C++ variable.
+//
+//   * `never`: There is no global variable mirror. The pref value can only be
+//     accessed via the standard libpref API functions.
+//
+//   * `once`: The pref value is mirrored into a variable at startup; the
+//     mirror variable is left unchanged after that. (The exact point at which
+//     all `once` mirror variables are set is when the first `once` mirror
+//     variable is accessed, via its getter function.) This is mostly useful
+//     for graphics prefs where we often don't want a new pref value to apply
+//     until restart. Otherwise, this update policy is best avoided because its
+//     behaviour can cause confusion and bugs.
+//
+//   * `always`: The mirror value is always kept in sync with the pref value.
+//     This is the most common choice.
+//
+//   The getter function's name is the same as the pref's name, but with '.' or
+//   '-' chars converted to '_', to make a valid identifier. For example, the
+//   getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear, and
+//   you can search for both the pref name and the getter using the regexp
+//   /foo.bar.baz/.
+//
+//   Using the getter function to read the pref's value has the two following
+//   advantages over the normal API functions.
+//
+//   * A direct variable access is faster than a hash table lookup.
+//
+//   * A variable can be accessed off the main thread. If a pref *is* accessed
+//     off the main thread, it should have an atomic type. Assertions enforce
+//     this.
+//
+//   Note that Rust code must access the global variable directly, rather than
+//   via the getter.
+//
+// - `do_not_use_directly` dictates if `_do_not_use_directly` should be
+//   appended to the name of the getter function. This is simply a naming
+//   convention indicating that there is some other wrapper getter function
+//   that should be used in preference to the normal static pref getter.
+//   Defaults to `false` if not present. Cannot be used with a `never` mirror
+//   value, because there is no getter function in that case.
+//
+// Preprocessor
 // ------------
-// Definitions of normal prefs in this file have the following form.
+// Note finally that this file is preprocessed by preprocessor.py, not the C++
+// preprocessor. As a result, the following things may be surprising.
 //
-//   PREF(<pref-name-string>, <cpp-type>, <default-value>)
+// - YAML comments start with a '#', so putting a comment on the same line as a
+//   preprocessor directive is dubious. E.g. avoid lines like `#define X 3 #
+//   three` because the ` # three` will be part of `X`.
 //
-// - <pref-name-string> is the name of the pref, as it appears in about:config.
-//   It is used in most libpref API functions (from both C++ and JS code).
+// - '@' use is required for substitutions to occur. E.g. with `#define FOO 1`,
+//   `FOO` won't be replaced with `1` unless it has '@' chars around it.
 //
-// - <cpp-type> is one of bool, int32_t, float, or String (which is just a
-//   typedef for `const char*` in StaticPrefs.h). Note that float prefs are
-//   stored internally as strings.
-//
-// - <default-value> is the default value. Its type should match <cpp-type>.
-//
-// VarCache prefs
-// --------------
-// A VarCache pref is a special type of pref. It can be accessed via the normal
-// pref hash table lookup functions, but it also has:
-//
-// - an associated global variable (the VarCache) that mirrors the pref value
-//   in the prefs hash table (unless the update policy is `Once`, see below);
-//   and
-//
-// - a getter function that reads that global variable.
-//
-// Using the getter to read the pref's value has the two following advantages
-// over the normal API functions.
-//
-// - A direct global variable access is faster than a hash table lookup.
-//
-// - A global variable can be accessed off the main thread. If a pref *is*
-//   accessed off the main thread, it should use an atomic type. (But note that
-//   many VarCaches that should be atomic are not, in particular because
-//   Atomic<float> is not available, alas.)
-//
-// Definitions of VarCache prefs in this file has the following form.
-//
-//   VARCACHE_PREF(
-//     <update-policy>,
-//     <pref-name-string>,
-//      <pref-name-id>,  // indented one space to align with <pref-name-string>
-//     <cpp-type>, <default-value>
-//   )
-//
-// - <update-policy> is one of the following:
-//
-//   * Live: Evaluate the pref and set callback so it stays current/live. This
-//     is the normal policy.
-//
-//   * Once: Set the value once at startup, and then leave it unchanged after
-//     that. (The exact point at which all Once pref values is set is when the
-//     first Once getter is called.) This is useful for graphics prefs where we
-//     often don't want a new pref value to apply until restart. Otherwise, this
-//     update policy is best avoided because its behaviour can cause confusion
-//     and bugs.
-//
-// - <pref-name-string> is the same as for normal prefs.
-//
-// - <pref-name-id> is the name of the static getter function generated within
-//   the StaticPrefs class. For consistency, the identifier for every pref
-//   should be created by starting with <pref-name-string> and converting any
-//   '.' or '-' chars to '_'. For example, "foo.bar_baz" becomes
-//   `foo_bar_baz`. This is arguably ugly, but clear, and you can search for
-//   both using the regexp /foo.bar.baz/. Some getter functions have
-//   `_do_not_use_directly` appended to indicate that there is some other
-//   wrapper getter that should be used in preference to the normal static pref
-//   getter.
-//
-// - <cpp-type> is one of bool, int32_t, uint32_t, float, or an Atomic version
-//   of one of those. The C++ preprocessor doesn't like template syntax in a
-//   macro argument, so use the typedefs defines in StaticPrefs.h; for example,
-//   use `ReleaseAcquireAtomicBool` instead of `Atomic<bool, ReleaseAcquire>`.
-//   A pref with a `Once` policy should be non-atomic as it is only ever
-//   written to once during the parent process startup. A pref with a Live
-//   policy must be made Atomic if ever accessed outside the main thread;
-//   assertions are in place to ensure this.
-//
-// - <default-value> is the same as for normal prefs.
-//
-// Note that Rust code must access the global variable directly, rather than via
-// the getter.
+// - Spaces aren't permitted between the leading '#' and the name of a
+//   directive, e.g. `#ifdef XYZ` works but `# ifdef XYZ` does not.
 
 // clang-format off
 
