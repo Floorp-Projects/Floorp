@@ -31,7 +31,6 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
-import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -152,17 +151,14 @@ class BrowserFragment : Fragment(), BackHandler {
 
         toolbarComponent = ToolbarComponent(
             view.browserLayout,
-            ActionBusFactory.get(this), customTabSessionId,
+            ActionBusFactory.get(this),
+            customTabSessionId,
             (activity as HomeActivity).browsingModeManager.isPrivate,
-            false,
-            search_engine_icon,
             FenixViewModelProvider.create(
                 this,
                 ToolbarViewModel::class.java
             ) {
-                ToolbarViewModel(
-                    SearchState("", getSessionById()?.searchTerms ?: "", isEditing = false)
-                )
+                ToolbarViewModel(SearchState())
             }
         )
 
