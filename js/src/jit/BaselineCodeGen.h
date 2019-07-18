@@ -364,18 +364,16 @@ class BaselineCodeGen {
                                        Register scratch1, Register scratch2);
 
   enum class CallVMPhase { BeforePushingLocals, AfterPushingLocals };
-  bool callVMInternal(VMFunctionId id, CallVMPhase phase);
+  bool callVMInternal(VMFunctionId id, RetAddrEntry::Kind kind,
+                      CallVMPhase phase);
 
   template <typename Fn, Fn fn>
-  bool callVM(CallVMPhase phase = CallVMPhase::AfterPushingLocals);
+  bool callVM(RetAddrEntry::Kind kind = RetAddrEntry::Kind::CallVM,
+              CallVMPhase phase = CallVMPhase::AfterPushingLocals);
 
   template <typename Fn, Fn fn>
   bool callVMNonOp(CallVMPhase phase = CallVMPhase::AfterPushingLocals) {
-    if (!callVM<Fn, fn>(phase)) {
-      return false;
-    }
-    handler.markLastRetAddrEntryKind(RetAddrEntry::Kind::NonOpCallVM);
-    return true;
+    return callVM<Fn, fn>(RetAddrEntry::Kind::NonOpCallVM, phase);
   }
 
   // ifDebuggee should be a function emitting code for when the script is a
@@ -593,9 +591,6 @@ class BaselineCompilerHandler {
     }
     return true;
   }
-  void markLastRetAddrEntryKind(RetAddrEntry::Kind kind) {
-    retAddrEntries_.back().setKind(kind);
-  }
 
   // If a script has more |nslots| than this the stack check must account
   // for these slots explicitly.
@@ -715,13 +710,12 @@ class BaselineInterpreterHandler {
     return debugInstrumentationOffsets_.append(offset.offset());
   }
 
-  // Interpreter doesn't need to keep track of RetAddrEntries, so these methods
-  // are no-ops.
+  // Interpreter doesn't need to keep track of RetAddrEntries, so this is a
+  // no-op.
   MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
                                        uint32_t retOffset) {
     return true;
   }
-  void markLastRetAddrEntryKind(RetAddrEntry::Kind) {}
 
   bool maybeIonCompileable() const { return true; }
 
