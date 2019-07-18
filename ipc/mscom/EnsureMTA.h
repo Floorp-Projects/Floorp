@@ -44,7 +44,6 @@ class MOZ_STACK_CLASS EnsureMTA final {
    * This constructor just ensures that the MTA thread is up and running.
    */
   EnsureMTA() {
-    MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIThread> thread = GetMTAThread();
     MOZ_ASSERT(thread);
     Unused << thread;
@@ -64,8 +63,6 @@ class MOZ_STACK_CLASS EnsureMTA final {
       aClosure();
       return;
     }
-
-    MOZ_ASSERT(NS_IsMainThread());
 
     // In this case we need to run aClosure on a background thread in the MTA
     nsCOMPtr<nsIThread> thread = GetMTAThread();
