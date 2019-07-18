@@ -39,8 +39,8 @@ add_task(async function mainMenu_entryPoint() {
   );
 
   info("mainMenu_entryPoint, clicking on Logins and passwords button");
-  EventUtils.synthesizeMouseAtCenter(item, {});
-  let dialogWindow = await waitForPasswordManagerDialog();
+  let openingFunc = () => EventUtils.synthesizeMouseAtCenter(item, {});
+  let passwordManager = await openPasswordManager(openingFunc);
   info("mainMenu_entryPoint, password manager dialog shown");
 
   TelemetryTestUtils.assertEvents([["pwmgr", "open_management", "mainmenu"]], {
@@ -49,7 +49,7 @@ add_task(async function mainMenu_entryPoint() {
   });
 
   info("mainMenu_entryPoint, close dialog and main menu");
-  dialogWindow.close();
+  await passwordManager.close();
   mainMenu.hidePopup();
 });
 
@@ -76,10 +76,11 @@ add_task(async function pageInfo_entryPoint() {
       );
       info("pageInfo_entryPoint, clicking the show passwords button...");
       await SimpleTest.promiseFocus(pageInfo);
-      await EventUtils.synthesizeMouseAtCenter(passwordsButton, {}, pageInfo);
+      let openingFunc = () =>
+        EventUtils.synthesizeMouseAtCenter(passwordsButton, {}, pageInfo);
 
       info("pageInfo_entryPoint, waiting for the passwords manager dialog");
-      let dialogWindow = await waitForPasswordManagerDialog();
+      let passwordManager = await openPasswordManager(openingFunc);
 
       TelemetryTestUtils.assertEvents(
         [["pwmgr", "open_management", "pageinfo"]],
@@ -87,7 +88,7 @@ add_task(async function pageInfo_entryPoint() {
       );
 
       info("pageInfo_entryPoint, close dialog and pageInfo");
-      dialogWindow.close();
+      await passwordManager.close();
       pageInfo.close();
     }
   );
