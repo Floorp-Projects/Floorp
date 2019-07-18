@@ -10,7 +10,7 @@
         let localeObj = parseLanguageTag(locale); \
         assert(localeObj !== null, \
                `${desc} is a structurally valid language tag`); \
-        assert(CanonicalizeLanguageTagFromObject(localeObj) === locale, \
+        assert(StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj)) === locale, \
                `${desc} is a canonicalized language tag`); \
     } while (false)
 #else
@@ -118,6 +118,164 @@ function getUnicodeExtensions(locale) {
     return Substring(locale, start, end - start);
 }
 
+// The three possible token type bits. Expressed as #defines to avoid
+// extra named lookups in the interpreter/jits.
+#define NONE  0b00
+#define ALPHA 0b01
+#define DIGIT 0b10
+
+// Constants for code units used below.
+#define HYPHEN  0x2D
+#define DIGIT_ZERO 0x30
+#define DIGIT_NINE 0x39
+#define UPPER_A 0x41
+#define UPPER_Z 0x5A
+#define LOWER_A 0x61
+#define LOWER_T 0x74
+#define LOWER_U 0x75
+#define LOWER_X 0x78
+#define LOWER_Z 0x7A
+
+// The requirement to use callFunction() for method calls makes the parser
+// harder to read. Use macros for the rescue.
+
+// Reads the next token.
+#define NEXT_TOKEN_OR_RETURN_NULL(ts)       \
+    if (!callFunction(ts.nextToken, ts))    \
+        return null;
+
+// Assigns the current subtag part transformed to lower-case to the target.
+#define SUBTAG_VAR_OR_RETURN_NULL(ts, target)                                   \
+    {                                                                           \
+        target = Substring(ts.localeLowercase, ts.tokenStart, ts.tokenLength);  \
+        NEXT_TOKEN_OR_RETURN_NULL(ts);                                          \
+    }
+
+/**
+ * Tokenizer for Unicode BCP 47 locale identifiers.
+ */
+function BCP47TokenStream(locale) {
+    this.locale = locale;
+
+    // Locale identifiers are compared and processed case-insensitively, so
+    // technically it's not necessary to adjust case. But for easier processing,
+    // and because the canonical form for most subtags is lower case, we start
+    // with lower case for all.
+    //
+    // Note that the tokenizer function keeps using the original input string
+    // to properly detect non-ASCII characters. The lower-case string can't be
+    // used to detect those characters, because some non-ASCII characters
+    // lower-case map into ASCII characters, e.g. U+212A (KELVIN SIGN) lower-
+    // case maps to U+006B (LATIN SMALL LETTER K).
+    this.localeLowercase = callFunction(std_String_toLowerCase, locale);
+
+    // Current parse index in |locale|.
+    this.index = 0;
+
+    // The current token type, its start index, and its length.
+    this.token = NONE;
+    this.tokenStart = 0;
+    this.tokenLength = 0;
+
+    assert(std_String_fromCharCode(HYPHEN) === "-" &&
+           std_String_fromCharCode(DIGIT_ZERO) === "0" &&
+           std_String_fromCharCode(DIGIT_NINE) === "9" &&
+           std_String_fromCharCode(UPPER_A) === "A" &&
+           std_String_fromCharCode(UPPER_Z) === "Z" &&
+           std_String_fromCharCode(LOWER_A) === "a" &&
+           std_String_fromCharCode(LOWER_T) === "t" &&
+           std_String_fromCharCode(LOWER_U) === "u" &&
+           std_String_fromCharCode(LOWER_X) === "x" &&
+           std_String_fromCharCode(LOWER_Z) === "z",
+           "code unit constants should match the expected characters");
+}
+
+MakeConstructible(BCP47TokenStream, {
+    __proto__: null,
+
+    // Reads the next token, returns |false| if an illegal character was found,
+    // otherwise returns |true|.
+    //
+    // eslint-disable-next-line object-shorthand
+    nextToken: function() {
+        var type = NONE;
+        var {index, locale} = this;
+        for (var i = index; i < locale.length; i++) {
+            // UTS 35, section 3.1.
+            // alpha = [A-Z a-z] ;
+            // digit = [0-9] ;
+            var c = callFunction(std_String_charCodeAt, locale, i);
+            if ((UPPER_A <= c && c <= UPPER_Z) || (LOWER_A <= c && c <= LOWER_Z))
+                type |= ALPHA;
+            else if (DIGIT_ZERO <= c && c <= DIGIT_NINE)
+                type |= DIGIT;
+            else if (c === HYPHEN && i > index && i + 1 < locale.length)
+                break;
+            else
+                return false;
+        }
+
+        this.token = type;
+        this.tokenStart = index;
+        this.tokenLength = i - index;
+        this.index = i + 1;
+        return true;
+    },
+
+    // Returns true if the character at the requested index within the current
+    // token is a digit.
+    //
+    // eslint-disable-next-line object-shorthand
+    isDigitAt: function(index) {
+        assert(0 <= index && index < this.tokenLength,
+               "must be an index into the current token");
+        var c = callFunction(std_String_charCodeAt, this.localeLowercase, this.tokenStart + index);
+        assert(!(c <= DIGIT_NINE) || c >= DIGIT_ZERO,
+               "token-start-code-unit <= '9' implies token-start-code-unit is in '0'..'9' " +
+               "and because all digits are sorted before any letters");
+        return c <= DIGIT_NINE;
+    },
+
+    // Returns the code unit of the first character at the current token
+    // position. Always returns the lower-case form of an alphabetical
+    // character.
+    //
+    // eslint-disable-next-line object-shorthand
+    singletonKey: function() {
+        assert(this.tokenLength === 1, "token is not a singleton");
+        var c = callFunction(std_String_charCodeAt, this.localeLowercase, this.tokenStart);
+        assert((DIGIT_ZERO <= c && c <= DIGIT_NINE) || (LOWER_A <= c && c <= LOWER_Z),
+               "unexpected code unit");
+        return c;
+    },
+
+    // eslint-disable-next-line object-shorthand
+    singletonValue: function() {
+        var singletonStart = this.tokenStart;
+        var min = callFunction(this.singletonKey, this) === LOWER_X ? 1 : 2;
+
+        NEXT_TOKEN_OR_RETURN_NULL(this);
+
+        // At least one non-singleton subtag must be present.
+        if (!(min <= this.tokenLength && this.tokenLength <= 8))
+            return null;
+        do {
+            NEXT_TOKEN_OR_RETURN_NULL(this);
+        } while (min <= this.tokenLength && this.tokenLength <= 8);
+
+        return callFunction(this.singletonValueAt, this, singletonStart);
+    },
+
+    // eslint-disable-next-line object-shorthand
+    singletonValueAt: function(start) {
+        // Singletons must be followed by a non-singleton subtag, "en-a-b" is not allowed.
+        var length = this.tokenStart - 1 - start;
+        if (length <= 2)
+            return null;
+        return Substring(this.localeLowercase, start, length);
+    }
+});
+
 /* eslint-disable complexity */
 /**
  * Parser for Unicode BCP 47 locale identifiers.
@@ -158,103 +316,11 @@ function getUnicodeExtensions(locale) {
 function parseLanguageTag(locale) {
     assert(typeof locale === "string", "locale is a string");
 
-    // Current parse index in |locale|.
-    var index = 0;
-
-    // The three possible token type bits. Expressed as #defines to avoid
-    // extra named lookups in the interpreter/jits.
-    #define NONE  0b00
-    #define ALPHA 0b01
-    #define DIGIT 0b10
-
-    // The current token type, its start index, and its length.
-    var token = 0;
-    var tokenStart = 0;
-    var tokenLength = 0;
-
-    // Constants for code units used below.
-    #define HYPHEN  0x2D
-    #define DIGIT_ZERO 0x30
-    #define DIGIT_NINE 0x39
-    #define UPPER_A 0x41
-    #define UPPER_Z 0x5A
-    #define LOWER_A 0x61
-    #define LOWER_T 0x74
-    #define LOWER_U 0x75
-    #define LOWER_X 0x78
-    #define LOWER_Z 0x7A
-    assert(std_String_fromCharCode(HYPHEN) === "-" &&
-           std_String_fromCharCode(DIGIT_ZERO) === "0" &&
-           std_String_fromCharCode(DIGIT_NINE) === "9" &&
-           std_String_fromCharCode(UPPER_A) === "A" &&
-           std_String_fromCharCode(UPPER_Z) === "Z" &&
-           std_String_fromCharCode(LOWER_A) === "a" &&
-           std_String_fromCharCode(LOWER_T) === "t" &&
-           std_String_fromCharCode(LOWER_U) === "u" &&
-           std_String_fromCharCode(LOWER_X) === "x" &&
-           std_String_fromCharCode(LOWER_Z) === "z",
-           "code unit constants should match the expected characters");
-
-    // Reads the next token, returns |false| if an illegal character was
-    // found, otherwise returns |true|.
-    function nextToken() {
-        var type = NONE;
-        for (var i = index; i < locale.length; i++) {
-            // UTS 35, section 3.1.
-            // alpha = [A-Z a-z] ;
-            // digit = [0-9] ;
-            var c = callFunction(std_String_charCodeAt, locale, i);
-            if ((UPPER_A <= c && c <= UPPER_Z) || (LOWER_A <= c && c <= LOWER_Z))
-                type |= ALPHA;
-            else if (DIGIT_ZERO <= c && c <= DIGIT_NINE)
-                type |= DIGIT;
-            else if (c === HYPHEN && i > index && i + 1 < locale.length)
-                break;
-            else
-                return false;
-        }
-
-        token = type;
-        tokenStart = index;
-        tokenLength = i - index;
-        index = i + 1;
-        return true;
-    }
-
-    // Locale identifiers are compared and processed case-insensitively, so
-    // technically it's not necessary to adjust case. But for easier processing,
-    // and because the canonical form for most subtags is lower case, we start
-    // with lower case for all.
-    //
-    // Note that the tokenizer function keeps using the original input string
-    // to properly detect non-ASCII characters. The lower-case string can't be
-    // used to detect those characters, because some non-ASCII characters
-    // lower-case map into ASCII characters, e.g. U+212A (KELVIN SIGN) lower-
-    // case maps to U+006B (LATIN SMALL LETTER K).
-    var localeLowercase = callFunction(std_String_toLowerCase, locale);
-
-    // Returns the code unit of the character at the requested index from the
-    // current token. Always returns the lower-case form of an alphabetical
-    // character.
-    function tokenCharCodeUnitLower(index) {
-        assert(0 <= index && index < tokenLength,
-               "must be an index into the current token");
-        var c = callFunction(std_String_charCodeAt, localeLowercase, tokenStart + index);
-        assert((DIGIT_ZERO <= c && c <= DIGIT_NINE) || (LOWER_A <= c && c <= LOWER_Z),
-               "unexpected code unit");
-        return c;
-    }
-
-    // Returns the current token part transformed to lower-case.
-    function tokenStringLower() {
-        return Substring(localeLowercase, tokenStart, tokenLength);
-    }
-
     // unicode_locale_id = unicode_language_id
     //                     extensions*
     //                     pu_extensions? ;
-    if (!nextToken())
-        return null;
+    var ts = new BCP47TokenStream(locale);
+    NEXT_TOKEN_OR_RETURN_NULL(ts);
 
     var language, script, region, privateuse;
     var variants = [];
@@ -271,61 +337,52 @@ function parseLanguageTag(locale) {
     //       removed from `unicode_language_id`.
 
     // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
-    if (token !== ALPHA || tokenLength === 1 || tokenLength === 4 || tokenLength > 8) {
+    if (ts.token !== ALPHA || ts.tokenLength === 1 || ts.tokenLength === 4 || ts.tokenLength > 8) {
         // Four character language subtags are not allowed in Unicode BCP 47
         // locale identifiers. Also see the comparison to Unicode CLDR locale
         // identifiers in <https://unicode.org/reports/tr35/#BCP_47_Conformance>.
         return null;
     }
-    assert((2 <= tokenLength && tokenLength <= 3) ||
-           (5 <= tokenLength && tokenLength <= 8),
+    assert((2 <= ts.tokenLength && ts.tokenLength <= 3) ||
+           (5 <= ts.tokenLength && ts.tokenLength <= 8),
            "language subtags have 2-3 or 5-8 letters");
 
-    language = tokenStringLower();
-    if (!nextToken())
-        return null;
+    SUBTAG_VAR_OR_RETURN_NULL(ts, language);
 
     // unicode_script_subtag = alpha{4} ;
-    if (tokenLength === 4 && token === ALPHA) {
-        script = tokenStringLower();
+    if (ts.tokenLength === 4 && ts.token === ALPHA) {
+        SUBTAG_VAR_OR_RETURN_NULL(ts, script);
 
         // The first character of a script code needs to be capitalized.
         // "hans" -> "Hans"
         script = callFunction(std_String_toUpperCase, script[0]) +
                  Substring(script, 1, script.length - 1);
-
-        if (!nextToken())
-            return null;
     }
 
     // unicode_region_subtag = (alpha{2} | digit{3}) ;
-    if ((tokenLength === 2 && token === ALPHA) || (tokenLength === 3 && token === DIGIT)) {
-        region = tokenStringLower();
+    if ((ts.tokenLength === 2 && ts.token === ALPHA) ||
+        (ts.tokenLength === 3 && ts.token === DIGIT))
+    {
+        SUBTAG_VAR_OR_RETURN_NULL(ts, region);
 
         // Region codes need to be in upper-case. "bu" -> "BU"
         region = callFunction(std_String_toUpperCase, region);
-
-        if (!nextToken())
-            return null;
     }
 
     // unicode_variant_subtag = (alphanum{5,8}
     //                        | digit alphanum{3}) ;
     //
     // alphanum               = [0-9 A-Z a-z] ;
-    while ((5 <= tokenLength && tokenLength <= 8) ||
-           (tokenLength === 4 && tokenCharCodeUnitLower(0) <= DIGIT_NINE))
+    while ((5 <= ts.tokenLength && ts.tokenLength <= 8) ||
+           (ts.tokenLength === 4 && callFunction(ts.isDigitAt, ts, 0)))
     {
-        assert(!(tokenCharCodeUnitLower(0) <= DIGIT_NINE) ||
-               tokenCharCodeUnitLower(0) >= DIGIT_ZERO,
-               "token-start-code-unit <= '9' implies token-start-code-unit is in '0'..'9'");
-
         // Locale identifiers are case insensitive (UTS 35, section 3.2).
         // All seen variants are compared ignoring case differences by
         // using the lower-case form. This allows to properly detect and
         // reject variant repetitions with differing case, e.g.
         // "en-variant-Variant".
-        var variant = tokenStringLower();
+        var variant;
+        SUBTAG_VAR_OR_RETURN_NULL(ts, variant);
 
         // Reject the Locale identifier if a duplicate variant was found.
         //
@@ -336,9 +393,6 @@ function parseLanguageTag(locale) {
         if (callFunction(ArrayIndexOf, variants, variant) !== -1)
             return null;
         _DefineDataProperty(variants, variants.length, variant);
-
-        if (!nextToken())
-            return null;
     }
 
     // extensions = unicode_locale_extensions
@@ -374,16 +428,15 @@ function parseLanguageTag(locale) {
     //
     // tvalue = (sep alphanum{3,8})+ ;
     var seenSingletons = [];
-    while (tokenLength === 1) {
-        var extensionStart = tokenStart;
-        var singleton = tokenCharCodeUnitLower(0);
+    while (ts.tokenLength === 1) {
+        var singleton = callFunction(ts.singletonKey, ts);
         if (singleton === LOWER_X)
             break;
 
         // Locale identifiers are case insensitive (UTS 35, section 3.2).
-        // Ensure |tokenCharCodeUnitLower(0)| does not return the code
-        // unit of an upper-case character, so we can properly detect and
-        // reject singletons with different case, e.g. "en-u-foo-U-foo".
+        // Ensure |singletonKey()| does not return the code unit of an
+        // upper-case character, so we can properly detect and reject
+        // singletons with different case, e.g. "en-u-foo-U-foo".
         assert(!(UPPER_A <= singleton && singleton <= UPPER_Z),
                "unexpected upper-case code unit");
 
@@ -396,107 +449,88 @@ function parseLanguageTag(locale) {
             return null;
         _DefineDataProperty(seenSingletons, seenSingletons.length, singleton);
 
-        if (!nextToken())
-            return null;
-
+        var extension;
         if (singleton === LOWER_U) {
-            while (2 <= tokenLength && tokenLength <= 8) {
+            var extensionStart = ts.tokenStart;
+            NEXT_TOKEN_OR_RETURN_NULL(ts);
+
+            while (2 <= ts.tokenLength && ts.tokenLength <= 8) {
                 // `key` doesn't allow a digit as its second character.
-                if (tokenLength === 2 && tokenCharCodeUnitLower(1) <= DIGIT_NINE)
+                if (ts.tokenLength === 2 && callFunction(ts.isDigitAt, ts, 1))
                     return null;
-                if (!nextToken())
-                    return null;
+                NEXT_TOKEN_OR_RETURN_NULL(ts);
             }
+            extension = callFunction(ts.singletonValueAt, ts, extensionStart);
         } else if (singleton === LOWER_T) {
+            var extensionStart = ts.tokenStart;
+            NEXT_TOKEN_OR_RETURN_NULL(ts);
+
             // `tfield` starts with `tkey`, which in turn is `alpha digit`, so
             // an alpha-only token must be a `tlang`.
-            if (token === ALPHA) {
+            if (ts.token === ALPHA) {
                 // `unicode_language_subtag`
-                if (tokenLength === 1 || tokenLength === 4 || tokenLength > 8)
+                if (ts.tokenLength === 1 || ts.tokenLength === 4 || ts.tokenLength > 8)
                     return null;
-                if (!nextToken())
-                    return null;
+                NEXT_TOKEN_OR_RETURN_NULL(ts);
 
                 // `unicode_script_subtag` (optional)
-                if (tokenLength === 4 && token === ALPHA) {
-                    if (!nextToken())
-                        return null;
+                if (ts.tokenLength === 4 && ts.token === ALPHA) {
+                    NEXT_TOKEN_OR_RETURN_NULL(ts);
                 }
 
                 // `unicode_region_subtag` (optional)
-                if ((tokenLength === 2 && token === ALPHA) ||
-                    (tokenLength === 3 && token === DIGIT))
+                if ((ts.tokenLength === 2 && ts.token === ALPHA) ||
+                    (ts.tokenLength === 3 && ts.token === DIGIT))
                 {
-                    if (!nextToken())
-                        return null;
+                    NEXT_TOKEN_OR_RETURN_NULL(ts);
                 }
 
                 // `unicode_variant_subtag` (optional)
-                while ((5 <= tokenLength && tokenLength <= 8) ||
-                       (tokenLength === 4 && tokenCharCodeUnitLower(0) <= DIGIT_NINE))
+                while ((5 <= ts.tokenLength && ts.tokenLength <= 8) ||
+                       (ts.tokenLength === 4 && callFunction(ts.isDigitAt, ts, 0)))
                 {
-                    if (!nextToken())
-                        return null;
+                    NEXT_TOKEN_OR_RETURN_NULL(ts);
                 }
             }
 
             // Trailing `tfield` subtags.
-            while (tokenLength === 2) {
+            while (ts.tokenLength === 2) {
                 // `tkey` is `alpha digit`.
-                if ((tokenCharCodeUnitLower(0) <= DIGIT_NINE) ||
-                    (tokenCharCodeUnitLower(1) > DIGIT_NINE))
+                if (callFunction(ts.isDigitAt, ts, 0) ||
+                    !callFunction(ts.isDigitAt, ts, 1))
                 {
                     return null;
                 }
-                if (!nextToken())
-                    return null;
+                NEXT_TOKEN_OR_RETURN_NULL(ts);
 
                 // `tfield` requires at least one `tvalue`.
-                if (!(3 <= tokenLength && tokenLength <= 8))
+                if (!(3 <= ts.tokenLength && ts.tokenLength <= 8))
                     return null;
                 do {
-                    if (!nextToken())
-                        return null;
-                } while (3 <= tokenLength && tokenLength <= 8);
+                    NEXT_TOKEN_OR_RETURN_NULL(ts);
+                } while (3 <= ts.tokenLength && ts.tokenLength <= 8);
             }
+            extension = callFunction(ts.singletonValueAt, ts, extensionStart);
         } else {
-            while (2 <= tokenLength && tokenLength <= 8) {
-                if (!nextToken())
-                    return null;
-            }
+            extension = callFunction(ts.singletonValue, ts);
         }
-
-        // Singletons must be followed by some value, "en-a-b" is not allowed.
-        var extensionLength = tokenStart - 1 - extensionStart;
-        if (extensionLength <= 2) {
+        if (!extension)
             return null;
-        }
-        var extension = Substring(localeLowercase, extensionStart,
-                                  extensionLength);
+
         _DefineDataProperty(extensions, extensions.length, extension);
     }
 
     // Trailing pu_extensions component of the unicode_locale_id production.
     //
     // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
-    if (tokenLength === 1 && tokenCharCodeUnitLower(0) === LOWER_X) {
-        var privateuseStart = tokenStart;
-        if (!nextToken())
+    if (ts.tokenLength === 1 && callFunction(ts.singletonKey, ts) === LOWER_X) {
+        privateuse = callFunction(ts.singletonValue, ts);
+        if (!privateuse)
             return null;
-
-        if (!(1 <= tokenLength && tokenLength <= 8))
-            return null;
-        do {
-            if (!nextToken())
-                return null;
-        } while (1 <= tokenLength && tokenLength <= 8);
-
-        privateuse = Substring(localeLowercase, privateuseStart,
-                               localeLowercase.length - privateuseStart);
     }
 
     // Reject the input if it couldn't be parsed completely.
-    if (token !== NONE)
+    if (ts.token !== NONE)
         return null;
 
     // grandfathered = "art-lojban"     ; non-redundant tags registered
@@ -509,9 +543,9 @@ function parseLanguageTag(locale) {
     //                                  ; and all of these are deprecated
     //                                  ; in favor of a more modern
     //                                  ; subtag or sequence of subtags
-    if (hasOwn(localeLowercase, grandfatheredMappings)) {
+    if (hasOwn(ts.localeLowercase, grandfatheredMappings)) {
         return {
-            locale: grandfatheredMappings[localeLowercase],
+            locale: grandfatheredMappings[ts.localeLowercase],
             grandfathered: true,
         };
     }
@@ -526,22 +560,26 @@ function parseLanguageTag(locale) {
         extensions,
         privateuse,
     };
-
-    #undef NONE
-    #undef ALPHA
-    #undef DIGIT
-    #undef HYPHEN
-    #undef DIGIT_ZERO
-    #undef DIGIT_NINE
-    #undef UPPER_A
-    #undef UPPER_Z
-    #undef LOWER_A
-    #undef LOWER_T
-    #undef LOWER_U
-    #undef LOWER_X
-    #undef LOWER_Z
 }
 /* eslint-enable complexity */
+
+#undef NONE
+#undef ALPHA
+#undef DIGIT
+
+#undef HYPHEN
+#undef DIGIT_ZERO
+#undef DIGIT_NINE
+#undef UPPER_A
+#undef UPPER_Z
+#undef LOWER_A
+#undef LOWER_T
+#undef LOWER_U
+#undef LOWER_X
+#undef LOWER_Z
+
+#undef SUBTAG_VAR_OR_RETURN_NULL
+#undef NEXT_TOKEN_OR_RETURN_NULL
 
 /**
  * Verifies that the given string is a well-formed BCP 47 language tag
@@ -587,21 +625,20 @@ function IsStructurallyValidLanguageTag(locale) {
  * Spec: https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
  * Spec: https://unicode.org/reports/tr35/#BCP_47_Language_Tag_Conversion
  */
-function CanonicalizeLanguageTagFromObject(localeObj) {
-    assert(IsObject(localeObj), "CanonicalizeLanguageTagFromObject");
+function CanonicalizeLanguageTagObject(localeObj) {
+    assert(IsObject(localeObj), "CanonicalizeLanguageTagObject");
 
     // Handle grandfathered language tags.
-    if (hasOwn("grandfathered", localeObj))
-        return localeObj.locale;
-
-    var {
-        language,
-        script,
-        region,
-        variants,
-        extensions,
-        privateuse,
-    } = localeObj;
+    if (hasOwn("grandfathered", localeObj)) {
+        // If the grandfathered tag has a modern form, it is already stored in
+        // |localeObj.locale|, so we only need to reparse it again to retrieve
+        // the canonical form.
+        // TODO: Change to in-place update instead of creating a new object?
+        localeObj = parseLanguageTag(localeObj.locale);
+        assert(localeObj !== null,
+               "grandfathered language tags are well-formed");
+        return localeObj;
+    }
 
     // Per UTS 35, 3.3.1, the very first step is to canonicalize the syntax by
     // normalizing the case and ordering all subtags. The canonical syntax form
@@ -625,32 +662,34 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
 #endif
 
     // 1. Any script subtag is in title case.
-    assert(!script || IsTitleCase(script),
+    assert(localeObj.script === undefined || IsTitleCase(localeObj.script),
            "If present, script subtag is in title case");
 
     // 2. Any region subtag is in uppercase.
-    assert(!region || IsUpperCase(region),
+    assert(localeObj.region === undefined || IsUpperCase(localeObj.region),
            "If present, region subtag is in upper case");
 
     // 3. All other subtags are in lowercase.
-    assert(IsLowerCase(language),
+    assert(IsLowerCase(localeObj.language),
            "language subtag is in lower case");
-    assert(callFunction(ArrayEvery, variants, IsLowerCase),
+    assert(callFunction(ArrayEvery, localeObj.variants, IsLowerCase),
            "variant subtags are in lower case");
-    assert(callFunction(ArrayEvery, extensions, IsLowerCase),
+    assert(callFunction(ArrayEvery, localeObj.extensions, IsLowerCase),
            "extension subtags are in lower case");
-    assert(!privateuse || IsLowerCase(privateuse),
+    assert(localeObj.privateuse === undefined || IsLowerCase(localeObj.privateuse),
            "If present, privateuse subtag is in lower case");
 
 
     // The second step in UTS 35, 3.2.1, is to order all subtags.
 
     // 1. Any variants are in alphabetical order.
+    var variants = localeObj.variants;
     if (variants.length > 0) {
         callFunction(ArraySort, variants);
     }
 
     // 2. Any extensions are in alphabetical order by their singleton.
+    var extensions = localeObj.extensions;
     if (extensions.length > 0) {
         // Extension sequences are sorted by their singleton characters.
         // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
@@ -687,53 +726,25 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
     // Update mappings for complete tags.
     updateLangTagMappings(localeObj);
 
-    // Re-read all subtags in case they were changed in |updateLangTagMappings|.
-    ({
-        language,
-        script,
-        region,
-        variants,
-        extensions,
-        privateuse,
-    } = localeObj);
-
     // Replace deprecated language tags with their preferred values.
     // "in" -> "id"
+    var language = localeObj.language;
     if (hasOwn(language, languageMappings))
-        language = languageMappings[language];
+        localeObj.language = languageMappings[language];
 
-    var canonical = language;
+    // No script replacements are currently present.
 
-    // No script replacements are currently present, so append as is.
-    if (script) {
-        assert(script.length === 4 && IsTitleCase(script),
-               "script must be [A-Z][a-z]{3}");
-        canonical += "-" + script;
-    }
+    // Replace deprecated subtags with their preferred values.
+    // "BU" -> "MM"
+    var region = localeObj.region;
+    if (region && hasOwn(region, regionMappings))
+        localeObj.region = regionMappings[region];
 
-    if (region) {
-        // Replace deprecated subtags with their preferred values.
-        // "BU" -> "MM"
-        if (hasOwn(region, regionMappings))
-            region = regionMappings[region];
+    // No variant replacements are currently present.
+    // No extension replacements are currently present.
+    // Private use sequences are left as is.
 
-        assert((2 <= region.length && region.length <= 3) && IsUpperCase(region),
-               "region must be [A-Z]{2} or [0-9]{3}");
-        canonical += "-" + region;
-    }
-
-    // No variant replacements are currently present, so append as is.
-    if (variants.length > 0)
-        canonical += "-" + callFunction(std_Array_join, variants, "-");
-
-    if (extensions.length > 0)
-        canonical += "-" + callFunction(std_Array_join, extensions, "-");
-
-    // Private use sequences are left as is. "x-private"
-    if (privateuse)
-        canonical += "-" + privateuse;
-
-    return canonical;
+    return localeObj;
 }
 
 /**
@@ -916,7 +927,46 @@ function CanonicalizeLanguageTag(locale) {
     var localeObj = parseLanguageTag(locale);
     assert(localeObj !== null, "CanonicalizeLanguageTag");
 
-    return CanonicalizeLanguageTagFromObject(localeObj);
+    return StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj));
+}
+
+/**
+ * Returns the string representation of the given language tag object.
+ */
+function StringFromLanguageTagObject(localeObj) {
+    assert(IsObject(localeObj), "StringFromLanguageTagObject");
+
+    // Handle grandfathered language tags.
+    if (hasOwn("grandfathered", localeObj))
+        return localeObj.locale;
+
+    var {
+        language,
+        script,
+        region,
+        variants,
+        extensions,
+        privateuse,
+    } = localeObj;
+
+    var canonical = language;
+
+    if (script !== undefined)
+        canonical += "-" + script;
+
+    if (region !== undefined)
+        canonical += "-" + region;
+
+    if (variants.length > 0)
+        canonical += "-" + callFunction(std_Array_join, variants, "-");
+
+    if (extensions.length > 0)
+        canonical += "-" + callFunction(std_Array_join, extensions, "-");
+
+    if (privateuse !== undefined)
+        canonical += "-" + privateuse;
+
+    return canonical;
 }
 
 /**
@@ -969,7 +1019,7 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
     if (localeObj === null)
         ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, locale);
 
-    return CanonicalizeLanguageTagFromObject(localeObj);
+    return StringFromLanguageTagObject(CanonicalizeLanguageTagObject(localeObj));
 }
 
 // The last-ditch locale is used if none of the available locales satisfies a
@@ -1021,7 +1071,7 @@ function DefaultLocaleIgnoringAvailableLocales() {
     if (candidate === null) {
         candidate = lastDitchLocale();
     } else {
-        candidate = CanonicalizeLanguageTagFromObject(candidate);
+        candidate = StringFromLanguageTagObject(CanonicalizeLanguageTagObject(candidate));
 
         // The default locale must be in [[availableLocales]], and that list
         // must not contain any locales with Unicode extension sequences, so
