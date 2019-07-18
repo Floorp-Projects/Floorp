@@ -177,7 +177,7 @@ sealed class Event {
                 }
 
             val countLabel: String
-                get() = "${source.searchEngine.name.toLowerCase(Locale.ROOT)}.$label"
+                get() = "${source.searchEngine.identifier.toLowerCase(Locale.ROOT)}.$label"
 
             val sourceLabel: String
                 get() = "${source.descriptor}.$label"

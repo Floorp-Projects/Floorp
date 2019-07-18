@@ -329,6 +329,7 @@ quick_action_sheet:
 metrics:
   default_browser:
     type: boolean
+    lifetime: application
     description: >
       Is Fenix the default browser?
     send_in_pings:
@@ -361,6 +362,7 @@ metrics:
     expires: "2019-09-01"
   mozilla_products:
     type: string_list
+    lifetime: application
     description: >
       A list of all the Mozilla products installed on device. We currently scan for: Firefox, Firefox Beta,
        Firefox Aurora, Firefox Nightly, Firefox Fdroid, Firefox Lite, Reference Browser, Reference Browser Debug,
@@ -376,8 +378,9 @@ metrics:
     expires: "2019-09-01"
   default_moz_browser:
     type: string
+    lifetime: application
     description: >
-      The name of the default browser on device if and only if it's a Mozilla owned product, otherwise empty string
+      The name of the default browser on device if and only if it's a Mozilla owned product
     send_in_pings:
     - metrics
     bugs:
@@ -391,6 +394,7 @@ metrics:
 search.default_engine:
   code:
     type: string
+    lifetime: application
     description: >
       If the search engine is pre-loaded with Fenix this value
       will be the search engine identifier. If it's a custom search engine
@@ -407,6 +411,7 @@ search.default_engine:
     expires: "2019-09-01"
   name:
     type: string
+    lifetime: application
     description: >
       If the search engine is pre-loaded with Fenix this value
       will be the search engine name. If it's a custom search engine
@@ -423,6 +428,7 @@ search.default_engine:
     expires: "2019-09-01"
   submission_url:
     type: string
+    lifetime: application
     description: >
       If the search engine is pre-loaded with Fenix this value
       will be he base URL we use to build the search query for the search engine.

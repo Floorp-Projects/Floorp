@@ -270,7 +270,9 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
             Metrics.apply {
                 defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
-                defaultMozBrowser.set(MozillaProductDetector.getMozillaBrowserDefault(context) ?: "")
+                MozillaProductDetector.getMozillaBrowserDefault(context)?.also {
+                    defaultMozBrowser.set(it)
+                }
                 mozillaProducts.set(MozillaProductDetector.getInstalledMozillaProducts(context))
             }
 
