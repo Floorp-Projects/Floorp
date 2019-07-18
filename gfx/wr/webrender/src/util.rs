@@ -4,8 +4,8 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
-use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
+use euclid::{Point2D, Rect, Size2D, Vector2D};
+use euclid::{default, Transform2D, Transform3D, Scale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt, ptr};
@@ -119,8 +119,8 @@ impl<T> VecHelper<T> for Vec<T> {
 #[derive(Debug, Clone, Copy, MallocSizeOf)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct ScaleOffset {
-    pub scale: Vector2D<f32>,
-    pub offset: Vector2D<f32>,
+    pub scale: default::Vector2D<f32>,
+    pub offset: default::Vector2D<f32>,
 }
 
 impl ScaleOffset {
@@ -134,7 +134,7 @@ impl ScaleOffset {
     // Construct a ScaleOffset from a transform. Returns
     // None if the matrix is not a pure scale / translation.
     pub fn from_transform<F, T>(
-        m: &TypedTransform3D<f32, F, T>,
+        m: &Transform3D<f32, F, T>,
     ) -> Option<ScaleOffset> {
 
         // To check that we have a pure scale / translation:
@@ -178,7 +178,7 @@ impl ScaleOffset {
         }
     }
 
-    pub fn offset(&self, offset: Vector2D<f32>) -> Self {
+    pub fn offset(&self, offset: default::Vector2D<f32>) -> Self {
         self.accumulate(
             &ScaleOffset {
                 scale: Vector2D::new(1.0, 1.0),
@@ -189,7 +189,7 @@ impl ScaleOffset {
 
     /// Produce a ScaleOffset that includes both self and other.
     /// The 'self' ScaleOffset is applied after other.
-    /// This is equivalent to `TypedTransform3D::pre_mul`.
+    /// This is equivalent to `Transform3D::pre_transform`.
     pub fn accumulate(&self, other: &ScaleOffset) -> Self {
         ScaleOffset {
             scale: Vector2D::new(
@@ -203,34 +203,34 @@ impl ScaleOffset {
         }
     }
 
-    pub fn map_rect<F, T>(&self, rect: &TypedRect<f32, F>) -> TypedRect<f32, T> {
-        TypedRect::new(
-            TypedPoint2D::new(
+    pub fn map_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+        Rect::new(
+            Point2D::new(
                 rect.origin.x * self.scale.x + self.offset.x,
                 rect.origin.y * self.scale.y + self.offset.y,
             ),
-            TypedSize2D::new(
+            Size2D::new(
                 rect.size.width * self.scale.x,
                 rect.size.height * self.scale.y,
             )
         )
     }
 
-    pub fn unmap_rect<F, T>(&self, rect: &TypedRect<f32, F>) -> TypedRect<f32, T> {
-        TypedRect::new(
-            TypedPoint2D::new(
+    pub fn unmap_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+        Rect::new(
+            Point2D::new(
                 (rect.origin.x - self.offset.x) / self.scale.x,
                 (rect.origin.y - self.offset.y) / self.scale.y,
             ),
-            TypedSize2D::new(
+            Size2D::new(
                 rect.size.width / self.scale.x,
                 rect.size.height / self.scale.y,
             )
         )
     }
 
-    pub fn to_transform<F, T>(&self) -> TypedTransform3D<f32, F, T> {
-        TypedTransform3D::row_major(
+    pub fn to_transform<F, T>(&self) -> Transform3D<f32, F, T> {
+        Transform3D::row_major(
             self.scale.x,
             0.0,
             0.0,
@@ -264,8 +264,8 @@ pub trait MatrixHelpers<Src, Dst> {
     /// Check if the matrix post-scaling on either the X or Y axes could cause geometry
     /// transformed by this matrix to have scaling exceeding the supplied limit.
     fn exceeds_2d_scale(&self, limit: f64) -> bool;
-    fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>>;
-    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>>;
+    fn inverse_project(&self, target: &Point2D<f32, Dst>) -> Option<Point2D<f32, Src>>;
+    fn inverse_rect_footprint(&self, rect: &Rect<f32, Dst>) -> Option<Rect<f32, Src>>;
     fn transform_kind(&self) -> TransformedRectKind;
     fn is_simple_translation(&self) -> bool;
     fn is_simple_2d_translation(&self) -> bool;
@@ -274,13 +274,13 @@ pub trait MatrixHelpers<Src, Dst> {
     /// This function returns a point in the `Src` space that projects into zero XY.
     /// It ignores the Z coordinate and is usable for "flattened" transformations,
     /// since they are not generally inversible.
-    fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>>;
+    fn inverse_project_2d_origin(&self) -> Option<Point2D<f32, Src>>;
     /// Turn Z transformation into identity. This is useful when crossing "flat"
     /// transform styled stacking contexts upon traversing the coordinate systems.
     fn flatten_z_output(&mut self);
 }
 
-impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
+impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
     fn preserves_2d_axis_alignment(&self) -> bool {
         if self.m14 != 0.0 || self.m24 != 0.0 {
             return false;
@@ -328,9 +328,9 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         self.m21 * self.m21 + self.m22 * self.m22 > limit2
     }
 
-    fn inverse_project(&self, target: &TypedPoint2D<f32, Dst>) -> Option<TypedPoint2D<f32, Src>> {
-        let m: TypedTransform2D<f32, Src, Dst>;
-        m = TypedTransform2D::column_major(
+    fn inverse_project(&self, target: &Point2D<f32, Dst>) -> Option<Point2D<f32, Src>> {
+        let m: Transform2D<f32, Src, Dst>;
+        m = Transform2D::column_major(
             self.m11 - target.x * self.m14,
             self.m21 - target.x * self.m24,
             self.m41 - target.x * self.m44,
@@ -338,11 +338,11 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
             self.m22 - target.y * self.m24,
             self.m42 - target.y * self.m44,
         );
-        m.inverse().map(|inv| TypedPoint2D::new(inv.m31, inv.m32))
+        m.inverse().map(|inv| Point2D::new(inv.m31, inv.m32))
     }
 
-    fn inverse_rect_footprint(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>> {
-        Some(TypedRect::from_points(&[
+    fn inverse_rect_footprint(&self, rect: &Rect<f32, Dst>) -> Option<Rect<f32, Src>> {
+        Some(Rect::from_points(&[
             self.inverse_project(&rect.origin)?,
             self.inverse_project(&rect.top_right())?,
             self.inverse_project(&rect.bottom_left())?,
@@ -385,12 +385,12 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
         self.m11 * self.m22 - self.m12 * self.m21
     }
 
-    fn inverse_project_2d_origin(&self) -> Option<TypedPoint2D<f32, Src>> {
+    fn inverse_project_2d_origin(&self) -> Option<Point2D<f32, Src>> {
         let det = self.determinant_2d();
         if det != 0.0 {
             let x = (self.m21 * self.m42 - self.m41 * self.m22) / det;
             let y = (self.m12 * self.m41 - self.m11 * self.m42) / det;
-            Some(TypedPoint2D::new(x, y))
+            Some(Point2D::new(x, y))
         } else {
             None
         }
@@ -412,11 +412,11 @@ where
     fn is_well_formed_and_nonempty(&self) -> bool;
 }
 
-impl<U> RectHelpers<U> for TypedRect<f32, U> {
+impl<U> RectHelpers<U> for Rect<f32, U> {
     fn from_floats(x0: f32, y0: f32, x1: f32, y1: f32) -> Self {
-        TypedRect::new(
-            TypedPoint2D::new(x0, y0),
-            TypedSize2D::new(x1 - x0, y1 - y0),
+        Rect::new(
+            Point2D::new(x0, y0),
+            Size2D::new(x1 - x0, y1 - y0),
         )
     }
 
@@ -445,10 +445,10 @@ pub fn pack_as_float(value: u32) -> f32 {
 
 #[inline]
 fn extract_inner_rect_impl<U>(
-    rect: &TypedRect<f32, U>,
+    rect: &Rect<f32, U>,
     radii: &BorderRadius,
     k: f32,
-) -> Option<TypedRect<f32, U>> {
+) -> Option<Rect<f32, U>> {
     // `k` defines how much border is taken into account
     // We enforce the offsets to be rounded to pixel boundaries
     // by `ceil`-ing and `floor`-ing them
@@ -460,9 +460,9 @@ fn extract_inner_rect_impl<U>(
         (rect.size.height - k * radii.bottom_left.height.max(radii.bottom_right.height)).floor();
 
     if xl <= xr && yt <= yb {
-        Some(TypedRect::new(
-            TypedPoint2D::new(rect.origin.x + xl, rect.origin.y + yt),
-            TypedSize2D::new(xr - xl, yb - yt),
+        Some(Rect::new(
+            Point2D::new(rect.origin.x + xl, rect.origin.y + yt),
+            Size2D::new(xr - xl, yb - yt),
         ))
     } else {
         None
@@ -472,9 +472,9 @@ fn extract_inner_rect_impl<U>(
 /// Return an aligned rectangle that is inside the clip region and doesn't intersect
 /// any of the bounding rectangles of the rounded corners.
 pub fn extract_inner_rect_safe<U>(
-    rect: &TypedRect<f32, U>,
+    rect: &Rect<f32, U>,
     radii: &BorderRadius,
-) -> Option<TypedRect<f32, U>> {
+) -> Option<Rect<f32, U>> {
     // value of `k==1.0` is used for extraction of the corner rectangles
     // see `SEGMENT_CORNER_*` in `clip_shared.glsl`
     extract_inner_rect_impl(rect, radii, 1.0)
@@ -483,7 +483,8 @@ pub fn extract_inner_rect_safe<U>(
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use euclid::{Point2D, Angle, Transform3D};
+    use euclid::default::{Point2D, Transform3D};
+    use euclid::Angle;
     use std::f32::consts::PI;
 
     #[test]
@@ -516,7 +517,7 @@ pub mod test {
         validate_convert(&xref);
 
         let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
-                        .pre_mul(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+                        .pre_transform(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
         validate_convert(&xref);
     }
 
@@ -544,12 +545,12 @@ pub mod test {
         validate_inverse(&xref);
 
         let xref = LayoutTransform::create_translation(50.0, 240.0, 0.0)
-                        .pre_mul(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
+                        .pre_transform(&LayoutTransform::create_scale(30.0, 11.0, 1.0));
         validate_inverse(&xref);
     }
 
     fn validate_accumulate(x0: &LayoutTransform, x1: &LayoutTransform) {
-        let x = x0.pre_mul(x1);
+        let x = x0.pre_transform(x1);
 
         let s0 = ScaleOffset::from_transform(x0).unwrap();
         let s1 = ScaleOffset::from_transform(x1).unwrap();
@@ -580,7 +581,7 @@ pub mod test {
         m.m42 = 0.5;
         let origin = m.inverse_project_2d_origin().unwrap();
         assert_eq!(origin, Point2D::new(1.0, 0.5));
-        assert_eq!(m.transform_point2d(&origin), Some(Point2D::zero()));
+        assert_eq!(m.transform_point2d(origin), Some(Point2D::zero()));
     }
 }
 
@@ -597,7 +598,7 @@ impl MaxRect for DeviceIntRect {
     }
 }
 
-impl<U> MaxRect for TypedRect<f32, U> {
+impl<U> MaxRect for Rect<f32, U> {
     fn max_rect() -> Self {
         // Having an unlimited bounding box is fine up until we try
         // to cast it to `i32`, where we get `-2147483648` for any
@@ -607,9 +608,9 @@ impl<U> MaxRect for TypedRect<f32, U> {
         // with explanation left as an exercise for the reader.
         const MAX_COORD: f32 = 1.0e9;
 
-        TypedRect::new(
-            TypedPoint2D::new(-MAX_COORD, -MAX_COORD),
-            TypedSize2D::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
+        Rect::new(
+            Point2D::new(-MAX_COORD, -MAX_COORD),
+            Size2D::new(2.0 * MAX_COORD, 2.0 * MAX_COORD),
         )
     }
 }
@@ -619,12 +620,12 @@ impl<U> MaxRect for TypedRect<f32, U> {
 #[derive(Debug, MallocSizeOf)]
 pub enum FastTransform<Src, Dst> {
     /// A simple offset, which can be used without doing any matrix math.
-    Offset(TypedVector2D<f32, Src>),
+    Offset(Vector2D<f32, Src>),
 
     /// A 2D transformation with an inverse.
     Transform {
-        transform: TypedTransform3D<f32, Src, Dst>,
-        inverse: Option<TypedTransform3D<f32, Dst, Src>>,
+        transform: Transform3D<f32, Src, Dst>,
+        inverse: Option<Transform3D<f32, Dst, Src>>,
         is_2d: bool,
     },
 }
@@ -639,16 +640,16 @@ impl<Src, Dst> Copy for FastTransform<Src, Dst> { }
 
 impl<Src, Dst> FastTransform<Src, Dst> {
     pub fn identity() -> Self {
-        FastTransform::Offset(TypedVector2D::zero())
+        FastTransform::Offset(Vector2D::zero())
     }
 
-    pub fn with_vector(offset: TypedVector2D<f32, Src>) -> Self {
+    pub fn with_vector(offset: Vector2D<f32, Src>) -> Self {
         FastTransform::Offset(offset)
     }
 
     pub fn with_scale_offset(scale_offset: ScaleOffset) -> Self {
         if scale_offset.scale == Vector2D::new(1.0, 1.0) {
-            FastTransform::Offset(TypedVector2D::from_untyped(&scale_offset.offset))
+            FastTransform::Offset(Vector2D::from_untyped(scale_offset.offset))
         } else {
             FastTransform::Transform {
                 transform: scale_offset.to_transform(),
@@ -659,19 +660,19 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     }
 
     #[inline(always)]
-    pub fn with_transform(transform: TypedTransform3D<f32, Src, Dst>) -> Self {
+    pub fn with_transform(transform: Transform3D<f32, Src, Dst>) -> Self {
         if transform.is_simple_2d_translation() {
-            return FastTransform::Offset(TypedVector2D::new(transform.m41, transform.m42));
+            return FastTransform::Offset(Vector2D::new(transform.m41, transform.m42));
         }
         let inverse = transform.inverse();
         let is_2d = transform.is_2d();
         FastTransform::Transform { transform, inverse, is_2d}
     }
 
-    pub fn to_transform(&self) -> Cow<TypedTransform3D<f32, Src, Dst>> {
+    pub fn to_transform(&self) -> Cow<Transform3D<f32, Src, Dst>> {
         match *self {
             FastTransform::Offset(offset) => Cow::Owned(
-                TypedTransform3D::create_translation(offset.x, offset.y, 0.0)
+                Transform3D::create_translation(offset.x, offset.y, 0.0)
             ),
             FastTransform::Transform { ref transform, .. } => Cow::Borrowed(transform),
         }
@@ -682,19 +683,19 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     pub fn is_identity(&self)-> bool {
         match *self {
             FastTransform::Offset(offset) => {
-                offset == TypedVector2D::zero()
+                offset == Vector2D::zero()
             }
             FastTransform::Transform { ref transform, .. } => {
-                *transform == TypedTransform3D::identity()
+                *transform == Transform3D::identity()
             }
         }
     }
 
-    pub fn post_mul<NewDst>(&self, other: &FastTransform<Dst, NewDst>) -> FastTransform<Src, NewDst> {
+    pub fn post_transform<NewDst>(&self, other: &FastTransform<Dst, NewDst>) -> FastTransform<Src, NewDst> {
         match *self {
             FastTransform::Offset(offset) => match *other {
                 FastTransform::Offset(other_offset) => {
-                    FastTransform::Offset(offset + other_offset * TypedScale::<_, _, Src>::new(1.0))
+                    FastTransform::Offset(offset + other_offset * Scale::<_, _, Src>::new(1.0))
                 }
                 FastTransform::Transform { transform: ref other_transform, .. } => {
                     FastTransform::with_transform(
@@ -714,9 +715,9 @@ impl<Src, Dst> FastTransform<Src, Dst> {
                 }
                 FastTransform::Transform { transform: ref other_transform, inverse: ref other_inverse, is_2d: other_is_2d } => {
                     FastTransform::Transform {
-                        transform: transform.post_mul(other_transform),
+                        transform: transform.post_transform(other_transform),
                         inverse: inverse.as_ref().and_then(|self_inv|
-                            other_inverse.as_ref().map(|other_inv| self_inv.pre_mul(other_inv))
+                            other_inverse.as_ref().map(|other_inv| self_inv.pre_transform(other_inv))
                         ),
                         is_2d: is_2d & other_is_2d,
                     }
@@ -725,26 +726,26 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    pub fn pre_mul<NewSrc>(
+    pub fn pre_transform<NewSrc>(
         &self,
         other: &FastTransform<NewSrc, Src>
     ) -> FastTransform<NewSrc, Dst> {
-        other.post_mul(self)
+        other.post_transform(self)
     }
 
-    pub fn pre_translate(&self, other_offset: &TypedVector2D<f32, Src>) -> Self {
+    pub fn pre_translate(&self, other_offset: Vector2D<f32, Src>) -> Self {
         match *self {
-            FastTransform::Offset(ref offset) =>
-                FastTransform::Offset(*offset + *other_offset),
+            FastTransform::Offset(offset) =>
+                FastTransform::Offset(offset + other_offset),
             FastTransform::Transform { transform, .. } =>
                 FastTransform::with_transform(transform.pre_translate(other_offset.to_3d()))
         }
     }
 
-    pub fn post_translate(&self, other_offset: &TypedVector2D<f32, Dst>) -> Self {
+    pub fn post_translate(&self, other_offset: Vector2D<f32, Dst>) -> Self {
         match *self {
-            FastTransform::Offset(ref offset) => {
-                FastTransform::Offset(*offset + *other_offset * TypedScale::<_, _, Src>::new(1.0))
+            FastTransform::Offset(offset) => {
+                FastTransform::Offset(offset + other_offset * Scale::<_, _, Src>::new(1.0))
             }
             FastTransform::Transform { ref transform, .. } => {
                 let transform = transform.post_translate(other_offset.to_3d());
@@ -765,11 +766,11 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     }
 
     #[inline(always)]
-    pub fn transform_point2d(&self, point: &TypedPoint2D<f32, Src>) -> Option<TypedPoint2D<f32, Dst>> {
+    pub fn transform_point2d(&self, point: Point2D<f32, Src>) -> Option<Point2D<f32, Dst>> {
         match *self {
             FastTransform::Offset(offset) => {
-                let new_point = *point + offset;
-                Some(TypedPoint2D::from_untyped(&new_point.to_untyped()))
+                let new_point = point + offset;
+                Some(Point2D::from_untyped(new_point.to_untyped()))
             }
             FastTransform::Transform { ref transform, .. } => transform.transform_point2d(point),
         }
@@ -779,7 +780,7 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     pub fn inverse(&self) -> Option<FastTransform<Dst, Src>> {
         match *self {
             FastTransform::Offset(offset) =>
-                Some(FastTransform::Offset(TypedVector2D::new(-offset.x, -offset.y))),
+                Some(FastTransform::Offset(Vector2D::new(-offset.x, -offset.y))),
             FastTransform::Transform { transform, inverse: Some(inverse), is_2d, } =>
                 Some(FastTransform::Transform {
                     transform: inverse,
@@ -792,14 +793,14 @@ impl<Src, Dst> FastTransform<Src, Dst> {
     }
 }
 
-impl<Src, Dst> From<TypedTransform3D<f32, Src, Dst>> for FastTransform<Src, Dst> {
-    fn from(transform: TypedTransform3D<f32, Src, Dst>) -> Self {
+impl<Src, Dst> From<Transform3D<f32, Src, Dst>> for FastTransform<Src, Dst> {
+    fn from(transform: Transform3D<f32, Src, Dst>) -> Self {
         FastTransform::with_transform(transform)
     }
 }
 
-impl<Src, Dst> From<TypedVector2D<f32, Src>> for FastTransform<Src, Dst> {
-    fn from(vector: TypedVector2D<f32, Src>) -> Self {
+impl<Src, Dst> From<Vector2D<f32, Src>> for FastTransform<Src, Dst> {
+    fn from(vector: Vector2D<f32, Src>) -> Self {
         FastTransform::with_vector(vector)
     }
 }
@@ -808,17 +809,17 @@ pub type LayoutFastTransform = FastTransform<LayoutPixel, LayoutPixel>;
 pub type LayoutToWorldFastTransform = FastTransform<LayoutPixel, WorldPixel>;
 
 pub fn project_rect<F, T>(
-    transform: &TypedTransform3D<f32, F, T>,
-    rect: &TypedRect<f32, F>,
-    bounds: &TypedRect<f32, T>,
-) -> Option<TypedRect<f32, T>>
+    transform: &Transform3D<f32, F, T>,
+    rect: &Rect<f32, F>,
+    bounds: &Rect<f32, T>,
+) -> Option<Rect<f32, T>>
  where F: fmt::Debug
 {
     let homogens = [
-        transform.transform_point2d_homogeneous(&rect.origin),
-        transform.transform_point2d_homogeneous(&rect.top_right()),
-        transform.transform_point2d_homogeneous(&rect.bottom_left()),
-        transform.transform_point2d_homogeneous(&rect.bottom_right()),
+        transform.transform_point2d_homogeneous(rect.origin),
+        transform.transform_point2d_homogeneous(rect.top_right()),
+        transform.transform_point2d_homogeneous(rect.bottom_left()),
+        transform.transform_point2d_homogeneous(rect.bottom_right()),
     ];
 
     // Note: we only do the full frustum collision when the polygon approaches the camera plane.
@@ -844,19 +845,19 @@ pub fn project_rect<F, T>(
             return None
         }
 
-        Some(TypedRect::from_points(results
+        Some(Rect::from_points(results
             .into_iter()
             // filter out parts behind the view plane
             .flat_map(|poly| &poly.points)
             .map(|p| {
-                let mut homo = transform.transform_point2d_homogeneous(&p.to_2d());
+                let mut homo = transform.transform_point2d_homogeneous(p.to_2d());
                 homo.w = homo.w.max(0.00000001); // avoid infinite values
                 homo.to_point2d().unwrap()
             })
         ))
     } else {
         // we just checked for all the points to be in positive hemisphere, so `unwrap` is valid
-        Some(TypedRect::from_points(&[
+        Some(Rect::from_points(&[
             homogens[0].to_point2d().unwrap(),
             homogens[1].to_point2d().unwrap(),
             homogens[2].to_point2d().unwrap(),
@@ -869,7 +870,7 @@ pub fn raster_rect_to_device_pixels(
     rect: RasterRect,
     device_pixel_scale: DevicePixelScale,
 ) -> DeviceRect {
-    let world_rect = rect * TypedScale::new(1.0);
+    let world_rect = rect * Scale::new(1.0);
     let device_rect = world_rect * device_pixel_scale;
     device_rect.round_out()
 }
@@ -1128,7 +1129,7 @@ impl<T: MallocSizeOf> MallocSizeOf for PrimaryArc<T> {
 ///
 /// * Removed `xMajor` parameter.
 pub fn scale_factors<Src, Dst>(
-    mat: &TypedTransform3D<f32, Src, Dst>
+    mat: &Transform3D<f32, Src, Dst>
 ) -> (f32, f32) {
     // Determinant is just of the 2D component.
     let det = mat.m11 * mat.m22 - mat.m12 * mat.m21;
