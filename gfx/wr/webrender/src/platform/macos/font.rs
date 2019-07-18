@@ -14,12 +14,10 @@ use core_graphics::base::{kCGImageAlphaNoneSkipFirst, kCGImageAlphaPremultiplied
 use core_graphics::base::{kCGBitmapByteOrder32Little};
 use core_graphics::color_space::CGColorSpace;
 use core_graphics::context::CGContext;
-#[cfg(not(feature = "pathfinder"))]
 use core_graphics::context::{CGBlendMode, CGTextDrawingMode};
 use core_graphics::data_provider::CGDataProvider;
 use core_graphics::font::{CGFont, CGGlyph};
 use core_graphics::geometry::{CGAffineTransform, CGPoint, CGSize};
-#[cfg(not(feature = "pathfinder"))]
 use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
@@ -27,9 +25,6 @@ use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTr
 use euclid::Size2D;
 use crate::gamma_lut::{ColorLut, GammaLut};
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
-#[cfg(feature = "pathfinder")]
-use crate::glyph_rasterizer::NativeFontHandleWrapper;
-#[cfg(not(feature = "pathfinder"))]
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};
 use crate::internal_types::{FastHashMap, ResourceCacheError};
 use std::collections::hash_map::Entry;
@@ -427,7 +422,6 @@ impl FontContext {
     }
 
     // Assumes the pixels here are linear values from CG
-    #[cfg(not(feature = "pathfinder"))]
     fn gamma_correct_pixels(
         &self,
         pixels: &mut Vec<u8>,
@@ -495,7 +489,6 @@ impl FontContext {
         }
     }
 
-    #[cfg(not(feature = "pathfinder"))]
     pub fn rasterize_glyph(&mut self, font: &FontInstance, key: &GlyphKey) -> GlyphRasterResult {
         let (x_scale, y_scale) = font.transform.compute_scale().unwrap_or((1.0, 1.0));
         let scale = font.oversized_scale_factor(x_scale, y_scale);
@@ -735,13 +728,6 @@ impl FontContext {
             },
             bytes: rasterized_pixels,
         })
-    }
-}
-
-#[cfg(feature = "pathfinder")]
-impl<'a> Into<CGFont> for NativeFontHandleWrapper<'a> {
-    fn into(self) -> CGFont {
-        (self.0).0.clone()
     }
 }
 
