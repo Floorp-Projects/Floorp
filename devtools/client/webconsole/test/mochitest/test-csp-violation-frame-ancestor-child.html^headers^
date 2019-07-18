@@ -1,0 +1,1 @@
+Content-Security-Policy: frame-ancestors 'none';
