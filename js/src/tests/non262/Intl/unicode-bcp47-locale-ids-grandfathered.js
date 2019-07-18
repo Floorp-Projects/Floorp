@@ -34,8 +34,8 @@ var regularGrandfatheredWithExtlangLike = [
 // which contain a variant-like subtag.
 var regularGrandfatheredWithVariantLike = {
     "art-lojban": "jbo",
-    "cel-gaulish": "xtg-x-cel-gaulish",
-    "zh-guoyu": "zh",
+    "cel-gaulish": "cel-gaulish",
+    "zh-guoyu": "cmn",
     "zh-hakka": "hak",
     "zh-xiang": "hsn",
 };
