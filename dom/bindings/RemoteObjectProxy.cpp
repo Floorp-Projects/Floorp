@@ -172,13 +172,23 @@ const char* RemoteObjectProxyBase::className(
 
 void RemoteObjectProxyBase::GetOrCreateProxyObject(
     JSContext* aCx, void* aNative, const js::Class* aClasp,
-    JS::MutableHandle<JSObject*> aProxy, bool& aNewObjectCreated) const {
+    JS::Handle<JSObject*> aTransplantTo, JS::MutableHandle<JSObject*> aProxy,
+    bool& aNewObjectCreated) const {
   xpc::CompartmentPrivate* priv =
       xpc::CompartmentPrivate::Get(JS::CurrentGlobalOrNull(aCx));
   xpc::CompartmentPrivate::RemoteProxyMap& map = priv->GetRemoteProxyMap();
   auto result = map.lookupForAdd(aNative);
   if (result) {
+    MOZ_ASSERT(!aTransplantTo,
+               "No existing value allowed if we're doing a transplant");
+
     aProxy.set(result->value());
+
+    // During a transplant, we put an object that is temporarily not a
+    // proxy object into the map. Make sure that we don't return one of
+    // these objects in the middle of a transplant.
+    MOZ_RELEASE_ASSERT(js::GetObjectClass(aProxy) == aClasp);
+
     return;
   }
 
@@ -193,7 +203,13 @@ void RemoteObjectProxyBase::GetOrCreateProxyObject(
 
   aNewObjectCreated = true;
 
-  if (!map.add(result, aNative, obj)) {
+  // If we're transplanting onto an object, we want to make sure that it does
+  // not have the same class as aClasp to ensure that the release assert earlier
+  // in this function will actually fire if we try to return a proxy object in
+  // the middle of a transplant.
+  MOZ_ASSERT_IF(aTransplantTo, js::GetObjectClass(aTransplantTo) != aClasp);
+
+  if (!map.add(result, aNative, aTransplantTo ? aTransplantTo : obj)) {
     return;
   }
 
