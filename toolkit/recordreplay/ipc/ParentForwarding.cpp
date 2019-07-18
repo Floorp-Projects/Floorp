@@ -140,6 +140,12 @@ static bool HandleMessageInMiddleman(ipc::Side aSide,
     return false;
   }
 
+  // Asynchronous replies to messages originally sent by the middleman need to
+  // be handled in the middleman.
+  if (ipc::MessageChannel::MessageOriginatesFromMiddleman(aMessage)) {
+    return true;
+  }
+
   return false;
 }
 
