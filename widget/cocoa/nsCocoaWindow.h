@@ -346,6 +346,7 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
                 bool aConstrainToCurrentScreen);
 
   inline bool ShouldToggleNativeFullscreen(bool aFullScreen, bool aUseSystemTransition);
+  void UpdateFullscreenState(bool aFullScreen, bool aNativeMode);
   nsresult DoMakeFullScreen(bool aFullScreen, bool aUseSystemTransition);
 
   virtual already_AddRefed<nsIWidget> AllocateChildPopupWidget() override {

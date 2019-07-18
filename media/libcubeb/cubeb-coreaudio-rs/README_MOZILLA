@@ -1,0 +1,6 @@
+The source from this directory was copied from the cubeb-coreaudio-rs
+git repository using the update.sh script.
+
+The cubeb-coreaudio-rs git repository is: https://github.com/ChunMinChang/cubeb-coreaudio-rs
+
+The git commit ID used was c5b109e0c51bcd24fddd069bcf994aa0005a6497 (2019-06-25 11:37:14 -0700)

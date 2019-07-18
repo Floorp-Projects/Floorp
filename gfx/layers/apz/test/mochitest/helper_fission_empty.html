@@ -1,14 +1,22 @@
 <!DOCTYPE html>
 <html>
  <meta charset="utf-8">
+ <script src="apz_test_utils.js"></script>
  <script>
 // This is an empty document that serves as a OOPIF content document that be
 // reused by different fission subtests. The subtest can eval stuff in this
 // document using the sendToOopif helper and thereby populate this document
 // with whatever is needed. This allows the subtest to more "contained" in a
 // single file and avoids having to create new dummy files for each subtest.
-function loaded() {
+async function loaded() {
   window.dispatchEvent(new Event("FissionTestHelper:Init"));
+  // Wait a couple of animation frames before sending the load, to ensure that
+  // this OOPIF's layer tree has been sent to the compositor. We use this
+  // instead of things like flushApzRepaints and/or waitForAllPaints because
+  // this page is running without SpecialPowers and I couldn't figure out a good
+  // way to get a hold of a things like Services.obs or DOMWindowUtils easily.
+  await waitForFrame();
+  await waitForFrame();
   FissionTestHelper.fireEventInEmbedder("OOPIF:Load", {content: window.location.href});
 }
  </script>

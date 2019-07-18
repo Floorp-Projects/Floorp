@@ -382,8 +382,8 @@ void AudioNodeEngine::ProcessBlock(AudioNodeStream* aStream, GraphTime aFrom,
 }
 
 void AudioNodeEngine::ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                                           const OutputChunks& aInput,
-                                           OutputChunks& aOutput,
+                                           Span<const AudioBlock> aInput,
+                                           Span<AudioBlock> aOutput,
                                            bool* aFinished) {
   MOZ_ASSERT(mInputCount > 1 || mOutputCount > 1);
   // Only produce one output port, and drop all other input ports.

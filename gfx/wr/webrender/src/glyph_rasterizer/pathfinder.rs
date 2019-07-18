@@ -19,7 +19,6 @@ use std::sync::{Arc, Mutex, MutexGuard};
 use crate::glyph_rasterizer::AddFont;
 use crate::internal_types::ResourceCacheError;
 use crate::glyph_cache::{GlyphCache, GlyphCacheEntry, CachedGlyphInfo};
-use std::collections::hash_map::Entry;
 use std::f32;
 use crate::glyph_rasterizer::{FontInstance, GlyphRasterizer, GlyphFormat, GlyphKey, FontContexts};
 use crate::texture_cache::TextureCache;
@@ -169,20 +168,9 @@ impl GlyphRasterizer {
         // select glyphs that have not been requested yet.
         for glyph_key in glyph_keys {
             let mut cached_glyph_info = None;
-            match glyph_key_cache.entry(glyph_key.clone()) {
-                Entry::Occupied(entry) => {
-                    let value = entry.into_mut();
-                    match *value {
-                        GlyphCacheEntry::Cached(ref glyph_info) => {
-                            cached_glyph_info = Some(glyph_info.clone())
-                        }
-                        GlyphCacheEntry::Blank | GlyphCacheEntry::Pending => {}
-                    }
-                }
-                Entry::Vacant(_) => {}
-            }
-
-            if cached_glyph_info.is_none() {
+            if let Some(GlyphCacheEntry::Cached(ref info)) = glyph_key_cache.try_get(glyph_key) {
+                cached_glyph_info = Some(info.clone());
+            } else {
                 let pathfinder_font_context = self.font_contexts.lock_pathfinder_context();
 
                 let pathfinder_font_instance = pathfinder_font_renderer::FontInstance {
@@ -234,7 +222,7 @@ impl GlyphRasterizer {
                 None => GlyphCacheEntry::Blank,
             };
 
-            glyph_key_cache.insert(glyph_key.clone(), handle);
+            glyph_key_cache.add_glyph(glyph_key.clone(), handle);
         }
     }
 

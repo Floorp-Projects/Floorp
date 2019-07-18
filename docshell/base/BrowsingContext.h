@@ -172,6 +172,10 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // CacheChildren.
   bool IsCached();
 
+  // Check that this browsing context is targetable for navigations (i.e. that
+  // it is neither closed, cached, nor discarded).
+  bool IsTargetable();
+
   const nsString& Name() const { return mName; }
   void GetName(nsAString& aName) { aName = mName; }
   bool NameEquals(const nsAString& aName) { return mName.Equals(aName); }
@@ -396,8 +400,6 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   // Performs access control to check that 'this' can access 'aContext'.
   bool CanAccess(BrowsingContext* aContext);
-
-  bool IsActive() const;
 
   // Removes the context from its group and sets mIsDetached to true.
   void Unregister();

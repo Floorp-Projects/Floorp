@@ -184,7 +184,11 @@ var AboutLoginsParent = {
         let messageManager = message.target.messageManager;
         const logins = await this.getAllLogins();
         messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-        const breachesByLoginGUID = await this.getBreachesForLogins(logins);
+        const breaches = await RemoteSettings("fxmonitor-breaches").get();
+        const breachesByLoginGUID = await this.getBreachesForLogins(
+          logins,
+          breaches
+        );
         messageManager.sendAsyncMessage(
           "AboutLogins:UpdateBreaches",
           breachesByLoginGUID
@@ -374,21 +378,20 @@ var AboutLoginsParent = {
     }
   },
 
-  async getBreachesForLogins(logins) {
-    const breaches = await RemoteSettings("fxmonitor-breaches").get();
-    const breachHostMap = new Map();
-    for (const breach of breaches) {
-      breachHostMap.set(breach.Domain, breach);
-    }
+  async getBreachesForLogins(logins, breaches) {
     const breachesByLoginGUID = new Map();
     for (const login of logins) {
       const loginURI = Services.io.newURI(login.origin);
-      const breach = breachHostMap.get(loginURI.host) || false;
-      if (
-        breach &&
-        login.timePasswordChanged < new Date(breach.BreachDate).getTime()
-      ) {
-        breachesByLoginGUID.set(login.guid, breach);
+      for (const breach of breaches) {
+        if (!breach.Domain) {
+          continue;
+        }
+        if (
+          Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
+          login.timePasswordChanged < new Date(breach.BreachDate).getTime()
+        ) {
+          breachesByLoginGUID.set(login.guid, breach);
+        }
       }
     }
     return breachesByLoginGUID;

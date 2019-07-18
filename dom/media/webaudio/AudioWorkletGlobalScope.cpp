@@ -11,6 +11,7 @@
 #include "AudioWorkletImpl.h"
 #include "jsapi.h"
 #include "mozilla/dom/AudioWorkletGlobalScopeBinding.h"
+#include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/WorkletPrincipal.h"
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
 #include "nsPrintfCString.h"
@@ -284,6 +285,75 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
   }
 
   return res;
+}
+
+bool AudioWorkletGlobalScope::ConstructProcessor(
+    const nsAString& aName,
+    NotNull<StructuredCloneHolder*> aOptionsSerialization,
+    JS::MutableHandle<JSObject*> aRetProcessor) {
+  /**
+   * See the second algorithm at
+   * https://webaudio.github.io/web-audio-api/#instantiation-of-AudioWorkletNode-and-AudioWorkletProcessor
+   */
+  AutoJSAPI jsapi;
+  if (NS_WARN_IF(!jsapi.Init(this))) {
+    return false;
+  }
+  JSContext* cx = jsapi.cx();
+  ErrorResult rv;
+  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565956
+   * 1. Let processorPort be
+   *    StructuredDeserializeWithTransfer(processorPortSerialization,
+   *                                      the current Realm).
+   */
+  /**
+   * 2. Let options be StructuredDeserialize(optionsSerialization,
+   *                                         the current Realm).
+   */
+  JS::Rooted<JS::Value> optionsVal(cx);
+  aOptionsSerialization->Read(this, cx, &optionsVal, rv);
+  if (rv.MaybeSetPendingException(cx)) {
+    return false;
+  }
+  /**
+   * 3. Let processorConstructor be the result of looking up nodeName on the
+   *    AudioWorkletGlobalScope's node name to processor definition map.
+   */
+  RefPtr<AudioWorkletProcessorConstructor> processorConstructor =
+      mNameToProcessorMap.Get(aName);
+  // AudioWorkletNode has already checked the definition exists.
+  // See also https://github.com/WebAudio/web-audio-api/issues/1854
+  MOZ_ASSERT(processorConstructor);
+  /**
+   * 4. Let processor be the result of Construct(processorConstructor,
+   *                                             « options »).
+   */
+  // The options were an object before serialization and so will be an object
+  // if deserialization succeeded above.  toObject() asserts.
+  JS::Rooted<JSObject*> options(cx, &optionsVal.toObject());
+  // Using https://heycam.github.io/webidl/#construct-a-callback-function
+  // See
+  // https://github.com/WebAudio/web-audio-api/pull/1843#issuecomment-478590304
+  RefPtr<AudioWorkletProcessor> processor = processorConstructor->Construct(
+      options, rv, "AudioWorkletProcessor construction",
+      CallbackFunction::eReportExceptions);
+  if (rv.Failed()) {
+    rv.SuppressException();  // already reported
+    return false;
+  }
+  /** TODO https://bugzilla.mozilla.org/show_bug.cgi?id=1565956
+   * but see https://github.com/WebAudio/web-audio-api/issues/1973
+   *
+   * 5. Set processor’s port to processorPort.
+   */
+
+  JS::Rooted<JS::Value> processorVal(cx);
+  if (NS_WARN_IF(!ToJSValue(cx, processor, &processorVal))) {
+    return false;
+  }
+  MOZ_ASSERT(processorVal.isObject());
+  aRetProcessor.set(&processorVal.toObject());
+  return true;
 }
 
 }  // namespace dom

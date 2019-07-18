@@ -82,12 +82,16 @@ class Message extends Component {
       timestampsVisible: PropTypes.bool.isRequired,
       serviceContainer: PropTypes.shape({
         emitNewMessage: PropTypes.func.isRequired,
+        onViewSource: PropTypes.func.isRequired,
         onViewSourceInDebugger: PropTypes.func,
         onViewSourceInScratchpad: PropTypes.func,
         onViewSourceInStyleEditor: PropTypes.func,
         openContextMenu: PropTypes.func.isRequired,
         openLink: PropTypes.func.isRequired,
         sourceMapService: PropTypes.any,
+        canRewind: PropTypes.func.isRequired,
+        jumpToExecutionPoint: PropTypes.func.isRequired,
+        onMessageHover: PropTypes.func.isRequired,
       }),
       notes: PropTypes.arrayOf(
         PropTypes.shape({
@@ -147,6 +151,13 @@ class Message extends Component {
     // making difficult for screen reader users to review output
     e.stopPropagation();
     const { open, dispatch, messageId, onToggle } = this.props;
+
+    // Early exit the function to avoid the message to collapse if the user is
+    // selecting a range in the toggle message.
+    const window = e.target.ownerDocument.defaultView;
+    if (window.getSelection && window.getSelection().type === "Range") {
+      return;
+    }
 
     // If defined on props, we let the onToggle() method handle the toggling,
     // otherwise we toggle the message open/closed ourselves.

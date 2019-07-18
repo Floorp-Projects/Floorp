@@ -57,17 +57,10 @@ async function testIdentityState(hasException) {
     !gProtectionsHandler._protectionsPopup.hasAttribute("detected"),
     "fingerprinters are not detected"
   );
-  if (hasException) {
-    ok(
-      !BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
-      "icon box is visible to indicate the exception"
-    );
-  } else {
-    ok(
-      BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
-      "icon box is not visible"
-    );
-  }
+  ok(
+    !BrowserTestUtils.is_hidden(gProtectionsHandler.iconBox),
+    "icon box is visible regardless the exception"
+  );
 
   promise = waitForContentBlockingEvent();
 

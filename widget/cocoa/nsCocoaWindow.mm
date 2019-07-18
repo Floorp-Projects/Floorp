@@ -1293,7 +1293,14 @@ NS_IMPL_ISUPPORTS0(FullscreenTransitionData)
 }
 @end
 
+static bool AlwaysUsesNativeFullScreen() {
+  return Preferences::GetBool("full-screen-api.macos-native-full-screen", false);
+}
+
 /* virtual */ bool nsCocoaWindow::PrepareForFullscreenTransition(nsISupports** aData) {
+  if (AlwaysUsesNativeFullScreen()) {
+    return false;
+  }
   nsCOMPtr<nsIScreen> widgetScreen = GetWidgetScreen();
   NSScreen* cocoaScreen = ScreenHelperCocoa::CocoaScreenForScreen(widgetScreen);
 
@@ -1343,10 +1350,17 @@ void nsCocoaWindow::WillEnterFullScreen(bool aFullScreen) {
   if (mWidgetListener) {
     mWidgetListener->FullscreenWillChange(aFullScreen);
   }
+  // Update the state to full screen when we are entering, so that we switch to
+  // full screen view as soon as possible.
+  UpdateFullscreenState(aFullScreen, true);
 }
 
 void nsCocoaWindow::EnteredFullScreen(bool aFullScreen, bool aNativeMode) {
   mInFullScreenTransition = false;
+  UpdateFullscreenState(aFullScreen, aNativeMode);
+}
+
+void nsCocoaWindow::UpdateFullscreenState(bool aFullScreen, bool aNativeMode) {
   bool wasInFullscreen = mInFullScreenMode;
   mInFullScreenMode = aFullScreen;
   if (aNativeMode || mInNativeFullScreenMode) {
@@ -1378,7 +1392,7 @@ inline bool nsCocoaWindow::ShouldToggleNativeFullscreen(bool aFullScreen,
 }
 
 nsresult nsCocoaWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen) {
-  return DoMakeFullScreen(aFullScreen, false);
+  return DoMakeFullScreen(aFullScreen, AlwaysUsesNativeFullScreen());
 }
 
 nsresult nsCocoaWindow::MakeFullScreenWithNativeTransition(bool aFullScreen,
@@ -2324,6 +2338,20 @@ already_AddRefed<nsIWidget> nsIWidget::CreateChildWindow() {
   mGeckoWindow->ReportMoveEvent();
 }
 
+- (NSArray<NSWindow*>*)customWindowsToEnterFullScreenForWindow:(NSWindow*)window {
+  return AlwaysUsesNativeFullScreen() ? @[ window ] : nil;
+}
+
+- (void)window:(NSWindow*)window
+    startCustomAnimationToEnterFullScreenOnScreen:(NSScreen*)screen
+                                     withDuration:(NSTimeInterval)duration {
+  // Immediately switch to cover full screen, so we don't show the default
+  // transition effect which stops video from playing.
+  // XXX Is it possible to simulate the native transition effect without
+  //     triggering content size change?
+  [window setFrame:[screen frame] display:YES];
+}
+
 - (void)windowWillEnterFullScreen:(NSNotification*)notification {
   if (!mGeckoWindow) {
     return;
@@ -2676,9 +2704,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 // used for a window is determined in the window's frameViewClassForStyleMask:
 // method, so this is where we make sure that we have swizzled the method on
 // all encountered classes.
-// We also override the _wantsFloatingTitlebar method to return NO in order to
-// avoid some glitches in the titlebar that are caused by the way we mess with
-// the window.
 + (Class)frameViewClassForStyleMask:(NSUInteger)styleMask {
   Class frameViewClass = [super frameViewClassForStyleMask:styleMask];
 
@@ -2714,11 +2739,18 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
                                 @selector(FrameView__fullScreenButtonOrigin));
     }
-    IMP _wantsFloatingTitlebar =
-        class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
-    if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
-      nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
-                                @selector(FrameView__wantsFloatingTitlebar));
+    if (!StaticPrefs::gfx_core_animation_enabled()) {
+      // When we're not using CoreAnimation, we need to override the
+      // _wantsFloatingTitlebar method to return NO, because the "floating
+      // titlebar" overlaps in a glitchy way with the NSOpenGLContext when we're
+      // drawing in the titlebar. These glitches do not appear when we use a
+      // CoreAnimation layer instead of an NSView-attached NSOpenGLContext.
+      IMP _wantsFloatingTitlebar =
+          class_getMethodImplementation(frameViewClass, @selector(_wantsFloatingTitlebar));
+      if (_wantsFloatingTitlebar && _wantsFloatingTitlebar != our_wantsFloatingTitlebar) {
+        nsToolkit::SwizzleMethods(frameViewClass, @selector(_wantsFloatingTitlebar),
+                                  @selector(FrameView__wantsFloatingTitlebar));
+      }
     }
     [gSwizzledFrameViewClasses addObject:frameViewClass];
   }
@@ -2836,6 +2868,7 @@ static const NSString* kStateTitleKey = @"title";
 static const NSString* kStateDrawsContentsIntoWindowFrameKey = @"drawsContentsIntoWindowFrame";
 static const NSString* kStateShowsToolbarButton = @"showsToolbarButton";
 static const NSString* kStateCollectionBehavior = @"collectionBehavior";
+static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (void)importState:(NSDictionary*)aState {
   if (NSString* title = [aState objectForKey:kStateTitleKey]) {
@@ -2845,6 +2878,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
                                             boolValue]];
   [self setShowsToolbarButton:[[aState objectForKey:kStateShowsToolbarButton] boolValue]];
   [self setCollectionBehavior:[[aState objectForKey:kStateCollectionBehavior] unsignedIntValue]];
+  [self setWantsTitleDrawn:[[aState objectForKey:kStateWantsTitleDrawn] boolValue]];
 }
 
 - (NSMutableDictionary*)exportState {
@@ -2858,6 +2892,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
             forKey:kStateShowsToolbarButton];
   [state setObject:[NSNumber numberWithUnsignedInt:[self collectionBehavior]]
             forKey:kStateCollectionBehavior];
+  [state setObject:[NSNumber numberWithBool:[self wantsTitleDrawn]] forKey:kStateWantsTitleDrawn];
   return state;
 }
 

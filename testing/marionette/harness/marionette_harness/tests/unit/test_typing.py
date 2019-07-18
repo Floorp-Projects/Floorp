@@ -50,12 +50,12 @@ class TestTypingChrome(TypingTestCase):
             key_reporter.send_keys(self.mod_key, "x")
             self.assertEqual("", key_reporter.get_property("value"))
 
-        url_bar = self.marionette.find_element(By.ID, "urlbar")
+        url_bar = self.marionette.find_element(By.ID, "urlbar-input")
 
         # Clear contents first
         url_bar.send_keys(self.mod_key, "a")
         url_bar.send_keys(Keys.BACK_SPACE)
-        self.assertEqual("", url_bar.get_attribute("value"))
+        self.assertEqual("", url_bar.get_property("value"))
 
         url_bar.send_keys(self.mod_key, "v")
         self.assertEqual("zyxwvutsr", url_bar.get_property("value"))

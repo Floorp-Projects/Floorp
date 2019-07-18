@@ -12,9 +12,11 @@
 #include "mozilla/StaticPrefs.h"
 #include "prenv.h"
 #include "GeckoProfiler.h"
+#include "MozFramebuffer.h"
 #include "mozilla/gfx/MacIOSurface.h"
 #include "mozilla/layers/CompositorOptions.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "ScopedGLHelpers.h"
 
 #include <OpenGL/OpenGL.h>
 
@@ -84,6 +86,12 @@ GLContextCGL::~GLContextCGL() {
   }
 }
 
+void GLContextCGL::OnMarkDestroyed() {
+  mRegisteredIOSurfaceFramebuffers.clear();
+
+  mDefaultFramebuffer = 0;
+}
+
 CGLContextObj GLContextCGL::GetCGLContext() const {
   return static_cast<CGLContextObj>([mContext CGLContextObj]);
 }
@@ -114,6 +122,7 @@ bool GLContextCGL::SwapBuffers() {
   AUTO_PROFILER_LABEL("GLContextCGL::SwapBuffers", GRAPHICS);
 
   [mContext flushBuffer];
+
   return true;
 }
 
@@ -122,6 +131,46 @@ void GLContextCGL::GetWSIInfo(nsCString* const out) const { out->AppendLiteral("
 Maybe<SymbolLoader> GLContextCGL::GetSymbolLoader() const {
   const auto& lib = sCGLLibrary.Library();
   return Some(SymbolLoader(*lib));
+}
+
+GLuint GLContextCGL::GetDefaultFramebuffer() { return mDefaultFramebuffer; }
+
+void GLContextCGL::UseRegisteredIOSurfaceForDefaultFramebuffer(IOSurfaceRef aSurface) {
+  MakeCurrent();
+
+  auto fb = mRegisteredIOSurfaceFramebuffers.find(aSurface);
+  MOZ_RELEASE_ASSERT(fb != mRegisteredIOSurfaceFramebuffers.end(),
+                     "IOSurface has not been registered with this GLContext");
+
+  mDefaultFramebuffer = fb->second->mFB;
+}
+
+void GLContextCGL::RegisterIOSurface(IOSurfaceRef aSurface) {
+  MOZ_RELEASE_ASSERT(
+      mRegisteredIOSurfaceFramebuffers.find(aSurface) == mRegisteredIOSurfaceFramebuffers.end(),
+      "double-registering IOSurface");
+
+  uint32_t width = IOSurfaceGetWidth(aSurface);
+  uint32_t height = IOSurfaceGetHeight(aSurface);
+
+  MakeCurrent();
+  GLuint tex = CreateTexture();
+
+  {
+    const ScopedBindTexture bindTex(this, tex, LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+    CGLTexImageIOSurface2D([mContext CGLContextObj], LOCAL_GL_TEXTURE_RECTANGLE_ARB, LOCAL_GL_RGBA,
+                           width, height, LOCAL_GL_BGRA, LOCAL_GL_UNSIGNED_INT_8_8_8_8_REV,
+                           aSurface, 0);
+  }
+
+  auto fb = MozFramebuffer::CreateWith(this, IntSize(width, height), 0, mCaps.depth,
+                                       LOCAL_GL_TEXTURE_RECTANGLE_ARB, tex);
+  mRegisteredIOSurfaceFramebuffers.insert({aSurface, std::move(fb)});
+}
+
+void GLContextCGL::UnregisterIOSurface(IOSurfaceRef aSurface) {
+  size_t removeCount = mRegisteredIOSurfaceFramebuffers.erase(aSurface);
+  MOZ_RELEASE_ASSERT(removeCount == 1, "Unregistering IOSurface that's not registered");
 }
 
 already_AddRefed<GLContext> GLContextProviderCGL::CreateWrappingExisting(void*, void*) {
@@ -187,10 +236,14 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
 #endif
 
   const NSOpenGLPixelFormatAttribute* attribs;
+  SurfaceCaps caps = SurfaceCaps::ForRGBA();
   if (sCGLLibrary.UseDoubleBufferedWindows()) {
     if (aWebRender) {
-      attribs =
-          aForceAccelerated ? kAttribs_doubleBuffered_accel_webrender : kAttribs_doubleBuffered;
+      MOZ_RELEASE_ASSERT(aForceAccelerated,
+                         "At the moment, aForceAccelerated is always true if aWebRender is true. "
+                         "If this changes, please update the code here.");
+      attribs = kAttribs_doubleBuffered_accel_webrender;
+      caps.depth = true;
     } else {
       attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
     }
@@ -205,8 +258,7 @@ already_AddRefed<GLContext> GLContextProviderCGL::CreateForWindow(nsIWidget* aWi
   GLint opaque = StaticPrefs::gfx_compositor_glcontext_opaque();
   [context setValues:&opaque forParameter:NSOpenGLCPSurfaceOpacity];
 
-  RefPtr<GLContextCGL> glContext =
-      new GLContextCGL(CreateContextFlags::NONE, SurfaceCaps::ForRGBA(), context, false);
+  RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps, context, false);
 
   if (!glContext->Init()) {
     glContext = nullptr;

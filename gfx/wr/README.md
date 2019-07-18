@@ -1,4 +1,7 @@
 # WebRender
+
+[![Version](https://img.shields.io/crates/v/webrender.svg)](https://crates.io/crates/webrender)
+
 GPU renderer for the Web content, used by Servo.
 
 Note that the canonical home for this code is in gfx/wr folder of the

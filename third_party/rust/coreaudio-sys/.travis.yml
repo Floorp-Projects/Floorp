@@ -1,0 +1,16 @@
+language: rust
+rust:
+- stable
+- beta
+- nightly
+notifications:
+  email:
+  - mitchell.nordine@gmail.com
+os:
+- osx
+before_script:
+- rustc --version
+- cargo --version
+script:
+- cargo build --verbose
+- cargo test --verbose

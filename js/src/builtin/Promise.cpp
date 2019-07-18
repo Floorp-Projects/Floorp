@@ -15,7 +15,7 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
-#include "dbg/Debugger.h"
+#include "debugger/Debugger.h"
 #include "gc/Heap.h"
 #include "js/Debug.h"
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
@@ -28,7 +28,7 @@
 #include "vm/JSObject.h"
 #include "vm/SelfHosting.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/JSObject-inl.h"
 #include "vm/NativeObject-inl.h"

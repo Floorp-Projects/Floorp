@@ -11,7 +11,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/JSObject.h"
 
-#include "dbg/Debugger-inl.h"
+#include "debugger/Debugger-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"

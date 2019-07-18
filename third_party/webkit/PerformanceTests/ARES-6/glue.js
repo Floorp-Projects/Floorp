@@ -53,6 +53,6 @@ driver.addBenchmark(BabylonBenchmarkRunner);
 driver.addBenchmark(MLBenchmarkRunner);
 driver.readyTrigger();
 
-if (typeof location !== 'undefined' && location.search == '?gecko') {
-    driver.start(6);
+if (typeof location !== 'undefined' && (location.search === '?gecko' || location.search === '?raptor')) {
+    driver.start(5);
 }

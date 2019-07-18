@@ -1254,13 +1254,20 @@ var gProtectionsHandler = {
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
       window.addEventListener("focus", this, true);
+
+      // Add the "open" attribute to the tracking protection icon container
+      // for styling.
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "open",
+        "true"
+      );
     }
   },
 
   onPopupHidden(event) {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
-      this._protectionsPopup.removeAttribute("open");
+      gIdentityHandler._trackingProtectionIconContainer.removeAttribute("open");
     }
   },
 
@@ -1567,10 +1574,15 @@ var gProtectionsHandler = {
     // blocking something or not.
     gProtectionsHandler.toggleBreakageLink();
 
+    // Check the panel state of the identity panel. Hide it if needed.
+    if (gIdentityHandler._identityPopup.state != "closed") {
+      PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
+    }
+
     // Now open the popup, anchored off the primary chrome element
     PanelMultiView.openPopup(
       this._protectionsPopup,
-      gIdentityHandler._identityIcon,
+      gIdentityHandler._trackingProtectionIconContainer,
       {
         position: "bottomcenter topleft",
         triggerEvent: event,

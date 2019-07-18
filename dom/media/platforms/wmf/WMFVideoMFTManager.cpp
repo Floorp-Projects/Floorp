@@ -588,7 +588,7 @@ MediaResult WMFVideoMFTManager::InitInternal() {
                     WMFDecoderModule::GetNumDecoderThreads());
     bool lowLatency =
         (StaticPrefs::media_wmf_low_latency_enabled() || IsWin10OrLater()) &&
-        !StaticPrefs::media_mwf_low_latency_force_disabled();
+        !StaticPrefs::media_wmf_low_latency_force_disabled();
     if (mLowLatency || lowLatency) {
       hr = attr->SetUINT32(CODECAPI_AVLowLatencyMode, TRUE);
       if (SUCCEEDED(hr)) {

@@ -9,13 +9,15 @@ This file contains a voluptuous schema definition for build system telemetry, an
 to fill an instance of that schema for a single mach invocation.
 '''
 
-from datetime import datetime
 import json
 import os
 import math
 import platform
 import pprint
 import sys
+from datetime import datetime
+
+from six import string_types
 from voluptuous import (
     Any,
     Optional,
@@ -32,21 +34,23 @@ from .base import (
 from .configure.constants import CompilerType
 
 schema = Schema({
-    Required('client_id', description='A UUID to uniquely identify a client'): basestring,
+    Required('client_id', description='A UUID to uniquely identify a client'): Any(*string_types),
     Required('time', description='Time at which this event happened'): Datetime(),
-    Required('command', description='The mach command that was invoked'): basestring,
+    Required('command', description='The mach command that was invoked'): Any(*string_types),
     Required('argv', description=(
         'Full mach commandline. ' +
-        'If the commandline contains absolute paths they will be sanitized.')): [basestring],
+        'If the commandline contains ' +
+        'absolute paths they will be sanitized.')): [Any(*string_types)],
     Required('success', description='true if the command succeeded'): bool,
     Optional('exception', description=(
-        'If a Python exception was encountered during the execution of the command, ' +
-        'this value contains the result of calling `repr` on the exception object.')): basestring,
+        'If a Python exception was encountered during the execution ' +
+        'of the command, this value contains the result of calling `repr` ' +
+        'on the exception object.')): Any(*string_types),
     Optional('file_types_changed', description=(
         'This array contains a list of objects with {ext, count} properties giving the count ' +
         'of files changed since the last invocation grouped by file type')): [
             {
-                Required('ext', description='File extension'): basestring,
+                Required('ext', description='File extension'): Any(*string_types),
                 Required('count', description='Count of changed files with this extension'): int,
             }
         ],
@@ -68,7 +72,7 @@ schema = Schema({
     Required('system'): {
         # We don't need perfect granularity here.
         Required('os', description='Operating system'): Any('windows', 'macos', 'linux', 'other'),
-        Optional('cpu_brand', description='CPU brand string from CPUID'): basestring,
+        Optional('cpu_brand', description='CPU brand string from CPUID'): Any(*string_types),
         Optional('logical_cores', description='Number of logical CPU cores present'): int,
         Optional('physical_cores', description='Number of physical CPU cores present'): int,
         Optional('memory_gb', description='System memory in GB'): int,
@@ -101,11 +105,11 @@ def cpu_brand_linux():
     '''
     Read the CPU brand string out of /proc/cpuinfo on Linux.
     '''
-    with open('/proc/cpuinfo', 'rb') as f:
+    with open('/proc/cpuinfo', 'r') as f:
         for line in f:
             if line.startswith('model name'):
                 _, brand = line.split(': ', 1)
-                return brand.rstrip().decode('ascii')
+                return brand.rstrip()
     # not found?
     return None
 
