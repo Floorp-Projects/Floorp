@@ -469,24 +469,29 @@ TaggingService.prototype = {
   ]),
 };
 
-// Implements nsIAutoCompleteSearch
-function TagAutoCompleteSearch() {}
+/**
+ * Class tracking a single tag autocomplete search.
+ */
+class TagSearch {
+  constructor(searchString, autocompleteSearch, listener) {
+    // We need a result regardless of having matches.
+    this._result = Cc[
+      "@mozilla.org/autocomplete/simple-result;1"
+    ].createInstance(Ci.nsIAutoCompleteSimpleResult);
+    this._result.setDefaultIndex(0);
+    this._result.setSearchString(searchString);
 
-TagAutoCompleteSearch.prototype = {
-  _stopped: false,
+    this._autocompleteSearch = autocompleteSearch;
+    this._listener = listener;
+  }
 
-  /*
-   * Search for a given string and notify a listener of the result.
-   *
-   * @param searchString - The string to search for
-   * @param searchParam - An extra parameter
-   * @param previousResult - A previous result to use for faster searching
-   * @param listener - A listener to notify when the search is complete
-   */
-  startSearch(searchString, searchParam, previousResult, listener) {
-    this._stopped = false;
+  async start() {
+    if (this._canceled) {
+      throw new Error("Can't restart a canceled search");
+    }
 
-    // only search on characters for the last tag
+    let searchString = this._result.searchString;
+    // Only search on characters for the last tag.
     let index = Math.max(
       searchString.lastIndexOf(","),
       searchString.lastIndexOf(";")
@@ -503,67 +508,81 @@ TagAutoCompleteSearch.prototype = {
       }
     }
 
-    // Create a new result to add eventual matches.  Note we need a result
-    // regardless having matches.
-    let result = Cc["@mozilla.org/autocomplete/simple-result;1"].createInstance(
-      Ci.nsIAutoCompleteSimpleResult
-    );
-    result.setDefaultIndex(0);
-    result.setSearchString(searchString);
+    if (searchString.length) {
+      let tags = await PlacesUtils.bookmarks.fetchTags();
+      if (this._canceled) {
+        return;
+      }
 
-    let count = 0;
-    if (!searchString.length) {
-      this.notifyResult(result, count, listener, false);
-      return;
-    }
-
-    (async () => {
-      let tags = (await PlacesUtils.bookmarks.fetchTags())
-        .filter(t =>
-          t.name.toLowerCase().startsWith(searchString.toLowerCase())
-        )
+      let lcSearchString = searchString.toLowerCase();
+      let matchingTags = tags
+        .filter(t => t.name.toLowerCase().startsWith(lcSearchString))
         .map(t => t.name);
 
-      // Chunk the search results via a generator.
-      let gen = function*() {
-        for (let i = 0; i < tags.length; ++i) {
-          if (this._stopped) {
-            yield false;
-          }
-
-          // For each match, prepend what the user has typed so far.
-          count++;
-          result.appendMatch(before + tags[i], tags[i]);
-
-          // In case of many tags, notify once every 10 loops.
-          if (i % 10 == 0) {
-            this.notifyResult(result, count, listener, true);
-            yield true;
+      for (let i = 0; i < matchingTags.length; ++i) {
+        let tag = matchingTags[i];
+        // For each match, prepend what the user has typed so far.
+        this._result.appendMatch(before + tag, tag);
+        // In case of many tags, notify once every 10.
+        if (i % 10 == 0) {
+          this._notifyResult(true);
+          // yield to avoid monopolizing the main-thread
+          await new Promise(resolve =>
+            Services.tm.dispatchToMainThread(resolve)
+          );
+          if (this._canceled) {
+            return;
           }
         }
-        yield false;
-      }.bind(this)();
+      }
+    }
 
-      // eslint-disable-next-line no-empty
-      while (gen.next().value) {}
-      this.notifyResult(result, count, listener, false);
-    })();
+    // Search is done.
+    this._notifyResult(false);
+  }
+
+  cancel() {
+    this._canceled = true;
+  }
+
+  _notifyResult(searchOngoing) {
+    let resultCode = this._result.matchCount
+      ? "RESULT_SUCCESS"
+      : "RESULT_NOMATCH";
+    if (searchOngoing) {
+      resultCode += "_ONGOING";
+    }
+    this._result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
+    this._listener.onSearchResult(this._autocompleteSearch, this._result);
+  }
+}
+
+// Implements nsIAutoCompleteSearch
+function TagAutoCompleteSearch() {}
+
+TagAutoCompleteSearch.prototype = {
+  /*
+   * Search for a given string and notify a listener of the result.
+   *
+   * @param searchString - The string to search for
+   * @param searchParam - An extra parameter
+   * @param previousResult - A previous result to use for faster searching
+   * @param listener - A listener to notify when the search is complete
+   */
+  startSearch(searchString, searchParam, previousResult, listener) {
+    if (this._search) {
+      this._search.cancel();
+    }
+    this._search = new TagSearch(searchString, this, listener);
+    this._search.start().catch(Cu.reportError);
   },
 
   /**
    * Stop an asynchronous search that is in progress
    */
-  stopSearch: function PTACS_stopSearch() {
-    this._stopped = true;
-  },
-
-  notifyResult(result, count, listener, searchOngoing) {
-    let resultCode = count ? "RESULT_SUCCESS" : "RESULT_NOMATCH";
-    if (searchOngoing) {
-      resultCode += "_ONGOING";
-    }
-    result.setSearchResult(Ci.nsIAutoCompleteResult[resultCode]);
-    listener.onSearchResult(this, result);
+  stopSearch() {
+    this._search.cancel();
+    this._search = null;
   },
 
   classID: Components.ID("{1dcc23b0-d4cb-11dc-9ad6-479d56d89593}"),
