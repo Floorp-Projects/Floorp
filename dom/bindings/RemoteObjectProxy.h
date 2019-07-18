@@ -122,6 +122,7 @@ class RemoteObjectProxyBase : public js::BaseProxyHandler,
 
   const prototypes::ID mPrototypeID;
 
+  friend struct SetDOMProxyInformation;
   static const char sCrossOriginProxyFamily;
 };
 
