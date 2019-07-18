@@ -1252,7 +1252,8 @@ typedef DOMProxyShadowsResult (*DOMProxyShadowsCheck)(JSContext* cx,
                                                       JS::HandleId id);
 JS_FRIEND_API void SetDOMProxyInformation(
     const void* domProxyHandlerFamily,
-    DOMProxyShadowsCheck domProxyShadowsCheck);
+    DOMProxyShadowsCheck domProxyShadowsCheck,
+    const void* domRemoteProxyHandlerFamily);
 
 const void* GetDOMProxyHandlerFamily();
 DOMProxyShadowsCheck GetDOMProxyShadowsCheck();
@@ -1260,6 +1261,8 @@ inline bool DOMProxyIsShadowing(DOMProxyShadowsResult result) {
   return result == Shadows || result == ShadowsViaDirectExpando ||
          result == ShadowsViaIndirectExpando;
 }
+
+const void* GetDOMRemoteProxyHandlerFamily();
 
 // Callbacks and other information for use by the JITs when optimizing accesses
 // on xray wrappers.
