@@ -51,6 +51,15 @@ add_task(async function() {
       },
     },
     {
+      info: "Testing when data argument has holey array",
+      // eslint-disable-next-line no-sparse-arrays
+      input: [[1, , 2]],
+      expected: {
+        columns: ["(index)", "0", "1", "2"],
+        rows: [["0", "1", "undefined", "2"]],
+      },
+    },
+    {
       info: "Testing when data argument is an object",
       input: new Person("John", "Smith"),
       expected: {
