@@ -450,6 +450,17 @@ class ContextMenuChild extends JSWindowActorChild {
     return node instanceof this.contentWindow.HTMLTextAreaElement;
   }
 
+  /**
+   * Check if we are in the parent process and the current iframe is the RDM iframe.
+   */
+  _isTargetRDMFrame(node) {
+    return (
+      Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT &&
+      node.tagName === "iframe" &&
+      node.hasAttribute("mozbrowser")
+    );
+  }
+
   _isSpellCheckEnabled(aNode) {
     // We can always force-enable spellchecking on textboxes
     if (this._isTargetATextBox(aNode)) {
@@ -521,6 +532,12 @@ class ContextMenuChild extends JSWindowActorChild {
     }
 
     if (defaultPrevented) {
+      return;
+    }
+
+    if (this._isTargetRDMFrame(aEvent.composedTarget)) {
+      // The target is in the DevTools RDM iframe, a proper context menu event
+      // will be created from the RDM browser.
       return;
     }
 
