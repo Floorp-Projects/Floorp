@@ -460,6 +460,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 setPositiveButton(R.string.tab_collection_dialog_positive) { dialog: DialogInterface, _ ->
                     viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         requireComponents.core.tabCollectionStorage.removeCollection(tabCollection)
+                        requireComponents.analytics.metrics.track(Event.CollectionRemoved)
                     }.invokeOnCompletion {
                         dialog.dismiss()
                     }
@@ -516,6 +517,7 @@ class HomeFragment : Fragment(), AccountObserver {
                     )
                     (activity as HomeActivity).openToBrowser(BrowserDirection.FromHome)
                 }
+                requireComponents.analytics.metrics.track(Event.CollectionTabRestored)
             }
             is CollectionAction.OpenTabs -> {
                 invokePendingDeleteJobs()
@@ -540,15 +542,18 @@ class HomeFragment : Fragment(), AccountObserver {
                     delay(ANIM_SCROLL_DELAY)
                     sessionControlComponent.view.smoothScrollToPosition(0)
                 }
+                requireComponents.analytics.metrics.track(Event.CollectionAllTabsRestored)
             }
             is CollectionAction.ShareTabs -> {
                 val shareTabs = action.collection.tabs.map { ShareTab(it.url, it.title) }
                 share(tabs = shareTabs)
+                requireComponents.analytics.metrics.track(Event.CollectionShared)
             }
             is CollectionAction.RemoveTab -> {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                     requireComponents.core.tabCollectionStorage.removeTabFromCollection(action.collection, action.tab)
                 }
+                requireComponents.analytics.metrics.track(Event.CollectionTabRemoved)
             }
         }
     }

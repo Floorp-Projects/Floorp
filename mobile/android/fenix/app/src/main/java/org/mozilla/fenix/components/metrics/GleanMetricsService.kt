@@ -29,9 +29,10 @@ import org.mozilla.fenix.GleanMetrics.Pings
 import org.mozilla.fenix.GleanMetrics.QrScanner
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.GleanMetrics.Collections
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
-import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -242,6 +243,27 @@ private val Event.wrapper
         )
         is Event.HistoryAllItemsRemoved -> EventWrapper<NoExtraKeys>(
             { History.removedAll.record(it) }
+        )
+        is Event.CollectionRenamed -> EventWrapper<NoExtraKeys>(
+            { Collections.renamed.record(it) }
+        )
+        is Event.CollectionTabRestored -> EventWrapper<NoExtraKeys>(
+            { Collections.tabRestored.record(it) }
+        )
+        is Event.CollectionAllTabsRestored -> EventWrapper<NoExtraKeys>(
+            { Collections.allTabsRestored.record(it) }
+        )
+        is Event.CollectionTabRemoved -> EventWrapper<NoExtraKeys>(
+            { Collections.tabRemoved.record(it) }
+        )
+        is Event.CollectionShared -> EventWrapper<NoExtraKeys>(
+            { Collections.shared.record(it) }
+        )
+        is Event.CollectionRemoved -> EventWrapper<NoExtraKeys>(
+            { Collections.removed.record(it) }
+        )
+        is Event.CollectionTabSelectOpened -> EventWrapper<NoExtraKeys>(
+            { Collections.tabSelectOpened.record(it) }
         )
 
         // Don't track other events with Glean

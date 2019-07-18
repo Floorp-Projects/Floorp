@@ -101,6 +101,13 @@ sealed class Event {
     object ReaderModeAvailable : Event()
     object ReaderModeOpened : Event()
     object ReaderModeAppearanceOpened : Event()
+    object CollectionRenamed : Event()
+    object CollectionTabRestored : Event()
+    object CollectionAllTabsRestored : Event()
+    object CollectionTabRemoved : Event()
+    object CollectionShared : Event()
+    object CollectionRemoved : Event()
+    object CollectionTabSelectOpened : Event()
 
     data class PreferenceToggled(val preferenceKey: String, val enabled: Boolean, val context: Context) : Event() {
         private val switchPreferenceTelemetryAllowList = listOf(
@@ -124,6 +131,22 @@ sealed class Event {
     }
 
     // Interaction Events
+    data class CollectionSaved(val tabsOpenCount: Int, val tabsSelectedCount: Int) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf(
+                "tabs_open" to tabsOpenCount.toString(),
+                "tabs_selected" to tabsSelectedCount.toString()
+            )
+    }
+
+    data class CollectionTabsAdded(val tabsOpenCount: Int, val tabsSelectedCount: Int) : Event() {
+        override val extras: Map<String, String>?
+            get() = mapOf(
+                "tabs_open" to tabsOpenCount.toString(),
+                "tabs_selected" to tabsSelectedCount.toString()
+            )
+    }
+
     data class LibrarySelectedItem(val item: String) : Event() {
         override val extras: Map<String, String>?
             get() = mapOf("item" to item)

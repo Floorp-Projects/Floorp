@@ -29,6 +29,8 @@ import kotlinx.coroutines.Job
 import mozilla.components.support.ktx.android.view.hideKeyboard
 import mozilla.components.support.ktx.android.view.showKeyboard
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -124,6 +126,8 @@ class CollectionCreationUIView(
 
         when (it.saveCollectionStep) {
             is SaveCollectionStep.SelectTabs -> {
+                view.context.components.analytics.metrics.track(Event.CollectionTabSelectOpened)
+
                 view.tab_list.isClickable = true
 
                 back_button.setOnClickListener {

@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessioncontrol.Tab
@@ -122,6 +123,11 @@ class CreateCollectionFragment : DialogFragment() {
                         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                             context.components.core.tabCollectionStorage.createCollection(it.name, sessionBundle)
                         }
+
+                        context.components.analytics.metrics.track(
+                            Event.CollectionSaved(context.components.core.sessionManager.size, sessionBundle.size)
+                        )
+
                         closeTabsIfNecessary(it.tabs)
                     }
                 }
@@ -133,6 +139,11 @@ class CreateCollectionFragment : DialogFragment() {
                             context.components.core.tabCollectionStorage
                                 .addTabsToCollection(it.collection, sessionBundle)
                         }
+
+                        context.components.analytics.metrics.track(
+                            Event.CollectionTabsAdded(context.components.core.sessionManager.size, sessionBundle.size)
+                        )
+
                         closeTabsIfNecessary(it.tabs)
                     }
                 }
@@ -140,6 +151,7 @@ class CreateCollectionFragment : DialogFragment() {
                     dismiss()
                     viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                         requireComponents.core.tabCollectionStorage.renameCollection(it.collection, it.name)
+                        requireComponents.analytics.metrics.track(Event.CollectionRenamed)
                     }
                 }
             }

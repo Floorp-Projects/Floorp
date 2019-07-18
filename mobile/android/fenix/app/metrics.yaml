@@ -941,3 +941,114 @@ reader_mode:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+
+collections:
+  renamed:
+    type: event
+    description: >
+      A user renamed a collection
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  tab_restored:
+    type: event
+    description: >
+      A user restored a tab from collection tab list
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  all_tabs_restored:
+    type: event
+    description: >
+      A user tapped "open tabs" from collection menu
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  tab_removed:
+    type: event
+    description: >
+      A user tapped remove tab from collection tab list
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  shared:
+    type: event
+    description: >
+      A user tapped share collection
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  removed:
+    type: event
+    description: >
+      A user tapped delete collection from collection menu
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  saved:
+    type: event
+    description: >
+      A user saved a list of tabs to a new collection
+    extra_keys:
+      tabs_open:
+        description: "The number of tabs open in the current session"
+      tabs_selected:
+        description: "The number of tabs added to the collection"
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  tabs_added:
+    type: event
+    description: >
+      A user saved a list of tabs to an existing collection
+    extra_keys:
+      tabs_open:
+        description: "The number of tabs open in the current session"
+      tabs_selected:
+        description: "The number of tabs added to the collection"
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  tab_select_opened:
+    type: event
+    description: >
+      A user opened the select tabs screen (the first step of the collection creation flow)
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/3935
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
