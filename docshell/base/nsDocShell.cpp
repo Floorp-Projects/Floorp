@@ -6368,8 +6368,7 @@ nsresult nsDocShell::RefreshURIFromQueue() {
   return NS_OK;
 }
 
-nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
-                           const char* aCommand, nsISupports* aExtraInfo) {
+nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer) {
   // Save the LayoutHistoryState of the previous document, before
   // setting up new document
   PersistLayoutHistoryState();
@@ -7184,7 +7183,7 @@ nsresult nsDocShell::CreateAboutBlankContentViewer(
       // hook 'em up
       if (viewer) {
         viewer->SetContainer(this);
-        rv = Embed(viewer, "", 0);
+        rv = Embed(viewer);
         NS_ENSURE_SUCCESS(rv, rv);
 
         SetCurrentURI(blankDoc->GetDocumentURI(), nullptr, true, 0);
@@ -8341,7 +8340,7 @@ nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,
     }
   }
 
-  NS_ENSURE_SUCCESS(Embed(viewer, "", nullptr), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(Embed(viewer), NS_ERROR_FAILURE);
 
   if (TreatAsBackgroundLoad()) {
     nsCOMPtr<nsIRunnable> triggerParentCheckDocShell =
