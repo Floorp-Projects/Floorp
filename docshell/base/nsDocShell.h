@@ -201,7 +201,8 @@ class nsDocShell final : public nsDocLoader,
 
   // Create a new nsDocShell object, initializing it.
   static already_AddRefed<nsDocShell> Create(
-      mozilla::dom::BrowsingContext* aBrowsingContext);
+      mozilla::dom::BrowsingContext* aBrowsingContext,
+      uint64_t aContentWindowID = 0);
 
   NS_IMETHOD Stop() override {
     // Need this here because otherwise nsIWebNavigation::Stop
@@ -473,6 +474,11 @@ class nsDocShell final : public nsDocLoader,
     mSkipBrowsingContextDetachOnDestroy = true;
   }
 
+  // Create a content viewer within this nsDocShell for the given
+  // `WindowGlobalChild` actor.
+  nsresult CreateContentViewerForActor(
+      mozilla::dom::WindowGlobalChild* aWindowActor);
+
  private:  // member functions
   friend class nsDSURIContentListener;
   friend class FramingChecker;
@@ -497,7 +503,8 @@ class nsDocShell final : public nsDocLoader,
   friend void mozilla::TimelineConsumers::PopMarkers(
       nsDocShell*, JSContext*, nsTArray<dom::ProfileTimelineMarker>&);
 
-  explicit nsDocShell(mozilla::dom::BrowsingContext* aBrowsingContext);
+  nsDocShell(mozilla::dom::BrowsingContext* aBrowsingContext,
+             uint64_t aContentWindowID);
 
   // Security checks to prevent frameset spoofing. See comments at
   // implementation sites.
@@ -551,12 +558,11 @@ class nsDocShell final : public nsDocLoader,
   // aPrincipal can be passed in if the caller wants. If null is
   // passed in, the about:blank principal will end up being used.
   // aCSP, if any, will be used for the new about:blank load.
-  nsresult CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
-                                         nsIPrincipal* aStoragePrincipal,
-                                         nsIContentSecurityPolicy* aCSP,
-                                         nsIURI* aBaseURI,
-                                         bool aTryToSaveOldPresentation = true,
-                                         bool aCheckPermitUnload = true);
+  nsresult CreateAboutBlankContentViewer(
+      nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+      nsIContentSecurityPolicy* aCSP, nsIURI* aBaseURI,
+      bool aTryToSaveOldPresentation = true, bool aCheckPermitUnload = true,
+      mozilla::dom::WindowGlobalChild* aActor = nullptr);
 
   nsresult CreateContentViewer(const nsACString& aContentType,
                                nsIRequest* aRequest,
@@ -567,7 +573,9 @@ class nsDocShell final : public nsDocLoader,
                                nsIStreamListener** aContentHandler,
                                nsIContentViewer** aViewer);
 
-  nsresult SetupNewViewer(nsIContentViewer* aNewViewer);
+  nsresult SetupNewViewer(
+      nsIContentViewer* aNewViewer,
+      mozilla::dom::WindowGlobalChild* aWindowActor = nullptr);
 
   //
   // Session History
@@ -980,7 +988,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult EnsureFind();
   nsresult EnsureCommandHandler();
   nsresult RefreshURIFromQueue();
-  nsresult Embed(nsIContentViewer* aContentViewer);
+  nsresult Embed(nsIContentViewer* aContentViewer,
+                 mozilla::dom::WindowGlobalChild* aWindowActor = nullptr);
   nsPresContext* GetEldestPresContext();
   nsresult CheckLoadingPermissions();
   nsresult PersistLayoutHistoryState();
