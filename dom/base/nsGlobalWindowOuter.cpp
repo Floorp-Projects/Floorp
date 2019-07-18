@@ -493,7 +493,6 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
 
   static const nsOuterWindowProxy singleton;
 
- protected:
   static nsGlobalWindowOuter* GetOuterWindow(JSObject* proxy) {
     nsGlobalWindowOuter* outerWindow =
         nsGlobalWindowOuter::FromSupports(static_cast<nsISupports*>(
@@ -501,6 +500,7 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
     return outerWindow;
   }
 
+ protected:
   // False return value means we threw an exception.  True return value
   // but false "found" means we didn't have a subframe at that index.
   bool GetSubframeWindow(JSContext* cx, JS::Handle<JSObject*> proxy,

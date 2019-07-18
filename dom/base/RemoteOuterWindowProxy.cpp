@@ -70,7 +70,7 @@ bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
   return !!aRetVal;
 }
 
-static BrowsingContext* GetBrowsingContext(JSObject* aProxy) {
+BrowsingContext* GetBrowsingContext(JSObject* aProxy) {
   MOZ_ASSERT(IsRemoteObjectProxy(aProxy, prototypes::id::Window));
   return static_cast<BrowsingContext*>(
       RemoteObjectProxyBase::GetNative(aProxy));

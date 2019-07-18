@@ -15,6 +15,8 @@
 namespace mozilla {
 namespace dom {
 
+class BrowsingContext;
+
 /**
  * Base class for RemoteObjectProxy. Implements the pieces of the handler that
  * don't depend on properties/methods of the specific WebIDL interface that this
@@ -189,6 +191,12 @@ inline bool IsRemoteObjectProxy(JSObject* aObj) {
   }
   return RemoteObjectProxyBase::IsRemoteObjectProxy(aObj);
 }
+
+/**
+ * Return the browsing context for this remote outer window proxy.
+ * Only call this function on remote outer window proxies.
+ */
+BrowsingContext* GetBrowsingContext(JSObject* aProxy);
 
 }  // namespace dom
 }  // namespace mozilla
