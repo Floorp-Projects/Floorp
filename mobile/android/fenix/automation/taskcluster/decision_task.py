@@ -85,8 +85,8 @@ def raptor(is_staging):
     signing_tasks = {}
     other_tasks = {}
 
-    geckoview_beta_version = get_geckoview_versions()['beta']
-    mozharness_task_id = fetch_mozharness_task_id(geckoview_beta_version)
+    geckoview_version = get_geckoview_versions()
+    mozharness_task_id = fetch_mozharness_task_id(geckoview_version)
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
     for variant in [Variant.from_values(abi, False, 'forPerformanceTest') for abi in ('aarch64', 'arm')]:

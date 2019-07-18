@@ -446,7 +446,7 @@ task printBuildVariants {
 
 task printGeckoviewVersions {
     doLast {
-        println "beta: " + groovy.json.JsonOutput.toJson(GeckoVersions.beta_version)
+        println "release: " + groovy.json.JsonOutput.toJson(GeckoVersions.release_version)
     }
 }
 

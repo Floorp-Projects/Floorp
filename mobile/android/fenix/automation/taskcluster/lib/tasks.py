@@ -580,7 +580,7 @@ class TaskBuilder(object):
                         "test_packages_url": "{}/{}/artifacts/public/build/en-US/target.test_packages.json".format(_DEFAULT_TASK_URL, mozharness_task_id),
                         "installer_url": apk_url,
                     }),
-                    "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/releases/mozilla-beta",
+                    "GECKO_HEAD_REPOSITORY": "https://hg.mozilla.org/releases/mozilla-release",
                     "GECKO_HEAD_REV": gecko_revision,
                     "MOZ_AUTOMATION": "1",
                     "MOZ_HIDE_RESULTS_TABLE": "1",
@@ -600,7 +600,7 @@ class TaskBuilder(object):
                 },
                 "mounts": [{
                     "content": {
-                        "url": "https://hg.mozilla.org/releases/mozilla-beta/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
+                        "url": "https://hg.mozilla.org/releases/mozilla-release/raw-file/{}/taskcluster/scripts/tester/test-linux.sh".format(gecko_revision),
                     },
                     "file": "test-linux.sh",
                 }]
@@ -655,7 +655,7 @@ def schedule_task_graph(ordered_groups_of_tasks):
 
 
 def fetch_mozharness_task_id(geckoview_beta_version):
-    raptor_index = 'gecko.v2.mozilla-beta.geckoview-version.{}.mobile.android-x86_64-beta-opt'.format(
+    raptor_index = 'gecko.v2.mozilla-release.geckoview-version.{}.mobile.android-x86_64-beta-opt'.format(
         geckoview_beta_version
     )
     return taskcluster.Index().findTask(raptor_index)['taskId']

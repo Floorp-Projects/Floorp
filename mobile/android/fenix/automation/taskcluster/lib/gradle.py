@@ -28,14 +28,12 @@ def get_geckoview_versions():
     print("Fetching geckoview version from gradle")
     output = _run_gradle_process('printGeckoviewVersions')
 
-    versions = {}
-    for version_type in ('beta',):
-        version = _extract_content_from_command_output(output, prefix='{}: '.format(version_type))
-        version = version.strip('"')
-        versions[version_type] = version
-        print('Got {} version: "{}"'.format(version_type, version))
+    version_type = 'release'
+    version = _extract_content_from_command_output(output, prefix='{}: '.format(version_type))
+    version = version.strip('"')
+    print('Got geckoview {} version: "{}"'.format(version_type, version))
 
-    return versions
+    return version
 
 
 def _run_gradle_process(gradle_command):
