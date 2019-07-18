@@ -6,7 +6,7 @@ We like to encourage external contributions to the Firefox code base and the Tel
 In order to set up a mentored bug, you can use the following template.
 Post it as a comment and add relevant steps in part 3.
 
-.. code-block:: markdown
+.. code-block:: md
 
    To help Mozilla out with this bug, here's the steps:
 

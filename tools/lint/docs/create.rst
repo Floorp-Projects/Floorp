@@ -22,7 +22,7 @@ Here's a trivial example:
 
 no-eval.yml
 
-.. code-block::
+.. code-block:: yaml
 
     EvalLinter:
         description: Ensures the string eval doesn't show up.
@@ -162,7 +162,7 @@ let's call the file ``flake8_lint.py``:
 
 Now here is the linter definition that would call it:
 
-.. code-block:: yml
+.. code-block:: yaml
 
     flake8:
         description: Python linter
@@ -197,7 +197,7 @@ automated bootstrapping of all their dependencies. To help with this,
 ``mozlint`` allows linters to define a ``setup`` config, which has the same
 path object format as an external payload. For example:
 
-.. code-block:: yml
+.. code-block:: yaml
 
     flake8:
         description: Python linter
