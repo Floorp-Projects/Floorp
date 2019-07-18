@@ -1753,6 +1753,7 @@ pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
 #else
 pref("signon.management.page.enabled", false);
 #endif
+pref("signon.management.page.breach-alerts.enabled", false);
 #ifdef NIGHTLY_BUILD
 // Bug 1563330 tracks shipping this by default.
 pref("signon.showAutoCompleteOrigins", true);
