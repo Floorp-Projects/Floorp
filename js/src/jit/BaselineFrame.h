@@ -13,7 +13,6 @@
 namespace js {
 namespace jit {
 
-struct BaselineDebugModeOSRInfo;
 class ICEntry;
 
 // The stack looks like this, fp is the frame pointer:
@@ -51,10 +50,6 @@ class BaselineFrame {
     // of invariants of debuggee compartments, scripts, and frames.
     DEBUGGEE = 1 << 6,
 
-    // Frame has a BaselineRecompileInfo stashed in the scratch value
-    // slot. See PatchBaselineFramesForDebugMode.
-    HAS_DEBUG_MODE_OSR_INFO = 1 << 7,
-
     // This flag is intended for use whenever the frame is settled on a
     // native code address without a corresponding RetAddrEntry. In this
     // case, the frame contains an explicit bytecode offset for frame
@@ -67,12 +62,12 @@ class BaselineFrame {
     // This flag should never be set on the top frame while we're
     // executing JIT code. In debug builds, it is checked before and
     // after VM calls.
-    HAS_OVERRIDE_PC = 1 << 8,
+    HAS_OVERRIDE_PC = 1 << 7,
 
     // If set, we're handling an exception for this frame. This is set for
     // debug mode OSR sanity checking when it handles corner cases which
     // only arise during exception handling.
-    HANDLING_EXCEPTION = 1 << 9,
+    HANDLING_EXCEPTION = 1 << 8,
   };
 
  protected:  // Silence Clang warning about unused private fields.
@@ -86,14 +81,8 @@ class BaselineFrame {
 
   // We need to split the Value into 2 fields of 32 bits, otherwise the C++
   // compiler may add some padding between the fields.
-  union {
-    struct {
-      uint32_t loScratchValue_;
-      uint32_t hiScratchValue_;
-    };
-    BaselineDebugModeOSRInfo* debugModeOSRInfo_;
-  };
-
+  uint32_t loScratchValue_;
+  uint32_t hiScratchValue_;
   uint32_t flags_;
   uint32_t frameSize_;
   uint32_t loReturnValue_;  // If HAS_RVAL, the frame's return value.
@@ -240,6 +229,16 @@ class BaselineFrame {
     interpreterICEntry_ = nullptr;
   }
 
+  // Switch a JIT frame on the stack to Interpreter mode. The caller is
+  // responsible for patching the return address into this frame to a location
+  // in the interpreter code.
+  void switchFromJitToInterpreter(jsbytecode* pc) {
+    MOZ_ASSERT(!runningInInterpreter());
+    flags_ |= RUNNING_IN_INTERPRETER;
+    interpreterScript_ = script();
+    setInterpreterPC(pc);
+  }
+
   bool runningInInterpreter() const { return flags_ & RUNNING_IN_INTERPRETER; }
 
   JSScript* interpreterScript() const {
@@ -309,25 +308,6 @@ class BaselineFrame {
   bool isHandlingException() const { return flags_ & HANDLING_EXCEPTION; }
   void setIsHandlingException() { flags_ |= HANDLING_EXCEPTION; }
   void unsetIsHandlingException() { flags_ &= ~HANDLING_EXCEPTION; }
-
-  BaselineDebugModeOSRInfo* debugModeOSRInfo() {
-    MOZ_ASSERT(flags_ & HAS_DEBUG_MODE_OSR_INFO);
-    return debugModeOSRInfo_;
-  }
-
-  BaselineDebugModeOSRInfo* getDebugModeOSRInfo() {
-    if (flags_ & HAS_DEBUG_MODE_OSR_INFO) {
-      return debugModeOSRInfo();
-    }
-    return nullptr;
-  }
-
-  void setDebugModeOSRInfo(BaselineDebugModeOSRInfo* info) {
-    flags_ |= HAS_DEBUG_MODE_OSR_INFO;
-    debugModeOSRInfo_ = info;
-  }
-
-  void deleteDebugModeOSRInfo();
 
   // See the HAS_OVERRIDE_PC comment.
   bool hasOverridePc() const { return flags_ & HAS_OVERRIDE_PC; }

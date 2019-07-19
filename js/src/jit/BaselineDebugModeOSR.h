@@ -47,32 +47,6 @@ class DebugModeOSRVolatileJitFrameIter : public JitFrameIter {
                                    uint8_t* newAddr);
 };
 
-//
-// Auxiliary info to help the DebugModeOSRHandler fix up state.
-//
-struct BaselineDebugModeOSRInfo {
-  uint8_t* resumeAddr;
-  jsbytecode* pc;
-  PCMappingSlotInfo slotInfo;
-  RetAddrEntry::Kind frameKind;
-
-  // Filled in by SyncBaselineDebugModeOSRInfo.
-  uintptr_t stackAdjust;
-  Value valueR0;
-  Value valueR1;
-
-  BaselineDebugModeOSRInfo(jsbytecode* pc, RetAddrEntry::Kind kind)
-      : resumeAddr(nullptr),
-        pc(pc),
-        slotInfo(0),
-        frameKind(kind),
-        stackAdjust(0),
-        valueR0(UndefinedValue()),
-        valueR1(UndefinedValue()) {}
-
-  void popValueInto(PCMappingSlotInfo::SlotLocation loc, Value* vp);
-};
-
 MOZ_MUST_USE bool RecompileOnStackBaselineScriptsForDebugMode(
     JSContext* cx, const Debugger::ExecutionObservableSet& obs,
     Debugger::IsObserving observing);
