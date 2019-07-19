@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <script>
@@ -20,14 +23,14 @@
                 var test_pointerEvent = setup_pointerevent_test("no pointercapture while pointerlock", ['mouse']);
                 var div1 = document.getElementById("div1");
                 var div2 = document.getElementById("div2");
-              
+
                 on_event(div1, 'pointerdown', function(event) {
                     div2.setPointerCapture(event.pointerId);
                     div1.requestPointerLock();
                 });
                 on_event(div1, 'pointermove', function(event) {
+                    mouse_move_count++
                     if (lock_change_count == 1) {
-                        mouse_move_count++;
                         if (mouse_move_count == 2) {
                             try {
                                 div2.setPointerCapture(event.pointerId);
@@ -44,14 +47,6 @@
                             mouse_move_count = 0;
                         }
 
-                    } else if (lock_change_count == 2) {
-                        mouse_move_count++;
-                        if (mouse_move_count == 2) {
-                            test_pointerEvent.step(function() {
-                                assert_equals(capture_count, 0, "There shouldn't be any capture events fired.");
-                            });
-                            test_pointerEvent.done();
-                        }
                     }
                 });
                 on_event(div2, 'gotpointercapture', function(event) {
@@ -69,6 +64,30 @@
                             assert_equals(document.pointerLockElement, null, "document.pointerLockElement should be null.");
                     });
                 });
+
+                injectInput().then(function(){
+                    test_pointerEvent.step(function(){
+                        assert_equals(lock_change_count, 2, "Pointer is unlocked");
+                        assert_greater_than(mouse_move_count, 1, "More than 1 pointermove has been received after unlocked");
+                        assert_equals(capture_count, 0, "There shouldn't be any capture events fired.");
+                    });
+                    test_pointerEvent.done();
+                })
+            }
+            // Inject mouse input
+            function injectInput() {
+                var actions = new test_driver.Actions();
+                return actions.pointerMove(0, 0, {origin: div1})
+                              .pointerDown()
+                              .pointerMove(30, 30, {origin: div1})
+                              .pointerMove(60, 30, {origin: div1})
+                              .pointerMove(30, 20, {origin: div1})
+                              .pointerMove(10, 50, {origin: div1})
+                              .pointerMove(40, 10, {origin: div1})
+                              .pointerMove(5,  30, {origin: div1})
+                              .pointerMove(-5, 15, {origin: div1})
+                              .pointerUp()
+                              .send();
             }
         </script>
     </head>
