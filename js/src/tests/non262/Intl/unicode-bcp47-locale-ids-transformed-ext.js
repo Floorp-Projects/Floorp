@@ -42,24 +42,27 @@ const invalid = [
     "en-t-en-latn-gb-abcdefghi",
 ];
 
-// Note: Case normalisation in the transformation extension is currently not
-// implemented, see also <https://github.com/tc39/ecma402/issues/330>.
+// Canonicalisation also applies for the transformation extension. But also
+// see <https://github.com/tc39/ecma402/issues/330>.
 const valid = [
-    "en-t-en",
-    "en-t-en-latn",
-    "en-t-en-ca",
-    "en-t-en-latn-ca",
-    "en-t-en-emodeng",
-    "en-t-en-latn-emodeng",
-    "en-t-en-latn-ca-emodeng",
+    {locale: "en-t-en", canonical: "en-t-en"},
+    {locale: "en-t-en-latn", canonical: "en-t-en-latn"},
+    {locale: "en-t-en-ca", canonical: "en-t-en-ca"},
+    {locale: "en-t-en-latn-ca", canonical: "en-t-en-latn-ca"},
+    {locale: "en-t-en-emodeng", canonical: "en-t-en-emodeng"},
+    {locale: "en-t-en-latn-emodeng", canonical: "en-t-en-latn-emodeng"},
+    {locale: "en-t-en-latn-ca-emodeng", canonical: "en-t-en-latn-ca-emodeng"},
+    {locale: "sl-t-sl-rozaj-biske-1994", canonical: "sl-t-sl-rozaj-biske-1994"},
+    {locale: "DE-T-M0-DIN-K0-QWERTZ", canonical: "de-t-k0-qwertz-m0-din"},
+    {locale: "en-t-m0-true", canonical: "en-t-m0-true"},
 ];
 
 for (let locale of invalid) {
     assertThrowsInstanceOf(() => Intl.getCanonicalLocales(locale), RangeError);
 }
 
-for (let locale of valid) {
-    assertEq(Intl.getCanonicalLocales(locale)[0], locale);
+for (let {locale, canonical} of valid) {
+    assertEq(Intl.getCanonicalLocales(locale)[0], canonical);
 }
 
 if (typeof reportCompare === "function")
