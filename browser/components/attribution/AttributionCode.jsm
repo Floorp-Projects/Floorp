@@ -22,17 +22,11 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 const ATTR_CODE_MAX_LENGTH = 200;
+const ATTR_CODE_KEYS_REGEX = /^source|medium|campaign|content$/;
 const ATTR_CODE_VALUE_REGEX = /[a-zA-Z0-9_%\\-\\.\\(\\)]*/;
 const ATTR_CODE_FIELD_SEPARATOR = "%26"; // URL-encoded &
 const ATTR_CODE_KEY_VALUE_SEPARATOR = "%3D"; // URL-encoded =
-const ATTR_CODE_KEYS = [
-  "source",
-  "medium",
-  "campaign",
-  "content",
-  "experiment",
-  "variation",
-];
+const ATTR_CODE_KEYS = ["source", "medium", "campaign", "content"];
 
 let gCachedAttrData = null;
 
@@ -48,33 +42,33 @@ function getAttributionFile() {
   return file;
 }
 
-var AttributionCode = {
-  /**
-   * Returns an object containing a key-value pair for each piece of attribution
-   * data included in the passed-in attribution code string.
-   * If the string isn't a valid attribution code, returns an empty object.
-   */
-  parseAttributionCode(code) {
-    if (code.length > ATTR_CODE_MAX_LENGTH) {
-      return {};
-    }
+/**
+ * Returns an object containing a key-value pair for each piece of attribution
+ * data included in the passed-in attribution code string.
+ * If the string isn't a valid attribution code, returns an empty object.
+ */
+function parseAttributionCode(code) {
+  if (code.length > ATTR_CODE_MAX_LENGTH) {
+    return {};
+  }
 
-    let isValid = true;
-    let parsed = {};
-    for (let param of code.split(ATTR_CODE_FIELD_SEPARATOR)) {
-      let [key, value] = param.split(ATTR_CODE_KEY_VALUE_SEPARATOR, 2);
-      if (key && ATTR_CODE_KEYS.includes(key)) {
-        if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
-          parsed[key] = value;
-        }
-      } else {
-        isValid = false;
-        break;
+  let isValid = true;
+  let parsed = {};
+  for (let param of code.split(ATTR_CODE_FIELD_SEPARATOR)) {
+    let [key, value] = param.split(ATTR_CODE_KEY_VALUE_SEPARATOR, 2);
+    if (key && ATTR_CODE_KEYS_REGEX.test(key)) {
+      if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
+        parsed[key] = value;
       }
+    } else {
+      isValid = false;
+      break;
     }
-    return isValid ? parsed : {};
-  },
+  }
+  return isValid ? parsed : {};
+}
 
+var AttributionCode = {
   /**
    * Reads the attribution code, either from disk or a cached version.
    * Returns a promise that fulfills with an object containing the parsed
@@ -97,7 +91,7 @@ var AttributionCode = {
           let bytes = await OS.File.read(getAttributionFile().path);
           let decoder = new TextDecoder();
           let code = decoder.decode(bytes);
-          gCachedAttrData = this.parseAttributionCode(code);
+          gCachedAttrData = parseAttributionCode(code);
         } catch (ex) {
           // The attribution file may already have been deleted,
           // or it may have never been installed at all;
@@ -115,7 +109,7 @@ var AttributionCode = {
           for (let key of ATTR_CODE_KEYS) {
             // We support the key prefixed with utm_ or not, but intentionally
             // choose non-utm params over utm params.
-            for (let paramKey of [`utm_${key}`, `funnel_${key}`, key]) {
+            for (let paramKey of [`utm_${key}`, key]) {
               if (params.has(paramKey)) {
                 let value = params.get(paramKey);
                 if (value && ATTR_CODE_VALUE_REGEX.test(value)) {
