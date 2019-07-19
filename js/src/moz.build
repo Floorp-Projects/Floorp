@@ -433,7 +433,7 @@ selfhosted.inputs = [
     'builtin/intl/CurrencyDataGenerated.js',
     'builtin/intl/DateTimeFormat.js',
     'builtin/intl/IntlObject.js',
-    'builtin/intl/LangTagMappingsGenerated.js',
+    'builtin/intl/LangTagMappingsIANAGenerated.js',
     'builtin/intl/NumberFormat.js',
     'builtin/intl/PluralRules.js',
     'builtin/intl/RelativeTimeFormat.js',
