@@ -10,12 +10,23 @@ add_task(async function test_main() {
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var isWebRender = utils.layerManagerType == "WebRender";
 
-  // Each of these URLs will get opened in a new top-level browser window that
-  // is fission-enabled.
+  // Each of these subtests is a dictionary that contains:
+  // url (required): URL of the subtest that will get opened in a new tab
+  //   in the top-level fission-enabled browser window.
+  // setup (optional): function that takes the top-level fission window and is
+  //   run once after the subtest is loaded but before it is started.
   var subtests = [
     { url: httpURL("helper_fission_basic.html") },
     { url: httpURL("helper_fission_transforms.html") },
     { url: httpURL("helper_fission_scroll_oopif.html") },
+    {
+      url: httpURL("helper_fission_event_region_override.html"),
+      setup(win) {
+        win.document.addEventListener("wheel", e => e.preventDefault(), {
+          once: true,
+        });
+      },
+    },
     // add additional tests here
   ];
   if (isWebRender) {
@@ -61,6 +72,9 @@ add_task(async function test_main() {
             "FissionTestHelper"
           );
           let donePromise = tabActor.getTestCompletePromise();
+          if (subtest.setup) {
+            subtest.setup(fissionWindow);
+          }
           tabActor.startTest();
           await donePromise;
         }
