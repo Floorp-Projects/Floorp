@@ -416,6 +416,12 @@ const TargetingGetters = {
 
     return null;
   },
+  get isFxABadgeEnabled() {
+    return Services.prefs.getBoolPref(
+      "browser.messaging-system.fxatoolbarbadge.enabled",
+      false
+    );
+  },
 };
 
 this.ASRouterTargeting = {
