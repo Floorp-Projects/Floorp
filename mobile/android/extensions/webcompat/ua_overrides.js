@@ -37,7 +37,7 @@ for (const override of [
     domain: "rolb.santanderbank.com",
     bug: "1563839",
     config: {
-      matches: ["*://rolb.santanderbank.com/*"],
+      matches: ["*://*.santander.co.uk/*", "*://rolb.santanderbank.com/*"],
       uaTransformer: originalUA => {
         return originalUA.replace("Gecko", "like Gecko");
       },
