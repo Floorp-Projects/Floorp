@@ -619,6 +619,16 @@ static XDRResult XDRScriptGCThing(XDRState<mode>* xdr, PrivateScriptData* data,
   return Ok();
 }
 
+js::ScriptSource* js::BaseScript::maybeForwardedScriptSource() const {
+  JSObject* source = MaybeForwarded(sourceObject());
+
+  // This may be called during GC. It's OK not to expose the source object
+  // here as it doesn't escape.
+  return UncheckedUnwrapWithoutExpose(source)
+      ->as<ScriptSourceObject>()
+      .source();
+}
+
 template <XDRMode mode>
 /* static */
 XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
@@ -1305,16 +1315,12 @@ template XDRResult js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleScope,
                                      HandleScriptSourceObject, HandleFunction,
                                      MutableHandle<LazyScript*>);
 
-void JSScript::setSourceObject(js::ScriptSourceObject* object) {
-  MOZ_ASSERT(compartment() == object->compartment());
-  sourceObject_ = object;
-}
-
 void JSScript::setDefaultClassConstructorSpan(
     js::ScriptSourceObject* sourceObject, uint32_t start, uint32_t end,
     unsigned line, unsigned column) {
+  MOZ_ASSERT(compartment() == sourceObject->compartment());
   MOZ_ASSERT(isDefaultClassConstructor());
-  setSourceObject(sourceObject);
+  sourceObject_ = sourceObject;
   toStringStart_ = start;
   toStringEnd_ = end;
   sourceStart_ = start;
@@ -1324,19 +1330,6 @@ void JSScript::setDefaultClassConstructorSpan(
   // Since this script has been changed to point into the user's source, we
   // can clear its self-hosted flag, allowing Debugger to see it.
   clearFlag(ImmutableFlags::SelfHosted);
-}
-
-js::ScriptSource* JSScript::scriptSource() const {
-  return sourceObject()->source();
-}
-
-js::ScriptSource* JSScript::maybeForwardedScriptSource() const {
-  JSObject* source = MaybeForwarded(sourceObject());
-  // This may be called during GC. It's OK not to expose the source object
-  // here as it doesn't escape.
-  return UncheckedUnwrapWithoutExpose(source)
-      ->as<ScriptSourceObject>()
-      .source();
 }
 
 bool JSScript::initScriptCounts(JSContext* cx) {
@@ -3800,18 +3793,18 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
-    : js::BaseScript(stubEntry),
+    : js::BaseScript(stubEntry, sourceObject),
       realm_(realm),
       sourceStart_(sourceStart),
       sourceEnd_(sourceEnd),
       toStringStart_(toStringStart),
       toStringEnd_(toStringEnd) {
+  MOZ_ASSERT(JS::GetCompartmentForRealm(realm) == sourceObject->compartment());
+
   // See JSScript.h for further details.
   MOZ_ASSERT(toStringStart <= sourceStart);
   MOZ_ASSERT(sourceStart <= sourceEnd);
   MOZ_ASSERT(sourceEnd <= toStringEnd);
-
-  setSourceObject(sourceObject);
 }
 
 /* static */
@@ -3877,7 +3870,7 @@ JSScript* JSScript::Create(JSContext* cx, const ReadOnlyCompileOptions& options,
 
 /* static */ JSScript* JSScript::CreateFromLazy(JSContext* cx,
                                                 Handle<LazyScript*> lazy) {
-  RootedScriptSourceObject sourceObject(cx, &lazy->sourceObject());
+  RootedScriptSourceObject sourceObject(cx, lazy->sourceObject());
   RootedScript script(
       cx,
       JSScript::New(cx, sourceObject, lazy->sourceStart(), lazy->sourceEnd(),
@@ -5144,10 +5137,6 @@ void JSScript::traceChildren(JSTracer* trc) {
     scriptData()->traceChildren(trc);
   }
 
-  MOZ_ASSERT_IF(sourceObject(),
-                MaybeForwarded(sourceObject())->compartment() == compartment());
-  TraceNullableEdge(trc, &sourceObject_, "sourceObject");
-
   if (maybeLazyScript()) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
@@ -5481,10 +5470,9 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
                        uint32_t lineno, uint32_t column)
-    : BaseScript(stubEntry),
+    : BaseScript(stubEntry, &sourceObject),
       script_(nullptr),
       function_(fun),
-      sourceObject_(&sourceObject),
       lazyData_(data),
       immutableFlags_(immutableFlags),
       mutableFlags_(0),
@@ -5534,17 +5522,6 @@ void LazyScript::setEnclosingScope(Scope* enclosingScope) {
   MOZ_ASSERT(!hasEnclosingScope());
 
   enclosingLazyScriptOrScope_ = enclosingScope;
-}
-
-ScriptSourceObject& LazyScript::sourceObject() const {
-  return sourceObject_->as<ScriptSourceObject>();
-}
-
-ScriptSource* LazyScript::maybeForwardedScriptSource() const {
-  JSObject* source = MaybeForwarded(&sourceObject());
-  return UncheckedUnwrapWithoutExpose(source)
-      ->as<ScriptSourceObject>()
-      .source();
 }
 
 /* static */
@@ -5785,7 +5762,7 @@ JS::ubi::Node::Size JS::ubi::Concrete<js::LazyScript>::size(
 }
 
 const char* JS::ubi::Concrete<js::LazyScript>::scriptFilename() const {
-  auto source = get().sourceObject().source();
+  auto source = get().scriptSource();
   if (!source) {
     return nullptr;
   }
