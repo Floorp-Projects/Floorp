@@ -5129,6 +5129,9 @@ void JSScript::traceChildren(JSTracer* trc) {
   // JSScript::Create(), but not yet finished initializing it with
   // fullyInitFromEmitter() or fullyInitTrivial().
 
+  // Trace base class fields.
+  BaseScript::traceChildren(trc);
+
   MOZ_ASSERT_IF(trc->isMarkingTracer() &&
                     GCMarker::fromTracer(trc)->shouldCheckCompartments(),
                 zone()->isCollecting());

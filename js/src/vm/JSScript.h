@@ -1406,6 +1406,8 @@ class BaseScript : public gc::TenuredCell {
  public:
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
 
+  void traceChildren(JSTracer* trc);
+
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
