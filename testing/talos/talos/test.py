@@ -877,6 +877,7 @@ class perf_reftest(PageloaderTest):
     unit = 'ms'
     lower_is_better = True
     alert_threshold = 5.0
+    subtest_alerts = True
 
 
 @register_test()
@@ -894,6 +895,7 @@ class perf_reftest_singletons(PageloaderTest):
     unit = 'ms'
     lower_is_better = True
     alert_threshold = 5.0
+    subtest_alerts = True
 
 
 @register_test()
