@@ -786,7 +786,7 @@ class UrlbarInput {
   }
 
   get goButton() {
-    return this.querySelector(".urlbar-go-button");
+    return this.querySelector("#urlbar-go-button");
   }
 
   get textValue() {
