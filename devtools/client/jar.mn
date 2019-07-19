@@ -126,6 +126,7 @@ devtools.jar:
     skin/images/rules-view-print-simulation.svg (themes/images/rules-view-print-simulation.svg)
     skin/markup.css (themes/markup.css)
     skin/webconsole.css (themes/webconsole.css)
+    skin/images/webconsole/editor.svg (themes/images/webconsole/editor.svg)
     skin/images/webconsole/input.svg (themes/images/webconsole/input.svg)
     skin/images/webconsole/navigation.svg (themes/images/webconsole/navigation.svg)
     skin/images/webconsole/return.svg (themes/images/webconsole/return.svg)
@@ -237,6 +238,7 @@ devtools.jar:
     content/netmonitor/src/assets/icons/shield.svg (netmonitor/src/assets/icons/shield.svg)
     content/netmonitor/index.html (netmonitor/index.html)
     content/netmonitor/src/assets/styles/StatusCode.css (netmonitor/src/assets/styles/StatusCode.css)
+    content/netmonitor/src/assets/styles/websockets.css (netmonitor/src/assets/styles/websockets.css)
 
     # Application panel
     content/application/index.html (application/index.html)

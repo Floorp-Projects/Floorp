@@ -124,6 +124,7 @@ bool BigIntObject::toString(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsBigInt, toString_impl>(cx, args);
 }
 
+#ifndef EXPOSE_INTL_API
 // BigInt proposal section 5.3.2. "This function is
 // implementation-dependent, and it is permissible, but not encouraged,
 // for it to return the same thing as toString."
@@ -146,6 +147,7 @@ bool BigIntObject::toLocaleString(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod<IsBigInt, toLocaleString_impl>(cx, args);
 }
+#endif /* !EXPOSE_INTL_API */
 
 // BigInt proposal section 5.2.1. BigInt.asUintN ( bits, bigint )
 bool BigIntObject::asUintN(JSContext* cx, unsigned argc, Value* vp) {
@@ -224,7 +226,12 @@ const JSPropertySpec BigIntObject::properties[] = {
 
 const JSFunctionSpec BigIntObject::methods[] = {
     JS_FN("valueOf", valueOf, 0, 0), JS_FN("toString", toString, 0, 0),
-    JS_FN("toLocaleString", toLocaleString, 0, 0), JS_FS_END};
+#ifdef EXPOSE_INTL_API
+    JS_SELF_HOSTED_FN("toLocaleString", "BigInt_toLocaleString", 0, 0),
+#else
+    JS_FN("toLocaleString", toLocaleString, 0, 0),
+#endif
+    JS_FS_END};
 
 const JSFunctionSpec BigIntObject::staticMethods[] = {
     JS_FN("asUintN", asUintN, 2, 0), JS_FN("asIntN", asIntN, 2, 0), JS_FS_END};

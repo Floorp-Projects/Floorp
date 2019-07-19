@@ -368,6 +368,7 @@ class App extends Component {
       filterBar,
       editorMode
         ? EditorToolbar({
+            dispatch,
             editorMode,
             webConsoleUI,
           })

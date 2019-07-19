@@ -165,9 +165,9 @@ class nsContentSink : public nsICSSLoaderObserver,
                                               const nsAString& aMedia,
                                               const nsAString& aReferrerPolicy);
 
-  void PrefetchPreloadHref(const nsAString& aHref, nsINode* aSource,
-                           uint32_t aLinkTypes, const nsAString& aAs,
-                           const nsAString& aType, const nsAString& aMedia);
+  void PrefetchPreloadHref(const nsAString& aHref, uint32_t aLinkTypes,
+                           const nsAString& aAs, const nsAString& aType,
+                           const nsAString& aMedia);
 
   // For PrefetchDNS() aHref can either be the usual
   // URI format or of the form "//www.hostname.com" without a scheme.

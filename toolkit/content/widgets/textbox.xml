@@ -36,7 +36,6 @@
 
       <field name="mInputField">null</field>
       <field name="mIgnoreClick">false</field>
-      <field name="mIgnoreFocus">false</field>
       <field name="mEditor">null</field>
 
       <property name="inputField" readonly="true">
@@ -76,10 +75,6 @@
                                          if (val) this.setAttribute('readonly', 'true');
                                          else this.removeAttribute('readonly'); return val;"
                                   onget="return this.inputField.readOnly;"/>
-      <property name="clickSelectsAll"
-                onget="return this.getAttribute('clickSelectsAll') == 'true';"
-                onset="if (val) this.setAttribute('clickSelectsAll', 'true');
-                       else this.removeAttribute('clickSelectsAll'); return val;" />
 
       <property name="editor" readonly="true">
         <getter><![CDATA[
@@ -152,15 +147,6 @@
         ]]></body>
       </method>
 
-      <method name="_maybeSelectAll">
-        <body><![CDATA[
-          if (!this.mIgnoreClick && this.clickSelectsAll &&
-              document.activeElement == this.inputField &&
-              this.inputField.selectionStart == this.inputField.selectionEnd)
-            this.editor.selectAll();
-        ]]></body>
-      </method>
-
       <constructor><![CDATA[
         var str = this._cachedInputFieldValue;
         if (str) {
@@ -200,14 +186,6 @@
               this.setAttribute("focused", "true");
               break;
             case this.inputField:
-              if (this.mIgnoreFocus) {
-                this.mIgnoreFocus = false;
-              } else if (this.clickSelectsAll) {
-                try {
-                  if (!this.editor || !this.editor.composing)
-                    this.editor.selectAll();
-                } catch (e) {}
-              }
               this.setAttribute("focused", "true");
               break;
             default:
@@ -220,12 +198,6 @@
       <handler event="blur" phase="capturing">
         <![CDATA[
           this.removeAttribute("focused");
-
-          // don't trigger clickSelectsAll when switching application windows
-          if (window == window.top &&
-              window.isChromeWindow &&
-              document.activeElement == this.inputField)
-            this.mIgnoreFocus = true;
         ]]>
       </handler>
 
@@ -234,7 +206,6 @@
           this.mIgnoreClick = this.hasAttribute("focused");
 
           if (!this.mIgnoreClick) {
-            this.mIgnoreFocus = true;
             this.setSelectionRange(0, 0);
             if (event.originalTarget == this ||
                 event.originalTarget == this.inputField.parentNode)
@@ -242,23 +213,6 @@
           }
         ]]>
       </handler>
-
-      <handler event="click" action="this._maybeSelectAll();"/>
-
-#ifndef XP_WIN
-      <handler event="contextmenu">
-        // Only care about context clicks on the textbox itself.
-        if (event.target != this)
-          return;
-
-        if (!event.button) // context menu opened via keyboard shortcut
-          return;
-        this._maybeSelectAll();
-        // see bug 576135 comment 4
-        let box = this.inputField.parentNode;
-        box._doPopupItemEnabling(box.menupopup);
-      </handler>
-#endif
     </handlers>
   </binding>
 </bindings>
