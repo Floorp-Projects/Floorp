@@ -1273,6 +1273,10 @@ RefPtr<OggTrackDemuxer::SamplesPromise> OggTrackDemuxer::GetSamples(
     if (!sample) {
       break;
     }
+    if (!sample->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     samples->AppendSample(sample);
     aNumSamples--;
   }

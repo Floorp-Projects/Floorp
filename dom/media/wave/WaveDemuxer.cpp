@@ -318,6 +318,10 @@ RefPtr<WAVTrackDemuxer::SamplesPromise> WAVTrackDemuxer::GetSamples(
     if (!datachunk) {
       break;
     }
+    if (!datachunk->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     datachunks->AppendSample(datachunk);
   }
 

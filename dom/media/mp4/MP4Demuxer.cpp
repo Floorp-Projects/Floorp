@@ -410,6 +410,7 @@ RefPtr<MP4TrackDemuxer::SeekPromise> MP4TrackDemuxer::Seek(
       continue;
     }
     if (sample->mKeyframe) {
+      MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
       mQueuedSample = sample;
       seekTime = mQueuedSample->mTime;
     }
@@ -500,6 +501,7 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
     if (!sample->Size()) {
       continue;
     }
+    MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
     samples->AppendSample(sample);
     aNumSamples--;
   }
@@ -561,6 +563,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
   RefPtr<MediaRawData> sample;
   while (!found && (sample = GetNextSample())) {
     parsed++;
+    MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
     if (sample->mKeyframe && sample->mTime >= aTimeThreshold) {
       found = true;
       mQueuedSample = sample;

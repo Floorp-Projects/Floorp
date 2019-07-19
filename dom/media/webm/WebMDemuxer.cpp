@@ -1102,6 +1102,10 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
     if (mNeedKeyframe && !sample->mKeyframe) {
       continue;
     }
+    if (!sample->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     mNeedKeyframe = false;
     samples->AppendSample(sample);
     aNumSamples--;
