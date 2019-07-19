@@ -4,6 +4,8 @@
 
 "use strict";
 
+Cu.importGlobalProperties(["fetch"]);
+
 var EXPORTED_SYMBOLS = ["AboutProtectionsHandler"];
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -12,6 +14,7 @@ const { RemotePages } = ChromeUtils.import(
   "resource://gre/modules/remotepagemanager/RemotePageManagerParent.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 ChromeUtils.defineModuleGetter(
   this,
   "fxAccounts",
@@ -31,6 +34,25 @@ let idToTextMap = new Map([
   [Ci.nsITrackingDBService.CRYPTOMINERS_ID, "cryptominer"],
   [Ci.nsITrackingDBService.FINGERPRINTERS_ID, "fingerprinter"],
 ]);
+
+const MONITOR_API_ENDPOINT = "https://monitor.firefox.com/user/breach-stats";
+
+// TODO: there will be a monitor-specific scope for FxA access tokens, which we should be
+// using once it's implemented. See: https://github.com/mozilla/blurts-server/issues/1128
+const SCOPE_MONITOR = [
+  "profile:uid",
+  "https://identity.mozilla.com/apps/monitor",
+];
+
+// Error messages
+const INVALID_OAUTH_TOKEN = "Invalid OAuth token";
+const USER_UNSUBSCRIBED_TO_MONITOR = "User is not subscribed to Monitor";
+const SERVICE_UNAVAILABLE = "Service unavailable";
+const UNEXPECTED_RESPONSE = "Unexpected response";
+const UNKNOWN_ERROR = "Unknown error";
+
+// Valid response info for successful Monitor data
+const MONITOR_RESPONSE_PROPS = ["monitoredEmails", "numBreaches", "passwords"];
 
 var AboutProtectionsHandler = {
   _inited: false,
@@ -71,6 +93,61 @@ var AboutProtectionsHandler = {
   },
 
   /**
+   * Fetches and validates data from the Monitor endpoint. If successful, then return
+   * expected data. Otherwise, throw the appropriate error depending on the status code.
+   *
+   * @return valid data from endpoint.
+   */
+  async fetchUserBreachStats(token) {
+    let monitorResponse = null;
+
+    // Make the request
+    const headers = new Headers();
+    headers.append("Authorization", `Bearer ${token}`);
+    const request = new Request(MONITOR_API_ENDPOINT, { headers });
+    const response = await fetch(request);
+
+    if (response.ok) {
+      // Validate the shape of the response is what we're expecting.
+      const json = await response.json();
+
+      // Make sure that we're getting the expected data.
+      let isValid = null;
+      for (let prop in json) {
+        isValid = MONITOR_RESPONSE_PROPS.includes(prop);
+
+        if (!isValid) {
+          break;
+        }
+      }
+
+      monitorResponse = isValid ? json : new Error(UNEXPECTED_RESPONSE);
+    } else {
+      // Check the reason for the error
+      switch (response.status) {
+        case 400:
+          monitorResponse = new Error(INVALID_OAUTH_TOKEN);
+          break;
+        case 404:
+          monitorResponse = new Error(USER_UNSUBSCRIBED_TO_MONITOR);
+          break;
+        case 503:
+          monitorResponse = new Error(SERVICE_UNAVAILABLE);
+          break;
+        default:
+          monitorResponse = new Error(UNKNOWN_ERROR);
+          break;
+      }
+    }
+
+    if (monitorResponse instanceof Error) {
+      throw monitorResponse;
+    }
+
+    return monitorResponse;
+  },
+
+  /**
    * Retrieves login data for the user.
    *
    * @return {{ hasFxa: Boolean,
@@ -103,13 +180,43 @@ var AboutProtectionsHandler = {
    *         Monitor data.
    */
   async getMonitorData() {
-    // TODO: Fetch real data for endpoints in Bug 1559424.
+    let monitorData = {};
+    const hasFxa = await fxAccounts.accountStatus();
+
+    if (hasFxa) {
+      let token = await fxAccounts.getOAuthToken({ scope: SCOPE_MONITOR });
+
+      try {
+        monitorData = await this.fetchUserBreachStats(token);
+      } catch (e) {
+        Cu.reportError(e.message);
+        // If the user's OAuth token is invalid, we clear the cached token and refetch
+        // again. If OAuth token is invalid after the second fetch, then the monitor UI
+        // will simply show the "no logins" UI version.
+        if (e.message === INVALID_OAUTH_TOKEN) {
+          await fxAccounts.removeCachedOAuthToken({ token });
+          token = await fxAccounts.getOAuthToken({ scope: SCOPE_MONITOR });
+
+          try {
+            monitorData = await this.fetchUserBreachStats(token);
+          } catch (_) {
+            Cu.reportError(e.message);
+            monitorData.errorMessage = INVALID_OAUTH_TOKEN;
+          }
+        } else {
+          monitorData.errorMessage = e.message;
+        }
+      }
+    } else {
+      // If no account exists, then the user is not logged in with an fxAccount.
+      monitorData = {
+        errorMessage: "No account",
+      };
+    }
+
     return {
-      monitoredEmails: 1,
-      numBreaches: 11,
-      passwords: 8,
-      lockwisePasswords: 2,
-      error: false,
+      ...monitorData,
+      error: !!monitorData.errorMessage,
     };
   },
 
