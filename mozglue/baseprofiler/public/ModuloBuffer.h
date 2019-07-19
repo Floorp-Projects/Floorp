@@ -50,8 +50,29 @@ class ModuloBuffer {
   static_assert(sizeof(Index) >= sizeof(Offset),
                 "ModuloBuffer::Index size must >= Offset");
 
+  // Create a buffer of the given length.
   explicit ModuloBuffer(PowerOfTwo<Length> aLength)
-      : mMask(aLength.Mask()), mBuffer(new Byte[aLength.Value()]) {}
+      : mMask(aLength.Mask()),
+        mBuffer(WrapNotNull(new Byte[aLength.Value()])),
+        mBufferDeleter([](Byte* aBuffer) { delete[] aBuffer; }) {}
+
+  // Take ownership of an existing buffer. Existing contents is ignored.
+  // Done by extracting raw pointer from UniquePtr<Byte[]>, and adding
+  // equivalent `delete[]` in `mBufferDeleter`.
+  ModuloBuffer(UniquePtr<Byte[]> aExistingBuffer, PowerOfTwo<Length> aLength)
+      : mMask(aLength.Mask()),
+        mBuffer(WrapNotNull(aExistingBuffer.release())),
+        mBufferDeleter([](Byte* aBuffer) { delete[] aBuffer; }) {}
+
+  // Use an externally-owned buffer. Existing contents is ignored.
+  ModuloBuffer(Byte* aExternalBuffer, PowerOfTwo<Length> aLength)
+      : mMask(aLength.Mask()), mBuffer(WrapNotNull(aExternalBuffer)) {}
+
+  ~ModuloBuffer() {
+    if (mBufferDeleter) {
+      mBufferDeleter(mBuffer);
+    }
+  }
 
   PowerOfTwo<Length> BufferLength() const {
     return PowerOfTwo<Length>(mMask.MaskValue() + 1);
@@ -408,7 +429,10 @@ class ModuloBuffer {
   const PowerOfTwoMask<Offset> mMask;
 
   // Buffer data.
-  UniquePtr<Byte[]> mBuffer;
+  NotNull<Byte*> mBuffer;
+
+  // Function used to release the buffer resource (if needed).
+  std::function<void(Byte*)> mBufferDeleter;
 };
 
 }  // namespace mozilla
