@@ -257,15 +257,8 @@ void TestLEB128() {
   printf("TestLEB128 done\n");
 }
 
-void TestModuloBuffer() {
-  printf("TestModuloBuffer...\n");
-
-  // Testing ModuloBuffer with default template arguments.
+static void TestModuloBuffer(ModuloBuffer<>& mb, uint32_t MBSize) {
   using MB = ModuloBuffer<>;
-
-  // Only 8-byte buffer, to easily test wrap-around.
-  constexpr uint32_t MBSize = 8;
-  MB mb(MakePowerOfTwo32<MBSize>());
 
   MOZ_RELEASE_ASSERT(mb.BufferLength().Value() == MBSize);
 
@@ -369,6 +362,53 @@ void TestModuloBuffer() {
   // And similarly, index MBSize+6 points at the same location as index 6.
   MOZ_RELEASE_ASSERT(it.ReadObject<int32_t>() == 456);
   MOZ_RELEASE_ASSERT(it.CurrentIndex() == MBSize + MBSize + 2);
+}
+
+void TestModuloBuffer() {
+  printf("TestModuloBuffer...\n");
+
+  // Testing ModuloBuffer with default template arguments.
+  using MB = ModuloBuffer<>;
+
+  // Only 8-byte buffers, to easily test wrap-around.
+  constexpr uint32_t MBSize = 8;
+
+  // MB with self-allocated heap buffer.
+  MB mbByLength(MakePowerOfTwo32<MBSize>());
+  TestModuloBuffer(mbByLength, MBSize);
+
+  // MB taking ownership of a provided UniquePtr to a buffer.
+  auto uniqueBuffer = MakeUnique<uint8_t[]>(MBSize);
+  MB mbByUniquePtr(MakeUnique<uint8_t[]>(MBSize), MakePowerOfTwo32<MBSize>());
+  TestModuloBuffer(mbByUniquePtr, MBSize);
+
+  // MB using part of a buffer on the stack. The buffer is three times the
+  // required size: The middle third is where ModuloBuffer will work, the first
+  // and last thirds are only used to later verify that ModuloBuffer didn't go
+  // out of its bounds.
+  uint8_t buffer[MBSize * 3];
+  // Pre-fill the buffer with a known pattern, so we can later see what changed.
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer[i] = uint8_t('A' + i);
+  }
+  MB mbByBuffer(&buffer[MBSize], MakePowerOfTwo32<MBSize>());
+  TestModuloBuffer(mbByBuffer, MBSize);
+
+  // Check that only the provided stack-based sub-buffer was modified.
+  uint32_t changed = 0;
+  for (size_t i = MBSize; i < MBSize * 2; ++i) {
+    changed += (buffer[i] == uint8_t('A' + i)) ? 0 : 1;
+  }
+  // Expect at least 75% changes.
+  MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
 
   printf("TestModuloBuffer done\n");
 }
@@ -388,11 +428,17 @@ void TestBlocksRingBufferAPI() {
   // Deleter will store about-to-be-deleted value in `lastDestroyed`.
   uint32_t lastDestroyed = 0;
 
+  // Create a 16-byte buffer, enough to store up to 3 entries (1 byte size + 4
+  // bytes uint64_t).
+  constexpr uint32_t MBSize = 16;
+  uint8_t buffer[MBSize * 3];
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer[i] = uint8_t('A' + i);
+  }
+
   // Start a temporary block to constrain buffer lifetime.
   {
-    // Create a 16-byte buffer, enough to store up to 3 entries (1 byte size + 4
-    // bytes uint64_t).
-    BlocksRingBuffer rb(MakePowerOfTwo32<16>(),
+    BlocksRingBuffer rb(&buffer[MBSize], MakePowerOfTwo32<MBSize>(),
                         [&](BlocksRingBuffer::EntryReader aReader) {
                           lastDestroyed = aReader.ReadObject<uint32_t>();
                         });
@@ -614,6 +660,22 @@ void TestBlocksRingBufferAPI() {
   }
   MOZ_RELEASE_ASSERT(lastDestroyed == 6);
 
+  // Check that only the provided stack-based sub-buffer was modified.
+  uint32_t changed = 0;
+  for (size_t i = MBSize; i < MBSize * 2; ++i) {
+    changed += (buffer[i] == uint8_t('A' + i)) ? 0 : 1;
+  }
+  // Expect at least 75% changes.
+  MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+
   printf("TestBlocksRingBufferAPI done\n");
 }
 
@@ -623,7 +685,12 @@ void TestBlocksRingBufferThreading() {
   // Deleter will store about-to-be-deleted value in `lastDestroyed`.
   std::atomic<int> lastDestroyed{0};
 
-  BlocksRingBuffer rb(MakePowerOfTwo32<8192>(),
+  constexpr uint32_t MBSize = 8192;
+  uint8_t buffer[MBSize * 3];
+  for (size_t i = 0; i < MBSize * 3; ++i) {
+    buffer[i] = uint8_t('A' + i);
+  }
+  BlocksRingBuffer rb(&buffer[MBSize], MakePowerOfTwo32<MBSize>(),
                       [&](BlocksRingBuffer::EntryReader aReader) {
                         lastDestroyed = aReader.ReadObject<int>();
                       });
@@ -674,6 +741,22 @@ void TestBlocksRingBufferThreading() {
   // Stop reader thread.
   stopReader = true;
   reader.join();
+
+  // Check that only the provided stack-based sub-buffer was modified.
+  uint32_t changed = 0;
+  for (size_t i = MBSize; i < MBSize * 2; ++i) {
+    changed += (buffer[i] == uint8_t('A' + i)) ? 0 : 1;
+  }
+  // Expect at least 75% changes.
+  MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
 
   printf("TestBlocksRingBufferThreading done\n");
 }
