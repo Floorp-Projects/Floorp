@@ -2070,9 +2070,7 @@ class JSScript : public js::gc::TenuredCell {
     // Whether the Parser declared 'arguments'.
     ShouldDeclareArguments = 1 << 25,
 
-    // Whether source is BinAST.
-    // FIXME: JSScript should also set this flag correctly.
-    IsBinAST = 1 << 26,
+    // (1 << 26) is unused.
 
     // Whether this script contains a direct eval statement.
     HasDirectEval = 1 << 27,
@@ -3522,8 +3520,7 @@ class LazyScript : public gc::TenuredCell {
     return frontend::ParseGoal::Script;
   }
 
-  bool isBinAST() const { return hasFlag(ImmutableFlags::IsBinAST); }
-  void setIsBinAST() { setFlag(ImmutableFlags::IsBinAST); }
+  bool isBinAST() const { return scriptSource()->hasBinASTSource(); }
 
   bool strict() const { return hasFlag(ImmutableFlags::Strict); }
   void setStrict() { setFlag(ImmutableFlags::Strict); }
