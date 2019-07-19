@@ -4,10 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# We give js/src/dbg its own moz.build file, separate from js/src/moz.build, so
-# that the object file names don't conflict with those from other directories.
-# For example, js/src/dbg/Object.cpp and js/src/builtin/Object.cpp had better
-# not smash each other's  .o files when unified sources are disabled.
+# We give js/src/debugger its own moz.build file, separate from
+# js/src/moz.build, so that the object file names don't conflict with those from
+# other directories. For example, js/src/debugger/Object.cpp and
+# js/src/builtin/Object.cpp had better not smash each other's .o files when
+# unified sources are disabled.
 
 FINAL_LIBRARY = 'js'
 
@@ -20,7 +21,7 @@ LOCAL_INCLUDES += [
 include('../js-config.mozbuild')
 include('../js-cxxflags.mozbuild')
 
-SOURCES = [
+UNIFIED_SOURCES = [
     'Debugger.cpp',
     'DebuggerMemory.cpp',
     'Environment.cpp',
