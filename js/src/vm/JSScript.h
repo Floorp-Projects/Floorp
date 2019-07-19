@@ -1400,11 +1400,25 @@ class BaseScript : public gc::TenuredCell {
   // non-null (except on no-jit builds).
   uint8_t* jitCodeRaw_ = nullptr;
 
-  explicit BaseScript(uint8_t* stubEntry)
-    : jitCodeRaw_(stubEntry) { }
+  // The ScriptSourceObject for this script.
+  GCPtr<ScriptSourceObject*> sourceObject_ = {};
+
+  BaseScript(uint8_t* stubEntry, ScriptSourceObject* sourceObject)
+      : jitCodeRaw_(stubEntry), sourceObject_(sourceObject) {}
 
  public:
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
+
+  ScriptSourceObject* sourceObject() const { return sourceObject_; }
+  ScriptSource* scriptSource() const { return sourceObject()->source(); }
+  ScriptSource* maybeForwardedScriptSource() const;
+
+  bool mutedErrors() const { return scriptSource()->mutedErrors(); }
+
+  const char* filename() const { return scriptSource()->filename(); }
+  const char* maybeForwardedFilename() const {
+    return maybeForwardedScriptSource()->filename();
+  }
 
   void traceChildren(JSTracer* trc);
 
@@ -1942,9 +1956,6 @@ class JSScript : public js::BaseScript {
  private:
   // JIT and type inference data for this script. May be purged on GC.
   js::jit::JitScript* jitScript_ = nullptr;
-
-  // This script's ScriptSourceObject.
-  js::GCPtr<js::ScriptSourceObject*> sourceObject_ = {};
 
   /*
    * Information attached by Ion. Nexto a valid IonScript this could be
@@ -2760,20 +2771,9 @@ class JSScript : public js::BaseScript {
   MOZ_MUST_USE bool appendSourceDataForToString(JSContext* cx,
                                                 js::StringBuffer& buf);
 
-  void setSourceObject(js::ScriptSourceObject* object);
-  js::ScriptSourceObject* sourceObject() const { return sourceObject_; }
-  js::ScriptSource* scriptSource() const;
-  js::ScriptSource* maybeForwardedScriptSource() const;
-
   void setDefaultClassConstructorSpan(js::ScriptSourceObject* sourceObject,
                                       uint32_t start, uint32_t end,
                                       unsigned line, unsigned column);
-
-  bool mutedErrors() const { return scriptSource()->mutedErrors(); }
-  const char* filename() const { return scriptSource()->filename(); }
-  const char* maybeForwardedFilename() const {
-    return maybeForwardedScriptSource()->filename();
-  }
 
 #ifdef MOZ_VTUNE
   // Unique Method ID passed to the VTune profiler. Allows attribution of
@@ -3343,10 +3343,6 @@ class LazyScript : public BaseScript {
   // +-----------------+
   GCPtr<TenuredCell*> enclosingLazyScriptOrScope_;
 
-  // ScriptSourceObject. We leave this set to nullptr until we generate
-  // bytecode for our immediate parent.
-  GCPtr<ScriptSourceObject*> sourceObject_;
-
   // Heap allocated table with any free variables, inner functions, or class
   // fields. This will be nullptr if none exist.
   LazyScriptData* lazyData_;
@@ -3470,11 +3466,6 @@ class LazyScript : public BaseScript {
     return enclosingScope()->hasOnChain(ScopeKind::NonSyntactic);
   }
 
-  ScriptSourceObject& sourceObject() const;
-  ScriptSource* scriptSource() const { return sourceObject().source(); }
-  ScriptSource* maybeForwardedScriptSource() const;
-  bool mutedErrors() const { return scriptSource()->mutedErrors(); }
-
   mozilla::Span<GCPtrAtom> closedOverBindings() {
     return lazyData_ ? lazyData_->closedOverBindings()
                      : mozilla::Span<GCPtrAtom>();
@@ -3595,7 +3586,6 @@ class LazyScript : public BaseScript {
     return lazyData_->fieldInitializers_;
   }
 
-  const char* filename() const { return scriptSource()->filename(); }
   uint32_t sourceStart() const { return sourceStart_; }
   uint32_t sourceEnd() const { return sourceEnd_; }
   uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }

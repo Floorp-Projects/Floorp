@@ -5141,7 +5141,7 @@ class MOZ_STACK_CLASS Debugger::SourceQuery : public Debugger::QueryBase {
       return;
     }
 
-    ScriptSourceObject* source = &lazyScript->sourceObject();
+    ScriptSourceObject* source = lazyScript->sourceObject();
     if (!sources.put(source)) {
       oom = true;
     }

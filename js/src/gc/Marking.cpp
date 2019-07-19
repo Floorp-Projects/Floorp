@@ -961,7 +961,9 @@ bool js::GCMarker::mark(T* thing) {
 // out-of-line, generic tracing code for comparison. Both paths must end up
 // traversing equivalent subgraphs.
 
-void BaseScript::traceChildren(JSTracer* trc) {}
+void BaseScript::traceChildren(JSTracer* trc) {
+  TraceNullableEdge(trc, &sourceObject_, "sourceObject");
+}
 
 void LazyScript::traceChildren(JSTracer* trc) {
   // Trace base class fields.
@@ -973,10 +975,6 @@ void LazyScript::traceChildren(JSTracer* trc) {
 
   if (function_) {
     TraceEdge(trc, &function_, "function");
-  }
-
-  if (sourceObject_) {
-    TraceEdge(trc, &sourceObject_, "sourceObject");
   }
 
   if (enclosingLazyScriptOrScope_) {
@@ -1005,14 +1003,14 @@ void LazyScript::traceChildren(JSTracer* trc) {
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
+  if (thing->sourceObject_) {
+    traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
+  }
+
   // script_ is weak so is not traced here.
 
   if (thing->function_) {
     traverseEdge(thing, static_cast<JSObject*>(thing->function_));
-  }
-
-  if (thing->sourceObject_) {
-    traverseEdge(thing, static_cast<JSObject*>(thing->sourceObject_));
   }
 
   if (thing->enclosingLazyScriptOrScope_) {
