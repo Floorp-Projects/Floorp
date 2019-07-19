@@ -3793,18 +3793,10 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
-    : js::BaseScript(stubEntry, sourceObject),
-      realm_(realm),
-      sourceStart_(sourceStart),
-      sourceEnd_(sourceEnd),
-      toStringStart_(toStringStart),
-      toStringEnd_(toStringEnd) {
+    : js::BaseScript(stubEntry, sourceObject, sourceStart, sourceEnd,
+                     toStringStart, toStringEnd),
+      realm_(realm) {
   MOZ_ASSERT(JS::GetCompartmentForRealm(realm) == sourceObject->compartment());
-
-  // See JSScript.h for further details.
-  MOZ_ASSERT(toStringStart <= sourceStart);
-  MOZ_ASSERT(sourceStart <= sourceEnd);
-  MOZ_ASSERT(sourceEnd <= toStringEnd);
 }
 
 /* static */
@@ -5470,23 +5462,19 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
                        uint32_t lineno, uint32_t column)
-    : BaseScript(stubEntry, &sourceObject),
+    : BaseScript(stubEntry, &sourceObject, sourceStart, sourceEnd,
+                 toStringStart, sourceEnd),
       script_(nullptr),
       function_(fun),
       lazyData_(data),
       immutableFlags_(immutableFlags),
-      mutableFlags_(0),
-      sourceStart_(sourceStart),
-      sourceEnd_(sourceEnd),
-      toStringStart_(toStringStart),
-      toStringEnd_(sourceEnd),
-      lineno_(lineno),
-      column_(column) {
+      mutableFlags_(0) {
   MOZ_ASSERT(function_);
   MOZ_ASSERT(sourceObject_);
   MOZ_ASSERT(function_->compartment() == sourceObject_->compartment());
-  MOZ_ASSERT(sourceStart <= sourceEnd);
-  MOZ_ASSERT(toStringStart <= sourceStart);
+
+  lineno_ = lineno;
+  column_ = column;
 
   if (data) {
     AddCellMemory(this, data->allocationSize(), MemoryUse::LazyScriptData);

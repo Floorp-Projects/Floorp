@@ -1403,8 +1403,51 @@ class BaseScript : public gc::TenuredCell {
   // The ScriptSourceObject for this script.
   GCPtr<ScriptSourceObject*> sourceObject_ = {};
 
-  BaseScript(uint8_t* stubEntry, ScriptSourceObject* sourceObject)
-      : jitCodeRaw_(stubEntry), sourceObject_(sourceObject) {}
+  // Range of characters in scriptSource which contains this script's source,
+  // that is, the range used by the Parser to produce this script.
+  //
+  // For most functions the fields point to the following locations.
+  //
+  //   function * f(a, b) { return a + b; }
+  //   ^          ^                        ^
+  //   |          |                        |
+  //   |          sourceStart_             sourceEnd_
+  //   |                                   |
+  //   toStringStart_                      toStringEnd_
+  //
+  // For the special case of class constructors, the spec requires us to use an
+  // alternate definition of toStringStart_ / toStringEnd_.
+  //
+  //   class C { constructor() { this.field = 42; } }
+  //   ^         ^                                 ^ ^
+  //   |         |                                 | `---------`
+  //   |         sourceStart_                      sourceEnd_  |
+  //   |                                                       |
+  //   toStringStart_                                          toStringEnd_
+  //
+  // NOTE: These are counted in Code Units from the start of the script source.
+  uint32_t sourceStart_ = 0;
+  uint32_t sourceEnd_ = 0;
+  uint32_t toStringStart_ = 0;
+  uint32_t toStringEnd_ = 0;
+
+  // Line and column of |sourceStart_| position.
+  uint32_t lineno_ = 0;
+  uint32_t column_ = 0;  // Count of Code Points
+
+  BaseScript(uint8_t* stubEntry, ScriptSourceObject* sourceObject,
+             uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+             uint32_t toStringEnd)
+      : jitCodeRaw_(stubEntry),
+        sourceObject_(sourceObject),
+        sourceStart_(sourceStart),
+        sourceEnd_(sourceEnd),
+        toStringStart_(toStringStart),
+        toStringEnd_(toStringEnd) {
+    MOZ_ASSERT(toStringStart <= sourceStart);
+    MOZ_ASSERT(sourceStart <= sourceEnd);
+    MOZ_ASSERT(sourceEnd <= toStringEnd);
+  }
 
  public:
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
@@ -1419,6 +1462,15 @@ class BaseScript : public gc::TenuredCell {
   const char* maybeForwardedFilename() const {
     return maybeForwardedScriptSource()->filename();
   }
+
+  uint32_t sourceStart() const { return sourceStart_; }
+  uint32_t sourceEnd() const { return sourceEnd_; }
+  uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }
+  uint32_t toStringStart() const { return toStringStart_; }
+  uint32_t toStringEnd() const { return toStringEnd_; }
+
+  uint32_t lineno() const { return lineno_; }
+  uint32_t column() const { return column_; }
 
   void traceChildren(JSTracer* trc);
 
@@ -1976,43 +2028,6 @@ class JSScript : public js::BaseScript {
   /* Size of the used part of the data array. */
   uint32_t dataSize_ = 0;
 
-  /* Base line number of script. */
-  uint32_t lineno_ = 0;
-
-  /* Base column of script, optionally set. */
-  uint32_t column_ = 0;
-
-  // Range of characters in scriptSource which contains this script's
-  // source, that is, the range used by the Parser to produce this script.
-  //
-  // Most scripted functions have sourceStart_ == toStringStart_ and
-  // sourceEnd_ == toStringEnd_. However, for functions with extra
-  // qualifiers (e.g. generators, async) and for class constructors (which
-  // need to return the entire class source), their values differ.
-  //
-  // Each field points the following locations.
-  //
-  //   function * f(a, b) { return a + b; }
-  //   ^          ^                        ^
-  //   |          |                        |
-  //   |          sourceStart_             sourceEnd_
-  //   |                                   |
-  //   toStringStart_                      toStringEnd_
-  //
-  // And, in the case of class constructors, an additional toStringEnd
-  // offset is used.
-  //
-  //   class C { constructor() { this.field = 42; } }
-  //   ^         ^                                 ^ ^
-  //   |         |                                 | `---------`
-  //   |         sourceStart_                      sourceEnd_  |
-  //   |                                                       |
-  //   toStringStart_                                          toStringEnd_
-  uint32_t sourceStart_ = 0;
-  uint32_t sourceEnd_ = 0;
-  uint32_t toStringStart_ = 0;
-  uint32_t toStringEnd_ = 0;
-
   // Number of times the script has been called or has had backedges taken.
   // When running in ion, also increased for any inlined scripts. Reset if
   // the script's JIT code is forcibly discarded.
@@ -2381,10 +2396,6 @@ class JSScript : public js::BaseScript {
 
   size_t mainOffset() const { return immutableScriptData()->mainOffset; }
 
-  uint32_t lineno() const { return lineno_; }
-
-  uint32_t column() const { return column_; }
-
   void setColumn(size_t column) { column_ = column; }
 
   // The fixed part of a stack frame is comprised of vars (in function and
@@ -2442,16 +2453,6 @@ class JSScript : public js::BaseScript {
   size_t numICEntries() const { return immutableScriptData()->numICEntries; }
 
   size_t funLength() const { return immutableScriptData()->funLength; }
-
-  uint32_t sourceStart() const { return sourceStart_; }
-
-  uint32_t sourceEnd() const { return sourceEnd_; }
-
-  uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }
-
-  uint32_t toStringStart() const { return toStringStart_; }
-
-  uint32_t toStringEnd() const { return toStringEnd_; }
 
   bool noScriptRval() const { return hasFlag(ImmutableFlags::NoScriptRval); }
 
@@ -3368,17 +3369,6 @@ class LazyScript : public BaseScript {
   }
   void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
 
-  // Source location for the script.
-  // See the comment in JSScript for the details
-  uint32_t sourceStart_;
-  uint32_t sourceEnd_;
-  uint32_t toStringStart_;
-  uint32_t toStringEnd_;
-  // Line and column of |begin_| position, that is the position where we
-  // start parsing.
-  uint32_t lineno_;
-  uint32_t column_;
-
   LazyScript(JSFunction* fun, uint8_t* stubEntry,
              ScriptSourceObject& sourceObject, LazyScriptData* data,
              uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
@@ -3585,14 +3575,6 @@ class LazyScript : public BaseScript {
     MOZ_ASSERT(lazyData_);
     return lazyData_->fieldInitializers_;
   }
-
-  uint32_t sourceStart() const { return sourceStart_; }
-  uint32_t sourceEnd() const { return sourceEnd_; }
-  uint32_t sourceLength() const { return sourceEnd_ - sourceStart_; }
-  uint32_t toStringStart() const { return toStringStart_; }
-  uint32_t toStringEnd() const { return toStringEnd_; }
-  uint32_t lineno() const { return lineno_; }
-  uint32_t column() const { return column_; }
 
   void setToStringEnd(uint32_t toStringEnd) {
     MOZ_ASSERT(toStringStart_ <= toStringEnd);

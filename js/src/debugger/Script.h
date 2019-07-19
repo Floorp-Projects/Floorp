@@ -45,6 +45,7 @@ class DebuggerScript : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
 
   inline gc::Cell* getReferentCell() const;
+  inline js::BaseScript* getReferentScript() const;
   inline DebuggerScriptReferent getReferent() const;
 
   static DebuggerScript* check(JSContext* cx, HandleValue v,

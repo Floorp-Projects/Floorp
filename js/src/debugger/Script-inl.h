@@ -28,4 +28,11 @@ js::DebuggerScriptReferent js::DebuggerScript::getReferent() const {
   return mozilla::AsVariant(static_cast<JSScript*>(nullptr));
 }
 
+js::BaseScript* js::DebuggerScript::getReferentScript() const {
+  gc::Cell* cell = getReferentCell();
+
+  MOZ_ASSERT(cell->is<JSScript>() || cell->is<LazyScript>());
+  return static_cast<js::BaseScript*>(cell);
+}
+
 #endif /* debugger_Script_inl_h */
