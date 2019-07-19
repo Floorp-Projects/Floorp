@@ -1130,11 +1130,12 @@ class CGHeaders(CGWrapper):
         bindingHeaders = set()
         declareIncludes = set(declareIncludes)
 
-        def addHeadersForType((t, dictionary)):
+        def addHeadersForType(typeAndPossibleDictionary):
             """
             Add the relevant headers for this type.  We use dictionary, if
             passed, to decide what to do with interface types.
             """
+            t, dictionary = typeAndPossibleDictionary
             # Dictionaries have members that need to be actually
             # declared, not just forward-declared.
             if dictionary:
@@ -8096,7 +8097,7 @@ class CGPerSignatureCall(CGThing):
         }
         try:
             wrapCode += wrapForType(self.returnType, self.descriptor, resultTemplateValues)
-        except MethodNotNewObjectError, err:
+        except MethodNotNewObjectError as err:
             assert not returnsNewObject
             raise TypeError("%s being returned from non-NewObject method or property %s.%s" %
                             (err.typename,
