@@ -52,6 +52,18 @@ loader.lazyRequireGetter(
   true
 );
 loader.lazyRequireGetter(this, "throttle", "devtools/shared/throttle", true);
+loader.lazyRequireGetter(
+  this,
+  "HighlighterEnvironment",
+  "devtools/server/actors/highlighters",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "PausedDebuggerOverlay",
+  "devtools/server/actors/highlighters/paused-debugger",
+  true
+);
 
 /**
  * JSD2 actors.
@@ -91,6 +103,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     this._observingNetwork = false;
     this._activeEventBreakpoints = new Set();
     this._activeEventPause = null;
+    this._pauseOverlay = null;
 
     this._priorPause = null;
 
@@ -239,6 +252,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     if (this.dbg.replaying) {
       this.dbg.replayPopThreadPause();
     }
+  },
+
+  isPaused() {
+    return this._state === "paused";
   },
 
   /**
@@ -392,6 +409,45 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
   _setBreakpointsOnAttach(breakpoints) {
     for (const { location, options } of Object.values(breakpoints)) {
       this.setBreakpoint(location, options);
+    }
+  },
+
+  get pauseOverlay() {
+    if (this._pauseOverlay) {
+      return this._pauseOverlay;
+    }
+
+    const env = new HighlighterEnvironment();
+    env.initFromTargetActor(this._parent);
+    const highlighter = new PausedDebuggerOverlay(env, {
+      showOverlayStepButtons: this._options.showOverlayStepButtons,
+      resume: () => this.onResume({ resumeLimit: null }),
+      stepOver: () => this.onResume({ resumeLimit: { type: "next" } }),
+    });
+    this._pauseOverlay = highlighter;
+    return highlighter;
+  },
+
+  showOverlay() {
+    if (
+      this.isPaused() &&
+      this._parent.on &&
+      this._parent.window.document &&
+      !this._parent.window.isChromeWindow &&
+      this.pauseOverlay
+    ) {
+      const reason = this._priorPause.why.type;
+      this.pauseOverlay.show(null, { reason });
+    }
+  },
+
+  hideOverlay(msg) {
+    if (
+      this._parent.window.document &&
+      this._parent.on &&
+      !this._parent.window.isChromeWindow
+    ) {
+      this.pauseOverlay.hide();
     }
   },
 
@@ -711,6 +767,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
       this._priorPause = pkt;
       this.conn.sendActorEvent(this.actorID, "paused", pkt);
+      this.showOverlay();
     } catch (error) {
       reportError(error);
       this.conn.send({
@@ -1228,6 +1285,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Tell anyone who cares of the resume (as of now, that's the xpcshell harness and
     // devtools-startup.js when handling the --wait-for-jsdebugger flag)
     this.conn.sendActorEvent(this.actorID, "resumed");
+    this.hideOverlay();
 
     if (Services.obs) {
       Services.obs.notifyObservers(this, "devtools-thread-resumed");
