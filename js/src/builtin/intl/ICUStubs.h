@@ -228,6 +228,12 @@ inline void unumf_formatDouble(const UNumberFormatter* uformatter, double value,
   MOZ_CRASH("unumf_formatDouble: Intl API disabled");
 }
 
+inline void unumf_formatDecimal(const UNumberFormatter* uformatter,
+                                const char* value, int32_t valueLen,
+                                UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_formatDecimal: Intl API disabled");
+}
+
 struct UFormattedValue;
 
 inline const UFormattedValue* unumf_resultAsValue(

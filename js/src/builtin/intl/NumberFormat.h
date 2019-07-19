@@ -220,7 +220,7 @@ using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 #ifndef U_HIDE_DRAFT_API
 MOZ_MUST_USE bool FormattedNumberToParts(JSContext* cx,
                                          const UFormattedValue* formattedValue,
-                                         double number, FieldType unitType,
+                                         HandleValue number, FieldType unitType,
                                          MutableHandleValue result);
 #endif
 
