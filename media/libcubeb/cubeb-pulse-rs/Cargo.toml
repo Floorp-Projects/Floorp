@@ -15,4 +15,3 @@ cubeb-backend = "0.5"
 pulse-ffi = { path = "pulse-ffi" }
 pulse = { path = "pulse-rs" }
 semver = "^0.6"
-ringbuf = "0.1"
