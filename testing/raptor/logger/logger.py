@@ -37,3 +37,6 @@ class RaptorLogger():
 
     def process_output(self, *args, **kwargs):
         return self.logger.process_output(*args, **kwargs)
+
+    def crash(self, *args, **kwargs):
+        return self.logger.crash(*args, **kwargs)
