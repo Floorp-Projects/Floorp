@@ -1,7 +1,17 @@
 "use strict";
 
-const BASE =
-  "http://mochi.test:8888/browser/browser/components/extensions/test/browser/";
+const { AddonTestUtils } = ChromeUtils.import(
+  "resource://testing-common/AddonTestUtils.jsm"
+);
+
+const { computeHash } = ChromeUtils.import(
+  "resource://gre/modules/addons/ProductAddonChecker.jsm",
+  null
+);
+
+AddonTestUtils.initMochitest(this);
+
+const testServer = AddonTestUtils.createHttpServer();
 
 add_task(async function test_management_install() {
   await SpecialPowers.pushPrefEnv({
@@ -42,14 +52,52 @@ add_task(async function test_management_install() {
     },
   });
 
+  const themeXPIFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      manifest_version: 2,
+      name: "Tigers Matter",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "tiger@persona.beard",
+        },
+      },
+      theme: {
+        colors: {
+          frame: "orange",
+        },
+      },
+    },
+  });
+
+  let themeXPIFileHash = await computeHash("sha256", themeXPIFile.path);
+
+  const otherXPIFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      manifest_version: 2,
+      name: "Tigers Don't Matter",
+      version: "1.0",
+      applications: {
+        gecko: {
+          id: "other@web.extension",
+        },
+      },
+    },
+  });
+
+  testServer.registerFile("/install_theme-1.0-fx.xpi", themeXPIFile);
+  testServer.registerFile("/install_other-1.0-fx.xpi", otherXPIFile);
+
+  const { primaryHost, primaryPort } = testServer.identity;
+  const baseURL = `http://${primaryHost}:${primaryPort}`;
+
   let addons = [
     {
-      url: BASE + "install_theme-1.0-fx.xpi",
-      hash:
-        "sha256:aa232d8391d82a9c1014364efbe1657ff6d8dfc88b3c71e99881b1f3843fdad3",
+      url: `${baseURL}/install_theme-1.0-fx.xpi`,
+      hash: `sha256:${themeXPIFileHash}`,
     },
     {
-      url: BASE + "install_other-1.0-fx.xpi",
+      url: `${baseURL}/install_other-1.0-fx.xpi`,
     },
   ];
 
