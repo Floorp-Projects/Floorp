@@ -121,9 +121,9 @@ class FrameHeader {
     }
     mValid =
 #ifdef FUZZING
-	    true;
-#else 
-	    crc == br.ReadBits(8);
+        true;
+#else
+        crc == br.ReadBits(8);
 #endif
     mSize = br.BitCount() / 8;
 
@@ -813,6 +813,10 @@ RefPtr<FlacTrackDemuxer::SamplesPromise> FlacTrackDemuxer::GetSamples(
   while (aNumSamples--) {
     RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
     if (!frame) break;
+    if (!frame->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     frames->AppendSample(frame);
   }
 

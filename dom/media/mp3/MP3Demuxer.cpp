@@ -261,6 +261,10 @@ RefPtr<MP3TrackDemuxer::SamplesPromise> MP3TrackDemuxer::GetSamples(
     if (!frame) {
       break;
     }
+    if (!frame->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     frames->AppendSample(frame);
   }
 
