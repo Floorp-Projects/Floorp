@@ -1308,7 +1308,6 @@ impl TextureCache {
         &mut self,
         tile_size: DeviceIntSize,
         handle: &mut TextureCacheHandle,
-        uv_rect_kind: UvRectKind,
         gpu_cache: &mut GpuCache,
     ) {
         debug_assert!(self.now.is_valid());
@@ -1340,11 +1339,10 @@ impl TextureCache {
         }
 
         // Upload the resource rect and texture array layer.
-        let entry = self.entries
+        self.entries
             .get_opt_mut(handle)
-            .expect("BUG: handle must be valid now");
-        entry.uv_rect_kind = uv_rect_kind;
-        entry.update_gpu_cache(gpu_cache);
+            .expect("BUG: handle must be valid now")
+            .update_gpu_cache(gpu_cache);
     }
 }
 
