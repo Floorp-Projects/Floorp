@@ -6,9 +6,6 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
-        <script src="/resources/testdriver.js"></script>
-        <script src="/resources/testdriver-actions.js"></script>
-        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <script>
@@ -54,19 +51,6 @@
                 on_event(document,"pointerlockerror", function() {
                     assert_unreached("Pointer lock error");
                 })
-
-                // Inject mouse input
-                var actions = new test_driver.Actions();
-                actions.pointerMove(0, 0, {origin: div1})
-                       .pointerDown({button: actions.ButtonType.LEFT})
-                       .pointerMove(30, 30, {origin: div1})
-                       .pointerMove(30, 0, {origin: div1})
-                       .pointerDown({button: actions.ButtonType.RIGHT})
-                       .pointerMove(60, 30, {origin: div1})
-                       .pointerMove(20, 20, {origin: div1})
-                       .pointerUp({button: actions.ButtonType.RIGHT})
-                       .pointerUp({button: actions.ButtonType.LEFT})
-                       .send();
             }
         </script>
     </head>
