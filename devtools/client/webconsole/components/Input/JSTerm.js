@@ -1744,7 +1744,6 @@ class JSTerm extends Component {
   }
 
   destroy() {
-    this.webConsoleClient.clearNetworkRequests();
     if (this.webConsoleUI.outputNode) {
       // We do this because it's much faster than letting React handle the ConsoleOutput
       // unmounting.
