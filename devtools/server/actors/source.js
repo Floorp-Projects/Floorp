@@ -112,7 +112,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     this._contentType = contentType;
     this._isInlineSource = isInlineSource;
 
-    this.onSource = this.onSource.bind(this);
+    this.source = this.source.bind(this);
     this._getSourceText = this._getSourceText.bind(this);
 
     this._init = null;
@@ -131,15 +131,12 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   get dbg() {
     return this.threadActor.dbg;
   },
-  get source() {
-    return this._source;
-  },
   get breakpointActorMap() {
     return this.threadActor.breakpointActorMap;
   },
   get url() {
     if (!this._url) {
-      this._url = getSourceURL(this.source, this.threadActor._parent.window);
+      this._url = getSourceURL(this._source, this.threadActor._parent.window);
     }
     return this._url;
   },
@@ -176,7 +173,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
   },
 
   form: function() {
-    const source = this.source;
+    const source = this._source;
 
     let introductionUrl = null;
     if (source.introductionScript) {
@@ -209,7 +206,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       "Debuggee source and URL are set automatically"
     );
 
-    query.source = this.source;
+    query.source = this._source;
     return this.dbg.findScripts(query);
   },
 
@@ -230,10 +227,10 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       content: t,
       contentType: this._contentType,
     });
-    const isWasm = this.source.introductionType === "wasm";
+    const isWasm = this._source.introductionType === "wasm";
 
     if (isWasm) {
-      const wasm = this.source.binary;
+      const wasm = this._source.binary;
       const buffer = wasm.buffer;
       assert(
         wasm.byteOffset === 0 && wasm.byteLength === buffer.byteLength,
@@ -257,13 +254,13 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     // (javascript.options.discardSystemSource == true). Re-fetch non-JS
     // sources to get the contentType from the headers.
     if (
-      this.source &&
-      this.source.text !== "[no source]" &&
+      this._source &&
+      this._source.text !== "[no source]" &&
       this._contentType &&
       (this._contentType.includes("javascript") ||
         this._contentType === "text/wasm")
     ) {
-      return toResolvedContent(this.source.text);
+      return toResolvedContent(this._source.text);
     }
 
     // Only load the HTML page source from cache (which exists when
@@ -393,7 +390,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *         a field `source`. `source` can either be an ArrayBuffer or
    *         a LongString.
    */
-  onSource: function() {
+  source: function() {
     return Promise.resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
