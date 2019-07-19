@@ -273,11 +273,11 @@ RefPtr<MP3TrackDemuxer::SamplesPromise> MP3TrackDemuxer::GetSamples(
           " mTotalFrameLen=%" PRIu64
           " mSamplesPerFrame=%d mSamplesPerSecond=%d "
           "mChannels=%d",
-          frames->mSamples.Length(), aNumSamples, mOffset, mNumParsedFrames,
+          frames->GetSamples().Length(), aNumSamples, mOffset, mNumParsedFrames,
           mFrameIndex, mTotalFrameLen, mSamplesPerFrame, mSamplesPerSecond,
           mChannels);
 
-  if (frames->mSamples.IsEmpty()) {
+  if (frames->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   }

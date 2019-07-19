@@ -1111,10 +1111,10 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
     aNumSamples--;
   }
 
-  if (samples->mSamples.IsEmpty()) {
+  if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(rv, __func__);
   } else {
-    UpdateSamples(samples->mSamples);
+    UpdateSamples(samples->GetSamples());
     return SamplesPromise::CreateAndResolve(samples, __func__);
   }
 }
@@ -1190,7 +1190,8 @@ void WebMTrackDemuxer::Reset() {
   }
 }
 
-void WebMTrackDemuxer::UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples) {
+void WebMTrackDemuxer::UpdateSamples(
+    const nsTArray<RefPtr<MediaRawData>>& aSamples) {
   for (const auto& sample : aSamples) {
     if (sample->mCrypto.IsEncrypted()) {
       UniquePtr<MediaRawDataWriter> writer(sample->CreateWriter());

@@ -1281,7 +1281,7 @@ RefPtr<OggTrackDemuxer::SamplesPromise> OggTrackDemuxer::GetSamples(
     aNumSamples--;
   }
 
-  if (samples->mSamples.IsEmpty()) {
+  if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   } else {

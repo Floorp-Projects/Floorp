@@ -506,11 +506,11 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
     aNumSamples--;
   }
 
-  if (samples->mSamples.IsEmpty()) {
+  if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   }
-  for (const auto& sample : samples->mSamples) {
+  for (const auto& sample : samples->GetSamples()) {
     // Collect telemetry from h264 Annex B SPS.
     if (mNeedSPSForTelemetry && mType == kH264 && AnnexB::IsAVCC(sample)) {
       RefPtr<MediaByteBuffer> extradata = H264::ExtractExtraData(sample);
@@ -522,7 +522,7 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
   }
 
   if (mNextKeyframeTime.isNothing() ||
-      samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value()) {
+      samples->GetSamples().LastElement()->mTime >= mNextKeyframeTime.value()) {
     SetNextKeyFrameTime();
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);

@@ -313,7 +313,7 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
     java::GeckoHLSSample::LocalRef sample(std::move(demuxedSample));
     if (sample->IsEOS()) {
       HLS_DEBUG("HLSTrackDemuxer", "Met BUFFER_FLAG_END_OF_STREAM.");
-      if (samples->mSamples.IsEmpty()) {
+      if (samples->GetSamples().IsEmpty()) {
         return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                                __func__);
       }
@@ -333,7 +333,8 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
   }
   if (mType == TrackInfo::kVideoTrack &&
       (mNextKeyframeTime.isNothing() ||
-       samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value())) {
+       samples->GetSamples().LastElement()->mTime >=
+           mNextKeyframeTime.value())) {
     // Only need to find NextKeyFrame for Video
     UpdateNextKeyFrameTime();
   }
