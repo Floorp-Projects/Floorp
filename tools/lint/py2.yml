@@ -36,7 +36,6 @@ py2:
         - tools/docs
         - tools/jprof/split-profile.py
         - tools/lint
-        - tools/mach_commands.py
         - tools/profiler
         - tools/rb
         - tools/update-packaging
