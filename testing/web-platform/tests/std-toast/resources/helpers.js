@@ -1,4 +1,4 @@
-import { showToast, StdToastElement } from 'std:toast';
+import { showToast, StdToastElement } from 'std:elements/toast';
 
 // helper functions to keep tests from bleeding into each other
 
