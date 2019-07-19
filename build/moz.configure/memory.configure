@@ -65,8 +65,7 @@ def phc_default(milestone, target, replace_malloc_default, replace_malloc):
             target.bitness == 64)
 
 
-# XXX: disabled for now
-option('--enable-phc', env='MOZ_PHC', default=False,
+option('--enable-phc', env='MOZ_PHC', default=phc_default,
        when='--enable-jemalloc',
        help='{Enable|Disable} PHC (Probabilistic Memory Checker). '
             'Also enables replace-malloc and frame pointers')
