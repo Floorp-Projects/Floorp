@@ -732,7 +732,6 @@ var complexRegionMappings = {
 /* eslint-disable complexity */
 function updateLocaleIdMappings(tag) {
     assert(IsObject(tag), "tag is an object");
-    assert(!hasOwn("grandfathered", tag), "tag is not a grandfathered tag");
 
     // Replace deprecated language tags with their preferred values.
     var language = tag.language;
@@ -1135,3 +1134,76 @@ function updateLocaleIdMappings(tag) {
     }
 }
 /* eslint-enable complexity */
+
+// Canonicalize grandfathered locale identifiers.
+// Derived from CLDR Supplemental Data, version 35.1.
+// https://github.com/unicode-org/cldr.git
+function updateGrandfatheredMappings(tag) {
+    assert(IsObject(tag), "tag is an object");
+
+    // We're mapping regular grandfathered tags to non-grandfathered form here.
+    // Other tags remain unchanged.
+    //
+    // regular       = "art-lojban"
+    //               / "cel-gaulish"
+    //               / "no-bok"
+    //               / "no-nyn"
+    //               / "zh-guoyu"
+    //               / "zh-hakka"
+    //               / "zh-min"
+    //               / "zh-min-nan"
+    //               / "zh-xiang"
+    //
+    // Therefore we can quickly exclude most tags by checking every
+    // |unicode_locale_id| subcomponent for characteristics not shared by any of
+    // the regular grandfathered (RG) tags:
+    //
+    //   * Real-world |unicode_language_subtag|s are all two or three letters,
+    //     so don't waste time running a useless |language.length > 3| fast-path.
+    //   * No RG tag has a "script"-looking component.
+    //   * No RG tag has a "region"-looking component.
+    //   * The RG tags that match |unicode_locale_id| (art-lojban, cel-gaulish,
+    //     zh-guoyu, zh-hakka, zh-xiang) have exactly one "variant". (no-bok,
+    //     no-nyn, zh-min, and zh-min-nan require BCP47's extlang subtag
+    //     that |unicode_locale_id| doesn't support.)
+    //   * No RG tag contains |extensions| or |pu_extensions|.
+    if (tag.script !== undefined ||
+        tag.region !== undefined ||
+        tag.variants.length !== 1 ||
+        tag.extensions.length !== 0 ||
+        tag.privateuse !== undefined)
+    {
+        return;
+    }
+
+    // art-lojban -> jbo
+    if (tag.language === "art" && tag.variants[0] === "lojban") {
+        tag.language = "jbo";
+        tag.variants.length = 0;
+    }
+
+    // cel-gaulish -> xtg-x-cel-gaulish
+    else if (tag.language === "cel" && tag.variants[0] === "gaulish") {
+        tag.language = "xtg";
+        tag.variants.length = 0;
+        tag.privateuse = "x-cel-gaulish";
+    }
+
+    // zh-guoyu -> zh
+    else if (tag.language === "zh" && tag.variants[0] === "guoyu") {
+        tag.language = "zh";
+        tag.variants.length = 0;
+    }
+
+    // zh-hakka -> hak
+    else if (tag.language === "zh" && tag.variants[0] === "hakka") {
+        tag.language = "hak";
+        tag.variants.length = 0;
+    }
+
+    // zh-xiang -> hsn
+    else if (tag.language === "zh" && tag.variants[0] === "xiang") {
+        tag.language = "hsn";
+        tag.variants.length = 0;
+    }
+}
