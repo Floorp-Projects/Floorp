@@ -593,13 +593,18 @@ void js::RemapWrapper(JSContext* cx, JSObject* wobjArg,
     JSObject::swap(cx, wobj, tobj);
   }
 
+  if (!wobj->is<WrapperObject>()) {
+    MOZ_ASSERT(js::IsProxy(wobj) && js::GetProxyHandler(wobj)->family() ==
+                                        js::GetDOMRemoteProxyHandlerFamily());
+    return;
+  }
+
   // Before swapping, this wrapper came out of rewrap(), which enforces the
   // invariant that the wrapper in the map points directly to the key.
   MOZ_ASSERT(Wrapper::wrappedObject(wobj) == newTarget);
 
   // Update the entry in the compartment's wrapper map to point to the old
   // wrapper, which has now been updated (via reuse or swap).
-  MOZ_ASSERT(wobj->is<WrapperObject>());
   if (!wcompartment->putWrapper(cx, CrossCompartmentKey(newTarget),
                                 ObjectValue(*wobj))) {
     oomUnsafe.crash("js::RemapWrapper");

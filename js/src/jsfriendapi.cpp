@@ -1179,18 +1179,25 @@ JS_FRIEND_API const DOMCallbacks* js::GetDOMCallbacks(JSContext* cx) {
 
 static const void* gDOMProxyHandlerFamily = nullptr;
 static DOMProxyShadowsCheck gDOMProxyShadowsCheck;
+static const void* gDOMRemoteProxyHandlerFamily = nullptr;
 
 JS_FRIEND_API void js::SetDOMProxyInformation(
     const void* domProxyHandlerFamily,
-    DOMProxyShadowsCheck domProxyShadowsCheck) {
+    DOMProxyShadowsCheck domProxyShadowsCheck,
+    const void* domRemoteProxyHandlerFamily) {
   gDOMProxyHandlerFamily = domProxyHandlerFamily;
   gDOMProxyShadowsCheck = domProxyShadowsCheck;
+  gDOMRemoteProxyHandlerFamily = domRemoteProxyHandlerFamily;
 }
 
 const void* js::GetDOMProxyHandlerFamily() { return gDOMProxyHandlerFamily; }
 
 DOMProxyShadowsCheck js::GetDOMProxyShadowsCheck() {
   return gDOMProxyShadowsCheck;
+}
+
+const void* js::GetDOMRemoteProxyHandlerFamily() {
+  return gDOMRemoteProxyHandlerFamily;
 }
 
 static XrayJitInfo* gXrayJitInfo = nullptr;

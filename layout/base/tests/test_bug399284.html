@@ -104,8 +104,7 @@ function testFontSize(frame)
 {
     var iframeDoc = SpecialPowers.wrap($(frame)).contentDocument;
     var size = parseInt(iframeDoc.defaultView.
-                getComputedStyle(iframeDoc.getElementById("testPara"), 
-                                 null).
+                getComputedStyle(iframeDoc.getElementById("testPara")).
                 getPropertyValue("font-size"));
     ok(size > 0, "font size assigned for " + frame);
 }

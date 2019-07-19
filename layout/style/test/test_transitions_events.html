@@ -242,7 +242,7 @@ $("five").addEventListener("transitionstart", function() {
     did_finish_five = true;
   }
   $("five").style.transitionProperty = "margin-left";
-}, false);
+});
 
 $("six").addEventListener("transitionstart", function() {
   if (cs("six").color == "rgb(0, 255, 0)") {
@@ -252,7 +252,7 @@ $("six").addEventListener("transitionstart", function() {
   $("six").style.transitionDuration = "0s";
   $("six").style.transitionDelay = "0s";
   $("six").style.color = "blue";
-}, false);
+});
 
 function poll_start_reversal() {
   if (cs("four").color != "rgb(0, 0, 255)") {

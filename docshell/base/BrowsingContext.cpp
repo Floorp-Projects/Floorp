@@ -337,14 +337,20 @@ void BrowsingContext::PrepareForProcessChange() {
 
   mIsInProcess = false;
 
-  // XXX: We should transplant our WindowProxy into a Cross-Process WindowProxy
-  // if mWindowProxy is non-nullptr. (bug 1510760)
-  mWindowProxy = nullptr;
-
   // NOTE: For now, clear our nsDocShell reference, as we're primarily in a
   // different process now. This may need to change in the future with
   // Cross-Process BFCache.
   mDocShell = nullptr;
+
+  if (!mWindowProxy) {
+    return;
+  }
+
+  // We have to go through mWindowProxy rather than calling GetDOMWindow() on
+  // mDocShell because the mDocshell reference gets cleared immediately after
+  // the window is closed.
+  nsGlobalWindowOuter::PrepareForProcessChange(mWindowProxy);
+  MOZ_ASSERT(!mWindowProxy);
 }
 
 void BrowsingContext::CacheChildren(bool aFromIPC) {
@@ -673,7 +679,8 @@ void BrowsingContext::Location(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aLocation,
                                ErrorResult& aError) {
   aError.MightThrowJSException();
-  sSingleton.GetProxyObject(aCx, &mLocation, aLocation);
+  sSingleton.GetProxyObject(aCx, &mLocation, /* aTransplantTo = */ nullptr,
+                            aLocation);
   if (!aLocation) {
     aError.StealExceptionFromJSContext(aCx);
   }

@@ -28,7 +28,7 @@ class UpdateExpected(Step):
                                  rev_old=None,
                                  full_update=state.full_update,
                                  sync_root=sync_root,
-                                 stability=state.stability)
+                                 disable_intermittent=state.disable_intermittent)
 
 
 class CreateMetadataPatch(Step):

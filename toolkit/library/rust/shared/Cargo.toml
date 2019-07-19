@@ -6,7 +6,7 @@ license = "MPL-2.0"
 description = "Shared Rust code for libxul"
 
 [dependencies]
-geckoservo = { path = "../../../../servo/ports/geckolib", optional = true }
+geckoservo = { path = "../../../../servo/ports/geckolib" }
 kvstore = { path = "../../../components/kvstore" }
 lmdb-rkv-sys = { version = "0.8.4", features = ["mdb_idl_logn_9"] }
 mp4parse_capi = { path = "../../../../media/mp4parse-rust/mp4parse_capi" }
@@ -47,8 +47,6 @@ rustc_version = "0.2"
 
 [features]
 default = []
-bindgen = ["geckoservo/bindgen"]
-servo = ["geckoservo"]
 quantum_render = ["webrender_bindings"]
 webrender_debugger = ["webrender_bindings/webrender_debugger"]
 cubeb-remoting = ["cubeb-sys", "audioipc-client", "audioipc-server"]

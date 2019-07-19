@@ -3,6 +3,8 @@ import sys
 import pytest
 
 from .. import expectedtree, metadata
+from collections import defaultdict
+
 
 def dump_tree(tree):
     rv = []
@@ -18,15 +20,22 @@ def dump_tree(tree):
         rv.append("%s<%s>" % (prefix, data))
         for child in sorted(node.children, key=lambda x:x.value):
             dump_node(child, indent + 2)
-
     dump_node(tree)
     return "\n".join(rv)
+
+
+def results_object(results):
+    results_obj = defaultdict(lambda: defaultdict(int))
+    for run_info, status in results:
+        run_info = metadata.RunInfo(run_info)
+        results_obj[run_info][status] += 1
+    return results_obj
 
 
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_build_tree_0():
-    # Pass iff debug
+    # Pass if debug
     results = [({"os": "linux", "version": "18.04", "debug": True}, "FAIL"),
                ({"os": "linux", "version": "18.04", "debug": False}, "PASS"),
                ({"os": "linux", "version": "16.04", "debug": False}, "PASS"),
@@ -34,8 +43,8 @@ def test_build_tree_0():
                ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
                ({"os": "win", "version": "7", "debug": False}, "PASS"),
                ({"os": "win", "version": "10", "debug": False}, "PASS")]
-    results = {metadata.RunInfo(run_info): set([status]) for run_info, status in results}
-    tree = expectedtree.build_tree(["os", "version", "debug"], {}, results)
+    results_obj = results_object(results)
+    tree = expectedtree.build_tree(["os", "version", "debug"], {}, results_obj)
 
     expected = """<root>
   <debug:False result_values:PASS>
@@ -55,8 +64,8 @@ def test_build_tree_1():
                ({"os": "mac", "version": "10.12", "debug": False}, "FAIL"),
                ({"os": "win", "version": "7", "debug": False}, "FAIL"),
                ({"os": "win", "version": "10", "debug": False}, "PASS")]
-    results = {metadata.RunInfo(run_info): set([status]) for run_info, status in results}
-    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results)
+    results_obj = results_object(results)
+    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results_obj)
 
     expected = """<root>
   <os:linux result_values:PASS>
@@ -80,8 +89,8 @@ def test_build_tree_2():
                ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
                ({"os": "win", "version": "7", "debug": False}, "PASS"),
                ({"os": "win", "version": "10", "debug": False}, "PASS")]
-    results = {metadata.RunInfo(run_info): set([status]) for run_info, status in results}
-    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results)
+    results_obj = results_object(results)
+    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results_obj)
 
     expected = """<root>
   <os:linux>
@@ -101,9 +110,21 @@ def test_build_tree_3():
 
     results = [({"os": "linux", "version": "18.04", "debug": True, "unused": False}, "PASS"),
                ({"os": "linux", "version": "18.04", "debug": True, "unused": True}, "FAIL")]
-    results = {metadata.RunInfo(run_info): set([status]) for run_info, status in results}
-    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results)
+    results_obj = results_object(results)
+    tree = expectedtree.build_tree(["os", "debug"], {"os": ["version"]}, results_obj)
 
     expected = """<root result_values:FAIL,PASS>"""
 
     assert dump_tree(tree) == expected
+
+
+def test_build_tree_4():
+    # Check counts for multiple statuses
+    results = [({"os": "linux", "version": "18.04", "debug": False}, "FAIL"),
+               ({"os": "linux", "version": "18.04", "debug": False}, "PASS"),
+               ({"os": "linux", "version": "18.04", "debug": False}, "PASS")]
+    results_obj = results_object(results)
+    tree = expectedtree.build_tree(["os", "version", "debug"], {}, results_obj)
+
+    assert tree.result_values["PASS"] == 2
+    assert tree.result_values["FAIL"] == 1

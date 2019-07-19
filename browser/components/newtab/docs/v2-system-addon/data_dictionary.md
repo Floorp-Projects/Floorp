@@ -10,7 +10,7 @@ The Activity Stream system add-on sends various types of pings to the backend (H
 
 Schema definitions/validations that can be used for tests can be found in `system-addon/test/schemas/pings.js`.
 
-# Example Activity Stream `health` log
+## Example Activity Stream `health` log
 
 ```js
 {
@@ -30,7 +30,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Activity Stream `session` Log
+## Example Activity Stream `session` Log
 
 ```js
 {
@@ -54,7 +54,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Activity Stream `user_event` Log
+## Example Activity Stream `user_event` Log
 
 ```js
 {
@@ -79,7 +79,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Activity Stream `performance` Log
+## Example Activity Stream `performance` Log
 
 ```js
 {
@@ -103,7 +103,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Activity Stream `undesired event` Log
+## Example Activity Stream `undesired event` Log
 
 ```js
 {
@@ -124,7 +124,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
   "date": "2016-03-07"
 }
 ```
-# Example Activity Stream `impression_stats` Logs
+## Example Activity Stream `impression_stats` Logs
 
 ```js
 {
@@ -162,7 +162,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Discovery Stream `SPOCS Fill` log
+## Example Discovery Stream `SPOCS Fill` log
 
 ```js
 {
@@ -186,7 +186,7 @@ Schema definitions/validations that can be used for tests can be found in `syste
 }
 ```
 
-# Example Activity Stream `Router` Pings
+## Example Activity Stream `Router` Pings
 
 ```js
 {

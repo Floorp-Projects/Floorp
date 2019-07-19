@@ -114,6 +114,7 @@ export type Props = {
   closeTab: typeof actions.closeTab,
   breakpointActions: BreakpointItemActions,
   editorActions: EditorItemActions,
+  toggleBlackBox: typeof actions.toggleBlackBox,
 };
 
 type State = {
@@ -380,17 +381,24 @@ class Editor extends PureComponent<Props, State> {
       closeConditionalPanel,
       addBreakpointAtLine,
       continueToHere,
+      toggleBlackBox,
     } = this.props;
 
     // ignore right clicks in the gutter
     if (
       (ev.ctrlKey && ev.button === 0) ||
       ev.button === 2 ||
-      (selectedSourceWithContent &&
-        selectedSourceWithContent.source.isBlackBoxed) ||
       !selectedSourceWithContent
     ) {
       return;
+    }
+
+    // if user clicks gutter to set breakpoint on blackboxed source, un-blackbox the source.
+    if (
+      selectedSourceWithContent &&
+      selectedSourceWithContent.source.isBlackBoxed
+    ) {
+      toggleBlackBox(cx, selectedSourceWithContent.source);
     }
 
     if (conditionalPanelLocation) {
@@ -681,6 +689,7 @@ const mapDispatchToProps = dispatch => ({
       traverseResults: actions.traverseResults,
       updateViewport: actions.updateViewport,
       closeTab: actions.closeTab,
+      toggleBlackBox: actions.toggleBlackBox,
     },
     dispatch
   ),

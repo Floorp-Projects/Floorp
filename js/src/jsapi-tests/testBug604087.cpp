@@ -25,7 +25,8 @@ static JSObject* wrap(JSContext* cx, JS::HandleObject toWrap,
   return wrapper;
 }
 
-static void PreWrap(JSContext* cx, JS::HandleObject scope, JS::HandleObject obj,
+static void PreWrap(JSContext* cx, JS::HandleObject scope,
+                    JS::HandleObject origObj, JS::HandleObject obj,
                     JS::HandleObject objectPassedToWrap,
                     JS::MutableHandleObject retObj) {
   JS_GC(cx);

@@ -2104,6 +2104,9 @@ pref(layout.css.supports-selector.enabled,true) == 1499386.html 1499386-ref.html
 pref(layout.css.supports-selector.enabled,false) != 1499386.html 1499386-ref.html
 == 1509425-1.html 1509425-1-ref.html
 == 1511570.html 1511570-ref.html
+fuzzy-if(winWidget&&!webrender,0-104,0-1420) == 1513423-1.html 1513423-1-ref.html
+fuzzy-if(winWidget&&!webrender,0-89,0-1418) == 1513423-2.html 1513423-2-ref.html
+== 1513423-3.html 1513423-3-ref.html
 fuzzy-if(!webrender,1-5,66-547) fuzzy-if(geckoview&&!webrender,1-2,64-141) == 1529992-1.html 1529992-1-ref.html
 fuzzy-if(!webrender,0-6,0-34) fuzzy-if(geckoview,9-9,44-44) fails-if(webrender) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
@@ -2115,5 +2118,5 @@ skip-if(!asyncPan) == 1544895.html 1544895-ref.html
 != 1563484.html 1563484-notref.html
 == 1563484.html 1563484-ref.html
 fuzzy-if(!webrender||!winWidget,254-255,464-1613) fuzzy-if(geckoview&&webrender,253-253,1397-1397) == 1562733-rotated-nastaliq-1.html 1562733-rotated-nastaliq-1-ref.html
-== 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html
+fuzzy-if(winWidget&&webrender,0-31,0-3) == 1562733-rotated-nastaliq-2.html 1562733-rotated-nastaliq-2-ref.html
 test-pref(plain_text.wrap_long_lines,false) != 1565129.txt 1565129.txt
