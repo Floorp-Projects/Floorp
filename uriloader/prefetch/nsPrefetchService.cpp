@@ -69,10 +69,10 @@ static LazyLogModule gPrefetchLog("nsPrefetch");
 //-----------------------------------------------------------------------------
 
 nsPrefetchNode::nsPrefetchNode(nsPrefetchService* aService, nsIURI* aURI,
-                               nsIURI* aReferrerURI, nsINode* aSource,
+                               nsIReferrerInfo* aReferrerInfo, nsINode* aSource,
                                nsContentPolicyType aPolicyType, bool aPreload)
     : mURI(aURI),
-      mReferrerURI(aReferrerURI),
+      mReferrerInfo(aReferrerInfo),
       mPolicyType(aPolicyType),
       mPreload(aPreload),
       mService(aService),
@@ -105,14 +105,8 @@ nsresult nsPrefetchNode::OpenChannel() {
   }
   nsCOMPtr<nsILoadGroup> loadGroup = source->OwnerDoc()->GetDocumentLoadGroup();
   CORSMode corsMode = CORS_NONE;
-  net::ReferrerPolicy referrerPolicy = net::RP_Unset;
   if (auto* link = dom::HTMLLinkElement::FromNode(source)) {
     corsMode = link->GetCORSMode();
-    referrerPolicy = link->GetReferrerPolicyAsEnum();
-  }
-
-  if (referrerPolicy == net::RP_Unset) {
-    referrerPolicy = source->OwnerDoc()->GetReferrerPolicy();
   }
 
   uint32_t securityFlags;
@@ -139,13 +133,11 @@ nsresult nsPrefetchNode::OpenChannel() {
   // configure HTTP specific stuff
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (httpChannel) {
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new mozilla::dom::ReferrerInfo(mReferrerURI, referrerPolicy);
-    rv = httpChannel->SetReferrerInfoWithoutClone(referrerInfo);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("X-Moz"),
-                                       NS_LITERAL_CSTRING("prefetch"), false);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    DebugOnly<nsresult> success = httpChannel->SetReferrerInfo(mReferrerInfo);
+    MOZ_ASSERT(NS_SUCCEEDED(success));
+    success = httpChannel->SetRequestHeader(
+        NS_LITERAL_CSTRING("X-Moz"), NS_LITERAL_CSTRING("prefetch"), false);
+    MOZ_ASSERT(NS_SUCCEEDED(success));
   }
 
   // Reduce the priority of prefetch network requests.
@@ -491,11 +483,12 @@ void nsPrefetchService::RemoveProgressListener() {
   if (progress) progress->RemoveProgressListener(this);
 }
 
-nsresult nsPrefetchService::EnqueueURI(nsIURI* aURI, nsIURI* aReferrerURI,
+nsresult nsPrefetchService::EnqueueURI(nsIURI* aURI,
+                                       nsIReferrerInfo* aReferrerInfo,
                                        nsINode* aSource,
                                        nsPrefetchNode** aNode) {
   RefPtr<nsPrefetchNode> node = new nsPrefetchNode(
-      this, aURI, aReferrerURI, aSource, nsIContentPolicy::TYPE_OTHER, false);
+      this, aURI, aReferrerInfo, aSource, nsIContentPolicy::TYPE_OTHER, false);
   mPrefetchQueue.push_back(node);
   node.forget(aNode);
   return NS_OK;
@@ -564,7 +557,8 @@ void nsPrefetchService::StopAll() {
   EmptyPrefetchQueue();
 }
 
-nsresult nsPrefetchService::CheckURIScheme(nsIURI* aURI, nsIURI* aReferrerURI) {
+nsresult nsPrefetchService::CheckURIScheme(nsIURI* aURI,
+                                           nsIReferrerInfo* aReferrerInfo) {
   //
   // XXX we should really be asking the protocol handler if it supports
   // caching, so we can determine if there is any value to prefetching.
@@ -584,9 +578,14 @@ nsresult nsPrefetchService::CheckURIScheme(nsIURI* aURI, nsIURI* aReferrerURI) {
   //
   // the referrer URI must be http:
   //
-  rv = aReferrerURI->SchemeIs("http", &match);
+  nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetOriginalReferrer();
+  if (!referrer) {
+    return NS_ERROR_ABORT;
+  }
+
+  rv = referrer->SchemeIs("http", &match);
   if (NS_FAILED(rv) || !match) {
-    rv = aReferrerURI->SchemeIs("https", &match);
+    rv = referrer->SchemeIs("https", &match);
     if (NS_FAILED(rv) || !match) {
       LOG(("rejected: referrer URL is neither http nor https\n"));
       return NS_ERROR_ABORT;
@@ -607,11 +606,12 @@ NS_IMPL_ISUPPORTS(nsPrefetchService, nsIPrefetchService, nsIWebProgressListener,
 // nsPrefetchService::nsIPrefetchService
 //-----------------------------------------------------------------------------
 
-nsresult nsPrefetchService::Preload(nsIURI* aURI, nsIURI* aReferrerURI,
+nsresult nsPrefetchService::Preload(nsIURI* aURI,
+                                    nsIReferrerInfo* aReferrerInfo,
                                     nsINode* aSource,
                                     nsContentPolicyType aPolicyType) {
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aReferrerURI);
+  NS_ENSURE_ARG_POINTER(aReferrerInfo);
   if (LOG_ENABLED()) {
     LOG(("PreloadURI [%s]\n", aURI->GetSpecOrDefault().get()));
   }
@@ -621,7 +621,7 @@ nsresult nsPrefetchService::Preload(nsIURI* aURI, nsIURI* aReferrerURI,
     return NS_ERROR_ABORT;
   }
 
-  nsresult rv = CheckURIScheme(aURI, aReferrerURI);
+  nsresult rv = CheckURIScheme(aURI, aReferrerInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -666,7 +666,7 @@ nsresult nsPrefetchService::Preload(nsIURI* aURI, nsIURI* aReferrerURI,
   LOG(("This is a preload, so start loading immediately.\n"));
   RefPtr<nsPrefetchNode> enqueuedNode;
   enqueuedNode =
-      new nsPrefetchNode(this, aURI, aReferrerURI, aSource, aPolicyType, true);
+      new nsPrefetchNode(this, aURI, aReferrerInfo, aSource, aPolicyType, true);
 
   NotifyLoadRequested(enqueuedNode);
   rv = enqueuedNode->OpenChannel();
@@ -683,10 +683,11 @@ nsresult nsPrefetchService::Preload(nsIURI* aURI, nsIURI* aReferrerURI,
   return NS_OK;
 }
 
-nsresult nsPrefetchService::Prefetch(nsIURI* aURI, nsIURI* aReferrerURI,
+nsresult nsPrefetchService::Prefetch(nsIURI* aURI,
+                                     nsIReferrerInfo* aReferrerInfo,
                                      nsINode* aSource, bool aExplicit) {
   NS_ENSURE_ARG_POINTER(aURI);
-  NS_ENSURE_ARG_POINTER(aReferrerURI);
+  NS_ENSURE_ARG_POINTER(aReferrerInfo);
 
   if (LOG_ENABLED()) {
     LOG(("PrefetchURI [%s]\n", aURI->GetSpecOrDefault().get()));
@@ -697,7 +698,7 @@ nsresult nsPrefetchService::Prefetch(nsIURI* aURI, nsIURI* aReferrerURI,
     return NS_ERROR_ABORT;
   }
 
-  nsresult rv = CheckURIScheme(aURI, aReferrerURI);
+  nsresult rv = CheckURIScheme(aURI, aReferrerInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -765,7 +766,7 @@ nsresult nsPrefetchService::Prefetch(nsIURI* aURI, nsIURI* aReferrerURI,
   }
 
   RefPtr<nsPrefetchNode> enqueuedNode;
-  rv = EnqueueURI(aURI, aReferrerURI, aSource, getter_AddRefs(enqueuedNode));
+  rv = EnqueueURI(aURI, aReferrerInfo, aSource, getter_AddRefs(enqueuedNode));
   NS_ENSURE_SUCCESS(rv, rv);
 
   NotifyLoadRequested(enqueuedNode);
@@ -839,16 +840,16 @@ nsPrefetchService::CancelPrefetchPreloadURI(nsIURI* aURI, nsINode* aSource) {
 }
 
 NS_IMETHODIMP
-nsPrefetchService::PreloadURI(nsIURI* aURI, nsIURI* aReferrerURI,
+nsPrefetchService::PreloadURI(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
                               nsINode* aSource,
                               nsContentPolicyType aPolicyType) {
-  return Preload(aURI, aReferrerURI, aSource, aPolicyType);
+  return Preload(aURI, aReferrerInfo, aSource, aPolicyType);
 }
 
 NS_IMETHODIMP
-nsPrefetchService::PrefetchURI(nsIURI* aURI, nsIURI* aReferrerURI,
+nsPrefetchService::PrefetchURI(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
                                nsINode* aSource, bool aExplicit) {
-  return Prefetch(aURI, aReferrerURI, aSource, aExplicit);
+  return Prefetch(aURI, aReferrerInfo, aSource, aExplicit);
 }
 
 NS_IMETHODIMP

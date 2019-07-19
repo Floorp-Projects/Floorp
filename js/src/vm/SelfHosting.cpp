@@ -2451,6 +2451,16 @@ static bool intrinsic_ToBigInt(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool intrinsic_ToNumeric(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  if (!ToNumeric(cx, args[0])) {
+    return false;
+  }
+  args.rval().set(args[0]);
+  return true;
+}
+
 // The self-hosting global isn't initialized with the normal set of builtins.
 // Instead, individual C++-implemented functions that're required by
 // self-hosted code are defined as global functions. Accessing these
@@ -2473,6 +2483,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Array_reverse", array_reverse, 0, 0),
     JS_FNINFO("std_Array_splice", array_splice, &array_splice_info, 2, 0),
     JS_FN("ArrayNativeSort", intrinsic_ArrayNativeSort, 1, 0),
+
+    JS_FN("std_BigInt_valueOf", BigIntObject::valueOf, 0, 0),
 
     JS_FN("std_Date_now", date_now, 0, 0),
     JS_FN("std_Date_valueOf", date_valueOf, 0, 0),
@@ -2939,6 +2951,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("PromiseResolve", intrinsic_PromiseResolve, 2, 0),
 
     JS_FN("ToBigInt", intrinsic_ToBigInt, 1, 0),
+    JS_FN("ToNumeric", intrinsic_ToNumeric, 1, 0),
 
     JS_FS_END};
 

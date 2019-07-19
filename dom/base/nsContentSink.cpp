@@ -698,7 +698,7 @@ nsresult nsContentSink::ProcessLinkFromHeader(
     if ((linkTypes & nsStyleLinkElement::eNEXT) ||
         (linkTypes & nsStyleLinkElement::ePREFETCH) ||
         (linkTypes & nsStyleLinkElement::ePRELOAD)) {
-      PrefetchPreloadHref(aHref, mDocument, linkTypes, aAs, aType, aMedia);
+      PrefetchPreloadHref(aHref, linkTypes, aAs, aType, aMedia);
     }
 
     if (!aHref.IsEmpty() && (linkTypes & nsStyleLinkElement::eDNS_PREFETCH)) {
@@ -832,7 +832,7 @@ nsresult nsContentSink::ProcessMETATag(nsIContent* aContent) {
 }
 
 void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
-                                        nsINode* aSource, uint32_t aLinkTypes,
+                                        uint32_t aLinkTypes,
                                         const nsAString& aAs,
                                         const nsAString& aType,
                                         const nsAString& aMedia) {
@@ -843,10 +843,13 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
     nsCOMPtr<nsIURI> uri;
     NS_NewURI(getter_AddRefs(uri), aHref, encoding, mDocument->GetDocBaseURI());
     if (uri) {
-      if (aLinkTypes & nsStyleLinkElement::ePRELOAD) {
+      bool preload = !!(aLinkTypes & nsStyleLinkElement::ePRELOAD);
+      nsContentPolicyType policyType;
+
+      if (preload) {
         nsAttrValue asAttr;
         Link::ParseAsValue(aAs, asAttr);
-        nsContentPolicyType policyType = Link::AsValueToContentPolicy(asAttr);
+        policyType = Link::AsValueToContentPolicy(asAttr);
 
         if (policyType == nsIContentPolicy::TYPE_INVALID) {
           // Ignore preload with a wrong or empty as attribute.
@@ -860,11 +863,18 @@ void nsContentSink::PrefetchPreloadHref(const nsAString& aHref,
                                                 mDocument)) {
           policyType = nsIContentPolicy::TYPE_INVALID;
         }
+      }
 
-        prefetchService->PreloadURI(uri, mDocumentURI, aSource, policyType);
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithDocument(mDocument);
+      referrerInfo = static_cast<ReferrerInfo*>(referrerInfo.get())
+                         ->CloneWithNewOriginalReferrer(mDocumentURI);
+
+      if (preload) {
+        prefetchService->PreloadURI(uri, referrerInfo, mDocument, policyType);
       } else {
         prefetchService->PrefetchURI(
-            uri, mDocumentURI, aSource,
+            uri, referrerInfo, mDocument,
             aLinkTypes & nsStyleLinkElement::ePREFETCH);
       }
     }

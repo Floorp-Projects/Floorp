@@ -10,10 +10,6 @@
   overflow-x: hidden;
 }
 
-.ws-frame-list-empty-notice {
-  width: 100%;
-}
-
 .empty-notice-element {
   padding-top: 12px;
   padding-left: 12px;
@@ -514,43 +510,6 @@
 .ws-frame-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
-}
-
-/* Frame type icon in the WebSockets Time column */
-
-.ws-frames-list-type-icon {
-  display: inline-block;
-  /* align bottom of image 4px below the text baseline
-     this tends to give a better result than "middle" */
-  vertical-align: -4px;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.ws-frames-list-type-icon-sent {
-  color: var(--green-70);
-}
-
-.theme-dark .ws-frames-list-type-icon-sent {
-  color: var(--green-50);
-}
-
-.ws-frames-list-type-icon-received {
-  color: var(--red-60);
-  transform: scaleY(-1);
-}
-
-.theme-dark .ws-frames-list-type-icon-received {
-  color: var(--red-40);
-}
-
-.ws-frame-list-item.selected .ws-frames-list-type-icon {
-  color: inherit;
-}
-
-/* Use lining numbers so that seconds and milliseconds align */
-.ws-frames-list-time {
-  font-variant-numeric: tabular-nums;
 }
 
 /* Responsive web design support */

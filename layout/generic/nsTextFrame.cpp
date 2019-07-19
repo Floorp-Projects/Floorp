@@ -5118,17 +5118,17 @@ void nsTextFrame::GetTextDecorations(
       if (textDecorations & kUnderline) {
         aDecorations.mUnderlines.AppendElement(nsTextFrame::LineDecoration(
             f, baselineOffset, styleText->mTextUnderlineOffset,
-            styleTextReset->mTextDecorationWidth, color, style));
+            styleTextReset->mTextDecorationThickness, color, style));
       }
       if (textDecorations & kOverline) {
         aDecorations.mOverlines.AppendElement(nsTextFrame::LineDecoration(
             f, baselineOffset, styleText->mTextUnderlineOffset,
-            styleTextReset->mTextDecorationWidth, color, style));
+            styleTextReset->mTextDecorationThickness, color, style));
       }
       if (textDecorations & StyleTextDecorationLine_LINE_THROUGH) {
         aDecorations.mStrikes.AppendElement(nsTextFrame::LineDecoration(
             f, baselineOffset, styleText->mTextUnderlineOffset,
-            styleTextReset->mTextDecorationWidth, color, style));
+            styleTextReset->mTextDecorationThickness, color, style));
       }
     }
 
@@ -5276,14 +5276,14 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
   return overflowRect.GetPhysicalRect(aWM, frameSize.GetPhysicalSize(aWM));
 }
 
-// helper function for implementing text-decoration-width
+// helper function for implementing text-decoration-thickness
 // https://drafts.csswg.org/css-text-decor-4/#text-decoration-width-property
-static void SetWidthIfLength(const LengthOrAuto& aDecorationWidth,
+static void SetWidthIfLength(const LengthOrAuto& aDecorationThickness,
                              Float* aLineThickness,
                              const gfxFloat aAppUnitsPerDevPixel) {
-  if (aDecorationWidth.IsLength()) {
+  if (aDecorationThickness.IsLength()) {
     *aLineThickness =
-        aDecorationWidth.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
+        aDecorationThickness.AsLength().ToAppUnits() / aAppUnitsPerDevPixel;
   }
 }
 
@@ -5348,8 +5348,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     const LengthOrAuto& textUnderlineOffset =
         aBlock->Style()->StyleText()->mTextUnderlineOffset;
 
-    const LengthOrAuto& textDecorationWidth =
-        aBlock->Style()->StyleTextReset()->mTextDecorationWidth;
+    const LengthOrAuto& textDecorationThickness =
+        aBlock->Style()->StyleTextReset()->mTextDecorationThickness;
 
     if (textUnderlineOffset.IsLength()) {
       if (verticalRun) {
@@ -5361,8 +5361,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     }
 
     params.defaultLineThickness = underlineSize;
-    if (textDecorationWidth.IsLength()) {
-      underlineSize = textDecorationWidth.AsLength().ToAppUnits();
+    if (textDecorationThickness.IsLength()) {
+      underlineSize = textDecorationThickness.AsLength().ToAppUnits();
     }
 
     nscoord maxAscent =
@@ -5461,8 +5461,8 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
                                 swapUnderline);
             }
 
-            SetWidthIfLength(dec.mTextDecorationWidth, &params.lineSize.height,
-                             appUnitsPerDevUnit);
+            SetWidthIfLength(dec.mTextDecorationThickness,
+                             &params.lineSize.height, appUnitsPerDevUnit);
 
             const nsRect decorationRect =
                 nsCSSRendering::GetTextDecorationRect(aPresContext, params) +
@@ -5649,7 +5649,7 @@ void nsTextFrame::DrawSelectionDecorations(
       aTextPaintStyle.PresContext(), aFontMetrics);
 
   float relativeSize;
-  const LengthOrAuto& decWidth = StyleTextReset()->mTextDecorationWidth;
+  const LengthOrAuto& decThickness = StyleTextReset()->mTextDecorationThickness;
   const gfxFloat appUnitsPerDevPixel =
       aTextPaintStyle.PresContext()->AppUnitsPerDevPixel();
 
@@ -5679,7 +5679,8 @@ void nsTextFrame::DrawSelectionDecorations(
       }
 
       params.lineSize.height = params.defaultLineThickness;
-      SetWidthIfLength(decWidth, &params.lineSize.height, appUnitsPerDevPixel);
+      SetWidthIfLength(decThickness, &params.lineSize.height,
+                       appUnitsPerDevPixel);
 
       bool isIMEType = aSelectionType != SelectionType::eSpellCheck;
 
@@ -5753,7 +5754,8 @@ void nsTextFrame::DrawSelectionDecorations(
       params.style = NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
       params.lineSize.height = metrics.strikeoutSize;
       params.defaultLineThickness = params.lineSize.height;
-      SetWidthIfLength(decWidth, &params.lineSize.height, appUnitsPerDevPixel);
+      SetWidthIfLength(decThickness, &params.lineSize.height,
+                       appUnitsPerDevPixel);
       params.offset = metrics.strikeoutOffset + 0.5;
       params.decoration = StyleTextDecorationLine_LINE_THROUGH;
       break;
@@ -6951,7 +6953,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
                         PresContext()->AppUnitsPerDevPixel(), wm.IsSideways(),
                         swapUnderline);
     }
-    SetWidthIfLength(dec.mTextDecorationWidth, &params.lineSize.height,
+    SetWidthIfLength(dec.mTextDecorationThickness, &params.lineSize.height,
                      PresContext()->AppUnitsPerDevPixel());
 
     params.style = dec.mStyle;
@@ -7292,12 +7294,13 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     }
     nsRect decorationArea;
 
-    const LengthOrAuto& decWidth = StyleTextReset()->mTextDecorationWidth;
+    const LengthOrAuto& decThickness =
+        StyleTextReset()->mTextDecorationThickness;
     params.lineSize.width = aPresContext->AppUnitsToGfxUnits(aRect.width);
     params.defaultLineThickness = ComputeSelectionUnderlineHeight(
         aPresContext, metrics, sd->mSelectionType);
     params.lineSize.height = params.defaultLineThickness;
-    SetWidthIfLength(decWidth, &params.lineSize.height,
+    SetWidthIfLength(decThickness, &params.lineSize.height,
                      aPresContext->AppUnitsPerDevPixel());
 
     bool swapUnderline = verticalRun && IsUnderlineRight(this);

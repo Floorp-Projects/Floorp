@@ -9,6 +9,7 @@ const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 
+const actions = require("devtools/client/webconsole/actions/index");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
@@ -18,11 +19,12 @@ class EditorToolbar extends Component {
     return {
       webConsoleUI: PropTypes.object.isRequired,
       editorMode: PropTypes.bool,
+      dispatch: PropTypes.func.isRequired,
     };
   }
 
   render() {
-    const { editorMode, webConsoleUI } = this.props;
+    const { editorMode, webConsoleUI, dispatch } = this.props;
 
     if (!editorMode) {
       return null;
@@ -43,7 +45,16 @@ class EditorToolbar extends Component {
           onClick: () => webConsoleUI.jsterm.execute(),
         },
         l10n.getStr("webconsole.editor.toolbar.executeButton.label")
-      )
+      ),
+      dom.button({
+        className:
+          "devtools-button webconsole-editor-toolbar-closeButton checked",
+        title: l10n.getFormatStr(
+          "webconsole.editor.toolbar.closeButton.tooltip",
+          [isMacOS ? "Cmd + B" : "Ctrl + B"]
+        ),
+        onClick: () => dispatch(actions.editorToggle()),
+      })
     );
   }
 }
