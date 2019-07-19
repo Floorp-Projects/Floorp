@@ -28,6 +28,7 @@
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
 #include "js/Vector.h"
+#include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
@@ -485,16 +486,33 @@ using PartitionNumberPatternResult = const UFormattedNumber*;
 
 static PartitionNumberPatternResult PartitionNumberPattern(
     JSContext* cx, const UNumberFormatter* nf, UFormattedNumber* formatted,
-    double* x) {
-  // ICU incorrectly formats NaN values with the sign bit set, as if they
-  // were negative.  Replace all NaNs with a single pattern with sign bit
-  // unset ("positive", that is) until ICU is fixed.
-  if (MOZ_UNLIKELY(IsNaN(*x))) {
-    *x = SpecificNaN<double>(0, 1);
-  }
-
+    HandleValue x) {
   UErrorCode status = U_ZERO_ERROR;
-  unumf_formatDouble(nf, *x, formatted, &status);
+  if (x.isNumber()) {
+    double num = x.toNumber();
+
+    // ICU incorrectly formats NaN values with the sign bit set, as if they
+    // were negative.  Replace all NaNs with a single pattern with sign bit
+    // unset ("positive", that is) until ICU is fixed.
+    if (MOZ_UNLIKELY(IsNaN(num))) {
+      num = SpecificNaN<double>(0, 1);
+    }
+
+    unumf_formatDouble(nf, num, formatted, &status);
+  } else {
+    RootedBigInt bi(cx, x.toBigInt());
+    JSLinearString* str = BigInt::toString<CanGC>(cx, bi, 10);
+    if (!str) {
+      return nullptr;
+    }
+    MOZ_ASSERT(str->hasLatin1Chars());
+
+    // Tell the analysis the |unumf_formatDecimal| function can't GC.
+    JS::AutoSuppressGCAnalysis nogc;
+
+    const char* chars = reinterpret_cast<const char*>(str->latin1Chars(nogc));
+    unumf_formatDecimal(nf, chars, str->length(), formatted, &status);
+  }
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
     return nullptr;
@@ -541,11 +559,11 @@ static JSString* FormattedNumberToString(
 #endif
 }
 
-static bool intl_FormatNumber(JSContext* cx, const UNumberFormatter* nf,
-                              UFormattedNumber* formatted, double x,
-                              MutableHandleValue result) {
+static bool FormatNumeric(JSContext* cx, const UNumberFormatter* nf,
+                          UFormattedNumber* formatted, HandleValue x,
+                          MutableHandleValue result) {
   PartitionNumberPatternResult formattedValue =
-      PartitionNumberPattern(cx, nf, formatted, &x);
+      PartitionNumberPattern(cx, nf, formatted, x);
   if (!formattedValue) {
     return false;
   }
@@ -560,7 +578,7 @@ static bool intl_FormatNumber(JSContext* cx, const UNumberFormatter* nf,
 }
 
 static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
-                                            double d) {
+                                            HandleValue x) {
   // See intl/icu/source/i18n/unicode/unum.h for a detailed field list.  This
   // list is deliberately exhaustive: cases might have to be added/removed if
   // this code is compiled with a different ICU with more UNumberFormatFields
@@ -568,11 +586,14 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
   // version-testing #ifdefs, should cross-version divergence occur.
   switch (fieldName) {
     case UNUM_INTEGER_FIELD:
-      if (IsNaN(d)) {
-        return &JSAtomState::nan;
-      }
-      if (!IsFinite(d)) {
-        return &JSAtomState::infinity;
+      if (x.isNumber()) {
+        double d = x.toNumber();
+        if (IsNaN(d)) {
+          return &JSAtomState::nan;
+        }
+        if (!IsFinite(d)) {
+          return &JSAtomState::infinity;
+        }
       }
       return &JSAtomState::integer;
 
@@ -589,12 +610,14 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
       // Manual trawling through the ICU call graph appears to indicate that
       // the basic formatting we request will never include a positive sign.
       // But this analysis may be mistaken, so don't absolutely trust it.
-      MOZ_ASSERT(!IsNaN(d),
+      MOZ_ASSERT(!x.isNumber() || !IsNaN(x.toNumber()),
                  "ICU appearing not to produce positive-sign among fields, "
                  "plus our coercing all NaNs to one with sign bit unset "
                  "(i.e. \"positive\"), means we shouldn't reach here with a "
                  "NaN value");
-      return IsNegative(d) ? &JSAtomState::minusSign : &JSAtomState::plusSign;
+      bool isNegative =
+          x.isNumber() ? IsNegative(x.toNumber()) : x.toBigInt()->isNegative();
+      return isNegative ? &JSAtomState::minusSign : &JSAtomState::plusSign;
     }
 
     case UNUM_PERCENT_FIELD:
@@ -666,10 +689,10 @@ class NumberFormatFields {
   using FieldsVector = Vector<Field, 16>;
 
   FieldsVector fields_;
-  double number_;
+  HandleValue number_;
 
  public:
-  NumberFormatFields(JSContext* cx, double number)
+  NumberFormatFields(JSContext* cx, HandleValue number)
       : fields_(cx), number_(number) {}
 
   MOZ_MUST_USE bool append(int32_t field, int32_t begin, int32_t end);
@@ -987,7 +1010,7 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
 #ifndef U_HIDE_DRAFT_API
 bool js::intl::FormattedNumberToParts(JSContext* cx,
                                       const UFormattedValue* formattedValue,
-                                      double number, FieldType unitType,
+                                      HandleValue number, FieldType unitType,
                                       MutableHandleValue result) {
   RootedString overallResult(cx, FormattedNumberToString(cx, formattedValue));
   if (!overallResult) {
@@ -1051,7 +1074,7 @@ bool js::intl::FormattedNumberToParts(JSContext* cx,
 }
 #else
 static ArrayObject* LegacyFormattedNumberToParts(
-    JSContext* cx, const UFormattedNumber* formatted, double x,
+    JSContext* cx, const UFormattedNumber* formatted, HandleValue x,
     MutableHandleValue result) {
   RootedString overallResult(cx, FormattedNumberToString(cx, formatted));
   if (!overallResult) {
@@ -1096,11 +1119,11 @@ static ArrayObject* LegacyFormattedNumberToParts(
 }
 #endif
 
-static bool intl_FormatNumberToParts(JSContext* cx, const UNumberFormatter* nf,
-                                     UFormattedNumber* formatted, double x,
-                                     MutableHandleValue result) {
+static bool FormatNumericToParts(JSContext* cx, const UNumberFormatter* nf,
+                                 UFormattedNumber* formatted, HandleValue x,
+                                 MutableHandleValue result) {
   PartitionNumberPatternResult formattedValue =
-      PartitionNumberPattern(cx, nf, formatted, &x);
+      PartitionNumberPattern(cx, nf, formatted, x);
   if (!formattedValue) {
     return false;
   }
@@ -1116,7 +1139,7 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 3);
   MOZ_ASSERT(args[0].isObject());
-  MOZ_ASSERT(args[1].isNumber());
+  MOZ_ASSERT(args[1].isNumeric());
   MOZ_ASSERT(args[2].isBoolean());
 
   Rooted<NumberFormatObject*> numberFormat(
@@ -1144,9 +1167,8 @@ bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
 
   // Use the UNumberFormatter to actually format the number.
   if (args[2].toBoolean()) {
-    return intl_FormatNumberToParts(cx, nf, formatted, args[1].toNumber(),
-                                    args.rval());
+    return FormatNumericToParts(cx, nf, formatted, args[1], args.rval());
   }
 
-  return intl_FormatNumber(cx, nf, formatted, args[1].toNumber(), args.rval());
+  return FormatNumeric(cx, nf, formatted, args[1], args.rval());
 }

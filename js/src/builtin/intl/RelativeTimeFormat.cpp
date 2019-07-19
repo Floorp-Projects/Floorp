@@ -344,7 +344,10 @@ static bool intl_FormatToPartsRelativeTime(JSContext* cx,
       MOZ_CRASH("unexpected relative time unit");
   }
 
-  return intl::FormattedNumberToParts(cx, formattedValue, t, unitType, result);
+  Value tval = DoubleValue(t);
+  return intl::FormattedNumberToParts(cx, formattedValue,
+                                      HandleValue::fromMarkedLocation(&tval),
+                                      unitType, result);
 }
 #endif
 
