@@ -11,28 +11,10 @@
 
 <!ENTITY ldb.MainWindow.title "Layout Debugger">
 
-<!ENTITY ldb.Open.label "Open File…">
-<!ENTITY ldb.Open.accesskey "o">
-<!ENTITY ldb.Open.commandkey "o">
-
 <!ENTITY ldb.BackButton.label "Back">
 <!ENTITY ldb.ForwardButton.label "Forward">
 <!ENTITY ldb.ReloadButton.label "Reload">
 <!ENTITY ldb.StopButton.label "Stop">
-
-
-<!ENTITY ldb.RegressionTestMenu.label "Regression-Test">
-<!ENTITY ldb.RegressionTestMenu.accesskey "R">
-<!ENTITY ldb.RunBaselineMenu.label "Run Baseline">
-<!ENTITY ldb.RunBaselineMenu.accesskey "B">
-<!ENTITY ldb.RunVerifyMenu.label "Run Verify">
-<!ENTITY ldb.RunVerifyMenu.accesskey "V">
-<!ENTITY ldb.RegressionPrintMode.label "Print Mode">
-<!ENTITY ldb.RegressionPrintMode.accesskey "P">
-<!ENTITY ldb.AddNewList.label "Add New List…">
-<!ENTITY ldb.AddNewList.accesskey "A">
-<!ENTITY ldb.RemoveListMenu.label "Remove List">
-<!ENTITY ldb.RemoveListMenu.accesskey "R">
 
 
 <!ENTITY ldb.ToggleMenu.label "Toggle">
