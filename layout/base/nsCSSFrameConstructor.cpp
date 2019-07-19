@@ -11632,7 +11632,9 @@ bool nsCSSFrameConstructor::WipeContainingBlock(
       return true;
     }
 
-    return false;
+    // If we get here, then we need further check for {ib} split to decide
+    // whether to reframe. For example, appending a block into an empty inline
+    // that is not part of an {ib} split, but should become an {ib} split.
   }
 
   // Now we have several cases involving {ib} splits.  Put them all in a
