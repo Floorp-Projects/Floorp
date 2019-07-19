@@ -1047,8 +1047,5 @@
     Ci.nsIDOMXULSelectControlItemElement,
   ]);
 
-  // Remove documentURI check when new about:addons interface is finished, see 1554238.
-  if (document.documentURI != "about:addons") {
-    customElements.define("richlistitem", MozElements.MozRichlistitem);
-  }
+  customElements.define("richlistitem", MozElements.MozRichlistitem);
 }
