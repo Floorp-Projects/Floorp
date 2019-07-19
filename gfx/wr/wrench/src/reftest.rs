@@ -114,11 +114,11 @@ impl Display for Reftest {
     }
 }
 
-struct ReftestImage {
-    data: Vec<u8>,
-    size: DeviceIntSize,
+pub struct ReftestImage {
+    pub data: Vec<u8>,
+    pub size: DeviceIntSize,
 }
-enum ReftestImageComparison {
+pub enum ReftestImageComparison {
     Equal,
     NotEqual {
         max_difference: usize,
@@ -127,7 +127,7 @@ enum ReftestImageComparison {
 }
 
 impl ReftestImage {
-    fn compare(&self, other: &ReftestImage) -> ReftestImageComparison {
+    pub fn compare(&self, other: &ReftestImage) -> ReftestImageComparison {
         assert_eq!(self.size, other.size);
         assert_eq!(self.data.len(), other.data.len());
         assert_eq!(self.data.len() % 4, 0);
@@ -158,7 +158,7 @@ impl ReftestImage {
         }
     }
 
-    fn create_data_uri(mut self) -> String {
+    pub fn create_data_uri(mut self) -> String {
         let width = self.size.width;
         let height = self.size.height;
 

@@ -1,15 +1,8 @@
-diff -Nru valgrind-3.14.0/debian/changelog valgrind-3.14.0/debian/changelog
---- valgrind-3.14.0/debian/changelog	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/changelog	2018-11-30 15:20:10.000000000 +0900
-@@ -1,3 +1,21 @@
-+valgrind (1:3.14.0-1.deb7moz2) wheezy; urgency=medium
-+
-+  * debian/patches/vg401112: Cherry-pick upstream revision
-+    f2c03ce3babe51eecbf03735f726c4028a162857.
-+
-+ -- Mike Hommey <glandium@debian.org>  Fri, 30 Nov 2018 15:20:10 +0900
-+
-+valgrind (1:3.14.0-1.deb7moz1) wheezy; urgency=medium
+diff -Nru valgrind-3.15.0/debian/changelog valgrind-3.15.0/debian/changelog
+--- valgrind-3.15.0/debian/changelog	2019-07-14 19:23:29.000000000 +0900
++++ valgrind-3.15.0/debian/changelog	2019-07-17 18:19:13.000000000 +0900
+@@ -1,3 +1,14 @@
++valgrind (1:3.15.0-1.deb7moz1) wheezy; urgency=medium
 +
 +  * Mozilla backport for wheezy.
 +  * debian/control, debian/compat: Drop debhelper compat back to 7, which
@@ -18,192 +11,33 @@ diff -Nru valgrind-3.14.0/debian/changelog valgrind-3.14.0/debian/changelog
 +    add --parallel back.
 +  * debian/valgrind-mpi.install: Use non-multiarch path.
 +
-+ -- Mike Hommey <glandium@mozilla.com>  Thu, 15 Nov 2018 11:45:25 +0900
++ -- Mike Hommey <glandium@mozilla.com>  Wed, 17 Jul 2019 18:19:13 +0900
 +
- valgrind (1:3.14.0-1) unstable; urgency=medium
+ valgrind (1:3.15.0-1) unstable; urgency=medium
  
-   * New upstream release (Closes: #913208)
-diff -Nru valgrind-3.14.0/debian/compat valgrind-3.14.0/debian/compat
---- valgrind-3.14.0/debian/compat	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/compat	2018-11-15 11:45:25.000000000 +0900
+   * New upstream release
+diff -Nru valgrind-3.15.0/debian/compat valgrind-3.15.0/debian/compat
+--- valgrind-3.15.0/debian/compat	2019-07-14 19:23:29.000000000 +0900
++++ valgrind-3.15.0/debian/compat	2019-07-17 18:19:13.000000000 +0900
 @@ -1 +1 @@
--11
+-12
 +7
-diff -Nru valgrind-3.14.0/debian/control valgrind-3.14.0/debian/control
---- valgrind-3.14.0/debian/control	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/control	2018-11-15 11:45:25.000000000 +0900
+diff -Nru valgrind-3.15.0/debian/control valgrind-3.15.0/debian/control
+--- valgrind-3.15.0/debian/control	2019-07-14 19:23:29.000000000 +0900
++++ valgrind-3.15.0/debian/control	2019-07-17 18:19:13.000000000 +0900
 @@ -2,7 +2,8 @@
  Section: devel
  Priority: optional
  Maintainer: Alessandro Ghedini <ghedo@debian.org>
--Build-Depends: debhelper (>= 11),
+-Build-Depends: debhelper (>= 12),
 +Build-Depends: debhelper (>= 7.0.50~),
 + dh-autoreconf,
   gdb,
   gcc-multilib [amd64],
   libc6-dev-i386 [amd64],
-diff -Nru valgrind-3.14.0/debian/patches/series valgrind-3.14.0/debian/patches/series
---- valgrind-3.14.0/debian/patches/series	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/patches/series	2018-11-30 15:19:14.000000000 +0900
-@@ -5,3 +5,4 @@
- 08_fix-spelling-in-manpage.patch
- 09_fix-armhf-detect.patch
- 10_mpi-pkg-config.patch
-+vg401112
-diff -Nru valgrind-3.14.0/debian/patches/vg401112 valgrind-3.14.0/debian/patches/vg401112
---- valgrind-3.14.0/debian/patches/vg401112	1970-01-01 09:00:00.000000000 +0900
-+++ valgrind-3.14.0/debian/patches/vg401112	2018-11-30 15:19:46.000000000 +0900
-@@ -0,0 +1,147 @@
-+From f2c03ce3babe51eecbf03735f726c4028a162857 Mon Sep 17 00:00:00 2001
-+From: Julian Seward <jseward@acm.org>
-+Date: Wed, 28 Nov 2018 14:15:06 +0100
-+Subject: [PATCH] Bug 401112 - LLVM 5.0 generates comparison against partially
-+ initialized data.
-+
-+This generalises the existing spec rules for W of 32 bits:
-+
-+             W  <u   0---(N-1)---0 1 0---0  or
-+
-+(that is, B/NB after SUBL, where dep2 has the above form), to also cover
-+
-+             W  <=u  0---(N-1)---0 0 1---1
-+
-+(that is, BE/NBE after SUBL, where dept2 has the specified form).
-+
-+Patch from Nicolas B. Pierron (nicolas.b.pierron@nbp.name).
-+---
-+ VEX/priv/guest_amd64_helpers.c | 90 ++++++++++++++++++++++++++++++------------
-+ 2 files changed, 66 insertions(+), 25 deletions(-)
-+
-+diff --git a/VEX/priv/guest_amd64_helpers.c b/VEX/priv/guest_amd64_helpers.c
-+index a2b0789..30e82db 100644
-+--- a/VEX/priv/guest_amd64_helpers.c
-++++ b/VEX/priv/guest_amd64_helpers.c
-+@@ -1013,13 +1013,10 @@ static inline Bool isU64 ( IRExpr* e, ULong n )
-+           && e->Iex.Const.con->Ico.U64 == n;
-+ }
-+ 
-+-/* Returns N if E is an immediate of the form 1 << N for N in 1 to 31,
-++/* Returns N if W64 is a value of the form 1 << N for N in 1 to 31,
-+    and zero in any other case. */
-+-static Int isU64_1_shl_N ( IRExpr* e )
-++static Int isU64_1_shl_N_literal ( ULong w64 )
-+ {
-+-   if (e->tag != Iex_Const || e->Iex.Const.con->tag != Ico_U64)
-+-      return 0;
-+-   ULong w64 = e->Iex.Const.con->Ico.U64;
-+    if (w64 < (1ULL << 1) || w64 > (1ULL << 31))
-+       return 0;
-+    if ((w64 & (w64 - 1)) != 0)
-+@@ -1036,6 +1033,30 @@ static Int isU64_1_shl_N ( IRExpr* e )
-+    return 0;
-+ }
-+ 
-++/* Returns N if E is an immediate of the form 1 << N for N in 1 to 31,
-++   and zero in any other case. */
-++static Int isU64_1_shl_N ( IRExpr* e )
-++{
-++   if (e->tag != Iex_Const || e->Iex.Const.con->tag != Ico_U64)
-++      return 0;
-++   ULong w64 = e->Iex.Const.con->Ico.U64;
-++   return isU64_1_shl_N_literal(w64);
-++}
-++
-++/* Returns N if E is an immediate of the form (1 << N) - 1 for N in 1 to 31,
-++   and zero in any other case. */
-++static Int isU64_1_shl_N_minus_1 ( IRExpr* e )
-++{
-++  if (e->tag != Iex_Const || e->Iex.Const.con->tag != Ico_U64)
-++    return 0;
-++  ULong w64 = e->Iex.Const.con->Ico.U64;
-++  // This isn't actually necessary since isU64_1_shl_N_literal will return
-++  // zero given a zero argument, but still ..
-++  if (w64 == 0xFFFFFFFFFFFFFFFFULL)
-++     return 0;
-++  return isU64_1_shl_N_literal(w64 + 1);
-++}
-++
-+ IRExpr* guest_amd64_spechelper ( const HChar* function_name,
-+                                  IRExpr** args,
-+                                  IRStmt** precedingStmts,
-+@@ -1258,32 +1279,51 @@ IRExpr* guest_amd64_spechelper ( const HChar* function_name,
-+         /* It appears that LLVM 5.0 and later have a new way to find out
-+            whether the top N bits of a word W are all zero, by computing
-+ 
-+-             W  <u  0---(N-1)---0 1 0---0
-++             W  <u   0---(N-1)---0 1 0---0  or
-++             W  <=u  0---(N-1)---0 0 1---1
-+ 
-+            In particular, the result will be defined if the top N bits of W
-+            are defined, even if the trailing bits -- those corresponding to
-+-           the 0---0 section -- are undefined.  Rather than make Memcheck
-+-           more complex, we detect this case where we can and shift out the
-+-           irrelevant and potentially undefined bits. */
-++           the rightmost 0---0 / 1---1 section -- are undefined.  Rather than
-++           make Memcheck more complex, we detect this case where we can and
-++           shift out the irrelevant and potentially undefined bits. */
-+         Int n = 0;
-+-        if (isU64(cc_op, AMD64G_CC_OP_SUBL)
-+-            && (isU64(cond, AMD64CondB) || isU64(cond, AMD64CondNB))
-+-            && (n = isU64_1_shl_N(cc_dep2)) > 0) {
-+-           /* long sub/cmp, then B (unsigned less than),
-+-              where dep2 is a power of 2:
-+-                -> CmpLT32(dep1, 1 << N)
-+-                -> CmpEQ32(dep1 >>u N, 0)
-+-              and
-+-              long sub/cmp, then NB (unsigned greater than or equal),
-+-              where dep2 is a power of 2:
-+-                -> CmpGE32(dep1, 1 << N)
-+-                -> CmpNE32(dep1 >>u N, 0)
-+-              This avoids CmpLT32U/CmpGE32U being applied to potentially
-+-              uninitialised bits in the area being shifted out. */
-++        Bool is_NB_or_NBE = False;
-++        if (isU64(cc_op, AMD64G_CC_OP_SUBL)) {
-++           if (isU64(cond, AMD64CondB) || isU64(cond, AMD64CondNB)) {
-++              /* long sub/cmp, then B (unsigned less than),
-++                 where dep2 is a power of 2:
-++                   -> CmpLT32U(dep1, 1 << N)
-++                   -> CmpEQ32(dep1 >>u N, 0)
-++                 and
-++                 long sub/cmp, then NB (unsigned greater than or equal),
-++                 where dep2 is a power of 2:
-++                   -> CmpGE32U(dep1, 1 << N)
-++                   -> CmpNE32(dep1 >>u N, 0)
-++                 This avoids CmpLT32U/CmpGE32U being applied to potentially
-++                 uninitialised bits in the area being shifted out. */
-++              n = isU64_1_shl_N(cc_dep2);
-++              is_NB_or_NBE = isU64(cond, AMD64CondNB);
-++           } else if (isU64(cond, AMD64CondBE) || isU64(cond, AMD64CondNBE)) {
-++              /* long sub/cmp, then BE (unsigned less than or equal),
-++                 where dep2 is a power of 2 minus 1:
-++                  -> CmpLE32U(dep1, (1 << N) - 1)
-++                  -> CmpEQ32(dep1 >>u N, 0)
-++                 and
-++                 long sub/cmp, then NBE (unsigned greater than),
-++                 where dep2 is a power of 2 minus 1:
-++                   -> CmpGT32U(dep1, (1 << N) - 1)
-++                   -> CmpNE32(dep1 >>u N, 0)
-++                 This avoids CmpLE32U/CmpGT32U being applied to potentially
-++                 uninitialised bits in the area being shifted out. */
-++              n = isU64_1_shl_N_minus_1(cc_dep2);
-++              is_NB_or_NBE = isU64(cond, AMD64CondNBE);
-++           }
-++        }
-++        if (n > 0) {
-+            vassert(n >= 1 && n <= 31);
-+-           Bool isNB = isU64(cond, AMD64CondNB);
-+            return unop(Iop_1Uto64,
-+-                       binop(isNB ? Iop_CmpNE32 : Iop_CmpEQ32,
-++                       binop(is_NB_or_NBE ? Iop_CmpNE32 : Iop_CmpEQ32,
-+                              binop(Iop_Shr32, unop(Iop_64to32, cc_dep1),
-+                                               mkU8(n)),
-+                              mkU32(0)));
-+-- 
-+2.9.3
-+
-diff -Nru valgrind-3.14.0/debian/rules valgrind-3.14.0/debian/rules
---- valgrind-3.14.0/debian/rules	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/rules	2018-11-15 11:45:25.000000000 +0900
+diff -Nru valgrind-3.15.0/debian/rules valgrind-3.15.0/debian/rules
+--- valgrind-3.15.0/debian/rules	2019-07-14 19:23:29.000000000 +0900
++++ valgrind-3.15.0/debian/rules	2019-07-17 18:19:13.000000000 +0900
 @@ -11,7 +11,7 @@
  LDFLAGS  = $(shell dpkg-buildflags --get LDFLAGS)
  
@@ -222,9 +56,9 @@ diff -Nru valgrind-3.14.0/debian/rules valgrind-3.14.0/debian/rules
  	$(MAKE) -C docs FAQ.txt
  	$(MAKE) -C docs html-docs
  	$(MAKE) -C docs man-pages
-diff -Nru valgrind-3.14.0/debian/valgrind-mpi.install valgrind-3.14.0/debian/valgrind-mpi.install
---- valgrind-3.14.0/debian/valgrind-mpi.install	2018-11-15 09:21:43.000000000 +0900
-+++ valgrind-3.14.0/debian/valgrind-mpi.install	2018-11-15 11:45:25.000000000 +0900
+diff -Nru valgrind-3.15.0/debian/valgrind-mpi.install valgrind-3.15.0/debian/valgrind-mpi.install
+--- valgrind-3.15.0/debian/valgrind-mpi.install	2019-07-14 19:23:29.000000000 +0900
++++ valgrind-3.15.0/debian/valgrind-mpi.install	2019-07-17 18:19:13.000000000 +0900
 @@ -1 +1 @@
 -usr/lib/*/valgrind/libmpiwrap*
 +usr/lib/valgrind/libmpiwrap*

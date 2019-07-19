@@ -1547,7 +1547,7 @@ def lto(value, pgo, profile_generate, c_compiler):
 
     # MSVC's implementation of PGO implies LTO. Make clang-cl match this.
     if c_compiler.type == 'clang-cl' and pgo and not profile_generate and value.origin == 'default':
-        value = ['thin']
+        value = ['cross']
 
     if value:
         enabled = True
