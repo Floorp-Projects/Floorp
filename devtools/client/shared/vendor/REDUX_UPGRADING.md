@@ -29,3 +29,4 @@ cp dist/redux.js <gecko-dev>/devtools/client/shared/vendor/redux.js
    * react-redux v3.7.2
    */
   ```
+- Replace all instances of `Function('return this')()` with `globalThis`. See Bug 1473549.
