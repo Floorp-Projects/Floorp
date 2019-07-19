@@ -122,7 +122,15 @@ void brush_vs(
 
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
+#ifdef WR_FEATURE_ALPHA_PASS
+    int color_mode = prim_user_data.x & 0xffff;
+    int blend_mode = prim_user_data.x >> 16;
     int raster_space = prim_user_data.y;
+
+    if (color_mode == COLOR_MODE_FROM_PASS) {
+        color_mode = uMode;
+    }
+
     // Derive the texture coordinates for this image, based on
     // whether the source image is a local-space or screen-space
     // image.
@@ -136,14 +144,6 @@ void brush_vs(
         }
         default:
             break;
-    }
-
-#ifdef WR_FEATURE_ALPHA_PASS
-    int color_mode = prim_user_data.x & 0xffff;
-    int blend_mode = prim_user_data.x >> 16;
-
-    if (color_mode == COLOR_MODE_FROM_PASS) {
-        color_mode = uMode;
     }
 #endif
 
