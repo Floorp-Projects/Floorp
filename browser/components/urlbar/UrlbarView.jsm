@@ -802,7 +802,7 @@ class UrlbarView {
       this.oneOffSearchButtons.style.display = "";
       // Set .textbox first, since the popup setter will cause
       // a _rebuild call that uses it.
-      this.oneOffSearchButtons.textbox = this.input.inputField;
+      this.oneOffSearchButtons.textbox = this.input.textbox;
       this.oneOffSearchButtons.view = this;
     } else {
       this.oneOffSearchButtons.telemetryOrigin = null;
