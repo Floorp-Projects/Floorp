@@ -474,32 +474,56 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(lastDestroyed == (aLastDestroyed));              \
     });
 
-    // Empty buffer to start with.
-    // Start&end indices still at 0, nothing destroyed.
-    VERIFY_START_END_DESTROYED(0, 0, 0);
-
     // All entries will contain one 32-bit number. The resulting blocks will
     // have the following structure:
     // - 1 byte for the LEB128 size of 4
     // - 4 bytes for the number.
     // E.g., if we have entries with `123` and `456`:
-    // .-- first readable block at index 0
-    // |.-- first block at index 0
-    // ||.-- 1 byte for the entry size, which is `4` (32 bits)
-    // |||  .-- entry starts at index 1, contain 32-bit int
-    // |||  |             .-- entry and block finish *after* index 4, i.e., 5
-    // |||  |             | .-- second block starts at index 5
-    // |||  |             | |         etc.
-    // |||  |             | |                  .-- End of readable blocks at 10
-    // vvv  v             v V                  v
+    //   .-- Index 0 reserved for empty BlockIndex, nothing there.
+    //   | .-- first readable block at index 1
+    //   | |.-- first block at index 1
+    //   | ||.-- 1 byte for the entry size, which is `4` (32 bits)
+    //   | |||  .-- entry starts at index 2, contains 32-bit int
+    //   | |||  |             .-- entry and block finish *after* index 5 (so 6)
+    //   | |||  |             | .-- second block starts at index 6
+    //   | |||  |             | |         etc.
+    //   | |||  |             | |                  .-- End readable blocks: 11
+    //   v vvv  v             v V                  v
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    // S[4 |   int(123)   ] [4 |   int(456)   ]E
+    //   - S[4 |   int(123)   ] [4 |   int(456)   ]E
+
+    // Empty buffer to start with.
+    // Start&end indices still at 1 (0 is reserved for the default BlockIndex{}
+    // that cannot point at a valid entry), nothing destroyed.
+    VERIFY_START_END_DESTROYED(1, 1, 0);
+
+    // Default BlockIndex.
+    BlocksRingBuffer::BlockIndex bi0;
+    if (bi0) {
+      MOZ_RELEASE_ASSERT(false, "if (BlockIndex{}) should fail test");
+    }
+    if (!bi0) {
+    } else {
+      MOZ_RELEASE_ASSERT(false, "if (!BlockIndex{}) should succeed test");
+    }
+    MOZ_RELEASE_ASSERT(!bi0);
+    MOZ_RELEASE_ASSERT(bi0 == bi0);
+    MOZ_RELEASE_ASSERT(bi0 <= bi0);
+    MOZ_RELEASE_ASSERT(bi0 >= bi0);
+    MOZ_RELEASE_ASSERT(!(bi0 != bi0));
+    MOZ_RELEASE_ASSERT(!(bi0 < bi0));
+    MOZ_RELEASE_ASSERT(!(bi0 > bi0));
+
+    // Default BlockIndex can be used, but returns no valid entry.
+    rb.ReadAt(bi0, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
+      MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
+    });
 
     // Push `1` directly.
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(1))) == 0);
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(1))) == 1);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    // S[4 |    int(1)    ]E
-    VERIFY_START_END_DESTROYED(0, 5, 0);
+    //   - S[4 |    int(1)    ]E
+    VERIFY_START_END_DESTROYED(1, 6, 0);
 
     // Push `2` through EntryReserver, check output BlockIndex.
     auto bi2 = rb.Put([](BlocksRingBuffer::EntryReserver aER) {
@@ -509,10 +533,10 @@ void TestBlocksRingBufferAPI() {
         std::is_same<decltype(bi2), BlocksRingBuffer::BlockIndex>::value,
         "All index-returning functions should return a "
         "BlocksRingBuffer::BlockIndex");
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(bi2) == 5);
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(bi2) == 6);
     //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    // S[4 |    int(1)    ] [4 |    int(2)    ]E
-    VERIFY_START_END_DESTROYED(0, 10, 0);
+    //   - S[4 |    int(1)    ] [4 |    int(2)    ]E
+    VERIFY_START_END_DESTROYED(1, 11, 0);
 
     // Check single entry at bi2, store next block index.
     auto bi2Next =
@@ -529,6 +553,53 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
+    // BlockIndex tests.
+    if (bi2) {
+    } else {
+      MOZ_RELEASE_ASSERT(false,
+                         "if (non-default-BlockIndex) should succeed test");
+    }
+    if (!bi2) {
+      MOZ_RELEASE_ASSERT(false,
+                         "if (!non-default-BlockIndex) should fail test");
+    }
+
+    MOZ_RELEASE_ASSERT(!!bi2);
+    MOZ_RELEASE_ASSERT(bi2 == bi2);
+    MOZ_RELEASE_ASSERT(bi2 <= bi2);
+    MOZ_RELEASE_ASSERT(bi2 >= bi2);
+    MOZ_RELEASE_ASSERT(!(bi2 != bi2));
+    MOZ_RELEASE_ASSERT(!(bi2 < bi2));
+    MOZ_RELEASE_ASSERT(!(bi2 > bi2));
+
+    MOZ_RELEASE_ASSERT(bi0 != bi2);
+    MOZ_RELEASE_ASSERT(bi0 < bi2);
+    MOZ_RELEASE_ASSERT(bi0 <= bi2);
+    MOZ_RELEASE_ASSERT(!(bi0 == bi2));
+    MOZ_RELEASE_ASSERT(!(bi0 > bi2));
+    MOZ_RELEASE_ASSERT(!(bi0 >= bi2));
+
+    MOZ_RELEASE_ASSERT(bi2 != bi0);
+    MOZ_RELEASE_ASSERT(bi2 > bi0);
+    MOZ_RELEASE_ASSERT(bi2 >= bi0);
+    MOZ_RELEASE_ASSERT(!(bi2 == bi0));
+    MOZ_RELEASE_ASSERT(!(bi2 < bi0));
+    MOZ_RELEASE_ASSERT(!(bi2 <= bi0));
+
+    MOZ_RELEASE_ASSERT(bi2 != bi2Next);
+    MOZ_RELEASE_ASSERT(bi2 < bi2Next);
+    MOZ_RELEASE_ASSERT(bi2 <= bi2Next);
+    MOZ_RELEASE_ASSERT(!(bi2 == bi2Next));
+    MOZ_RELEASE_ASSERT(!(bi2 > bi2Next));
+    MOZ_RELEASE_ASSERT(!(bi2 >= bi2Next));
+
+    MOZ_RELEASE_ASSERT(bi2Next != bi2);
+    MOZ_RELEASE_ASSERT(bi2Next > bi2);
+    MOZ_RELEASE_ASSERT(bi2Next >= bi2);
+    MOZ_RELEASE_ASSERT(!(bi2Next == bi2));
+    MOZ_RELEASE_ASSERT(!(bi2Next < bi2));
+    MOZ_RELEASE_ASSERT(!(bi2Next <= bi2));
+
     // Push `3` through EntryReserver and then EntryWriter, check writer output
     // is returned to the initial caller.
     auto put3 = rb.Put([&](BlocksRingBuffer::EntryReserver aER) {
@@ -540,10 +611,10 @@ void TestBlocksRingBufferAPI() {
     });
     static_assert(std::is_same<decltype(put3), float>::value,
                   "Expect float as returned by callback.");
-    MOZ_RELEASE_ASSERT(put3 == 10.0);
-    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    // S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
-    VERIFY_START_END_DESTROYED(0, 15, 0);
+    MOZ_RELEASE_ASSERT(put3 == 11.0);
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
+    //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
+    VERIFY_START_END_DESTROYED(1, 16, 0);
 
     // Re-Read single entry at bi2, should now have a next entry.
     rb.ReadAt(bi2, [&](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
@@ -573,20 +644,20 @@ void TestBlocksRingBufferAPI() {
     // This will wrap around, and destroy the first entry.
     BlocksRingBuffer::BlockIndex bi4 = rb.PutObject(uint32_t(4));
     // Before:
-    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    // S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
+    //   - S[4 |    int(1)    ] [4 |    int(2)    ] [4 |    int(3)    ]E
     // 1. First entry destroyed:
-    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    //   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ]E
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
+    //   -   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ]E
     // 2. New entry starts at 15 and wraps around: (shown on separate line)
-    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
-    //   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ] [4 |
+    //   0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 (16)
+    //   -   ?   ?   ?   ?   ? S[4 |    int(2)    ] [4 |    int(3)    ]
     //  16  17  18  19  20  21  ...
-    //      int(4)    ]E
+    //  [4 |    int(4)    ]E
     // (collapsed)
-    //  16  17  18  19  20   5   6   7   8   9  10  11  12  13  14  15
-    //      int(4)    ]E ? S[4 |    int(2)    ] [4 |    int(3)    ] [4 |
-    VERIFY_START_END_DESTROYED(5, 20, 1);
+    //  16  17  18  19  20  21   6   7   8   9  10  11  12  13  14  15 (16)
+    //  [4 |    int(4)    ]E ? S[4 |    int(2)    ] [4 |    int(3)    ]
+    VERIFY_START_END_DESTROYED(6, 21, 1);
 
     // Check that we have `2` to `4`.
     count = 1;
@@ -610,9 +681,9 @@ void TestBlocksRingBufferAPI() {
             return aEW.CurrentBlockIndex();
           });
     });
-    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
-    //      int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ] [4 |
-    VERIFY_START_END_DESTROYED(10, 25, 2);
+    //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
+    //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
+    VERIFY_START_END_DESTROYED(11, 26, 2);
 
     // Read single entry at bi2, should now gracefully fail.
     rb.ReadAt(bi2, [](Maybe<BlocksRingBuffer::EntryReader>&& aMaybeReader) {
@@ -636,9 +707,9 @@ void TestBlocksRingBufferAPI() {
 
     // Delete everything before `4`, this should delete `3`.
     rb.ClearBefore(bi4);
-    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
-    //      int(4)    ] [4 |    int(5)    ]E ?   ?   ?   ?   ?   ? S[4 |
-    VERIFY_START_END_DESTROYED(15, 25, 3);
+    //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
+    // S[4 |    int(4)    ] [4 |    int(5)    ]E ?   ?   ?   ?   ?   ?
+    VERIFY_START_END_DESTROYED(16, 26, 3);
 
     // Check that we have `4` to `5`.
     count = 3;
@@ -650,14 +721,14 @@ void TestBlocksRingBufferAPI() {
     // Delete everything before `4` again, nothing to delete.
     lastDestroyed = 0;
     rb.ClearBefore(bi4);
-    VERIFY_START_END_DESTROYED(15, 25, 0);
+    VERIFY_START_END_DESTROYED(16, 26, 0);
 
     // Delete everything, this should delete `4` and `5`, and bring the start
     // index where the end index currently is.
     rb.Clear();
-    //  16  17  18  19  20  21  22  23  24  25  10  11  12  13  14  15
-    //   ?   ?   ?   ?   ?   ?   ?   ?   ?S E?   ?   ?   ?   ?   ?   ?
-    VERIFY_START_END_DESTROYED(25, 25, 5);
+    //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
+    //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? SE?   ?   ?   ?   ?   ?
+    VERIFY_START_END_DESTROYED(26, 26, 5);
 
     // Check that we have nothing to read.
     rb.ReadEach([&](auto&&) { MOZ_RELEASE_ASSERT(false); });
@@ -670,13 +741,13 @@ void TestBlocksRingBufferAPI() {
     // Delete everything before now-deleted `4`, nothing to delete.
     lastDestroyed = 0;
     rb.ClearBefore(bi4);
-    VERIFY_START_END_DESTROYED(25, 25, 0);
+    VERIFY_START_END_DESTROYED(26, 26, 0);
 
     // Push `6` directly.
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(6))) == 25);
+    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(6))) == 26);
     //  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
-    //   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?   ?
-    VERIFY_START_END_DESTROYED(25, 30, 0);
+    //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?
+    VERIFY_START_END_DESTROYED(26, 31, 0);
 
     // End of block where rb lives, should call deleter on destruction.
   }
