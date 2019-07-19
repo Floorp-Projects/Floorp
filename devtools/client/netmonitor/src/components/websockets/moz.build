@@ -14,6 +14,7 @@ DevToolsModules(
     'FrameListHeader.js',
     'FrameListItem.js',
     'FramePayload.js',
+    'RawData.js',
     'StatusBar.js',
     'Toolbar.js',
     'WebSocketsPanel.js',
