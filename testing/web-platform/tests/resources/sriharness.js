@@ -76,7 +76,9 @@ const SRIPreloadTest = (preload_sri_success, subresource_sri_success, name,
 
   // Early-fail in UAs that do not support `preload` links.
   test.step_func(() => {
-    assert_true(link.relList.supports('preload'), "Clever message here.");
+    assert_true(link.relList.supports('preload'),
+      "This test is automatically failing because the browser does not" +
+      "support `preload` links.");
   })();
 
   // Build up the link.
