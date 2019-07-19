@@ -115,17 +115,44 @@ class BlocksRingBuffer {
     Index mBlockIndex;
   };
 
-  // Constructor with no deleter, the oldest entries will be silently
+  // Constructors with no deleter, the oldest entries will be silently
   // overwritten/destroyed.
+
+  // Create a buffer of the given length.
   explicit BlocksRingBuffer(PowerOfTwo<Length> aLength) : mBuffer(aLength) {}
 
-  // Constructor with a deleter, which will be called with an `EntryReader`
+  // Take ownership of an existing buffer.
+  BlocksRingBuffer(UniquePtr<Buffer::Byte[]> aExistingBuffer,
+                   PowerOfTwo<Length> aLength)
+      : mBuffer(std::move(aExistingBuffer), aLength) {}
+
+  // Use an externally-owned buffer.
+  BlocksRingBuffer(Buffer::Byte* aExternalBuffer, PowerOfTwo<Length> aLength)
+      : mBuffer(aExternalBuffer, aLength) {}
+
+  // Constructors with a deleter, which will be called with an `EntryReader`
   // before the oldest entries get overwritten/destroyed.
   // Note that this deleter may be invoked from another caller's function that
   // writes/deletes data, be aware of this re-entrancy! (Details above class.)
+
+  // Create a buffer of the given length.
   template <typename Deleter>
   explicit BlocksRingBuffer(PowerOfTwo<Length> aLength, Deleter&& aDeleter)
       : mBuffer(aLength), mDeleter(std::forward<Deleter>(aDeleter)) {}
+
+  // Take ownership of an existing buffer.
+  template <typename Deleter>
+  explicit BlocksRingBuffer(UniquePtr<Buffer::Byte[]> aExistingBuffer,
+                            PowerOfTwo<Length> aLength, Deleter&& aDeleter)
+      : mBuffer(std::move(aExistingBuffer), aLength),
+        mDeleter(std::forward<Deleter>(aDeleter)) {}
+
+  // Use an externally-owned buffer.
+  template <typename Deleter>
+  explicit BlocksRingBuffer(Buffer::Byte* aExternalBuffer,
+                            PowerOfTwo<Length> aLength, Deleter&& aDeleter)
+      : mBuffer(aExternalBuffer, aLength),
+        mDeleter(std::forward<Deleter>(aDeleter)) {}
 
   // Destructor explictly deletes all remaining entries, this may invoke the
   // caller-provided deleter.

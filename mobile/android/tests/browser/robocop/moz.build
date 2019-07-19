@@ -26,7 +26,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
     '*.webm',
     '*.xml',
     '/mobile/android/tests/browser/chrome/head.js',
-    'browser_theme_image_file.xpi',
+    'addons/**',
     'reader_mode_pages/**', # The ** preserves directory structure.
     'robocop*.js',
     'test*.js',
@@ -36,3 +36,20 @@ DEFINES['MOZ_ANDROID_SHARED_ID'] = CONFIG['MOZ_ANDROID_SHARED_ID']
 OBJDIR_PP_FILES.mobile.android.tests.browser.robocop += [
     'AndroidManifest.xml.in',
 ]
+
+addons = [
+    'browser_theme_image_file',
+]
+
+output_dir = OBJDIR_FILES._tests.testing.mochitest.tests.robocop.addons
+
+for addon in addons:
+    indir = 'addons/%s' % addon
+    xpi = '%s.xpi' % indir
+
+    GENERATED_FILES += [xpi]
+    GENERATED_FILES[xpi].script = '/toolkit/mozapps/extensions/test/create_xpi.py'
+    GENERATED_FILES[xpi].inputs = [indir]
+
+    output_dir += ['!%s' % xpi]
+

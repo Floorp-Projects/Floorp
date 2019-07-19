@@ -1,7 +1,7 @@
-/** @license React v16.4.1
+/** @license React v16.8.6
  * react-dom-test-utils.development.js
  *
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,16 +20,6 @@ var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 var _assign = ReactInternals.assign;
 
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-/**
  * Use invariant() to assert state which your program assumes to be true.
  *
  * Provide sprintf-style format (only %s is supported) and arguments
@@ -40,10 +30,10 @@ var _assign = ReactInternals.assign;
  * will remain to ensure logic does not differ in production.
  */
 
-var validateFormat = function validateFormat(format) {};
+var validateFormat = function () {};
 
 {
-  validateFormat = function validateFormat(format) {
+  validateFormat = function (format) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
@@ -54,7 +44,7 @@ function invariant(condition, format, a, b, c, d, e, f) {
   validateFormat(format);
 
   if (!condition) {
-    var error;
+    var error = void 0;
     if (format === undefined) {
       error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
     } else {
@@ -71,57 +61,8 @@ function invariant(condition, format, a, b, c, d, e, f) {
   }
 }
 
-var invariant_1 = invariant;
-
 // Relying on the `invariant()` implementation lets us
-// have preserve the format and params in the www builds.
-
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * 
- */
-
-function makeEmptyFunction(arg) {
-  return function () {
-    return arg;
-  };
-}
-
-/**
- * This function accepts and discards inputs; it has no side effects. This is
- * primarily useful idiomatically for overridable function endpoints which
- * always need to be callable, since JS lacks a null-call idiom ala Cocoa.
- */
-var emptyFunction = function emptyFunction() {};
-
-emptyFunction.thatReturns = makeEmptyFunction;
-emptyFunction.thatReturnsFalse = makeEmptyFunction(false);
-emptyFunction.thatReturnsTrue = makeEmptyFunction(true);
-emptyFunction.thatReturnsNull = makeEmptyFunction(null);
-emptyFunction.thatReturnsThis = function () {
-  return this;
-};
-emptyFunction.thatReturnsArgument = function (arg) {
-  return arg;
-};
-
-var emptyFunction_1 = emptyFunction;
-
-/**
- * Copyright (c) 2014-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
-
+// preserve the format and params in the www builds.
 
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -130,49 +71,48 @@ var emptyFunction_1 = emptyFunction;
  * same logic and follow the same code paths.
  */
 
-var warning = emptyFunction_1;
+var warningWithoutStack = function () {};
 
 {
-  var printWarning = function printWarning(format) {
-    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-      args[_key - 1] = arguments[_key];
+  warningWithoutStack = function (condition, format) {
+    for (var _len = arguments.length, args = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+      args[_key - 2] = arguments[_key];
     }
 
-    var argIndex = 0;
-    var message = 'Warning: ' + format.replace(/%s/g, function () {
-      return args[argIndex++];
-    });
+    if (format === undefined) {
+      throw new Error('`warningWithoutStack(condition, format, ...args)` requires a warning ' + 'message argument');
+    }
+    if (args.length > 8) {
+      // Check before the condition to catch violations early.
+      throw new Error('warningWithoutStack() currently supports at most 8 arguments.');
+    }
+    if (condition) {
+      return;
+    }
     if (typeof console !== 'undefined') {
-      console.error(message);
+      var argsWithFormat = args.map(function (item) {
+        return '' + item;
+      });
+      argsWithFormat.unshift('Warning: ' + format);
+
+      // We intentionally don't use spread (or .apply) directly because it
+      // breaks IE9: https://github.com/facebook/react/issues/13610
+      Function.prototype.apply.call(console.error, console, argsWithFormat);
     }
     try {
       // --- Welcome to debugging React ---
       // This error was thrown as a convenience so that you can use this stack
       // to find the callsite that caused this warning to fire.
+      var argIndex = 0;
+      var message = 'Warning: ' + format.replace(/%s/g, function () {
+        return args[argIndex++];
+      });
       throw new Error(message);
     } catch (x) {}
   };
-
-  warning = function warning(condition, format) {
-    if (format === undefined) {
-      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-    }
-
-    if (format.indexOf('Failed Composite propType: ') === 0) {
-      return; // Ignore CompositeComponent proptype check.
-    }
-
-    if (!condition) {
-      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-        args[_key2 - 2] = arguments[_key2];
-      }
-
-      printWarning.apply(undefined, [format].concat(args));
-    }
-  };
 }
 
-var warning_1 = warning;
+var warningWithoutStack$1 = warningWithoutStack;
 
 /**
  * `ReactInstanceMap` maintains a mapping from a public facing stateful
@@ -195,17 +135,23 @@ function get(key) {
   return key._reactInternalFiber;
 }
 
-var ReactInternals$1 = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var ReactCurrentOwner = ReactInternals$1.ReactCurrentOwner;
-var ReactDebugCurrentFrame = ReactInternals$1.ReactDebugCurrentFrame;
+// Prevent newer renderers from RTE when used with older react package versions.
+// Current owner and dispatcher used to share the same ref,
+// but PR #14548 split them out to better support the react-debug-tools package.
+if (!ReactSharedInternals.hasOwnProperty('ReactCurrentDispatcher')) {
+  ReactSharedInternals.ReactCurrentDispatcher = {
+    current: null
+  };
+}
 
 // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
 
-// Before we know whether it is functional or class
-var FunctionalComponent = 1;
-var ClassComponent = 2;
+var FunctionComponent = 0;
+var ClassComponent = 1;
+ // Before we know whether it is function or class
 var HostRoot = 3; // Root of a host tree. Could be nested inside another node.
  // A subtree. Could be an entry point to a different renderer.
 var HostComponent = 5;
@@ -226,7 +172,13 @@ var Placement = /*             */2;
 
 
 
+
+// Passive & Update & Callback & Ref & Snapshot
+
+
 // Union of all host effects
+
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
 var MOUNTING = 1;
 var MOUNTED = 2;
@@ -266,7 +218,7 @@ function isFiberMountedImpl(fiber) {
 
 
 function assertIsMounted(fiber) {
-  !(isFiberMountedImpl(fiber) === MOUNTED) ? invariant_1(false, 'Unable to find node on an unmounted component.') : void 0;
+  !(isFiberMountedImpl(fiber) === MOUNTED) ? invariant(false, 'Unable to find node on an unmounted component.') : void 0;
 }
 
 function findCurrentFiberUsingSlowPath(fiber) {
@@ -274,7 +226,7 @@ function findCurrentFiberUsingSlowPath(fiber) {
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
     var state = isFiberMountedImpl(fiber);
-    !(state !== UNMOUNTED) ? invariant_1(false, 'Unable to find node on an unmounted component.') : void 0;
+    !(state !== UNMOUNTED) ? invariant(false, 'Unable to find node on an unmounted component.') : void 0;
     if (state === MOUNTING) {
       return null;
     }
@@ -313,7 +265,7 @@ function findCurrentFiberUsingSlowPath(fiber) {
       }
       // We should never have an alternate for any mounting node. So the only
       // way this could possibly happen is if this was unmounted, if at all.
-      invariant_1(false, 'Unable to find node on an unmounted component.');
+      invariant(false, 'Unable to find node on an unmounted component.');
     }
 
     if (a.return !== b.return) {
@@ -364,15 +316,15 @@ function findCurrentFiberUsingSlowPath(fiber) {
           }
           _child = _child.sibling;
         }
-        !didFindChild ? invariant_1(false, 'Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue.') : void 0;
+        !didFindChild ? invariant(false, 'Child was not found in either parent set. This indicates a bug in React related to the return pointer. Please file an issue.') : void 0;
       }
     }
 
-    !(a.alternate === b) ? invariant_1(false, 'Return fibers should always be each others\' alternates. This error is likely caused by a bug in React. Please file an issue.') : void 0;
+    !(a.alternate === b) ? invariant(false, 'Return fibers should always be each others\' alternates. This error is likely caused by a bug in React. Please file an issue.') : void 0;
   }
   // If the root is not a host container, we're in a disconnected tree. I.e.
   // unmounted.
-  !(a.tag === HostRoot) ? invariant_1(false, 'Unable to find node on an unmounted component.') : void 0;
+  !(a.tag === HostRoot) ? invariant(false, 'Unable to find node on an unmounted component.') : void 0;
   if (a.stateNode.current === a) {
     // We've determined that A is the current branch.
     return fiber;
@@ -383,10 +335,7 @@ function findCurrentFiberUsingSlowPath(fiber) {
 
 /* eslint valid-typeof: 0 */
 
-var didWarnForAddedNewProperty = false;
 var EVENT_POOL_SIZE = 10;
-
-var shouldBeReleasedProperties = ['dispatchConfig', '_targetInst', 'nativeEvent', 'isDefaultPrevented', 'isPropagationStopped', '_dispatchListeners', '_dispatchInstances'];
 
 /**
  * @interface Event
@@ -396,7 +345,9 @@ var EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: emptyFunction_1.thatReturnsNull,
+  currentTarget: function () {
+    return null;
+  },
   eventPhase: null,
   bubbles: null,
   cancelable: null,
@@ -406,6 +357,14 @@ var EventInterface = {
   defaultPrevented: null,
   isTrusted: null
 };
+
+function functionThatReturnsTrue() {
+  return true;
+}
+
+function functionThatReturnsFalse() {
+  return false;
+}
 
 /**
  * Synthetic events are dispatched by event plugins, typically in response to a
@@ -431,6 +390,8 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
     delete this.nativeEvent;
     delete this.preventDefault;
     delete this.stopPropagation;
+    delete this.isDefaultPrevented;
+    delete this.isPropagationStopped;
   }
 
   this.dispatchConfig = dispatchConfig;
@@ -459,11 +420,11 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
 
   var defaultPrevented = nativeEvent.defaultPrevented != null ? nativeEvent.defaultPrevented : nativeEvent.returnValue === false;
   if (defaultPrevented) {
-    this.isDefaultPrevented = emptyFunction_1.thatReturnsTrue;
+    this.isDefaultPrevented = functionThatReturnsTrue;
   } else {
-    this.isDefaultPrevented = emptyFunction_1.thatReturnsFalse;
+    this.isDefaultPrevented = functionThatReturnsFalse;
   }
-  this.isPropagationStopped = emptyFunction_1.thatReturnsFalse;
+  this.isPropagationStopped = functionThatReturnsFalse;
   return this;
 }
 
@@ -480,7 +441,7 @@ _assign(SyntheticEvent.prototype, {
     } else if (typeof event.returnValue !== 'unknown') {
       event.returnValue = false;
     }
-    this.isDefaultPrevented = emptyFunction_1.thatReturnsTrue;
+    this.isDefaultPrevented = functionThatReturnsTrue;
   },
 
   stopPropagation: function () {
@@ -500,7 +461,7 @@ _assign(SyntheticEvent.prototype, {
       event.cancelBubble = true;
     }
 
-    this.isPropagationStopped = emptyFunction_1.thatReturnsTrue;
+    this.isPropagationStopped = functionThatReturnsTrue;
   },
 
   /**
@@ -509,7 +470,7 @@ _assign(SyntheticEvent.prototype, {
    * won't be added back into the pool.
    */
   persist: function () {
-    this.isPersistent = emptyFunction_1.thatReturnsTrue;
+    this.isPersistent = functionThatReturnsTrue;
   },
 
   /**
@@ -517,7 +478,7 @@ _assign(SyntheticEvent.prototype, {
    *
    * @return {boolean} True if this should not be released, false otherwise.
    */
-  isPersistent: emptyFunction_1.thatReturnsFalse,
+  isPersistent: functionThatReturnsFalse,
 
   /**
    * `PooledClass` looks for `destructor` on each instance it releases.
@@ -529,13 +490,19 @@ _assign(SyntheticEvent.prototype, {
         Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
       }
     }
-    for (var i = 0; i < shouldBeReleasedProperties.length; i++) {
-      this[shouldBeReleasedProperties[i]] = null;
-    }
+    this.dispatchConfig = null;
+    this._targetInst = null;
+    this.nativeEvent = null;
+    this.isDefaultPrevented = functionThatReturnsFalse;
+    this.isPropagationStopped = functionThatReturnsFalse;
+    this._dispatchListeners = null;
+    this._dispatchInstances = null;
     {
       Object.defineProperty(this, 'nativeEvent', getPooledWarningPropertyDefinition('nativeEvent', null));
-      Object.defineProperty(this, 'preventDefault', getPooledWarningPropertyDefinition('preventDefault', emptyFunction_1));
-      Object.defineProperty(this, 'stopPropagation', getPooledWarningPropertyDefinition('stopPropagation', emptyFunction_1));
+      Object.defineProperty(this, 'isDefaultPrevented', getPooledWarningPropertyDefinition('isDefaultPrevented', functionThatReturnsFalse));
+      Object.defineProperty(this, 'isPropagationStopped', getPooledWarningPropertyDefinition('isPropagationStopped', functionThatReturnsFalse));
+      Object.defineProperty(this, 'preventDefault', getPooledWarningPropertyDefinition('preventDefault', function () {}));
+      Object.defineProperty(this, 'stopPropagation', getPooledWarningPropertyDefinition('stopPropagation', function () {}));
     }
   }
 });
@@ -565,38 +532,6 @@ SyntheticEvent.extend = function (Interface) {
 
   return Class;
 };
-
-/** Proxying after everything set on SyntheticEvent
- * to resolve Proxy issue on some WebKit browsers
- * in which some Event properties are set to undefined (GH#10010)
- */
-{
-  var isProxySupported = typeof Proxy === 'function' &&
-  // https://github.com/facebook/react/issues/12011
-  !Object.isSealed(new Proxy({}, {}));
-
-  if (isProxySupported) {
-    /*eslint-disable no-func-assign */
-    SyntheticEvent = new Proxy(SyntheticEvent, {
-      construct: function (target, args) {
-        return this.apply(target, Object.create(target.prototype), args);
-      },
-      apply: function (constructor, that, args) {
-        return new Proxy(constructor.apply(that, args), {
-          set: function (target, prop, value) {
-            if (prop !== 'isPersistent' && !target.constructor.Interface.hasOwnProperty(prop) && shouldBeReleasedProperties.indexOf(prop) === -1) {
-              !(didWarnForAddedNewProperty || target.isPersistent()) ? warning_1(false, "This synthetic event is reused for performance reasons. If you're " + "seeing this, you're adding a new property in the synthetic event object. " + 'The property is never released. See ' + 'https://fb.me/react-event-pooling for more information.') : void 0;
-              didWarnForAddedNewProperty = true;
-            }
-            target[prop] = value;
-            return true;
-          }
-        });
-      }
-    });
-    /*eslint-enable no-func-assign */
-  }
-}
 
 addEventPoolingTo(SyntheticEvent);
 
@@ -630,7 +565,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 
   function warn(action, result) {
     var warningCondition = false;
-    !warningCondition ? warning_1(false, "This synthetic event is reused for performance reasons. If you're seeing this, " + "you're %s `%s` on a released/nullified synthetic event. %s. " + 'If you must keep the original synthetic event around, use event.persist(). ' + 'See https://fb.me/react-event-pooling for more information.', action, propName, result) : void 0;
+    !warningCondition ? warningWithoutStack$1(false, "This synthetic event is reused for performance reasons. If you're seeing this, " + "you're %s `%s` on a released/nullified synthetic event. %s. " + 'If you must keep the original synthetic event around, use event.persist(). ' + 'See https://fb.me/react-event-pooling for more information.', action, propName, result) : void 0;
   }
 }
 
@@ -646,7 +581,7 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
 
 function releasePooledEvent(event) {
   var EventConstructor = this;
-  !(event instanceof EventConstructor) ? invariant_1(false, 'Trying to release an event instance  into a pool of a different type.') : void 0;
+  !(event instanceof EventConstructor) ? invariant(false, 'Trying to release an event instance into a pool of a different type.') : void 0;
   event.destructor();
   if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
     EventConstructor.eventPool.push(event);
@@ -659,7 +594,64 @@ function addEventPoolingTo(EventConstructor) {
   EventConstructor.release = releasePooledEvent;
 }
 
-var SyntheticEvent$1 = SyntheticEvent;
+/**
+ * Forked from fbjs/warning:
+ * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
+ *
+ * Only change is we use console.warn instead of console.error,
+ * and do nothing when 'console' is not supported.
+ * This really simplifies the code.
+ * ---
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
+ */
+
+var lowPriorityWarning = function () {};
+
+{
+  var printWarning = function (format) {
+    for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      args[_key - 1] = arguments[_key];
+    }
+
+    var argIndex = 0;
+    var message = 'Warning: ' + format.replace(/%s/g, function () {
+      return args[argIndex++];
+    });
+    if (typeof console !== 'undefined') {
+      console.warn(message);
+    }
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
+
+  lowPriorityWarning = function (condition, format) {
+    if (format === undefined) {
+      throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
+    }
+    if (!condition) {
+      for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+        args[_key2 - 2] = arguments[_key2];
+      }
+
+      printWarning.apply(undefined, [format].concat(args));
+    }
+  };
+}
+
+var lowPriorityWarning$1 = lowPriorityWarning;
+
+/**
+ * HTML nodeType values that represent the type of the node
+ */
+
+var ELEMENT_NODE = 1;
 
 // Do not uses the below two methods directly!
 // Instead use constants exported from DOMTopLevelEventTypes in ReactDOM.
@@ -669,39 +661,7 @@ function unsafeCastStringToDOMTopLevelType(topLevelType) {
   return topLevelType;
 }
 
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
-
-
 var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-
-/**
- * Simple, lightweight module assisting with the detection and context of
- * Worker. Helps avoid circular dependencies and allows code to reason about
- * whether or not they are in a Worker, even if they never include the main
- * `ReactWorker` dependency.
- */
-var ExecutionEnvironment = {
-
-  canUseDOM: canUseDOM,
-
-  canUseWorkers: typeof Worker !== 'undefined',
-
-  canUseEventListeners: canUseDOM && !!(window.addEventListener || window.attachEvent),
-
-  canUseViewport: canUseDOM && !!window.screen,
-
-  isInWorker: !canUseDOM // For now, this is true - might change in the future.
-
-};
-
-var ExecutionEnvironment_1 = ExecutionEnvironment;
 
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.
@@ -716,8 +676,6 @@ function makePrefixMap(styleProp, eventName) {
   prefixes[styleProp.toLowerCase()] = eventName.toLowerCase();
   prefixes['Webkit' + styleProp] = 'webkit' + eventName;
   prefixes['Moz' + styleProp] = 'moz' + eventName;
-  prefixes['ms' + styleProp] = 'MS' + eventName;
-  prefixes['O' + styleProp] = 'o' + eventName.toLowerCase();
 
   return prefixes;
 }
@@ -745,7 +703,7 @@ var style = {};
 /**
  * Bootstrap if a DOM exists.
  */
-if (ExecutionEnvironment_1.canUseDOM) {
+if (canUseDOM) {
   style = document.createElementNS('http://www.w3.org/1999/xhtml', 'div').style;
 
   // On some platforms, in particular some releases of Android 4.x,
@@ -813,6 +771,7 @@ var TOP_CONTEXT_MENU = unsafeCastStringToDOMTopLevelType('contextmenu');
 var TOP_COPY = unsafeCastStringToDOMTopLevelType('copy');
 var TOP_CUT = unsafeCastStringToDOMTopLevelType('cut');
 var TOP_DOUBLE_CLICK = unsafeCastStringToDOMTopLevelType('dblclick');
+
 var TOP_DRAG = unsafeCastStringToDOMTopLevelType('drag');
 var TOP_DRAG_END = unsafeCastStringToDOMTopLevelType('dragend');
 var TOP_DRAG_ENTER = unsafeCastStringToDOMTopLevelType('dragenter');
@@ -881,17 +840,28 @@ var TOP_WHEEL = unsafeCastStringToDOMTopLevelType('wheel');
 // Note that events in this list will *not* be listened to at the top level
 // unless they're explicitly whitelisted in `ReactBrowserEventEmitter.listenTo`.
 
+// for .act's return value
 var findDOMNode = ReactDOM.findDOMNode;
-var _ReactDOM$__SECRET_IN = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-var EventPluginHub = _ReactDOM$__SECRET_IN.EventPluginHub;
-var EventPluginRegistry = _ReactDOM$__SECRET_IN.EventPluginRegistry;
-var EventPropagators = _ReactDOM$__SECRET_IN.EventPropagators;
-var ReactControlledComponent = _ReactDOM$__SECRET_IN.ReactControlledComponent;
-var ReactDOMComponentTree = _ReactDOM$__SECRET_IN.ReactDOMComponentTree;
-var ReactDOMEventListener = _ReactDOM$__SECRET_IN.ReactDOMEventListener;
+// Keep in sync with ReactDOMUnstableNativeDependencies.js
+// and ReactDOM.js:
+
+var _ReactDOM$__SECRET_IN = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+var getInstanceFromNode = _ReactDOM$__SECRET_IN[0];
+var getNodeFromInstance = _ReactDOM$__SECRET_IN[1];
+var getFiberCurrentPropsFromNode = _ReactDOM$__SECRET_IN[2];
+var injectEventPluginsByName = _ReactDOM$__SECRET_IN[3];
+var eventNameDispatchConfigs = _ReactDOM$__SECRET_IN[4];
+var accumulateTwoPhaseDispatches = _ReactDOM$__SECRET_IN[5];
+var accumulateDirectDispatches = _ReactDOM$__SECRET_IN[6];
+var enqueueStateRestore = _ReactDOM$__SECRET_IN[7];
+var restoreStateIfNeeded = _ReactDOM$__SECRET_IN[8];
+var dispatchEvent = _ReactDOM$__SECRET_IN[9];
+var runEventsInBatch = _ReactDOM$__SECRET_IN[10];
 
 
 function Event(suffix) {}
+
+var hasWarnedAboutDeprecatedMockComponent = false;
 
 /**
  * @class ReactTestUtils
@@ -906,7 +876,7 @@ function Event(suffix) {}
  */
 function simulateNativeEventOnNode(topLevelType, node, fakeNativeEvent) {
   fakeNativeEvent.target = node;
-  ReactDOMEventListener.dispatchEvent(topLevelType, fakeNativeEvent);
+  dispatchEvent(topLevelType, fakeNativeEvent);
 }
 
 /**
@@ -931,7 +901,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   var node = currentParent;
   var ret = [];
   while (true) {
-    if (node.tag === HostComponent || node.tag === HostText || node.tag === ClassComponent || node.tag === FunctionalComponent) {
+    if (node.tag === HostComponent || node.tag === HostText || node.tag === ClassComponent || node.tag === FunctionComponent) {
       var publicInst = node.stateNode;
       if (test(publicInst)) {
         ret.push(publicInst);
@@ -955,6 +925,32 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     node = node.sibling;
   }
 }
+
+function validateClassInstance(inst, methodName) {
+  if (!inst) {
+    // This is probably too relaxed but it's existing behavior.
+    return;
+  }
+  if (get(inst)) {
+    // This is a public instance indeed.
+    return;
+  }
+  var received = void 0;
+  var stringified = '' + inst;
+  if (Array.isArray(inst)) {
+    received = 'an array';
+  } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
+    received = 'a DOM node';
+  } else if (stringified === '[object Object]') {
+    received = 'object with keys {' + Object.keys(inst).join(', ') + '}';
+  } else {
+    received = stringified;
+  }
+  invariant(false, '%s(...): the first argument must be a React class instance. Instead received: %s.', methodName, received);
+}
+
+// a stub element, lazily initialized, used by act() when flushing effects
+var actContainerElement = null;
 
 /**
  * Utilities for making it easy to test React components.
@@ -985,7 +981,7 @@ var ReactTestUtils = {
   },
 
   isDOMComponent: function (inst) {
-    return !!(inst && inst.nodeType === 1 && inst.tagName);
+    return !!(inst && inst.nodeType === ELEMENT_NODE && inst.tagName);
   },
 
   isDOMComponentElement: function (inst) {
@@ -1011,10 +1007,10 @@ var ReactTestUtils = {
   },
 
   findAllInRenderedTree: function (inst, test) {
+    validateClassInstance(inst, 'findAllInRenderedTree');
     if (!inst) {
       return [];
     }
-    !ReactTestUtils.isCompositeComponent(inst) ? invariant_1(false, 'findAllInRenderedTree(...): instance must be a composite component') : void 0;
     var internalInstance = get(inst);
     return findAllInRenderedFiberTreeInternal(internalInstance, test);
   },
@@ -1025,6 +1021,7 @@ var ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function (root, classNames) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithClass');
     return ReactTestUtils.findAllInRenderedTree(root, function (inst) {
       if (ReactTestUtils.isDOMComponent(inst)) {
         var className = inst.className;
@@ -1035,7 +1032,7 @@ var ReactTestUtils = {
         var classList = className.split(/\s+/);
 
         if (!Array.isArray(classNames)) {
-          !(classNames !== undefined) ? invariant_1(false, 'TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument.') : void 0;
+          !(classNames !== undefined) ? invariant(false, 'TestUtils.scryRenderedDOMComponentsWithClass expects a className as a second argument.') : void 0;
           classNames = classNames.split(/\s+/);
         }
         return classNames.every(function (name) {
@@ -1053,6 +1050,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function (root, className) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithClass');
     var all = ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
       throw new Error('Did not find exactly one match (found: ' + all.length + ') ' + 'for class:' + className);
@@ -1066,6 +1064,7 @@ var ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedDOMComponentsWithTag: function (root, tagName) {
+    validateClassInstance(root, 'scryRenderedDOMComponentsWithTag');
     return ReactTestUtils.findAllInRenderedTree(root, function (inst) {
       return ReactTestUtils.isDOMComponent(inst) && inst.tagName.toUpperCase() === tagName.toUpperCase();
     });
@@ -1078,6 +1077,7 @@ var ReactTestUtils = {
    * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function (root, tagName) {
+    validateClassInstance(root, 'findRenderedDOMComponentWithTag');
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
     if (all.length !== 1) {
       throw new Error('Did not find exactly one match (found: ' + all.length + ') ' + 'for tag:' + tagName);
@@ -1090,6 +1090,7 @@ var ReactTestUtils = {
    * @return {array} an array of all the matches.
    */
   scryRenderedComponentsWithType: function (root, componentType) {
+    validateClassInstance(root, 'scryRenderedComponentsWithType');
     return ReactTestUtils.findAllInRenderedTree(root, function (inst) {
       return ReactTestUtils.isCompositeComponentWithType(inst, componentType);
     });
@@ -1102,6 +1103,7 @@ var ReactTestUtils = {
    * @return {!ReactComponent} The one match.
    */
   findRenderedComponentWithType: function (root, componentType) {
+    validateClassInstance(root, 'findRenderedComponentWithType');
     var all = ReactTestUtils.scryRenderedComponentsWithType(root, componentType);
     if (all.length !== 1) {
       throw new Error('Did not find exactly one match (found: ' + all.length + ') ' + 'for componentType:' + componentType);
@@ -1123,6 +1125,11 @@ var ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function (module, mockTagName) {
+    if (!hasWarnedAboutDeprecatedMockComponent) {
+      hasWarnedAboutDeprecatedMockComponent = true;
+      lowPriorityWarning$1(false, 'ReactTestUtils.mockComponent() is deprecated. ' + 'Use shallow rendering or jest.mock() instead.\n\n' + 'See https://fb.me/test-utils-mock-component for more information.');
+    }
+
     mockTagName = mockTagName || module.mockTagName || 'div';
 
     module.prototype.render.mockImplementation(function () {
@@ -1139,7 +1146,43 @@ var ReactTestUtils = {
   },
 
   Simulate: null,
-  SimulateNative: {}
+  SimulateNative: {},
+
+  act: function (callback) {
+    if (actContainerElement === null) {
+      // warn if we can't actually create the stub element
+      {
+        !(typeof document !== 'undefined' && document !== null && typeof document.createElement === 'function') ? warningWithoutStack$1(false, 'It looks like you called TestUtils.act(...) in a non-browser environment. ' + "If you're using TestRenderer for your tests, you should call " + 'TestRenderer.act(...) instead of TestUtils.act(...).') : void 0;
+      }
+      // then make it
+      actContainerElement = document.createElementNS('http://www.w3.org/1999/xhtml', 'div');
+    }
+
+    var result = ReactDOM.unstable_batchedUpdates(callback);
+    // note: keep these warning messages in sync with
+    // createReactNoop.js and ReactTestRenderer.js
+    {
+      if (result !== undefined) {
+        var addendum = void 0;
+        if (result !== null && typeof result.then === 'function') {
+          addendum = '\n\nIt looks like you wrote ReactTestUtils.act(async () => ...), ' + 'or returned a Promise from the callback passed to it. ' + 'Putting asynchronous logic inside ReactTestUtils.act(...) is not supported.\n';
+        } else {
+          addendum = ' You returned: ' + result;
+        }
+        warningWithoutStack$1(false, 'The callback passed to ReactTestUtils.act(...) function must not return anything.%s', addendum);
+      }
+    }
+    ReactDOM.render(React.createElement('div', null), actContainerElement);
+    // we want the user to not expect a return,
+    // but we want to warn if they use it like they can await on it.
+    return {
+      then: function () {
+        {
+          warningWithoutStack$1(false, 'Do not await the result of calling ReactTestUtils.act(...), it is not a Promise.');
+        }
+      }
+    };
+  }
 };
 
 /**
@@ -1152,10 +1195,10 @@ var ReactTestUtils = {
  */
 function makeSimulator(eventType) {
   return function (domNode, eventData) {
-    !!React.isValidElement(domNode) ? invariant_1(false, 'TestUtils.Simulate expected a DOM node as the first argument but received a React element. Pass the DOM node you wish to simulate the event on instead. Note that TestUtils.Simulate will not work if you are using shallow rendering.') : void 0;
-    !!ReactTestUtils.isCompositeComponent(domNode) ? invariant_1(false, 'TestUtils.Simulate expected a DOM node as the first argument but received a component instance. Pass the DOM node you wish to simulate the event on instead.') : void 0;
+    !!React.isValidElement(domNode) ? invariant(false, 'TestUtils.Simulate expected a DOM node as the first argument but received a React element. Pass the DOM node you wish to simulate the event on instead. Note that TestUtils.Simulate will not work if you are using shallow rendering.') : void 0;
+    !!ReactTestUtils.isCompositeComponent(domNode) ? invariant(false, 'TestUtils.Simulate expected a DOM node as the first argument but received a component instance. Pass the DOM node you wish to simulate the event on instead.') : void 0;
 
-    var dispatchConfig = EventPluginRegistry.eventNameDispatchConfigs[eventType];
+    var dispatchConfig = eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
@@ -1163,8 +1206,8 @@ function makeSimulator(eventType) {
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    var targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
-    var event = new SyntheticEvent$1(dispatchConfig, targetInst, fakeNativeEvent, domNode);
+    var targetInst = getInstanceFromNode(domNode);
+    var event = new SyntheticEvent(dispatchConfig, targetInst, fakeNativeEvent, domNode);
 
     // Since we aren't using pooling, always persist the event. This will make
     // sure it's marked and won't warn when setting additional properties.
@@ -1172,18 +1215,18 @@ function makeSimulator(eventType) {
     _assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
-      EventPropagators.accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatches(event);
     } else {
-      EventPropagators.accumulateDirectDispatches(event);
+      accumulateDirectDispatches(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function () {
       // Normally extractEvent enqueues a state restore, but we'll just always
-      // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(domNode);
-      EventPluginHub.runEventsInBatch(event, true);
+      // do that since we're by-passing it here.
+      enqueueStateRestore(domNode);
+      runEventsInBatch(event);
     });
-    ReactControlledComponent.restoreStateIfNeeded();
+    restoreStateIfNeeded();
   };
 }
 
@@ -1191,7 +1234,7 @@ function buildSimulators() {
   ReactTestUtils.Simulate = {};
 
   var eventType = void 0;
-  for (eventType in EventPluginRegistry.eventNameDispatchConfigs) {
+  for (eventType in eventNameDispatchConfigs) {
     /**
      * @param {!Element|ReactDOMComponent} domComponentOrNode
      * @param {?object} eventData Fake event data to use in SyntheticEvent.
@@ -1199,18 +1242,6 @@ function buildSimulators() {
     ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
   }
 }
-
-// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
-EventPluginHub.injection.injectEventPluginOrder = function () {
-  oldInjectEventPluginOrder.apply(this, arguments);
-  buildSimulators();
-};
-var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
-EventPluginHub.injection.injectEventPluginsByName = function () {
-  oldInjectEventPlugins.apply(this, arguments);
-  buildSimulators();
-};
 
 buildSimulators();
 
@@ -1264,7 +1295,7 @@ var ReactTestUtils$3 = ( ReactTestUtils$2 && ReactTestUtils ) || ReactTestUtils$
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.
-var testUtils = ReactTestUtils$3.default ? ReactTestUtils$3.default : ReactTestUtils$3;
+var testUtils = ReactTestUtils$3.default || ReactTestUtils$3;
 
 return testUtils;
 

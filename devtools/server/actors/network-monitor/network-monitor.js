@@ -16,7 +16,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "NetworkEventActor",
-  "devtools/server/actors/network-event",
+  "devtools/server/actors/network-monitor/network-event",
   true
 );
 
