@@ -172,7 +172,7 @@ class BackgroundServices(
         // See https://github.com/mozilla-mobile/android-components/issues/3732
         setOf("https://identity.mozilla.com/apps/oldsync")
     ).also {
-        it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
+        it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), false)
 
         // This should be removed in the future. See comment on `accountObserver`.
         if (FeatureFlags.sendTabEnabled && pushConfig != null) {
