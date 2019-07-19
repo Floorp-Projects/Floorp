@@ -91,14 +91,6 @@ class LocationBar(UIBaseLib):
             message='Contents of location bar could not be cleared.')
 
     @property
-    def connection_icon(self):
-        """ Provides access to the urlbar connection icon.
-
-        :returns: Reference to the connection icon element.
-        """
-        return self.marionette.find_element(By.ID, 'connection-icon')
-
-    @property
     def focused(self):
         """Checks the focus state of the location bar.
 
@@ -243,7 +235,7 @@ class LocationBar(UIBaseLib):
 
         :returns: Reference to the urlbar input.
         """
-        return self.urlbar.find_element(By.CLASS_NAME, 'urlbar-input')
+        return self.marionette.find_element(By.ID, 'urlbar-input')
 
     @property
     def value(self):

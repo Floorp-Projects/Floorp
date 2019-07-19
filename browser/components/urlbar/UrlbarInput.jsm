@@ -154,7 +154,7 @@ class UrlbarInput {
       });
     }
 
-    this.inputField = this.querySelector(".urlbar-input");
+    this.inputField = this.querySelector("#urlbar-input");
     this.dropmarker = this.querySelector(".urlbar-history-dropmarker");
 
     XPCOMUtils.defineLazyGetter(this, "valueFormatter", () => {
