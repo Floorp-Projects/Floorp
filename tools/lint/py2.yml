@@ -12,7 +12,6 @@ py2:
         - js/src
         - js/xpconnect
         - layout
-        - media
         - modules
         - mozglue
         - netwerk
