@@ -527,3 +527,6 @@ skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
 
 # Regular grandfathered tags canonicalized differently in CLDR.
 skip script test262/intl402/Intl/getCanonicalLocales/grandfathered.js
+
+# Deprecated variant subtag mappings are no longer supported.
+skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js

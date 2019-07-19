@@ -366,6 +366,19 @@ var languageMappings = {
     "zyb": "za",
 };
 
+// Language subtags with complex mappings.
+// Derived from CLDR Supplemental Data, version 35.1.
+// https://github.com/unicode-org/cldr.git
+var complexLanguageMappings = {
+    "cnr": true,
+    "drw": true,
+    "hbs": true,
+    "prs": true,
+    "sh": true,
+    "swc": true,
+    "tnf": true,
+};
+
 // Mappings from region subtags to preferred values.
 // Derived from CLDR Supplemental Data, version 35.1.
 // https://github.com/unicode-org/cldr.git
@@ -389,6 +402,7 @@ var regionMappings = {
     "052": "BB",
     "056": "BE",
     "060": "BM",
+    "062": "034",
     "064": "BT",
     "068": "BO",
     "070": "BA",
@@ -611,6 +625,7 @@ var regionMappings = {
     "807": "MK",
     "818": "EG",
     "826": "GB",
+    "830": "JE",
     "831": "GG",
     "832": "JE",
     "833": "IM",
@@ -625,6 +640,7 @@ var regionMappings = {
     "882": "WS",
     "886": "YE",
     "887": "YE",
+    "891": "RS",
     "894": "ZM",
     "958": "AA",
     "959": "QM",
@@ -668,9 +684,11 @@ var regionMappings = {
     "998": "XZ",
     "999": "ZZ",
     "BU": "MM",
+    "CS": "RS",
     "CT": "KI",
     "DD": "DE",
     "DY": "BJ",
+    "FQ": "AQ",
     "FX": "FR",
     "HV": "BF",
     "JT": "UM",
@@ -686,5 +704,434 @@ var regionMappings = {
     "VD": "VN",
     "WK": "UM",
     "YD": "YE",
+    "YU": "RS",
     "ZR": "CD",
 };
+
+// Region subtags with complex mappings.
+// Derived from CLDR Supplemental Data, version 35.1.
+// https://github.com/unicode-org/cldr.git
+var complexRegionMappings = {
+    "172": true,
+    "200": true,
+    "530": true,
+    "532": true,
+    "536": true,
+    "582": true,
+    "810": true,
+    "890": true,
+    "AN": true,
+    "NT": true,
+    "PC": true,
+    "SU": true,
+};
+
+// Canonicalize Unicode BCP 47 locale identifiers.
+// Derived from CLDR Supplemental Data, version 35.1.
+// https://github.com/unicode-org/cldr.git
+/* eslint-disable complexity */
+function updateLocaleIdMappings(tag) {
+    assert(IsObject(tag), "tag is an object");
+    assert(!hasOwn("grandfathered", tag), "tag is not a grandfathered tag");
+
+    // Replace deprecated language tags with their preferred values.
+    var language = tag.language;
+    if (hasOwn(language, languageMappings)) {
+        tag.language = languageMappings[language];
+    } else if (hasOwn(language, complexLanguageMappings)) {
+        switch (language) {
+          case "cnr":
+            tag.language = "sr";
+            if (tag.region === undefined)
+                tag.region = "ME";
+            break;
+          case "drw":
+          case "prs":
+          case "tnf":
+            tag.language = "fa";
+            if (tag.region === undefined)
+                tag.region = "AF";
+            break;
+          case "hbs":
+          case "sh":
+            tag.language = "sr";
+            if (tag.script === undefined)
+                tag.script = "Latn";
+            break;
+          case "swc":
+            tag.language = "sw";
+            if (tag.region === undefined)
+                tag.region = "CD";
+            break;
+          default:
+            assert(false, "language not handled: " + language);
+        }
+    }
+
+    // No script replacements are currently present.
+
+    // Replace deprecated subtags with their preferred values.
+    var region = tag.region;
+    if (region !== undefined) {
+        if (hasOwn(region, regionMappings)) {
+            tag.region = regionMappings[region];
+        } else if (hasOwn(region, complexRegionMappings)) {
+            switch (region) {
+              case "172":
+                if (tag.language === "ab") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "az") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "be") {
+                    tag.region = "BY";
+                    break;
+                }
+                if (tag.language === "crh") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "gag") {
+                    tag.region = "MD";
+                    break;
+                }
+                if (tag.language === "got") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "hy") {
+                    tag.region = "AM";
+                    break;
+                }
+                if (tag.language === "ji") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "ka") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "kaa") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "kk") {
+                    tag.region = "KZ";
+                    break;
+                }
+                if (tag.language === "ky") {
+                    tag.region = "KG";
+                    break;
+                }
+                if (tag.language === "os") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "rue") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "sog") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "tg") {
+                    tag.region = "TJ";
+                    break;
+                }
+                if (tag.language === "tk") {
+                    tag.region = "TM";
+                    break;
+                }
+                if (tag.language === "tkr") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "tly") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "ttt") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "ug" && tag.script === "Cyrl") {
+                    tag.region = "KZ";
+                    break;
+                }
+                if (tag.language === "uk") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Armn") {
+                    tag.region = "AM";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Sogd") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Geor") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Goth") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Sogo") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "uz") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "xmf") {
+                    tag.region = "GE";
+                    break;
+                }
+                tag.region = "RU";
+                break;
+              case "200":
+                if (tag.language === "sk") {
+                    tag.region = "SK";
+                    break;
+                }
+                tag.region = "CZ";
+                break;
+              case "530":
+              case "532":
+              case "AN":
+                if (tag.language === "vic") {
+                    tag.region = "SX";
+                    break;
+                }
+                tag.region = "CW";
+                break;
+              case "536":
+              case "NT":
+                if (tag.language === "akk") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "ckb") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "ku" && tag.script === "Arab") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "mis") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "syr") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Xsux") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Hatr") {
+                    tag.region = "IQ";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Syrc") {
+                    tag.region = "IQ";
+                    break;
+                }
+                tag.region = "SA";
+                break;
+              case "582":
+              case "PC":
+                if (tag.language === "mh") {
+                    tag.region = "MH";
+                    break;
+                }
+                if (tag.language === "pau") {
+                    tag.region = "PW";
+                    break;
+                }
+                tag.region = "FM";
+                break;
+              case "810":
+              case "SU":
+                if (tag.language === "ab") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "az") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "be") {
+                    tag.region = "BY";
+                    break;
+                }
+                if (tag.language === "crh") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "et") {
+                    tag.region = "EE";
+                    break;
+                }
+                if (tag.language === "gag") {
+                    tag.region = "MD";
+                    break;
+                }
+                if (tag.language === "got") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "hy") {
+                    tag.region = "AM";
+                    break;
+                }
+                if (tag.language === "ji") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "ka") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "kaa") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "kk") {
+                    tag.region = "KZ";
+                    break;
+                }
+                if (tag.language === "ky") {
+                    tag.region = "KG";
+                    break;
+                }
+                if (tag.language === "lt") {
+                    tag.region = "LT";
+                    break;
+                }
+                if (tag.language === "ltg") {
+                    tag.region = "LV";
+                    break;
+                }
+                if (tag.language === "lv") {
+                    tag.region = "LV";
+                    break;
+                }
+                if (tag.language === "os") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "rue") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "sgs") {
+                    tag.region = "LT";
+                    break;
+                }
+                if (tag.language === "sog") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "tg") {
+                    tag.region = "TJ";
+                    break;
+                }
+                if (tag.language === "tk") {
+                    tag.region = "TM";
+                    break;
+                }
+                if (tag.language === "tkr") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "tly") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "ttt") {
+                    tag.region = "AZ";
+                    break;
+                }
+                if (tag.language === "ug" && tag.script === "Cyrl") {
+                    tag.region = "KZ";
+                    break;
+                }
+                if (tag.language === "uk") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Armn") {
+                    tag.region = "AM";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Sogd") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Geor") {
+                    tag.region = "GE";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Goth") {
+                    tag.region = "UA";
+                    break;
+                }
+                if (tag.language === "und" && tag.script === "Sogo") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "uz") {
+                    tag.region = "UZ";
+                    break;
+                }
+                if (tag.language === "vro") {
+                    tag.region = "EE";
+                    break;
+                }
+                if (tag.language === "xmf") {
+                    tag.region = "GE";
+                    break;
+                }
+                tag.region = "RU";
+                break;
+              case "890":
+                if (tag.language === "bs") {
+                    tag.region = "BA";
+                    break;
+                }
+                if (tag.language === "hr") {
+                    tag.region = "HR";
+                    break;
+                }
+                if (tag.language === "mk") {
+                    tag.region = "MK";
+                    break;
+                }
+                if (tag.language === "sl") {
+                    tag.region = "SI";
+                    break;
+                }
+                tag.region = "RS";
+                break;
+              default:
+                assert(false, "region not handled: " + region);
+            }
+        }
+
+        // No variant replacements are currently present.
+        // No extension replacements are currently present.
+        // Private use sequences are left as is.
+
+    }
+}
+/* eslint-enable complexity */
