@@ -1076,10 +1076,8 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
         aFrame->InvalidateFrameSubtree();
       }
     }
-    nsIFrame* primaryFrame =
-        nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame);
     if ((aChange & nsChangeHint_UpdateTransformLayer) &&
-        primaryFrame->IsTransformed()) {
+        aFrame->IsTransformed()) {
       // Note: All the transform-like properties should map to the same
       // layer activity index, so does the restyle count. Therefore, using
       // eCSSProperty_transform should be fine.
@@ -1090,15 +1088,14 @@ static void DoApplyRenderingChangeToTree(nsIFrame* aFrame,
       // paint.
       if (!needInvalidatingPaint) {
         nsDisplayItem::Layer* layer;
-        needInvalidatingPaint |= !primaryFrame->TryUpdateTransformOnly(&layer);
+        needInvalidatingPaint |= !aFrame->TryUpdateTransformOnly(&layer);
 
         if (!needInvalidatingPaint) {
           // Since we're not going to paint, we need to resend animation
           // data to the layer.
           MOZ_ASSERT(layer, "this can't happen if there's no layer");
           nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(
-              layer, nullptr, nullptr, primaryFrame,
-              DisplayItemType::TYPE_TRANSFORM);
+              layer, nullptr, nullptr, aFrame, DisplayItemType::TYPE_TRANSFORM);
         }
       }
     }
@@ -1200,8 +1197,7 @@ static void ApplyRenderingChangeToTree(PresShell* aPresShell, nsIFrame* aFrame,
   // CSS transforms, and table frames, which are their own odd-ball, since the
   // transform is handled by their wrapper, which _also_ gets a separate hint.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
-                   nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame)
-                       ->IsTransformed() ||
+                   aFrame->IsTransformed() ||
                    aFrame->StyleDisplay()->HasTransformStyle(),
                "Unexpected UpdateTransformLayer hint");
 
@@ -1536,15 +1532,9 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
       }
     }
 
-    // Transforms are applied to the primary frame only but transform-related
-    // change hints (e.g. those due to animation) are generally only applied to
-    // the style frame. As a result, we need to look up the primary frame so we
-    // can apply the appropriate frame bits there.
-    nsIFrame* primaryFrame = content ? content->GetPrimaryFrame() : nullptr;
-
-    if (primaryFrame && (hint & nsChangeHint_AddOrRemoveTransform) &&
+    if ((hint & nsChangeHint_AddOrRemoveTransform) && frame &&
         !(hint & nsChangeHint_ReconstructFrame)) {
-      for (nsIFrame* cont = primaryFrame; cont;
+      for (nsIFrame* cont = frame; cont;
            cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
         if (cont->StyleDisplay()->HasTransform(cont)) {
           cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
@@ -1581,17 +1571,16 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
               nsChangeHint_UpdateSubtreeOverflow);
       }
 
-      if (primaryFrame &&
-          !(primaryFrame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED)) {
+      if (!(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED)) {
         // Frame can not be transformed, and thus a change in transform will
         // have no effect and we should not use the
         // nsChangeHint_UpdatePostTransformOverflow hint.
         hint &= ~nsChangeHint_UpdatePostTransformOverflow;
       }
 
-      if ((hint & nsChangeHint_UpdateTransformLayer) && primaryFrame &&
-          !(primaryFrame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          primaryFrame->HasAnimationOfTransform()) {
+      if ((hint & nsChangeHint_UpdateTransformLayer) &&
+          !(frame->GetStateBits() & NS_FRAME_MAY_BE_TRANSFORMED) &&
+          frame->HasAnimationOfTransform()) {
         // If we have an nsChangeHint_UpdateTransformLayer hint but no
         // corresponding frame bit, we most likely have a transform animation
         // that was added or updated after this frame was created (otherwise
@@ -1601,7 +1590,10 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         // hint).
         //
         // In that case we should set the frame bit.
-        for (nsIFrame* cont = primaryFrame; cont;
+        //
+        // FIXME: Bug 1527210 - Use the primary frame here instead so that
+        // we handle display: table correctly.
+        for (nsIFrame* cont = frame; cont;
              cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
         }
@@ -1712,7 +1704,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
                    nsChangeHint_UpdateParentOverflow |
                    nsChangeHint_UpdateSubtreeOverflow))) {
         if (hint & nsChangeHint_UpdateSubtreeOverflow) {
-          for (nsIFrame* cont = primaryFrame; cont;
+          for (nsIFrame* cont = frame; cont;
                cont =
                    nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
             AddSubtreeToOverflowTracker(cont, mOverflowChangedTracker);
@@ -1772,8 +1764,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         }
         // If |frame| is dirty or has dirty children, we don't bother updating
         // overflows since that will happen when it's reflowed.
-        if (primaryFrame &&
-            !(primaryFrame->GetStateBits() &
+        if (!(frame->GetStateBits() &
               (NS_FRAME_IS_DIRTY | NS_FRAME_HAS_DIRTY_CHILDREN))) {
           if (hint & (nsChangeHint_UpdateOverflow |
                       nsChangeHint_UpdatePostTransformOverflow)) {
@@ -1787,7 +1778,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
             } else {
               changeKind = OverflowChangedTracker::TRANSFORM_CHANGED;
             }
-            for (nsIFrame* cont = primaryFrame; cont;
+            for (nsIFrame* cont = frame; cont;
                  cont =
                      nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
               mOverflowChangedTracker.AddFrame(cont, changeKind);
@@ -1800,7 +1791,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
           if (hint & nsChangeHint_UpdateParentOverflow) {
             MOZ_ASSERT(frame->GetParent(),
                        "shouldn't get style hints for the root frame");
-            for (nsIFrame* cont = primaryFrame; cont;
+            for (nsIFrame* cont = frame; cont;
                  cont =
                      nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
               mOverflowChangedTracker.AddFrame(
