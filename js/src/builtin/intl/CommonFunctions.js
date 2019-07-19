@@ -292,11 +292,6 @@ MakeConstructible(BCP47TokenStream, {
 /**
  * Parser for Unicode BCP 47 locale identifiers.
  *
- * ----------------------------------------------------------------------------
- * | NB: While transitioning from BCP 47 language tags to Unicode BCP 47      |
- * | locale identifiers, some parts of this parser may still follow RFC 5646. |
- * ----------------------------------------------------------------------------
- *
  * Returns null if |locale| can't be parsed as a `unicode_locale_id`. If the
  * input is a grandfathered language tag, it is directly canonicalized to its
  * modern form. The returned object has the following structure:
@@ -703,8 +698,8 @@ function IsStructurallyValidLanguageTag(locale) {
 }
 
 /**
- * Canonicalizes the given structurally valid BCP 47 language tag, including
- * regularized case of subtags. For example, the language tag
+ * Canonicalizes the given structurally valid Unicode BCP 47 locale identifier,
+ * including regularized case of subtags. For example, the language tag
  * Zh-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
  *
  *     Zh             ; 2*3ALPHA
@@ -716,7 +711,7 @@ function IsStructurallyValidLanguageTag(locale) {
  *     -t-Zh-laTN
  *     -x-PRIVATE     ; ["-" privateuse]
  *
- * becomes zh-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ * becomes zh-Hans-MM-variant1-variant2-t-zh-latn-u-ca-chinese-x-private
  *
  * UTS 35 specifies two different canonicalization algorithms. There's one to
  * canonicalize BCP 47 language tags and other one to canonicalize Unicode
@@ -725,14 +720,7 @@ function IsStructurallyValidLanguageTag(locale) {
  * ECMA-402 currently only uses the former to canonicalize Unicode BCP 47 locale
  * identifiers.
  *
- * ------------------------------------------------------------------------------
- * | NB: While transitioning from BCP 47 language tags to Unicode BCP 47        |
- * | locale identifiers, some parts of this function may still follow RFC 5646. |
- * ------------------------------------------------------------------------------
- *
  * Spec: ECMAScript Internationalization API Specification, 6.2.3.
- * Spec: RFC 5646, section 4.5.
- *
  * Spec: https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
  * Spec: https://unicode.org/reports/tr35/#BCP_47_Language_Tag_Conversion
  */
@@ -1077,10 +1065,9 @@ function CanonicalizeTransformExtension(localeObj, fields) {
  *     -t-Zh-laTN
  *     -x-PRIVATE     ; ["-" privateuse]
  *
- * becomes zh-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ * becomes zh-Hans-MM-variant1-variant2-t-zh-latn-u-ca-chinese-x-private
  *
  * Spec: ECMAScript Internationalization API Specification, 6.2.3.
- * Spec: RFC 5646, section 4.5.
  */
 function CanonicalizeLanguageTag(locale) {
     var localeObj = parseLanguageTag(locale);
