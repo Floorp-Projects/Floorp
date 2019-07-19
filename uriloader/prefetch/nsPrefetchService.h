@@ -22,6 +22,7 @@
 
 class nsPrefetchService;
 class nsPrefetchNode;
+class nsIReferrerInfo;
 
 //-----------------------------------------------------------------------------
 // nsPrefetchService
@@ -50,23 +51,23 @@ class nsPrefetchService final : public nsIPrefetchService,
  private:
   ~nsPrefetchService();
 
-  nsresult Prefetch(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
-                    bool aExplicit);
+  nsresult Prefetch(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
+                    nsINode* aSource, bool aExplicit);
 
-  nsresult Preload(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
-                   nsContentPolicyType aPolicyType);
+  nsresult Preload(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
+                   nsINode* aSource, nsContentPolicyType aPolicyType);
 
   void AddProgressListener();
   void RemoveProgressListener();
-  nsresult EnqueueURI(nsIURI* aURI, nsIURI* aReferrerURI, nsINode* aSource,
-                      nsPrefetchNode** node);
+  nsresult EnqueueURI(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo,
+                      nsINode* aSource, nsPrefetchNode** node);
   void EmptyPrefetchQueue();
 
   void StartPrefetching();
   void StopPrefetching();
   void StopCurrentPrefetchsPreloads(bool aPreload);
   void StopAll();
-  nsresult CheckURIScheme(nsIURI* aURI, nsIURI* aReferrerURI);
+  nsresult CheckURIScheme(nsIURI* aURI, nsIReferrerInfo* aReferrerInfo);
 
   std::deque<RefPtr<nsPrefetchNode>> mPrefetchQueue;
   nsTArray<RefPtr<nsPrefetchNode>> mCurrentNodes;
@@ -100,14 +101,14 @@ class nsPrefetchNode final : public nsIStreamListener,
   NS_DECL_NSIREDIRECTRESULTLISTENER
 
   nsPrefetchNode(nsPrefetchService* aPrefetchService, nsIURI* aURI,
-                 nsIURI* aReferrerURI, nsINode* aSource,
+                 nsIReferrerInfo* aReferrerInfo, nsINode* aSource,
                  nsContentPolicyType aPolicyType, bool aPreload);
 
   nsresult OpenChannel();
   nsresult CancelChannel(nsresult error);
 
   nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIURI> mReferrerURI;
+  nsCOMPtr<nsIReferrerInfo> mReferrerInfo;
   nsTArray<nsWeakPtr> mSources;
 
   // The policy type to be used for fetching the resource.

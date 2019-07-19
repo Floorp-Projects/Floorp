@@ -927,9 +927,9 @@ void ReferrerInfo::GetReferrerPolicyFromAtribute(nsINode* aNode,
   aPolicy = mozilla::net::RP_Unset;
   mozilla::dom::Element* element = aNode->AsElement();
 
-  if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area,
-                                    nsGkAtoms::script, nsGkAtoms::iframe,
-                                    nsGkAtoms::link, nsGkAtoms::img)) {
+  if (!element || !element->IsAnyOfHTMLElements(
+                      nsGkAtoms::a, nsGkAtoms::area, nsGkAtoms::script,
+                      nsGkAtoms::iframe, nsGkAtoms::link, nsGkAtoms::img)) {
     return;
   }
 
@@ -940,7 +940,8 @@ bool ReferrerInfo::HasRelNoReferrer(nsINode* aNode) const {
   mozilla::dom::Element* element = aNode->AsElement();
 
   // rel=noreferrer is only support in <a> and <area>
-  if (!element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area)) {
+  if (!element ||
+      !element->IsAnyOfHTMLElements(nsGkAtoms::a, nsGkAtoms::area)) {
     return false;
   }
 
