@@ -57,6 +57,7 @@ gtest:
             windows.*-pgo/.*: []  # permafails on pgo too
             windows.*-nightly/.*: []  # permafails on nightly too
             windows10-64-asan/opt: []  # permafails on asan too
+            windows10-aarch64/opt: []  # gtests don't build on Windows PGO
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
     target:
