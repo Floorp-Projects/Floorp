@@ -9,7 +9,7 @@ assertEqArray(Intl.getCanonicalLocales("de-1996"), ["de-1996"]);
 assertThrowsInstanceOf(() => Intl.getCanonicalLocales("de-1996-1996"), RangeError);
 
 // Multiple different variants are allowed.
-assertEqArray(Intl.getCanonicalLocales("sl-rozaj-biske-1994"), ["sl-rozaj-biske-1994"]);
+assertEqArray(Intl.getCanonicalLocales("sl-rozaj-solba"), ["sl-rozaj-solba"]);
 
 // Variants can have the same prefix.
 assertEqArray(Intl.getCanonicalLocales("zh-Latn-pinyin-pinyin2"), ["zh-Latn-pinyin-pinyin2"]);
