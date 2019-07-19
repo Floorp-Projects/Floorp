@@ -1,0 +1,22 @@
+<html class="reftest-wait">
+  <script>
+    function doTest() {
+      document.getElementById("out").style.height = 30 + "px";
+      document.getElementById("c").setAttribute("width", 20);
+      document.documentElement.removeAttribute("class");
+    }
+    document.addEventListener("MozReftestInvalidate", doTest);
+  </script>
+  <div id=out style="overflow: hidden; height:40px">
+    <!-- avoid letting the clip leak into the svg by separating it with
+    a transform -->
+    <div style="transform: rotate(2deg)">
+      <div style="overflow: hidden; width: 40px;">
+        <svg>
+        <rect x=0 y=0 width=100 height=100></rect>
+        <rect fill=red id=c x=10 y=10 width=1 height=20></rect>
+        </svg>
+      </div>
+    </div>
+  </div>
+</html>
