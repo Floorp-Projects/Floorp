@@ -12,14 +12,14 @@ add_task(async function test_main() {
 
   // Each of these URLs will get opened in a new top-level browser window that
   // is fission-enabled.
-  var test_urls = [
-    httpURL("helper_fission_basic.html"),
-    httpURL("helper_fission_transforms.html"),
-    httpURL("helper_fission_scroll_oopif.html"),
+  var subtests = [
+    { url: httpURL("helper_fission_basic.html") },
+    { url: httpURL("helper_fission_transforms.html") },
+    { url: httpURL("helper_fission_scroll_oopif.html") },
     // add additional tests here
   ];
   if (isWebRender) {
-    test_urls = test_urls.concat([
+    subtests = subtests.concat([
       // add additional WebRender-specific tests here
     ]);
   }
@@ -49,13 +49,13 @@ add_task(async function test_main() {
   });
 
   try {
-    for (var url of test_urls) {
-      dump(`Starting test ${url}\n`);
+    for (var subtest of subtests) {
+      dump(`Starting test ${subtest.url}\n`);
 
       // Load the test URL and tell it to get started, and wait until it reports
       // completion.
       await BrowserTestUtils.withNewTab(
-        { gBrowser: fissionWindow.gBrowser, url },
+        { gBrowser: fissionWindow.gBrowser, url: subtest.url },
         async browser => {
           let tabActor = browser.browsingContext.currentWindowGlobal.getActor(
             "FissionTestHelper"
@@ -66,7 +66,7 @@ add_task(async function test_main() {
         }
       );
 
-      dump(`Finished test ${url}\n`);
+      dump(`Finished test ${subtest.url}\n`);
     }
   } finally {
     // Delete stuff we added to FissionTestHelperParent, beacuse the object will
