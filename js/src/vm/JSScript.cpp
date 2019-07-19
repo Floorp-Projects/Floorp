@@ -3800,8 +3800,7 @@ JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
-    :
-      jitCodeRaw_(stubEntry),
+    : js::BaseScript(stubEntry),
       realm_(realm),
       sourceStart_(sourceStart),
       sourceEnd_(sourceEnd),
@@ -5479,8 +5478,7 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
                        uint32_t lineno, uint32_t column)
-    :
-      jitCodeRaw_(stubEntry),
+    : BaseScript(stubEntry),
       script_(nullptr),
       function_(fun),
       sourceObject_(&sourceObject),

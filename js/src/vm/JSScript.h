@@ -1389,6 +1389,29 @@ class ScriptSourceObject : public NativeObject {
   };
 };
 
+// This class contains fields and accessors that are common to both lazy and
+// non-lazy interpreted scripts. This must be located at offset +0 of any
+// derived classes in order for the 'jitCodeRaw' mechanism to work with the
+// JITs.
+class BaseScript : public gc::TenuredCell {
+ protected:
+  // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
+  // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
+  // non-null (except on no-jit builds).
+  uint8_t* jitCodeRaw_ = nullptr;
+
+  explicit BaseScript(uint8_t* stubEntry)
+    : jitCodeRaw_(stubEntry) { }
+
+ public:
+  uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
+
+  // JIT accessors
+  static constexpr size_t offsetOfJitCodeRaw() {
+    return offsetof(BaseScript, jitCodeRaw_);
+  }
+};
+
 enum class GeneratorKind : bool { NotGenerator, Generator };
 enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
 
@@ -1903,13 +1926,8 @@ struct DeletePolicy<js::PrivateScriptData>
 
 } /* namespace JS */
 
-class JSScript : public js::gc::TenuredCell {
+class JSScript : public js::BaseScript {
  private:
-  // Pointer to baseline->method()->raw(), ion->method()->raw(), a wasm jit
-  // entry, the JIT's EnterInterpreter stub, or the lazy link stub. Must be
-  // non-null.
-  uint8_t* jitCodeRaw_ = nullptr;
-
   // Shareable script data
   RefPtr<js::RuntimeScriptData> scriptData_ = {};
 
@@ -2676,10 +2694,6 @@ class JSScript : public js::gc::TenuredCell {
     return offsetof(JSScript, baseline);
   }
   static size_t offsetOfIonScript() { return offsetof(JSScript, ion); }
-  static constexpr size_t offsetOfJitCodeRaw() {
-    return offsetof(JSScript, jitCodeRaw_);
-  }
-  uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
 
   // We don't relazify functions with a JitScript or JIT code, but some
   // callers (XDR, testing functions) want to know whether this script is
@@ -3240,12 +3254,7 @@ class alignas(uintptr_t) LazyScriptData final {
 
 // Information about a script which may be (or has been) lazily compiled to
 // bytecode from its source.
-class LazyScript : public gc::TenuredCell {
-  // Pointer to interpreter trampoline. This field is stored at same location
-  // as in JSScript, allowing the JIT to directly call LazyScripts in the same
-  // way as JSScripts.
-  uint8_t* jitCodeRaw_ = nullptr;
-
+class LazyScript : public BaseScript {
   // If non-nullptr, the script has been compiled and this is a forwarding
   // pointer to the result. This is a weak pointer: after relazification, we
   // can collect the script if there are no other pointers to it.
@@ -3617,10 +3626,6 @@ class LazyScript : public gc::TenuredCell {
 
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(lazyData_);
-  }
-
-  static constexpr size_t offsetOfJitCodeRaw() {
-    return offsetof(LazyScript, jitCodeRaw_);
   }
 
   uint32_t immutableFlags() const { return immutableFlags_; }
