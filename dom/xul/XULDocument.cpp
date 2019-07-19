@@ -210,6 +210,7 @@ nsresult XULDocument::StartDocumentLoad(const char* aCommand,
                                         nsISupports* aContainer,
                                         nsIStreamListener** aDocListener,
                                         bool aReset, nsIContentSink* aSink) {
+  MOZ_RELEASE_ASSERT(false, "XULDocuments should not be created.");
   if (MOZ_LOG_TEST(gXULLog, LogLevel::Warning)) {
     nsCOMPtr<nsIURI> uri;
     nsresult rv = aChannel->GetOriginalURI(getter_AddRefs(uri));
