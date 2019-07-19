@@ -569,8 +569,23 @@ function IsStructurallyValidLanguageTag(locale) {
  *
  * becomes zh-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
  *
+ * UTS 35 specifies two different canonicalization algorithms. There's one to
+ * canonicalize BCP 47 language tags and other one to canonicalize Unicode
+ * locale identifiers. The latter one wasn't present when ECMA-402 was changed
+ * to use Unicode BCP 47 locale identifiers instead of BCP 47 language tags, so
+ * ECMA-402 currently only uses the former to canonicalize Unicode BCP 47 locale
+ * identifiers.
+ *
+ * ------------------------------------------------------------------------------
+ * | NB: While transitioning from BCP 47 language tags to Unicode BCP 47        |
+ * | locale identifiers, some parts of this function may still follow RFC 5646. |
+ * ------------------------------------------------------------------------------
+ *
  * Spec: ECMAScript Internationalization API Specification, 6.2.3.
  * Spec: RFC 5646, section 4.5.
+ *
+ * Spec: https://unicode.org/reports/tr35/#Canonical_Unicode_Locale_Identifiers
+ * Spec: https://unicode.org/reports/tr35/#BCP_47_Language_Tag_Conversion
  */
 function CanonicalizeLanguageTagFromObject(localeObj) {
     assert(IsObject(localeObj), "CanonicalizeLanguageTagFromObject");
@@ -591,6 +606,45 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         privateuse,
     } = localeObj;
 
+    // Per UTS 35, 3.3.1, the very first step is to canonicalize the syntax by
+    // normalizing the case and ordering all subtags. The canonical syntax form
+    // itself is specified in UTS 35, 3.2.1.
+
+    // The parser already normalized the case for all subtags.
+
+#ifdef DEBUG
+    function IsLowerCase(s) {
+        return s === callFunction(std_String_toLowerCase, s);
+    }
+    function IsUpperCase(s) {
+        return s === callFunction(std_String_toUpperCase, s);
+    }
+    function IsTitleCase(s) {
+        assert(s.length > 0, "unexpected empy string");
+        var r = callFunction(std_String_toUpperCase, s[0]) +
+                callFunction(std_String_toLowerCase, Substring(s, 1, s.length - 1));
+        return s === r;
+    }
+#endif
+
+    // 1. Any script subtag is in title case.
+    assert(!script || IsTitleCase(script),
+           "If present, script subtag is in title case");
+
+    // 2. Any region subtag is in uppercase.
+    assert(!region || IsUpperCase(region),
+           "If present, region subtag is in upper case");
+
+    // 3. All other subtags are in lowercase.
+    assert(IsLowerCase(language),
+           "language subtag is in lower case");
+    assert(callFunction(ArrayEvery, variants, IsLowerCase),
+           "variant subtags are in lower case");
+    assert(callFunction(ArrayEvery, extensions, IsLowerCase),
+           "extension subtags are in lower case");
+    assert(!privateuse || IsLowerCase(privateuse),
+           "If present, privateuse subtag is in lower case");
+
     // Replace deprecated language tags with their preferred values.
     // "in" -> "id"
     if (hasOwn(language, languageMappings))
@@ -600,10 +654,7 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
 
     // No script replacements are currently present, so append as is.
     if (script) {
-        assert(script.length === 4 &&
-               script ===
-               callFunction(std_String_toUpperCase, script[0]) +
-               callFunction(std_String_toLowerCase, Substring(script, 1, script.length - 1)),
+        assert(script.length === 4 && IsTitleCase(script),
                "script must be [A-Z][a-z]{3}");
         canonical += "-" + script;
     }
@@ -614,8 +665,7 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         if (hasOwn(region, regionMappings))
             region = regionMappings[region];
 
-        assert((2 <= region.length && region.length <= 3) &&
-               region === callFunction(std_String_toUpperCase, region),
+        assert((2 <= region.length && region.length <= 3) && IsUpperCase(region),
                "region must be [A-Z]{2} or [0-9]{3}");
         canonical += "-" + region;
     }
@@ -632,7 +682,7 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         // Canonicalize Unicode locale extension subtag if present.
         for (var i = 0; i < extensions.length; i++) {
             var ext = extensions[i];
-            assert(ext === callFunction(std_String_toLowerCase, ext),
+            assert(IsLowerCase(ext),
                    "extension subtags must be in lower-case");
             assert(ext[1] === "-",
                    "extension subtags start with a singleton");
