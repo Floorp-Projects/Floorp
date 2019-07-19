@@ -20,6 +20,9 @@ if CONFIG['MOZ_REPLACE_MALLOC']:
         'replace_malloc_bridge.h',
     ]
 
+if CONFIG['MOZ_PHC']:
+    DEFINES['MOZ_PHC'] = True
+
 if CONFIG['MOZ_MEMORY']:
     UNIFIED_SOURCES += [
         'mozjemalloc.cpp',
