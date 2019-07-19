@@ -961,7 +961,12 @@ bool js::GCMarker::mark(T* thing) {
 // out-of-line, generic tracing code for comparison. Both paths must end up
 // traversing equivalent subgraphs.
 
+void BaseScript::traceChildren(JSTracer* trc) {}
+
 void LazyScript::traceChildren(JSTracer* trc) {
+  // Trace base class fields.
+  BaseScript::traceChildren(trc);
+
   if (trc->traceWeakEdges()) {
     TraceNullableEdge(trc, &script_, "script");
   }
