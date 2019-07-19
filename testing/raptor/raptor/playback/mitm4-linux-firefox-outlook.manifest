@@ -1,0 +1,10 @@
+[
+  {
+    "size": 10091794,
+    "visibility": "public",
+    "digest": "4ab0e3defec98b227f1685f97246848d7662897cb6a1e83ae657f82b1ca17de7c69ac2e764def36f3dcf4f4c372b5a0410f1bb9d55e55ec046b6f96c183db42a",
+    "algorithm": "sha512",
+    "filename": "firefox-outlook.zip",
+    "unpack": true
+  }
+]

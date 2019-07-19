@@ -218,10 +218,18 @@ body {
 .jsterm-editor .webconsole-editor-toolbar {
   grid-column: 1 / 2;
   grid-row: 2 / 3;
-  display: flex;
-  flex-direction: row;
-  justify-content: start;
+  display: grid;
+  /* We're going to have the run button, the history nav and the close button */
+  grid-template-columns: auto 1fr auto;
   height: unset;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton {
+  grid-column: -1 / -2;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {
+  background-image: url(chrome://devtools/skin/images/webconsole/editor.svg);
 }
 
 .jsterm-editor .webconsole-output {

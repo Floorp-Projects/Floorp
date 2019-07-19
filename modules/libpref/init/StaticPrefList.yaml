@@ -3785,8 +3785,8 @@
   value: false
   mirror: always
 
-# text decoration width
-- name: layout.css.text-decoration-width.enabled
+# text decoration thickness
+- name: layout.css.text-decoration-thickness.enabled
   type: bool
   value: false
   mirror: always
@@ -5767,7 +5767,7 @@
 
 - name: security.allow_eval_with_system_principal
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether strict file origin policy is in effect.

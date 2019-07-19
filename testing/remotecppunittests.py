@@ -6,15 +6,16 @@
 
 from __future__ import absolute_import, print_function
 import os
+import posixpath
 import sys
 import subprocess
+import traceback
 from zipfile import ZipFile
 import runcppunittests as cppunittests
 import mozcrash
 import mozfile
 import mozinfo
 import mozlog
-import posixpath
 from mozdevice import ADBDevice, ADBProcessError, ADBTimeoutError
 
 try:
@@ -258,6 +259,7 @@ def main():
         result = run_test_harness(options, args)
     except Exception as e:
         log.error(str(e))
+        traceback.print_exc()
         result = False
     sys.exit(0 if result else 1)
 

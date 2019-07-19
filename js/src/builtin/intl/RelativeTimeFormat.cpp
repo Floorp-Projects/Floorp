@@ -314,20 +314,6 @@ static bool intl_FormatToPartsRelativeTime(JSContext* cx,
     return false;
   }
 
-  int32_t strLength;
-  const char16_t* str = ufmtval_getString(formattedValue, &strLength, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  MOZ_ASSERT(strLength >= 0);
-
-  RootedString overallResult(cx,
-                             NewStringCopyN<CanGC>(cx, str, size_t(strLength)));
-  if (!overallResult) {
-    return false;
-  }
-
   intl::FieldType unitType;
   switch (unit) {
     case UDAT_REL_UNIT_SECOND:
@@ -358,59 +344,10 @@ static bool intl_FormatToPartsRelativeTime(JSContext* cx,
       MOZ_CRASH("unexpected relative time unit");
   }
 
-  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
-
-  // The possible field position categories are UFIELD_CATEGORY_NUMBER and
-  // UFIELD_CATEGORY_RELATIVE_DATETIME. For the parts array we only need to
-  // iterate over the number formatted fields.
-  ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
-  if (U_FAILURE(status)) {
-    intl::ReportInternalError(cx);
-    return false;
-  }
-
-  intl::NumberFormatFields fields(cx, t);
-
-  while (true) {
-    bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-    if (!hasMore) {
-      break;
-    }
-
-    int32_t field = ucfpos_getField(fpos, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    int32_t beginIndex, endIndex;
-    ucfpos_getIndexes(fpos, &beginIndex, &endIndex, &status);
-    if (U_FAILURE(status)) {
-      intl::ReportInternalError(cx);
-      return false;
-    }
-
-    if (!fields.append(field, beginIndex, endIndex)) {
-      return false;
-    }
-  }
-
-  ArrayObject* array = fields.toArray(cx, overallResult, unitType);
-  if (!array) {
-    return false;
-  }
-
-  result.setObject(*array);
-  return true;
+  Value tval = DoubleValue(t);
+  return intl::FormattedNumberToParts(cx, formattedValue,
+                                      HandleValue::fromMarkedLocation(&tval),
+                                      unitType, result);
 }
 #endif
 
