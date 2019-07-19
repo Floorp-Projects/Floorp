@@ -4,13 +4,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import json
 import os
 import re
 import signal
 import sys
+
 sys.path.append(os.path.join(os.path.dirname(__file__), "eslint"))
-import setup_helper
+from eslint import setup_helper
+
 from mozbuild.nodeutil import find_node_executable
 
 from mozprocess import ProcessHandler
