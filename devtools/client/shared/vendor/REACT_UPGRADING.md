@@ -1,5 +1,5 @@
 [//]: # (
-  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
+This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 )
 
 # Upgrading React
@@ -17,14 +17,14 @@ You should start by upgrading our prop-types library to match the latest version
 ```bash
 git clone https://github.com/facebook/react.git
 cd react
-git checkout v16.4.1 # or the version you are targetting
+git checkout v16.8.6 # or the version you are targetting
 ```
 
 ## Preparing to Build
 
 We need to disable minification and tree shaking as they overcomplicate the upgrade process without adding any benefits.
 
-- Open scripts/rollup/build.js
+- Open `scripts/rollup/build.js`
 - Find a method called `function getRollupOutputOptions()`
 - After `sourcemap: false` add `treeshake: false` and `freeze: false`
 - Remove `freeze: !isProduction,` from the same section.
@@ -57,6 +57,7 @@ We need to disable minification and tree shaking as they overcomplicate the upgr
   // Apply dead code elimination and/or minification.
   false &&
   ```
+
   - Find `await createBundle` and remove all bundles in that block except for `UMD_DEV`, `UMD_PROD` and `NODE_DEV`.
 
 ## Building
@@ -84,3 +85,76 @@ cp build/dist/react-test-renderer.production.min.js <gecko-dev>/devtools/client/
 ```
 
 From this point we will no longer need your react repository so feel free to delete it.
+
+## Debugger
+
+### Update React
+
+- Open `devtools/client/debugger/package.json`
+- Under `dependencies` update `react` and `react-dom` to the required version.
+- Under `devDependencies` you may also need to update `enzyme`, `enzyme-adapter-react-16` and `enzyme-to-json` to versions compatible with the new react version.
+
+### Build the debugger
+
+#### Check your .mozconfig
+
+- Ensure you are not in debug mode (`ac_add_options --disable-debug`).
+- Ensure you are not using the debug version of react (`ac_add_options --disable-debug-js-modules`).
+
+#### First build Firefox
+
+```bash
+cd <srcdir> # where sourcedir is the root of your Firefox repo.
+./mach build
+```
+
+#### Now update the debugger source
+
+```bash
+# Go to the debugger folder.
+cd devtools/client/debugger
+
+# Remove all node_modules folders.
+find . -name "node_modules" -exec rm -rf '{}' +
+
+# Install the new react and enzyme modules.
+yarn
+```
+
+### Run the debugger tests
+
+#### First run locally
+
+```bash
+node bin/try-runner.js
+```
+
+If there any failures fix them.
+
+**NOTE: If there are any jest failures you will get better output by running the jest tests directly using:**
+
+```bash
+yarn test
+```
+
+If any tests fail then fix them.
+
+#### Commit your changes
+
+Use `hg commit` or `hg amend` to commit your changes.
+
+#### Push to try
+
+Just because the tests run fine locally they may still fail on try. You should first ensure that `node bin/try-runner.js` passes on try:
+
+```bash
+cd <srcdir> # where sourcedir is the root of your Firefox repo.
+`./mach try fuzzy`
+```
+
+- When the interface appears type `debugger`.
+- Press `<enter>`.
+
+Once these tests pass on try then push to try as normal e.g. `./mach try -b do -p all -u all -t all -e all --setenv MOZ_QUIET=1`.
+
+If try passes then go celebrate otherwise you are on your own.
