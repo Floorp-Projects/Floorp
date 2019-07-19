@@ -23,3 +23,10 @@ graph-total-summary =
      [one] { $count } tracker blocked since { DATETIME($earliestDate, day: "numeric", month: "long", year: "numeric") }
     *[other] { $count } trackers blocked since { DATETIME($earliestDate, day: "numeric", month: "long", year: "numeric") }
   }
+
+# The terminology used to refer to categories of Content Blocking is also used in chrome/browser/browser.properties and should be translated consistently.
+# The category name in the <b> tag will be bold.
+# "Standard" in this case is an adjective, meaning "default" or "normal".
+protection-header-details-standard = Protection Level is set to <b>Standard</b>
+protection-header-details-strict = Protection Level is set to <b>Strict</b>
+protection-header-details-custom = Protection Level is set to <b>Custom</b>
