@@ -403,6 +403,19 @@ nsIXULBrowserWindow* BrowserParent::GetXULBrowserWindow() {
   return xulBrowserWindow;
 }
 
+uint32_t BrowserParent::GetMaxTouchPoints(Element* aElement) {
+  if (!aElement) {
+    return 0;
+  }
+
+  if (StaticPrefs::dom_maxtouchpoints_testing_value() >= 0) {
+    return StaticPrefs::dom_maxtouchpoints_testing_value();
+  }
+
+  nsIWidget* widget = nsContentUtils::WidgetForDocument(aElement->OwnerDoc());
+  return widget ? widget->GetMaxTouchPoints() : 0;
+}
+
 a11y::DocAccessibleParent* BrowserParent::GetTopLevelDocAccessible() const {
 #ifdef ACCESSIBILITY
   // XXX Consider managing non top level PDocAccessibles with their parent
@@ -3073,9 +3086,10 @@ mozilla::ipc::IPCResult BrowserParent::RecvBrowserFrameOpenWindow(
                                           aURL, aName, aForceNoReferrer,
                                           aFeatures);
   cwi.windowOpened() = (opened == BrowserElementParent::OPEN_WINDOW_ADDED);
+  cwi.maxTouchPoints() = GetMaxTouchPoints();
+
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (widget) {
-    cwi.maxTouchPoints() = widget->GetMaxTouchPoints();
     cwi.dimensions() = GetDimensionInfo();
   }
 
