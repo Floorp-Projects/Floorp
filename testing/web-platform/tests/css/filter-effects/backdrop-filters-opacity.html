@@ -2,7 +2,7 @@
 <title>CSS Backdrop Filters Animation: Opacity</title>
 <link rel="author" title="Mason Freed" href="mailto:masonfreed@chromium.org">
 <link rel="help" href="https://drafts.fxtf.org/filter-effects-2/#BackdropFilterProperty">
-<link rel="match" href="css-backdrop-filters-animation-opacity-ref.html">
+<link rel="match" href="backdrop-filters-opacity-ref.html">
 <style>
     /* Note that per the spec, the backdrop image is read back, filters
        are applied, any additional content is drawn, and then the resulting
@@ -13,33 +13,21 @@
        that at 100% opacity, and then the entire thing is composited into
        the backdrop, which already contains the 100% opacity blue square.
        So the blue square stays 100% blue. */
-    @keyframes animate {
-        0% {
-            backdrop-filter: opacity(0%);
-        }
-        100% {
-            backdrop-filter: none;
-        }
-    }
     .square {
         position: absolute;
         width: 100px;
         height: 100px;
         top: 100px;
         left: 100px;
-        background: black;
+        background: blue;
     }
     .filt {
+        backdrop-filter: opacity(50%);
         position: absolute;
         width: 200px;
         height: 200px;
         top: 50px;
         left: 50px;
-        animation-name: animate;
-        animation-play-state: paused;
-        animation-delay: -2s;
-        animation-duration: 4s;
-        animation-timing-function: linear;
     }
     .greenbox {
         position: absolute;
