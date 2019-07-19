@@ -336,12 +336,12 @@
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
-.urlbar-go-button,
+#urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
-.urlbar-go-button:-moz-locale-dir(rtl),
+#urlbar-go-button:-moz-locale-dir(rtl),
 .search-go-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
