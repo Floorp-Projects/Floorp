@@ -122,6 +122,10 @@ fn dwrite_render_mode(
         FontRenderMode::Alpha | FontRenderMode::Subpixel => {
             if bitmaps || font.flags.contains(FontInstanceFlags::FORCE_GDI) {
                 dwrote::DWRITE_RENDERING_MODE_GDI_CLASSIC
+            } else if font.flags.contains(FontInstanceFlags::FORCE_SYMMETRIC) {
+                dwrote::DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC
+            } else if font.flags.contains(FontInstanceFlags::NO_SYMMETRIC) {
+                dwrote::DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL
             } else {
                 font_face.get_recommended_rendering_mode_default_params(em_size, 1.0, measure_mode)
             }

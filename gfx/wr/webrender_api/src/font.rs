@@ -175,6 +175,8 @@ bitflags! {
 
         // Windows flags
         const FORCE_GDI         = 1 << 16;
+        const FORCE_SYMMETRIC   = 1 << 17;
+        const NO_SYMMETRIC      = 1 << 18;
 
         // Mac flags
         const FONT_SMOOTHING    = 1 << 16;
