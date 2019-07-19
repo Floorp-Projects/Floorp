@@ -594,9 +594,6 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
     if (hasOwn("grandfathered", localeObj))
         return localeObj.locale;
 
-    // Update mappings for complete tags.
-    updateLangTagMappings(localeObj);
-
     var {
         language,
         script,
@@ -645,6 +642,61 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
     assert(!privateuse || IsLowerCase(privateuse),
            "If present, privateuse subtag is in lower case");
 
+
+    // The second step in UTS 35, 3.2.1, is to order all subtags.
+
+    // 1. Any variants are in alphabetical order.
+    if (variants.length > 0) {
+        callFunction(ArraySort, variants);
+    }
+
+    // 2. Any extensions are in alphabetical order by their singleton.
+    if (extensions.length > 0) {
+        // Extension sequences are sorted by their singleton characters.
+        // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
+        callFunction(ArraySort, extensions);
+
+        // The last three bullet points in UTS 35, 3.2.1 apply only to Unicode and Transform
+        // extensions.
+        //
+        // 3. All attributes are sorted in alphabetical order.
+        //
+        // 4. All keywords and tfields are sorted by alphabetical order of their
+        //    keys, within their respective extensions.
+        //
+        // 5. Any type or tfield value "true" is removed.
+
+        for (var i = 0; i < extensions.length; i++) {
+            var ext = extensions[i];
+            assert(IsLowerCase(ext),
+                   "extension subtags must be in lower-case");
+            assert(ext[1] === "-",
+                   "extension subtags start with a singleton");
+
+            // Canonicalize Unicode locale extension subtag if present.
+            if (ext[0] === "u") {
+                var {attributes, keywords} = UnicodeExtensionComponents(ext);
+                extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords);
+                break;
+            }
+
+            // TODO: Canonicalize Unicode BCP 47 T extension if present.
+        }
+    }
+
+    // Update mappings for complete tags.
+    updateLangTagMappings(localeObj);
+
+    // Re-read all subtags in case they were changed in |updateLangTagMappings|.
+    ({
+        language,
+        script,
+        region,
+        variants,
+        extensions,
+        privateuse,
+    } = localeObj);
+
     // Replace deprecated language tags with their preferred values.
     // "in" -> "id"
     if (hasOwn(language, languageMappings))
@@ -674,28 +726,8 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
     if (variants.length > 0)
         canonical += "-" + callFunction(std_Array_join, variants, "-");
 
-    if (extensions.length > 0) {
-        // Extension sequences are sorted by their singleton characters.
-        // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
-        callFunction(ArraySort, extensions);
-
-        // Canonicalize Unicode locale extension subtag if present.
-        for (var i = 0; i < extensions.length; i++) {
-            var ext = extensions[i];
-            assert(IsLowerCase(ext),
-                   "extension subtags must be in lower-case");
-            assert(ext[1] === "-",
-                   "extension subtags start with a singleton");
-
-            if (ext[0] === "u") {
-                var {attributes, keywords} = UnicodeExtensionComponents(ext);
-                extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords);
-                break;
-            }
-        }
-
+    if (extensions.length > 0)
         canonical += "-" + callFunction(std_Array_join, extensions, "-");
-    }
 
     // Private use sequences are left as is. "x-private"
     if (privateuse)
