@@ -325,6 +325,10 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
     if (!mrd) {
       return SamplesPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
+    if (!mrd->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
     samples->AppendSample(mrd);
   }
   if (mType == TrackInfo::kVideoTrack &&
@@ -569,11 +573,19 @@ HLSTrackDemuxer::DoSkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
     if (sample->IsKeyFrame()) {
       java::sdk::BufferInfo::LocalRef info = sample->Info();
       int64_t presentationTimeUs = 0;
-      bool ok = NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
-      if (ok &&
+      if (NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs)) &&
           TimeUnit::FromMicroseconds(presentationTimeUs) >= aTimeThreshold) {
+        RefPtr<MediaRawData> rawData = ConvertToMediaRawData(sample);
+        if (!rawData) {
+          result = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+        if (!rawData->HasValidTime()) {
+          result = NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+          break;
+        }
         found = true;
-        mQueuedSample = ConvertToMediaRawData(sample);
+        mQueuedSample = rawData;
         break;
       }
     }
