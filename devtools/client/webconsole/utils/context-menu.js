@@ -202,9 +202,10 @@ function createContextMenu(
       disabled: !actor && !variableText,
       click: () => {
         if (actor) {
-          // The Debugger.Object of the OA will be bound to |_self| during evaluation,
-          webConsoleUI.jsterm
-            .copyObject(`_self`, { selectedObjectActor: actor })
+          // The Debugger.Object of the OA will be bound to |_self| during evaluation.
+          // See server/actors/webconsole/eval-with-debugger.js `evalWithDebugger`.
+          webConsoleUI.webConsoleClient
+            .evaluateJSAsync("copy(_self)", { selectedObjectActor: actor })
             .then(res => {
               clipboardHelper.copyString(res.helperResult.value);
             });
