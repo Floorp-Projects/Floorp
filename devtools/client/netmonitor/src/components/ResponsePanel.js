@@ -17,6 +17,7 @@ const {
   fetchNetworkUpdatePacket,
   formDataURI,
   getUrlBaseName,
+  isJSON,
 } = require("../utils/request-utils");
 const { Filters } = require("../utils/filter-predicates");
 
@@ -86,23 +87,6 @@ class ResponsePanel extends Component {
   }
 
   /**
-   * This method checks that the response is base64 encoded by
-   * comparing these 2 values:
-   * 1. The original response
-   * 2. The value of doing a base64 decode on the
-   * response and then base64 encoding the result.
-   * If the values are different or an error is thrown,
-   * the method will return false.
-   */
-  isBase64(response) {
-    try {
-      return btoa(atob(response)) == response;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  /**
    * Handle json, which we tentatively identify by checking the
    * MIME type for "json" after any word boundary. This works
    * for the standard "application/json", and also for custom
@@ -111,12 +95,11 @@ class ResponsePanel extends Component {
    * it's json or not, to handle responses incorrectly labeled
    * as text/plain instead.
    */
-  isJSON(mimeType, response) {
+  handleJSONResponse(mimeType, response) {
     const limit = Services.prefs.getIntPref(
       "devtools.netmonitor.responseBodyLimit"
     );
     const { request } = this.props;
-    let json, error;
 
     // Check if the response has been truncated, in which case no parse should
     // be attempted.
@@ -126,19 +109,7 @@ class ResponsePanel extends Component {
       return result;
     }
 
-    try {
-      json = JSON.parse(response);
-    } catch (err) {
-      if (this.isBase64(response)) {
-        try {
-          json = JSON.parse(atob(response));
-        } catch (err64) {
-          error = err;
-        }
-      } else {
-        error = err;
-      }
-    }
+    let { json, error } = isJSON(response);
 
     if (/\bjson/.test(mimeType) || json) {
       // Extract the actual json substring in case this might be a "JSONP".
@@ -226,7 +197,8 @@ class ResponsePanel extends Component {
     }
 
     // Display Properties View
-    const { json, jsonpCallback, error } = this.isJSON(mimeType, text) || {};
+    const { json, jsonpCallback, error } =
+      this.handleJSONResponse(mimeType, text) || {};
     const object = {};
     let sectionName;
 
