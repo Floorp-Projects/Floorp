@@ -158,12 +158,18 @@ bool BaselineInterpreterHandler::recordCallRetAddr(JSContext* cx,
                                                    uint32_t retOffset) {
   switch (kind) {
     case RetAddrEntry::Kind::DebugPrologue:
+      MOZ_ASSERT(callVMOffsets_.debugPrologueOffset == 0,
+                 "expected single DebugPrologue call");
       callVMOffsets_.debugPrologueOffset = retOffset;
       break;
     case RetAddrEntry::Kind::DebugEpilogue:
+      MOZ_ASSERT(callVMOffsets_.debugEpilogueOffset == 0,
+                 "expected single DebugEpilogue call");
       callVMOffsets_.debugEpilogueOffset = retOffset;
       break;
     case RetAddrEntry::Kind::DebugAfterYield:
+      MOZ_ASSERT(callVMOffsets_.debugAfterYieldOffset == 0,
+                 "expected single DebugAfterYield call");
       callVMOffsets_.debugAfterYieldOffset = retOffset;
       break;
     default:
@@ -1169,7 +1175,7 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
     {
       masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-      masm.jump(&return_);
+      masm.jump(&returnNoDebugEpilogue_);
     }
     masm.bind(&done);
     return true;
@@ -5180,14 +5186,14 @@ bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGGER() {
   masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
   {
     masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-    masm.jump(&return_);
+    masm.jump(&returnNoDebugEpilogue_);
   }
   masm.bind(&done);
   return true;
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emitReturn() {
+bool BaselineCodeGen<Handler>::emitDebugEpilogue() {
   auto ifDebuggee = [this]() {
     // Move return value into the frame's rval slot.
     masm.storeValue(JSReturnOperand, frame.addressOfReturnValue());
@@ -5211,8 +5217,15 @@ bool BaselineCodeGen<Handler>::emitReturn() {
     masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
     return true;
   };
-  if (!emitDebugInstrumentation(ifDebuggee)) {
-    return false;
+  return emitDebugInstrumentation(ifDebuggee);
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emitReturn() {
+  if (handler.shouldEmitDebugEpilogueAtReturnOp()) {
+    if (!emitDebugEpilogue()) {
+      return false;
+    }
   }
 
   // Only emit the jump if this JSOP_RETRVAL is not the last instruction.
@@ -6012,7 +6025,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
     masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, &done);
     {
       masm.loadValue(frame.addressOfReturnValue(), JSReturnOperand);
-      masm.jump(&return_);
+      masm.jump(&returnNoDebugEpilogue_);
     }
     masm.bind(&done);
     return true;
@@ -6789,6 +6802,13 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitEpilogue() {
   masm.bind(&return_);
+
+  if (!handler.shouldEmitDebugEpilogueAtReturnOp()) {
+    if (!emitDebugEpilogue()) {
+      return false;
+    }
+  }
+  masm.bind(&returnNoDebugEpilogue_);
 
 #ifdef JS_TRACE_LOGGING
   if (JS::TraceLoggerSupported() && !emitTraceLoggerExit()) {
