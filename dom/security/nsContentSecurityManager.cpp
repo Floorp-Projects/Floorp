@@ -50,8 +50,6 @@ static nsLiteralCString evalWhitelist[] = {
 
     // Bug 1498560
     NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
-    // Bug 1550476
-    NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/jsol.js"),
 };
 
 /* static */
