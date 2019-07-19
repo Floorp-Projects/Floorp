@@ -524,3 +524,6 @@ skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
 # https://github.com/tc39/test262/pull/2210
 skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js
 skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
+
+# Regular grandfathered tags canonicalized differently in CLDR.
+skip script test262/intl402/Intl/getCanonicalLocales/grandfathered.js
