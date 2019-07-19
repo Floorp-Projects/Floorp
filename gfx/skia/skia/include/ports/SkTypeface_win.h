@@ -53,7 +53,7 @@ struct IDWriteFontFallback;
 SK_API SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
                                                   IDWriteFontFace* aFontFace,
                                                   SkFontStyle aStyle,
-                                                  bool aForceGDI,
+                                                  DWRITE_RENDERING_MODE aRenderingMode,
                                                   float aGamma,
                                                   float aContrast);
 
