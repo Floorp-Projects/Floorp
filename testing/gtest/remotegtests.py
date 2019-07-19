@@ -269,6 +269,7 @@ class AppWaiter(object):
             if not self.update_log():
                 top = self.get_top()
                 if top != package or self.output_timed_out():
+                    time.sleep(self.output_poll_interval)
                     break
             time.sleep(self.output_poll_interval)
         self.update_log()
