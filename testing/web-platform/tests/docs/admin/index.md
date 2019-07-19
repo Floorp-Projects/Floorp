@@ -10,6 +10,12 @@ infrastructure which makes the project possible.
    :titlesonly:
 
    ../README
+   ../tools/wptserve/docs/index.rst
+
+.. toctree::
+   :hidden:
+
+   ../tools/wptserve/README
 ```
 
 ## Secrets
