@@ -16,16 +16,16 @@
     // Modify the position of the div.
     document.getElementById('myDiv').style = "top: 60px";
     function testBufferedEntry() {
-      if (performance.getEntriesByType('layoutShift').length === 0) {
+      if (performance.getEntriesByType('layout-shift').length === 0) {
         t.step_timeout(testBufferedEntry, 0);
         return;
       }
       const endTime = performance.now();
-      assert_equals(performance.getEntriesByType('layoutShift').length, 1);
+      assert_equals(performance.getEntriesByType('layout-shift').length, 1);
       assert_equals(performance.getEntries().filter(
-        entry => entry.entryType === 'layoutShift').length, 1);
-      const entry = performance.getEntriesByType('layoutShift')[0];
-      assert_equals(entry.entryType, "layoutShift");
+        entry => entry.entryType === 'layout-shift').length, 1);
+      const entry = performance.getEntriesByType('layout-shift')[0];
+      assert_equals(entry.entryType, "layout-shift");
       assert_equals(entry.name, "");
       assert_greater_than_equal(entry.startTime, startTime)
       assert_less_than_equal(entry.startTime, endTime)
