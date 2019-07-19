@@ -33,7 +33,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "NetworkMonitorActor",
-  "devtools/server/actors/network-monitor",
+  "devtools/server/actors/network-monitor/network-monitor",
   true
 );
 loader.lazyRequireGetter(
@@ -731,7 +731,8 @@ WebConsoleActor.prototype = {
               // most requests that happen in parent. This one will communicate through
               // `messageManager`.
               await this.conn.spawnActorInParentProcess(this.actorID, {
-                module: "devtools/server/actors/network-monitor",
+                module:
+                  "devtools/server/actors/network-monitor/network-monitor",
                 constructor: "NetworkMonitorActor",
                 args: [
                   { outerWindowID: this.parentActor.outerWindowID },
