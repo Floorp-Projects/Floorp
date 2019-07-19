@@ -1103,7 +1103,7 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
       continue;
     }
     mNeedKeyframe = false;
-    samples->mSamples.AppendElement(sample);
+    samples->AppendSample(sample);
     aNumSamples--;
   }
 

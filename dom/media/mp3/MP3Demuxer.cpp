@@ -261,8 +261,7 @@ RefPtr<MP3TrackDemuxer::SamplesPromise> MP3TrackDemuxer::GetSamples(
     if (!frame) {
       break;
     }
-
-    frames->mSamples.AppendElement(frame);
+    frames->AppendSample(frame);
   }
 
   MP3LOGV("GetSamples() End mSamples.Size()=%zu aNumSamples=%d mOffset=%" PRIu64
