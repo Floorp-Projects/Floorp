@@ -584,6 +584,49 @@ function processNetworkUpdates(update, request) {
   return result;
 }
 
+/**
+ * This method checks that the response is base64 encoded by
+ * comparing these 2 values:
+ * 1. The original response
+ * 2. The value of doing a base64 decode on the
+ * response and then base64 encoding the result.
+ * If the values are different or an error is thrown,
+ * the method will return false.
+ */
+function isBase64(payload) {
+  try {
+    return btoa(atob(payload)) == payload;
+  } catch (err) {
+    return false;
+  }
+}
+
+/**
+ * Checks if the payload is of JSON type.
+ */
+function isJSON(payload) {
+  let json, error;
+
+  try {
+    json = JSON.parse(payload);
+  } catch (err) {
+    if (isBase64(payload)) {
+      try {
+        json = JSON.parse(atob(payload));
+      } catch (err64) {
+        error = err;
+      }
+    } else {
+      error = err;
+    }
+  }
+
+  return {
+    json,
+    error,
+  };
+}
+
 module.exports = {
   decodeUnicodeBase64,
   getFormDataSections,
@@ -612,4 +655,5 @@ module.exports = {
   processNetworkUpdates,
   propertiesEqual,
   ipToLong,
+  isJSON,
 };
