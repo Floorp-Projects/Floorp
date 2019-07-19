@@ -228,6 +228,13 @@ inline void unumf_formatDouble(const UNumberFormatter* uformatter, double value,
   MOZ_CRASH("unumf_formatDouble: Intl API disabled");
 }
 
+struct UFormattedValue;
+
+inline const UFormattedValue* unumf_resultAsValue(
+    const UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_resultAsValue: Intl API disabled");
+}
+
 inline void unumf_resultGetAllFieldPositions(const UFormattedNumber* uresult,
                                              UFieldPositionIterator* ufpositer,
                                              UErrorCode* status) {
