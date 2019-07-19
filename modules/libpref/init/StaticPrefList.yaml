@@ -2012,6 +2012,12 @@
   mirror: always
 #undef PREF_VALUE
 
+# If the value is >= 0, it will be used for max touch points in child processes.
+- name: dom.maxtouchpoints.testing.value
+  type: int32_t
+  value: -1
+  mirror: always
+
 # Is support for Navigator.webdriver enabled?
 - name: dom.webdriver.enabled
   type: bool

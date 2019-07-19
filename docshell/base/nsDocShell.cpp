@@ -3344,6 +3344,9 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
     childDocShell->SetUseGlobalHistory(true);
   }
 
+  Cast(childDocShell)->SetRemoteTabs(mUseRemoteTabs);
+  Cast(childDocShell)->SetRemoteSubframes(mUseRemoteSubframes);
+
   if (aChild->ItemType() != mItemType) {
     return NS_OK;
   }
