@@ -21,6 +21,14 @@ assertEq(asmLink(asmCompile(asmFunStr))(), undefined);
 g.dbg.allowUnobservedAsmJS = false;
 assertAsmTypeFail(asmFunStr);
 
+// Disabling the debugger should uninhibit.
+g.dbg.enabled = false;
+assertEq(asmLink(asmCompile(asmFunStr))(), undefined);
+
+// Enabling it should inhibit again.
+g.dbg.enabled = true;
+assertAsmTypeFail(asmFunStr);
+
 // Removing the global should lift the inhibition.
 g.dbg.removeDebuggee(this);
 assertEq(asmLink(asmCompile(asmFunStr))(), undefined);

@@ -1832,7 +1832,7 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
     // this is safe as long as dbgp does not escape.
     Debugger* dbgp = p->unbarrieredGet();
 
-    if (dbgp->trackingAllocationSites) {
+    if (dbgp->trackingAllocationSites && dbgp->enabled) {
       foundAnyDebuggers = true;
       probability = std::max(dbgp->allocationSamplingProbability, probability);
     }
