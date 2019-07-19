@@ -29,7 +29,6 @@ py2:
         - testing/tps
         - testing/web-platform
         - toolkit
-        - tools/docs
         - tools/lint
         - tools/profiler
         - tools/rb
