@@ -38,15 +38,16 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const uint32_t& aChromeFlags, TabId aTabId) {
   mIPCOpen = true;
 
-  // FIXME: This should actually use a non-bogus TabContext, probably inherited
-  // from our Manager().
-  OriginAttributes attrs;
-  attrs.mInIsolatedMozBrowser = false;
-  attrs.SyncAttributesWithPrivateBrowsing(false);
-  uint32_t maxTouchPoints = Manager()->GetMaxTouchPoints();
+  // We can inherit most TabContext fields for the new BrowserParent actor from
+  // our Manager BrowserParent.
+  //
+  // We don't intend to support mozbrowsers with Fission currently, so we set
+  // |aMozBrowserElement| to be false.
   MutableTabContext tabContext;
-  tabContext.SetTabContext(false, 0, UIStateChangeType_Set, attrs,
-                           aPresentationURL, maxTouchPoints);
+  tabContext.SetTabContext(false, Manager()->ChromeOuterWindowID(),
+                           Manager()->ShowFocusRings(),
+                           Manager()->OriginAttributesRef(), aPresentationURL,
+                           Manager()->GetMaxTouchPoints());
 
   ProcessPriority initialPriority = PROCESS_PRIORITY_FOREGROUND;
 
