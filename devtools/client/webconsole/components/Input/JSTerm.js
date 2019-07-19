@@ -54,11 +54,6 @@ const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
-function gSequenceId() {
-  return gSequenceId.n++;
-}
-gSequenceId.n = 0;
-
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
