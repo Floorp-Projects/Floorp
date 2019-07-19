@@ -50,9 +50,6 @@ static nsLiteralCString evalWhitelist[] = {
 
     // Bug 1498560
     NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
-    // Bug 1550489
-    NS_LITERAL_CSTRING(
-        "resource://devtools/client/shared/vendor/react-redux.js"),
     // Bug 1550463
     NS_LITERAL_CSTRING("resource://devtools/client/shared/vendor/lodash.js"),
     // Bug 1550471
