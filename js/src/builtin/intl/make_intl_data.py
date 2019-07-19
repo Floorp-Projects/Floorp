@@ -1444,7 +1444,7 @@ if __name__ == "__main__":
                              help="Download url for language-subtag-registry.txt "
                              "(default: %(default)s)")
     parser_tags.add_argument("--out",
-                             default="LangTagMappingsGenerated.js",
+                             default="LangTagMappingsIANAGenerated.js",
                              help="Output file (default: %(default)s)")
     parser_tags.add_argument("file",
                              nargs="?",
