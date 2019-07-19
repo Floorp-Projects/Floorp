@@ -80,14 +80,6 @@ button.clicked::after {
 .clicked > legend::after {
   content: " (clicked)";
 }
-
-#adjacent {
-  position: absolute;
-  top: 250px;
-  left: 100px;
-  height: 20px;
-  width: 100px;
-}
 </style>
 </head>
 <body>
@@ -108,7 +100,6 @@ button.clicked::after {
         <button id="foreground">foreground</button>
       </fieldset>
     </fieldset>
-    <button id="adjacent">adjacent</button>
   </fieldset>
 
   <script>
@@ -170,7 +161,7 @@ function expectEventsOn(events, element) {
         setTimeout(() => {
           element.removeEventListener(event, f, { capture: true });
           reject("did not get " + event + " on " + element.id);
-        }, 500);
+        }, 1000);
       });
       promises.push(promise);
     })(event, element);
@@ -193,7 +184,7 @@ function unexpectEventsOn(events, element) {
         setTimeout(() => {
           element.removeEventListener(event, f, { capture: true });
           resolve();
-        }, 250);
+        }, 1000);
       });
       promises.push(promise);
     })(event, element);
@@ -219,7 +210,11 @@ promise_test(async () => {
   await clickOn(foreground);
   await auxClickOn(foreground);
   await dblClickOn(foreground);
-  await movePointerOver(adjacent);
+  let ancestorBox = ancestorContainer.getBoundingClientRect();
+  let inertBox = inertContainer.getBoundingClientRect();
+  let x = ancestorBox.left + (ancestorBox.width / 2);
+  let y = inertBox.bottom + ((ancestorBox.bottom - inertBox.bottom) / 2);
+  await movePointerTo(x, y);
   await Promise.all(promises);
 }, "Tests that any mouse event on a non-inert element is correctly targeted to that element");
 
@@ -232,15 +227,18 @@ promise_test(async () => {
   let promises = expectEventsOn(["mouseover", "mouseenter", "mousemove", "mousedown",
                                  "mouseup", "click", "auxclick"],
                                 ancestorContainer);
-/*
-  // TODO(aboxhall): We are getting these unexpected events. Why?
+
   promises = promises.concat(unexpectEventsOn(["mouseout", "mouseleave"],
                                               ancestorContainer));
-*/
+
   await clickOn(foreground);
   await auxClickOn(foreground);
   await dblClickOn(foreground);
-  await movePointerOver(adjacent);
+  let ancestorBox = ancestorContainer.getBoundingClientRect();
+  let inertBox = inertContainer.getBoundingClientRect();
+  let x = ancestorBox.left + (ancestorBox.width / 2);
+  let y = inertBox.bottom + ((ancestorBox.bottom - inertBox.bottom) / 2);
+  await movePointerTo(x, y);
   await Promise.all(promises);
 }, 'Tests that any mouse event on an inert element is targeted to the nearest non-inert ancestor at the same coordinates');
 
@@ -254,7 +252,11 @@ promise_test(async () => {
                                  "pointerleave"],
                                 foreground);
   await clickOn(foreground);
-  await movePointerOver(adjacent);
+  let ancestorBox = ancestorContainer.getBoundingClientRect();
+  let inertBox = inertContainer.getBoundingClientRect();
+  let x = ancestorBox.left + (ancestorBox.width / 2);
+  let y = inertBox.bottom + ((ancestorBox.bottom - inertBox.bottom) / 2);
+  await movePointerTo(x, y);
   await Promise.all(promises);
 }, "Tests that any pointer event on a non-inert element is correctly targeted to that element");
 
@@ -267,13 +269,15 @@ promise_test(async () => {
   let promises = expectEventsOn(["pointerover", "pointerenter", "pointermove",
                                  "pointerdown", "pointerup" ],
                                 ancestorContainer);
-/*
-  // TODO(aboxhall): We are getting these unexpected events. Why?
+
   promises = promises.concat(unexpectEventsOn(["pointerout", "pointerleave"],
                                               ancestorContainer));
-*/
   await clickOn(foreground);
-  await movePointerOver(adjacent);
+  let ancestorBox = ancestorContainer.getBoundingClientRect();
+  let inertBox = inertContainer.getBoundingClientRect();
+  let x = ancestorBox.left + (ancestorBox.width / 2);
+  let y = inertBox.bottom + ((ancestorBox.bottom - inertBox.bottom) / 2);
+  await movePointerTo(x, y);
   await Promise.all(promises);
 }, 'Tests that any pointer event on an inert element is targeted to the nearest non-inert ancestor at the same coordinates');
   </script>
