@@ -3,11 +3,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import absolute_import, print_function
+
 import os
 import sys
 import json
 import math
 import glob
+
+AWSY_PATH = os.path.dirname(os.path.realpath(__file__))
+if AWSY_PATH not in sys.path:
+    sys.path.append(AWSY_PATH)
+
 import parse_about_memory
 
 # A description of each checkpoint and the root path to it.
