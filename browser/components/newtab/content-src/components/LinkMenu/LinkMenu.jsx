@@ -85,6 +85,7 @@ export class _LinkMenu extends React.PureComponent {
         onUpdate={this.props.onUpdate}
         onShow={this.props.onShow}
         options={this.getOptions()}
+        keyboardAccess={this.props.keyboardAccess}
       />
     );
   }

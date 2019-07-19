@@ -240,7 +240,7 @@ impl FrameBuilder {
         retained_tiles: RetainedTiles,
         globals: FrameGlobalResources,
     ) {
-        debug_assert!(self.pending_retained_tiles.tiles.is_empty());
+        assert!(self.pending_retained_tiles.caches.is_empty());
         self.pending_retained_tiles = retained_tiles;
         self.globals = globals;
     }

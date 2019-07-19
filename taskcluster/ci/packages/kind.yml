@@ -192,8 +192,8 @@ jobs:
         run:
             using: debian-package
             dsc:
-                url: http://snapshot.debian.org/archive/debian/20181115T045552Z/pool/main/v/valgrind/valgrind_3.14.0-1.dsc
-                sha256: 6709e2fe4e8251ee32f3cfbf2c6ee106a5cfa3e8dc672cf1dd5f2b26e72b64ee
+                url: http://snapshot.debian.org/archive/debian/20190714T155055Z/pool/main/v/valgrind/valgrind_3.15.0-1.dsc
+                sha256: 2bd467ec486302060ed4e91452231b2c0a09afcd51c25d4ba8d3028218328681
             patch: valgrind-wheezy.diff
 
     deb7-dh-python:

@@ -206,12 +206,17 @@ describe("ASRouter", () => {
           handleMessageRequest: Router.handleMessageRequest,
           addImpression: Router.addImpression,
           blockMessageById: Router.blockMessageById,
+          dispatch: Router.dispatch,
         }
       );
 
-      assert.calledWithExactly(FakeToolbarPanelHub.init, {
-        getMessages: Router.handleMessageRequest,
-      });
+      assert.calledWithExactly(
+        FakeToolbarPanelHub.init,
+        Router.waitForInitialized,
+        {
+          getMessages: Router.handleMessageRequest,
+        }
+      );
 
       assert.calledWithExactly(
         FakeBookmarkPanelHub.init,

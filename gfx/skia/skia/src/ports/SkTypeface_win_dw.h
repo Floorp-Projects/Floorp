@@ -57,7 +57,7 @@ private:
         , fDWriteFontFamily(SkSafeRefComPtr(fontFamily))
         , fDWriteFont(SkSafeRefComPtr(font))
         , fDWriteFontFace(SkRefComPtr(fontFace))
-        , fForceGDI(false)
+        , fRenderingMode(DWRITE_RENDERING_MODE_DEFAULT)
         , fGamma(2.2f)
         , fContrast(1.0f)
     {
@@ -105,20 +105,21 @@ public:
     static DWriteFontTypeface* Create(IDWriteFactory* factory,
                                       IDWriteFontFace* fontFace,
                                       SkFontStyle aStyle,
-                                      bool aForceGDI,
+                                      DWRITE_RENDERING_MODE aRenderingMode,
                                       float aGamma,
                                       float aContrast) {
         DWriteFontTypeface* typeface =
                 new DWriteFontTypeface(aStyle, factory, fontFace,
                                        nullptr, nullptr,
                                        nullptr, nullptr);
-        typeface->fForceGDI = aForceGDI;
+        typeface->fRenderingMode = aRenderingMode;
         typeface->fGamma = aGamma;
         typeface->fContrast = aContrast;
         return typeface;
     }
 
-    bool ForceGDI() const { return fForceGDI; }
+    bool ForceGDI() const { return fRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC; }
+    DWRITE_RENDERING_MODE GetRenderingMode() const { return fRenderingMode; }
 
 protected:
     void weak_dispose() const override {
@@ -156,7 +157,7 @@ protected:
 
 private:
     typedef SkTypeface INHERITED;
-    bool fForceGDI;
+    DWRITE_RENDERING_MODE fRenderingMode;
     float fGamma;
     float fContrast;
 };
