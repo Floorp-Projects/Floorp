@@ -95,7 +95,7 @@ impl Context {
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Context, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
@@ -146,7 +146,7 @@ impl Context {
     pub fn drain<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, userdata: *mut c_void)
@@ -167,7 +167,7 @@ impl Context {
     pub fn rttime_new<CB>(&self, usec: USec, _: CB, userdata: *mut c_void) -> *mut ffi::pa_time_event
         where CB: Fn(&MainloopApi, *mut ffi::pa_time_event, &TimeVal, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(a: *mut ffi::pa_mainloop_api,
@@ -191,7 +191,7 @@ impl Context {
     pub fn get_server_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, Option<&ServerInfo>, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, i: *const ffi::pa_server_info, userdata: *mut c_void)
@@ -219,7 +219,7 @@ impl Context {
         CB: Fn(&Context, *const SinkInfo, i32, *mut c_void),
         CS: Into<Option<&'str CStr>>,
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -246,7 +246,7 @@ impl Context {
     pub fn get_sink_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SinkInfo, i32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -270,7 +270,7 @@ impl Context {
     pub fn get_sink_input_info<CB>(&self, idx: u32, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SinkInputInfo, i32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -294,7 +294,7 @@ impl Context {
     pub fn get_source_info_list<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, *const SourceInfo, i32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
@@ -323,7 +323,7 @@ impl Context {
                                      -> Result<Operation>
         where CB: Fn(&Context, i32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
@@ -344,7 +344,7 @@ impl Context {
     pub fn subscribe<CB>(&self, m: SubscriptionMask, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Context, i32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context, success: c_int, userdata: *mut c_void)
@@ -371,7 +371,7 @@ impl Context {
     pub fn set_subscribe_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Context, SubscriptionEvent, u32, *mut c_void)
     {
-        debug_assert_eq!(::std::mem::size_of::<CB>(), 0);
+        assert_eq!(::std::mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(c: *mut ffi::pa_context,
