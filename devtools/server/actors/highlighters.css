@@ -584,12 +584,8 @@
   position: fixed;
   top: 0;
   left: 0;
-  zoom: 1;
-  right: 0;
-  bottom: 0;
-
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
 
   display: flex;
   align-items: center;
@@ -600,7 +596,7 @@
   --text-color: #585959; /* --theme-body-color-alt */
   --toolbar-background: #fcfcfc; /* --theme-toolbar-background */;
   --toolbar-border: #dde1e4; /* --theme-splitter-color */
-  --toolbar-box-shadow: 0 2px 2px 0 rgba(155, 155, 155, 0.26); /* --rdm-box-shadow */
+  --toolbar-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26); /* --rdm-box-shadow */
   --overlay-background: #dde1e4a8;
 }
 
@@ -611,60 +607,17 @@
 
 :-moz-native-anonymous .paused-dbg-toolbar {
   margin-top: 15px;
+  padding: 4px 5px;
   display: inline-flex;
   -moz-user-select: none;
+  pointer-events: auto;
 
   color: var(--text-color);
   border-radius: 2px;
   box-shadow: var(--toolbar-box-shadow);
   background-color: var(--toolbar-background);
   border: 1px solid var(--toolbar-border);
-  border-radius: 4px;
 
-  font: var(--highlighter-font-family);
-  font-size: var(--highlighter-font-size);
-}
-
-:-moz-native-anonymous .paused-dbg-toolbar button {
-  margin: 8px 4px 6px 6px;
-  width: 14px;
-  height: 14px;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: 14px 14px;
-  background-color: var(--text-color);
-
-  border: 0px;
-  -moz-appearance: none;
-}
-
-:-moz-native-anonymous .paused-dbg-toolbar button:hover {
-  cursor: pointer;
-}
-
-:-moz-native-anonymous .paused-dbg-divider {
-  width: 1px;
-  height: 14px;
-  margin-top: 8px;
-  background-color: var(--toolbar-border);
-}
-
-:-moz-native-anonymous button.paused-dbg-step-button {
-  margin-left: 10px;
-  mask-image: url(resource://devtools/client/debugger/images/stepOver.svg);
-}
-
-:-moz-native-anonymous button.paused-dbg-resume-button {
-  margin-right: 10px;
-  mask-image: url(resource://devtools/client/debugger/images/resume.svg);
-}
-
-:-moz-native-anonymous .paused-dbg-reason {
-  padding: 1px 16px;
-  margin: 6px 0px;
-  line-height: 16px;
-  font-size: 14px;
   font: var(--highlighter-font-family);
   font-size: var(--highlighter-font-size);
 }

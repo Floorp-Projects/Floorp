@@ -257,10 +257,6 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   _currentNode: null,
 
   pick: function() {
-    if (this._targetActor.threadActor) {
-      this._targetActor.threadActor.hideOverlay();
-    }
-
     if (this._isPicking) {
       return null;
     }
@@ -488,10 +484,6 @@ exports.HighlighterActor = protocol.ActorClassWithSpec(highlighterSpec, {
   },
 
   cancelPick: function() {
-    if (this._targetActor.threadActor) {
-      this._targetActor.threadActor.showOverlay();
-    }
-
     if (this._isPicking) {
       this._highlighter.hide();
       this._stopPickerListeners();
