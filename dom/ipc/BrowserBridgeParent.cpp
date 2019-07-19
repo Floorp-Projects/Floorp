@@ -43,9 +43,10 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   OriginAttributes attrs;
   attrs.mInIsolatedMozBrowser = false;
   attrs.SyncAttributesWithPrivateBrowsing(false);
+  uint32_t maxTouchPoints = Manager()->GetMaxTouchPoints();
   MutableTabContext tabContext;
   tabContext.SetTabContext(false, 0, UIStateChangeType_Set, attrs,
-                           aPresentationURL);
+                           aPresentationURL, maxTouchPoints);
 
   ProcessPriority initialPriority = PROCESS_PRIORITY_FOREGROUND;
 
