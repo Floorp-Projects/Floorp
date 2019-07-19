@@ -15,7 +15,7 @@ import re
 
 import taskcluster
 
-from lib.gradle import get_variants_for_build_type, get_geckoview_versions
+from lib.gradle import get_variants_for_build_type
 from lib.tasks import (
     fetch_mozharness_task_id,
     schedule_task_graph,
@@ -85,8 +85,7 @@ def raptor(is_staging):
     signing_tasks = {}
     other_tasks = {}
 
-    geckoview_version = get_geckoview_versions()
-    mozharness_task_id = fetch_mozharness_task_id(geckoview_version)
+    mozharness_task_id = fetch_mozharness_task_id()
     gecko_revision = taskcluster.Queue().task(mozharness_task_id)['payload']['env']['GECKO_HEAD_REV']
 
     for variant in [Variant.from_values(abi, False, 'forPerformanceTest') for abi in ('aarch64', 'arm')]:
