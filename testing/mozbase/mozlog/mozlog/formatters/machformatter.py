@@ -438,7 +438,7 @@ class MachFormatter(base.BaseFormatter):
         else:
             success = False
 
-        rv = ["pid:%s. Test:%s. Minidump anaylsed:%s. Signature:[%s]" %
+        rv = ["pid:%s. Test:%s. Minidump analysed:%s. Signature:[%s]" %
               (data.get("pid", None), test, success, data["signature"])]
 
         if data.get("minidump_path"):
