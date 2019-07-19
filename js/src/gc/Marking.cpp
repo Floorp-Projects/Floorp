@@ -2883,11 +2883,14 @@ static inline void TraceWholeCell(TenuringTracer& mover,
 template <typename T>
 static void TraceBufferedCells(TenuringTracer& mover, Arena* arena,
                                ArenaCellSet* cells) {
-  for (size_t i = 0; i < MaxArenaCellIndex; i++) {
-    if (cells->hasCell(i)) {
+  for (size_t i = 0; i < MaxArenaCellIndex; i += cells->BitsPerWord) {
+    ArenaCellSet::WordT bitset = cells->getWord(i / cells->BitsPerWord);
+    while (bitset) {
+      int bit = i + js::detail::CountTrailingZeroes(bitset);
       auto cell =
-          reinterpret_cast<T*>(uintptr_t(arena) + ArenaCellIndexBytes * i);
+          reinterpret_cast<T*>(uintptr_t(arena) + ArenaCellIndexBytes * bit);
       TraceWholeCell(mover, cell);
+      bitset &= bitset - 1;  // Clear the low bit.
     }
   }
 }
