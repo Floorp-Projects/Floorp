@@ -11,7 +11,9 @@ import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.browser.session.ext.syncDispatch
 import mozilla.components.browser.session.ext.toSecurityInfoState
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.state.action.ContentAction.RemoveIconAction
 import mozilla.components.browser.state.action.ContentAction.RemoveThumbnailAction
+import mozilla.components.browser.state.action.ContentAction.UpdateIconAction
 import mozilla.components.browser.state.action.ContentAction.UpdateLoadingStateAction
 import mozilla.components.browser.state.action.ContentAction.UpdateProgressAction
 import mozilla.components.browser.state.action.ContentAction.UpdateSecurityInfo
@@ -358,7 +360,10 @@ class Session(
      * An icon for the currently visible page.
      */
     var icon: Bitmap? by Delegates.observable<Bitmap?>(null) { _, old, new ->
-        notifyObservers(old, new) { onIconChanged(this@Session, new) }
+        if (notifyObservers(old, new) { onIconChanged(this@Session, new) }) {
+            val action = if (new != null) UpdateIconAction(id, new) else RemoveIconAction(id)
+            store?.syncDispatch(action)
+        }
     }
 
     /**

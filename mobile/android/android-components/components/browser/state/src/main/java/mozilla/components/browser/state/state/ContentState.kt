@@ -20,6 +20,7 @@ import android.graphics.Bitmap
  * as the host and SSL certificate authority.
  * @property thumbnail the last generated [Bitmap] of this session's content, to
  * be used as a preview in e.g. a tab switcher.
+ * @property icon the icon of the page currently loaded by this session.
  */
 data class ContentState(
     val url: String,
@@ -29,5 +30,6 @@ data class ContentState(
     val loading: Boolean = false,
     val searchTerms: String = "",
     val securityInfo: SecurityInfoState = SecurityInfoState(),
-    val thumbnail: Bitmap? = null
+    val thumbnail: Bitmap? = null,
+    val icon: Bitmap? = null
 )

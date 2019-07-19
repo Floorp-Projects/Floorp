@@ -116,6 +116,11 @@ sealed class CustomTabListAction : BrowserAction() {
  */
 sealed class ContentAction : BrowserAction() {
     /**
+     * Removes the icon of the [ContentState] with the given [sessionId].
+     */
+    data class RemoveIconAction(val sessionId: String) : ContentAction()
+
+    /**
      * Removes the thumbnail of the [ContentState] with the given [sessionId].
      */
     data class RemoveThumbnailAction(val sessionId: String) : ContentAction()
@@ -149,6 +154,11 @@ sealed class ContentAction : BrowserAction() {
      * Updates the [SecurityInfoState] of the [ContentState] with the given [sessionId].
      */
     data class UpdateSecurityInfo(val sessionId: String, val securityInfo: SecurityInfoState) : ContentAction()
+
+    /**
+     * Updates the icon of the [ContentState] with the given [sessionId].
+     */
+    data class UpdateIconAction(val sessionId: String, val icon: Bitmap) : ContentAction()
 
     /**
      * Updates the thumbnail of the [ContentState] with the given [sessionId].

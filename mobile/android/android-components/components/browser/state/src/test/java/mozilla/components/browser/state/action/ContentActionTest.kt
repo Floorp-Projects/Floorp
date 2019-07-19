@@ -194,6 +194,40 @@ class ContentActionTest {
     }
 
     @Test
+    fun `UpdateIconAction updates icon`() {
+        val icon = spy(Bitmap::class.java)
+
+        assertNotEquals(icon, tab.content.icon)
+        assertNotEquals(icon, otherTab.content.icon)
+
+        store.dispatch(
+                ContentAction.UpdateIconAction(tab.id, icon)
+        ).joinBlocking()
+
+        assertEquals(icon, tab.content.icon)
+        assertNotEquals(icon, otherTab.content.icon)
+    }
+
+    @Test
+    fun `RemoveIconAction removes icon`() {
+        val icon = spy(Bitmap::class.java)
+
+        assertNotEquals(icon, tab.content.icon)
+
+        store.dispatch(
+                ContentAction.UpdateIconAction(tab.id, icon)
+        ).joinBlocking()
+
+        assertEquals(icon, tab.content.icon)
+
+        store.dispatch(
+                ContentAction.RemoveIconAction(tab.id)
+        ).joinBlocking()
+
+        assertNull(tab.content.icon)
+    }
+
+    @Test
     fun `Updating custom tab`() {
         val customTab = createCustomTab("https://getpocket.com")
         val otherCustomTab = createCustomTab("https://www.google.com")

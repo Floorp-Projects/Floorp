@@ -1059,6 +1059,24 @@ class SessionTest {
     }
 
     @Test
+    fun `action is dispatched when icon changes`() {
+        val store: BrowserStore = mock()
+        `when`(store.dispatch(any())).thenReturn(mock())
+
+        val session = Session("https://www.mozilla.org")
+        session.store = store
+
+        val icon = spy(Bitmap::class.java)
+        session.icon = icon
+        verify(store).dispatch(ContentAction.UpdateIconAction(session.id, icon))
+
+        session.icon = null
+        verify(store).dispatch(ContentAction.RemoveIconAction(session.id))
+
+        verifyNoMoreInteractions(store)
+    }
+
+    @Test
     fun `observer is notified when readerable state updated`() {
         val observer = mock(Session.Observer::class.java)
 
