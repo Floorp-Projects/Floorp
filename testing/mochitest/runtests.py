@@ -2362,7 +2362,7 @@ toolbar#nav-bar {
 
         if marionette_exception is not None:
             exc, value, tb = marionette_exception
-            raise exc(value).with_traceback(tb)
+            raise exc, value, tb
 
         return status, self.lastTestSeen
 
