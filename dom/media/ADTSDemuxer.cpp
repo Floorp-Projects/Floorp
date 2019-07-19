@@ -435,8 +435,7 @@ RefPtr<ADTSTrackDemuxer::SamplesPromise> ADTSTrackDemuxer::GetSamples(
   while (aNumSamples--) {
     RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
     if (!frame) break;
-
-    frames->mSamples.AppendElement(frame);
+    frames->AppendSample(frame);
   }
 
   ADTSLOGV(

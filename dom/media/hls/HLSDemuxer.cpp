@@ -287,7 +287,7 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
                                              __func__);
     }
     MOZ_ASSERT(mQueuedSample->mKeyframe, "mQueuedSample must be a keyframe");
-    samples->mSamples.AppendElement(mQueuedSample);
+    samples->AppendSample(mQueuedSample);
     mQueuedSample = nullptr;
     aNumSamples--;
   }
@@ -325,7 +325,7 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
     if (!mrd) {
       return SamplesPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
-    samples->mSamples.AppendElement(mrd);
+    samples->AppendSample(mrd);
   }
   if (mType == TrackInfo::kVideoTrack &&
       (mNextKeyframeTime.isNothing() ||

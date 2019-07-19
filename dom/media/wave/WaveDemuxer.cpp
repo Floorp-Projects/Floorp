@@ -318,7 +318,7 @@ RefPtr<WAVTrackDemuxer::SamplesPromise> WAVTrackDemuxer::GetSamples(
     if (!datachunk) {
       break;
     }
-    datachunks->mSamples.AppendElement(datachunk);
+    datachunks->AppendSample(datachunk);
   }
 
   if (datachunks->mSamples.IsEmpty()) {
