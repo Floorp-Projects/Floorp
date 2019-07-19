@@ -716,8 +716,9 @@ pref("gfx.ycbcr.accurate-conversion", false);
 
 #ifdef XP_WIN
 pref("gfx.webrender.force-angle", true);
+pref("gfx.webrender.flip-sequential", false);
 pref("gfx.webrender.dcomp-win.enabled", true);
-pref("gfx.webrender.dcomp-win-triple-buffering.enabled", true);
+pref("gfx.webrender.triple-buffering.enabled", true);
 #endif
 
 #if defined(XP_WIN) || defined(MOZ_WIDGET_ANDROID)
