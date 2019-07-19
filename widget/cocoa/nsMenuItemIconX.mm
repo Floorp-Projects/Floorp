@@ -127,10 +127,6 @@ nsresult nsMenuItemIconX::SetupIcon() {
 
   mSetIcon = true;
 
-  if (mMenuObject) {
-    mMenuObject->IconUpdated();
-  }
-
   return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
@@ -229,6 +225,9 @@ nsresult nsMenuItemIconX::OnComplete(NSImage* aImage) {
   }
 
   [mNativeMenuItem setImage:aImage];
+  if (mMenuObject) {
+    mMenuObject->IconUpdated();
+  }
   [aImage release];
   return NS_OK;
 }
