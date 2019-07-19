@@ -2018,6 +2018,13 @@
   value: -1
   mirror: always
 
+# If the pref is set to true, pointer events are enabled on GeckoView, but only
+# in the case it is using separate child processes.
+- name: dom.w3c_pointer_events.multiprocess.android.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Is support for Navigator.webdriver enabled?
 - name: dom.webdriver.enabled
   type: bool
