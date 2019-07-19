@@ -86,6 +86,8 @@ export default class MonitorClass {
     storedEmail.textContent = monitorData.monitoredEmails;
     knownBreaches.textContent = monitorData.numBreaches;
     exposedPasswords.textContent = monitorData.passwords;
-    exposedLockwisePasswords.textContent = monitorData.lockwisePasswords;
+
+    // TODO: Bug 1559427: Display data from Lockwise here
+    exposedLockwisePasswords.textContent = 2;
   }
 }
