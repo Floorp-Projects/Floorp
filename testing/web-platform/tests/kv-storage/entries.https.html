@@ -7,7 +7,7 @@
 
 <script type="module">
 import { testWithArea } from "./helpers/kvs-tests.js";
-import * as classAssert from "./helpers/class-assert.js";
+import * as iterAssert from "./helpers/iter-assert.js";
 import {
   assertAsyncIteratorEquals,
   assertAsyncIteratorCustomEquals,
@@ -76,7 +76,7 @@ testWithArea(async area => {
     await iter.next()
   ];
 
-  classAssert.iterResultsCustom(
+  iterAssert.iterResultsCustom(
     iterResults,
     [
       [[1, "value 1"], false],
@@ -106,7 +106,7 @@ testWithArea(async area => {
   ];
   const iterResults = await Promise.all(promises);
 
-  classAssert.iterResultsCustom(
+  iterAssert.iterResultsCustom(
     iterResults,
     [
       [[1, "value 1"], false],
