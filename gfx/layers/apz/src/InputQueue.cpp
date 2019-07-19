@@ -256,8 +256,9 @@ nsEventStatus InputQueue::ReceiveScrollWheelInput(
 
   if (!block) {
     block = new WheelBlockState(aTarget, aFlags, aEvent);
-    INPQ_LOG("started new scroll wheel block %p id %" PRIu64 " for target %p\n",
-             block, block->GetBlockId(), aTarget.get());
+    INPQ_LOG("started new scroll wheel block %p id %" PRIu64 " for %starget %p\n",
+             block, block->GetBlockId(),
+             aFlags.mTargetConfirmed ? "confirmed " : "", aTarget.get());
 
     mActiveWheelBlock = block;
 
