@@ -12,7 +12,7 @@ import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_share.*
-import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.UIView
@@ -41,7 +41,7 @@ class ShareUIView(
         intent_handler_recyclerview.adapter = adapter
 
         // And authorized
-        if (BuildConfig.SEND_TAB_ENABLED &&
+        if (FeatureFlags.sendTabEnabled &&
             !view.context.components.backgroundServices.accountManager.accountNeedsReauth()
         ) {
             account_devices_recyclerview.adapter = AccountDevicesShareAdapter(view.context, actionEmitter)

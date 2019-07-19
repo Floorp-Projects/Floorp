@@ -259,14 +259,6 @@ android.applicationVariants.all { variant ->
         buildConfigField 'String', 'LEANPLUM_TOKEN', 'null'
         println("X_X")
     }
-
-// -------------------------------------------------------------------------------------------------
-// Feature build flags
-// -------------------------------------------------------------------------------------------------
-    // NB: flipping SEND_TAB_ENABLED flag back and worth is currently not well supported and may need hand-holding.
-    // Consult with the android-components peers before changing.
-    buildConfigField 'Boolean', 'SEND_TAB_ENABLED', (buildType == "nightly" || buildType == "nightlyLegacy" || isDebug).toString()
-    buildConfigField 'Boolean', 'PULL_TO_REFRESH_ENABLED', (false).toString()
 }
 
 androidExtensions {

@@ -33,8 +33,8 @@ import mozilla.components.feature.push.PushType
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.service.fxa.sync.GlobalSyncableStoreProvider
 import mozilla.components.support.base.log.logger.Logger
-import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Experiments
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.test.Mockable
@@ -63,7 +63,7 @@ class BackgroundServices(
         // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
         // Consult with the android-components peers before changing.
         // See https://github.com/mozilla/application-services/issues/1308
-        capabilities = if (BuildConfig.SEND_TAB_ENABLED) {
+        capabilities = if (FeatureFlags.sendTabEnabled) {
             setOf(DeviceCapability.SEND_TAB)
         } else {
             emptySet()
@@ -120,7 +120,7 @@ class BackgroundServices(
         GlobalSyncableStoreProvider.configureStore("bookmarks" to bookmarkStorage)
 
         // Sets the PushFeature as the singleton instance for push messages to go to.
-        if (BuildConfig.SEND_TAB_ENABLED && pushConfig != null) {
+        if (FeatureFlags.sendTabEnabled && pushConfig != null) {
             PushProcessor.install(push)
         }
     }
@@ -175,7 +175,7 @@ class BackgroundServices(
         it.registerForDeviceEvents(deviceEventObserver, ProcessLifecycleOwner.get(), true)
 
         // This should be removed in the future. See comment on `accountObserver`.
-        if (BuildConfig.SEND_TAB_ENABLED && pushConfig != null) {
+        if (FeatureFlags.sendTabEnabled && pushConfig != null) {
             it.register(accountObserver)
         }
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }

@@ -57,7 +57,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.BuildConfig
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
@@ -343,7 +343,7 @@ class BrowserFragment : Fragment(), BackHandler {
             view = view
         )
 
-        if (BuildConfig.PULL_TO_REFRESH_ENABLED) {
+        if (FeatureFlags.pullToRefreshEnabled) {
             val primaryTextColor = ThemeManager.resolveAttribute(R.attr.primaryText, requireContext())
             view.swipeRefresh.setColorSchemeColors(primaryTextColor)
             swipeRefreshFeature.set(
