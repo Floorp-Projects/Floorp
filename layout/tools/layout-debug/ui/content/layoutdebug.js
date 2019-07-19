@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var gBrowser;
+var gURLBar;
 var gDebugger;
 var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
   .useRemoteTabs;
@@ -129,7 +130,6 @@ function nsLDBBrowserContentListener() {
 nsLDBBrowserContentListener.prototype = {
   init: function() {
     this.mStatusText = document.getElementById("status-text");
-    this.mURLBar = document.getElementById("urlbar");
     this.mForwardButton = document.getElementById("forward-button");
     this.mBackButton = document.getElementById("back-button");
     this.mStopButton = document.getElementById("stop-button");
@@ -156,7 +156,7 @@ nsLDBBrowserContentListener.prototype = {
       this.mLoading = true;
     } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
       this.setButtonEnabled(this.mStopButton, false);
-      this.mStatusText.value = this.mURLBar.value + " loaded";
+      this.mStatusText.value = gURLBar.value + " loaded";
       this.mLoading = false;
     }
   },
@@ -171,7 +171,7 @@ nsLDBBrowserContentListener.prototype = {
   ) {},
 
   onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
-    this.mURLBar.value = aLocation.spec;
+    gURLBar.value = aLocation.spec;
     this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
     this.setButtonEnabled(this.mBackButton, gBrowser.canGoBack);
   },
@@ -194,7 +194,6 @@ nsLDBBrowserContentListener.prototype = {
   },
 
   mStatusText: null,
-  mURLBar: null,
   mForwardButton: null,
   mBackButton: null,
   mStopButton: null,
@@ -204,6 +203,7 @@ nsLDBBrowserContentListener.prototype = {
 
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
+  gURLBar = document.getElementById("urlbar");
 
   gDebugger = new Debugger();
 
@@ -303,4 +303,14 @@ function loadURI(aURL) {
   gBrowser.loadURI(aURL, {
     triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
+}
+
+function focusURLBar() {
+  gURLBar.focus();
+  gURLBar.select();
+}
+
+function go() {
+  loadURI(gURLBar.value);
+  gBrowser.focus();
 }
