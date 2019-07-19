@@ -9,11 +9,13 @@
 #include "builtin/intl/NumberFormat.h"
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <algorithm>
 #include <stddef.h>
 #include <stdint.h>
+#include <type_traits>
 
 #include "builtin/intl/CommonFunctions.h"
 #include "builtin/intl/ICUStubs.h"
@@ -25,6 +27,7 @@
 #include "js/RootingAPI.h"
 #include "js/StableStringChars.h"
 #include "js/TypeDecls.h"
+#include "js/Vector.h"
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
@@ -41,6 +44,7 @@ using mozilla::SpecificNaN;
 
 using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
+using js::intl::FieldType;
 using js::intl::GetAvailableLocales;
 using js::intl::IcuLocale;
 
@@ -470,9 +474,18 @@ static UFormattedNumber* NewUFormattedNumber(JSContext* cx) {
   return formatted;
 }
 
-static JSString* PartitionNumberPattern(JSContext* cx, UNumberFormatter* nf,
-                                        UFormattedNumber* formatted,
-                                        double* x) {
+// We also support UFormattedNumber in addition to UFormattedValue, in case
+// we're compiling against a system ICU which doesn't expose draft APIs.
+
+#ifndef U_HIDE_DRAFT_API
+using PartitionNumberPatternResult = const UFormattedValue*;
+#else
+using PartitionNumberPatternResult = const UFormattedNumber*;
+#endif
+
+static PartitionNumberPatternResult PartitionNumberPattern(
+    JSContext* cx, const UNumberFormatter* nf, UFormattedNumber* formatted,
+    double* x) {
   // ICU incorrectly formats NaN values with the sign bit set, as if they
   // were negative.  Replace all NaNs with a single pattern with sign bit
   // unset ("positive", that is) until ICU is fixed.
@@ -487,16 +500,57 @@ static JSString* PartitionNumberPattern(JSContext* cx, UNumberFormatter* nf,
     return nullptr;
   }
 
+#ifndef U_HIDE_DRAFT_API
+  const UFormattedValue* formattedValue =
+      unumf_resultAsValue(formatted, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+  return formattedValue;
+#else
+  return formatted;
+#endif
+}
+
+static JSString* FormattedNumberToString(
+    JSContext* cx, PartitionNumberPatternResult formattedValue) {
+#ifndef U_HIDE_DRAFT_API
+  static_assert(
+      std::is_same<PartitionNumberPatternResult, const UFormattedValue*>::value,
+      "UFormattedValue arm");
+
+  UErrorCode status = U_ZERO_ERROR;
+  int32_t strLength;
+  const char16_t* str = ufmtval_getString(formattedValue, &strLength, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return nullptr;
+  }
+
+  return NewStringCopyN<CanGC>(cx, str, AssertedCast<uint32_t>(strLength));
+#else
+  static_assert(std::is_same<PartitionNumberPatternResult,
+                             const UFormattedNumber*>::value,
+                "UFormattedNumber arm");
+
   return CallICU(cx,
                  [formatted](UChar* chars, int32_t size, UErrorCode* status) {
                    return unumf_resultToString(formatted, chars, size, status);
                  });
+#endif
 }
 
-static bool intl_FormatNumber(JSContext* cx, UNumberFormatter* nf,
+static bool intl_FormatNumber(JSContext* cx, const UNumberFormatter* nf,
                               UFormattedNumber* formatted, double x,
                               MutableHandleValue result) {
-  JSString* str = PartitionNumberPattern(cx, nf, formatted, &x);
+  PartitionNumberPatternResult formattedValue =
+      PartitionNumberPattern(cx, nf, formatted, &x);
+  if (!formattedValue) {
+    return false;
+  }
+
+  JSString* str = FormattedNumberToString(cx, formattedValue);
   if (!str) {
     return false;
   }
@@ -505,8 +559,8 @@ static bool intl_FormatNumber(JSContext* cx, UNumberFormatter* nf,
   return true;
 }
 
-static intl::FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
-                                                  double d) {
+static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
+                                            double d) {
   // See intl/icu/source/i18n/unicode/unum.h for a detailed field list.  This
   // list is deliberately exhaustive: cases might have to be added/removed if
   // this code is compiled with a different ICU with more UNumberFormatFields
@@ -596,8 +650,36 @@ static intl::FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
   return nullptr;
 }
 
-bool js::intl::NumberFormatFields::append(int32_t field, int32_t begin,
-                                          int32_t end) {
+struct Field {
+  uint32_t begin;
+  uint32_t end;
+  FieldType type;
+
+  // Needed for vector-resizing scratch space.
+  Field() = default;
+
+  Field(uint32_t begin, uint32_t end, FieldType type)
+      : begin(begin), end(end), type(type) {}
+};
+
+class NumberFormatFields {
+  using FieldsVector = Vector<Field, 16>;
+
+  FieldsVector fields_;
+  double number_;
+
+ public:
+  NumberFormatFields(JSContext* cx, double number)
+      : fields_(cx), number_(number) {}
+
+  MOZ_MUST_USE bool append(int32_t field, int32_t begin, int32_t end);
+
+  MOZ_MUST_USE ArrayObject* toArray(JSContext* cx,
+                                    JS::HandleString overallResult,
+                                    FieldType unitType);
+};
+
+bool NumberFormatFields::append(int32_t field, int32_t begin, int32_t end) {
   MOZ_ASSERT(begin >= 0);
   MOZ_ASSERT(end >= 0);
   MOZ_ASSERT(begin < end, "erm, aren't fields always non-empty?");
@@ -607,9 +689,9 @@ bool js::intl::NumberFormatFields::append(int32_t field, int32_t begin,
   return fields_.emplaceBack(uint32_t(begin), uint32_t(end), type);
 }
 
-ArrayObject* js::intl::NumberFormatFields::toArray(JSContext* cx,
-                                                   HandleString overallResult,
-                                                   FieldType unitType) {
+ArrayObject* NumberFormatFields::toArray(JSContext* cx,
+                                         HandleString overallResult,
+                                         FieldType unitType) {
   // Merge sort the fields vector.  Expand the vector to have scratch space for
   // performing the sort.
   size_t fieldsLen = fields_.length();
@@ -904,10 +986,76 @@ ArrayObject* js::intl::NumberFormatFields::toArray(JSContext* cx,
   return partsArray;
 }
 
-static bool intl_FormatNumberToParts(JSContext* cx, UNumberFormatter* nf,
-                                     UFormattedNumber* formatted, double x,
-                                     MutableHandleValue result) {
-  RootedString overallResult(cx, PartitionNumberPattern(cx, nf, formatted, &x));
+#ifndef U_HIDE_DRAFT_API
+bool js::intl::FormattedNumberToParts(JSContext* cx,
+                                      const UFormattedValue* formattedValue,
+                                      double number, FieldType unitType,
+                                      MutableHandleValue result) {
+  RootedString overallResult(cx, FormattedNumberToString(cx, formattedValue));
+  if (!overallResult) {
+    return false;
+  }
+
+  UErrorCode status = U_ZERO_ERROR;
+  UConstrainedFieldPosition* fpos = ucfpos_open(&status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+  ScopedICUObject<UConstrainedFieldPosition, ucfpos_close> toCloseFpos(fpos);
+
+  // We're only interested in UFIELD_CATEGORY_NUMBER fields.
+  ucfpos_constrainCategory(fpos, UFIELD_CATEGORY_NUMBER, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+
+  // Vacuum up fields in the overall formatted string.
+
+  NumberFormatFields fields(cx, number);
+
+  while (true) {
+    bool hasMore = ufmtval_nextPosition(formattedValue, fpos, &status);
+    if (U_FAILURE(status)) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+    if (!hasMore) {
+      break;
+    }
+
+    int32_t field = ucfpos_getField(fpos, &status);
+    if (U_FAILURE(status)) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+
+    int32_t beginIndex, endIndex;
+    ucfpos_getIndexes(fpos, &beginIndex, &endIndex, &status);
+    if (U_FAILURE(status)) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+
+    if (!fields.append(field, beginIndex, endIndex)) {
+      return false;
+    }
+  }
+
+  ArrayObject* array = fields.toArray(cx, overallResult, unitType);
+  if (!array) {
+    return false;
+  }
+
+  result.setObject(*array);
+  return true;
+}
+#else
+static ArrayObject* LegacyFormattedNumberToParts(
+    JSContext* cx, const UFormattedNumber* formatted, double x,
+    MutableHandleValue result) {
+  RootedString overallResult(cx, FormattedNumberToString(cx, formatted));
   if (!overallResult) {
     return false;
   }
@@ -931,7 +1079,7 @@ static bool intl_FormatNumberToParts(JSContext* cx, UNumberFormatter* nf,
 
   // Vacuum up fields in the overall formatted string.
 
-  intl::NumberFormatFields fields(cx, x);
+  NumberFormatFields fields(cx, x);
 
   int32_t field, beginIndex, endIndex;
   while ((field = ufieldpositer_next(fpositer, &beginIndex, &endIndex)) >= 0) {
@@ -947,6 +1095,23 @@ static bool intl_FormatNumberToParts(JSContext* cx, UNumberFormatter* nf,
 
   result.setObject(*array);
   return true;
+}
+#endif
+
+static bool intl_FormatNumberToParts(JSContext* cx, const UNumberFormatter* nf,
+                                     UFormattedNumber* formatted, double x,
+                                     MutableHandleValue result) {
+  PartitionNumberPatternResult formattedValue =
+      PartitionNumberPattern(cx, nf, formatted, &x);
+  if (!formattedValue) {
+    return false;
+  }
+
+#ifndef U_HIDE_DRAFT_API
+  return intl::FormattedNumberToParts(cx, formattedValue, x, nullptr, result);
+#else
+  return LegacyFormattedNumberToParts(cx, formattedValue, x, result);
+#endif
 }
 
 bool js::intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp) {
