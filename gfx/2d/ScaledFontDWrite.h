@@ -27,15 +27,17 @@ class ScaledFontDWrite final : public ScaledFontBase {
       : ScaledFontBase(aUnscaledFont, aSize),
         mFontFace(aFont),
         mUseEmbeddedBitmap(false),
-        mForceGDIMode(false),
+        mRenderingMode(DWRITE_RENDERING_MODE_DEFAULT),
         mGamma(2.2f),
         mContrast(1.0f) {}
 
   ScaledFontDWrite(IDWriteFontFace* aFontFace,
                    const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-                   bool aUseEmbeddedBitmap, bool aForceGDIMode,
-                   IDWriteRenderingParams* aParams, Float aGamma,
-                   Float aContrast, const gfxFontStyle* aStyle = nullptr);
+                   bool aUseEmbeddedBitmap,
+                   DWRITE_RENDERING_MODE aRenderingMode,
+                   IDWriteRenderingParams* aParams,
+                   Float aGamma, Float aContrast,
+                   const gfxFontStyle* aStyle = nullptr);
 
   FontType GetType() const override { return FontType::DWRITE; }
 
@@ -61,8 +63,9 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
   AntialiasMode GetDefaultAAMode() override;
 
-  bool UseEmbeddedBitmaps() { return mUseEmbeddedBitmap; }
-  bool ForceGDIMode() { return mForceGDIMode; }
+  bool UseEmbeddedBitmaps() const { return mUseEmbeddedBitmap; }
+  bool ForceGDIMode() const { return mRenderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC; }
+  DWRITE_RENDERING_MODE GetRenderingMode() const { return mRenderingMode; }
 
 #ifdef USE_SKIA
   SkTypeface* CreateSkTypeface() override;
@@ -71,7 +74,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
 
   RefPtr<IDWriteFontFace> mFontFace;
   bool mUseEmbeddedBitmap;
-  bool mForceGDIMode;
+  DWRITE_RENDERING_MODE mRenderingMode;
   // DrawTargetD2D1 requires the IDWriteRenderingParams,
   // but we also separately need to store the gamma and contrast
   // since Skia needs to be able to access these without having
@@ -94,7 +97,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
   struct InstanceData {
     explicit InstanceData(ScaledFontDWrite* aScaledFont)
         : mUseEmbeddedBitmap(aScaledFont->mUseEmbeddedBitmap),
-          mForceGDIMode(aScaledFont->mForceGDIMode),
+          mRenderingMode(aScaledFont->mRenderingMode),
           mGamma(aScaledFont->mGamma),
           mContrast(aScaledFont->mContrast) {}
 
@@ -102,7 +105,7 @@ class ScaledFontDWrite final : public ScaledFontBase {
                  const wr::FontInstancePlatformOptions* aPlatformOptions);
 
     bool mUseEmbeddedBitmap;
-    bool mForceGDIMode;
+    DWRITE_RENDERING_MODE mRenderingMode;
     Float mGamma;
     Float mContrast;
   };
