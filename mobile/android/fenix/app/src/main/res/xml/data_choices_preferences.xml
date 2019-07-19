@@ -6,6 +6,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <androidx.preference.SwitchPreference
         android:key="@string/pref_key_telemetry"
-        android:title="@string/preferences_telemetry"
+        android:summary="@string/preferences_usage_data_description"
+        android:title="@string/preference_usage_data"
         app:iconSpaceReserved="false" />
 </PreferenceScreen>

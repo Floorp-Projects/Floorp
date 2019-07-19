@@ -37,7 +37,7 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
-        (activity as AppCompatActivity).title = getString(R.string.preferences_data_choices)
+        (activity as AppCompatActivity).title = getString(R.string.preferences_data_collection)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 
@@ -53,6 +53,9 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
 
         val telemetryPreference = findPreference<SwitchPreference>(getString(R.string.pref_key_telemetry))?.apply {
             isChecked = Settings.getInstance(context).isTelemetryEnabled
+
+            val appName = context.getString(R.string.app_name)
+            summary = context.getString(R.string.preferences_usage_data_description, appName)
         }
         telemetryPreference?.setOnPreferenceChangeListener { preference, newValue ->
             Settings.getInstance(preference.context).preferences.edit().putBoolean(preference.key, newValue as Boolean)
