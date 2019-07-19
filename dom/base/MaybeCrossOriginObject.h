@@ -201,13 +201,17 @@ class MaybeCrossOriginObject : public Base,
                     JS::ObjectOpResult& result) const final;
 
   /**
-   * Our non-standard getPrototypeIfOrdinary hook.  We don't need to implement
-   * setImmutablePrototype, because the default behavior of not allowing it is
-   * fine for us.
+   * Our non-standard getPrototypeIfOrdinary hook.
    */
   bool getPrototypeIfOrdinary(JSContext* cx, JS::Handle<JSObject*> proxy,
                               bool* isOrdinary,
                               JS::MutableHandle<JSObject*> protop) const final;
+
+  /**
+   * Our non-standard setImmutablePrototype hook.
+   */
+  bool setImmutablePrototype(JSContext* cx, JS::Handle<JSObject*> proxy,
+                             bool* succeeded) const final;
 
   /**
    * Implementation of [[IsExtensible]] as defined in
