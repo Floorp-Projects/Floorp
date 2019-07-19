@@ -7,7 +7,6 @@
 
 interface nsIURI;
 interface nsISimpleEnumerator;
-interface nsIReferrerInfo;
 
 webidl Node;
 
@@ -18,13 +17,13 @@ interface nsIPrefetchService : nsISupports
      * Enqueue a request to prefetch the specified URI.
      *
      * @param aURI the URI of the document to prefetch
-     * @param aReferrerInfo the referrerInfo of the request
+     * @param aReferrerURI the URI of the referring page
      * @param aSource the DOM node (such as a <link> tag) that requested this
      *        fetch, or null if the prefetch was not requested by a DOM node.
      * @param aExplicit the link element has an explicit prefetch link type
      */
     void prefetchURI(in nsIURI aURI,
-                     in nsIReferrerInfo aReferrerInfo,
+                     in nsIURI aReferrerURI,
                      in Node aSource,
                      in boolean aExplicit);
 
@@ -32,13 +31,13 @@ interface nsIPrefetchService : nsISupports
      * Start a preload of the specified URI.
      *
      * @param aURI the URI of the document to preload
-     * @param aReferrerInfo the referrerInfo of the request
+     * @param aReferrerURI the URI of the referring page
      * @param aSource the DOM node (such as a <link> tag) that requested this
      *        fetch, or null if the prefetch was not requested by a DOM node.
      * @param aPolicyType content policy to be used for this load.
      */
     void preloadURI(in nsIURI aURI,
-                    in nsIReferrerInfo aReferrerInfo,
+                    in nsIURI aReferrerURI,
                     in Node aSource,
                     in nsContentPolicyType aPolicyType);
 
