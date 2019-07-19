@@ -44,11 +44,12 @@
     // TrustedURL.
     // There a number of affected elements, and there are several ways to set
     // a namespaced attribute. Let's iterate over all combinations.
-    // TODO(vogelheim): Also SMIL timed elements.
     const xlink = "http://www.w3.org/1999/xlink";
     const svg = "http://www.w3.org/2000/svg";
-    const elems = [ "a", "feImage", "filter", "image", "linearGradient",
-                    "mpath", "pattern", "radialGradient", "textPath", "use" ];
+    const elems = [ "a", "animate", "animateMotion", "animateTransform",
+                    "discard", "feImage", "filter", "image", "linearGradient",
+                    "mpath", "pattern", "radialGradient", "set", "textPath",
+                    "use" ];
 
     // There are multiple ways to set a namespaced attribute. Let's encapsulate
     // each in a function.
@@ -114,9 +115,9 @@
     }, "Test synchronized, namespaced attributes.");
 
     // svg:script xlink:href=... expects a TrustedScriptURL.
-    let elem = document.createElementNS(svg, "script");
     // Assigning a TrustedScriptURL works.
     test(t => {
+      let elem = document.createElementNS(svg, "script");
       elem.setAttributeNS(xlink, "href", script_url);
       assert_equals("" + RESULTS.ScriptURL,
                     elem.getAttributeNodeNS(xlink, "href").value);
@@ -124,6 +125,7 @@
 
     // Assigning things that ought to not work.
     test(t => {
+      let elem = document.createElementNS(svg, "script");
       const values = [ "abc", null, url, html, script ];
       for (const v of values) {
         assert_throws(new TypeError(), _ => {
