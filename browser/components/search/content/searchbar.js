@@ -415,7 +415,27 @@
       }
     }
 
+    /**
+     * Determines if we should select all the text in the searchbar based on the
+     * clickSelectsAll pref, searchbar state, and whether the selection is empty.
+     */
+    _maybeSelectAll() {
+      if (
+        !this._preventClickSelectsAll &&
+        UrlbarPrefs.get("clickSelectsAll") &&
+        document.activeElement == this._textbox.inputField &&
+        this._textbox.inputField.selectionStart ==
+          this._textbox.inputField.selectionEnd
+      ) {
+        this._textbox.editor.selectAll();
+      }
+    }
+
     _setupEventListeners() {
+      this.addEventListener("click", event => {
+        this._maybeSelectAll();
+      });
+
       this.addEventListener("command", event => {
         const target = event.originalTarget;
         if (target.engine) {
@@ -435,6 +455,15 @@
 
         this.focus();
         this.select();
+      });
+
+      this.addEventListener("contextmenu", event => {
+        // Context menu opened via keyboard shortcut.
+        if (!event.button) {
+          return;
+        }
+
+        this._maybeSelectAll();
       });
 
       this.addEventListener(
@@ -502,6 +531,7 @@
       );
 
       this.addEventListener("mousedown", event => {
+        this._preventClickSelectsAll = this._textbox.focused;
         // Ignore right clicks
         if (event.button != 0) {
           return;
@@ -528,6 +558,11 @@
           // Open the suggestions whenever clicking on the search icon or if there
           // is text in the textbox.
           this.openSuggestionsPanel(true);
+        }
+
+        if (event.detail == 2 && UrlbarPrefs.get("doubleClickSelectsAll")) {
+          this._textbox.editor.selectAll();
+          event.preventDefault();
         }
       });
     }
@@ -658,10 +693,6 @@
 
       if (this.parentNode.parentNode.localName == "toolbarpaletteitem") {
         return;
-      }
-
-      if (Services.prefs.getBoolPref("browser.urlbar.clickSelectsAll")) {
-        this.textbox.setAttribute("clickSelectsAll", true);
       }
 
       let inputBox = document.getAnonymousElementByAttribute(
