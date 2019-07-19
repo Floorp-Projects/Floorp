@@ -385,7 +385,7 @@ class DebuggerScript::GetSourceMatcher {
   }
   ReturnType match(Handle<LazyScript*> lazyScript) {
     // LazyScript holds the reference to the unwrapped ScriptSourceObject.
-    RootedScriptSourceObject source(cx_, &lazyScript->sourceObject());
+    RootedScriptSourceObject source(cx_, lazyScript->sourceObject());
     return dbg_->wrapSource(cx_, source);
   }
   ReturnType match(Handle<WasmInstanceObject*> wasmInstance) {
