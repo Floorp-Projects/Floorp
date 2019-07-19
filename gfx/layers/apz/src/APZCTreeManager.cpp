@@ -2607,6 +2607,8 @@ already_AddRefed<AsyncPanZoomController> APZCTreeManager::GetAPZCAtPointWR(
       hitInfo += CompositorHitTestFlags::eApzAwareListeners;
     }
   }
+  APZCTM_LOG("Successfully matched APZC %p (hit result 0x%x)\n",
+             result.get(), hitInfo.serialize());
   if (!result) {
     // It falls back to the root
     MOZ_ASSERT(scrollId == ScrollableLayerGuid::NULL_SCROLL_ID);
