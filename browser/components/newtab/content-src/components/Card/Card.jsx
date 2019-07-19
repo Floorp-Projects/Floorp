@@ -5,6 +5,7 @@
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { cardContextTypes } from "./types";
 import { connect } from "react-redux";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 import { ScreenshotUtils } from "content-src/lib/screenshot-utils";
@@ -27,11 +28,9 @@ export class _Card extends React.PureComponent {
     this.state = {
       activeCard: null,
       imageLoaded: false,
-      showContextMenu: false,
       cardImage: null,
     };
-    this.onMenuButtonClick = this.onMenuButtonClick.bind(this);
-    this.onMenuUpdate = this.onMenuUpdate.bind(this);
+    this.onMenuButtonUpdate = this.onMenuButtonUpdate.bind(this);
     this.onLinkClick = this.onLinkClick.bind(this);
   }
 
@@ -117,12 +116,12 @@ export class _Card extends React.PureComponent {
     return nextState;
   }
 
-  onMenuButtonClick(event) {
-    event.preventDefault();
-    this.setState({
-      activeCard: this.props.index,
-      showContextMenu: true,
-    });
+  onMenuButtonUpdate(isOpen) {
+    if (isOpen) {
+      this.setState({ activeCard: this.props.index });
+    } else {
+      this.setState({ activeCard: null });
+    }
   }
 
   /**
@@ -191,10 +190,6 @@ export class _Card extends React.PureComponent {
     }
   }
 
-  onMenuUpdate(showContextMenu) {
-    this.setState({ showContextMenu });
-  }
-
   componentDidMount() {
     this.maybeLoadImage();
   }
@@ -239,8 +234,7 @@ export class _Card extends React.PureComponent {
     } = this.props;
     const { props } = this;
     const title = link.title || link.hostname;
-    const isContextMenuOpen =
-      this.state.showContextMenu && this.state.activeCard === index;
+    const isContextMenuOpen = this.state.activeCard === index;
     // Display "now" as "trending" until we have new strings #3402
     const { icon, fluentID } =
       cardContextTypes[link.type === "now" ? "trending" : link.type] || {};
@@ -329,25 +323,21 @@ export class _Card extends React.PureComponent {
           </div>
         </a>
         {!props.placeholder && (
-          <button
-            aria-haspopup="true"
-            data-l10n-id="newtab-menu-content-tooltip"
-            data-l10n-args={JSON.stringify({ title })}
-            className="context-menu-button icon"
-            onClick={this.onMenuButtonClick}
-          />
-        )}
-        {isContextMenuOpen && (
-          <LinkMenu
-            dispatch={dispatch}
-            index={index}
-            source={eventSource}
-            onUpdate={this.onMenuUpdate}
-            options={link.contextMenuOptions || contextMenuOptions}
-            site={link}
-            siteInfo={this._getTelemetryInfo()}
-            shouldSendImpressionStats={shouldSendImpressionStats}
-          />
+          <ContextMenuButton
+            tooltip="newtab-menu-content-tooltip"
+            tooltipArgs={{ title }}
+            onUpdate={this.onMenuButtonUpdate}
+          >
+            <LinkMenu
+              dispatch={dispatch}
+              index={index}
+              source={eventSource}
+              options={link.contextMenuOptions || contextMenuOptions}
+              site={link}
+              siteInfo={this._getTelemetryInfo()}
+              shouldSendImpressionStats={shouldSendImpressionStats}
+            />
+          </ContextMenuButton>
         )}
       </li>
     );

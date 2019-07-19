@@ -5,12 +5,18 @@ import React from "react";
 describe("ModalOverlayWrapper", () => {
   let fakeDoc;
   let sandbox;
+  let header;
   beforeEach(() => {
     sandbox = sinon.createSandbox();
+    header = document.createElement("div");
+
     fakeDoc = {
       addEventListener: sandbox.stub(),
       removeEventListener: sandbox.stub(),
       body: { classList: { add: sandbox.stub(), remove: sandbox.stub() } },
+      getElementById() {
+        return header;
+      },
     };
   });
   afterEach(() => {

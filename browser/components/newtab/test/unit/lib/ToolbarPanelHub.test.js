@@ -12,11 +12,16 @@ describe("ToolbarPanelHub", () => {
   let fakeElementById;
   let createdElements = [];
   let eventListeners = {};
+  let addObserverStub;
+  let removeObserverStub;
+  let getBoolPrefStub;
+  let waitForInitializedStub;
 
   beforeEach(async () => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
     instance = new _ToolbarPanelHub();
+    waitForInitializedStub = sandbox.stub().resolves();
     fakeElementById = {
       setAttribute: sandbox.stub(),
       removeAttribute: sandbox.stub(),
@@ -59,38 +64,140 @@ describe("ToolbarPanelHub", () => {
       registerCallback: sandbox.stub(),
       unregisterCallback: sandbox.stub(),
     };
+    addObserverStub = sandbox.stub();
+    removeObserverStub = sandbox.stub();
+    getBoolPrefStub = sandbox.stub();
     globals.set("EveryWindow", everyWindowStub);
+    globals.set("Services", {
+      ...Services,
+      prefs: {
+        addObserver: addObserverStub,
+        removeObserver: removeObserverStub,
+        getBoolPref: getBoolPrefStub,
+      },
+    });
   });
   afterEach(() => {
     instance.uninit();
     sandbox.restore();
+    globals.restore();
   });
   it("should create an instance", () => {
     assert.ok(instance);
   });
   it("should not enableAppmenuButton() on init() if pref is not enabled", () => {
-    sandbox.stub(global.Services.prefs, "getBoolPref").returns(false);
+    getBoolPrefStub.returns(false);
     instance.enableAppmenuButton = sandbox.stub();
-    instance.init({ getMessages: () => {} });
+    instance.init(waitForInitializedStub, { getMessages: () => {} });
     assert.notCalled(instance.enableAppmenuButton);
   });
-  it("should enableAppmenuButton() on init() if pref is enabled", () => {
-    sandbox.stub(global.Services.prefs, "getBoolPref").returns(true);
+  it("should enableAppmenuButton() on init() if pref is enabled", async () => {
+    getBoolPrefStub.returns(true);
     instance.enableAppmenuButton = sandbox.stub();
-    instance.init({ getMessages: () => {} });
+
+    await instance.init(waitForInitializedStub, { getMessages: () => {} });
+
     assert.calledOnce(instance.enableAppmenuButton);
   });
   it("should unregisterCallback on uninit()", () => {
     instance.uninit();
     assert.calledTwice(everyWindowStub.unregisterCallback);
   });
-  it("should registerCallback on enableAppmenuButton()", () => {
-    instance.enableAppmenuButton();
-    assert.calledOnce(everyWindowStub.registerCallback);
+  it("should observe pref changes on init", async () => {
+    await instance.init(waitForInitializedStub, {});
+
+    assert.calledOnce(addObserverStub);
+    assert.calledWithExactly(
+      addObserverStub,
+      "browser.messaging-system.whatsNewPanel.enabled",
+      instance
+    );
   });
-  it("should registerCallback on enableToolbarButton()", () => {
-    instance.enableToolbarButton();
-    assert.calledOnce(everyWindowStub.registerCallback);
+  it("should remove the observer on uninit", () => {
+    instance.uninit();
+
+    assert.calledOnce(removeObserverStub);
+    assert.calledWithExactly(
+      removeObserverStub,
+      "browser.messaging-system.whatsNewPanel.enabled",
+      instance
+    );
+  });
+  describe("#observe", () => {
+    it("should uninit if the pref is turned off", () => {
+      sandbox.stub(instance, "uninit");
+      getBoolPrefStub.returns(false);
+
+      instance.observe(
+        "",
+        "",
+        "browser.messaging-system.whatsNewPanel.enabled"
+      );
+
+      assert.calledOnce(instance.uninit);
+    });
+    it("shouldn't do anything if the pref is true", () => {
+      sandbox.stub(instance, "uninit");
+      getBoolPrefStub.returns(true);
+
+      instance.observe(
+        "",
+        "",
+        "browser.messaging-system.whatsNewPanel.enabled"
+      );
+
+      assert.notCalled(instance.uninit);
+    });
+  });
+  describe("#enableAppmenuButton", () => {
+    it("should registerCallback on enableAppmenuButton() if there are messages", async () => {
+      instance.init(waitForInitializedStub, {
+        getMessages: sandbox.stub().resolves([{}, {}]),
+      });
+      // init calls `enableAppmenuButton`
+      everyWindowStub.registerCallback.resetHistory();
+
+      await instance.enableAppmenuButton();
+
+      assert.calledOnce(everyWindowStub.registerCallback);
+      assert.calledWithExactly(
+        everyWindowStub.registerCallback,
+        "appMenu-whatsnew-button",
+        sinon.match.func,
+        sinon.match.func
+      );
+    });
+    it("should not registerCallback on enableAppmenuButton() if there are no messages", async () => {
+      instance.init(waitForInitializedStub, {
+        getMessages: sandbox.stub().resolves([]),
+      });
+      // init calls `enableAppmenuButton`
+      everyWindowStub.registerCallback.resetHistory();
+
+      await instance.enableAppmenuButton();
+
+      assert.notCalled(everyWindowStub.registerCallback);
+    });
+  });
+  describe("#enableToolbarButton", () => {
+    it("should registerCallback on enableToolbarButton if messages.length", async () => {
+      instance.init(waitForInitializedStub, {
+        getMessages: sandbox.stub().resolves([{}, {}]),
+      });
+
+      await instance.enableToolbarButton();
+
+      assert.calledOnce(everyWindowStub.registerCallback);
+    });
+    it("should not registerCallback on enableToolbarButton if no messages", async () => {
+      instance.init(waitForInitializedStub, {
+        getMessages: sandbox.stub().resolves([]),
+      });
+
+      await instance.enableToolbarButton();
+
+      assert.notCalled(everyWindowStub.registerCallback);
+    });
   });
   it("should unhide appmenu button on _showAppmenuButton()", () => {
     instance._showAppmenuButton(fakeWindow);
@@ -113,7 +220,7 @@ describe("ToolbarPanelHub", () => {
       m => m.template === "whatsnew_panel_message"
     );
     messages[0].content.link_text = { string_id: "link_text_id" };
-    instance.init({
+    instance.init(waitForInitializedStub, {
       getMessages: sandbox
         .stub()
         .returns([messages[0], messages[2], messages[1]]),
@@ -143,14 +250,14 @@ describe("ToolbarPanelHub", () => {
     const uniqueDates = [
       ...new Set(messages.map(m => m.content.published_date)),
     ];
-    instance.init({
+    instance.init(waitForInitializedStub, {
       getMessages: sandbox.stub().returns(messages),
     });
     await instance.renderMessages(fakeWindow, fakeDocument, "container-id");
     assert.callCount(instance._createDateElement, uniqueDates.length);
   });
   it("should listen for panelhidden and remove the toolbar button", async () => {
-    instance.init({
+    instance.init(waitForInitializedStub, {
       getMessages: sandbox.stub().returns([]),
     });
     fakeDocument.getElementById
@@ -162,7 +269,7 @@ describe("ToolbarPanelHub", () => {
     assert.notCalled(fakeElementById.addEventListener);
   });
   it("should listen for panelhidden and remove the toolbar button", async () => {
-    instance.init({
+    instance.init(waitForInitializedStub, {
       getMessages: sandbox.stub().returns([]),
     });
 

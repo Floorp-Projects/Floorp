@@ -2,6 +2,7 @@ import {
   ContextMenu,
   ContextMenuItem,
 } from "content-src/components/ContextMenu/ContextMenu";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { mount, shallow } from "enzyme";
 import React from "react";
 
@@ -10,6 +11,88 @@ const DEFAULT_PROPS = {
   options: [],
   tabbableOptionsLength: 0,
 };
+
+const DEFAULT_MENU_OPTIONS = [
+  "MoveUp",
+  "MoveDown",
+  "Separator",
+  "RemoveSection",
+  "CheckCollapsed",
+  "Separator",
+  "ManageSection",
+];
+
+const FakeMenu = props => {
+  return <div>{props.children}</div>;
+};
+
+describe("<ContextMenuButton>", () => {
+  let sandbox;
+  beforeEach(() => {
+    sandbox = sinon.createSandbox();
+  });
+  afterEach(() => {
+    sandbox.restore();
+  });
+  it("should call onUpdate when clicked", () => {
+    const onUpdate = sandbox.spy();
+    const wrapper = mount(
+      <ContextMenuButton onUpdate={onUpdate}>
+        <FakeMenu />
+      </ContextMenuButton>
+    );
+    wrapper.find(".context-menu-button").simulate("click");
+    assert.calledOnce(onUpdate);
+  });
+  it("should call onUpdate when activated with Enter", () => {
+    const onUpdate = sandbox.spy();
+    const wrapper = mount(
+      <ContextMenuButton onUpdate={onUpdate}>
+        <FakeMenu />
+      </ContextMenuButton>
+    );
+    wrapper.find(".context-menu-button").simulate("keydown", { key: "Enter" });
+    assert.calledOnce(onUpdate);
+  });
+  it("should call onClick", () => {
+    const onClick = sandbox.spy(ContextMenuButton.prototype, "onClick");
+    const wrapper = mount(
+      <ContextMenuButton>
+        <FakeMenu />
+      </ContextMenuButton>
+    );
+    wrapper.find("button").simulate("click");
+    assert.calledOnce(onClick);
+  });
+  it("should have a default keyboardAccess prop of false", () => {
+    const wrapper = mount(
+      <ContextMenuButton>
+        <ContextMenu options={DEFAULT_MENU_OPTIONS} />
+      </ContextMenuButton>
+    );
+    wrapper.setState({ showContextMenu: true });
+    assert.equal(wrapper.find(ContextMenu).prop("keyboardAccess"), false);
+  });
+  it("should pass the keyboardAccess prop down to ContextMenu", () => {
+    const wrapper = mount(
+      <ContextMenuButton>
+        <ContextMenu options={DEFAULT_MENU_OPTIONS} />
+      </ContextMenuButton>
+    );
+    wrapper.setState({ showContextMenu: true, contextMenuKeyboard: true });
+    assert.equal(wrapper.find(ContextMenu).prop("keyboardAccess"), true);
+  });
+  it("should call focusFirst when keyboardAccess is true", () => {
+    const wrapper = mount(
+      <ContextMenuButton>
+        <ContextMenu options={[{ label: "item1", first: true }]} />
+      </ContextMenuButton>
+    );
+    const focusFirst = sandbox.spy(ContextMenuItem.prototype, "focusFirst");
+    wrapper.setState({ showContextMenu: true, contextMenuKeyboard: true });
+    assert.calledOnce(focusFirst);
+  });
+});
 
 describe("<ContextMenu>", () => {
   it("should render all the options provided", () => {
@@ -79,7 +162,7 @@ describe("<ContextMenu>", () => {
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
     assert.lengthOf(wrapper.find(".context-menu-item"), 1);
   });
-  it("should call onClick when onKeyDown is called", () => {
+  it("should call onClick when onKeyDown is called with Enter", () => {
     const onClick = sinon.spy();
     const wrapper = mount(
       <ContextMenu {...DEFAULT_PROPS} options={[{ label: "item1", onClick }]} />

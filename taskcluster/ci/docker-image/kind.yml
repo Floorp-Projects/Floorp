@@ -75,8 +75,6 @@ jobs:
         symbol: I(deb7-bb)
         parent: debian7-base
         definition: debian-build
-        packages:
-            - deb7-valgrind
         args:
             ARCH: amd64
     debian7-amd64-build:

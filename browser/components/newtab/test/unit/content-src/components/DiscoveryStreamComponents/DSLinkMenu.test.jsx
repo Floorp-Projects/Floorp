@@ -1,5 +1,6 @@
 import { mount, shallow } from "enzyme";
 import { DSLinkMenu } from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 import { LinkMenu } from "content-src/components/LinkMenu/LinkMenu";
 import React from "react";
 
@@ -18,7 +19,6 @@ describe("<DSLinkMenu>", () => {
     });
 
     it("Should remove active on Menu Update", () => {
-      wrapper.setState({ showContextMenu: true });
       // Add active class name to DSLinkMenu parent node
       // to simulate menu open state
       parentNode.classList.add("active");
@@ -28,7 +28,6 @@ describe("<DSLinkMenu>", () => {
       wrapper.update();
 
       assert.isEmpty(parentNode.className);
-      assert.isFalse(wrapper.state(["showContextMenu"]));
     });
 
     it("Should add active on Menu Show", async () => {
@@ -76,7 +75,7 @@ describe("<DSLinkMenu>", () => {
 
     it("should parse args for fluent correctly ", () => {
       const title = '"fluent"';
-      wrapper = shallow(<DSLinkMenu title={title} />);
+      wrapper = mount(<DSLinkMenu title={title} />);
 
       const button = wrapper.find(
         "button[data-l10n-id='newtab-menu-content-tooltip']"
@@ -96,23 +95,25 @@ describe("<DSLinkMenu>", () => {
 
     it("should render a context menu button", () => {
       assert.ok(wrapper.exists());
-      assert.ok(wrapper.find(".context-menu-button").exists());
+      assert.ok(
+        wrapper.find(ContextMenuButton).exists(),
+        "context menu button exists"
+      );
     });
 
     it("should render LinkMenu when context menu button is clicked", () => {
-      let button = wrapper.find(".context-menu-button");
+      let button = wrapper.find(ContextMenuButton);
       button.simulate("click", { preventDefault: () => {} });
       assert.equal(wrapper.find(LinkMenu).length, 1);
     });
 
-    it("should pass dispatch, onUpdate, onShow, site, options, shouldSendImpressionStats, source and index to LinkMenu", () => {
+    it("should pass dispatch, onShow, site, options, shouldSendImpressionStats, source and index to LinkMenu", () => {
       wrapper
-        .find(".context-menu-button")
+        .find(ContextMenuButton)
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       [
         "dispatch",
-        "onUpdate",
         "onShow",
         "site",
         "index",
@@ -124,7 +125,7 @@ describe("<DSLinkMenu>", () => {
 
     it("should pass through the correct menu options to LinkMenu", () => {
       wrapper
-        .find(".context-menu-button")
+        .find(ContextMenuButton)
         .simulate("click", { preventDefault: () => {} });
       const linkMenuProps = wrapper.find(LinkMenu).props();
       assert.deepEqual(linkMenuProps.options, [

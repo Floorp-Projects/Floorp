@@ -22,6 +22,7 @@ import { mount, shallow } from "enzyme";
 import { TopSiteForm } from "content-src/components/TopSites/TopSiteForm";
 import { TopSiteFormInput } from "content-src/components/TopSites/TopSiteFormInput";
 import { _TopSites as TopSites } from "content-src/components/TopSites/TopSites";
+import { ContextMenuButton } from "content-src/components/ContextMenu/ContextMenuButton";
 
 const perfSvc = {
   mark() {},
@@ -724,24 +725,14 @@ describe("<TopSite>", () => {
   });
   it("should render a context menu button", () => {
     const wrapper = shallow(<TopSite link={link} />);
-    assert.equal(wrapper.find(".context-menu-button").length, 1);
+    assert.equal(wrapper.find(ContextMenuButton).length, 1);
   });
-  it("should render a link menu when button is clicked", () => {
+  it("should render a link menu", () => {
     const wrapper = shallow(<TopSite link={link} />);
-    let button = wrapper.find(".context-menu-button");
-    assert.equal(wrapper.find(LinkMenu).length, 0);
-    button.simulate("click", { preventDefault: () => {} });
     assert.equal(wrapper.find(LinkMenu).length, 1);
-  });
-  it("should not render a link menu by default", () => {
-    const wrapper = shallow(<TopSite link={link} />);
-    assert.equal(wrapper.find(LinkMenu).length, 0);
   });
   it("should pass onUpdate, site, options, and index to LinkMenu", () => {
     const wrapper = shallow(<TopSite link={link} />);
-    wrapper
-      .find(".context-menu-button")
-      .simulate("click", { preventDefault: () => {} });
     const linkMenuProps = wrapper.find(LinkMenu).props();
     ["onUpdate", "site", "index", "options"].forEach(prop =>
       assert.property(linkMenuProps, prop)
@@ -749,9 +740,6 @@ describe("<TopSite>", () => {
   });
   it("should pass through the correct menu options to LinkMenu", () => {
     const wrapper = shallow(<TopSite link={link} />);
-    wrapper
-      .find(".context-menu-button")
-      .simulate("click", { preventDefault: () => {} });
     const linkMenuProps = wrapper.find(LinkMenu).props();
     assert.deepEqual(linkMenuProps.options, [
       "CheckPinTopSite",
