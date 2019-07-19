@@ -6,7 +6,6 @@ py3:
         - browser/app
         - build
         - client.py
-        - dom/bindings
         - dom/canvas/test
         - dom/media/test
         - gfx
