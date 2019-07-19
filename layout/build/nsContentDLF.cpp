@@ -46,9 +46,13 @@ using mozilla::dom::Document;
 
 already_AddRefed<nsIContentViewer> NS_NewContentViewer();
 
-static const char* const gHTMLTypes[] = {TEXT_HTML, VIEWSOURCE_CONTENT_TYPE,
+static const char* const gHTMLTypes[] = {TEXT_HTML,
+                                         VIEWSOURCE_CONTENT_TYPE,
                                          APPLICATION_XHTML_XML,
-                                         APPLICATION_WAPXHTML_XML, 0};
+                                         APPLICATION_WAPXHTML_XML,
+                                         TEXT_XUL,
+                                         APPLICATION_CACHED_XUL,
+                                         0};
 
 static const char* const gXMLTypes[] = {TEXT_XML,
                                         APPLICATION_XML,
@@ -59,7 +63,7 @@ static const char* const gXMLTypes[] = {TEXT_XML,
 
 static const char* const gSVGTypes[] = {IMAGE_SVG_XML, 0};
 
-static const char* const gXULTypes[] = {TEXT_XUL, APPLICATION_CACHED_XUL, 0};
+static const char* const gXULTypes[] = {0};
 
 static bool IsTypeInList(const nsACString& aType, const char* const aList[]) {
   int32_t typeIndex;
