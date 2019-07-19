@@ -399,6 +399,14 @@ bool MaybeCrossOriginObject<Base>::getPrototypeIfOrdinary(
 }
 
 template <typename Base>
+bool MaybeCrossOriginObject<Base>::setImmutablePrototype(
+    JSContext* cx, JS::Handle<JSObject*> proxy, bool* succeeded) const {
+  // We just want to disallow this.
+  *succeeded = false;
+  return true;
+}
+
+template <typename Base>
 bool MaybeCrossOriginObject<Base>::isExtensible(JSContext* cx,
                                                 JS::Handle<JSObject*> proxy,
                                                 bool* extensible) const {
