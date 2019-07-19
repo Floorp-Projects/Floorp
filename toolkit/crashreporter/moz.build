@@ -115,6 +115,9 @@ if CONFIG['MOZ_CRASHREPORTER']:
     DEFINES['UNICODE'] = True
     DEFINES['_UNICODE'] = True
 
+    if CONFIG['MOZ_PHC']:
+        DEFINES['MOZ_PHC'] = True
+
     LOCAL_INCLUDES += [
         'google-breakpad/src',
     ]

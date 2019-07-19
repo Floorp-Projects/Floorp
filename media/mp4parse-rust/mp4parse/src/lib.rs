@@ -364,7 +364,7 @@ pub struct FLACMetadataBlock {
     pub data: Vec<u8>,
 }
 
-/// Represet a FLACSpecificBox 'dfLa'
+/// Represents a FLACSpecificBox 'dfLa'
 #[derive(Debug, Clone)]
 pub struct FLACSpecificBox {
     version: u8,
@@ -439,6 +439,179 @@ pub struct ProtectionSchemeInfoBox {
     pub tenc: Option<TrackEncryptionBox>,
 }
 
+/// Represents a userdata box 'udta'.
+/// Currently, only the metadata atom 'meta'
+/// is parsed.
+#[derive(Debug, Default, Clone)]
+pub struct UserdataBox {
+    pub meta: Option<MetadataBox>
+}
+
+/// Represents possible contents of the
+/// ©gen or gnre atoms within a metadata box.
+/// 'udta.meta.ilst' may only have either a
+/// standard genre box 'gnre' or a custom
+/// genre box '©gen', but never both at once.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum Genre {
+    /// A standard ID3v1 numbered genre.
+    StandardGenre(u8),
+    /// Any custom genre string.
+    CustomGenre(String),
+}
+
+/// Represents the contents of a 'stik'
+/// atom that indicates content types within
+/// iTunes.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum MediaType {
+    /// Movie is stored as 0 in a 'stik' atom.
+    Movie, // 0
+    /// Normal is stored as 1 in a 'stik' atom.
+    Normal, // 1
+    /// AudioBook is stored as 2 in a 'stik' atom.
+    AudioBook, // 2
+    /// WhackedBookmark is stored as 5 in a 'stik' atom.
+    WhackedBookmark, // 5
+    /// MusicVideo is stored as 6 in a 'stik' atom.
+    MusicVideo, // 6
+    /// ShortFilm is stored as 9 in a 'stik' atom.
+    ShortFilm, // 9
+    /// TVShow is stored as 10 in a 'stik' atom.
+    TVShow, // 10
+    /// Booklet is stored as 11 in a 'stik' atom.
+    Booklet, // 11
+    /// An unknown 'stik' value.
+    Unknown(u8),
+}
+
+/// Represents the parental advisory rating on the track,
+/// stored within the 'rtng' atom.
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub enum AdvisoryRating {
+    /// Clean is always stored as 2 in an 'rtng' atom.
+    Clean, // 2
+    /// A value of 0 in an 'rtng' atom indicates 'Inoffensive'
+    Inoffensive, // 0
+    /// Any non 2 or 0 value in 'rtng' indicates the track is explicit.
+    Explicit(u8),
+}
+
+/// Represents the contents of 'ilst' atoms within
+/// a metadata box 'meta', parsed as iTunes metadata using
+/// the conventional tags.
+#[derive(Debug, Default, Clone)]
+pub struct MetadataBox {
+    /// The album name, '©alb'
+    pub album: Option<String>,
+    /// The artist name '©art' or '©ART'
+    pub artist: Option<String>,
+    /// The album artist 'aART'
+    pub album_artist: Option<String>,
+    /// Track comments '©cmt'
+    pub comment: Option<String>,
+    /// The date or year field '©day'
+    ///
+    /// This is stored as an arbitrary string,
+    /// and may not necessarily be in a valid date
+    /// format.
+    pub year: Option<String>,
+    /// The track title '©nam'
+    pub title: Option<String>,
+    /// The track genre '©gen' or 'gnre'.
+    pub genre: Option<Genre>,
+    /// The track number 'trkn'.
+    pub track_number: Option<u8>,
+    /// The disc number 'disk'
+    pub disc_number: Option<u8>,
+    /// The total number of tracks on the disc,
+    /// stored in 'trkn'
+    pub total_tracks: Option<u8>,
+    /// The total number of discs in the album,
+    /// stored in 'disk'
+    pub total_discs: Option<u8>,
+    /// The composer of the track '©wrt'
+    pub composer: Option<String>,
+    /// The encoder used to create this track '©too'
+    pub encoder: Option<String>,
+    /// The encoded-by settingo this track '©enc'
+    pub encoded_by: Option<String>,
+    /// The tempo or BPM of the track 'tmpo'
+    pub beats_per_minute: Option<u8>,
+    /// Copyright information of the track 'cprt'
+    pub copyright: Option<String>,
+    /// Whether or not this track is part of a compilation 'cpil'
+    pub compilation: Option<bool>,
+    /// The advisory rating of this track 'rtng'
+    pub advisory: Option<AdvisoryRating>,
+    /// The personal rating of this track, 'rate'.
+    ///
+    /// This is stored in the box as string data, but
+    /// the format is an integer percentage from 0 - 100,
+    /// where 100 is displayed as 5 stars out of 5.
+    pub rating: Option<String>,
+    /// The grouping this track belongs to '©grp'
+    pub grouping: Option<String>,
+    /// The media type of this track 'stik'
+    pub media_type: Option<MediaType>, // stik
+    /// Whether or not this track is a podcast 'pcst'
+    pub podcast: Option<bool>,
+    /// The category of ths track 'catg'
+    pub category: Option<String>,
+    /// The podcast keyword 'keyw'
+    pub keyword: Option<String>,
+    /// The podcast url 'purl'
+    pub podcast_url: Option<String>,
+    /// The podcast episode GUID 'egid'
+    pub podcast_guid: Option<String>,
+    /// The description of the track 'desc'
+    pub description: Option<String>,
+    /// The long description of the track 'ldes'.
+    ///
+    /// Unlike other string fields, the long description field
+    /// can be longer than 256 characters.
+    pub long_description: Option<String>,
+    /// The lyrics of the track '©lyr'.
+    ///
+    /// Unlike other string fields, the lyrics field
+    /// can be longer than 256 characters.
+    pub lyrics: Option<String>,
+    /// The name of the TV network this track aired on 'tvnn'.
+    pub tv_network_name: Option<String>,
+    /// The name of the TV Show for this track 'tvsh'.
+    pub tv_show_name: Option<String>,
+    /// The name of the TV Episode for this track 'tven'.
+    pub tv_episode_name: Option<String>,
+    /// The number of the TV Episode for this track 'tves'.
+    pub tv_episode_number: Option<u8>,
+    /// The season of the TV Episode of this track 'tvsn'.
+    pub tv_season: Option<u8>,
+    /// The date this track was purchased 'purd'.
+    pub purchase_date: Option<String>,
+    /// Whether or not this track supports gapless playback 'pgap'
+    pub gapless_playback: Option<bool>,
+    /// Any cover artwork attached to this track 'covr'
+    ///
+    /// 'covr' is unique in that it may contain multiple 'data' sub-entries,
+    /// each an image file. Here, each subentry's raw binary data is exposed,
+    /// which may contain image data in JPEG or PNG format.
+    pub cover_art: Option<Vec<Vec<u8>>>,
+    /// The owner of the track 'ownr'
+    pub owner: Option<String>,
+    /// Whether or not this track is HD Video 'hdvd'
+    pub hd_video: Option<bool>,
+    /// The name of the track to sort by 'sonm'
+    pub sort_name: Option<String>,
+    /// The name of the album to sort by 'soal'
+    pub sort_album: Option<String>,
+    /// The name of the artist to sort by 'soar'
+    pub sort_artist: Option<String>,
+    /// The name of the album artist to sort by 'soaa'
+    pub sort_album_artist: Option<String>,
+    /// The name of the composer to sort by 'soco'
+    pub sort_composer: Option<String>,
+}
+
 /// Internal data structures.
 #[derive(Debug, Default)]
 pub struct MediaContext {
@@ -446,7 +619,8 @@ pub struct MediaContext {
     /// Tracks found in the file.
     pub tracks: Vec<Track>,
     pub mvex: Option<MovieExtendsBox>,
-    pub psshs: Vec<ProtectionSystemSpecificHeaderBox>
+    pub psshs: Vec<ProtectionSystemSpecificHeaderBox>,
+    pub userdata: Option<Result<UserdataBox>>,
 }
 
 impl MediaContext {
@@ -772,6 +946,11 @@ fn read_moov<T: Read>(f: &mut BMFFBox<T>, context: &mut MediaContext) -> Result<
                 let pssh = read_pssh(&mut b)?;
                 debug!("{:?}", pssh);
                 vec_push(&mut context.psshs, pssh)?;
+            }
+            BoxType::UserdataBox => {
+                let udta = read_udta(&mut b);
+                debug!("{:?}", udta);
+                context.userdata = Some(udta);
             }
             _ => skip_box_content(&mut b)?,
         };
@@ -2284,6 +2463,171 @@ fn read_schm<T: Read>(src: &mut BMFFBox<T>) -> Result<SchemeTypeBox> {
         scheme_type: scheme_type,
         scheme_version: scheme_version,
     })
+}
+
+/// Parse a metadata box inside a moov, trak, or mdia box.
+fn read_udta<T: Read>(src: &mut BMFFBox<T>) -> Result<UserdataBox> {
+    let mut iter = src.box_iter();
+    let mut udta = UserdataBox { meta: None };
+
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::MetadataBox => {
+                let meta = read_meta(&mut b)?;
+                udta.meta = Some(meta);
+            },
+            _ => skip_box_content(&mut b)?,
+        };
+        check_parser_state!(b.content);
+    }
+    Ok(udta)
+}
+
+/// Parse a metadata box inside a udta box
+fn read_meta<T: Read>(src: &mut BMFFBox<T>) -> Result<MetadataBox> {
+    let (_, _) = read_fullbox_extra(src)?;
+    let mut iter = src.box_iter();
+    let mut meta = MetadataBox::default();
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::MetadataItemListEntry => read_ilst(&mut b, &mut meta)?,
+            _ => skip_box_content(&mut b)?
+        };
+        check_parser_state!(b.content);
+    }
+    Ok(meta)
+}
+
+/// Parse a metadata box inside a udta box
+fn read_ilst<T: Read>(src: &mut BMFFBox<T>, meta: &mut MetadataBox) -> Result<()> {
+    let mut iter = src.box_iter();
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::AlbumEntry => meta.album = read_ilst_string_data(&mut b)?,
+            BoxType::ArtistEntry | BoxType::ArtistLowercaseEntry =>
+                meta.artist = read_ilst_string_data(&mut b)?,
+            BoxType::AlbumArtistEntry => meta.album_artist = read_ilst_string_data(&mut b)?,
+            BoxType::CommentEntry => meta.comment = read_ilst_string_data(&mut b)?,
+            BoxType::DateEntry => meta.year = read_ilst_string_data(&mut b)?,
+            BoxType::TitleEntry => meta.title = read_ilst_string_data(&mut b)?,
+            BoxType::CustomGenreEntry => meta.genre = read_ilst_string_data(&mut b)?
+                .map(|s| Genre::CustomGenre(s)),
+            BoxType::StandardGenreEntry => meta.genre = read_ilst_u8_data(&mut b)?
+                .and_then(|gnre| Some(Genre::StandardGenre(gnre.get(1).copied()?))),
+            BoxType::ComposerEntry => meta.composer = read_ilst_string_data(&mut b)?,
+            BoxType::EncoderEntry => meta.encoder = read_ilst_string_data(&mut b)?,
+            BoxType::EncodedByEntry => meta.encoded_by = read_ilst_string_data(&mut b)?,
+            BoxType::CopyrightEntry => meta.copyright = read_ilst_string_data(&mut b)?,
+            BoxType::GroupingEntry => meta.grouping = read_ilst_string_data(&mut b)?,
+            BoxType::CategoryEntry => meta.category = read_ilst_string_data(&mut b)?,
+            BoxType::KeywordEntry => meta.keyword = read_ilst_string_data(&mut b)?,
+            BoxType::PodcastUrlEntry => meta.podcast_url = read_ilst_string_data(&mut b)?,
+            BoxType::PodcastGuidEntry => meta.podcast_guid = read_ilst_string_data(&mut b)?,
+            BoxType::DescriptionEntry => meta.description = read_ilst_string_data(&mut b)?,
+            BoxType::LongDescriptionEntry => meta.long_description = read_ilst_string_data(&mut b)?,
+            BoxType::LyricsEntry => meta.lyrics = read_ilst_string_data(&mut b)?,
+            BoxType::TVNetworkNameEntry => meta.tv_network_name = read_ilst_string_data(&mut b)?,
+            BoxType::TVEpisodeNameEntry => meta.tv_episode_name = read_ilst_string_data(&mut b)?,
+            BoxType::TVShowNameEntry => meta.tv_show_name = read_ilst_string_data(&mut b)?,
+            BoxType::PurchaseDateEntry => meta.purchase_date = read_ilst_string_data(&mut b)?,
+            BoxType::RatingEntry => meta.rating = read_ilst_string_data(&mut b)?,
+            BoxType::OwnerEntry => meta.owner = read_ilst_string_data(&mut b)?,
+            BoxType::HDVideoEntry => meta.hd_video = read_ilst_bool_data(&mut b)?,
+            BoxType::SortNameEntry => meta.sort_name = read_ilst_string_data(&mut b)?,
+            BoxType::SortArtistEntry => meta.sort_artist = read_ilst_string_data(&mut b)?,
+            BoxType::SortAlbumEntry => meta.sort_album = read_ilst_string_data(&mut b)?,
+            BoxType::SortAlbumArtistEntry => meta.sort_album_artist = read_ilst_string_data(&mut b)?,
+            BoxType::SortComposerEntry => meta.sort_composer = read_ilst_string_data(&mut b)?,
+            BoxType::TrackNumberEntry => {
+                if let Some(trkn) = read_ilst_u8_data(&mut b)? {
+                    meta.track_number = trkn.get(3).copied();
+                    meta.total_tracks = trkn.get(5).copied();
+                };
+            },
+            BoxType::DiskNumberEntry => {
+                if let Some(disk) = read_ilst_u8_data(&mut b)? {
+                    meta.disc_number = disk.get(3).copied();
+                    meta.total_discs = disk.get(5).copied();
+                };
+            },
+            BoxType::TempoEntry => meta.beats_per_minute = read_ilst_u8_data(&mut b)?
+                .and_then(|tmpo| tmpo.get(1).copied()),
+            BoxType::CompilationEntry => meta.compilation = read_ilst_bool_data(&mut b)?,
+            BoxType::AdvisoryEntry => meta.advisory = read_ilst_u8_data(&mut b)?
+                .and_then(|rtng| {
+                    Some(match rtng.get(0)? {
+                        2 => AdvisoryRating::Clean,
+                        0 => AdvisoryRating::Inoffensive,
+                        r => AdvisoryRating::Explicit(*r),
+                    })
+                }),
+            BoxType::MediaTypeEntry => meta.media_type = read_ilst_u8_data(&mut b)?
+                .and_then(|stik| {
+                    Some(match stik.get(0)? {
+                        0 => MediaType::Movie,
+                        1 => MediaType::Normal,
+                        2 => MediaType::AudioBook,
+                        5 => MediaType::WhackedBookmark,
+                        6 => MediaType::MusicVideo,
+                        9 => MediaType::ShortFilm,
+                        10 => MediaType::TVShow,
+                        11 => MediaType::Booklet,
+                        s => MediaType::Unknown(*s)
+                    })
+                }),
+            BoxType::PodcastEntry => meta.podcast = read_ilst_bool_data(&mut b)?,
+            BoxType::TVSeasonNumberEntry => meta.tv_season = read_ilst_u8_data(&mut b)?
+                .and_then(|tvsn| tvsn.get(3).copied()),
+            BoxType::TVEpisodeNumberEntry => meta.tv_episode_number = read_ilst_u8_data(&mut b)?
+                .and_then(|tves| tves.get(3).copied()),
+            BoxType::GaplessPlaybackEntry => meta.gapless_playback = read_ilst_bool_data(&mut b)?,
+            BoxType::CoverArtEntry => meta.cover_art = read_ilst_multiple_u8_data(&mut b).ok(),
+            _ => skip_box_content(&mut b)?,
+
+        };
+        check_parser_state!(b.content);
+    }
+    Ok(())
+}
+
+fn read_ilst_bool_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Option<bool>> {
+    Ok(read_ilst_u8_data(src)?.and_then(|d| Some(d.get(0)? == &1)))
+}
+
+fn read_ilst_string_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Option<String>> {
+    read_ilst_u8_data(src)?
+        .map_or(Ok(None),
+                |d| String::from_utf8(d)
+                    .map_err(From::from)
+                    .map(Some)
+        )
+}
+
+fn read_ilst_u8_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Option<Vec<u8>>> {
+    // For all non-covr atoms, there must only be one data atom.
+    Ok(read_ilst_multiple_u8_data(src)?.pop())
+}
+
+fn read_ilst_multiple_u8_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Vec<Vec<u8>>> {
+    let mut iter = src.box_iter();
+    let mut data = Vec::new();
+    while let Some(mut b) = iter.next_box()? {
+        match b.head.name {
+            BoxType::MetadataItemDataEntry => {
+                data.push(read_ilst_data(&mut b)?);
+            }
+            _ => skip_box_content(&mut b)?,
+        };
+        check_parser_state!(b.content);
+    }
+    Ok(data)
+}
+
+fn read_ilst_data<T: Read>(src: &mut BMFFBox<T>) -> Result<Vec<u8>> {
+    // Skip past the padding bytes
+    skip(&mut src.content, src.head.offset as usize)?;
+    let size = src.content.limit() as usize;
+    read_buf(&mut src.content, size)
 }
 
 /// Skip a number of bytes that we don't care to parse.

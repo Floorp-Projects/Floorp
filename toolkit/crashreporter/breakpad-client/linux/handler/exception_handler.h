@@ -44,6 +44,12 @@
 #include "common/using_std_string.h"
 #include "google_breakpad/common/minidump_format.h"
 
+#ifdef MOZ_PHC
+#include "PHC.h"
+#else
+namespace mozilla { namespace phc { class AddrInfo {}; } }
+#endif
+
 namespace google_breakpad {
 
 // ExceptionHandler
@@ -82,7 +88,8 @@ class ExceptionHandler {
   // attempting to write a minidump.  If a FilterCallback returns false,
   // Breakpad  will immediately report the exception as unhandled without
   // writing a minidump, allowing another handler the opportunity to handle it.
-  typedef bool (*FilterCallback)(void *context);
+  typedef bool (*FilterCallback)(void *context,
+                                 const mozilla::phc::AddrInfo* addr_info);
 
   // A callback function to run after the minidump has been written.
   // |descriptor| contains the file descriptor or file path containing the
@@ -102,6 +109,7 @@ class ExceptionHandler {
   // return true directly (unless |succeeded| is true).
   typedef bool (*MinidumpCallback)(const MinidumpDescriptor& descriptor,
                                    void* context,
+                                   const mozilla::phc::AddrInfo* addr_info,
                                    bool succeeded);
 
   // In certain cases, a user may wish to handle the generation of the minidump
@@ -234,7 +242,8 @@ class ExceptionHandler {
   static void RestoreHandlersLocked();
 
   void PreresolveSymbols();
-  bool GenerateDump(CrashContext *context);
+  bool GenerateDump(CrashContext *context,
+                    const mozilla::phc::AddrInfo* addr_info);
   void SendContinueSignalToChild();
   void WaitForContinueSignal();
 
