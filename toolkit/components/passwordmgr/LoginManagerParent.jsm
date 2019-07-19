@@ -9,6 +9,12 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+const LoginInfo = new Components.Constructor(
+  "@mozilla.org/login-manager/loginInfo;1",
+  Ci.nsILoginInfo,
+  "init"
+);
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 ChromeUtils.defineModuleGetter(
@@ -523,10 +529,7 @@ this.LoginManagerParent = {
       return;
     }
 
-    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
-      Ci.nsILoginInfo
-    );
-    formLogin.init(
+    let formLogin = new LoginInfo(
       origin,
       formActionOrigin,
       null,
@@ -701,10 +704,23 @@ this.LoginManagerParent = {
       log("The field containing the generated password has changed");
       return;
     }
-    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].createInstance(
-      Ci.nsILoginInfo
+
+    let formLogin = new LoginInfo(
+      formOrigin,
+      formActionOrigin,
+      null,
+      username,
+      password
     );
-    formLogin.init(formOrigin, formActionOrigin, null, username, password);
+
+    let formLoginWithoutUsername = new LoginInfo(
+      formOrigin,
+      formActionOrigin,
+      null,
+      "",
+      password
+    );
+
     let shouldSaveLogin = true;
 
     // This will throw if we can't look up the entry in the password/origin map
@@ -742,7 +758,7 @@ this.LoginManagerParent = {
       );
       shouldSaveLogin = false;
       for (let login of logins) {
-        if (formLogin.matches(login, false)) {
+        if (formLoginWithoutUsername.matches(login, false)) {
           // This login is already saved so show no new UI.
           log(
             "_onGeneratedPasswordFilledOrEdited: Matching login already saved"
@@ -753,7 +769,7 @@ this.LoginManagerParent = {
     }
 
     if (shouldSaveLogin) {
-      Services.logins.addLogin(formLogin);
+      Services.logins.addLogin(formLoginWithoutUsername);
     }
     log(
       "_onGeneratedPasswordFilledOrEdited: show dismissed save-password notification"
@@ -765,7 +781,7 @@ this.LoginManagerParent = {
       // If we auto-saved the login then show a change doorhanger to allow
       // modifying it e.g. adding a username.
       prompter.promptToChangePassword(
-        formLogin,
+        formLoginWithoutUsername,
         formLogin,
         true, // dimissed prompt
         shouldSaveLogin // notifySaved
