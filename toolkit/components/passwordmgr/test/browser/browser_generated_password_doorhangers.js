@@ -138,6 +138,11 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         }
       );
 
+      let storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "addLogin"
+      );
+
       let confirmationHint = document.getElementById("confirmation-hint");
       let hintPromiseShown = BrowserTestUtils.waitForEvent(
         confirmationHint,
@@ -157,6 +162,7 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         }
       );
 
+      let [{ username, password }] = await storageChangedPromise;
       // Make sure confirmation hint was shown
       await hintPromiseShown;
 
@@ -171,6 +177,10 @@ add_task(async function autocomplete_generated_password_auto_saved() {
         "popuphidden"
       );
       await hintPromiseHidden;
+
+      // Check properties of the newly auto-saved login
+      is(username, "", "Saved login should have no username");
+      is(password.length, 15, "Saved login should have generated password");
 
       // check a dismissed prompt was shown with extraAttr attribute
       let notif = getCaptureDoorhanger("password-change");
