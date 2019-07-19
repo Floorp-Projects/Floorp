@@ -21,5 +21,5 @@ interface FrameCrashedEvent : Event
 dictionary FrameCrashedEventInit : EventInit
 {
   unsigned long long browsingContextId = 0;
-  boolean isTopFrame = false;
+  boolean isTopFrame = true;
 };

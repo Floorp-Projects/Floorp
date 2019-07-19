@@ -4,7 +4,6 @@
 
 #![cfg_attr(feature = "oom_with_hook", feature(alloc_error_hook))]
 
-#[cfg(feature="servo")]
 extern crate geckoservo;
 
 extern crate kvstore;

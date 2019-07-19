@@ -39,6 +39,8 @@ item_classes = {"testharness": manifest_item.TestharnessTest,
 
 
 default_run_info = {"debug": False, "os": "linux", "version": "18.04", "processor": "x86_64", "bits": 64}
+test_id = "/path/to/test.htm"
+dir_id = "path/to/__dir__"
 
 
 def reset_globals():
@@ -55,7 +57,9 @@ def get_run_info(overrides):
 
 def update(tests, *logs, **kwargs):
     full_update = kwargs.pop("full_update", False)
-    stability = kwargs.pop("stability", False)
+    disable_intermittent = kwargs.pop("disable_intermittent", False)
+    update_intermittent = kwargs.pop("update_intermittent", False)
+    remove_intermittent = kwargs.pop("remove_intermittent", False)
     assert not kwargs
     id_test_map, updater = create_updater(tests)
 
@@ -76,8 +80,10 @@ def update(tests, *logs, **kwargs):
 
     return list(metadata.update_results(id_test_map,
                                         update_properties,
-                                        stability,
-                                        full_update))
+                                        full_update,
+                                        disable_intermittent,
+                                        update_intermittent,
+                                        remove_intermittent))
 
 
 def create_updater(tests, url_base="/", **kwargs):
@@ -129,7 +135,7 @@ def create_test_manifest(tests, url_base="/"):
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_0():
-    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness",
+    tests = [("path/to/test.htm", [test_id], "testharness",
               """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -151,7 +157,6 @@ def test_update_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_1():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness",
               """[test.htm]
   [test1]
@@ -174,8 +179,405 @@ def test_update_1():
 
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
+def test_update_known_intermittent_1():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: PASS""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "FAIL",
+                                      "expected": "PASS"}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS"}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS"}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
+
+    new_manifest = updated[0][1]
+    
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "FAIL"]
+
+
+def test_update_known_intermittent_2():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: PASS""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "FAIL",
+                                      "expected": "PASS"}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests, log_0, update_intermittent=True)
+
+    new_manifest = updated[0][1]
+    
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == "FAIL"
+
+
+def test_update_existing_known_intermittent():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "ERROR",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
+
+    new_manifest = updated[0][1]
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "ERROR", "FAIL"]
+
+
+def test_update_remove_previous_intermittent():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "ERROR",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "PASS",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests,
+                     log_0,
+                     log_1,
+                     log_2,
+                     update_intermittent=True,
+                     remove_intermittent=True)
+
+    new_manifest = updated[0][1]
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "ERROR"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_new_test_with_intermittent():
+    tests = [("path/to/test.htm", [test_id], "testharness", None)]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test("test.htm") is None
+    assert len(new_manifest.get_test(test_id).children) == 1
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "FAIL"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_expected_tie_resolution():
+    tests = [("path/to/test.htm", [test_id], "testharness", None)]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS"}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    updated = update(tests, log_0, log_1, update_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["PASS", "FAIL"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_reorder_expected():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "FAIL",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                       ("test_status", {"test": test_id,
+                                        "subtest": "test1",
+                                        "status": "PASS",
+                                        "expected": "PASS",
+                                        "known_intermittent": ["FAIL"]}),
+                       ("test_end", {"test": test_id,
+                                     "status": "OK"})])
+
+    updated = update(tests, log_0, log_1, log_2, update_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == ["FAIL", "PASS"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_and_preserve_unchanged_expected_intermittent():
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected:
+    if os == "android": [PASS, FAIL]
+    FAIL""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "FAIL",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    log_2 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS",
+                                     "expected": "FAIL"})])
+
+    updated = update(tests, log_0, log_1, log_2)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "android"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == ["PASS", "FAIL"]
+    assert new_manifest.get_test(test_id).get(
+        "expected", default_run_info) == "PASS"
+
+
+def test_update_test_with_intermittent_to_one_expected_status():
+    tests = [("path/to/test.htm", [test_id], "testharness",
+              """[test.htm]
+  [test1]
+    expected: [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                     ("test_status", {"test": test_id,
+                                      "subtest": "test1",
+                                      "status": "ERROR",
+                                      "expected": "PASS",
+                                      "known_intermittent": ["FAIL"]}),
+                     ("test_end", {"test": test_id,
+                                   "status": "OK"})])
+
+    updated = update(tests, log_0)
+
+    new_manifest = updated[0][1]
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).children[0].get(
+        "expected", default_run_info) == "ERROR"
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_intermittent_with_conditions():
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected:
+    if os == "android": [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "TIMEOUT",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    updated = update(tests, log_0, log_1, update_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "android"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == ["PASS", "TIMEOUT", "FAIL"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
+def test_update_and_remove_intermittent_with_conditions():
+    tests = [("path/to/test.htm", [test_id], "testharness", """
+[test.htm]
+  expected:
+    if os == "android": [PASS, FAIL]""")]
+
+    log_0 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "TIMEOUT",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    log_1 = suite_log([("test_start", {"test": test_id}),
+                       ("test_end", {"test": test_id,
+                                     "status": "PASS",
+                                     "expected": "PASS",
+                                     "known_intermittent": ["FAIL"]})],
+                      run_info={"os": "android"})
+
+    updated = update(tests, log_0, log_1, update_intermittent=True, remove_intermittent=True)
+    new_manifest = updated[0][1]
+
+    assert not new_manifest.is_empty
+
+    run_info_1 = default_run_info.copy()
+    run_info_1.update({"os": "android"})
+
+    assert not new_manifest.is_empty
+    assert new_manifest.get_test(test_id).get(
+        "expected", run_info_1) == ["PASS", "TIMEOUT"]
+
+
+@pytest.mark.xfail(sys.version[0] == "3",
+                   reason="metadata doesn't support py3")
 def test_skip_0():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness",
               """[test.htm]
   [test1]
@@ -196,7 +598,6 @@ def test_skip_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_new_subtest():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -222,7 +623,6 @@ def test_new_subtest():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_multiple_0():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -262,7 +662,6 @@ def test_update_multiple_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_multiple_1():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -307,7 +706,6 @@ def test_update_multiple_1():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_multiple_2():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -348,7 +746,6 @@ def test_update_multiple_2():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_multiple_3():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
@@ -391,7 +788,6 @@ def test_update_multiple_3():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_ignore_existing():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
@@ -434,8 +830,7 @@ def test_update_ignore_existing():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_new_test():
-    test_id = "/path/to/test.html"
-    tests = [("path/to/test.html", [test_id], "testharness", None)]
+    tests = [("path/to/test.htm", [test_id], "testharness", None)]
 
     log_0 = suite_log([("test_start", {"test": test_id}),
                        ("test_status", {"test": test_id,
@@ -450,7 +845,7 @@ def test_update_new_test():
     run_info_1 = default_run_info.copy()
 
     assert not new_manifest.is_empty
-    assert new_manifest.get_test("test.html") is None
+    assert new_manifest.get_test("test.htm") is None
     assert len(new_manifest.get_test(test_id).children) == 1
     assert new_manifest.get_test(test_id).children[0].get(
         "expected", run_info_1) == "FAIL"
@@ -459,7 +854,6 @@ def test_update_new_test():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_duplicate():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """
 [test.htm]
   expected: ERROR""")]
@@ -481,8 +875,7 @@ def test_update_duplicate():
 
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
-def test_update_stability():
-    test_id = "/path/to/test.htm"
+def test_update_disable_intermittent():
     tests = [("path/to/test.htm", [test_id], "testharness", """
 [test.htm]
   expected: ERROR""")]
@@ -494,7 +887,7 @@ def test_update_stability():
                        ("test_end", {"test": test_id,
                                      "status": "FAIL"})])
 
-    updated = update(tests, log_0, log_1, stability="Some message")
+    updated = update(tests, log_0, log_1, disable_intermittent="Some message")
     new_manifest = updated[0][1]
     run_info_1 = default_run_info.copy()
 
@@ -505,7 +898,6 @@ def test_update_stability():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_stability_conditional_instability():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """
 [test.htm]
   expected: ERROR""")]
@@ -523,7 +915,7 @@ def test_update_stability_conditional_instability():
                                      "status": "FAIL"})],
                       run_info={"os": "mac"})
 
-    updated = update(tests, log_0, log_1, log_2, stability="Some message")
+    updated = update(tests, log_0, log_1, log_2, disable_intermittent="Some message")
     new_manifest = updated[0][1]
     run_info_1 = default_run_info.copy()
     run_info_1.update({"os": "linux"})
@@ -542,7 +934,6 @@ def test_update_stability_conditional_instability():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_full():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
@@ -595,7 +986,6 @@ def test_update_full():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_full_unknown():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
@@ -640,7 +1030,6 @@ def test_update_full_unknown():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_default():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   [test1]
     expected:
@@ -674,7 +1063,6 @@ def test_update_default():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_default_1():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """
 [test.htm]
   expected:
@@ -707,7 +1095,6 @@ def test_update_default_1():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_default_2():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """
 [test.htm]
   expected:
@@ -740,7 +1127,6 @@ def test_update_default_2():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_assertion_count_0():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
@@ -765,7 +1151,6 @@ def test_update_assertion_count_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_assertion_count_1():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
@@ -790,7 +1175,6 @@ def test_update_assertion_count_1():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_assertion_count_2():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
@@ -811,7 +1195,6 @@ def test_update_assertion_count_2():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_assertion_count_3():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]
   max-asserts: 4
   min-asserts: 2
@@ -846,7 +1229,6 @@ def test_update_assertion_count_3():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_assertion_count_4():
-    test_id = "/path/to/test.htm"
     tests = [("path/to/test.htm", [test_id], "testharness", """[test.htm]""")]
 
     log_0 = suite_log([("test_start", {"test": test_id}),
@@ -878,8 +1260,6 @@ def test_update_assertion_count_4():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_lsan_0():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, "")]
 
@@ -897,8 +1277,6 @@ def test_update_lsan_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_lsan_1():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, """
 lsan-allowed: [foo]""")]
@@ -919,8 +1297,6 @@ lsan-allowed: [foo]""")]
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_lsan_2():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/__dir__", ["path/__dir__"], None, """
 lsan-allowed: [foo]"""),
@@ -943,8 +1319,6 @@ lsan-allowed: [foo]"""),
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_lsan_3():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, "")]
 
@@ -967,7 +1341,7 @@ def test_update_lsan_3():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_wptreport_0():
-    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness",
+    tests = [("path/to/test.htm", [test_id], "testharness",
               """[test.htm]
   [test1]
     expected: FAIL""")]
@@ -990,8 +1364,8 @@ def test_update_wptreport_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_wptreport_1():
-    tests = [("path/to/test.htm", ["/path/to/test.htm"], "testharness", ""),
-             ("path/to/__dir__", ["path/to/__dir__"], None, "")]
+    tests = [("path/to/test.htm", [test_id], "testharness", ""),
+             ("path/to/__dir__", [dir_id], None, "")]
 
     log = {"run_info": default_run_info.copy(),
            "results": [],
@@ -1007,8 +1381,6 @@ def test_update_wptreport_1():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_leak_total_0():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, "")]
 
@@ -1028,8 +1400,6 @@ def test_update_leak_total_0():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_leak_total_1():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, "")]
 
@@ -1046,8 +1416,6 @@ def test_update_leak_total_1():
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_leak_total_2():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, """
 leak-total: 110""")]
@@ -1065,8 +1433,6 @@ leak-total: 110""")]
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_leak_total_3():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, """
 leak-total: 100""")]
@@ -1087,8 +1453,6 @@ leak-total: 100""")]
 @pytest.mark.xfail(sys.version[0] == "3",
                    reason="metadata doesn't support py3")
 def test_update_leak_total_4():
-    test_id = "/path/to/test.htm"
-    dir_id = "path/to/__dir__"
     tests = [("path/to/test.htm", [test_id], "testharness", ""),
              ("path/to/__dir__", [dir_id], None, """
 leak-total: 110""")]
@@ -1109,135 +1473,8 @@ leak-total: 110""")]
     assert new_manifest.has_key("leak-threshold") is False
 
 
-def dump_tree(tree):
-    rv = []
-
-    def dump_node(node, indent=0):
-        prefix = " " * indent
-        if not node.prop:
-            data = "root"
-        else:
-            data = "%s:%s" % (node.prop, node.value)
-        if node.update_values:
-            data += " update_values:%s" % (",".join(sorted(node.update_values)))
-        rv.append("%s<%s>" % (prefix, data))
-        for child in sorted(node.children, key=lambda x:x.value):
-            dump_node(child, indent + 2)
-
-    dump_node(tree)
-    return "\n".join(rv)
-
-
-# @pytest.mark.xfail(sys.version[0] == "3",
-#                    reason="metadata doesn't support py3")
-# def test_property_tree():
-#     run_info_values = [{"os": "linux", "version": "18.04", "debug": False},
-#                        {"os": "linux", "version": "18.04", "debug": True},
-#                        {"os": "linux", "version": "16.04", "debug": False},
-#                        {"os": "mac", "version": "10.12", "debug": True},
-#                        {"os": "mac", "version": "10.12", "debug": False},
-#                        {"os": "win", "version": "7", "debug": False},
-#                        {"os": "win", "version": "10", "debug": False}]
-#     run_info_values = [metadata.RunInfo(item) for item in run_info_values]
-#     tree = metadata.build_property_tree(["os", "version", "debug"],
-#                                         run_info_values)
-
-#     expected = """<root>
-#   <os:linux>
-#     <version:16.04>
-#     <version:18.04>
-#       <debug:False>
-#       <debug:True>
-#   <os:mac>
-#     <debug:False>
-#     <debug:True>
-#   <os:win>
-#     <version:10>
-#     <version:7>"""
-
-#     assert dump_tree(tree) == expected
-
-
-# @pytest.mark.xfail(sys.version[0] == "3",
-#                    reason="metadata doesn't support py3")
-# def test_propogate_up():
-#     update_values = [({"os": "linux", "version": "18.04", "debug": False}, "FAIL"),
-#                      ({"os": "linux", "version": "18.04", "debug": True}, "FAIL"),
-#                      ({"os": "linux", "version": "16.04", "debug": False}, "FAIL"),
-#                      ({"os": "mac", "version": "10.12", "debug": True}, "PASS"),
-#                      ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
-#                      ({"os": "win", "version": "7", "debug": False}, "PASS"),
-#                      ({"os": "win", "version": "10", "debug": False}, "FAIL")]
-#     update_values = {metadata.RunInfo(item[0]): item[1] for item in update_values}
-#     tree = metadata.build_property_tree(["os", "version", "debug"],
-#                                         update_values.keys())
-#     for node in tree:
-#         for run_info in node.run_info:
-#             node.update_values.add(update_values[run_info])
-
-#     optimiser = manifestupdate.OptimiseConditionalTree()
-#     optimiser.propogate_up(tree)
-
-#     expected = """<root>
-#   <os:linux update_values:FAIL>
-#   <os:mac update_values:PASS>
-#   <os:win>
-#     <version:10 update_values:FAIL>
-#     <version:7 update_values:PASS>"""
-
-#     assert dump_tree(tree) == expected
-
-
-# @pytest.mark.xfail(sys.version[0] == "3",
-#                    reason="metadata doesn't support py3")
-# def test_common_properties():
-#     update_values = [({"os": "linux", "version": "18.04", "debug": False}, "PASS"),
-#                      ({"os": "linux", "version": "18.04", "debug": True}, "FAIL"),
-#                      ({"os": "linux", "version": "16.04", "debug": False}, "PASS"),
-#                      ({"os": "mac", "version": "10.12", "debug": True}, "FAIL"),
-#                      ({"os": "mac", "version": "10.12", "debug": False}, "PASS"),
-#                      ({"os": "win", "version": "7", "debug": False}, "PASS"),
-#                      ({"os": "win", "version": "10", "debug": False}, "PASS")]
-#     update_values = {metadata.RunInfo(item[0]): item[1] for item in update_values}
-#     tree = metadata.build_property_tree(["os", "version", "debug"],
-#                                         update_values.keys())
-#     for node in tree:
-#         for run_info in node.run_info:
-#             node.update_values.add(update_values[run_info])
-
-#     optimiser = manifestupdate.OptimiseConditionalTree()
-#     optimiser.propogate_up(tree)
-
-#     expected = """<root>
-#   <os:linux>
-#     <version:16.04 update_values:PASS>
-#     <version:18.04>
-#       <debug:False update_values:PASS>
-#       <debug:True update_values:FAIL>
-#   <os:mac>
-#     <debug:False update_values:PASS>
-#     <debug:True update_values:FAIL>
-#   <os:win update_values:PASS>"""
-
-#     assert dump_tree(tree) == expected
-
-
-#     optimiser.common_properties(tree)
-
-#     expected = """<root>
-#   <os:linux>
-#     <debug:False update_values:PASS>
-#     <debug:True update_values:FAIL>
-#   <os:mac update_values:PASS>
-#     <debug:False update_values:PASS>
-#     <debug:True update_values:FAIL>
-#   <os:win update_values: PASS>"""
-#     assert dump_tree(tree) == expected
-
-
 class TestStep(Step):
     def create(self, state):
-        test_id = "/path/to/test.htm"
         tests = [("path/to/test.htm", [test_id], "testharness", "")]
         state.foo = create_test_manifest(tests)
 

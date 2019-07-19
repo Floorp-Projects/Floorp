@@ -148,6 +148,9 @@ class BaseFile(object):
         # enough precision.
         dest_mtime = int(os.path.getmtime(dest) * 1000)
         for input in inputs:
+            if not os.path.exists(input):
+                # If an input file was removed, we should update.
+                return True
             if dest_mtime < int(os.path.getmtime(input) * 1000):
                 return True
         return False

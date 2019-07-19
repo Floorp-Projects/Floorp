@@ -36,7 +36,7 @@ add_task(async function() {
     BrowserTestUtils.loadURI(browser, URL1);
     await BrowserTestUtils.browserLoaded(browser, false, URL1);
 
-    info("Browser has loaded initial URI.");
+    info("Chrome script has loaded initial URI.");
     await ContentTask.spawn(
       browser,
       { URL1, URL2, URL3 },
@@ -44,7 +44,7 @@ add_task(async function() {
         let iframe = content.document.createElement("iframe");
         content.document.body.appendChild(iframe);
 
-        info("iframe created");
+        info("Chrome script created iframe");
 
         // Here and below, we have to store references to things in the
         // iframes on the content window, because all chrome references
@@ -89,6 +89,7 @@ add_task(async function() {
         await waitLoad();
 
         content.win1 = iframe.contentWindow;
+        let chromeWin1 = iframe.contentWindow;
         content.bc1 = iframe.browsingContext;
 
         is(
@@ -96,14 +97,15 @@ add_task(async function() {
           content.bc1,
           "same to same-origin BrowsingContext match"
         );
-        ok(
-          content.win0 == content.win1,
-          "same to same-origin WindowProxy match"
-        );
+        is(content.win0, content.win1, "same to same-origin WindowProxy match");
 
         ok(
           !Cu.isDeadWrapper(content.win1),
           "win1 shouldn't be a dead wrapper before navigation"
+        );
+        ok(
+          !Cu.isDeadWrapper(chromeWin1),
+          "chromeWin1 shouldn't be a dead wrapper before navigation"
         );
 
         askLoad(URL2);
@@ -112,13 +114,49 @@ add_task(async function() {
         content.win2 = iframe.contentWindow;
         content.bc2 = iframe.browsingContext;
 
+        // When chrome accesses a remote window proxy in content, the result
+        // should be a remote outer window proxy in the chrome compartment, not an
+        // Xray wrapper around the content remote window proxy. The former will
+        // throw a security error, because @@toPrimitive can't be called cross
+        // process, while the latter will result in an opaque wrapper, because
+        // XPConnect doesn't know what to do when trying to create an Xray wrapper
+        // around a remote outer window proxy. See bug 1556845.
+        Assert.throws(
+          () => {
+            dump("content.win1 " + content.win1 + "\n");
+          },
+          /SecurityError: Permission denied to access property Symbol.toPrimitive on cross-origin object/,
+          "Should get a remote outer window proxy when accessing old window proxy"
+        );
+        Assert.throws(
+          () => {
+            dump("content.win2 " + content.win2 + "\n");
+          },
+          /SecurityError: Permission denied to access property Symbol.toPrimitive on cross-origin object/,
+          "Should get a remote outer window proxy when accessing new window proxy"
+        );
+
+        // If we fail to transplant existing non-remote outer window proxies, then
+        // after we navigate the iframe existing chrome references to the window will
+        // become dead wrappers. Also check content.win1 for thoroughness, though
+        // we don't nuke content-content references.
+        ok(
+          !Cu.isDeadWrapper(content.win1),
+          "win1 shouldn't be a dead wrapper after navigation"
+        );
+        ok(
+          !Cu.isDeadWrapper(chromeWin1),
+          "chromeWin1 shouldn't be a dead wrapper after navigation"
+        );
+
         is(
           content.bc1,
           content.bc2,
           "same to cross-origin navigation BrowsingContext match"
         );
-        todo(
-          content.win1 == content.win2,
+        is(
+          content.win1,
+          content.win2,
           "same to cross-origin navigation WindowProxy match"
         );
 
@@ -138,8 +176,9 @@ add_task(async function() {
           content.bc3,
           "cross to cross-origin navigation BrowsingContext match"
         );
-        ok(
-          content.win2 == content.win3,
+        is(
+          content.win2,
+          content.win3,
           "cross to cross-origin navigation WindowProxy match"
         );
 
@@ -156,7 +195,7 @@ add_task(async function() {
         );
         todo(
           content.win3 == content.win4,
-          "cross to same-origin navigation WindowProxty match"
+          "cross to same-origin navigation WindowProxy match"
         );
       }
     );

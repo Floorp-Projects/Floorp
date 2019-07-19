@@ -57,7 +57,7 @@ function test_display_value(val)
   }
 }
 
-var displayInfo = gCSSProperties["display"];
+var displayInfo = gCSSProperties.display;
 displayInfo.initial_values.forEach(test_display_value);
 displayInfo.other_values.forEach(test_display_value);
 

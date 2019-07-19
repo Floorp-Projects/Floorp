@@ -642,7 +642,7 @@ function check_descendant_tests() {
     var values = {};
     values["text-indent"] = [ 50, 150 ];
     values["letter-spacing"] = [ 10, 5 ];
-    let tf = timingFunctions["ease"];
+    let tf = timingFunctions.ease;
 
     var time = px_to_num(earlyrefcs.textIndent) / REF_PX_PER_SEC;
 
@@ -721,7 +721,7 @@ function check_descendant_tests() {
 
 function check_number_tests()
 {
-    let tf = timingFunctions["ease"];
+    let tf = timingFunctions.ease;
     for (let d in number_tests) {
         let test = number_tests[d];
         let p = test.node;
