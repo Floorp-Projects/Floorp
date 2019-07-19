@@ -2,14 +2,11 @@
 <html>
     <head>
         <title>Pointer Events properties tests</title>
-        <meta name="timeout" content="long">
+<meta name="timeout" content="long">
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
-        <script src="/resources/testdriver.js"></script>
-        <script src="/resources/testdriver-actions.js"></script>
-        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
         <style>
@@ -48,21 +45,8 @@
                 lastScreenY = 0;
             }
 
-            function injectInput(pointerType) {
-                var pointerId = pointerType + "Pointer1";
-                return new test_driver.Actions()
-                                     .addPointer(pointerId, pointerType)
-                                     .pointerMove(0, 0, {origin: box1})
-                                     .pointerDown()
-                                     .pointerMove(20, 30, {origin: box1})
-                                     .pointerMove(60, 40, {origin: box1})
-                                     .pointerMove(0, 0, {origin: box2})
-                                     .pointerUp()
-                                     .send();
-            }
-
             function run() {
-                var test_pointerEvent = setup_pointerevent_test("pointerevent attributes", ALL_POINTERS);
+                var test_pointerEvent = setup_pointerevent_test("pointerevent attributes", ['mouse', 'touch']);
 
                 [document, document.getElementById('innerFrame').contentDocument].forEach(function(element) {
                   on_event(element, 'pointermove', function (event) {
@@ -89,22 +73,14 @@
                   startSummation = false;
                   test_pointerEvent.done();
                 });
-
-                // Inject input
-                injectInput("mouse").then(function(){
-                  return injectInput("touch")
-                }).then(function() {
-                  return injectInput("pen")
-                })
             }
-
         </script>
     </head>
     <body onload="run()">
         <h1>Pointer Events movementX/Y attribute test</h1>
         <h2 id="pointerTypeDescription"></h2>
         <h4>
-            Test Description: This test checks the movementX/Y properties of pointer events.
+            Test Description: This test checks the properties of pointer events that do not support hover.
             <ol>
                  <li>Press down on the black square.</li>
                  <li>Move your pointer  slowly along a straight line to the red square.</li>

@@ -6,9 +6,6 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
-        <script src="/resources/testdriver.js"></script>
-        <script src="/resources/testdriver-actions.js"></script>
-        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
     </head>
@@ -61,25 +58,9 @@
                     });
                   }
                 });
-
                 on_event(target0, "click", function(event) {
                   target0.requestPointerLock();
                 });
-
-                var x = innerframe.getBoundingClientRect().x + target1.getBoundingClientRect().x;
-                var y = innerframe.getBoundingClientRect().y + target1.getBoundingClientRect().y;
-                // Inject mouse input
-                new test_driver.Actions()
-                               .pointerMove(5, 5, {origin: target0})
-                               .pointerDown()
-                               .pointerUp()
-                               .pointerMove(100, 300, {origin: target0})
-                               .pointerMove(x+10, y+10)
-                               .pointerDown()
-                               .pointerUp()
-                               .pointerMove(5, 5, {origin: target0})
-                               .send();
-
             }
 
         </script>
