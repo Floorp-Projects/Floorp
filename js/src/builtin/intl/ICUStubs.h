@@ -223,6 +223,11 @@ inline void unumf_closeResult(UFormattedNumber* uresult) {
   MOZ_CRASH("unumf_closeResult: Intl API disabled");
 }
 
+inline void unumf_formatInt(const UNumberFormatter* uformatter, int64_t value,
+                            UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_formatInt: Intl API disabled");
+}
+
 inline void unumf_formatDouble(const UNumberFormatter* uformatter, double value,
                                UFormattedNumber* uresult, UErrorCode* status) {
   MOZ_CRASH("unumf_formatDouble: Intl API disabled");

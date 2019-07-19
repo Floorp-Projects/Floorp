@@ -501,17 +501,23 @@ static PartitionNumberPatternResult PartitionNumberPattern(
     unumf_formatDouble(nf, num, formatted, &status);
   } else {
     RootedBigInt bi(cx, x.toBigInt());
-    JSLinearString* str = BigInt::toString<CanGC>(cx, bi, 10);
-    if (!str) {
-      return nullptr;
+
+    int64_t num;
+    if (BigInt::isInt64(bi, &num)) {
+      unumf_formatInt(nf, num, formatted, &status);
+    } else {
+      JSLinearString* str = BigInt::toString<CanGC>(cx, bi, 10);
+      if (!str) {
+        return nullptr;
+      }
+      MOZ_ASSERT(str->hasLatin1Chars());
+
+      // Tell the analysis the |unumf_formatDecimal| function can't GC.
+      JS::AutoSuppressGCAnalysis nogc;
+
+      const char* chars = reinterpret_cast<const char*>(str->latin1Chars(nogc));
+      unumf_formatDecimal(nf, chars, str->length(), formatted, &status);
     }
-    MOZ_ASSERT(str->hasLatin1Chars());
-
-    // Tell the analysis the |unumf_formatDecimal| function can't GC.
-    JS::AutoSuppressGCAnalysis nogc;
-
-    const char* chars = reinterpret_cast<const char*>(str->latin1Chars(nogc));
-    unumf_formatDecimal(nf, chars, str->length(), formatted, &status);
   }
   if (U_FAILURE(status)) {
     intl::ReportInternalError(cx);
