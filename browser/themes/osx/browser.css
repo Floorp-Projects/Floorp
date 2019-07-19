@@ -255,7 +255,7 @@
 
 /* Ensure diacritics and other edge-of-font-box glyphs do not get clipped,
  * even in non-Latin scripts. */
-html|input.urlbar-input {
+#urlbar-input {
   line-height: 1.745em;
 }
 

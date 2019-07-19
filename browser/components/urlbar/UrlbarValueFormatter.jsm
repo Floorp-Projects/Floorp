@@ -46,7 +46,7 @@ class UrlbarValueFormatter {
   }
 
   get scheme() {
-    return this.urlbarInput.textbox.querySelector(".urlbar-scheme");
+    return this.urlbarInput.querySelector("#urlbar-scheme");
   }
 
   update() {
