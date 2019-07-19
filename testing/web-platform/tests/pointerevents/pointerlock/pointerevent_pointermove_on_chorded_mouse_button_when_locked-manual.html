@@ -7,9 +7,6 @@
         <link rel="stylesheet" type="text/css" href="../pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
-        <script src="/resources/testdriver.js"></script>
-        <script src="/resources/testdriver-actions.js"></script>
-        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="../pointerevent_support.js"></script>
     </head>
@@ -17,7 +14,7 @@
         <h2>PointerMove</h2>
         <h4>Test Description: This test checks if pointermove event are triggered by button state changes
             <ol>
-                <li>Click on the black rectangle to lock the pointer </li>
+                <li>Lick on the black rectangle to lock the pointer </li>
                 <li>Press a button and hold it</li>
                 <li>Press a second button</li>
                 <li>Release the second button</li>
@@ -89,17 +86,6 @@
                 on_event(target0, "contextmenu", function (event) {
                     event.preventDefault();
                 });
-
-                // Inject mouse input
-                var actions = new test_driver.Actions();
-                actions.pointerMove(0, 0, {origin: target0})
-                       .pointerDown({button: actions.ButtonType.LEFT})
-                       .pointerUp({button: actions.ButtonType.LEFT})
-                       .pointerDown({button: actions.ButtonType.LEFT})
-                       .pointerDown({button: actions.ButtonType.MIDDLE})
-                       .pointerUp({button: actions.ButtonType.MIDDLE})
-                       .pointerUp({button: actions.ButtonType.LEFT})
-                       .send();
             }
         </script>
         <h1>Pointer Lock Pointer Events pointermove on button state changes Tests</h1>
