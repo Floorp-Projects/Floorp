@@ -412,8 +412,7 @@ bool DebuggerScript::getSource(JSContext* cx, unsigned argc, Value* vp) {
 bool DebuggerScript::getSourceStart(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceStart)", args,
                                      obj);
-  args.rval().setNumber(uint32_t(
-      CallScriptMethod(obj, &JSScript::sourceStart, &LazyScript::sourceStart)));
+  args.rval().setNumber(uint32_t(obj->getReferentScript()->sourceStart()));
   return true;
 }
 
@@ -421,8 +420,7 @@ bool DebuggerScript::getSourceStart(JSContext* cx, unsigned argc, Value* vp) {
 bool DebuggerScript::getSourceLength(JSContext* cx, unsigned argc, Value* vp) {
   THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "(get sourceEnd)", args,
                                      obj);
-  args.rval().setNumber(uint32_t(CallScriptMethod(obj, &JSScript::sourceLength,
-                                                  &LazyScript::sourceLength)));
+  args.rval().setNumber(uint32_t(obj->getReferentScript()->sourceLength()));
   return true;
 }
 
