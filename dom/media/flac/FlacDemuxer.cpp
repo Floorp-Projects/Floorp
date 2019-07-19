@@ -813,8 +813,7 @@ RefPtr<FlacTrackDemuxer::SamplesPromise> FlacTrackDemuxer::GetSamples(
   while (aNumSamples--) {
     RefPtr<MediaRawData> frame(GetNextFrame(FindNextFrame()));
     if (!frame) break;
-
-    frames->mSamples.AppendElement(frame);
+    frames->AppendSample(frame);
   }
 
   LOGV("GetSamples() End mSamples.Length=%zu aNumSamples=%d offset=%" PRId64
