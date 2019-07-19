@@ -148,6 +148,7 @@ tasks:
                           && python automation/taskcluster/decision_task.py pull-request
                       env:
                         GITHUB_PULL_TITLE: ${pull_request_title}
+                        MOBILE_PULL_REQUEST_NUMBER: ${pull_request_number}
                     extra:
                       treeherder:
                         symbol: D-PR
