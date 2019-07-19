@@ -713,10 +713,10 @@ function CopySiteUrl() {
   clipboard.copyString(url);
 }
 
-function CopyPassword() {
+async function CopyPassword() {
   // Don't copy passwords if we aren't already showing the passwords & a master
   // password hasn't been entered.
-  if (!showingPasswords && !masterPasswordLogin()) {
+  if (!showingPasswords && !(await masterPasswordLogin())) {
     return;
   }
   // Copy selected signon's password to clipboard
