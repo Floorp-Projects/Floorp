@@ -84,6 +84,17 @@ class BlocksRingBuffer {
   // to access previous blocks using `GetEntryAt(BlockIndex)` functions.
   class BlockIndex {
    public:
+    // Default constructor with internal 0 value, for which BlocksRingBuffer
+    // guarantees that it is before any valid entries. All public APIs should
+    // fail gracefully, doing nothing and/or returning Nothing. It may be used
+    // to initialize a BlockIndex variable that will be overwritten with a real
+    // value (e.g., from `ReadObject()`, `CurrentBlockIndex()`, etc.).
+    BlockIndex() : mBlockIndex(0) {}
+
+    // Explicit conversion to bool, works in `if/while()` tests.
+    // Only returns false for default `BlockIndex{}` value.
+    explicit operator bool() const { return mBlockIndex != 0; }
+
     // Comparison over the wide `Index` range, ignoring wrapping of the
     // containing ring buffer.
     bool operator==(const BlockIndex& aRhs) const {
@@ -760,10 +771,12 @@ class BlocksRingBuffer {
 
   // Underlying circular byte buffer.
   Buffer mBuffer;
-  // Index to the first block to be read (or deleted).
-  BlockIndex mFirstReadIndex = BlockIndex(Index(0));
-  // Index where the next new block should be allocated.
-  BlockIndex mNextWriteIndex = BlockIndex(Index(0));
+  // Index to the first block to be read (or deleted). Initialized to 1 because
+  // 0 is reserved for the "empty" BlockIndex value.
+  BlockIndex mFirstReadIndex = BlockIndex(Index(1));
+  // Index where the next new block should be allocated. Initialized to 1
+  // because 0 is reserved for the "empty" BlockIndex value.
+  BlockIndex mNextWriteIndex = BlockIndex(Index(1));
   // If set, function to call for each entry that is about to be destroyed.
   std::function<void(EntryReader)> mDeleter;
 
