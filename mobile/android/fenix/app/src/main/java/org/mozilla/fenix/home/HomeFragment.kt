@@ -13,6 +13,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -321,6 +322,8 @@ class HomeFragment : Fragment(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.hide()
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
+
+        focusToolbarForAccessibility()
     }
 
     override fun onStart() {
@@ -837,6 +840,14 @@ class HomeFragment : Fragment(), AccountObserver {
         }
     }
 
+    private fun focusToolbarForAccessibility() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            delay(ACCESSIBILITY_FOCUS_DELAY)
+            toolbar.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
+            toolbar.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED)
+        }
+    }
+
     private fun showRenamedSnackbar() {
         view?.let { view ->
             val string = view.context.getString(R.string.snackbar_collection_renamed)
@@ -864,6 +875,7 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val ANIM_ON_SCREEN_DELAY = 200L
         private const val FADE_ANIM_DURATION = 150L
         private const val ANIM_SNACKBAR_DELAY = 100L
+        private const val ACCESSIBILITY_FOCUS_DELAY = 2000L
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
