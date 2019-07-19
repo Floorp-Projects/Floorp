@@ -23,7 +23,6 @@ py2:
         - security
         - servo
         - taskcluster/docker/funsize-update-generator
-        - testing/awsy
         - testing/gtest
         - testing/mochitest
         - testing/mozharness
