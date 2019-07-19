@@ -1590,9 +1590,6 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         // hint).
         //
         // In that case we should set the frame bit.
-        //
-        // FIXME: Bug 1527210 - Use the primary frame here instead so that
-        // we handle display: table correctly.
         for (nsIFrame* cont = frame; cont;
              cont = nsLayoutUtils::GetNextContinuationOrIBSplitSibling(cont)) {
           cont->AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
