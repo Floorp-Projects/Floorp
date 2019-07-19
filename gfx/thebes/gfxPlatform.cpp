@@ -3087,16 +3087,22 @@ void gfxPlatform::InitWebRenderConfig() {
 #endif
 
 #ifdef XP_WIN
+  if (Preferences::GetBool("gfx.webrender.flip-sequential", false)) {
+    // XXX relax win version to windows 8.
+    if (IsWin10OrLater() && UseWebRender() && gfxVars::UseWebRenderANGLE()) {
+      gfxVars::SetUseWebRenderFlipSequentialWin(true);
+    }
+  }
   if (Preferences::GetBool("gfx.webrender.dcomp-win.enabled", false)) {
     // XXX relax win version to windows 8.
     if (IsWin10OrLater() && UseWebRender() && gfxVars::UseWebRenderANGLE()) {
       gfxVars::SetUseWebRenderDCompWin(true);
     }
   }
-  if (Preferences::GetBool("gfx.webrender.dcomp-win-triple-buffering.enabled",
-                           false)) {
-    if (gfxVars::UseWebRenderDCompWin()) {
-      gfxVars::SetUseWebRenderDCompWinTripleBuffering(true);
+  if (Preferences::GetBool("gfx.webrender.triple-buffering.enabled", false)) {
+    if (gfxVars::UseWebRenderDCompWin() ||
+        gfxVars::UseWebRenderFlipSequentialWin()) {
+      gfxVars::SetUseWebRenderTripleBufferingWin(true);
     }
   }
 #endif

@@ -54,11 +54,6 @@ const l10n = require("devtools/client/webconsole/webconsole-l10n");
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
-function gSequenceId() {
-  return gSequenceId.n++;
-}
-gSequenceId.n = 0;
-
 // React & Redux
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
@@ -582,14 +577,6 @@ class JSTerm extends Component {
     return this.webConsoleUI.outputNode;
   }
 
-  /**
-   * Getter for the debugger WebConsoleClient.
-   * @type object
-   */
-  get webConsoleClient() {
-    return this.webConsoleUI.webConsoleClient;
-  }
-
   focus() {
     if (this.editor) {
       this.editor.focus();
@@ -827,23 +814,6 @@ class JSTerm extends Component {
       frameActor,
       ...options,
     });
-  }
-
-  /**
-   * Copy the object/variable by invoking the server
-   * which invokes the `copy(variable)` command and makes it
-   * available in the clipboard
-   * @param evalString - string which has the evaluation string to be copied
-   * @param options - object - Options for evaluation
-   * @return object
-   *         A promise object that is resolved when the server response is
-   *         received.
-   */
-  copyObject(evalString, evalOptions) {
-    return this.webConsoleClient.evaluateJSAsync(
-      `copy(${evalString})`,
-      evalOptions
-    );
   }
 
   /**
@@ -1766,7 +1736,6 @@ class JSTerm extends Component {
   }
 
   destroy() {
-    this.webConsoleClient.clearNetworkRequests();
     if (this.webConsoleUI.outputNode) {
       // We do this because it's much faster than letting React handle the ConsoleOutput
       // unmounting.

@@ -1765,7 +1765,8 @@ PWebRenderBridgeParent* CompositorBridgeParent::AllocPWebRenderBridgeParent(
   MOZ_ASSERT(mWidget);
 
 #ifdef XP_WIN
-  if (mWidget && DeviceManagerDx::Get()->CanUseDComp()) {
+  if (mWidget && (DeviceManagerDx::Get()->CanUseDComp() ||
+                  gfxVars::UseWebRenderFlipSequentialWin())) {
     mWidget->AsWindows()->EnsureCompositorWindow();
   }
 #endif

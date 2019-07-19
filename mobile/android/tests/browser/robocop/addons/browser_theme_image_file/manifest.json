@@ -6,7 +6,7 @@
 
   "applications": {
     "gecko": {
-      "id": "theme@tests.mozilla.org"
+      "id": "theme-image@tests.mozilla.org"
     }
   },
 
