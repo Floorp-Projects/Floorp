@@ -1419,11 +1419,11 @@ void TrackBuffersManager::MaybeDispatchEncryptedEvent(
 void TrackBuffersManager::OnVideoDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%zu video samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%zu video samples demuxed", aSamples->GetSamples().Length());
   mVideoTracks.mDemuxRequest.Complete();
-  mVideoTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mVideoTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
 
-  MaybeDispatchEncryptedEvent(aSamples->mSamples);
+  MaybeDispatchEncryptedEvent(aSamples->GetSamples());
   DoDemuxAudio();
 }
 
@@ -1443,12 +1443,12 @@ void TrackBuffersManager::DoDemuxAudio() {
 void TrackBuffersManager::OnAudioDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%zu audio samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%zu audio samples demuxed", aSamples->GetSamples().Length());
   mAudioTracks.mDemuxRequest.Complete();
-  mAudioTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mAudioTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
   CompleteCodedFrameProcessing();
 
-  MaybeDispatchEncryptedEvent(aSamples->mSamples);
+  MaybeDispatchEncryptedEvent(aSamples->GetSamples());
 }
 
 void TrackBuffersManager::CompleteCodedFrameProcessing() {

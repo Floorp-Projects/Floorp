@@ -822,10 +822,10 @@ RefPtr<FlacTrackDemuxer::SamplesPromise> FlacTrackDemuxer::GetSamples(
 
   LOGV("GetSamples() End mSamples.Length=%zu aNumSamples=%d offset=%" PRId64
        " mParsedFramesDuration=%f mTotalFrameLen=%" PRIu64,
-       frames->mSamples.Length(), aNumSamples, GetResourceOffset(),
+       frames->GetSamples().Length(), aNumSamples, GetResourceOffset(),
        mParsedFramesDuration.ToSeconds(), mTotalFrameLen);
 
-  if (frames->mSamples.IsEmpty()) {
+  if (frames->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   }
