@@ -138,9 +138,11 @@ void Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
     if (prefetchService) {
       nsCOMPtr<nsIURI> uri(GetURI());
       if (uri) {
-        if (linkTypes & nsStyleLinkElement::ePRELOAD) {
+        bool preload = !!(linkTypes & nsStyleLinkElement::ePRELOAD);
+        nsContentPolicyType policyType;
+
+        if (preload) {
           nsAttrValue asAttr;
-          nsContentPolicyType policyType;
           nsAutoString mimeType;
           nsAutoString media;
           GetContentPolicyMimeTypeMedia(asAttr, policyType, mimeType, media);
@@ -154,13 +156,15 @@ void Link::TryDNSPrefetchOrPreconnectOrPrefetchOrPreloadOrPrerender() {
                                                   mElement->OwnerDoc())) {
             policyType = nsIContentPolicy::TYPE_INVALID;
           }
+        }
 
-          prefetchService->PreloadURI(uri,
-                                      mElement->OwnerDoc()->GetDocumentURI(),
-                                      mElement, policyType);
+        nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+        referrerInfo->InitWithNode(mElement);
+        if (preload) {
+          prefetchService->PreloadURI(uri, referrerInfo, mElement, policyType);
         } else {
           prefetchService->PrefetchURI(
-              uri, mElement->OwnerDoc()->GetDocumentURI(), mElement,
+              uri, referrerInfo, mElement,
               linkTypes & nsStyleLinkElement::ePREFETCH);
         }
         return;
@@ -243,8 +247,10 @@ void Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
     CORSMode oldCorsMode = Element::AttrValueToCORSMode(aOldValue);
     if (corsMode != oldCorsMode) {
       prefetchService->CancelPrefetchPreloadURI(uri, mElement);
-      prefetchService->PreloadURI(uri, mElement->OwnerDoc()->GetDocumentURI(),
-                                  mElement, policyType);
+
+      nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+      referrerInfo->InitWithNode(mElement);
+      prefetchService->PreloadURI(uri, referrerInfo, mElement, policyType);
     }
     return;
   }
@@ -303,8 +309,9 @@ void Link::UpdatePreload(nsAtom* aName, const nsAttrValue* aValue,
   // trigger an error event.
   if ((policyType != oldPolicyType) ||
       (policyType == nsIContentPolicy::TYPE_INVALID)) {
-    prefetchService->PreloadURI(uri, mElement->OwnerDoc()->GetDocumentURI(),
-                                mElement, policyType);
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = new ReferrerInfo();
+    referrerInfo->InitWithNode(mElement);
+    prefetchService->PreloadURI(uri, referrerInfo, mElement, policyType);
   }
 }
 

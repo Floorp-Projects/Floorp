@@ -422,6 +422,7 @@ selfhosted.inputs = [
     'builtin/Array.js',
     'builtin/AsyncFunction.js',
     'builtin/AsyncIteration.js',
+    'builtin/BigInt.js',
     'builtin/Classes.js',
     'builtin/Date.js',
     'builtin/Error.js',

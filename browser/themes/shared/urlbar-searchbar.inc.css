@@ -85,7 +85,7 @@
   color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, black));
 }
 
-:root[lwt-selection] .urlbar-input:-moz-lwtheme::selection,
+:root[lwt-selection] #urlbar-input:-moz-lwtheme::selection,
 :root[lwt-selection] .searchbar-textbox:-moz-lwtheme::selection {
   background-color: var(--lwt-toolbar-field-highlight, Highlight);
   color: var(--lwt-toolbar-field-highlight-text, HighlightText);
@@ -112,8 +112,8 @@
   visibility: hidden;
 }
 
-.urlbar-input,
-.urlbar-scheme {
+#urlbar-input,
+#urlbar-scheme {
   -moz-box-flex: 1;
   background-color: transparent;
   color: inherit;
@@ -336,12 +336,12 @@
   -moz-outline-radius: var(--toolbarbutton-border-radius);
 }
 
-.urlbar-go-button,
+#urlbar-go-button,
 .search-go-button {
   list-style-image: url("chrome://browser/skin/forward.svg");
 }
 
-.urlbar-go-button:-moz-locale-dir(rtl),
+#urlbar-go-button:-moz-locale-dir(rtl),
 .search-go-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
@@ -649,7 +649,7 @@
 }
 
 /* Shift the url-bar text fading to stop the recommendation overlapping */
-#urlbar[cfr-recommendation-state] html|input.urlbar-input {
+#urlbar[cfr-recommendation-state] #urlbar-input {
   /* A mask-image is usually only defined for the url bar when text overflows.
      We need to re-define the mask image here so that it shows up correctly when
      we transition to or from an `expanded` state (in which the right end of the
@@ -657,13 +657,13 @@
   mask-image: linear-gradient(to left, transparent, black 3ch);
   transition: mask-position-x ease-in-out var(--cfr-animation-duration);
 }
-#urlbar[cfr-recommendation-state] html|input.urlbar-input:-moz-locale-dir(rtl) {
+#urlbar[cfr-recommendation-state] #urlbar-input:-moz-locale-dir(rtl) {
   mask-image: linear-gradient(to right, transparent, black 3ch);
 }
-#urlbar[cfr-recommendation-state="expanded"] html|input.urlbar-input {
+#urlbar[cfr-recommendation-state="expanded"] #urlbar-input {
   mask-position-x: calc(var(--cfr-label-width) * -1);
 }
-#urlbar[cfr-recommendation-state="expanded"] html|input.urlbar-input:-moz-locale-dir(rtl) {
+#urlbar[cfr-recommendation-state="expanded"] #urlbar-input:-moz-locale-dir(rtl) {
   mask-position-x: calc(var(--cfr-label-width));
 }
 

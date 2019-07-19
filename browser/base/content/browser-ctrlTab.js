@@ -140,18 +140,6 @@ var ctrlTab = {
       "ctrlTab-preview"
     ));
   },
-  get canvasWidth() {
-    delete this.canvasWidth;
-    return (this.canvasWidth = Math.ceil(
-      (screen.availWidth * 0.85) / this.maxTabPreviews
-    ));
-  },
-  get canvasHeight() {
-    delete this.canvasHeight;
-    return (this.canvasHeight = Math.round(
-      this.canvasWidth * tabPreviews.aspectRatio
-    ));
-  },
   get keys() {
     var keys = {};
     ["close", "find", "selectAll"].forEach(function(key) {
@@ -242,16 +230,8 @@ var ctrlTab = {
     preview.appendChild(previewInner);
 
     if (!aIsShowAllButton) {
-      let canvasWidth = this.canvasWidth;
-      let canvasHeight = this.canvasHeight;
-
       let canvas = (preview._canvas = document.createXULElement("hbox"));
       canvas.setAttribute("class", "ctrlTab-canvas");
-      canvas.setAttribute("width", canvasWidth);
-      canvas.style.minWidth = canvasWidth + "px";
-      canvas.style.maxWidth = canvasWidth + "px";
-      canvas.style.minHeight = canvasHeight + "px";
-      canvas.style.maxHeight = canvasHeight + "px";
       previewInner.appendChild(canvas);
 
       let faviconContainer = document.createXULElement("hbox");
@@ -296,7 +276,16 @@ var ctrlTab = {
     }
 
     if (aTab) {
-      aPreview._canvas.appendChild(tabPreviews.get(aTab));
+      let canvas = aPreview._canvas;
+      let canvasWidth = this.canvasWidth;
+      let canvasHeight = this.canvasHeight;
+      canvas.setAttribute("width", canvasWidth);
+      canvas.style.minWidth = canvasWidth + "px";
+      canvas.style.maxWidth = canvasWidth + "px";
+      canvas.style.minHeight = canvasHeight + "px";
+      canvas.style.maxHeight = canvasHeight + "px";
+      canvas.appendChild(tabPreviews.get(aTab));
+
       aPreview._label.setAttribute("value", aTab.label);
       aPreview.setAttribute("tooltiptext", aTab.label);
       if (aTab.image) {
@@ -404,20 +393,20 @@ var ctrlTab = {
 
     document.addEventListener("keyup", this, true);
 
+    this.canvasWidth = Math.ceil(
+      (screen.availWidth * 0.85) / this.maxTabPreviews
+    );
+    this.canvasHeight = Math.round(this.canvasWidth * tabPreviews.aspectRatio);
     this.updatePreviews();
     this._selectedIndex = 1;
     gBrowser.warmupTab(this.selected._tab);
 
     // Add a slight delay before showing the UI, so that a quick
     // "ctrl-tab" keypress just flips back to the MRU tab.
-    this._timer = setTimeout(
-      function(self) {
-        self._timer = null;
-        self._openPanel();
-      },
-      200,
-      this
-    );
+    this._timer = setTimeout(() => {
+      this._timer = null;
+      this._openPanel();
+    }, 200);
   },
 
   _openPanel: function ctrlTab_openPanel() {

@@ -3288,7 +3288,7 @@ exports.CSS_PROPERTIES = {
       "text-decoration-style",
       "text-decoration-color",
       "initial-letter",
-      "text-decoration-width",
+      "text-decoration-thickness",
       "ime-mode",
       "scrollbar-width",
       "user-select",
@@ -10793,8 +10793,8 @@ exports.PREFERENCES = [
     "layout.css.individual-transform.enabled"
   ],
   [
-    "text-decoration-width",
-    "layout.css.text-decoration-width.enabled"
+    "text-decoration-thickness",
+    "layout.css.text-decoration-thickness.enabled"
   ],
   [
     "text-underline-offset",

@@ -453,13 +453,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1543677
-skip script test262/intl402/BigInt/prototype/toLocaleString/de-DE.js
-skip script test262/intl402/BigInt/prototype/toLocaleString/returns-same-results-as-NumberFormat.js
-skip script test262/intl402/BigInt/prototype/toLocaleString/en-US.js
-skip script test262/intl402/BigInt/prototype/toLocaleString/default-options-object-prototype.js
-skip script test262/intl402/BigInt/prototype/toLocaleString/throws-same-exceptions-as-NumberFormat.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
 # All of these tests pass except with --more-compartments.
 skip script test262/built-ins/String/prototype/valueOf/non-generic-realm.js

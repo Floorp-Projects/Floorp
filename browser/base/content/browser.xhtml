@@ -954,11 +954,10 @@
               <moz-input-box tooltip="aHTMLTooltip"
                              class="urlbar-input-box"
                              flex="1">
-                <html:input class="urlbar-scheme"
+                <html:input id="urlbar-scheme"
                             required="required"/>
                 <html:input id="urlbar-input"
                             anonid="input"
-                            class="urlbar-input"
                             role="combobox"
                             aria-owns="urlbarView-results"
                             aria-controls="urlbarView-results"
@@ -967,7 +966,8 @@
                             inputmode="mozAwesomebar"
                             placeholder="&urlbar.placeholder2;"/>
               </moz-input-box>
-              <image class="urlbar-go-button urlbar-icon"
+              <image id="urlbar-go-button"
+                     class="urlbar-icon"
                      onclick="gURLBar.handleCommand(event);"
                      tooltiptext="&goEndCap.tooltip;"/>
               <image class="urlbar-history-dropmarker urlbar-icon chromeclass-toolbar-additional"
