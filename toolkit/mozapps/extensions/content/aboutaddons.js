@@ -127,8 +127,10 @@ const AddonCardListenerHandler = {
     if (this.MANAGER_EVENTS.has(name)) {
       cards = document.querySelectorAll("addon-card");
     } else {
-      let card = document.querySelector(`addon-card[addon-id="${addon.id}"]`);
-      cards = card ? [card] : [];
+      let cardSelector = `addon-card[addon-id="${addon.id}"]`;
+      cards = document.querySelectorAll(
+        `${cardSelector}, ${cardSelector} addon-details`
+      );
     }
     for (let card of cards) {
       try {
@@ -1288,6 +1290,30 @@ class AddonDetails extends HTMLElement {
     }
   }
 
+  onInstalled() {
+    // Ensure the inline options browser is recreated when a new version starts.
+    this.extensionShutdown();
+    this.extensionStartup();
+  }
+
+  onDisabled(addon) {
+    this.extensionShutdown();
+  }
+
+  onEnabled(addon) {
+    this.extensionStartup();
+  }
+
+  extensionShutdown() {
+    this.inlineOptions.destroyBrowser();
+  }
+
+  extensionStartup() {
+    if (this.deck.selectedViewName === "preferences") {
+      this.inlineOptions.ensureBrowserCreated();
+    }
+  }
+
   get releaseNotesUri() {
     return this.addon.updateInstall
       ? this.addon.updateInstall.releaseNotesURI
@@ -1310,7 +1336,11 @@ class AddonDetails extends HTMLElement {
     notesBtn.hidden = !this.releaseNotesUri;
     let prefsBtn = getButtonByName("preferences");
     prefsBtn.hidden = getOptionsType(addon) !== "inline";
-    if (!prefsBtn.hidden) {
+    if (prefsBtn.hidden) {
+      if (this.deck.selectedViewName === "preferences") {
+        this.deck.selectedViewName = "details";
+      }
+    } else {
       isAddonOptionsUIAllowed(addon).then(allowed => {
         prefsBtn.hidden = !allowed;
       });
@@ -1523,11 +1553,7 @@ class AddonCard extends HTMLElement {
   }
 
   set reloading(val) {
-    if (val) {
-      this.setAttribute("reloading", "true");
-    } else {
-      this.removeAttribute("reloading");
-    }
+    this.toggleAttribute("reloading", val);
   }
 
   /**
