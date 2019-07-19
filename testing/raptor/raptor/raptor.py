@@ -110,6 +110,9 @@ class Raptor(object):
             'e10s': e10s,
             'enable_webrender': enable_webrender,
         }
+        # We can never use e10s on fennec
+        if self.config['app'] == 'fennec':
+            self.config['e10s'] = False
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.raptor_webext = None
@@ -931,6 +934,7 @@ class RaptorAndroid(Raptor):
         path = os.path.join(self.profile_data_dir, 'raptor-android')
         LOG.info("Merging profile: {}".format(path))
         self.profile.merge(path)
+        self.profile.set_preferences({'browser.tabs.remote.autostart': self.config['e10s']})
 
     def clear_app_data(self):
         LOG.info("clearing %s app data" % self.config['binary'])
