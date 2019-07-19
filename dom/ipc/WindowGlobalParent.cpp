@@ -64,7 +64,6 @@ WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
 
 void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   MOZ_ASSERT(Manager(), "Should have a manager!");
-  MOZ_ASSERT(!mFrameLoader, "Cannot Init() a WindowGlobalParent twice!");
 
   // Register this WindowGlobal in the gWindowGlobalParentsById map.
   if (!gWindowGlobalParentsById) {
@@ -95,35 +94,6 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // optimistically.
   if (!mBrowsingContext->GetCurrentWindowGlobal()) {
     mBrowsingContext->SetCurrentWindowGlobal(this);
-  }
-
-  // Determine what toplevel frame element our WindowGlobalParent is being
-  // embedded in.
-  RefPtr<Element> frameElement;
-  if (mInProcess) {
-    // In the in-process case, we can get it from the other side's
-    // WindowGlobalChild.
-    MOZ_ASSERT(Manager()->GetProtocolId() == PInProcessMsgStart);
-    RefPtr<WindowGlobalChild> otherSide = GetChildActor();
-    if (otherSide && otherSide->WindowGlobal()) {
-      // Get the toplevel window from the other side.
-      RefPtr<nsDocShell> docShell =
-          nsDocShell::Cast(otherSide->WindowGlobal()->GetDocShell());
-      if (docShell) {
-        docShell->GetTopFrameElement(getter_AddRefs(frameElement));
-      }
-    }
-  } else {
-    // In the cross-process case, we can get the frame element from our manager.
-    MOZ_ASSERT(Manager()->GetProtocolId() == PBrowserMsgStart);
-    frameElement = static_cast<BrowserParent*>(Manager())->GetOwnerElement();
-  }
-
-  // Extract the nsFrameLoader from the current frame element. We may not have a
-  // nsFrameLoader if we are a chrome document.
-  RefPtr<nsFrameLoaderOwner> flOwner = do_QueryObject(frameElement);
-  if (flOwner) {
-    mFrameLoader = flOwner->GetFrameLoader();
   }
 
   // Ensure we have a document URI
@@ -159,6 +129,17 @@ already_AddRefed<BrowserParent> WindowGlobalParent::GetBrowserParent() {
     return nullptr;
   }
   return do_AddRef(static_cast<BrowserParent*>(Manager()));
+}
+
+already_AddRefed<nsFrameLoader> WindowGlobalParent::GetRootFrameLoader() {
+  dom::BrowsingContext* top = BrowsingContext()->Top();
+
+  RefPtr<nsFrameLoaderOwner> frameLoaderOwner =
+      do_QueryObject(top->GetEmbedderElement());
+  if (frameLoaderOwner) {
+    return frameLoaderOwner->GetFrameLoader();
+  }
+  return nullptr;
 }
 
 uint64_t WindowGlobalParent::ContentParentId() {
@@ -474,8 +455,7 @@ nsIGlobalObject* WindowGlobalParent::GetParentObject() {
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(WindowGlobalParent, WindowGlobalActor,
-                                   mFrameLoader, mBrowsingContext,
-                                   mWindowActors)
+                                   mBrowsingContext, mWindowActors)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(WindowGlobalParent,
                                                WindowGlobalActor)
