@@ -200,51 +200,9 @@ var FxAccountsConfig = {
   },
 
   async ensureConfigured() {
-    await this.tryPrefsMigration();
     let isSignedIn = !!(await this.getSignedInUser());
     if (!isSignedIn) {
       await this.fetchConfigURLs();
-    }
-  },
-
-  // In bug 1427674 we migrated a set of preferences with a shared origin
-  // to a single preference (identity.fxaccounts.remote.root).
-  // This whole function should be removed in version 65 or later once
-  // everyone had a chance to migrate.
-  async tryPrefsMigration() {
-    // If this pref is set, there is a very good chance the user is running
-    // a custom FxA content server.
-    if (
-      !Services.prefs.prefHasUserValue("identity.fxaccounts.remote.signin.uri")
-    ) {
-      return;
-    }
-
-    if (Services.prefs.prefHasUserValue("identity.fxaccounts.autoconfig.uri")) {
-      await this.fetchConfigURLs();
-    } else {
-      // Best effort.
-      const signinURI = Services.prefs.getCharPref(
-        "identity.fxaccounts.remote.signin.uri"
-      );
-      Services.prefs.setCharPref(
-        "identity.fxaccounts.remote.root",
-        signinURI.slice(0, signinURI.lastIndexOf("/signin")) + "/"
-      );
-    }
-
-    const migratedPrefs = [
-      "identity.fxaccounts.remote.webchannel.uri",
-      "identity.fxaccounts.settings.uri",
-      "identity.fxaccounts.settings.devices.uri",
-      "identity.fxaccounts.remote.signup.uri",
-      "identity.fxaccounts.remote.signin.uri",
-      "identity.fxaccounts.remote.email.uri",
-      "identity.fxaccounts.remote.connectdevice.uri",
-      "identity.fxaccounts.remote.force_auth.uri",
-    ];
-    for (const pref of migratedPrefs) {
-      Services.prefs.clearUserPref(pref);
     }
   },
 
