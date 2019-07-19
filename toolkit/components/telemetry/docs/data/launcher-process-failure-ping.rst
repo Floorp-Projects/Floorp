@@ -16,7 +16,7 @@ Structure:
       "update_channel": <string>,
       "build_id": <string>,
       "build_version": <string>,
-      // Windows version numnber in major.minor.build.UBR format (UBR is optional, only available on Win10)
+      // Windows version number in major.minor.build.UBR format (UBR is optional, only available on Win10)
       "os_version": <string>,
       // True if this build was running atop a Windows Server OS
       "server_os": <bool>,
