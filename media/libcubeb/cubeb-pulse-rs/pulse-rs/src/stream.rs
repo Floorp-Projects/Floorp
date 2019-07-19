@@ -184,7 +184,7 @@ impl Stream {
     pub fn update_timing_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Stream, i32, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
@@ -219,7 +219,7 @@ impl Stream {
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, userdata: *mut c_void)
@@ -247,7 +247,7 @@ impl Stream {
     pub fn set_write_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, usize, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
@@ -275,7 +275,7 @@ impl Stream {
     pub fn set_read_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, usize, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
@@ -297,7 +297,7 @@ impl Stream {
     pub fn cork<CB>(&self, b: i32, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Stream, i32, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
