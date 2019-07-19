@@ -2,41 +2,56 @@
 <script src="test-helpers.sub.js?pipe=sub"></script>
 <script>
 
+let worker_type;
+
 async function boilerplate_test(url, msg) {
-  const worker = new Worker(url);
-  const data = await new Promise((resolve, reject) => {
-    worker.onmessage = e => resolve(e.data);
-    worker.onerror = e =>reject(e);
-    worker.postMessage(msg);
-  });
-  assert_equals(data, "This load was successfully intercepted.");
+  let data;
+  if (worker_type === 'worker') {
+    const worker = new Worker(url);
+    data = await new Promise((resolve, reject) => {
+      worker.onmessage = e => resolve(e.data);
+      worker.onerror = e => reject(e);
+      worker.postMessage(msg);
+    });
+  } else if (worker_type === 'sharedworker') {
+    const worker = new SharedWorker(url);
+    data = await new Promise((resolve, reject) => {
+      worker.port.onmessage = e => resolve(e.data);
+      worker.onerror = e => reject(e);
+      worker.port.postMessage(msg);
+    });
+  } else {
+    data = 'Unexpected worker type! ' + worker_type;
+  }
+  assert_equals(data, 'This load was successfully intercepted.');
 }
 
 function xhr_test() {
-  return boilerplate_test("load_worker.js", "xhr");
+  return boilerplate_test('load_worker.js', 'xhr');
 }
 
 function fetch_test() {
-  return boilerplate_test("load_worker.js", "fetch");
+  return boilerplate_test('load_worker.js', 'fetch');
 }
 
 function importScripts_test() {
-  return boilerplate_test("load_worker.js", "importScripts");
+  return boilerplate_test('load_worker.js', 'importScripts');
 }
 
 function nested_worker_xhr_test() {
-  return boilerplate_test("nested_load_worker.js", "xhr");
+  return boilerplate_test('nested_load_worker.js', 'xhr');
 }
 
 function nested_worker_fetch_test() {
-  return boilerplate_test("nested_load_worker.js", "fetch");
+  return boilerplate_test('nested_load_worker.js', 'fetch');
 }
 
 function nested_worker_importScripts_test() {
-  return boilerplate_test("nested_load_worker.js", "importScripts");
+  return boilerplate_test('nested_load_worker.js', 'importScripts');
 }
 
 window.addEventListener('message', evt => {
+  worker_type = evt.data;
   const port = evt.ports[0];
   xhr_test()
       .then(fetch_test)
