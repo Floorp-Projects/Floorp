@@ -76,10 +76,10 @@ const sourceSpec = generateActorSpec({
         lines: RetVal("json"),
       },
     },
-    onSource: {
+    source: {
       // we are sending the type "source" to be compatible
       // with FF67 and older
-      request: { type: "source" },
+      request: {},
       response: RetVal("source.onsource"),
     },
     setPausePoints: {
