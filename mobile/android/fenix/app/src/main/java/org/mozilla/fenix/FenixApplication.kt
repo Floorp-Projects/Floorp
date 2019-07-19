@@ -17,6 +17,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.push.PushProcessor
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
@@ -68,6 +69,13 @@ open class FenixApplication : Application() {
         setupLeakCanary()
         if (Settings.getInstance(this).isTelemetryEnabled) {
             components.analytics.metrics.start()
+        }
+
+        // Sets the PushFeature as the singleton instance for push messages to go to.
+        // We need the push feature setup here to deliver messages in the case where the service
+        // starts up the app first.
+        if (FeatureFlags.sendTabEnabled && components.backgroundServices.pushConfig != null) {
+            PushProcessor.install(components.backgroundServices.push)
         }
     }
 
