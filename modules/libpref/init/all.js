@@ -2454,14 +2454,6 @@ pref("csp.overrule_about_uris_without_csp_whitelist", false);
 pref("csp.skip_about_page_has_csp_assert", false);
 #endif
 
-#if !defined(ANDROID)
-#if defined(NIGHTLY_BUILD) || defined(DEBUG)
-// assertion flag will be set to false after fixing Bug 1473549
-pref("security.allow_eval_with_system_principal", false);
-pref("security.uris_using_eval_with_system_principal", "autocomplete.xml,redux.js,react-redux.js,content-task.js,lodash.js,jszip.js,sinon-7.2.7.js,ajv-4.1.1.js,jsol.js");
-#endif
-#endif
-
 #ifdef EARLY_BETA_OR_EARLIER
 // Disallow web documents loaded with the SystemPrincipal
 pref("security.disallow_non_local_systemprincipal_in_tests", false);
