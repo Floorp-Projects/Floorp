@@ -41,6 +41,7 @@ class OnboardingPrivateBrowsingViewHolder(view: View) : RecyclerView.ViewHolder(
         }
 
         view.description_text.text = text
+        view.contentDescription = String.format(text.toString(), view.header_text.text)
     }
 
     class PrivateBrowsingImageSpan(
