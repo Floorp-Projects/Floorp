@@ -259,7 +259,7 @@ class MockRuntime {
           leftDegrees: 50.899,
           rightDegrees: 35.197
         },
-        offset: new gfx.mojom.Vector3dF(-0.032, 0, 0),
+        offset: { x: -0.032, y: 0, z: 0 },
         renderWidth: 20,
         renderHeight: 20
       },
@@ -270,7 +270,7 @@ class MockRuntime {
           leftDegrees: 50.899,
           rightDegrees: 35.197
         },
-        offset: new gfx.mojom.Vector3dF(0.032, 0, 0),
+        offset: { x: 0.032, y: 0, z: 0 },
         renderWidth: 20,
         renderHeight: 20
       },
@@ -303,7 +303,7 @@ class MockRuntime {
         leftDegrees: toDegrees(leftTan),
         rightDegrees: toDegrees(rightTan)
       },
-      offset: new gfx.mojom.Vector3dF(0, 0, 0),
+      offset: { x: 0, y: 0, z: 0 },
       renderWidth: 20,
       renderHeight: 20
     };
