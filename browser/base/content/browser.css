@@ -651,8 +651,8 @@ html|*#urlbar-input {
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 #urlbar[usertyping] > .urlbar-history-dropmarker,
-#urlbar:not([usertyping]) > .urlbar-go-button,
-#urlbar:not([focused]) > .urlbar-go-button {
+#urlbar:not([usertyping]) > #urlbar-go-button,
+#urlbar:not([focused]) > #urlbar-go-button {
   display: none;
 }
 
