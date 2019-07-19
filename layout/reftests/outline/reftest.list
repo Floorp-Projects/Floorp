@@ -12,3 +12,4 @@ pref(layout.css.outline-style-auto.enabled,true) skip-if(!gtkWidget&&!winWidget&
 pref(layout.css.outline-style-auto.enabled,false) == outline-auto-001.html outline-auto-001-solid-ref.html
 == outline-initial-1a.html outline-initial-1-ref.html
 == outline-initial-1b.html outline-initial-1-ref.html
+== outline-on-table.html outline-on-table-ref.html
