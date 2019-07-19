@@ -53,31 +53,27 @@ window.onload = function() {
   ok(isHidden("root"), "The highlighter is hidden");
 
   info("Show the highlighter with overlay and toolbar");
-  let didShow = highlighter.show(null, {"reason": "Paused in debugger"});
+  let didShow = highlighter.show(null, { "reason": "breakpoint" });
   ok(didShow, "Calling show returned true");
   ok(!isHidden("root"), "The highlighter is shown");
   ok(isOverlayShown(), "The overlay is shown");
-  is(getReason(), "Paused in debugger", "The reason displayed in the toolbar is correct");
+  is(
+    getReason(),
+    "Paused on breakpoint",
+    "The reason displayed in the toolbar is correct"
+  );
 
   info("Call show again with another reason");
-  didShow = highlighter.show(null, {"reason": "Paused for another reason"});
+  didShow = highlighter.show(null, {"reason": "debuggerStatement"});
   ok(didShow, "Calling show returned true too");
   ok(!isHidden("root"), "The highlighter is still shown");
-  is(getReason(), "Paused for another reason",
+  is(getReason(), "Paused on debugger statement",
      "The reason displayed in the toolbar is correct again");
   ok(isOverlayShown(), "The overlay is still shown too");
 
   info("Call show again but with no reason");
   highlighter.show();
-  ok(isHidden("toolbar"), "The toolbar is hidden");
   ok(isOverlayShown(), "The overlay is shown however");
-
-  info("Call show again with a reason but no overlay");
-  highlighter.show(null, {reason: "no overlay this time", onlyToolbar: true});
-  ok(!isHidden("toolbar"), "The toolbar is shown this time");
-  is(getReason(), "no overlay this time",
-     "The reason displayed in the toolbar is correct again");
-  ok(!isOverlayShown(), "The overlay is hidden");
 
   info("Hide the highlighter");
   highlighter.hide();
