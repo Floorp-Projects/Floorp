@@ -115,6 +115,13 @@ customising the test run:
 [A complete listing of the command-line arguments is available
 here](command-line-arguments).
 
+```eval_rst
+.. toctree::
+   :hidden:
+
+   command-line-arguments
+```
+
 Additional browser-specific documentation:
 
 ```eval_rst

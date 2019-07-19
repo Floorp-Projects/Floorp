@@ -3,6 +3,15 @@
 This section documents all the information necessary to administer the
 infrastructure which makes the project possible.
 
+## Tooling
+
+```eval_rst
+.. toctree::
+   :titlesonly:
+
+   ../README
+```
+
 ## Secrets
 
 Some aspects of the infrastructure are only accessible to administrators.
