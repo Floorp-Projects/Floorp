@@ -10,7 +10,6 @@ extern crate cubeb_backend;
 extern crate pulse;
 extern crate pulse_ffi;
 extern crate semver;
-extern crate ringbuf;
 
 mod capi;
 mod backend;

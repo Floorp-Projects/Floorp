@@ -639,15 +639,11 @@ impl ProplistExt for SourceInfo {
 
 pub trait SampleSpecExt {
     fn frame_size(&self) -> usize;
-    fn sample_size(&self) -> usize;
 }
 
 impl SampleSpecExt for SampleSpec {
     fn frame_size(&self) -> usize {
         unsafe { ffi::pa_frame_size(self) }
-    }
-    fn sample_size(&self) -> usize {
-        unsafe { ffi::pa_sample_size(self) }
     }
 }
 
