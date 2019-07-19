@@ -130,9 +130,9 @@ bool BaselineCompiler::init() {
   return true;
 }
 
-bool BaselineCompilerHandler::appendRetAddrEntry(JSContext* cx,
-                                                 RetAddrEntry::Kind kind,
-                                                 uint32_t retOffset) {
+bool BaselineCompilerHandler::recordCallRetAddr(JSContext* cx,
+                                                RetAddrEntry::Kind kind,
+                                                uint32_t retOffset) {
   uint32_t pcOffset = script_->pcToOffset(pc_);
 
   // Entries must be sorted by pcOffset for binary search to work.
@@ -148,6 +148,26 @@ bool BaselineCompilerHandler::appendRetAddrEntry(JSContext* cx,
   if (!retAddrEntries_.emplaceBack(pcOffset, kind, CodeOffset(retOffset))) {
     ReportOutOfMemory(cx);
     return false;
+  }
+
+  return true;
+}
+
+bool BaselineInterpreterHandler::recordCallRetAddr(JSContext* cx,
+                                                   RetAddrEntry::Kind kind,
+                                                   uint32_t retOffset) {
+  switch (kind) {
+    case RetAddrEntry::Kind::DebugPrologue:
+      callVMOffsets_.debugPrologueOffset = retOffset;
+      break;
+    case RetAddrEntry::Kind::DebugEpilogue:
+      callVMOffsets_.debugEpilogueOffset = retOffset;
+      break;
+    case RetAddrEntry::Kind::DebugAfterYield:
+      callVMOffsets_.debugAfterYieldOffset = retOffset;
+      break;
+    default:
+      break;
   }
 
   return true;
@@ -295,15 +315,14 @@ MethodStatus BaselineCompiler::compile() {
   }
 
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(
-          script, bailoutPrologueOffset_.offset(),
-          warmUpCheckPrologueOffset_.offset(), debugOsrPrologueOffset_.offset(),
-          debugOsrEpilogueOffset_.offset(),
-          profilerEnterFrameToggleOffset_.offset(),
-          profilerExitFrameToggleOffset_.offset(),
-          handler.retAddrEntries().length(), pcMappingIndexEntries.length(),
-          pcEntries.length(), script->resumeOffsets().size(),
-          traceLoggerToggleOffsets_.length()),
+      BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                          warmUpCheckPrologueOffset_.offset(),
+                          profilerEnterFrameToggleOffset_.offset(),
+                          profilerExitFrameToggleOffset_.offset(),
+                          handler.retAddrEntries().length(),
+                          pcMappingIndexEntries.length(), pcEntries.length(),
+                          script->resumeOffsets().size(),
+                          traceLoggerToggleOffsets_.length()),
       JS::DeletePolicy<BaselineScript>(cx->runtime()));
   if (!baselineScript) {
     ReportOutOfMemory(cx);
@@ -773,7 +792,7 @@ bool BaselineCodeGen<Handler>::callVMInternal(VMFunctionId id,
   }
 #endif
 
-  return handler.appendRetAddrEntry(cx, kind, callOffset);
+  return handler.recordCallRetAddr(cx, kind, callOffset);
 }
 
 template <typename Handler>
@@ -1155,13 +1174,7 @@ bool BaselineCodeGen<Handler>::emitDebugPrologue() {
     masm.bind(&done);
     return true;
   };
-  if (!emitDebugInstrumentation(ifDebuggee)) {
-    return false;
-  }
-
-  debugOsrPrologueOffset_ = CodeOffset(masm.currentOffset());
-
-  return true;
+  return emitDebugInstrumentation(ifDebuggee);
 }
 
 template <>
@@ -1585,8 +1598,8 @@ bool BaselineCompiler::emitDebugTrap() {
 #endif
 
   // Add a RetAddrEntry for the return offset -> pc mapping.
-  return handler.appendRetAddrEntry(cx, RetAddrEntry::Kind::DebugTrap,
-                                    masm.currentOffset());
+  return handler.recordCallRetAddr(cx, RetAddrEntry::Kind::DebugTrap,
+                                   masm.currentOffset());
 }
 
 #ifdef JS_TRACE_LOGGING
@@ -6177,9 +6190,9 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   masm.callAndPushReturnAddress(&genStart);
 #endif
 
-  // Add a RetAddrEntry so the return offset -> pc mapping works.
-  if (!handler.appendRetAddrEntry(cx, RetAddrEntry::Kind::IC,
-                                  masm.currentOffset())) {
+  // Record the return address so the return offset -> pc mapping works.
+  if (!handler.recordCallRetAddr(cx, RetAddrEntry::Kind::IC,
+                                 masm.currentOffset())) {
     return false;
   }
 
@@ -6775,10 +6788,6 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emitEpilogue() {
-  // Record the offset of the epilogue, so we can do early return from
-  // Debugger handlers during on-stack recompile.
-  debugOsrEpilogueOffset_ = CodeOffset(masm.currentOffset());
-
   masm.bind(&return_);
 
 #ifdef JS_TRACE_LOGGING
@@ -7006,7 +7015,8 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 #undef EMIT_OP
 
   // External entry point to start interpreting bytecode ops. This is used for
-  // things like exception handling and OSR.
+  // things like exception handling and OSR. DebugModeOSR patches JIT frames to
+  // return here from the DebugTrapHandler.
   masm.bind(handler.interpretOpLabel());
   interpretOpOffset_ = masm.currentOffset();
   restoreInterpreterPCReg();
@@ -7152,7 +7162,8 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
                      profilerExitFrameToggleOffset_.offset(),
                      std::move(handler.debugInstrumentationOffsets()),
                      std::move(debugTrapOffsets_),
-                     std::move(handler.codeCoverageOffsets()));
+                     std::move(handler.codeCoverageOffsets()),
+                     handler.callVMOffsets());
   }
 
   if (cx->runtime()->geckoProfiler().enabled()) {

@@ -171,7 +171,6 @@ JitRuntime::JitRuntime()
       interpreterStubOffset_(0),
       doubleToInt32ValueStubOffset_(0),
       debugTrapHandlers_(),
-      baselineDebugModeOSRHandler_(nullptr),
       baselineInterpreter_(),
       trampolineCode_(nullptr),
       jitcodeGlobalTable_(nullptr),

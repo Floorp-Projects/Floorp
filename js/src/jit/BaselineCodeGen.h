@@ -288,14 +288,6 @@ class BaselineCodeGen {
   // is right after the warm-up counter check in the prologue.
   CodeOffset warmUpCheckPrologueOffset_;
 
-  // Baseline Debug OSR during prologue will enter at this address. This is
-  // right after where a debug prologue VM call would have returned.
-  CodeOffset debugOsrPrologueOffset_;
-
-  // Baseline Debug OSR during epilogue will enter at this address. This is
-  // right after where a debug epilogue VM call would have returned.
-  CodeOffset debugOsrEpilogueOffset_;
-
   uint32_t pushedBeforeCall_;
 #ifdef DEBUG
   bool inCall_;
@@ -585,8 +577,8 @@ class BaselineCompilerHandler {
 
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
 
-  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
-                                       uint32_t retOffset);
+  MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
+                                      uint32_t retOffset);
 
   // If a script has more |nslots| than this the stack check must account
   // for these slots explicitly.
@@ -678,6 +670,9 @@ class BaselineInterpreterHandler {
   Label codeCoverageAtPrologueLabel_;
   Label codeCoverageAtPCLabel_;
 
+  // Offsets of some callVMs for BaselineDebugModeOSR.
+  BaselineInterpreter::CallVMOffsets callVMOffsets_;
+
  public:
   using FrameInfoT = InterpreterFrameInfo;
 
@@ -706,12 +701,12 @@ class BaselineInterpreterHandler {
     return debugInstrumentationOffsets_.append(offset.offset());
   }
 
-  // Interpreter doesn't need to keep track of RetAddrEntries, so this is a
-  // no-op.
-  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
-                                       uint32_t retOffset) {
-    return true;
+  const BaselineInterpreter::CallVMOffsets& callVMOffsets() const {
+    return callVMOffsets_;
   }
+
+  MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
+                                      uint32_t retOffset);
 
   bool maybeIonCompileable() const { return true; }
 
