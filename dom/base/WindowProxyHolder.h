@@ -70,6 +70,7 @@ inline void ImplCycleCollectionUnlink(WindowProxyHolder& aProxy) {
 }
 
 extern bool GetRemoteOuterWindowProxy(JSContext* aCx, BrowsingContext* aContext,
+                                      JS::Handle<JSObject*> aTransplantTo,
                                       JS::MutableHandle<JSObject*> aValue);
 
 }  // namespace dom

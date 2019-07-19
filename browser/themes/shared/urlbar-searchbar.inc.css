@@ -26,18 +26,16 @@
 
 #urlbar,
 #searchbar {
-  -moz-appearance: none;
   background-color: -moz-Field;
   color: -moz-FieldText;
   background-clip: content-box;
   border: 1px solid @fieldBorderColor@;
   border-radius: var(--toolbarbutton-border-radius);
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
-  padding: 0;
   margin: 3px 5px;
   min-height: 30px;
-  cursor: default;
   overflow: -moz-hidden-unscrollable;
+  text-shadow: none;
 }
 
 .searchbar-textbox {
@@ -114,9 +112,12 @@
   visibility: hidden;
 }
 
-.urlbar-input {
-  /* Remove the 1px padding-left (and padding-right) so that the titles in the
-     urlbar popup align with the text in the input. */
+.urlbar-input,
+.urlbar-scheme {
+  -moz-box-flex: 1;
+  background-color: transparent;
+  color: inherit;
+  border: none;
   padding: 0;
 }
 

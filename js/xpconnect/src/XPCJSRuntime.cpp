@@ -2651,10 +2651,10 @@ static nsresult JSSizeOfTab(JSObject* objArg, size_t* jsObjectsSize,
       JS::AddSizeOfTab(cx, obj, moz_malloc_size_of, &orphanReporter, &sizes),
       NS_ERROR_OUT_OF_MEMORY);
 
-  *jsObjectsSize = sizes.objects;
-  *jsStringsSize = sizes.strings;
+  *jsObjectsSize = sizes.objects_;
+  *jsStringsSize = sizes.strings_;
   *jsPrivateSize = sizes.private_;
-  *jsOtherSize = sizes.other;
+  *jsOtherSize = sizes.other_;
   return NS_OK;
 }
 

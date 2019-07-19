@@ -44,7 +44,8 @@ class ScriptedOnStepHandler final : public OnStepHandler {
  public:
   explicit ScriptedOnStepHandler(JSObject* object);
   virtual JSObject* object() const override;
-  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
+  virtual void hold(JSObject* owner) override;
+  virtual void drop(js::FreeOp* fop, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onStep(JSContext* cx, HandleDebuggerFrame frame,
@@ -76,7 +77,8 @@ class ScriptedOnPopHandler final : public OnPopHandler {
  public:
   explicit ScriptedOnPopHandler(JSObject* object);
   virtual JSObject* object() const override;
-  virtual void drop(js::FreeOp* fop, DebuggerFrame* frame) override;
+  virtual void hold(JSObject* owner) override;
+  virtual void drop(js::FreeOp* fop, JSObject* owner) override;
   virtual void trace(JSTracer* tracer) override;
   virtual size_t allocSize() const override;
   virtual bool onPop(JSContext* cx, HandleDebuggerFrame frame,

@@ -755,6 +755,14 @@ struct JSObject_Slots16 : JSObject {
 
 namespace js {
 
+// Returns true if object may possibly use JSObject::swap. The JITs may better
+// optimize objects that can never swap (and thus change their type).
+//
+// If ObjectMayBeSwapped is false, it is safe to guard on pointer identity to
+// test immutable features of the object. For example, the target of a
+// JSFunction will not change. Note: the object can still be moved by GC.
+extern bool ObjectMayBeSwapped(const JSObject* obj);
+
 /**
  * This enum is used to select whether the defined functions should be marked as
  * builtin native instrinsics for self-hosted code.

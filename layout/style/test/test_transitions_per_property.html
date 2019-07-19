@@ -42,6 +42,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=435441
 <script type="application/javascript">
 
 /* eslint no-shadow: ["error", {"allow": ["prop", "div"]}] */
+/* eslint-disable dot-notation */
+
 
 /** Test for Bug 435441 **/
 
@@ -1830,10 +1832,9 @@ function test_shape_or_url_equals(computedValStr, expected)
   if (expectedList.length == 0) {
     if (computedValStr == "") {
       return true;
-    } else {
-      ok(false, "expected basic shape");
-      return false;
-    }
+    } 
+    ok(false, "expected basic shape");
+    return false;
   }
 
   // The regular expression does not filter out the last parenthesis.

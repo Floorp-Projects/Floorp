@@ -493,7 +493,6 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
 
   static const nsOuterWindowProxy singleton;
 
- protected:
   static nsGlobalWindowOuter* GetOuterWindow(JSObject* proxy) {
     nsGlobalWindowOuter* outerWindow =
         nsGlobalWindowOuter::FromSupports(static_cast<nsISupports*>(
@@ -501,6 +500,7 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
     return outerWindow;
   }
 
+ protected:
   // False return value means we threw an exception.  True return value
   // but false "found" means we didn't have a subframe at that index.
   bool GetSubframeWindow(JSContext* cx, JS::Handle<JSObject*> proxy,
@@ -2282,6 +2282,51 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
   }
 
   return NS_OK;
+}
+
+/* static */
+void nsGlobalWindowOuter::PrepareForProcessChange(JSObject* aProxy) {
+  JS::Rooted<JSObject*> localProxy(RootingCx(), aProxy);
+  MOZ_ASSERT(js::IsWindowProxy(localProxy));
+
+  RefPtr<nsGlobalWindowOuter> outerWindow =
+      nsOuterWindowProxy::GetOuterWindow(localProxy);
+  if (!outerWindow) {
+    return;
+  }
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+
+  JSAutoRealm ar(cx, localProxy);
+
+  // Clear out existing references from the browsing context and outer window to
+  // the proxy, and from the proxy to the outer window. These references will
+  // become invalid once the proxy is transplanted. Clearing the window proxy
+  // from the browsing context is also necessary to indicate that it is for an
+  // out of process window.
+  outerWindow->ClearWrapper(localProxy);
+  RefPtr<BrowsingContext> bc = outerWindow->GetBrowsingContext();
+  MOZ_ASSERT(bc);
+  MOZ_ASSERT(bc->GetWindowProxy() == localProxy);
+  bc->ClearWindowProxy();
+  js::SetProxyReservedSlot(localProxy, OUTER_WINDOW_SLOT,
+                           js::PrivateValue(nullptr));
+  js::SetProxyReservedSlot(localProxy, HOLDER_WEAKMAP_SLOT,
+                           JS::UndefinedValue());
+
+  // Create a new remote outer window proxy, and transplant to it.
+  JS::Rooted<JSObject*> remoteProxy(cx);
+
+  if (!mozilla::dom::GetRemoteOuterWindowProxy(cx, bc, localProxy,
+                                               &remoteProxy)) {
+    MOZ_CRASH("PrepareForProcessChange GetRemoteOuterWindowProxy");
+  }
+
+  if (!xpc::TransplantObject(cx, localProxy, remoteProxy)) {
+    MOZ_CRASH("PrepareForProcessChange TransplantObject");
+  }
 }
 
 void nsGlobalWindowOuter::PreloadLocalStorage() {
