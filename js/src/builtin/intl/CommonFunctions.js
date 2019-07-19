@@ -842,26 +842,13 @@ function CanonicalizeLanguageTagObject(localeObj) {
         }
     }
 
-    // Update mappings for complete tags.
-    updateLangTagMappings(localeObj);
+    // The next two steps in 3.3.1 replace deprecated language and region
+    // subtags with their preferred mappings.
+    updateLocaleIdMappings(localeObj);
 
-    // Replace deprecated language tags with their preferred values.
-    // "in" -> "id"
-    var language = localeObj.language;
-    if (hasOwn(language, languageMappings))
-        localeObj.language = languageMappings[language];
-
-    // No script replacements are currently present.
-
-    // Replace deprecated subtags with their preferred values.
-    // "BU" -> "MM"
-    var region = localeObj.region;
-    if (region && hasOwn(region, regionMappings))
-        localeObj.region = regionMappings[region];
-
-    // No variant replacements are currently present.
-    // No extension replacements are currently present.
-    // Private use sequences are left as is.
+    // The two final steps in 3.3.1, handling irregular grandfathered and
+    // private-use only language tags, don't apply, because these two forms
+    // can't occur in Unicode BCP 47 locale identifiers.
 
     return localeObj;
 }
@@ -1192,17 +1179,18 @@ function ValidateAndCanonicalizeLanguageTag(locale) {
         // The language subtag is canonicalized to lower case.
         locale = callFunction(std_String_toLowerCase, locale);
 
-        // updateLangTagMappings doesn't modify tags containing only
-        // |language| subtags, so we don't need to call it for possible
-        // replacements.
+        // updateLocaleIdMappings may modify tags containing only |language|
+        // subtags, if the language is in |complexLanguageMappings|, so we need
+        // to handle that case first.
+        if (!hasOwn(locale, complexLanguageMappings)) {
+            // Replace deprecated subtags with their preferred values.
+            locale = hasOwn(locale, languageMappings)
+                     ? languageMappings[locale]
+                     : locale;
+            assert(locale === CanonicalizeLanguageTag(locale), "expected same canonicalization");
 
-        // Replace deprecated subtags with their preferred values.
-        locale = hasOwn(locale, languageMappings)
-                 ? languageMappings[locale]
-                 : locale;
-        assert(locale === CanonicalizeLanguageTag(locale), "expected same canonicalization");
-
-        return locale;
+            return locale;
+        }
     }
 
     var localeObj = parseLanguageTag(locale);

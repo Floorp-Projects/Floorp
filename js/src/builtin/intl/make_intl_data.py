@@ -7,7 +7,7 @@
 
 """ Usage:
     make_intl_data.py langtags [language-subtag-registry.txt]
-    make_intl_data.py cldr-langtags [ldmlSupplemental.dtd supplementalMetadata.xml]
+    make_intl_data.py cldr-langtags [ldmlSupplemental.dtd supplementalMetadata.xml likelySubtags.xml]
     make_intl_data.py tzdata
     make_intl_data.py currency
 
@@ -262,7 +262,11 @@ def writeMappingsVar(println, mapping, name, description, source, url):
     println(u"var {0} = {{".format(name))
     for key in sorted(mapping):
         if not isinstance(mapping[key], dict):
-            value = '"{0}"'.format(mapping[key])
+            value = mapping[key]
+            if isinstance(value, bool):
+                value = "true" if value else "false"
+            else:
+                value = '"{0}"'.format(value)
         else:
             preferred = mapping[key]["preferred"]
             prefix = mapping[key]["prefix"]
@@ -524,6 +528,146 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, descripti
     println(u"/* eslint-enable complexity */")
 
 
+def writeUpdateLocaleIdMappingsFunction(println,
+                                        complex_language_mappings,
+                                        complex_region_mappings,
+                                        description, source, url):
+    """ Writes a function definition that performs language tag mapping. """
+    println(u"")
+    writeMappingHeader(println, description, source, url)
+    println(u"""\
+/* eslint-disable complexity */
+function updateLocaleIdMappings(tag) {
+    assert(IsObject(tag), "tag is an object");
+    assert(!hasOwn("grandfathered", tag), "tag is not a grandfathered tag");
+
+    // Replace deprecated language tags with their preferred values.
+    var language = tag.language;
+    if (hasOwn(language, languageMappings)) {
+        tag.language = languageMappings[language];
+    } else if (hasOwn(language, complexLanguageMappings)) {
+        switch (language) {""")
+
+    # Merge duplicate language entries.
+    language_aliases = {}
+    for (deprecated_language, (language, script, region)) in (
+        sorted(complex_language_mappings.items(), key=itemgetter(0))
+    ):
+        key = (language, script, region)
+        if key not in language_aliases:
+            language_aliases[key] = []
+        else:
+            language_aliases[key].append(deprecated_language)
+
+    for (deprecated_language, (language, script, region)) in (
+        sorted(complex_language_mappings.items(), key=itemgetter(0))
+    ):
+        key = (language, script, region)
+        if deprecated_language in language_aliases[key]:
+            continue
+
+        for lang in [deprecated_language] + language_aliases[key]:
+            println(u"""
+          case "{}":
+            """.format(lang).rstrip().strip("\n"))
+
+        println(u"""
+            tag.language = "{}";
+        """.format(language).rstrip().strip("\n"))
+        if script is not None:
+            println(u"""
+            if (tag.script === undefined)
+                tag.script = "{}";
+            """.format(script).rstrip().strip("\n"))
+        if region is not None:
+            println(u"""
+            if (tag.region === undefined)
+                tag.region = "{}";
+            """.format(region).rstrip().strip("\n"))
+        println(u"""
+            break;
+        """.rstrip().strip("\n"))
+
+    println(u"""
+          default:
+            assert(false, "language not handled: " + language);
+        }
+    }
+
+    // No script replacements are currently present.
+
+    // Replace deprecated subtags with their preferred values.
+    var region = tag.region;
+    if (region !== undefined) {
+        if (hasOwn(region, regionMappings)) {
+            tag.region = regionMappings[region];
+        } else if (hasOwn(region, complexRegionMappings)) {
+            switch (region) {""".lstrip("\n"))
+
+    # |non_default_replacements| is a list and hence not hashable. Convert it
+    # to a string to get a proper hashable value.
+    def hash_key(default, non_default_replacements):
+        return (default, str(sorted(str(v) for v in non_default_replacements)))
+
+    # Merge duplicate region entries.
+    region_aliases = {}
+    for (deprecated_region, (default, non_default_replacements)) in (
+        sorted(complex_region_mappings.items(), key=itemgetter(0))
+    ):
+        key = hash_key(default, non_default_replacements)
+        if key not in region_aliases:
+            region_aliases[key] = []
+        else:
+            region_aliases[key].append(deprecated_region)
+
+    for (deprecated_region, (default, non_default_replacements)) in (
+        sorted(complex_region_mappings.items(), key=itemgetter(0))
+    ):
+        key = hash_key(default, non_default_replacements)
+        if deprecated_region in region_aliases[key]:
+            continue
+
+        for region in [deprecated_region] + region_aliases[key]:
+            println(u"""
+              case "{}":
+            """.format(region).rstrip().strip("\n"))
+
+        for (language, script, region) in sorted(non_default_replacements, key=itemgetter(0)):
+            if script is None:
+                println(u"""
+                if (tag.language === "{}") {{
+                """.format(language).rstrip().strip("\n"))
+            else:
+                println(u"""
+                if (tag.language === "{}" && tag.script === "{}") {{
+                """.format(language, script).rstrip().strip("\n"))
+            println(u"""
+                    tag.region = "{}";
+                    break;
+                }}
+            """.format(region).rstrip().strip("\n"))
+
+        println(u"""
+                tag.region = "{}";
+                break;
+        """.format(default).rstrip().strip("\n"))
+
+    println(u"""
+              default:
+                assert(false, "region not handled: " + region);
+            }
+        }
+
+        // No variant replacements are currently present.
+        // No extension replacements are currently present.
+        // Private use sequences are left as is.
+
+    }
+}
+/* eslint-enable complexity */
+""".strip("\n"))
+
+
 def writeLanguageTagData(println, data, url):
     """ Writes the language tag data to the Intl data file. """
 
@@ -588,15 +732,17 @@ def TemporaryDirectory():
         shutil.rmtree(tmpDir)
 
 
-def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file):
+def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file, likely_subtags_file):
     """ Reads CLDR Supplemental Data and extracts information for Intl.js.
 
         Information extracted:
         - grandfatheredMappings: mappings from grandfathered tags to preferred
           complete language tags
         - languageMappings: mappings from language subtags to preferred subtags
+        - complexLanguageMappings: mappings from language subtags with complex rules
         - regionMappings: mappings from region subtags to preferred subtags
-        Returns these three mappings as dictionaries.
+        - complexRegionMappings: mappings from region subtags with complex rules
+        Returns these five mappings as dictionaries.
     """
     import xml.etree.ElementTree as ET
 
@@ -764,10 +910,73 @@ def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file):
             ), "{} invalid region subtags".format(replacement)
             complex_region_mappings[type] = replacements
 
+    tree = ET.parse(likely_subtags_file)
+
+    likely_subtags = {}
+
+    for likely_subtag in tree.iterfind(".//likelySubtag"):
+        from_tag = bcp47_id(likely_subtag.get("from"))
+        from_match = re_unicode_language_id.match(from_tag)
+        assert from_match is not None, (
+               "{} invalid Unicode BCP 47 locale identifier".format(from_tag))
+        assert from_match.group("variants") is None, (
+               "unexpected variant subtags in {}".format(from_tag))
+
+        to_tag = bcp47_id(likely_subtag.get("to"))
+        to_match = re_unicode_language_id.match(to_tag)
+        assert to_match is not None, (
+               "{} invalid Unicode BCP 47 locale identifier".format(to_tag))
+        assert to_match.group("variants") is None, (
+               "unexpected variant subtags in {}".format(to_tag))
+
+        from_canonical = bcp47_canonical(from_match.group("language"),
+                                         from_match.group("script"),
+                                         from_match.group("region"))
+
+        to_canonical = bcp47_canonical(to_match.group("language"),
+                                       to_match.group("script"),
+                                       to_match.group("region"))
+
+        likely_subtags[from_canonical] = to_canonical
+
+    complex_region_mappings_final = {}
+
+    for (deprecated_region, replacements) in complex_region_mappings.items():
+        # Find all likely subtag entries which don't already contain a region
+        # subtag and whose target region is in the list of replacement regions.
+        region_likely_subtags = [(from_language, from_script, to_region)
+                                 for ((from_language, from_script, from_region),
+                                      (_, _, to_region)) in likely_subtags.items()
+                                 if from_region is None and to_region in replacements]
+
+        # The first replacement entry is the default region.
+        default = replacements[0]
+
+        # Find all likely subtag entries whose region matches the default region.
+        default_replacements = {(language, script)
+                                for (language, script, region) in region_likely_subtags
+                                if region == default}
+
+        # And finally find those entries which don't use the default region.
+        # These are the entries we're actually interested in, because those need
+        # to be handled specially when selecting the correct preferred region.
+        non_default_replacements = [(language, script, region)
+                                    for (language, script, region) in region_likely_subtags
+                                    if (language, script) not in default_replacements]
+
+        # If there are no non-default replacements, we can handle the region as
+        # part of the simple region mapping.
+        if non_default_replacements:
+            complex_region_mappings_final[deprecated_region] = (default, non_default_replacements)
+        else:
+            region_mappings[deprecated_region] = default
+
     return {"version": cldr_version,
             "grandfatheredMappings": grandfathered_mappings,
             "languageMappings": language_mappings,
+            "complexLanguageMappings": complex_language_mappings,
             "regionMappings": region_mappings,
+            "complexRegionMappings": complex_region_mappings_final,
             }
 
 
@@ -777,14 +986,27 @@ def writeCLDRLanguageTagData(println, data, url):
     source = u"CLDR Supplemental Data, version {}".format(data["version"])
     grandfathered_mappings = data["grandfatheredMappings"]
     language_mappings = data["languageMappings"]
+    complex_language_mappings = data["complexLanguageMappings"]
     region_mappings = data["regionMappings"]
+    complex_region_mappings = data["complexRegionMappings"]
 
     writeMappingsVar(println, grandfathered_mappings, "grandfatheredMappings",
                      "Mappings from grandfathered tags to preferred values.", source, url)
     writeMappingsVar(println, language_mappings, "languageMappings",
                      "Mappings from language subtags to preferred values.", source, url)
+    writeMappingsVar(println, {key: True for key in complex_language_mappings},
+                     "complexLanguageMappings",
+                     "Language subtags with complex mappings.", source, url)
     writeMappingsVar(println, region_mappings, "regionMappings",
                      "Mappings from region subtags to preferred values.", source, url)
+    writeMappingsVar(println, {key: True for key in complex_region_mappings},
+                     "complexRegionMappings",
+                     "Region subtags with complex mappings.", source, url)
+
+    writeUpdateLocaleIdMappingsFunction(println, complex_language_mappings,
+                                        complex_region_mappings,
+                                        "Canonicalize Unicode BCP 47 locale identifiers.",
+                                        source, url)
 
 
 def updateCLDRLangTags(args):
@@ -799,19 +1021,20 @@ def updateCLDRLangTags(args):
     print("\tDownload url: %s" % url)
     print("\tBranch: %s" % branch)
     print("\tRevision: %s" % revision)
-    print("\tLocal supplemental data: %s" % files)
+    print("\tLocal supplemental data and likely subtags: %s" % files)
     print("\tOutput file: %s" % out)
     print("")
 
     if files:
-        if len(files) != 2:
-            raise Exception("Expected two files, but got: {}".format(files))
+        if len(files) != 3:
+            raise Exception("Expected three files, but got: {}".format(files))
 
-        print(("Always make sure you have the newest ldmlSupplemental.dtd "
-               "and supplementalMetadata.xml!"))
+        print(("Always make sure you have the newest ldmlSupplemental.dtd, "
+               "supplementalMetadata.xml, and likelySubtags.xml!"))
 
         supplemental_dtd_file = files[0]
         supplemental_metadata_file = files[1]
+        likely_subtags_file = files[2]
     else:
         print("Downloading CLDR supplemental data...")
 
@@ -824,6 +1047,9 @@ def updateCLDRLangTags(args):
             supplemental_metadata_filename)
         supplemental_metadata_file = os.path.join(os.getcwd(), supplemental_metadata_filename)
 
+        likely_subtags_filename = "likelySubtags.xml"
+        likely_subtags_path = "common/supplemental/{}".format(likely_subtags_filename)
+        likely_subtags_file = os.path.join(os.getcwd(), likely_subtags_filename)
 
         # Try to download the raw file directly from GitHub if possible.
         split = urlsplit(url)
@@ -840,6 +1066,7 @@ def updateCLDRLangTags(args):
 
             download(supplemental_dtd_path, supplemental_dtd_file)
             download(supplemental_metadata_path, supplemental_metadata_file)
+            download(likely_subtags_path, likely_subtags_file)
         else:
             # Download the requested branch in a temporary directory.
             with TemporaryDirectory() as inDir:
@@ -855,10 +1082,12 @@ def updateCLDRLangTags(args):
                                     supplemental_dtd_file)
                     shutil.copyfile(os.path.join(inDir, supplemental_metadata_path),
                                     supplemental_metadata_file)
+                    shutil.copyfile(os.path.join(inDir, likely_subtags_path), likely_subtags_file)
 
     print("Processing CLDR supplemental data...")
     data = readSupplementalData(supplemental_dtd_file,
-                                supplemental_metadata_file)
+                                supplemental_metadata_file,
+                                likely_subtags_file)
 
     print("Writing Intl data...")
     with io.open(out, mode="w", encoding="utf-8", newline="") as f:
@@ -1766,7 +1995,8 @@ if __name__ == "__main__":
                                   help="Output file (default: %(default)s)")
     parser_cldr_tags.add_argument("files",
                                   nargs="*",
-                                  help="Local ldmlSupplemental.dtd and supplementalMetadata.xml files, if omitted uses <URL>")
+                                  help="Local ldmlSupplemental.dtd, supplementalMetadata.xml, "
+                                       "and likelySubtags.xml files, if omitted uses <URL>")
     parser_cldr_tags.set_defaults(func=updateCLDRLangTags)
 
     parser_tz = subparsers.add_parser("tzdata", help="Update tzdata")
