@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<title>CSSOM View - scrollIntoView considers vertical-rl writing mode</title>
+<title>CSSOM View - scrollIntoView considers vertical-lr and rtl direction</title>
 <meta charset="utf-8">
-<link rel="author" title="Suneel Kota" href="mailto:suneel.kota@samsung.com">
+<link rel="author" title="Cathie Chen" href="mailto:cathiechen@igalia.com">
 <link rel="help" href="https://drafts.csswg.org/cssom-view/#dom-element-scrollintoview">
+<link rel="help" href="https://drafts.csswg.org/cssom-view/#scroll-an-element">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 
@@ -13,7 +14,8 @@
   height: 200px;
 }
 #scroller {
-  writing-mode: vertical-rl;
+  writing-mode: vertical-lr;
+  direction: rtl;
   overflow: scroll;
   width: 300px;
   height: 300px;
@@ -29,21 +31,21 @@
 <body>
 <div id="scroller">
   <div id="container">
-    <!-- ROW-1 -->
+    <!--  ROW-1  -->
     <div class="row">
       <div class="box"></div>
       <div class="box"></div>
       <div class="box"></div>
     </div>
 
-    <!-- ROW-2 -->
+    <!--  ROW-2  -->
     <div class="row">
       <div class="box"></div>
       <div class="box" id="target"></div>
       <div class="box"></div>
     </div>
 
-    <!-- ROW-3 -->
+    <!--  ROW-3  -->
     <div class="row">
       <div class="box"></div>
       <div class="box"></div>
@@ -53,12 +55,16 @@
 </div>
 
 <script>
-// In vertical-rl mode, X corresponds to the block axis and is oriented
-// leftward. Y corresponds to the inline axis and is oriented downward.
-// So the beginning edges are the top and right edges and the ending
-// edges are the bottom and left edges.
+// In vertical-lr mode and rtl direction, X corresponds to the block axis
+// and is oriented rightward. Y corresponds to the inline axis and is oriented
+// upward. So the beginning edges are the bottom and left edges and the ending
+// edges are the top and right edges.
 
-// This assumes that the horizontal scrollbar is on the bottom side.
+// According to the spec, y be min(0, max(y, element padding edge height - element scrolling area height)).
+// So y is nonpositive and decreases upward.
+
+// This assumes that the horizontal scrollbar
+// is on the bottom side and the vertical scrollbar is on the right side.
 
 var target = document.getElementById("target");
 var scroller = document.getElementById("scroller");
@@ -69,42 +75,17 @@ var scroller_height = scroller.offsetHeight;
 var box_width = target.offsetWidth;
 var box_height = target.offsetHeight;
 
-var expectedX;
-// If scroll bar is on the left side, scroller.scrollLeft won't get bigger than 0,
-scroller.scrollLeft = scrollbar_width;
-if (scroller.scrollLeft == 0) {
-  expectedX = {
-    blockStart: -box_width,
-    blockCenter: -(((3*box_width - scroller_width)/2) + (scrollbar_width/2)),
-    blockEnd: -(((2*box_width) - scroller_width) + scrollbar_width),
-  };
-} else {
-  expectedX = {
-    blockStart: -(box_width - scrollbar_width),
-    blockCenter: -(((3*box_width - scroller_width)/2) + (scrollbar_width/2) - scrollbar_width),
-    blockEnd: -((2*box_width) - scroller_width),
-  };
-}
-
-var expectedY = {
-  inlineStart: box_height,
-  inlineCenter: ((3*box_height - scroller_height)/2) + (scrollbar_width/2),
-  inlineEnd: ((2*box_height) - scroller_height) + scrollbar_width,
+var expectedX = {
+    blockStart: box_width,
+    blockCenter: (3*box_width - scroller_width)/2 + scrollbar_width/2,
+    blockEnd: 2*box_width - scroller_width + scrollbar_width,
 };
 
-// As browsers differ in the meaning of scrollLeft when
-// in a right-to-left mode, we adjust the expectation
-// to match the semantics of scrollLeft.
-// In vertical-rl mode, the scroll x coordinate should be nonpositive per the the spec.
-// But some browsers is nonnegative, so we adjust the expectation.
-scroller.scrollLeft = -1000;
-if(scroller.scrollLeft === 0) {
-  expectedX = {
-    blockStart: ((2*box_width) - scroller_width) + scrollbar_width,
-    blockCenter: ((3*box_width - scroller_width)/2) + (scrollbar_width/2),
-    blockEnd: box_width,
-  };
-}
+var expectedY = {
+  inlineStart: -box_height,
+  inlineCenter: -((3*box_height - scroller_height)/2) - scrollbar_width/2,
+  inlineEnd: -(2*box_height - scroller_height) - scrollbar_width,
+};
 
 [
   [{block: "start", inline: "start"}, expectedX.blockStart, expectedY.inlineStart],
