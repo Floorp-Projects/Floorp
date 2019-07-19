@@ -47,6 +47,7 @@ def test_android7_power():
             raptor.device = device
             raptor.config['power_test'] = True
             raptor.control_server = control_server
+            raptor.power_test_time = 20  # minutes
             raptor.os_baseline_data = {
                 u'type': u'power',
                 u'test': u'gve-pytest',
@@ -71,14 +72,27 @@ def test_android7_power():
                 }
             }
 
+            pc_data = {
+                u'type': u'power',
+                u'test': u'gve-pytest-%change',
+                u'unit': u'%',
+                u'values': {
+                    u'cpu': float(14.5),
+                    u'wifi': float(0.132000000000005),
+                    u'screen': float(70.70000000000002)
+                }
+            }
+
             power.finish_android_power_test(
                 raptor,
                 'gve-pytest'
             )
 
-            control_server.submit_supporting_data.assert_has_calls(
-                [mock.call(power_data), mock.call(raptor.os_baseline_data)]
-            )
+            control_server.submit_supporting_data.assert_has_calls([
+                    mock.call(power_data),
+                    mock.call(pc_data),
+                    mock.call(raptor.os_baseline_data)
+            ])
 
 
 def test_android8_power():
@@ -117,6 +131,7 @@ def test_android8_power():
             raptor.device = device
             raptor.config['power_test'] = True
             raptor.control_server = control_server
+            raptor.power_test_time = 20  # minutes
             raptor.os_baseline_data = {
                 u'type': u'power',
                 u'test': u'gve-pytest',
@@ -142,14 +157,28 @@ def test_android8_power():
                 }
             }
 
+            pc_data = {
+                u'type': u'power',
+                u'test': u'gve-pytest-%change',
+                u'unit': u'%',
+                u'values': {
+                    u'cpu': float(4.700000000000017),
+                    u'wifi': float(0.0005559999999888987),
+                    u'screen': float(51.5),
+                    u'proportional': float(11.199999999999989)
+                }
+            }
+
             power.finish_android_power_test(
                 raptor,
                 'gve-pytest'
             )
 
-            control_server.submit_supporting_data.assert_has_calls(
-                [mock.call(power_data), mock.call(raptor.os_baseline_data)]
-            )
+            control_server.submit_supporting_data.assert_has_calls([
+                    mock.call(power_data),
+                    mock.call(pc_data),
+                    mock.call(raptor.os_baseline_data)
+            ])
 
 
 def test_androidos_baseline_power():
