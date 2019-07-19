@@ -45,3 +45,34 @@ def replace_malloc_static(build_project):
 
 
 set_config('MOZ_REPLACE_MALLOC_STATIC', replace_malloc_static)
+
+# PHC (Probabilistic Heap Checker)
+# ==============================================================
+
+# In general, it only makes sense for PHC to run on the platforms that have a
+# crash reporter. Currently it only runs on Linux, but not on 32-bit Linux
+# because stack tracing frequently crashes (for unclear reasons). In the
+# future, we want it to run on Win64 and Mac as well.
+@depends(milestone, target, replace_malloc_default, '--enable-replace-malloc',
+         when='--enable-jemalloc')
+def phc_default(milestone, target, replace_malloc_default, replace_malloc):
+    if not replace_malloc_default or \
+       (replace_malloc.origin != 'default' and not replace_malloc):
+        return False
+    if not milestone.is_nightly:
+        return False
+    return (target.os == 'GNU' and target.kernel == 'Linux' and
+            target.bitness == 64)
+
+
+# XXX: disabled for now
+option('--enable-phc', env='MOZ_PHC', default=False,
+       when='--enable-jemalloc',
+       help='{Enable|Disable} PHC (Probabilistic Memory Checker). '
+            'Also enables replace-malloc and frame pointers')
+imply_option('--enable-replace-malloc', True, when='--enable-phc')
+imply_option('--enable-frame-pointers', True, when='--enable-phc')
+
+
+set_config('MOZ_PHC', True, when='--enable-phc')
+

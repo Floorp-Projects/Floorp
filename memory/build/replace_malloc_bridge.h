@@ -115,6 +115,10 @@ namespace dmd {
 struct DMDFuncs;
 }  // namespace dmd
 
+namespace phc {
+class AddrInfo;
+}  // namespace phc
+
 // Callbacks to register debug file handles for Poison IO interpose.
 // See Mozilla(|Un)RegisterDebugHandle in xpcom/build/PoisonIOInterposer.h
 struct DebugFdRegistry {
@@ -126,7 +130,7 @@ struct DebugFdRegistry {
 }  // namespace mozilla
 
 struct ReplaceMallocBridge {
-  ReplaceMallocBridge() : mVersion(3) {}
+  ReplaceMallocBridge() : mVersion(4) {}
 
   // This method was added in version 1 of the bridge.
   virtual mozilla::dmd::DMDFuncs* GetDMDFuncs() { return nullptr; }
@@ -155,6 +159,28 @@ struct ReplaceMallocBridge {
       const malloc_hook_table_t* aHookTable) {
     return nullptr;
   }
+
+  // If this is a PHC-handled address, return true, and if an AddrInfo is
+  // provided, fill in all of its fields. Otherwise, return false and leave
+  // AddrInfo unchanged.
+  // This method was added in version 4 of the bridge.
+  virtual bool IsPHCAllocation(const void*, mozilla::phc::AddrInfo*) {
+    return false;
+  }
+
+  // Disable PHC allocations on the current thread. Only useful for tests. Note
+  // that PHC deallocations will still occur as needed.
+  // This method was added in version 4 of the bridge.
+  virtual void DisablePHCOnCurrentThread() {}
+
+  // Re-enable PHC allocations on the current thread. Only useful for tests.
+  // This method was added in version 4 of the bridge.
+  virtual void ReenablePHCOnCurrentThread() {}
+
+  // Test whether PHC allocations are enabled on the current thread. Only
+  // useful for tests.
+  // This method was added in version 4 of the bridge.
+  virtual bool IsPHCEnabledOnCurrentThread() { return false; }
 
 #  ifndef REPLACE_MALLOC_IMPL
   // Returns the replace-malloc bridge if its version is at least the
@@ -198,6 +224,30 @@ struct ReplaceMalloc {
     auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 3);
     return singleton ? singleton->RegisterHook(aName, aTable, aHookTable)
                      : nullptr;
+  }
+
+  static bool IsPHCAllocation(const void* aPtr, mozilla::phc::AddrInfo* aOut) {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
+    return singleton ? singleton->IsPHCAllocation(aPtr, aOut) : false;
+  }
+
+  static void DisablePHCOnCurrentThread() {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
+    if (singleton) {
+      singleton->DisablePHCOnCurrentThread();
+    }
+  }
+
+  static void ReenablePHCOnCurrentThread() {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
+    if (singleton) {
+      singleton->ReenablePHCOnCurrentThread();
+    }
+  }
+
+  static bool IsPHCEnabledOnCurrentThread() {
+    auto singleton = ReplaceMallocBridge::Get(/* minimumVersion */ 4);
+    return singleton ? singleton->IsPHCEnabledOnCurrentThread() : false;
   }
 };
 #  endif
