@@ -22,38 +22,4 @@
     </implementation>
   </binding>
 
-  <binding id="basetext" extends="chrome://global/content/bindings/general.xml#basecontrol">
-    <implementation>
-      <!-- public implementation -->
-      <property name="label"      onset="this.setAttribute('label',val); return val;"
-                                  onget="return this.getAttribute('label');"/>
-      <property name="crop"       onset="this.setAttribute('crop',val); return val;"
-                                  onget="return this.getAttribute('crop');"/>
-      <property name="image"      onset="this.setAttribute('image',val); return val;"
-                                  onget="return this.getAttribute('image');"/>
-      <property name="command"    onset="this.setAttribute('command',val); return val;"
-                                  onget="return this.getAttribute('command');"/>
-      <property name="accessKey">
-        <getter>
-          <![CDATA[
-            return this.getAttribute("accesskey");
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            // Always store on the control
-            this.setAttribute("accesskey", val);
-            // If there is a label, change the accesskey on the labelElement
-            // if it's also set there
-            let labelElement = document.getElementsByAttribute("control", this.id)[0];
-            if (labelElement) {
-              labelElement.setAttribute("accesskey", val);
-            }
-            return val;
-          ]]>
-        </setter>
-      </property>
-    </implementation>
-  </binding>
-
 </bindings>
