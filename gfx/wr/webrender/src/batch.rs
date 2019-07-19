@@ -1208,7 +1208,7 @@ impl BatchBuilder {
                                         textures,
                                         [
                                             ShaderColorMode::Image as i32 | ((AlphaType::PremultipliedAlpha as i32) << 16),
-                                            RasterizationSpace::Screen as i32,
+                                            RasterizationSpace::Local as i32,
                                             get_shader_opacity(1.0),
                                             0,
                                         ],

@@ -110,26 +110,35 @@ struct PictureInfo {
     _spatial_node_index: SpatialNodeIndex,
 }
 
+pub struct PictureCacheState {
+    /// The tiles retained by this picture cache.
+    pub tiles: FastHashMap<TileOffset, Tile>,
+    /// The current fractional offset of the cache transform root.
+    fract_offset: PictureVector2D,
+}
+
 /// Stores a list of cached picture tiles that are retained
 /// between new scenes.
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub struct RetainedTiles {
     /// The tiles retained between display lists.
     #[cfg_attr(feature = "capture", serde(skip))] //TODO
-    pub tiles: FastHashMap<TileKey, Tile>,
+    pub caches: FastHashMap<usize, PictureCacheState>,
 }
 
 impl RetainedTiles {
     pub fn new() -> Self {
         RetainedTiles {
-            tiles: FastHashMap::default(),
+            caches: FastHashMap::default(),
         }
     }
 
     /// Merge items from one retained tiles into another.
     pub fn merge(&mut self, other: RetainedTiles) {
-        assert!(self.tiles.is_empty() || other.tiles.is_empty());
-        self.tiles.extend(other.tiles);
+        assert!(self.caches.is_empty() || other.caches.is_empty());
+        if self.caches.is_empty() {
+            self.caches = other.caches;
+        }
     }
 }
 
@@ -196,14 +205,6 @@ impl From<PropertyBinding<f32>> for OpacityBinding {
 /// A stable ID for a given tile, to help debugging.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TileId(usize);
-
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
-pub struct TileKey {
-    /// The picture cache slice that this belongs to.
-    slice: usize,
-    /// Offset (in tile coords) of the tile within this slice.
-    offset: TileOffset,
-}
 
 /// Information about a cached tile.
 #[derive(Debug)]
@@ -503,7 +504,7 @@ pub struct TileCacheInstance {
     /// The positioning node for this tile cache.
     pub spatial_node_index: SpatialNodeIndex,
     /// Hash of tiles present in this picture.
-    pub tiles: FastHashMap<TileKey, Tile>,
+    pub tiles: FastHashMap<TileOffset, Tile>,
     /// A helper struct to map local rects into surface coords.
     map_local_to_surface: SpaceMapper<LayoutPixel, PicturePixel>,
     /// List of opacity bindings, with some extra information
@@ -524,7 +525,7 @@ pub struct TileCacheInstance {
     /// Local clip rect for this tile cache.
     pub local_clip_rect: PictureRect,
     /// A list of tiles that are valid and visible, which should be drawn to the main scene.
-    pub tiles_to_draw: Vec<TileKey>,
+    pub tiles_to_draw: Vec<TileOffset>,
     /// The world space viewport that this tile cache draws into.
     /// Any clips outside this viewport can be ignored (and must be removed so that
     /// we can draw outside the bounds of the viewport).
@@ -541,6 +542,10 @@ pub struct TileCacheInstance {
     /// The allowed subpixel mode for this surface, which depends on the detected
     /// opacity of the background.
     pub subpixel_mode: SubpixelMode,
+    /// The current fractional offset of the cache transform root. If this changes,
+    /// all tiles need to be invalidated and redrawn, since snapping differences are
+    /// likely to occur.
+    fract_offset: PictureVector2D,
 }
 
 impl TileCacheInstance {
@@ -571,6 +576,7 @@ impl TileCacheInstance {
             background_color,
             opaque_rect: PictureRect::zero(),
             subpixel_mode: SubpixelMode::Allow,
+            fract_offset: PictureVector2D::zero(),
         }
     }
 
@@ -637,6 +643,53 @@ impl TileCacheInstance {
             frame_context.global_screen_world_rect,
             frame_context.clip_scroll_tree,
         );
+
+        // If there are pending retained state, retrieve it.
+        if let Some(prev_state) = frame_state.retained_tiles.caches.remove(&self.slice) {
+            self.tiles.extend(prev_state.tiles);
+            self.fract_offset = prev_state.fract_offset;
+        }
+
+        // Map an arbitrary point in picture space to world space, to work out
+        // what the fractional translation is that's applied by this scroll root.
+        // TODO(gw): I'm not 100% sure this is right. At least, in future, we should
+        //           make a specific API for this, and/or enforce that the picture
+        //           cache transform only includes scale and/or translation (we
+        //           already ensure it doesn't have perspective).
+        let world_origin = pic_to_world_mapper
+            .map(&PictureRect::new(PicturePoint::zero(), PictureSize::new(1.0, 1.0)))
+            .expect("bug: unable to map origin to world space")
+            .origin;
+
+        // Get the desired integer device coordinate
+        let device_origin = world_origin * frame_context.global_device_pixel_scale;
+        let desired_device_origin = device_origin.round();
+
+        // Unmap from device space to world space rect
+        let ref_world_rect = WorldRect::new(
+            desired_device_origin / frame_context.global_device_pixel_scale,
+            WorldSize::new(1.0, 1.0),
+        );
+
+        // Unmap from world space to picture space
+        let ref_point = pic_to_world_mapper
+            .unmap(&ref_world_rect)
+            .expect("bug: unable to unmap ref world rect")
+            .origin;
+
+        // Extract the fractional offset required in picture space to align in device space
+        let fract_offset = PictureVector2D::new(
+            ref_point.x.fract(),
+            ref_point.y.fract(),
+        );
+
+        // Determine if the fractional offset of the transform is different this frame
+        // from the currently cached tile set.
+        let fract_changed = (self.fract_offset.x - fract_offset.x).abs() > 0.001 ||
+                            (self.fract_offset.y - fract_offset.y).abs() > 0.001;
+        if fract_changed {
+            self.fract_offset = fract_offset;
+        }
 
         let spatial_node = &frame_context
             .clip_scroll_tree
@@ -750,31 +803,16 @@ impl TileCacheInstance {
         self.tile_bounds_p0 = TileOffset::new(x0, y0);
         self.tile_bounds_p1 = TileOffset::new(x1, y1);
 
-        // TODO(gw): Tidy this up as we add better support for retaining
-        //           slices and sub-grid dirty areas.
-        let mut keys = Vec::new();
-        for key in frame_state.retained_tiles.tiles.keys() {
-            if key.slice == self.slice {
-                keys.push(*key);
-            }
-        }
-        for key in keys {
-            self.tiles.insert(key, frame_state.retained_tiles.tiles.remove(&key).unwrap());
-        }
+        let mut world_culling_rect = WorldRect::zero();
 
         let mut old_tiles = mem::replace(
             &mut self.tiles,
             FastHashMap::default(),
         );
 
-        let mut world_culling_rect = WorldRect::zero();
-
         for y in y0 .. y1 {
             for x in x0 .. x1 {
-                let key = TileKey {
-                    offset: TileOffset::new(x, y),
-                    slice: self.slice,
-                };
+                let key = TileOffset::new(x, y);
 
                 let mut tile = old_tiles
                     .remove(&key)
@@ -783,10 +821,13 @@ impl TileCacheInstance {
                         Tile::new(next_id)
                     });
 
+                // Ensure each tile is offset by the appropriate amount from the
+                // origin, such that the content origin will be a whole number and
+                // the snapping will be consistent.
                 tile.rect = PictureRect::new(
                     PicturePoint::new(
-                        x as f32 * self.tile_size.width,
-                        y as f32 * self.tile_size.height,
+                        x as f32 * self.tile_size.width + fract_offset.x,
+                        y as f32 * self.tile_size.height + fract_offset.y,
                     ),
                     self.tile_size,
                 );
@@ -807,8 +848,9 @@ impl TileCacheInstance {
 
         // Do tile invalidation for any dependencies that we know now.
         for (_, tile) in &mut self.tiles {
-            // Start frame assuming that the tile has the same content.
-            tile.is_same_content = true;
+            // Start frame assuming that the tile has the same content,
+            // unless the fractional offset of the transform root changed.
+            tile.is_same_content = !fract_changed;
 
             // Content has changed if any opacity bindings changed.
             for binding in tile.descriptor.opacity_bindings.items() {
@@ -1038,10 +1080,7 @@ impl TileCacheInstance {
         for y in p0.y .. p1.y {
             for x in p0.x .. p1.x {
                 // TODO(gw): Convert to 2d array temporarily to avoid hash lookups per-tile?
-                let key = TileKey {
-                    slice: self.slice,
-                    offset: TileOffset::new(x, y),
-                };
+                let key = TileOffset::new(x, y);
                 let tile = self.tiles.get_mut(&key).expect("bug: no tile");
 
                 // Mark if the tile is cacheable at all.
@@ -1234,29 +1273,9 @@ impl TileCacheInstance {
                         TILE_SIZE_WIDTH,
                         TILE_SIZE_HEIGHT,
                     );
-
-                    let content_origin_f = tile.world_rect.origin * frame_context.global_device_pixel_scale;
-                    let content_origin_i = content_origin_f.floor();
-
-                    // Calculate the UV coords for this tile. These are generally 0-1, but if the
-                    // local rect of the cache has fractional coordinates, then the content origin
-                    // of the tile is floor'ed, and so we need to adjust the UV rect in order to
-                    // ensure a correct 1:1 texel:pixel mapping and correct snapping.
-                    let s0 = (content_origin_f.x - content_origin_i.x) / tile.world_rect.size.width;
-                    let t0 = (content_origin_f.y - content_origin_i.y) / tile.world_rect.size.height;
-                    let s1 = 1.0;
-                    let t1 = 1.0;
-
-                    let uv_rect_kind = UvRectKind::Quad {
-                        top_left: DeviceHomogeneousVector::new(s0, t0, 0.0, 1.0),
-                        top_right: DeviceHomogeneousVector::new(s1, t0, 0.0, 1.0),
-                        bottom_left: DeviceHomogeneousVector::new(s0, t1, 0.0, 1.0),
-                        bottom_right: DeviceHomogeneousVector::new(s1, t1, 0.0, 1.0),
-                    };
                     resource_cache.texture_cache.update_picture_cache(
                         tile_size,
                         &mut tile.handle,
-                        uv_rect_kind,
                         gpu_cache,
                     );
                 }
@@ -1982,7 +2001,15 @@ impl PicturePrimitive {
         retained_tiles: &mut RetainedTiles,
     ) {
         if let Some(tile_cache) = self.tile_cache.take() {
-            retained_tiles.tiles.extend(tile_cache.tiles);
+            if !tile_cache.tiles.is_empty() {
+                retained_tiles.caches.insert(
+                    tile_cache.slice,
+                    PictureCacheState {
+                        tiles: tile_cache.tiles,
+                        fract_offset: tile_cache.fract_offset,
+                    },
+                );
+            }
         }
     }
 
@@ -2364,10 +2391,10 @@ impl PicturePrimitive {
                                 continue;
                             }
 
-                            // The content origin for surfaces is always an integer value (this preserves
-                            // the same snapping on a surface as would occur if drawn directly to parent).
                             let content_origin_f = tile.world_rect.origin * device_pixel_scale;
-                            let content_origin = content_origin_f.floor().to_i32();
+                            let content_origin = content_origin_f.round();
+                            debug_assert!((content_origin_f.x - content_origin.x).abs() < 0.01);
+                            debug_assert!((content_origin_f.y - content_origin.y).abs() < 0.01);
 
                             let cache_item = frame_state.resource_cache.texture_cache.get(&tile.handle);
 
@@ -2379,7 +2406,7 @@ impl PicturePrimitive {
                                 },
                                 tile_size,
                                 pic_index,
-                                content_origin,
+                                content_origin.to_i32(),
                                 UvRectKind::Rect,
                                 surface_spatial_node_index,
                                 device_pixel_scale,
