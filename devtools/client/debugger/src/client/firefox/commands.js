@@ -125,17 +125,14 @@ function forEachThread(iteratee) {
   // trigger additional thread operations. Requests on server threads will
   // resolve in FIFO order, and this could result in client and server state
   // going out of sync.
-  const mainThreadPromise = iteratee(threadFront);
-  const workerPromises = listWorkerThreadFronts().map(t => {
-    try {
-      iteratee(t);
-    } catch (e) {
-      // If a worker thread shuts down while sending the message then it will
-      // throw. Ignore these errors.
-      console.error(e);
-    }
-  });
-  return Promise.all([mainThreadPromise, ...workerPromises]);
+
+  const promises = [threadFront, ...listWorkerThreadFronts()].map(
+    // If a thread shuts down while sending the message then it will
+    // throw. Ignore these exceptions.
+    t => iteratee(t).catch(e => console.log(e))
+  );
+
+  return Promise.all(promises);
 }
 
 function resume(thread: string): Promise<*> {
