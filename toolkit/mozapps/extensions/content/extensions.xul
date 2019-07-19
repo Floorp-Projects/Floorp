@@ -29,7 +29,7 @@
     <xhtml:link rel="localization" href="branding/brand.ftl"/>
     <xhtml:link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
   </linkset>
-  
+
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="chrome://mozapps/content/extensions/aboutaddonsCommon.js"/>
   <script src="chrome://mozapps/content/extensions/extensions.js"/>
@@ -94,16 +94,19 @@
       <richlistbox id="categories" flex="1">
         <richlistitem id="category-discover" value="addons://discover/"
                       class="category"
+                      is="addon-category"
                       data-l10n-id="extensions-view-discopane"
                       data-l10n-attrs="name"
                       priority="1000"/>
         <richlistitem id="category-availableUpdates" value="addons://updates/available"
                       class="category"
+                      is="addon-category"
                       data-l10n-id="extensions-view-available-updates"
                       data-l10n-attrs="name"
                       hidden="true"/>
         <richlistitem id="category-recentUpdates" value="addons://updates/recent"
                       class="category"
+                      is="addon-category"
                       data-l10n-id="extensions-view-recent-updates"
                       data-l10n-attrs="name"
                       priority="101000"

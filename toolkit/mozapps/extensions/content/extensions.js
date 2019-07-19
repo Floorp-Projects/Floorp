@@ -4,6 +4,7 @@
 
 "use strict";
 
+/* import-globals-from ../../../content/customElements.js */
 /* import-globals-from ../../../content/contentAreaUtils.js */
 /* import-globals-from aboutaddonsCommon.js */
 /* globals ProcessingInstruction */
@@ -1331,13 +1332,61 @@ var gCategories = {
     AddonManager.removeTypeListener(this);
   },
 
+  _defineCustomElement() {
+    class MozCategory extends MozElements.MozRichlistitem {
+      connectedCallback() {
+        if (this.delayConnectedCallback()) {
+          return;
+        }
+        this.textContent = "";
+        this.appendChild(
+          MozXULElement.parseXULToFragment(`
+          <image class="category-icon"/>
+          <label class="category-name" crop="end" flex="1"/>
+          <label class="category-badge"/>
+        `)
+        );
+        this.initializeAttributeInheritance();
+
+        if (!this.hasAttribute("count")) {
+          this.setAttribute("count", 0);
+        }
+      }
+
+      static get inheritedAttributes() {
+        return {
+          ".category-name": "value=name",
+          ".category-badge": "value=count",
+        };
+      }
+
+      set badgeCount(val) {
+        if (this.getAttribute("count") == val) {
+          return;
+        }
+
+        this.setAttribute("count", val);
+      }
+
+      get badgeCount() {
+        return this.getAttribute("count");
+      }
+    }
+
+    customElements.define("addon-category", MozCategory, {
+      extends: "richlistitem",
+    });
+  },
+
   _insertCategory(aId, aName, aView, aPriority, aStartHidden) {
     // If this category already exists then don't re-add it
     if (document.getElementById("category-" + aId)) {
       return;
     }
 
-    var category = document.createXULElement("richlistitem");
+    var category = document.createXULElement("richlistitem", {
+      is: "addon-category",
+    });
     category.setAttribute("id", "category-" + aId);
     category.setAttribute("value", aView);
     category.setAttribute("class", "category");
@@ -1504,6 +1553,10 @@ var gCategories = {
     }
   },
 };
+
+// This needs to be defined before the XUL is parsed because some of the
+// categories are in the XUL markup.
+gCategories._defineCustomElement();
 
 var gHeader = {
   _search: null,

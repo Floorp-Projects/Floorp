@@ -9,10 +9,6 @@ xhtml|link {
   display: none;
 }
 
-.category {
-  -moz-binding: url("chrome://mozapps/content/extensions/extensions.xml#category");
-}
-
 .sidebar-footer-button > .text-link {
   margin-top: 0;
   margin-bottom: 0;
