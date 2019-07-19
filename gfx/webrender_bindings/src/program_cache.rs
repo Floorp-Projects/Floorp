@@ -123,8 +123,8 @@ impl WrProgramBinaryDiskCache {
         whitelist_path.push(WHITELIST_FILENAME);
         self.workers.spawn(move || result_to_void(move || {
             info!("Writing startup shader whitelist");
-            let mut file = File::create(&whitelist_path).unwrap();
-            file.write_all(whitelist.as_bytes())
+            File::create(&whitelist_path)
+                .and_then(|mut file| file.write_all(whitelist.as_bytes()))
                 .map_err(|e| error!("shader-cache: Failed to write startup whitelist: {}", e))?;
             Ok(())
         }));
@@ -136,7 +136,12 @@ impl WrProgramBinaryDiskCache {
         // build-time, and whenever the build ID, device ID, or driver version
         // changes `remove_program_binary_disk_cache` will remove all shaders
         // from disk. Therefore the disk cache cannot grow too large over time.
-        for existing in read_dir(&self.cache_path).unwrap().filter_map(|f| f.ok()) {
+        for existing in read_dir(&self.cache_path)
+            .map_err(|err| error!("shader-cache: Error reading directory whilst saving shaders: {}", err))
+            .into_iter()
+            .flatten()
+            .filter_map(|f| f.ok())
+        {
             let pos = existing.file_name().to_str()
                 .and_then(|digest| entries.iter().position(|x| x.0 == digest));
             if let Some(p) = pos {
@@ -227,9 +232,12 @@ impl WrProgramBinaryDiskCache {
         info!("Loaded startup shader whitelist in {:?}", start.elapsed());
 
         self.cached_shader_filenames = read_dir(&self.cache_path)
-            .unwrap()
-            .map(|e| e.unwrap().file_name())
-            .filter(|e| e != WHITELIST_FILENAME)
+            .map_err(|err| error!("shader-cache: Error reading directory whilst loading startup shaders: {}", err))
+            .into_iter()
+            .flatten()
+            .filter_map(Result::ok)
+            .map(|entry| entry.file_name())
+            .filter(|filename| filename != WHITELIST_FILENAME)
             .collect::<Vec<OsString>>();
 
         // Load whitelisted program binaries if they exist
