@@ -695,7 +695,7 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
   // Merge sort the fields vector.  Expand the vector to have scratch space for
   // performing the sort.
   size_t fieldsLen = fields_.length();
-  if (!fields_.resizeUninitialized(fieldsLen * 2)) {
+  if (!fields_.growByUninitialized(fieldsLen)) {
     return nullptr;
   }
 
@@ -709,10 +709,8 @@ ArrayObject* NumberFormatFields::toArray(JSContext* cx,
         return true;
       }));
 
-  // Deallocate the scratch space.
-  if (!fields_.resize(fieldsLen)) {
-    return nullptr;
-  }
+  // Delete the elements in the scratch space.
+  fields_.shrinkBy(fieldsLen);
 
   // Then iterate over the sorted field list to generate a sequence of parts
   // (what ECMA-402 actually exposes).  A part is a maximal character sequence
