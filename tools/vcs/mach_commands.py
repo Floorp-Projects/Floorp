@@ -32,6 +32,12 @@ PR_REPOSITORIES = {
         'bugzilla_product': 'Core',
         'bugzilla_component': 'Graphics: WebRender',
     },
+    'debugger': {
+        'github': 'firefox-devtools/debugger',
+        'path': 'devtools/client/debugger',
+        'bugzilla_product': 'DevTools',
+        'bugzilla_component': 'Debugger'
+    },
 }
 
 
