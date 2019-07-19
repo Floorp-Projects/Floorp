@@ -61,6 +61,21 @@ async function performTests() {
     isInputFocused(hud),
     "input is still focused after clicking the Run button"
   );
+
+  info("Test that clicking the close button works as expected");
+  const closeButton = toolbar.querySelector(
+    ".webconsole-editor-toolbar-closeButton"
+  );
+  const closeKeyShortcut =
+    (Services.appinfo.OS === "Darwin" ? "Cmd" : "Ctrl") + " + B";
+  is(
+    closeButton.title,
+    `Close Editor (${closeKeyShortcut})`,
+    "Close button has expected title"
+  );
+  closeButton.click();
+  await waitFor(() => !isEditorModeEnabled(hud));
+  ok(true, "Editor mode is disabled when clicking on the close button");
 }
 
 function getEditorToolbar(hud) {

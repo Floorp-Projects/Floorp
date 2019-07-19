@@ -635,6 +635,8 @@ union alignas(8) Value {
 
   bool isObjectOrNull() const { return isObject() || isNull(); }
 
+  bool isNumeric() const { return isNumber() || isBigInt(); }
+
   bool isGCThing() const {
 #if defined(JS_NUNBOX32)
     /* gcc sometimes generates signed < without explicit casts. */
@@ -1183,6 +1185,7 @@ class WrappedPtrOperations<JS::Value, Wrapper> {
 
   bool isNullOrUndefined() const { return value().isNullOrUndefined(); }
   bool isObjectOrNull() const { return value().isObjectOrNull(); }
+  bool isNumeric() const { return value().isNumeric(); }
 
   bool toBoolean() const { return value().toBoolean(); }
   double toNumber() const { return value().toNumber(); }

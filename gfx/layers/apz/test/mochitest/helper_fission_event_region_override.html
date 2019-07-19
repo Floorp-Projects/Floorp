@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Ensure the event region override flags work properly</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script src="helper_fission_utils.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+  <script>
+
+fission_subtest_init();
+
+FissionTestHelper.startTestPromise
+  .then(waitUntilApzStable)
+  .then(loadOOPIFrame("testframe", "helper_fission_empty.html"))
+  .then(waitUntilApzStable)
+  .then(runAsyncContinuation(test))
+  .then(FissionTestHelper.subtestDone, FissionTestHelper.subtestDone);
+
+
+// The actual test
+
+let code_for_oopif_to_run = function() {
+  document.body.innerHTML = '<div style="height: 5000px">scrollable content</div>';
+  document.addEventListener("wheel", function(e) {
+    dump(`OOPIF got wheel at ${e.clientX},${e.clientY}\n`);
+    let result = { x: e.clientX, y: e.clientY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:WheelData", result);
+  }, { passive: true });
+  document.addEventListener("scroll", function(e) {
+    dump(`OOPIF got scroll to ${window.scrollX},${window.scrollY}\n`);
+    let result = { x: window.scrollX, y: window.scrollY };
+    FissionTestHelper.fireEventInEmbedder("OOPIF:Scrolled", result);
+  });
+  dump("OOPIF registered wheel and scroll listeners\n");
+  return true;
+};
+
+async function* test() {
+  let iframeElement = document.getElementById("testframe");
+
+  let iframeResponse = await FissionTestHelper.sendToOopif(iframeElement, code_for_oopif_to_run.toSource() + "()");
+  dump("OOPIF response: " + JSON.stringify(iframeResponse) + "\n");
+  ok(iframeResponse, "code_for_oopif_to_run successfully installed");
+
+  let wheeled = false;
+  let scrolled = false;
+  window.addEventListener("OOIF:WheelData", function listener(e) {
+    dump("OOPIF:WheelData received with data: " + JSON.stringify(e.data) + "\n");
+    wheeled = true;
+  });
+  window.addEventListener("OOPIF:Scrolled", function listener(e) {
+    dump("OOPIF:Scrolled received with data: " + JSON.stringify(e.data) + "\n");
+    scrolled = true;
+  });
+
+  synthesizeNativeWheel(iframeElement, 10, 10, 0, -50);
+
+  // Advance a bunch of frames. The only goal here is to ensure enough time
+  // passes so that if the OOPIF does scroll, we find out about it via the
+  // OOPIF:Scrolled messaging.
+  // If we don't wait long enough we might end up finishing the test before
+  // that scroll message gets received here, and so we might wrongly pass the
+  // test.
+  await SpecialPowers.promiseTimeout(0);
+  var utils = SpecialPowers.getDOMWindowUtils(window);
+  for (var i = 0; i < 5; i++) {
+    utils.advanceTimeAndRefresh(16);
+  }
+  utils.restoreNormalRefresh();
+  await promiseApzRepaintsFlushed();
+
+  ok(!wheeled, "OOPIF correctly did not get wheel event");
+  ok(!scrolled, "OOPIF correctly did not scroll");
+}
+
+  </script>
+</head>
+<body>
+<iframe id="testframe"></iframe>
+</body>
+</html>

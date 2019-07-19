@@ -223,9 +223,27 @@ inline void unumf_closeResult(UFormattedNumber* uresult) {
   MOZ_CRASH("unumf_closeResult: Intl API disabled");
 }
 
+inline void unumf_formatInt(const UNumberFormatter* uformatter, int64_t value,
+                            UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_formatInt: Intl API disabled");
+}
+
 inline void unumf_formatDouble(const UNumberFormatter* uformatter, double value,
                                UFormattedNumber* uresult, UErrorCode* status) {
   MOZ_CRASH("unumf_formatDouble: Intl API disabled");
+}
+
+inline void unumf_formatDecimal(const UNumberFormatter* uformatter,
+                                const char* value, int32_t valueLen,
+                                UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_formatDecimal: Intl API disabled");
+}
+
+struct UFormattedValue;
+
+inline const UFormattedValue* unumf_resultAsValue(
+    const UFormattedNumber* uresult, UErrorCode* status) {
+  MOZ_CRASH("unumf_resultAsValue: Intl API disabled");
 }
 
 inline void unumf_resultGetAllFieldPositions(const UFormattedNumber* uresult,
