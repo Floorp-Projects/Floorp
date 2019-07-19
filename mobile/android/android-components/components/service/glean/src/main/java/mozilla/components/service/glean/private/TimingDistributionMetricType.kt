@@ -25,7 +25,7 @@ data class TimingDistributionMetricType(
     override val name: String,
     override val sendInPings: List<String>,
     val timeUnit: TimeUnit
-) : CommonMetricData {
+) : CommonMetricData, HistogramBase {
 
     private val logger = Logger("glean/TimingDistributionMetricType")
 
@@ -83,6 +83,21 @@ data class TimingDistributionMetricType(
         }
 
         TimingManager.cancel(this, timerId)
+    }
+
+    override fun accumulateSamples(samples: LongArray) {
+        if (!shouldRecord(logger)) {
+            return
+        }
+
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        Dispatchers.API.launch {
+            TimingDistributionsStorageEngine.accumulateSamples(
+                metricData = this@TimingDistributionMetricType,
+                samples = samples,
+                timeUnit = timeUnit
+            )
+        }
     }
 
     /**

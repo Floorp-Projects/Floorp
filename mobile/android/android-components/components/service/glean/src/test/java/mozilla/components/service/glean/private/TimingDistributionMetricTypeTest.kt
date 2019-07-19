@@ -148,4 +148,33 @@ class TimingDistributionMetricTypeTest {
         // Check that the 3L fell into the third bucket
         assertEquals(1L, snapshot2.values[3])
     }
+
+    @Test
+    fun `The accumulateSamples API correctly stores timing values`() {
+        // Define a timing distribution metric which will be stored in multiple stores
+        val metric = TimingDistributionMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Ping,
+            name = "timing_distribution_samples",
+            sendInPings = listOf("store1"),
+            timeUnit = TimeUnit.Second
+        )
+
+        // Accumulate a few values
+        val testSamples = (1L..3L).toList().toLongArray()
+        metric.accumulateSamples(testSamples)
+
+        // Check that data was properly recorded in the second ping.
+        assertTrue(metric.testHasValue("store1"))
+        val snapshot = metric.testGetValue("store1")
+        // Check the sum
+        assertEquals(6L, snapshot.sum)
+        // Check that the 1L fell into the first bucket
+        assertEquals(1L, snapshot.values[1])
+        // Check that the 2L fell into the second bucket
+        assertEquals(1L, snapshot.values[2])
+        // Check that the 3L fell into the third bucket
+        assertEquals(1L, snapshot.values[3])
+    }
 }

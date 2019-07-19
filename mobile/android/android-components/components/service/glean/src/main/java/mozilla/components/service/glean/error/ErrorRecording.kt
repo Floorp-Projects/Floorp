@@ -41,12 +41,15 @@ object ErrorRecording {
      *     ping.  It does not need to include the metric name, as that is automatically
      *     prepended to the message.
      * @param logger The [Logger] instance to display the warning.
+     * @param numErrors The optional number of errors to report for this [ErrorType].
      */
+    @Suppress("LongMethod")
     internal fun recordError(
         metricData: CommonMetricData,
         errorType: ErrorType,
         message: String,
-        logger: Logger
+        logger: Logger,
+        numErrors: Int? = null
     ) {
         val errorName = GLEAN_ERROR_NAMES[errorType]!!
 
@@ -82,7 +85,7 @@ object ErrorRecording {
         // in the __other__ category.
         CountersStorageEngine.record(
             errorMetric,
-            amount = 1
+            amount = numErrors ?: 1
         )
     }
 

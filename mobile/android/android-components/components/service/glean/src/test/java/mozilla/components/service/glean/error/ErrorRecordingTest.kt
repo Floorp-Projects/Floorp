@@ -35,6 +35,11 @@ class ErrorRecordingTest {
             sendInPings = listOf("store1", "store2")
         )
 
+        val expectedErrors = mapOf(
+            ErrorRecording.ErrorType.InvalidValue to 1,
+            ErrorRecording.ErrorType.InvalidLabel to 2
+        )
+
         ErrorRecording.recordError(
             stringMetric,
             ErrorRecording.ErrorType.InvalidValue,
@@ -46,16 +51,14 @@ class ErrorRecordingTest {
             stringMetric,
             ErrorRecording.ErrorType.InvalidLabel,
             "Invalid label",
-            logger
+            logger,
+            numErrors = expectedErrors[ErrorRecording.ErrorType.InvalidLabel]
         )
 
         for (storeName in listOf("store1", "store2", "metrics")) {
-            for (errorType in listOf(
-                ErrorRecording.ErrorType.InvalidValue,
-                ErrorRecording.ErrorType.InvalidLabel
-            )) {
+            for (errorType in expectedErrors.keys) {
                 assertEquals(
-                    1,
+                    expectedErrors[errorType],
                     ErrorRecording.testGetNumRecordedErrors(stringMetric, errorType, storeName)
                 )
             }

@@ -59,7 +59,8 @@ internal open class TimingDistributionsStorageEngineImplementation(
      * Accumulate value for the provided metric.
      *
      * @param metricData the metric information for the timing distribution
-     * @param sample the value to accumulate
+     * @param sample the value to accumulate, in nanoseconds
+     * @param timeUnit the [TimeUnit] the sample will be converted to
      */
     @Synchronized
     fun accumulate(
@@ -67,6 +68,9 @@ internal open class TimingDistributionsStorageEngineImplementation(
         sample: Long,
         timeUnit: TimeUnit
     ) {
+        // We're checking for errors in `accumulateSamples` already, but
+        // we need to check it here too anyway because `getAdjustedTime` would
+        // throw otherwise.
         if (sample < 0) {
             ErrorRecording.recordError(
                 metricData,
@@ -78,21 +82,53 @@ internal open class TimingDistributionsStorageEngineImplementation(
         }
 
         val sampleInUnit = getAdjustedTime(timeUnit, sample)
+        accumulateSamples(metricData, longArrayOf(sampleInUnit), timeUnit)
+    }
+
+    /**
+     * Accumulate an array of samples for the provided metric.
+     *
+     * @param metricData the metric information for the timing distribution
+     * @param samples the values to accumulate, provided in the metric's [TimeUnit] (they won't
+     *        be truncated nor converted)
+     * @param timeUnit the [TimeUnit] the samples are in
+     */
+    @Suppress("LongMethod")
+    @Synchronized
+    fun accumulateSamples(
+        metricData: CommonMetricData,
+        samples: LongArray,
+        timeUnit: TimeUnit
+    ) {
+        val validSamples = samples.filter { sample -> sample >= 0 }
+        val numNegativeSamples = samples.size - validSamples.size
+        if (numNegativeSamples > 0) {
+            ErrorRecording.recordError(
+                metricData,
+                ErrorRecording.ErrorType.InvalidValue,
+                "Accumulate $numNegativeSamples negative samples",
+                logger,
+                numNegativeSamples
+            )
+            return
+        }
 
         // Since the custom combiner closure captures this value, we need to just create a dummy
         // value here that won't be used by the combine function, and create a fresh
         // TimingDistributionData for each value that doesn't have an existing current value.
         val dummy = TimingDistributionData(category = metricData.category, name = metricData.name,
             timeUnit = timeUnit)
-        super.recordMetric(metricData, dummy, null) { currentValue, _ ->
-            currentValue?.let {
-                it.accumulate(sampleInUnit)
-                it
-            } ?: let {
-                val newTD = TimingDistributionData(category = metricData.category, name = metricData.name,
-                    timeUnit = timeUnit)
-                newTD.accumulate(sampleInUnit)
-                return@let newTD
+        validSamples.forEach { sample ->
+            super.recordMetric(metricData, dummy, null) { currentValue, _ ->
+                currentValue?.let {
+                    it.accumulate(sample)
+                    it
+                } ?: let {
+                    val newTD = TimingDistributionData(category = metricData.category, name = metricData.name,
+                        timeUnit = timeUnit)
+                    newTD.accumulate(sample)
+                    return@let newTD
+                }
             }
         }
     }
@@ -124,7 +160,8 @@ internal open class TimingDistributionsStorageEngineImplementation(
  * @param category of the metric
  * @param name of the metric
  * @param bucketCount total number of buckets
- * @param range an array always containing 2 elements: the minimum and maximum bucket values
+ * @param rangeMin the minimum value that can be represented
+ * @param rangeMax the maximum value that can be represented
  * @param histogramType the [HistogramType] representing the bucket layout
  * @param values a map containing the bucket index mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the timing distribution
