@@ -419,8 +419,8 @@ class RestyleManager {
   // b) When the style before sending the animation to the compositor exactly
   // the same as the current style
   static void AddLayerChangesForAnimation(
-      nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHintForThisFrame,
-      nsStyleChangeList& aChangeListToProcess);
+      nsIFrame* aStyleFrame, nsIFrame* aPrimaryFrame, Element* aElement,
+      nsChangeHint aHintForThisFrame, nsStyleChangeList& aChangeListToProcess);
 
   /**
    * Whether to clear all the style data (including the element itself), or just

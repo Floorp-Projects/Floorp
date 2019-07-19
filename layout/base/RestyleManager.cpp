@@ -1197,7 +1197,8 @@ static void ApplyRenderingChangeToTree(PresShell* aPresShell, nsIFrame* aFrame,
                                        nsChangeHint aChange) {
   // We check StyleDisplay()->HasTransformStyle() in addition to checking
   // IsTransformed() since we can get here for some frames that don't support
-  // CSS transforms.
+  // CSS transforms, and table frames, which are their own odd-ball, since the
+  // transform is handled by their wrapper, which _also_ gets a separate hint.
   NS_ASSERTION(!(aChange & nsChangeHint_UpdateTransformLayer) ||
                    nsLayoutUtils::GetPrimaryFrameFromStyleFrame(aFrame)
                        ->IsTransformed() ||
@@ -1844,9 +1845,12 @@ void RestyleManager::IncrementAnimationGeneration() {
 
 /* static */
 void RestyleManager::AddLayerChangesForAnimation(
-    nsIFrame* aStyleFrame, nsIContent* aContent, nsChangeHint aHintForThisFrame,
+    nsIFrame* aStyleFrame, nsIFrame* aPrimaryFrame,
+    Element* aElement, nsChangeHint aHintForThisFrame,
     nsStyleChangeList& aChangeListToProcess) {
-  if (!aStyleFrame || !aContent) {
+  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(!!aStyleFrame == !!aPrimaryFrame);
+  if (!aStyleFrame) {
     return;
   }
 
@@ -1927,11 +1931,13 @@ void RestyleManager::AddLayerChangesForAnimation(
   };
 
   AnimationInfo::EnumerateGenerationOnFrame(
-      aStyleFrame, aContent, LayerAnimationInfo::sDisplayItemTypes,
+      aStyleFrame, aElement, LayerAnimationInfo::sDisplayItemTypes,
       maybeApplyChangeHint);
 
   if (hint) {
-    aChangeListToProcess.AppendChange(aStyleFrame, aContent, hint);
+    // We apply the hint to the primary frame, not the style frame. Transform
+    // and opacity hints apply to the table wrapper box, not the table box.
+    aChangeListToProcess.AppendChange(aPrimaryFrame, aElement, hint);
   }
 }
 
@@ -2852,7 +2858,7 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
     // Since AddLayerChangesForAnimation checks if |styleFrame| has a transform
     // style or not, we need to call it *after* setting |newStyle| to
     // |styleFrame| to ensure the animated transform has been removed first.
-    AddLayerChangesForAnimation(styleFrame, aElement, changeHint,
+    AddLayerChangesForAnimation(styleFrame, primaryFrame, aElement, changeHint,
                                 aRestyleState.ChangeList());
 
     childrenFlags |=
