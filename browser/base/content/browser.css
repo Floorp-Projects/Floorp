@@ -530,7 +530,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 /* Display URLs left-to-right but right aligned in RTL mode. */
-html|input.urlbar-input:-moz-locale-dir(rtl) {
+html|*#urlbar-input:-moz-locale-dir(rtl) {
   direction: ltr !important;
   text-align: right !important;
 }
@@ -538,7 +538,7 @@ html|input.urlbar-input:-moz-locale-dir(rtl) {
 /* Make sure that the location bar's alignment in RTL mode changes according
    to the input box direction if the user switches the text direction using
    cmd_switchTextDirection (which applies a dir attribute to the <input>). */
-html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
+html|*#urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
   text-align: left !important;
 }
 
@@ -564,11 +564,11 @@ html|input.urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
 }
 
 /* Show the url scheme in a static box when overflowing to the left */
-moz-input-box.urlbar-input-box {
+.urlbar-input-box {
   position: relative;
   direction: ltr;
 }
-html|input.urlbar-scheme {
+html|*#urlbar-scheme {
   position: absolute;
   height: 100%;
   visibility: hidden;
@@ -578,22 +578,22 @@ html|input.urlbar-scheme {
 
 /* Visible if the urlbar is not focused and it overflows at the start.
    Uses the required-valid trick to check if it contains a value */
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|input.urlbar-scheme:valid {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|*#urlbar-scheme:valid {
   visibility: visible;
 }
 
 /* Fade out URL on overflow
    This mask may be overriden when a Contextual Feature Recommendation is shown,
    see browser/themes/shared/urlbar-searchbar.inc.css for details */
-#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > html|input.urlbar-input {
+#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > html|*#urlbar-input {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
 
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|input.urlbar-input {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|*#urlbar-input {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
-html|input.urlbar-input {
+html|*#urlbar-input {
   mask-repeat: no-repeat;
 }
 
@@ -651,8 +651,8 @@ html|input.urlbar-input {
 #urlbar[pageproxystate=invalid] > #page-action-buttons > .urlbar-page-action,
 #identity-box.chromeUI ~ #page-action-buttons > .urlbar-page-action:not(#star-button-box),
 #urlbar[usertyping] > .urlbar-history-dropmarker,
-#urlbar:not([usertyping]) > .urlbar-go-button,
-#urlbar:not([focused]) > .urlbar-go-button {
+#urlbar:not([usertyping]) > #urlbar-go-button,
+#urlbar:not([focused]) > #urlbar-go-button {
   display: none;
 }
 

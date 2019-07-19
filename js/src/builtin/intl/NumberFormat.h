@@ -14,11 +14,11 @@
 #include "builtin/SelfHostingDefines.h"
 #include "gc/Barrier.h"
 #include "js/Class.h"
-#include "js/Vector.h"
 #include "vm/NativeObject.h"
 #include "vm/Runtime.h"
 
 struct UFormattedNumber;
+struct UFormattedValue;
 struct UNumberFormatter;
 
 namespace js {
@@ -217,34 +217,12 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
 
 using FieldType = js::ImmutablePropertyNamePtr JSAtomState::*;
 
-struct Field {
-  uint32_t begin;
-  uint32_t end;
-  FieldType type;
-
-  // Needed for vector-resizing scratch space.
-  Field() = default;
-
-  Field(uint32_t begin, uint32_t end, FieldType type)
-      : begin(begin), end(end), type(type) {}
-};
-
-class NumberFormatFields {
-  using FieldsVector = Vector<Field, 16>;
-
-  FieldsVector fields_;
-  double number_;
-
- public:
-  NumberFormatFields(JSContext* cx, double number)
-      : fields_(cx), number_(number) {}
-
-  MOZ_MUST_USE bool append(int32_t field, int32_t begin, int32_t end);
-
-  MOZ_MUST_USE ArrayObject* toArray(JSContext* cx,
-                                    JS::HandleString overallResult,
-                                    FieldType unitType);
-};
+#ifndef U_HIDE_DRAFT_API
+MOZ_MUST_USE bool FormattedNumberToParts(JSContext* cx,
+                                         const UFormattedValue* formattedValue,
+                                         HandleValue number, FieldType unitType,
+                                         MutableHandleValue result);
+#endif
 
 }  // namespace intl
 }  // namespace js

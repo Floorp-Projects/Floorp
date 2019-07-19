@@ -405,7 +405,7 @@ function numberFormatFormatToBind(value) {
     assert(GuardToNumberFormat(nf) !== null, "InitializeNumberFormat called with non-NumberFormat");
 
     // Steps 3-4.
-    var x = ToNumber(value);
+    var x = ToNumeric(value);
 
     // Step 5.
     return intl_FormatNumber(nf, x, /* formatToParts = */ false);
@@ -462,7 +462,7 @@ function Intl_NumberFormat_formatToParts(value) {
     getNumberFormatInternals(nf);
 
     // Step 4.
-    var x = ToNumber(value);
+    var x = ToNumeric(value);
 
     // Step 5.
     return intl_FormatNumber(nf, x, /* formatToParts = */ true);

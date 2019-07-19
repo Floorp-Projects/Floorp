@@ -10,16 +10,27 @@ add_task(async function test_main() {
   var utils = SpecialPowers.getDOMWindowUtils(window);
   var isWebRender = utils.layerManagerType == "WebRender";
 
-  // Each of these URLs will get opened in a new top-level browser window that
-  // is fission-enabled.
-  var test_urls = [
-    httpURL("helper_fission_basic.html"),
-    httpURL("helper_fission_transforms.html"),
-    httpURL("helper_fission_scroll_oopif.html"),
+  // Each of these subtests is a dictionary that contains:
+  // url (required): URL of the subtest that will get opened in a new tab
+  //   in the top-level fission-enabled browser window.
+  // setup (optional): function that takes the top-level fission window and is
+  //   run once after the subtest is loaded but before it is started.
+  var subtests = [
+    { url: httpURL("helper_fission_basic.html") },
+    { url: httpURL("helper_fission_transforms.html") },
+    { url: httpURL("helper_fission_scroll_oopif.html") },
+    {
+      url: httpURL("helper_fission_event_region_override.html"),
+      setup(win) {
+        win.document.addEventListener("wheel", e => e.preventDefault(), {
+          once: true,
+        });
+      },
+    },
     // add additional tests here
   ];
   if (isWebRender) {
-    test_urls = test_urls.concat([
+    subtests = subtests.concat([
       // add additional WebRender-specific tests here
     ]);
   }
@@ -49,24 +60,27 @@ add_task(async function test_main() {
   });
 
   try {
-    for (var url of test_urls) {
-      dump(`Starting test ${url}\n`);
+    for (var subtest of subtests) {
+      dump(`Starting test ${subtest.url}\n`);
 
       // Load the test URL and tell it to get started, and wait until it reports
       // completion.
       await BrowserTestUtils.withNewTab(
-        { gBrowser: fissionWindow.gBrowser, url },
+        { gBrowser: fissionWindow.gBrowser, url: subtest.url },
         async browser => {
           let tabActor = browser.browsingContext.currentWindowGlobal.getActor(
             "FissionTestHelper"
           );
           let donePromise = tabActor.getTestCompletePromise();
+          if (subtest.setup) {
+            subtest.setup(fissionWindow);
+          }
           tabActor.startTest();
           await donePromise;
         }
       );
 
-      dump(`Finished test ${url}\n`);
+      dump(`Finished test ${subtest.url}\n`);
     }
   } finally {
     // Delete stuff we added to FissionTestHelperParent, beacuse the object will

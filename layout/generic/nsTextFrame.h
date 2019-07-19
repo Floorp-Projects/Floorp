@@ -698,20 +698,20 @@ class nsTextFrame : public nsFrame {
     // This represents the offset from the initial position of the underline
     const mozilla::LengthOrAuto mTextUnderlineOffset;
 
-    // for CSS property text-decoration-width, the width refers to the thickness
-    // of the decoration line
-    const mozilla::LengthOrAuto mTextDecorationWidth;
+    // for CSS property text-decoration-thickness, the width refers to the
+    // thickness of the decoration line
+    const mozilla::LengthOrAuto mTextDecorationThickness;
     nscolor mColor;
     uint8_t mStyle;
 
     LineDecoration(nsIFrame* const aFrame, const nscoord aOff,
                    const mozilla::LengthOrAuto& aUnderline,
-                   const mozilla::LengthOrAuto& aDecWidth, const nscolor aColor,
-                   const uint8_t aStyle)
+                   const mozilla::LengthOrAuto& aDecThickness,
+                   const nscolor aColor, const uint8_t aStyle)
         : mFrame(aFrame),
           mBaselineOffset(aOff),
           mTextUnderlineOffset(aUnderline),
-          mTextDecorationWidth(aDecWidth),
+          mTextDecorationThickness(aDecThickness),
           mColor(aColor),
           mStyle(aStyle) {}
 
@@ -719,7 +719,7 @@ class nsTextFrame : public nsFrame {
         : mFrame(aOther.mFrame),
           mBaselineOffset(aOther.mBaselineOffset),
           mTextUnderlineOffset(aOther.mTextUnderlineOffset),
-          mTextDecorationWidth(aOther.mTextDecorationWidth),
+          mTextDecorationThickness(aOther.mTextDecorationThickness),
           mColor(aOther.mColor),
           mStyle(aOther.mStyle) {}
 
@@ -728,7 +728,7 @@ class nsTextFrame : public nsFrame {
              mColor == aOther.mColor &&
              mBaselineOffset == aOther.mBaselineOffset &&
              mTextUnderlineOffset == aOther.mTextUnderlineOffset &&
-             mTextDecorationWidth == aOther.mTextDecorationWidth;
+             mTextDecorationThickness == aOther.mTextDecorationThickness;
     }
 
     bool operator!=(const LineDecoration& aOther) const {
