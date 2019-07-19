@@ -182,7 +182,7 @@
             is="search-textbox" id="searchInput"
             data-l10n-id="search-input-box"
             data-l10n-attrs="style"
-            hidden="true" clickSelectsAll="true"/>
+            hidden="true"/>
         </hbox>
         <vbox id="mainPrefPane">
 #include searchResults.inc.xul
