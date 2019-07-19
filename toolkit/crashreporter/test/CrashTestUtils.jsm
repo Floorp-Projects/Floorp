@@ -31,6 +31,8 @@ var CrashTestUtils = {
   CRASH_X64CFI_SAVE_XMM128_FAR: 18,
   CRASH_X64CFI_EPILOG: 19,
   CRASH_X64CFI_EOF: 20,
+  CRASH_PHC_USE_AFTER_FREE: 21,
+  CRASH_PHC_DOUBLE_FREE: 22,
 
   // Constants for dumpHasStream()
   // From google_breakpad/common/minidump_format.h

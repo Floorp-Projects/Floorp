@@ -10,6 +10,9 @@ if CONFIG['OS_TARGET'] != 'Android' and not(CONFIG['OS_TARGET'] == 'WINNT' and C
         'TestJemalloc.cpp',
     ]
 
+    if CONFIG['MOZ_PHC']:
+      DEFINES['MOZ_PHC'] = True
+
 FINAL_LIBRARY = 'xul-gtest'
 
 LOCAL_INCLUDES += [
