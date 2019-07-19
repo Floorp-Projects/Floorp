@@ -50,7 +50,6 @@ var AboutProtectionsHandler = {
     LockwiseCard: "browser.contentblocking.report.lockwise.enabled",
     MonitorCard: "browser.contentblocking.report.monitor.enabled",
   },
-  PREF_CB_CATEGORY: "browser.contentblocking.category",
 
   init() {
     this.receiveMessage = this.receiveMessage.bind(this);
@@ -146,9 +145,6 @@ var AboutProtectionsHandler = {
         win.openTrustedLinkIn("about:preferences#sync", "tab");
         break;
       case "FetchContentBlockingEvents":
-        let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
-        this.sendMessage(aMessage.target, "SendCBCategory", category);
-
         let sumEvents = await TrackingDBService.sumAllEvents();
         let earliestDate = await TrackingDBService.getEarliestRecordedDate();
         let eventsByDate = await TrackingDBService.getEventsByDateRange(
