@@ -13,7 +13,6 @@ py3:
         - layout/reftests
         - layout/style
         - layout/tools/reftest
-        - media
         - security/manager/ssl
         - testing/awsy
         - testing/firefox-ui/harness/firefox_ui_harness/runners/update.py
