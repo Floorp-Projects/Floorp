@@ -1839,7 +1839,7 @@ class GFX2D_API Factory {
   static already_AddRefed<ScaledFont> CreateScaledFontForDWriteFont(
       IDWriteFontFace* aFontFace, const gfxFontStyle* aStyle,
       const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      bool aUseEmbeddedBitmap, bool aForceGDIMode,
+      bool aUseEmbeddedBitmap, int aRenderingMode,
       IDWriteRenderingParams* aParams, Float aGamma, Float aContrast);
 
   static void SetSystemTextQuality(uint8_t aQuality);

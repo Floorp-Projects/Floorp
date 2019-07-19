@@ -335,20 +335,23 @@ SkScalerContext_DW::SkScalerContext_DW(sk_sp<DWriteFontTypeface> typefaceRef,
                 range.fVersion >= 1) ||
                realTextSize > SkIntToScalar(20) || !is_hinted(this, typeface)) {
         fTextSizeRender = realTextSize;
+        fRenderingMode = DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC;
         fTextureType = DWRITE_TEXTURE_CLEARTYPE_3x1;
         fTextSizeMeasure = realTextSize;
         fMeasuringMode = DWRITE_MEASURING_MODE_NATURAL;
 
-        IDWriteRenderingParams* params = sk_get_dwrite_default_rendering_params();
         DWriteFontTypeface* typeface = static_cast<DWriteFontTypeface*>(getTypeface());
-        if (params &&
-            !SUCCEEDED(typeface->fDWriteFontFace->GetRecommendedRenderingMode(
-                fTextSizeRender,
-                1.0f,
-                fMeasuringMode,
-                params,
-                &fRenderingMode))) {
-            fRenderingMode = DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC;
+        switch (typeface->GetRenderingMode()) {
+        case DWRITE_RENDERING_MODE_NATURAL:
+        case DWRITE_RENDERING_MODE_NATURAL_SYMMETRIC:
+            fRenderingMode = typeface->GetRenderingMode();
+            break;
+        default:
+            if (IDWriteRenderingParams* params = sk_get_dwrite_default_rendering_params()) {
+                typeface->fDWriteFontFace->GetRecommendedRenderingMode(
+                    fTextSizeRender, 1.0f, fMeasuringMode, params, &fRenderingMode);
+            }
+            break;
         }
 
         // We don't support outline mode right now.
