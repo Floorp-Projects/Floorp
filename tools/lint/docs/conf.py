@@ -10,6 +10,8 @@
 # This file is execfile()d with the current directory set to its
 # containing dir.
 
+from __future__ import absolute_import
+
 import os
 
 # -- General configuration ------------------------------------------------
