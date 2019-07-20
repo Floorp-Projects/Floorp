@@ -287,8 +287,13 @@ bool DefaultJitOptions::isSmallFunction(JSScript* script) const {
 
 void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 
-void DefaultJitOptions::setEagerIonCompilation() {
+void DefaultJitOptions::setEagerBaselineCompilation() {
+  baselineInterpreterWarmUpThreshold = 0;
   baselineWarmUpThreshold = 0;
+}
+
+void DefaultJitOptions::setEagerIonCompilation() {
+  setEagerBaselineCompilation();
   normalIonWarmUpThreshold = 0;
   fullIonWarmUpThreshold = 0;
 }
