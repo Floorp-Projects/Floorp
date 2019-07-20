@@ -10400,7 +10400,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
 
   warmUpThreshold = op.getIntOption("baseline-warmup-threshold");
   if (warmUpThreshold >= 0) {
-    jit::JitOptions.baselineWarmUpThreshold = warmUpThreshold;
+    jit::JitOptions.baselineJitWarmUpThreshold = warmUpThreshold;
   }
 
   if (op.getBoolOption("baseline-eager")) {

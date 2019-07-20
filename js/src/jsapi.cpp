@@ -5240,9 +5240,9 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
       if (value == uint32_t(-1)) {
         jit::DefaultJitOptions defaultValues;
-        value = defaultValues.baselineWarmUpThreshold;
+        value = defaultValues.baselineJitWarmUpThreshold;
       }
-      jit::JitOptions.baselineWarmUpThreshold = value;
+      jit::JitOptions.baselineJitWarmUpThreshold = value;
       break;
     case JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER:
       if (value == uint32_t(-1)) {
@@ -5391,7 +5391,7 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       *valueOut = jit::JitOptions.baselineInterpreterWarmUpThreshold;
       break;
     case JSJITCOMPILER_BASELINE_WARMUP_TRIGGER:
-      *valueOut = jit::JitOptions.baselineWarmUpThreshold;
+      *valueOut = jit::JitOptions.baselineJitWarmUpThreshold;
       break;
     case JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER:
       *valueOut = jit::JitOptions.normalIonWarmUpThreshold;

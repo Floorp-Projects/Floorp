@@ -5682,9 +5682,9 @@ void JSScript::resetWarmUpCounterToDelayIonCompilation() {
   // because we don't want scripts to get stuck in the (Baseline) interpreter in
   // pathological cases.
 
-  if (warmUpCount > jit::JitOptions.baselineWarmUpThreshold) {
+  if (warmUpCount > jit::JitOptions.baselineJitWarmUpThreshold) {
     incWarmUpResetCounter();
-    warmUpCount = jit::JitOptions.baselineWarmUpThreshold;
+    warmUpCount = jit::JitOptions.baselineJitWarmUpThreshold;
   }
 }
 
