@@ -37,7 +37,6 @@ Please note that some targeting attributes require stricter controls on the tele
 * [hasAccessedFxAPanel](#hasaccessedfxapanel)
 * [isWhatsNewPanelEnabled](#iswhatsnewpanelenabled)
 * [earliestFirefoxVersion](#earliestfirefoxversion)
-* [isFxABadgeEnabled](#isfxabadgeenabled)
 
 ## Detailed usage
 
@@ -507,14 +506,4 @@ Integer value of the first Firefox version the profile ran on
 
 ```ts
 declare const earliestFirefoxVersion: boolean;
-```
-
-### `isFxABadgeEnabled`
-
-Boolean pref that controls if the FxA toolbar button is badged by Messaging System.
-
-#### Definition
-
-```ts
-declare const isFxABadgeEnabled: boolean;
 ```
