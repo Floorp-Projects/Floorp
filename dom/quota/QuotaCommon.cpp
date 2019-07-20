@@ -17,8 +17,8 @@ LazyLogModule gLogger("QuotaManager");
 }  // namespace
 
 #ifdef NIGHTLY_BUILD
-NS_NAMED_LITERAL_CSTRING(kInternalError, "internal");
-NS_NAMED_LITERAL_CSTRING(kExternalError, "external");
+NS_NAMED_LITERAL_CSTRING(kQuotaInternalError, "internal");
+NS_NAMED_LITERAL_CSTRING(kQuotaExternalError, "external");
 #endif
 
 LogModule* GetQuotaManagerLogger() { return gLogger; }

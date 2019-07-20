@@ -3998,7 +3998,7 @@ nsresult QuotaManager::GetDirectoryMetadata2WithRestore(
     rv = RestoreDirectoryMetadata2(aDirectory, aPersistent);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       if (aTelemetry) {
-        REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_RestoreDirMeta);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Rep_RestoreDirMeta);
       }
       return rv;
     }
@@ -4007,7 +4007,7 @@ nsresult QuotaManager::GetDirectoryMetadata2WithRestore(
                                aGroup, aOrigin);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       if (aTelemetry) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetDirMeta);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetDirMeta);
       }
       return rv;
     }
@@ -4083,21 +4083,21 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
   nsresult rv = NS_NewLocalFile(GetStoragePath(aPersistenceType), false,
                                 getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_NewLocalFile);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_NewLocalFile);
     return rv;
   }
 
   bool created;
   rv = EnsureDirectory(directory, &created);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_EnsureDirectory);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_EnsureDirectory);
     return rv;
   }
 
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = directory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetDirEntries);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetDirEntries);
     return rv;
   }
 
@@ -4118,7 +4118,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
     bool isDirectory;
     rv = childDirectory->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_IsDirectory);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_IsDirectory);
       RECORD_IN_NIGHTLY(statusKeeper, rv);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
@@ -4127,7 +4127,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
       nsString leafName;
       rv = childDirectory->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, Rep_GetLeafName);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Rep_GetLeafName);
         RECORD_IN_NIGHTLY(statusKeeper, rv);
         CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
       }
@@ -4138,7 +4138,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
 
       UNKNOWN_FILE_WARNING(leafName);
 
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_UnexpectedFile);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Rep_UnexpectedFile);
       RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(NS_ERROR_UNEXPECTED);
     }
@@ -4167,7 +4167,7 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kInternalError, Rep_GetNextFile);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Rep_GetNextFile);
     RECORD_IN_NIGHTLY(statusKeeper, rv);
 #ifndef NIGHTLY_BUILD
     return rv;
@@ -4210,7 +4210,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
   nsCOMPtr<nsIDirectoryEnumerator> entries;
   rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_GetDirEntries);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Ori_GetDirEntries);
     return rv;
   }
 
@@ -4224,7 +4224,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     bool isDirectory;
     rv = file->IsDirectory(&isDirectory);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_IsDirectory);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Ori_IsDirectory);
       RECORD_IN_NIGHTLY(statusKeeper, rv);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
@@ -4232,7 +4232,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     nsString leafName;
     rv = file->GetLeafName(leafName);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_GetLeafName);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Ori_GetLeafName);
       RECORD_IN_NIGHTLY(statusKeeper, rv);
       CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
     }
@@ -4245,7 +4245,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
       if (IsTempMetadata(leafName)) {
         rv = file->Remove(/* recursive */ false);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          REPORT_TELEMETRY_INIT_ERR(kExternalError, Ori_Remove);
+          REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, Ori_Remove);
           RECORD_IN_NIGHTLY(statusKeeper, rv);
           CONTINUE_IN_NIGHTLY_RETURN_IN_OTHERS(rv);
         }
@@ -4258,7 +4258,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
       }
 
       UNKNOWN_FILE_WARNING(leafName);
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_UnexpectedFile);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_UnexpectedFile);
 
 #ifdef NIGHTLY_BUILD
       Telemetry::ScalarSetMaximum(
@@ -4274,7 +4274,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     rv = Client::TypeFromText(leafName, clientType);
     if (NS_FAILED(rv)) {
       UNKNOWN_FILE_WARNING(leafName);
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_UnexpectedClient);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_UnexpectedClient);
       RECORD_IN_NIGHTLY(statusKeeper, NS_ERROR_UNEXPECTED);
 
       // Our upgrade process should have attempted to delete the deprecated
@@ -4310,7 +4310,7 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
     }
   }
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kInternalError, Ori_GetNextFile);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, Ori_GetNextFile);
     RECORD_IN_NIGHTLY(statusKeeper, rv);
 #ifndef NIGHTLY_BUILD
     return rv;
