@@ -31,7 +31,7 @@
 #   - name: <pref-name>                    # mandatory
 #     type: <cpp-type>                     # mandatory
 #     value: <default-value>               # mandatory
-#     mirror: <never | once | live>        # mandatory
+#     mirror: <never | once | always>      # mandatory
 #     do_not_use_directly: <True | False>  # optional
 #
 # - `name` is the name of the pref, without double-quotes, as it appears
