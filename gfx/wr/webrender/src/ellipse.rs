@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::units::*;
-use euclid::TypedSize2D;
+use euclid::Size2D;
 use std::f32::consts::FRAC_PI_2;
 
 
@@ -13,12 +13,12 @@ const STEP_COUNT: usize = 20;
 /// Represents an ellipse centred at a local space origin.
 #[derive(Debug, Clone)]
 pub struct Ellipse<U> {
-    pub radius: TypedSize2D<f32, U>,
+    pub radius: Size2D<f32, U>,
     pub total_arc_length: f32,
 }
 
 impl<U> Ellipse<U> {
-    pub fn new(radius: TypedSize2D<f32, U>) -> Ellipse<U> {
+    pub fn new(radius: Size2D<f32, U>) -> Ellipse<U> {
         // Approximate the total length of the first quadrant of this ellipse.
         let total_arc_length = get_simpson_length(FRAC_PI_2, radius.width, radius.height);
 

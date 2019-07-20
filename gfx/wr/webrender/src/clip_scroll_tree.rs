@@ -5,7 +5,7 @@
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle};
 use api::{PipelineId, ScrollClamping, ScrollNodeState, ScrollLocation, ScrollSensitivity};
 use api::units::*;
-use euclid::TypedTransform3D;
+use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::print_tree::{PrintableTree, PrintTree, PrintTreePrinter};
@@ -146,13 +146,13 @@ pub struct TransformUpdateState {
 pub enum CoordinateSpaceMapping<Src, Dst> {
     Local,
     ScaleOffset(ScaleOffset),
-    Transform(TypedTransform3D<f32, Src, Dst>),
+    Transform(Transform3D<f32, Src, Dst>),
 }
 
 impl<Src, Dst> CoordinateSpaceMapping<Src, Dst> {
-    pub fn into_transform(self) -> TypedTransform3D<f32, Src, Dst> {
+    pub fn into_transform(self) -> Transform3D<f32, Src, Dst> {
         match self {
-            CoordinateSpaceMapping::Local => TypedTransform3D::identity(),
+            CoordinateSpaceMapping::Local => Transform3D::identity(),
             CoordinateSpaceMapping::ScaleOffset(scale_offset) => scale_offset.to_transform(),
             CoordinateSpaceMapping::Transform(transform) => transform,
         }
@@ -287,10 +287,10 @@ impl ClipScrollTree {
             }
 
             coordinate_system_id = coord_system.parent.expect("invalid parent!");
-            transform = transform.post_mul(&coord_system.transform);
+            transform = transform.post_transform(&coord_system.transform);
         }
 
-        transform = transform.post_mul(
+        transform = transform.post_transform(
             &parent.content_transform
                 .inverse()
                 .to_transform(),
@@ -320,7 +320,7 @@ impl ClipScrollTree {
             };
             let transform = scale_offset
                 .to_transform()
-                .post_mul(&system.world_transform);
+                .post_transform(&system.world_transform);
 
             CoordinateSpaceMapping::Transform(transform)
         }
@@ -715,7 +715,7 @@ fn test_pt(
 
     let p = LayoutPoint::new(px, py);
     let m = cst.get_relative_transform(child, parent).into_transform();
-    let pt = m.transform_point2d(&p).unwrap();
+    let pt = m.transform_point2d(p).unwrap();
     assert!(pt.x.approx_eq_eps(&expected_x, &EPSILON) &&
             pt.y.approx_eq_eps(&expected_y, &EPSILON),
             "p: {:?} -> {:?}\nm={:?}",
