@@ -85,7 +85,7 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   nogc.emplace(cx);
 #endif
 
-  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled());
+  MOZ_ASSERT(IsBaselineInterpreterEnabled());
   MOZ_ASSERT(CheckFrame(data.osrFrame));
 
   EnterJitCode enter = cx->runtime()->jitRuntime()->enterJit();
