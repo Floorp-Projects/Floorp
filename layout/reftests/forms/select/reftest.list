@@ -14,3 +14,8 @@ needs-focus == focusring-3.html focusring-3-ref.html
 == listbox-zero-row-initial.html listbox-zero-row-initial-ref.html
 == 1246836.html 1246836-ref.html
 skip-if(Android) == select-option-display-none-inline-size.html select-option-display-none-inline-size-ref.html
+
+# Android and Windows actually use the anonymous select > button (rather than
+# drawing the arrow as a background like Linux and Mac), so most of this test
+# doesn't apply since when over-constrained it gets zero-sized.
+skip-if(Android||winWidget) == themed-select-padding-no-clip.html themed-select-padding-no-clip-ref.html
