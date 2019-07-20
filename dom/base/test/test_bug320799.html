@@ -52,6 +52,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=320799
   <select id="s3">
     <option>x</option>
   </select>
+  <select id="s4" style="width: 100px; box-sizing: border-box; border: 0; margin: 10px">
+    <option>This is a test, it really is a test I tell you</option>
+  </select>
 </p>
 <div id="content" style="display: none">
   
@@ -63,6 +66,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=320799
 is($("s").scrollWidth, 100, "Scroll width should not include dropdown contents");
 is($("s2").clientWidth, $("s3").clientWidth,
    "Client width should not depend on the dropdown's vertical scrollbar");
+
+is($("s4").scrollWidth, 100, "Scroll width should not include dropdown contents");
 </script>
 </pre>
 </body>
