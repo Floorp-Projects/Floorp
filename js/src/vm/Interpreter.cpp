@@ -1973,12 +1973,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_LOOPENTRY) {
       COUNT_COVERAGE();
       // Attempt on-stack replacement with Baseline code.
-      if (jit::IsBaselineInterpreterOrJitEnabled()) {
+      if (jit::IsBaselineInterpreterEnabled()) {
         script->incWarmUpCounter();
 
         using Tier = jit::BaselineTier;
-        bool tryBaselineInterpreter = (jit::IsBaselineInterpreterEnabled() &&
-                                       !script->hasBaselineScript());
+        bool tryBaselineInterpreter = !script->hasBaselineScript();
         jit::MethodStatus status =
             tryBaselineInterpreter
                 ? jit::CanEnterBaselineAtBranch<Tier::Interpreter>(cx,
