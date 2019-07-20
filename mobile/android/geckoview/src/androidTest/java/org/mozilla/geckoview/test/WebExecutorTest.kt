@@ -295,7 +295,7 @@ class WebExecutorTest {
         assertThat("Content-Length should match", response.headers["Content-Length"]!!.toInt(), equalTo(expectedCount))
 
         val stream = response.body!!
-        val bytes = stream.readBytes(expectedCount)
+        val bytes = stream.readBytes()
         stream.close()
 
         assertThat("Byte counts should match", bytes.size, equalTo(expectedCount))
