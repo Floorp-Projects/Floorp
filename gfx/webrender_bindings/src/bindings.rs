@@ -1052,6 +1052,13 @@ pub unsafe extern "C" fn wr_thread_pool_new() -> *mut WrThreadPool {
 
     let workers = Arc::new(worker.unwrap());
 
+    // This effectively leaks the thread pool. Not great but we only create one and it lives
+    // for as long as the browser.
+    // Do this to avoid intermittent race conditions with nsThreadManager shutdown.
+    // A better fix would involve removing the dependency between implicit nsThreadManager
+    // and webrender's threads, or be able to synchronously terminate rayon's thread pool.
+    mem::forget(Arc::clone(&workers));
+
     Box::into_raw(Box::new(WrThreadPool(workers)))
 }
 
@@ -2780,8 +2787,8 @@ pub struct WrBorderImage {
     width: i32,
     height: i32,
     fill: bool,
-    slice: SideOffsets2D<i32>,
-    outset: SideOffsets2D<f32>,
+    slice: DeviceIntSideOffsets,
+    outset: LayoutSideOffsets,
     repeat_horizontal: RepeatMode,
     repeat_vertical: RepeatMode,
 }
@@ -2832,13 +2839,13 @@ pub extern "C" fn wr_dp_push_border_gradient(state: &mut WrState,
                                              width: i32,
                                              height: i32,
                                              fill: bool,
-                                             slice: SideOffsets2D<i32>,
+                                             slice: DeviceIntSideOffsets,
                                              start_point: LayoutPoint,
                                              end_point: LayoutPoint,
                                              stops: *const GradientStop,
                                              stops_count: usize,
                                              extend_mode: ExtendMode,
-                                             outset: SideOffsets2D<f32>) {
+                                             outset: LayoutSideOffsets) {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = unsafe { make_slice(stops, stops_count) };
@@ -2893,7 +2900,7 @@ pub extern "C" fn wr_dp_push_border_radial_gradient(state: &mut WrState,
                                                     stops: *const GradientStop,
                                                     stops_count: usize,
                                                     extend_mode: ExtendMode,
-                                                    outset: SideOffsets2D<f32>) {
+                                                    outset: LayoutSideOffsets) {
     debug_assert!(unsafe { is_in_main_thread() });
 
     let stops_slice = unsafe { make_slice(stops, stops_count) };

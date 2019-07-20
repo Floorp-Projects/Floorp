@@ -718,16 +718,16 @@ impl ResourceCache {
             };
 
             tiles.retain(|tile, _| {
-                !req.original_tile_range.contains(tile) ||
-                req.actual_tile_range.contains(tile)
+                !req.original_tile_range.contains(*tile) ||
+                req.actual_tile_range.contains(*tile)
             });
 
             let texture_cache = &mut self.texture_cache;
             match self.cached_images.try_get_mut(&req.key.as_image()) {
                 Some(&mut ImageResult::Multi(ref mut entries)) => {
                     entries.retain(|key, entry| {
-                        if !req.original_tile_range.contains(&key.tile.unwrap()) ||
-                           req.actual_tile_range.contains(&key.tile.unwrap()) {
+                        if !req.original_tile_range.contains(key.tile.unwrap()) ||
+                           req.actual_tile_range.contains(key.tile.unwrap()) {
                             return true;
                         }
                         entry.mark_unused(texture_cache);
@@ -1386,13 +1386,13 @@ impl ResourceCache {
             tile_size,
         );
 
-        tiles.retain(|tile, _| { tile_range.contains(tile) });
+        tiles.retain(|tile, _| { tile_range.contains(*tile) });
 
         let texture_cache = &mut self.texture_cache;
         match self.cached_images.try_get_mut(&key.as_image()) {
             Some(&mut ImageResult::Multi(ref mut entries)) => {
                 entries.retain(|key, entry| {
-                    if key.tile.is_none() || tile_range.contains(&key.tile.unwrap()) {
+                    if key.tile.is_none() || tile_range.contains(key.tile.unwrap()) {
                         return true;
                     }
                     entry.mark_unused(texture_cache);

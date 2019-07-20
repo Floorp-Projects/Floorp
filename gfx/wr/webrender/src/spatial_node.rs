@@ -309,8 +309,8 @@ impl SpatialNode {
                             // Do a change-basis operation on the
                             // perspective matrix using the scroll offset.
                             source_transform
-                                .pre_translate(&scroll_offset)
-                                .post_translate(&-scroll_offset)
+                                .pre_translate(scroll_offset)
+                                .post_translate(-scroll_offset)
                         }
                         ReferenceFrameKind::Perspective { scrolling_relative_to: None } |
                         ReferenceFrameKind::Transform => source_transform,
@@ -318,14 +318,14 @@ impl SpatialNode {
 
                     let resolved_transform =
                         LayoutFastTransform::with_vector(info.origin_in_parent_reference_frame)
-                            .pre_mul(&source_transform);
+                            .pre_transform(&source_transform);
 
                     // The transformation for this viewport in world coordinates is the transformation for
                     // our parent reference frame, plus any accumulated scrolling offsets from nodes
                     // between our reference frame and this node. Finally, we also include
                     // whatever local transformation this reference frame provides.
                     let relative_transform = resolved_transform
-                        .post_translate(&state.parent_accumulated_scroll_offset)
+                        .post_translate(state.parent_accumulated_scroll_offset)
                         .to_transform()
                         .with_destination::<LayoutPixel>();
 
@@ -352,7 +352,7 @@ impl SpatialNode {
                         // new incompatible coordinate system with which we cannot share clips without masking.
                         let transform = state.coordinate_system_relative_scale_offset
                             .to_transform()
-                            .pre_mul(&relative_transform);
+                            .pre_transform(&relative_transform);
 
                         // Push that new coordinate system and record the new id.
                         let coord_system = {
@@ -361,7 +361,7 @@ impl SpatialNode {
                             if parent_system.should_flatten {
                                 cur_transform.flatten_z_output();
                             }
-                            let world_transform = cur_transform.post_mul(&parent_system.world_transform);
+                            let world_transform = cur_transform.post_transform(&parent_system.world_transform);
                             let determinant = world_transform.determinant();
                             info.invertible = determinant != 0.0 && !determinant.is_nan();
 
@@ -437,7 +437,7 @@ impl SpatialNode {
         // between the scrolled content and unscrolled viewport we adjust the viewport's
         // position by the scroll offset in order to work with their relative positions on the
         // page.
-        let sticky_rect = info.frame_rect.translate(viewport_scroll_offset);
+        let sticky_rect = info.frame_rect.translate(*viewport_scroll_offset);
 
         let mut sticky_offset = LayoutVector2D::zero();
         if let Some(margin) = info.margins.top {
@@ -560,7 +560,7 @@ impl SpatialNode {
                 let translation = -info.origin_in_parent_reference_frame;
                 state.nearest_scrolling_ancestor_viewport =
                     state.nearest_scrolling_ancestor_viewport
-                       .translate(&translation);
+                       .translate(translation);
             }
         }
     }
@@ -763,7 +763,7 @@ pub struct ReferenceFrameInfo {
 #[derive(Clone, Debug)]
 pub struct StickyFrameInfo {
     pub frame_rect: LayoutRect,
-    pub margins: SideOffsets2D<Option<f32>>,
+    pub margins: SideOffsets2D<Option<f32>, LayoutPixel>,
     pub vertical_offset_bounds: StickyOffsetBounds,
     pub horizontal_offset_bounds: StickyOffsetBounds,
     pub previously_applied_offset: LayoutVector2D,
@@ -773,7 +773,7 @@ pub struct StickyFrameInfo {
 impl StickyFrameInfo {
     pub fn new(
         frame_rect: LayoutRect,
-        margins: SideOffsets2D<Option<f32>>,
+        margins: SideOffsets2D<Option<f32>, LayoutPixel>,
         vertical_offset_bounds: StickyOffsetBounds,
         horizontal_offset_bounds: StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D
