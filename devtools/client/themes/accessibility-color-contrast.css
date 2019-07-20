@@ -49,4 +49,5 @@
   padding: 0px 2px;
   margin-inline-start: 6px;
   line-height: initial;
+  -moz-user-select: none;
 }
