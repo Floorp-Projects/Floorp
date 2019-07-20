@@ -47,7 +47,7 @@ import java.util.List;
 @UiThread
 public class BasicSelectionActionDelegate implements ActionMode.Callback,
                                                      GeckoSession.SelectionActionDelegate {
-    private static final String LOGTAG = "GeckoBasicSelectionAction";
+    private static final String LOGTAG = "BasicSelectionAction";
 
     protected static final String ACTION_PROCESS_TEXT = Intent.ACTION_PROCESS_TEXT;
 

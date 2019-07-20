@@ -18,7 +18,7 @@ import android.util.Log;
 import java.util.Locale;
 
 public final class HardwareCodecCapabilityUtils {
-    private static final String LOGTAG = "GeckoHardwareCodecCapabilityUtils";
+    private static final String LOGTAG = "HardwareCodecCapability";
 
     // List of supported HW VP8 encoders.
     private static final String[] supportedVp8HwEncCodecPrefixes = {

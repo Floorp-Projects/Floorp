@@ -13,7 +13,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBinder.DeathRecipient {
-    private static final String LOGTAG = "GeckoRemoteMediaDrmBridgeStub";
+    private static final String LOGTAG = "RemoteDrmBridgeStub";
     private static final boolean DEBUG = false;
     private volatile IMediaDrmBridgeCallbacks mCallbacks = null;
 

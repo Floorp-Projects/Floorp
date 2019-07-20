@@ -32,7 +32,7 @@ import android.util.Log;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ProxySelector;
 
-@TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+@TargetApi(Build.VERSION_CODES.LOLLIPOP)
 public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     protected final String LOGTAG;
     private static final String INVALID_SESSION_ID = "Invalid";
@@ -612,7 +612,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
         try {
             mProvisioningPromiseId = promiseId;
-            @SuppressLint("NewApi") MediaDrm.ProvisionRequest request = mDrm.getProvisionRequest();
+            MediaDrm.ProvisionRequest request = mDrm.getProvisionRequest();
             PostRequestTask postTask =
                 new PostRequestTask(promiseId, request.getDefaultUrl(), request.getData());
             postTask.execute();

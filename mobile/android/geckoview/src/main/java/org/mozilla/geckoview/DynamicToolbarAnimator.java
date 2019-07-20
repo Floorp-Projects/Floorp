@@ -19,7 +19,7 @@ import java.util.Set;
 
 @UiThread
 public final class DynamicToolbarAnimator {
-    private static final String LOGTAG = "GeckoDynamicToolbarAnimator";
+    private static final String LOGTAG = "DynamicToolbarAnimator";
 
     @AnyThread
     public static enum PinReason {

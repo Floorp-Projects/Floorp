@@ -8,7 +8,7 @@ import android.media.MediaCrypto;
 import android.util.Log;
 
 final class RemoteMediaDrmBridge implements GeckoMediaDrm {
-    private static final String LOGTAG = "GeckoRemoteMediaDrmBridge";
+    private static final String LOGTAG = "RemoteMediaDrmBridge";
     private static final boolean DEBUG = false;
     private CallbacksForwarder mCallbacksFwd;
     private IMediaDrmBridge mRemote;

@@ -216,7 +216,7 @@ set_config('GRADLE_ANDROID_TEST_TASKS', gradle_android_test_tasks)
 def gradle_android_lint_tasks(build_config):
     '''Gradle tasks run by |mach android lint|.'''
     return [
-        'app:lint{app.variant.name}'.format(app=build_config.app),
+        'geckoview:lint{app.variant.name}'.format(app=build_config.app),
     ]
 
 set_config('GRADLE_ANDROID_LINT_TASKS', gradle_android_lint_tasks)

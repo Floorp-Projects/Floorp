@@ -22,7 +22,7 @@ import android.os.RemoteException;
 import android.util.Log;
 
 public class GeckoServiceChildProcess extends Service {
-    private static final String LOGTAG = "GeckoServiceChildProcess";
+    private static final String LOGTAG = "ServiceChildProcess";
     private static IProcessManager sProcessManager;
 
     @WrapForJNI(calledFrom = "gecko")
