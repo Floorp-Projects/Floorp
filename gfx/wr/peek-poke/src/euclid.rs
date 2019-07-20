@@ -9,9 +9,9 @@
 // except according to those terms.
 
 use crate::{Peek, Poke};
-use euclid::{TypedPoint2D, TypedRect, TypedSideOffsets2D, TypedSize2D, TypedTransform3D, TypedVector2D};
+use euclid::{Point2D, Rect, SideOffsets2D, Size2D, Transform3D, Vector2D};
 
-unsafe impl<T: Poke, U> Poke for TypedPoint2D<T, U> {
+unsafe impl<T: Poke, U> Poke for Point2D<T, U> {
     #[inline(always)]
     fn max_size() -> usize {
         2 * T::max_size()
@@ -23,7 +23,7 @@ unsafe impl<T: Poke, U> Poke for TypedPoint2D<T, U> {
         bytes
     }
 }
-impl<T: Peek, U> Peek for TypedPoint2D<T, U> {
+impl<T: Peek, U> Peek for Point2D<T, U> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
         let bytes = T::peek_from(bytes, &mut (*output).x);
@@ -32,10 +32,10 @@ impl<T: Peek, U> Peek for TypedPoint2D<T, U> {
     }
 }
 
-unsafe impl<T: Poke, U> Poke for TypedRect<T, U> {
+unsafe impl<T: Poke, U> Poke for Rect<T, U> {
     #[inline(always)]
     fn max_size() -> usize {
-        TypedPoint2D::<T, U>::max_size() + TypedSize2D::<T, U>::max_size()
+        Point2D::<T, U>::max_size() + Size2D::<T, U>::max_size()
     }
     #[inline(always)]
     unsafe fn poke_into(&self, bytes: *mut u8) -> *mut u8 {
@@ -44,16 +44,16 @@ unsafe impl<T: Poke, U> Poke for TypedRect<T, U> {
         bytes
     }
 }
-impl<T: Peek, U> Peek for TypedRect<T, U> {
+impl<T: Peek, U> Peek for Rect<T, U> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
-        let bytes = TypedPoint2D::<T, U>::peek_from(bytes, &mut (*output).origin);
-        let bytes = TypedSize2D::<T, U>::peek_from(bytes, &mut (*output).size);
+        let bytes = Point2D::<T, U>::peek_from(bytes, &mut (*output).origin);
+        let bytes = Size2D::<T, U>::peek_from(bytes, &mut (*output).size);
         bytes
     }
 }
 
-unsafe impl<T: Poke, U> Poke for TypedSideOffsets2D<T, U> {
+unsafe impl<T: Poke, U> Poke for SideOffsets2D<T, U> {
     #[inline(always)]
     fn max_size() -> usize {
         4 * T::max_size()
@@ -67,7 +67,7 @@ unsafe impl<T: Poke, U> Poke for TypedSideOffsets2D<T, U> {
         bytes
     }
 }
-impl<T: Peek, U> Peek for TypedSideOffsets2D<T, U> {
+impl<T: Peek, U> Peek for SideOffsets2D<T, U> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
         let bytes = T::peek_from(bytes, &mut (*output).top);
@@ -78,7 +78,7 @@ impl<T: Peek, U> Peek for TypedSideOffsets2D<T, U> {
     }
 }
 
-unsafe impl<T: Poke, U> Poke for TypedSize2D<T, U> {
+unsafe impl<T: Poke, U> Poke for Size2D<T, U> {
     #[inline(always)]
     fn max_size() -> usize {
         2 * T::max_size()
@@ -90,7 +90,7 @@ unsafe impl<T: Poke, U> Poke for TypedSize2D<T, U> {
         bytes
     }
 }
-impl<T: Peek, U> Peek for TypedSize2D<T, U> {
+impl<T: Peek, U> Peek for Size2D<T, U> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
         let bytes = T::peek_from(bytes, &mut (*output).width);
@@ -99,7 +99,7 @@ impl<T: Peek, U> Peek for TypedSize2D<T, U> {
     }
 }
 
-unsafe impl<T: Poke, S, D> Poke for TypedTransform3D<T, S, D> {
+unsafe impl<T: Poke, S, D> Poke for Transform3D<T, S, D> {
     #[inline(always)]
     fn max_size() -> usize {
         16 * T::max_size()
@@ -125,7 +125,7 @@ unsafe impl<T: Poke, S, D> Poke for TypedTransform3D<T, S, D> {
         bytes
     }
 }
-impl<T: Peek, S, D> Peek for TypedTransform3D<T, S, D> {
+impl<T: Peek, S, D> Peek for Transform3D<T, S, D> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
         let bytes = T::peek_from(bytes, &mut (*output).m11);
@@ -148,7 +148,7 @@ impl<T: Peek, S, D> Peek for TypedTransform3D<T, S, D> {
     }
 }
 
-unsafe impl<T: Poke, U> Poke for TypedVector2D<T, U> {
+unsafe impl<T: Poke, U> Poke for Vector2D<T, U> {
     #[inline(always)]
     fn max_size() -> usize {
         2 * T::max_size()
@@ -160,7 +160,7 @@ unsafe impl<T: Poke, U> Poke for TypedVector2D<T, U> {
         bytes
     }
 }
-impl<T: Peek, U> Peek for TypedVector2D<T, U> {
+impl<T: Peek, U> Peek for Vector2D<T, U> {
     #[inline(always)]
     unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
         let bytes = T::peek_from(bytes, &mut (*output).x);

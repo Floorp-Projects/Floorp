@@ -12,162 +12,135 @@ use num::One;
 
 use num_traits::NumCast;
 #[cfg(feature = "serde")]
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde;
 use core::fmt;
 use core::ops::{Add, Div, Mul, Neg, Sub};
 use core::marker::PhantomData;
-use {TypedPoint2D, TypedRect, TypedSize2D, TypedVector2D};
+use {Point2D, Rect, Size2D, Vector2D};
 
 /// A scaling factor between two different units of measurement.
 ///
 /// This is effectively a type-safe float, intended to be used in combination with other types like
 /// `length::Length` to enforce conversion between systems of measurement at compile time.
 ///
-/// `Src` and `Dst` represent the units before and after multiplying a value by a `TypedScale`. They
+/// `Src` and `Dst` represent the units before and after multiplying a value by a `Scale`. They
 /// may be types without values, such as empty enums.  For example:
 ///
 /// ```rust
-/// use euclid::TypedScale;
+/// use euclid::Scale;
 /// use euclid::Length;
 /// enum Mm {};
 /// enum Inch {};
 ///
-/// let mm_per_inch: TypedScale<f32, Inch, Mm> = TypedScale::new(25.4);
+/// let mm_per_inch: Scale<f32, Inch, Mm> = Scale::new(25.4);
 ///
 /// let one_foot: Length<f32, Inch> = Length::new(12.0);
 /// let one_foot_in_mm: Length<f32, Mm> = one_foot * mm_per_inch;
 /// ```
 #[repr(C)]
-pub struct TypedScale<T, Src, Dst>(pub T, #[doc(hidden)] pub PhantomData<(Src, Dst)>);
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(bound(serialize = "T: serde::Serialize", deserialize = "T: serde::Deserialize<'de>")))]
+pub struct Scale<T, Src, Dst>(pub T, #[doc(hidden)] pub PhantomData<(Src, Dst)>);
 
-#[cfg(feature = "serde")]
-impl<'de, T, Src, Dst> Deserialize<'de> for TypedScale<T, Src, Dst>
-where
-    T: Deserialize<'de>,
-{
-    fn deserialize<D>(deserializer: D) -> Result<TypedScale<T, Src, Dst>, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        Ok(TypedScale(
-            try!(Deserialize::deserialize(deserializer)),
-            PhantomData,
-        ))
-    }
-}
-
-#[cfg(feature = "serde")]
-impl<T, Src, Dst> Serialize for TypedScale<T, Src, Dst>
-where
-    T: Serialize,
-{
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        self.0.serialize(serializer)
-    }
-}
-
-impl<T, Src, Dst> TypedScale<T, Src, Dst> {
+impl<T, Src, Dst> Scale<T, Src, Dst> {
     pub fn new(x: T) -> Self {
-        TypedScale(x, PhantomData)
+        Scale(x, PhantomData)
     }
 }
 
-impl<T: Clone, Src, Dst> TypedScale<T, Src, Dst> {
+impl<T: Clone, Src, Dst> Scale<T, Src, Dst> {
     pub fn get(&self) -> T {
         self.0.clone()
     }
 }
 
-impl<Src, Dst> TypedScale<f32, Src, Dst> {
+impl<Src, Dst> Scale<f32, Src, Dst> {
     /// Identity scaling, could be used to safely transit from one space to another.
-    pub const ONE: Self = TypedScale(1.0, PhantomData);
+    pub const ONE: Self = Scale(1.0, PhantomData);
 }
 
-impl<T: Clone + One + Div<T, Output = T>, Src, Dst> TypedScale<T, Src, Dst> {
-    /// The inverse TypedScale (1.0 / self).
-    pub fn inv(&self) -> TypedScale<T, Dst, Src> {
+impl<T: Clone + One + Div<T, Output = T>, Src, Dst> Scale<T, Src, Dst> {
+    /// The inverse Scale (1.0 / self).
+    pub fn inv(&self) -> Scale<T, Dst, Src> {
         let one: T = One::one();
-        TypedScale::new(one / self.get())
+        Scale::new(one / self.get())
     }
 }
 
 // scale0 * scale1
-impl<T: Clone + Mul<T, Output = T>, A, B, C> Mul<TypedScale<T, B, C>> for TypedScale<T, A, B> {
-    type Output = TypedScale<T, A, C>;
+impl<T: Clone + Mul<T, Output = T>, A, B, C> Mul<Scale<T, B, C>> for Scale<T, A, B> {
+    type Output = Scale<T, A, C>;
     #[inline]
-    fn mul(self, other: TypedScale<T, B, C>) -> TypedScale<T, A, C> {
-        TypedScale::new(self.get() * other.get())
+    fn mul(self, other: Scale<T, B, C>) -> Scale<T, A, C> {
+        Scale::new(self.get() * other.get())
     }
 }
 
 // scale0 + scale1
-impl<T: Clone + Add<T, Output = T>, Src, Dst> Add for TypedScale<T, Src, Dst> {
-    type Output = TypedScale<T, Src, Dst>;
+impl<T: Clone + Add<T, Output = T>, Src, Dst> Add for Scale<T, Src, Dst> {
+    type Output = Scale<T, Src, Dst>;
     #[inline]
-    fn add(self, other: TypedScale<T, Src, Dst>) -> TypedScale<T, Src, Dst> {
-        TypedScale::new(self.get() + other.get())
+    fn add(self, other: Scale<T, Src, Dst>) -> Scale<T, Src, Dst> {
+        Scale::new(self.get() + other.get())
     }
 }
 
 // scale0 - scale1
-impl<T: Clone + Sub<T, Output = T>, Src, Dst> Sub for TypedScale<T, Src, Dst> {
-    type Output = TypedScale<T, Src, Dst>;
+impl<T: Clone + Sub<T, Output = T>, Src, Dst> Sub for Scale<T, Src, Dst> {
+    type Output = Scale<T, Src, Dst>;
     #[inline]
-    fn sub(self, other: TypedScale<T, Src, Dst>) -> TypedScale<T, Src, Dst> {
-        TypedScale::new(self.get() - other.get())
+    fn sub(self, other: Scale<T, Src, Dst>) -> Scale<T, Src, Dst> {
+        Scale::new(self.get() - other.get())
     }
 }
 
-impl<T: NumCast + Clone, Src, Dst0> TypedScale<T, Src, Dst0> {
+impl<T: NumCast + Clone, Src, Dst0> Scale<T, Src, Dst0> {
     /// Cast from one numeric representation to another, preserving the units.
-    pub fn cast<T1: NumCast + Clone>(&self) -> TypedScale<T1, Src, Dst0> {
+    pub fn cast<T1: NumCast + Clone>(&self) -> Scale<T1, Src, Dst0> {
         self.try_cast().unwrap()
     }
 
     /// Fallible cast from one numeric representation to another, preserving the units.
-    pub fn try_cast<T1: NumCast + Clone>(&self) -> Option<TypedScale<T1, Src, Dst0>> {
-        NumCast::from(self.get()).map(TypedScale::new)
+    pub fn try_cast<T1: NumCast + Clone>(&self) -> Option<Scale<T1, Src, Dst0>> {
+        NumCast::from(self.get()).map(Scale::new)
     }
 }
 
-impl<T, Src, Dst> TypedScale<T, Src, Dst>
+impl<T, Src, Dst> Scale<T, Src, Dst>
 where
     T: Copy + Clone + Mul<T, Output = T> + Neg<Output = T> + PartialEq + One,
 {
     /// Returns the given point transformed by this scale.
     #[inline]
-    pub fn transform_point(&self, point: &TypedPoint2D<T, Src>) -> TypedPoint2D<T, Dst> {
-        TypedPoint2D::new(point.x * self.get(), point.y * self.get())
+    pub fn transform_point(&self, point: Point2D<T, Src>) -> Point2D<T, Dst> {
+        Point2D::new(point.x * self.get(), point.y * self.get())
     }
 
     /// Returns the given vector transformed by this scale.
     #[inline]
-    pub fn transform_vector(&self, vec: &TypedVector2D<T, Src>) -> TypedVector2D<T, Dst> {
-        TypedVector2D::new(vec.x * self.get(), vec.y * self.get())
+    pub fn transform_vector(&self, vec: Vector2D<T, Src>) -> Vector2D<T, Dst> {
+        Vector2D::new(vec.x * self.get(), vec.y * self.get())
     }
 
     /// Returns the given vector transformed by this scale.
     #[inline]
-    pub fn transform_size(&self, size: &TypedSize2D<T, Src>) -> TypedSize2D<T, Dst> {
-        TypedSize2D::new(size.width * self.get(), size.height * self.get())
+    pub fn transform_size(&self, size: Size2D<T, Src>) -> Size2D<T, Dst> {
+        Size2D::new(size.width * self.get(), size.height * self.get())
     }
 
     /// Returns the given rect transformed by this scale.
     #[inline]
-    pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
-        TypedRect::new(
-            self.transform_point(&rect.origin),
-            self.transform_size(&rect.size),
+    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Rect<T, Dst> {
+        Rect::new(
+            self.transform_point(rect.origin),
+            self.transform_size(rect.size),
         )
     }
 
     /// Returns the inverse of this scale.
     #[inline]
-    pub fn inverse(&self) -> TypedScale<T, Dst, Src> {
-        TypedScale::new(-self.get())
+    pub fn inverse(&self) -> Scale<T, Dst, Src> {
+        Scale::new(-self.get())
     }
 
     /// Returns true if this scale has no effect.
@@ -180,27 +153,27 @@ where
 // FIXME: Switch to `derive(PartialEq, Clone)` after this Rust issue is fixed:
 // https://github.com/mozilla/rust/issues/7671
 
-impl<T: PartialEq, Src, Dst> PartialEq for TypedScale<T, Src, Dst> {
-    fn eq(&self, other: &TypedScale<T, Src, Dst>) -> bool {
+impl<T: PartialEq, Src, Dst> PartialEq for Scale<T, Src, Dst> {
+    fn eq(&self, other: &Scale<T, Src, Dst>) -> bool {
         self.0 == other.0
     }
 }
 
-impl<T: Clone, Src, Dst> Clone for TypedScale<T, Src, Dst> {
-    fn clone(&self) -> TypedScale<T, Src, Dst> {
-        TypedScale::new(self.get())
+impl<T: Clone, Src, Dst> Clone for Scale<T, Src, Dst> {
+    fn clone(&self) -> Scale<T, Src, Dst> {
+        Scale::new(self.get())
     }
 }
 
-impl<T: Copy, Src, Dst> Copy for TypedScale<T, Src, Dst> {}
+impl<T: Copy, Src, Dst> Copy for Scale<T, Src, Dst> {}
 
-impl<T: fmt::Debug, Src, Dst> fmt::Debug for TypedScale<T, Src, Dst> {
+impl<T: fmt::Debug, Src, Dst> fmt::Debug for Scale<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl<T: fmt::Display, Src, Dst> fmt::Display for TypedScale<T, Src, Dst> {
+impl<T: fmt::Display, Src, Dst> fmt::Display for Scale<T, Src, Dst> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.0.fmt(f)
     }
@@ -208,7 +181,7 @@ impl<T: fmt::Display, Src, Dst> fmt::Display for TypedScale<T, Src, Dst> {
 
 #[cfg(test)]
 mod tests {
-    use super::TypedScale;
+    use super::Scale;
 
     enum Inch {}
     enum Cm {}
@@ -216,20 +189,20 @@ mod tests {
 
     #[test]
     fn test_scale() {
-        let mm_per_inch: TypedScale<f32, Inch, Mm> = TypedScale::new(25.4);
-        let cm_per_mm: TypedScale<f32, Mm, Cm> = TypedScale::new(0.1);
+        let mm_per_inch: Scale<f32, Inch, Mm> = Scale::new(25.4);
+        let cm_per_mm: Scale<f32, Mm, Cm> = Scale::new(0.1);
 
-        let mm_per_cm: TypedScale<f32, Cm, Mm> = cm_per_mm.inv();
+        let mm_per_cm: Scale<f32, Cm, Mm> = cm_per_mm.inv();
         assert_eq!(mm_per_cm.get(), 10.0);
 
-        let cm_per_inch: TypedScale<f32, Inch, Cm> = mm_per_inch * cm_per_mm;
-        assert_eq!(cm_per_inch, TypedScale::new(2.54));
+        let cm_per_inch: Scale<f32, Inch, Cm> = mm_per_inch * cm_per_mm;
+        assert_eq!(cm_per_inch, Scale::new(2.54));
 
-        let a: TypedScale<isize, Inch, Inch> = TypedScale::new(2);
-        let b: TypedScale<isize, Inch, Inch> = TypedScale::new(3);
+        let a: Scale<isize, Inch, Inch> = Scale::new(2);
+        let b: Scale<isize, Inch, Inch> = Scale::new(3);
         assert!(a != b);
         assert_eq!(a, a.clone());
-        assert_eq!(a.clone() + b.clone(), TypedScale::new(5));
-        assert_eq!(a - b, TypedScale::new(-1));
+        assert_eq!(a.clone() + b.clone(), Scale::new(5));
+        assert_eq!(a - b, Scale::new(-1));
     }
 }

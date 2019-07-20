@@ -28,7 +28,7 @@ use api::{DebugFlags, DocumentId, PremultipliedColorF};
 #[cfg(test)]
 use api::IdNamespace;
 use api::units::TexelRect;
-use euclid::{HomogeneousVector, TypedRect};
+use euclid::{HomogeneousVector, Rect};
 use crate::internal_types::{FastHashMap, FastHashSet};
 use crate::profiler::GpuCacheProfileCounters;
 use crate::render_backend::{FrameStamp, FrameId};
@@ -102,8 +102,8 @@ impl From<[f32; 4]> for GpuBlockData {
     }
 }
 
-impl<P> From<TypedRect<f32, P>> for GpuBlockData {
-    fn from(r: TypedRect<f32, P>) -> Self {
+impl<P> From<Rect<f32, P>> for GpuBlockData {
+    fn from(r: Rect<f32, P>) -> Self {
         GpuBlockData {
             data: [
                 r.origin.x,

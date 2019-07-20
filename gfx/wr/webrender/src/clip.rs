@@ -958,7 +958,7 @@ impl<I: Iterator<Item = ComplexClipRegion>> Iterator for ComplexTranslateIter<I>
         self.source
             .next()
             .map(|mut complex| {
-                complex.rect = complex.rect.translate(&self.offset);
+                complex.rect = complex.rect.translate(self.offset);
                 complex
             })
     }
@@ -982,11 +982,11 @@ impl<J> ClipRegion<ComplexTranslateIter<J>> {
         J: Iterator<Item = ComplexClipRegion>
     {
         if let Some(ref mut image_mask) = image_mask {
-            image_mask.rect = image_mask.rect.translate(reference_frame_relative_offset);
+            image_mask.rect = image_mask.rect.translate(*reference_frame_relative_offset);
         }
 
         ClipRegion {
-            main: rect.translate(reference_frame_relative_offset),
+            main: rect.translate(*reference_frame_relative_offset),
             image_mask,
             complex_clips: ComplexTranslateIter {
                 source: complex_clips,
@@ -1002,7 +1002,7 @@ impl ClipRegion<Option<ComplexClipRegion>> {
         reference_frame_relative_offset: &LayoutVector2D
     ) -> Self {
         ClipRegion {
-            main: local_clip.translate(reference_frame_relative_offset),
+            main: local_clip.translate(*reference_frame_relative_offset),
             image_mask: None,
             complex_clips: None,
         }
@@ -1494,7 +1494,7 @@ pub fn rounded_rectangle_contains_point(
     rect: &LayoutRect,
     radii: &BorderRadius
 ) -> bool {
-    if !rect.contains(point) {
+    if !rect.contains(*point) {
         return false;
     }
 
@@ -1532,10 +1532,10 @@ pub fn project_inner_rect(
     rect: &LayoutRect,
 ) -> Option<WorldRect> {
     let points = [
-        transform.transform_point2d(&rect.origin)?,
-        transform.transform_point2d(&rect.top_right())?,
-        transform.transform_point2d(&rect.bottom_left())?,
-        transform.transform_point2d(&rect.bottom_right())?,
+        transform.transform_point2d(rect.origin)?,
+        transform.transform_point2d(rect.top_right())?,
+        transform.transform_point2d(rect.bottom_left())?,
+        transform.transform_point2d(rect.bottom_right())?,
     ];
 
     let mut xs = [points[0].x, points[1].x, points[2].x, points[3].x];

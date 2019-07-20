@@ -4,7 +4,7 @@ extern crate plane_split;
 
 use std::f32::consts::FRAC_PI_4;
 use binary_space_partition::{Plane as Plane_, PlaneCut};
-use euclid::{Angle, TypedTransform3D, TypedRect, rect, vec3};
+use euclid::{Angle, Transform3D, Rect, rect, vec3};
 use plane_split::{BspSplitter, Polygon, Splitter, make_grid};
 
 
@@ -21,14 +21,14 @@ fn grid_bsp() {
 
 
 fn sort_rotation(splitter: &mut Splitter<f32, ()>) {
-    let transform0: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
-    let transform1: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(0.0));
-    let transform2: TypedTransform3D<f32, (), ()> =
-        TypedTransform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(FRAC_PI_4));
+    let transform0: Transform3D<f32, (), ()> =
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(-FRAC_PI_4));
+    let transform1: Transform3D<f32, (), ()> =
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(0.0));
+    let transform2: Transform3D<f32, (), ()> =
+        Transform3D::create_rotation(0.0, 1.0, 0.0, Angle::radians(FRAC_PI_4));
 
-    let rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let p1 = Polygon::from_transformed_rect(rect, transform0, 0);
     let p2 = Polygon::from_transformed_rect(rect, transform1, 1);
     let p3 = Polygon::from_transformed_rect(rect, transform2, 2);
@@ -48,9 +48,9 @@ fn rotation_bsp() {
 
 fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
     let anchors: Vec<_> = (0usize .. 10).collect();
-    let rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let polys: Vec<_> = anchors.iter().map(|&anchor| {
-        let transform: TypedTransform3D<f32, (), ()> = TypedTransform3D::create_translation(0.0, 0.0, anchor as f32);
+        let transform: Transform3D<f32, (), ()> = Transform3D::create_translation(0.0, 0.0, anchor as f32);
         let poly = Polygon::from_transformed_rect(rect, transform, anchor);
         assert!(poly.is_some(), "Cannot construct transformed polygons");
         poly.unwrap()
@@ -65,12 +65,12 @@ fn sort_trivial(splitter: &mut Splitter<f32, ()>) {
 }
 
 fn sort_external(splitter: &mut Splitter<f32, ()>) {
-    let rect0: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let rect0: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly0 = Polygon::from_rect(rect0, 0);
     let poly1 = {
-        let transform0: TypedTransform3D<f32, (), ()> = TypedTransform3D::create_rotation(1.0, 0.0, 0.0, Angle::radians(2.0 * FRAC_PI_4));
-        let transform1: TypedTransform3D<f32, (), ()> = TypedTransform3D::create_translation(0.0, 100.0, 0.0);
-        Polygon::from_transformed_rect(rect0, transform1.pre_mul(&transform0), 1).unwrap()
+        let transform0: Transform3D<f32, (), ()> = Transform3D::create_rotation(1.0, 0.0, 0.0, Angle::radians(2.0 * FRAC_PI_4));
+        let transform1: Transform3D<f32, (), ()> = Transform3D::create_translation(0.0, 100.0, 0.0);
+        Polygon::from_transformed_rect(rect0, transform1.pre_transform(&transform0), 1).unwrap()
     };
 
     let result = splitter.solve(&[poly0, poly1], vec3(1.0, 1.0, 0.0).normalize());
@@ -92,7 +92,7 @@ fn external_bsp() {
 
 #[test]
 fn test_cut() {
-    let rect: TypedRect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
+    let rect: Rect<f32, ()> = rect(-10.0, -10.0, 20.0, 20.0);
     let poly = Polygon::from_rect(rect, 0);
     let mut poly2 = Polygon::from_rect(rect, 0);
     // test robustness for positions

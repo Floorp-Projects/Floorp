@@ -323,7 +323,7 @@ impl TextRunPrimitive {
                 glyphs.iter().map(|src| {
                     let src_point = src.point + prim_offset;
                     let world_offset = self.used_font.transform.transform(&src_point);
-                    let device_offset = device_pixel_scale.transform_point(&world_offset);
+                    let device_offset = device_pixel_scale.transform_point(world_offset);
                     GlyphKey::new(src.index, device_offset, subpx_dir)
                 }));
         }

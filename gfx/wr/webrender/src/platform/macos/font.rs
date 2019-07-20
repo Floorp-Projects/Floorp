@@ -22,7 +22,7 @@ use core_graphics::geometry::{CG_AFFINE_TRANSFORM_IDENTITY, CGRect};
 use core_text;
 use core_text::font::{CTFont, CTFontRef};
 use core_text::font_descriptor::{kCTFontDefaultOrientation, kCTFontColorGlyphsTrait};
-use euclid::Size2D;
+use euclid::default::Size2D;
 use crate::gamma_lut::{ColorLut, GammaLut};
 use crate::glyph_rasterizer::{FontInstance, FontTransform, GlyphKey};
 use crate::glyph_rasterizer::{GlyphFormat, GlyphRasterError, GlyphRasterResult, RasterizedGlyph};

@@ -7,47 +7,83 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use {TypedVector2D, TypedPoint2D, TypedVector3D, TypedPoint3D, TypedTransform2D, TypedTransform3D};
-use {TypedSize2D, TypedRect, vec2, point2, vec3, point3};
+use {Vector2D, Point2D, Vector3D, Point3D, Transform2D, Transform3D};
+use {Size2D, Rect, vec2, point2, vec3, point3};
 use num::*;
 use trig::Trig;
 use core::ops::{Add, Sub, Neg, Mul, Div};
 use core::marker::PhantomData;
 use core::fmt;
+use core::cmp::{Eq, PartialEq};
+use core::hash::{Hash};
+#[cfg(feature = "serde")]
+use serde;
 
 /// A 2d transformation from a space to another that can only express translations.
 ///
-/// The main benefit of this type over a TypedVector2D is the ability to cast
+/// The main benefit of this type over a Vector2D is the ability to cast
 /// between a source and a destination spaces.
 ///
 /// Example:
 ///
 /// ```
-/// use euclid::{TypedTranslation2D, TypedPoint2D, point2};
+/// use euclid::{Translation2D, Point2D, point2};
 /// struct ParentSpace;
 /// struct ChildSpace;
-/// type ScrollOffset = TypedTranslation2D<i32, ParentSpace, ChildSpace>;
-/// type ParentPoint = TypedPoint2D<i32, ParentSpace>;
-/// type ChildPoint = TypedPoint2D<i32, ChildSpace>;
+/// type ScrollOffset = Translation2D<i32, ParentSpace, ChildSpace>;
+/// type ParentPoint = Point2D<i32, ParentSpace>;
+/// type ChildPoint = Point2D<i32, ChildSpace>;
 ///
 /// let scrolling = ScrollOffset::new(0, 100);
 /// let p1: ParentPoint = point2(0, 0);
-/// let p2: ChildPoint = scrolling.transform_point(&p1);
+/// let p2: ChildPoint = scrolling.transform_point(p1);
 /// ```
 ///
-#[derive(EuclidMatrix)]
 #[repr(C)]
-pub struct TypedTranslation2D<T, Src, Dst> {
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(bound(serialize = "T: serde::Serialize", deserialize = "T: serde::Deserialize<'de>")))]
+pub struct Translation2D<T, Src, Dst> {
     pub x: T,
     pub y: T,
     #[doc(hidden)]
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst> {
+impl<T: Copy, Src, Dst> Copy for Translation2D<T, Src, Dst> {}
+
+impl<T: Clone, Src, Dst> Clone for Translation2D<T, Src, Dst> {
+    fn clone(&self) -> Self {
+        Translation2D {
+            x: self.x.clone(),
+            y: self.y.clone(),
+            _unit: PhantomData,
+        }
+    }
+}
+
+impl<T, Src, Dst> Eq for Translation2D<T, Src, Dst> where T: Eq {}
+
+impl<T, Src, Dst> PartialEq for Translation2D<T, Src, Dst>
+    where T: PartialEq
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
+impl<T, Src, Dst> Hash for Translation2D<T, Src, Dst>
+    where T: Hash
+{
+    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+        self.x.hash(h);
+        self.y.hash(h);
+    }
+}
+
+impl<T, Src, Dst> Translation2D<T, Src, Dst> {
     #[inline]
     pub fn new(x: T, y: T) -> Self {
-        TypedTranslation2D {
+        Translation2D {
             x,
             y,
             _unit: PhantomData,
@@ -55,7 +91,7 @@ impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst> {
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T : Copy
 {
@@ -70,18 +106,18 @@ where
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T : Copy + Zero
 {
     #[inline]
     pub fn identity() -> Self {
         let _0 = T::zero();
-        TypedTranslation2D::new(_0, _0)
+        Translation2D::new(_0, _0)
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T: Zero + PartialEq
 {
@@ -91,56 +127,56 @@ where
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T: Copy + Add<T, Output = T>
 {
     /// Translate a point and cast its unit.
     #[inline]
-    pub fn transform_point(&self, p: &TypedPoint2D<T, Src>) -> TypedPoint2D<T, Dst> {
+    pub fn transform_point(&self, p: Point2D<T, Src>) -> Point2D<T, Dst> {
         point2(p.x + self.x, p.y + self.y)
     }
 
     /// Translate a rectangle and cast its unit.
     #[inline]
-    pub fn transform_rect(&self, r: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
-        TypedRect {
-            origin: self.transform_point(&r.origin),
-            size: self.transform_size(&r.size),
+    pub fn transform_rect(&self, r: &Rect<T, Src>) -> Rect<T, Dst> {
+        Rect {
+            origin: self.transform_point(r.origin),
+            size: self.transform_size(r.size),
         }
     }
 
     /// No-op, just cast the unit.
     #[inline]
-    pub fn transform_size(&self, s: &TypedSize2D<T, Src>) -> TypedSize2D<T, Dst> {
-        TypedSize2D::new(s.width, s.height)
+    pub fn transform_size(&self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
+        Size2D::new(s.width, s.height)
     }
 
     /// Cast into a 2D vector.
-    pub fn to_vector(&self) -> TypedVector2D<T, Src> {
+    pub fn to_vector(&self) -> Vector2D<T, Src> {
         vec2(self.x, self.y)
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T: Copy + Neg<Output = T>
 {
     /// Return the inverse transformation.
     #[inline]
-    pub fn inverse(&self) -> TypedTranslation2D<T, Dst, Src> {
-        TypedTranslation2D::new(-self.x, -self.y)
+    pub fn inverse(&self) -> Translation2D<T, Dst, Src> {
+        Translation2D::new(-self.x, -self.y)
     }
 }
 
-impl<T, Src, Dst1, Dst2> Add<TypedTranslation2D<T, Dst1, Dst2>>
-for TypedTranslation2D<T, Src, Dst1>
+impl<T, Src, Dst1, Dst2> Add<Translation2D<T, Dst1, Dst2>>
+for Translation2D<T, Src, Dst1>
 where
     T: Copy + Add<T, Output = T>
 {
-    type Output = TypedTranslation2D<T, Src, Dst2>;
-    fn add(self, other: TypedTranslation2D<T, Dst1, Dst2>) -> TypedTranslation2D<T, Src, Dst2> {
-        TypedTranslation2D::new(
+    type Output = Translation2D<T, Src, Dst2>;
+    fn add(self, other: Translation2D<T, Dst1, Dst2>) -> Translation2D<T, Src, Dst2> {
+        Translation2D::new(
             self.x + other.x,
             self.y + other.y,
         )
@@ -148,21 +184,21 @@ where
 }
 
 impl<T, Src, Dst1, Dst2>
-    Sub<TypedTranslation2D<T, Dst1, Dst2>>
-    for TypedTranslation2D<T, Src, Dst2>
+    Sub<Translation2D<T, Dst1, Dst2>>
+    for Translation2D<T, Src, Dst2>
 where
     T: Copy + Sub<T, Output = T>
 {
-    type Output = TypedTranslation2D<T, Src, Dst1>;
-    fn sub(self, other: TypedTranslation2D<T, Dst1, Dst2>) -> TypedTranslation2D<T, Src, Dst1> {
-        TypedTranslation2D::new(
+    type Output = Translation2D<T, Src, Dst1>;
+    fn sub(self, other: Translation2D<T, Dst1, Dst2>) -> Translation2D<T, Src, Dst1> {
+        Translation2D::new(
             self.x - other.x,
             self.y - other.y,
         )
     }
 }
 
-impl<T, Src, Dst> TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Translation2D<T, Src, Dst>
 where
     T: Copy
         + Clone
@@ -177,30 +213,30 @@ where
 {
     /// Returns the matrix representation of this translation.
     #[inline]
-    pub fn to_transform(&self) -> TypedTransform2D<T, Src, Dst> {
-        TypedTransform2D::create_translation(self.x, self.y)
+    pub fn to_transform(&self) -> Transform2D<T, Src, Dst> {
+        Transform2D::create_translation(self.x, self.y)
     }
 }
 
-impl<T, Src, Dst> From<TypedVector2D<T, Src>> for TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> From<Vector2D<T, Src>> for Translation2D<T, Src, Dst>
 where
     T: Copy
 {
-    fn from(v: TypedVector2D<T, Src>) -> Self {
-        TypedTranslation2D::new(v.x, v.y)
+    fn from(v: Vector2D<T, Src>) -> Self {
+        Translation2D::new(v.x, v.y)
     }
 }
 
-impl<T, Src, Dst> Into<TypedVector2D<T, Src>> for TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Into<Vector2D<T, Src>> for Translation2D<T, Src, Dst>
 where
     T: Copy
 {
-    fn into(self) -> TypedVector2D<T, Src> {
+    fn into(self) -> Vector2D<T, Src> {
         vec2(self.x, self.y)
     }
 }
 
-impl<T, Src, Dst> Into<TypedTransform2D<T, Src, Dst>> for TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> Into<Transform2D<T, Src, Dst>> for Translation2D<T, Src, Dst>
 where
     T: Copy
         + Clone
@@ -213,12 +249,12 @@ where
         + One
         + Zero,
 {
-    fn into(self) -> TypedTransform2D<T, Src, Dst> {
+    fn into(self) -> Transform2D<T, Src, Dst> {
         self.to_transform()
     }
 }
 
-impl <T, Src, Dst> Default for TypedTranslation2D<T, Src, Dst>
+impl <T, Src, Dst> Default for Translation2D<T, Src, Dst>
     where T: Copy + Zero
 {
     fn default() -> Self {
@@ -226,7 +262,7 @@ impl <T, Src, Dst> Default for TypedTranslation2D<T, Src, Dst>
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for TypedTranslation2D<T, Src, Dst>
+impl<T, Src, Dst> fmt::Debug for Translation2D<T, Src, Dst>
 where T: Copy + fmt::Debug {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_array().fmt(f)
@@ -237,11 +273,10 @@ where T: Copy + fmt::Debug {
 
 /// A 3d transformation from a space to another that can only express translations.
 ///
-/// The main benefit of this type over a TypedVector3D is the ability to cast
+/// The main benefit of this type over a Vector3D is the ability to cast
 /// between a source and a destination spaces.
-#[derive(EuclidMatrix)]
 #[repr(C)]
-pub struct TypedTranslation3D<T, Src, Dst> {
+pub struct Translation3D<T, Src, Dst> {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -249,10 +284,66 @@ pub struct TypedTranslation3D<T, Src, Dst> {
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst> {
+impl<T: Copy, Src, Dst> Copy for Translation3D<T, Src, Dst> {}
+
+impl<T: Clone, Src, Dst> Clone for Translation3D<T, Src, Dst> {
+    fn clone(&self) -> Self {
+        Translation3D {
+            x: self.x.clone(),
+            y: self.y.clone(),
+            z: self.z.clone(),
+            _unit: PhantomData,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T, Src, Dst> serde::Deserialize<'de> for Translation3D<T, Src, Dst>
+    where T: serde::Deserialize<'de>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de>
+    {
+        let (x, y, z) = try!(serde::Deserialize::deserialize(deserializer));
+        Ok(Translation3D { x, y, z, _unit: PhantomData })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T, Src, Dst> serde::Serialize for Translation3D<T, Src, Dst>
+    where T: serde::Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        (&self.x, &self.y, &self.z).serialize(serializer)
+    }
+}
+
+impl<T, Src, Dst> Eq for Translation3D<T, Src, Dst> where T: Eq {}
+
+impl<T, Src, Dst> PartialEq for Translation3D<T, Src, Dst>
+    where T: PartialEq
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
+}
+
+impl<T, Src, Dst> Hash for Translation3D<T, Src, Dst>
+    where T: Hash
+{
+    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+        self.x.hash(h);
+        self.y.hash(h);
+        self.z.hash(h);
+    }
+}
+
+impl<T, Src, Dst> Translation3D<T, Src, Dst> {
     #[inline]
     pub fn new(x: T, y: T, z: T) -> Self {
-        TypedTranslation3D {
+        Translation3D {
             x,
             y,
             z,
@@ -261,7 +352,7 @@ impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst> {
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy
 {
@@ -276,18 +367,18 @@ where
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy + Zero
 {
     #[inline]
     pub fn identity() -> Self {
         let _0 = T::zero();
-        TypedTranslation3D::new(_0, _0, _0)
+        Translation3D::new(_0, _0, _0)
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Zero + PartialEq
 {
@@ -297,62 +388,62 @@ where
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy + Add<T, Output = T>
 {
     /// Translate a point and cast its unit.
     #[inline]
-    pub fn transform_point3d(&self, p: &TypedPoint3D<T, Src>) -> TypedPoint3D<T, Dst> {
+    pub fn transform_point3d(&self, p: &Point3D<T, Src>) -> Point3D<T, Dst> {
         point3(p.x + self.x, p.y + self.y, p.z + self.z)
     }
 
     /// Translate a point and cast its unit.
     #[inline]
-    pub fn transform_point2d(&self, p: &TypedPoint2D<T, Src>) -> TypedPoint2D<T, Dst> {
+    pub fn transform_point2d(&self, p: &Point2D<T, Src>) -> Point2D<T, Dst> {
         point2(p.x + self.x, p.y + self.y)
     }
 
     /// Translate a rectangle and cast its unit.
     #[inline]
-    pub fn transform_rect(&self, r: &TypedRect<T, Src>) -> TypedRect<T, Dst> {
-        TypedRect {
+    pub fn transform_rect(&self, r: &Rect<T, Src>) -> Rect<T, Dst> {
+        Rect {
             origin: self.transform_point2d(&r.origin),
-            size: self.transform_size(&r.size),
+            size: self.transform_size(r.size),
         }
     }
 
     /// No-op, just cast the unit.
     #[inline]
-    pub fn transform_size(&self, s: &TypedSize2D<T, Src>) -> TypedSize2D<T, Dst> {
-        TypedSize2D::new(s.width, s.height)
+    pub fn transform_size(self, s: Size2D<T, Src>) -> Size2D<T, Dst> {
+        Size2D::new(s.width, s.height)
     }
 
     /// Cast into a 3D vector.
-    pub fn to_vector(&self) -> TypedVector3D<T, Src> {
+    pub fn to_vector(&self) -> Vector3D<T, Src> {
         vec3(self.x, self.y, self.z)
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy + Neg<Output = T>
 {
     /// Return the inverse transformation.
     #[inline]
-    pub fn inverse(&self) -> TypedTranslation3D<T, Dst, Src> {
-        TypedTranslation3D::new(-self.x, -self.y, -self.z)
+    pub fn inverse(&self) -> Translation3D<T, Dst, Src> {
+        Translation3D::new(-self.x, -self.y, -self.z)
     }
 }
 
-impl<T, Src, Dst1, Dst2> Add<TypedTranslation3D<T, Dst1, Dst2>>
-for TypedTranslation3D<T, Src, Dst1>
+impl<T, Src, Dst1, Dst2> Add<Translation3D<T, Dst1, Dst2>>
+for Translation3D<T, Src, Dst1>
 where
     T: Copy + Add<T, Output = T>
 {
-    type Output = TypedTranslation3D<T, Src, Dst2>;
-    fn add(self, other: TypedTranslation3D<T, Dst1, Dst2>) -> TypedTranslation3D<T, Src, Dst2> {
-        TypedTranslation3D::new(
+    type Output = Translation3D<T, Src, Dst2>;
+    fn add(self, other: Translation3D<T, Dst1, Dst2>) -> Translation3D<T, Src, Dst2> {
+        Translation3D::new(
             self.x + other.x,
             self.y + other.y,
             self.z + other.z,
@@ -361,14 +452,14 @@ where
 }
 
 impl<T, Src, Dst1, Dst2>
-    Sub<TypedTranslation3D<T, Dst1, Dst2>>
-    for TypedTranslation3D<T, Src, Dst2>
+    Sub<Translation3D<T, Dst1, Dst2>>
+    for Translation3D<T, Src, Dst2>
 where
     T: Copy + Sub<T, Output = T>
 {
-    type Output = TypedTranslation3D<T, Src, Dst1>;
-    fn sub(self, other: TypedTranslation3D<T, Dst1, Dst2>) -> TypedTranslation3D<T, Src, Dst1> {
-        TypedTranslation3D::new(
+    type Output = Translation3D<T, Src, Dst1>;
+    fn sub(self, other: Translation3D<T, Dst1, Dst2>) -> Translation3D<T, Src, Dst1> {
+        Translation3D::new(
             self.x - other.x,
             self.y - other.y,
             self.z - other.z,
@@ -376,7 +467,7 @@ where
     }
 }
 
-impl<T, Src, Dst> TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Translation3D<T, Src, Dst>
 where
     T: Copy + Clone +
         Add<T, Output=T> +
@@ -390,30 +481,30 @@ where
 {
     /// Returns the matrix representation of this translation.
     #[inline]
-    pub fn to_transform(&self) -> TypedTransform3D<T, Src, Dst> {
-        TypedTransform3D::create_translation(self.x, self.y, self.z)
+    pub fn to_transform(&self) -> Transform3D<T, Src, Dst> {
+        Transform3D::create_translation(self.x, self.y, self.z)
     }
 }
 
-impl<T, Src, Dst> From<TypedVector3D<T, Src>> for TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> From<Vector3D<T, Src>> for Translation3D<T, Src, Dst>
 where
     T: Copy
 {
-    fn from(v: TypedVector3D<T, Src>) -> Self {
-        TypedTranslation3D::new(v.x, v.y, v.z)
+    fn from(v: Vector3D<T, Src>) -> Self {
+        Translation3D::new(v.x, v.y, v.z)
     }
 }
 
-impl<T, Src, Dst> Into<TypedVector3D<T, Src>> for TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Into<Vector3D<T, Src>> for Translation3D<T, Src, Dst>
 where
     T: Copy
 {
-    fn into(self) -> TypedVector3D<T, Src> {
+    fn into(self) -> Vector3D<T, Src> {
         vec3(self.x, self.y, self.z)
     }
 }
 
-impl<T, Src, Dst> Into<TypedTransform3D<T, Src, Dst>> for TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> Into<Transform3D<T, Src, Dst>> for Translation3D<T, Src, Dst>
 where
     T: Copy + Clone +
         Add<T, Output=T> +
@@ -425,12 +516,12 @@ where
         Trig +
         One + Zero,
 {
-    fn into(self) -> TypedTransform3D<T, Src, Dst> {
+    fn into(self) -> Transform3D<T, Src, Dst> {
         self.to_transform()
     }
 }
 
-impl <T, Src, Dst> Default for TypedTranslation3D<T, Src, Dst>
+impl <T, Src, Dst> Default for Translation3D<T, Src, Dst>
     where T: Copy + Zero
 {
     fn default() -> Self {
@@ -438,7 +529,7 @@ impl <T, Src, Dst> Default for TypedTranslation3D<T, Src, Dst>
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for TypedTranslation3D<T, Src, Dst>
+impl<T, Src, Dst> fmt::Debug for Translation3D<T, Src, Dst>
 where T: Copy + fmt::Debug {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         self.to_array().fmt(f)
@@ -452,9 +543,9 @@ fn simple_translation2d() {
     struct A;
     struct B;
 
-    type Translation = TypedTranslation2D<i32, A, B>;
-    type SrcRect = TypedRect<i32, A>;
-    type DstRect = TypedRect<i32, B>;
+    type Translation = Translation2D<i32, A, B>;
+    type SrcRect = Rect<i32, A>;
+    type DstRect = Rect<i32, B>;
 
     let tx = Translation::new(10, -10);
     let r1: SrcRect = rect(10, 20, 30, 40);
@@ -472,9 +563,9 @@ fn simple_translation3d() {
     struct A;
     struct B;
 
-    type Translation = TypedTranslation3D<i32, A, B>;
-    type SrcPoint = TypedPoint3D<i32, A>;
-    type DstPoint = TypedPoint3D<i32, B>;
+    type Translation = Translation3D<i32, A, B>;
+    type SrcPoint = Point3D<i32, A>;
+    type DstPoint = Point3D<i32, B>;
 
     let tx = Translation::new(10, -10, 100);
     let p1: SrcPoint = point3(10, 20, 30);

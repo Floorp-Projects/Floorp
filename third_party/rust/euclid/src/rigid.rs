@@ -1,7 +1,7 @@
 use approxeq::ApproxEq;
 use num_traits::Float;
 use trig::Trig;
-use {TypedRotation3D, TypedTransform3D, TypedVector3D, UnknownUnit};
+use {Rotation3D, Transform3D, Vector3D};
 
 /// A rigid transformation. All lengths are preserved under such a transformation.
 ///
@@ -14,21 +14,19 @@ use {TypedRotation3D, TypedTransform3D, TypedVector3D, UnknownUnit};
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[repr(C)]
-pub struct TypedRigidTransform3D<T, Src, Dst> {
-    pub rotation: TypedRotation3D<T, Src, Dst>,
-    pub translation: TypedVector3D<T, Dst>,
+pub struct RigidTransform3D<T, Src, Dst> {
+    pub rotation: Rotation3D<T, Src, Dst>,
+    pub translation: Vector3D<T, Dst>,
 }
-
-pub type RigidTransform3D<T> = TypedRigidTransform3D<T, UnknownUnit, UnknownUnit>;
 
 // All matrix multiplication in this file is in row-vector notation,
 // i.e. a vector `v` is transformed with `v * T`, and if you want to apply `T1`
 // before `T2` you use `T1 * T2`
 
-impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
+impl<T: Float + ApproxEq<T>, Src, Dst> RigidTransform3D<T, Src, Dst> {
     /// Construct a new rigid transformation, where the `rotation` applies first
     #[inline]
-    pub fn new(rotation: TypedRotation3D<T, Src, Dst>, translation: TypedVector3D<T, Dst>) -> Self {
+    pub fn new(rotation: Rotation3D<T, Src, Dst>, translation: Vector3D<T, Dst>) -> Self {
         Self {
             rotation,
             translation,
@@ -39,16 +37,16 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
     #[inline]
     pub fn identity() -> Self {
         Self {
-            rotation: TypedRotation3D::identity(),
-            translation: TypedVector3D::zero(),
+            rotation: Rotation3D::identity(),
+            translation: Vector3D::zero(),
         }
     }
 
     /// Construct a new rigid transformation, where the `translation` applies first
     #[inline]
     pub fn new_from_reversed(
-        translation: TypedVector3D<T, Src>,
-        rotation: TypedRotation3D<T, Src, Dst>,
+        translation: Vector3D<T, Src>,
+        rotation: Rotation3D<T, Src, Dst>,
     ) -> Self {
         // T * R
         //   = (R * R^-1) * T * R
@@ -59,7 +57,7 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
         // It is equivalent to the translation matrix obtained by rotating the
         // translation by R
 
-        let translation = rotation.rotate_vector3d(&translation);
+        let translation = rotation.transform_vector3d(translation);
         Self {
             rotation,
             translation,
@@ -67,18 +65,18 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
     }
 
     #[inline]
-    pub fn from_rotation(rotation: TypedRotation3D<T, Src, Dst>) -> Self {
+    pub fn from_rotation(rotation: Rotation3D<T, Src, Dst>) -> Self {
         Self {
             rotation,
-            translation: TypedVector3D::zero(),
+            translation: Vector3D::zero(),
         }
     }
 
     #[inline]
-    pub fn from_translation(translation: TypedVector3D<T, Dst>) -> Self {
+    pub fn from_translation(translation: Vector3D<T, Dst>) -> Self {
         Self {
             translation,
-            rotation: TypedRotation3D::identity(),
+            rotation: Rotation3D::identity(),
         }
     }
 
@@ -86,7 +84,7 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
     ///
     /// i.e., the translation is applied _first_
     #[inline]
-    pub fn decompose_reversed(&self) -> (TypedVector3D<T, Src>, TypedRotation3D<T, Src, Dst>) {
+    pub fn decompose_reversed(&self) -> (Vector3D<T, Src>, Rotation3D<T, Src, Dst>) {
         // self = R * T
         //      = R * T * (R^-1 * R)
         //      = (R * T * R^-1) * R)
@@ -94,7 +92,7 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
         //
         // T' = (R^ * T * R^-1) is T rotated by R^-1
 
-        let translation = self.rotation.inverse().rotate_vector3d(&self.translation);
+        let translation = self.rotation.inverse().transform_vector3d(self.translation);
         (translation, self.rotation)
     }
 
@@ -103,10 +101,10 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
     ///
     /// i.e., this produces `self * other` in row-vector notation
     #[inline]
-    pub fn post_mul<Dst2>(
+    pub fn post_transform<Dst2>(
         &self,
-        other: &TypedRigidTransform3D<T, Dst, Dst2>,
-    ) -> TypedRigidTransform3D<T, Src, Dst2> {
+        other: &RigidTransform3D<T, Dst, Dst2>,
+    ) -> RigidTransform3D<T, Src, Dst2> {
         // self = R1 * T1
         // other = R2 * T2
         // result = R1 * T1 * R2 * T2
@@ -121,10 +119,10 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
 
         let t_prime = other
             .rotation
-            .rotate_vector3d(&self.translation);
+            .transform_vector3d(self.translation);
         let r_prime = self.rotation.post_rotate(&other.rotation);
         let t_prime2 = t_prime + other.translation;
-        TypedRigidTransform3D {
+        RigidTransform3D {
             rotation: r_prime,
             translation: t_prime2,
         }
@@ -135,16 +133,16 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
     ///
     /// i.e., this produces `other * self` in row-vector notation
     #[inline]
-    pub fn pre_mul<Src2>(
+    pub fn pre_transform<Src2>(
         &self,
-        other: &TypedRigidTransform3D<T, Src2, Src>,
-    ) -> TypedRigidTransform3D<T, Src2, Dst> {
-        other.post_mul(&self)
+        other: &RigidTransform3D<T, Src2, Src>,
+    ) -> RigidTransform3D<T, Src2, Dst> {
+        other.post_transform(&self)
     }
 
     /// Inverts the transformation
     #[inline]
-    pub fn inverse(&self) -> TypedRigidTransform3D<T, Dst, Src> {
+    pub fn inverse(&self) -> RigidTransform3D<T, Dst, Src> {
         // result = (self)^-1
         //        = (R * T)^-1
         //        = T^-1 * R^-1
@@ -157,34 +155,34 @@ impl<T: Float + ApproxEq<T>, Src, Dst> TypedRigidTransform3D<T, Src, Dst> {
         //
         // An easier way of writing this is to use new_from_reversed() with R^-1 and T^-1
 
-        TypedRigidTransform3D::new_from_reversed(
+        RigidTransform3D::new_from_reversed(
             -self.translation,
             self.rotation.inverse(),
         )
     }
 
-    pub fn to_transform(&self) -> TypedTransform3D<T, Src, Dst>
+    pub fn to_transform(&self) -> Transform3D<T, Src, Dst>
     where
         T: Trig,
     {
         self.translation
             .to_transform()
-            .pre_mul(&self.rotation.to_transform())
+            .pre_transform(&self.rotation.to_transform())
     }
 }
 
-impl<T: Float + ApproxEq<T>, Src, Dst> From<TypedRotation3D<T, Src, Dst>>
-    for TypedRigidTransform3D<T, Src, Dst>
+impl<T: Float + ApproxEq<T>, Src, Dst> From<Rotation3D<T, Src, Dst>>
+    for RigidTransform3D<T, Src, Dst>
 {
-    fn from(rot: TypedRotation3D<T, Src, Dst>) -> Self {
+    fn from(rot: Rotation3D<T, Src, Dst>) -> Self {
         Self::from_rotation(rot)
     }
 }
 
-impl<T: Float + ApproxEq<T>, Src, Dst> From<TypedVector3D<T, Dst>>
-    for TypedRigidTransform3D<T, Src, Dst>
+impl<T: Float + ApproxEq<T>, Src, Dst> From<Vector3D<T, Dst>>
+    for RigidTransform3D<T, Src, Dst>
 {
-    fn from(t: TypedVector3D<T, Dst>) -> Self {
+    fn from(t: Vector3D<T, Dst>) -> Self {
         Self::from_translation(t)
     }
 }
@@ -192,7 +190,7 @@ impl<T: Float + ApproxEq<T>, Src, Dst> From<TypedVector3D<T, Dst>>
 #[cfg(test)]
 mod test {
     use super::RigidTransform3D;
-    use {Rotation3D, TypedTransform3D, Vector3D};
+    use default::{Rotation3D, Transform3D, Vector3D};
 
     #[test]
     fn test_rigid_construction() {
@@ -202,13 +200,13 @@ mod test {
         let rigid = RigidTransform3D::new(rotation, translation);
         assert!(rigid
             .to_transform()
-            .approx_eq(&translation.to_transform().pre_mul(&rotation.to_transform())));
+            .approx_eq(&translation.to_transform().pre_transform(&rotation.to_transform())));
 
         let rigid = RigidTransform3D::new_from_reversed(translation, rotation);
         assert!(rigid.to_transform().approx_eq(
             &translation
                 .to_transform()
-                .post_mul(&rotation.to_transform())
+                .post_transform(&rotation.to_transform())
         ));
     }
 
@@ -221,7 +219,7 @@ mod test {
         let (t2, r2) = rigid.decompose_reversed();
         assert!(rigid
             .to_transform()
-            .approx_eq(&t2.to_transform().post_mul(&r2.to_transform())));
+            .approx_eq(&t2.to_transform().post_transform(&r2.to_transform())));
     }
 
     #[test]
@@ -232,9 +230,9 @@ mod test {
         let rigid = RigidTransform3D::new(rotation, translation);
         let inverse = rigid.inverse();
         assert!(rigid
-            .post_mul(&inverse)
+            .post_transform(&inverse)
             .to_transform()
-            .approx_eq(&TypedTransform3D::identity()));
+            .approx_eq(&Transform3D::identity()));
         assert!(inverse
             .to_transform()
             .approx_eq(&rigid.to_transform().inverse().unwrap()));
@@ -250,12 +248,12 @@ mod test {
         let rigid2 = RigidTransform3D::new(rotation2, translation2);
 
         assert!(rigid
-            .post_mul(&rigid2)
+            .post_transform(&rigid2)
             .to_transform()
-            .approx_eq(&rigid.to_transform().post_mul(&rigid2.to_transform())));
+            .approx_eq(&rigid.to_transform().post_transform(&rigid2.to_transform())));
         assert!(rigid
-            .pre_mul(&rigid2)
+            .pre_transform(&rigid2)
             .to_transform()
-            .approx_eq(&rigid.to_transform().pre_mul(&rigid2.to_transform())));
+            .approx_eq(&rigid.to_transform().pre_transform(&rigid2.to_transform())));
     }
 }

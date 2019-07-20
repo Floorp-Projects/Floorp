@@ -8,13 +8,14 @@
 // except according to those terms.
 
 use super::UnknownUnit;
-use scale::TypedScale;
+use scale::Scale;
 use num::*;
-use rect::TypedRect;
-use point::{point2, TypedPoint2D};
-use vector::{vec2, TypedVector2D};
-use side_offsets::TypedSideOffsets2D;
-use size::TypedSize2D;
+use rect::Rect;
+use point::{point2, Point2D};
+use vector::{vec2, Vector2D};
+use side_offsets::SideOffsets2D;
+use size::Size2D;
+use nonempty::NonEmpty;
 use approxord::{min, max};
 
 use num_traits::NumCast;
@@ -32,73 +33,70 @@ use core::ops::{Add, Div, Mul, Sub};
 #[repr(C)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature = "serde", serde(bound(serialize = "T: Serialize", deserialize = "T: Deserialize<'de>")))]
-pub struct TypedBox2D<T, U> {
-    pub min: TypedPoint2D<T, U>,
-    pub max: TypedPoint2D<T, U>,
+pub struct Box2D<T, U> {
+    pub min: Point2D<T, U>,
+    pub max: Point2D<T, U>,
 }
 
-/// The default box 2d type with no unit.
-pub type Box2D<T> = TypedBox2D<T, UnknownUnit>;
-
-impl<T: Hash, U> Hash for TypedBox2D<T, U> {
+impl<T: Hash, U> Hash for Box2D<T, U> {
     fn hash<H: Hasher>(&self, h: &mut H) {
         self.min.hash(h);
         self.max.hash(h);
     }
 }
 
-impl<T: Copy, U> Copy for TypedBox2D<T, U> {}
+impl<T: Copy, U> Copy for Box2D<T, U> {}
 
-impl<T: Copy, U> Clone for TypedBox2D<T, U> {
+impl<T: Copy, U> Clone for Box2D<T, U> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<T: PartialEq, U> PartialEq<TypedBox2D<T, U>> for TypedBox2D<T, U> {
+impl<T: PartialEq, U> PartialEq<Box2D<T, U>> for Box2D<T, U> {
     fn eq(&self, other: &Self) -> bool {
         self.min.eq(&other.min) && self.max.eq(&other.max)
     }
 }
 
-impl<T: Eq, U> Eq for TypedBox2D<T, U> {}
+impl<T: Eq, U> Eq for Box2D<T, U> {}
 
-impl<T: fmt::Debug, U> fmt::Debug for TypedBox2D<T, U> {
+impl<T: fmt::Debug, U> fmt::Debug for Box2D<T, U> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TypedBox2D({:?}, {:?})", self.min, self.max)
+        write!(f, "Box2D({:?}, {:?})", self.min, self.max)
     }
 }
 
-impl<T: fmt::Display, U> fmt::Display for TypedBox2D<T, U> {
+impl<T: fmt::Display, U> fmt::Display for Box2D<T, U> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "Box2D({}, {})", self.min, self.max)
     }
 }
 
-impl<T, U> TypedBox2D<T, U> {
+impl<T, U> Box2D<T, U> {
     /// Constructor.
-    pub fn new(min: TypedPoint2D<T, U>, max: TypedPoint2D<T, U>) -> Self {
-        TypedBox2D {
+    pub fn new(min: Point2D<T, U>, max: Point2D<T, U>) -> Self {
+        Box2D {
             min,
             max,
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Zero + PartialOrd,
 {
     /// Creates a Box2D of the given size, at offset zero.
     #[inline]
-    pub fn from_size(size: TypedSize2D<T, U>) -> Self {
-        let zero = TypedPoint2D::zero();
+    pub fn from_size(size: Size2D<T, U>) -> Self {
+        let zero = Point2D::zero();
         let point = size.to_vector().to_point();
-        TypedBox2D::from_points(&[zero, point])
+        Box2D::from_points(&[zero, point])
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + PartialOrd,
 {
@@ -117,6 +115,15 @@ where
         self.max.x <= self.min.x || self.max.y <= self.min.y
     }
 
+    #[inline]
+    pub fn to_non_empty(&self) -> Option<NonEmpty<Self>> {
+        if self.is_empty_or_negative() {
+            return None;
+        }
+
+        Some(NonEmpty(*self))
+    }
+
     /// Returns true if the two boxes intersect.
     #[inline]
     pub fn intersects(&self, other: &Self) -> bool {
@@ -131,7 +138,7 @@ where
     /// The result is a negative box if the boxes do not intersect.
     #[inline]
     pub fn intersection(&self, other: &Self) -> Self {
-        TypedBox2D {
+        Box2D {
             min: point2(
                 max(self.min.x, other.min.x),
                 max(self.min.y, other.min.y),
@@ -145,29 +152,32 @@ where
 
     /// Computes the intersection of two boxes, returning `None` if the boxes do not intersect.
     #[inline]
-    pub fn try_intersection(&self, other: &Self) -> Option<Self> {
+    pub fn try_intersection(&self, other: &Self) -> Option<NonEmpty<Self>> {
         let intersection = self.intersection(other);
 
         if intersection.is_negative() {
             return None;
         }
 
-        Some(intersection)
+        Some(NonEmpty(intersection))
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Add<T, Output = T>,
 {
     /// Returns the same box, translated by a vector.
     #[inline]
-    pub fn translate(&self, by: &TypedVector2D<T, U>) -> Self {
-        Self::new(self.min + *by, self.max + *by)
+    pub fn translate(&self, by: Vector2D<T, U>) -> Self {
+        Box2D {
+            min: self.min + by,
+            max: self.max + by,
+        }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + PartialOrd + Zero,
 {
@@ -175,13 +185,13 @@ where
     /// in the box if they are on the front, left or top faces, but outside if they
     /// are on the back, right or bottom faces.
     #[inline]
-    pub fn contains(&self, p: &TypedPoint2D<T, U>) -> bool {
+    pub fn contains(&self, p: Point2D<T, U>) -> bool {
         self.min.x <= p.x && p.x < self.max.x
             && self.min.y <= p.y && p.y < self.max.y
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + PartialOrd + Zero + Sub<T, Output = T>,
 {
@@ -196,40 +206,40 @@ where
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Sub<T, Output = T>,
 {
     #[inline]
-    pub fn size(&self)-> TypedSize2D<T, U> {
+    pub fn size(&self)-> Size2D<T, U> {
         (self.max - self.min).to_size()
     }
 
     #[inline]
-    pub fn to_rect(&self) -> TypedRect<T, U> {
-        TypedRect {
+    pub fn to_rect(&self) -> Rect<T, U> {
+        Rect {
             origin: self.min,
             size: self.size(),
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + PartialEq + Add<T, Output = T> + Sub<T, Output = T>,
 {
     /// Inflates the box by the specified sizes on each side respectively.
     #[inline]
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn inflate(&self, width: T, height: T) -> Self {
-        TypedBox2D {
+        Box2D {
             min: point2(self.min.x - width, self.min.y - height),
             max: point2(self.max.x + width, self.max.y + height),
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Zero + PartialOrd + Add<T, Output = T> + Sub<T, Output = T>,
 {
@@ -237,8 +247,8 @@ where
     ///
     /// Subtracts the side offsets from all sides. The horizontal, vertical
     /// and applicate offsets must not be larger than the original side length.
-    pub fn inner_box(&self, offsets: TypedSideOffsets2D<T, U>) -> Self {
-        TypedBox2D {
+    pub fn inner_box(&self, offsets: SideOffsets2D<T, U>) -> Self {
+        Box2D {
             min: self.min + vec2(offsets.left, offsets.top),
             max: self.max - vec2(offsets.right, offsets.bottom),
         }
@@ -247,8 +257,8 @@ where
     /// Calculate the b and position of an outer box.
     ///
     /// Add the offsets to all sides. The expanded box is returned.
-    pub fn outer_box(&self, offsets: TypedSideOffsets2D<T, U>) -> Self {
-        TypedBox2D {
+    pub fn outer_box(&self, offsets: SideOffsets2D<T, U>) -> Self {
+        Box2D {
             min: self.min - vec2(offsets.left, offsets.top),
             max: self.max + vec2(offsets.right, offsets.bottom),
         }
@@ -256,7 +266,7 @@ where
 }
 
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Zero + PartialOrd,
 {
@@ -264,14 +274,14 @@ where
     pub fn from_points<I>(points: I) -> Self
     where
         I: IntoIterator,
-        I::Item: Borrow<TypedPoint2D<T, U>>,
+        I::Item: Borrow<Point2D<T, U>>,
     {
         let mut points = points.into_iter();
 
         // Need at least 2 different points for a valid box (ie: volume > 0).
         let (mut min_x, mut min_y) = match points.next() {
             Some(first) => (first.borrow().x, first.borrow().y),
-            None => return TypedBox2D::zero(),
+            None => return Box2D::zero(),
         };
         let (mut max_x, mut max_y) = (min_x, min_y);
 
@@ -294,7 +304,7 @@ where
 
             match points.next() {
                 Some(second) => assign_min_max(second),
-                None => return TypedBox2D::zero(),
+                None => return Box2D::zero(),
             }
 
             for point in points {
@@ -302,14 +312,14 @@ where
             }
         }
 
-        TypedBox2D {
+        Box2D {
             min: point2(min_x, min_y),
             max: point2(max_x, max_y),
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + One + Add<Output = T> + Sub<Output = T> + Mul<Output = T>,
 {
@@ -325,23 +335,23 @@ where
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + One + Add<Output = T> + Div<Output = T>,
 {
-    pub fn center(&self) -> TypedPoint2D<T, U> {
+    pub fn center(&self) -> Point2D<T, U> {
         let two = T::one() + T::one();
         (self.min + self.max.to_vector()) / two
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + PartialOrd,
 {
     #[inline]
     pub fn union(&self, other: &Self) -> Self {
-        TypedBox2D {
+        Box2D {
             min: point2(
                 min(self.min.x, other.min.x),
                 min(self.min.y, other.min.y),
@@ -354,7 +364,7 @@ where
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy,
 {
@@ -363,14 +373,14 @@ where
     where
         T: Mul<S, Output = T>
     {
-        TypedBox2D {
+        Box2D {
             min: point2(self.min.x * x, self.min.y * y),
             max: point2(self.max.x * x, self.max.y * y),
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Mul<T, Output = T> + Sub<T, Output = T>,
 {
@@ -381,17 +391,17 @@ where
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Copy + Zero,
 {
     /// Constructor, setting all sides to zero.
     pub fn zero() -> Self {
-        TypedBox2D::new(TypedPoint2D::zero(), TypedPoint2D::zero())
+        Box2D::new(Point2D::zero(), Point2D::zero())
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: PartialEq,
 {
@@ -402,69 +412,69 @@ where
     }
 }
 
-impl<T, U> Mul<T> for TypedBox2D<T, U>
+impl<T, U> Mul<T> for Box2D<T, U>
 where
     T: Copy + Mul<T, Output = T>,
 {
     type Output = Self;
     #[inline]
     fn mul(self, scale: T) -> Self {
-        TypedBox2D::new(self.min * scale, self.max * scale)
+        Box2D::new(self.min * scale, self.max * scale)
     }
 }
 
-impl<T, U> Div<T> for TypedBox2D<T, U>
+impl<T, U> Div<T> for Box2D<T, U>
 where
     T: Copy + Div<T, Output = T>,
 {
     type Output = Self;
     #[inline]
     fn div(self, scale: T) -> Self {
-        TypedBox2D::new(self.min / scale, self.max / scale)
+        Box2D::new(self.min / scale, self.max / scale)
     }
 }
 
-impl<T, U1, U2> Mul<TypedScale<T, U1, U2>> for TypedBox2D<T, U1>
+impl<T, U1, U2> Mul<Scale<T, U1, U2>> for Box2D<T, U1>
 where
     T: Copy + Mul<T, Output = T>,
 {
-    type Output = TypedBox2D<T, U2>;
+    type Output = Box2D<T, U2>;
     #[inline]
-    fn mul(self, scale: TypedScale<T, U1, U2>) -> TypedBox2D<T, U2> {
-        TypedBox2D::new(self.min * scale, self.max * scale)
+    fn mul(self, scale: Scale<T, U1, U2>) -> Box2D<T, U2> {
+        Box2D::new(self.min * scale, self.max * scale)
     }
 }
 
-impl<T, U1, U2> Div<TypedScale<T, U1, U2>> for TypedBox2D<T, U2>
+impl<T, U1, U2> Div<Scale<T, U1, U2>> for Box2D<T, U2>
 where
     T: Copy + Div<T, Output = T>,
 {
-    type Output = TypedBox2D<T, U1>;
+    type Output = Box2D<T, U1>;
     #[inline]
-    fn div(self, scale: TypedScale<T, U1, U2>) -> TypedBox2D<T, U1> {
-        TypedBox2D::new(self.min / scale, self.max / scale)
+    fn div(self, scale: Scale<T, U1, U2>) -> Box2D<T, U1> {
+        Box2D::new(self.min / scale, self.max / scale)
     }
 }
 
-impl<T, Unit> TypedBox2D<T, Unit>
+impl<T, Unit> Box2D<T, Unit>
 where
     T: Copy,
 {
     /// Drop the units, preserving only the numeric value.
-    pub fn to_untyped(&self) -> Box2D<T> {
-        TypedBox2D::new(self.min.to_untyped(), self.max.to_untyped())
+    pub fn to_untyped(&self) -> Box2D<T, UnknownUnit> {
+        Box2D::new(self.min.to_untyped(), self.max.to_untyped())
     }
 
     /// Tag a unitless value with units.
-    pub fn from_untyped(c: &Box2D<T>) -> TypedBox2D<T, Unit> {
-        TypedBox2D::new(
-            TypedPoint2D::from_untyped(&c.min),
-            TypedPoint2D::from_untyped(&c.max),
+    pub fn from_untyped(c: &Box2D<T, UnknownUnit>) -> Box2D<T, Unit> {
+        Box2D::new(
+            Point2D::from_untyped(c.min),
+            Point2D::from_untyped(c.max),
         )
     }
 }
 
-impl<T0, Unit> TypedBox2D<T0, Unit>
+impl<T0, Unit> Box2D<T0, Unit>
 where
     T0: NumCast + Copy,
 {
@@ -473,8 +483,8 @@ where
     /// When casting from floating point to integer coordinates, the decimals are truncated
     /// as one would expect from a simple cast, but this behavior does not always make sense
     /// geometrically. Consider using round(), round_in or round_out() before casting.
-    pub fn cast<T1: NumCast + Copy>(&self) -> TypedBox2D<T1, Unit> {
-        TypedBox2D::new(
+    pub fn cast<T1: NumCast + Copy>(&self) -> Box2D<T1, Unit> {
+        Box2D::new(
             self.min.cast(),
             self.max.cast(),
         )
@@ -485,15 +495,15 @@ where
     /// When casting from floating point to integer coordinates, the decimals are truncated
     /// as one would expect from a simple cast, but this behavior does not always make sense
     /// geometrically. Consider using round(), round_in or round_out() before casting.
-    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<TypedBox2D<T1, Unit>> {
+    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<Box2D<T1, Unit>> {
         match (self.min.try_cast(), self.max.try_cast()) {
-            (Some(a), Some(b)) => Some(TypedBox2D::new(a, b)),
+            (Some(a), Some(b)) => Some(Box2D::new(a, b)),
             _ => None,
         }
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Round,
 {
@@ -506,44 +516,44 @@ where
     /// avoid pixel rounding errors.
     /// Note that this is *not* rounding to nearest integer if the values are negative.
     /// They are always rounding as floor(n + 0.5).
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn round(&self) -> Self {
-        TypedBox2D::new(self.min.round(), self.max.round())
+        Box2D::new(self.min.round(), self.max.round())
     }
 }
 
-impl<T, U> TypedBox2D<T, U>
+impl<T, U> Box2D<T, U>
 where
     T: Floor + Ceil,
 {
     /// Return a box with faces/edges rounded to integer coordinates, such that
     /// the original box contains the resulting box.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn round_in(&self) -> Self {
         let min = self.min.ceil();
         let max = self.max.floor();
-        TypedBox2D { min, max }
+        Box2D { min, max }
     }
 
     /// Return a box with faces/edges rounded to integer coordinates, such that
     /// the original box is contained in the resulting box.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn round_out(&self) -> Self {
         let min = self.min.floor();
         let max = self.max.ceil();
-        TypedBox2D { min, max }
+        Box2D { min, max }
     }
 }
 
 // Convenience functions for common casts
-impl<T: NumCast + Copy, Unit> TypedBox2D<T, Unit> {
+impl<T: NumCast + Copy, Unit> Box2D<T, Unit> {
     /// Cast into an `f32` box.
-    pub fn to_f32(&self) -> TypedBox2D<f32, Unit> {
+    pub fn to_f32(&self) -> Box2D<f32, Unit> {
         self.cast()
     }
 
     /// Cast into an `f64` box.
-    pub fn to_f64(&self) -> TypedBox2D<f64, Unit> {
+    pub fn to_f64(&self) -> Box2D<f64, Unit> {
         self.cast()
     }
 
@@ -552,7 +562,7 @@ impl<T: NumCast + Copy, Unit> TypedBox2D<T, Unit> {
     /// When casting from floating point boxes, it is worth considering whether
     /// to `round()`, `round_in()` or `round_out()` before the cast in order to
     /// obtain the desired conversion behavior.
-    pub fn to_usize(&self) -> TypedBox2D<usize, Unit> {
+    pub fn to_usize(&self) -> Box2D<usize, Unit> {
         self.cast()
     }
 
@@ -561,7 +571,7 @@ impl<T: NumCast + Copy, Unit> TypedBox2D<T, Unit> {
     /// When casting from floating point boxes, it is worth considering whether
     /// to `round()`, `round_in()` or `round_out()` before the cast in order to
     /// obtain the desired conversion behavior.
-    pub fn to_u32(&self) -> TypedBox2D<u32, Unit> {
+    pub fn to_u32(&self) -> Box2D<u32, Unit> {
         self.cast()
     }
 
@@ -570,7 +580,7 @@ impl<T: NumCast + Copy, Unit> TypedBox2D<T, Unit> {
     /// When casting from floating point boxes, it is worth considering whether
     /// to `round()`, `round_in()` or `round_out()` before the cast in order to
     /// obtain the desired conversion behavior.
-    pub fn to_i32(&self) -> TypedBox2D<i32, Unit> {
+    pub fn to_i32(&self) -> Box2D<i32, Unit> {
         self.cast()
     }
 
@@ -579,16 +589,16 @@ impl<T: NumCast + Copy, Unit> TypedBox2D<T, Unit> {
     /// When casting from floating point boxes, it is worth considering whether
     /// to `round()`, `round_in()` or `round_out()` before the cast in order to
     /// obtain the desired conversion behavior.
-    pub fn to_i64(&self) -> TypedBox2D<i64, Unit> {
+    pub fn to_i64(&self) -> Box2D<i64, Unit> {
         self.cast()
     }
 }
 
-impl<T, U> From<TypedSize2D<T, U>> for TypedBox2D<T, U>
+impl<T, U> From<Size2D<T, U>> for Box2D<T, U>
 where
     T: Copy + Zero + PartialOrd,
 {
-    fn from(b: TypedSize2D<T, U>) -> Self {
+    fn from(b: Size2D<T, U>) -> Self {
         Self::from_size(b)
     }
 }
@@ -596,9 +606,9 @@ where
 #[cfg(test)]
 mod tests {
     use side_offsets::SideOffsets2D;
-    use size::size2;
-    use point::Point2D;
-    use super::*;
+    use {Point2D, point2, vec2, size2};
+    use default::Box2D;
+    //use super::*;
 
     #[test]
     fn test_size() {
@@ -688,7 +698,7 @@ mod tests {
         let b = Box2D::from_size(size);
         assert_eq!(b.center(), center);
         let translation = vec2(10.0, 2.5);
-        let b = b.translate(&translation);
+        let b = b.translate(translation);
         center += translation;
         assert_eq!(b.center(), center);
         assert_eq!(b.max.x, 25.0);
@@ -760,7 +770,7 @@ mod tests {
     #[test]
     fn test_contains() {
         let b = Box2D::from_points(&[point2(-20.0, -20.0), point2(20.0, 20.0)]);
-        assert!(b.contains(&point2(-15.3, 10.5)));
+        assert!(b.contains(point2(-15.3, 10.5)));
     }
 
     #[test]

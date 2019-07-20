@@ -4,7 +4,7 @@
 
 use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::device::{Device, Program, ShaderError};
-use euclid::{Transform3D};
+use euclid::default::Transform3D;
 use crate::glyph_rasterizer::GlyphFormat;
 use crate::renderer::{
     desc,

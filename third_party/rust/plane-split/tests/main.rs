@@ -1,7 +1,7 @@
 extern crate euclid;
 extern crate plane_split;
 
-use euclid::{Angle, TypedRect, TypedSize2D, TypedTransform3D, point2, point3, vec3};
+use euclid::{Angle, Rect, Size2D, Transform3D, point2, point3, vec3};
 use euclid::approxeq::ApproxEq;
 use plane_split::{Intersection, Line, LineProjection, NegativeHemisphereError, Plane, Polygon};
 
@@ -72,7 +72,7 @@ fn empty() {
     assert_eq!(None, poly);
 }
 
-fn test_transformed(rect: TypedRect<f32, ()>, transform: TypedTransform3D<f32, (), ()>) {
+fn test_transformed(rect: Rect<f32, ()>, transform: Transform3D<f32, (), ()>) {
     let poly = Polygon::from_transformed_rect(rect, transform, 0).unwrap();
     assert!(poly.is_valid());
 
@@ -85,18 +85,18 @@ fn test_transformed(rect: TypedRect<f32, ()>, transform: TypedTransform3D<f32, (
 
 #[test]
 fn from_transformed_rect() {
-    let rect = TypedRect::new(point2(10.0, 10.0), TypedSize2D::new(20.0, 30.0));
+    let rect = Rect::new(point2(10.0, 10.0), Size2D::new(20.0, 30.0));
     let transform =
-        TypedTransform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
+        Transform3D::create_rotation(0.5f32.sqrt(), 0.0, 0.5f32.sqrt(), Angle::radians(5.0))
         .pre_translate(vec3(0.0, 0.0, 10.0));
     test_transformed(rect, transform);
 }
 
 #[test]
 fn from_transformed_rect_perspective() {
-    let rect = TypedRect::new(point2(-10.0, -5.0), TypedSize2D::new(20.0, 30.0));
+    let rect = Rect::new(point2(-10.0, -5.0), Size2D::new(20.0, 30.0));
     let mut transform =
-        TypedTransform3D::create_perspective(400.0)
+        Transform3D::create_perspective(400.0)
         .pre_translate(vec3(0.0, 0.0, 100.0));
     transform.m44 = 0.7; //for fun
     test_transformed(rect, transform);

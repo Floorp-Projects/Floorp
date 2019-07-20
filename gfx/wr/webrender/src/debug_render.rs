@@ -7,7 +7,7 @@ use api::units::*;
 use crate::debug_font_data;
 use crate::device::{Device, Program, Texture, TextureSlot, VertexDescriptor, ShaderError, VAO};
 use crate::device::{TextureFilter, VertexAttribute, VertexAttributeKind, VertexUsageHint};
-use euclid::{Point2D, Rect, Size2D, Transform3D};
+use euclid::{Point2D, Rect, Size2D, Transform3D, default};
 use crate::internal_types::{ORTHO_FAR_PLANE, ORTHO_NEAR_PLANE};
 use std::f32;
 
@@ -193,7 +193,7 @@ impl DebugRenderer {
         text: &str,
         color: ColorU,
         bounds: Option<DeviceRect>,
-    ) -> Rect<f32> {
+    ) -> default::Rect<f32> {
         let mut x_start = x;
         let ipw = 1.0 / debug_font_data::BMP_WIDTH as f32;
         let iph = 1.0 / debug_font_data::BMP_HEIGHT as f32;

@@ -1723,8 +1723,8 @@ impl RenderTask {
         };
 
         if let Some(mut request) = gpu_cache.request(cache_handle) {
-            let p0 = target_rect.origin.to_f32();
-            let p1 = target_rect.bottom_right().to_f32();
+            let p0 = target_rect.min().to_f32();
+            let p1 = target_rect.max().to_f32();
             let image_source = ImageSource {
                 p0,
                 p1,

@@ -4,7 +4,7 @@
 
 #![deny(missing_docs)]
 
-use euclid::{size2, TypedRect, num::Zero};
+use euclid::{size2, Rect, num::Zero};
 use peek_poke::PeekPoke;
 use std::ops::{Add, Sub};
 use std::sync::Arc;
@@ -381,7 +381,7 @@ pub enum DirtyRect<T: Copy, U> {
     /// Everything is Dirty, equivalent to Partial(image_bounds)
     All,
     /// Some specific amount is dirty
-    Partial(TypedRect<T, U>)
+    Partial(Rect<T, U>)
 }
 
 impl<T, U> DirtyRect<T, U>
@@ -394,7 +394,7 @@ where
 {
     /// Creates an empty DirtyRect (indicating nothing is invalid)
     pub fn empty() -> Self {
-        DirtyRect::Partial(TypedRect::zero())
+        DirtyRect::Partial(Rect::zero())
     }
 
     /// Returns whether the dirty rect is empty
@@ -412,7 +412,7 @@ where
 
     /// Maps over the contents of Partial.
     pub fn map<F>(self, func: F) -> Self
-        where F: FnOnce(TypedRect<T, U>) -> TypedRect<T, U>,
+        where F: FnOnce(Rect<T, U>) -> Rect<T, U>,
     {
         use crate::DirtyRect::*;
 
@@ -439,18 +439,18 @@ where
         match (*self, *other) {
             (All, rect) | (rect, All)  => rect,
             (Partial(rect1), Partial(rect2)) => Partial(rect1.intersection(&rect2)
-                                                                   .unwrap_or_else(TypedRect::zero))
+                                                                   .unwrap_or_else(Rect::zero))
         }
     }
 
     /// Converts the dirty rect into a subrect of the given one via intersection.
-    pub fn to_subrect_of(&self, rect: &TypedRect<T, U>) -> TypedRect<T, U> {
+    pub fn to_subrect_of(&self, rect: &Rect<T, U>) -> Rect<T, U> {
         use crate::DirtyRect::*;
 
         match *self {
             All              => *rect,
             Partial(dirty_rect) => dirty_rect.intersection(rect)
-                                               .unwrap_or_else(TypedRect::zero),
+                                               .unwrap_or_else(Rect::zero),
         }
     }
 }
@@ -460,8 +460,8 @@ impl<T: Copy, U> Clone for DirtyRect<T, U> {
     fn clone(&self) -> Self { *self }
 }
 
-impl<T: Copy, U> From<TypedRect<T, U>> for DirtyRect<T, U> {
-    fn from(rect: TypedRect<T, U>) -> Self {
+impl<T: Copy, U> From<Rect<T, U>> for DirtyRect<T, U> {
+    fn from(rect: Rect<T, U>) -> Self {
         DirtyRect::Partial(rect)
     }
 }

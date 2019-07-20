@@ -1520,7 +1520,7 @@ class TextFrameIterator {
       return;
     }
 
-    mBaselines.AppendElement(mRootFrame->StyleSVGReset()->mDominantBaseline);
+    mBaselines.AppendElement(mRootFrame->StyleSVG()->mDominantBaseline);
     Next();
   }
 
@@ -1663,10 +1663,7 @@ nsTextFrame* TextFrameIterator::Next() {
 }
 
 void TextFrameIterator::PushBaseline(nsIFrame* aNextFrame) {
-  uint8_t baseline = aNextFrame->StyleSVGReset()->mDominantBaseline;
-  if (baseline == NS_STYLE_DOMINANT_BASELINE_AUTO) {
-    baseline = mBaselines.LastElement();
-  }
+  uint8_t baseline = aNextFrame->StyleSVG()->mDominantBaseline;
   mBaselines.AppendElement(baseline);
 }
 
