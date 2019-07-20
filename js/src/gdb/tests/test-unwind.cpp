@@ -38,18 +38,23 @@ FRAGMENT(unwind, simple) {
     return;
   }
 
-  // baseline-eager.
-  uint32_t saveThreshold = js::jit::JitOptions.baselineWarmUpThreshold;
-  js::jit::JitOptions.baselineWarmUpThreshold = 0;
+  // Define an itercount property and use it to ensure Baseline compilation.
+  uint32_t threshold = js::jit::JitOptions.baselineWarmUpThreshold;
+  RootedValue val(cx, Int32Value(threshold + 10));
+  if (!JS_DefineProperty(cx, global, "itercount", val, 0)) {
+    return;
+  }
 
   int line0 = __LINE__;
   const char* bytes =
       "\n"
       "function unwindFunctionInner() {\n"
+      "    for (var i = 0; i < itercount; i++) {}\n"
       "    return something();\n"
       "}\n"
       "\n"
       "function unwindFunctionOuter() {\n"
+      "    for (var i = 0; i < itercount; i++) {}\n"
       "    return unwindFunctionInner();\n"
       "}\n"
       "\n"
@@ -65,6 +70,4 @@ FRAGMENT(unwind, simple) {
 
   JS::Rooted<JS::Value> rval(cx);
   JS::EvaluateDontInflate(cx, opts, srcBuf, &rval);
-
-  js::jit::JitOptions.baselineWarmUpThreshold = saveThreshold;
 }
