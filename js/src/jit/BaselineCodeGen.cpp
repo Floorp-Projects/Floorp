@@ -1437,7 +1437,7 @@ bool BaselineInterpreterCodeGen::emitWarmUpCounterIncrement() {
   // compile it.
   Label done;
   masm.branch32(Assembler::BelowOrEqual, countReg,
-                Imm32(JitOptions.baselineWarmUpThreshold), &done);
+                Imm32(JitOptions.baselineJitWarmUpThreshold), &done);
   masm.branchPtr(Assembler::Equal,
                  Address(scriptReg, JSScript::offsetOfBaselineScript()),
                  ImmPtr(BASELINE_DISABLED_SCRIPT), &done);

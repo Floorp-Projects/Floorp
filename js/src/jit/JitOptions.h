@@ -80,7 +80,7 @@ struct DefaultJitOptions {
   bool enableWasmFuncCallSpew;
 #endif
   uint32_t baselineInterpreterWarmUpThreshold;
-  uint32_t baselineWarmUpThreshold;
+  uint32_t baselineJitWarmUpThreshold;
   uint32_t normalIonWarmUpThreshold;
   uint32_t fullIonWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
