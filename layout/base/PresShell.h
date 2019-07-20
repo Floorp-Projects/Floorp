@@ -1593,12 +1593,33 @@ class PresShell final : public nsStubDocumentObserver,
   /**
    * Tells the presshell to scroll again to the last anchor scrolled to by
    * GoToAnchor, if any. This scroll only happens if the scroll
-   * position has not changed since the last GoToAnchor. This is called
-   * by nsDocumentViewer::LoadComplete. This clears the last anchor
-   * scrolled to by GoToAnchor (we don't want to keep it alive if it's
-   * removed from the DOM), so don't call this more than once.
+   * position has not changed since the last GoToAnchor (modulo scroll anchoring
+   * adjustments). This is called by nsDocumentViewer::LoadComplete. This clears
+   * the last anchor scrolled to by GoToAnchor (we don't want to keep it alive
+   * if it's removed from the DOM), so don't call this more than once.
    */
   MOZ_CAN_RUN_SCRIPT nsresult ScrollToAnchor();
+
+  /**
+   * When scroll anchoring adjusts positions in the root frame during page load,
+   * it may move our scroll position in the root frame.
+   *
+   * While that's generally desirable, when scrolling to an anchor via an id-ref
+   * we have a more direct target. If the id-ref points to something that cannot
+   * be selected as a scroll anchor container (like an image or an inline), we
+   * may select a node following it as a scroll anchor, and if then stuff is
+   * inserted on top, we may end up moving the id-ref element offscreen to the
+   * top inadvertently.
+   *
+   * On page load, the document viewer will call ScrollToAnchor(), and will only
+   * scroll to the anchor again if the scroll position is not changed. We don't
+   * want scroll anchoring adjustments to prevent this, so account for them.
+   */
+  void RootScrollFrameAdjusted(nscoord aYAdjustment) {
+    if (mLastAnchorScrolledTo) {
+      mLastAnchorScrollPositionY += aYAdjustment;
+    }
+  }
 
   /**
    * Scrolls the view of the document so that the primary frame of the content
