@@ -8,8 +8,9 @@ import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
 
 class CertificateSection extends HTMLElement {
-  constructor() {
+  constructor(error) {
     super();
+    this.error = error;
   }
 
   connectedCallback() {
@@ -34,13 +35,9 @@ class CertificateSection extends HTMLElement {
       "certificate-viewer-certificate-section-title"
     );
 
-    // TODO: Render based on certificate error.
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1560513
-    let error = true;
-
     this.infoGroupContainer = this.shadowRoot.querySelector(".info-groups");
 
-    if (error) {
+    if (this.error) {
       title.classList.add("error");
       certificateTabs.appendChild(new ErrorSection());
       return;
