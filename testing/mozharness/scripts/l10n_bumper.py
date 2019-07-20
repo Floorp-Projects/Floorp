@@ -179,6 +179,7 @@ class L10nBumper(VCSScript):
         if bump_config.get('revision_url'):
             repl_dict = {
                 'MAJOR_VERSION': version_list[0],
+                'COMBINED_MAJOR_VERSION': str(int(version_list[0]) + int(version_list[1])),
             }
 
             url = bump_config['revision_url'] % repl_dict
