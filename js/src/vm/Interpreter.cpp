@@ -1972,17 +1972,12 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_LOOPENTRY) {
       COUNT_COVERAGE();
-      // Attempt on-stack replacement with Baseline code.
+      // Attempt on-stack replacement into the Baseline Interpreter.
       if (jit::IsBaselineInterpreterEnabled()) {
         script->incWarmUpCounter();
 
-        using Tier = jit::BaselineTier;
-        bool tryBaselineInterpreter = !script->hasBaselineScript();
         jit::MethodStatus status =
-            tryBaselineInterpreter
-                ? jit::CanEnterBaselineAtBranch<Tier::Interpreter>(cx,
-                                                                   REGS.fp())
-                : jit::CanEnterBaselineAtBranch<Tier::Compiler>(cx, REGS.fp());
+            jit::CanEnterBaselineInterpreterAtBranch(cx, REGS.fp());
         if (status == jit::Method_Error) {
           goto error;
         }
@@ -1992,7 +1987,8 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           jit::JitExecStatus maybeOsr;
           {
             GeckoProfilerBaselineOSRMarker osr(cx, wasProfiler);
-            maybeOsr = jit::EnterBaselineAtBranch(cx, REGS.fp(), REGS.pc);
+            maybeOsr =
+                jit::EnterBaselineInterpreterAtBranch(cx, REGS.fp(), REGS.pc);
           }
 
           // We failed to call into baseline at all, so treat as an error.
