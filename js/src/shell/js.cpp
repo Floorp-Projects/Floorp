@@ -10404,8 +10404,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("baseline-eager")) {
-    jit::JitOptions.baselineInterpreterWarmUpThreshold = 0;
-    jit::JitOptions.baselineWarmUpThreshold = 0;
+    jit::JitOptions.setEagerBaselineCompilation();
   }
 
   if (op.getBoolOption("blinterp")) {

@@ -117,6 +117,7 @@ struct DefaultJitOptions {
 
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
+  void setEagerBaselineCompilation();
   void setEagerIonCompilation();
   void setNormalIonWarmUpThreshold(uint32_t warmUpThreshold);
   void setFullIonWarmUpThreshold(uint32_t warmUpThreshold);
