@@ -24,8 +24,7 @@ static EnterJitStatus JS_HAZ_JSNATIVE_CALLER EnterJit(JSContext* cx,
   // C++ -> interpreterStub -> C++ is slower than staying in C++).
   MOZ_ASSERT(code);
   MOZ_ASSERT(code != cx->runtime()->jitRuntime()->interpreterStub().value);
-
-  MOZ_ASSERT(IsBaselineInterpreterOrJitEnabled());
+  MOZ_ASSERT(IsBaselineInterpreterEnabled());
 
   if (!CheckRecursionLimit(cx)) {
     return EnterJitStatus::Error;
