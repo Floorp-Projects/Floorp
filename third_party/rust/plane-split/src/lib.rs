@@ -20,7 +20,7 @@ mod bsp;
 mod clip;
 mod polygon;
 
-use euclid::{TypedPoint3D, TypedScale, TypedVector3D};
+use euclid::{Point3D, Scale, Vector3D};
 use euclid::approxeq::ApproxEq;
 use num_traits::{Float, One, Zero};
 
@@ -37,7 +37,7 @@ fn is_zero<T>(value: T) -> bool where
     (value * value).approx_eq(&T::zero())
 }
 
-fn is_zero_vec<T, U>(vec: TypedVector3D<T, U>) -> bool where
+fn is_zero_vec<T, U>(vec: Vector3D<T, U>) -> bool where
    T: Copy + Zero + ApproxEq<T> +
       ops::Add<T, Output=T> + ops::Sub<T, Output=T> + ops::Mul<T, Output=T> {
     vec.dot(vec).approx_eq(&T::zero())
@@ -48,9 +48,9 @@ fn is_zero_vec<T, U>(vec: TypedVector3D<T, U>) -> bool where
 #[derive(Debug)]
 pub struct Line<T, U> {
     /// Arbitrary point on the line.
-    pub origin: TypedPoint3D<T, U>,
+    pub origin: Point3D<T, U>,
     /// Normalized direction of the line.
-    pub dir: TypedVector3D<T, U>,
+    pub dir: Vector3D<T, U>,
 }
 
 impl<T, U> Line<T, U> where
@@ -72,7 +72,7 @@ impl<T, U> Line<T, U> where
     /// Returns the fraction of the edge where the intersection occurs.
     fn intersect_edge(
         &self,
-        edge: ops::Range<TypedPoint3D<T, U>>,
+        edge: ops::Range<Point3D<T, U>>,
     ) -> Option<T>
     where T: ops::Div<T, Output=T>
     {
@@ -101,7 +101,7 @@ impl<T, U> Line<T, U> where
 #[derive(Debug, PartialEq)]
 pub struct Plane<T, U> {
     /// Normalized vector perpendicular to the plane.
-    pub normal: TypedVector3D<T, U>,
+    pub normal: Vector3D<T, U>,
     /// Constant offset from the normal plane, specified in the
     /// direction opposite to the normal.
     pub offset: T,
@@ -129,7 +129,7 @@ impl<
 > Plane<T, U> {
     /// Construct a new plane from unnormalized equation.
     pub fn from_unnormalized(
-        normal: TypedVector3D<T, U>, offset: T
+        normal: Vector3D<T, U>, offset: T
     ) -> Result<Option<Self>, NegativeHemisphereError> {
         let square_len = normal.square_length();
         if square_len < T::approx_epsilon() * T::approx_epsilon() {
@@ -141,7 +141,7 @@ impl<
         } else {
             let kf = T::one() / square_len.sqrt();
             Ok(Some(Plane {
-                normal: normal * TypedScale::new(kf),
+                normal: normal * Scale::new(kf),
                 offset: offset * kf,
             }))
         }
@@ -156,7 +156,7 @@ impl<
     /// Return the signed distance from this plane to a point.
     /// The distance is negative if the point is on the other side of the plane
     /// from the direction of the normal.
-    pub fn signed_distance_to(&self, point: &TypedPoint3D<T, U>) -> T {
+    pub fn signed_distance_to(&self, point: &Point3D<T, U>) -> T {
         point.to_vector().dot(self.normal) + self.offset
     }
 
@@ -179,7 +179,7 @@ impl<
     /// Check if a convex shape defined by a set of points is completely
     /// outside of this plane. Merely touching the surface is not
     /// considered an intersection.
-    pub fn are_outside(&self, points: &[TypedPoint3D<T, U>]) -> bool {
+    pub fn are_outside(&self, points: &[Point3D<T, U>]) -> bool {
         let d0 = self.signed_distance_to(&points[0]);
         points[1..]
             .iter()
@@ -200,7 +200,7 @@ impl<
             return None
         }
         let factor = T::one() / divisor;
-        let origin = TypedPoint3D::origin() +
+        let origin = Point3D::origin() +
             self.normal * ((other.offset * w - self.offset) * factor) -
             other.normal* ((other.offset - self.offset * w) * factor);
 
@@ -228,13 +228,13 @@ pub trait Splitter<T, U> {
 
     /// Sort the produced polygon set by the ascending distance across
     /// the specified view vector. Return the sorted slice.
-    fn sort(&mut self, view: TypedVector3D<T, U>) -> &[Polygon<T, U>];
+    fn sort(&mut self, view: Vector3D<T, U>) -> &[Polygon<T, U>];
 
     /// Process a set of polygons at once.
     fn solve(
         &mut self,
         input: &[Polygon<T, U>],
-        view: TypedVector3D<T, U>,
+        view: Vector3D<T, U>,
     ) -> &[Polygon<T, U>]
     where
         T: Clone,
@@ -257,39 +257,39 @@ pub fn make_grid(count: usize) -> Vec<Polygon<f32, ()>> {
     let len = count as f32;
     polys.extend((0 .. count).map(|i| Polygon {
         points: [
-            TypedPoint3D::new(0.0, i as f32, 0.0),
-            TypedPoint3D::new(len, i as f32, 0.0),
-            TypedPoint3D::new(len, i as f32, len),
-            TypedPoint3D::new(0.0, i as f32, len),
+            Point3D::new(0.0, i as f32, 0.0),
+            Point3D::new(len, i as f32, 0.0),
+            Point3D::new(len, i as f32, len),
+            Point3D::new(0.0, i as f32, len),
         ],
         plane: Plane {
-            normal: TypedVector3D::new(0.0, 1.0, 0.0),
+            normal: Vector3D::new(0.0, 1.0, 0.0),
             offset: -(i as f32),
         },
         anchor: 0,
     }));
     polys.extend((0 .. count).map(|i| Polygon {
         points: [
-            TypedPoint3D::new(i as f32, 0.0, 0.0),
-            TypedPoint3D::new(i as f32, len, 0.0),
-            TypedPoint3D::new(i as f32, len, len),
-            TypedPoint3D::new(i as f32, 0.0, len),
+            Point3D::new(i as f32, 0.0, 0.0),
+            Point3D::new(i as f32, len, 0.0),
+            Point3D::new(i as f32, len, len),
+            Point3D::new(i as f32, 0.0, len),
         ],
         plane: Plane {
-            normal: TypedVector3D::new(1.0, 0.0, 0.0),
+            normal: Vector3D::new(1.0, 0.0, 0.0),
             offset: -(i as f32),
         },
         anchor: 0,
     }));
     polys.extend((0 .. count).map(|i| Polygon {
         points: [
-            TypedPoint3D::new(0.0, 0.0, i as f32),
-            TypedPoint3D::new(len, 0.0, i as f32),
-            TypedPoint3D::new(len, len, i as f32),
-            TypedPoint3D::new(0.0, len, i as f32),
+            Point3D::new(0.0, 0.0, i as f32),
+            Point3D::new(len, 0.0, i as f32),
+            Point3D::new(len, len, i as f32),
+            Point3D::new(0.0, len, i as f32),
         ],
         plane: Plane {
-            normal: TypedVector3D::new(0.0, 0.0, 1.0),
+            normal: Vector3D::new(0.0, 0.0, 1.0),
             offset: -(i as f32),
         },
         anchor: 0,

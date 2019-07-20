@@ -9935,14 +9935,7 @@ static StyleVerticalAlignKeyword ConvertSVGDominantBaselineToVerticalAlign(
 
 Maybe<StyleVerticalAlignKeyword> nsIFrame::VerticalAlignEnum() const {
   if (nsSVGUtils::IsInSVGTextSubtree(this)) {
-    uint8_t dominantBaseline;
-    for (const nsIFrame* frame = this; frame; frame = frame->GetParent()) {
-      dominantBaseline = frame->StyleSVGReset()->mDominantBaseline;
-      if (dominantBaseline != NS_STYLE_DOMINANT_BASELINE_AUTO ||
-          frame->IsSVGTextFrame()) {
-        break;
-      }
-    }
+    uint8_t dominantBaseline = StyleSVG()->mDominantBaseline;
     return Some(ConvertSVGDominantBaselineToVerticalAlign(dominantBaseline));
   }
 

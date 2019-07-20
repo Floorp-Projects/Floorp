@@ -754,6 +754,7 @@ nsStyleSVG::nsStyleSVG(const Document& aDocument)
       mShapeRendering(NS_STYLE_SHAPE_RENDERING_AUTO),
       mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT),
       mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER),
+      mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO),
       mTextAnchor(NS_STYLE_TEXT_ANCHOR_START),
       mContextFlags(
           (eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
@@ -784,6 +785,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
       mShapeRendering(aSource.mShapeRendering),
       mStrokeLinecap(aSource.mStrokeLinecap),
       mStrokeLinejoin(aSource.mStrokeLinejoin),
+      mDominantBaseline(aSource.mDominantBaseline),
       mTextAnchor(aSource.mTextAnchor),
       mContextFlags(aSource.mContextFlags) {
   MOZ_COUNT_CTOR(nsStyleSVG);
@@ -836,11 +838,13 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aNewData) const {
   // we need a reflow here. No intrinsic sizes need to change, so
   // nsChangeHint_NeedReflow is sufficient.
   // Note that stroke-dashoffset does not affect SVGGeometryFrame::mRect.
-  // text-anchor changes also require a reflow since it changes frames' rects.
+  // text-anchor and dominant-baseline changes also require a reflow since
+  // they change frames' rects.
   if (mStrokeWidth != aNewData.mStrokeWidth ||
       mStrokeMiterlimit != aNewData.mStrokeMiterlimit ||
       mStrokeLinecap != aNewData.mStrokeLinecap ||
       mStrokeLinejoin != aNewData.mStrokeLinejoin ||
+      mDominantBaseline != aNewData.mDominantBaseline ||
       mTextAnchor != aNewData.mTextAnchor) {
     return hint | nsChangeHint_NeedReflow |
            nsChangeHint_NeedDirtyReflow |  // XXX remove me: bug 876085
@@ -1035,7 +1039,6 @@ nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
       mLightingColor(StyleColor::White()),
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
-      mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO),
       mVectorEffect(NS_STYLE_VECTOR_EFFECT_NONE),
       mMaskType(NS_STYLE_MASK_TYPE_LUMINANCE) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
@@ -1058,7 +1061,6 @@ nsStyleSVGReset::nsStyleSVGReset(const nsStyleSVGReset& aSource)
       mLightingColor(aSource.mLightingColor),
       mStopOpacity(aSource.mStopOpacity),
       mFloodOpacity(aSource.mFloodOpacity),
-      mDominantBaseline(aSource.mDominantBaseline),
       mVectorEffect(aSource.mVectorEffect),
       mMaskType(aSource.mMaskType) {
   MOZ_COUNT_CTOR(nsStyleSVGReset);
@@ -1114,10 +1116,7 @@ nsChangeHint nsStyleSVGReset::CalcDifference(
     hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
   }
 
-  if (mDominantBaseline != aNewData.mDominantBaseline) {
-    // XXXjwatt: why NS_STYLE_HINT_REFLOW? Isn't that excessive?
-    hint |= NS_STYLE_HINT_REFLOW;
-  } else if (mVectorEffect != aNewData.mVectorEffect) {
+  if (mVectorEffect != aNewData.mVectorEffect) {
     // Stroke currently affects SVGGeometryFrame::mRect, and
     // vector-effect affect stroke. As a result we need to reflow if
     // vector-effect changes in order to have SVGGeometryFrame::

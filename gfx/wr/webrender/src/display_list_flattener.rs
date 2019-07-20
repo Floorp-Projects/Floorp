@@ -704,7 +704,7 @@ impl<'a> DisplayListFlattener<'a> {
         parent_node_index: SpatialNodeIndex,
     ) {
         let current_offset = self.current_offset(parent_node_index);
-        let frame_rect = info.bounds.translate(&current_offset);
+        let frame_rect = info.bounds.translate(current_offset);
         let sticky_frame_info = StickyFrameInfo::new(
             frame_rect,
             info.margins,
@@ -966,8 +966,8 @@ impl<'a> DisplayListFlattener<'a> {
 
         let current_offset = self.current_offset(clip_and_scroll.spatial_node_index);
 
-        let clip_rect = common.clip_rect.translate(&current_offset);
-        let rect = bounds.translate(&current_offset);
+        let clip_rect = common.clip_rect.translate(current_offset);
+        let rect = bounds.translate(current_offset);
         let layout = LayoutPrimitiveInfo {
             rect,
             clip_rect,
@@ -2530,9 +2530,9 @@ impl<'a> DisplayListFlattener<'a> {
     {
         // Offset the local rect and clip rect by the shadow offset.
         let mut info = pending_primitive.info.clone();
-        info.rect = info.rect.translate(&pending_shadow.shadow.offset);
+        info.rect = info.rect.translate(pending_shadow.shadow.offset);
         info.clip_rect = info.clip_rect.translate(
-            &pending_shadow.shadow.offset
+            pending_shadow.shadow.offset
         );
 
         // Construct and add a primitive for the given shadow.

@@ -2303,11 +2303,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
   uint8_t mColorInterpolation;         // NS_STYLE_COLOR_INTERPOLATION_*
   uint8_t mColorInterpolationFilters;  // NS_STYLE_COLOR_INTERPOLATION_*
   mozilla::StyleFillRule mFillRule;
-  uint8_t mPaintOrder;      // bitfield of NS_STYLE_PAINT_ORDER_* values
-  uint8_t mShapeRendering;  // NS_STYLE_SHAPE_RENDERING_*
-  uint8_t mStrokeLinecap;   // NS_STYLE_STROKE_LINECAP_*
-  uint8_t mStrokeLinejoin;  // NS_STYLE_STROKE_LINEJOIN_*
-  uint8_t mTextAnchor;      // NS_STYLE_TEXT_ANCHOR_*
+  uint8_t mPaintOrder;        // bitfield of NS_STYLE_PAINT_ORDER_* values
+  uint8_t mShapeRendering;    // NS_STYLE_SHAPE_RENDERING_*
+  uint8_t mStrokeLinecap;     // NS_STYLE_STROKE_LINECAP_*
+  uint8_t mStrokeLinejoin;    // NS_STYLE_STROKE_LINEJOIN_*
+  uint8_t mDominantBaseline;  // NS_STYLE_DOMINANT_BASELINE_*
+  uint8_t mTextAnchor;        // NS_STYLE_TEXT_ANCHOR_*
 
   /// Returns true if style has been set to expose the computed values of
   /// certain properties (such as 'fill') to the contents of any linked images.
@@ -2415,9 +2416,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
   float mStopOpacity;
   float mFloodOpacity;
 
-  uint8_t mDominantBaseline;  // NS_STYLE_DOMINANT_BASELINE_*
-  uint8_t mVectorEffect;      // NS_STYLE_VECTOR_EFFECT_*
-  uint8_t mMaskType;          // NS_STYLE_MASK_TYPE_*
+  uint8_t mVectorEffect;  // NS_STYLE_VECTOR_EFFECT_*
+  uint8_t mMaskType;      // NS_STYLE_MASK_TYPE_*
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleEffects {

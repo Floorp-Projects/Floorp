@@ -12,7 +12,7 @@ extern crate winit;
 mod boilerplate;
 
 use crate::boilerplate::Example;
-use euclid::TypedScale;
+use euclid::Scale;
 use webrender::api::*;
 use webrender::api::units::*;
 
@@ -78,7 +78,7 @@ impl App {
                 pipeline_id,
                 content_rect: LayoutRect::new(
                     LayoutPoint::origin(),
-                    bounds.size.to_f32() / TypedScale::new(device_pixel_ratio),
+                    bounds.size.to_f32() / Scale::new(device_pixel_ratio),
                 ),
                 color,
             });

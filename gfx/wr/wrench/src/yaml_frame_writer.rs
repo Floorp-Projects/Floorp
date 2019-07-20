@@ -4,7 +4,7 @@
 
 extern crate yaml_rust;
 
-use euclid::{TypedPoint2D, TypedRect, TypedSize2D, TypedTransform3D, TypedVector2D};
+use euclid::{Point2D, Rect, Size2D, Transform3D, Vector2D};
 use image::{save_buffer, ColorType};
 use crate::premultiply::unpremultiply;
 use crate::scene::{Scene, SceneProperties};
@@ -84,19 +84,19 @@ fn color_node(parent: &mut Table, key: &str, value: ColorF) {
     yaml_node(parent, key, Yaml::String(color_to_string(value)));
 }
 
-fn point_node<U>(parent: &mut Table, key: &str, value: &TypedPoint2D<f32, U>) {
+fn point_node<U>(parent: &mut Table, key: &str, value: &Point2D<f32, U>) {
     f32_vec_node(parent, key, &[value.x, value.y]);
 }
 
-fn vector_node<U>(parent: &mut Table, key: &str, value: &TypedVector2D<f32, U>) {
+fn vector_node<U>(parent: &mut Table, key: &str, value: &Vector2D<f32, U>) {
     f32_vec_node(parent, key, &[value.x, value.y]);
 }
 
-fn size_node<U>(parent: &mut Table, key: &str, value: &TypedSize2D<f32, U>) {
+fn size_node<U>(parent: &mut Table, key: &str, value: &Size2D<f32, U>) {
     f32_vec_node(parent, key, &[value.width, value.height]);
 }
 
-fn rect_yaml<U>(value: &TypedRect<f32, U>) -> Yaml {
+fn rect_yaml<U>(value: &Rect<f32, U>) -> Yaml {
     f32_vec_yaml(
         &[
             value.origin.x,
@@ -108,11 +108,11 @@ fn rect_yaml<U>(value: &TypedRect<f32, U>) -> Yaml {
     )
 }
 
-fn rect_node<U>(parent: &mut Table, key: &str, value: &TypedRect<f32, U>) {
+fn rect_node<U>(parent: &mut Table, key: &str, value: &Rect<f32, U>) {
     yaml_node(parent, key, rect_yaml(value));
 }
 
-fn matrix4d_node<U1, U2>(parent: &mut Table, key: &str, value: &TypedTransform3D<f32, U1, U2>) {
+fn matrix4d_node<U1, U2>(parent: &mut Table, key: &str, value: &Transform3D<f32, U1, U2>) {
     f32_vec_node(parent, key, &value.to_row_major_array());
 }
 

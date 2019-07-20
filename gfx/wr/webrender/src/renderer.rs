@@ -55,7 +55,7 @@ use crate::device::{ShaderError, TextureFilter, TextureFlags,
              VertexUsageHint, VAO, VBO, CustomVAO};
 use crate::device::{ProgramCache};
 use crate::device::query::GpuTimer;
-use euclid::{rect, Transform3D, TypedScale};
+use euclid::{rect, Transform3D, Scale, default};
 use crate::frame_builder::{ChasePrimitive, FrameBuilderConfig};
 use gleam::gl;
 use crate::glyph_cache::GlyphCache;
@@ -3321,7 +3321,7 @@ impl Renderer {
             readback_rect.size,
         );
         let mut dest = readback_rect.to_i32();
-        let device_to_framebuffer = TypedScale::new(1i32);
+        let device_to_framebuffer = Scale::new(1i32);
 
         // Need to invert the y coordinates and flip the image vertically when
         // reading back from the framebuffer.
@@ -3397,7 +3397,7 @@ impl Renderer {
                 read_target.into(),
                 read_target.to_framebuffer_rect(source_rect),
                 draw_target,
-                draw_target.to_framebuffer_rect(blit.target_rect.translate(&-content_origin.to_vector())),
+                draw_target.to_framebuffer_rect(blit.target_rect.translate(-content_origin.to_vector())),
                 TextureFilter::Linear,
             );
         }
@@ -3407,7 +3407,7 @@ impl Renderer {
         &mut self,
         scalings: &[ScalingInstance],
         source: TextureSource,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
         if scalings.is_empty() {
@@ -3437,7 +3437,7 @@ impl Renderer {
         &mut self,
         textures: &BatchTextures,
         svg_filters: &[SvgFilterInstance],
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
         if svg_filters.is_empty() {
@@ -3465,7 +3465,7 @@ impl Renderer {
         target: &PictureCacheTarget,
         draw_target: DrawTarget,
         content_origin: DeviceIntPoint,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
@@ -3508,7 +3508,7 @@ impl Renderer {
         draw_target: DrawTarget,
         content_origin: DeviceIntPoint,
         framebuffer_kind: FramebufferKind,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
@@ -3718,7 +3718,7 @@ impl Renderer {
         clear_color: Option<[f32; 4]>,
         clear_depth: Option<f32>,
         render_tasks: &RenderTaskGraph,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         frame_id: GpuFrameId,
         stats: &mut RendererStats,
     ) {
@@ -3874,7 +3874,7 @@ impl Renderer {
                 let (src_rect, _) = render_tasks[output.task_id].get_target_rect();
                 self.device.blit_render_target_invert_y(
                     draw_target.into(),
-                    draw_target.to_framebuffer_rect(src_rect.translate(&-content_origin.to_vector())),
+                    draw_target.to_framebuffer_rect(src_rect.translate(-content_origin.to_vector())),
                     DrawTarget::External { fbo: fbo_id, size: output_size },
                     output_size.into(),
                 );
@@ -3887,7 +3887,7 @@ impl Renderer {
     fn draw_clip_batch_list(
         &mut self,
         list: &ClipBatchList,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
         if self.debug_flags.contains(DebugFlags::DISABLE_CLIP_MASKS) {
@@ -3968,7 +3968,7 @@ impl Renderer {
         &mut self,
         draw_target: DrawTarget,
         target: &AlphaRenderTarget,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         render_tasks: &RenderTaskGraph,
         stats: &mut RendererStats,
     ) {
@@ -4508,7 +4508,7 @@ impl Renderer {
                             ORTHO_FAR_PLANE,
                         );
 
-                        let fb_scale = TypedScale::<_, _, FramebufferPixel>::new(1i32);
+                        let fb_scale = Scale::<_, _, FramebufferPixel>::new(1i32);
                         let mut fb_rect = frame.device_rect * fb_scale;
                         fb_rect.origin.y = device_size.height - fb_rect.origin.y - fb_rect.size.height;
 
@@ -4695,7 +4695,7 @@ impl Renderer {
     pub fn init_pixel_local_storage(
         &mut self,
         task_rect: DeviceIntRect,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
         self.device.enable_pixel_local_storage(true);
@@ -4725,7 +4725,7 @@ impl Renderer {
     pub fn resolve_pixel_local_storage(
         &mut self,
         task_rect: DeviceIntRect,
-        projection: &Transform3D<f32>,
+        projection: &default::Transform3D<f32>,
         stats: &mut RendererStats,
     ) {
         self.shaders
@@ -4888,7 +4888,7 @@ impl Renderer {
 
         let texture_rect = FramebufferIntRect::new(
             FramebufferIntPoint::zero(),
-            FramebufferIntSize::from_untyped(&source_rect.size.to_untyped()),
+            FramebufferIntSize::from_untyped(source_rect.size.to_untyped()),
         );
 
         debug_renderer.add_rect(
@@ -5145,7 +5145,7 @@ impl Renderer {
 
     pub fn read_gpu_cache(&mut self) -> (DeviceIntSize, Vec<u8>) {
         let texture = self.gpu_cache_texture.texture.as_ref().unwrap();
-        let size = FramebufferIntSize::from_untyped(&texture.get_dimensions().to_untyped());
+        let size = FramebufferIntSize::from_untyped(texture.get_dimensions().to_untyped());
         let mut texels = vec![0; (size.width * size.height * 16) as usize];
         self.device.begin_frame();
         self.device.bind_read_target(ReadTarget::from_texture(texture, 0));
@@ -5666,7 +5666,7 @@ impl Renderer {
         // read from textures directly with `get_tex_image*`.
 
         for layer_id in 0 .. texture.get_layer_count() {
-            let rect = FramebufferIntSize::from_untyped(&rect_size.to_untyped()).into();
+            let rect = FramebufferIntSize::from_untyped(rect_size.to_untyped()).into();
 
             device.attach_read_texture(texture, layer_id);
             #[cfg(feature = "png")]

@@ -3194,6 +3194,7 @@ exports.CSS_PROPERTIES = {
       "-moz-user-focus",
       "caret-color",
       "scrollbar-color",
+      "dominant-baseline",
       "text-anchor",
       "color-interpolation",
       "color-interpolation-filters",
@@ -3294,7 +3295,6 @@ exports.CSS_PROPERTIES = {
       "user-select",
       "-moz-window-dragging",
       "-moz-force-broken-image-icon",
-      "dominant-baseline",
       "vector-effect",
       "stop-color",
       "stop-opacity",
@@ -5932,7 +5932,7 @@ exports.CSS_PROPERTIES = {
     ]
   },
   "dominant-baseline": {
-    "isInherited": false,
+    "isInherited": true,
     "subproperties": [
       "dominant-baseline"
     ],

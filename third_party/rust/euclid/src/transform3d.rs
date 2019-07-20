@@ -15,23 +15,27 @@ use homogen::HomogeneousVector;
 #[cfg(feature = "mint")]
 use mint;
 use trig::Trig;
-use point::{TypedPoint2D, TypedPoint3D};
-use vector::{TypedVector2D, TypedVector3D, vec2, vec3};
-use rect::TypedRect;
-use transform2d::TypedTransform2D;
-use scale::TypedScale;
+use point::{Point2D, point2, Point3D};
+use vector::{Vector2D, Vector3D, vec2, vec3};
+use rect::Rect;
+use transform2d::Transform2D;
+use scale::Scale;
 use num::{One, Zero};
 use core::ops::{Add, Mul, Sub, Div, Neg};
 use core::marker::PhantomData;
 use core::fmt;
+use core::cmp::{Eq, PartialEq};
+use core::hash::{Hash};
 use num_traits::NumCast;
+#[cfg(feature = "serde")]
+use serde;
 
 /// A 3d transform stored as a 4 by 4 matrix in row-major order in memory.
 ///
 /// Transforms can be parametrized over the source and destination units, to describe a
 /// transformation from a space to another.
-/// For example, `TypedTransform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
-/// takes a `TypedPoint3D<f32, WorldSpace>` and returns a `TypedPoint3D<f32, ScreenSpace>`.
+/// For example, `Transform3D<f32, WorldSpace, ScreenSpace>::transform_point3d`
+/// takes a `Point3D<f32, WorldSpace>` and returns a `Point3D<f32, ScreenSpace>`.
 ///
 /// Transforms expose a set of convenience methods for pre- and post-transformations.
 /// A pre-transformation corresponds to adding an operation that is applied before
@@ -41,9 +45,8 @@ use num_traits::NumCast;
 /// These transforms are for working with _row vectors_, so the matrix math for transforming
 /// a vector is `v * T`. If your library is using column vectors, use `row_major` functions when you
 /// are asked for `column_major` representations and vice versa.
-#[derive(EuclidMatrix)]
 #[repr(C)]
-pub struct TypedTransform3D<T, Src, Dst> {
+pub struct Transform3D<T, Src, Dst> {
     pub m11: T, pub m12: T, pub m13: T, pub m14: T,
     pub m21: T, pub m22: T, pub m23: T, pub m24: T,
     pub m31: T, pub m32: T, pub m33: T, pub m34: T,
@@ -52,10 +55,120 @@ pub struct TypedTransform3D<T, Src, Dst> {
     pub _unit: PhantomData<(Src, Dst)>,
 }
 
-/// The default 3d transform type with no units.
-pub type Transform3D<T> = TypedTransform3D<T, UnknownUnit, UnknownUnit>;
+impl<T: Copy, Src, Dst> Copy for Transform3D<T, Src, Dst> {}
 
-impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
+impl<T: Clone, Src, Dst> Clone for Transform3D<T, Src, Dst> {
+    fn clone(&self) -> Self {
+        Transform3D {
+            m11: self.m11.clone(),
+            m12: self.m12.clone(),
+            m13: self.m13.clone(),
+            m14: self.m14.clone(),
+            m21: self.m21.clone(),
+            m22: self.m22.clone(),
+            m23: self.m23.clone(),
+            m24: self.m24.clone(),
+            m31: self.m31.clone(),
+            m32: self.m32.clone(),
+            m33: self.m33.clone(),
+            m34: self.m34.clone(),
+            m41: self.m41.clone(),
+            m42: self.m42.clone(),
+            m43: self.m43.clone(),
+            m44: self.m44.clone(),
+            _unit: PhantomData,
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de, T, Src, Dst> serde::Deserialize<'de> for Transform3D<T, Src, Dst>
+    where T: serde::Deserialize<'de>
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de>
+    {
+        let (
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44,
+        ) = try!(serde::Deserialize::deserialize(deserializer));
+        Ok(Transform3D {
+            m11, m12, m13, m14,
+            m21, m22, m23, m24,
+            m31, m32, m33, m34,
+            m41, m42, m43, m44,
+            _unit: PhantomData
+        })
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<T, Src, Dst> serde::Serialize for Transform3D<T, Src, Dst>
+    where T: serde::Serialize
+{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer
+    {
+        (
+            &self.m11, &self.m12, &self.m13, &self.m14,
+            &self.m21, &self.m22, &self.m23, &self.m24,
+            &self.m31, &self.m32, &self.m33, &self.m34,
+            &self.m41, &self.m42, &self.m43, &self.m44,
+        ).serialize(serializer)
+    }
+}
+
+impl<T, Src, Dst> Eq for Transform3D<T, Src, Dst> where T: Eq {}
+
+impl<T, Src, Dst> PartialEq for Transform3D<T, Src, Dst>
+    where T: PartialEq
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.m11 == other.m11 &&
+            self.m12 == other.m12 &&
+            self.m13 == other.m13 &&
+            self.m14 == other.m14 &&
+            self.m21 == other.m21 &&
+            self.m22 == other.m22 &&
+            self.m23 == other.m23 &&
+            self.m24 == other.m24 &&
+            self.m31 == other.m31 &&
+            self.m32 == other.m32 &&
+            self.m33 == other.m33 &&
+            self.m34 == other.m34 &&
+            self.m41 == other.m41 &&
+            self.m42 == other.m42 &&
+            self.m43 == other.m43 &&
+            self.m44 == other.m44
+    }
+}
+
+impl<T, Src, Dst> Hash for Transform3D<T, Src, Dst>
+    where T: Hash
+{
+    fn hash<H: ::core::hash::Hasher>(&self, h: &mut H) {
+        self.m11.hash(h);
+        self.m12.hash(h);
+        self.m13.hash(h);
+        self.m14.hash(h);
+        self.m21.hash(h);
+        self.m22.hash(h);
+        self.m23.hash(h);
+        self.m24.hash(h);
+        self.m31.hash(h);
+        self.m32.hash(h);
+        self.m33.hash(h);
+        self.m34.hash(h);
+        self.m41.hash(h);
+        self.m42.hash(h);
+        self.m43.hash(h);
+        self.m44.hash(h);
+    }
+}
+
+impl<T, Src, Dst> Transform3D<T, Src, Dst> {
     /// Create a transform specifying its components in row-major order.
     ///
     /// For example, the translation terms m41, m42, m43 on the last row with the
@@ -72,7 +185,7 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
             m31: T, m32: T, m33: T, m34: T,
             m41: T, m42: T, m43: T, m44: T)
          -> Self {
-        TypedTransform3D {
+        Transform3D {
             m11, m12, m13, m14,
             m21, m22, m23, m24,
             m31, m32, m33, m34,
@@ -97,7 +210,7 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
             m13: T, m23: T, m33: T, m43: T,
             m14: T, m24: T, m34: T, m44: T)
          -> Self {
-        TypedTransform3D {
+        Transform3D {
             m11, m12, m13, m14,
             m21, m22, m23, m24,
             m31, m32, m33, m34,
@@ -107,14 +220,14 @@ impl<T, Src, Dst> TypedTransform3D<T, Src, Dst> {
     }
 }
 
-impl <T, Src, Dst> TypedTransform3D<T, Src, Dst>
+impl <T, Src, Dst> Transform3D<T, Src, Dst>
 where T: Copy + Clone +
          PartialEq +
          One + Zero {
     #[inline]
     pub fn identity() -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _1, _0, _0, _0,
             _0, _1, _0, _0,
             _0, _0, _1, _0,
@@ -127,11 +240,11 @@ where T: Copy + Clone +
     // equivalence to deal with floating-point errors.
     #[inline]
     fn is_identity(&self) -> bool {
-        *self == TypedTransform3D::identity()
+        *self == Transform3D::identity()
     }
 }
 
-impl <T, Src, Dst> TypedTransform3D<T, Src, Dst>
+impl <T, Src, Dst> Transform3D<T, Src, Dst>
 where T: Copy + Clone +
          Add<T, Output=T> +
          Sub<T, Output=T> +
@@ -147,7 +260,7 @@ where T: Copy + Clone +
     #[inline]
     pub fn row_major_2d(m11: T, m12: T, m21: T, m22: T, m41: T, m42: T) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             m11, m12, _0, _0,
             m21, m22, _0, _0,
              _0,  _0, _1, _0,
@@ -165,7 +278,7 @@ where T: Copy + Clone +
 
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let _2 = _1 + _1;
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _2 / (right - left), _0                 , _0                , _0,
             _0                 , _2 / (top - bottom), _0                , _0,
             _0                 , _0                 , -_2 / (far - near), _0,
@@ -173,7 +286,7 @@ where T: Copy + Clone +
         )
     }
 
-    /// Returns true if this transform can be represented with a `TypedTransform2D`.
+    /// Returns true if this transform can be represented with a `Transform2D`.
     ///
     /// See <https://drafts.csswg.org/css-transforms/#2d-transform>
     #[inline]
@@ -190,8 +303,8 @@ where T: Copy + Clone +
     ///
     /// This method assumes that self represents a 2d transformation, callers
     /// should check that self.is_2d() returns true beforehand.
-    pub fn to_2d(&self) -> TypedTransform2D<T, Src, Dst> {
-        TypedTransform2D::row_major(
+    pub fn to_2d(&self) -> Transform2D<T, Src, Dst> {
+        Transform2D::row_major(
             self.m11, self.m12,
             self.m21, self.m22,
             self.m41, self.m42
@@ -224,8 +337,8 @@ where T: Copy + Clone +
 
     /// Returns the same transform with a different destination unit.
     #[inline]
-    pub fn with_destination<NewDst>(&self) -> TypedTransform3D<T, Src, NewDst> {
-        TypedTransform3D::row_major(
+    pub fn with_destination<NewDst>(&self) -> Transform3D<T, Src, NewDst> {
+        Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
             self.m31, self.m32, self.m33, self.m34,
@@ -235,8 +348,8 @@ where T: Copy + Clone +
 
     /// Returns the same transform with a different source unit.
     #[inline]
-    pub fn with_source<NewSrc>(&self) -> TypedTransform3D<T, NewSrc, Dst> {
-        TypedTransform3D::row_major(
+    pub fn with_source<NewSrc>(&self) -> Transform3D<T, NewSrc, Dst> {
+        Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
             self.m31, self.m32, self.m33, self.m34,
@@ -246,7 +359,7 @@ where T: Copy + Clone +
 
     /// Drop the units, preserving only the numeric value.
     #[inline]
-    pub fn to_untyped(&self) -> Transform3D<T> {
+    pub fn to_untyped(&self) -> Transform3D<T, UnknownUnit, UnknownUnit> {
         Transform3D::row_major(
             self.m11, self.m12, self.m13, self.m14,
             self.m21, self.m22, self.m23, self.m24,
@@ -257,8 +370,8 @@ where T: Copy + Clone +
 
     /// Tag a unitless value with units.
     #[inline]
-    pub fn from_untyped(m: &Transform3D<T>) -> Self {
-        TypedTransform3D::row_major(
+    pub fn from_untyped(m: &Transform3D<T, UnknownUnit, UnknownUnit>) -> Self {
+        Transform3D::row_major(
             m.m11, m.m12, m.m13, m.m14,
             m.m21, m.m22, m.m23, m.m24,
             m.m31, m.m32, m.m33, m.m34,
@@ -270,8 +383,9 @@ where T: Copy + Clone +
     /// applies after self's transformation.
     ///
     /// Assuming row vectors, this is equivalent to self * mat
-    pub fn post_mul<NewDst>(&self, mat: &TypedTransform3D<T, Dst, NewDst>) -> TypedTransform3D<T, Src, NewDst> {
-        TypedTransform3D::row_major(
+    #[must_use]
+    pub fn post_transform<NewDst>(&self, mat: &Transform3D<T, Dst, NewDst>) -> Transform3D<T, Src, NewDst> {
+        Transform3D::row_major(
             self.m11 * mat.m11  +  self.m12 * mat.m21  +  self.m13 * mat.m31  +  self.m14 * mat.m41,
             self.m11 * mat.m12  +  self.m12 * mat.m22  +  self.m13 * mat.m32  +  self.m14 * mat.m42,
             self.m11 * mat.m13  +  self.m12 * mat.m23  +  self.m13 * mat.m33  +  self.m14 * mat.m43,
@@ -295,12 +409,14 @@ where T: Copy + Clone +
     /// applies before self's transformation.
     ///
     /// Assuming row vectors, this is equivalent to mat * self
-    pub fn pre_mul<NewSrc>(&self, mat: &TypedTransform3D<T, NewSrc, Src>) -> TypedTransform3D<T, NewSrc, Dst> {
-        mat.post_mul(self)
+    #[inline]
+    #[must_use]
+    pub fn pre_transform<NewSrc>(&self, mat: &Transform3D<T, NewSrc, Src>) -> Transform3D<T, NewSrc, Dst> {
+        mat.post_transform(self)
     }
 
     /// Returns the inverse transform if possible.
-    pub fn inverse(&self) -> Option<TypedTransform3D<T, Dst, Src>> {
+    pub fn inverse(&self) -> Option<Transform3D<T, Dst, Src>> {
         let det = self.determinant();
 
         if det == Zero::zero() {
@@ -309,7 +425,7 @@ where T: Copy + Clone +
 
         // todo(gw): this could be made faster by special casing
         // for simpler transform types.
-        let m = TypedTransform3D::row_major(
+        let m = Transform3D::row_major(
             self.m23*self.m34*self.m42 - self.m24*self.m33*self.m42 +
             self.m24*self.m32*self.m43 - self.m22*self.m34*self.m43 -
             self.m23*self.m32*self.m44 + self.m22*self.m33*self.m44,
@@ -408,9 +524,9 @@ where T: Copy + Clone +
     }
 
     /// Multiplies all of the transform's component by a scalar and returns the result.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn mul_s(&self, x: T) -> Self {
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             self.m11 * x, self.m12 * x, self.m13 * x, self.m14 * x,
             self.m21 * x, self.m22 * x, self.m23 * x, self.m24 * x,
             self.m31 * x, self.m32 * x, self.m33 * x, self.m34 * x,
@@ -418,9 +534,9 @@ where T: Copy + Clone +
         )
     }
 
-    /// Convenience function to create a scale transform from a `TypedScale`.
-    pub fn from_scale(scale: TypedScale<T, Src, Dst>) -> Self {
-        TypedTransform3D::create_scale(scale.get(), scale.get(), scale.get())
+    /// Convenience function to create a scale transform from a `Scale`.
+    pub fn from_scale(scale: Scale<T, Src, Dst>) -> Self {
+        Transform3D::create_scale(scale.get(), scale.get(), scale.get())
     }
 
     /// Returns the homogeneous vector corresponding to the transformed 2d point.
@@ -430,7 +546,7 @@ where T: Copy + Clone +
     /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point2d_homogeneous(
-        &self, p: &TypedPoint2D<T, Src>
+        &self, p: Point2D<T, Src>
     ) -> HomogeneousVector<T, Dst> {
         let x = p.x * self.m11 + p.y * self.m21 + self.m41;
         let y = p.x * self.m12 + p.y * self.m22 + self.m42;
@@ -447,14 +563,14 @@ where T: Copy + Clone +
     ///
     /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
-    pub fn transform_point2d(&self, p: &TypedPoint2D<T, Src>) -> Option<TypedPoint2D<T, Dst>> {
+    pub fn transform_point2d(&self, p: Point2D<T, Src>) -> Option<Point2D<T, Dst>> {
         //Note: could use `transform_point2d_homogeneous()` but it would waste the calculus of `z`
         let w = p.x * self.m14 + p.y * self.m24 + self.m44;
         if w > T::zero() {
             let x = p.x * self.m11 + p.y * self.m21 + self.m41;
             let y = p.x * self.m12 + p.y * self.m22 + self.m42;
 
-            Some(TypedPoint2D::new(x / w, y / w))
+            Some(Point2D::new(x / w, y / w))
         } else {
             None
         }
@@ -466,7 +582,7 @@ where T: Copy + Clone +
     ///
     /// Assuming row vectors, this is equivalent to `v * self`
     #[inline]
-    pub fn transform_vector2d(&self, v: &TypedVector2D<T, Src>) -> TypedVector2D<T, Dst> {
+    pub fn transform_vector2d(&self, v: Vector2D<T, Src>) -> Vector2D<T, Dst> {
         vec2(
             v.x * self.m11 + v.y * self.m21,
             v.x * self.m12 + v.y * self.m22,
@@ -480,7 +596,7 @@ where T: Copy + Clone +
     /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
     pub fn transform_point3d_homogeneous(
-        &self, p: &TypedPoint3D<T, Src>
+        &self, p: Point3D<T, Src>
     ) -> HomogeneousVector<T, Dst> {
         let x = p.x * self.m11 + p.y * self.m21 + p.z * self.m31 + self.m41;
         let y = p.x * self.m12 + p.y * self.m22 + p.z * self.m32 + self.m42;
@@ -497,7 +613,7 @@ where T: Copy + Clone +
     ///
     /// Assuming row vectors, this is equivalent to `p * self`
     #[inline]
-    pub fn transform_point3d(&self, p: &TypedPoint3D<T, Src>) -> Option<TypedPoint3D<T, Dst>> {
+    pub fn transform_point3d(&self, p: Point3D<T, Src>) -> Option<Point3D<T, Dst>> {
         self.transform_point3d_homogeneous(p).to_point3d()
     }
 
@@ -507,7 +623,7 @@ where T: Copy + Clone +
     ///
     /// Assuming row vectors, this is equivalent to `v * self`
     #[inline]
-    pub fn transform_vector3d(&self, v: &TypedVector3D<T, Src>) -> TypedVector3D<T, Dst> {
+    pub fn transform_vector3d(&self, v: Vector3D<T, Src>) -> Vector3D<T, Dst> {
         vec3(
             v.x * self.m11 + v.y * self.m21 + v.z * self.m31,
             v.x * self.m12 + v.y * self.m22 + v.z * self.m32,
@@ -517,19 +633,21 @@ where T: Copy + Clone +
 
     /// Returns a rectangle that encompasses the result of transforming the given rectangle by this
     /// transform, if the transform makes sense for it, or `None` otherwise.
-    pub fn transform_rect(&self, rect: &TypedRect<T, Src>) -> Option<TypedRect<T, Dst>> {
-        Some(TypedRect::from_points(&[
-            self.transform_point2d(&rect.origin)?,
-            self.transform_point2d(&rect.top_right())?,
-            self.transform_point2d(&rect.bottom_left())?,
-            self.transform_point2d(&rect.bottom_right())?,
+    pub fn transform_rect(&self, rect: &Rect<T, Src>) -> Option<Rect<T, Dst>> {
+        let min = rect.min();
+        let max = rect.max();
+        Some(Rect::from_points(&[
+            self.transform_point2d(min)?,
+            self.transform_point2d(max)?,
+            self.transform_point2d(point2(max.x, min.y))?,
+            self.transform_point2d(point2(min.x, max.y))?,
         ]))
     }
 
     /// Create a 3d translation transform
     pub fn create_translation(x: T, y: T, z: T) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _1, _0, _0, _0,
             _0, _1, _0, _0,
             _0, _0, _1, _0,
@@ -538,15 +656,15 @@ where T: Copy + Clone +
     }
 
     /// Returns a transform with a translation applied before self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
-    pub fn pre_translate(&self, v: TypedVector3D<T, Src>) -> Self {
-        self.pre_mul(&TypedTransform3D::create_translation(v.x, v.y, v.z))
+    #[must_use]
+    pub fn pre_translate(&self, v: Vector3D<T, Src>) -> Self {
+        self.pre_transform(&Transform3D::create_translation(v.x, v.y, v.z))
     }
 
     /// Returns a transform with a translation applied after self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
-    pub fn post_translate(&self, v: TypedVector3D<T, Dst>) -> Self {
-        self.post_mul(&TypedTransform3D::create_translation(v.x, v.y, v.z))
+    #[must_use]
+    pub fn post_translate(&self, v: Vector3D<T, Dst>) -> Self {
+        self.post_transform(&Transform3D::create_translation(v.x, v.y, v.z))
     }
 
     /// Returns a projection of this transform in 2d space.
@@ -588,7 +706,7 @@ where T: Copy + Clone +
     /// Create a 3d scale transform
     pub fn create_scale(x: T, y: T, z: T) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
              x, _0, _0, _0,
             _0,  y, _0, _0,
             _0, _0,  z, _0,
@@ -597,9 +715,9 @@ where T: Copy + Clone +
     }
 
     /// Returns a transform with a scale applied before self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn pre_scale(&self, x: T, y: T, z: T) -> Self {
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             self.m11 * x, self.m12,     self.m13,     self.m14,
             self.m21    , self.m22 * y, self.m23,     self.m24,
             self.m31    , self.m32,     self.m33 * z, self.m34,
@@ -608,9 +726,9 @@ where T: Copy + Clone +
     }
 
     /// Returns a transform with a scale applied after self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn post_scale(&self, x: T, y: T, z: T) -> Self {
-        self.post_mul(&TypedTransform3D::create_scale(x, y, z))
+        self.post_transform(&Transform3D::create_scale(x, y, z))
     }
 
     /// Create a 3d rotation transform from an angle / axis.
@@ -627,7 +745,7 @@ where T: Copy + Clone +
         let sc = half_theta.sin() * half_theta.cos();
         let sq = half_theta.sin() * half_theta.sin();
 
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _1 - _2 * (yy + zz) * sq,
             _2 * (x * y * sq - z * sc),
             _2 * (x * z * sq + y * sc),
@@ -651,15 +769,15 @@ where T: Copy + Clone +
     }
 
     /// Returns a transform with a rotation applied after self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn post_rotate(&self, x: T, y: T, z: T, theta: Angle<T>) -> Self {
-        self.post_mul(&TypedTransform3D::create_rotation(x, y, z, theta))
+        self.post_transform(&Transform3D::create_rotation(x, y, z, theta))
     }
 
     /// Returns a transform with a rotation applied before self's transformation.
-    #[cfg_attr(feature = "unstable", must_use)]
+    #[must_use]
     pub fn pre_rotate(&self, x: T, y: T, z: T, theta: Angle<T>) -> Self {
-        self.pre_mul(&TypedTransform3D::create_rotation(x, y, z, theta))
+        self.pre_transform(&Transform3D::create_rotation(x, y, z, theta))
     }
 
     /// Create a 2d skew transform.
@@ -668,7 +786,7 @@ where T: Copy + Clone +
     pub fn create_skew(alpha: Angle<T>, beta: Angle<T>) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
         let (sx, sy) = (beta.get().tan(), alpha.get().tan());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _1, sx, _0, _0,
             sy, _1, _0, _0,
             _0, _0, _1, _0,
@@ -679,7 +797,7 @@ where T: Copy + Clone +
     /// Create a simple perspective projection transform
     pub fn create_perspective(d: T) -> Self {
         let (_0, _1): (T, T) = (Zero::zero(), One::one());
-        TypedTransform3D::row_major(
+        Transform3D::row_major(
             _1, _0, _0, _0,
             _0, _1, _0, _0,
             _0, _0, _1, -_1 / d,
@@ -688,7 +806,7 @@ where T: Copy + Clone +
     }
 }
 
-impl<T: Copy, Src, Dst> TypedTransform3D<T, Src, Dst> {
+impl<T: Copy, Src, Dst> Transform3D<T, Src, Dst> {
     /// Returns an array containing this transform's terms in row-major order (the order
     /// in which the transform is actually laid out in memory).
     ///
@@ -781,14 +899,14 @@ impl<T: Copy, Src, Dst> TypedTransform3D<T, Src, Dst> {
     }
 }
 
-impl<T0: NumCast + Copy, Src, Dst> TypedTransform3D<T0, Src, Dst> {
+impl<T0: NumCast + Copy, Src, Dst> Transform3D<T0, Src, Dst> {
     /// Cast from one numeric representation to another, preserving the units.
-    pub fn cast<T1: NumCast + Copy>(&self) -> TypedTransform3D<T1, Src, Dst> {
+    pub fn cast<T1: NumCast + Copy>(&self) -> Transform3D<T1, Src, Dst> {
         self.try_cast().unwrap()
     }
 
     /// Fallible cast from one numeric representation to another, preserving the units.
-    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<TypedTransform3D<T1, Src, Dst>> {
+    pub fn try_cast<T1: NumCast + Copy>(&self) -> Option<Transform3D<T1, Src, Dst>> {
         match (NumCast::from(self.m11), NumCast::from(self.m12),
                NumCast::from(self.m13), NumCast::from(self.m14),
                NumCast::from(self.m21), NumCast::from(self.m22),
@@ -801,7 +919,7 @@ impl<T0: NumCast + Copy, Src, Dst> TypedTransform3D<T0, Src, Dst> {
              Some(m21), Some(m22), Some(m23), Some(m24),
              Some(m31), Some(m32), Some(m33), Some(m34),
              Some(m41), Some(m42), Some(m43), Some(m44)) => {
-                Some(TypedTransform3D::row_major(m11, m12, m13, m14,
+                Some(Transform3D::row_major(m11, m12, m13, m14,
                                                  m21, m22, m23, m24,
                                                  m31, m32, m33, m34,
                                                  m41, m42, m43, m44))
@@ -811,7 +929,7 @@ impl<T0: NumCast + Copy, Src, Dst> TypedTransform3D<T0, Src, Dst> {
     }
 }
 
-impl <T, Src, Dst> Default for TypedTransform3D<T, Src, Dst>
+impl <T, Src, Dst> Default for Transform3D<T, Src, Dst>
     where T: Copy + PartialEq + One + Zero
 {
     fn default() -> Self {
@@ -819,7 +937,7 @@ impl <T, Src, Dst> Default for TypedTransform3D<T, Src, Dst>
     }
 }
 
-impl<T, Src, Dst> fmt::Debug for TypedTransform3D<T, Src, Dst>
+impl<T, Src, Dst> fmt::Debug for Transform3D<T, Src, Dst>
 where T: Copy + fmt::Debug +
          PartialEq +
          One + Zero {
@@ -833,9 +951,9 @@ where T: Copy + fmt::Debug +
 }
 
 #[cfg(feature = "mint")]
-impl<T, Src, Dst> From<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
+impl<T, Src, Dst> From<mint::RowMatrix4<T>> for Transform3D<T, Src, Dst> {
     fn from(m: mint::RowMatrix4<T>) -> Self {
-        TypedTransform3D {
+        Transform3D {
             m11: m.x.x, m12: m.x.y, m13: m.x.z, m14: m.x.w,
             m21: m.y.x, m22: m.y.y, m23: m.y.z, m24: m.y.w,
             m31: m.z.x, m32: m.z.y, m33: m.z.z, m34: m.z.w,
@@ -845,7 +963,7 @@ impl<T, Src, Dst> From<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
     }
 }
 #[cfg(feature = "mint")]
-impl<T, Src, Dst> Into<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
+impl<T, Src, Dst> Into<mint::RowMatrix4<T>> for Transform3D<T, Src, Dst> {
     fn into(self) -> mint::RowMatrix4<T> {
         mint::RowMatrix4 {
             x: mint::Vector4 { x: self.m11, y: self.m12, z: self.m13, w: self.m14 },
@@ -860,14 +978,13 @@ impl<T, Src, Dst> Into<mint::RowMatrix4<T>> for TypedTransform3D<T, Src, Dst> {
 #[cfg(test)]
 mod tests {
     use approxeq::ApproxEq;
-    use transform2d::Transform2D;
-    use point::{point2, point3};
-    use Angle;
     use super::*;
+    use {point2, point3};
+    use default;
 
     use core::f32::consts::{FRAC_PI_2, PI};
 
-    type Mf32 = Transform3D<f32>;
+    type Mf32 = default::Transform3D<f32>;
 
     // For convenience.
     fn rad(v: f32) -> Angle<f32> { Angle::radians(v) }
@@ -880,10 +997,10 @@ mod tests {
         assert_eq!(t1, t2);
         assert_eq!(t1, t3);
 
-        assert_eq!(t1.transform_point3d(&point3(1.0, 1.0, 1.0)), Some(point3(2.0, 3.0, 4.0)));
-        assert_eq!(t1.transform_point2d(&point2(1.0, 1.0)), Some(point2(2.0, 3.0)));
+        assert_eq!(t1.transform_point3d(point3(1.0, 1.0, 1.0)), Some(point3(2.0, 3.0, 4.0)));
+        assert_eq!(t1.transform_point2d(point2(1.0, 1.0)), Some(point2(2.0, 3.0)));
 
-        assert_eq!(t1.post_mul(&t1), Mf32::create_translation(2.0, 4.0, 6.0));
+        assert_eq!(t1.post_transform(&t1), Mf32::create_translation(2.0, 4.0, 6.0));
 
         assert!(!t1.is_2d());
         assert_eq!(Mf32::create_translation(1.0, 2.0, 3.0).to_2d(), Transform2D::create_translation(1.0, 2.0));
@@ -897,10 +1014,10 @@ mod tests {
         assert_eq!(r1, r2);
         assert_eq!(r1, r3);
 
-        assert!(r1.transform_point3d(&point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(2.0, -1.0, 3.0)));
-        assert!(r1.transform_point2d(&point2(1.0, 2.0)).unwrap().approx_eq(&point2(2.0, -1.0)));
+        assert!(r1.transform_point3d(point3(1.0, 2.0, 3.0)).unwrap().approx_eq(&point3(2.0, -1.0, 3.0)));
+        assert!(r1.transform_point2d(point2(1.0, 2.0)).unwrap().approx_eq(&point2(2.0, -1.0)));
 
-        assert!(r1.post_mul(&r1).approx_eq(&Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
+        assert!(r1.post_transform(&r1).approx_eq(&Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2*2.0))));
 
         assert!(r1.is_2d());
         assert!(r1.to_2d().approx_eq(&Transform2D::create_rotation(rad(FRAC_PI_2))));
@@ -914,10 +1031,10 @@ mod tests {
         assert_eq!(s1, s2);
         assert_eq!(s1, s3);
 
-        assert!(s1.transform_point3d(&point3(2.0, 2.0, 2.0)).unwrap().approx_eq(&point3(4.0, 6.0, 8.0)));
-        assert!(s1.transform_point2d(&point2(2.0, 2.0)).unwrap().approx_eq(&point2(4.0, 6.0)));
+        assert!(s1.transform_point3d(point3(2.0, 2.0, 2.0)).unwrap().approx_eq(&point3(4.0, 6.0, 8.0)));
+        assert!(s1.transform_point2d(point2(2.0, 2.0)).unwrap().approx_eq(&point2(4.0, 6.0)));
 
-        assert_eq!(s1.post_mul(&s1), Mf32::create_scale(4.0, 9.0, 16.0));
+        assert_eq!(s1.post_transform(&s1), Mf32::create_scale(4.0, 9.0, 16.0));
 
         assert!(!s1.is_2d());
         assert_eq!(Mf32::create_scale(2.0, 3.0, 0.0).to_2d(), Transform2D::create_scale(2.0, 3.0));
@@ -985,34 +1102,34 @@ mod tests {
     pub fn test_inverse_scale() {
         let m1 = Mf32::create_scale(1.5, 0.3, 2.1);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.pre_mul(&m2).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_translate() {
         let m1 = Mf32::create_translation(-132.0, 0.3, 493.0);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.pre_mul(&m2).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_rotate() {
         let m1 = Mf32::create_rotation(0.0, 1.0, 0.0, rad(1.57));
         let m2 = m1.inverse().unwrap();
-        assert!(m1.pre_mul(&m2).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
     }
 
     #[test]
     pub fn test_inverse_transform_point_2d() {
         let m1 = Mf32::create_translation(100.0, 200.0, 0.0);
         let m2 = m1.inverse().unwrap();
-        assert!(m1.pre_mul(&m2).approx_eq(&Mf32::identity()));
+        assert!(m1.pre_transform(&m2).approx_eq(&Mf32::identity()));
 
         let p1 = point2(1000.0, 2000.0);
-        let p2 = m1.transform_point2d(&p1);
+        let p2 = m1.transform_point2d(p1);
         assert_eq!(p2, Some(point2(1100.0, 2200.0)));
 
-        let p3 = m2.transform_point2d(&p2.unwrap());
+        let p3 = m2.transform_point2d(p2.unwrap());
         assert_eq!(p3, Some(p1));
     }
 
@@ -1024,8 +1141,8 @@ mod tests {
 
     #[test]
     pub fn test_pre_post() {
-        let m1 = Transform3D::identity().post_scale(1.0, 2.0, 3.0).post_translate(vec3(1.0, 2.0, 3.0));
-        let m2 = Transform3D::identity().pre_translate(vec3(1.0, 2.0, 3.0)).pre_scale(1.0, 2.0, 3.0);
+        let m1 = default::Transform3D::identity().post_scale(1.0, 2.0, 3.0).post_translate(vec3(1.0, 2.0, 3.0));
+        let m2 = default::Transform3D::identity().pre_translate(vec3(1.0, 2.0, 3.0)).pre_scale(1.0, 2.0, 3.0);
         assert!(m1.approx_eq(&m2));
 
         let r = Mf32::create_rotation(0.0, 0.0, 1.0, rad(FRAC_PI_2));
@@ -1033,20 +1150,20 @@ mod tests {
 
         let a = point3(1.0, 1.0, 1.0);
 
-        assert!(r.post_mul(&t).transform_point3d(&a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
-        assert!(t.post_mul(&r).transform_point3d(&a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
-        assert!(t.post_mul(&r).transform_point3d(&a).unwrap().approx_eq(&r.transform_point3d(&t.transform_point3d(&a).unwrap()).unwrap()));
+        assert!(r.post_transform(&t).transform_point3d(a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.post_transform(&r).transform_point3d(a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.post_transform(&r).transform_point3d(a).unwrap().approx_eq(&r.transform_point3d(t.transform_point3d(a).unwrap()).unwrap()));
 
-        assert!(r.pre_mul(&t).transform_point3d(&a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
-        assert!(t.pre_mul(&r).transform_point3d(&a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
-        assert!(t.pre_mul(&r).transform_point3d(&a).unwrap().approx_eq(&t.transform_point3d(&r.transform_point3d(&a).unwrap()).unwrap()));
+        assert!(r.pre_transform(&t).transform_point3d(a).unwrap().approx_eq(&point3(4.0, -3.0, 1.0)));
+        assert!(t.pre_transform(&r).transform_point3d(a).unwrap().approx_eq(&point3(3.0, 2.0, 1.0)));
+        assert!(t.pre_transform(&r).transform_point3d(a).unwrap().approx_eq(&t.transform_point3d(r.transform_point3d(a).unwrap()).unwrap()));
     }
 
     #[test]
     fn test_size_of() {
         use core::mem::size_of;
-        assert_eq!(size_of::<Transform3D<f32>>(), 16*size_of::<f32>());
-        assert_eq!(size_of::<Transform3D<f64>>(), 16*size_of::<f64>());
+        assert_eq!(size_of::<default::Transform3D<f32>>(), 16*size_of::<f32>());
+        assert_eq!(size_of::<default::Transform3D<f64>>(), 16*size_of::<f64>());
     }
 
     #[test]
@@ -1061,14 +1178,14 @@ mod tests {
                                  -2.5, 6.0, 1.0, 1.0);
 
         let p = point3(1.0, 3.0, 5.0);
-        let p1 = m2.pre_mul(&m1).transform_point3d(&p).unwrap();
-        let p2 = m2.transform_point3d(&m1.transform_point3d(&p).unwrap()).unwrap();
+        let p1 = m2.pre_transform(&m1).transform_point3d(p).unwrap();
+        let p2 = m2.transform_point3d(m1.transform_point3d(p).unwrap()).unwrap();
         assert!(p1.approx_eq(&p2));
     }
 
     #[test]
     pub fn test_is_identity() {
-        let m1 = Transform3D::identity();
+        let m1 = default::Transform3D::identity();
         assert!(m1.is_identity());
         let m2 = m1.post_translate(vec3(0.1, 0.0, 0.0));
         assert!(!m2.is_identity());
@@ -1079,14 +1196,14 @@ mod tests {
         // Translation does not apply to vectors.
         let m = Mf32::create_translation(1.0, 2.0, 3.0);
         let v1 = vec3(10.0, -10.0, 3.0);
-        assert_eq!(v1, m.transform_vector3d(&v1));
+        assert_eq!(v1, m.transform_vector3d(v1));
         // While it does apply to points.
-        assert_ne!(Some(v1.to_point()), m.transform_point3d(&v1.to_point()));
+        assert_ne!(Some(v1.to_point()), m.transform_point3d(v1.to_point()));
 
         // same thing with 2d vectors/points
         let v2 = vec2(10.0, -5.0);
-        assert_eq!(v2, m.transform_vector2d(&v2));
-        assert_ne!(Some(v2.to_point()), m.transform_point2d(&v2.to_point()));
+        assert_eq!(v2, m.transform_vector2d(v2));
+        assert_ne!(Some(v2.to_point()), m.transform_point2d(v2.to_point()));
     }
 
     #[test]
@@ -1117,11 +1234,11 @@ mod tests {
             -1.0, 1.0, -1.0, 2.0,
         );
         assert_eq!(
-            m.transform_point2d_homogeneous(&point2(1.0, 2.0)),
+            m.transform_point2d_homogeneous(point2(1.0, 2.0)),
             HomogeneousVector::new(6.0, 11.0, 0.0, 19.0),
         );
         assert_eq!(
-            m.transform_point3d_homogeneous(&point3(1.0, 2.0, 4.0)),
+            m.transform_point3d_homogeneous(point3(1.0, 2.0, 4.0)),
             HomogeneousVector::new(8.0, 7.0, 4.0, 15.0),
         );
     }
@@ -1130,12 +1247,12 @@ mod tests {
     pub fn test_perspective_division() {
         let p = point2(1.0, 2.0);
         let mut m = Mf32::identity();
-        assert!(m.transform_point2d(&p).is_some());
+        assert!(m.transform_point2d(p).is_some());
         m.m44 = 0.0;
-        assert_eq!(None, m.transform_point2d(&p));
+        assert_eq!(None, m.transform_point2d(p));
         m.m44 = 1.0;
         m.m24 = -1.0;
-        assert_eq!(None, m.transform_point2d(&p));
+        assert_eq!(None, m.transform_point2d(p));
     }
 
     #[cfg(feature = "mint")]

@@ -181,7 +181,7 @@ impl Window {
                 .to_physical(device_pixel_ratio as f64);
             DeviceIntSize::new(size.width as i32, size.height as i32)
         };
-        let layout_size = device_size.to_f32() / euclid::TypedScale::new(device_pixel_ratio);
+        let layout_size = device_size.to_f32() / euclid::Scale::new(device_pixel_ratio);
         let mut txn = Transaction::new();
         let mut builder = DisplayListBuilder::new(self.pipeline_id, layout_size);
         let space_and_clip = SpaceAndClipInfo::root_scroll(self.pipeline_id);

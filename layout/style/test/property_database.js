@@ -8153,7 +8153,7 @@ var gCSSProperties = {
   },
   "dominant-baseline": {
     domProp: "dominantBaseline",
-    inherited: false,
+    inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
     other_values: [

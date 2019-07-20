@@ -1408,7 +1408,7 @@ impl DisplayListBuilder {
         &mut self,
         parent_spatial_id: di::SpatialId,
         frame_rect: LayoutRect,
-        margins: SideOffsets2D<Option<f32>>,
+        margins: SideOffsets2D<Option<f32>, LayoutPixel>,
         vertical_offset_bounds: di::StickyOffsetBounds,
         horizontal_offset_bounds: di::StickyOffsetBounds,
         previously_applied_offset: LayoutVector2D,

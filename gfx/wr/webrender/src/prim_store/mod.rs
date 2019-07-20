@@ -16,7 +16,7 @@ use crate::clip::{ClipDataStore, ClipNodeFlags, ClipChainId, ClipChainInstance, 
 use crate::debug_colors;
 use crate::debug_render::DebugItem;
 use crate::display_list_flattener::{CreateShadow, IsVisible};
-use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D, TypedPoint2D};
+use euclid::{SideOffsets2D, Transform3D, Rect, Scale, Size2D, Point2D};
 use euclid::approxeq::ApproxEq;
 use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
@@ -134,14 +134,14 @@ pub struct SpaceMapper<F, T> {
     kind: CoordinateSpaceMapping<F, T>,
     pub ref_spatial_node_index: SpatialNodeIndex,
     pub current_target_spatial_node_index: SpatialNodeIndex,
-    pub bounds: TypedRect<f32, T>,
+    pub bounds: Rect<f32, T>,
     visible_face: VisibleFace,
 }
 
 impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new(
         ref_spatial_node_index: SpatialNodeIndex,
-        bounds: TypedRect<f32, T>,
+        bounds: Rect<f32, T>,
     ) -> Self {
         SpaceMapper {
             kind: CoordinateSpaceMapping::Local,
@@ -155,7 +155,7 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
     pub fn new_with_target(
         ref_spatial_node_index: SpatialNodeIndex,
         target_node_index: SpatialNodeIndex,
-        bounds: TypedRect<f32, T>,
+        bounds: Rect<f32, T>,
         clip_scroll_tree: &ClipScrollTree,
     ) -> Self {
         let mut mapper = Self::new(ref_spatial_node_index, bounds);
@@ -195,10 +195,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         self.current_target_spatial_node_index = target_node_index;
     }
 
-    pub fn get_transform(&self) -> TypedTransform3D<f32, F, T> {
+    pub fn get_transform(&self) -> Transform3D<f32, F, T> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
-                TypedTransform3D::identity()
+                Transform3D::identity()
             }
             CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
                 scale_offset.to_transform()
@@ -209,10 +209,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
-    pub fn unmap(&self, rect: &TypedRect<f32, T>) -> Option<TypedRect<f32, F>> {
+    pub fn unmap(&self, rect: &Rect<f32, T>) -> Option<Rect<f32, F>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
-                Some(TypedRect::from_untyped(&rect.to_untyped()))
+                Some(Rect::from_untyped(&rect.to_untyped()))
             }
             CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
                 Some(scale_offset.unmap_rect(rect))
@@ -223,10 +223,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
         }
     }
 
-    pub fn map(&self, rect: &TypedRect<f32, F>) -> Option<TypedRect<f32, T>> {
+    pub fn map(&self, rect: &Rect<f32, F>) -> Option<Rect<f32, T>> {
         match self.kind {
             CoordinateSpaceMapping::Local => {
-                Some(TypedRect::from_untyped(&rect.to_untyped()))
+                Some(Rect::from_untyped(&rect.to_untyped()))
             }
             CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
                 Some(scale_offset.map_rect(rect))
@@ -407,19 +407,8 @@ impl From<SideOffsetsKey> for LayoutSideOffsets {
     }
 }
 
-impl From<LayoutSideOffsets> for SideOffsetsKey {
-    fn from(offsets: LayoutSideOffsets) -> SideOffsetsKey {
-        SideOffsetsKey {
-            top: offsets.top,
-            right: offsets.right,
-            bottom: offsets.bottom,
-            left: offsets.left,
-        }
-    }
-}
-
-impl From<SideOffsets2D<f32>> for SideOffsetsKey {
-    fn from(offsets: SideOffsets2D<f32>) -> SideOffsetsKey {
+impl<U> From<SideOffsets2D<f32, U>> for SideOffsetsKey {
+    fn from(offsets: SideOffsets2D<f32, U>) -> SideOffsetsKey {
         SideOffsetsKey {
             top: offsets.top,
             right: offsets.right,
@@ -453,8 +442,8 @@ impl From<SizeKey> for LayoutSize {
     }
 }
 
-impl<U> From<TypedSize2D<f32, U>> for SizeKey {
-    fn from(size: TypedSize2D<f32, U>) -> SizeKey {
+impl<U> From<Size2D<f32, U>> for SizeKey {
+    fn from(size: Size2D<f32, U>) -> SizeKey {
         SizeKey {
             w: size.width,
             h: size.height,
@@ -1210,7 +1199,7 @@ impl ClipData {
 pub struct NinePatchDescriptor {
     pub width: i32,
     pub height: i32,
-    pub slice: SideOffsets2D<i32>,
+    pub slice: DeviceIntSideOffsets,
     pub fill: bool,
     pub repeat_horizontal: RepeatMode,
     pub repeat_vertical: RepeatMode,
@@ -1942,7 +1931,7 @@ impl PrimitiveStore {
                             PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                                 let mut rect = LayoutRect::zero();
                                 for shadow in shadows {
-                                    rect = rect.union(&pic.snapped_local_rect.translate(&shadow.offset));
+                                    rect = rect.union(&pic.snapped_local_rect.translate(shadow.offset));
                                 }
 
                                 rect
@@ -2256,7 +2245,7 @@ impl PrimitiveStore {
 
             // Layout space for the picture is picture space from the
             // perspective of its child primitives.
-            let pic_local_rect = surface_rect * TypedScale::new(1.0);
+            let pic_local_rect = surface_rect * Scale::new(1.0);
             if pic.snapped_local_rect != pic_local_rect {
                 match raster_config.composite_mode {
                     PictureCompositeMode::Filter(Filter::DropShadows(..)) => {
@@ -2788,7 +2777,7 @@ impl PrimitiveStore {
                 if let Some(cache_key) = line_dec_data.cache_key.as_ref() {
                     // TODO(gw): Do we ever need / want to support scales for text decorations
                     //           based on the current transform?
-                    let scale_factor = TypedScale::new(1.0) * device_pixel_scale;
+                    let scale_factor = Scale::new(1.0) * device_pixel_scale;
                     let task_size = (LayoutSize::from_au(cache_key.size) * scale_factor).ceil().to_i32();
 
                     // Request a pre-rendered image task.
@@ -3496,7 +3485,7 @@ impl<'a> GpuDataRequest<'a> {
                     // ensures clip-mask tasks get allocated for these
                     // pixel regions, even if no other clips affect them.
                     let prim_shadow_rect = info.prim_shadow_rect.translate(
-                        &LayoutVector2D::new(clip_instance.local_pos.x, clip_instance.local_pos.y),
+                        LayoutVector2D::new(clip_instance.local_pos.x, clip_instance.local_pos.y),
                     );
                     segment_builder.push_mask_region(
                         prim_shadow_rect,
@@ -3650,7 +3639,7 @@ impl PrimitiveInstance {
                 frame_state.segment_builder.build(|segment| {
                     segments.push(
                         BrushSegment::new(
-                            segment.rect.translate(&-prim_local_rect.origin.to_vector()),
+                            segment.rect.translate(-prim_local_rect.origin.to_vector()),
                             segment.has_mask,
                             segment.edge_flags,
                             [0.0; 4],
@@ -3820,7 +3809,7 @@ impl PrimitiveInstance {
                 let segment_clip_chain = frame_state
                     .clip_store
                     .build_clip_chain_instance(
-                        segment.local_rect.translate(&LayoutVector2D::new(
+                        segment.local_rect.translate(LayoutVector2D::new(
                             self.prim_origin.x,
                             self.prim_origin.y,
                         )),
@@ -3966,12 +3955,12 @@ fn mix(x: f32, y: f32, a: f32) -> f32 {
 /// Given a point within a local rectangle, and the device space corners
 /// of a snapped primitive, return the snap offsets.
 fn compute_snap_offset_impl<PixelSpace>(
-    reference_pos: TypedPoint2D<f32, PixelSpace>,
-    reference_rect: TypedRect<f32, PixelSpace>,
+    reference_pos: Point2D<f32, PixelSpace>,
+    reference_rect: Rect<f32, PixelSpace>,
     prim_top_left: DevicePoint,
     prim_bottom_right: DevicePoint,
 ) -> DeviceVector2D {
-    let normalized_snap_pos = TypedPoint2D::<f32, PixelSpace>::new(
+    let normalized_snap_pos = Point2D::<f32, PixelSpace>::new(
         (reference_pos.x - reference_rect.origin.x) / reference_rect.size.width,
         (reference_pos.y - reference_rect.origin.y) / reference_rect.size.height,
     );
@@ -3997,8 +3986,8 @@ fn compute_snap_offset_impl<PixelSpace>(
 /// This *must* exactly match the logic in the GLSL
 /// compute_snap_offset function.
 pub fn recompute_snap_offsets<PixelSpace>(
-    local_rect: TypedRect<f32, PixelSpace>,
-    prim_rect: TypedRect<f32, PixelSpace>,
+    local_rect: Rect<f32, PixelSpace>,
+    prim_rect: Rect<f32, PixelSpace>,
     snap_offsets: SnapOffsets,
 ) -> SnapOffsets
 {
@@ -4006,12 +3995,12 @@ pub fn recompute_snap_offsets<PixelSpace>(
         return SnapOffsets::empty();
     }
 
-    let normalized_top_left = TypedPoint2D::<f32, PixelSpace>::new(
+    let normalized_top_left = Point2D::<f32, PixelSpace>::new(
         (local_rect.origin.x - prim_rect.origin.x) / prim_rect.size.width,
         (local_rect.origin.y - prim_rect.origin.y) / prim_rect.size.height,
     );
 
-    let normalized_bottom_right = TypedPoint2D::<f32, PixelSpace>::new(
+    let normalized_bottom_right = Point2D::<f32, PixelSpace>::new(
         (local_rect.origin.x + local_rect.size.width - prim_rect.origin.x) / prim_rect.size.width,
         (local_rect.origin.y + local_rect.size.height - prim_rect.origin.y) / prim_rect.size.height,
     );
@@ -4039,7 +4028,7 @@ fn get_unclipped_device_rect(
     device_pixel_scale: DevicePixelScale,
 ) -> Option<DeviceRect> {
     let raster_rect = map_to_raster.map(&prim_rect)?;
-    let world_rect = raster_rect * TypedScale::new(1.0);
+    let world_rect = raster_rect * Scale::new(1.0);
     Some(world_rect * device_pixel_scale)
 }
 
@@ -4056,9 +4045,9 @@ fn get_clipped_device_rect(
     device_pixel_scale: DevicePixelScale,
 ) -> Option<(DeviceIntRect, SnapOffsets)> {
     let unclipped_raster_rect = {
-        let world_rect = *unclipped * TypedScale::new(1.0);
+        let world_rect = *unclipped * Scale::new(1.0);
         let raster_rect = world_rect * device_pixel_scale.inv();
-        TypedRect::from_untyped(&raster_rect.to_untyped())
+        Rect::from_untyped(&raster_rect.to_untyped())
     };
 
     let unclipped_world_rect = map_to_world.map(&unclipped_raster_rect)?;
@@ -4142,10 +4131,10 @@ pub fn get_raster_rects(
 /// axis-aligned. It return the snapped rect transformed back into the
 /// given pixel space, and the snap offsets in device space.
 pub fn get_snapped_rect<PixelSpace>(
-    prim_rect: TypedRect<f32, PixelSpace>,
+    prim_rect: Rect<f32, PixelSpace>,
     map_to_raster: &SpaceMapper<PixelSpace, RasterPixel>,
     device_pixel_scale: DevicePixelScale,
-) -> Option<(TypedRect<f32, PixelSpace>, SnapOffsets)> where PixelSpace: fmt::Debug {
+) -> Option<(Rect<f32, PixelSpace>, SnapOffsets)> where PixelSpace: fmt::Debug {
     let is_axis_aligned = match map_to_raster.kind {
         CoordinateSpaceMapping::Local |
         CoordinateSpaceMapping::ScaleOffset(..) => true,
@@ -4156,7 +4145,7 @@ pub fn get_snapped_rect<PixelSpace>(
        let raster_rect = map_to_raster.map(&prim_rect)?;
 
        let device_rect = {
-            let world_rect = raster_rect * TypedScale::new(1.0);
+            let world_rect = raster_rect * Scale::new(1.0);
             world_rect * device_pixel_scale
         };
 
@@ -4185,7 +4174,7 @@ pub fn get_snapped_rect<PixelSpace>(
         );
 
         let snapped_world_rect = snapped_device_rect / device_pixel_scale;
-        let snapped_raster_rect = snapped_world_rect * TypedScale::new(1.0);
+        let snapped_raster_rect = snapped_world_rect * Scale::new(1.0);
         let snapped_prim_rect = map_to_raster.unmap(&snapped_raster_rect)?;
         Some((snapped_prim_rect, snap_offsets))
     } else {
