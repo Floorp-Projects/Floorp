@@ -24,7 +24,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 public class GeckoSystemStateListener
         implements InputManager.InputDeviceListener {
-    private static final String LOGTAG = "GeckoSystemStateListener";
+    private static final String LOGTAG = "SystemStateListener";
 
     private static final GeckoSystemStateListener listenerInstance = new GeckoSystemStateListener();
 

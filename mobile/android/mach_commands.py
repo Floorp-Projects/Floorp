@@ -249,7 +249,7 @@ class MachCommands(MachCommandBase):
         for report in reports:
             f = open(os.path.join(
                 self.topobjdir,
-                'gradle/build/mobile/android/app/reports/lint-results-{}.xml'.format(report)),
+                'gradle/build/mobile/android/geckoview/reports/lint-results-{}.xml'.format(report)),  # NOQA: E501
                      'rt')
             tree = ET.parse(f)
             root = tree.getroot()

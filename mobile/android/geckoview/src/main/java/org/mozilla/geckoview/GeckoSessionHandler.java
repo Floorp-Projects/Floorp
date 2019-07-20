@@ -10,6 +10,7 @@ import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 
+import android.support.annotation.UiThread;
 import android.util.Log;
 
 /* package */ abstract class GeckoSessionHandler<Delegate>
@@ -68,6 +69,7 @@ import android.util.Log;
     }
 
     @Override
+    @UiThread
     public void handleMessage(final String event, final GeckoBundle message,
                               final EventCallback callback) {
         if (DEBUG) {

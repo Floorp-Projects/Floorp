@@ -470,6 +470,7 @@ public class MediaElement {
 
     // Helper methods used for event observers to update the current video state
 
+    @UiThread
     /* package */ void notifyPlaybackStateChange(final String event) {
         @MediaStateFlags int state;
         switch (event.toLowerCase()) {
@@ -515,48 +516,56 @@ public class MediaElement {
         }
     }
 
+    @UiThread
     /* package */ void notifyReadyStateChange(final int readyState) {
         if (mDelegate != null) {
             mDelegate.onReadyStateChange(this, readyState);
         }
     }
 
+    @UiThread
     /* package */ void notifyLoadProgress(final GeckoBundle message) {
         if (mDelegate != null) {
             mDelegate.onLoadProgress(this, new LoadProgressInfo(message));
         }
     }
 
+    @UiThread
     /* package */ void notifyTimeChange(final double currentTime) {
         if (mDelegate != null) {
             mDelegate.onTimeChange(this, currentTime);
         }
     }
 
+    @UiThread
     /* package */ void notifyVolumeChange(final double volume, final boolean muted) {
         if (mDelegate != null) {
             mDelegate.onVolumeChange(this, volume, muted);
         }
     }
 
+    @UiThread
     /* package */ void notifyPlaybackRateChange(final double rate) {
         if (mDelegate != null) {
             mDelegate.onPlaybackRateChange(this, rate);
         }
     }
 
+    @UiThread
     /* package */ void notifyMetadataChange(final GeckoBundle message) {
         if (mDelegate != null) {
             mDelegate.onMetadataChange(this, new Metadata(message));
         }
     }
 
+    @UiThread
     /* package */ void notifyFullscreenChange(final boolean fullscreen) {
         if (mDelegate != null) {
             mDelegate.onFullscreenChange(this, fullscreen);
         }
     }
 
+    @UiThread
     /* package */ void notifyError(final int aCode) {
         if (mDelegate != null) {
             mDelegate.onError(this, aCode);
