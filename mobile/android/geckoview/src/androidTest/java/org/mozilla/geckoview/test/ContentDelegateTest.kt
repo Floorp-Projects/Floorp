@@ -321,7 +321,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 val htmlInfo = child.htmlInfo
                 assertThat("Should have HTML tag", htmlInfo!!.tag, equalTo("input"))
                 assertThat("Should have ID attribute",
-                           htmlInfo.attributes.map { it.first }, hasItem("id"))
+                           htmlInfo.attributes!!.map { it.first }, hasItem("id"))
 
                 assertThat("Autofill type should match",
                            child.autofillType, equalTo(View.AUTOFILL_TYPE_TEXT))

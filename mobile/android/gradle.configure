@@ -92,9 +92,11 @@ def gradle_android_intermediates_folder(build_config):
     productFlavor = uncapitalize(''.join(imap(capitalize, build_config.geckoview.variant.productFlavors)))
     buildType = uncapitalize(build_config.geckoview.variant.buildType)
 
-    return "gradle/build/mobile/android/geckoview/intermediates/classes/{}/{}".format(
+    return "gradle/build/mobile/android/geckoview/intermediates/javac/{}{}/compile{}{}JavaWithJavac/classes".format(
             productFlavor,
-            buildType)
+            capitalize(buildType),
+            capitalize(productFlavor),
+            capitalize(buildType))
 
 set_config('GRADLE_ANDROID_GECKOVIEW_APILINT_FOLDER', gradle_android_intermediates_folder)
 

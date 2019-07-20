@@ -137,14 +137,14 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
     }
 
     if (module == 'Generated') {
-        tasks["bundle${variant.name.capitalize()}"].dependsOn wrapperTask
+        tasks["bundle${variant.name.capitalize()}Aar"].dependsOn wrapperTask
     } else {
         tasks["assemble${variant.name.capitalize()}"].dependsOn wrapperTask
     }
 }
 
 ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
-    def jarTask = tasks["bundleAppClasses${variant.name.capitalize()}"]
+    def jarTask = tasks["packageAppClasses${variant.name.capitalize()}"]
     def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar

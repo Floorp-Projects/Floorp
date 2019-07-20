@@ -414,7 +414,12 @@ if (gradle.startParameter.taskNames.any { it.endsWith('UnitTest') }) {
 // to generate one report per invocation: https://stackoverflow.com/a/42720235.
 // Run two tasks, accepting the cost of duplicate work.
 android.applicationVariants.all { variant ->
+    def jarTask = tasks["packageAppClasses${variant.name.capitalize()}"]
+    def bundleJar = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
+
     task("findbugsHtml${variant.name.capitalize()}", type: FindBugs) {
+        outputs.upToDateWhen { false } // We always want to re-run findbugs when asked.
+
         // TODO: figure out how to share the shared configuration.
         description "Analyze ${variant.name} code with findbugs (HTML report)"
         group "Verification"
@@ -424,12 +429,12 @@ android.applicationVariants.all { variant ->
         reportLevel = "high"   // For now we only care about high priority bugs. After we have fixed
                                // the issues with medium/low priority we can lower the report level here.
 
-        classes = files("$project.buildDir/intermediates/classes")
+        classes = files(bundleJar)
         source = variant.javaCompile.source
-        classpath = variant.javaCompile.classpath
+        classpath = variant.javaCompile.classpath + files(android.bootClasspath)
 
         excludeFilter = file("findbugs-exclude.xml")
-        dependsOn "bundleAppClasses${variant.name.capitalize()}"
+        dependsOn jarTask
 
         reports {
             html.enabled = true // HTML reports for humans.
@@ -439,6 +444,8 @@ android.applicationVariants.all { variant ->
     }
 
     task("findbugsXml${variant.name.capitalize()}", type: FindBugs) {
+        outputs.upToDateWhen { false } // We always want to re-run findbugs when asked.
+
         // TODO: figure out how to share the shared configuration.
         description "Analyze ${variant.name} code with findbugs (XML report)"
         group "Verification"
@@ -448,12 +455,12 @@ android.applicationVariants.all { variant ->
         reportLevel = "high"   // For now we only care about high priority bugs. After we have fixed
                                // the issues with medium/low priority we can lower the report level here.
         
-        classes = files("$project.buildDir/intermediates/classes")
+        classes = files(bundleJar)
         source = variant.javaCompile.source
-        classpath = variant.javaCompile.classpath
+        classpath = variant.javaCompile.classpath + files(android.bootClasspath)
 
         excludeFilter = file("findbugs-exclude.xml")
-        dependsOn "bundleAppClasses${variant.name.capitalize()}"
+        dependsOn jarTask
 
         reports {
             xml.enabled = true // XML reports for machines.
