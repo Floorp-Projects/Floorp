@@ -131,30 +131,18 @@ static JitExecStatus EnterBaseline(JSContext* cx, EnterJitData& data) {
   return data.result.isMagic() ? JitExec_Error : JitExec_Ok;
 }
 
-JitExecStatus jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
-                                         jsbytecode* pc) {
+JitExecStatus jit::EnterBaselineInterpreterAtBranch(JSContext* cx,
+                                                    InterpreterFrame* fp,
+                                                    jsbytecode* pc) {
   MOZ_ASSERT(JSOp(*pc) == JSOP_LOOPENTRY);
 
   EnterJitData data(cx);
 
-  if (fp->script()->hasBaselineScript()) {
-    BaselineScript* baseline = fp->script()->baselineScript();
-    PCMappingSlotInfo slotInfo;
-    data.jitcode = baseline->nativeCodeForPC(fp->script(), pc, &slotInfo);
-    MOZ_ASSERT(slotInfo.isStackSynced());
-
-    // Skip debug breakpoint/trap handler, the interpreter already handled it
-    // for the current op.
-    if (fp->isDebuggee()) {
-      MOZ_RELEASE_ASSERT(baseline->hasDebugInstrumentation());
-      data.jitcode += MacroAssembler::ToggledCallSize(data.jitcode);
-    }
-  } else {
-    // As above, use the entry point that skips the debug trap.
-    const BaselineInterpreter& interp =
-        cx->runtime()->jitRuntime()->baselineInterpreter();
-    data.jitcode = interp.interpretOpNoDebugTrapAddr().value;
-  }
+  // Use the entry point that skips the debug trap because the C++ interpreter
+  // already handled this for the current op.
+  const BaselineInterpreter& interp =
+      cx->runtime()->jitRuntime()->baselineInterpreter();
+  data.jitcode = interp.interpretOpNoDebugTrapAddr().value;
 
   // Note: keep this in sync with SetEnterJitData.
 
@@ -335,7 +323,7 @@ bool jit::CanBaselineInterpretScript(JSScript* script) {
 }
 
 static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
-                                                HandleScript script) {
+                                                JSScript* script) {
   MOZ_ASSERT(IsBaselineInterpreterEnabled());
 
   if (script->jitScript()) {
@@ -364,29 +352,14 @@ static MethodStatus CanEnterBaselineInterpreter(JSContext* cx,
   return Method_Compiled;
 }
 
-template <BaselineTier Tier>
-MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
-                                           InterpreterFrame* fp) {
+MethodStatus jit::CanEnterBaselineInterpreterAtBranch(JSContext* cx,
+                                                      InterpreterFrame* fp) {
   if (!CheckFrame(fp)) {
     return Method_CantCompile;
   }
 
-  RootedScript script(cx, fp->script());
-  switch (Tier) {
-    case BaselineTier::Interpreter:
-      return CanEnterBaselineInterpreter(cx, script);
-
-    case BaselineTier::Compiler:
-      return CanEnterBaselineJIT(cx, script, fp);
-  }
-
-  MOZ_CRASH("Unexpected tier");
+  return CanEnterBaselineInterpreter(cx, fp->script());
 }
-
-template MethodStatus jit::CanEnterBaselineAtBranch<BaselineTier::Interpreter>(
-    JSContext* cx, InterpreterFrame* fp);
-template MethodStatus jit::CanEnterBaselineAtBranch<BaselineTier::Compiler>(
-    JSContext* cx, InterpreterFrame* fp);
 
 template <BaselineTier Tier>
 MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
@@ -450,8 +423,7 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
         MOZ_ASSERT(slotInfo.isStackSynced());
         if (frame->isDebuggee()) {
           // Skip the debug trap emitted by emitInterpreterLoop because the
-          // Baseline Interpreter already handled it for the current op. This
-          // matches EnterBaseline.
+          // Baseline Interpreter already handled it for the current op.
           MOZ_RELEASE_ASSERT(baselineScript->hasDebugInstrumentation());
           *res += MacroAssembler::ToggledCallSize(*res);
         }

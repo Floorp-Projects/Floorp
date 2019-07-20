@@ -546,11 +546,12 @@ enum class BaselineTier { Interpreter, Compiler };
 template <BaselineTier Tier>
 MethodStatus CanEnterBaselineMethod(JSContext* cx, RunState& state);
 
-template <BaselineTier Tier>
-MethodStatus CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp);
+MethodStatus CanEnterBaselineInterpreterAtBranch(JSContext* cx,
+                                                 InterpreterFrame* fp);
 
-JitExecStatus EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
-                                    jsbytecode* pc);
+JitExecStatus EnterBaselineInterpreterAtBranch(JSContext* cx,
+                                               InterpreterFrame* fp,
+                                               jsbytecode* pc);
 
 bool CanBaselineInterpretScript(JSScript* script);
 
