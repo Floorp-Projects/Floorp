@@ -3188,22 +3188,20 @@ nsresult PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
 }
 
 nsresult PresShell::ScrollToAnchor() {
-  if (!mLastAnchorScrolledTo) {
+  nsCOMPtr<nsIContent> lastAnchor = mLastAnchorScrolledTo.forget();
+  if (!lastAnchor) {
     return NS_OK;
   }
-  NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
 
+  NS_ASSERTION(mDidInitialize, "should have done initial reflow by now");
   nsIScrollableFrame* rootScroll = GetRootScrollFrameAsScrollable();
   if (!rootScroll ||
       mLastAnchorScrollPositionY != rootScroll->GetScrollPosition().y) {
     return NS_OK;
   }
-  nsCOMPtr<nsIContent> lastAnchorScrollTo = mLastAnchorScrolledTo;
-  nsresult rv = ScrollContentIntoView(
-      lastAnchorScrollTo, ScrollAxis(kScrollToTop, WhenToScroll::Always),
-      ScrollAxis(), ScrollFlags::AnchorScrollFlags);
-  mLastAnchorScrolledTo = nullptr;
-  return rv;
+  return ScrollContentIntoView(lastAnchor,
+                               ScrollAxis(kScrollToTop, WhenToScroll::Always),
+                               ScrollAxis(), ScrollFlags::AnchorScrollFlags);
 }
 
 /*
