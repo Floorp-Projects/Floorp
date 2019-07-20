@@ -334,8 +334,10 @@ select > button[orientation="right"]:active {
   text-align: unset;
   user-select: none;
   /* Make sure to size correctly if the combobox has a non-auto block-size. */
-  block-size: 100% ! important;
-  box-sizing: border-box ! important;
+  block-size: 100%;
+  /* Try to always display our own text */
+  min-inline-size: max-content;
+  box-sizing: border-box;
   line-height: -moz-block-height;
 }
 
