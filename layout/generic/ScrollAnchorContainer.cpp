@@ -367,8 +367,10 @@ void ScrollAnchorContainer::ApplyAdjustments() {
   mApplyingAnchorAdjustment = false;
 
   nsPresContext* pc = Frame()->PresContext();
-  Document* doc = pc->Document();
-  doc->UpdateForScrollAnchorAdjustment(logicalAdjustment);
+  if (mScrollFrame->mIsRoot) {
+    pc->PresShell()->RootScrollFrameAdjusted(physicalAdjustment.y);
+  }
+  pc->Document()->UpdateForScrollAnchorAdjustment(logicalAdjustment);
 
   // The anchor position may not be in the same relative position after
   // adjustment. Update ourselves so we have consistent state.

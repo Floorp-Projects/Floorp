@@ -1,0 +1,24 @@
+<!doctype html>
+<style>
+.spacer { height: 200vh; }
+</style>
+<script>
+  function loadFailed() {
+    parent.ok(false, "Image load should not fail");
+  }
+</script>
+<div class="spacer"></div>
+<img id="fast" src="file_SlowTallImage.sjs?fast" onerror="loadFailed()">
+<div class="spacer"></div>
+<img id="slow" src="file_SlowTallImage.sjs?slow" onerror="loadFailed()">
+<div class="spacer"></div>
+<script>
+onload = function() {
+  setTimeout(function() {
+    let rect = document.getElementById("slow").getBoundingClientRect();
+    parent.is(rect.height, 1000, "#slow should take space");
+    parent.is(rect.top, 0, "#slow should be at the top of the viewport");
+    parent.SimpleTest.finish();
+  }, 0);
+}
+</script>
