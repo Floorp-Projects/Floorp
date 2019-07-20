@@ -39,7 +39,7 @@ FRAGMENT(unwind, simple) {
   }
 
   // Define an itercount property and use it to ensure Baseline compilation.
-  uint32_t threshold = js::jit::JitOptions.baselineWarmUpThreshold;
+  uint32_t threshold = js::jit::JitOptions.baselineJitWarmUpThreshold;
   RootedValue val(cx, Int32Value(threshold + 10));
   if (!JS_DefineProperty(cx, global, "itercount", val, 0)) {
     return;

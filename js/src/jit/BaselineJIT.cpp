@@ -290,7 +290,7 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   }
 
   // Check script warm-up counter.
-  if (script->getWarmUpCount() <= JitOptions.baselineWarmUpThreshold) {
+  if (script->getWarmUpCount() <= JitOptions.baselineJitWarmUpThreshold) {
     return Method_Skipped;
   }
 

@@ -160,7 +160,7 @@ DefaultJitOptions::DefaultJitOptions() {
   // How many invocations or loop iterations are needed before functions
   // are compiled with the baseline compiler.
   // Duplicated in all.js - ensure both match.
-  SET_DEFAULT(baselineWarmUpThreshold, 50);
+  SET_DEFAULT(baselineJitWarmUpThreshold, 50);
 
   // How many invocations or loop iterations are needed before functions
   // are compiled with the Ion compiler at OptimizationLevel::Normal.
@@ -289,7 +289,7 @@ void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 
 void DefaultJitOptions::setEagerBaselineCompilation() {
   baselineInterpreterWarmUpThreshold = 0;
-  baselineWarmUpThreshold = 0;
+  baselineJitWarmUpThreshold = 0;
 }
 
 void DefaultJitOptions::setEagerIonCompilation() {
