@@ -3,8 +3,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 use cssparser::{Parser, ParserInput};
-use euclid::TypedScale;
-use euclid::TypedSize2D;
+use euclid::Scale;
+use euclid::Size2D;
 use servo_arc::Arc;
 use servo_config::prefs::{PREFS, PrefValue};
 use servo_url::ServoUrl;
@@ -96,7 +96,7 @@ macro_rules! viewport_length {
 
 #[test]
 fn empty_viewport_rule() {
-    let device = Device::new(MediaType::screen(), TypedSize2D::new(800., 600.), TypedScale::new(1.0));
+    let device = Device::new(MediaType::screen(), Size2D::new(800., 600.), Scale::new(1.0));
 
     test_viewport_rule("@viewport {}", &device, |declarations, css| {
         println!("{}", css);
@@ -119,7 +119,7 @@ macro_rules! assert_decl_eq {
 
 #[test]
 fn simple_viewport_rules() {
-    let device = Device::new(MediaType::screen(), TypedSize2D::new(800., 600.), TypedScale::new(1.0));
+    let device = Device::new(MediaType::screen(), Size2D::new(800., 600.), Scale::new(1.0));
 
     test_viewport_rule("@viewport { width: auto; height: auto;\
                                     zoom: auto; min-zoom: 0; max-zoom: 200%;\
@@ -191,7 +191,7 @@ fn simple_meta_viewport_contents() {
 
 #[test]
 fn cascading_within_viewport_rule() {
-    let device = Device::new(MediaType::screen(), TypedSize2D::new(800., 600.), TypedScale::new(1.0));
+    let device = Device::new(MediaType::screen(), Size2D::new(800., 600.), Scale::new(1.0));
 
     // normal order of appearance
     test_viewport_rule("@viewport { min-width: 200px; min-width: auto; }",
@@ -257,7 +257,7 @@ fn cascading_within_viewport_rule() {
 #[test]
 fn multiple_stylesheets_cascading() {
     PREFS.set("layout.viewport.enabled", PrefValue::Boolean(true));
-    let device = Device::new(MediaType::screen(), TypedSize2D::new(800., 600.), TypedScale::new(1.0));
+    let device = Device::new(MediaType::screen(), Size2D::new(800., 600.), Scale::new(1.0));
     let shared_lock = SharedRwLock::new();
     let stylesheets = vec![
         stylesheet!("@viewport { min-width: 100px; min-height: 100px; zoom: 1; }",
@@ -317,8 +317,8 @@ fn constrain_viewport() {
         }
     }
 
-    let initial_viewport = TypedSize2D::new(800., 600.);
-    let device = Device::new(MediaType::screen(), initial_viewport, TypedScale::new(1.0));
+    let initial_viewport = Size2D::new(800., 600.);
+    let device = Device::new(MediaType::screen(), initial_viewport, Scale::new(1.0));
     let mut input = ParserInput::new("");
     assert_eq!(ViewportConstraints::maybe_new(&device, from_css!(input), QuirksMode::NoQuirks), None);
 
@@ -366,12 +366,12 @@ fn constrain_viewport() {
                    orientation: Orientation::Auto
                }));
 
-    let initial_viewport = TypedSize2D::new(200., 150.);
-    let device = Device::new(MediaType::screen(), initial_viewport, TypedScale::new(1.0));
+    let initial_viewport = Size2D::new(200., 150.);
+    let device = Device::new(MediaType::screen(), initial_viewport, Scale::new(1.0));
     let mut input = ParserInput::new("width: 320px auto");
     assert_eq!(ViewportConstraints::maybe_new(&device, from_css!(input), QuirksMode::NoQuirks),
                Some(ViewportConstraints {
-                   size: TypedSize2D::new(320., 240.),
+                   size: Size2D::new(320., 240.),
 
                    initial_zoom: PinchZoomFactor::new(1.),
                    min_zoom: None,

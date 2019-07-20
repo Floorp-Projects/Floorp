@@ -12,7 +12,7 @@ use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX,
     ClipScrollTree, CoordinateSpaceMapping, SpatialNodeIndex, VisibleFace, CoordinateSystemId
 };
 use crate::debug_colors;
-use euclid::{vec3, TypedPoint2D, TypedScale, TypedSize2D, Vector2D, TypedRect};
+use euclid::{vec3, Point2D, Scale, Size2D, Vector2D, Rect};
 use euclid::approxeq::ApproxEq;
 use crate::filterdata::SFilterData;
 use crate::frame_builder::{FrameVisibilityContext, FrameVisibilityState};
@@ -148,9 +148,9 @@ impl RetainedTiles {
 pub struct TileCoordinate;
 
 // Geometry types for tile coordinates.
-pub type TileOffset = TypedPoint2D<i32, TileCoordinate>;
-pub type TileSize = TypedSize2D<i32, TileCoordinate>;
-pub type TileRect = TypedRect<i32, TileCoordinate>;
+pub type TileOffset = Point2D<i32, TileCoordinate>;
+pub type TileSize = Size2D<i32, TileCoordinate>;
+pub type TileRect = Rect<i32, TileCoordinate>;
 
 /// The size in device pixels of a cached tile. The currently chosen
 /// size is arbitrary. We should do some profiling to find the best
@@ -1632,7 +1632,7 @@ impl PictureCompositeMode {
                             let inflation_factor = primitive.shadow.blur_radius.round() * BLUR_SAMPLE_SCALE;
                             let input = primitive.input.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect);
                             let shadow_rect = input.inflate(inflation_factor, inflation_factor);
-                            input.union(&shadow_rect.translate(&(primitive.shadow.offset * TypedScale::new(1.0))))
+                            input.union(&shadow_rect.translate(primitive.shadow.offset * Scale::new(1.0)))
                         }
                         FilterPrimitiveKind::Blend(ref primitive) => {
                             primitive.input1.to_index(cur_index).map(|index| output_rects[index]).unwrap_or(picture_rect)
@@ -2718,7 +2718,7 @@ impl PicturePrimitive {
         match transform {
             CoordinateSpaceMapping::Local => {
                 let polygon = Polygon::from_rect(
-                    local_rect * TypedScale::new(1.0),
+                    local_rect * Scale::new(1.0),
                     plane_split_anchor,
                 );
                 splitter.add(polygon);
@@ -2781,10 +2781,10 @@ impl PicturePrimitive {
             };
 
             let local_points = [
-                transform.transform_point3d(&poly.points[0].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[1].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[2].cast()).unwrap(),
-                transform.transform_point3d(&poly.points[3].cast()).unwrap(),
+                transform.transform_point3d(poly.points[0].cast()).unwrap(),
+                transform.transform_point3d(poly.points[1].cast()).unwrap(),
+                transform.transform_point3d(poly.points[2].cast()).unwrap(),
+                transform.transform_point3d(poly.points[3].cast()).unwrap(),
             ];
             let gpu_blocks = [
                 [local_points[0].x, local_points[0].y, local_points[1].x, local_points[1].y].into(),
@@ -2988,7 +2988,7 @@ impl PicturePrimitive {
             // This inflaction factor is to be applied to the surface itself.
             surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.inflation_factor);
 
-            let mut surface_rect = surface.rect * TypedScale::new(1.0);
+            let mut surface_rect = surface.rect * Scale::new(1.0);
 
             // Pop this surface from the stack
             let surface_index = state.pop_surface();
@@ -3015,7 +3015,7 @@ impl PicturePrimitive {
                 PictureCompositeMode::Filter(Filter::DropShadows(ref shadows)) => {
                     for shadow in shadows {
                         let content_rect = surface_rect;
-                        let shadow_rect = surface_rect.translate(&shadow.offset);
+                        let shadow_rect = surface_rect.translate(shadow.offset);
                         surface_rect = content_rect.union(&shadow_rect);
                     }
                 }
@@ -3077,7 +3077,7 @@ impl PicturePrimitive {
                         // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                         //  [brush specific data]
                         //  [segment_rect, segment data]
-                        let shadow_rect = self.snapped_local_rect.translate(&shadow.offset);
+                        let shadow_rect = self.snapped_local_rect.translate(shadow.offset);
 
                         // ImageBrush colors
                         request.push(shadow.color.premultiplied());
@@ -3140,7 +3140,7 @@ fn calculate_screen_uv(
     device_pixel_scale: DevicePixelScale,
     supports_snapping: bool,
 ) -> DeviceHomogeneousVector {
-    let raster_pos = transform.transform_point2d_homogeneous(local_pos);
+    let raster_pos = transform.transform_point2d_homogeneous(*local_pos);
 
     let mut device_vec = DeviceHomogeneousVector::new(
         raster_pos.x * device_pixel_scale.0,
