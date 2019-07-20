@@ -1138,10 +1138,9 @@ void DisplayListBuilder::PushBorderGradient(
     const wr::LayoutRect& aBounds, const wr::LayoutRect& aClip,
     bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths,
     const int32_t aWidth, const int32_t aHeight, bool aFill,
-    const wr::SideOffsets2D<int32_t>& aSlice,
-    const wr::LayoutPoint& aStartPoint, const wr::LayoutPoint& aEndPoint,
-    const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::SideOffsets2D<float>& aOutset) {
+    const wr::DeviceIntSideOffsets& aSlice, const wr::LayoutPoint& aStartPoint,
+    const wr::LayoutPoint& aEndPoint, const nsTArray<wr::GradientStop>& aStops,
+    wr::ExtendMode aExtendMode, const wr::LayoutSideOffsets& aOutset) {
   wr_dp_push_border_gradient(mWrState, aBounds, MergeClipLeaf(aClip),
                              aIsBackfaceVisible, &mCurrentSpaceAndClipChain,
                              aWidths, aWidth, aHeight, aFill, aSlice,
@@ -1154,7 +1153,7 @@ void DisplayListBuilder::PushBorderRadialGradient(
     bool aIsBackfaceVisible, const wr::LayoutSideOffsets& aWidths, bool aFill,
     const wr::LayoutPoint& aCenter, const wr::LayoutSize& aRadius,
     const nsTArray<wr::GradientStop>& aStops, wr::ExtendMode aExtendMode,
-    const wr::SideOffsets2D<float>& aOutset) {
+    const wr::LayoutSideOffsets& aOutset) {
   wr_dp_push_border_radial_gradient(
       mWrState, aBounds, MergeClipLeaf(aClip), aIsBackfaceVisible,
       &mCurrentSpaceAndClipChain, aWidths, aFill, aCenter, aRadius,

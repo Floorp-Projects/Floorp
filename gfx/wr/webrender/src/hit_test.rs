@@ -197,9 +197,9 @@ impl HitTestRegion {
     pub fn contains(&self, point: &LayoutPoint) -> bool {
         match *self {
             HitTestRegion::Rectangle(ref rectangle, ClipMode::Clip) =>
-                rectangle.contains(point),
+                rectangle.contains(*point),
             HitTestRegion::Rectangle(ref rectangle, ClipMode::ClipOut) =>
-                !rectangle.contains(point),
+                !rectangle.contains(*point),
             HitTestRegion::RoundedRectangle(rect, radii, ClipMode::Clip) =>
                 rounded_rectangle_contains_point(point, &rect, &radii),
             HitTestRegion::RoundedRectangle(rect, radii, ClipMode::ClipOut) =>
@@ -342,7 +342,7 @@ impl HitTester {
             .world_content_transform;
         let transformed_point = match transform
             .inverse()
-            .and_then(|inverted| inverted.transform_point2d(&point))
+            .and_then(|inverted| inverted.transform_point2d(point))
         {
             Some(point) => point,
             None => {
@@ -375,7 +375,7 @@ impl HitTester {
                 point_in_layer = scroll_node
                     .world_content_transform
                     .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(&point));
+                    .and_then(|inverted| inverted.transform_point2d(point));
 
                 current_spatial_node_index = item.spatial_node_index;
             }
@@ -384,10 +384,10 @@ impl HitTester {
             if let Some(point_in_layer) = point_in_layer {
                 // If the item's rect or clip rect don't contain this point,
                 // it's not a valid hit.
-                if !item.rect.contains(&point_in_layer) {
+                if !item.rect.contains(point_in_layer) {
                     continue;
                 }
-                if !item.clip_rect.contains(&point_in_layer) {
+                if !item.clip_rect.contains(point_in_layer) {
                     continue;
                 }
 
@@ -436,7 +436,7 @@ impl HitTester {
                 point_in_layer = scroll_node
                     .world_content_transform
                     .inverse()
-                    .and_then(|inverted| inverted.transform_point2d(&point));
+                    .and_then(|inverted| inverted.transform_point2d(point));
                 current_spatial_node_index = item.spatial_node_index;
             }
 
@@ -444,10 +444,10 @@ impl HitTester {
             if let Some(point_in_layer) = point_in_layer {
                 // If the item's rect or clip rect don't contain this point,
                 // it's not a valid hit.
-                if !item.rect.contains(&point_in_layer) {
+                if !item.rect.contains(point_in_layer) {
                     continue;
                 }
-                if !item.clip_rect.contains(&point_in_layer) {
+                if !item.clip_rect.contains(point_in_layer) {
                     continue;
                 }
 
@@ -480,7 +480,7 @@ impl HitTester {
                     point_in_viewport = root_node
                         .world_viewport_transform
                         .inverse()
-                        .and_then(|inverted| inverted.transform_point2d(&point))
+                        .and_then(|inverted| inverted.transform_point2d(point))
                         .map(|pt| pt - scroll_node.external_scroll_offset);
 
                     current_root_spatial_node_index = root_spatial_node_index;
@@ -562,7 +562,7 @@ impl HitTest {
             return self.point;
         }
 
-        let point =  &LayoutPoint::new(self.point.x, self.point.y);
+        let point = LayoutPoint::new(self.point.x, self.point.y);
         self.pipeline_id
             .and_then(|id|
                 hit_tester

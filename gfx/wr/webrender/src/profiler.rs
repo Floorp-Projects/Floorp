@@ -5,7 +5,7 @@
 use api::{ColorF, ColorU};
 use crate::debug_render::DebugRenderer;
 use crate::device::query::{GpuSampler, GpuTimer, NamedTag};
-use euclid::{Point2D, Rect, Size2D, vec2};
+use euclid::{Point2D, Rect, Size2D, vec2, default};
 use crate::internal_types::FastHashMap;
 use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
 use std::collections::vec_deque::VecDeque;
@@ -687,7 +687,7 @@ impl ProfileGraph {
         y: f32,
         description: &'static str,
         debug_renderer: &mut DebugRenderer,
-    ) -> Rect<f32> {
+    ) -> default::Rect<f32> {
         let size = Size2D::new(600.0, 120.0);
         let line_height = debug_renderer.line_height();
         let graph_rect = Rect::new(Point2D::new(x, y), size);
@@ -812,7 +812,7 @@ impl GpuFrameCollection {
 }
 
 impl GpuFrameCollection {
-    fn draw(&self, x: f32, y: f32, debug_renderer: &mut DebugRenderer) -> Rect<f32> {
+    fn draw(&self, x: f32, y: f32, debug_renderer: &mut DebugRenderer) -> default::Rect<f32> {
         let graph_rect = Rect::new(
             Point2D::new(x, y),
             Size2D::new(GRAPH_WIDTH, GRAPH_HEIGHT),
@@ -1019,7 +1019,7 @@ impl Profiler {
         label_color: ColorU,
         counters: &[(ColorU, &IntProfileCounter)],
         debug_renderer: &mut DebugRenderer,
-    ) -> Rect<f32> {
+    ) -> default::Rect<f32> {
         let mut rect = debug_renderer.add_text(
             self.draw_state.x_left,
             self.draw_state.y_left,
