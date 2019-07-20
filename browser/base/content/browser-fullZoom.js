@@ -360,20 +360,16 @@ var FullZoom = {
   reset: function FullZoom_reset(browser = gBrowser.selectedBrowser) {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       browser.messageManager.sendAsyncMessage("Reader:ResetZoom");
-    } else {
-      let token = this._getBrowserToken(browser);
-      let result = this._getGlobalValue(browser).then(value => {
-        if (token.isCurrent) {
-          ZoomManager.setZoomForBrowser(
-            browser,
-            value === undefined ? 1 : value
-          );
-          this._ignorePendingZoomAccesses(browser);
-        }
-      });
-      this._removePref(browser);
-      return result;
     }
+    let token = this._getBrowserToken(browser);
+    let result = this._getGlobalValue(browser).then(value => {
+      if (token.isCurrent) {
+        ZoomManager.setZoomForBrowser(browser, value === undefined ? 1 : value);
+        this._ignorePendingZoomAccesses(browser);
+      }
+    });
+    this._removePref(browser);
+    return result;
   },
 
   /**
