@@ -57,8 +57,8 @@ class ModuloBuffer {
         mBufferDeleter([](Byte* aBuffer) { delete[] aBuffer; }) {}
 
   // Take ownership of an existing buffer. Existing contents is ignored.
-  // Done by extracting raw pointer from UniquePtr<Byte[]>, and adding
-  // equivalent `delete[]` in `mBufferDeleter`.
+  // Done by extracting the raw pointer from UniquePtr<Byte[]>, and adding
+  // an equivalent `delete[]` in `mBufferDeleter`.
   ModuloBuffer(UniquePtr<Byte[]> aExistingBuffer, PowerOfTwo<Length> aLength)
       : mMask(aLength.Mask()),
         mBuffer(WrapNotNull(aExistingBuffer.release())),
@@ -68,6 +68,34 @@ class ModuloBuffer {
   ModuloBuffer(Byte* aExternalBuffer, PowerOfTwo<Length> aLength)
       : mMask(aLength.Mask()), mBuffer(WrapNotNull(aExternalBuffer)) {}
 
+  // Disallow copying, as we may uniquely own the resource.
+  ModuloBuffer(const ModuloBuffer& aOther) = delete;
+  ModuloBuffer& operator=(const ModuloBuffer& aOther) = delete;
+
+  // Allow move-construction. Stealing ownership if the original had it.
+  // This effectively prevents copy construction, and all assignments; needed so
+  // that a ModuloBuffer may be initialized from a separate construction.
+  // The moved-from ModuloBuffer still points at the resource but doesn't own
+  // it, so it won't try to free it; but accesses are not guaranteed, so it
+  // should not be used anymore.
+  ModuloBuffer(ModuloBuffer&& aOther)
+      : mMask(std::move(aOther.mMask)),
+        mBuffer(std::move(aOther.mBuffer)),
+        mBufferDeleter(std::move(aOther.mBufferDeleter)) {
+    // The above move leaves `aOther.mBufferDeleter` in a valid state but with
+    // an unspecified value, so it could theoretically still contain the
+    // original function, which would be bad because we don't want aOther to
+    // delete the resource that `this` now owns.
+    if (aOther.mBufferDeleter) {
+      // `aOther` still had a non-empty deleter, reset it.
+      aOther.mBufferDeleter = nullptr;
+    }
+  }
+
+  // Disallow assignment, as we have some `const` members.
+  ModuloBuffer& operator=(ModuloBuffer&& aOther) = delete;
+
+  // Destructor, deletes the resource if we uniquely own it.
   ~ModuloBuffer() {
     if (mBufferDeleter) {
       mBufferDeleter(mBuffer);
@@ -428,8 +456,10 @@ class ModuloBuffer {
   // Mask used to convert an index to an offset in `mBuffer`
   const PowerOfTwoMask<Offset> mMask;
 
-  // Buffer data.
-  NotNull<Byte*> mBuffer;
+  // Buffer data. `const NotNull<...>` shows that `mBuffer is `const`, and
+  // `Byte* const` shows that the pointer cannot be changed to point at
+  // something else, but the pointed-at `Byte`s are writable.
+  const NotNull<Byte* const> mBuffer;
 
   // Function used to release the buffer resource (if needed).
   std::function<void(Byte*)> mBufferDeleter;
