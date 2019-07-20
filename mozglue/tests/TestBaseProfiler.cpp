@@ -410,6 +410,28 @@ void TestModuloBuffer() {
     MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
   }
 
+  // Check that move-construction is allowed. This verifies that we do not
+  // crash from a double free, when `mbByBuffer` and `mbByStolenBuffer` are both
+  // destroyed at the end of this function.
+  MB mbByStolenBuffer = std::move(mbByBuffer);
+  TestModuloBuffer(mbByStolenBuffer, MBSize);
+
+  // Check that only the provided stack-based sub-buffer was modified.
+  changed = 0;
+  for (size_t i = MBSize; i < MBSize * 2; ++i) {
+    changed += (buffer[i] == uint8_t('A' + i)) ? 0 : 1;
+  }
+  // Expect at least 75% changes.
+  MOZ_RELEASE_ASSERT(changed >= MBSize * 6 / 8);
+
+  // Everything around the sub-buffer should be unchanged.
+  for (size_t i = 0; i < MBSize; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+  for (size_t i = MBSize * 2; i < MBSize * 3; ++i) {
+    MOZ_RELEASE_ASSERT(buffer[i] == uint8_t('A' + i));
+  }
+
   printf("TestModuloBuffer done\n");
 }
 
