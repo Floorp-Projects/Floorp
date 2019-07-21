@@ -406,7 +406,9 @@ pub const SEEK_SET: ::c_int = 0;
 pub const SEEK_CUR: ::c_int = 1;
 pub const SEEK_END: ::c_int = 2;
 
-pub const FIONBIO: ::c_int = 1;
+pub const FIONBIO: ::c_ulong = 1;
+pub const FIOCLEX: ::c_ulong = 0x20006601;
+pub const FIONCLEX: ::c_ulong = 0x20006602;
 
 pub const S_BLKSIZE: ::mode_t = 1024;
 pub const S_IREAD: ::mode_t = 256;
@@ -457,15 +459,41 @@ pub const SHUT_RD: ::c_int = 0;
 pub const SHUT_WR: ::c_int = 1;
 pub const SHUT_RDWR: ::c_int = 2;
 
-pub const SO_REUSEADDR: ::c_int = 4;
-pub const SO_LINGER: ::c_int = 128;
-pub const SO_OOBINLINE: ::c_int = 256;
-pub const SO_SNDBUF: ::c_int = 4097;
-pub const SO_RCVBUF: ::c_int = 4098;
-pub const SO_SNDLOWAT: ::c_int = 4099;
-pub const SO_RCVLOWAT: ::c_int = 4100;
-pub const SO_TYPE: ::c_int = 4104;
-pub const SO_ERROR: ::c_int = 4105;
+pub const SO_BINTIME: ::c_int = 0x2000;
+pub const SO_NO_OFFLOAD: ::c_int = 0x4000;
+pub const SO_NO_DDP: ::c_int = 0x8000;
+pub const SO_REUSEPORT_LB: ::c_int = 0x10000;
+pub const SO_LABEL: ::c_int = 0x1009;
+pub const SO_PEERLABEL: ::c_int = 0x1010;
+pub const SO_LISTENQLIMIT: ::c_int = 0x1011;
+pub const SO_LISTENQLEN: ::c_int = 0x1012;
+pub const SO_LISTENINCQLEN: ::c_int = 0x1013;
+pub const SO_SETFIB: ::c_int = 0x1014;
+pub const SO_USER_COOKIE: ::c_int = 0x1015;
+pub const SO_PROTOCOL: ::c_int = 0x1016;
+pub const SO_PROTOTYPE: ::c_int = SO_PROTOCOL;
+pub const SO_VENDOR: ::c_int = 0x80000000;
+pub const SO_DEBUG: ::c_int = 0x01;
+pub const SO_ACCEPTCONN: ::c_int = 0x0002;
+pub const SO_REUSEADDR: ::c_int = 0x0004;
+pub const SO_KEEPALIVE: ::c_int = 0x0008;
+pub const SO_DONTROUTE: ::c_int = 0x0010;
+pub const SO_BROADCAST: ::c_int = 0x0020;
+pub const SO_USELOOPBACK: ::c_int = 0x0040;
+pub const SO_LINGER: ::c_int = 0x0080;
+pub const SO_OOBINLINE: ::c_int = 0x0100;
+pub const SO_REUSEPORT: ::c_int = 0x0200;
+pub const SO_TIMESTAMP: ::c_int = 0x0400;
+pub const SO_NOSIGPIPE: ::c_int = 0x0800;
+pub const SO_ACCEPTFILTER: ::c_int = 0x1000;
+pub const SO_SNDBUF: ::c_int = 0x1001;
+pub const SO_RCVBUF: ::c_int = 0x1002;
+pub const SO_SNDLOWAT: ::c_int = 0x1003;
+pub const SO_RCVLOWAT: ::c_int = 0x1004;
+pub const SO_SNDTIMEO: ::c_int = 0x1005;
+pub const SO_RCVTIMEO: ::c_int = 0x1006;
+pub const SO_ERROR: ::c_int = 0x1007;
+pub const SO_TYPE: ::c_int = 0x1008;
 
 pub const SOCK_CLOEXEC: ::c_int = O_CLOEXEC;
 
@@ -493,13 +521,29 @@ pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
 pub const TCP_NODELAY: ::c_int = 8193;
 pub const TCP_MAXSEG: ::c_int = 8194;
+pub const TCP_NOPUSH: ::c_int = 4;
+pub const TCP_NOOPT: ::c_int = 8;
+pub const TCP_KEEPIDLE: ::c_int = 256;
+pub const TCP_KEEPINTVL: ::c_int = 512;
+pub const TCP_KEEPCNT: ::c_int = 1024;
 
-pub const IP_TOS: ::c_int = 7;
+pub const IP_TOS: ::c_int = 3;
 pub const IP_TTL: ::c_int = 8;
-pub const IP_MULTICAST_LOOP: ::c_int = 9;
+pub const IP_MULTICAST_IF: ::c_int = 9;
 pub const IP_MULTICAST_TTL: ::c_int = 10;
+pub const IP_MULTICAST_LOOP: ::c_int = 11;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 11;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 12;
+
+pub const IPV6_UNICAST_HOPS: ::c_int = 4;
+pub const IPV6_MULTICAST_IF: ::c_int = 9;
+pub const IPV6_MULTICAST_HOPS: ::c_int = 10;
+pub const IPV6_MULTICAST_LOOP: ::c_int = 11;
+pub const IPV6_V6ONLY: ::c_int = 27;
+pub const IPV6_JOIN_GROUP: ::c_int = 12;
+pub const IPV6_LEAVE_GROUP: ::c_int = 13;
+pub const IPV6_ADD_MEMBERSHIP: ::c_int = 12;
+pub const IPV6_DROP_MEMBERSHIP: ::c_int = 13;
 
 pub const HOST_NOT_FOUND: ::c_int = 1;
 pub const NO_DATA: ::c_int = 2;
@@ -555,6 +599,14 @@ f! {
 }
 
 extern {
+    pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
+    pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
+
+    #[cfg_attr(target_os = "linux",
+               link_name = "__xpg_strerror_r")]
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
+                      buflen: ::size_t) -> ::c_int;
+
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
     pub fn sem_init(sem: *mut sem_t,
                     pshared: ::c_int,
@@ -580,8 +632,10 @@ extern {
     pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
                    envp: *const *const ::c_char)
                    -> ::c_int;
+    pub fn gettimeofday(tp: *mut ::timeval,
+                        tz: *mut ::c_void) -> ::c_int;
     #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
-    pub fn getgrgid_r(uid: ::uid_t,
+    pub fn getgrgid_r(gid: ::gid_t,
                       grp: *mut ::group,
                       buf: *mut ::c_char,
                       buflen: ::size_t,

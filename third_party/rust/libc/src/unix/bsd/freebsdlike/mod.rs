@@ -1,4 +1,3 @@
-pub type dev_t = u32;
 pub type mode_t = u16;
 pub type pthread_attr_t = *mut ::c_void;
 pub type rlim_t = i64;
@@ -20,6 +19,16 @@ pub enum timezone {}
 impl ::Copy for timezone {}
 impl ::Clone for timezone {
     fn clone(&self) -> timezone { *self }
+}
+
+impl siginfo_t {
+    pub unsafe fn si_addr(&self) -> *mut ::c_void {
+        self.si_addr
+    }
+
+    pub unsafe fn si_value(&self) -> ::sigval {
+        self.si_value
+    }
 }
 
 s! {
@@ -46,15 +55,6 @@ s! {
         __unused8: *mut ::c_void,
     }
 
-    pub struct kevent {
-        pub ident: ::uintptr_t,
-        pub filter: ::c_short,
-        pub flags: ::c_ushort,
-        pub fflags: ::c_uint,
-        pub data: ::intptr_t,
-        pub udata: *mut ::c_void,
-    }
-
     pub struct addrinfo {
         pub ai_flags: ::c_int,
         pub ai_family: ::c_int,
@@ -78,7 +78,9 @@ s! {
         pub si_uid: ::uid_t,
         pub si_status: ::c_int,
         pub si_addr: *mut ::c_void,
-        _pad: [::c_int; 12],
+        pub si_value: ::sigval,
+        _pad1: ::c_long,
+        _pad2: [::c_int; 7],
     }
 
     pub struct sigaction {
@@ -758,7 +760,11 @@ pub const LOCK_NB: ::c_int = 4;
 pub const LOCK_UN: ::c_int = 8;
 
 pub const MAP_COPY: ::c_int = 0x0002;
+#[doc(hidden)]
+#[deprecated(since="0.2.54",note="Removed in FreeBSD 11")]
 pub const MAP_RENAME: ::c_int = 0x0020;
+#[doc(hidden)]
+#[deprecated(since="0.2.54",note="Removed in FreeBSD 11")]
 pub const MAP_NORESERVE: ::c_int = 0x0040;
 pub const MAP_HASSEMAPHORE: ::c_int = 0x0200;
 pub const MAP_STACK: ::c_int = 0x0400;
@@ -1003,6 +1009,10 @@ pub const SLIPDISC: ::c_int = 0x4;
 pub const PPPDISC: ::c_int = 0x5;
 pub const NETGRAPHDISC: ::c_int = 0x6;
 
+pub const FIODTYPE: ::c_ulong = 0x4004667a;
+pub const FIOGETLBA: ::c_ulong = 0x40046679;
+pub const FIODGNAME: ::c_ulong = 0x80106678;
+
 pub const B0: speed_t = 0;
 pub const B50: speed_t = 50;
 pub const B75: speed_t = 75;
@@ -1095,7 +1105,8 @@ extern {
                     -> ::c_int;
 
     pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
-
+    pub fn gettimeofday(tp: *mut ::timeval,
+                        tz: *mut ::timezone) -> ::c_int;
     pub fn accept4(s: ::c_int, addr: *mut ::sockaddr,
                    addrlen: *mut ::socklen_t, flags: ::c_int) -> ::c_int;
     pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
@@ -1140,7 +1151,10 @@ extern {
     pub fn getutxid(ut: *const utmpx) -> *mut utmpx;
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
     pub fn initgroups(name: *const ::c_char, basegid: ::gid_t) -> ::c_int;
-    #[cfg_attr(target_os = "freebsd", link_name = "kevent@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "kevent@FBSD_1.0"
+    )]
     pub fn kevent(kq: ::c_int,
                   changelist: *const ::kevent,
                   nchanges: ::c_int,
@@ -1156,7 +1170,10 @@ extern {
                    n: ::size_t) -> *mut ::c_void;
     pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
                     mode: ::mode_t) -> ::c_int;
-    #[cfg_attr(target_os = "freebsd", link_name = "mknodat@FBSD_1.1")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "mknodat@FBSD_1.1"
+    )]
     pub fn mknodat(dirfd: ::c_int, pathname: *const ::c_char,
                   mode: ::mode_t, dev: dev_t) -> ::c_int;
     pub fn mq_close(mqd: ::mqd_t) -> ::c_int;
@@ -1299,6 +1316,7 @@ extern {
                    name: *mut ::c_char,
                    termp: *mut termios,
                    winp: *mut ::winsize) -> ::pid_t;
+    pub fn login_tty(fd: ::c_int) -> ::c_int;
 }
 
 cfg_if! {

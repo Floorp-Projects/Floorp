@@ -39,8 +39,8 @@ s! {
 
     pub struct bpf_hdr {
         pub bh_tstamp: ::timeval,
-        pub bh_caplen: ::uint32_t,
-        pub bh_datalen: ::uint32_t,
+        pub bh_caplen: u32,
+        pub bh_datalen: u32,
         pub bh_hdrlen: ::c_ushort,
     }
 }
