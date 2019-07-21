@@ -1312,12 +1312,5 @@ void RestoreMemoryToLastSavedDiffCheckpoint() {
   gMemoryInfo->mSnapshotThreadsShouldRestore.ActivateEnd();
 }
 
-size_t GetMemoryUsage(MemoryKind aKind) {
-  if (!gMemoryInfo) {
-    return 0;
-  }
-  return gMemoryInfo->mMemoryBalance[(size_t)aKind];
-}
-
 }  // namespace recordreplay
 }  // namespace mozilla
