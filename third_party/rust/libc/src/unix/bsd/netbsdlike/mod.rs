@@ -1,14 +1,14 @@
 pub type time_t = i64;
 pub type mode_t = u32;
-pub type nlink_t = u32;
-pub type ino_t = u64;
+pub type nlink_t = ::uint32_t;
+pub type ino_t = ::uint64_t;
 pub type pthread_key_t = ::c_int;
 pub type rlim_t = u64;
 pub type speed_t = ::c_uint;
 pub type tcflag_t = ::c_uint;
 pub type nl_item = c_long;
 pub type clockid_t = ::c_int;
-pub type id_t = u32;
+pub type id_t = ::uint32_t;
 pub type sem_t = *mut sem;
 
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
@@ -597,7 +597,6 @@ pub const TIMER_ABSTIME: ::c_int = 1;
 
 #[link(name = "util")]
 extern {
-    pub fn setgrent();
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
     pub fn sem_init(sem: *mut sem_t,
                     pshared: ::c_int,
@@ -644,7 +643,6 @@ extern {
                    name: *mut ::c_char,
                    termp: *mut termios,
                    winp: *mut ::winsize) -> ::pid_t;
-    pub fn login_tty(fd: ::c_int) -> ::c_int;
     pub fn getpriority(which: ::c_int, who: ::id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: ::id_t, prio: ::c_int) -> ::c_int;
 
@@ -677,9 +675,9 @@ cfg_if! {
     if #[cfg(target_os = "netbsd")] {
         mod netbsd;
         pub use self::netbsd::*;
-    } else if #[cfg(target_os = "openbsd")] {
-        mod openbsd;
-        pub use self::openbsd::*;
+    } else if #[cfg(any(target_os = "openbsd", target_os = "bitrig"))] {
+        mod openbsdlike;
+        pub use self::openbsdlike::*;
     } else {
         // Unknown target_os
     }

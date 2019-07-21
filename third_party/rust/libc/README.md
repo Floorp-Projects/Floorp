@@ -28,14 +28,12 @@ libc = "0.2"
 
 ## Features
 
-* `std`: by default `libc` links to the standard library. Disable this
+* `use_std`: by default `libc` links to the standard library. Disable this
   feature remove this dependency and be able to use `libc` in `#![no_std]`
   crates.
 
 * `extra_traits`: all `struct`s implemented in `libc` are `Copy` and `Clone`.
   This feature derives `Debug`, `Eq`, `Hash`, and `PartialEq`.
-
-* **deprecated**: `use_std` is deprecated, and is equivalent to `std`.
 
 ## Rust version support
 
@@ -56,7 +54,7 @@ newer Rust features are only available on newer Rust toolchains:
 [Platform-specific documentation (master branch)][docs.master].
 
 See
-[`ci/build.sh`](https://github.com/rust-lang/libc/blob/master/ci/build.sh)
+[`ci/build.sh`](https://github.com/rust-lang/libc/blob/master/libc-test/build.rs)
 for the platforms on which `libc` is guaranteed to build for each Rust
 toolchain. The test-matrix at [Travis-CI], [Appveyor], and [Cirrus-CI] show the
 platforms in which `libc` tests are run.
