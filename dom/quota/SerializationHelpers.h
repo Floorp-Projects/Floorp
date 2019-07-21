@@ -37,6 +37,7 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
     WriteParam(aMsg, aParam.mInIsolatedMozBrowser);
     WriteParam(aMsg, aParam.mPrivateBrowsingId);
     WriteParam(aMsg, aParam.mUserContextId);
+    WriteParam(aMsg, aParam.mGeckoViewSessionContextId);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -44,7 +45,8 @@ struct ParamTraits<mozilla::OriginAttributesPattern> {
     return ReadParam(aMsg, aIter, &aResult->mFirstPartyDomain) &&
            ReadParam(aMsg, aIter, &aResult->mInIsolatedMozBrowser) &&
            ReadParam(aMsg, aIter, &aResult->mPrivateBrowsingId) &&
-           ReadParam(aMsg, aIter, &aResult->mUserContextId);
+           ReadParam(aMsg, aIter, &aResult->mUserContextId) &&
+           ReadParam(aMsg, aIter, &aResult->mGeckoViewSessionContextId);
   }
 };
 

@@ -8,10 +8,12 @@ package org.mozilla.geckoview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.math.BigInteger;
 
 import android.support.annotation.AnyThread;
 import android.support.annotation.LongDef;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.GeckoBundle;
@@ -159,5 +161,41 @@ public final class StorageController {
             "GeckoView:ClearHostData", bundle, result);
 
         return result;
+    }
+
+    /**
+     * Clear data for the given context ID.
+     * Use {@link GeckoSessionSettings.Builder#contextId}.to set a context ID
+     * for a session.
+     *
+     * Note: Any open session may re-accumulate previously cleared data. To
+     * ensure that no persistent data is left behind, you need to close all
+     * sessions for the given context prior to clearing data.
+     *
+     * @param contextId The context ID for the storage data to be deleted.
+     */
+    @AnyThread
+    public void clearDataForSessionContext(final @NonNull String contextId) {
+        final GeckoBundle bundle = new GeckoBundle(1);
+        bundle.putString("contextId", createSafeSessionContextId(contextId));
+
+        EventDispatcher.getInstance().dispatch(
+            "GeckoView:ClearSessionContextData", bundle);
+    }
+
+    /* package */ static @NonNull String createSafeSessionContextId(
+            final @Nullable String contextId) {
+        if (contextId == null) {
+            return null;
+        }
+        if (contextId.isEmpty()) {
+            // Let's avoid empty strings for Gecko.
+            return "gvctxempty";
+        }
+        // We don't want to restrict the session context ID string options, so to
+        // ensure that the string is safe for Gecko processing, we translate it to
+        // its hex representation.
+        return String.format("gvctx%x", new BigInteger(contextId.getBytes()))
+               .toLowerCase();
     }
 }
