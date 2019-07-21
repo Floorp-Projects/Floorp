@@ -5000,7 +5000,7 @@
 #define PREF_VALUE false
 #endif
 - name: media.hls.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: @PREF_VALUE@
   mirror: always
 #undef PREF_VALUE
