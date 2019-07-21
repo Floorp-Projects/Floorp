@@ -1,3 +1,4 @@
+pub type dev_t = u32;
 pub type c_char = i8;
 pub type clock_t = u64;
 pub type ino_t = u64;
@@ -27,6 +28,15 @@ impl ::Clone for sem {
 }
 
 s! {
+    pub struct kevent {
+        pub ident: ::uintptr_t,
+        pub filter: ::c_short,
+        pub flags: ::c_ushort,
+        pub fflags: ::c_uint,
+        pub data: ::intptr_t,
+        pub udata: *mut ::c_void,
+    }
+
     pub struct exit_status {
         pub e_termination: u16,
         pub e_exit: u16
@@ -60,19 +70,6 @@ s! {
         pub mq_curmsgs: ::c_long,
     }
 
-    pub struct sigevent {
-        pub sigev_notify: ::c_int,
-        // The union is 8-byte in size, so it is aligned at a 8-byte offset.
-        #[cfg(target_pointer_width = "64")]
-        __unused1: ::c_int,
-        pub sigev_signo: ::c_int,       //actually a union
-        // pad the union
-        #[cfg(target_pointer_width = "64")]
-        __unused2: ::c_int,
-        pub sigev_value: ::sigval,
-        __unused3: *mut ::c_void        //actually a function pointer
-    }
-
     pub struct statvfs {
         pub f_bsize: ::c_ulong,
         pub f_frsize: ::c_ulong,
@@ -100,7 +97,7 @@ s! {
         pub st_nlink: ::nlink_t,
         pub st_dev: ::dev_t,
         pub st_mode: ::mode_t,
-        pub st_padding1: ::uint16_t,
+        pub st_padding1: u16,
         pub st_uid: ::uid_t,
         pub st_gid: ::gid_t,
         pub st_rdev: ::dev_t,
@@ -111,13 +108,13 @@ s! {
         pub st_ctime: ::time_t,
         pub st_ctime_nsec: ::c_long,
         pub st_size: ::off_t,
-        pub st_blocks: ::int64_t,
-        pub st_blksize: ::uint32_t,
-        pub st_flags: ::uint32_t,
-        pub st_gen: ::uint32_t,
-        pub st_lspare: ::int32_t,
-        pub st_qspare1: ::int64_t,
-        pub st_qspare2: ::int64_t,
+        pub st_blocks: i64,
+        pub st_blksize: u32,
+        pub st_flags: u32,
+        pub st_gen: u32,
+        pub st_lspare: i32,
+        pub st_qspare1: i64,
+        pub st_qspare2: i64,
     }
 
     pub struct if_data {
@@ -214,8 +211,8 @@ s_no_extra_traits! {
         pub f_ffree: ::c_long,
         pub f_fsid: ::fsid_t,
         pub f_owner: ::uid_t,
-        pub f_type: ::int32_t,
-        pub f_flags: ::int32_t,
+        pub f_type: i32,
+        pub f_flags: i32,
         pub f_syncwrites: ::c_long,
         pub f_asyncwrites: ::c_long,
         pub f_fstypename: [::c_char; 16],
@@ -224,6 +221,20 @@ s_no_extra_traits! {
         pub f_asyncreads: ::c_long,
         pub f_mntfromname: [::c_char; 90],
     }
+
+    pub struct sigevent {
+        pub sigev_notify: ::c_int,
+        // The union is 8-byte in size, so it is aligned at a 8-byte offset.
+        #[cfg(target_pointer_width = "64")]
+        __unused1: ::c_int,
+        pub sigev_signo: ::c_int,       //actually a union
+        // pad the union
+        #[cfg(target_pointer_width = "64")]
+        __unused2: ::c_int,
+        pub sigev_value: ::sigval,
+        __unused3: *mut ::c_void        //actually a function pointer
+    }
+
 }
 
 cfg_if! {
@@ -398,6 +409,31 @@ cfg_if! {
                 self.f_mntfromname.hash(state);
             }
         }
+
+        impl PartialEq for sigevent {
+            fn eq(&self, other: &sigevent) -> bool {
+                self.sigev_notify == other.sigev_notify
+                    && self.sigev_signo == other.sigev_signo
+                    && self.sigev_value == other.sigev_value
+            }
+        }
+        impl Eq for sigevent {}
+        impl ::fmt::Debug for sigevent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigevent")
+                    .field("sigev_notify", &self.sigev_notify)
+                    .field("sigev_signo", &self.sigev_signo)
+                    .field("sigev_value", &self.sigev_value)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sigevent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sigev_notify.hash(state);
+                self.sigev_signo.hash(state);
+                self.sigev_value.hash(state);
+            }
+        }
     }
 }
 
@@ -567,55 +603,55 @@ pub const CTL_P1003_1B_SIGQUEUE_MAX: ::c_int = 24;
 pub const CTL_P1003_1B_TIMER_MAX: ::c_int = 25;
 pub const CTL_P1003_1B_MAXID: ::c_int = 26;
 
-pub const EVFILT_READ: ::int16_t = -1;
-pub const EVFILT_WRITE: ::int16_t = -2;
-pub const EVFILT_AIO: ::int16_t = -3;
-pub const EVFILT_VNODE: ::int16_t = -4;
-pub const EVFILT_PROC: ::int16_t = -5;
-pub const EVFILT_SIGNAL: ::int16_t = -6;
-pub const EVFILT_TIMER: ::int16_t = -7;
-pub const EVFILT_EXCEPT: ::int16_t = -8;
-pub const EVFILT_USER: ::int16_t = -9;
-pub const EVFILT_FS: ::int16_t = -10;
+pub const EVFILT_READ: i16 = -1;
+pub const EVFILT_WRITE: i16 = -2;
+pub const EVFILT_AIO: i16 = -3;
+pub const EVFILT_VNODE: i16 = -4;
+pub const EVFILT_PROC: i16 = -5;
+pub const EVFILT_SIGNAL: i16 = -6;
+pub const EVFILT_TIMER: i16 = -7;
+pub const EVFILT_EXCEPT: i16 = -8;
+pub const EVFILT_USER: i16 = -9;
+pub const EVFILT_FS: i16 = -10;
 
-pub const EV_ADD: ::uint16_t = 0x1;
-pub const EV_DELETE: ::uint16_t = 0x2;
-pub const EV_ENABLE: ::uint16_t = 0x4;
-pub const EV_DISABLE: ::uint16_t = 0x8;
-pub const EV_ONESHOT: ::uint16_t = 0x10;
-pub const EV_CLEAR: ::uint16_t = 0x20;
-pub const EV_RECEIPT: ::uint16_t = 0x40;
-pub const EV_DISPATCH: ::uint16_t = 0x80;
-pub const EV_NODATA: ::uint16_t = 0x1000;
-pub const EV_FLAG1: ::uint16_t = 0x2000;
-pub const EV_ERROR: ::uint16_t = 0x4000;
-pub const EV_EOF: ::uint16_t = 0x8000;
-pub const EV_SYSFLAGS: ::uint16_t = 0xf000;
+pub const EV_ADD: u16 = 0x1;
+pub const EV_DELETE: u16 = 0x2;
+pub const EV_ENABLE: u16 = 0x4;
+pub const EV_DISABLE: u16 = 0x8;
+pub const EV_ONESHOT: u16 = 0x10;
+pub const EV_CLEAR: u16 = 0x20;
+pub const EV_RECEIPT: u16 = 0x40;
+pub const EV_DISPATCH: u16 = 0x80;
+pub const EV_NODATA: u16 = 0x1000;
+pub const EV_FLAG1: u16 = 0x2000;
+pub const EV_ERROR: u16 = 0x4000;
+pub const EV_EOF: u16 = 0x8000;
+pub const EV_SYSFLAGS: u16 = 0xf000;
 
-pub const NOTE_TRIGGER: ::uint32_t = 0x01000000;
-pub const NOTE_FFNOP: ::uint32_t = 0x00000000;
-pub const NOTE_FFAND: ::uint32_t = 0x40000000;
-pub const NOTE_FFOR: ::uint32_t = 0x80000000;
-pub const NOTE_FFCOPY: ::uint32_t = 0xc0000000;
-pub const NOTE_FFCTRLMASK: ::uint32_t = 0xc0000000;
-pub const NOTE_FFLAGSMASK: ::uint32_t = 0x00ffffff;
-pub const NOTE_LOWAT: ::uint32_t = 0x00000001;
-pub const NOTE_OOB: ::uint32_t = 0x00000002;
-pub const NOTE_DELETE: ::uint32_t = 0x00000001;
-pub const NOTE_WRITE: ::uint32_t = 0x00000002;
-pub const NOTE_EXTEND: ::uint32_t = 0x00000004;
-pub const NOTE_ATTRIB: ::uint32_t = 0x00000008;
-pub const NOTE_LINK: ::uint32_t = 0x00000010;
-pub const NOTE_RENAME: ::uint32_t = 0x00000020;
-pub const NOTE_REVOKE: ::uint32_t = 0x00000040;
-pub const NOTE_EXIT: ::uint32_t = 0x80000000;
-pub const NOTE_FORK: ::uint32_t = 0x40000000;
-pub const NOTE_EXEC: ::uint32_t = 0x20000000;
-pub const NOTE_PDATAMASK: ::uint32_t = 0x000fffff;
-pub const NOTE_PCTRLMASK: ::uint32_t = 0xf0000000;
-pub const NOTE_TRACK: ::uint32_t = 0x00000001;
-pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
-pub const NOTE_CHILD: ::uint32_t = 0x00000004;
+pub const NOTE_TRIGGER: u32 = 0x01000000;
+pub const NOTE_FFNOP: u32 = 0x00000000;
+pub const NOTE_FFAND: u32 = 0x40000000;
+pub const NOTE_FFOR: u32 = 0x80000000;
+pub const NOTE_FFCOPY: u32 = 0xc0000000;
+pub const NOTE_FFCTRLMASK: u32 = 0xc0000000;
+pub const NOTE_FFLAGSMASK: u32 = 0x00ffffff;
+pub const NOTE_LOWAT: u32 = 0x00000001;
+pub const NOTE_OOB: u32 = 0x00000002;
+pub const NOTE_DELETE: u32 = 0x00000001;
+pub const NOTE_WRITE: u32 = 0x00000002;
+pub const NOTE_EXTEND: u32 = 0x00000004;
+pub const NOTE_ATTRIB: u32 = 0x00000008;
+pub const NOTE_LINK: u32 = 0x00000010;
+pub const NOTE_RENAME: u32 = 0x00000020;
+pub const NOTE_REVOKE: u32 = 0x00000040;
+pub const NOTE_EXIT: u32 = 0x80000000;
+pub const NOTE_FORK: u32 = 0x40000000;
+pub const NOTE_EXEC: u32 = 0x20000000;
+pub const NOTE_PDATAMASK: u32 = 0x000fffff;
+pub const NOTE_PCTRLMASK: u32 = 0xf0000000;
+pub const NOTE_TRACK: u32 = 0x00000001;
+pub const NOTE_TRACKERR: u32 = 0x00000002;
+pub const NOTE_CHILD: u32 = 0x00000004;
 
 pub const SO_SNDSPACE: ::c_int = 0x100a;
 pub const SO_CPUHINT: ::c_int = 0x1030;
@@ -881,10 +917,8 @@ pub const TCP_FASTKEEP:   ::c_int = 128;
 pub const AF_BLUETOOTH: ::c_int = 33;
 pub const AF_MPLS: ::c_int = 34;
 pub const AF_IEEE80211: ::c_int = 35;
-pub const AF_MAX: ::c_int = 36;
 
 pub const PF_BLUETOOTH: ::c_int = AF_BLUETOOTH;
-pub const PF_MAX: ::c_int = AF_MAX;
 
 pub const NET_RT_DUMP: ::c_int = 1;
 pub const NET_RT_FLAGS: ::c_int = 2;
@@ -892,9 +926,6 @@ pub const NET_RT_IFLIST: ::c_int = 3;
 pub const NET_RT_MAXID: ::c_int = 4;
 
 pub const SOMAXOPT_SIZE: ::c_int = 65536;
-
-#[doc(hidden)]
-pub const NET_MAXID: ::c_int = AF_MAX;
 
 pub const MSG_UNUSED09: ::c_int = 0x00000200;
 pub const MSG_NOSIGNAL: ::c_int = 0x00000400;
@@ -1008,6 +1039,7 @@ f! {
 }
 
 extern {
+    pub fn setgrent();
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
     pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
@@ -1027,4 +1059,11 @@ extern {
     pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
     pub fn uname(buf: *mut ::utsname) -> ::c_int;
+}
+
+cfg_if! {
+    if #[cfg(libc_thread_local)] {
+        mod errno;
+        pub use self::errno::*;
+    }
 }

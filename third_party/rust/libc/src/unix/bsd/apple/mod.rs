@@ -11,7 +11,6 @@ pub type mode_t = u16;
 pub type nlink_t = u16;
 pub type blksize_t = i32;
 pub type rlim_t = u64;
-pub type mach_timebase_info_data_t = mach_timebase_info;
 pub type pthread_key_t = c_ulong;
 pub type sigset_t = u32;
 pub type clockid_t = ::c_uint;
@@ -26,12 +25,17 @@ pub type idtype_t = ::c_uint;
 pub type integer_t = ::c_int;
 pub type cpu_type_t = integer_t;
 pub type cpu_subtype_t = integer_t;
-pub type vm_prot_t = ::c_int;
+
 pub type posix_spawnattr_t = *mut ::c_void;
 pub type posix_spawn_file_actions_t = *mut ::c_void;
 pub type key_t = ::c_int;
 pub type shmatt_t = ::c_ushort;
-pub type vm_size_t = ::uintptr_t;
+
+deprecated_mach! {
+    pub type vm_prot_t = ::c_int;
+    pub type vm_size_t = ::uintptr_t;
+    pub type mach_timebase_info_data_t = mach_timebase_info;
+}
 
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
@@ -83,6 +87,10 @@ s! {
         pub ai_next: *mut addrinfo,
     }
 
+    #[deprecated(
+        since = "0.2.55",
+        note = "Use the `mach` crate instead",
+    )]
     pub struct mach_timebase_info {
         pub numer: u32,
         pub denom: u32,
@@ -107,10 +115,10 @@ s! {
         pub st_size: ::off_t,
         pub st_blocks: ::blkcnt_t,
         pub st_blksize: blksize_t,
-        pub st_flags: ::uint32_t,
-        pub st_gen: ::uint32_t,
-        pub st_lspare: ::int32_t,
-        pub st_qspare: [::int64_t; 2],
+        pub st_flags: u32,
+        pub st_gen: u32,
+        pub st_lspare: i32,
+        pub st_qspare: [i64; 2],
     }
 
     pub struct pthread_mutexattr_t {
@@ -136,6 +144,8 @@ s! {
         pub si_uid: ::uid_t,
         pub si_status: ::c_int,
         pub si_addr: *mut ::c_void,
+        //Requires it to be union for tests
+        //pub si_value: ::sigval,
         _pad: [usize; 9],
     }
 
@@ -195,26 +205,26 @@ s! {
     }
 
     pub struct kevent64_s {
-        pub ident: ::uint64_t,
-        pub filter: ::int16_t,
-        pub flags: ::uint16_t,
-        pub fflags: ::uint32_t,
-        pub data: ::int64_t,
-        pub udata: ::uint64_t,
-        pub ext: [::uint64_t; 2],
+        pub ident: u64,
+        pub filter: i16,
+        pub flags: u16,
+        pub fflags: u32,
+        pub data: i64,
+        pub udata: u64,
+        pub ext: [u64; 2],
     }
 
     pub struct dqblk {
-        pub dqb_bhardlimit: ::uint64_t,
-        pub dqb_bsoftlimit: ::uint64_t,
-        pub dqb_curbytes: ::uint64_t,
-        pub dqb_ihardlimit: ::uint32_t,
-        pub dqb_isoftlimit: ::uint32_t,
-        pub dqb_curinodes: ::uint32_t,
-        pub dqb_btime: ::uint32_t,
-        pub dqb_itime: ::uint32_t,
-        pub dqb_id: ::uint32_t,
-        pub dqb_spare: [::uint32_t; 4],
+        pub dqb_bhardlimit: u64,
+        pub dqb_bsoftlimit: u64,
+        pub dqb_curbytes: u64,
+        pub dqb_ihardlimit: u32,
+        pub dqb_isoftlimit: u32,
+        pub dqb_curinodes: u32,
+        pub dqb_btime: u32,
+        pub dqb_itime: u32,
+        pub dqb_id: u32,
+        pub dqb_spare: [u32; 4],
     }
 
     pub struct if_msghdr {
@@ -277,14 +287,6 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
-    }
-
-    pub struct sigevent {
-        pub sigev_notify: ::c_int,
-        pub sigev_signo: ::c_int,
-        pub sigev_value: ::sigval,
-        __unused1: *mut ::c_void,       //actually a function pointer
-        pub sigev_notify_attributes: *mut ::pthread_attr_t
     }
 
     pub struct proc_taskinfo {
@@ -353,6 +355,10 @@ s! {
         pub cr_groups: [::gid_t;16]
     }
 
+    #[deprecated(
+        since = "0.2.55",
+        note = "Use the `mach` crate instead",
+    )]
     pub struct mach_header {
         pub magic: u32,
         pub cputype: cpu_type_t,
@@ -363,6 +369,10 @@ s! {
         pub flags: u32,
     }
 
+    #[deprecated(
+        since = "0.2.55",
+        note = "Use the `mach` crate instead",
+    )]
     pub struct mach_header_64 {
         pub magic: u32,
         pub cputype: cpu_type_t,
@@ -431,10 +441,10 @@ s! {
     pub struct sockaddr_ctl {
         pub sc_len: ::c_uchar,
         pub sc_family: ::c_uchar,
-        pub ss_sysaddr: ::uint16_t,
-        pub sc_id: ::uint32_t,
-        pub sc_unit: ::uint32_t,
-        pub sc_reserved: [::uint32_t; 5],
+        pub ss_sysaddr: u16,
+        pub sc_id: u32,
+        pub sc_unit: u32,
+        pub sc_reserved: [u32; 5],
     }
 
     pub struct in_pktinfo {
@@ -487,9 +497,9 @@ s_no_extra_traits!{
     #[cfg_attr(libc_packedN, repr(packed(4)))]
     pub struct kevent {
         pub ident: ::uintptr_t,
-        pub filter: ::int16_t,
-        pub flags: ::uint16_t,
-        pub fflags: ::uint32_t,
+        pub filter: i16,
+        pub flags: u16,
+        pub fflags: u32,
         pub data: ::intptr_t,
         pub udata: *mut ::c_void,
     }
@@ -498,13 +508,13 @@ s_no_extra_traits!{
     pub struct semid_ds {
         // Note the manpage shows different types than the system header.
         pub sem_perm: ipc_perm,
-        pub sem_base: ::int32_t,
+        pub sem_base: i32,
         pub sem_nsems: ::c_ushort,
         pub sem_otime: ::time_t,
-        pub sem_pad1: ::int32_t,
+        pub sem_pad1: i32,
         pub sem_ctime: ::time_t,
-        pub sem_pad2: ::int32_t,
-        pub sem_pad3: [::int32_t; 4],
+        pub sem_pad2: i32,
+        pub sem_pad3: [i32; 4],
     }
 
     #[cfg_attr(libc_packedN, repr(packed(4)))]
@@ -536,22 +546,22 @@ s_no_extra_traits!{
     }
 
     pub struct statfs {
-        pub f_bsize: ::uint32_t,
-        pub f_iosize: ::int32_t,
-        pub f_blocks: ::uint64_t,
-        pub f_bfree: ::uint64_t,
-        pub f_bavail: ::uint64_t,
-        pub f_files: ::uint64_t,
-        pub f_ffree: ::uint64_t,
+        pub f_bsize: u32,
+        pub f_iosize: i32,
+        pub f_blocks: u64,
+        pub f_bfree: u64,
+        pub f_bavail: u64,
+        pub f_files: u64,
+        pub f_ffree: u64,
         pub f_fsid: ::fsid_t,
         pub f_owner: ::uid_t,
-        pub f_type: ::uint32_t,
-        pub f_flags: ::uint32_t,
-        pub f_fssubtype: ::uint32_t,
+        pub f_type: u32,
+        pub f_flags: u32,
+        pub f_fssubtype: u32,
         pub f_fstypename: [::c_char; 16],
         pub f_mntonname: [::c_char; 1024],
         pub f_mntfromname: [::c_char; 1024],
-        pub f_reserved: [::uint32_t; 8],
+        pub f_reserved: [u32; 8],
     }
 
     pub struct dirent {
@@ -594,7 +604,37 @@ s_no_extra_traits!{
         pub ut_type: ::c_short,
         pub ut_tv: ::timeval,
         pub ut_host: [::c_char; _UTX_HOSTSIZE],
-        ut_pad: [::uint32_t; 16],
+        ut_pad: [u32; 16],
+    }
+
+    pub struct sigevent {
+        pub sigev_notify: ::c_int,
+        pub sigev_signo: ::c_int,
+        pub sigev_value: ::sigval,
+        __unused1: *mut ::c_void,       //actually a function pointer
+        pub sigev_notify_attributes: *mut ::pthread_attr_t
+    }
+}
+
+impl siginfo_t {
+    pub unsafe fn si_addr(&self) -> *mut ::c_void {
+        self.si_addr
+    }
+
+    pub unsafe fn si_value(&self) -> ::sigval {
+        #[repr(C)]
+        struct siginfo_timer {
+            _si_signo: ::c_int,
+            _si_errno: ::c_int,
+            _si_code: ::c_int,
+            _si_pid: ::pid_t,
+            _si_uid: ::uid_t,
+            _si_status: ::c_int,
+            _si_addr: *mut ::c_void,
+            si_value: ::sigval,
+        }
+
+        (*(self as *const siginfo_t as *const siginfo_timer)).si_value
     }
 }
 
@@ -1143,6 +1183,39 @@ cfg_if! {
                 self.ut_pad.hash(state);
             }
         }
+
+        impl PartialEq for sigevent {
+            fn eq(&self, other: &sigevent) -> bool {
+                self.sigev_notify == other.sigev_notify
+                    && self.sigev_signo == other.sigev_signo
+                    && self.sigev_value == other.sigev_value
+                    && self.sigev_notify_attributes
+                        == other.sigev_notify_attributes
+            }
+        }
+
+        impl Eq for sigevent {}
+
+        impl ::fmt::Debug for sigevent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigevent")
+                    .field("sigev_notify", &self.sigev_notify)
+                    .field("sigev_signo", &self.sigev_signo)
+                    .field("sigev_value", &self.sigev_value)
+                    .field("sigev_notify_attributes",
+                           &self.sigev_notify_attributes)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for sigevent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sigev_notify.hash(state);
+                self.sigev_signo.hash(state);
+                self.sigev_value.hash(state);
+                self.sigev_notify_attributes.hash(state);
+            }
+        }
     }
 }
 
@@ -1361,103 +1434,106 @@ pub const MAP_FIXED: ::c_int = 0x0010;
 pub const MAP_ANON: ::c_int = 0x1000;
 pub const MAP_ANONYMOUS: ::c_int = MAP_ANON;
 
-pub const VM_FLAGS_FIXED: ::c_int = 0x0000;
-pub const VM_FLAGS_ANYWHERE: ::c_int = 0x0001;
-pub const VM_FLAGS_PURGABLE: ::c_int = 0x0002;
-pub const VM_FLAGS_RANDOM_ADDR: ::c_int = 0x0008;
-pub const VM_FLAGS_NO_CACHE: ::c_int = 0x0010;
-pub const VM_FLAGS_RESILIENT_CODESIGN: ::c_int = 0x0020;
-pub const VM_FLAGS_RESILIENT_MEDIA: ::c_int = 0x0040;
-pub const VM_FLAGS_OVERWRITE: ::c_int = 0x4000;
-pub const VM_FLAGS_SUPERPAGE_MASK: ::c_int = 0x70000;
-pub const VM_FLAGS_RETURN_DATA_ADDR: ::c_int = 0x100000;
-pub const VM_FLAGS_RETURN_4K_DATA_ADDR: ::c_int = 0x800000;
-pub const VM_FLAGS_ALIAS_MASK: ::c_int = 0xFF000000;
-pub const VM_FLAGS_USER_ALLOCATE: ::c_int = 0xff07401f;
-pub const VM_FLAGS_USER_MAP: ::c_int = 0xff97401f;
-pub const VM_FLAGS_USER_REMAP: ::c_int = VM_FLAGS_FIXED | VM_FLAGS_ANYWHERE |
-                                        VM_FLAGS_RANDOM_ADDR |
-                                        VM_FLAGS_OVERWRITE |
-                                        VM_FLAGS_RETURN_DATA_ADDR |
-                                        VM_FLAGS_RESILIENT_CODESIGN;
+deprecated_mach! {
+    pub const VM_FLAGS_FIXED: ::c_int = 0x0000;
+    pub const VM_FLAGS_ANYWHERE: ::c_int = 0x0001;
+    pub const VM_FLAGS_PURGABLE: ::c_int = 0x0002;
+    pub const VM_FLAGS_RANDOM_ADDR: ::c_int = 0x0008;
+    pub const VM_FLAGS_NO_CACHE: ::c_int = 0x0010;
+    pub const VM_FLAGS_RESILIENT_CODESIGN: ::c_int = 0x0020;
+    pub const VM_FLAGS_RESILIENT_MEDIA: ::c_int = 0x0040;
+    pub const VM_FLAGS_OVERWRITE: ::c_int = 0x4000;
+    pub const VM_FLAGS_SUPERPAGE_MASK: ::c_int = 0x70000;
+    pub const VM_FLAGS_RETURN_DATA_ADDR: ::c_int = 0x100000;
+    pub const VM_FLAGS_RETURN_4K_DATA_ADDR: ::c_int = 0x800000;
+    pub const VM_FLAGS_ALIAS_MASK: ::c_int = 0xFF000000;
+    pub const VM_FLAGS_USER_ALLOCATE: ::c_int = 0xff07401f;
+    pub const VM_FLAGS_USER_MAP: ::c_int = 0xff97401f;
+    pub const VM_FLAGS_USER_REMAP: ::c_int = VM_FLAGS_FIXED |
+                                             VM_FLAGS_ANYWHERE |
+                                             VM_FLAGS_RANDOM_ADDR |
+                                             VM_FLAGS_OVERWRITE |
+                                             VM_FLAGS_RETURN_DATA_ADDR |
+                                             VM_FLAGS_RESILIENT_CODESIGN;
 
-pub const VM_FLAGS_SUPERPAGE_SHIFT: ::c_int = 16;
-pub const SUPERPAGE_NONE: ::c_int = 0;
-pub const SUPERPAGE_SIZE_ANY: ::c_int = 1;
-pub const VM_FLAGS_SUPERPAGE_NONE: ::c_int = SUPERPAGE_NONE <<
-                                             VM_FLAGS_SUPERPAGE_SHIFT;
-pub const VM_FLAGS_SUPERPAGE_SIZE_ANY: ::c_int = SUPERPAGE_SIZE_ANY <<
+    pub const VM_FLAGS_SUPERPAGE_SHIFT: ::c_int = 16;
+    pub const SUPERPAGE_NONE: ::c_int = 0;
+    pub const SUPERPAGE_SIZE_ANY: ::c_int = 1;
+    pub const VM_FLAGS_SUPERPAGE_NONE: ::c_int = SUPERPAGE_NONE <<
                                                  VM_FLAGS_SUPERPAGE_SHIFT;
-pub const SUPERPAGE_SIZE_2MB: ::c_int = 2;
-pub const VM_FLAGS_SUPERPAGE_SIZE_2MB: ::c_int = SUPERPAGE_SIZE_2MB <<
-                                                 VM_FLAGS_SUPERPAGE_SHIFT;
+    pub const VM_FLAGS_SUPERPAGE_SIZE_ANY: ::c_int = SUPERPAGE_SIZE_ANY <<
+                                                     VM_FLAGS_SUPERPAGE_SHIFT;
+    pub const SUPERPAGE_SIZE_2MB: ::c_int = 2;
+    pub const VM_FLAGS_SUPERPAGE_SIZE_2MB: ::c_int = SUPERPAGE_SIZE_2MB <<
+                                                     VM_FLAGS_SUPERPAGE_SHIFT;
 
-pub const VM_MEMORY_MALLOC: ::c_int = 1;
-pub const VM_MEMORY_MALLOC_SMALL: ::c_int = 2;
-pub const VM_MEMORY_MALLOC_LARGE: ::c_int = 3;
-pub const VM_MEMORY_MALLOC_HUGE: ::c_int = 4;
-pub const VM_MEMORY_SBRK: ::c_int = 5;
-pub const VM_MEMORY_REALLOC: ::c_int = 6;
-pub const VM_MEMORY_MALLOC_TINY: ::c_int = 7;
-pub const VM_MEMORY_MALLOC_LARGE_REUSABLE: ::c_int = 8;
-pub const VM_MEMORY_MALLOC_LARGE_REUSED: ::c_int = 9;
-pub const VM_MEMORY_ANALYSIS_TOOL: ::c_int = 10;
-pub const VM_MEMORY_MALLOC_NANO: ::c_int = 11;
-pub const VM_MEMORY_MACH_MSG: ::c_int = 20;
-pub const VM_MEMORY_IOKIT: ::c_int = 21;
-pub const VM_MEMORY_STACK: ::c_int = 30;
-pub const VM_MEMORY_GUARD: ::c_int = 31;
-pub const VM_MEMORY_SHARED_PMAP: ::c_int = 32;
-pub const VM_MEMORY_DYLIB: ::c_int = 33;
-pub const VM_MEMORY_OBJC_DISPATCHERS: ::c_int = 34;
-pub const VM_MEMORY_UNSHARED_PMAP: ::c_int = 35;
-pub const VM_MEMORY_APPKIT: ::c_int = 40;
-pub const VM_MEMORY_FOUNDATION: ::c_int = 41;
-pub const VM_MEMORY_COREGRAPHICS: ::c_int = 42;
-pub const VM_MEMORY_CORESERVICES: ::c_int = 43;
-pub const VM_MEMORY_CARBON: ::c_int = VM_MEMORY_CORESERVICES;
-pub const VM_MEMORY_JAVA: ::c_int = 44;
-pub const VM_MEMORY_COREDATA: ::c_int = 45;
-pub const VM_MEMORY_COREDATA_OBJECTIDS: ::c_int = 46;
-pub const VM_MEMORY_ATS: ::c_int = 50;
-pub const VM_MEMORY_LAYERKIT: ::c_int = 51;
-pub const VM_MEMORY_CGIMAGE: ::c_int = 52;
-pub const VM_MEMORY_TCMALLOC: ::c_int = 53;
-pub const VM_MEMORY_COREGRAPHICS_DATA: ::c_int = 54;
-pub const VM_MEMORY_COREGRAPHICS_SHARED: ::c_int = 55;
-pub const VM_MEMORY_COREGRAPHICS_FRAMEBUFFERS: ::c_int = 56;
-pub const VM_MEMORY_COREGRAPHICS_BACKINGSTORES: ::c_int = 57;
-pub const VM_MEMORY_COREGRAPHICS_XALLOC: ::c_int = 58;
-pub const VM_MEMORY_COREGRAPHICS_MISC: ::c_int = VM_MEMORY_COREGRAPHICS;
-pub const VM_MEMORY_DYLD: ::c_int = 60;
-pub const VM_MEMORY_DYLD_MALLOC: ::c_int = 61;
-pub const VM_MEMORY_SQLITE: ::c_int = 62;
-pub const VM_MEMORY_JAVASCRIPT_CORE: ::c_int = 63;
-pub const VM_MEMORY_JAVASCRIPT_JIT_EXECUTABLE_ALLOCATOR: ::c_int = 64;
-pub const VM_MEMORY_JAVASCRIPT_JIT_REGISTER_FILE: ::c_int = 65;
-pub const VM_MEMORY_GLSL: ::c_int = 66;
-pub const VM_MEMORY_OPENCL: ::c_int = 67;
-pub const VM_MEMORY_COREIMAGE: ::c_int = 68;
-pub const VM_MEMORY_WEBCORE_PURGEABLE_BUFFERS: ::c_int = 69;
-pub const VM_MEMORY_IMAGEIO: ::c_int = 70;
-pub const VM_MEMORY_COREPROFILE: ::c_int = 71;
-pub const VM_MEMORY_ASSETSD: ::c_int = 72;
-pub const VM_MEMORY_OS_ALLOC_ONCE: ::c_int = 73;
-pub const VM_MEMORY_LIBDISPATCH: ::c_int = 74;
-pub const VM_MEMORY_ACCELERATE: ::c_int = 75;
-pub const VM_MEMORY_COREUI: ::c_int = 76;
-pub const VM_MEMORY_COREUIFILE: ::c_int = 77;
-pub const VM_MEMORY_GENEALOGY: ::c_int = 78;
-pub const VM_MEMORY_RAWCAMERA: ::c_int = 79;
-pub const VM_MEMORY_CORPSEINFO: ::c_int = 80;
-pub const VM_MEMORY_ASL: ::c_int = 81;
-pub const VM_MEMORY_SWIFT_RUNTIME: ::c_int = 82;
-pub const VM_MEMORY_SWIFT_METADATA: ::c_int = 83;
-pub const VM_MEMORY_DHMM: ::c_int = 84;
-pub const VM_MEMORY_SCENEKIT: ::c_int = 86;
-pub const VM_MEMORY_SKYWALK: ::c_int = 87;
-pub const VM_MEMORY_APPLICATION_SPECIFIC_1: ::c_int = 240;
-pub const VM_MEMORY_APPLICATION_SPECIFIC_16: ::c_int = 255;
+    pub const VM_MEMORY_MALLOC: ::c_int = 1;
+    pub const VM_MEMORY_MALLOC_SMALL: ::c_int = 2;
+    pub const VM_MEMORY_MALLOC_LARGE: ::c_int = 3;
+    pub const VM_MEMORY_MALLOC_HUGE: ::c_int = 4;
+    pub const VM_MEMORY_SBRK: ::c_int = 5;
+    pub const VM_MEMORY_REALLOC: ::c_int = 6;
+    pub const VM_MEMORY_MALLOC_TINY: ::c_int = 7;
+    pub const VM_MEMORY_MALLOC_LARGE_REUSABLE: ::c_int = 8;
+    pub const VM_MEMORY_MALLOC_LARGE_REUSED: ::c_int = 9;
+    pub const VM_MEMORY_ANALYSIS_TOOL: ::c_int = 10;
+    pub const VM_MEMORY_MALLOC_NANO: ::c_int = 11;
+    pub const VM_MEMORY_MACH_MSG: ::c_int = 20;
+    pub const VM_MEMORY_IOKIT: ::c_int = 21;
+    pub const VM_MEMORY_STACK: ::c_int = 30;
+    pub const VM_MEMORY_GUARD: ::c_int = 31;
+    pub const VM_MEMORY_SHARED_PMAP: ::c_int = 32;
+    pub const VM_MEMORY_DYLIB: ::c_int = 33;
+    pub const VM_MEMORY_OBJC_DISPATCHERS: ::c_int = 34;
+    pub const VM_MEMORY_UNSHARED_PMAP: ::c_int = 35;
+    pub const VM_MEMORY_APPKIT: ::c_int = 40;
+    pub const VM_MEMORY_FOUNDATION: ::c_int = 41;
+    pub const VM_MEMORY_COREGRAPHICS: ::c_int = 42;
+    pub const VM_MEMORY_CORESERVICES: ::c_int = 43;
+    pub const VM_MEMORY_CARBON: ::c_int = VM_MEMORY_CORESERVICES;
+    pub const VM_MEMORY_JAVA: ::c_int = 44;
+    pub const VM_MEMORY_COREDATA: ::c_int = 45;
+    pub const VM_MEMORY_COREDATA_OBJECTIDS: ::c_int = 46;
+    pub const VM_MEMORY_ATS: ::c_int = 50;
+    pub const VM_MEMORY_LAYERKIT: ::c_int = 51;
+    pub const VM_MEMORY_CGIMAGE: ::c_int = 52;
+    pub const VM_MEMORY_TCMALLOC: ::c_int = 53;
+    pub const VM_MEMORY_COREGRAPHICS_DATA: ::c_int = 54;
+    pub const VM_MEMORY_COREGRAPHICS_SHARED: ::c_int = 55;
+    pub const VM_MEMORY_COREGRAPHICS_FRAMEBUFFERS: ::c_int = 56;
+    pub const VM_MEMORY_COREGRAPHICS_BACKINGSTORES: ::c_int = 57;
+    pub const VM_MEMORY_COREGRAPHICS_XALLOC: ::c_int = 58;
+    pub const VM_MEMORY_COREGRAPHICS_MISC: ::c_int = VM_MEMORY_COREGRAPHICS;
+    pub const VM_MEMORY_DYLD: ::c_int = 60;
+    pub const VM_MEMORY_DYLD_MALLOC: ::c_int = 61;
+    pub const VM_MEMORY_SQLITE: ::c_int = 62;
+    pub const VM_MEMORY_JAVASCRIPT_CORE: ::c_int = 63;
+    pub const VM_MEMORY_JAVASCRIPT_JIT_EXECUTABLE_ALLOCATOR: ::c_int = 64;
+    pub const VM_MEMORY_JAVASCRIPT_JIT_REGISTER_FILE: ::c_int = 65;
+    pub const VM_MEMORY_GLSL: ::c_int = 66;
+    pub const VM_MEMORY_OPENCL: ::c_int = 67;
+    pub const VM_MEMORY_COREIMAGE: ::c_int = 68;
+    pub const VM_MEMORY_WEBCORE_PURGEABLE_BUFFERS: ::c_int = 69;
+    pub const VM_MEMORY_IMAGEIO: ::c_int = 70;
+    pub const VM_MEMORY_COREPROFILE: ::c_int = 71;
+    pub const VM_MEMORY_ASSETSD: ::c_int = 72;
+    pub const VM_MEMORY_OS_ALLOC_ONCE: ::c_int = 73;
+    pub const VM_MEMORY_LIBDISPATCH: ::c_int = 74;
+    pub const VM_MEMORY_ACCELERATE: ::c_int = 75;
+    pub const VM_MEMORY_COREUI: ::c_int = 76;
+    pub const VM_MEMORY_COREUIFILE: ::c_int = 77;
+    pub const VM_MEMORY_GENEALOGY: ::c_int = 78;
+    pub const VM_MEMORY_RAWCAMERA: ::c_int = 79;
+    pub const VM_MEMORY_CORPSEINFO: ::c_int = 80;
+    pub const VM_MEMORY_ASL: ::c_int = 81;
+    pub const VM_MEMORY_SWIFT_RUNTIME: ::c_int = 82;
+    pub const VM_MEMORY_SWIFT_METADATA: ::c_int = 83;
+    pub const VM_MEMORY_DHMM: ::c_int = 84;
+    pub const VM_MEMORY_SCENEKIT: ::c_int = 86;
+    pub const VM_MEMORY_SKYWALK: ::c_int = 87;
+    pub const VM_MEMORY_APPLICATION_SPECIFIC_1: ::c_int = 240;
+    pub const VM_MEMORY_APPLICATION_SPECIFIC_16: ::c_int = 255;
+}
 
 pub const MAP_FAILED: *mut ::c_void = !0 as *mut ::c_void;
 
@@ -1685,11 +1761,6 @@ pub const TIOCPTYGRANT: ::c_uint = 0x20007454;
 pub const TIOCPTYGNAME: ::c_uint = 0x40807453;
 pub const TIOCPTYUNLK: ::c_uint = 0x20007452;
 
-pub const FIONCLEX: ::c_uint = 0x20006602;
-pub const FIONREAD: ::c_ulong = 0x4004667f;
-pub const FIOASYNC: ::c_ulong = 0x8004667d;
-pub const FIOSETOWN: ::c_ulong = 0x8004667c;
-pub const FIOGETOWN: ::c_ulong = 0x4004667b;
 pub const FIODTYPE: ::c_ulong = 0x4004667a;
 
 pub const B0: speed_t = 0;
@@ -2063,8 +2134,6 @@ pub const AF_SYSTEM: ::c_int = 32;
 pub const AF_NETBIOS: ::c_int = 33;
 pub const AF_PPP: ::c_int = 34;
 pub const pseudo_AF_HDRCMPLT: ::c_int = 35;
-#[doc(hidden)]
-pub const AF_MAX: ::c_int = 40;
 pub const AF_SYS_CONTROL: ::c_int = 2;
 
 pub const SYSPROTO_EVENT: ::c_int = 1;
@@ -2105,16 +2174,12 @@ pub const PF_NATM: ::c_int =  AF_NATM;
 pub const PF_SYSTEM: ::c_int = AF_SYSTEM;
 pub const PF_NETBIOS: ::c_int = AF_NETBIOS;
 pub const PF_PPP: ::c_int =  AF_PPP;
-#[doc(hidden)]
-pub const PF_MAX: ::c_int =  AF_MAX;
-
-#[doc(hidden)]
-pub const NET_MAXID: ::c_int = AF_MAX;
 
 pub const NET_RT_DUMP: ::c_int = 1;
 pub const NET_RT_FLAGS: ::c_int = 2;
 pub const NET_RT_IFLIST: ::c_int = 3;
 #[doc(hidden)]
+#[deprecated(since = "0.2.55")]
 pub const NET_RT_MAXID: ::c_int = 10;
 
 pub const SOMAXCONN: ::c_int = 128;
@@ -2372,109 +2437,111 @@ pub const FD_SETSIZE: usize = 1024;
 
 pub const ST_NOSUID: ::c_ulong = 2;
 
-pub const EVFILT_READ: ::int16_t = -1;
-pub const EVFILT_WRITE: ::int16_t = -2;
-pub const EVFILT_AIO: ::int16_t = -3;
-pub const EVFILT_VNODE: ::int16_t = -4;
-pub const EVFILT_PROC: ::int16_t = -5;
-pub const EVFILT_SIGNAL: ::int16_t = -6;
-pub const EVFILT_TIMER: ::int16_t = -7;
-pub const EVFILT_MACHPORT: ::int16_t = -8;
-pub const EVFILT_FS: ::int16_t = -9;
-pub const EVFILT_USER: ::int16_t = -10;
-pub const EVFILT_VM: ::int16_t = -12;
+pub const EVFILT_READ: i16 = -1;
+pub const EVFILT_WRITE: i16 = -2;
+pub const EVFILT_AIO: i16 = -3;
+pub const EVFILT_VNODE: i16 = -4;
+pub const EVFILT_PROC: i16 = -5;
+pub const EVFILT_SIGNAL: i16 = -6;
+pub const EVFILT_TIMER: i16 = -7;
+pub const EVFILT_MACHPORT: i16 = -8;
+pub const EVFILT_FS: i16 = -9;
+pub const EVFILT_USER: i16 = -10;
+pub const EVFILT_VM: i16 = -12;
 
-pub const EV_ADD: ::uint16_t = 0x1;
-pub const EV_DELETE: ::uint16_t = 0x2;
-pub const EV_ENABLE: ::uint16_t = 0x4;
-pub const EV_DISABLE: ::uint16_t = 0x8;
-pub const EV_ONESHOT: ::uint16_t = 0x10;
-pub const EV_CLEAR: ::uint16_t = 0x20;
-pub const EV_RECEIPT: ::uint16_t = 0x40;
-pub const EV_DISPATCH: ::uint16_t = 0x80;
-pub const EV_FLAG0: ::uint16_t = 0x1000;
-pub const EV_POLL: ::uint16_t = 0x1000;
-pub const EV_FLAG1: ::uint16_t = 0x2000;
-pub const EV_OOBAND: ::uint16_t = 0x2000;
-pub const EV_ERROR: ::uint16_t = 0x4000;
-pub const EV_EOF: ::uint16_t = 0x8000;
-pub const EV_SYSFLAGS: ::uint16_t = 0xf000;
+pub const EV_ADD: u16 = 0x1;
+pub const EV_DELETE: u16 = 0x2;
+pub const EV_ENABLE: u16 = 0x4;
+pub const EV_DISABLE: u16 = 0x8;
+pub const EV_ONESHOT: u16 = 0x10;
+pub const EV_CLEAR: u16 = 0x20;
+pub const EV_RECEIPT: u16 = 0x40;
+pub const EV_DISPATCH: u16 = 0x80;
+pub const EV_FLAG0: u16 = 0x1000;
+pub const EV_POLL: u16 = 0x1000;
+pub const EV_FLAG1: u16 = 0x2000;
+pub const EV_OOBAND: u16 = 0x2000;
+pub const EV_ERROR: u16 = 0x4000;
+pub const EV_EOF: u16 = 0x8000;
+pub const EV_SYSFLAGS: u16 = 0xf000;
 
-pub const NOTE_TRIGGER: ::uint32_t = 0x01000000;
-pub const NOTE_FFNOP: ::uint32_t = 0x00000000;
-pub const NOTE_FFAND: ::uint32_t = 0x40000000;
-pub const NOTE_FFOR: ::uint32_t = 0x80000000;
-pub const NOTE_FFCOPY: ::uint32_t = 0xc0000000;
-pub const NOTE_FFCTRLMASK: ::uint32_t = 0xc0000000;
-pub const NOTE_FFLAGSMASK: ::uint32_t = 0x00ffffff;
-pub const NOTE_LOWAT: ::uint32_t = 0x00000001;
-pub const NOTE_DELETE: ::uint32_t = 0x00000001;
-pub const NOTE_WRITE: ::uint32_t = 0x00000002;
-pub const NOTE_EXTEND: ::uint32_t = 0x00000004;
-pub const NOTE_ATTRIB: ::uint32_t = 0x00000008;
-pub const NOTE_LINK: ::uint32_t = 0x00000010;
-pub const NOTE_RENAME: ::uint32_t = 0x00000020;
-pub const NOTE_REVOKE: ::uint32_t = 0x00000040;
-pub const NOTE_NONE: ::uint32_t = 0x00000080;
-pub const NOTE_EXIT: ::uint32_t = 0x80000000;
-pub const NOTE_FORK: ::uint32_t = 0x40000000;
-pub const NOTE_EXEC: ::uint32_t = 0x20000000;
+pub const NOTE_TRIGGER: u32 = 0x01000000;
+pub const NOTE_FFNOP: u32 = 0x00000000;
+pub const NOTE_FFAND: u32 = 0x40000000;
+pub const NOTE_FFOR: u32 = 0x80000000;
+pub const NOTE_FFCOPY: u32 = 0xc0000000;
+pub const NOTE_FFCTRLMASK: u32 = 0xc0000000;
+pub const NOTE_FFLAGSMASK: u32 = 0x00ffffff;
+pub const NOTE_LOWAT: u32 = 0x00000001;
+pub const NOTE_DELETE: u32 = 0x00000001;
+pub const NOTE_WRITE: u32 = 0x00000002;
+pub const NOTE_EXTEND: u32 = 0x00000004;
+pub const NOTE_ATTRIB: u32 = 0x00000008;
+pub const NOTE_LINK: u32 = 0x00000010;
+pub const NOTE_RENAME: u32 = 0x00000020;
+pub const NOTE_REVOKE: u32 = 0x00000040;
+pub const NOTE_NONE: u32 = 0x00000080;
+pub const NOTE_EXIT: u32 = 0x80000000;
+pub const NOTE_FORK: u32 = 0x40000000;
+pub const NOTE_EXEC: u32 = 0x20000000;
+#[doc(hidden)]
 #[deprecated(since="0.2.49", note="Deprecated since MacOSX 10.9")]
-pub const NOTE_REAP: ::uint32_t = 0x10000000;
-pub const NOTE_SIGNAL: ::uint32_t = 0x08000000;
-pub const NOTE_EXITSTATUS: ::uint32_t = 0x04000000;
-pub const NOTE_EXIT_DETAIL: ::uint32_t = 0x02000000;
-pub const NOTE_PDATAMASK: ::uint32_t = 0x000fffff;
-pub const NOTE_PCTRLMASK: ::uint32_t = 0xfff00000;
+pub const NOTE_REAP: u32 = 0x10000000;
+pub const NOTE_SIGNAL: u32 = 0x08000000;
+pub const NOTE_EXITSTATUS: u32 = 0x04000000;
+pub const NOTE_EXIT_DETAIL: u32 = 0x02000000;
+pub const NOTE_PDATAMASK: u32 = 0x000fffff;
+pub const NOTE_PCTRLMASK: u32 = 0xfff00000;
+#[doc(hidden)]
 #[deprecated(since="0.2.49", note="Deprecated since MacOSX 10.9")]
-pub const NOTE_EXIT_REPARENTED: ::uint32_t = 0x00080000;
-pub const NOTE_EXIT_DETAIL_MASK: ::uint32_t = 0x00070000;
-pub const NOTE_EXIT_DECRYPTFAIL: ::uint32_t = 0x00010000;
-pub const NOTE_EXIT_MEMORY: ::uint32_t = 0x00020000;
-pub const NOTE_EXIT_CSERROR: ::uint32_t = 0x00040000;
-pub const NOTE_VM_PRESSURE: ::uint32_t = 0x80000000;
-pub const NOTE_VM_PRESSURE_TERMINATE: ::uint32_t = 0x40000000;
-pub const NOTE_VM_PRESSURE_SUDDEN_TERMINATE: ::uint32_t = 0x20000000;
-pub const NOTE_VM_ERROR: ::uint32_t = 0x10000000;
-pub const NOTE_SECONDS: ::uint32_t = 0x00000001;
-pub const NOTE_USECONDS: ::uint32_t = 0x00000002;
-pub const NOTE_NSECONDS: ::uint32_t = 0x00000004;
-pub const NOTE_ABSOLUTE: ::uint32_t = 0x00000008;
-pub const NOTE_LEEWAY: ::uint32_t = 0x00000010;
-pub const NOTE_CRITICAL: ::uint32_t = 0x00000020;
-pub const NOTE_BACKGROUND: ::uint32_t = 0x00000040;
-pub const NOTE_TRACK: ::uint32_t = 0x00000001;
-pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
-pub const NOTE_CHILD: ::uint32_t = 0x00000004;
+pub const NOTE_EXIT_REPARENTED: u32 = 0x00080000;
+pub const NOTE_EXIT_DETAIL_MASK: u32 = 0x00070000;
+pub const NOTE_EXIT_DECRYPTFAIL: u32 = 0x00010000;
+pub const NOTE_EXIT_MEMORY: u32 = 0x00020000;
+pub const NOTE_EXIT_CSERROR: u32 = 0x00040000;
+pub const NOTE_VM_PRESSURE: u32 = 0x80000000;
+pub const NOTE_VM_PRESSURE_TERMINATE: u32 = 0x40000000;
+pub const NOTE_VM_PRESSURE_SUDDEN_TERMINATE: u32 = 0x20000000;
+pub const NOTE_VM_ERROR: u32 = 0x10000000;
+pub const NOTE_SECONDS: u32 = 0x00000001;
+pub const NOTE_USECONDS: u32 = 0x00000002;
+pub const NOTE_NSECONDS: u32 = 0x00000004;
+pub const NOTE_ABSOLUTE: u32 = 0x00000008;
+pub const NOTE_LEEWAY: u32 = 0x00000010;
+pub const NOTE_CRITICAL: u32 = 0x00000020;
+pub const NOTE_BACKGROUND: u32 = 0x00000040;
+pub const NOTE_TRACK: u32 = 0x00000001;
+pub const NOTE_TRACKERR: u32 = 0x00000002;
+pub const NOTE_CHILD: u32 = 0x00000004;
 
-pub const OCRNL: ::c_int = 0x00000010;
-pub const ONOCR: ::c_int = 0x00000020;
-pub const ONLRET: ::c_int = 0x00000040;
-pub const OFILL: ::c_int = 0x00000080;
-pub const NLDLY: ::c_int = 0x00000300;
-pub const TABDLY: ::c_int = 0x00000c04;
-pub const CRDLY: ::c_int = 0x00003000;
-pub const FFDLY: ::c_int = 0x00004000;
-pub const BSDLY: ::c_int = 0x00008000;
-pub const VTDLY: ::c_int = 0x00010000;
-pub const OFDEL: ::c_int = 0x00020000;
+pub const OCRNL: ::tcflag_t = 0x00000010;
+pub const ONOCR: ::tcflag_t = 0x00000020;
+pub const ONLRET: ::tcflag_t = 0x00000040;
+pub const OFILL: ::tcflag_t = 0x00000080;
+pub const NLDLY: ::tcflag_t = 0x00000300;
+pub const TABDLY: ::tcflag_t = 0x00000c04;
+pub const CRDLY: ::tcflag_t = 0x00003000;
+pub const FFDLY: ::tcflag_t = 0x00004000;
+pub const BSDLY: ::tcflag_t = 0x00008000;
+pub const VTDLY: ::tcflag_t = 0x00010000;
+pub const OFDEL: ::tcflag_t = 0x00020000;
 
-pub const NL0: ::c_int  = 0x00000000;
-pub const NL1: ::c_int  = 0x00000100;
-pub const TAB0: ::c_int = 0x00000000;
-pub const TAB1: ::c_int = 0x00000400;
-pub const TAB2: ::c_int = 0x00000800;
-pub const CR0: ::c_int  = 0x00000000;
-pub const CR1: ::c_int  = 0x00001000;
-pub const CR2: ::c_int  = 0x00002000;
-pub const CR3: ::c_int  = 0x00003000;
-pub const FF0: ::c_int  = 0x00000000;
-pub const FF1: ::c_int  = 0x00004000;
-pub const BS0: ::c_int  = 0x00000000;
-pub const BS1: ::c_int  = 0x00008000;
-pub const TAB3: ::c_int = 0x00000004;
-pub const VT0: ::c_int  = 0x00000000;
-pub const VT1: ::c_int  = 0x00010000;
+pub const NL0: ::tcflag_t  = 0x00000000;
+pub const NL1: ::tcflag_t = 0x00000100;
+pub const TAB0: ::tcflag_t = 0x00000000;
+pub const TAB1: ::tcflag_t = 0x00000400;
+pub const TAB2: ::tcflag_t = 0x00000800;
+pub const CR0: ::tcflag_t  = 0x00000000;
+pub const CR1: ::tcflag_t  = 0x00001000;
+pub const CR2: ::tcflag_t  = 0x00002000;
+pub const CR3: ::tcflag_t  = 0x00003000;
+pub const FF0: ::tcflag_t  = 0x00000000;
+pub const FF1: ::tcflag_t  = 0x00004000;
+pub const BS0: ::tcflag_t  = 0x00000000;
+pub const BS1: ::tcflag_t  = 0x00008000;
+pub const TAB3: ::tcflag_t = 0x00000004;
+pub const VT0: ::tcflag_t  = 0x00000000;
+pub const VT1: ::tcflag_t  = 0x00010000;
 pub const IUTF8: ::tcflag_t = 0x00004000;
 pub const CRTSCTS: ::tcflag_t = 0x00030000;
 
@@ -2632,8 +2699,10 @@ pub const KERN_KDSETRTCDEC: ::c_int = 15;
 pub const KERN_KDGETENTROPY: ::c_int = 16;
 pub const KERN_KDWRITETR: ::c_int = 17;
 pub const KERN_KDWRITEMAP: ::c_int = 18;
+#[doc(hidden)]
 #[deprecated(since = "0.2.49", note ="Removed in MacOSX 10.12")]
 pub const KERN_KDENABLE_BG_TRACE: ::c_int = 19;
+#[doc(hidden)]
 #[deprecated(since = "0.2.49", note ="Removed in MacOSX 10.12")]
 pub const KERN_KDDISABLE_BG_TRACE: ::c_int = 20;
 pub const KERN_KDREADCURTHRMAP: ::c_int = 21;
@@ -2887,7 +2956,7 @@ pub const DLT_RAW: ::c_uint = 12;         // raw IP
 pub const DLT_LOOP: ::c_uint = 108;
 
 // https://github.com/apple/darwin-xnu/blob/master/bsd/net/bpf.h#L100
-// sizeof(int32_t)
+// sizeof(i32)
 pub const BPF_ALIGNMENT: ::c_int = 4;
 
 // sys/spawn.h:
@@ -3014,11 +3083,15 @@ f! {
 }
 
 extern {
+    pub fn setgrent();
+    #[doc(hidden)]
     #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.5")]
     #[link_name = "daemon$1050"]
     pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
+    #[doc(hidden)]
     #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.10")]
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
+    #[doc(hidden)]
     #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.10")]
     pub fn sem_init(sem: *mut sem_t,
                     pshared: ::c_int,
@@ -3045,6 +3118,8 @@ extern {
 
     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
 
+    pub fn gettimeofday(tp: *mut ::timeval,
+                        tz: *mut ::c_void) -> ::c_int;
     pub fn getutxent() -> *mut utmpx;
     pub fn getutxid(ut: *const utmpx) -> *mut utmpx;
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
@@ -3100,7 +3175,10 @@ extern {
                         newp: *mut ::c_void,
                         newlen: ::size_t)
                         -> ::c_int;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
     pub fn mach_absolute_time() -> u64;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
+    #[allow(deprecated)]
     pub fn mach_timebase_info(info: *mut ::mach_timebase_info) -> ::c_int;
     pub fn pthread_setname_np(name: *const ::c_char) -> ::c_int;
     pub fn pthread_get_stackaddr_np(thread: ::pthread_t) -> *mut ::c_void;
@@ -3168,6 +3246,7 @@ extern {
                    name: *mut ::c_char,
                    termp: *mut termios,
                    winp: *mut ::winsize) -> ::pid_t;
+    pub fn login_tty(fd: ::c_int) -> ::c_int;
     pub fn duplocale(base: ::locale_t) -> ::locale_t;
     pub fn freelocale(loc: ::locale_t) -> ::c_int;
     pub fn localeconv_l(loc: ::locale_t) -> *mut lconv;
@@ -3219,9 +3298,14 @@ extern {
     pub fn brk(addr: *const ::c_void) -> *mut ::c_void;
     pub fn sbrk(increment: ::c_int) -> *mut ::c_void;
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::timezone) -> ::c_int;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
     pub fn _dyld_image_count() -> u32;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
+    #[allow(deprecated)]
     pub fn _dyld_get_image_header(image_index: u32) -> *const mach_header;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
     pub fn _dyld_get_image_vmaddr_slide(image_index: u32) -> ::intptr_t;
+    #[deprecated(since = "0.2.55", note = "Use the mach crate")]
     pub fn _dyld_get_image_name(image_index: u32) -> *const ::c_char;
 
     pub fn posix_spawn(pid: *mut ::pid_t,
