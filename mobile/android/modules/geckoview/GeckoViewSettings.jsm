@@ -43,6 +43,7 @@ class GeckoViewSettings extends GeckoViewModule {
     debug`onInit`;
     this._userAgentMode = USER_AGENT_MODE_MOBILE;
     this._userAgentOverride = null;
+    this._sessionContextId = null;
     // Required for safe browsing and tracking protection.
 
     this.registerListener(["GeckoView:GetUserAgent"]);
@@ -65,6 +66,7 @@ class GeckoViewSettings extends GeckoViewModule {
     this.displayMode = settings.displayMode;
     this.userAgentMode = settings.userAgentMode;
     this.userAgentOverride = settings.userAgentOverride;
+    this.sessionContextId = settings.sessionContextId;
   }
 
   get useMultiprocess() {
@@ -109,6 +111,14 @@ class GeckoViewSettings extends GeckoViewModule {
 
   set displayMode(aMode) {
     this.window.docShell.displayMode = aMode;
+  }
+
+  set sessionContextId(aAttribute) {
+    this._sessionContextId = aAttribute;
+  }
+
+  get sessionContextId() {
+    return this._sessionContextId;
   }
 }
 

@@ -80,6 +80,22 @@ public final class GeckoSessionSettings implements Parcelable {
         }
 
         /**
+         * Set the session context ID for this instance.
+         * Setting a context ID partitions the cookie jars based on the provided
+         * IDs. This isolates the browser storage like cookies and localStorage
+         * between sessions, only sessions that share the same ID share storage
+         * data.
+         *
+         * @param value The custom context ID.
+         *              The default ID is null, which removes isolation for this
+         *              instance.
+         */
+        public @NonNull Builder contextId(final @Nullable String value) {
+            mSettings.setContextId(value);
+            return this;
+        }
+
+        /**
          * Set whether multi-process support should be enabled.
          *
          * @param flag A flag determining whether multi-process should be enabled.
@@ -213,6 +229,7 @@ public final class GeckoSessionSettings implements Parcelable {
      * width of 980 CSS px.
      */
     public static final int VIEWPORT_MODE_MOBILE = 0;
+
     /**
      * All pages will be rendered using the special desktop mode viewport, which has a width of
      * 980 CSS px, regardless of whether the page has a &lt;meta&gt; viewport tag specified or not.
@@ -314,6 +331,12 @@ public final class GeckoSessionSettings implements Parcelable {
     private static final Key<Boolean> FULL_ACCESSIBILITY_TREE =
             new Key<Boolean>("fullAccessibilityTree", /* initOnly */ false, /* values */ null);
 
+    /**
+     * Key to specify the session context ID.
+     */
+    private static final Key<String> CONTEXT_ID =
+        new Key<String>("sessionContextId", /* initOnly */ true, /* values */ null);
+
     private final GeckoSession mSession;
     private final GeckoBundle mBundle;
 
@@ -347,6 +370,7 @@ public final class GeckoSessionSettings implements Parcelable {
         mBundle.putString(USER_AGENT_OVERRIDE.name, null);
         mBundle.putInt(VIEWPORT_MODE.name, VIEWPORT_MODE_MOBILE);
         mBundle.putInt(DISPLAY_MODE.name, DISPLAY_MODE_BROWSER);
+        mBundle.putString(CONTEXT_ID.name, null);
     }
 
     /**
@@ -437,6 +461,15 @@ public final class GeckoSessionSettings implements Parcelable {
      */
     public boolean getUsePrivateMode() {
         return getBoolean(USE_PRIVATE_MODE);
+    }
+
+    /**
+     * The context ID for this session.
+     *
+     * @return The context ID for this session.
+     */
+    public @Nullable String getContextId() {
+        return getString(CONTEXT_ID);
     }
 
     /**
@@ -595,6 +628,10 @@ public final class GeckoSessionSettings implements Parcelable {
      */
     public void setUserAgentOverride(final @Nullable String value) {
         setString(USER_AGENT_OVERRIDE, value);
+    }
+
+    private void setContextId(final @Nullable String value) {
+        setString(CONTEXT_ID, value);
     }
 
     private void setString(final Key<String> key, final String value) {

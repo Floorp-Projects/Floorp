@@ -158,6 +158,15 @@ void OriginAttributes::CreateSuffix(nsACString& aStr) const {
                sanitizedFirstPartyDomain);
   }
 
+  if (!mGeckoViewSessionContextId.IsEmpty()) {
+    nsAutoString sanitizedGeckoViewUserContextId(mGeckoViewSessionContextId);
+    sanitizedGeckoViewUserContextId.ReplaceChar(
+        dom::quota::QuotaManager::kReplaceChars, '+');
+
+    params.Set(NS_LITERAL_STRING("geckoViewUserContextId"),
+               sanitizedGeckoViewUserContextId);
+  }
+
   aStr.Truncate();
 
   params.Serialize(value);
@@ -240,6 +249,13 @@ class MOZ_STACK_CLASS PopulateFromSuffixIterator final
     if (aName.EqualsLiteral("firstPartyDomain")) {
       MOZ_RELEASE_ASSERT(mOriginAttributes->mFirstPartyDomain.IsEmpty());
       mOriginAttributes->mFirstPartyDomain.Assign(aValue);
+      return true;
+    }
+
+    if (aName.EqualsLiteral("geckoViewUserContextId")) {
+      MOZ_RELEASE_ASSERT(
+          mOriginAttributes->mGeckoViewSessionContextId.IsEmpty());
+      mOriginAttributes->mGeckoViewSessionContextId.Assign(aValue);
       return true;
     }
 
