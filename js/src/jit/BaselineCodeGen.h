@@ -274,7 +274,12 @@ class BaselineCodeGen {
 
   js::Vector<CodeOffset> traceLoggerToggleOffsets_;
 
+  // Shared epilogue code to return to the caller.
   NonAssertingLabel return_;
+
+  // Like return_ but skips the debug epilogue instrumentation.
+  NonAssertingLabel returnNoDebugEpilogue_;
+
   NonAssertingLabel postBarrierSlot_;
 
   CodeOffset profilerEnterFrameToggleOffset_;
@@ -287,14 +292,6 @@ class BaselineCodeGen {
   // Baseline Interpreter can enter Baseline Compiler code at this address. This
   // is right after the warm-up counter check in the prologue.
   CodeOffset warmUpCheckPrologueOffset_;
-
-  // Baseline Debug OSR during prologue will enter at this address. This is
-  // right after where a debug prologue VM call would have returned.
-  CodeOffset debugOsrPrologueOffset_;
-
-  // Baseline Debug OSR during epilogue will enter at this address. This is
-  // right after where a debug epilogue VM call would have returned.
-  CodeOffset debugOsrEpilogueOffset_;
 
   uint32_t pushedBeforeCall_;
 #ifdef DEBUG
@@ -500,6 +497,7 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitStackCheck();
   MOZ_MUST_USE bool emitArgumentTypeChecks();
   MOZ_MUST_USE bool emitDebugPrologue();
+  MOZ_MUST_USE bool emitDebugEpilogue();
 
   template <typename F1, typename F2>
   MOZ_MUST_USE bool initEnvironmentChainHelper(const F1& initFunctionEnv,
@@ -559,6 +557,13 @@ class BaselineCompilerHandler {
 
   bool isDefinitelyLastOp() const { return pc_ == script_->lastPC(); }
 
+  bool shouldEmitDebugEpilogueAtReturnOp() const {
+    // The JIT uses the return address -> pc mapping and bakes in the pc
+    // argument so the DebugEpilogue call needs to be part of the returning
+    // bytecode op for this to work.
+    return true;
+  }
+
   JSScript* script() const { return script_; }
   JSScript* maybeScript() const { return script_; }
 
@@ -585,8 +590,8 @@ class BaselineCompilerHandler {
 
   RetAddrEntryVector& retAddrEntries() { return retAddrEntries_; }
 
-  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
-                                       uint32_t retOffset);
+  MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
+                                      uint32_t retOffset);
 
   // If a script has more |nslots| than this the stack check must account
   // for these slots explicitly.
@@ -678,6 +683,9 @@ class BaselineInterpreterHandler {
   Label codeCoverageAtPrologueLabel_;
   Label codeCoverageAtPCLabel_;
 
+  // Offsets of some callVMs for BaselineDebugModeOSR.
+  BaselineInterpreter::CallVMOffsets callVMOffsets_;
+
  public:
   using FrameInfoT = InterpreterFrameInfo;
 
@@ -702,16 +710,23 @@ class BaselineInterpreterHandler {
   JSScript* maybeScript() const { return nullptr; }
   JSFunction* maybeFunction() const { return nullptr; }
 
+  bool shouldEmitDebugEpilogueAtReturnOp() const {
+    // The interpreter doesn't use the return address -> pc mapping and doesn't
+    // bake in bytecode PCs so it can emit a shared DebugEpilogue call instead
+    // of duplicating it for every return op.
+    return false;
+  }
+
   MOZ_MUST_USE bool addDebugInstrumentationOffset(CodeOffset offset) {
     return debugInstrumentationOffsets_.append(offset.offset());
   }
 
-  // Interpreter doesn't need to keep track of RetAddrEntries, so this is a
-  // no-op.
-  MOZ_MUST_USE bool appendRetAddrEntry(JSContext* cx, RetAddrEntry::Kind kind,
-                                       uint32_t retOffset) {
-    return true;
+  const BaselineInterpreter::CallVMOffsets& callVMOffsets() const {
+    return callVMOffsets_;
   }
+
+  MOZ_MUST_USE bool recordCallRetAddr(JSContext* cx, RetAddrEntry::Kind kind,
+                                      uint32_t retOffset);
 
   bool maybeIonCompileable() const { return true; }
 

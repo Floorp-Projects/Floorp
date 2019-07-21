@@ -4,6 +4,7 @@
 
 package org.mozilla.geckoview.test
 
+import org.mozilla.geckoview.GeckoSessionSettings
 import org.mozilla.geckoview.StorageController
 
 import android.support.test.filters.MediumTest
@@ -214,5 +215,171 @@ class StorageControllerTest : BaseSessionTest() {
         assertThat("Cookie value should match",
                    cookie,
                    equalTo("null"))
+    }
+
+    @Test fun sessionContext() {
+        val session1 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build())
+        session1.loadUri("https://example.com")
+        session1.waitForPageStop()
+
+        session1.evaluateJS("""
+            localStorage.setItem('ctx', '1');
+        """)
+
+        var localStorage = session1.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("1"))
+
+        session1.reload()
+        session1.waitForPageStop()
+
+        localStorage = session1.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("1"))
+
+        val session2 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("2")
+                .build())
+
+        session2.loadUri("https://example.com")
+        session2.waitForPageStop()
+
+        localStorage = session2.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("null"))
+
+        session2.evaluateJS("""
+            localStorage.setItem('ctx', '2');
+        """)
+
+        localStorage = session2.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("2"))
+
+        session1.loadUri("https://example.com")
+        session1.waitForPageStop()
+
+        localStorage = session1.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("1"))
+
+        val session3 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("2")
+                .build())
+
+        session3.loadUri("https://example.com")
+        session3.waitForPageStop()
+
+        localStorage = session3.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("2"))
+    }
+
+    @Test fun clearDataForSessionContext() {
+        val session1 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build())
+        session1.loadUri("https://example.com")
+        session1.waitForPageStop()
+
+        session1.evaluateJS("""
+            localStorage.setItem('ctx', '1');
+        """)
+
+        var localStorage = session1.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("1"))
+
+        session1.close()
+
+        val session2 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("2")
+                .build())
+
+        session2.loadUri("https://example.com")
+        session2.waitForPageStop()
+
+        session2.evaluateJS("""
+            localStorage.setItem('ctx', '2');
+        """)
+
+        localStorage = session2.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("2"))
+
+        session2.close()
+
+        sessionRule.runtime.storageController.clearDataForSessionContext("1")
+
+        val session3 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build())
+
+        session3.loadUri("https://example.com")
+        session3.waitForPageStop()
+
+        localStorage = session3.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("null"))
+
+        val session4 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("2")
+                .build())
+
+        session4.loadUri("https://example.com")
+        session4.waitForPageStop()
+
+        localStorage = session4.evaluateJS("""
+            localStorage.getItem('ctx') || 'null'
+        """) as String
+
+        assertThat("Local storage value should match",
+                   localStorage,
+                   equalTo("2"))
     }
 }
