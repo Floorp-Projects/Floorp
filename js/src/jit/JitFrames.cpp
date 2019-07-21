@@ -701,13 +701,6 @@ void HandleException(ResumeFromException* rfe) {
 
       HandleExceptionBaseline(cx, frame, rfe, pc);
 
-      // If we are propagating an exception through a frame with
-      // on-stack recompile info, we should free the allocated
-      // RecompileInfo struct before we leave this block, as we will not
-      // be returning to the recompile handler.
-      auto deleteDebugModeOSRInfo = mozilla::MakeScopeExit(
-          [=] { frame.baselineFrame()->deleteDebugModeOSRInfo(); });
-
       if (rfe->kind != ResumeFromException::RESUME_ENTRY_FRAME &&
           rfe->kind != ResumeFromException::RESUME_FORCED_RETURN) {
         return;

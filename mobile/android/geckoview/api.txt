@@ -797,6 +797,7 @@ package org.mozilla.geckoview {
     ctor public GeckoSessionSettings(@NonNull GeckoSessionSettings);
     method public boolean getAllowJavascript();
     method @Nullable public String getChromeUri();
+    method @Nullable public String getContextId();
     method public int getDisplayMode();
     method public boolean getFullAccessibilityTree();
     method public int getScreenId();
@@ -834,6 +835,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSessionSettings.Builder allowJavascript(boolean);
     method @NonNull public GeckoSessionSettings build();
     method @NonNull public GeckoSessionSettings.Builder chromeUri(@NonNull String);
+    method @NonNull public GeckoSessionSettings.Builder contextId(@Nullable String);
     method @NonNull public GeckoSessionSettings.Builder displayMode(int);
     method @NonNull public GeckoSessionSettings.Builder fullAccessibilityTree(boolean);
     method @NonNull public GeckoSessionSettings.Builder screenId(int);
@@ -1045,6 +1047,7 @@ package org.mozilla.geckoview {
   public final class StorageController {
     ctor public StorageController();
     method @AnyThread @NonNull public GeckoResult<Void> clearData(long);
+    method @AnyThread public void clearDataForSessionContext(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
   }
 

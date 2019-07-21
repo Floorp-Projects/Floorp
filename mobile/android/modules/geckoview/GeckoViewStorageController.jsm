@@ -98,6 +98,10 @@ const GeckoViewStorageController = {
         this.clearData(aData.flags, aCallback);
         break;
       }
+      case "GeckoView:ClearSessionContextData": {
+        this.clearSessionContextData(aData.contextId);
+        break;
+      }
       case "GeckoView:ClearHostData": {
         this.clearHostData(aData.host, aData.flags, aCallback);
         break;
@@ -124,5 +128,15 @@ const GeckoViewStorageController = {
     }).then(resultFlags => {
       aCallback.onSuccess();
     });
+  },
+
+  clearSessionContextData(aContextId) {
+    const pattern = { geckoViewSessionContextId: aContextId };
+    debug`clearSessionContextData ${pattern}`;
+    Services.clearData.deleteDataFromOriginAttributesPattern(pattern);
+    // Call QMS explicitly to work around bug 1537882.
+    Services.qms.clearStoragesForOriginAttributesPattern(
+      JSON.stringify(pattern)
+    );
   },
 };

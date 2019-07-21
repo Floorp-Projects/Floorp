@@ -195,10 +195,6 @@ class JitRuntime {
                            WriteOnceData<JitCode*>>
       debugTrapHandlers_;
 
-  // Thunk used to fix up on-stack recompile of baseline scripts.
-  WriteOnceData<JitCode*> baselineDebugModeOSRHandler_;
-  WriteOnceData<void*> baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
-
   // BaselineInterpreter state.
   BaselineInterpreter baselineInterpreter_;
 
@@ -267,8 +263,6 @@ class JitRuntime {
                               MIRType type);
   void generateFreeStub(MacroAssembler& masm);
   JitCode* generateDebugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
-  JitCode* generateBaselineDebugModeOSRHandler(
-      JSContext* cx, uint32_t* noFrameRegPopOffsetOut);
 
   bool generateVMWrapper(JSContext* cx, MacroAssembler& masm,
                          const VMFunctionData& f, void* nativeFun,
@@ -329,8 +323,6 @@ class JitRuntime {
   }
 
   JitCode* debugTrapHandler(JSContext* cx, DebugTrapHandlerKind kind);
-  JitCode* getBaselineDebugModeOSRHandler(JSContext* cx);
-  void* getBaselineDebugModeOSRHandlerAddress(JSContext* cx, bool popFrameReg);
 
   BaselineInterpreter& baselineInterpreter() { return baselineInterpreter_; }
 

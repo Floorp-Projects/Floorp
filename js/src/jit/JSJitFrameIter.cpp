@@ -632,13 +632,6 @@ void JSJitProfilingFrameIterator::fixBaselineReturnAddress() {
   BaselineFrame* bl = (BaselineFrame*)(fp_ - BaselineFrame::FramePointerOffset -
                                        BaselineFrame::Size());
 
-  // Debug mode OSR for Baseline uses a "continuation fixer" and stashes the
-  // actual return address in an auxiliary structure.
-  if (BaselineDebugModeOSRInfo* info = bl->getDebugModeOSRInfo()) {
-    resumePCinCurrentFrame_ = info->resumeAddr;
-    return;
-  }
-
   // Certain exception handling cases such as debug OSR or resuming a generator
   // with .throw() will use BaselineFrame::setOverridePc() to indicate the
   // effective |pc|. We translate the effective-pc into a Baseline code
