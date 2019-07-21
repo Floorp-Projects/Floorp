@@ -143,6 +143,13 @@ exclude: true
 
 [68.28]: ./GeckoSession.MediaSource.html
 
+- Added API for session context assignment
+  [`GeckoSessionSettings.Builder.contextId`][68.29] and deletion of data
+  related to a session context
+  [`StorageController.clearSessionContextData`][68.30].
+
+[68.29]: ../GeckoSessionSettings.Builder.html#contextId-
+[68.30]: ../StorageController.html#clearSessionContextData-java.lang.String-
 
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to

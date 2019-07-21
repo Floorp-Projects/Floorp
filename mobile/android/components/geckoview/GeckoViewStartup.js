@@ -65,7 +65,11 @@ GeckoViewStartup.prototype = {
 
         GeckoViewUtils.addLazyGetter(this, "GeckoViewStorageController", {
           module: "resource://gre/modules/GeckoViewStorageController.jsm",
-          ged: ["GeckoView:ClearData", "GeckoView:ClearHostData"],
+          ged: [
+            "GeckoView:ClearData",
+            "GeckoView:ClearSessionContextData",
+            "GeckoView:ClearHostData",
+          ],
         });
 
         GeckoViewUtils.addLazyPrefObserver(

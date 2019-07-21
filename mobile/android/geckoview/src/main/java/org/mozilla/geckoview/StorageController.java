@@ -160,4 +160,24 @@ public final class StorageController {
 
         return result;
     }
+
+    /**
+     * Clear data for the given context ID.
+     * Use {@link GeckoSessionSettings.Builder#contextId}.to set a context ID
+     * for a session.
+     *
+     * Note: Any open session may re-accumulate previously cleared data. To
+     * ensure that no persistent data is left behind, you need to close all
+     * sessions for the given context prior to clearing data.
+     *
+     * @param contextId The context ID for the storage data to be deleted.
+     */
+    @AnyThread
+    public void clearDataForSessionContext(final @NonNull String contextId) {
+        final GeckoBundle bundle = new GeckoBundle(1);
+        bundle.putString("contextId", contextId);
+
+        EventDispatcher.getInstance().dispatch(
+            "GeckoView:ClearSessionContextData", bundle);
+    }
 }

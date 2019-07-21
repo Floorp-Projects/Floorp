@@ -1047,6 +1047,7 @@ package org.mozilla.geckoview {
   public final class StorageController {
     ctor public StorageController();
     method @AnyThread @NonNull public GeckoResult<Void> clearData(long);
+    method @AnyThread public void clearDataForSessionContext(@NonNull String);
     method @AnyThread @NonNull public GeckoResult<Void> clearDataFromHost(@NonNull String, long);
   }
 
