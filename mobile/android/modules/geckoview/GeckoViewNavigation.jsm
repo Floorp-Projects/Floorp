@@ -76,6 +76,11 @@ class GeckoViewNavigation extends GeckoViewModule {
     debug`sessionContextId=${this.settings.sessionContextId}`;
 
     if (this.settings.sessionContextId !== null) {
+      // Gecko may have issues with strings containing special characters,
+      // so we restrict the string format to a specific pattern.
+      if (!/^gvctx(-)?([a-f0-9]+)$/.test(this.settings.sessionContextId)) {
+        throw new Error("sessionContextId has illegal format");
+      }
       this.browser.webNavigation.setOriginAttributesBeforeLoading({
         geckoViewSessionContextId: this.settings.sessionContextId,
         privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(this.browser)
