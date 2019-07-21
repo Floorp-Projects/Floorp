@@ -326,10 +326,11 @@ class PromptFeatureTest {
         val timeSelectionTypes = listOf(
             PromptRequest.TimeSelection.Type.DATE,
             PromptRequest.TimeSelection.Type.DATE_AND_TIME,
-            PromptRequest.TimeSelection.Type.TIME
+            PromptRequest.TimeSelection.Type.TIME,
+            PromptRequest.TimeSelection.Type.MONTH
         )
 
-        timeSelectionTypes.forEach { _ ->
+        timeSelectionTypes.forEach { type ->
             val session = getSelectedSession()
             var onClearWasCalled = false
             var selectedDate: Date? = null
@@ -337,7 +338,7 @@ class PromptFeatureTest {
                 "title", Date(0),
                 null,
                 null,
-                PromptRequest.TimeSelection.Type.DATE,
+                type,
                 { date -> selectedDate = date }) {
                 onClearWasCalled = true
             }

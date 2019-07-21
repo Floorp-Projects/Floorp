@@ -305,6 +305,7 @@ class PromptFeature(
                     TimeSelection.Type.DATE -> TimePickerDialogFragment.SELECTION_TYPE_DATE
                     TimeSelection.Type.DATE_AND_TIME -> TimePickerDialogFragment.SELECTION_TYPE_DATE_AND_TIME
                     TimeSelection.Type.TIME -> TimePickerDialogFragment.SELECTION_TYPE_TIME
+                    TimeSelection.Type.MONTH -> TimePickerDialogFragment.SELECTION_TYPE_MONTH
                 }
 
                 with(promptRequest) {

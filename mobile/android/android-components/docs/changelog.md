@@ -21,6 +21,9 @@ permalink: /changelog/
 * **service-location**
   * 🆕 A new component for accessing Mozilla's and other location services.
 
+* **feature-prompts**
+  * Improved month picker UI, now we have the same widget as Fennec.
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)

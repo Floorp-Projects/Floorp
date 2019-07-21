@@ -11,10 +11,15 @@ import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.content.DialogInterface.BUTTON_POSITIVE
 import android.os.Build.VERSION_CODES.LOLLIPOP
 import android.widget.DatePicker
+import android.widget.NumberPicker
 import android.widget.TimePicker
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_DATE_AND_TIME
+import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_MONTH
 import mozilla.components.feature.prompts.TimePickerDialogFragment.Companion.SELECTION_TYPE_TIME
+import mozilla.components.feature.prompts.ext.month
+import mozilla.components.feature.prompts.ext.toCalendar
+import mozilla.components.feature.prompts.ext.year
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -142,6 +147,50 @@ class TimePickerDialogFragmentTest {
     }
 
     @Test
+    fun `building a month picker`() {
+        val initialDate = "2018-06".toDate("yyyy-MM")
+        val minDate = "2018-04".toDate("yyyy-MM")
+        val maxDate = "2018-09".toDate("yyyy-MM")
+
+        val initialDateCal = initialDate.toCalendar()
+        val minCal = minDate.toCalendar()
+        val maxCal = maxDate.toCalendar()
+
+        val fragment = spy(
+            TimePickerDialogFragment.newInstance(
+                "sessionId",
+                initialDate,
+                minDate,
+                maxDate,
+                SELECTION_TYPE_MONTH
+            )
+        )
+
+        doReturn(appCompatContext).`when`(fragment).requireContext()
+
+        val dialog = fragment.onCreateDialog(null)
+        dialog.show()
+
+        val monthPicker = dialog.findViewById<NumberPicker>(R.id.month_chooser)
+        val yearPicker = dialog.findViewById<NumberPicker>(R.id.year_chooser)
+
+        assertEquals(initialDateCal.year, yearPicker.value)
+        assertEquals(initialDateCal.month, monthPicker.value)
+
+        assertEquals(minCal.year, yearPicker.minValue)
+        assertEquals(minCal.month, monthPicker.minValue)
+
+        assertEquals(maxCal.year, yearPicker.maxValue)
+        assertEquals(maxCal.month, monthPicker.maxValue)
+
+        fragment.onDateSet(mock(), 8, 2019)
+        val selectedDate = fragment.selectedDate.toCalendar()
+
+        assertEquals(2019, selectedDate.year)
+        assertEquals(7, selectedDate.month)
+    }
+
+    @Test
     @Config(sdk = [LOLLIPOP])
     @Suppress("DEPRECATION")
     fun `building a time picker`() {
@@ -205,12 +254,6 @@ class TimePickerDialogFragmentTest {
 
         val dialog = fragment.onCreateDialog(null)
         dialog.show()
-    }
-
-    private fun Date.toCalendar(): Calendar {
-        val calendar = Calendar.getInstance()
-        calendar.time = this
-        return calendar
     }
 
     private val Calendar.minutes: Int

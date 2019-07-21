@@ -90,7 +90,7 @@ sealed class PromptRequest {
         val onClear: () -> Unit
     ) : PromptRequest() {
         enum class Type {
-            DATE, DATE_AND_TIME, TIME
+            DATE, DATE_AND_TIME, TIME, MONTH
         }
     }
 

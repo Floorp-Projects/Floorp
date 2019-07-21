@@ -389,6 +389,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val selectionType = when (format) {
             "HH:mm" -> TimeSelection.Type.TIME
+            "yyyy-MM" -> TimeSelection.Type.MONTH
             "yyyy-MM-dd'T'HH:mm" -> TimeSelection.Type.DATE_AND_TIME
             else -> TimeSelection.Type.DATE
         }

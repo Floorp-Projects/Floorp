@@ -22,6 +22,13 @@ import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import mozilla.components.feature.prompts.ext.day
+import mozilla.components.feature.prompts.ext.hour
+import mozilla.components.feature.prompts.ext.minute
+import mozilla.components.feature.prompts.ext.month
+import mozilla.components.feature.prompts.ext.toCalendar
+import mozilla.components.feature.prompts.ext.year
+import mozilla.components.feature.prompts.widget.MonthAndYearPicker
 import java.util.Calendar
 import java.util.Date
 
@@ -37,7 +44,8 @@ private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
 @Suppress("TooManyFunctions")
 internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnDateChangedListener,
     TimePicker.OnTimeChangedListener, TimePickerDialog.OnTimeSetListener,
-    DatePickerDialog.OnDateSetListener, DialogInterface.OnClickListener {
+    DatePickerDialog.OnDateSetListener, DialogInterface.OnClickListener,
+    MonthAndYearPicker.OnDateSetListener {
     private val initialDate: Date by lazy { safeArguments.getSerializable(KEY_INITIAL_DATE) as Date }
     private val minimumDate: Date? by lazy { safeArguments.getSerializable((KEY_MIN_DATE)) as? Date }
     private val maximumDate: Date? by lazy { safeArguments.getSerializable(KEY_MAX_DATE) as? Date }
@@ -78,6 +86,14 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
                     it.setButton(BUTTON_POSITIVE, context.getString(R.string.mozac_feature_prompts_set_date), this)
                     it.setButton(BUTTON_NEGATIVE, context.getString(R.string.mozac_feature_prompts_cancel), this)
                 }
+            SELECTION_TYPE_MONTH -> AlertDialog.Builder(context)
+                .setTitle(R.string.mozac_feature_prompts_set_month)
+                .setView(inflateDateMonthPicker())
+                .create()
+                .also {
+                    it.setButton(BUTTON_POSITIVE, context.getString(R.string.mozac_feature_prompts_set_date), this)
+                    it.setButton(BUTTON_NEGATIVE, context.getString(R.string.mozac_feature_prompts_cancel), this)
+                }
             else -> throw IllegalArgumentException()
         }
 
@@ -112,6 +128,16 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         return view
     }
 
+    private fun inflateDateMonthPicker(): View {
+        return MonthAndYearPicker(
+            context = requireContext(),
+            selectedDate = initialDate.toCalendar(),
+            maxDate = maximumDate?.toCalendar() ?: MonthAndYearPicker.getDefaultMaxDate(),
+            minDate = minimumDate?.toCalendar() ?: MonthAndYearPicker.getDefaultMinDate(),
+            dateSetListener = this
+        )
+    }
+
     @Suppress("DEPRECATION")
     private fun initTimePicker(picker: TimePicker, cal: Calendar) {
         if (Build.VERSION.SDK_INT >= M) {
@@ -143,6 +169,10 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
         onDateChanged(view, year, month, dayOfMonth)
         onClick(null, BUTTON_POSITIVE)
+    }
+
+    override fun onDateSet(picker: MonthAndYearPicker, month: Int, year: Int) {
+        onDateChanged(null, year, month, 0)
     }
 
     override fun onTimeChanged(picker: TimePicker?, hourOfDay: Int, minute: Int) {
@@ -203,18 +233,6 @@ internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnD
         const val SELECTION_TYPE_DATE = 1
         const val SELECTION_TYPE_DATE_AND_TIME = 2
         const val SELECTION_TYPE_TIME = 3
+        const val SELECTION_TYPE_MONTH = 4
     }
 }
-
-internal fun Date.toCalendar() = Calendar.getInstance().also { it.time = this }
-
-internal val Calendar.minute: Int
-    get() = get(Calendar.MINUTE)
-internal val Calendar.hour: Int
-    get() = get(Calendar.HOUR_OF_DAY)
-internal val Calendar.day: Int
-    get() = get(Calendar.DAY_OF_MONTH)
-internal val Calendar.year: Int
-    get() = get(Calendar.YEAR)
-internal val Calendar.month: Int
-    get() = get(Calendar.MONTH)
