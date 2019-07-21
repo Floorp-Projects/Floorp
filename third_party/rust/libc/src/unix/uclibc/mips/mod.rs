@@ -224,6 +224,7 @@ pub const SO_MAX_PACING_RATE: ::c_int = 47;
 pub const SO_BPF_EXTENSIONS: ::c_int = 48;
 
 pub const FIOCLEX: ::c_ulong = 0x6601;
+pub const FIONCLEX: ::c_ulong = 0x6602;
 pub const FIONBIO: ::c_ulong = 0x667e;
 
 pub const SA_ONSTACK: ::c_uint = 0x08000000;
@@ -391,15 +392,15 @@ pub const MCL_FUTURE: ::c_int = 0x0002;
 
 pub const SIGSTKSZ: ::size_t = 8192;
 pub const CBAUD: ::tcflag_t = 0o0010017;
-pub const TAB1: ::c_int = 0x00000800;
-pub const TAB2: ::c_int = 0x00001000;
-pub const TAB3: ::c_int = 0x00001800;
-pub const CR1: ::c_int  = 0x00000200;
-pub const CR2: ::c_int  = 0x00000400;
-pub const CR3: ::c_int  = 0x00000600;
-pub const FF1: ::c_int  = 0x00008000;
-pub const BS1: ::c_int  = 0x00002000;
-pub const VT1: ::c_int  = 0x00004000;
+pub const TAB1: ::tcflag_t = 0x00000800;
+pub const TAB2: ::tcflag_t = 0x00001000;
+pub const TAB3: ::tcflag_t = 0x00001800;
+pub const CR1: ::tcflag_t = 0x00000200;
+pub const CR2: ::tcflag_t = 0x00000400;
+pub const CR3: ::tcflag_t = 0x00000600;
+pub const FF1: ::tcflag_t = 0x00008000;
+pub const BS1: ::tcflag_t = 0x00002000;
+pub const VT1: ::tcflag_t = 0x00004000;
 pub const VWERASE: usize = 14;
 pub const VREPRINT: usize = 12;
 pub const VSUSP: usize = 10;

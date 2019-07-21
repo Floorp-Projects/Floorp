@@ -80,13 +80,6 @@ s! {
         pub ai_next: *mut addrinfo,
     }
 
-    pub struct sockaddr_nl {
-        pub nl_family: ::sa_family_t,
-        nl_pad: ::c_ushort,
-        pub nl_pid: u32,
-        pub nl_groups: u32
-    }
-
     pub struct sockaddr_ll {
         pub sll_family: ::c_ushort,
         pub sll_protocol: ::c_ushort,
@@ -151,19 +144,6 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
-    }
-
-    pub struct sigevent {
-        pub sigev_value: ::sigval,
-        pub sigev_signo: ::c_int,
-        pub sigev_notify: ::c_int,
-        // Actually a union.  We only expose sigev_notify_thread_id because it's
-        // the most useful member
-        pub sigev_notify_thread_id: ::c_int,
-        #[cfg(target_pointer_width = "64")]
-        __unused1: [::c_int; 11],
-        #[cfg(target_pointer_width = "32")]
-        __unused1: [::c_int; 12]
     }
 
     pub struct rlimit64 {
@@ -242,51 +222,43 @@ s! {
     }
 
     pub struct dqblk {
-        pub dqb_bhardlimit: ::uint32_t,
-        pub dqb_bsoftlimit: ::uint32_t,
-        pub dqb_curblocks: ::uint32_t,
-        pub dqb_ihardlimit: ::uint32_t,
-        pub dqb_isoftlimit: ::uint32_t,
-        pub dqb_curinodes: ::uint32_t,
+        pub dqb_bhardlimit: u32,
+        pub dqb_bsoftlimit: u32,
+        pub dqb_curblocks: u32,
+        pub dqb_ihardlimit: u32,
+        pub dqb_isoftlimit: u32,
+        pub dqb_curinodes: u32,
         pub dqb_btime: ::time_t,
         pub dqb_itime: ::time_t,
     }
 
     pub struct signalfd_siginfo {
-        pub ssi_signo: ::uint32_t,
-        pub ssi_errno: ::int32_t,
-        pub ssi_code: ::int32_t,
-        pub ssi_pid: ::uint32_t,
-        pub ssi_uid: ::uint32_t,
-        pub ssi_fd: ::int32_t,
-        pub ssi_tid: ::uint32_t,
-        pub ssi_band: ::uint32_t,
-        pub ssi_overrun: ::uint32_t,
-        pub ssi_trapno: ::uint32_t,
-        pub ssi_status: ::int32_t,
-        pub ssi_int: ::int32_t,
-        pub ssi_ptr: ::uint64_t,
-        pub ssi_utime: ::uint64_t,
-        pub ssi_stime: ::uint64_t,
-        pub ssi_addr: ::uint64_t,
-        pub ssi_addr_lsb: ::uint16_t,
-        _pad2: ::uint16_t,
-        pub ssi_syscall: ::int32_t,
-        pub ssi_call_addr: ::uint64_t,
-        pub ssi_arch: ::uint32_t,
-        _pad: [::uint8_t; 28],
+        pub ssi_signo: u32,
+        pub ssi_errno: i32,
+        pub ssi_code: i32,
+        pub ssi_pid: u32,
+        pub ssi_uid: u32,
+        pub ssi_fd: i32,
+        pub ssi_tid: u32,
+        pub ssi_band: u32,
+        pub ssi_overrun: u32,
+        pub ssi_trapno: u32,
+        pub ssi_status: i32,
+        pub ssi_int: i32,
+        pub ssi_ptr: u64,
+        pub ssi_utime: u64,
+        pub ssi_stime: u64,
+        pub ssi_addr: u64,
+        pub ssi_addr_lsb: u16,
+        _pad2: u16,
+        pub ssi_syscall: i32,
+        pub ssi_call_addr: u64,
+        pub ssi_arch: u32,
+        _pad: [u8; 28],
     }
 
     pub struct fsid_t {
         __val: [::c_int; 2],
-    }
-
-    pub struct mq_attr {
-        pub mq_flags: ::c_long,
-        pub mq_maxmsg: ::c_long,
-        pub mq_msgsize: ::c_long,
-        pub mq_curmsgs: ::c_long,
-        pad: [::c_long; 4]
     }
 
     pub struct cpu_set_t {
@@ -321,8 +293,8 @@ s_no_extra_traits! {
     )]
     #[allow(missing_debug_implementations)]
     pub struct epoll_event {
-        pub events: ::uint32_t,
-        pub u64: ::uint64_t,
+        pub events: u32,
+        pub u64: u64,
     }
 
     #[allow(missing_debug_implementations)]
@@ -367,6 +339,121 @@ s_no_extra_traits! {
         pub d_reclen: ::c_ushort,
         pub d_type: ::c_uchar,
         pub d_name: [::c_char; 256],
+    }
+
+    pub struct mq_attr {
+        pub mq_flags: ::c_long,
+        pub mq_maxmsg: ::c_long,
+        pub mq_msgsize: ::c_long,
+        pub mq_curmsgs: ::c_long,
+        pad: [::c_long; 4]
+    }
+
+    pub struct sockaddr_nl {
+        pub nl_family: ::sa_family_t,
+        nl_pad: ::c_ushort,
+        pub nl_pid: u32,
+        pub nl_groups: u32
+    }
+
+    pub struct sigevent {
+        pub sigev_value: ::sigval,
+        pub sigev_signo: ::c_int,
+        pub sigev_notify: ::c_int,
+        // Actually a union.  We only expose sigev_notify_thread_id because it's
+        // the most useful member
+        pub sigev_notify_thread_id: ::c_int,
+        #[cfg(target_pointer_width = "64")]
+        __unused1: [::c_int; 11],
+        #[cfg(target_pointer_width = "32")]
+        __unused1: [::c_int; 12]
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for mq_attr {
+            fn eq(&self, other: &mq_attr) -> bool {
+                self.mq_flags == other.mq_flags &&
+                self.mq_maxmsg == other.mq_maxmsg &&
+                self.mq_msgsize == other.mq_msgsize &&
+                self.mq_curmsgs == other.mq_curmsgs
+            }
+        }
+        impl Eq for mq_attr {}
+        impl ::fmt::Debug for mq_attr {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("mq_attr")
+                    .field("mq_flags", &self.mq_flags)
+                    .field("mq_maxmsg", &self.mq_maxmsg)
+                    .field("mq_msgsize", &self.mq_msgsize)
+                    .field("mq_curmsgs", &self.mq_curmsgs)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for mq_attr {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.mq_flags.hash(state);
+                self.mq_maxmsg.hash(state);
+                self.mq_msgsize.hash(state);
+                self.mq_curmsgs.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_nl {
+            fn eq(&self, other: &sockaddr_nl) -> bool {
+                self.nl_family == other.nl_family &&
+                self.nl_pid == other.nl_pid &&
+                self.nl_groups == other.nl_groups
+            }
+        }
+        impl Eq for sockaddr_nl {}
+        impl ::fmt::Debug for sockaddr_nl {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_nl")
+                    .field("nl_family", &self.nl_family)
+                    .field("nl_pid", &self.nl_pid)
+                    .field("nl_groups", &self.nl_groups)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_nl {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.nl_family.hash(state);
+                self.nl_pid.hash(state);
+                self.nl_groups.hash(state);
+            }
+        }
+
+        impl PartialEq for sigevent {
+            fn eq(&self, other: &sigevent) -> bool {
+                self.sigev_value == other.sigev_value
+                    && self.sigev_signo == other.sigev_signo
+                    && self.sigev_notify == other.sigev_notify
+                    && self.sigev_notify_thread_id
+                        == other.sigev_notify_thread_id
+            }
+        }
+        impl Eq for sigevent {}
+        impl ::fmt::Debug for sigevent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sigevent")
+                    .field("sigev_value", &self.sigev_value)
+                    .field("sigev_signo", &self.sigev_signo)
+                    .field("sigev_notify", &self.sigev_notify)
+                    .field("sigev_notify_thread_id",
+                           &self.sigev_notify_thread_id)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sigevent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sigev_value.hash(state);
+                self.sigev_signo.hash(state);
+                self.sigev_notify.hash(state);
+                self.sigev_notify_thread_id.hash(state);
+            }
+        }
     }
 }
 
@@ -853,13 +940,13 @@ pub const TCOON: ::c_int = 1;
 pub const TCIFLUSH: ::c_int = 0;
 pub const TCOFLUSH: ::c_int = 1;
 pub const TCIOFLUSH: ::c_int = 2;
-pub const NL0: ::c_int  = 0x00000000;
-pub const NL1: ::c_int  = 0x00000100;
-pub const TAB0: ::c_int = 0x00000000;
-pub const CR0: ::c_int  = 0x00000000;
-pub const FF0: ::c_int  = 0x00000000;
-pub const BS0: ::c_int  = 0x00000000;
-pub const VT0: ::c_int  = 0x00000000;
+pub const NL0: ::tcflag_t  = 0x00000000;
+pub const NL1: ::tcflag_t  = 0x00000100;
+pub const TAB0: ::tcflag_t = 0x00000000;
+pub const CR0: ::tcflag_t  = 0x00000000;
+pub const FF0: ::tcflag_t  = 0x00000000;
+pub const BS0: ::tcflag_t  = 0x00000000;
+pub const VT0: ::tcflag_t  = 0x00000000;
 pub const VERASE: usize = 2;
 pub const VKILL: usize = 3;
 pub const VINTR: usize = 0;
@@ -1388,8 +1475,6 @@ pub const NOSTR: ::nl_item = 0x503;
 
 pub const FILENAME_MAX: ::c_uint = 4095;
 
-pub const AF_MAX: ::c_int = 39;
-
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
@@ -1487,6 +1572,11 @@ f! {
 }
 
 extern {
+    #[cfg_attr(target_os = "linux",
+               link_name = "__xpg_strerror_r")]
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
+                      buflen: ::size_t) -> ::c_int;
+
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
     pub fn sem_init(sem: *mut sem_t,
                     pshared: ::c_int,
@@ -1500,6 +1590,8 @@ extern {
     pub fn srand(seed: ::c_uint);
 
     pub fn fdatasync(fd: ::c_int) -> ::c_int;
+    pub fn gettimeofday(tp: *mut ::timeval,
+                        tz: *mut ::timezone) -> ::c_int;
     pub fn mincore(addr: *mut ::c_void, len: ::size_t,
                    vec: *mut ::c_uchar) -> ::c_int;
     pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
@@ -1576,6 +1668,8 @@ extern {
 
     pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t,
                          advise: ::c_int) -> ::c_int;
+    pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
+    pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
     pub fn utimensat(dirfd: ::c_int, path: *const ::c_char,
                      times: *const ::timespec, flag: ::c_int) -> ::c_int;
@@ -1837,7 +1931,7 @@ extern {
     pub fn recvmsg(fd: ::c_int, msg: *mut ::msghdr, flags: ::c_int)
                    -> ::ssize_t;
     #[cfg_attr(target_os = "solaris", link_name = "__posix_getgrgid_r")]
-    pub fn getgrgid_r(uid: ::uid_t,
+    pub fn getgrgid_r(gid: ::gid_t,
                       grp: *mut ::group,
                       buf: *mut ::c_char,
                       buflen: ::size_t,
