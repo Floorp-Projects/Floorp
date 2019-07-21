@@ -54,6 +54,7 @@ add_task(async function test_deserialize_principal_with_csp() {
           inIsolatedMozBrowser: false,
           privateBrowsingId: 0,
           userContextId: 0,
+          geckoViewSessionContextId: "",
         },
       },
     },
@@ -67,6 +68,7 @@ add_task(async function test_deserialize_principal_with_csp() {
           inIsolatedMozBrowser: false,
           privateBrowsingId: 0,
           userContextId: 0,
+          geckoViewSessionContextId: "",
         },
         // Within Bug 965637 we removed CSP from Principals. Already serialized Principals however should still deserialize correctly (just without the CSP).
         // "cspJSON": "{\"csp-policies\":[{\"child-src\":[\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://www.youtube-nocookie.com\",\"https://trackertest.org\",\"https://www.surveygizmo.com\",\"https://accounts.firefox.com\",\"https://accounts.firefox.com.cn\",\"https://www.youtube.com\"],\"connect-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://accounts.firefox.com/\",\"https://accounts.firefox.com.cn/\"],\"default-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\"],\"frame-src\":[\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://www.youtube-nocookie.com\",\"https://trackertest.org\",\"https://www.surveygizmo.com\",\"https://accounts.firefox.com\",\"https://accounts.firefox.com.cn\",\"https://www.youtube.com\"],\"img-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"data:\",\"https://mozilla.org\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://adservice.google.com\",\"https://adservice.google.de\",\"https://adservice.google.dk\",\"https://creativecommons.org\",\"https://ad.doubleclick.net\"],\"report-only\":false,\"script-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"'unsafe-inline'\",\"'unsafe-eval'\",\"https://www.googletagmanager.com\",\"https://www.google-analytics.com\",\"https://tagmanager.google.com\",\"https://www.youtube.com\",\"https://s.ytimg.com\"],\"style-src\":[\"'self'\",\"https://*.mozilla.net\",\"https://*.mozilla.org\",\"https://*.mozilla.com\",\"'unsafe-inline'\"]}]}",
