@@ -198,7 +198,6 @@ class ObjectInspector extends Component<Props> {
       nodeExpand,
       nodeCollapse,
       recordTelemetryEvent,
-      setExpanded,
       roots,
     } = this.props;
 
@@ -210,10 +209,6 @@ class ObjectInspector extends Component<Props> {
       }
     } else {
       nodeCollapse(item);
-    }
-
-    if (setExpanded) {
-      setExpanded(item, expand);
     }
   }
 
@@ -254,7 +249,6 @@ class ObjectInspector extends Component<Props> {
     const {
       autoExpandAll = true,
       autoExpandDepth = 1,
-      initiallyExpanded,
       focusable = true,
       disableWrap = false,
       expandedPaths,
@@ -270,7 +264,6 @@ class ObjectInspector extends Component<Props> {
 
       autoExpandAll,
       autoExpandDepth,
-      initiallyExpanded,
 
       isExpanded: item => expandedPaths && expandedPaths.has(item.path),
       isExpandable: this.isNodeExpandable,

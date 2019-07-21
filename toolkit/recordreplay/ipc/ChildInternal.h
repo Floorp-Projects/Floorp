@@ -39,9 +39,6 @@ struct MinidumpInfo {
 void ReportFatalError(const Maybe<MinidumpInfo>& aMinidumpInfo,
                       const char* aFormat, ...);
 
-// Get the unique ID of this child.
-size_t GetId();
-
 // Monitor used for various synchronization tasks.
 extern Monitor* gMonitor;
 

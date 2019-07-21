@@ -488,7 +488,7 @@ class Tree extends Component {
     super(props);
 
     this.state = {
-      autoExpanded: new Set(),
+      seen: new Set(),
     };
 
     this.treeRef = React.createRef();
@@ -536,40 +536,29 @@ class Tree extends Component {
   }
 
   _autoExpand() {
-    const {
-      autoExpandDepth,
-      autoExpandNodeChildrenLimit,
-      initiallyExpanded
-    } = this.props;
-
-    if (!autoExpandDepth && !initiallyExpanded) {
+    const { autoExpandDepth, autoExpandNodeChildrenLimit } = this.props;
+    if (!autoExpandDepth) {
       return;
     }
 
     // Automatically expand the first autoExpandDepth levels for new items. Do
     // not use the usual DFS infrastructure because we don't want to ignore
-    // collapsed nodes. Any initially expanded items will be expanded regardless
-    // of how deep they are.
+    // collapsed nodes.
     const autoExpand = (item, currentDepth) => {
-      const initial = initiallyExpanded && initiallyExpanded(item);
-
-      if (!initial && currentDepth >= autoExpandDepth) {
+      if (currentDepth >= autoExpandDepth || this.state.seen.has(item)) {
         return;
       }
 
       const children = this.props.getChildren(item);
       if (
-        !initial &&
         autoExpandNodeChildrenLimit &&
         children.length > autoExpandNodeChildrenLimit
       ) {
         return;
       }
 
-      if (!this.state.autoExpanded.has(item)) {
-        this.props.onExpand(item);
-        this.state.autoExpanded.add(item);
-      }
+      this.props.onExpand(item);
+      this.state.seen.add(item);
 
       const length = children.length;
       for (let i = 0; i < length; i++) {
@@ -585,14 +574,6 @@ class Tree extends Component {
       }
     } else if (length != 0) {
       autoExpand(roots[0], 0);
-
-      if (initiallyExpanded) {
-        for (let i = 1; i < length; i++) {
-          if (initiallyExpanded(roots[i])) {
-            autoExpand(roots[i], 0);
-          }
-        }
-      }
     }
   }
 

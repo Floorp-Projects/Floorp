@@ -264,17 +264,13 @@ void ChildProcessInfo::WaitUntilPaused() {
 
   bool sentTerminateMessage = false;
   while (true) {
-    Maybe<MonitorAutoLock> lock;
-    lock.emplace(*gMonitor);
-
-    MaybeHandlePendingSyncMessage();
+    MonitorAutoLock lock(*gMonitor);
 
     // Search for the first message received from this process.
     ChildProcessInfo* process = this;
     Message::UniquePtr msg = ExtractChildMessage(&process);
 
     if (msg) {
-      lock.reset();
       OnIncomingMessage(*msg);
       if (IsPaused()) {
         return;
