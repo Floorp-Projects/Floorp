@@ -108,7 +108,7 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSStyleRule)
   // Keep this in sync with IsCCLeaf.
 
-  // Unlink the wrapper for our declaraton.
+  // Unlink the wrapper for our declaration.
   //
   // Note that this has to happen before unlinking css::Rule.
   tmp->UnlinkDeclarationWrapper(tmp->mDecls);
