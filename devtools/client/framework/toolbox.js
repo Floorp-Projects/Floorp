@@ -496,7 +496,7 @@ Toolbox.prototype = {
    * Get the toolbox's inspector front. Note that it may not always have been
    * initialized first. Use `initInspector()` if needed.
    */
-  get inspector() {
+  get inspectorFront() {
     return this._inspector;
   },
 
@@ -1720,10 +1720,10 @@ Toolbox.prototype = {
     if (currentPanel.togglePicker) {
       currentPanel.togglePicker(focus);
     } else {
-      if (!this.inspector) {
+      if (!this.inspectorFront) {
         await this.initInspector();
       }
-      this.inspector.nodePicker.togglePicker(focus);
+      this.inspectorFront.nodePicker.togglePicker(focus);
     }
   },
 
@@ -1737,7 +1737,7 @@ Toolbox.prototype = {
       if (currentPanel.cancelPicker) {
         currentPanel.cancelPicker();
       } else {
-        this.inspector.nodePicker.cancel();
+        this.inspectorFront.nodePicker.cancel();
       }
       // Stop the console from toggling.
       event.stopImmediatePropagation();
@@ -1748,7 +1748,7 @@ Toolbox.prototype = {
     this.tellRDMAboutPickerState(true);
     this.pickerButton.isChecked = true;
     await this.selectTool("inspector", "inspect_dom");
-    this.on("select", this.inspector.nodePicker.stop);
+    this.on("select", this.inspectorFront.nodePicker.stop);
   },
 
   _onPickerStarted: async function() {
@@ -1758,7 +1758,7 @@ Toolbox.prototype = {
 
   _onPickerStopped: function() {
     this.tellRDMAboutPickerState(false);
-    this.off("select", this.inspector.nodePicker.stop);
+    this.off("select", this.inspectorFront.nodePicker.stop);
     this.doc.removeEventListener("keypress", this._onPickerKeypress, true);
     this.pickerButton.isChecked = false;
   },
@@ -1881,7 +1881,7 @@ Toolbox.prototype = {
    * Update the buttons.
    */
   updateToolboxButtons() {
-    const inspector = this.inspector;
+    const inspector = this.inspectorFront;
     // two of the buttons have highlighters that need to be cleared
     // on will-navigate, otherwise we hold on to the stale highlighter
     const hasHighlighters =
@@ -3267,14 +3267,23 @@ Toolbox.prototype = {
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
         this._inspector = await this.target.getInspector();
-        this._walker = this.inspector.walker;
-        this._highlighter = this.inspector.highlighter;
-        this._selection = this.inspector.selection;
+        this._walker = this.inspectorFront.walker;
+        this._highlighter = this.inspectorFront.highlighter;
+        this._selection = this.inspectorFront.selection;
 
-        this.inspector.nodePicker.on("picker-starting", this._onPickerStarting);
-        this.inspector.nodePicker.on("picker-started", this._onPickerStarted);
-        this.inspector.nodePicker.on("picker-stopped", this._onPickerStopped);
-        this.inspector.nodePicker.on(
+        this.inspectorFront.nodePicker.on(
+          "picker-starting",
+          this._onPickerStarting
+        );
+        this.inspectorFront.nodePicker.on(
+          "picker-started",
+          this._onPickerStarted
+        );
+        this.inspectorFront.nodePicker.on(
+          "picker-stopped",
+          this._onPickerStopped
+        );
+        this.inspectorFront.nodePicker.on(
           "picker-node-canceled",
           this._onPickerCanceled
         );

@@ -51,3 +51,10 @@ export function getThisVariable(this_: any, path: string): ?NamedValue {
     contents: { value: this_ },
   };
 }
+
+// Get a string path for an scope item which can be used in different pauses for
+// a thread.
+export function getScopeItemPath(item: Object) {
+  // Calling toString() on item.path allows symbols to be handled.
+  return item.path.toString();
+}
