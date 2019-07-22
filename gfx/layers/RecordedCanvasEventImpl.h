@@ -35,6 +35,8 @@ const EventType TEXTURE_UNLOCK = EventType(EventType::LAST + 4);
 const EventType CACHE_DATA_SURFACE = EventType(EventType::LAST + 5);
 const EventType PREPARE_DATA_FOR_SURFACE = EventType(EventType::LAST + 6);
 const EventType GET_DATA_FOR_SURFACE = EventType(EventType::LAST + 7);
+const EventType ADD_SURFACE_ALIAS = EventType(EventType::LAST + 8);
+const EventType REMOVE_SURFACE_ALIAS = EventType(EventType::LAST + 9);
 
 class RecordedCanvasBeginTransaction final
     : public RecordedEventDerived<RecordedCanvasBeginTransaction> {
@@ -368,6 +370,93 @@ RecordedGetDataForSurface::RecordedGetDataForSurface(S& aStream)
   ReadElement(aStream, mSurface);
 }
 
+class RecordedAddSurfaceAlias final
+    : public RecordedEventDerived<RecordedAddSurfaceAlias> {
+ public:
+  RecordedAddSurfaceAlias(const gfx::SourceSurface* aSurfaceAlias,
+                          const gfx::SourceSurface* aActualSurface)
+      : RecordedEventDerived(ADD_SURFACE_ALIAS),
+        mSurfaceAlias(aSurfaceAlias),
+        mActualSurface(aActualSurface) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedAddSurfaceAlias(S& aStream);
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const;
+
+  template <class S>
+  void Record(S& aStream) const;
+
+  std::string GetName() const final { return "RecordedAddSurfaceAlias"; }
+
+ private:
+  ReferencePtr mSurfaceAlias;
+  ReferencePtr mActualSurface;
+};
+
+inline bool RecordedAddSurfaceAlias::PlayCanvasEvent(
+    CanvasTranslator* aTranslator) const {
+  RefPtr<gfx::SourceSurface> surface =
+      aTranslator->LookupSourceSurface(mActualSurface);
+  if (!surface) {
+    return false;
+  }
+
+  aTranslator->AddSourceSurface(mSurfaceAlias, surface);
+  return true;
+}
+
+template <class S>
+void RecordedAddSurfaceAlias::Record(S& aStream) const {
+  WriteElement(aStream, mSurfaceAlias);
+  WriteElement(aStream, mActualSurface);
+}
+
+template <class S>
+RecordedAddSurfaceAlias::RecordedAddSurfaceAlias(S& aStream)
+    : RecordedEventDerived(ADD_SURFACE_ALIAS) {
+  ReadElement(aStream, mSurfaceAlias);
+  ReadElement(aStream, mActualSurface);
+}
+
+class RecordedRemoveSurfaceAlias final
+    : public RecordedEventDerived<RecordedRemoveSurfaceAlias> {
+ public:
+  explicit RecordedRemoveSurfaceAlias(const gfx::SourceSurface* aSurfaceAlias)
+      : RecordedEventDerived(REMOVE_SURFACE_ALIAS),
+        mSurfaceAlias(aSurfaceAlias) {}
+
+  template <class S>
+  MOZ_IMPLICIT RecordedRemoveSurfaceAlias(S& aStream);
+
+  bool PlayCanvasEvent(CanvasTranslator* aTranslator) const;
+
+  template <class S>
+  void Record(S& aStream) const;
+
+  std::string GetName() const final { return "RecordedRemoveSurfaceAlias"; }
+
+ private:
+  ReferencePtr mSurfaceAlias;
+};
+
+inline bool RecordedRemoveSurfaceAlias::PlayCanvasEvent(
+    CanvasTranslator* aTranslator) const {
+  aTranslator->RemoveSourceSurface(mSurfaceAlias);
+  return true;
+}
+
+template <class S>
+void RecordedRemoveSurfaceAlias::Record(S& aStream) const {
+  WriteElement(aStream, mSurfaceAlias);
+}
+
+template <class S>
+RecordedRemoveSurfaceAlias::RecordedRemoveSurfaceAlias(S& aStream)
+    : RecordedEventDerived(REMOVE_SURFACE_ALIAS) {
+  ReadElement(aStream, mSurfaceAlias);
+}
+
 #define FOR_EACH_CANVAS_EVENT(f)                               \
   f(CANVAS_BEGIN_TRANSACTION, RecordedCanvasBeginTransaction); \
   f(CANVAS_END_TRANSACTION, RecordedCanvasEndTransaction);     \
@@ -376,7 +465,9 @@ RecordedGetDataForSurface::RecordedGetDataForSurface(S& aStream)
   f(TEXTURE_UNLOCK, RecordedTextureUnlock);                    \
   f(CACHE_DATA_SURFACE, RecordedCacheDataSurface);             \
   f(PREPARE_DATA_FOR_SURFACE, RecordedPrepareDataForSurface);  \
-  f(GET_DATA_FOR_SURFACE, RecordedGetDataForSurface);
+  f(GET_DATA_FOR_SURFACE, RecordedGetDataForSurface);          \
+  f(ADD_SURFACE_ALIAS, RecordedAddSurfaceAlias);               \
+  f(REMOVE_SURFACE_ALIAS, RecordedRemoveSurfaceAlias);
 
 }  // namespace layers
 }  // namespace mozilla

@@ -89,6 +89,23 @@ class CanvasChild final : public PCanvasChild {
    */
   void RecordEvent(const gfx::RecordedEvent& aEvent);
 
+  /**
+   * Wrap the given surface, so that we can provide a DataSourceSurface if
+   * required.
+   * @param aSurface the SourceSurface to wrap
+   * @returns a SourceSurface that can provide a DataSourceSurface if required
+   */
+  already_AddRefed<gfx::SourceSurface> WrapSurface(
+      const RefPtr<gfx::SourceSurface>& aSurface);
+
+  /**
+   * Get DataSourceSurface from the translated equivalent version of aSurface in
+   * the GPU process.
+   * @param aSurface the SourceSurface in this process for which we need a
+   *                 DataSourceSurface
+   * @returns a DataSourceSurface created from data for aSurface retrieve from
+   *          GPU process
+   */
   already_AddRefed<gfx::DataSourceSurface> GetDataSurface(
       const gfx::SourceSurface* aSurface);
 
