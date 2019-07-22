@@ -2,10 +2,10 @@ import { showToast, StdToastElement } from 'std:elements/toast';
 
 // helper functions to keep tests from bleeding into each other
 
-const runTest = (testFn, name, toast) => {
+const runTest = (testFn, name, toast, action) => {
     try {
         test(() => {
-            testFn(toast);
+            testFn(toast, action);
         }, name);
     } finally {
         toast.remove();
@@ -39,6 +39,17 @@ export const testShowToast = (testFn, name) => {
     const toast = showToast("message");
 
     runTest(testFn, name, toast);
+};
+
+export const testActionToast = (testFn, name) => {
+    const toast = new StdToastElement('Message', {});
+    const action = document.createElement('button');
+    action.setAttribute('slot', 'action');
+    action.textContent = 'action';
+    toast.appendChild(action);
+    document.querySelector('main').appendChild(toast);
+
+    runTest(testFn, name, toast, action);
 };
 
 export const assertToastShown = (toast) => {
