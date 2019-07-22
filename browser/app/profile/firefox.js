@@ -1318,6 +1318,8 @@ pref("trailhead.firstrun.branches", "join-privacy");
 
 // The pref that controls if the What's New panel is enabled.
 pref("browser.messaging-system.whatsNewPanel.enabled", false);
+// Whether to use Messaging System to add a badge to the FxA toolbar button
+pref("browser.messaging-system.fxatoolbarbadge.enabled", true);
 
 // Enable the DOM fullscreen API.
 pref("full-screen-api.enabled", true);
