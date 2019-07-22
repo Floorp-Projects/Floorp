@@ -11,35 +11,6 @@
 namespace mozilla {
 namespace layers {
 
-class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
- public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCanvasRecording, final)
-
-  SourceSurfaceCanvasRecording(RefPtr<gfx::SourceSurface>& aRecordedSuface,
-                               RefPtr<CanvasChild>& aCanvasChild)
-      : mRecordedSurface(aRecordedSuface), mCanvasChild(aCanvasChild) {}
-
-  gfx::SurfaceType GetType() const final { return mRecordedSurface->GetType(); }
-
-  gfx::IntSize GetSize() const final { return mRecordedSurface->GetSize(); }
-
-  gfx::SurfaceFormat GetFormat() const final {
-    return mRecordedSurface->GetFormat();
-  }
-
-  already_AddRefed<gfx::DataSourceSurface> GetDataSurface() final {
-    if (!mDataSourceSurface) {
-      mDataSourceSurface = mCanvasChild->GetDataSurface(mRecordedSurface);
-    }
-
-    return do_AddRef(mDataSourceSurface);
-  }
-
-  RefPtr<gfx::SourceSurface> mRecordedSurface;
-  RefPtr<CanvasChild> mCanvasChild;
-  RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
-};
-
 RecordedTextureData::RecordedTextureData(
     already_AddRefed<CanvasChild> aCanvasChild, gfx::IntSize aSize,
     gfx::SurfaceFormat aFormat, TextureType aTextureType)
@@ -87,7 +58,7 @@ already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
   MOZ_ASSERT(mDT);
 
   mSnapshot = mDT->Snapshot();
-  return MakeAndAddRef<SourceSurfaceCanvasRecording>(mSnapshot, mCanvasChild);
+  return mCanvasChild->WrapSurface(mSnapshot);
 }
 
 void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {}
