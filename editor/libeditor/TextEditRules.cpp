@@ -928,7 +928,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
     if (NS_WARN_IF(!doc)) {
       return NS_OK;
     }
-    RefPtr<nsTextNode> newNode = EditorBase::CreateTextNode(*doc, tString);
+    RefPtr<nsTextNode> newNode = TextEditorRef().CreateTextNode(tString);
     if (NS_WARN_IF(!newNode)) {
       return NS_OK;
     }
