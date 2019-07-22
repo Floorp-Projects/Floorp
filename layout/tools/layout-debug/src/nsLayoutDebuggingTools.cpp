@@ -88,31 +88,6 @@ nsLayoutDebuggingTools::Init(mozIDOMWindow* aWin) {
   }
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_UNEXPECTED);
 
-  mPaintFlashing =
-      Preferences::GetBool("nglayout.debug.paint_flashing", mPaintFlashing);
-  mPaintDumping =
-      Preferences::GetBool("nglayout.debug.paint_dumping", mPaintDumping);
-  mInvalidateDumping = Preferences::GetBool("nglayout.debug.invalidate_dumping",
-                                            mInvalidateDumping);
-  mEventDumping =
-      Preferences::GetBool("nglayout.debug.event_dumping", mEventDumping);
-  mMotionEventDumping = Preferences::GetBool(
-      "nglayout.debug.motion_event_dumping", mMotionEventDumping);
-  mCrossingEventDumping = Preferences::GetBool(
-      "nglayout.debug.crossing_event_dumping", mCrossingEventDumping);
-  mReflowCounts =
-      Preferences::GetBool("layout.reflow.showframecounts", mReflowCounts);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetVisualDebugging(bool* aVisualDebugging) {
-#ifdef DEBUG
-  *aVisualDebugging = nsFrame::GetShowFrameBorders();
-#else
-  *aVisualDebugging = false;
-#endif
   return NS_OK;
 }
 
@@ -121,16 +96,6 @@ nsLayoutDebuggingTools::SetVisualDebugging(bool aVisualDebugging) {
 #ifdef DEBUG
   nsFrame::ShowFrameBorders(aVisualDebugging);
   ForceRefresh();
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetVisualEventDebugging(bool* aVisualEventDebugging) {
-#ifdef DEBUG
-  *aVisualEventDebugging = nsFrame::GetShowEventTargetFrameBorder();
-#else
-  *aVisualEventDebugging = false;
 #endif
   return NS_OK;
 }
@@ -145,94 +110,11 @@ nsLayoutDebuggingTools::SetVisualEventDebugging(bool aVisualEventDebugging) {
 }
 
 NS_IMETHODIMP
-nsLayoutDebuggingTools::GetPaintFlashing(bool* aPaintFlashing) {
-  *aPaintFlashing = mPaintFlashing;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetPaintFlashing(bool aPaintFlashing) {
-  mPaintFlashing = aPaintFlashing;
-  return SetBoolPrefAndRefresh("nglayout.debug.paint_flashing", mPaintFlashing);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetPaintDumping(bool* aPaintDumping) {
-  *aPaintDumping = mPaintDumping;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetPaintDumping(bool aPaintDumping) {
-  mPaintDumping = aPaintDumping;
-  return SetBoolPrefAndRefresh("nglayout.debug.paint_dumping", mPaintDumping);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetInvalidateDumping(bool* aInvalidateDumping) {
-  *aInvalidateDumping = mInvalidateDumping;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetInvalidateDumping(bool aInvalidateDumping) {
-  mInvalidateDumping = aInvalidateDumping;
-  return SetBoolPrefAndRefresh("nglayout.debug.invalidate_dumping",
-                               mInvalidateDumping);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetEventDumping(bool* aEventDumping) {
-  *aEventDumping = mEventDumping;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetEventDumping(bool aEventDumping) {
-  mEventDumping = aEventDumping;
-  return SetBoolPrefAndRefresh("nglayout.debug.event_dumping", mEventDumping);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetMotionEventDumping(bool* aMotionEventDumping) {
-  *aMotionEventDumping = mMotionEventDumping;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetMotionEventDumping(bool aMotionEventDumping) {
-  mMotionEventDumping = aMotionEventDumping;
-  return SetBoolPrefAndRefresh("nglayout.debug.motion_event_dumping",
-                               mMotionEventDumping);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetCrossingEventDumping(bool* aCrossingEventDumping) {
-  *aCrossingEventDumping = mCrossingEventDumping;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::SetCrossingEventDumping(bool aCrossingEventDumping) {
-  mCrossingEventDumping = aCrossingEventDumping;
-  return SetBoolPrefAndRefresh("nglayout.debug.crossing_event_dumping",
-                               mCrossingEventDumping);
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::GetReflowCounts(bool* aShow) {
-  *aShow = mReflowCounts;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsLayoutDebuggingTools::SetReflowCounts(bool aShow) {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
   if (PresShell* presShell = GetPresShell(mDocShell)) {
 #ifdef MOZ_REFLOW_PERF
     presShell->SetPaintFrameCount(aShow);
-    SetBoolPrefAndRefresh("layout.reflow.showframecounts", aShow);
-    mReflowCounts = aShow;
 #else
     printf("************************************************\n");
     printf("Sorry, you have not built with MOZ_REFLOW_PERF=1\n");
@@ -440,13 +322,14 @@ nsLayoutDebuggingTools::DumpReflowStats() {
   return NS_OK;
 }
 
-void nsLayoutDebuggingTools::ForceRefresh() {
+nsresult nsLayoutDebuggingTools::ForceRefresh() {
   RefPtr<nsViewManager> vm(view_manager(mDocShell));
-  if (!vm) return;
+  if (!vm) return NS_OK;
   nsView* root = vm->GetRootView();
   if (root) {
     vm->InvalidateView(root);
   }
+  return NS_OK;
 }
 
 nsresult nsLayoutDebuggingTools::SetBoolPrefAndRefresh(const char* aPrefName,
