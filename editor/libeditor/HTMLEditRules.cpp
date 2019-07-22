@@ -3075,14 +3075,13 @@ nsresult HTMLEditRules::WillDeleteSelection(
         // text node is found, we can delete to end or to begining as
         // appropriate, since the case where both sel endpoints in same text
         // node was already handled (we wouldn't be here)
-        if (startNode->GetAsText() &&
+        if (startNode->IsText() &&
             startNode->Length() > static_cast<uint32_t>(startOffset)) {
           // Delete to last character
-          OwningNonNull<CharacterData> dataNode =
-              *static_cast<CharacterData*>(startNode.get());
+          OwningNonNull<Text> textNode = *startNode->AsText();
           rv =
               MOZ_KnownLive(HTMLEditorRef())
-                  .DeleteTextWithTransaction(dataNode, startOffset,
+                  .DeleteTextWithTransaction(textNode, startOffset,
                                              startNode->Length() - startOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -3091,12 +3090,11 @@ nsresult HTMLEditRules::WillDeleteSelection(
             return rv;
           }
         }
-        if (endNode->GetAsText() && endOffset) {
+        if (endNode->IsText() && endOffset) {
           // Delete to first character
-          OwningNonNull<CharacterData> dataNode =
-              *static_cast<CharacterData*>(endNode.get());
+          OwningNonNull<Text> textNode = *endNode->AsText();
           rv = MOZ_KnownLive(HTMLEditorRef())
-                   .DeleteTextWithTransaction(dataNode, 0, endOffset);
+                   .DeleteTextWithTransaction(textNode, 0, endOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
