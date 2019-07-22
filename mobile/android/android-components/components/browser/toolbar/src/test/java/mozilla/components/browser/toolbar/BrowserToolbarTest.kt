@@ -49,7 +49,6 @@ import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.Robolectric
 import org.robolectric.Robolectric.buildAttributeSet
 import org.robolectric.Shadows
-import kotlin.random.Random
 
 @RunWith(AndroidJUnit4::class)
 class BrowserToolbarTest {
@@ -807,16 +806,18 @@ class BrowserToolbarTest {
     fun `titleView fading is set properly with null attrs`() {
         val toolbar = BrowserToolbar(testContext)
         val titleView = toolbar.displayToolbar.titleView
-        val edgeLength = Random.nextInt(1, 24)
+        val edgeLengthArray = arrayOf(1, 12, 24)
 
         assertFalse(titleView.isHorizontalFadingEdgeEnabled)
         assertEquals(0, titleView.horizontalFadingEdgeLength)
 
-        titleView.setFadingEdgeLength(edgeLength)
-        titleView.isHorizontalFadingEdgeEnabled = edgeLength > 0
+        for (edgeLength in edgeLengthArray) {
+            titleView.setFadingEdgeLength(edgeLength)
+            titleView.isHorizontalFadingEdgeEnabled = edgeLength > 0
 
-        assertTrue(titleView.isHorizontalFadingEdgeEnabled)
-        assertEquals(edgeLength, titleView.horizontalFadingEdgeLength)
+            assertTrue(titleView.isHorizontalFadingEdgeEnabled)
+            assertEquals(edgeLength, titleView.horizontalFadingEdgeLength)
+        }
     }
 
     @Test
@@ -835,16 +836,18 @@ class BrowserToolbarTest {
     fun `urlView fading is set properly with null attrs`() {
         val toolbar = BrowserToolbar(testContext)
         val urlView = toolbar.displayToolbar.urlView
-        val edgeLength = Random.nextInt(1, 24)
+        val edgeLengthArray = arrayOf(1, 12, 24)
 
         assertFalse(urlView.isHorizontalFadingEdgeEnabled)
         assertEquals(0, urlView.horizontalFadingEdgeLength)
 
-        urlView.setFadingEdgeLength(edgeLength)
-        urlView.isHorizontalFadingEdgeEnabled = edgeLength > 0
+        for (edgeLength in edgeLengthArray) {
+            urlView.setFadingEdgeLength(edgeLength)
+            urlView.isHorizontalFadingEdgeEnabled = edgeLength > 0
 
-        assertTrue(urlView.isHorizontalFadingEdgeEnabled)
-        assertEquals(edgeLength, urlView.horizontalFadingEdgeLength)
+            assertTrue(urlView.isHorizontalFadingEdgeEnabled)
+            assertEquals(edgeLength, urlView.horizontalFadingEdgeLength)
+        }
     }
 
     @Test
