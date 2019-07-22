@@ -351,6 +351,23 @@ add_task(async function test_get_does_not_verify_signature_if_load_dump() {
 });
 add_task(clear_state);
 
+add_task(async function test_sync_runs_once_only() {
+  const backup = Utils.log.warn;
+  const messages = [];
+  Utils.log.warn = m => {
+    messages.push(m);
+  };
+
+  await Promise.all([client.maybeSync(2000), client.maybeSync(2000)]);
+
+  ok(
+    messages.includes("main/password-fields sync already running"),
+    "warning is shown about sync already running"
+  );
+  Utils.log.warn = backup;
+});
+add_task(clear_state);
+
 add_task(
   async function test_sync_pulls_metadata_if_missing_with_dump_is_up_to_date() {
     if (IS_ANDROID) {
