@@ -707,7 +707,7 @@
       if (type == "tag" || type == "bookmark-tag") {
         // The title is separated from the tags by an endash
         let tags;
-        [, title, tags] = title.match(/^(.+) \u2013 (.+)$/);
+        [, title, tags] = title.match(/^(.+)\x1F(.+)$/);
 
         // Each tag is split by a comma in an undefined order, so sort it
         let sortedTags = tags.split(/\s*,\s*/).sort((a, b) => {
