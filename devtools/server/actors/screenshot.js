@@ -11,7 +11,20 @@ const { screenshotSpec } = require("devtools/shared/specs/screenshot");
 exports.ScreenshotActor = protocol.ActorClassWithSpec(screenshotSpec, {
   initialize: function(conn, targetActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
+    this.targetActor = targetActor;
     this.document = targetActor.window.document;
+    this._onNavigate = this._onNavigate.bind(this);
+
+    this.targetActor.on("navigate", this._onNavigate);
+  },
+
+  destroy() {
+    this.targetActor.off("navigate", this._onNavigate);
+    protocol.Actor.prototype.destroy.call(this);
+  },
+
+  _onNavigate() {
+    this.document = this.targetActor.window.document;
   },
 
   capture: function(args) {
