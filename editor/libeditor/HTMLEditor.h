@@ -609,17 +609,17 @@ class HTMLEditor final : public TextEditor,
   MOZ_CAN_RUN_SCRIPT nsresult DeleteNodeWithTransaction(nsINode& aNode);
 
   /**
-   * DeleteTextWithTransaction() removes text in the range from aCharData if
+   * DeleteTextWithTransaction() removes text in the range from aTextNode if
    * it's modifiable.  Note that this not an override of same method of
    * EditorBase.
    *
-   * @param aCharData           The data node which should be modified.
-   * @param aOffset             Start offset of removing text in aCharData.
+   * @param aTextNode           The text node which should be modified.
+   * @param aOffset             Start offset of removing text in aTextNode.
    * @param aLength             Length of removing text.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTextWithTransaction(dom::CharacterData& aTextNode,
-                                     uint32_t aOffset, uint32_t aLength);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteTextWithTransaction(dom::Text& aTextNode,
+                                                        uint32_t aOffset,
+                                                        uint32_t aLength);
 
   /**
    * DeleteParentBlocksIfEmpty() removes parent block elements if they

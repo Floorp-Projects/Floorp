@@ -2299,6 +2299,44 @@ void EditorBase::OnEndHandlingTopLevelEditSubAction() {
   mEditActionData->SetTopLevelEditSubAction(EditSubAction::eNone, eNone);
 }
 
+void EditorBase::DoInsertText(Text& aText, uint32_t aOffset,
+                              const nsAString& aStringToInsert,
+                              ErrorResult& aRv) {
+  aText.InsertData(aOffset, aStringToInsert, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "Text::InsertData() failed");
+  if (NS_WARN_IF(Destroyed())) {
+    aRv = NS_ERROR_EDITOR_DESTROYED;
+  }
+}
+
+void EditorBase::DoDeleteText(Text& aText, uint32_t aOffset, uint32_t aCount,
+                              ErrorResult& aRv) {
+  aText.DeleteData(aOffset, aCount, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "Text::DeleteData() failed");
+  if (NS_WARN_IF(Destroyed())) {
+    aRv = NS_ERROR_EDITOR_DESTROYED;
+  }
+}
+
+void EditorBase::DoReplaceText(Text& aText, uint32_t aOffset, uint32_t aCount,
+                               const nsAString& aStringToInsert,
+                               ErrorResult& aRv) {
+  aText.ReplaceData(aOffset, aCount, aStringToInsert, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "Text::ReplaceData() failed");
+  if (NS_WARN_IF(Destroyed())) {
+    aRv = NS_ERROR_EDITOR_DESTROYED;
+  }
+}
+
+void EditorBase::DoSetText(Text& aText, const nsAString& aStringToSet,
+                           ErrorResult& aRv) {
+  aText.SetData(aStringToSet, aRv);
+  NS_WARNING_ASSERTION(!aRv.Failed(), "Text::SetData() failed");
+  if (NS_WARN_IF(Destroyed())) {
+    aRv = NS_ERROR_EDITOR_DESTROYED;
+  }
+}
+
 NS_IMETHODIMP
 EditorBase::CloneAttribute(const nsAString& aAttribute, Element* aDestElement,
                            Element* aSourceElement) {
@@ -2742,10 +2780,10 @@ nsresult EditorBase::NotifyDocumentListeners(
   return rv;
 }
 
-nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData) {
+nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aTextNode) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  const uint32_t length = aCharData.Length();
+  const uint32_t length = aTextNode.Length();
 
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
       *this, EditSubAction::eSetText, nsIEditor::eNext);
@@ -2754,16 +2792,16 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData) {
   if (!mActionListeners.IsEmpty() && length) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(&aCharData, 0, length);
+      listener->WillDeleteText(&aTextNode, 0, length);
     }
   }
 
   // We don't support undo here, so we don't really need all of the transaction
   // machinery, therefore we can run our transaction directly, breaking all of
   // the rules!
-  ErrorResult res;
-  aCharData.SetData(aString, res);
-  nsresult rv = res.StealNSResult();
+  ErrorResult error;
+  DoSetText(aTextNode, aString, error);
+  nsresult rv = error.StealNSResult();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -2771,21 +2809,21 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData) {
   {
     // Create a nested scope to not overwrite rv from the outer scope.
     DebugOnly<nsresult> rv =
-        SelectionRefPtr()->Collapse(&aCharData, aString.Length());
+        SelectionRefPtr()->Collapse(&aTextNode, aString.Length());
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Selection could not be collapsed after insert");
   }
 
-  RangeUpdaterRef().SelAdjDeleteText(&aCharData, 0, length);
-  RangeUpdaterRef().SelAdjInsertText(aCharData, 0, aString);
+  RangeUpdaterRef().SelAdjDeleteText(&aTextNode, 0, length);
+  RangeUpdaterRef().SelAdjInsertText(aTextNode, 0, aString);
 
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
     if (length) {
-      htmlEditRules->DidDeleteText(aCharData, 0, length);
+      htmlEditRules->DidDeleteText(aTextNode, 0, length);
     }
     if (!aString.IsEmpty()) {
-      htmlEditRules->DidInsertText(aCharData, 0, aString);
+      htmlEditRules->DidInsertText(aTextNode, 0, aString);
     }
   }
 
@@ -2794,10 +2832,10 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
       if (length) {
-        listener->DidDeleteText(&aCharData, 0, length, rv);
+        listener->DidDeleteText(&aTextNode, 0, length, rv);
       }
       if (!aString.IsEmpty()) {
-        listener->DidInsertText(&aCharData, 0, aString, rv);
+        listener->DidInsertText(&aTextNode, 0, aString, rv);
       }
     }
   }
@@ -2805,13 +2843,13 @@ nsresult EditorBase::SetTextImpl(const nsAString& aString, Text& aCharData) {
   return rv;
 }
 
-nsresult EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
+nsresult EditorBase::DeleteTextWithTransaction(Text& aTextNode,
                                                uint32_t aOffset,
                                                uint32_t aLength) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   RefPtr<DeleteTextTransaction> transaction =
-      DeleteTextTransaction::MaybeCreate(*this, aCharData, aOffset, aLength);
+      DeleteTextTransaction::MaybeCreate(*this, aTextNode, aOffset, aLength);
   if (NS_WARN_IF(!transaction)) {
     return NS_ERROR_FAILURE;
   }
@@ -2823,7 +2861,7 @@ nsresult EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->WillDeleteText(&aCharData, aOffset, aLength);
+      listener->WillDeleteText(&aTextNode, aOffset, aLength);
     }
   }
 
@@ -2831,14 +2869,14 @@ nsresult EditorBase::DeleteTextWithTransaction(CharacterData& aCharData,
 
   if (mRules && mRules->AsHTMLEditRules()) {
     RefPtr<HTMLEditRules> htmlEditRules = mRules->AsHTMLEditRules();
-    htmlEditRules->DidDeleteText(aCharData, aOffset, aLength);
+    htmlEditRules->DidDeleteText(aTextNode, aOffset, aLength);
   }
 
   // Let listeners know what happened
   if (!mActionListeners.IsEmpty()) {
     AutoActionListenerArray listeners(mActionListeners);
     for (auto& listener : listeners) {
-      listener->DidDeleteText(&aCharData, aOffset, aLength, rv);
+      listener->DidDeleteText(&aTextNode, aOffset, aLength, rv);
     }
   }
 
@@ -2915,13 +2953,18 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
     Text* rightAsText = aStartOfRightNode.GetContainerAsText();
     Text* leftAsText = aNewLeftNode.GetAsText();
     if (rightAsText && leftAsText) {
+      MOZ_DIAGNOSTIC_ASSERT(AsHTMLEditor(),
+                            "Text node in TextEditor shouldn't be split");
       // Fix right node
       nsAutoString leftText;
       rightAsText->SubstringData(0, aStartOfRightNode.Offset(), leftText,
                                  IgnoreErrors());
-      rightAsText->DeleteData(0, aStartOfRightNode.Offset(), IgnoreErrors());
+      // XXX This call may destroy us.
+      DoDeleteText(MOZ_KnownLive(*rightAsText), 0, aStartOfRightNode.Offset(),
+                   IgnoreErrors());
       // Fix left node
-      leftAsText->GetAsText()->SetData(leftText, IgnoreErrors());
+      // XXX This call may destroy us.
+      DoSetText(MOZ_KnownLive(*leftAsText), leftText, IgnoreErrors());
     } else {
       MOZ_DIAGNOSTIC_ASSERT(!rightAsText && !leftAsText);
       // Otherwise it's an interior node, so shuffle around the children. Go
@@ -3040,6 +3083,7 @@ void EditorBase::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
                                  nsINode* aParent) {
   MOZ_ASSERT(IsEditActionDataAvailable());
+  MOZ_DIAGNOSTIC_ASSERT(AsHTMLEditor());
 
   MOZ_ASSERT(aNodeToKeep);
   MOZ_ASSERT(aNodeToJoin);
@@ -3101,7 +3145,9 @@ nsresult EditorBase::DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
     aNodeToKeep->GetAsText()->GetData(rightText);
     aNodeToJoin->GetAsText()->GetData(leftText);
     leftText += rightText;
-    aNodeToKeep->GetAsText()->SetData(leftText, IgnoreErrors());
+    // XXX This call may destroy us.
+    DoSetText(MOZ_KnownLive(*aNodeToKeep->GetAsText()), leftText,
+              IgnoreErrors());
   } else {
     // Otherwise it's an interior node, so shuffle around the children.
     nsCOMPtr<nsINodeList> childNodes = aNodeToJoin->ChildNodes();
@@ -4048,8 +4094,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
 
     // there is a priorNode, so delete its last child (if chardata, delete the
     // last char). if it has no children, delete it
-    if (RefPtr<CharacterData> priorNodeAsCharData =
-            CharacterData::FromNode(priorNode)) {
+    if (RefPtr<Text> priorNodeAsText = Text::FromNode(priorNode)) {
       uint32_t length = priorNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4057,7 +4102,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
           DeleteTextTransaction::MaybeCreateForPreviousCharacter(
-              *this, *priorNodeAsCharData, length);
+              *this, *priorNodeAsText, length);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
@@ -4087,8 +4132,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
 
     // there is a nextNode, so delete its first child (if chardata, delete the
     // first char). if it has no children, delete it
-    if (RefPtr<CharacterData> nextNodeAsCharData =
-            CharacterData::FromNode(nextNode)) {
+    if (RefPtr<Text> nextNodeAsText = Text::FromNode(nextNode)) {
       uint32_t length = nextNode->Length();
       // Bail out for empty chardata XXX: Do we want to do something else?
       if (NS_WARN_IF(!length)) {
@@ -4096,7 +4140,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
       }
       RefPtr<DeleteTextTransaction> deleteTextTransaction =
           DeleteTextTransaction::MaybeCreateForNextCharacter(
-              *this, *nextNodeAsCharData, 0);
+              *this, *nextNodeAsText, 0);
       if (NS_WARN_IF(!deleteTextTransaction)) {
         return nullptr;
       }
@@ -4116,7 +4160,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
     return deleteNodeTransaction.forget();
   }
 
-  if (RefPtr<CharacterData> nodeAsCharData = CharacterData::FromNode(node)) {
+  if (RefPtr<Text> nodeAsText = Text::FromNode(node)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
@@ -4124,9 +4168,9 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
         aAction == ePrevious
             ? DeleteTextTransaction::MaybeCreateForPreviousCharacter(
-                  *this, *nodeAsCharData, offset)
+                  *this, *nodeAsText, offset)
             : DeleteTextTransaction::MaybeCreateForNextCharacter(
-                  *this, *nodeAsCharData, offset);
+                  *this, *nodeAsText, offset);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }
@@ -4160,8 +4204,7 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
     return nullptr;
   }
 
-  if (RefPtr<CharacterData> selectedNodeAsCharData =
-          CharacterData::FromNode(selectedNode)) {
+  if (RefPtr<Text> selectedNodeAsText = Text::FromNode(selectedNode)) {
     if (NS_WARN_IF(aAction != ePrevious && aAction != eNext)) {
       return nullptr;
     }
@@ -4173,9 +4216,9 @@ already_AddRefed<EditTransactionBase> EditorBase::CreateTxnForDeleteRange(
     RefPtr<DeleteTextTransaction> deleteTextTransaction =
         aAction == ePrevious
             ? DeleteTextTransaction::MaybeCreateForPreviousCharacter(
-                  *this, *selectedNodeAsCharData, position)
+                  *this, *selectedNodeAsText, position)
             : DeleteTextTransaction::MaybeCreateForNextCharacter(
-                  *this, *selectedNodeAsCharData, position);
+                  *this, *selectedNodeAsText, position);
     if (NS_WARN_IF(!deleteTextTransaction)) {
       return nullptr;
     }

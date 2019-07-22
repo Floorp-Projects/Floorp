@@ -22,24 +22,24 @@ using namespace dom;
 
 // static
 already_AddRefed<DeleteTextTransaction> DeleteTextTransaction::MaybeCreate(
-    EditorBase& aEditorBase, CharacterData& aCharData, uint32_t aOffset,
+    EditorBase& aEditorBase, Text& aTextNode, uint32_t aOffset,
     uint32_t aLengthToDelete) {
   RefPtr<DeleteTextTransaction> transaction = new DeleteTextTransaction(
-      aEditorBase, aCharData, aOffset, aLengthToDelete);
+      aEditorBase, aTextNode, aOffset, aLengthToDelete);
   return transaction.forget();
 }
 
 // static
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForPreviousCharacter(EditorBase& aEditorBase,
-                                                       CharacterData& aCharData,
+                                                       Text& aTextNode,
                                                        uint32_t aOffset) {
   if (NS_WARN_IF(!aOffset)) {
     return nullptr;
   }
 
   nsAutoString data;
-  aCharData.GetData(data);
+  aTextNode.GetData(data);
   if (NS_WARN_IF(data.IsEmpty())) {
     return nullptr;
   }
@@ -51,17 +51,17 @@ DeleteTextTransaction::MaybeCreateForPreviousCharacter(EditorBase& aEditorBase,
     ++length;
     --offset;
   }
-  return DeleteTextTransaction::MaybeCreate(aEditorBase, aCharData, offset,
+  return DeleteTextTransaction::MaybeCreate(aEditorBase, aTextNode, offset,
                                             length);
 }
 
 // static
 already_AddRefed<DeleteTextTransaction>
 DeleteTextTransaction::MaybeCreateForNextCharacter(EditorBase& aEditorBase,
-                                                   CharacterData& aCharData,
+                                                   Text& aTextNode,
                                                    uint32_t aOffset) {
   nsAutoString data;
-  aCharData.GetData(data);
+  aTextNode.GetData(data);
   if (NS_WARN_IF(aOffset >= data.Length()) || NS_WARN_IF(data.IsEmpty())) {
     return nullptr;
   }
@@ -71,66 +71,68 @@ DeleteTextTransaction::MaybeCreateForNextCharacter(EditorBase& aEditorBase,
       NS_IS_LOW_SURROGATE(data[aOffset + 1])) {
     ++length;
   }
-  return DeleteTextTransaction::MaybeCreate(aEditorBase, aCharData, aOffset,
+  return DeleteTextTransaction::MaybeCreate(aEditorBase, aTextNode, aOffset,
                                             length);
 }
 
 DeleteTextTransaction::DeleteTextTransaction(EditorBase& aEditorBase,
-                                             CharacterData& aCharData,
-                                             uint32_t aOffset,
+                                             Text& aTextNode, uint32_t aOffset,
                                              uint32_t aLengthToDelete)
     : mEditorBase(&aEditorBase),
-      mCharData(&aCharData),
+      mTextNode(&aTextNode),
       mOffset(aOffset),
       mLengthToDelete(aLengthToDelete) {
-  NS_ASSERTION(mCharData->Length() >= aOffset + aLengthToDelete,
+  NS_ASSERTION(mTextNode->Length() >= aOffset + aLengthToDelete,
                "Trying to delete more characters than in node");
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(DeleteTextTransaction, EditTransactionBase,
-                                   mEditorBase, mCharData)
+                                   mEditorBase, mTextNode)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DeleteTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
 bool DeleteTextTransaction::CanDoIt() const {
-  if (NS_WARN_IF(!mCharData) || NS_WARN_IF(!mEditorBase)) {
+  if (NS_WARN_IF(!mTextNode) || NS_WARN_IF(!mEditorBase)) {
     return false;
   }
-  return mEditorBase->IsModifiableNode(*mCharData);
+  return mEditorBase->IsModifiableNode(*mTextNode);
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 DeleteTextTransaction::DoTransaction() {
-  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mCharData)) {
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   // Get the text that we're about to delete
   ErrorResult err;
-  mCharData->SubstringData(mOffset, mLengthToDelete, mDeletedText, err);
+  mTextNode->SubstringData(mOffset, mLengthToDelete, mDeletedText, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
 
-  mCharData->DeleteData(mOffset, mLengthToDelete, err);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
+  editorBase->DoDeleteText(*textNode, mOffset, mLengthToDelete, err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
 
-  mEditorBase->RangeUpdaterRef().SelAdjDeleteText(mCharData, mOffset,
-                                                  mLengthToDelete);
+  editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+                                                 mLengthToDelete);
 
-  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+  if (!editorBase->AllowsTransactionsToChangeSelection()) {
     return NS_OK;
   }
 
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = editorBase->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }
   ErrorResult error;
-  selection->Collapse(EditorRawDOMPoint(mCharData, mOffset), error);
+  selection->Collapse(EditorRawDOMPoint(textNode, mOffset), error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
@@ -139,14 +141,17 @@ DeleteTextTransaction::DoTransaction() {
 
 // XXX: We may want to store the selection state and restore it properly.  Was
 //     it an insertion point or an extended selection?
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 DeleteTextTransaction::UndoTransaction() {
-  if (NS_WARN_IF(!mCharData)) {
+  if (NS_WARN_IF(!mTextNode) || NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  ErrorResult rv;
-  mCharData->InsertData(mOffset, mDeletedText, rv);
-  return rv.StealNSResult();
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
+  ErrorResult error;
+  editorBase->DoInsertText(*textNode, mOffset, mDeletedText, error);
+  return error.StealNSResult();
 }
 
 }  // namespace mozilla
