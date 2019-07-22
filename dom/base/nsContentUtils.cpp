@@ -6782,6 +6782,27 @@ TextEditor* nsContentUtils::GetActiveEditor(nsPresContext* aPresContext) {
 }
 
 // static
+TextEditor* nsContentUtils::GetTextEditorFromAnonymousNodeWithoutCreation(
+    nsIContent* aAnonymousContent) {
+  if (!aAnonymousContent) {
+    return nullptr;
+  }
+  nsIContent* parent = aAnonymousContent->FindFirstNonChromeOnlyAccessContent();
+  if (!parent || parent == aAnonymousContent) {
+    return nullptr;
+  }
+  if (HTMLInputElement* inputElement =
+          HTMLInputElement::FromNodeOrNull(parent)) {
+    return inputElement->GetTextEditorWithoutCreation();
+  }
+  if (HTMLTextAreaElement* textareaElement =
+          HTMLTextAreaElement::FromNodeOrNull(parent)) {
+    return textareaElement->GetTextEditorWithoutCreation();
+  }
+  return nullptr;
+}
+
+// static
 bool nsContentUtils::IsForbiddenRequestHeader(const nsACString& aHeader) {
   if (IsForbiddenSystemRequestHeader(aHeader)) {
     return true;
