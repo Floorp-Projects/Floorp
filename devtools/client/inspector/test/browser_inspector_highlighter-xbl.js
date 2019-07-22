@@ -37,6 +37,6 @@ add_task(async function() {
       center: true,
       selector: selector,
     });
-    return inspector.inspector.nodePicker.once("picker-node-hovered");
+    return inspector.inspectorFront.nodePicker.once("picker-node-hovered");
   }
 });

@@ -95,6 +95,6 @@ add_task(async function() {
       y,
       options: { type: "mousemove" },
     });
-    return inspector.inspector.nodePicker.once("picker-node-hovered");
+    return inspector.inspectorFront.nodePicker.once("picker-node-hovered");
   }
 });

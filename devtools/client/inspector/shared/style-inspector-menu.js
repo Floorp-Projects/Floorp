@@ -414,7 +414,7 @@ StyleInspectorMenu.prototype = {
 
     let message;
     try {
-      const inspectorFront = this.inspector.inspector;
+      const inspectorFront = this.inspector.inspectorFront;
       const imageUrl = this._clickedNodeInfo.value.url;
       const data = await inspectorFront.getImageDataFromURL(imageUrl);
       message = await data.data.string();
