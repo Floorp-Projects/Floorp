@@ -16,6 +16,7 @@ pref("security.tls.hello_downgrade_check", false);
 #else
 pref("security.tls.hello_downgrade_check", true);
 #endif
+pref("security.tls.enable_delegated_credentials", false);
 
 pref("security.ssl.treat_unsafe_negotiation_as_broken", false);
 pref("security.ssl.require_safe_negotiation",  false);
