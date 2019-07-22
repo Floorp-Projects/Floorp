@@ -360,6 +360,11 @@ static const char SandboxPolicyContent[] = R"SANDBOX_LITERAL(
       (subpath "/Library/Extensis/UTC")      ; bug 1469657
       (regex #"\.fontvault/")
       (home-subpath "/FontExplorer X/Font Library")))
+
+  (if (>= macosMinorVersion 13)
+   (allow mach-lookup
+    ; bug 1565575
+    (global-name "com.apple.audio.AudioComponentRegistrar")))
 )SANDBOX_LITERAL";
 
 // These are additional rules that are added to the content process rules for
@@ -383,11 +388,6 @@ static const char SandboxPolicyContentAudioAddend[] = R"SANDBOX_LITERAL(
   (allow mach-lookup
     (global-name "com.apple.audio.coreaudiod")
     (global-name "com.apple.audio.audiohald"))
-
-  (if (>= macosMinorVersion 13)
-    (allow mach-lookup
-    ; bug 1376163
-    (global-name "com.apple.audio.AudioComponentRegistrar")))
 
   (allow iokit-open (iokit-user-client-class "IOAudioEngineUserClient"))
 
