@@ -580,6 +580,7 @@ static bool IsBidiLeaf(nsIFrame* aFrame) {
  *        If aFrame is null, all the children of aParent are reparented.
  */
 static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
+                                     nsLineList::iterator aLine,
                                      nsIFrame* aFrame) {
   nsPresContext* presContext = aParent->PresContext();
   PresShell* presShell = presContext->PresShell();
@@ -609,14 +610,28 @@ static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
       }
 
       // The parent's continuation adopts the siblings after the split.
+      MOZ_ASSERT(!newParent->IsBlockFrameOrSubclass(),
+                 "blocks should not be IsBidiSplittable");
       newParent->InsertFrames(nsIFrame::kNoReflowPrincipalList, nullptr,
                               nullptr, tail);
+
+      // While passing &aLine to InsertFrames for a non-block isn't harmful
+      // because it's a no-op, it doesn't really make sense.  However, the
+      // MOZ_ASSERT() we need to guarantee that it's safe only works if the
+      // parent is actually the block.
+      const nsLineList::iterator* parentLine;
+      if (grandparent->IsBlockFrameOrSubclass()) {
+        MOZ_ASSERT(aLine->Contains(parent));
+        parentLine = &aLine;
+      } else {
+        parentLine = nullptr;
+      }
 
       // The list name kNoReflowPrincipalList would indicate we don't want
       // reflow
       nsFrameList temp(newParent, newParent);
       grandparent->InsertFrames(nsIFrame::kNoReflowPrincipalList, parent,
-                                nullptr, temp);
+                                parentLine, temp);
     }
 
     frame = parent;
@@ -720,7 +735,7 @@ static nsresult CreateContinuation(nsIFrame* aFrame,
 
   if (!aIsFluid) {
     // Split inline ancestor frames
-    rv = SplitInlineAncestors(parent, aFrame);
+    rv = SplitInlineAncestors(parent, aLine, aFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -1103,7 +1118,9 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
             parent = child->GetParent();
           }
           if (parent && IsBidiSplittable(parent)) {
-            SplitInlineAncestors(parent, child);
+            aBpd->mCurrentResolveLine.AdvanceToLinesAndFrame(lastRealFrame);
+            SplitInlineAncestors(parent, aBpd->mCurrentResolveLine.GetLine(),
+                                 child);
 
             // See above comment about the call to EnsureBidiContinuation.
             // The SplitInlineAncestors call here might do the same thing, so
