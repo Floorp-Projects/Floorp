@@ -1,5 +1,4 @@
-"use strict";
-importScripts("/resources/testharness.js");
+// META: global=!default,dedicatedworker,sharedworker
 
 test(() => {
   const sab = new SharedArrayBuffer(16);
@@ -7,5 +6,3 @@ test(() => {
 
   assert_equals(Atomics.wait(ta, 0, 0, 10), "timed-out");
 }, `[[CanBlock]] in a ${self.constructor.name}`);
-
-done();
