@@ -51,6 +51,11 @@ bool MainThreadIsWaitingForIPDLReply();
 // to block while waiting on an IPDL reply from the child.
 void ResumeBeforeWaitingForIPDLReply();
 
+// Immediately forward any sync child->parent IPDL message. These are sent on
+// the main thread, which might be blocked waiting for a response from the
+// recording child and unable to run an event loop.
+void MaybeHandlePendingSyncMessage();
+
 // Initialize state which handles incoming IPDL messages from the UI and
 // recording child processes.
 void InitializeForwarding();
