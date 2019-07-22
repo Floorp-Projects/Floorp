@@ -35,6 +35,48 @@ class RingBufferWriterServices final
   RefPtr<CanvasChild> mCanvasChild;
 };
 
+class SourceSurfaceCanvasRecording final : public gfx::SourceSurface {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurfaceCanvasRecording, final)
+
+  SourceSurfaceCanvasRecording(
+      const RefPtr<gfx::SourceSurface>& aRecordedSuface,
+      CanvasChild* aCanvasChild,
+      const RefPtr<CanvasDrawEventRecorder>& aRecorder)
+      : mRecordedSurface(aRecordedSuface),
+        mCanvasChild(aCanvasChild),
+        mRecorder(aRecorder) {
+    mRecorder->RecordEvent(RecordedAddSurfaceAlias(this, aRecordedSuface));
+    mRecorder->AddStoredObject(this);
+  }
+
+  ~SourceSurfaceCanvasRecording() {
+    mRecorder->RemoveStoredObject(this);
+    mRecorder->RecordEvent(RecordedRemoveSurfaceAlias(this));
+  }
+
+  gfx::SurfaceType GetType() const final { return mRecordedSurface->GetType(); }
+
+  gfx::IntSize GetSize() const final { return mRecordedSurface->GetSize(); }
+
+  gfx::SurfaceFormat GetFormat() const final {
+    return mRecordedSurface->GetFormat();
+  }
+
+  already_AddRefed<gfx::DataSourceSurface> GetDataSurface() final {
+    if (!mDataSourceSurface) {
+      mDataSourceSurface = mCanvasChild->GetDataSurface(mRecordedSurface);
+    }
+
+    return do_AddRef(mDataSourceSurface);
+  }
+
+  RefPtr<gfx::SourceSurface> mRecordedSurface;
+  RefPtr<CanvasChild> mCanvasChild;
+  RefPtr<CanvasDrawEventRecorder> mRecorder;
+  RefPtr<gfx::DataSourceSurface> mDataSourceSurface;
+};
+
 CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
   aEndpoint.Bind(this);
   mCanSend = true;
@@ -158,6 +200,12 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   mRecorder->ReturnRead(dest, ssSize.height * dataFormatWidth);
 
   return dataSurface.forget();
+}
+
+already_AddRefed<gfx::SourceSurface> CanvasChild::WrapSurface(
+    const RefPtr<gfx::SourceSurface>& aSurface) {
+  MOZ_ASSERT(aSurface);
+  return MakeAndAddRef<SourceSurfaceCanvasRecording>(aSurface, this, mRecorder);
 }
 
 }  // namespace layers
