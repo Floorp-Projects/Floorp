@@ -43,8 +43,9 @@ TEST_F(ImageSurfaceCache, Factor2) {
 
   // Ensures we meet the threshold for FLAG_SYNC_DECODE_IF_FAST to do sync
   // decoding without the implications of FLAG_SYNC_DECODE.
-  ASSERT_LT(length, static_cast<uint64_t>(
-                        StaticPrefs::image_mem_decode_bytes_at_a_time()));
+  ASSERT_LT(length,
+            static_cast<uint64_t>(
+                StaticPrefs::image_mem_decode_bytes_at_a_time_AtStartup()));
 
   // Write the data into the image.
   rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,

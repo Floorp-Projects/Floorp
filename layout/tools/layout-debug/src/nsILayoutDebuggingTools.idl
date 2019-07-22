@@ -22,22 +22,13 @@ interface nsILayoutDebuggingTools : nsISupports
      */
     void init(in mozIDOMWindow win);
 
-    /*
-     * Notify the debugger that the docshell has been told to load a new
-     * URI.
-     */
-    void newURILoaded();
+    // Repaint the window.
+    void forceRefresh();
 
     /* Toggle various debugging states */
-    attribute boolean visualDebugging;
-    attribute boolean visualEventDebugging;
-    attribute boolean paintFlashing;
-    attribute boolean paintDumping;
-    attribute boolean invalidateDumping;
-    attribute boolean eventDumping;
-    attribute boolean motionEventDumping;
-    attribute boolean crossingEventDumping;
-    attribute boolean reflowCounts;
+    void setVisualDebugging(in boolean enabled);
+    void setVisualEventDebugging(in boolean enabled);
+    void setReflowCounts(in boolean enabled);
 
     /* Run various tests. */
     void dumpWebShells();

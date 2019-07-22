@@ -235,14 +235,6 @@ void HTMLEditRules::InitStyleCacheArray(
   aStyleCache[18] = StyleCache(nsGkAtoms::sup, nullptr);
 }
 
-HTMLEditRules::~HTMLEditRules() {}
-
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLEditRules, TextEditRules)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
-                                   mDocChangeRange, mUtilRange, mNewBlock,
-                                   mRangeItem)
-
 nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   if (NS_WARN_IF(!aTextEditor) || NS_WARN_IF(!aTextEditor->AsHTMLEditor())) {
     return NS_ERROR_INVALID_ARG;
@@ -3075,14 +3067,13 @@ nsresult HTMLEditRules::WillDeleteSelection(
         // text node is found, we can delete to end or to begining as
         // appropriate, since the case where both sel endpoints in same text
         // node was already handled (we wouldn't be here)
-        if (startNode->GetAsText() &&
+        if (startNode->IsText() &&
             startNode->Length() > static_cast<uint32_t>(startOffset)) {
           // Delete to last character
-          OwningNonNull<CharacterData> dataNode =
-              *static_cast<CharacterData*>(startNode.get());
+          OwningNonNull<Text> textNode = *startNode->AsText();
           rv =
               MOZ_KnownLive(HTMLEditorRef())
-                  .DeleteTextWithTransaction(dataNode, startOffset,
+                  .DeleteTextWithTransaction(textNode, startOffset,
                                              startNode->Length() - startOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -3091,12 +3082,11 @@ nsresult HTMLEditRules::WillDeleteSelection(
             return rv;
           }
         }
-        if (endNode->GetAsText() && endOffset) {
+        if (endNode->IsText() && endOffset) {
           // Delete to first character
-          OwningNonNull<CharacterData> dataNode =
-              *static_cast<CharacterData*>(endNode.get());
+          OwningNonNull<Text> textNode = *endNode->AsText();
           rv = MOZ_KnownLive(HTMLEditorRef())
-                   .DeleteTextWithTransaction(dataNode, 0, endOffset);
+                   .DeleteTextWithTransaction(textNode, 0, endOffset);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -5917,8 +5907,10 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     if (!HTMLEditorRef().IsContainer(node)) {
       return NS_OK;
     }
-    OwningNonNull<Text> newNode =
-        EditorBase::CreateTextNode(aDocument, EmptyString());
+    RefPtr<Text> newNode = HTMLEditorRef().CreateTextNode(EmptyString());
+    if (NS_WARN_IF(!newNode)) {
+      return NS_ERROR_FAILURE;
+    }
     nsresult rv =
         MOZ_KnownLive(HTMLEditorRef())
             .InsertNodeWithTransaction(*newNode, EditorDOMPoint(node, offset));
@@ -5938,7 +5930,7 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+                 .RelativeFontChangeOnTextNode(dir, *newNode, 0, -1);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }

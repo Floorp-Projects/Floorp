@@ -86,7 +86,7 @@ const gfx::IntRect AnimationState::UpdateStateInternal(
     } else if (aResult.Type() == MatchType::NOT_FOUND ||
                aResult.Type() == MatchType::PENDING) {
       if (mHasRequestedDecode) {
-        MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable());
+        MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
         mCompositedFrameInvalid = true;
       }
     }
@@ -379,7 +379,7 @@ RefreshResult FrameAnimator::RequestRefresh(AnimationState& aState,
   // only advance the frame if the current time is greater than or
   // equal to the current frame's end time.
   if (!currentFrame) {
-    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable());
+    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
     MOZ_ASSERT(aState.GetHasRequestedDecode() &&
                !aState.GetIsCurrentlyDecoded());
     MOZ_ASSERT(aState.mCompositedFrameInvalid);
@@ -451,7 +451,7 @@ LookupResult FrameAnimator::GetCompositedFrame(AnimationState& aState,
       aMarkUsed);
 
   if (aState.mCompositedFrameInvalid) {
-    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable());
+    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
     MOZ_ASSERT(aState.GetHasRequestedDecode());
     MOZ_ASSERT(!aState.GetIsCurrentlyDecoded());
     if (result.Type() == MatchType::NOT_FOUND) {

@@ -16,16 +16,19 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TextServicesDocument.h"
-#include "mozilla/dom/Selection.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Selection.h"
 #include "nsAString.h"
 #include "nsCRT.h"
 #include "nsCaret.h"
@@ -54,6 +57,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsStringFwd.h"
+#include "nsTextFragment.h"
 #include "nsTextNode.h"
 #include "nsUnicharUtils.h"
 #include "nsXPCOM.h"
@@ -69,15 +73,15 @@ TextEditor::TextEditor()
     : mWrapColumn(0),
       mMaxTextLength(-1),
       mInitTriggerCounter(0),
-      mNewlineHandling(nsIPlaintextEditor::eNewlinesPasteToFirst)
+      mNewlineHandling(nsIPlaintextEditor::eNewlinesPasteToFirst),
 #ifdef XP_WIN
-      ,
-      mCaretStyle(1)
+      mCaretStyle(1),
 #else
-      ,
-      mCaretStyle(0)
+      mCaretStyle(0),
 #endif
-{
+      mUnmaskedStart(UINT32_MAX),
+      mUnmaskedLength(0),
+      mIsMaskingPassword(true) {
   // printf("Size of TextEditor: %zu\n", sizeof(TextEditor));
   static_assert(
       sizeof(TextEditor) <= 512,
@@ -99,14 +103,21 @@ TextEditor::~TextEditor() {
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditor)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TextEditor, EditorBase)
-  if (tmp->mRules) tmp->mRules->DetachEditor();
+  if (tmp->mRules) {
+    tmp->mRules->DetachEditor();
+  }
+  if (tmp->mMaskTimer) {
+    tmp->mMaskTimer->Cancel();
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mRules)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedDocumentEncoder)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMaskTimer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TextEditor, EditorBase)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRules)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedDocumentEncoder)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMaskTimer)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_ADDREF_INHERITED(TextEditor, EditorBase)
@@ -114,6 +125,8 @@ NS_IMPL_RELEASE_INHERITED(TextEditor, EditorBase)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TextEditor)
   NS_INTERFACE_MAP_ENTRY(nsIPlaintextEditor)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY(nsINamed)
 NS_INTERFACE_MAP_END_INHERITING(EditorBase)
 
 nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
@@ -134,15 +147,8 @@ nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
       return rv;
     }
   }
-  NS_ENSURE_SUCCESS(rulesRv, rulesRv);
-
-  // mRules may not have been initialized yet, when this is called via
-  // HTMLEditor::Init.
-  if (mRules) {
-    mRules->SetInitialValue(aInitialValue);
-  }
-
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rulesRv), "Failed to initialize us");
+  return EditorBase::ToGenericNSResult(rulesRv);
 }
 
 static int32_t sNewlineHandlingPref = -1, sCaretStylePref = -1;
@@ -195,7 +201,7 @@ nsresult TextEditor::EndEditorInit() {
 
   nsresult rv = InitRules();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
@@ -1276,15 +1282,6 @@ nsresult TextEditor::OnCompositionStart(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (IsPasswordEditor()) {
-    if (NS_WARN_IF(!mRules)) {
-      return NS_ERROR_FAILURE;
-    }
-    // Protect the edit rules object from dying
-    RefPtr<TextEditRules> rules(mRules);
-    rules->ResetIMETextPWBuf();
-  }
-
   EnsureComposition(aCompositionStartEvent);
   NS_WARNING_ASSERTION(mComposition, "Failed to get TextComposition instance?");
   return NS_OK;
@@ -2228,23 +2225,271 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
   return NS_OK;
 }
 
-nsresult TextEditor::HideLastPasswordInput() {
-  // This method should be called only by TextEditRules::Notify().
-  MOZ_ASSERT(mRules);
-  MOZ_ASSERT(IsPasswordEditor());
-  MOZ_ASSERT(!IsEditActionDataAvailable());
+nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
+                                            uint32_t aTimeout, bool aNotify,
+                                            bool aForceStartMasking) {
+  mIsMaskingPassword = aForceStartMasking || aTimeout != 0;
+
+  // We cannot manage multiple unmasked ranges so that shrink the previous
+  // range first.
+  if (!IsAllMasked()) {
+    mUnmaskedLength = 0;
+    if (mMaskTimer) {
+      mMaskTimer->Cancel();
+    }
+  }
+
+  // If we're not a password editor, return error since this call does not
+  // make sense.
+  if (!IsPasswordEditor()) {
+    if (mMaskTimer) {
+      mMaskTimer = nullptr;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  Element* rootElement = GetRoot();
+  if (NS_WARN_IF(!rootElement)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  Text* text = Text::FromNodeOrNull(rootElement->GetFirstChild());
+  if (!text) {
+    // There is no anonymous text node in the editor.
+    return aStart > 0 ? NS_ERROR_INVALID_ARG : NS_OK;
+  }
+
+  if (aStart < UINT32_MAX) {
+    uint32_t valueLength = text->Length();
+    if (aStart >= valueLength) {
+      return NS_ERROR_INVALID_ARG;  // There is no character can be masked.
+    }
+    // If aStart is middle of a surrogate pair, expand it to include the
+    // preceding high surrogate because the caller may want to show a
+    // character before the character at `aStart + 1`.
+    const nsTextFragment* textFragment = text->GetText();
+    if (aStart > 0 && NS_IS_LOW_SURROGATE(textFragment->CharAt(aStart)) &&
+        NS_IS_HIGH_SURROGATE(textFragment->CharAt(aStart - 1))) {
+      mUnmaskedStart = aStart - 1;
+      // If caller collapses the range, keep it.  Otherwise, expand the length.
+      if (aLength > 0) {
+        ++aLength;
+      }
+    } else {
+      mUnmaskedStart = aStart;
+    }
+    mUnmaskedLength = std::min(valueLength - mUnmaskedStart, aLength);
+    // If unmasked end is middle of a surrogate pair, expand it to include
+    // the following low surrogate because the caller may want to show a
+    // character after the character at `aStart + aLength`.
+    if (mUnmaskedLength > 0 && mUnmaskedStart + mUnmaskedLength < valueLength &&
+        NS_IS_HIGH_SURROGATE(
+            textFragment->CharAt(mUnmaskedStart + mUnmaskedLength - 1)) &&
+        NS_IS_LOW_SURROGATE(
+            textFragment->CharAt(mUnmaskedStart + mUnmaskedLength))) {
+      ++mUnmaskedLength;
+    }
+    // If it's first time to mask the unmasking characters with timer, create
+    // the timer now.  Then, we'll keep using it for saving the creation cost.
+    if (!mMaskTimer && aLength && aTimeout && mUnmaskedLength) {
+      mMaskTimer = NS_NewTimer();
+    }
+  } else {
+    if (NS_WARN_IF(aLength != 0)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+    mUnmaskedStart = UINT32_MAX;
+    mUnmaskedLength = 0;
+  }
+
+  // Notify nsTextFrame of this update if the caller wants this to do it.
+  // Only in this case, script may run.
+  if (aNotify) {
+    MOZ_ASSERT(IsEditActionDataAvailable());
+
+    RefPtr<Document> document = GetDocument();
+    if (NS_WARN_IF(!document)) {
+      return NS_ERROR_NOT_INITIALIZED;
+    }
+    // Notify nsTextFrame of masking range change.
+    if (PresShell* presShell = document->GetObservingPresShell()) {
+      uint32_t valueLength = text->Length();
+      CharacterDataChangeInfo changeInfo = {false, 0, valueLength, valueLength,
+                                            nullptr};
+      presShell->CharacterDataChanged(text, changeInfo);
+    }
+
+    // Scroll caret into the view since masking or unmasking character may
+    // move caret to outside of the view.
+    ScrollSelectionIntoView(false);
+
+    if (NS_WARN_IF(Destroyed())) {
+      return NS_ERROR_EDITOR_DESTROYED;
+    }
+  }
+
+  if (!IsAllMasked() && aTimeout != 0) {
+    // Initialize the timer to mask the range automatically.
+    MOZ_ASSERT(mMaskTimer);
+    mMaskTimer->InitWithCallback(this, aTimeout, nsITimer::TYPE_ONE_SHOT);
+  }
+
+  return NS_OK;
+}
+
+// static
+char16_t TextEditor::PasswordMask() {
+  char16_t ret = LookAndFeel::GetPasswordCharacter();
+  if (!ret) {
+    ret = '*';
+  }
+  return ret;
+}
+
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
+NS_IMETHODIMP
+TextEditor::Notify(nsITimer* aTimer) {
+  // Check whether our text editor's password flag was changed before this
+  // "hide password character" timer actually fires.
+  if (!IsPasswordEditor()) {
+    return NS_OK;
+  }
+
+  if (IsAllMasked()) {
+    return NS_OK;
+  }
 
   AutoEditActionDataSetter editActionData(*this, EditAction::eHidePassword);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->HideLastPasswordInput();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+  // Mask all characters.
+  nsresult rv = MaskAllCharactersAndNotify();
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to mask all characters");
+
+  if (StaticPrefs::editor_password_testing_mask_delay()) {
+    if (RefPtr<Element> target = GetInputEventTargetElement()) {
+      RefPtr<Document> document = target->OwnerDoc();
+      nsContentUtils::DispatchTrustedEvent(
+          document, target, NS_LITERAL_STRING("MozLastInputMasked"),
+          CanBubble::eYes, Cancelable::eNo);
+    }
   }
+
+  return EditorBase::ToGenericNSResult(rv);
+}
+
+NS_IMETHODIMP
+TextEditor::GetName(nsACString& aName) {
+  aName.AssignLiteral("TextEditor");
   return NS_OK;
+}
+
+void TextEditor::WillDeleteText(uint32_t aCurrentLength,
+                                uint32_t aRemoveStartOffset,
+                                uint32_t aRemoveLength) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!IsPasswordEditor() || IsAllMasked()) {
+    return;
+  }
+
+  // Adjust unmasked range before deletion since DOM mutation may cause
+  // layout referring the range in old text.
+
+  // If we need to mask automatically, mask all now.
+  if (mIsMaskingPassword) {
+    DebugOnly<nsresult> rvIgnored = MaskAllCharacters();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "MaskAllCharacters() failed");
+    return;
+  }
+
+  if (aRemoveStartOffset < mUnmaskedStart) {
+    // If removing range is before the unmasked range, move it.
+    if (aRemoveStartOffset + aRemoveLength <= mUnmaskedStart) {
+      DebugOnly<nsresult> rvIgnored =
+          SetUnmaskRange(mUnmaskedStart - aRemoveLength, mUnmaskedLength);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "SetUnmaskRange() failed");
+      return;
+    }
+
+    // If removing range starts before unmasked range, and ends in unmasked
+    // range, move and shrink the range.
+    if (aRemoveStartOffset + aRemoveLength < UnmaskedEnd()) {
+      uint32_t unmaskedLengthInRemovingRange =
+          aRemoveStartOffset + aRemoveLength - mUnmaskedStart;
+      DebugOnly<nsresult> rvIgnored = SetUnmaskRange(
+          aRemoveStartOffset, mUnmaskedLength - unmaskedLengthInRemovingRange);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "SetUnmaskRange() failed");
+      return;
+    }
+
+    // If removing range includes all unmasked range, collapse it to the
+    // remove offset.
+    DebugOnly<nsresult> rvIgnored = SetUnmaskRange(aRemoveStartOffset, 0);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "SetUnmaskRange() failed");
+    return;
+  }
+
+  if (aRemoveStartOffset < UnmaskedEnd()) {
+    // If removing range is in unmasked range, shrink the range.
+    if (aRemoveStartOffset + aRemoveLength <= UnmaskedEnd()) {
+      DebugOnly<nsresult> rvIgnored =
+          SetUnmaskRange(mUnmaskedStart, mUnmaskedLength - aRemoveLength);
+      NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "SetUnmaskRange() failed");
+      return;
+    }
+
+    // If removing range starts from unmasked range, and ends after it,
+    // shrink it.
+    DebugOnly<nsresult> rvIgnored =
+        SetUnmaskRange(mUnmaskedStart, aRemoveStartOffset - mUnmaskedStart);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored), "SetUnmaskRange() failed");
+    return;
+  }
+
+  // If removing range is after the unmasked range, keep it.
+}
+
+nsresult TextEditor::DidInsertText(uint32_t aNewLength,
+                                   uint32_t aInsertedOffset,
+                                   uint32_t aInsertedLength) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (!IsPasswordEditor() || IsAllMasked()) {
+    return NS_OK;
+  }
+
+  if (mIsMaskingPassword) {
+    // If we need to mask password, mask all right now.
+    nsresult rv = MaskAllCharactersAndNotify();
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "MaskAllCharacters() failed");
+    return rv;
+  }
+
+  if (aInsertedOffset < mUnmaskedStart) {
+    // If insertion point is before unmasked range, expand the unmasked range
+    // to include the new text.
+    nsresult rv = SetUnmaskRangeAndNotify(
+        aInsertedOffset, UnmaskedEnd() + aInsertedLength - aInsertedOffset);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetUnmaskRange() failed");
+    return rv;
+  }
+
+  if (aInsertedOffset <= UnmaskedEnd()) {
+    // If insertion point is in unmasked range, unmask new text.
+    nsresult rv = SetUnmaskRangeAndNotify(mUnmaskedStart,
+                                          mUnmaskedLength + aInsertedLength);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetUnmaskRange() failed");
+    return rv;
+  }
+
+  // If insertion point is after unmasked range, extend the unmask range to
+  // include the new text.
+  nsresult rv = SetUnmaskRangeAndNotify(
+      mUnmaskedStart, aInsertedOffset + aInsertedLength - mUnmaskedStart);
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "SetUnmaskRange() failed");
+  return rv;
 }
 
 }  // namespace mozilla

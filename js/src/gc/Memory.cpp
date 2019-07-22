@@ -763,7 +763,7 @@ bool MarkPagesUnused(void* region, size_t length) {
   return VirtualAlloc(region, length, MEM_RESET,
                       DWORD(PageAccess::ReadWrite)) == region;
 #elif defined(XP_DARWIN)
-  return madvise(region, length, MADV_FREE) == 0;
+  return madvise(region, length, MADV_FREE_REUSABLE) == 0;
 #elif defined(XP_SOLARIS)
   return posix_madvise(region, length, POSIX_MADV_DONTNEED) == 0;
 #else

@@ -347,7 +347,7 @@ LookupResult RasterImage::LookupFrame(const IntSize& aSize, uint32_t aFlags,
     // one. (Or we're sync decoding and the existing decoder hasn't even started
     // yet.) Trigger decoding so it'll be available next time.
     MOZ_ASSERT(aPlaybackType != PlaybackType::eAnimated ||
-                   StaticPrefs::image_mem_animated_discardable() ||
+                   StaticPrefs::image_mem_animated_discardable_AtStartup() ||
                    !mAnimationState || mAnimationState->KnownFrameCount() < 1,
                "Animated frames should be locked");
 
@@ -415,7 +415,7 @@ RasterImage::WillDrawOpaqueNow() {
   }
 
   if (mAnimationState) {
-    if (!StaticPrefs::image_mem_animated_discardable()) {
+    if (!StaticPrefs::image_mem_animated_discardable_AtStartup()) {
       // We never discard frames of animated images.
       return true;
     } else {
@@ -471,7 +471,7 @@ void RasterImage::OnSurfaceDiscardedInternal(bool aAnimatedFramesDiscarded) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (aAnimatedFramesDiscarded && mAnimationState) {
-    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable());
+    MOZ_ASSERT(StaticPrefs::image_mem_animated_discardable_AtStartup());
     ReleaseImageContainer();
     gfx::IntRect rect =
         mAnimationState->UpdateState(mAnimationFinished, this, mSize);
@@ -716,7 +716,7 @@ bool RasterImage::SetMetadata(const ImageMetadata& aMetadata,
     mAnimationState.emplace(mAnimationMode);
     mFrameAnimator = MakeUnique<FrameAnimator>(this, mSize);
 
-    if (!StaticPrefs::image_mem_animated_discardable()) {
+    if (!StaticPrefs::image_mem_animated_discardable_AtStartup()) {
       // We don't support discarding animated images (See bug 414259).
       // Lock the image and throw away the key.
       LockImage();
@@ -1020,7 +1020,8 @@ RasterImage::GetKeys(nsTArray<nsCString>& keys) {
 void RasterImage::Discard() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CanDiscard(), "Asked to discard but can't");
-  MOZ_ASSERT(!mAnimationState || StaticPrefs::image_mem_animated_discardable(),
+  MOZ_ASSERT(!mAnimationState ||
+                 StaticPrefs::image_mem_animated_discardable_AtStartup(),
              "Asked to discard for animated image");
 
   // Delete all the decoded frames.
@@ -1042,7 +1043,8 @@ void RasterImage::Discard() {
 bool RasterImage::CanDiscard() {
   return mAllSourceData &&
          // Can discard animated images if the pref is set
-         (!mAnimationState || StaticPrefs::image_mem_animated_discardable());
+         (!mAnimationState ||
+          StaticPrefs::image_mem_animated_discardable_AtStartup());
 }
 
 NS_IMETHODIMP

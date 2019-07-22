@@ -52,6 +52,7 @@ bool JoinNodeTransaction::CanDoIt() const {
 
 // After DoTransaction() and RedoTransaction(), the left node is removed from
 // the content tree and right node remains.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 JoinNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mLeftNode) ||
@@ -74,23 +75,29 @@ JoinNodeTransaction::DoTransaction() {
   mParent = leftParent;
   mOffset = mLeftNode->Length();
 
-  return mEditorBase->DoJoinNodes(mRightNode, mLeftNode, mParent);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsINode> leftNode = mLeftNode;
+  nsCOMPtr<nsINode> rightNode = mRightNode;
+  return editorBase->DoJoinNodes(rightNode, leftNode, MOZ_KnownLive(mParent));
 }
 
 // XXX: What if instead of split, we just deleted the unneeded children of
 //     mRight and re-inserted mLeft?
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 JoinNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mParent) || NS_WARN_IF(!mLeftNode) ||
-      NS_WARN_IF(!mRightNode)) {
+      NS_WARN_IF(!mRightNode) || NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   // First, massage the existing node so it is in its post-split state
   ErrorResult rv;
   if (mRightNode->GetAsText()) {
-    mRightNode->GetAsText()->DeleteData(0, mOffset, rv);
-    if (rv.Failed()) {
+    RefPtr<EditorBase> editorBase = mEditorBase;
+    RefPtr<Text> rightNodeAsText = mRightNode->GetAsText();
+    editorBase->DoDeleteText(*rightNodeAsText, 0, mOffset, rv);
+    if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
   } else {

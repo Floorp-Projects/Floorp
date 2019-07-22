@@ -1211,7 +1211,6 @@ function runEditorFlagChangeTests() {
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "IME isn't enabled on HTML editor");
   const kIMEStateChangeFlags =
-    Ci.nsIPlaintextEditor.eEditorPasswordMask |
     Ci.nsIPlaintextEditor.eEditorReadonlyMask |
     Ci.nsIPlaintextEditor.eEditorDisabledMask;
   var editor = window.docShell.editor;
@@ -1235,7 +1234,8 @@ function runEditorFlagChangeTests() {
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
      description + "#1 IME isn't enabled on HTML editor");
 
-  editor.flags |= ~kIMEStateChangeFlags;
+  editor.flags |=
+      ~(kIMEStateChangeFlags | Ci.nsIPlaintextEditor.eEditorPasswordMask);
   ok(editor.composing,
      description + "#2 IME composition was committed unexpectedly");
   is(gUtils.IMEStatus, gUtils.IME_STATUS_ENABLED,
