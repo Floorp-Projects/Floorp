@@ -13,17 +13,18 @@ import {
   getSelectedFrame,
   getGeneratedFrameScope,
   getOriginalFrameScope,
-  getIsPaused,
   getPauseReason,
   isMapScopesEnabled,
-  getCurrentThread,
+  getThreadContext,
+  getLastExpandedScopes,
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
+import { getScopeItemPath } from "../../utils/pause/scopes/utils";
 
 // eslint-disable-next-line import/named
 import { objectInspector } from "devtools-reps";
 
-import type { Why } from "../../types";
+import type { ThreadContext, Why } from "../../types";
 import type { NamedValue } from "../../utils/pause/scopes/types";
 
 import "./Scopes.css";
@@ -31,7 +32,7 @@ import "./Scopes.css";
 const { ObjectInspector } = objectInspector;
 
 type Props = {
-  isPaused: boolean,
+  cx: ThreadContext,
   selectedFrame: Object,
   generatedFrameScopes: Object,
   originalFrameScopes: Object | null,
@@ -43,6 +44,8 @@ type Props = {
   highlightDomElement: typeof actions.highlightDomElement,
   unHighlightDomElement: typeof actions.unHighlightDomElement,
   toggleMapScopes: typeof actions.toggleMapScopes,
+  setExpandedScope: typeof actions.setExpandedScope,
+  expandedScopes: string[],
 };
 
 type State = {
@@ -71,12 +74,12 @@ class Scopes extends PureComponent<Props, State> {
 
   componentWillReceiveProps(nextProps) {
     const {
-      isPaused,
+      cx,
       selectedFrame,
       originalFrameScopes,
       generatedFrameScopes,
     } = this.props;
-    const isPausedChanged = isPaused !== nextProps.isPaused;
+    const isPausedChanged = cx.isPaused !== nextProps.cx.isPaused;
     const selectedFrameChanged = selectedFrame !== nextProps.selectedFrame;
     const originalFrameScopesChanged =
       originalFrameScopes !== nextProps.originalFrameScopes;
@@ -110,18 +113,24 @@ class Scopes extends PureComponent<Props, State> {
 
   renderScopesList() {
     const {
-      isPaused,
+      cx,
       isLoading,
       openLink,
       openElementInInspector,
       highlightDomElement,
       unHighlightDomElement,
       mapScopesEnabled,
+      setExpandedScope,
+      expandedScopes,
     } = this.props;
     const { originalScopes, generatedScopes, showOriginal } = this.state;
 
     const scopes =
       (showOriginal && mapScopesEnabled && originalScopes) || generatedScopes;
+
+    function initiallyExpanded(item) {
+      return expandedScopes.some(path => path == getScopeItemPath(item));
+    }
 
     if (scopes && scopes.length > 0 && !isLoading) {
       return (
@@ -138,13 +147,15 @@ class Scopes extends PureComponent<Props, State> {
             onInspectIconClick={grip => openElementInInspector(grip)}
             onDOMNodeMouseOver={grip => highlightDomElement(grip)}
             onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
+            setExpanded={(path, expand) => setExpandedScope(cx, path, expand)}
+            initiallyExpanded={initiallyExpanded}
           />
         </div>
       );
     }
 
     let stateText = L10N.getStr("scopes.notPaused");
-    if (isPaused) {
+    if (cx.isPaused) {
       if (isLoading) {
         stateText = L10N.getStr("loadingText");
       } else {
@@ -165,8 +176,8 @@ class Scopes extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => {
-  const thread = getCurrentThread(state);
-  const selectedFrame = getSelectedFrame(state, thread);
+  const cx = getThreadContext(state);
+  const selectedFrame = getSelectedFrame(state, cx.thread);
   const selectedSource = getSelectedSource(state);
 
   const {
@@ -174,7 +185,7 @@ const mapStateToProps = state => {
     pending: originalPending,
   } = getOriginalFrameScope(
     state,
-    thread,
+    cx.thread,
     selectedSource && selectedSource.id,
     selectedFrame && selectedFrame.id
   ) || { scope: null, pending: false };
@@ -184,7 +195,7 @@ const mapStateToProps = state => {
     pending: generatedPending,
   } = getGeneratedFrameScope(
     state,
-    thread,
+    cx.thread,
     selectedFrame && selectedFrame.id
   ) || {
     scope: null,
@@ -192,13 +203,14 @@ const mapStateToProps = state => {
   };
 
   return {
+    cx,
     selectedFrame,
     mapScopesEnabled: isMapScopesEnabled(state),
-    isPaused: getIsPaused(state, thread),
     isLoading: generatedPending || originalPending,
-    why: getPauseReason(state, thread),
+    why: getPauseReason(state, cx.thread),
     originalFrameScopes,
     generatedFrameScopes,
+    expandedScopes: getLastExpandedScopes(state, cx.thread),
   };
 };
 
@@ -210,5 +222,6 @@ export default connect(
     highlightDomElement: actions.highlightDomElement,
     unHighlightDomElement: actions.unHighlightDomElement,
     toggleMapScopes: actions.toggleMapScopes,
+    setExpandedScope: actions.setExpandedScope,
   }
 )(Scopes);
