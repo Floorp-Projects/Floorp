@@ -84,12 +84,12 @@
 #   Note that Rust code must access the global variable directly, rather than
 #   via the getter.
 #
-# - `do_not_use_directly` dictates if `_do_not_use_directly` should be
-#   appended to the name of the getter function. This is simply a naming
-#   convention indicating that there is some other wrapper getter function
-#   that should be used in preference to the normal static pref getter.
-#   Defaults to `false` if not present. Cannot be used with a `never` mirror
-#   value, because there is no getter function in that case.
+# - `do_not_use_directly` dictates if `_DoNotUseDirectly` should be appended to
+#   the name of the getter function. This is simply a naming convention
+#   indicating that there is some other wrapper getter function that should be
+#   used in preference to the normal static pref getter. Defaults to `false` if
+#   not present. Cannot be used with a `never` mirror value, because there is
+#   no getter function in that case.
 #
 # Preprocessor
 # ------------

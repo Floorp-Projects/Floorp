@@ -106,7 +106,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Once,
   "my.float",
-   my_float_do_not_use_directly,
+   my_float_DoNotUseDirectly,
   float, 0.0f
 )
 
@@ -124,7 +124,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "my.atomic.int",
-   my_atomic_int_do_not_use_directly,
+   my_atomic_int_DoNotUseDirectly,
   ReleaseAcquireAtomicInt32, 10 + 10 * 20
 )
 

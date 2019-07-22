@@ -88,7 +88,7 @@ def pref_id(pref):
 
     id = pref['name'].replace('.', '_').replace('-', '_')
     if pref.get('do_not_use_directly'):
-        id += '_do_not_use_directly'
+        id += '_DoNotUseDirectly'
     return id
 
 

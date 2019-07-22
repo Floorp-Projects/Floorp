@@ -1384,9 +1384,9 @@ void gfxWindowsPlatform::InitializeAdvancedLayersConfig() {
 
   FeatureState& al = gfxConfig::GetFeature(Feature::ADVANCED_LAYERS);
   al.SetDefaultFromPref(
-      StaticPrefs::GetPrefName_layers_mlgpu_enabled_do_not_use_directly(),
+      StaticPrefs::GetPrefName_layers_mlgpu_enabled_DoNotUseDirectly(),
       true /* aIsEnablePref */,
-      StaticPrefs::GetPrefDefault_layers_mlgpu_enabled_do_not_use_directly());
+      StaticPrefs::GetPrefDefault_layers_mlgpu_enabled_DoNotUseDirectly());
 
   // Windows 7 has an extra pref since it uses totally different buffer paths
   // that haven't been performance tested yet.
