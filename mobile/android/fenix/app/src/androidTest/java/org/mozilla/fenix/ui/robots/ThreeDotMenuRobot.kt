@@ -39,7 +39,7 @@ class ThreeDotMenuRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            mDevice.wait(Until.findObject(By.text("Settings")), waitingTime)
+            mDevice.wait(Until.findObject(By.text("R.string.settings")), waitingTime)
             settingsButton().click()
 
             SettingsRobot().interact()
@@ -47,7 +47,7 @@ class ThreeDotMenuRobot {
         }
 
         fun openLibrary(interact: LibraryRobot.() -> Unit): LibraryRobot.Transition {
-            mDevice.wait(Until.findObject(By.text("Library")), waitingTime)
+            mDevice.wait(Until.findObject(By.text("R.string.Library")), waitingTime)
             libraryButton().click()
 
             LibraryRobot().interact()
@@ -90,7 +90,7 @@ class ThreeDotMenuRobot {
 private fun threeDotMenuRecyclerViewExists() {
     onView(withId(R.id.mozac_browser_menu_recyclerView)).check(matches(isDisplayed()))
 }
-private fun settingsButton() = onView(allOf(withText("Settings")))
+private fun settingsButton() = onView(allOf(withText(R.string.settings)))
 private fun assertSettingsButton() = settingsButton()
     .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 

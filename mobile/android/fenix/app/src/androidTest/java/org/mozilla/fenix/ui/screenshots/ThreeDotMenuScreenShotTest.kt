@@ -9,19 +9,14 @@ import org.junit.Test
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 
 import tools.fastlane.screengrab.Screengrab
 import tools.fastlane.screengrab.locale.LocaleTestRule
 
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.swipeUp
-import androidx.test.espresso.matcher.ViewMatchers.withId
-
 import br.com.concretesolutions.kappuccino.actions.ClickActions
-import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.ui.robots.homeScreen
+import org.mozilla.fenix.ui.robots.swipeToBottom
 
 class ThreeDotMenuScreenShotTest : ScreenshotTest() {
     @Rule @JvmField
@@ -37,7 +32,8 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
 
     @Test
     fun threeDotMenu() {
-        onView(allOf(withId(R.id.menuButton))).perform(click())
+        homeScreen {
+        }.openThreeDotMenu { }
         Screengrab.screenshot("three-dot-menu")
         device.pressBack()
     }
@@ -46,11 +42,10 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
     fun settingsTest() {
         homeScreen {
         }.openThreeDotMenu {
-        }
-        settingsButton2()
+        }.openSettings { }
         Screengrab.screenshot("settings")
 
-        SystemClock.sleep(1000)
+        SystemClock.sleep(TestAssetHelper.waitingTime)
         settingsAccount()
         Screengrab.screenshot("settings-sync")
         device.pressBack()
@@ -76,23 +71,16 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
     fun settingsAfterScrollMenusTest() {
         homeScreen {
         }.openThreeDotMenu {
+        }.openSettings {
+            swipeToBottom()
         }
-        settingsButton2()
-        SystemClock.sleep(1000)
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        Screengrab.screenshot("settings-scroll")
-        SystemClock.sleep(2000)
+        Screengrab.screenshot("settings-scroll-to-bottom")
+        SystemClock.sleep(TestAssetHelper.waitingTime)
 
         settingsRemoveData()
         Screengrab.screenshot("settings-delete-browsing-data")
         device.pressBack()
-
-        SystemClock.sleep(1000)
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        Screengrab.screenshot("settings-scroll")
-        SystemClock.sleep(3000)
+        SystemClock.sleep(TestAssetHelper.waitingTime)
 
         settingsTelemetry()
         Screengrab.screenshot("settings-telemetry")
@@ -100,34 +88,12 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
     }
 
     @Test
-    fun settingsScrollToBottomTest() {
-        homeScreen {
-        }.openThreeDotMenu {
-        }
-        settingsButton2()
-        SystemClock.sleep(1000)
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        Screengrab.screenshot("settings-scroll2")
-        SystemClock.sleep(1000)
-
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        onView(withId(R.id.switch_widget)).perform(ViewActions.swipeUp())
-        Screengrab.screenshot("settings-scroll3")
-        SystemClock.sleep(1000)
-
-        onView(withId(R.id.recycler_view)).perform(swipeUp())
-        Screengrab.screenshot("settings-scroll4")
-    }
-
-    @Test
     fun libraryTest() {
         homeScreen {
         }.openThreeDotMenu {
-        }
-        libraryButton()
+        }.openLibrary { }
         Screengrab.screenshot("library")
+
         bookmarksButton()
         Screengrab.screenshot("library-bookmarks")
         device.pressBack()
@@ -136,8 +102,6 @@ class ThreeDotMenuScreenShotTest : ScreenshotTest() {
     }
 }
 
-fun settingsButton2() = ClickActions.click { text(R.string.settings) }
-fun libraryButton() = ClickActions.click { text(R.string.browser_menu_your_library) }
 fun bookmarksButton() = ClickActions.click { text(R.string.library_bookmarks) }
 fun historyButton() = ClickActions.click { text(R.string.library_history) }
 fun settingsAccount() = ClickActions.click { text(R.string.preferences_sync) }

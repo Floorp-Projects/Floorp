@@ -16,6 +16,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.UiDevice
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
 import org.hamcrest.CoreMatchers
+import org.mozilla.fenix.R
 
 /**
  * Implementation of Robot Pattern for the settings menu.
@@ -50,3 +51,5 @@ private fun assertAdvancedHeading() = onView(ViewMatchers.withText("Advanced"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun goBackButton() = onView(CoreMatchers.allOf(withContentDescription("Navigate up")))
+
+fun swipeToBottom() = onView(ViewMatchers.withId(R.id.recycler_view)).perform(ViewActions.swipeUp())
