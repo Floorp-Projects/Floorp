@@ -70,6 +70,20 @@ export const assertActionButtonOnToast = (action, toast) => {
     assert_equals(action, toast.querySelector('button'));
 };
 
+export const assertComputedStyleMapsEqual = (element1, element2) => {
+    assert_greater_than(element1.computedStyleMap().size, 0);
+    for (const [styleProperty, baseStyleValues] of element1.computedStyleMap()) {
+        const refStyleValues = element2.computedStyleMap().getAll(styleProperty);
+        assert_equals(baseStyleValues.length, refStyleValues.length, `${styleProperty} length`);
+
+        for (let i = 0; i < baseStyleValues.length; ++i) {
+            const baseStyleValue = baseStyleValues[i];
+            const refStyleValue = refStyleValues[i];
+            assert_equals(baseStyleValue.toString(), refStyleValue.toString(), `diff at value ${styleProperty}`);
+        }
+    }
+}
+
 export class EventCollector {
     events = [];
 
