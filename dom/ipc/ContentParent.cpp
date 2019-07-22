@@ -2161,7 +2161,7 @@ void ContentParent::LaunchSubprocessInternal(
 
     mLifecycleState = LifecycleState::ALIVE;
     if (!InitInternal(aInitialPriority)) {
-      NS_ERROR("failed to initialize child in the parent");
+      NS_WARNING("failed to initialize child in the parent");
       // We've already called Open() by this point, so we need to close the
       // channel to avoid leaking the process.
       ShutDownProcess(SEND_SHUTDOWN_MESSAGE);
