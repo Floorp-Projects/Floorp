@@ -24,6 +24,7 @@
 #include "nsIPrincipal.h"
 #include "mozilla/LoadInfo.h"
 #include "nsProxyRelease.h"
+#include "nsIHttpChannelInternal.h"
 
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -112,7 +113,9 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mSTSThread(mParent->GetSTSThread()),
       mProxyResolveCompleted(false),
       mProxyConfig(nullptr),
-      mLocalAddrsCompleted(false) {}
+      mLocalAddrsCompleted(false),
+      mRemoteIp(),
+      mRemotePort(0) {}
 
 PeerConnectionMedia::~PeerConnectionMedia() {
   MOZ_RELEASE_ASSERT(!mMainThread);
@@ -203,7 +206,31 @@ nsresult PeerConnectionMedia::InitProxy() {
 }
 
 nsresult PeerConnectionMedia::Init() {
-  nsresult rv = InitProxy();
+  // Get the remote address and port number from the parent.
+  Document* doc =
+      mParent->GetWindow() ? mParent->GetWindow()->GetDoc() : nullptr;
+  MOZ_ASSERT(doc);
+  nsIChannel* channel = doc->GetChannel();
+  MOZ_ASSERT(channel);
+
+  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+      do_QueryInterface(channel);
+  MOZ_ASSERT(httpChannelInternal);
+
+  nsresult rv;
+  rv = httpChannelInternal->GetRemoteAddress(mRemoteIp);
+  if (NS_FAILED(rv) || mRemoteIp.IsEmpty()) {
+    CSFLogError(LOGTAG, "%s: Couldn't get remote IP address", __FUNCTION__);
+    return rv;
+  }
+
+  rv = httpChannelInternal->GetRemotePort(&mRemotePort);
+  if (NS_FAILED(rv)) {
+    CSFLogError(LOGTAG, "%s: Couldn't get remote port number", __FUNCTION__);
+    return rv;
+  }
+
+  rv = InitProxy();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // setup the stun local addresses IPC async call
@@ -440,7 +467,8 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
     return;
   }
 
-  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mStunAddrs);
+  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mRemoteIp.get(),
+                                       mRemotePort, mStunAddrs);
 }
 
 void PeerConnectionMedia::SelfDestruct() {
