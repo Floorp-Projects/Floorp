@@ -7936,7 +7936,8 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
         // A non-BMP character is masked with 2 mask characters.  Therefore,
         // one of them is unmasked, we should unmask the surrogate pair.
         // NOTE: When you change this rule, you need to change
-        // `nsCaseTransformTextRunFactory::TransformString`.
+        // `nsCaseTransformTextRunFactory::TransformString()` and `MaskString()`
+        // in ContentEventHandler.cpp.
         if (transformedTextRun->mStyles[skippedOffset]->mMaskPassword &&
             transformedTextRun->mStyles[skippedOffset + 1]->mMaskPassword) {
           maskedText.Append(kPasswordMask);
