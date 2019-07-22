@@ -347,7 +347,8 @@ bool nsCaseTransformTextRunFactory::TransformString(
       // A non-BMP character is masked with 2 mask characters.  Therefore,
       // one of them is unmasked, we should unmask the surrogate pair.
       // NOTE: When you change this rule, you need to change the constructor
-      // of `ClusterIterator` in `nsTextFrame.cpp`.
+      // of `ClusterIterator` in nsTextFrame.cpp and `MaskString()` in
+      // ContentEventHandler.cpp.
       if (maskPassword &&
           !aTextRun->mStyles[aOffsetInTextRun + 1]->mMaskPassword) {
         maskPassword = false;
