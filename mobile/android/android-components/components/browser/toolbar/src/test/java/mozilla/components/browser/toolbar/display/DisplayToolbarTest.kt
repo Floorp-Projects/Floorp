@@ -674,6 +674,15 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `titleView in displayToolbar is not ellipsized`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+        val titleView = displayToolbar.titleView
+
+        assertNull(titleView.ellipsize)
+    }
+
+    @Test
     fun `urlView is properly laid out when a title is shown`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)

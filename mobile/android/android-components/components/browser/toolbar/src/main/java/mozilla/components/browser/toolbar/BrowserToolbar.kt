@@ -388,6 +388,8 @@ class BrowserToolbar @JvmOverloads constructor(
                 )
                 displayToolbar.urlView.setFadingEdgeLength(fadingEdgeLength)
                 displayToolbar.urlView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
+                displayToolbar.titleView.setFadingEdgeLength(fadingEdgeLength)
+                displayToolbar.titleView.isHorizontalFadingEdgeEnabled = fadingEdgeLength > 0
             }
             recycle()
         }

@@ -6,7 +6,6 @@ package mozilla.components.browser.toolbar.display
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.text.TextUtils
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -90,7 +89,6 @@ internal class DisplayToolbar(
         gravity = Gravity.CENTER_VERTICAL
         textSize = URL_TEXT_SIZE_SP
         visibility = View.GONE
-        ellipsize = TextUtils.TruncateAt.END
 
         setSingleLine(true)
     }
