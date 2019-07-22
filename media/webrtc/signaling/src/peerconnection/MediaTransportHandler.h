@@ -78,9 +78,6 @@ class MediaTransportHandler {
                                           const std::string& aLocalPwd,
                                           size_t aComponentCount) = 0;
 
-  virtual void SetTargetForDefaultLocalAddressLookup(
-      const std::string& aTargetIp, uint16_t aTargetPort) = 0;
-
   // We set default-route-only as late as possible because it depends on what
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
