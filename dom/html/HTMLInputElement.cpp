@@ -1927,12 +1927,6 @@ bool HTMLInputElement::IsDateTimeInputType(uint8_t aType) {
          aType == NS_FORM_INPUT_DATETIME_LOCAL;
 }
 
-void HTMLInputElement::FlushFrames() {
-  if (GetComposedDoc()) {
-    GetComposedDoc()->FlushPendingNotifications(FlushType::Frames);
-  }
-}
-
 void HTMLInputElement::MozGetFileNameArray(nsTArray<nsString>& aArray,
                                            ErrorResult& aRv) {
   if (NS_WARN_IF(mType != NS_FORM_INPUT_FILE)) {
