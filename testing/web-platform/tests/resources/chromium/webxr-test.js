@@ -82,6 +82,17 @@ class MockVRService {
     this.runtimes_ = [];
   }
 
+  removeRuntime(device) {
+    let index = this.runtimes_.indexOf(device);
+    if (index >= 0) {
+      this.runtimes_.splice(index, 1);
+      if (this.client_) {
+        console.error("Notifying client");
+        this.client_.onDeviceChanged();
+      }
+    }
+  }
+
   // VRService implementation.
   requestDevice() {
     if (this.runtimes_.length > 0) {
@@ -194,6 +205,16 @@ class MockRuntime {
   }
 
   // Test API methods.
+  disconnect() {
+    this.service_.removeRuntime(this);
+    this.presentation_provider_.Close();
+    if (this.sessionClient_.ptr.isBound()) {
+      this.sessionClient_.ptr.reset();
+    }
+
+    return Promise.resolve();
+  }
+
   setViews(views) {
     if (views) {
       let changed = false;
@@ -536,6 +557,11 @@ class MockXRPresentationProvider {
     // calls would be queued until the current execution context finishes.
     this.submitFrameClient_.onSubmitFrameTransferred(true);
     this.submitFrameClient_.onSubmitFrameRendered();
+  }
+
+  // Utility methods
+  Close() {
+    this.binding_.close();
   }
 }
 
