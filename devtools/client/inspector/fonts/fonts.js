@@ -852,7 +852,7 @@ class FontInspector {
   async onToggleFontHighlight(font, show, isForCurrentElement = true) {
     if (!this.fontsHighlighter) {
       try {
-        this.fontsHighlighter = await this.inspector.inspector.getHighlighterByType(
+        this.fontsHighlighter = await this.inspector.inspectorFront.getHighlighterByType(
           "FontsHighlighter"
         );
       } catch (e) {

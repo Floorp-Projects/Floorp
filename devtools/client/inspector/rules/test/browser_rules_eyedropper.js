@@ -95,7 +95,7 @@ async function runTest(testActor, inspector, view) {
 async function testESC(swatch, inspector, testActor) {
   info("Press escape");
   const onCanceled = new Promise(resolve => {
-    inspector.inspector.once("color-pick-canceled", resolve);
+    inspector.inspectorFront.once("color-pick-canceled", resolve);
   });
   await testActor.synthesizeKey({ key: "VK_ESCAPE", options: {} });
   await onCanceled;
@@ -107,7 +107,7 @@ async function testESC(swatch, inspector, testActor) {
 async function testSelect(view, swatch, inspector, testActor) {
   info("Click at x:10px y:10px");
   const onPicked = new Promise(resolve => {
-    inspector.inspector.once("color-picked", resolve);
+    inspector.inspectorFront.once("color-picked", resolve);
   });
   // The change to the content is done async after rule view change
   const onRuleViewChanged = view.once("ruleview-changed");

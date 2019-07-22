@@ -57,20 +57,20 @@ add_task(async function() {
     return promise.all([
       inspector.selection.once("new-node-front"),
       inspector.once("inspector-updated"),
-      inspector.inspector.nodePicker.once("picker-stopped"),
+      inspector.inspectorFront.nodePicker.once("picker-stopped"),
     ]);
   }
 
   function doKeyStop(args) {
     info("Key pressed. Waiting for picker to be canceled");
     testActor.synthesizeKey(args);
-    return inspector.inspector.nodePicker.once("picker-stopped");
+    return inspector.inspectorFront.nodePicker.once("picker-stopped");
   }
 
   function moveMouseOver(selector) {
     info("Waiting for element " + selector + " to be highlighted");
     const onHighlighterReady = toolbox.once("highlighter-ready");
-    const onPickerNodeHovered = inspector.inspector.nodePicker.once(
+    const onPickerNodeHovered = inspector.inspectorFront.nodePicker.once(
       "picker-node-hovered"
     );
     testActor.synthesizeMouse({

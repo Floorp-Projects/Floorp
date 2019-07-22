@@ -123,9 +123,7 @@ ReplayDebugger.prototype = {
   },
 
   _processResponse(request, response, divergeResponse) {
-    dumpv(
-      `SendRequest: ${JSON.stringify(request)} -> ${JSON.stringify(response)}`
-    );
+    dumpv(`SendRequest: ${stringify(request)} -> ${stringify(response)}`);
     if (response.exception) {
       ThrowError(response.exception);
     }
@@ -324,7 +322,7 @@ ReplayDebugger.prototype = {
   replayPushThreadPause() {
     // The thread has paused so that the user can interact with it. The child
     // will stay paused until this thread-wide pause has been popped.
-    assert(this._paused);
+    this._ensurePaused();
     assert(!this._resumeCallback);
     if (++this._threadPauseCount == 1) {
       // There is no preferred direction of travel after an explicit pause.
@@ -363,7 +361,8 @@ ReplayDebugger.prototype = {
   },
 
   _performResume() {
-    assert(this._paused && !this._threadPauseCount);
+    this._ensurePaused();
+    assert(!this._threadPauseCount);
     if (this._resumeCallback && !this._threadPauseCount) {
       const callback = this._resumeCallback;
       this._invalidateAfterUnpause();
@@ -528,11 +527,11 @@ ReplayDebugger.prototype = {
     return data.map(script => this._addScript(script));
   },
 
-  findAllConsoleMessages() {
-    const messages = this._sendRequestMainChild({
-      type: "findConsoleMessages",
-    });
-    return messages.map(this._convertConsoleMessage.bind(this));
+  _onNewScript(data) {
+    if (this.onNewScript) {
+      const script = this._addScript(data);
+      this.onNewScript(script);
+    }
   },
 
   /////////////////////////////////////////////////////////
@@ -544,7 +543,9 @@ ReplayDebugger.prototype = {
     if (source) {
       return source;
     }
-    return this._addSource(this._sendRequest({ type: "getSource", id }));
+    return this._addSource(
+      this._sendRequestMainChild({ type: "getSource", id })
+    );
   },
 
   _addSource(data) {
@@ -690,6 +691,13 @@ ReplayDebugger.prototype = {
       }
     }
     return message;
+  },
+
+  findAllConsoleMessages() {
+    const messages = this._sendRequestMainChild({
+      type: "findConsoleMessages",
+    });
+    return messages.map(this._convertConsoleMessage.bind(this));
   },
 
   /////////////////////////////////////////////////////////
@@ -1360,6 +1368,14 @@ function assert(v) {
 
 function isNonNullObject(obj) {
   return obj && (typeof obj == "object" || typeof obj == "function");
+}
+
+function stringify(object) {
+  const str = JSON.stringify(object);
+  if (str.length >= 4096) {
+    return `${str.substr(0, 4096)} TRIMMED ${str.length}`;
+  }
+  return str;
 }
 
 module.exports = ReplayDebugger;

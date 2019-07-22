@@ -111,6 +111,9 @@ function ChildProcess(id, recording) {
   // The last point we paused at.
   this.lastPausePoint = null;
 
+  // Last reported memory usage for this child.
+  this.lastMemoryUsage = null;
+
   // Manifests which this child needs to send asynchronously.
   this.asyncManifests = [];
 
@@ -168,19 +171,25 @@ ChildProcess.prototype = {
     this.paused = false;
     this.manifest = manifest;
 
-    dumpv(`SendManifest #${this.id} ${JSON.stringify(manifest.contents)}`);
+    dumpv(`SendManifest #${this.id} ${stringify(manifest.contents)}`);
     RecordReplayControl.sendManifest(this.id, manifest.contents);
   },
 
   // Called when the child's current manifest finishes.
   manifestFinished(response) {
     assert(!this.paused);
-    if (response && response.point) {
-      this.lastPausePoint = response.point;
+    if (response) {
+      if (response.point) {
+        this.lastPausePoint = response.point;
+      }
+      if (response.memoryUsage) {
+        this.lastMemoryUsage = response.memoryUsage;
+      }
     }
     this.paused = true;
     this.manifest.onFinished(response);
     this.manifest = null;
+    maybeDumpStatistics();
   },
 
   // Block until this child is paused. If maybeCreateCheckpoint is specified
@@ -346,6 +355,15 @@ function CheckpointInfo() {
   // If the checkpoint is saved, the replaying child responsible for saving it
   // and scanning the region up to the next saved checkpoint.
   this.owner = null;
+
+  // If the checkpoint is saved, the time it was assigned an owner.
+  this.assignTime = null;
+
+  // If the checkpoint is saved and scanned, the time it finished being scanned.
+  this.scanTime = null;
+
+  // If the checkpoint is saved and scanned, the duration of the scan.
+  this.scanDuration = null;
 }
 
 function getCheckpointInfo(id) {
@@ -364,17 +382,21 @@ function timeSinceCheckpoint(id) {
   return time;
 }
 
+// How much execution time is captured by a saved checkpoint.
+function timeForSavedCheckpoint(id) {
+  const next = nextSavedCheckpoint(id);
+  let time = 0;
+  for (let i = id; i < next; i++) {
+    time += gCheckpoints[i].duration;
+  }
+  return time;
+}
+
 // The checkpoint up to which the recording runs.
 let gLastFlushCheckpoint = InvalidCheckpointId;
 
-// The last saved checkpoint.
-let gLastSavedCheckpoint = FirstCheckpointId;
-
 // How often we want to flush the recording.
 const FlushMs = 0.5 * 1000;
-
-// How often we want to save a checkpoint.
-const SavedCheckpointMs = 0.25 * 1000;
 
 function addSavedCheckpoint(checkpoint) {
   if (getCheckpointInfo(checkpoint).owner) {
@@ -383,26 +405,16 @@ function addSavedCheckpoint(checkpoint) {
 
   const owner = pickReplayingChild();
   getCheckpointInfo(checkpoint).owner = owner;
+  getCheckpointInfo(checkpoint).assignTime = Date.now();
   owner.addSavedCheckpoint(checkpoint);
-  gLastSavedCheckpoint = checkpoint;
 }
 
 function addCheckpoint(checkpoint, duration) {
   assert(!getCheckpointInfo(checkpoint).duration);
   getCheckpointInfo(checkpoint).duration = duration;
-
-  // Mark saved checkpoints as required, unless we haven't spawned any replaying
-  // children yet.
-  if (
-    timeSinceCheckpoint(gLastSavedCheckpoint) >= SavedCheckpointMs &&
-    gReplayingChildren.length > 0
-  ) {
-    addSavedCheckpoint(checkpoint + 1);
-  }
 }
 
 function ownerChild(checkpoint) {
-  assert(checkpoint <= gLastSavedCheckpoint);
   while (!getCheckpointInfo(checkpoint).owner) {
     checkpoint--;
   }
@@ -559,7 +571,14 @@ function scanRecording(checkpoint) {
           needSaveCheckpoints: child.flushNeedSaveCheckpoints(),
         };
       },
-      onFinished: child => child.scannedCheckpoints.add(checkpoint),
+      onFinished(child, { duration }) {
+        child.scannedCheckpoints.add(checkpoint);
+        const info = getCheckpointInfo(checkpoint);
+        if (!info.scanTime) {
+          info.scanTime = Date.now();
+          info.scanDuration = duration;
+        }
+      },
     },
     checkpointExecutionPoint(checkpoint)
   );
@@ -1006,8 +1025,8 @@ function handleResumeManifestResponse({
     consoleMessages.forEach(msg => gDebugger.onConsoleMessage(msg));
   }
 
-  if (gDebugger && gDebugger.onNewScript) {
-    scripts.forEach(script => gDebugger.onNewScript(script));
+  if (gDebugger) {
+    scripts.forEach(script => gDebugger._onNewScript(script));
   }
 }
 
@@ -1071,8 +1090,8 @@ function ensureFlushed() {
     spawnReplayingChildren();
   }
 
-  // Checkpoints where the recording was flushed to disk are always saved.
-  // This allows the recording to be scanned as soon as it has been flushed.
+  // Checkpoints where the recording was flushed to disk are saved. This allows
+  // the recording to be scanned as soon as it has been flushed.
   addSavedCheckpoint(gLastFlushCheckpoint);
 
   // Flushing creates a new region of the recording for replaying children
@@ -1156,7 +1175,7 @@ function Initialize(recordingChildId) {
 // eslint-disable-next-line no-unused-vars
 function ManifestFinished(id, response) {
   try {
-    dumpv(`ManifestFinished #${id} ${JSON.stringify(response)}`);
+    dumpv(`ManifestFinished #${id} ${stringify(response)}`);
     lookupChild(id).manifestFinished(response);
   } catch (e) {
     dump(`ERROR: ManifestFinished threw exception: ${e} ${e.stack}\n`);
@@ -1332,6 +1351,75 @@ const gControl = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+// Statistics
+///////////////////////////////////////////////////////////////////////////////
+
+let lastDumpTime = Date.now();
+
+function maybeDumpStatistics() {
+  const now = Date.now();
+  if (now - lastDumpTime < 5000) {
+    return;
+  }
+  lastDumpTime = now;
+
+  let delayTotal = 0;
+  let unscannedTotal = 0;
+  let timeTotal = 0;
+  let scanDurationTotal = 0;
+
+  forSavedCheckpointsInRange(
+    FirstCheckpointId,
+    gLastFlushCheckpoint,
+    checkpoint => {
+      const checkpointTime = timeForSavedCheckpoint(checkpoint);
+      const info = getCheckpointInfo(checkpoint);
+
+      timeTotal += checkpointTime;
+      if (info.scanTime) {
+        delayTotal += checkpointTime * (info.scanTime - info.assignTime);
+        scanDurationTotal += info.scanDuration;
+      } else {
+        unscannedTotal += checkpointTime;
+      }
+    }
+  );
+
+  const memoryUsage = [];
+  let totalSaved = 0;
+
+  for (const child of gReplayingChildren) {
+    if (!child) {
+      continue;
+    }
+    totalSaved += child.savedCheckpoints.size;
+    if (!child.lastMemoryUsage) {
+      continue;
+    }
+    for (const [name, value] of Object.entries(child.lastMemoryUsage)) {
+      if (!memoryUsage[name]) {
+        memoryUsage[name] = 0;
+      }
+      memoryUsage[name] += value;
+    }
+  }
+
+  const delay = delayTotal / timeTotal;
+  const overhead = scanDurationTotal / (timeTotal - unscannedTotal);
+
+  dumpv(`Statistics:`);
+  dumpv(`Total recording time: ${timeTotal}`);
+  dumpv(`Unscanned fraction: ${unscannedTotal / timeTotal}`);
+  dumpv(`Average scan delay: ${delay}`);
+  dumpv(`Average scanning overhead: ${overhead}`);
+
+  dumpv(`Saved checkpoints: ${totalSaved}`);
+  for (const [name, value] of Object.entries(memoryUsage)) {
+    dumpv(`Memory ${name}: ${value}`);
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1341,8 +1429,15 @@ function ConnectDebugger(dbg) {
   dbg._control = gControl;
 }
 
+const startTime = Date.now();
+
+// eslint-disable-next-line no-unused-vars
+function currentTime() {
+  return (((Date.now() - startTime) / 10) | 0) / 100;
+}
+
 function dumpv(str) {
-  //dump(`[ReplayControl] ${str}\n`);
+  //dump(`[ReplayControl ${currentTime()}] ${str}\n`);
 }
 
 function assert(v) {
@@ -1355,6 +1450,14 @@ function ThrowError(msg) {
   const error = new Error(msg);
   dump(`ReplayControl Server Error: ${msg} Stack: ${error.stack}\n`);
   throw error;
+}
+
+function stringify(object) {
+  const str = JSON.stringify(object);
+  if (str && str.length >= 4096) {
+    return `${str.substr(0, 4096)} TRIMMED ${str.length}`;
+  }
+  return str;
 }
 
 // eslint-disable-next-line no-unused-vars
