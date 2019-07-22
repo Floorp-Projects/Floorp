@@ -1023,6 +1023,7 @@ impl DisplayListBuilder {
         yuv_data: di::YuvData,
         color_depth: ColorDepth,
         color_space: di::YuvColorSpace,
+        color_range: di::ColorRange,
         image_rendering: di::ImageRendering,
     ) {
         let item = di::DisplayItem::YuvImage(di::YuvImageDisplayItem {
@@ -1031,6 +1032,7 @@ impl DisplayListBuilder {
             yuv_data,
             color_depth,
             color_space,
+            color_range,
             image_rendering,
         });
         self.push_item(&item);
