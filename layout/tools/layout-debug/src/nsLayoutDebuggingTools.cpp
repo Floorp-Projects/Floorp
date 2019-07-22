@@ -63,14 +63,16 @@ static already_AddRefed<Document> document(nsIDocShell* aDocShell) {
 #endif
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools()
-    : mPaintFlashing(false),
+    : mVisualDebugging(false),
+      mVisualEventDebugging(false),
+      mPaintFlashing(false),
       mPaintDumping(false),
       mInvalidateDumping(false),
       mEventDumping(false),
       mMotionEventDumping(false),
       mCrossingEventDumping(false),
       mReflowCounts(false) {
-  NewURILoaded();
+  ForceRefresh();
 }
 
 nsLayoutDebuggingTools::~nsLayoutDebuggingTools() {}
@@ -113,22 +115,6 @@ nsLayoutDebuggingTools::Init(mozIDOMWindow* aWin) {
     }
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsLayoutDebuggingTools::NewURILoaded() {
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-  // Reset all the state that should be reset between pages.
-
-  // XXX Some of these should instead be transferred between pages!
-  mEditorMode = false;
-  mVisualDebugging = false;
-  mVisualEventDebugging = false;
-
-  mReflowCounts = false;
-
-  ForceRefresh();
   return NS_OK;
 }
 
