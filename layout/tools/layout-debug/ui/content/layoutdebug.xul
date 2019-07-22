@@ -107,7 +107,7 @@
                        oncommand="gBrowser.goForward();" />
         <toolbarbutton id="reload-button" class="toolbarbutton-1"
                        label="&ldb.ReloadButton.label;"
-                       command="reload" />
+                       command="cmd_reload" />
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
                        label="&ldb.StopButton.label;"
                        oncommand="gBrowser.stop();" />
