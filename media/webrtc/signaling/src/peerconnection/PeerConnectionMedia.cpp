@@ -114,8 +114,7 @@ PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl* parent)
       mProxyResolveCompleted(false),
       mProxyConfig(nullptr),
       mLocalAddrsCompleted(false),
-      mRemoteIp(),
-      mRemotePort(0) {}
+      mTargetForDefaultLocalAddressLookupIsSet(false) {}
 
 PeerConnectionMedia::~PeerConnectionMedia() {
   MOZ_RELEASE_ASSERT(!mMainThread);
@@ -206,31 +205,7 @@ nsresult PeerConnectionMedia::InitProxy() {
 }
 
 nsresult PeerConnectionMedia::Init() {
-  // Get the remote address and port number from the parent.
-  Document* doc =
-      mParent->GetWindow() ? mParent->GetWindow()->GetDoc() : nullptr;
-  MOZ_ASSERT(doc);
-  nsIChannel* channel = doc->GetChannel();
-  MOZ_ASSERT(channel);
-
-  nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
-      do_QueryInterface(channel);
-  MOZ_ASSERT(httpChannelInternal);
-
-  nsresult rv;
-  rv = httpChannelInternal->GetRemoteAddress(mRemoteIp);
-  if (NS_FAILED(rv) || mRemoteIp.IsEmpty()) {
-    CSFLogError(LOGTAG, "%s: Couldn't get remote IP address", __FUNCTION__);
-    return rv;
-  }
-
-  rv = httpChannelInternal->GetRemotePort(&mRemotePort);
-  if (NS_FAILED(rv)) {
-    CSFLogError(LOGTAG, "%s: Couldn't get remote port number", __FUNCTION__);
-    return rv;
-  }
-
-  rv = InitProxy();
+  nsresult rv = InitProxy();
   NS_ENSURE_SUCCESS(rv, rv);
 
   // setup the stun local addresses IPC async call
@@ -445,6 +420,56 @@ void PeerConnectionMedia::GatherIfReady() {
   PerformOrEnqueueIceCtxOperation(runnable);
 }
 
+nsresult PeerConnectionMedia::SetTargetForDefaultLocalAddressLookup() {
+  Document* doc = mParent->GetWindow()->GetExtantDoc();
+  if (!doc) {
+    MOZ_ASSERT(false, "Failed to get document from window");
+    NS_WARNING("Failed to get document from window");
+    return NS_ERROR_FAILURE;
+  }
+
+  bool isFileScheme;
+  doc->GetDocumentURI()->SchemeIs("file", &isFileScheme);
+  if (!isFileScheme) {
+    nsIChannel* channel = doc->GetChannel();
+    if (!channel) {
+      MOZ_ASSERT(false, "Failed to get channel from document");
+      NS_WARNING("Failed to get channel from document");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIHttpChannelInternal> httpChannelInternal =
+        do_QueryInterface(channel);
+    if (!httpChannelInternal) {
+      NS_WARNING(
+          "Failed to get HTTP channel internal from document loaded "
+          "over network");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCString remoteIp;
+    nsresult rv = httpChannelInternal->GetRemoteAddress(remoteIp);
+    if (NS_FAILED(rv) || remoteIp.IsEmpty()) {
+      CSFLogError(LOGTAG, "%s: Failed to get remote IP address: %d",
+                  __FUNCTION__, (int)rv);
+      return rv;
+    }
+
+    int32_t remotePort;
+    rv = httpChannelInternal->GetRemotePort(&remotePort);
+    if (NS_FAILED(rv)) {
+      CSFLogError(LOGTAG, "%s: Failed to get remote port number: %d",
+                  __FUNCTION__, (int)rv);
+      return rv;
+    }
+
+    mTransportHandler->SetTargetForDefaultLocalAddressLookup(remoteIp.get(),
+                                                             remotePort);
+  }
+
+  return NS_OK;
+}
+
 void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
   if (mProxyConfig) {
     // Note that this could check if PrivacyRequested() is set on the PC and
@@ -454,6 +479,17 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
     // media is isolated, then we would need to restructure this code.
     mTransportHandler->SetProxyServer(std::move(*mProxyConfig));
     mProxyConfig.reset();
+  }
+
+  if (!mTargetForDefaultLocalAddressLookupIsSet) {
+    nsresult rv = SetTargetForDefaultLocalAddressLookup();
+    if (NS_FAILED(rv)) {
+      CSFLogError(LOGTAG,
+                  "%s: Unable to set target for default local address lookup",
+                  __FUNCTION__);
+      return;
+    }
+    mTargetForDefaultLocalAddressLookupIsSet = true;
   }
 
   // Make sure we don't call StartIceGathering if we're in e10s mode
@@ -467,8 +503,7 @@ void PeerConnectionMedia::EnsureIceGathering(bool aDefaultRouteOnly) {
     return;
   }
 
-  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mRemoteIp.get(),
-                                       mRemotePort, mStunAddrs);
+  mTransportHandler->StartIceGathering(aDefaultRouteOnly, mStunAddrs);
 }
 
 void PeerConnectionMedia::SelfDestruct() {
