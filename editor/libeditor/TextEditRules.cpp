@@ -997,7 +997,7 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   if (MOZ_UNLIKELY(NS_WARN_IF(!textNode))) {
     return NS_OK;
   }
-  rv = TextEditorRef().SetTextImpl(tString, *textNode);
+  rv = MOZ_KnownLive(TextEditorRef()).SetTextImpl(tString, *textNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -1736,8 +1736,9 @@ nsresult TextEditRules::HideLastPasswordInputInternal() {
     return NS_OK;
   }
 
-  selNode->GetAsText()->ReplaceData(mLastStart, mLastLength, hiddenText,
-                                    IgnoreErrors());
+  MOZ_KnownLive(TextEditorRef())
+      .DoReplaceText(MOZ_KnownLive(*selNode->GetAsText()), mLastStart,
+                     mLastLength, hiddenText, IgnoreErrors());
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }

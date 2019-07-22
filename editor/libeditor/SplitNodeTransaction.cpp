@@ -52,6 +52,7 @@ NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 SplitNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mStartOfRightNode.IsSet())) {
@@ -113,6 +114,7 @@ SplitNodeTransaction::DoTransaction() {
   return NS_OK;
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 SplitNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mNewLeftNode) ||
@@ -123,29 +125,35 @@ SplitNodeTransaction::UndoTransaction() {
   // This assumes Do inserted the new node in front of the prior existing node
   // XXX Perhaps, we should reset mStartOfRightNode with current first child
   //     of the right node.
-  return mEditorBase->DoJoinNodes(mStartOfRightNode.GetContainer(),
-                                  mNewLeftNode, mParent);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsINode> container = mStartOfRightNode.GetContainer();
+  nsCOMPtr<nsINode> newLeftNode = mNewLeftNode;
+  nsCOMPtr<nsINode> parent = mParent;
+  return editorBase->DoJoinNodes(container, newLeftNode, parent);
 }
 
 /* Redo cannot simply resplit the right node, because subsequent transactions
  * on the redo stack may depend on the left node existing in its previous
  * state.
  */
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 SplitNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!mNewLeftNode) || NS_WARN_IF(!mParent) ||
-      NS_WARN_IF(!mStartOfRightNode.IsSet())) {
+      NS_WARN_IF(!mStartOfRightNode.IsSet()) || NS_WARN_IF(!mEditorBase)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
   // First, massage the existing node so it is in its post-split state
   if (mStartOfRightNode.IsInTextNode()) {
-    Text* rightNodeAsText = mStartOfRightNode.GetContainerAsText();
+    RefPtr<EditorBase> editorBase = mEditorBase;
+    RefPtr<Text> rightNodeAsText = mStartOfRightNode.GetContainerAsText();
     MOZ_DIAGNOSTIC_ASSERT(rightNodeAsText);
-    ErrorResult rv;
-    rightNodeAsText->DeleteData(0, mStartOfRightNode.Offset(), rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
+    ErrorResult error;
+    editorBase->DoDeleteText(*rightNodeAsText, 0, mStartOfRightNode.Offset(),
+                             error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
     }
   } else {
     nsCOMPtr<nsIContent> child =
