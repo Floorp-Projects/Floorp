@@ -6,7 +6,8 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.feature.intent.IntentProcessor
+import mozilla.components.feature.customtabs.CustomTabIntentProcessor
+import mozilla.components.feature.intent.TabIntentProcessor
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import org.mozilla.fenix.test.Mockable
@@ -26,11 +27,15 @@ class Utilities(
      * and ACTION_SEND intents.
      */
     val intentProcessor by lazy {
-        IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context)
+        TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = false)
     }
 
     val privateIntentProcessor by lazy {
-        IntentProcessor(sessionUseCases, sessionManager, searchUseCases, context, isPrivate = true)
+        TabIntentProcessor(sessionManager, sessionUseCases.loadUrl, searchUseCases.newTabSearch, isPrivate = true)
+    }
+
+    val customTabIntentProcessor by lazy {
+        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources.displayMetrics)
     }
 
     /**

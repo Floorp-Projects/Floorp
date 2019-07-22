@@ -7,9 +7,9 @@ package org.mozilla.fenix
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import mozilla.components.browser.session.tab.CustomTabConfig
-import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.components.NotificationManager.Companion.RECEIVE_TABS_TAG
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
+import org.mozilla.fenix.components.NotificationManager
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
@@ -21,31 +21,42 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // The intent property is nullable, but the rest of the code below
-        // assumes it is not. If it's null, then we make a new one and open
-        // the HomeActivity.
-        val intent = intent?.let { Intent(intent) } ?: Intent()
-
         val isPrivate = Settings.getInstance(this).usePrivateMode
 
-        if (isPrivate) {
-            components.utils.privateIntentProcessor.process(intent)
-        } else {
-            components.utils.intentProcessor.process(intent)
-        }
+        MainScope().launch {
+            // The intent property is nullable, but the rest of the code below
+            // assumes it is not. If it's null, then we make a new one and open
+            // the HomeActivity.
+            val intent = intent?.let { Intent(intent) } ?: Intent()
 
+            val intentProcessors = listOf(
+                components.utils.customTabIntentProcessor,
+                if (isPrivate) components.utils.privateIntentProcessor else components.utils.intentProcessor
+            )
+
+            intentProcessors.any { it.process(intent) }
+            setIntentActivity(intent)
+
+            startActivity(intent)
+
+            finish()
+        }
+    }
+
+    private fun setIntentActivity(intent: Intent) {
         val openToBrowser = when {
-            CustomTabConfig.isCustomTabIntent(SafeIntent(intent)) -> {
-                intent.setClassName(
-                    applicationContext,
-                    if (intent.hasExtra(getString(R.string.intent_extra_auth))) AuthCustomTabActivity::class.java.name
-                    else CustomTabActivity::class.java.name
-                )
+            components.utils.customTabIntentProcessor.matches(intent) -> {
+                val activityClass = if (intent.hasExtra(getString(R.string.intent_extra_auth))) {
+                    AuthCustomTabActivity::class
+                } else {
+                    CustomTabActivity::class
+                }
+                intent.setClassName(applicationContext, activityClass.java.name)
                 true
             }
             intent.action == Intent.ACTION_VIEW -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                if (!intent.getBooleanExtra(RECEIVE_TABS_TAG, false)) {
+                if (!intent.getBooleanExtra(NotificationManager.RECEIVE_TABS_TAG, false)) {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 }
                 true
@@ -57,9 +68,5 @@ class IntentReceiverActivity : Activity() {
         }
 
         intent.putExtra(HomeActivity.OPEN_TO_BROWSER, openToBrowser)
-
-        startActivity(intent)
-
-        finish()
     }
 }
