@@ -55,12 +55,12 @@ const VALID_GRIP_WITH_POINTER_OFFSET =
 
 // A Valid Local to floor matrix/transform for when we don't care about specific
 // values.  Note that these should be identical, just different representations.
-const VALID_LOCAL_TO_FLOOR_MATRIX = [1, 0,    0,  0,
+const VALID_FLOOR_ORIGIN_MATRIX = [1, 0,    0,  0,
                                      0, 1,    0,  0,
                                      0, 0,    1,  0,
                                      1, 1.65, -1, 1];
 
-const VALID_LOCAL_TO_FLOOR_TRANSFORM = {
+const VALID_FLOOR_ORIGIN = {
     position: [1.0, 1.65, -1.0],
     orientation: [0, 0, 0, 1]
 };
