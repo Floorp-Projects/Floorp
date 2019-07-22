@@ -1518,7 +1518,7 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
     // required for notable string detection is high.
     MOZ_ASSERT(!anonymize);
 
-    nsDependentCString notableString(info.buffer);
+    nsDependentCString notableString(info.buffer.get());
 
     // Viewing about:memory generates many notable strings which contain
     // "string(length=".  If we report these as notable, then we'll create
@@ -1803,7 +1803,7 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
 
     nsCString classPath =
         realmJSPathPrefix +
-        nsPrintfCString("classes/class(%s)/", classInfo.className_);
+        nsPrintfCString("classes/class(%s)/", classInfo.className_.get());
 
     ReportClassStats(classInfo, classPath, handleReport, data, gcTotal);
   }
@@ -2027,7 +2027,7 @@ void ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
     if (anonymize) {
       escapedFilename.AppendPrintf("<anonymized-source-%d>", int(i));
     } else {
-      nsDependentCString filename(scriptSourceInfo.filename_);
+      nsDependentCString filename(scriptSourceInfo.filename_.get());
       escapedFilename.Append(filename);
       escapedFilename.ReplaceSubstring("/", "\\");
     }

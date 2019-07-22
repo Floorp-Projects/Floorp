@@ -265,17 +265,13 @@ struct ShapeInfo {
  * holds a copy of the filename.
  */
 struct NotableClassInfo : public ClassInfo {
-  NotableClassInfo();
-  NotableClassInfo(const char* className, const ClassInfo& info);
-  NotableClassInfo(NotableClassInfo&& info);
-  NotableClassInfo& operator=(NotableClassInfo&& info);
-
-  ~NotableClassInfo() { js_free(className_); }
-
-  char* className_;
-
- private:
+  NotableClassInfo() = default;
+  NotableClassInfo(NotableClassInfo&&) = default;
   NotableClassInfo(const NotableClassInfo& info) = delete;
+
+  NotableClassInfo(const char* className, const ClassInfo& info);
+
+  UniqueChars className_ = nullptr;
 };
 
 /** Data for tracking JIT-code memory usage. */
@@ -385,18 +381,14 @@ struct StringInfo {
 struct NotableStringInfo : public StringInfo {
   static const size_t MAX_SAVED_CHARS = 1024;
 
-  NotableStringInfo();
+  NotableStringInfo() = default;
+  NotableStringInfo(NotableStringInfo&&) = default;
+  NotableStringInfo(const NotableStringInfo&) = delete;
+
   NotableStringInfo(JSString* str, const StringInfo& info);
-  NotableStringInfo(NotableStringInfo&& info);
-  NotableStringInfo& operator=(NotableStringInfo&& info);
 
-  ~NotableStringInfo() { js_free(buffer); }
-
-  char* buffer;
-  size_t length;
-
- private:
-  NotableStringInfo(const NotableStringInfo& info) = delete;
+  UniqueChars buffer = nullptr;
+  size_t length = 0;
 };
 
 /**
@@ -446,17 +438,13 @@ struct ScriptSourceInfo {
  * class holds a copy of the filename.
  */
 struct NotableScriptSourceInfo : public ScriptSourceInfo {
-  NotableScriptSourceInfo();
+  NotableScriptSourceInfo() = default;
+  NotableScriptSourceInfo(NotableScriptSourceInfo&&) = default;
+  NotableScriptSourceInfo(const NotableScriptSourceInfo&) = delete;
+
   NotableScriptSourceInfo(const char* filename, const ScriptSourceInfo& info);
-  NotableScriptSourceInfo(NotableScriptSourceInfo&& info);
-  NotableScriptSourceInfo& operator=(NotableScriptSourceInfo&& info);
 
-  ~NotableScriptSourceInfo() { js_free(filename_); }
-
-  char* filename_;
-
- private:
-  NotableScriptSourceInfo(const NotableScriptSourceInfo& info) = delete;
+  UniqueChars filename_ = nullptr;
 };
 
 struct HelperThreadStats {
