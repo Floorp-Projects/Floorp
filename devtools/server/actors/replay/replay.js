@@ -810,6 +810,7 @@ const gManifestFinishedAfterCheckpointHandlers = {
   },
 
   runToPoint({ endpoint }, point) {
+    assert(endpoint.checkpoint >= point.checkpoint);
     if (!endpoint.position && point.checkpoint == endpoint.checkpoint) {
       RecordReplayControl.manifestFinished({ point });
     }
@@ -892,6 +893,7 @@ let gFrameStepsFrameIndex = 0;
 // This must be specified for any manifest that uses ensurePositionHandler.
 const gManifestPositionHandlers = {
   resume(manifest, point) {
+    clearPositionHandlers();
     RecordReplayControl.manifestFinished({
       point,
       consoleMessages: gNewConsoleMessages,
@@ -1249,6 +1251,7 @@ function getPauseData() {
     const names = getEnvironmentNames(env);
     rv.environments[id] = { data, names };
 
+    addObject(data.callee);
     addEnvironment(data.parent);
   }
 
