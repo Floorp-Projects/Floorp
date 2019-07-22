@@ -1040,14 +1040,43 @@ fontlist::Family* gfxPlatformFontList::FindSharedFamily(
   return family;
 }
 
+class InitializeFamilyRunnable : public mozilla::Runnable {
+ public:
+  explicit InitializeFamilyRunnable(uint32_t aFamilyIndex)
+      : Runnable("gfxPlatformFontList::InitializeFamilyRunnable"),
+        mIndex(aFamilyIndex) {}
+
+  NS_IMETHOD Run() override {
+    auto list = gfxPlatformFontList::PlatformFontList()->SharedFontList();
+    if (!list) {
+      return NS_OK;
+    }
+    if (mIndex >= list->NumFamilies()) {
+      // Out of range? Maybe the list got reinitialized since this request
+      // was posted - just ignore it.
+      return NS_OK;
+    }
+    dom::ContentChild::GetSingleton()->SendInitializeFamily(
+        list->GetGeneration(), mIndex);
+    return NS_OK;
+  }
+
+ private:
+  uint32_t mIndex;
+};
+
 bool gfxPlatformFontList::InitializeFamily(fontlist::Family* aFamily) {
   MOZ_ASSERT(SharedFontList());
   auto list = SharedFontList();
   if (!XRE_IsParentProcess()) {
     uint32_t index = aFamily - list->Families();
     MOZ_ASSERT(index < list->NumFamilies());
-    dom::ContentChild::GetSingleton()->SendInitializeFamily(
-        list->GetGeneration(), index);
+    if (NS_IsMainThread()) {
+      dom::ContentChild::GetSingleton()->SendInitializeFamily(
+          list->GetGeneration(), index);
+    } else {
+      NS_DispatchToMainThread(new InitializeFamilyRunnable(index));
+    }
     return aFamily->IsInitialized();
   }
   AutoTArray<fontlist::Face::InitData, 16> faceList;
