@@ -240,7 +240,7 @@ function handleAsyncOrdering(request, response) {
       }
 
       try {
-        out.writeByteArray(data, data.length);
+        out.writeByteArray(data);
         step();
       } catch (e) {
         try {

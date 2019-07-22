@@ -48,7 +48,7 @@ function write_string_to_file(file, contents) {
   bos.setOutputStream(ostream);
 
   let utf8 = new TextEncoder("utf-8").encode(contents);
-  bos.writeByteArray(utf8, utf8.length);
+  bos.writeByteArray(utf8);
   ostream.QueryInterface(Ci.nsISafeOutputStream).finish();
   ostream.close();
 }
