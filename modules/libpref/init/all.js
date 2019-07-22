@@ -8,7 +8,7 @@
  * such as browser/app/profile/firefox.js or mobile/android/app/mobile.js.
  *
  * NOTE: Not all prefs should be defined in this (or any other) data file.
- * Static prefs, especially VarCache prefs, are defined in StaticPrefList.h.
+ * Static prefs, especially VarCache prefs, are defined in StaticPrefList.yaml.
  * Those prefs should *not* appear in this file.
  *
  * For the syntax used by this file, consult the comments at the top of
@@ -894,7 +894,7 @@ pref("toolkit.asyncshutdown.log", false);
 pref("toolkit.content-background-hang-monitor.disabled", false);
 
 // Enable JS dump() function.
-// IMPORTANT: Keep this in condition in sync with StaticPrefList.h. The value
+// IMPORTANT: Keep this in condition in sync with StaticPrefList.yaml. The value
 // of MOZILLA_OFFICIAL is different between full and artifact builds, so without
 // it being specified, dump is disabled in artifact builds (see Bug 1490412).
 #ifdef MOZILLA_OFFICIAL
