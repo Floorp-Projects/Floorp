@@ -144,15 +144,8 @@ nsresult TextEditor::Init(Document& aDoc, Element* aRoot,
       return rv;
     }
   }
-  NS_ENSURE_SUCCESS(rulesRv, rulesRv);
-
-  // mRules may not have been initialized yet, when this is called via
-  // HTMLEditor::Init.
-  if (mRules) {
-    mRules->SetInitialValue(aInitialValue);
-  }
-
-  return NS_OK;
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rulesRv), "Failed to initialize us");
+  return EditorBase::ToGenericNSResult(rulesRv);
 }
 
 static int32_t sNewlineHandlingPref = -1, sCaretStylePref = -1;
@@ -205,7 +198,7 @@ nsresult TextEditor::EndEditorInit() {
 
   nsresult rv = InitRules();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
+    return rv;
   }
   // Throw away the old transaction manager if this is not the first time that
   // we're initializing the editor.
@@ -1286,15 +1279,6 @@ nsresult TextEditor::OnCompositionStart(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (IsPasswordEditor()) {
-    if (NS_WARN_IF(!mRules)) {
-      return NS_ERROR_FAILURE;
-    }
-    // Protect the edit rules object from dying
-    RefPtr<TextEditRules> rules(mRules);
-    rules->ResetIMETextPWBuf();
-  }
-
   EnsureComposition(aCompositionStartEvent);
   NS_WARNING_ASSERTION(mComposition, "Failed to get TextComposition instance?");
   return NS_OK;
@@ -2232,25 +2216,6 @@ nsresult TextEditor::RemoveAttributeOrEquivalent(Element* aElement,
   }
 
   nsresult rv = RemoveAttributeWithTransaction(*aElement, *aAttribute);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return EditorBase::ToGenericNSResult(rv);
-  }
-  return NS_OK;
-}
-
-nsresult TextEditor::HideLastPasswordInput() {
-  // This method should be called only by TextEditRules::Notify().
-  MOZ_ASSERT(mRules);
-  MOZ_ASSERT(IsPasswordEditor());
-  MOZ_ASSERT(!IsEditActionDataAvailable());
-
-  AutoEditActionDataSetter editActionData(*this, EditAction::eHidePassword);
-  if (NS_WARN_IF(!editActionData.CanHandle())) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  RefPtr<TextEditRules> rules(mRules);
-  nsresult rv = rules->HideLastPasswordInput();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
