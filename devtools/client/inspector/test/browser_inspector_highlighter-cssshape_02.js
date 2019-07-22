@@ -11,7 +11,7 @@ const HIGHLIGHTER_TYPE = "ShapesHighlighter";
 
 add_task(async function() {
   const { inspector, testActor } = await openInspectorForURL(TEST_URL);
-  const front = inspector.inspector;
+  const front = inspector.inspectorFront;
   const highlighter = await front.getHighlighterByType(HIGHLIGHTER_TYPE);
 
   await polygonHasCorrectAttrs(testActor, inspector, highlighter);
