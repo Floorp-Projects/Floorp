@@ -38,12 +38,13 @@ static nsresult nsAppShellInit() {
   if (!sAppShell) return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(sAppShell);
 
-  nsresult rv;
-  rv = static_cast<nsAppShell*>(sAppShell)->Init();
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(sAppShell);
-    return rv;
-  }
+  nsresult rv = static_cast<nsAppShell*>(sAppShell)->Init();
+  // If we somehow failed to initialize the appshell, it's extremely likely
+  // that we are sufficiently hosed that continuing on is just going to lead
+  // to bad things later.  By crashing early here, the crash report will
+  // potentially contain a little more insight into what's going wrong than
+  // if we waited for a crash further down the line.  See also bug 1545381.
+  MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   return NS_OK;
 }
