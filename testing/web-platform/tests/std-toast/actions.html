@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Toast: action tests</title>
+
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+
+<main></main>
+
+<script type="module">
+import { testActionToast, testToastElement } from './resources/helpers.js';
+
+testActionToast((toast) => {
+    assert_equals(toast.action.textContent, 'action');
+}, 'the action element gets properly captured with this.action');
+
+testActionToast((toast) => {
+    toast.innerHTML = `<button slot='action'>new action</button>`
+    assert_equals(toast.action.textContent, 'new action');
+}, 'changing the action button changes this.action');
+
+testToastElement((toast) => {
+    assert_equals(toast.action, null);
+}, 'the action property of a toast without an action is null');
+
+testToastElement((toast) => {
+    toast.innerHTML = `<button slot="action" id="first">first</button>
+        <button slot="action" id="second">second</button>`;
+
+    assert_equals(toast.action, toast.querySelector('#first'));
+})
+</script>
