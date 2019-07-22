@@ -13,5 +13,5 @@ function handleRequest(request, response) {
       .createInstance(Components.interfaces.nsIBinaryOutputStream);
   bos.setOutputStream(response.bodyOutputStream);
 
-  bos.writeByteArray(bytes, bytes.length);
+  bos.writeByteArray(bytes);
 }
