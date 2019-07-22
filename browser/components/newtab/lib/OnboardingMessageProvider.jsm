@@ -465,6 +465,16 @@ const ONBOARDING_MESSAGES = async () => [
       "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
     trigger: { id: "firstRun" },
   },
+  {
+    id: "FXA_ACCOUNTS_BADGE",
+    template: "toolbar_badge",
+    content: {
+      target: "fxa-toolbar-menu-button",
+    },
+    // Never accessed the FxA panel && doesn't use Firefox sync & has FxA enabled
+    targeting: `isFxABadgeEnabled && !hasAccessedFxAPanel && !usesFirefoxSync && isFxAEnabled == true`,
+    trigger: { id: "toolbarBadgeUpdate" },
+  },
 ];
 
 const OnboardingMessageProvider = {
