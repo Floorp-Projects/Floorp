@@ -918,8 +918,8 @@ void gfxPlatform::Init() {
     // Layers prefs
     forcedPrefs.AppendPrintf(
         "-L%d%d%d%d", StaticPrefs::layers_amd_switchable_gfx_enabled(),
-        StaticPrefs::layers_acceleration_disabled_do_not_use_directly(),
-        StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly(),
+        StaticPrefs::layers_acceleration_disabled_DoNotUseDirectly(),
+        StaticPrefs::layers_acceleration_force_enabled_DoNotUseDirectly(),
         StaticPrefs::layers_d3d11_force_warp());
     // WebGL prefs
     forcedPrefs.AppendPrintf(
@@ -1138,7 +1138,7 @@ int32_t gfxPlatform::MaxTextureSize() {
   // pref or whatnot.
   const int32_t kMinSizePref = 2048;
   return std::max(kMinSizePref,
-                  StaticPrefs::gfx_max_texture_size_do_not_use_directly());
+                  StaticPrefs::gfx_max_texture_size_DoNotUseDirectly());
 }
 
 /* static */
@@ -1147,7 +1147,7 @@ int32_t gfxPlatform::MaxAllocSize() {
   // pref or whatnot.
   const int32_t kMinAllocPref = 10000000;
   return std::max(kMinAllocPref,
-                  StaticPrefs::gfx_max_alloc_size_do_not_use_directly());
+                  StaticPrefs::gfx_max_alloc_size_DoNotUseDirectly());
 }
 
 /* static */
@@ -2505,7 +2505,7 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
   // Base value - does the platform allow acceleration?
   if (feature.SetDefault(AccelerateLayersByDefault(), FeatureStatus::Blocked,
                          "Acceleration blocked by platform")) {
-    if (StaticPrefs::layers_acceleration_disabled_do_not_use_directly()) {
+    if (StaticPrefs::layers_acceleration_disabled_DoNotUseDirectly()) {
       feature.UserDisable("Disabled by pref",
                           NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_PREF"));
     } else if (acceleratedEnv && *acceleratedEnv == '0') {
@@ -2519,7 +2519,7 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
   }
 
   // This has specific meaning elsewhere, so we always record it.
-  if (StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly()) {
+  if (StaticPrefs::layers_acceleration_force_enabled_DoNotUseDirectly()) {
     feature.UserForceEnable("Force-enabled by pref");
   }
 
@@ -2544,7 +2544,7 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
 /*static*/
 bool gfxPlatform::WebRenderPrefEnabled() {
   return StaticPrefs::gfx_webrender_all() ||
-         StaticPrefs::gfx_webrender_enabled_do_not_use_directly();
+         StaticPrefs::gfx_webrender_enabled_DoNotUseDirectly();
 }
 
 /*static*/
@@ -3196,8 +3196,7 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
              !StaticPrefs::layers_offmainthreadcomposition_force_disabled();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
-    result |=
-        StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly();
+    result |= StaticPrefs::layers_acceleration_force_enabled_DoNotUseDirectly();
 
 #endif
     firstTime = false;
@@ -3474,7 +3473,7 @@ bool gfxPlatform::AsyncPanZoomEnabled() {
 #ifdef MOZ_WIDGET_ANDROID
   return true;
 #else
-  return StaticPrefs::layers_async_pan_zoom_enabled_do_not_use_directly();
+  return StaticPrefs::layers_async_pan_zoom_enabled_DoNotUseDirectly();
 #endif
 }
 
@@ -3636,7 +3635,7 @@ void gfxPlatform::InitOpenGLConfig() {
 
   // When layers acceleration is force-enabled, enable it even for blacklisted
   // devices.
-  if (StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly()) {
+  if (StaticPrefs::layers_acceleration_force_enabled_DoNotUseDirectly()) {
     openGLFeature.UserForceEnable("Force-enabled by pref");
     return;
   }
