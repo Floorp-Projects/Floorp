@@ -173,6 +173,17 @@ input > .preview-div {
   white-space: pre;
 }
 
+input[type=password] > .anonymous-div,
+input[type=password] > .preview-div {
+  /*
+   * In password fields, any character should be put same direction.  Otherwise,
+   * caret position at typing tells everybody whether the character is an RTL
+   * or an LTR character.  Unfortunately, this makes odd rendering when bidi
+   * text is unmasked.
+   */
+  unicode-bidi: bidi-override;
+}
+
 textarea > .anonymous-div {
   scroll-behavior: inherit;
   overscroll-behavior: inherit;
