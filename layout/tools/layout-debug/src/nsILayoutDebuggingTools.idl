@@ -22,12 +22,6 @@ interface nsILayoutDebuggingTools : nsISupports
      */
     void init(in mozIDOMWindow win);
 
-    /*
-     * Notify the debugger that the docshell has been told to load a new
-     * URI.
-     */
-    void newURILoaded();
-
     /* Toggle various debugging states */
     attribute boolean visualDebugging;
     attribute boolean visualEventDebugging;
