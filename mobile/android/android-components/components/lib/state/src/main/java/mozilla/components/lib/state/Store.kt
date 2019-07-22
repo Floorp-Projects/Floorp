@@ -68,11 +68,13 @@ open class Store<S : State, A : Action>(
     /**
      * Registers an [Observer] function that will be invoked whenever the [State] changes.
      *
-     * Right after registering the [Observer] will be invoked with the current [State].
-     *
      * It's the responsibility of the caller to keep track of the returned [Subscription] and call
      * [Subscription.unsubscribe] to stop observing and avoid potentially leaking memory by keeping an unused [Observer]
      * registered. It's is recommend to use one of the `observe` extension methods that unsubscribe automatically.
+     *
+     * The created [Subscription] is in paused state until explicitly resumed by calling [Subscription.resume].
+     * While paused the [Subscription] will not receive any state updates. Once resumed the [observer]
+     * will get invoked immediately with the latest state.
      *
      * @return A [Subscription] object that can be used to unsubscribe from further state changes.
      */
@@ -84,8 +86,6 @@ open class Store<S : State, A : Action>(
         synchronized(subscriptions) {
             subscriptions.add(subscription)
         }
-
-        observer.invoke(currentState)
 
         return subscription
     }
@@ -109,7 +109,7 @@ open class Store<S : State, A : Action>(
         currentState = newState
 
         synchronized(subscriptions) {
-            subscriptions.forEach { it.observer.invoke(currentState) }
+            subscriptions.forEach { subscription -> subscription.dispatch(newState) }
         }
     }
 
@@ -129,9 +129,47 @@ open class Store<S : State, A : Action>(
     ) {
         private val storeReference = WeakReference(store)
         internal var binding: Binding? = null
+        private var active = false
 
+        /**
+         * Resumes the [Subscription]. The [Observer] will get notified for every state change.
+         * Additionally it will get invoked immediately with the latest state.
+         */
+        @Synchronized
+        fun resume() {
+            active = true
+
+            storeReference.get()?.state?.let(observer)
+        }
+
+        /**
+         * Pauses the [Subscription]. The [Observer] will not get notified when the state changes
+         * until [resume] is called.
+         */
+        @Synchronized
+        fun pause() {
+            active = false
+        }
+
+        @Synchronized
+        internal fun dispatch(state: S) {
+            if (active) {
+                observer.invoke(state)
+            }
+        }
+
+        /**
+         * Unsubscribe from the [Store].
+         *
+         * Calling this method will clear all references and the subscription will not longer be
+         * active.
+         */
+        @Synchronized
         fun unsubscribe() {
+            active = false
+
             storeReference.get()?.removeSubscription(this)
+            storeReference.clear()
 
             binding?.unbind()
         }

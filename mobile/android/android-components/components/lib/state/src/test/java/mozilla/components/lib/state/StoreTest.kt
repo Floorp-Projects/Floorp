@@ -37,7 +37,9 @@ class StoreTest {
 
         var observedValue = 0
 
-        store.observeManually { state -> observedValue = state.counter }
+        store.observeManually { state -> observedValue = state.counter }.also {
+            it.resume()
+        }
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
 
@@ -53,7 +55,9 @@ class StoreTest {
 
         var observedValue = 0
 
-        store.observeManually { state -> observedValue = state.counter }
+        store.observeManually { state -> observedValue = state.counter }.also {
+            it.resume()
+        }
 
         assertEquals(23, observedValue)
     }
@@ -67,7 +71,9 @@ class StoreTest {
 
         var stateChangeObserved = false
 
-        store.observeManually { stateChangeObserved = true }
+        store.observeManually { stateChangeObserved = true }.also {
+            it.resume()
+        }
 
         // Initial state observed
         assertTrue(stateChangeObserved)
@@ -89,6 +95,8 @@ class StoreTest {
 
         val subscription = store.observeManually { state ->
             observedValue = state.counter
+        }.also {
+            it.resume()
         }
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()

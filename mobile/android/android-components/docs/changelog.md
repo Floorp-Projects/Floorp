@@ -78,6 +78,12 @@ permalink: /changelog/
   * Hyphens `-` are now allowed in labels for metrics.  See [1566764](https://bugzilla.mozilla.org/show_bug.cgi?id=1566764).
   * ⚠️ **This is a breaking change**: Timespan values are returned in their configured time unit in the testing API.
 
+* **lib-state**
+  * Added ability to pause/resume observing a `Store` via `pause()` and `resume()` methods on the subscription
+  * When using `observeManually` the returned `Subscription` is in paused state by default.
+  * When binding a subscription to a `LifecycleOwner` then this subscription will automatically paused and resumed based on whether the lifecycle is in STARTED state.
+  * When binding a subscription to a `View` then this subscription will be paused until the `View` gets attached.
+
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
   * Added `View.toScope()` to create a `CoroutineScope` that is active as long as the `View` is attached. Once the `View` gets detached the `CoroutineScope` gets cancelled automatically.  By default coroutines dispatched on the created [CoroutineScope] run on the main dispatcher

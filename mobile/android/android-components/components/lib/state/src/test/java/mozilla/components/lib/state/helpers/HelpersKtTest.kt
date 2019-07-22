@@ -24,13 +24,15 @@ class HelpersKtTest {
         var callbackExecuted = false
         var callbackValue = false
 
-        store.observeManually(onlyIfChanged<TestState, Boolean>(
+        store.observeManually(observer = onlyIfChanged<TestState, Boolean>(
             map = { state -> state.counter % 2 == 0 },
             then = { _, _isEven ->
                 callbackExecuted = true
                 callbackValue = _isEven
             }
-        ))
+        )).also {
+            it.resume()
+        }
 
         // Initial notify
         assertTrue(callbackExecuted)
@@ -63,12 +65,14 @@ class HelpersKtTest {
 
         var callbackExecuted = false
 
-        store.observeManually(onlyIfChanged<TestState, TestState>(
+        store.observeManually(observer = onlyIfChanged<TestState, TestState>(
             map = { state -> if (state.counter % 2 == 0) null else state },
             then = { _, _ ->
                 callbackExecuted = true
             }
-        ))
+        )).also {
+            it.resume()
+        }
 
         assertTrue(callbackExecuted)
 
