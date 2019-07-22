@@ -78,6 +78,11 @@ permalink: /changelog/
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
 
+* **concept-push**, **lib-push-firebase**, **feature-push**
+  * Added `deleteToken` to the PushService interface.
+  * Added the implementation for it to Firebase Push implementation.
+  * Added `forceRegistrationRenewal` to the AutopushFeature for situations where our current registration token may be invalid for us to use.
+
 # 4.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v4.0.1)
