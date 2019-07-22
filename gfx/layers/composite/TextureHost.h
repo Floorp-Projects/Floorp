@@ -675,8 +675,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   virtual bool IsDirectMap() { return false; }
 
-  virtual bool SupportsWrNativeTexture() { return false; }
-
   virtual bool NeedsYFlip() const;
 
  protected:

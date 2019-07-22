@@ -62,8 +62,6 @@ class GPUVideoTextureHost : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
 
-  bool SupportsWrNativeTexture() override;
-
  protected:
   GPUVideoTextureHost(TextureFlags aFlags,
                       const SurfaceDescriptorGPUVideo& aDescriptor);

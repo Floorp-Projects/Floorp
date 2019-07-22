@@ -151,13 +151,5 @@ void GPUVideoTextureHost::PushDisplayItems(
                                                aFilter, aImageKeys);
 }
 
-bool GPUVideoTextureHost::SupportsWrNativeTexture() {
-  MOZ_ASSERT(EnsureWrappedTextureHost());
-  if (!EnsureWrappedTextureHost()) {
-    return false;
-  }
-  return EnsureWrappedTextureHost()->SupportsWrNativeTexture();
-}
-
 }  // namespace layers
 }  // namespace mozilla
