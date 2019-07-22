@@ -51,6 +51,17 @@ addon-list > section:first-of-type .list-section-heading {
   margin-bottom: 16px;
 }
 
+addon-card:not([expanded]) > .addon.card[active="false"] {
+  opacity: 0.6;
+  transition: opacity 150ms, box-shadow 150ms;
+}
+
+addon-card:not([expanded])[panelopen] > .addon.card[active="false"],
+addon-card:not([expanded]) > .addon.card[active="false"]:focus-within,
+addon-card:not([expanded]) > .addon.card[active="false"]:hover {
+  opacity: 1;
+}
+
 .addon.card:hover {
   box-shadow: var(--card-shadow);
 }
