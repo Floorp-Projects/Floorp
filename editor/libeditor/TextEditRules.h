@@ -107,6 +107,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    */
   virtual bool DocumentIsEmpty();
 
+  bool DontEchoPassword() const;
+
  protected:
   virtual ~TextEditRules();
 
@@ -373,7 +375,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   bool IsReadonly() const;
   bool IsDisabled() const;
   bool IsMailEditor() const;
-  bool DontEchoPassword() const;
 
  private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
