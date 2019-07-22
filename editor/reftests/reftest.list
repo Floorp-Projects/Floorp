@@ -14,6 +14,16 @@ include xul/reftest.list
 != passwd-2.html passwd-ref.html
 == passwd-3.html passwd-ref.html
 needs-focus == passwd-4.html passwd-ref.html
+== passwd-5-with-Preview.html passwd-ref.html
+needs-focus == passwd-5-with-TextEditor.html passwd-ref.html
+== passwd-6-with-Preview.html passwd-6-ref.html
+needs-focus == passwd-6-with-TextEditor.html passwd-6-ref.html
+== passwd-7-with-Preview.html passwd-ref.html
+needs-focus == passwd-7-with-TextEditor.html passwd-ref.html
+== passwd-8-with-Preview.html passwd-ref.html
+needs-focus == passwd-8-with-TextEditor.html passwd-ref.html
+== passwd-9-with-Preview.html passwd-2.html
+needs-focus == passwd-9-with-TextEditor.html passwd-2.html
 == emptypasswd-1.html emptypasswd-ref.html
 == emptypasswd-2.html emptypasswd-ref.html
 == caret_on_positioned.html caret_on_positioned-ref.html

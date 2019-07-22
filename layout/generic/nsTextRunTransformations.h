@@ -38,6 +38,7 @@ struct nsTransformedCharStyle final {
   uint8_t mMathVariant;
   bool mExplicitLanguage;
   bool mForceNonFullWidth = false;
+  bool mMaskPassword = false;
 
  private:
   ~nsTransformedCharStyle() {}
@@ -105,6 +106,12 @@ class nsCaseTransformTextRunFactory : public nsTransformingTextRunFactory {
   // these are ignored.
   // If aCaseTransformsOnly is true, then only the upper/lower/capitalize
   // transformations are performed; full-width and full-size-kana are ignored.
+  // If `aTextRun` is not nullptr and characters which are styled with setting
+  // `nsTransformedCharStyle::mMaskPassword` to true, they are replaced with
+  // password mask characters and are not transformed (i.e., won't be added
+  // or merged for the specified transform).  However, unmasked characters
+  // whose `nsTransformedCharStyle::mMaskPassword` is set to false are
+  // transformed normally.
   static bool TransformString(
       const nsAString& aString, nsString& aConvertedString, bool aAllUppercase,
       bool aCaseTransformsOnly, const nsAtom* aLanguage,
