@@ -1,6 +1,6 @@
-# Testsuite Design
+# Test Suite Design
 
-The vast majority of the testsuite is formed of HTML pages, which can
+The vast majority of the test suite is formed of HTML pages, which can
 be loaded in a browser and either programmatically provide a result or
 provide a set of steps to run the test and obtain the result.
 
@@ -12,7 +12,7 @@ and should be easy to run in any browser.
 
 Each top level directory in the repository corresponds to tests for a
 single specification, with the exception of `css/` which contains
-testsuites for CSS WG specifications. For W3C specs, these directories
+test suites for CSS WG specifications. For W3C specs, these directories
 are typically named after the shortname of the spec (i.e. the name
 used for snapshot publications under `/TR/`); for WHATWG specs, they
 are typically named after the subdomain of the spec (i.e. trimming
