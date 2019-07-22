@@ -22,7 +22,6 @@ SOURCES += [
     'bsf.c',
     'codec_desc.c',
     'decode.c',
-    'dummy_funcs.c',
     'flac.c',
     'flacdata.c',
     'flacdec.c',
