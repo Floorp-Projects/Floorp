@@ -64,6 +64,18 @@ type ThreadPauseState = {
     },
   },
   selectedFrameId: ?string,
+
+  // Scope items that have been expanded in the current pause.
+  expandedScopes: Set<string>,
+
+  // Scope items that were expanded in the last pause. This is separate from
+  // expandedScopes so that (a) the scope pane's ObjectInspector does not depend
+  // on the current expanded scopes and we don't have to re-render the entire
+  // ObjectInspector when an element is expanded or collapsed, and (b) so that
+  // the expanded scopes are regenerated when we pause at a new location and we
+  // don't have to worry about pruning obsolete scope entries.
+  lastExpandedScopes: string[],
+
   command: Command,
   lastCommand: Command,
   wasStepping: boolean,
@@ -120,6 +132,8 @@ const createInitialPauseState = () => ({
   command: null,
   lastCommand: null,
   previousLocation: null,
+  expandedScopes: new Set(),
+  lastExpandedScopes: [],
 });
 
 function getThreadPauseState(state: PauseState, thread: ThreadId) {
@@ -292,6 +306,8 @@ function update(
       return updateThreadState({
         ...resumedPauseState,
         wasStepping: !!action.wasStepping,
+        expandedScopes: new Set(),
+        lastExpandedScopes: [...threadState().expandedScopes],
       });
     }
 
@@ -315,7 +331,7 @@ function update(
         },
         threads: {
           [action.mainThread.actor]: {
-            ...state.threads[action.mainThread.actor],
+            ...getThreadPauseState(state, action.mainThread.actor),
             ...resumedPauseState,
           },
         },
@@ -333,6 +349,17 @@ function update(
       const { mapScopes } = action;
       prefs.mapScopes = mapScopes;
       return { ...state, mapScopes };
+    }
+
+    case "SET_EXPANDED_SCOPE": {
+      const { path, expanded } = action;
+      const expandedScopes = new Set(threadState().expandedScopes);
+      if (expanded) {
+        expandedScopes.add(path);
+      } else {
+        expandedScopes.delete(path);
+      }
+      return updateThreadState({ expandedScopes });
     }
   }
 
@@ -580,6 +607,10 @@ export function isMapScopesEnabled(state: State) {
 export function getChromeScopes(state: State, thread: ThreadId) {
   const frame: ?ChromeFrame = (getSelectedFrame(state, thread): any);
   return frame ? frame.scopeChain : undefined;
+}
+
+export function getLastExpandedScopes(state: State, thread: ThreadId) {
+  return getThreadPauseState(state.pause, thread).lastExpandedScopes;
 }
 
 export default update;

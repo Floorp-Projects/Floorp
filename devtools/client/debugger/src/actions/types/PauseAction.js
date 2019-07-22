@@ -147,4 +147,11 @@ export type PauseAction =
   | {|
       +type: "TOGGLE_MAP_SCOPES",
       +mapScopes: boolean,
+    |}
+  | {|
+      +type: "SET_EXPANDED_SCOPE",
+      +cx: ThreadContext,
+      +thread: string,
+      +path: string,
+      +expanded: boolean,
     |};

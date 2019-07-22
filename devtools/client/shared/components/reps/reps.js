@@ -588,7 +588,7 @@ class Tree extends Component {
     super(props);
 
     this.state = {
-      seen: new Set()
+      autoExpanded: new Set()
     };
 
     this.treeRef = _react2.default.createRef();
@@ -632,26 +632,36 @@ class Tree extends Component {
   }
 
   _autoExpand() {
-    const { autoExpandDepth, autoExpandNodeChildrenLimit } = this.props;
-    if (!autoExpandDepth) {
+    const {
+      autoExpandDepth,
+      autoExpandNodeChildrenLimit,
+      initiallyExpanded
+    } = this.props;
+
+    if (!autoExpandDepth && !initiallyExpanded) {
       return;
     }
 
     // Automatically expand the first autoExpandDepth levels for new items. Do
     // not use the usual DFS infrastructure because we don't want to ignore
-    // collapsed nodes.
+    // collapsed nodes. Any initially expanded items will be expanded regardless
+    // of how deep they are.
     const autoExpand = (item, currentDepth) => {
-      if (currentDepth >= autoExpandDepth || this.state.seen.has(item)) {
+      const initial = initiallyExpanded && initiallyExpanded(item);
+
+      if (!initial && currentDepth >= autoExpandDepth) {
         return;
       }
 
       const children = this.props.getChildren(item);
-      if (autoExpandNodeChildrenLimit && children.length > autoExpandNodeChildrenLimit) {
+      if (!initial && autoExpandNodeChildrenLimit && children.length > autoExpandNodeChildrenLimit) {
         return;
       }
 
-      this.props.onExpand(item);
-      this.state.seen.add(item);
+      if (!this.state.autoExpanded.has(item)) {
+        this.props.onExpand(item);
+        this.state.autoExpanded.add(item);
+      }
 
       const length = children.length;
       for (let i = 0; i < length; i++) {
@@ -667,6 +677,14 @@ class Tree extends Component {
       }
     } else if (length != 0) {
       autoExpand(roots[0], 0);
+
+      if (initiallyExpanded) {
+        for (let i = 1; i < length; i++) {
+          if (initiallyExpanded(roots[i])) {
+            autoExpand(roots[i], 0);
+          }
+        }
+      }
     }
   }
 
@@ -7001,6 +7019,7 @@ class ObjectInspector extends Component {
       nodeExpand,
       nodeCollapse,
       recordTelemetryEvent,
+      setExpanded,
       roots
     } = this.props;
 
@@ -7012,6 +7031,10 @@ class ObjectInspector extends Component {
       }
     } else {
       nodeCollapse(item);
+    }
+
+    if (setExpanded) {
+      setExpanded(item, expand);
     }
   }
 
@@ -7052,6 +7075,7 @@ class ObjectInspector extends Component {
     const {
       autoExpandAll = true,
       autoExpandDepth = 1,
+      initiallyExpanded,
       focusable = true,
       disableWrap = false,
       expandedPaths,
@@ -7067,6 +7091,7 @@ class ObjectInspector extends Component {
 
       autoExpandAll,
       autoExpandDepth,
+      initiallyExpanded,
 
       isExpanded: item => expandedPaths && expandedPaths.has(item.path),
       isExpandable: this.isNodeExpandable,
@@ -7212,8 +7237,7 @@ function rootsChanged(props) {
 function releaseActors(state, client) {
   const actors = getActors(state);
   for (const actor of actors) {
-    // Ignore release failure, since the object actor may have been already GC.
-    client.releaseActor(actor).catch(() => {});
+    client.releaseActor(actor);
   }
 }
 
