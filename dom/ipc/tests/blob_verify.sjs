@@ -15,6 +15,6 @@ function handleRequest(request, response) {
   var bos = new BinaryOutputStream(response.bodyOutputStream);
 
   response.processAsync();
-  bos.writeByteArray(bodyBytes);
+  bos.writeByteArray(bodyBytes, bodyBytes.length);
   response.finish();
 }

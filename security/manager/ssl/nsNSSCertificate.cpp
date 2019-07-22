@@ -13,7 +13,6 @@
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/Span.h"
 #include "mozilla/Unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
@@ -1195,7 +1194,7 @@ nsNSSCertificate::Write(nsIObjectOutputStream* aStream) {
   if (NS_FAILED(rv)) {
     return rv;
   }
-  return aStream->WriteBytes(AsBytes(MakeSpan(mCert->derCert.data, mCert->derCert.len)));
+  return aStream->WriteByteArray(mCert->derCert.data, mCert->derCert.len);
 }
 
 NS_IMETHODIMP
