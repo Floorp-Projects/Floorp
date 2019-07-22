@@ -150,11 +150,11 @@ class AnimationInspector {
     this.provider = provider;
 
     this.inspector.sidebar.on("select", this.onSidebarSelectionChanged);
-    this.inspector.inspector.nodePicker.on(
+    this.inspector.inspectorFront.nodePicker.on(
       "picker-started",
       this.onElementPickerStarted
     );
-    this.inspector.inspector.nodePicker.on(
+    this.inspector.inspectorFront.nodePicker.on(
       "picker-stopped",
       this.onElementPickerStopped
     );
@@ -183,11 +183,11 @@ class AnimationInspector {
       "inspector-sidebar-resized",
       this.onSidebarResized
     );
-    this.inspector.inspector.nodePicker.off(
+    this.inspector.inspectorFront.nodePicker.off(
       "picker-started",
       this.onElementPickerStarted
     );
-    this.inspector.inspector.nodePicker.off(
+    this.inspector.inspectorFront.nodePicker.off(
       "picker-stopped",
       this.onElementPickerStopped
     );
@@ -711,7 +711,7 @@ class AnimationInspector {
   }
 
   toggleElementPicker() {
-    this.inspector.inspector.nodePicker.togglePicker();
+    this.inspector.inspectorFront.nodePicker.togglePicker();
   }
 
   async update() {

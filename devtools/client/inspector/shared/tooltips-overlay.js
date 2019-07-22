@@ -422,7 +422,7 @@ TooltipsOverlay.prototype = {
       naturalWidth = size.naturalWidth;
       naturalHeight = size.naturalHeight;
     } else {
-      const inspectorFront = this.view.inspector.inspector;
+      const inspectorFront = this.view.inspector.inspectorFront;
       const { data, size } = await inspectorFront.getImageDataFromURL(
         imageUrl,
         maxDim

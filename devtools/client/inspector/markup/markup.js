@@ -183,11 +183,11 @@ function MarkupView(inspector, frame, controllerWindow) {
   this.walker.on("mutations", this._mutationObserver);
   this.win.addEventListener("copy", this._onCopy);
   this.win.addEventListener("mouseup", this._onMouseUp);
-  this.inspector.inspector.nodePicker.on(
+  this.inspector.inspectorFront.nodePicker.on(
     "picker-node-canceled",
     this._onToolboxPickerCanceled
   );
-  this.inspector.inspector.nodePicker.on(
+  this.inspector.inspectorFront.nodePicker.on(
     "picker-node-hovered",
     this._onToolboxPickerHover
   );
@@ -932,7 +932,7 @@ MarkupView.prototype = {
 
     if (type === "uri" || type === "cssresource" || type === "jsresource") {
       // Open link in a new tab.
-      this.inspector.inspector
+      this.inspector.inspectorFront
         .resolveRelativeURL(link, this.inspector.selection.nodeFront)
         .then(url => {
           if (type === "uri") {
@@ -2245,7 +2245,7 @@ MarkupView.prototype = {
     this._elt.removeEventListener("mouseout", this._onMouseOut);
     this._frame.removeEventListener("focus", this._onFocus);
     this.inspector.selection.off("new-node-front", this._onNewSelection);
-    this.inspector.inspector.nodePicker.off(
+    this.inspector.inspectorFront.nodePicker.off(
       "picker-node-hovered",
       this._onToolboxPickerHover
     );

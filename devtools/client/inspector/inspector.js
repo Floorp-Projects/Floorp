@@ -227,8 +227,8 @@ Inspector.prototype = {
     return this._toolbox;
   },
 
-  get inspector() {
-    return this.toolbox.inspector;
+  get inspectorFront() {
+    return this.toolbox.inspectorFront;
   },
 
   get walker() {
@@ -417,7 +417,7 @@ Inspector.prototype = {
   },
 
   _getPageStyle: function() {
-    return this.inspector.getPageStyle().then(pageStyle => {
+    return this.inspectorFront.getPageStyle().then(pageStyle => {
       this.pageStyle = pageStyle;
     }, this._handleRejectionIfNotDestroyed);
   },
@@ -1208,7 +1208,7 @@ Inspector.prototype = {
    */
   async supportsEyeDropper() {
     try {
-      return await this.inspector.supportsHighlighters();
+      return await this.inspectorFront.supportsHighlighters();
     } catch (e) {
       console.error(e);
       return false;
@@ -1706,14 +1706,14 @@ Inspector.prototype = {
   },
 
   startEyeDropperListeners: function() {
-    this.inspector.once("color-pick-canceled", this.onEyeDropperDone);
-    this.inspector.once("color-picked", this.onEyeDropperDone);
+    this.inspectorFront.once("color-pick-canceled", this.onEyeDropperDone);
+    this.inspectorFront.once("color-picked", this.onEyeDropperDone);
     this.walker.once("new-root", this.onEyeDropperDone);
   },
 
   stopEyeDropperListeners: function() {
-    this.inspector.off("color-pick-canceled", this.onEyeDropperDone);
-    this.inspector.off("color-picked", this.onEyeDropperDone);
+    this.inspectorFront.off("color-pick-canceled", this.onEyeDropperDone);
+    this.inspectorFront.off("color-picked", this.onEyeDropperDone);
     this.walker.off("new-root", this.onEyeDropperDone);
   },
 
@@ -1736,7 +1736,7 @@ Inspector.prototype = {
     this.telemetry.scalarSet(TELEMETRY_EYEDROPPER_OPENED, 1);
     this.eyeDropperButton.classList.add("checked");
     this.startEyeDropperListeners();
-    return this.inspector
+    return this.inspectorFront
       .pickColorFromPage({ copyOnSelect: true })
       .catch(console.error);
   },
@@ -1753,7 +1753,7 @@ Inspector.prototype = {
 
     this.eyeDropperButton.classList.remove("checked");
     this.stopEyeDropperListeners();
-    return this.inspector.cancelPickColorFromPage().catch(console.error);
+    return this.inspectorFront.cancelPickColorFromPage().catch(console.error);
   },
 
   /**

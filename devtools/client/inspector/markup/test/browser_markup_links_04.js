@@ -140,7 +140,7 @@ add_task(async function() {
       info("Get link from node attribute");
       const link = await nodeFront.getAttribute(test.attributeName);
       info("Resolve link to absolue URL");
-      const expected = await inspector.inspector.resolveRelativeURL(
+      const expected = await inspector.inspectorFront.resolveRelativeURL(
         link,
         nodeFront
       );
