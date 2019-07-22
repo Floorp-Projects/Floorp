@@ -129,7 +129,7 @@ function serverHandler_GZip(metadata, response) {
     Ci.nsIBinaryOutputStream
   );
   bos.setOutputStream(response.bodyOutputStream);
-  bos.writeByteArray(httpbodyGZip);
+  bos.writeByteArray(httpbodyGZip, httpbodyGZip.length);
   if (dbg) {
     print("============== serverHandler GZip: out");
   }

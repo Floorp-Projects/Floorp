@@ -49,13 +49,13 @@ function streamDefaultFavicon(uri, loadInfo, outputStream, originalChannel) {
   }
 }
 
-function serveIcon(pipe, data) {
+function serveIcon(pipe, data, len) {
   // Pass the icon data to the output stream.
   let stream = Cc["@mozilla.org/binaryoutputstream;1"].createInstance(
     Ci.nsIBinaryOutputStream
   );
   stream.setOutputStream(pipe.outputStream);
-  stream.writeByteArray(data);
+  stream.writeByteArray(data, len);
   stream.close();
   pipe.outputStream.close();
 }
@@ -109,10 +109,7 @@ PageIconProtocolHandler.prototype = {
             try {
               channel.contentType = mimeType;
               channel.contentLength = len;
-              if (len != data.length) {
-                throw new Error("Unexpected data length");
-              }
-              serveIcon(pipe, data);
+              serveIcon(pipe, data, len);
             } catch (ex) {
               streamDefaultFavicon(uri, loadInfo, pipe.outputStream, channel);
             }
