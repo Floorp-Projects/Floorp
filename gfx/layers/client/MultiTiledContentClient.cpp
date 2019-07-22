@@ -266,7 +266,8 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       ctx = nullptr;
 
       // Edge padding allows us to avoid resampling artifacts
-      if (StaticPrefs::layers_tiles_edge_padding() && mResolution == 1) {
+      if (StaticPrefs::layers_tiles_edge_padding_AtStartup() &&
+          mResolution == 1) {
         drawTarget->PadEdges(newValidRegion.MovedBy(-mTilingOrigin));
       }
 

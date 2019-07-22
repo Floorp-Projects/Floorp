@@ -255,6 +255,28 @@ function openPasswordManager(openingFunc, waitForFilter) {
     : waitForPasswordManagerDialog(openingFunc);
 }
 
+// Autocomplete popup related functions //
+
+function openACPopup(popup, browser, inputSelector) {
+  return new Promise(async resolve => {
+    let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
+
+    await SimpleTest.promiseFocus(browser);
+    info("content window focused");
+
+    // Focus the username field to open the popup.
+    await ContentTask.spawn(browser, [inputSelector], function openAutocomplete(
+      sel
+    ) {
+      content.document.querySelector(sel).focus();
+    });
+
+    let shown = await promiseShown;
+    ok(shown, "autocomplete popup shown");
+    resolve(shown);
+  });
+}
+
 // Contextmenu functions //
 
 /**
@@ -268,9 +290,10 @@ async function openPasswordContextMenu(
   passwordInput,
   assertCallback = null
 ) {
-  const CONTEXT_MENU = document.getElementById("contentAreaContextMenu");
-  const POPUP_HEADER = document.getElementById("fill-login");
-  const LOGIN_POPUP = document.getElementById("fill-login-popup");
+  const doc = browser.ownerDocument;
+  const CONTEXT_MENU = doc.getElementById("contentAreaContextMenu");
+  const POPUP_HEADER = doc.getElementById("fill-login");
+  const LOGIN_POPUP = doc.getElementById("fill-login-popup");
 
   let contextMenuShownPromise = BrowserTestUtils.waitForEvent(
     CONTEXT_MENU,
@@ -307,7 +330,7 @@ async function openPasswordContextMenu(
   let popupShownPromise = BrowserTestUtils.waitForCondition(
     () => POPUP_HEADER.open && BrowserTestUtils.is_visible(LOGIN_POPUP)
   );
-  EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {});
+  EventUtils.synthesizeMouseAtCenter(POPUP_HEADER, {}, browser.ownerGlobal);
   await popupShownPromise;
 }
 

@@ -59,7 +59,8 @@ PREF("{name}", {typ}, {value})
 VARCACHE_PREF(
   Once,
   "{name}",
-   {id},
+   {base_id},
+   {full_id},
   {typ}, {value}
 )
 ''',
@@ -68,7 +69,8 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   Live,
   "{name}",
-   {id},
+   {base_id},
+   {full_id},
   {typ}, {value}
 )
 ''',
@@ -79,17 +81,20 @@ def error(msg):
     raise ValueError(msg)
 
 
-def pref_id(pref):
+def pref_ids(pref):
     if pref['mirror'] == 'never':
         if pref.get('do_not_use_directly'):
             error('`do_not_use_directly` uselessly set with `mirror` value '
                   '`never` for pref `{}`'.format(pref['name']))
-        return None
+        return (None, None)
 
-    id = pref['name'].replace('.', '_').replace('-', '_')
+    base_id = pref['name'].replace('.', '_').replace('-', '_')
+    full_id = base_id
+    if pref['mirror'] == 'once':
+        full_id += '_AtStartup'
     if pref.get('do_not_use_directly'):
-        id += '_do_not_use_directly'
-    return id
+        full_id += '_DoNotUseDirectly'
+    return (base_id, full_id)
 
 
 def generate_header(pref_list):
@@ -152,9 +157,11 @@ def generate_header(pref_list):
                   .format(mirror, name))
 
         # Generate the C++ code.
+        ids = pref_ids(pref)
         lines.append(mirror_templates[mirror].format(
             name=name,
-            id=pref_id(pref),
+            base_id=ids[0],
+            full_id=ids[1],
             typ=typ,
             value=value,
         ))

@@ -13,45 +13,9 @@ const FORM_PAGE_PATH =
 const passwordInputSelector = "#form-basic-password";
 const usernameInputSelector = "#form-basic-username";
 
-async function addLogin({ username, password }) {
-  const login = LoginTestUtils.testData.formLogin({
-    origin: "https://example.com",
-    formActionOrigin: "https://example.com",
-    username,
-    password,
-  });
-  let storageChangedPromised = TestUtils.topicObserved(
-    "passwordmgr-storage-changed",
-    (_, data) => data == "addLogin"
-  );
-  Services.logins.addLogin(login);
-  await storageChangedPromised;
-  return login;
-}
-
 let login1;
 function addOneLogin() {
-  login1 = addLogin({ username: "username", password: "pass1" });
-}
-
-function openACPopup(popup, browser, inputSelector) {
-  return new Promise(async resolve => {
-    let promiseShown = BrowserTestUtils.waitForEvent(popup, "popupshown");
-
-    await SimpleTest.promiseFocus(browser);
-    info("content window focused");
-
-    // Focus the username field to open the popup.
-    await ContentTask.spawn(browser, [inputSelector], function openAutocomplete(
-      sel
-    ) {
-      content.document.querySelector(sel).focus();
-    });
-
-    let shown = await promiseShown;
-    ok(shown, "autocomplete popup shown");
-    resolve(shown);
-  });
+  login1 = LoginTestUtils.addLogin({ username: "username", password: "pass1" });
 }
 
 async function fillGeneratedPasswordFromACPopup(
@@ -405,7 +369,7 @@ add_task(async function password_change_without_username() {
     async function(browser) {
       await SimpleTest.promiseFocus(browser.ownerGlobal);
       // Save 2nd login different from the 1st one
-      addLogin({
+      LoginTestUtils.addLogin({
         username: "username2",
         password: "pass2",
       });

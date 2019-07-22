@@ -81,6 +81,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 NS_IMPL_ADDREF_INHERITED(CompositionTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(CompositionTransaction, EditTransactionBase)
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 CompositionTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase)) {
@@ -92,37 +93,44 @@ CompositionTransaction::DoTransaction() {
   mEditorBase->GetSelectionController(getter_AddRefs(selCon));
   NS_ENSURE_TRUE(selCon, NS_ERROR_NOT_INITIALIZED);
 
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
+
   // Advance caret: This requires the presentation shell to get the selection.
   if (mReplaceLength == 0) {
     ErrorResult rv;
-    mTextNode->InsertData(mOffset, mStringToInsert, rv);
+    editorBase->DoInsertText(*textNode, mOffset, mStringToInsert, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
-    mEditorBase->RangeUpdaterRef().SelAdjInsertText(*mTextNode, mOffset,
-                                                    mStringToInsert);
+    editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
+                                                   mStringToInsert);
   } else {
-    uint32_t replaceableLength = mTextNode->TextLength() - mOffset;
+    uint32_t replaceableLength = textNode->TextLength() - mOffset;
     ErrorResult rv;
-    mTextNode->ReplaceData(mOffset, mReplaceLength, mStringToInsert, rv);
+    editorBase->DoReplaceText(*textNode, mOffset, mReplaceLength,
+                              mStringToInsert, rv);
     if (NS_WARN_IF(rv.Failed())) {
       return rv.StealNSResult();
     }
-    mEditorBase->RangeUpdaterRef().SelAdjDeleteText(mTextNode, mOffset,
-                                                    mReplaceLength);
-    mEditorBase->RangeUpdaterRef().SelAdjInsertText(*mTextNode, mOffset,
-                                                    mStringToInsert);
+    editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, mOffset,
+                                                   mReplaceLength);
+    editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
+                                                   mStringToInsert);
 
     // If IME text node is multiple node, ReplaceData doesn't remove all IME
     // text.  So we need remove remained text into other text node.
+    // XXX I think that this shouldn't occur.  Composition string should be
+    //     in a text node.
     if (replaceableLength < mReplaceLength) {
       int32_t remainLength = mReplaceLength - replaceableLength;
-      nsCOMPtr<nsINode> node = mTextNode->GetNextSibling();
+      nsCOMPtr<nsINode> node = textNode->GetNextSibling();
       while (node && node->IsText() && remainLength > 0) {
-        Text* text = static_cast<Text*>(node.get());
-        uint32_t textLength = text->TextLength();
-        text->DeleteData(0, remainLength, IgnoreErrors());
-        mEditorBase->RangeUpdaterRef().SelAdjDeleteText(text, 0, remainLength);
+        RefPtr<Text> textNode = static_cast<Text*>(node.get());
+        uint32_t textLength = textNode->TextLength();
+        editorBase->DoDeleteText(*textNode, 0, remainLength, IgnoreErrors());
+        editorBase->RangeUpdaterRef().SelAdjDeleteText(textNode, 0,
+                                                       remainLength);
         remainLength -= textLength;
         node = node->GetNextSibling();
       }
@@ -135,6 +143,7 @@ CompositionTransaction::DoTransaction() {
   return NS_OK;
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 CompositionTransaction::UndoTransaction() {
   if (NS_WARN_IF(!mEditorBase)) {
@@ -146,14 +155,16 @@ CompositionTransaction::UndoTransaction() {
   RefPtr<Selection> selection = mEditorBase->GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NOT_INITIALIZED);
 
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
   ErrorResult err;
-  mTextNode->DeleteData(mOffset, mStringToInsert.Length(), err);
+  editorBase->DoDeleteText(*textNode, mOffset, mStringToInsert.Length(), err);
   if (NS_WARN_IF(err.Failed())) {
     return err.StealNSResult();
   }
 
   // set the selection to the insertion point where the string was removed
-  nsresult rv = selection->Collapse(mTextNode, mOffset);
+  nsresult rv = selection->Collapse(textNode, mOffset);
   NS_ASSERTION(NS_SUCCEEDED(rv),
                "Selection could not be collapsed after undo of IME insert.");
   NS_ENSURE_SUCCESS(rv, rv);

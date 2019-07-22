@@ -46,26 +46,30 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertTextTransaction)
   NS_INTERFACE_MAP_ENTRY_CONCRETE(InsertTextTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 InsertTextTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
+
   ErrorResult rv;
-  mTextNode->InsertData(mOffset, mStringToInsert, rv);
+  editorBase->DoInsertText(*textNode, mOffset, mStringToInsert, rv);
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
   }
 
   // Only set selection to insertion point if editor gives permission
-  if (mEditorBase->AllowsTransactionsToChangeSelection()) {
-    RefPtr<Selection> selection = mEditorBase->GetSelection();
+  if (editorBase->AllowsTransactionsToChangeSelection()) {
+    RefPtr<Selection> selection = editorBase->GetSelection();
     if (NS_WARN_IF(!selection)) {
       return NS_ERROR_FAILURE;
     }
     DebugOnly<nsresult> rv =
-        selection->Collapse(mTextNode, mOffset + mStringToInsert.Length());
+        selection->Collapse(textNode, mOffset + mStringToInsert.Length());
     NS_ASSERTION(NS_SUCCEEDED(rv),
                  "Selection could not be collapsed after insert");
   } else {
@@ -73,17 +77,23 @@ InsertTextTransaction::DoTransaction() {
   }
   // XXX Other transactions do not do this but its callers do.
   //     Why do this transaction do this by itself?
-  mEditorBase->RangeUpdaterRef().SelAdjInsertText(*mTextNode, mOffset,
-                                                  mStringToInsert);
+  editorBase->RangeUpdaterRef().SelAdjInsertText(*textNode, mOffset,
+                                                 mStringToInsert);
 
   return NS_OK;
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 InsertTextTransaction::UndoTransaction() {
-  ErrorResult rv;
-  mTextNode->DeleteData(mOffset, mStringToInsert.Length(), rv);
-  return rv.StealNSResult();
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mTextNode)) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  RefPtr<Text> textNode = mTextNode;
+  ErrorResult error;
+  editorBase->DoDeleteText(*textNode, mOffset, mStringToInsert.Length(), error);
+  return error.StealNSResult();
 }
 
 NS_IMETHODIMP

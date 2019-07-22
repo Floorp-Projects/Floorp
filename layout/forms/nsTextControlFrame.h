@@ -320,6 +320,16 @@ class nsTextControlFrame final : public nsContainerFrame,
   nsresult CreateRootNode();
   void CreatePlaceholderIfNeeded();
   void CreatePreviewIfNeeded();
+  enum class AnonymousDivType {
+    Root,
+    Placeholder,
+    Preview,
+  };
+  already_AddRefed<Element> CreateEmptyAnonymousDiv(
+      AnonymousDivType aAnonymousDivType) const;
+  already_AddRefed<Element> CreateEmptyAnonymousDivWithTextNode(
+      AnonymousDivType aAnonymousDivType) const;
+
   bool ShouldInitializeEagerly() const;
   void InitializeEagerlyIfNeeded();
 

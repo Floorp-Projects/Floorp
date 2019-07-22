@@ -252,7 +252,8 @@ OpenVRSession::~OpenVRSession() {
 }
 
 bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
-  if (!StaticPrefs::dom_vr_enabled() || !StaticPrefs::dom_vr_openvr_enabled()) {
+  if (!StaticPrefs::dom_vr_enabled() ||
+      !StaticPrefs::dom_vr_openvr_enabled_AtStartup()) {
     return false;
   }
   if (mVRSystem != nullptr) {
@@ -308,7 +309,8 @@ bool OpenVRSession::Initialize(mozilla::gfx::VRSystemState& aSystemState) {
     return false;
   }
 
-  if (StaticPrefs::dom_vr_openvr_action_input() && !SetupContollerActions()) {
+  if (StaticPrefs::dom_vr_openvr_action_input_AtStartup() &&
+      !SetupContollerActions()) {
     return false;
   }
 
@@ -334,7 +336,7 @@ bool OpenVRSession::SetupContollerActions() {
   nsCString cosmosManifest;
 
   // Getting / Generating manifest file paths.
-  if (StaticPrefs::dom_vr_process_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     VRParent* vrParent = VRProcessChild::GetVRParent();
     nsCString output;
 
@@ -831,7 +833,7 @@ bool OpenVRSession::SetupContollerActions() {
   // End of setup controller actions.
 
   // Notify the parent process these manifest files are already been recorded.
-  if (StaticPrefs::dom_vr_process_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     NS_DispatchToMainThread(NS_NewRunnableFunction(
         "SendOpenVRControllerActionPathToParent",
         [controllerAction, viveManifest, WMRManifest, knucklesManifest,
@@ -2027,7 +2029,7 @@ void OpenVRSession::StartFrame(mozilla::gfx::VRSystemState& aSystemState) {
   UpdateHeadsetPose(aSystemState);
   UpdateEyeParameters(aSystemState);
 
-  if (StaticPrefs::dom_vr_openvr_action_input()) {
+  if (StaticPrefs::dom_vr_openvr_action_input_AtStartup()) {
     EnumerateControllers(aSystemState);
 
     vr::VRActiveActionSet_t actionSet = {0};
@@ -2239,7 +2241,7 @@ void OpenVRSession::HapticTimerCallback(nsITimer* aTimer, void* aClosure) {
    */
   OpenVRSession* self = static_cast<OpenVRSession*>(aClosure);
 
-  if (StaticPrefs::dom_vr_openvr_action_input()) {
+  if (StaticPrefs::dom_vr_openvr_action_input_AtStartup()) {
     self->UpdateHaptics();
   } else {
     self->UpdateHapticsObsolete();

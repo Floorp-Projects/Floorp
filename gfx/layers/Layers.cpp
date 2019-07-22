@@ -144,7 +144,8 @@ bool LayerManager::LayersComponentAlphaEnabled() {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
   return false;
 #else
-  return StaticPrefs::layers_componentalpha_enabled_do_not_use_directly();
+  return StaticPrefs::
+      layers_componentalpha_enabled_AtStartup_DoNotUseDirectly();
 #endif
 }
 
