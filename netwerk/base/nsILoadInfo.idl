@@ -505,6 +505,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean isDocshellReload;
 
   /**
+   * True if the load was initiated by a form request. 
+   * This is important to know to handle the CSP directive navigate-to.
+   */
+  [infallible] attribute boolean isFormSubmission;
+
+  /**
    * The external contentPolicyType of the channel, used for security checks
    * like Mixed Content Blocking and Content Security Policy.
    *
