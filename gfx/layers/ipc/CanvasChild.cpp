@@ -17,9 +17,23 @@
 namespace mozilla {
 namespace layers {
 
-static const TimeDuration kLockWaitTimeout =
-    TimeDuration::FromMilliseconds(100);
-static const TimeDuration kGetDataTimeout = TimeDuration::FromMilliseconds(500);
+class RingBufferWriterServices final
+    : public CanvasEventRingBuffer::WriterServices {
+ public:
+  explicit RingBufferWriterServices(RefPtr<CanvasChild> aCanvasChild)
+      : mCanvasChild(std::move(aCanvasChild)) {}
+
+  ~RingBufferWriterServices() final = default;
+
+  bool ReaderClosed() final {
+    return mCanvasChild->GetIPCChannel()->Unsound_IsClosed();
+  }
+
+  void ResumeReader() final { mCanvasChild->ResumeTranslation(); }
+
+ private:
+  RefPtr<CanvasChild> mCanvasChild;
+};
 
 CanvasChild::CanvasChild(Endpoint<PCanvasChild>&& aEndpoint) {
   aEndpoint.Bind(this);
@@ -36,9 +50,8 @@ void CanvasChild::EnsureRecorder(TextureType aTextureType) {
     SharedMemoryBasic::Handle handle;
     CrossProcessSemaphoreHandle readerSem;
     CrossProcessSemaphoreHandle writerSem;
-    RefPtr<CanvasChild> thisRef = this;
     mRecorder->Init(OtherPid(), &handle, &readerSem, &writerSem,
-                    [cc = std::move(thisRef)] { cc->ResumeTranslation(); });
+                    MakeUnique<RingBufferWriterServices>(this));
 
     if (mCanSend) {
       Unused << SendCreateTranslator(mTextureType, handle, readerSem,
@@ -74,8 +87,7 @@ void CanvasChild::OnTextureWriteLock() {
 void CanvasChild::OnTextureForwarded() {
   if (mHasOutstandingWriteLock) {
     mRecorder->RecordEvent(RecordedCanvasFlush());
-    if (!mRecorder->WaitForCheckpoint(mLastWriteLockCheckpoint,
-                                      kLockWaitTimeout)) {
+    if (!mRecorder->WaitForCheckpoint(mLastWriteLockCheckpoint)) {
       gfxWarning() << "Timed out waiting for last write lock to be processed.";
     }
 
@@ -137,7 +149,7 @@ already_AddRefed<gfx::DataSourceSurface> CanvasChild::GetDataSurface(
   gfx::DataSourceSurface::ScopedMap map(dataSurface,
                                         gfx::DataSourceSurface::READ_WRITE);
   char* dest = reinterpret_cast<char*>(map.GetData());
-  if (!mRecorder->WaitForCheckpoint(checkpoint, kGetDataTimeout)) {
+  if (!mRecorder->WaitForCheckpoint(checkpoint)) {
     gfxWarning() << "Timed out preparing data for DataSourceSurface.";
     return dataSurface.forget();
   }
