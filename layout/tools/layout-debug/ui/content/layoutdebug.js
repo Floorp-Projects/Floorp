@@ -11,8 +11,7 @@ const { Preferences } = ChromeUtils.import(
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID =
-  "@mozilla.org/layout-debug/layout-debuggingtools;1";
+const HELPER_URL = "chrome://layoutdebug/content/layoutdebug-helper.js";
 
 const FEATURES = {
   paintFlashing: "nglayout.debug.paint_flashing",
@@ -40,14 +39,11 @@ class Debugger {
     this._flags = new Map();
     this._visualDebugging = false;
     this._visualEventDebugging = false;
-    this._tools = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].createInstance(
-      Ci.nsILayoutDebuggingTools
-    );
 
     for (let [name, pref] of Object.entries(FEATURES)) {
       this._flags.set(name, !!Preferences.get(pref, false));
     }
-    this._tools.init(gBrowser.contentWindow);
+    gBrowser.messageManager.loadFrameScript(HELPER_URL, false);
   }
 
   get visualDebugging() {
@@ -57,7 +53,7 @@ class Debugger {
   set visualDebugging(v) {
     v = !!v;
     this._visualDebugging = v;
-    this._tools.setVisualDebugging(v);
+    this._sendMessage("setVisualDebugging", v);
   }
 
   get visualEventDebugging() {
@@ -67,7 +63,11 @@ class Debugger {
   set visualEventDebugging(v) {
     v = !!v;
     this._visualEventDebugging = v;
-    this._tools.setVisualEventDebugging(v);
+    this._sendMessage("setVisualEventDebugging", v);
+  }
+
+  _sendMessage(name, arg) {
+    gBrowser.messageManager.sendAsyncMessage("LayoutDebug:Call", { name, arg });
   }
 }
 
@@ -82,16 +82,16 @@ for (let [name, pref] of Object.entries(FEATURES)) {
       this._flags.set(name, v);
       // XXX PresShell should watch for this pref change itself.
       if (name == "reflowCounts") {
-        this._tools.setReflowCounts(v);
+        this._sendMessage("setReflowCounts", v);
       }
-      this._tools.forceRefresh();
+      this._sendMessage("forceRefresh");
     },
   });
 }
 
 for (let name of COMMANDS) {
   Debugger.prototype[name] = function() {
-    this._tools[name]();
+    this._sendMessage(name);
   };
 }
 
