@@ -150,7 +150,11 @@ class FontPropertyValue extends PureComponent {
       value = this.state.initialValue;
     }
 
-    this.updateValue(value);
+    // Avoid updating the value if a keyword value like "normal" is present
+    if (!this.props.valueLabel) {
+      this.updateValue(value);
+    }
+
     this.toggleInteractiveState(false);
   }
 
