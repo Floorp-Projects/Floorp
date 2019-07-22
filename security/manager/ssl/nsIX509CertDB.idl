@@ -251,14 +251,6 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AddonsPublicRoot = 7;
   const AppTrustedRoot AddonsStageRoot = 8;
   const AppTrustedRoot PrivilegedPackageRoot = 9;
-  /*
-   * If DeveloperImportedRoot is set as trusted root, a CA from local file
-   * system will be imported. Only used when preference
-   * "network.http.packaged-apps-developer-mode" is set.
-   * The path of the CA is specified by preference
-   * "network.http.packaged-apps-developer-trusted-root".
-   */
-  const AppTrustedRoot DeveloperImportedRoot = 10;
   [must_use]
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
