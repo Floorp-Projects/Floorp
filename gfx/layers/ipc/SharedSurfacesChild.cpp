@@ -512,7 +512,7 @@ void SharedSurfacesAnimation::Destroy() {
 
   for (const auto& entry : mKeys) {
     MOZ_ASSERT(!entry.mManager->IsDestroyed());
-    if (StaticPrefs::image_animated_decode_on_demand_recycle()) {
+    if (StaticPrefs::image_animated_decode_on_demand_recycle_AtStartup()) {
       entry.mManager->DeregisterAsyncAnimation(entry.mImageKey);
     }
     entry.mManager->AddImageKeyForDiscard(entry.mImageKey);
@@ -528,7 +528,7 @@ void SharedSurfacesAnimation::HoldSurfaceForRecycling(
     return;
   }
 
-  MOZ_ASSERT(StaticPrefs::image_animated_decode_on_demand_recycle());
+  MOZ_ASSERT(StaticPrefs::image_animated_decode_on_demand_recycle_AtStartup());
   aEntry.mPendingRelease.AppendElement(aParentSurface);
 }
 
@@ -617,7 +617,7 @@ nsresult SharedSurfacesAnimation::UpdateKey(
 
   if (!found) {
     aKey = aManager->WrBridge()->GetNextImageKey();
-    if (StaticPrefs::image_animated_decode_on_demand_recycle()) {
+    if (StaticPrefs::image_animated_decode_on_demand_recycle_AtStartup()) {
       aManager->RegisterAsyncAnimation(aKey, this);
     }
 

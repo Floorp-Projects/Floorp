@@ -2739,7 +2739,7 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
       nsToolkit::SwizzleMethods(frameViewClass, @selector(_fullScreenButtonOrigin),
                                 @selector(FrameView__fullScreenButtonOrigin));
     }
-    if (!StaticPrefs::gfx_core_animation_enabled()) {
+    if (!StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
       // When we're not using CoreAnimation, we need to override the
       // _wantsFloatingTitlebar method to return NO, because the "floating
       // titlebar" overlaps in a glitchy way with the NSOpenGLContext when we're

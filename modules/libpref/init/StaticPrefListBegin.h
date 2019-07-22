@@ -16,7 +16,7 @@ namespace StaticPrefs {
 
 // For a VarCache pref like this:
 //
-//   VARCACHE_PREF($POLICY, "my.pref", my_pref, int32_t, 99)
+//   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
 //
 // we generate an extern variable declaration and three getter
 // declarations/definitions.
@@ -36,18 +36,20 @@ namespace StaticPrefs {
 // and generate Rust bindings.
 //
 #define PREF(name, cpp_type, default_value)
-#define VARCACHE_PREF(policy, name, id, cpp_type, default_value) \
-  extern cpp_type sVarCache_##id;                                \
-  inline StripAtomic<cpp_type> id() {                            \
-    if (UpdatePolicy::policy != UpdatePolicy::Once) {            \
-      MOZ_DIAGNOSTIC_ASSERT(                                     \
-          IsAtomic<cpp_type>::value || NS_IsMainThread(),        \
-          "Non-atomic static pref '" name                        \
-          "' being accessed on background thread by getter");    \
-      return sVarCache_##id;                                     \
-    }                                                            \
-    MaybeInitOncePrefs();                                        \
-    return sVarCache_##id;                                       \
-  }                                                              \
-  inline const char* GetPrefName_##id() { return name; }         \
-  inline StripAtomic<cpp_type> GetPrefDefault_##id() { return default_value; }
+#define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, default_value) \
+  extern cpp_type sVarCache_##full_id;                                         \
+  inline StripAtomic<cpp_type> full_id() {                                     \
+    if (UpdatePolicy::policy != UpdatePolicy::Once) {                          \
+      MOZ_DIAGNOSTIC_ASSERT(                                                   \
+          IsAtomic<cpp_type>::value || NS_IsMainThread(),                      \
+          "Non-atomic static pref '" name                                      \
+          "' being accessed on background thread by getter");                  \
+      return sVarCache_##full_id;                                              \
+    }                                                                          \
+    MaybeInitOncePrefs();                                                      \
+    return sVarCache_##full_id;                                                \
+  }                                                                            \
+  inline const char* GetPrefName_##base_id() { return name; }                  \
+  inline StripAtomic<cpp_type> GetPrefDefault_##base_id() {                    \
+    return default_value;                                                      \
+  }

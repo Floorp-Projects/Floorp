@@ -48,7 +48,7 @@ void PaintThread::AddRef() {}
 /* static */
 int32_t PaintThread::CalculatePaintWorkerCount() {
   int32_t cpuCores = PR_GetNumberOfProcessors();
-  int32_t workerCount = StaticPrefs::layers_omtp_paint_workers();
+  int32_t workerCount = StaticPrefs::layers_omtp_paint_workers_AtStartup();
 
   // If not manually specified, default to (cpuCores * 3) / 4, and clamp
   // between 1 and 4. If a user wants more, they can manually specify it

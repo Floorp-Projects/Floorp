@@ -256,7 +256,7 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
   mImageDevice = device;
 
   TextureAllocationFlags allocFlags = TextureAllocationFlags::ALLOC_DEFAULT;
-  if (StaticPrefs::media_wmf_use_sync_texture() ||
+  if (StaticPrefs::media_wmf_use_sync_texture_AtStartup() ||
       mDevice == DeviceManagerDx::Get()->GetCompositorDevice()) {
     // If our device is the compositor device, we don't need any synchronization
     // in practice.

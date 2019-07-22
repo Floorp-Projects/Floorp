@@ -201,7 +201,7 @@ void DecodedSurfaceProvider::FinishDecoding() {
 
 bool DecodedSurfaceProvider::ShouldPreferSyncRun() const {
   return mDecoder->ShouldSyncDecode(
-      StaticPrefs::image_mem_decode_bytes_at_a_time());
+      StaticPrefs::image_mem_decode_bytes_at_a_time_AtStartup());
 }
 
 }  // namespace image

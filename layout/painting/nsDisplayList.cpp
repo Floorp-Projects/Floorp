@@ -6970,7 +6970,7 @@ nsDisplayRenderRoot::nsDisplayRenderRoot(
       mRenderRoot(aRenderRoot),
       mBuiltWRCommands(false) {
   MOZ_ASSERT(aRenderRoot != wr::RenderRoot::Default);
-  MOZ_ASSERT(StaticPrefs::gfx_webrender_split_render_roots());
+  MOZ_ASSERT(StaticPrefs::gfx_webrender_split_render_roots_AtStartup());
   ExpandDisplayListBuilderRenderRootRect(aBuilder);
   MOZ_COUNT_CTOR(nsDisplayRenderRoot);
 }

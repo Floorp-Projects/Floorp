@@ -384,8 +384,8 @@ void GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost) {
 static bool ShouldLimitDeviceResets(uint32_t count, int32_t deltaMilliseconds) {
   // We decide to limit by comparing the amount of resets that have happened
   // and time since the last reset to two prefs.
-  int32_t timeLimit = StaticPrefs::gfx_device_reset_threshold_ms();
-  int32_t countLimit = StaticPrefs::gfx_device_reset_limit();
+  int32_t timeLimit = StaticPrefs::gfx_device_reset_threshold_ms_AtStartup();
+  int32_t countLimit = StaticPrefs::gfx_device_reset_limit_AtStartup();
 
   bool hasTimeLimit = timeLimit >= 0;
   bool hasCountLimit = countLimit >= 0;

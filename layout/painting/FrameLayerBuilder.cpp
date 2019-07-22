@@ -6205,7 +6205,7 @@ static bool ChooseScaleAndSetTransform(
   // tiling, that's not a problem, since we'll automatically choose a tiled
   // layer for layers of that size. If not, we need to apply clamping to
   // prevent this.
-  if (aTransform && !StaticPrefs::layers_enable_tiles()) {
+  if (aTransform && !StaticPrefs::layers_enable_tiles_AtStartup()) {
     RestrictScaleToMaxLayerSize(scale, aVisibleRect, aContainerFrame, aLayer);
   }
 
@@ -7155,7 +7155,7 @@ void FrameLayerBuilder::PaintItems(std::vector<AssignedDisplayItem>& aItems,
  */
 static bool ShouldDrawRectsSeparately(DrawTarget* aDrawTarget,
                                       DrawRegionClip aClip) {
-  if (!StaticPrefs::layout_paint_rects_separately() ||
+  if (!StaticPrefs::layout_paint_rects_separately_AtStartup() ||
       aClip == DrawRegionClip::NONE) {
     return false;
   }

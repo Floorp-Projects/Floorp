@@ -1781,7 +1781,7 @@ void CompositorOGL::InsertFrameDoneSync() {
 #ifdef XP_MACOSX
   // Only do this on macOS.
   // On other platforms, SwapBuffers automatically applies back-pressure.
-  if (StaticPrefs::gfx_core_animation_enabled()) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     if (mThisFrameDoneSync) {
       mGLContext->fDeleteSync(mThisFrameDoneSync);
     }
@@ -2016,7 +2016,7 @@ GLuint CompositorOGL::GetTemporaryTexture(GLenum aTarget, GLenum aUnit) {
 }
 
 bool CompositorOGL::SupportsTextureDirectMapping() {
-  if (!StaticPrefs::gfx_allow_texture_direct_mapping()) {
+  if (!StaticPrefs::gfx_allow_texture_direct_mapping_AtStartup()) {
     return false;
   }
 
