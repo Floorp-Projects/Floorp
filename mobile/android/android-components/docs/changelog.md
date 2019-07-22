@@ -80,6 +80,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
+  * Added `View.toScope()` to create a `CoroutineScope` that is active as long as the `View` is attached. Once the `View` gets detached the `CoroutineScope` gets cancelled automatically.  By default coroutines dispatched on the created [CoroutineScope] run on the main dispatcher
 
 * **concept-push**, **lib-push-firebase**, **feature-push**
   * Added `deleteToken` to the PushService interface.

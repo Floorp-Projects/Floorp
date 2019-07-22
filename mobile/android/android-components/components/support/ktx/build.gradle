@@ -25,6 +25,7 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
     implementation Dependencies.androidx_core
     implementation Dependencies.androidx_core_ktx
 
@@ -32,6 +33,8 @@ dependencies {
     implementation project(':support-utils')
 
     testImplementation project(':support-test')
+
+    testImplementation Dependencies.kotlin_coroutines_test
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric
