@@ -110,7 +110,7 @@ CompositorD3D11::CompositorD3D11(CompositorBridgeParent* aParent,
       mIsDoubleBuffered(false),
       mVerifyBuffersFailed(false),
       mUseMutexOnPresent(false) {
-  mUseMutexOnPresent = StaticPrefs::gfx_use_mutex_on_present();
+  mUseMutexOnPresent = StaticPrefs::gfx_use_mutex_on_present_AtStartup();
 }
 
 CompositorD3D11::~CompositorD3D11() {}

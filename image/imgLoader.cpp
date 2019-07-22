@@ -1251,8 +1251,8 @@ imgCacheQueue& imgLoader::GetCacheQueue(const ImageCacheKey& aKey) {
 }
 
 void imgLoader::GlobalInit() {
-  sCacheTimeWeight = StaticPrefs::image_cache_timeweight() / 1000.0;
-  int32_t cachesize = StaticPrefs::image_cache_size();
+  sCacheTimeWeight = StaticPrefs::image_cache_timeweight_AtStartup() / 1000.0;
+  int32_t cachesize = StaticPrefs::image_cache_size_AtStartup();
   sCacheMaxSize = cachesize > 0 ? cachesize : 0;
 
   sMemReporter = new imgMemoryReporter();

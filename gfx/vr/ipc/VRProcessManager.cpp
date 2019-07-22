@@ -69,7 +69,7 @@ void VRProcessManager::LaunchVRProcess() {
 }
 
 void VRProcessManager::DisableVRProcess(const char* aMessage) {
-  if (!StaticPrefs::dom_vr_process_enabled()) {
+  if (!StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     return;
   }
 

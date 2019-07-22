@@ -611,7 +611,7 @@ void APZCTreeManager::UpdateFocusState(LayersId aRootLayerTreeId,
                                        const FocusTarget& aFocusTarget) {
   AssertOnUpdaterThread();
 
-  if (!StaticPrefs::apz_keyboard_enabled()) {
+  if (!StaticPrefs::apz_keyboard_enabled_AtStartup()) {
     return;
   }
 
@@ -1548,7 +1548,7 @@ nsEventStatus APZCTreeManager::ReceiveInputEvent(
     case KEYBOARD_INPUT: {
       // Disable async keyboard scrolling when accessibility.browsewithcaret is
       // enabled
-      if (!StaticPrefs::apz_keyboard_enabled() ||
+      if (!StaticPrefs::apz_keyboard_enabled_AtStartup() ||
           StaticPrefs::accessibility_browsewithcaret()) {
         APZ_KEY_LOG("Skipping key input from invalid prefs\n");
         return result;

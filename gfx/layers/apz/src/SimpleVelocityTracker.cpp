@@ -103,7 +103,8 @@ void SimpleVelocityTracker::Clear() { mVelocityQueue.Clear(); }
 void SimpleVelocityTracker::AddVelocityToQueue(uint32_t aTimestampMs,
                                                float aVelocity) {
   mVelocityQueue.AppendElement(std::make_pair(aTimestampMs, aVelocity));
-  if (mVelocityQueue.Length() > StaticPrefs::apz_max_velocity_queue_size()) {
+  if (mVelocityQueue.Length() >
+      StaticPrefs::apz_max_velocity_queue_size_AtStartup()) {
     mVelocityQueue.RemoveElementAt(0);
   }
 }

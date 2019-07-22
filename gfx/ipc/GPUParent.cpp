@@ -478,7 +478,7 @@ mozilla::ipc::IPCResult GPUParent::RecvRequestMemoryReport(
 }
 
 mozilla::ipc::IPCResult GPUParent::RecvShutdownVR() {
-  if (StaticPrefs::dom_vr_process_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     VRGPUChild::Shutdown();
   }
   return IPC_OK();

@@ -605,7 +605,7 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId,
 #if defined(RELEASE_OR_BETA)
   int32_t blocklistAll = 0;
 #else
-  int32_t blocklistAll = StaticPrefs::gfx_blocklist_all();
+  int32_t blocklistAll = StaticPrefs::gfx_blocklist_all_AtStartup();
 #endif
   if (blocklistAll > 0) {
     gfxCriticalErrorOnce(gfxCriticalError::DefaultOptions(false))
