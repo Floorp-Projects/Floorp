@@ -171,7 +171,10 @@ bool WindowGlobalParent::IsProcessRoot() {
   }
 
   auto* embedder = BrowsingContext()->GetEmbedderWindowGlobal();
-  MOZ_ASSERT(embedder, "This should be set before we were created");
+  if (NS_WARN_IF(!embedder)) {
+    return false;
+  }
+
   return ContentParentId() != embedder->ContentParentId();
 }
 
