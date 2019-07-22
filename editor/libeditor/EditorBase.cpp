@@ -218,14 +218,8 @@ nsresult EditorBase::Init(Document& aDocument, Element* aRoot,
              "Initializing during an edit action is an error");
 
   // First only set flags, but other stuff shouldn't be initialized now.
-  // Don't move this call after initializing mDocument.
-  // SetFlags() can check whether it's called during initialization or not by
-  // them.  Note that SetFlags() will be called by PostCreate().
-#ifdef DEBUG
-  nsresult rv =
-#endif
-      SetFlags(aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "SetFlags() failed");
+  // Note that SetFlags() will be called by PostCreate().
+  mFlags = aFlags;
 
   mDocument = &aDocument;
   // HTML editors currently don't have their own selection controller,
@@ -470,6 +464,12 @@ void EditorBase::PreDestroy(bool aDestroyingFrames) {
     return;
   }
 
+  if (IsPasswordEditor() && !AsTextEditor()->IsAllMasked()) {
+    // Mask all range for now because if layout accessed the range, that
+    // would cause showing password accidentary or crash.
+    AsTextEditor()->MaskAllCharacters();
+  }
+
   Selection* selection = GetSelection();
   if (selection) {
     selection->RemoveSelectionListener(this);
@@ -527,6 +527,12 @@ EditorBase::SetFlags(uint32_t aFlags) {
     return NS_OK;
   }
 
+  DebugOnly<bool> changingPasswordEditorFlagDynamically =
+      mFlags != ~aFlags &&
+      ((mFlags ^ aFlags) & nsIPlaintextEditor::eEditorPasswordMask);
+  MOZ_ASSERT(
+      !changingPasswordEditorFlagDynamically,
+      "TextEditor does not support dynamic eEditorPasswordMask flag change");
   bool spellcheckerWasEnabled = CanEnableSpellCheck();
   mFlags = aFlags;
 
@@ -2303,14 +2309,26 @@ void EditorBase::DoInsertText(Text& aText, uint32_t aOffset,
                               const nsAString& aStringToInsert,
                               ErrorResult& aRv) {
   aText.InsertData(aOffset, aStringToInsert, aRv);
-  NS_WARNING_ASSERTION(!aRv.Failed(), "Text::InsertData() failed");
   if (NS_WARN_IF(Destroyed())) {
     aRv = NS_ERROR_EDITOR_DESTROYED;
+    return;
+  }
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (!AsHTMLEditor() && !aStringToInsert.IsEmpty()) {
+    aRv = MOZ_KnownLive(AsTextEditor())
+              ->DidInsertText(aText.TextLength(), aOffset,
+                              aStringToInsert.Length());
+    NS_WARNING_ASSERTION(!aRv.Failed(), "TextEditor::DidInsertText() failed");
   }
 }
 
 void EditorBase::DoDeleteText(Text& aText, uint32_t aOffset, uint32_t aCount,
                               ErrorResult& aRv) {
+  if (!AsHTMLEditor() && aCount > 0) {
+    AsTextEditor()->WillDeleteText(aText.TextLength(), aOffset, aCount);
+  }
   aText.DeleteData(aOffset, aCount, aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "Text::DeleteData() failed");
   if (NS_WARN_IF(Destroyed())) {
@@ -2321,19 +2339,46 @@ void EditorBase::DoDeleteText(Text& aText, uint32_t aOffset, uint32_t aCount,
 void EditorBase::DoReplaceText(Text& aText, uint32_t aOffset, uint32_t aCount,
                                const nsAString& aStringToInsert,
                                ErrorResult& aRv) {
+  if (!AsHTMLEditor() && aCount > 0) {
+    AsTextEditor()->WillDeleteText(aText.TextLength(), aOffset, aCount);
+  }
   aText.ReplaceData(aOffset, aCount, aStringToInsert, aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "Text::ReplaceData() failed");
   if (NS_WARN_IF(Destroyed())) {
     aRv = NS_ERROR_EDITOR_DESTROYED;
   }
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (!AsHTMLEditor() && !aStringToInsert.IsEmpty()) {
+    aRv = MOZ_KnownLive(AsTextEditor())
+              ->DidInsertText(aText.TextLength(), aOffset,
+                              aStringToInsert.Length());
+    NS_WARNING_ASSERTION(!aRv.Failed(), "TextEditor::DidInsertText() failed");
+  }
 }
 
 void EditorBase::DoSetText(Text& aText, const nsAString& aStringToSet,
                            ErrorResult& aRv) {
+  if (!AsHTMLEditor()) {
+    uint32_t length = aText.TextLength();
+    if (length > 0) {
+      AsTextEditor()->WillDeleteText(length, 0, length);
+    }
+  }
   aText.SetData(aStringToSet, aRv);
   NS_WARNING_ASSERTION(!aRv.Failed(), "Text::SetData() failed");
   if (NS_WARN_IF(Destroyed())) {
     aRv = NS_ERROR_EDITOR_DESTROYED;
+    return;
+  }
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
+  if (!AsHTMLEditor() && !aStringToSet.IsEmpty()) {
+    aRv = MOZ_KnownLive(AsTextEditor())
+              ->DidInsertText(aText.Length(), 0, aStringToSet.Length());
+    NS_WARNING_ASSERTION(!aRv.Failed(), "TextEditor::DidInsertText() failed");
   }
 }
 
@@ -4893,6 +4938,81 @@ void EditorBase::HideCaret(bool aHide) {
   } else {
     caret->RemoveForceHide();
   }
+}
+
+NS_IMETHODIMP EditorBase::Unmask(uint32_t aStart, int64_t aEnd,
+                                 uint32_t aTimeout, uint8_t aArgc) {
+  if (NS_WARN_IF(!IsPasswordEditor())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  if (NS_WARN_IF(aStart == UINT32_MAX) || NS_WARN_IF(aArgc >= 1 && aEnd == 0) ||
+      NS_WARN_IF(aArgc >= 1 && aEnd > 0 && aStart >= aEnd)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eHidePassword);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  uint32_t length = aArgc < 1 || aEnd < 0 ? UINT32_MAX : aEnd - aStart;
+  uint32_t timeout = aArgc < 2 ? 0 : aTimeout;
+  nsresult rv = MOZ_KnownLive(AsTextEditor())
+                    ->SetUnmaskRangeAndNotify(aStart, length, timeout);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  // Flush pending layout right now since the caller may access us before
+  // doing it.
+  if (RefPtr<PresShell> presShell = GetPresShell()) {
+    presShell->FlushPendingNotifications(FlushType::Layout);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditorBase::Mask() {
+  if (NS_WARN_IF(!IsPasswordEditor())) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  AutoEditActionDataSetter editActionData(*this, EditAction::eHidePassword);
+  if (NS_WARN_IF(!editActionData.CanHandle())) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  nsresult rv = MOZ_KnownLive(AsTextEditor())->MaskAllCharactersAndNotify();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return EditorBase::ToGenericNSResult(rv);
+  }
+
+  // Flush pending layout right now since the caller may access us before
+  // doing it.
+  if (RefPtr<PresShell> presShell = GetPresShell()) {
+    presShell->FlushPendingNotifications(FlushType::Layout);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditorBase::GetUnmaskedStart(uint32_t* aResult) {
+  if (NS_WARN_IF(!IsPasswordEditor())) {
+    *aResult = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aResult =
+      AsTextEditor()->IsAllMasked() ? 0 : AsTextEditor()->UnmaskedStart();
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditorBase::GetUnmaskedEnd(uint32_t* aResult) {
+  if (NS_WARN_IF(!IsPasswordEditor())) {
+    *aResult = 0;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aResult = AsTextEditor()->IsAllMasked() ? 0 : AsTextEditor()->UnmaskedEnd();
+  return NS_OK;
 }
 
 /******************************************************************************
