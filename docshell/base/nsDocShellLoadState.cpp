@@ -26,6 +26,7 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
       mPrincipalIsExplicit(false),
       mForceAllowDataURI(false),
       mOriginalFrameSrc(false),
+      mIsFormSubmission(false),
       mLoadType(LOAD_NORMAL),
       mTarget(),
       mSrcdocData(VoidString()),
@@ -198,6 +199,12 @@ bool nsDocShellLoadState::OriginalFrameSrc() const { return mOriginalFrameSrc; }
 
 void nsDocShellLoadState::SetOriginalFrameSrc(bool aOriginalFrameSrc) {
   mOriginalFrameSrc = aOriginalFrameSrc;
+}
+
+bool nsDocShellLoadState::IsFormSubmission() const { return mIsFormSubmission; }
+
+void nsDocShellLoadState::SetIsFormSubmission(bool aIsFormSubmission) {
+  mIsFormSubmission = aIsFormSubmission;
 }
 
 uint32_t nsDocShellLoadState::LoadType() const { return mLoadType; }
