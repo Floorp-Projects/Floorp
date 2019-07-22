@@ -125,7 +125,7 @@ a.hidden,
 }
 
 .etp-card .icon {
-  background: url("chrome://browser/skin/controlcenter/tracking-protection.svg") no-repeat center/cover;
+  background: url("chrome://browser/content/logos/tracking-protection.svg") no-repeat center/cover;
 }
 
 .lockwise-card .icon {
