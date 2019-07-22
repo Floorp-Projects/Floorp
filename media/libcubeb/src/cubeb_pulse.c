@@ -573,7 +573,9 @@ layout_to_channel_map(cubeb_channel_layout layout, pa_channel_map * cm)
     }
     channelMap = channelMap >> 1;
   }
-  cm->channels = cubeb_channel_layout_nb_channels(layout);
+  unsigned int channels_from_layout = cubeb_channel_layout_nb_channels(layout);
+  assert(channels_from_layout <= UINT8_MAX);
+  cm->channels = (uint8_t) channels_from_layout;
 }
 
 static void pulse_context_destroy(cubeb * ctx);
@@ -826,7 +828,9 @@ create_pa_stream(cubeb_stream * stm,
   if (ss.format == PA_SAMPLE_INVALID)
     return CUBEB_ERROR_INVALID_FORMAT;
   ss.rate = stream_params->rate;
-  ss.channels = stream_params->channels;
+  if (stream_params->channels > UINT8_MAX)
+    return CUBEB_ERROR_INVALID_FORMAT;
+  ss.channels = (uint8_t) stream_params->channels;
 
   if (stream_params->layout == CUBEB_LAYOUT_UNDEFINED) {
     pa_channel_map cm;

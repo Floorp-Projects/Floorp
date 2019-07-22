@@ -18,37 +18,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const { Toolbox } = require("devtools/client/framework/toolbox");
-const { gDevTools } = require("devtools/client/framework/devtools");
-
 const { PREFERENCES } = require("../constants");
-
-let addonToolbox = null;
-
-/**
- * Start debugging an addon.
- *
- * @param {String} id
- *        The addon id to debug.
- * @param {DebuggerClient} client
- *        Required for debugging.
- */
-exports.debugAddon = async function(id, client) {
-  const addonFront = await client.mainRoot.getAddon({ id });
-
-  const target = await addonFront.connect();
-
-  // Close previous addon debugging toolbox.
-  if (addonToolbox) {
-    addonToolbox.destroy();
-  }
-
-  const hostType = Toolbox.HostType.WINDOW;
-  addonToolbox = await gDevTools.showToolbox(target, null, hostType);
-  addonToolbox.once("destroy", () => {
-    addonToolbox = null;
-  });
-};
 
 /**
  * Uninstall the addon with the provided id.

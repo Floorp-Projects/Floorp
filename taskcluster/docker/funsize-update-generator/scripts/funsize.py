@@ -25,14 +25,8 @@ from scriptworker.utils import retry_async
 from mardor.reader import MarReader
 from mardor.signing import get_keysize
 
-from datadog import initialize, ThreadStats
-
 
 log = logging.getLogger(__name__)
-
-# Create this even when not sending metrics, so the context manager
-# statements work.
-ddstats = ThreadStats(namespace='releng.releases.partials')
 
 
 ROOT_URL = os.environ['TASKCLUSTER_ROOT_URL']
@@ -62,18 +56,6 @@ BCJ_OPTIONS = {
     'x86_64': ['--x86'],
     'aarch64': [],
 }
-
-
-def write_dogrc(api_key):
-    """Datadog .dogrc file for command line interface."""
-    dogrc_path = os.path.join(os.path.expanduser('~'), '.dogrc')
-    config = configparser.ConfigParser()
-    config['Connection'] = {
-        'apikey': api_key,
-        'appkey': '',
-    }
-    with open(dogrc_path, 'w') as f:
-        config.write(f)
 
 
 def verify_signature(mar, certs):
@@ -334,11 +316,7 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
         dest = os.path.join(work_env.workdir, "{}.mar".format(mar_type))
         unpack_dir = os.path.join(work_env.workdir, mar_type)
 
-        metric_tags = [
-            "platform:{}".format(partial_def['platform']),
-        ]
-        with ddstats.timer('mar.download.time', tags=metric_tags):
-            await retry_download(f, dest)
+        await retry_download(f, dest)
 
         if not os.getenv("MOZ_DISABLE_MAR_CERT_VERIFICATION"):
             verify_signature(dest, signing_certs)
@@ -346,8 +324,7 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
         complete_mars["%s_size" % mar_type] = os.path.getsize(dest)
         complete_mars["%s_hash" % mar_type] = get_hash(dest)
 
-        with ddstats.timer('mar.unpack.time'):
-            await unpack(work_env, dest, unpack_dir)
+        await unpack(work_env, dest, unpack_dir)
 
         if mar_type == 'to':
             check_channels_in_files.append(dest)
@@ -413,24 +390,10 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
     await work_env.download_buildsystem_bits(repo=mar_data["repo"],
                                              revision=mar_data["revision"])
 
-    metric_tags = [
-        "branch:{}".format(mar_data['branch']),
-        "platform:{}".format(mar_data['platform']),
-        # If required. Shouldn't add much useful info, but increases
-        # cardinality of metrics substantially, so avoided.
-        # "locale:{}".format(mar_data['locale']),
-    ]
-    with ddstats.timer('generate_partial.time', tags=metric_tags):
-        await generate_partial(work_env, from_path, to_path, dest_mar,
-                               mar_data, use_old_format)
+    await generate_partial(work_env, from_path, to_path, dest_mar,
+                           mar_data, use_old_format)
 
     mar_data["size"] = os.path.getsize(dest_mar)
-
-    metric_tags.append("unit:bytes")
-    # Allows us to find out how many releases there were between the two,
-    # making buckets of the file sizes easier.
-    metric_tags.append("update_number:{}".format(mar_data.get('update_number', 0)))
-    ddstats.gauge('partial_mar_size', mar_data['size'], tags=metric_tags)
 
     mar_data["hash"] = get_hash(dest_mar)
 
@@ -470,8 +433,6 @@ async def async_main(args, signing_certs):
 
 def main():
 
-    start = time.time()
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--artifacts-dir", required=True)
     parser.add_argument("--sha1-signing-cert", required=True)
@@ -504,24 +465,6 @@ def main():
     assert(get_keysize(signing_certs['sha1']) == 2048)
     assert(get_keysize(signing_certs['sha384']) == 4096)
 
-    # Intended for local testing.
-    dd_api_key = os.environ.get('DATADOG_API_KEY')
-    # Intended for Taskcluster.
-    if not dd_api_key and os.environ.get('DATADOG_API_SECRET'):
-        dd_api_key = get_secret(os.environ.get('DATADOG_API_SECRET')).get('key')
-
-    if dd_api_key:
-        dd_options = {
-            'api_key': dd_api_key,
-        }
-        log.info("Starting metric collection")
-        initialize(**dd_options)
-        ddstats.start(flush_interval=1)
-        # For use in shell scripts.
-        write_dogrc(dd_api_key)
-    else:
-        log.info("No metric collection")
-
     loop = asyncio.get_event_loop()
     manifest = loop.run_until_complete(async_main(args, signing_certs))
     loop.close()
@@ -531,21 +474,6 @@ def main():
         json.dump(manifest, fp, indent=2, sort_keys=True)
 
     log.debug("{}".format(json.dumps(manifest, indent=2, sort_keys=True)))
-
-    # Warning: Assumption that one partials task will always be for one branch.
-    metric_tags = [
-        "branch:{}".format(manifest[0]['branch']),
-        "platform:{}".format(manifest[0]['platform']),
-    ]
-
-    ddstats.timing('task_duration', time.time() - start,
-                   start, tags=metric_tags)
-
-    # Wait for all the metrics to flush. If the program ends before
-    # they've been sent, they'll be dropped.
-    # Should be more than the flush_interval for the ThreadStats object
-    if dd_api_key:
-        time.sleep(10)
 
 
 if __name__ == '__main__':

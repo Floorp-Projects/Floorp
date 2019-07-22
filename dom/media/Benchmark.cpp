@@ -240,6 +240,11 @@ void BenchmarkPlayback::DemuxNextSample() {
 void BenchmarkPlayback::InitDecoder(UniquePtr<TrackInfo>&& aInfo) {
   MOZ_ASSERT(OnThread());
 
+  if (!aInfo) {
+    Error(MediaResult(NS_ERROR_FAILURE, "Invalid TrackInfo"));
+    return;
+  }
+
   RefPtr<PDMFactory> platform = new PDMFactory();
   mInfo = std::move(aInfo);
   mDecoder = platform->CreateDecoder({*mInfo, mDecoderTaskQueue});

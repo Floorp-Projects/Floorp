@@ -2317,7 +2317,7 @@ devtools.changesview:
       - 1532583
     description: >
       Number of times the Copy All Changes button is used in the Changes panel.
-    expires: "70"
+    expires: "73"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -2335,7 +2335,7 @@ devtools.changesview:
       - 1532583
     description: >
       Number of times the Copy Rule button is used in the Changes panel.
-    expires: "70"
+    expires: "73"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -2354,7 +2354,7 @@ devtools.changesview:
     description: >
       Number of times the Copy Declaration option is picked from the Changes panel
       context menu.
-    expires: "70"
+    expires: "73"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
@@ -2373,7 +2373,7 @@ devtools.changesview:
     description: >
       Number of times the Copy Rule option is picked from the Changes panel
       context menu.
-    expires: "70"
+    expires: "73"
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
