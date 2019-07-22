@@ -7,9 +7,9 @@
 #include "nsTextRunTransformations.h"
 
 #include "mozilla/ComputedStyleInlines.h"
-#include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/TextEditor.h"
 
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -279,7 +279,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
 
   uint32_t length = aString.Length();
   const char16_t* str = aString.BeginReading();
-  const char16_t kPasswordMask = LookAndFeel::GetPasswordCharacter();
+  const char16_t kPasswordMask = TextEditor::PasswordMask();
 
   bool mergeNeeded = false;
 

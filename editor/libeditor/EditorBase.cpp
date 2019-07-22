@@ -5027,6 +5027,20 @@ NS_IMETHODIMP EditorBase::GetUnmaskedEnd(uint32_t* aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP EditorBase::GetAutoMaskingEnabled(bool* aResult) {
+  if (NS_WARN_IF(!IsPasswordEditor())) {
+    *aResult = false;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aResult = AsTextEditor()->IsMaskingPassword();
+  return NS_OK;
+}
+
+NS_IMETHODIMP EditorBase::GetPasswordMask(nsAString& aPasswordMask) {
+  aPasswordMask.Assign(TextEditor::PasswordMask());
+  return NS_OK;
+}
+
 /******************************************************************************
  * EditorBase::AutoSelectionRestorer
  *****************************************************************************/

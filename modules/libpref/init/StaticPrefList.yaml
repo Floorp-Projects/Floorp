@@ -2200,6 +2200,28 @@
   mirror: always
 
 #---------------------------------------------------------------------------
+# Prefs starting with "editor"
+#---------------------------------------------------------------------------
+
+# Delay to mask last input character in password fields.
+# If negative value, to use platform's default behavior.
+# If 0, no delay to mask password.
+# Otherwise, password fields unmask last input character(s) during specified
+# time (in milliseconds).
+- name: editor.password.mask_delay
+  type: int32_t
+  value: -1
+  mirror: always
+
+# Set to true when you test mask_delay of password editor.  If this is set
+# to true, "MozLastInputMasked" is fired when last input characters are
+# masked by timeout.
+- name: editor.password.testing.mask_delay
+  type: bool
+  value: false
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
 
