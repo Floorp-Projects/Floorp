@@ -870,17 +870,11 @@ add_task(function test_common_initialize() {
       );
 
       let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-      bos.writeByteArray(
-        TEST_DATA_SHORT_GZIP_ENCODED_FIRST,
-        TEST_DATA_SHORT_GZIP_ENCODED_FIRST.length
-      );
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_FIRST);
     },
     function secondPart(aRequest, aResponse) {
       let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-      bos.writeByteArray(
-        TEST_DATA_SHORT_GZIP_ENCODED_SECOND,
-        TEST_DATA_SHORT_GZIP_ENCODED_SECOND.length
-      );
+      bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED_SECOND);
     }
   );
 
