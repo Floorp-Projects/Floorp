@@ -11,7 +11,7 @@
  *  |     "Source" | script_name debug_link       |
     |              | "Updated" update_time        |
  *  |--------------+-------------+----------------|
- *  |     "Status" | status start_link            |
+ *  |     "Status" | status start_button          |
  *  +---+----------+-------------+----------------|
  */
 
@@ -62,7 +62,7 @@
 .worker__data {
   display: grid;
   grid-template-columns: auto 1fr;
-  grid-column-gap: 1rem;
+  grid-gap: 1rem;
 }
 
 .worker__data > * {
