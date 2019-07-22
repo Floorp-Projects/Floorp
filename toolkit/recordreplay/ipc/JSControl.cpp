@@ -565,6 +565,13 @@ static bool FetchContent(JSContext* aCx, HandleString aURL,
 // Recording/Replaying Methods
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool RecordReplay_ChildId(JSContext* aCx, unsigned aArgc, Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  args.rval().setInt32(child::GetId());
+  return true;
+}
+
 static bool RecordReplay_AreThreadEventsDisallowed(JSContext* aCx,
                                                    unsigned aArgc, Value* aVp) {
   CallArgs args = CallArgsFromVp(aArgc, aVp);
@@ -971,6 +978,26 @@ static bool RecordReplay_Repaint(JSContext* aCx, unsigned aArgc, Value* aVp) {
   return true;
 }
 
+static bool RecordReplay_MemoryUsage(JSContext* aCx, unsigned aArgc,
+                                     Value* aVp) {
+  CallArgs args = CallArgsFromVp(aArgc, aVp);
+
+  if (!args.get(0).isNumber()) {
+    JS_ReportErrorASCII(aCx, "Bad memory kind");
+    return false;
+  }
+
+  size_t kind = args.get(0).toNumber();
+
+  if (kind >= (size_t) MemoryKind::Count) {
+    JS_ReportErrorASCII(aCx, "Memory kind out of range");
+    return false;
+  }
+
+  args.rval().setDouble(GetMemoryUsage((MemoryKind) kind));
+  return true;
+}
+
 static bool RecordReplay_Dump(JSContext* aCx, unsigned aArgc, Value* aVp) {
   // This method is an alternative to dump() that can be used in places where
   // thread events are disallowed.
@@ -1007,6 +1034,7 @@ static const JSFunctionSpec gMiddlemanMethods[] = {
     JS_FS_END};
 
 static const JSFunctionSpec gRecordReplayMethods[] = {
+    JS_FN("childId", RecordReplay_ChildId, 0, 0),
     JS_FN("areThreadEventsDisallowed", RecordReplay_AreThreadEventsDisallowed,
           0, 0),
     JS_FN("divergeFromRecording", RecordReplay_DivergeFromRecording, 0, 0),
@@ -1025,6 +1053,7 @@ static const JSFunctionSpec gRecordReplayMethods[] = {
     JS_FN("findScriptHits", RecordReplay_FindScriptHits, 2, 0),
     JS_FN("getContent", RecordReplay_GetContent, 1, 0),
     JS_FN("repaint", RecordReplay_Repaint, 0, 0),
+    JS_FN("memoryUsage", RecordReplay_MemoryUsage, 0, 0),
     JS_FN("dump", RecordReplay_Dump, 1, 0),
     JS_FS_END};
 
