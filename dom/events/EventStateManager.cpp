@@ -1792,11 +1792,20 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsCOMPtr<nsIContent> eventContent, targetContent;
       nsCOMPtr<nsIPrincipal> principal;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
-      if (eventContent)
+      if (eventContent) {
+        // If the content is a text node in a password field, we shouldn't
+        // allow to drag its raw text.  Note that we've supported drag from
+        // password fields but dragging data was masked text.  So, it doesn't
+        // make sense anyway.
+        if (eventContent->IsText() && eventContent->HasFlag(NS_MAYBE_MASKED)) {
+          StopTrackingDragGesture();
+          return;
+        }
         DetermineDragTargetAndDefaultData(
             window, eventContent, dataTransfer, getter_AddRefs(selection),
             getter_AddRefs(remoteDragStartData), getter_AddRefs(targetContent),
             getter_AddRefs(principal));
+      }
 
       // Stop tracking the drag gesture now. This should stop us from
       // reentering GenerateDragGesture inside DOM event processing.
