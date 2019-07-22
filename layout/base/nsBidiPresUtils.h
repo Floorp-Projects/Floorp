@@ -25,7 +25,6 @@ class nsFontMetrics;
 class nsIFrame;
 class nsBlockFrame;
 class nsPresContext;
-class nsBlockInFlowLineIterator;
 struct nsSize;
 template <class T>
 class nsTHashtable;
@@ -418,8 +417,7 @@ class nsBidiPresUtils {
    *  than one paragraph for bidi resolution, resolve the paragraph up to that
    *  point.
    */
-  static void TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
-                             nsIFrame* aCurrentFrame, BidiParagraphData* aBpd);
+  static void TraverseFrames(nsIFrame* aCurrentFrame, BidiParagraphData* aBpd);
 
   /**
    * Perform a recursive "pre-traversal" of the child frames of a block or
