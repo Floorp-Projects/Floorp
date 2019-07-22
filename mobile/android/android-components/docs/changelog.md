@@ -24,7 +24,11 @@ permalink: /changelog/
   ```kotlin
      val windowFeature = WindowFeature(components.sessionManager)
   ```
-  
+
+* **feature-pwa**
+  * Added full support for pinning websites to the home screen.
+  * Added full support for Progressive Web Apps, which can be pinned and open in their own window.
+
 * **service-glean**
   * Fixed a bug in`TimeSpanMetricType` that prevented multiple consecutive `start()`/`stop()` calls. This resulted in the `glean.baseline.duration` being missing from most [`baseline`](https://mozilla.github.io/glean/book/user/pings/baseline.html) pings.
 
@@ -116,7 +120,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `Collection.crossProduct` to retrieve the cartesian product of two `Collections`.
-  
+
 * **service-glean**
   * ⚠️ **This is a breaking change**: `Glean.enableTestingMode` is now `internal`. Tests can use the `GleanTestRule` to enable testing mode. [Updated docs available here](https://mozilla.github.io/glean/book/user/testing-metrics.html).
 

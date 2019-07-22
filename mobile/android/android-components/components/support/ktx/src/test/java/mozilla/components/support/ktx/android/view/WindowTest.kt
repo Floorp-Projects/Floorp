@@ -64,6 +64,19 @@ class WindowTest {
     }
 
     @Test
+    fun `setNavigationBarTheme changes navigation bar color`() {
+        window.setNavigationBarTheme(Color.RED)
+        verify(window, never()).navigationBarDividerColor
+        verify(window).navigationBarColor = Color.RED
+        verify(decorView, never()).systemUiVisibility
+
+        setStaticField(Build.VERSION::SDK_INT.javaField, Build.VERSION_CODES.P)
+        window.setNavigationBarTheme(Color.BLUE)
+        verify(window).navigationBarDividerColor = 0
+        verify(window).navigationBarColor = Color.BLUE
+    }
+
+    @Test
     fun `check setNavigationBarTheme sets the correct flags`() {
         setStaticField(Build.VERSION::SDK_INT.javaField, Build.VERSION_CODES.O)
         val expectedFlags = View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR

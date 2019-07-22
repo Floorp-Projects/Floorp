@@ -16,6 +16,7 @@ import mozilla.components.feature.pwa.ext.getWebAppManifest
 import mozilla.components.feature.pwa.ext.putWebAppManifest
 import mozilla.components.feature.pwa.feature.WebAppActivityFeature
 import mozilla.components.feature.pwa.feature.WebAppHideToolbarFeature
+import mozilla.components.feature.pwa.feature.WebAppSiteControlsFeature
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import org.mozilla.samples.browser.ext.components
@@ -64,6 +65,15 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 WebAppActivityFeature(
                     activity!!,
                     components.icons,
+                    manifest
+                )
+            )
+            activity?.lifecycle?.addObserver(
+                WebAppSiteControlsFeature(
+                    context?.applicationContext!!,
+                    components.sessionManager,
+                    components.sessionUseCases.reload,
+                    sessionId!!,
                     manifest
                 )
             )

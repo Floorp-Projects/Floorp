@@ -7,6 +7,7 @@
 package mozilla.components.support.ktx.android.view
 
 import android.os.Build
+import android.os.Build.VERSION.SDK_INT
 import android.view.View
 import android.view.Window
 import androidx.annotation.ColorInt
@@ -17,7 +18,7 @@ import mozilla.components.support.utils.ColorUtils.isDark
  * If the color is light enough, a light status bar with dark icons will be used.
  */
 fun Window.setStatusBarTheme(@ColorInt color: Int) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+    if (SDK_INT >= Build.VERSION_CODES.M) {
         val flags = decorView.systemUiVisibility
         decorView.systemUiVisibility =
             flags.useLightFlag(color, View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR)
@@ -30,10 +31,13 @@ fun Window.setStatusBarTheme(@ColorInt color: Int) {
  * If the color is light enough, a light navigation bar with dark icons will be used.
  */
 fun Window.setNavigationBarTheme(@ColorInt color: Int) {
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    if (SDK_INT >= Build.VERSION_CODES.O) {
         val flags = decorView.systemUiVisibility
         decorView.systemUiVisibility =
             flags.useLightFlag(color, View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR)
+    }
+    if (SDK_INT >= Build.VERSION_CODES.P) {
+        navigationBarDividerColor = 0
     }
     navigationBarColor = color
 }
