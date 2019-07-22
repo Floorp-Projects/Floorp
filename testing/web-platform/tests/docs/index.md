@@ -1,7 +1,7 @@
 # web-platform-tests documentation
 
 The web-platform-tests project is a W3C-coordinated attempt to build a
-cross-browser testsuite for [the Web-platform
+cross-browser test suite for [the Web-platform
 stack](https://platform.html5.org). Writing tests in a way that allows them to
 be run in all browsers gives browser projects confidence that they are shipping
 software which is compatible with other implementations, and that later
@@ -48,7 +48,7 @@ free to add yourself to the META.yml file!
 .. toctree::
    :maxdepth: 2
 
-   testsuite-design
+   test-suite-design
    running-tests/index
    writing-tests/index
    reviewing-tests/index
