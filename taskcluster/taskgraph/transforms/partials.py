@@ -117,8 +117,6 @@ def make_task_description(config, jobs):
             'env': {
                 'SHA1_SIGNING_CERT': 'nightly_sha1',
                 'SHA384_SIGNING_CERT': 'nightly_sha384',
-                'DATADOG_API_SECRET':
-                    'project/releng/gecko/build/level-{}/datadog-api-key'.format(level),
                 'EXTRA_PARAMS': '--arch={}'.format(architecture(attributes['build_platform'])),
                 'MAR_CHANNEL_ID': attributes['mar-channel-id']
             }
@@ -132,9 +130,7 @@ def make_task_description(config, jobs):
                 dep_job.task["metadata"]["description"]),
             'worker-type': 'b-linux',
             'dependencies': dependencies,
-            'scopes': [
-                'secrets:get:project/releng/gecko/build/level-%s/datadog-api-key' % level
-            ],
+            'scopes': [],
             'attributes': attributes,
             'run-on-projects': dep_job.attributes.get('run_on_projects'),
             'treeherder': treeherder,
