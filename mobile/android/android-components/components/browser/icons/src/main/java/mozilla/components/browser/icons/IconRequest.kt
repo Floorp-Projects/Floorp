@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons
 
+import androidx.annotation.ColorInt
 import androidx.annotation.DimenRes
 import mozilla.components.concept.engine.manifest.Size as HtmlSize
 
@@ -13,11 +14,13 @@ import mozilla.components.concept.engine.manifest.Size as HtmlSize
  * @property url The URL of the website an icon should be loaded for.
  * @property size The preferred size of the icon that should be loaded.
  * @property resources An optional list of icon resources to load the icon from.
+ * @property color The suggested dominant color of the icon.
  */
 data class IconRequest(
     val url: String,
     val size: Size = Size.DEFAULT,
-    val resources: List<Resource> = emptyList()
+    val resources: List<Resource> = emptyList(),
+    @ColorInt val color: Int? = null
 ) {
 
     /**

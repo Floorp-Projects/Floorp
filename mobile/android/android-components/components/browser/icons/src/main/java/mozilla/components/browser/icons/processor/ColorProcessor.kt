@@ -23,6 +23,7 @@ class ColorProcessor : IconProcessor {
         desiredSize: DesiredSize
     ): Icon {
         if (icon.color != null) return icon
+        if (request.color != null) return icon.copy(color = request.color)
 
         val swatch = Palette.from(icon.bitmap).generate().dominantSwatch
         return swatch?.run { icon.copy(color = rgb) } ?: icon

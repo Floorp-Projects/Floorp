@@ -42,7 +42,7 @@ class DefaultIconGenerator(
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        val backgroundColor = pickColor(context.resources, request.url)
+        val backgroundColor = request.color ?: pickColor(context.resources, request.url)
 
         val paint = Paint()
         paint.color = backgroundColor
