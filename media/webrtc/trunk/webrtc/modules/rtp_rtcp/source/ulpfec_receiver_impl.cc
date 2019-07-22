@@ -80,6 +80,11 @@ int32_t UlpfecReceiverImpl::AddReceivedRedPacket(
         << "Received RED packet with different SSRC than expected; dropping.";
     return -1;
   }
+  if (packet_length > IP_PACKET_SIZE) {
+    RTC_LOG(LS_WARNING) << "Received RED packet with length exceeds maximum IP "
+                           "packet size; dropping.";
+    return -1;
+  }
 
   rtc::CritScope cs(&crit_sect_);
 
