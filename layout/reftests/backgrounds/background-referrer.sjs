@@ -62,7 +62,7 @@ function handleRequest(request, response)
     response.setHeader("Content-Type", "image/png", false);
 
     var stream = new BinaryOutputStream(response.bodyOutputStream);
-    stream.writeByteArray(IMAGE_DATA, IMAGE_DATA.length);
+    stream.writeByteArray(IMAGE_DATA);
   }
   else
   {
