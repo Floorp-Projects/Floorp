@@ -27,9 +27,9 @@ import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -65,7 +65,7 @@ class AutoPushFeatureTest {
     fun `updateToken not called if no token in prefs`() = runBlockingTest {
         val connection: PushConnection = spy(TestPushConnection())
 
-        spy(AutoPushFeature(testContext, mock(), mock(), connection = connection))
+        spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
 
         verify(connection, never()).updateToken(anyString())
     }
@@ -111,17 +111,16 @@ class AutoPushFeatureTest {
         assertEquals("token", pref)
     }
 
-    @Ignore
     @Test
-    fun `onNewToken updates subscriptions based on pref`() = runBlockingTest {
+    fun `onNewToken updates subscriptions if token does not already exists`() = runBlockingTest {
         val connection: PushConnection = spy(TestPushConnection(true))
         val feature = spy(AutoPushFeature(testContext, mock(), mock(), coroutineContext, connection))
 
         feature.onNewToken("token")
-        verify(feature).subscribeAll()
+        verify(feature, times(1)).subscribeAll()
 
         feature.onNewToken("token")
-        verify(feature, never()).subscribeAll()
+        verify(feature, times(1)).subscribeAll()
     }
 
     @Test
@@ -200,6 +199,19 @@ class AutoPushFeatureTest {
         }, owner, true)
 
         feature.subscribeAll()
+    }
+
+    @Test
+    fun `forceRegistrationRenewal deletes pref and calls service`() = runBlockingTest {
+        val service: PushService = mock()
+        val feature = spy(AutoPushFeature(testContext, service, mock(), coroutineContext, mock()))
+
+        feature.forceRegistrationRenewal()
+
+        verify(service).deleteToken()
+
+        val pref = preference(testContext).getString(PREF_TOKEN, null)
+        assertNull(pref)
     }
 
     private fun preference(context: Context): SharedPreferences {

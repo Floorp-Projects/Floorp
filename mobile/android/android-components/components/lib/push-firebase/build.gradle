@@ -23,8 +23,10 @@ android {
 
 dependencies {
     implementation Dependencies.kotlin_stdlib
+    implementation Dependencies.kotlin_coroutines
 
     implementation project(':concept-push')
+    implementation project(':support-base')
 
     implementation Dependencies.firebase_core
     api Dependencies.firebase_messaging

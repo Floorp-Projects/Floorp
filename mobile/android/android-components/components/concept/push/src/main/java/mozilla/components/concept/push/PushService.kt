@@ -23,4 +23,9 @@ interface PushService {
      * Stops the push service.
      */
     fun stop()
+
+    /**
+     * Tells the push service to delete the registration token.
+     */
+    fun deleteToken()
 }

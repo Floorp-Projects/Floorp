@@ -7,6 +7,7 @@
 package mozilla.components.lib.push.firebase
 
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.Dispatchers
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
@@ -83,6 +84,15 @@ class AbstractFirebasePushServiceTest {
         service.onMessageReceived(null)
 
         verifyZeroInteractions(processor)
+    }
+
+    @Test
+    fun `force registration should never be on Main`() {
+        // Default dispatcher isn't main
+        assertTrue(service.coroutineContext != Dispatchers.Main)
+
+        val service = object : AbstractFirebasePushService(Dispatchers.Default) {}
+        service.deleteToken()
     }
 
     class TestService : AbstractFirebasePushService()

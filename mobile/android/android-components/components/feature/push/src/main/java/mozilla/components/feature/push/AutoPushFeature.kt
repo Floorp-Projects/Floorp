@@ -81,7 +81,8 @@ class AutoPushFeature(
     private val subscriptionObservers: Observable<PushSubscriptionObserver> = ObserverRegistry()
     private val messageObserverBus: Bus<PushType, String> = MessageBus()
     // The preference that stores new registration tokens.
-    private val prefToken = preferences(context).getString(PREF_TOKEN, null)
+    private val prefToken: String?
+        get() = preferences(context).getString(PREF_TOKEN, null)
 
     internal var job: Job = SupervisorJob()
     private val scope = CoroutineScope(coroutineContext) + job
@@ -131,7 +132,7 @@ class AutoPushFeature(
                 subscribeAll()
             }
 
-            putPreference(context, PREF_TOKEN, newToken)
+            saveToken(context, newToken)
         }
     }
 
@@ -215,7 +216,20 @@ class AutoPushFeature(
         }
     }
 
-    internal fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit) {
+    /**
+     * Deletes the registration token locally so that it forces the service to get a new one the
+     * next time hits it's messaging server.
+     */
+    fun forceRegistrationRenewal() {
+        // Remove the cached token we have.
+        deleteToken(context)
+
+        // Tell the service to delete the token as well, which will trigger a new token to be
+        // retrieved the next time it hits the server.
+        service.deleteToken()
+    }
+
+    private fun CoroutineScope.launchAndTry(block: suspend CoroutineScope.() -> Unit) {
         job = launch {
             try {
                 block()
@@ -225,8 +239,12 @@ class AutoPushFeature(
         }
     }
 
-    private fun putPreference(context: Context, key: String, value: String) {
-        preferences(context).edit().putString(key, value).apply()
+    private fun saveToken(context: Context, value: String) {
+        preferences(context).edit().putString(PREF_TOKEN, value).apply()
+    }
+
+    private fun deleteToken(context: Context) {
+        preferences(context).edit().remove(PREF_TOKEN).apply()
     }
 
     private fun preferences(context: Context): SharedPreferences =

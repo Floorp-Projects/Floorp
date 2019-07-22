@@ -8,18 +8,29 @@ package mozilla.components.lib.push.firebase
 
 import android.content.Context
 import com.google.firebase.FirebaseApp
+import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.concept.push.EncryptedPushMessage
 import mozilla.components.concept.push.PushError
 import mozilla.components.concept.push.PushProcessor
 import mozilla.components.concept.push.PushService
+import mozilla.components.support.base.log.logger.Logger
+import java.io.IOException
+import kotlin.coroutines.CoroutineContext
 
 /**
  * A Firebase Cloud Messaging implementation of the [PushService] for Android devices that support Google Play Services.
  */
-abstract class AbstractFirebasePushService : FirebaseMessagingService(), PushService {
+abstract class AbstractFirebasePushService(
+    internal val coroutineContext: CoroutineContext = Dispatchers.IO
+) : FirebaseMessagingService(), PushService {
+
+    private val logger = Logger("AbstractFirebasePushService")
 
     /**
      * Initializes Firebase and starts the messaging service if not already started and enables auto-start as well.
@@ -58,5 +69,19 @@ abstract class AbstractFirebasePushService : FirebaseMessagingService(), PushSer
     final override fun stop() {
         FirebaseMessaging.getInstance().isAutoInitEnabled = false
         stopSelf()
+    }
+
+    /**
+     * Removes the Firebase instance ID. This would lead a new token being generated when the
+     * service hits the Firebase servers.
+     */
+    override fun deleteToken() {
+        CoroutineScope(coroutineContext).launch {
+            try {
+                FirebaseInstanceId.getInstance().deleteInstanceId()
+            } catch (e: IOException) {
+                logger.error("Force registration renewable failed.", e)
+            }
+        }
     }
 }
