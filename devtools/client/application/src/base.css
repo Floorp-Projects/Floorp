@@ -5,6 +5,8 @@
 :root {
   /* Typography from Photon */
   /* See https://firefox-dev.tools/photon/visuals/typography.html */
+  --caption-10-font-size: 11px;
+  --caption-10-font-weight: 400;
   --body-10-font-size: 13px;
   --body-10-font-weight: 400;
   --body-20-font-size: 15px;
@@ -27,11 +29,18 @@
 
   /* Global layout vars */
   --base-unit: 4px;
+
+  /* extra, raw colors */
+  --blue-50-a30: rgba(10, 132, 255, 0.3);
 }
 
 /*
 * Reset some tags
 */
+
+* {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;

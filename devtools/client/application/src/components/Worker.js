@@ -8,11 +8,11 @@ const {
   createFactory,
   Component,
 } = require("devtools/client/shared/vendor/react");
+
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+
 const {
-  a,
   br,
-  button,
   dd,
   dl,
   dt,
@@ -22,6 +22,7 @@ const {
   span,
   time,
 } = require("devtools/client/shared/vendor/react-dom-factories");
+
 const {
   getUnicodeUrl,
   getUnicodeUrlPath,
@@ -29,6 +30,8 @@ const {
 
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
+
+const UIButton = createFactory(require("./ui/UIButton"));
 
 loader.lazyRequireGetter(
   this,
@@ -136,50 +139,51 @@ class Worker extends Component {
     return getUnicodeUrlPath(parts[parts.length - 1]);
   }
 
-  renderDebugLink() {
+  renderDebugButton() {
     const { isDebugEnabled } = this.props;
 
-    const shallDisableLink = !this.isRunning() || !isDebugEnabled;
-    const linkClass = shallDisableLink ? "disabled-link" : "";
+    const isDisabled = !this.isRunning() || !isDebugEnabled;
 
     const localizationId = isDebugEnabled
       ? "serviceworker-worker-debug"
       : "serviceworker-worker-debug-forbidden";
 
-    const link = Localized(
+    return Localized(
       {
         id: localizationId,
         // The localized title is only displayed if the debug link is disabled.
         attrs: {
-          title: shallDisableLink,
+          title: isDisabled,
         },
       },
-      a({
-        onClick: !shallDisableLink ? this.debug : null,
-        className: `${linkClass} worker__link-debug js-link-debug`,
+      UIButton({
+        onClick: this.debug,
+        className: `js-debug-button`,
+        disabled: isDisabled,
+        size: "micro",
       })
     );
-    return link;
   }
 
-  renderStartLink() {
+  renderStartButton() {
     const { isDebugEnabled } = this.props;
-    const linkClass = !isDebugEnabled ? "disabled-link" : "";
+    const isDisabled = !isDebugEnabled;
 
-    const link = Localized(
+    return Localized(
       {
         id: "serviceworker-worker-start2",
         // The localized title is only displayed if the debug link is disabled.
         attrs: {
-          title: !isDebugEnabled,
+          title: !isDisabled,
         },
       },
-      a({
+      UIButton({
         onClick: this.start,
-        className: `worker__link-start js-link-start ${linkClass}`,
+        className: `js-start-button`,
+        disabled: isDisabled,
+        size: "micro",
       })
     );
-    return link;
   }
 
   render() {
@@ -189,11 +193,9 @@ class Worker extends Component {
     const unregisterButton = this.isActive()
       ? Localized(
           { id: "serviceworker-worker-unregister" },
-          button({
+          UIButton({
             onClick: this.unregister,
-            className:
-              "devtools-button worker__unregister-button js-unregister-button",
-            "data-standalone": true,
+            className: "worker__unregister-button js-unregister-button",
           })
         )
       : null;
@@ -237,7 +239,8 @@ class Worker extends Component {
             },
             this.formatSource(worker.url)
           ),
-          this.renderDebugLink(),
+          " ",
+          this.renderDebugButton(),
           lastUpdated ? br({}) : null,
           lastUpdated ? lastUpdated : null
         ),
@@ -251,7 +254,8 @@ class Worker extends Component {
             { id: "serviceworker-worker-status-" + status },
             span({ className: "js-worker-status" })
           ),
-          !this.isRunning() ? this.renderStartLink() : null
+          " ",
+          !this.isRunning() ? this.renderStartButton() : null
         )
       )
     );

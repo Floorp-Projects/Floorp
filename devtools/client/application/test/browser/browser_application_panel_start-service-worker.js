@@ -26,17 +26,22 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  info("Wait until the start link is displayed and enabled");
+  info("Wait until the start button is displayed and enabled");
   const container = getWorkerContainers(doc)[0];
-  await waitUntil(() =>
-    container.querySelector(".js-link-start:not(.disabled-link)")
-  );
-  info("Click the link and wait for the worker to start");
-  const link = container.querySelector(".js-link-start");
-  link.click();
-  await waitUntil(
-    () => container.querySelector(".js-worker-status").textContent === "Running"
-  );
+  await waitUntil(() => {
+    const button = container.querySelector(".js-start-button");
+    return button && !button.disabled;
+  });
+
+  info("Click the button and wait for the worker to start");
+  const button = container.querySelector(".js-start-button");
+  button.click();
+
+  info("Wait until status 'Running' is displayed");
+  await waitUntil(() => {
+    const statusEl = container.querySelector(".js-worker-status");
+    return statusEl && statusEl.textContent === "Running";
+  });
   ok(true, "Worker status is 'Running'");
 
   await unregisterAllWorkers(target.client);
@@ -59,12 +64,12 @@ add_task(async function() {
   info("Wait until the service worker appears in the application panel");
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
-  info("Wait until the start link is displayed");
+  info("Wait until the start button is displayed");
   const container = getWorkerContainers(doc)[0];
-  await waitUntil(() => container.querySelector(".js-link-start"));
+  await waitUntil(() => container.querySelector(".js-start-button"));
   ok(
-    container.querySelector(".js-link-start.disabled-link"),
-    "Start link is disabled"
+    container.querySelector(".js-start-button").disabled,
+    "Start button is disabled"
   );
 
   await unregisterAllWorkers(target.client);
