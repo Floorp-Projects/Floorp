@@ -253,3 +253,46 @@ add_task(async function test_graph_display() {
   await db.close();
   BrowserTestUtils.removeTab(tab);
 });
+
+// Ensure that the string in the ETP card header is changing when we change
+// the category pref.
+add_task(async function test_etp_header_string() {
+  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
+  let tab = await BrowserTestUtils.openNewForegroundTab({
+    url: "about:protections",
+    gBrowser,
+  });
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let l10nID = content.document
+        .querySelector("#protection-details")
+        .getAttribute("data-l10n-id");
+      return l10nID == "protection-header-details-standard";
+    }, "The standard string is showing");
+  });
+
+  Services.prefs.setStringPref("browser.contentblocking.category", "strict");
+  await reloadTab(tab);
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let l10nID = content.document
+        .querySelector("#protection-details")
+        .getAttribute("data-l10n-id");
+      return l10nID == "protection-header-details-strict";
+    }, "The strict string is showing");
+  });
+
+  Services.prefs.setStringPref("browser.contentblocking.category", "custom");
+  await reloadTab(tab);
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      let l10nID = content.document
+        .querySelector("#protection-details")
+        .getAttribute("data-l10n-id");
+      return l10nID == "protection-header-details-custom";
+    }, "The strict string is showing");
+  });
+
+  Services.prefs.setStringPref("browser.contentblocking.category", "standard");
+  BrowserTestUtils.removeTab(tab);
+});

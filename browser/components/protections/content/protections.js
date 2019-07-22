@@ -32,6 +32,25 @@ document.addEventListener("DOMContentLoaded", e => {
   // Get the display prefs for each component
   RPMSendAsyncMessage("GetEnabledPrefs");
 
+  RPMAddMessageListener("SendCBCategory", message => {
+    if (message.data == "custom") {
+      protectionDetails.setAttribute(
+        "data-l10n-id",
+        "protection-header-details-custom"
+      );
+    } else if (message.data == "strict") {
+      protectionDetails.setAttribute(
+        "data-l10n-id",
+        "protection-header-details-strict"
+      );
+    } else {
+      protectionDetails.setAttribute(
+        "data-l10n-id",
+        "protection-header-details-standard"
+      );
+    }
+  });
+
   let createGraph = data => {
     let dateInMS = data.earliestDate
       ? new Date(data.earliestDate).getTime()
