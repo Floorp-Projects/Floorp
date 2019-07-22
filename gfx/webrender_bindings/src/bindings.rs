@@ -97,6 +97,8 @@ pub type WrFontInstanceKey = FontInstanceKey;
 type WrYuvColorSpace = YuvColorSpace;
 /// cbindgen:field-names=[mNamespace, mHandle]
 type WrColorDepth = ColorDepth;
+/// cbindgen:field-names=[mNamespace, mHandle]
+type WrColorRange = ColorRange;
 
 
 #[repr(C)]
@@ -2556,6 +2558,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                                               image_key_2: WrImageKey,
                                               color_depth: WrColorDepth,
                                               color_space: WrYuvColorSpace,
+                                              color_range: WrColorRange,
                                               image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
@@ -2576,6 +2579,7 @@ pub extern "C" fn wr_dp_push_yuv_planar_image(state: &mut WrState,
                          YuvData::PlanarYCbCr(image_key_0, image_key_1, image_key_2),
                          color_depth,
                          color_space,
+                         color_range,
                          image_rendering);
 }
 
@@ -2590,6 +2594,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                                             image_key_1: WrImageKey,
                                             color_depth: WrColorDepth,
                                             color_space: WrYuvColorSpace,
+                                            color_range: WrColorRange,
                                             image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
@@ -2610,6 +2615,7 @@ pub extern "C" fn wr_dp_push_yuv_NV12_image(state: &mut WrState,
                          YuvData::NV12(image_key_0, image_key_1),
                          color_depth,
                          color_space,
+                         color_range,
                          image_rendering);
 }
 
@@ -2623,6 +2629,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                                                    image_key_0: WrImageKey,
                                                    color_depth: WrColorDepth,
                                                    color_space: WrYuvColorSpace,
+                                                   color_range: WrColorRange,
                                                    image_rendering: ImageRendering) {
     debug_assert!(unsafe { is_in_main_thread() || is_in_compositor_thread() });
 
@@ -2643,6 +2650,7 @@ pub extern "C" fn wr_dp_push_yuv_interleaved_image(state: &mut WrState,
                          YuvData::InterleavedYCbCr(image_key_0),
                          color_depth,
                          color_space,
+                         color_range,
                          image_rendering);
 }
 
