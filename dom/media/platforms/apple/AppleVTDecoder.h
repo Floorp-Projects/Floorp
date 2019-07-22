@@ -89,6 +89,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   const uint32_t mDisplayWidth;
   const uint32_t mDisplayHeight;
   const gfx::YUVColorSpace mColorSpace;
+  const gfx::ColorRange mColorRange;
 
   // Method to set up the decompression session.
   MediaResult InitializeSession();
