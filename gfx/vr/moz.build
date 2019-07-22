@@ -51,7 +51,6 @@ UNIFIED_SOURCES += [
 ]
 
 SOURCES += [
-    'nsFxrCommandLineHandler.cpp',
     'VRManager.cpp',
     'VRPuppetCommandBuffer.cpp',
     'VRShMem.cpp'
@@ -81,9 +80,14 @@ IPDL_SOURCES = [
     'ipc/PVRManager.ipdl',
 ]
 
-XPCOM_MANIFESTS += [
-  'components.conf',
-]
+# For now, only enable FxR CLH for Windows Nightly builds (BUG 1565349)
+if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['NIGHTLY_BUILD']:
+    XPCOM_MANIFESTS += [
+      'components.conf',
+    ]
+    SOURCES += [
+      'nsFxrCommandLineHandler.cpp',
+    ]
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
