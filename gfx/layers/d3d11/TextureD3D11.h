@@ -354,8 +354,6 @@ class DXGITextureHostD3D11 : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
 
-  bool SupportsWrNativeTexture() override { return true; }
-
  protected:
   bool LockInternal();
   void UnlockInternal();
@@ -422,8 +420,6 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
                         const wr::LayoutRect& aBounds,
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
-
-  bool SupportsWrNativeTexture() override { return true; }
 
  private:
   bool EnsureTextureSource();

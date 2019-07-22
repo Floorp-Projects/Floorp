@@ -81,8 +81,6 @@ class WebRenderTextureHost : public TextureHost {
                         const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
                         const Range<wr::ImageKey>& aImageKeys) override;
 
-  bool SupportsWrNativeTexture() override;
-
   bool NeedsYFlip() const override;
 
   void MaybeNofityForUse(wr::TransactionBuilder& aTxn);
