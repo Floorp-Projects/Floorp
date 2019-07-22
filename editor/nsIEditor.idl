@@ -513,8 +513,12 @@ interface nsIEditor  : nsISupports
    * a new character and echo is enabled, unmasked range is expanded to
    * including it.
    *
-   * @param aStart      First index to show the character.
-   * @param aEnd        Optional, next index of last unmasked character.
+   * @param aStart      First index to show the character.  If you specify
+   *                    middle of a surrogate pair, this expands the range
+   *                    to include the prceding high surrogate automatically.
+   * @param aEnd        Optional, next index of last unmasked character.  If
+   *                    you specify middle of a surrogate pair, the expands
+   *                    the range to include the following low surrogate.
    *                    If omitted or negative value, it means unmasking all
    *                    characters after aStart.  Specifying same index
    *                    throws an exception.

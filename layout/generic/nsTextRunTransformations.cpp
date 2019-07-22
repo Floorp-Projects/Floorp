@@ -344,15 +344,6 @@ bool nsCaseTransformTextRunFactory::TransformString(
     if (NS_IS_HIGH_SURROGATE(ch) && i < length - 1 &&
         NS_IS_LOW_SURROGATE(str[i + 1])) {
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
-      // A non-BMP character is masked with 2 mask characters.  Therefore,
-      // one of them is unmasked, we should unmask the surrogate pair.
-      // NOTE: When you change this rule, you need to change the constructor
-      // of `ClusterIterator` in nsTextFrame.cpp and `MaskString()` in
-      // ContentEventHandler.cpp.
-      if (maskPassword &&
-          !aTextRun->mStyles[aOffsetInTextRun + 1]->mMaskPassword) {
-        maskPassword = false;
-      }
     }
 
     // Skip case transform if we're masking current character.

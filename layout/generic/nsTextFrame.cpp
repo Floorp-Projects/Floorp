@@ -7933,13 +7933,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
       uint32_t skippedOffset = mIterator.GetSkippedOffset();
       if (NS_IS_HIGH_SURROGATE(ch) && i < mFrag->GetLength() - 1 &&
           NS_IS_LOW_SURROGATE(mFrag->CharAt(i + 1))) {
-        // A non-BMP character is masked with 2 mask characters.  Therefore,
-        // one of them is unmasked, we should unmask the surrogate pair.
-        // NOTE: When you change this rule, you need to change
-        // `nsCaseTransformTextRunFactory::TransformString()` and `MaskString()`
-        // in ContentEventHandler.cpp.
-        if (transformedTextRun->mStyles[skippedOffset]->mMaskPassword &&
-            transformedTextRun->mStyles[skippedOffset + 1]->mMaskPassword) {
+        if (transformedTextRun->mStyles[skippedOffset]->mMaskPassword) {
           maskedText.Append(kPasswordMask);
           maskedText.Append(kPasswordMask);
         } else {
