@@ -161,7 +161,7 @@ struct nr_ice_ctx_ {
   char force_net_interface[MAXIFNAME];
   nr_ice_stats stats;
 
-  nr_transport_addr *remote_addr;             /* The address for the origin */
+  nr_transport_addr *target_for_default_local_address_lookup;
 };
 
 int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp);
@@ -177,7 +177,7 @@ void nr_ice_ctx_add_flags(nr_ice_ctx *ctx, UINT4 flags);
 void nr_ice_ctx_remove_flags(nr_ice_ctx *ctx, UINT4 flags);
 int nr_ice_ctx_destroy(nr_ice_ctx **ctxp);
 int nr_ice_set_local_addresses(nr_ice_ctx *ctx, nr_local_addr* stun_addrs, int stun_addr_ct);
-int nr_ice_set_remote_address(nr_ice_ctx *ctx, const char *remote_ip, UINT2 remote_port);
+int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const char *target_ip, UINT2 target_port);
 int nr_ice_gather(nr_ice_ctx *ctx, NR_async_cb done_cb, void *cb_arg);
 int nr_ice_add_candidate(nr_ice_ctx *ctx, nr_ice_candidate *cand);
 void nr_ice_gather_finished_cb(NR_SOCKET s, int h, void *cb_arg);
