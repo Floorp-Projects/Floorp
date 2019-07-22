@@ -68,7 +68,9 @@ dbg.onNewGlobalObject = function(global) {
 // Utilities
 ///////////////////////////////////////////////////////////////////////////////
 
-const dump = RecordReplayControl.dump;
+const dump = str => {
+  RecordReplayControl.dump(`[Child #${RecordReplayControl.childId()}]: ${str}`);
+};
 
 function assert(v) {
   if (!v) {
@@ -141,6 +143,24 @@ function scriptFrameForIndex(index) {
 
 function isNonNullObject(obj) {
   return obj && (typeof obj == "object" || typeof obj == "function");
+}
+
+function getMemoryUsage() {
+  const memoryKinds = {
+    Generic: [1],
+    Snapshots: [2, 3, 4, 5, 6, 7],
+    ScriptHits: [8],
+  };
+
+  const rv = {};
+  for (const [name, kinds] of Object.entries(memoryKinds)) {
+    let total = 0;
+    kinds.forEach(kind => {
+      total += RecordReplayControl.memoryUsage(kind);
+    });
+    rv[name] = total;
+  }
+  return rv;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -637,16 +657,16 @@ function ClearPausedState() {
 // The manifest that is currently being processed.
 let gManifest;
 
-// When processing "resume" manifests this tracks the execution time when we
-// started execution from the initial checkpoint.
-let gTimeWhenResuming;
+// When processing certain manifests this tracks the execution time when the
+// manifest started executing.
+let gManifestStartTime;
 
 // Handlers that run when a manifest is first received. This must be specified
 // for all manifests.
 const gManifestStartHandlers = {
   resume({ breakpoints }) {
     RecordReplayControl.resumeExecution();
-    gTimeWhenResuming = RecordReplayControl.currentExecutionTime();
+    gManifestStartTime = RecordReplayControl.currentExecutionTime();
     breakpoints.forEach(ensurePositionHandler);
   },
 
@@ -663,6 +683,7 @@ const gManifestStartHandlers = {
   },
 
   scanRecording(manifest) {
+    gManifestStartTime = RecordReplayControl.currentExecutionTime();
     gManifestStartHandlers.runToPoint(manifest);
   },
 
@@ -801,7 +822,7 @@ const gManifestFinishedAfterCheckpointHandlers = {
   resume(_, point) {
     RecordReplayControl.manifestFinished({
       point,
-      duration: RecordReplayControl.currentExecutionTime() - gTimeWhenResuming,
+      duration: RecordReplayControl.currentExecutionTime() - gManifestStartTime,
       consoleMessages: gNewConsoleMessages,
       scripts: gNewScripts,
     });
@@ -810,6 +831,7 @@ const gManifestFinishedAfterCheckpointHandlers = {
   },
 
   runToPoint({ endpoint }, point) {
+    assert(endpoint.checkpoint >= point.checkpoint);
     if (!endpoint.position && point.checkpoint == endpoint.checkpoint) {
       RecordReplayControl.manifestFinished({ point });
     }
@@ -817,7 +839,13 @@ const gManifestFinishedAfterCheckpointHandlers = {
 
   scanRecording({ endpoint }, point) {
     if (point.checkpoint == endpoint) {
-      RecordReplayControl.manifestFinished({ point });
+      const duration =
+        RecordReplayControl.currentExecutionTime() - gManifestStartTime;
+      RecordReplayControl.manifestFinished({
+        point,
+        duration,
+        memoryUsage: getMemoryUsage(),
+      });
     }
   },
 };
@@ -892,6 +920,7 @@ let gFrameStepsFrameIndex = 0;
 // This must be specified for any manifest that uses ensurePositionHandler.
 const gManifestPositionHandlers = {
   resume(manifest, point) {
+    clearPositionHandlers();
     RecordReplayControl.manifestFinished({
       point,
       consoleMessages: gNewConsoleMessages,
@@ -1066,7 +1095,7 @@ function getObjectData(id) {
       optimizedOut: object.optimizedOut,
     };
   }
-  throwError("Unknown object kind");
+  throwError(`Unknown object kind: ${object}`);
 }
 
 function getObjectProperties(object) {
@@ -1249,6 +1278,7 @@ function getPauseData() {
     const names = getEnvironmentNames(env);
     rv.environments[id] = { data, names };
 
+    addObject(data.callee);
     addEnvironment(data.parent);
   }
 

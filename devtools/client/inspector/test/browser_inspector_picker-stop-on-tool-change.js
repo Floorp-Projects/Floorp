@@ -13,7 +13,9 @@ const TEST_URI =
 
 add_task(async function() {
   const { toolbox } = await openInspectorForURL(TEST_URI);
-  const pickerStopped = toolbox.inspector.nodePicker.once("picker-stopped");
+  const pickerStopped = toolbox.inspectorFront.nodePicker.once(
+    "picker-stopped"
+  );
 
   info("Starting the inspector picker");
   await startPicker(toolbox);

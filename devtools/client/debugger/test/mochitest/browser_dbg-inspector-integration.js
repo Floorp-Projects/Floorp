@@ -10,8 +10,8 @@ function waitForInspectorPanelChange(dbg) {
 
   return new Promise(resolve => {
     toolbox.getPanelWhenReady("inspector").then(() => {
-      ok(toolbox.inspector, "Inspector is shown.");
-      resolve(toolbox.inspector);
+      ok(toolbox.inspectorFront, "Inspector is shown.");
+      resolve(toolbox.inspectorFront);
     });
   });
 }
@@ -31,9 +31,14 @@ add_task(async function() {
 
   // Ensure hovering over button highlights the node in content pane
   const view = inspectorNode.ownerDocument.defaultView;
-  const onNodeHighlight = toolbox.target.once("inspector")
+  const onNodeHighlight = toolbox.target
+    .once("inspector")
     .then(inspector => inspector.highlighter.once("node-highlight"));
-  EventUtils.synthesizeMouseAtCenter(inspectorNode, {type: "mousemove"}, view);
+  EventUtils.synthesizeMouseAtCenter(
+    inspectorNode,
+    { type: "mousemove" },
+    view
+  );
   const nodeFront = await onNodeHighlight;
   is(nodeFront.displayName, "button", "The correct node was highlighted");
 
