@@ -224,9 +224,6 @@ class NrIceCtx {
                                 bool tcp_enabled = true,
                                 bool allow_link_local = false);
 
-  void SetTargetForDefaultLocalAddressLookup(const std::string& target_ip,
-                                             uint16_t target_port);
-
   // static GetStunAddrs for use in parent process to support
   // sandboxing restrictions
   static nsTArray<NrIceStunAddr> GetStunAddrs();

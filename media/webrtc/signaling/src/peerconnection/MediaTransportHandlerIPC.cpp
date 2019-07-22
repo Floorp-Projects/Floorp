@@ -183,19 +183,6 @@ void MediaTransportHandlerIPC::EnsureProvisionalTransport(
       [](const nsCString& aError) {});
 }
 
-void MediaTransportHandlerIPC::SetTargetForDefaultLocalAddressLookup(
-    const std::string& aTargetIp, uint16_t aTargetPort) {
-  mInitPromise->Then(
-      mCallbackThread, __func__,
-      [=, self = RefPtr<MediaTransportHandlerIPC>(this)](bool /*dummy*/) {
-        if (mChild) {
-          mChild->SendSetTargetForDefaultLocalAddressLookup(aTargetIp,
-                                                            aTargetPort);
-        }
-      },
-      [](const nsCString& aError) {});
-}
-
 // We set default-route-only as late as possible because it depends on what
 // capture permissions have been granted on the window, which could easily
 // change between Init (ie; when the PC is created) and StartIceGathering
@@ -333,7 +320,9 @@ MediaTransportHandlerIPC::GetIceStats(
 MediaTransportChild::MediaTransportChild(MediaTransportHandlerIPC* aUser)
     : mUser(aUser) {}
 
-MediaTransportChild::~MediaTransportChild() { mUser->mChild = nullptr; }
+MediaTransportChild::~MediaTransportChild() {
+  mUser->mChild = nullptr;
+}
 
 mozilla::ipc::IPCResult MediaTransportChild::RecvOnCandidate(
     const string& transportId, const CandidateInfo& candidateInfo) {
