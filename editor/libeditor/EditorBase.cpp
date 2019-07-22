@@ -2634,8 +2634,10 @@ nsresult EditorBase::InsertTextWithTransaction(
     CheckedInt<int32_t> newOffset;
     if (!pointToInsert.IsInTextNode()) {
       // create a text node
-      RefPtr<nsTextNode> newNode =
-          EditorBase::CreateTextNode(aDocument, EmptyString());
+      RefPtr<nsTextNode> newNode = CreateTextNode(EmptyString());
+      if (NS_WARN_IF(!newNode)) {
+        return NS_ERROR_FAILURE;
+      }
       // then we insert it into the dom tree
       nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2675,8 +2677,10 @@ nsresult EditorBase::InsertTextWithTransaction(
 
   // we are inserting text into a non-text node.  first we have to create a
   // textnode (this also populates it with the text)
-  RefPtr<nsTextNode> newNode =
-      EditorBase::CreateTextNode(aDocument, aStringToInsert);
+  RefPtr<nsTextNode> newNode = CreateTextNode(aStringToInsert);
+  if (NS_WARN_IF(!newNode)) {
+    return NS_ERROR_FAILURE;
+  }
   // then we insert it into the dom tree
   nsresult rv = InsertNodeWithTransaction(*newNode, pointToInsert);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4355,11 +4359,19 @@ already_AddRefed<Element> EditorBase::CreateHTMLContent(const nsAtom* aTag) {
                          kNameSpaceID_XHTML);
 }
 
-// static
 already_AddRefed<nsTextNode> EditorBase::CreateTextNode(
-    Document& aDocument, const nsAString& aData) {
-  RefPtr<nsTextNode> text = aDocument.CreateEmptyTextNode();
+    const nsAString& aData) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  Document* document = GetDocument();
+  if (NS_WARN_IF(!document)) {
+    return nullptr;
+  }
+  RefPtr<nsTextNode> text = document->CreateEmptyTextNode();
   text->MarkAsMaybeModifiedFrequently();
+  if (IsPasswordEditor()) {
+    text->MarkAsMaybeMasked();
+  }
   // Don't notify; this node is still being created.
   text->SetText(aData, false);
   return text.forget();
