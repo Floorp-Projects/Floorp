@@ -6,9 +6,94 @@ var gBrowser;
 var gProgressListener;
 var gDebugger;
 
+const { Preferences } = ChromeUtils.import(
+  "resource://gre/modules/Preferences.jsm"
+);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID =
   "@mozilla.org/layout-debug/layout-debuggingtools;1";
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
+const FEATURES = {
+  paintFlashing: "nglayout.debug.paint_flashing",
+  paintDumping: "nglayout.debug.paint_dumping",
+  invalidateDumping: "nglayout.debug.invalidate_dumping",
+  eventDumping: "nglayout.debug.event_dumping",
+  motionEventDumping: "nglayout.debug.motion_event_dumping",
+  crossingEventDumping: "nglayout.debug.crossing_event_dumping",
+  reflowCounts: "layout.reflow.showframecounts",
+};
+
+const COMMANDS = [
+  "dumpWebShells",
+  "dumpContent",
+  "dumpFrames",
+  "dumpViews",
+  "dumpStyleSheets",
+  "dumpMatchedRules",
+  "dumpComputedStyles",
+  "dumpReflowStats",
+];
+
+class Debugger {
+  constructor() {
+    this._flags = new Map();
+    this._visualDebugging = false;
+    this._visualEventDebugging = false;
+    this._tools = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].createInstance(
+      Ci.nsILayoutDebuggingTools
+    );
+
+    for (let [name, pref] of Object.entries(FEATURES)) {
+      this._flags.set(name, !!Preferences.get(pref, false));
+    }
+    this._tools.init(gBrowser.contentWindow);
+  }
+
+  get visualDebugging() {
+    return this._visualDebugging;
+  }
+
+  set visualDebugging(v) {
+    v = !!v;
+    this._visualDebugging = v;
+    this._tools.setVisualDebugging(v);
+  }
+
+  get visualEventDebugging() {
+    return this._visualEventDebugging;
+  }
+
+  set visualEventDebugging(v) {
+    v = !!v;
+    this._visualEventDebugging = v;
+    this._tools.setVisualEventDebugging(v);
+  }
+}
+
+for (let [name, pref] of Object.entries(FEATURES)) {
+  Object.defineProperty(Debugger.prototype, name, {
+    get: function() {
+      return this._flags.get(name);
+    },
+    set: function(v) {
+      v = !!v;
+      Preferences.set(pref, v);
+      this._flags.set(name, v);
+      // XXX PresShell should watch for this pref change itself.
+      if (name == "reflowCounts") {
+        this._tools.setReflowCounts(v);
+      }
+      this._tools.forceRefresh();
+    },
+  });
+}
+
+for (let name of COMMANDS) {
+  Debugger.prototype[name] = function() {
+    this._tools[name]();
+  };
+}
 
 function nsLDBBrowserContentListener() {
   this.init();
@@ -97,9 +182,7 @@ function OnLDBLoad() {
   gProgressListener = new nsLDBBrowserContentListener();
   gBrowser.addProgressListener(gProgressListener);
 
-  gDebugger = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].createInstance(
-    Ci.nsILayoutDebuggingTools
-  );
+  gDebugger = new Debugger();
 
   if (window.arguments && window.arguments[0]) {
     gBrowser.loadURI(window.arguments[0], {
@@ -112,8 +195,6 @@ function OnLDBLoad() {
       ),
     });
   }
-
-  gDebugger.init(gBrowser.contentWindow);
 
   checkPersistentMenus();
 }
