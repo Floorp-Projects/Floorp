@@ -1245,10 +1245,10 @@ class EditorBase : public nsIEditor,
   already_AddRefed<Element> CreateHTMLContent(const nsAtom* aTag);
 
   /**
-   * Creates text node which is marked as "maybe modified frequently".
+   * Creates text node which is marked as "maybe modified frequently" and
+   * "maybe masked" if this is a password editor.
    */
-  static already_AddRefed<nsTextNode> CreateTextNode(Document& aDocument,
-                                                     const nsAString& aData);
+  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData);
 
   /**
    * DoInsertText(), DoDeleteText(), DoReplaceText() and DoSetText() are

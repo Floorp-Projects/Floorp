@@ -5907,8 +5907,10 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
     if (!HTMLEditorRef().IsContainer(node)) {
       return NS_OK;
     }
-    OwningNonNull<Text> newNode =
-        EditorBase::CreateTextNode(aDocument, EmptyString());
+    RefPtr<Text> newNode = HTMLEditorRef().CreateTextNode(EmptyString());
+    if (NS_WARN_IF(!newNode)) {
+      return NS_ERROR_FAILURE;
+    }
     nsresult rv =
         MOZ_KnownLive(HTMLEditorRef())
             .InsertNodeWithTransaction(*newNode, EditorDOMPoint(node, offset));
@@ -5928,7 +5930,7 @@ nsresult HTMLEditRules::CreateStyleForInsertText(Document& aDocument) {
                                                  : HTMLEditor::FontSize::decr;
       for (int32_t j = 0; j < DeprecatedAbs(relFontSize); j++) {
         rv = MOZ_KnownLive(HTMLEditorRef())
-                 .RelativeFontChangeOnTextNode(dir, newNode, 0, -1);
+                 .RelativeFontChangeOnTextNode(dir, *newNode, 0, -1);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
