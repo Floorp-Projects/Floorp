@@ -7700,7 +7700,11 @@ class MOZ_STACK_CLASS ClusterIterator {
   int32_t GetAfterInternal();
 
   gfxSkipCharsIterator mIterator;
+  // Usually, mFrag is pointer to `dom::CharacterData::mText`.  However, if
+  // we're in a password field, this points `mMaskedFrag`.
   const nsTextFragment* mFrag;
+  // If we're in a password field, this is initialized with mask characters.
+  nsTextFragment mMaskedFrag;
   nsTextFrame* mTextFrame;
   int32_t mDirection;  // +1 or -1, or 0 to indicate failure
   int32_t mCharIndex;
@@ -7903,13 +7907,57 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
       mCharIndex(-1),
       mHaveWordBreak(false) {
   mIterator = aTextFrame->EnsureTextRun(nsTextFrame::eInflated);
-  if (!aTextFrame->GetTextRun(nsTextFrame::eInflated)) {
+  gfxTextRun* textRun = aTextFrame->GetTextRun(nsTextFrame::eInflated);
+  if (!textRun) {
     mDirection = 0;  // signal failure
     return;
   }
-  mIterator.SetOriginalOffset(aPosition);
 
   mFrag = aTextFrame->TextFragment();
+  // If we're in a password field, some characters may be masked.  In such
+  // case, we need to treat each masked character is a mask character since
+  // we shouldn't expose word boundary which is hidden by the masking.
+  if (aTextFrame->GetContent() && mFrag->GetLength() > 0 &&
+      aTextFrame->GetContent()->HasFlag(NS_MAYBE_MASKED) &&
+      (textRun->GetFlags2() & nsTextFrameUtils::Flags::IsTransformed)) {
+    const char16_t kPasswordMask = TextEditor::PasswordMask();
+    const nsTransformedTextRun* transformedTextRun =
+        static_cast<const nsTransformedTextRun*>(textRun);
+    // Use nsString and not nsAutoString so that we get a nsStringBuffer which
+    // can be just AddRefed in `mMaskedFrag`.
+    nsString maskedText;
+    maskedText.SetCapacity(mFrag->GetLength());
+    for (uint32_t i = 0; i < mFrag->GetLength(); ++i) {
+      uint32_t ch = mFrag->CharAt(i);
+      mIterator.SetOriginalOffset(i);
+      uint32_t skippedOffset = mIterator.GetSkippedOffset();
+      if (NS_IS_HIGH_SURROGATE(ch) && i < mFrag->GetLength() - 1 &&
+          NS_IS_LOW_SURROGATE(mFrag->CharAt(i + 1))) {
+        // A non-BMP character is masked with 2 mask characters.  Therefore,
+        // one of them is unmasked, we should unmask the surrogate pair.
+        // NOTE: When you change this rule, you need to change
+        // `nsCaseTransformTextRunFactory::TransformString`.
+        if (transformedTextRun->mStyles[skippedOffset]->mMaskPassword &&
+            transformedTextRun->mStyles[skippedOffset + 1]->mMaskPassword) {
+          maskedText.Append(kPasswordMask);
+          maskedText.Append(kPasswordMask);
+        } else {
+          maskedText.Append(ch);
+          maskedText.Append(mFrag->CharAt(i + 1));
+        }
+        ++i;
+      } else {
+        maskedText.Append(
+            transformedTextRun->mStyles[skippedOffset]->mMaskPassword
+                ? kPasswordMask
+                : ch);
+      }
+    }
+    mMaskedFrag.SetTo(maskedText, mFrag->IsBidi(), true);
+    mFrag = &mMaskedFrag;
+  }
+
+  mIterator.SetOriginalOffset(aPosition);
   mTrimmed = aTextFrame->GetTrimmedOffsets(
       mFrag, aTrimSpaces ? nsTextFrame::TrimmedOffsetFlags::Default
                          : nsTextFrame::TrimmedOffsetFlags::NoTrimAfter |
