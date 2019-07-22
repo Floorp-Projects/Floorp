@@ -6134,16 +6134,32 @@ nsIFrame* nsCSSFrameConstructor::FindSiblingInternal(
                                                    : aIter.GetPreviousChild();
   };
 
-  auto getNearPseudo = [](const nsIContent* aContent) -> nsIFrame* {
-    return aDirection == SiblingDirection::Forward
-               ? nsLayoutUtils::GetBeforeFrame(aContent)
-               : nsLayoutUtils::GetAfterFrame(aContent);
+  auto getInsideMarkerFrame = [](const nsIContent* aContent) -> nsIFrame* {
+    auto* marker = nsLayoutUtils::GetMarkerFrame(aContent);
+    const bool isInsideMarker = marker &&
+        marker->GetInFlowParent()->StyleList()->mListStylePosition ==
+            NS_STYLE_LIST_STYLE_POSITION_INSIDE;
+    return isInsideMarker ? marker : nullptr;
   };
 
-  auto getFarPseudo = [](const nsIContent* aContent) -> nsIFrame* {
-    return aDirection == SiblingDirection::Forward
-               ? nsLayoutUtils::GetAfterFrame(aContent)
-               : nsLayoutUtils::GetBeforeFrame(aContent);
+  auto getNearPseudo = [&](const nsIContent* aContent) -> nsIFrame* {
+    if (aDirection == SiblingDirection::Forward) {
+      if (auto* marker = getInsideMarkerFrame(aContent)) {
+        return marker;
+      }
+      return nsLayoutUtils::GetBeforeFrame(aContent);
+    }
+    return nsLayoutUtils::GetAfterFrame(aContent);
+  };
+
+  auto getFarPseudo = [&](const nsIContent* aContent) -> nsIFrame* {
+    if (aDirection == SiblingDirection::Forward) {
+      return nsLayoutUtils::GetAfterFrame(aContent);
+    }
+    if (auto* before = nsLayoutUtils::GetBeforeFrame(aContent)) {
+      return before;
+    }
+    return getInsideMarkerFrame(aContent);
   };
 
   while (nsIContent* sibling = nextDomSibling(aIter)) {
