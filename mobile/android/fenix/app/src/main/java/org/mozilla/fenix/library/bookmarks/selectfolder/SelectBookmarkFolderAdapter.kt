@@ -16,7 +16,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getColorIntFromAttr
+import org.mozilla.fenix.ext.getColorResFromAttr
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
@@ -86,12 +86,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
         }
 
         fun bind(folder: BookmarkNodeWithDepth, selected: Boolean, selectionInterface: SelectionInterface) {
-            val backgroundTint =
-                if (selected) {
-                    R.attr.accentBright.getColorIntFromAttr(containerView!!.context)
-                } else {
-                    R.attr.neutral.getColorIntFromAttr(containerView!!.context)
-                }
+            val backgroundTintAttr = if (selected) R.attr.accentBright else R.attr.neutral
 
             // Center the bookmark title since we don't have a url
             val constraintSet = ConstraintSet()
@@ -101,6 +96,7 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
             )
             constraintSet.applyTo(bookmark_layout)
 
+            val backgroundTint = containerView!!.context.getColorResFromAttr(backgroundTintAttr)
             val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
             bookmark_favicon.backgroundTintList = backgroundTintList
             val res = if (selected) R.drawable.mozac_ic_check else R.drawable.ic_folder_icon

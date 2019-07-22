@@ -23,7 +23,7 @@ import kotlinx.android.synthetic.main.delete_history_button.*
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
-import org.mozilla.fenix.ext.getColorIntFromAttr
+import org.mozilla.fenix.ext.getColorResFromAttr
 
 /**
  * Interface for the HistoryViewInteractor. This interface is implemented by objects that want
@@ -135,7 +135,7 @@ class HistoryView(
             context.getString(R.string.history_multi_select_title, selectedItemSize)
         setToolbarColors(
             R.color.white_color,
-            R.attr.accentHighContrast.getColorIntFromAttr(context!!)
+            context!!.getColorResFromAttr(R.attr.accentHighContrast)
         )
     }
 
@@ -144,8 +144,8 @@ class HistoryView(
         delete_history_button?.isVisible = !isEmpty
         history_empty_view.isVisible = isEmpty
         setToolbarColors(
-            R.attr.primaryText.getColorIntFromAttr(context!!),
-            R.attr.foundation.getColorIntFromAttr(context)
+            context!!.getColorResFromAttr(R.attr.primaryText),
+            context.getColorResFromAttr(R.attr.foundation)
         )
     }
 

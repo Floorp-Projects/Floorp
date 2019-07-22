@@ -17,7 +17,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_search.*
@@ -33,9 +32,9 @@ import org.jetbrains.anko.backgroundDrawable
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.getSpannable
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.search.awesomebar.AwesomeBarView
@@ -220,12 +219,7 @@ class SearchFragment : Fragment(), BackHandler {
 
             val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
 
-            search_shortcuts_button.compoundDrawables[0]?.setTint(
-                ContextCompat.getColor(
-                    this,
-                    ThemeManager.resolveAttribute(color, this)
-                )
-            )
+            search_shortcuts_button.compoundDrawables[0]?.setTint(getColorFromAttr(color))
         }
     }
 

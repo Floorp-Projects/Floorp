@@ -14,7 +14,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getColorIntFromAttr
+import org.mozilla.fenix.ext.getColorResFromAttr
 import org.mozilla.fenix.library.LibraryPageView
 
 /**
@@ -194,7 +194,7 @@ class BookmarkView(
             context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
         setToolbarColors(
             R.color.white_color,
-            R.attr.accentHighContrast.getColorIntFromAttr(context)
+            context.getColorResFromAttr(R.attr.accentHighContrast)
         )
     }
 
@@ -202,8 +202,8 @@ class BookmarkView(
         bookmarkAdapter.updateData(root, BookmarkState.Mode.Normal)
         setTitle(root)
         setToolbarColors(
-            R.attr.primaryText.getColorIntFromAttr(context),
-            R.attr.foundation.getColorIntFromAttr(context)
+            context.getColorResFromAttr(R.attr.primaryText),
+            context.getColorResFromAttr(R.attr.foundation)
         )
     }
 

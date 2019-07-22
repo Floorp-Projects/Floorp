@@ -17,6 +17,7 @@ import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customtabs.CustomTabToolbarMenu
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.mvi.UIView
 
 class ToolbarUIView(
@@ -59,6 +60,10 @@ class ToolbarUIView(
             textColor = ContextCompat.getColor(context, R.color.photonGrey30)
 
             hint = context.getString(R.string.search_hint)
+
+            suggestionBackgroundColor = ContextCompat.getColor(context, R.color.suggestion_highlight_color)
+            textColor = context.getColorFromAttr(R.attr.primaryText)
+            hintColor = context.getColorFromAttr(R.attr.secondaryText)
         }
 
         with(view.context) {

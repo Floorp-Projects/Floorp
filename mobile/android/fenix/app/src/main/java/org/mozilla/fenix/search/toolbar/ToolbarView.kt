@@ -16,7 +16,7 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.search.SearchState
 
 /**
@@ -78,15 +78,9 @@ class ToolbarView(
 
             hint = context.getString(R.string.search_hint)
 
-            textColor = ContextCompat.getColor(
-                container.context,
-                ThemeManager.resolveAttribute(R.attr.primaryText, container.context)
-            )
+            textColor = container.context.getColorFromAttr(R.attr.primaryText)
 
-            hintColor = ContextCompat.getColor(
-                container.context,
-                ThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
-            )
+            hintColor = container.context.getColorFromAttr(R.attr.secondaryText)
 
             suggestionBackgroundColor = ContextCompat.getColor(
                 container.context,

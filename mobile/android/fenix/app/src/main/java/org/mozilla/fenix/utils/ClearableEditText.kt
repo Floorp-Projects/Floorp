@@ -48,7 +48,7 @@ class ClearableEditText @JvmOverloads constructor(
         super.onTextChanged(text, start, lengthBefore, lengthAfter)
         val drawable = if (shouldShowClearButton(lengthAfter)) {
             context.getDrawable(R.drawable.ic_clear)?.apply {
-                colorFilter = PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context), SRC_IN)
+                colorFilter = PorterDuffColorFilter(context.getColorFromAttr(R.attr.primaryText), SRC_IN)
             }
         } else {
             null

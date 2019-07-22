@@ -71,7 +71,7 @@ class AddBookmarkFolderFragment : Fragment() {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_add_folder, menu)
         menu.findItem(R.id.confirm_add_folder_button).icon.colorFilter =
-            PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), SRC_IN)
+            PorterDuffColorFilter(context!!.getColorFromAttr(R.attr.primaryText), SRC_IN)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

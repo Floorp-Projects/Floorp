@@ -388,7 +388,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 view = view)
         }
 
-        toolbarComponent.getView().setOnSiteSecurityClickedListener {
+        toolbarComponent.setOnSiteSecurityClickedListener {
             showQuickSettingsDialog()
         }
 

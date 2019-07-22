@@ -48,7 +48,7 @@ object SupportUtils {
     }
 
     fun createCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
-        putExtra(context.getString(R.string.intent_extra_toolbar_color), R.attr.foundation.getColorFromAttr(context))
+        putExtra(context.getString(R.string.intent_extra_toolbar_color), context.getColorFromAttr(R.attr.foundation))
         putExtra(context.getString(R.string.intent_extra_session), true)
         setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)
         data = Uri.parse(url)
@@ -56,7 +56,7 @@ object SupportUtils {
     }
 
     fun createAuthCustomTabIntent(context: Context, url: String) = Intent(Intent.ACTION_VIEW).apply {
-        putExtra(context.getString(R.string.intent_extra_toolbar_color), R.attr.foundation.getColorFromAttr(context))
+        putExtra(context.getString(R.string.intent_extra_toolbar_color), context.getColorFromAttr(R.attr.foundation))
         putExtra(context.getString(R.string.intent_extra_session), true)
         putExtra(context.getString(R.string.intent_extra_auth), true)
         setClassName(context.applicationContext, IntentReceiverActivity::class.java.name)

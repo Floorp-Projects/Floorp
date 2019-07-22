@@ -5,11 +5,7 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.component_search.*
-import mozilla.components.browser.toolbar.BrowserToolbar
-import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -32,8 +28,6 @@ class ToolbarComponent(
         viewModelProvider
     ) {
 
-    fun getView(): BrowserToolbar = uiView.toolbar
-
     override fun initView() = ToolbarUIView(
         sessionId,
         isPrivate,
@@ -44,22 +38,10 @@ class ToolbarComponent(
 
     init {
         bind()
-        applyTheme()
     }
 
-    private fun applyTheme() {
-        getView().suggestionBackgroundColor = ContextCompat.getColor(
-            container.context,
-            R.color.suggestion_highlight_color
-        )
-        getView().textColor = ContextCompat.getColor(
-            container.context,
-            ThemeManager.resolveAttribute(R.attr.primaryText, container.context)
-        )
-        getView().hintColor = ContextCompat.getColor(
-            container.context,
-            ThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
-        )
+    fun setOnSiteSecurityClickedListener(listener: () -> Unit) {
+        uiView.toolbar.setOnSiteSecurityClickedListener(listener)
     }
 }
 

@@ -95,7 +95,7 @@ class TabInCollectionViewHolder(
             view.background = ContextCompat.getDrawable(view.context, R.drawable.rounded_bottom_corners)
             divider_line.visibility = View.GONE
         } else {
-            view.backgroundColor = R.attr.above.getColorFromAttr(view.context)
+            view.backgroundColor = view.context.getColorFromAttr(R.attr.above)
             divider_line.visibility = View.VISIBLE
         }
     }

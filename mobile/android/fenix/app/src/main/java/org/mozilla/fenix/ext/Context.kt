@@ -15,13 +15,18 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
+import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
 import mozilla.components.browser.search.SearchEngineManager
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.Log.Priority.WARN
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.metrics.MetricController
 
@@ -94,3 +99,15 @@ fun Context.share(text: String, subject: String = ""): Boolean {
  */
 fun Context.getRootView(): View? =
     asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as? ViewGroup
+
+/**
+ * Returns the color resource corresponding to the attribute.
+ */
+@ColorRes
+fun Context.getColorResFromAttr(@AttrRes attr: Int) = ThemeManager.resolveAttribute(attr, this)
+
+/**
+ * Returns the color int corresponding to the attribute.
+ */
+@ColorInt
+fun Context.getColorFromAttr(@AttrRes attr: Int) = ContextCompat.getColor(this, getColorResFromAttr(attr))

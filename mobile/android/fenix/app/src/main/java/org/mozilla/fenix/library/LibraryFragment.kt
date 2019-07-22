@@ -91,8 +91,8 @@ class LibraryFragment : Fragment() {
     private fun setToolbarColor() {
         val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
 
-        val backgroundColor = R.attr.foundation.getColorFromAttr(context!!)
-        val foregroundColor = R.attr.primaryText.getColorFromAttr(context!!)
+        val backgroundColor = context!!.getColorFromAttr(R.attr.foundation)
+        val foregroundColor = context!!.getColorFromAttr(R.attr.primaryText)
 
         toolbar.setBackgroundColor(backgroundColor)
         toolbar.setTitleTextColor(foregroundColor)
