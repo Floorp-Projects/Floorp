@@ -1599,15 +1599,31 @@ function installAddonFromURL(url, extensionID) {
   });
 }
 
-let gChromeURLSBlocked = false;
+let gBlockedChromePages = [];
 
-// If any about page is blocked, we block the loading of all
-// chrome:// URLs in the browser window.
 function blockAboutPage(manager, feature, neededOnContentProcess = false) {
+  if (!gBlockedChromePages.length) {
+    addChromeURLBlocker();
+  }
   manager.disallowFeature(feature, neededOnContentProcess);
-  if (!gChromeURLSBlocked) {
-    blockAllChromeURLs();
-    gChromeURLSBlocked = true;
+  let splitURL = Services.io
+    .newChannelFromURI(
+      Services.io.newURI(feature),
+      null,
+      Services.scriptSecurityManager.getSystemPrincipal(),
+      null,
+      0,
+      Ci.nsIContentPolicy.TYPE_OTHER
+    )
+    .URI.spec.split("/");
+  // about:debugging uses index.html for a filename, so we need to rely
+  // on more than just the filename.
+  let fileName =
+    splitURL[splitURL.length - 2] + "/" + splitURL[splitURL.length - 1];
+  gBlockedChromePages.push(fileName);
+  if (feature == "about:config") {
+    // Hide old page until it is removed
+    gBlockedChromePages.push("config.xul");
   }
 }
 
@@ -1619,8 +1635,9 @@ let ChromeURLBlockPolicy = {
       contentType == Ci.nsIContentPolicy.TYPE_DOCUMENT &&
       loadInfo.loadingContext &&
       loadInfo.loadingContext.baseURI == AppConstants.BROWSER_CHROME_URL &&
-      contentLocation.host != "mochitests" &&
-      contentLocation.host != "devtools"
+      gBlockedChromePages.some(function(fileName) {
+        return contentLocation.filePath.endsWith(fileName);
+      })
     ) {
       return Ci.nsIContentPolicy.REJECT_REQUEST;
     }
@@ -1638,7 +1655,7 @@ let ChromeURLBlockPolicy = {
   },
 };
 
-function blockAllChromeURLs() {
+function addChromeURLBlocker() {
   let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
   registrar.registerFactory(
     ChromeURLBlockPolicy.classID,
