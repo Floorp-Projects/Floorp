@@ -1,5 +1,4 @@
-"use strict";
-importScripts("/resources/testharness.js");
+// META: global=!default,window,serviceworker
 
 test(() => {
   const sab = new SharedArrayBuffer(16);
@@ -9,5 +8,3 @@ test(() => {
     Atomics.wait(ta, 0, 0, 10);
   });
 }, `[[CanBlock]] in a ${self.constructor.name}`);
-
-done();
