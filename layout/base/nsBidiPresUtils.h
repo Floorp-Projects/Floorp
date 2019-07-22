@@ -13,6 +13,7 @@
 #include "nsHashKeys.h"
 #include "nsCoord.h"
 #include "nsTArray.h"
+#include "nsLineBox.h"
 
 #ifdef DrawText
 #  undef DrawText
@@ -536,6 +537,7 @@ class nsBidiPresUtils {
    * create a continuation frame for the remainder of its content.
    *
    * @param aFrame       the original frame
+   * @param aLine        the line box containing aFrame
    * @param aNewFrame    [OUT] the new frame that was created
    * @param aStart       [IN] the start of the content mapped by aFrame (and
    *                          any fluid continuations)
@@ -544,9 +546,9 @@ class nsBidiPresUtils {
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  static inline nsresult EnsureBidiContinuation(nsIFrame* aFrame,
-                                                nsIFrame** aNewFrame,
-                                                int32_t aStart, int32_t aEnd);
+  static inline nsresult EnsureBidiContinuation(
+      nsIFrame* aFrame, const nsLineList::iterator aLine, nsIFrame** aNewFrame,
+      int32_t aStart, int32_t aEnd);
 
   /**
    * Helper method for Resolve()

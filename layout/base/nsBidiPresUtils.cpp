@@ -666,8 +666,9 @@ static void JoinInlineAncestors(nsIFrame* aFrame) {
   }
 }
 
-static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
-                                   bool aIsFluid) {
+static nsresult CreateContinuation(nsIFrame* aFrame,
+                                   const nsLineList::iterator aLine,
+                                   nsIFrame** aNewFrame, bool aIsFluid) {
   MOZ_ASSERT(aNewFrame, "null OUT ptr");
   MOZ_ASSERT(aFrame, "null ptr");
 
@@ -683,6 +684,18 @@ static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
   NS_ASSERTION(
       parent,
       "Couldn't get frame parent in nsBidiPresUtils::CreateContinuation");
+
+  // While passing &aLine to InsertFrames for a non-block isn't harmful
+  // because it's a no-op, it doesn't really make sense.  However, the
+  // MOZ_ASSERT() we need to guarantee that it's safe only works if the
+  // parent is actually the block.
+  const nsLineList::iterator* parentLine;
+  if (parent->IsBlockFrameOrSubclass()) {
+    MOZ_ASSERT(aLine->Contains(aFrame));
+    parentLine = &aLine;
+  } else {
+    parentLine = nullptr;
+  }
 
   nsresult rv = NS_OK;
 
@@ -702,7 +715,8 @@ static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
   // The list name kNoReflowPrincipalList would indicate we don't want reflow
   // XXXbz this needs higher-level framelist love
   nsFrameList temp(*aNewFrame, *aNewFrame);
-  parent->InsertFrames(nsIFrame::kNoReflowPrincipalList, aFrame, nullptr, temp);
+  parent->InsertFrames(nsIFrame::kNoReflowPrincipalList, aFrame, parentLine,
+                       temp);
 
   if (!aIsFluid) {
     // Split inline ancestor frames
@@ -978,7 +992,8 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
           currentLine->MarkDirty();
           nsIFrame* nextBidi;
           int32_t runEnd = contentOffset + runLength;
-          rv = EnsureBidiContinuation(frame, &nextBidi, contentOffset, runEnd);
+          rv = EnsureBidiContinuation(frame, currentLine, &nextBidi,
+                                      contentOffset, runEnd);
           if (NS_FAILED(rv)) {
             break;
           }
@@ -1299,7 +1314,8 @@ void nsBidiPresUtils::TraverseFrames(nsIFrame* aCurrentFrame,
 
                 if (!next) {
                   // If the frame has no next in flow, create one.
-                  CreateContinuation(frame, &next, true);
+                  CreateContinuation(
+                      frame, aBpd->mCurrentTraverseLine.GetLine(), &next, true);
                   createdContinuation = true;
                 }
                 // Mark the line before the newline as dirty.
@@ -1904,15 +1920,14 @@ nsIFrame* nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame* aFrame,
   return nullptr;
 }
 
-inline nsresult nsBidiPresUtils::EnsureBidiContinuation(nsIFrame* aFrame,
-                                                        nsIFrame** aNewFrame,
-                                                        int32_t aStart,
-                                                        int32_t aEnd) {
+inline nsresult nsBidiPresUtils::EnsureBidiContinuation(
+    nsIFrame* aFrame, const nsLineList::iterator aLine, nsIFrame** aNewFrame,
+    int32_t aStart, int32_t aEnd) {
   MOZ_ASSERT(aNewFrame, "null OUT ptr");
   MOZ_ASSERT(aFrame, "aFrame is null");
 
   aFrame->AdjustOffsetsForBidi(aStart, aEnd);
-  return CreateContinuation(aFrame, aNewFrame, false);
+  return CreateContinuation(aFrame, aLine, aNewFrame, false);
 }
 
 void nsBidiPresUtils::RemoveBidiContinuation(BidiParagraphData* aBpd,
