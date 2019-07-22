@@ -3,9 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var gBrowser;
-var gProgressListener;
 var gDebugger;
+var gMultiProcessBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
+  .useRemoteTabs;
+var gFissionBrowser = window.docShell.QueryInterface(Ci.nsILoadContext)
+  .useRemoteSubframes;
 
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
@@ -39,11 +45,32 @@ class Debugger {
     this._flags = new Map();
     this._visualDebugging = false;
     this._visualEventDebugging = false;
+    this._attached = false;
 
     for (let [name, pref] of Object.entries(FEATURES)) {
       this._flags.set(name, !!Preferences.get(pref, false));
     }
+
+    this.attachBrowser();
+  }
+
+  detachBrowser() {
+    if (!this._attached) {
+      return;
+    }
+    gBrowser.removeProgressListener(this._progressListener);
+    this._progressListener = null;
+    this._attached = false;
+  }
+
+  attachBrowser() {
+    if (this._attached) {
+      throw "already attached";
+    }
+    this._progressListener = new nsLDBBrowserContentListener();
+    gBrowser.addProgressListener(this._progressListener);
     gBrowser.messageManager.loadFrameScript(HELPER_URL, false);
+    this._attached = true;
   }
 
   get visualDebugging() {
@@ -116,8 +143,7 @@ nsLDBBrowserContentListener.prototype = {
   // nsIWebProgressListener implementation
   onStateChange: function(aWebProgress, aRequest, aStateFlags, aStatus) {
     if (
-      !(aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) ||
-      aWebProgress != gBrowser.webProgress
+      !(aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK)
     ) {
       return;
     }
@@ -179,24 +205,21 @@ nsLDBBrowserContentListener.prototype = {
 function OnLDBLoad() {
   gBrowser = document.getElementById("browser");
 
-  gProgressListener = new nsLDBBrowserContentListener();
-  gBrowser.addProgressListener(gProgressListener);
-
   gDebugger = new Debugger();
 
-  if (window.arguments && window.arguments[0]) {
-    gBrowser.loadURI(window.arguments[0], {
-      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-    });
-  } else {
-    gBrowser.loadURI("about:blank", {
-      triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal(
-        {}
-      ),
-    });
-  }
-
   checkPersistentMenus();
+
+  // Pretend slightly to be like a normal browser, so that SessionStore.jsm
+  // doesn't get too confused.  The effect is that we'll never switch process
+  // type when navigating, and for layout debugging purposes we don't bother
+  // about getting that right.
+  gBrowser.getTabForBrowser = function() {
+    return null;
+  };
+
+  if (window.arguments && window.arguments[0]) {
+    loadURI(window.arguments[0]);
+  }
 }
 
 function checkPersistentMenu(item) {
@@ -216,7 +239,7 @@ function checkPersistentMenus() {
 }
 
 function OnLDBUnload() {
-  gBrowser.removeProgressListener(gProgressListener);
+  gDebugger.detachBrowser();
 }
 
 function toggle(menuitem) {
@@ -235,9 +258,49 @@ function openFile() {
       fp.fileURL.spec &&
       fp.fileURL.spec.length > 0
     ) {
-      gBrowser.loadURI(fp.fileURL.spec, {
-        triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
-      });
+      loadURI(fp.fileURL.spec);
     }
+  });
+}
+
+// A simplified version of the function with the same name in tabbrowser.js.
+function updateBrowserRemotenessByURL(aURL) {
+  let remoteType = E10SUtils.getRemoteTypeForURI(
+    aURL,
+    gMultiProcessBrowser,
+    gFissionBrowser,
+    gBrowser.remoteType,
+    gBrowser.currentURI
+  );
+  if (gBrowser.remoteType != remoteType) {
+    gDebugger.detachBrowser();
+    if (remoteType == E10SUtils.NOT_REMOTE) {
+      gBrowser.removeAttribute("remote");
+      gBrowser.removeAttribute("remoteType");
+    } else {
+      gBrowser.setAttribute("remote", "true");
+      gBrowser.setAttribute("remoteType", remoteType);
+    }
+    if (
+      !Services.prefs.getBoolPref(
+        "fission.rebuild_frameloaders_on_remoteness_change",
+        false
+      )
+    ) {
+      gBrowser.replaceWith(gBrowser);
+    } else {
+      gBrowser.changeRemoteness({ remoteType });
+      gBrowser.construct();
+    }
+    gDebugger.attachBrowser();
+  }
+}
+
+function loadURI(aURL) {
+  // We don't bother trying to handle navigations within the browser to new URLs
+  // that should be loaded in a different process.
+  updateBrowserRemotenessByURL(aURL);
+  gBrowser.loadURI(aURL, {
+    triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
   });
 }
