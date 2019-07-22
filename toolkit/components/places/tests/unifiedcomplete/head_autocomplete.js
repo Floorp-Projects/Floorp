@@ -58,9 +58,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
   UrlbarProviderOpenTabs: "resource:///modules/UrlbarProviderOpenTabs.jsm",
   UrlbarTokenizer: "resource:///modules/UrlbarTokenizer.jsm",
+  UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
-
-const TITLE_SEARCH_ENGINE_SEPARATOR = " \u00B7\u2013\u00B7 ";
 
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
@@ -170,7 +169,7 @@ async function _check_autocomplete_matches(match, result) {
   let title = match.comment || match.title;
 
   if (tags) {
-    title += " \u2013 " + tags.sort().join(", ");
+    title += UrlbarUtils.TITLE_TAGS_SEPARATOR + tags.sort().join(", ");
   }
   if (style) {
     style = style.sort();
