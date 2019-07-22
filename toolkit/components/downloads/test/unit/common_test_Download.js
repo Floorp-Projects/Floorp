@@ -1809,7 +1809,10 @@ add_task(async function test_with_content_encoding() {
     );
 
     let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-    bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED);
+    bos.writeByteArray(
+      TEST_DATA_SHORT_GZIP_ENCODED,
+      TEST_DATA_SHORT_GZIP_ENCODED.length
+    );
   });
 
   let download = await promiseStartDownload(sourceUrl);
@@ -1846,7 +1849,10 @@ add_task(async function test_with_content_encoding_ignore_extension() {
     );
 
     let bos = new BinaryOutputStream(aResponse.bodyOutputStream);
-    bos.writeByteArray(TEST_DATA_SHORT_GZIP_ENCODED);
+    bos.writeByteArray(
+      TEST_DATA_SHORT_GZIP_ENCODED,
+      TEST_DATA_SHORT_GZIP_ENCODED.length
+    );
   });
 
   let download = await promiseStartDownload(sourceUrl);

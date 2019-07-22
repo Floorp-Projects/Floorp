@@ -7,7 +7,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Span.h"
 
 #include "DataTransfer.h"
 
@@ -1105,12 +1104,8 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
                 totalCustomLength = 0;
                 continue;
               }
-              MOZ_ASSERT(formatLength.isValid() &&
-                             formatLength.value() ==
-                                 type.Length() * sizeof(nsString::char_type),
-                         "Why is formatLength off?");
-              rv = stream->WriteBytes(
-                  AsBytes(MakeSpan(type.get(), type.Length())));
+              rv = stream->WriteBytes((const char*)type.get(),
+                                      formatLength.value());
               if (NS_WARN_IF(NS_FAILED(rv))) {
                 totalCustomLength = 0;
                 continue;
@@ -1120,13 +1115,7 @@ already_AddRefed<nsITransferable> DataTransfer::GetTransferable(
                 totalCustomLength = 0;
                 continue;
               }
-              // XXXbz it's not obvious to me that lengthInBytes is the actual
-              // length of "data" if the variant contained an nsISupportsString
-              // as VTYPE_INTERFACE, say.  We used lengthInBytes above for
-              // sizing, so just keep doing that.
-              rv = stream->WriteBytes(MakeSpan(
-                  reinterpret_cast<const uint8_t*>(data.get()), lengthInBytes));
-              ;
+              rv = stream->WriteBytes((const char*)data.get(), lengthInBytes);
               if (NS_WARN_IF(NS_FAILED(rv))) {
                 totalCustomLength = 0;
                 continue;

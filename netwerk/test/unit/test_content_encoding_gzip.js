@@ -203,6 +203,6 @@ function handler(metadata, response) {
   bos.setOutputStream(response.bodyOutputStream);
 
   response.processAsync();
-  bos.writeByteArray(tests[index].body);
+  bos.writeByteArray(tests[index].body, tests[index].body.length);
   response.finish();
 }

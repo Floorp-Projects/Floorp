@@ -25,7 +25,7 @@ function dumpToFile(aData) {
   );
   bos.setOutputStream(outputStream);
 
-  bos.writeByteArray(aData);
+  bos.writeByteArray(aData, aData.length);
 
   outputStream.close();
 }

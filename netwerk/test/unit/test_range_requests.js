@@ -261,7 +261,7 @@ function handler_4(metadata, response) {
       );
       bos.setOutputStream(response.bodyOutputStream);
       response.processAsync();
-      bos.writeByteArray(body);
+      bos.writeByteArray(body, body.length);
       response.finish();
       break;
     case 1:

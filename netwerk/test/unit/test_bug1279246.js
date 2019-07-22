@@ -91,6 +91,6 @@ function handler(metadata, response) {
   bos.setOutputStream(response.bodyOutputStream);
 
   response.processAsync();
-  bos.writeByteArray(responseBody);
+  bos.writeByteArray(responseBody, responseBody.length);
   response.finish();
 }
