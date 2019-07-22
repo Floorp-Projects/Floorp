@@ -16,9 +16,11 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/LookAndFeel.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEditRules.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
@@ -2309,6 +2311,15 @@ nsresult TextEditor::SetUnmaskRangeInternal(uint32_t aStart, uint32_t aLength,
   return NS_OK;
 }
 
+// static
+char16_t TextEditor::PasswordMask() {
+  char16_t ret = LookAndFeel::GetPasswordCharacter();
+  if (!ret) {
+    ret = '*';
+  }
+  return ret;
+}
+
 MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 TextEditor::Notify(nsITimer* aTimer) {
@@ -2330,6 +2341,16 @@ TextEditor::Notify(nsITimer* aTimer) {
   // Mask all characters.
   nsresult rv = MaskAllCharactersAndNotify();
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to mask all characters");
+
+  if (StaticPrefs::editor_password_testing_mask_delay()) {
+    if (RefPtr<Element> target = GetInputEventTargetElement()) {
+      RefPtr<Document> document = target->OwnerDoc();
+      nsContentUtils::DispatchTrustedEvent(
+          document, target, NS_LITERAL_STRING("MozLastInputMasked"),
+          CanBubble::eYes, Cancelable::eNo);
+    }
+  }
+
   return EditorBase::ToGenericNSResult(rv);
 }
 

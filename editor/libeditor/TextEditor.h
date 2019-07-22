@@ -356,6 +356,12 @@ class TextEditor : public EditorBase,
     return mIsMaskingPassword;
   }
 
+  /**
+   * PasswordMask() returns a character which masks each character in password
+   * fields.
+   */
+  static char16_t PasswordMask();
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
