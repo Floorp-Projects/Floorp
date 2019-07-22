@@ -16,6 +16,43 @@ namespace layers {
 
 class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
  public:
+  /**
+   * WriterServices allows consumers of CanvasEventRingBuffer to provide
+   * functions required by the write side of a CanvasEventRingBuffer without
+   * introducing unnecessary dependencies on IPC code.
+   */
+  class WriterServices {
+   public:
+    virtual ~WriterServices() = default;
+
+    /**
+     * @returns true if the reader of the CanvasEventRingBuffer has permanently
+     *          stopped processing, otherwise returns false.
+     */
+    virtual bool ReaderClosed() = 0;
+
+    /**
+     * Causes the reader to resume processing when it is in a stopped state.
+     */
+    virtual void ResumeReader() = 0;
+  };
+
+  /**
+   * ReaderServices allows consumers of CanvasEventRingBuffer to provide
+   * functions required by the read side of a CanvasEventRingBuffer without
+   * introducing unnecessary dependencies on IPC code.
+   */
+  class ReaderServices {
+   public:
+    virtual ~ReaderServices() = default;
+
+    /**
+     * @returns true if the writer of the CanvasEventRingBuffer has permanently
+     *          stopped processing, otherwise returns false.
+     */
+    virtual bool WriterClosed() = 0;
+  };
+
   CanvasEventRingBuffer() {}
 
   /**
@@ -27,15 +64,14 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
    * @param aReadHandle handle to the shared memory for the buffer
    * @param aReaderSem reading blocked semaphore
    * @param aWriterSem writing blocked semaphore
-   * @param aResumeReaderCallback callback to start the reader when it is has
-   *                             stopped
+   * @param aWriterServices provides functions required by the writer
    * @returns true if initialization succeeds
    */
   bool InitWriter(base::ProcessId aOtherPid,
                   ipc::SharedMemoryBasic::Handle* aReadHandle,
                   CrossProcessSemaphoreHandle* aReaderSem,
                   CrossProcessSemaphoreHandle* aWriterSem,
-                  const std::function<void()>& aResumeReaderCallback);
+                  UniquePtr<WriterServices> aWriterServices);
 
   /**
    * Initialize the read side of a CanvasEventRingBuffer.
@@ -43,11 +79,13 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
    * @param aReadHandle handle to the shared memory for the buffer
    * @param aReaderSem reading blocked semaphore
    * @param aWriterSem writing blocked semaphore
+   * @param aReaderServices provides functions required by the reader
    * @returns true if initialization succeeds
    */
   bool InitReader(const ipc::SharedMemoryBasic::Handle& aReadHandle,
                   const CrossProcessSemaphoreHandle& aReaderSem,
-                  const CrossProcessSemaphoreHandle& aWriterSem);
+                  const CrossProcessSemaphoreHandle& aWriterSem,
+                  UniquePtr<ReaderServices> aReaderServices);
 
   bool good() const final { return mGood; }
 
@@ -66,11 +104,15 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   bool StopIfEmpty();
 
   /*
-   * Waits for the given TimeDuration for data to become available.
+   * Waits for data to become available. This will wait for aTimeout duration
+   * aRetryCount number of times, checking to see if the other side is closed in
+   * between each one.
    *
+   * @param aTimeout duration to wait
+   * @param aRetryCount number of times to retry
    * @returns true if data is available to read.
    */
-  bool WaitForDataToRead(TimeDuration aTimeout);
+  bool WaitForDataToRead(TimeDuration aTimeout, int32_t aRetryCount);
 
   int32_t ReadNextEvent();
 
@@ -88,10 +130,10 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
    *
    * @params aCheckpoint the checkpoint to wait for
    * @params aTimeout duration to wait while reader is not active
-   * @returns true if the checkpoint was reached, false if the read count has
-   *          not changed in the aTimeout duration.
+   * @returns true if the checkpoint was reached, false if the reader is closed
+   *          or we timeout.
    */
-  bool WaitForCheckpoint(uint32_t aCheckpoint, TimeDuration aTimeout);
+  bool WaitForCheckpoint(uint32_t aCheckpoint);
 
   /**
    * Used to send data back to the writer. This is done through the same shared
@@ -155,7 +197,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
 
   void IncrementWriteCountBy(uint32_t aCount);
 
-  bool WaitForReadCount(uint32_t aReadCount, TimeDuration aTimeout);
+  bool WaitForReadCount(uint32_t aReadCount, TimeDuration aTimeout,
+                        int32_t aRetryCount);
 
   bool WaitForAndRecalculateAvailableData();
 
@@ -173,7 +216,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
   RefPtr<ipc::SharedMemoryBasic> mSharedMemory;
   UniquePtr<CrossProcessSemaphore> mReaderSemaphore;
   UniquePtr<CrossProcessSemaphore> mWriterSemaphore;
-  std::function<void()> mResumeReaderCallback;
+  UniquePtr<WriterServices> mWriterServices;
+  UniquePtr<ReaderServices> mReaderServices;
   char* mBuf = nullptr;
   uint32_t mOurCount = 0;
   WriteFooter* mWrite = nullptr;
@@ -189,9 +233,9 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
   bool Init(base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aHandle,
             CrossProcessSemaphoreHandle* aReaderSem,
             CrossProcessSemaphoreHandle* aWriterSem,
-            const std::function<void()>& aResumeReaderCallback) {
+            UniquePtr<CanvasEventRingBuffer::WriterServices> aWriterServices) {
     return mOutputStream.InitWriter(aOtherPid, aHandle, aReaderSem, aWriterSem,
-                                    aResumeReaderCallback);
+                                    std::move(aWriterServices));
   }
 
   void RecordEvent(const gfx::RecordedEvent& aEvent) final {
@@ -214,12 +258,11 @@ class CanvasDrawEventRecorder final : public gfx::DrawEventRecorderPrivate {
    * Waits until the given checkpoint has been read by the translator.
    *
    * @params aCheckpoint the checkpoint to wait for
-   * @params aTimeout duration to wait while translator is not actively reading
-   * @returns true if the checkpoint was reached, false if the translator has
-   *          not been active in the aTimeout duration.
+   * @returns true if the checkpoint was reached, false if the reader is closed
+   *          or we timeout.
    */
-  bool WaitForCheckpoint(uint32_t aCheckpoint, TimeDuration aTimeout) {
-    return mOutputStream.WaitForCheckpoint(aCheckpoint, aTimeout);
+  bool WaitForCheckpoint(uint32_t aCheckpoint) {
+    return mOutputStream.WaitForCheckpoint(aCheckpoint);
   }
 
  private:
