@@ -60,6 +60,9 @@ static const char16_t kSeparators[] = {
 
 #define NS_BIDI_CONTROL_FRAME ((nsIFrame*)0xfffb1d1)
 
+// This exists just to be a type; the value doesn't matter.
+enum class BidiControlFrameType { Value };
+
 static bool IsIsolateControl(char16_t aChar) {
   return aChar == kLRI || aChar == kRLI || aChar == kFSI;
 }
@@ -116,9 +119,33 @@ static char16_t GetBidiControl(ComputedStyle* aComputedStyle) {
 }
 
 struct MOZ_STACK_CLASS BidiParagraphData {
+  struct FrameInfo {
+    FrameInfo(nsIFrame* aFrame, nsBlockInFlowLineIterator& aLineIter)
+        : mFrame(aFrame),
+          mBlockContainer(aLineIter.GetContainer()),
+          mInOverflow(aLineIter.GetInOverflow()) {}
+
+    explicit FrameInfo(BidiControlFrameType aValue)
+        : mFrame(NS_BIDI_CONTROL_FRAME),
+          mBlockContainer(nullptr),
+          mInOverflow(false) {}
+
+    FrameInfo()
+        : mFrame(nullptr), mBlockContainer(nullptr), mInOverflow(false) {}
+
+    nsIFrame* mFrame;
+
+    // The block containing mFrame (i.e., which continuation).
+    nsBlockFrame* mBlockContainer;
+
+    // true if mFrame is in mBlockContainer's overflow lines, false if
+    // in primary lines
+    bool mInOverflow;
+  };
+
   nsAutoString mBuffer;
   AutoTArray<char16_t, 16> mEmbeddingStack;
-  AutoTArray<nsIFrame*, 16> mLogicalFrames;
+  AutoTArray<FrameInfo, 16> mLogicalFrames;
   AutoTArray<nsLineBox*, 16> mLinePerFrame;
   nsDataHashtable<nsPtrHashKey<const nsIContent>, int32_t> mContentToFrameIndex;
   // Cached presentation context for the frames we're processing.
@@ -218,7 +245,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
     mPrevContent = nullptr;
     for (uint32_t i = 0; i < mEmbeddingStack.Length(); ++i) {
       mBuffer.Append(mEmbeddingStack[i]);
-      mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+      mLogicalFrames.AppendElement(FrameInfo(BidiControlFrameType::Value));
       mLinePerFrame.AppendElement((nsLineBox*)nullptr);
     }
   }
@@ -228,9 +255,9 @@ struct MOZ_STACK_CLASS BidiParagraphData {
     if (aContent) {
       mContentToFrameIndex.Put(aContent, FrameCount());
     }
-    mLogicalFrames.AppendElement(aFrame);
 
     AdvanceLineIteratorToFrame(aFrame, aLineIter, mPrevFrame);
+    mLogicalFrames.AppendElement(FrameInfo(aFrame, aLineIter));
     mLinePerFrame.AppendElement(aLineIter->GetLine().get());
   }
 
@@ -267,7 +294,11 @@ struct MOZ_STACK_CLASS BidiParagraphData {
 
   int32_t BufferLength() { return mBuffer.Length(); }
 
-  nsIFrame* FrameAt(int32_t aIndex) { return mLogicalFrames[aIndex]; }
+  nsIFrame* FrameAt(int32_t aIndex) { return mLogicalFrames[aIndex].mFrame; }
+
+  const FrameInfo& FrameInfoAt(int32_t aIndex) {
+    return mLogicalFrames[aIndex];
+  }
 
   nsLineBox* GetLineForFrameAt(int32_t aIndex) { return mLinePerFrame[aIndex]; }
 
@@ -278,7 +309,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
   }
 
   void AppendControlChar(char16_t aCh) {
-    mLogicalFrames.AppendElement(NS_BIDI_CONTROL_FRAME);
+    mLogicalFrames.AppendElement(FrameInfo(BidiControlFrameType::Value));
     mLinePerFrame.AppendElement((nsLineBox*)nullptr);
     AppendUnichar(aCh);
   }
