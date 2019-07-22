@@ -13,9 +13,7 @@ import { testToastElement, EventCollector } from './resources/helpers.js';
 testToastElement((toast) => {
     const counter = new EventCollector();
 
-    toast.addEventListener('show', (e) => {
-        counter.getCallback()(e);
-    });
+    toast.addEventListener('show', counter.getCallback());
     toast.open = true;
 
     assert_equals(counter.getCount(), 1);
