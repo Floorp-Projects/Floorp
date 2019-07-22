@@ -23,7 +23,7 @@ class DomainMatcherTest {
                 "https://en.Wikipedia.org/Wiki/Mozilla",
                 "http://192.168.254.254:8000", "http://192.168.254.254:8000/admin",
                 "http://иННая.локаль", // TODO add more test data for non-english locales
-                "about:config", "about:crashes"
+                "about:config", "about:crashes", "http://localhost:8080/index.html"
         )
         // Full url matching.
         assertEquals(
@@ -69,6 +69,11 @@ class DomainMatcherTest {
         assertEquals(
                 DomainMatch("http://192.168.254.254:8000/admin", "192.168.254.254:8000/admin"),
                 segmentAwareDomainMatch("192.168.254.254:8000/a", urls)
+        )
+
+        assertEquals(
+                DomainMatch("http://localhost:8080/index.html", "localhost:8080/index.html"),
+                segmentAwareDomainMatch("localhost", urls)
         )
 
         // About urls.
