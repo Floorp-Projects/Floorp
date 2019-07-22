@@ -1595,8 +1595,8 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       text = `${selectorText} {${ruleBodyText}}`;
     }
 
-    const prettyCSS = prettifyCSS(text);
-    return Promise.resolve(prettyCSS);
+    const { result } = prettifyCSS(text);
+    return Promise.resolve(result);
   },
 
   /**

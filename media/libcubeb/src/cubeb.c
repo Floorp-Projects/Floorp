@@ -74,7 +74,7 @@ validate_stream_params(cubeb_stream_params * input_stream_params,
   XASSERT(input_stream_params || output_stream_params);
   if (output_stream_params) {
     if (output_stream_params->rate < 1000 || output_stream_params->rate > 192000 ||
-        output_stream_params->channels < 1) {
+        output_stream_params->channels < 1 || output_stream_params->channels > UINT8_MAX) {
       return CUBEB_ERROR_INVALID_FORMAT;
     }
   }
