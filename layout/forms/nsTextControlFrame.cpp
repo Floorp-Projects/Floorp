@@ -36,7 +36,6 @@
 #include "mozilla/PresState.h"
 #include "nsAttrValueInlines.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/TextEditRules.h"
 #include "nsContentUtils.h"
 #include "nsTextNode.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -1226,9 +1225,6 @@ nsresult nsTextControlFrame::UpdateValueDisplay(bool aNotify,
     return NS_OK;
   }
 
-  if (!value.IsEmpty() && IsPasswordTextControl()) {
-    TextEditRules::FillBufWithPWChars(&value, value.Length());
-  }
   return textContent->SetText(value, aNotify);
 }
 

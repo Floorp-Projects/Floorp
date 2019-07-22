@@ -453,14 +453,6 @@ class TextEditor : public EditorBase,
    */
   nsresult ExtendSelectionForDelete(nsIEditor::EDirection* aAction);
 
-  /**
-   * HideLastPasswordInput() is called by timer callback of TextEditRules.
-   * This should be called only by TextEditRules::Notify().
-   * When this is called, the TextEditRules wants to call its
-   * HideLastPasswordInput() with AutoEditActionDataSetter instance.
-   */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HideLastPasswordInput();
-
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
 
