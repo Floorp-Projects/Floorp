@@ -843,7 +843,7 @@ a.learn-more-link.webconsole-learn-more-link {
 }
 
 /* console.table() */
-.new-consoletable {
+.message .new-consoletable {
   width: 100%;
   --consoletable-border: var(--theme-splitter-color);
   margin-block-end: var(--attachment-margin-block-end);
