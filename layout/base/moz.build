@@ -50,7 +50,6 @@ EXPORTS += [
     'nsFrameTraversal.h',
     'nsGenConList.h',
     'nsIFrameTraversal.h',
-    'nsILayoutDebugger.h',
     'nsIPercentBSizeObserver.h',
     'nsIReflowCallback.h',
     'nsLayoutUtils.h',

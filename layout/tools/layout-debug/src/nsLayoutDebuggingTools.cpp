@@ -17,11 +17,9 @@
 #include "nsIContent.h"
 
 #include "nsViewManager.h"
-#include "nsIFrame.h"
+#include "nsFrame.h"
 
-#include "nsILayoutDebugger.h"
 #include "nsLayoutCID.h"
-static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 #include "nsISelectionController.h"
 #include "mozilla/dom/Document.h"
@@ -63,9 +61,7 @@ static already_AddRefed<Document> document(nsIDocShell* aDocShell) {
 #endif
 
 nsLayoutDebuggingTools::nsLayoutDebuggingTools()
-    : mVisualDebugging(false),
-      mVisualEventDebugging(false),
-      mPaintFlashing(false),
+    : mPaintFlashing(false),
       mPaintDumping(false),
       mInvalidateDumping(false),
       mEventDumping(false),
@@ -107,46 +103,44 @@ nsLayoutDebuggingTools::Init(mozIDOMWindow* aWin) {
   mReflowCounts =
       Preferences::GetBool("layout.reflow.showframecounts", mReflowCounts);
 
-  {
-    nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
-    if (ld) {
-      ld->GetShowFrameBorders(&mVisualDebugging);
-      ld->GetShowEventTargetFrameBorder(&mVisualEventDebugging);
-    }
-  }
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutDebuggingTools::GetVisualDebugging(bool* aVisualDebugging) {
-  *aVisualDebugging = mVisualDebugging;
+#ifdef DEBUG
+  *aVisualDebugging = nsFrame::GetShowFrameBorders();
+#else
+  *aVisualDebugging = false;
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutDebuggingTools::SetVisualDebugging(bool aVisualDebugging) {
-  nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
-  if (!ld) return NS_ERROR_UNEXPECTED;
-  mVisualDebugging = aVisualDebugging;
-  ld->SetShowFrameBorders(aVisualDebugging);
+#ifdef DEBUG
+  nsFrame::ShowFrameBorders(aVisualDebugging);
   ForceRefresh();
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutDebuggingTools::GetVisualEventDebugging(bool* aVisualEventDebugging) {
-  *aVisualEventDebugging = mVisualEventDebugging;
+#ifdef DEBUG
+  *aVisualEventDebugging = nsFrame::GetShowEventTargetFrameBorder();
+#else
+  *aVisualEventDebugging = false;
+#endif
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsLayoutDebuggingTools::SetVisualEventDebugging(bool aVisualEventDebugging) {
-  nsCOMPtr<nsILayoutDebugger> ld = do_GetService(kLayoutDebuggerCID);
-  if (!ld) return NS_ERROR_UNEXPECTED;
-  mVisualEventDebugging = aVisualEventDebugging;
-  ld->SetShowEventTargetFrameBorder(aVisualEventDebugging);
+#ifdef DEBUG
+  nsFrame::ShowEventTargetFrameBorder(aVisualEventDebugging);
   ForceRefresh();
+#endif
   return NS_OK;
 }
 

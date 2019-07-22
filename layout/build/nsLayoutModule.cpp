@@ -24,7 +24,6 @@
 #include "nsHTMLParts.h"
 #include "nsIContentSerializer.h"
 #include "nsIContentViewer.h"
-#include "nsILayoutDebugger.h"
 #include "nsPlainTextSerializer.h"
 #include "nsXMLContentSerializer.h"
 #include "nsXHTMLContentSerializer.h"
@@ -162,10 +161,6 @@ nsresult NS_NewChildProcessMessageManager(nsISupports** aResult);
 
 #define MAKE_GENERIC_CTOR2(iface_, func_) \
   NS_IMPL_COMPONENT_FACTORY(iface_) { return func_(); }
-
-#ifdef DEBUG
-MAKE_GENERIC_CTOR(nsILayoutDebugger, NS_NewLayoutDebugger)
-#endif
 
 MAKE_GENERIC_CTOR(nsIFrameTraversal, NS_CreateFrameTraversal)
 

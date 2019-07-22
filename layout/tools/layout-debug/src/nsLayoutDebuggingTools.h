@@ -27,8 +27,6 @@ class nsLayoutDebuggingTools : public nsILayoutDebuggingTools {
 
   nsCOMPtr<nsIDocShell> mDocShell;
 
-  bool mVisualDebugging;
-  bool mVisualEventDebugging;
   bool mPaintFlashing;
   bool mPaintDumping;
   bool mInvalidateDumping;
