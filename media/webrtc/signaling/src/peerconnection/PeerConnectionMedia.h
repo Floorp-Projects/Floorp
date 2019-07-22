@@ -177,7 +177,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   void GatherIfReady();
   void FlushIceCtxOperationQueueIfReady();
   void PerformOrEnqueueIceCtxOperation(nsIRunnable* runnable);
-  nsresult SetTargetForDefaultLocalAddressLookup();
   void EnsureIceGathering(bool aDefaultRouteOnly);
 
   bool GetPrefDefaultAddressOnly() const;
@@ -236,10 +235,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   // Used to store the result of the stun addr IPC request
   nsTArray<NrIceStunAddr> mStunAddrs;
-
-  // Used to ensure the target for default local address lookup is only set
-  // once.
-  bool mTargetForDefaultLocalAddressLookupIsSet;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };

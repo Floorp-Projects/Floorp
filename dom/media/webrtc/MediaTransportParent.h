@@ -30,8 +30,6 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   mozilla::ipc::IPCResult RecvEnsureProvisionalTransport(
       const string& transportId, const string& localUfrag,
       const string& localPwd, const int& componentCount);
-  mozilla::ipc::IPCResult RecvSetTargetForDefaultLocalAddressLookup(
-      const string& targetIp, uint16_t targetPort);
   mozilla::ipc::IPCResult RecvStartIceGathering(
       const bool& defaultRouteOnly, const net::NrIceStunAddrArray& stunAddrs);
   mozilla::ipc::IPCResult RecvActivateTransport(

@@ -519,12 +519,6 @@ void NrIceCtx::InitializeGlobals(bool allow_loopback, bool tcp_enabled,
   }
 }
 
-void NrIceCtx::SetTargetForDefaultLocalAddressLookup(
-    const std::string& target_ip, uint16_t target_port) {
-  nr_ice_set_target_for_default_local_address_lookup(ctx_, target_ip.c_str(),
-                                                     target_port);
-}
-
 #define MAXADDRS 100  // mirrors setting in ice_ctx.c
 
 /* static */
