@@ -235,14 +235,6 @@ void HTMLEditRules::InitStyleCacheArray(
   aStyleCache[18] = StyleCache(nsGkAtoms::sup, nullptr);
 }
 
-HTMLEditRules::~HTMLEditRules() {}
-
-NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(HTMLEditRules, TextEditRules)
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLEditRules, TextEditRules,
-                                   mDocChangeRange, mUtilRange, mNewBlock,
-                                   mRangeItem)
-
 nsresult HTMLEditRules::Init(TextEditor* aTextEditor) {
   if (NS_WARN_IF(!aTextEditor) || NS_WARN_IF(!aTextEditor->AsHTMLEditor())) {
     return NS_ERROR_INVALID_ARG;
