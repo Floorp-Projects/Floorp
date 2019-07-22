@@ -37,7 +37,7 @@ function handleRequest(request, response) {
 
   function fontWrite(data) {
     var stream = new BinaryOutputStream(response.bodyOutputStream);
-    stream.writeByteArray(data, data.length);
+    stream.writeByteArray(data);
   }
 
   var f;
