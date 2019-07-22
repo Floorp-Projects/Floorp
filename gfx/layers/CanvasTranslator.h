@@ -33,13 +33,15 @@ class CanvasTranslator final : public gfx::InlineTranslator {
    * CanvasEventRingBuffer
    * @param aReaderSem reading blocked semaphore for the CanvasEventRingBuffer
    * @param aWriterSem writing blocked semaphore for the CanvasEventRingBuffer
+   * @param aReaderServices provides functions required by the reader
    * @returns the new CanvasTranslator
    */
   static UniquePtr<CanvasTranslator> Create(
       const TextureType& aTextureType,
       const ipc::SharedMemoryBasic::Handle& aReadHandle,
       const CrossProcessSemaphoreHandle& aReaderSem,
-      const CrossProcessSemaphoreHandle& aWriterSem);
+      const CrossProcessSemaphoreHandle& aWriterSem,
+      UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices);
 
   ~CanvasTranslator();
 
@@ -183,11 +185,13 @@ class CanvasTranslator final : public gfx::InlineTranslator {
       gfx::ReferencePtr aSurface);
 
  private:
-  CanvasTranslator(const TextureType& aTextureType, TextureData* aTextureData,
-                   gfx::DrawTarget* aDrawTarget,
-                   const ipc::SharedMemoryBasic::Handle& aReadHandle,
-                   const CrossProcessSemaphoreHandle& aReaderSem,
-                   const CrossProcessSemaphoreHandle& aWriterSem);
+  CanvasTranslator(
+      const TextureType& aTextureType, TextureData* aTextureData,
+      gfx::DrawTarget* aDrawTarget,
+      const ipc::SharedMemoryBasic::Handle& aReadHandle,
+      const CrossProcessSemaphoreHandle& aReaderSem,
+      const CrossProcessSemaphoreHandle& aWriterSem,
+      UniquePtr<CanvasEventRingBuffer::ReaderServices> aReaderServices);
 
   void AddSurfaceDescriptor(gfx::ReferencePtr aRefPtr,
                             TextureData* atextureData);

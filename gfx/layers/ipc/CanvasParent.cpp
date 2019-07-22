@@ -24,6 +24,22 @@ bool NS_IsInCanvasThread() {
 namespace mozilla {
 namespace layers {
 
+class RingBufferReaderServices final
+    : public CanvasEventRingBuffer::ReaderServices {
+ public:
+  explicit RingBufferReaderServices(RefPtr<CanvasParent> aCanvasParent)
+      : mCanvasParent(std::move(aCanvasParent)) {}
+
+  ~RingBufferReaderServices() final = default;
+
+  bool WriterClosed() final {
+    return mCanvasParent->GetIPCChannel()->Unsound_IsClosed();
+  }
+
+ private:
+  RefPtr<CanvasParent> mCanvasParent;
+};
+
 static base::Thread* sCanvasThread = nullptr;
 static StaticRefPtr<nsIThreadPool> sCanvasWorkers;
 static bool sShuttingDown = false;
@@ -112,8 +128,9 @@ mozilla::ipc::IPCResult CanvasParent::RecvCreateTranslator(
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
     const CrossProcessSemaphoreHandle& aWriterSem) {
-  mTranslator = CanvasTranslator::Create(aTextureType, aReadHandle, aReaderSem,
-                                         aWriterSem);
+  mTranslator = CanvasTranslator::Create(
+      aTextureType, aReadHandle, aReaderSem, aWriterSem,
+      MakeUnique<RingBufferReaderServices>(this));
   return RecvResumeTranslation();
 }
 
@@ -137,13 +154,18 @@ void CanvasParent::PostStartTranslationTask(uint32_t aDispatchFlags) {
   RefPtr<nsIThreadPool> canvasWorkers = GetCanvasWorkers();
   RefPtr<Runnable> runnable = NewRunnableMethod(
       "CanvasParent::StartTranslation", this, &CanvasParent::StartTranslation);
+  mTranslating = true;
   canvasWorkers->Dispatch(runnable.forget(), aDispatchFlags);
 }
 
 void CanvasParent::StartTranslation() {
-  if (!mTranslator->TranslateRecording()) {
+  if (!mTranslator->TranslateRecording() &&
+      !GetIPCChannel()->Unsound_IsClosed()) {
     PostStartTranslationTask(nsIThread::DISPATCH_AT_END);
+    return;
   }
+
+  mTranslating = false;
 }
 
 UniquePtr<SurfaceDescriptor>
@@ -153,7 +175,21 @@ CanvasParent::LookupSurfaceDescriptorForClientDrawTarget(
       reinterpret_cast<void*>(aDrawTarget));
 }
 
-void CanvasParent::DeallocPCanvasParent() { mSelfRef = nullptr; }
+void CanvasParent::ActorDestroy(ActorDestroyReason why) {
+  while (mTranslating) {
+  }
+
+  if (mTranslator) {
+    mTranslator = nullptr;
+  }
+}
+
+void CanvasParent::ActorDealloc() {
+  MOZ_DIAGNOSTIC_ASSERT(!mTranslating);
+  MOZ_DIAGNOSTIC_ASSERT(!mTranslator);
+
+  mSelfRef = nullptr;
+}
 
 }  // namespace layers
 }  // namespace mozilla

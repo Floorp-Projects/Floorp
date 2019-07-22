@@ -14,11 +14,8 @@ namespace layers {
 static const int32_t kCheckpointEventType = -1;
 static const uint32_t kMaxSpinCount = 200;
 
-// TODO: These timeouts are long because failure in the middle of writing or
-// reading an event is probably going to be fatal to the GPU process. What we
-// really need to know is whether the other process has died.
-static const TimeDuration kWriterTimeout = TimeDuration::FromMilliseconds(1000);
-static const TimeDuration kReaderTimeout = TimeDuration::FromMilliseconds(5000);
+static const TimeDuration kTimeout = TimeDuration::FromMilliseconds(100);
+static const int32_t kTimeoutRetryCount = 50;
 
 static const uint32_t kCacheLineSize = 64;
 static const uint32_t kStreamSize = 64 * 1024;
@@ -31,7 +28,7 @@ bool CanvasEventRingBuffer::InitWriter(
     base::ProcessId aOtherPid, ipc::SharedMemoryBasic::Handle* aReadHandle,
     CrossProcessSemaphoreHandle* aReaderSem,
     CrossProcessSemaphoreHandle* aWriterSem,
-    const std::function<void()>& aResumeReaderCallback) {
+    UniquePtr<WriterServices> aWriterServices) {
   mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
   if (NS_WARN_IF(!mSharedMemory->Create(kShmemSize)) ||
       NS_WARN_IF(!mSharedMemory->Map(kShmemSize))) {
@@ -72,7 +69,7 @@ bool CanvasEventRingBuffer::InitWriter(
   *aWriterSem = mWriterSemaphore->ShareToProcess(aOtherPid);
   mWriterSemaphore->CloseHandle();
 
-  mResumeReaderCallback = aResumeReaderCallback;
+  mWriterServices = std::move(aWriterServices);
 
   mGood = true;
   return true;
@@ -81,7 +78,8 @@ bool CanvasEventRingBuffer::InitWriter(
 bool CanvasEventRingBuffer::InitReader(
     const ipc::SharedMemoryBasic::Handle& aReadHandle,
     const CrossProcessSemaphoreHandle& aReaderSem,
-    const CrossProcessSemaphoreHandle& aWriterSem) {
+    const CrossProcessSemaphoreHandle& aWriterSem,
+    UniquePtr<ReaderServices> aReaderServices) {
   mSharedMemory = MakeAndAddRef<ipc::SharedMemoryBasic>();
   if (NS_WARN_IF(!mSharedMemory->SetHandle(
           aReadHandle, ipc::SharedMemory::RightsReadWrite)) ||
@@ -98,6 +96,9 @@ bool CanvasEventRingBuffer::InitReader(
   mReaderSemaphore->CloseHandle();
   mWriterSemaphore.reset(CrossProcessSemaphore::Create(aWriterSem));
   mWriterSemaphore->CloseHandle();
+
+  mReaderServices = std::move(aReaderServices);
+
   mGood = true;
   return true;
 }
@@ -241,7 +242,7 @@ void CanvasEventRingBuffer::CheckAndSignalReader() {
       case State::Stopped:
         if (mRead->count != mOurCount) {
           mRead->state = State::Processing;
-          mResumeReaderCallback();
+          mWriterServices->ResumeReader();
         }
         return;
       default:
@@ -268,7 +269,8 @@ bool CanvasEventRingBuffer::StopIfEmpty() {
   return true;
 }
 
-bool CanvasEventRingBuffer::WaitForDataToRead(TimeDuration aTimeout) {
+bool CanvasEventRingBuffer::WaitForDataToRead(TimeDuration aTimeout,
+                                              int32_t aRetryCount) {
   uint32_t spinCount = kMaxSpinCount;
   do {
     if (HasDataToRead()) {
@@ -285,23 +287,30 @@ bool CanvasEventRingBuffer::WaitForDataToRead(TimeDuration aTimeout) {
   }
 
   mRead->state = State::Waiting;
-  if (!mReaderSemaphore->Wait(Some(aTimeout))) {
-    // We have to use compareExchange here because the writer can change our
-    // state if we are waiting.
-    if (!mRead->state.compareExchange(State::Waiting, State::Stopped)) {
+  do {
+    if (mReaderSemaphore->Wait(Some(aTimeout))) {
       MOZ_RELEASE_ASSERT(HasDataToRead());
-      MOZ_RELEASE_ASSERT(mRead->state == State::Processing);
-      // The writer has just signaled us, so consume it before returning
-      MOZ_ALWAYS_TRUE(mReaderSemaphore->Wait());
       return true;
     }
 
-    return false;
+    if (mReaderServices->WriterClosed()) {
+      // Something has gone wrong on the writing side, just return false so
+      // that we can hopefully recover.
+      return false;
+    }
+  } while (aRetryCount-- > 0);
+
+  // We have to use compareExchange here because the writer can change our
+  // state if we are waiting. signaled
+  if (!mRead->state.compareExchange(State::Waiting, State::Stopped)) {
+    MOZ_RELEASE_ASSERT(HasDataToRead());
+    MOZ_RELEASE_ASSERT(mRead->state == State::Processing);
+    // The writer has just signaled us, so consume it before returning
+    MOZ_ALWAYS_TRUE(mReaderSemaphore->Wait());
+    return true;
   }
 
-  MOZ_RELEASE_ASSERT(HasDataToRead());
-
-  return true;
+  return false;
 }
 
 int32_t CanvasEventRingBuffer::ReadNextEvent() {
@@ -319,9 +328,8 @@ uint32_t CanvasEventRingBuffer::CreateCheckpoint() {
   return mOurCount;
 }
 
-bool CanvasEventRingBuffer::WaitForCheckpoint(uint32_t aCheckpoint,
-                                              TimeDuration aTimeout) {
-  return WaitForReadCount(aCheckpoint, aTimeout);
+bool CanvasEventRingBuffer::WaitForCheckpoint(uint32_t aCheckpoint) {
+  return WaitForReadCount(aCheckpoint, kTimeout, kTimeoutRetryCount);
 }
 
 void CanvasEventRingBuffer::CheckAndSignalWriter() {
@@ -347,7 +355,8 @@ void CanvasEventRingBuffer::CheckAndSignalWriter() {
 }
 
 bool CanvasEventRingBuffer::WaitForReadCount(uint32_t aReadCount,
-                                             TimeDuration aTimeout) {
+                                             TimeDuration aTimeout,
+                                             int32_t aRetryCount) {
   uint32_t requiredDifference = mOurCount - aReadCount;
   uint32_t spinCount = kMaxSpinCount;
   do {
@@ -367,21 +376,26 @@ bool CanvasEventRingBuffer::WaitForReadCount(uint32_t aReadCount,
   mWrite->requiredDifference = requiredDifference;
   mWrite->state = State::Waiting;
 
-  uint32_t lastReadCount = mRead->count;
-  while (!mWriterSemaphore->Wait(Some(aTimeout))) {
-    if (NS_WARN_IF(mRead->count == lastReadCount)) {
+  do {
+    if (mWriterSemaphore->Wait(Some(aTimeout))) {
+      MOZ_ASSERT(mOurCount - mRead->count <= requiredDifference);
+      return true;
+    }
+
+    if (mWriterServices->ReaderClosed()) {
+      // Something has gone wrong on the reading side, just return false so
+      // that we can hopefully recover.
       return false;
     }
-    lastReadCount = mRead->count;
-  }
+  } while (aRetryCount-- > 0);
 
-  MOZ_ASSERT(mOurCount - mRead->count <= requiredDifference);
-  return true;
+  return false;
 }
 
 uint32_t CanvasEventRingBuffer::WaitForBytesToWrite() {
   uint32_t streamFullReadCount = mOurCount - kStreamSize;
-  if (!WaitForReadCount(streamFullReadCount + 1, kWriterTimeout)) {
+  if (!WaitForReadCount(streamFullReadCount + 1, kTimeout,
+                        kTimeoutRetryCount)) {
     mGood = false;
     return 0;
   }
@@ -390,7 +404,7 @@ uint32_t CanvasEventRingBuffer::WaitForBytesToWrite() {
 }
 
 uint32_t CanvasEventRingBuffer::WaitForBytesToRead() {
-  if (!WaitForDataToRead(kReaderTimeout)) {
+  if (!WaitForDataToRead(kTimeout, kTimeoutRetryCount)) {
     return 0;
   }
 
