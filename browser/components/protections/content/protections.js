@@ -52,8 +52,11 @@ document.addEventListener("DOMContentLoaded", e => {
   });
 
   let createGraph = data => {
+    // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
+    // to ensure we display the correct date no matter the user's location.
+    let hoursInMS12 = 12 * 60 * 60 * 1000;
     let dateInMS = data.earliestDate
-      ? new Date(data.earliestDate).getTime()
+      ? new Date(data.earliestDate).getTime() + hoursInMS12
       : Date.now();
 
     let summary = document.getElementById("graph-total-summary");
