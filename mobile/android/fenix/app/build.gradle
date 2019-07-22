@@ -439,7 +439,13 @@ task printGeckoviewVersions {
     }
 }
 
-apply from: 'https://github.com/mozilla-mobile/android-components/raw/master/components/service/glean/scripts/sdk_generator.gradle'
+def glean_android_components_tag = (
+    Versions.mozilla_android_components.endsWith('-SNAPSHOT') ?
+        'master' :
+        'v' + Versions.mozilla_android_components
+)
+
+apply from: 'https://github.com/mozilla-mobile/android-components/raw/' + glean_android_components_tag + '/components/service/glean/scripts/sdk_generator.gradle'
 
 // For production builds, the native code for all `org.mozilla.appservices` dependencies gets compiled together
 // into a single "megazord" build, and different megazords are published for different subsets of features.
