@@ -2,9 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-// @flow
+"use strict";
 
-import { asyncStorage } from "devtools-modules";
+const asyncStorage = require("devtools/shared/async-storage");
 
 /*
  * asyncStoreHelper wraps asyncStorage so that it is easy to define project
@@ -15,8 +15,8 @@ import { asyncStorage } from "devtools-modules";
  *   asyncStore.a         // => asyncStorage.getItem("r._a")
  *   asyncStore.a = 2     // => asyncStorage.setItem("r._a", 2)
  */
-export function asyncStoreHelper(root: string, mappings: Object) {
-  let store: any = {};
+function asyncStoreHelper(root, mappings) {
+  let store = {};
 
   function getMappingKey(key) {
     return Array.isArray(mappings[key]) ? mappings[key][0] : mappings[key];
@@ -51,5 +51,7 @@ export function asyncStoreHelper(root: string, mappings: Object) {
     },
   });
 
-  return (store: { [$Keys<typeof mappings>]: any });
+  return store;
 }
+
+module.exports = asyncStoreHelper;

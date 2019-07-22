@@ -4,8 +4,7 @@
 
 // @flow
 
-import { asyncStoreHelper } from "../asyncStoreHelper";
-import { asyncStorage } from "devtools-modules";
+import { asyncStorage, asyncStoreHelper } from "devtools-modules";
 
 function mockAsyncStorage() {
   const store = {};
