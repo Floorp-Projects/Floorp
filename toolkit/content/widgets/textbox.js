@@ -192,10 +192,6 @@
       if (!this._spellCheckInitialized) {
         this._spellCheckInitialized = true;
 
-        if (ChromeUtils.getClassName(document) != "XULDocument") {
-          return null;
-        }
-
         try {
           ChromeUtils.import(
             "resource://gre/modules/InlineSpellChecker.jsm",
