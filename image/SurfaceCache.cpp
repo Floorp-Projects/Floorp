@@ -1054,10 +1054,10 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
 
     // (Note that we *don't* unlock the per-image cache here; that's the
     // difference between this and UnlockImage.)
-    DoUnlockSurfaces(
-        WrapNotNull(cache),
-        /* aStaticOnly = */ !StaticPrefs::image_mem_animated_discardable(),
-        aAutoLock);
+    DoUnlockSurfaces(WrapNotNull(cache),
+                     /* aStaticOnly = */
+                     !StaticPrefs::image_mem_animated_discardable_AtStartup(),
+                     aAutoLock);
   }
 
   already_AddRefed<ImageSurfaceCache> RemoveImage(
@@ -1378,18 +1378,18 @@ void SurfaceCache::Initialize() {
   // Length of time before an unused surface is removed from the cache, in
   // milliseconds.
   uint32_t surfaceCacheExpirationTimeMS =
-      StaticPrefs::image_mem_surfacecache_min_expiration_ms();
+      StaticPrefs::image_mem_surfacecache_min_expiration_ms_AtStartup();
 
   // What fraction of the memory used by the surface cache we should discard
   // when we get a memory pressure notification. This value is interpreted as
   // 1/N, so 1 means to discard everything, 2 means to discard about half of the
   // memory we're using, and so forth. We clamp it to avoid division by zero.
   uint32_t surfaceCacheDiscardFactor =
-      max(StaticPrefs::image_mem_surfacecache_discard_factor(), 1u);
+      max(StaticPrefs::image_mem_surfacecache_discard_factor_AtStartup(), 1u);
 
   // Maximum size of the surface cache, in kilobytes.
   uint64_t surfaceCacheMaxSizeKB =
-      StaticPrefs::image_mem_surfacecache_max_size_kb();
+      StaticPrefs::image_mem_surfacecache_max_size_kb_AtStartup();
 
   // A knob determining the actual size of the surface cache. Currently the
   // cache is (size of main memory) / (surface cache size factor) KB
@@ -1400,7 +1400,7 @@ void SurfaceCache::Initialize() {
   // of memory, which would yield a 64MB cache on this setting.
   // We clamp this value to avoid division by zero.
   uint32_t surfaceCacheSizeFactor =
-      max(StaticPrefs::image_mem_surfacecache_size_factor(), 1u);
+      max(StaticPrefs::image_mem_surfacecache_size_factor_AtStartup(), 1u);
 
   // Compute the size of the surface cache.
   uint64_t memorySize = PR_GetPhysicalMemorySize();

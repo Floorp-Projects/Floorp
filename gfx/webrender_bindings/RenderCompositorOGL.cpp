@@ -74,7 +74,7 @@ void RenderCompositorOGL::InsertFrameDoneSync() {
 #ifdef XP_MACOSX
   // Only do this on macOS.
   // On other platforms, SwapBuffers automatically applies back-pressure.
-  if (StaticPrefs::gfx_core_animation_enabled()) {
+  if (StaticPrefs::gfx_core_animation_enabled_AtStartup()) {
     if (mThisFrameDoneSync) {
       mGL->fDeleteSync(mThisFrameDoneSync);
     }

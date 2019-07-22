@@ -408,7 +408,7 @@ void AnimationSurfaceProvider::RequestFrameDiscarding() {
       static_cast<AnimationFrameRetainedBuffer*>(mFrames.get());
 
   MOZ_ASSERT(!mDecoder->GetFrameRecycler());
-  if (StaticPrefs::image_animated_decode_on_demand_recycle()) {
+  if (StaticPrefs::image_animated_decode_on_demand_recycle_AtStartup()) {
     mFrames.reset(new AnimationFrameRecyclingQueue(std::move(*oldFrameQueue)));
     mDecoder->SetFrameRecycler(this);
   } else {
@@ -466,7 +466,7 @@ bool AnimationSurfaceProvider::ShouldPreferSyncRun() const {
   MOZ_ASSERT(mDecoder);
 
   return mDecoder->ShouldSyncDecode(
-      StaticPrefs::image_mem_decode_bytes_at_a_time());
+      StaticPrefs::image_mem_decode_bytes_at_a_time_AtStartup());
 }
 
 RawAccessFrameRef AnimationSurfaceProvider::RecycleFrame(

@@ -354,7 +354,8 @@ class IOThreadIniter final : public Runnable {
 
 DecodePool::DecodePool() : mMutex("image::IOThread") {
   // Determine the number of threads we want.
-  int32_t prefLimit = StaticPrefs::image_multithreaded_decoding_limit();
+  int32_t prefLimit =
+      StaticPrefs::image_multithreaded_decoding_limit_AtStartup();
   uint32_t limit;
   if (prefLimit <= 0) {
     int32_t numCores = NumberOfCores();
@@ -385,7 +386,7 @@ DecodePool::DecodePool() : mMutex("image::IOThread") {
 
   // The timeout period before shutting down idle threads.
   int32_t prefIdleTimeout =
-      StaticPrefs::image_multithreaded_decoding_idle_timeout();
+      StaticPrefs::image_multithreaded_decoding_idle_timeout_AtStartup();
   TimeDuration idleTimeout;
   if (prefIdleTimeout <= 0) {
     idleTimeout = TimeDuration::Forever();
