@@ -693,30 +693,6 @@ void RenderThread::NotifyNotUsed(uint64_t aExternalImageId) {
   texture->NotifyNotUsed();
 }
 
-void RenderThread::UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
-                                           uint64_t aWrappedExternalImageId) {
-  MOZ_ASSERT(aSrcExternalImageId != aWrappedExternalImageId);
-  MOZ_ASSERT(RenderThread::IsInRenderThread());
-
-  MutexAutoLock lock(mRenderTextureMapLock);
-  if (mHasShutdown) {
-    return;
-  }
-  auto src = mRenderTextures.find(aSrcExternalImageId);
-  auto wrapped = mRenderTextures.find(aWrappedExternalImageId);
-  if (src == mRenderTextures.end() || wrapped == mRenderTextures.end()) {
-    return;
-  }
-  MOZ_ASSERT(src->second->AsRenderTextureHostWrapper());
-  MOZ_ASSERT(!wrapped->second->AsRenderTextureHostWrapper());
-  RenderTextureHostWrapper* wrapper = src->second->AsRenderTextureHostWrapper();
-  if (!wrapper) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to happen");
-    return;
-  }
-  wrapper->UpdateRenderTextureHost(wrapped->second);
-}
-
 void RenderThread::NofityForUse(uint64_t aExternalImageId) {
   MOZ_ASSERT(RenderThread::IsInRenderThread());
 

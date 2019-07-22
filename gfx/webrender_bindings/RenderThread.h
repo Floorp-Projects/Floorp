@@ -205,10 +205,6 @@ class RenderThread final {
   void NotifyNotUsed(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
-  void UpdateRenderTextureHost(uint64_t aSrcExternalImageId,
-                               uint64_t aWrappedExternalImageId);
-
-  /// Can only be called from the render thread.
   void NofityForUse(uint64_t aExternalImageId);
 
   /// Can only be called from the render thread.
