@@ -12,6 +12,7 @@
 #include "jit/arm/Assembler-arm.h"
 #include "jit/JitFrames.h"
 #include "jit/MoveResolver.h"
+#include "vm/BigIntType.h"
 #include "vm/BytecodeUtil.h"
 
 namespace js {
