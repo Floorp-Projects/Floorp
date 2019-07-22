@@ -49,17 +49,13 @@ function onInspect(aState, aResponse)
 {
   ok(!aResponse.error, "no response error");
 
-  let expectedProps = {
-    "constructor": { value: { type: "object" } },
-  };
+  let expectedProps =  Object.getOwnPropertyNames(document.__proto__);
 
   let props = aResponse.ownProperties;
   ok(props, "response properties available");
 
   if (props) {
-    ok(Object.keys(props).length == Object.keys(expectedProps).length,
-       "number of enumerable properties");
-    checkObject(props, expectedProps);
+    isDeeply(Object.keys(props), expectedProps, "Same own properties.");
   }
 
   closeDebugger(aState, function() {
