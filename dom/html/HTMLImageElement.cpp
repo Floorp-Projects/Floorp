@@ -41,6 +41,7 @@
 #include "imgRequestProxy.h"
 
 #include "nsILoadGroup.h"
+#include "mozilla/CycleCollectedJSContext.h"
 
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -75,11 +76,11 @@ namespace dom {
 // Calls LoadSelectedImage on host element unless it has been superseded or
 // canceled -- this is the synchronous section of "update the image data".
 // https://html.spec.whatwg.org/multipage/embedded-content.html#update-the-image-data
-class ImageLoadTask : public Runnable {
+class ImageLoadTask : public MicroTaskRunnable {
  public:
   ImageLoadTask(HTMLImageElement* aElement, bool aAlwaysLoad,
                 bool aUseUrgentStartForChannel)
-      : Runnable("dom::ImageLoadTask"),
+      : MicroTaskRunnable(),
         mElement(aElement),
         mAlwaysLoad(aAlwaysLoad),
         mUseUrgentStartForChannel(aUseUrgentStartForChannel) {
@@ -87,14 +88,18 @@ class ImageLoadTask : public Runnable {
     mDocument->BlockOnload();
   }
 
-  NS_IMETHOD Run() override {
+  virtual void Run(AutoSlowOperation& aAso) override {
     if (mElement->mPendingImageLoadTask == this) {
       mElement->mPendingImageLoadTask = nullptr;
       mElement->mUseUrgentStartForChannel = mUseUrgentStartForChannel;
       mElement->LoadSelectedImage(true, true, mAlwaysLoad);
     }
     mDocument->UnblockOnload(false);
-    return NS_OK;
+  }
+
+  virtual bool Suppressed() override {
+    nsIGlobalObject* global = mElement->GetOwnerGlobal();
+    return global && global->IsInSyncOperation();
   }
 
   bool AlwaysLoad() { return mAlwaysLoad; }
@@ -790,7 +795,7 @@ void HTMLImageElement::QueueImageLoadTask(bool aAlwaysLoad) {
   // The task checks this to determine if it was the last
   // queued event, and so earlier tasks are implicitly canceled.
   mPendingImageLoadTask = task;
-  nsContentUtils::RunInStableState(task.forget());
+  CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
 }
 
 bool HTMLImageElement::HaveSrcsetOrInPicture() {
