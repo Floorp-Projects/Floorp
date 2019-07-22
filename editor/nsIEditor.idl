@@ -544,6 +544,19 @@ interface nsIEditor  : nsISupports
   readonly attribute unsigned long unmaskedStart;
   readonly attribute unsigned long unmaskedEnd;
 
+  /**
+   * autoMaskingEnabled is true if unmasked range and newly inputted characters
+   * are masked automatically.  That's the default state.  If false, until
+   * `mask()` is called, unmasked range and newly inputted characters are
+   * unmasked.
+   */
+  readonly attribute boolean autoMaskingEnabled;
+
+  /**
+   * passwordMask attribute is a mask character which is used to mask password.
+   */
+  readonly attribute AString passwordMask;
+
 %{C++
   /**
    * AsEditorBase() returns a pointer to EditorBase class.

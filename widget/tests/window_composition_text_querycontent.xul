@@ -8,6 +8,7 @@
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js" />
 
   <panel id="panel" hidden="true" orient="vertical">
     <vbox id="vbox">
@@ -27,6 +28,8 @@
         src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
 <iframe id="iframe4" width="300" height="150"
         src="data:text/html,&lt;div contenteditable id='contenteditable'&gt;&lt;/div&gt;"></iframe><br/>
+<iframe id="iframe5" width="200" height="50" src="data:text/html,&lt;input id='input'&gt;"></iframe>
+<iframe id="iframe6" width="200" height="50" src="data:text/html,&lt;input id='password' type='password'&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>
 </p>
 <div id="content" style="display: none">
@@ -8372,6 +8375,304 @@ async function runIMEContentObserverTest()
   // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
 }
 
+async function runPasswordMaskDelayTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["editor.password.mask_delay", 600],
+          ["editor.password.testing.mask_delay", true],
+         ],
+  });
+
+  let iframe5 = document.getElementById("iframe5");
+  let iframe6 = document.getElementById("iframe6");
+  let inputWindow = iframe5.contentWindow;
+  let passwordWindow = iframe6.contentWindow;
+
+  let inputElement = iframe5.contentDocument.getElementById("input");
+  let passwordElement = iframe6.contentDocument.getElementById("password");
+
+  const kMask = passwordElement.editor.passwordMask;
+
+  function promiseAllPasswordMasked() {
+    return new Promise(resolve => {
+      passwordElement.addEventListener("MozLastInputMasked", resolve, {once: true});
+    });
+  }
+
+  function checkSnapshots(aResult, aReference, aMatch, aDescription) {
+    let [correct, data1, data2] = compareSnapshots(aResult, aReference, true);
+    is(correct, aMatch, `${aDescription}\nREFTEST   IMAGE 1 (TEST): ${data1}\nREFTEST   IMAGE 2 (REFERENCE): ${data2}`);
+  }
+
+  // First character input
+  passwordElement.value = "";
+  passwordElement.focus();
+  let waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("a");
+  let unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  let maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = "a";
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  let unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = kMask;
+  inputElement.setSelectionRange(1, 1);
+  let maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): first inputted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): first inputted character should be masked after a while");
+
+  // Second character input
+  passwordElement.value = "a";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("b");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}b`;
+  inputElement.focus();
+  inputElement.setSelectionRange(2, 2);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.setSelectionRange(2, 2);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): second inputted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): second inputted character should be masked after a while");
+
+  // Typing new character should mask the previous unmasked characters
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(2, 2);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("c");
+  synthesizeKey("d");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}${kMask}${kMask}d`;
+  inputElement.focus();
+  inputElement.setSelectionRange(4, 4);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(4, 4);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): forth character input should mask the third character");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): forth inputted character should be masked after a while");
+
+  // Typing middle of password should unmask the last input character
+  passwordElement.value = "abcd";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(2, 2);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("e");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}${kMask}e${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(3, 3);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(3, 3);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): inserted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): inserted character should be masked after a while");
+
+  // Composition string should be unmasked for a while, and shouldn't be committed at masking
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #1");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: kMask,
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): composing character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): composing character should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Updating composition string should unmask the composition string for a while
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "d",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #2");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "d",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: kMask,
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): updated composing character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): updated composing character should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Composing multi-characters should be unmasked for a while.
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #3");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: `${kMask}${kMask}`,
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): all of composing string should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): all of composing string should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Committing composition should make the commit string unmasked.
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}cd${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(3, 3);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(3, 3);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): committed string should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): committed string should be masked after a while");
+}
+
 async function runTest()
 {
   window.addEventListener("unload", window.opener.wrappedJSObject.SimpleTest.finish, {once: true, capture: true});
@@ -8385,6 +8686,7 @@ async function runTest()
   await runAsyncForceCommitTest();
   await runRemoveContentTest();
   await runPanelTest();
+  await runPasswordMaskDelayTest();
 
   runUndoRedoTest();
   runCompositionCommitAsIsTest();
