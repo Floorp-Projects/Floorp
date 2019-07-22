@@ -259,7 +259,7 @@ private fun HitResult.isLink(): Boolean =
     ((this is HitResult.UNKNOWN && src.isNotEmpty()) || this is HitResult.IMAGE_SRC) &&
         getLink().startsWith("http")
 
-private fun HitResult.getLink(): String = when (this) {
+internal fun HitResult.getLink(): String = when (this) {
     is HitResult.UNKNOWN -> src
     is HitResult.IMAGE_SRC -> uri
     else -> "about:blank"
