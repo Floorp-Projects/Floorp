@@ -50,7 +50,10 @@ class Input extends Domain {
     const browserWindow = browser.ownerGlobal;
 
     const EventUtils = this._getEventUtils(browserWindow);
-    await this.executeInChild("addContentEventListener", domType);
+    const eventId = await this.executeInChild(
+      "addContentEventListener",
+      domType
+    );
 
     if (type == "char") {
       // type == "char" is used when doing `await page.keyboard.type( 'I’m a list' );`
@@ -73,7 +76,7 @@ class Input extends Domain {
       );
     }
 
-    await this.executeInChild("waitForContentEvent", domType);
+    await this.executeInChild("waitForContentEvent", eventId);
   }
 
   async dispatchMouseEvent({ type, button, x, y, modifiers, clickCount }) {
