@@ -35,7 +35,6 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyZeroInteractions
 import java.io.File
 
 @RunWith(AndroidJUnit4::class)
@@ -121,7 +120,6 @@ class ExperimentsTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
-        `when`(experiments.isGleanInitialized()).thenReturn(true)
         experimentStorage = storage
         `when`(experiments.getExperimentsStorage(context)).thenReturn(storage)
         `when`(experimentStorage.save(any())).then {
@@ -157,26 +155,9 @@ class ExperimentsTest {
 
         experiments.initialize(context, configuration)
 
-        verify(experiments).isGleanInitialized()
         verify(experimentStorage).retrieve()
         verify(experimentsUpdater).initialize(any())
         verify(experimentSource).getExperiments(any())
-    }
-
-    @Test
-    fun `initialize experiments before glean`() {
-        resetExperiments()
-
-        `when`(experiments.isGleanInitialized()).thenReturn(false)
-        experiments.initialize(context, configuration)
-
-        // Glean was not initialized yet, so no other initialization should have happened.
-        verify(experiments).isGleanInitialized()
-        assertEquals(experiments.isInitialized, false)
-        verifyZeroInteractions(experimentStorage)
-        // Make sure the updater is only interacted with once, from resetExperiments()
-        verify(experimentsUpdater, times(1)).scheduleUpdates()
-        verifyZeroInteractions(experimentSource)
     }
 
     @Test
@@ -746,7 +727,6 @@ class ExperimentsTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = ValuesProvider()
 
-        `when`(experiments.isGleanInitialized()).thenReturn(true)
         `when`(experiments.getExperimentsStorage(context)).thenReturn(experimentStorage)
 
         experimentsUpdater = spy(ExperimentsUpdater(context, experiments))

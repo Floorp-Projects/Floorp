@@ -59,7 +59,6 @@ class ExperimentsUpdaterTest {
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
 
-        `when`(experiments.isGleanInitialized()).thenReturn(true)
         experimentStorage = storage
         `when`(experiments.getExperimentsStorage(context)).thenReturn(storage)
 
