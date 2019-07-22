@@ -503,6 +503,64 @@ interface nsIEditor  : nsISupports
    */
   readonly attribute boolean composing;
 
+  /**
+   * unmask() is available only when the editor is a passwrod field.  This
+   * unmasks characters in specified by aStart and aEnd.  If there have
+   * already unmasked characters, they are masked when this is called.
+   * Note that if you calls this without non-zero `aTimeout`, you bear
+   * responsibility for masking password with calling `mask()`.  I.e.,
+   * user inputting password won't be masked automacitally.  If user types
+   * a new character and echo is enabled, unmasked range is expanded to
+   * including it.
+   *
+   * @param aStart      First index to show the character.  If you specify
+   *                    middle of a surrogate pair, this expands the range
+   *                    to include the prceding high surrogate automatically.
+   * @param aEnd        Optional, next index of last unmasked character.  If
+   *                    you specify middle of a surrogate pair, the expands
+   *                    the range to include the following low surrogate.
+   *                    If omitted or negative value, it means unmasking all
+   *                    characters after aStart.  Specifying same index
+   *                    throws an exception.
+   * @param aTimeout    Optional, specify milliseconds to hide the unmasked
+   *                    characters if you want to show them temporarily.
+   *                    If omitted or 0, it means this won't mask the characters
+   *                    automatically.
+   */
+  [can_run_script, optional_argc] void unmask(
+      in unsigned long aStart,
+      [optional] in long long aEnd,
+      [optional] in unsigned long aTimeout);
+
+  /**
+   * mask() is available only when the editor is a password field.  This masks
+   * all unmasked characters immediately.
+   */
+  [can_run_script] void mask();
+
+  /**
+   * These attributes are available only when the editor is a password field.
+   * unmaskedStart is first unmasked character index, or 0 if there is no
+   * unmasked characters.
+   * unmaskedEnd is next index of the last unmasked character.  0 means there
+   * is no unmasked characters.
+   */
+  readonly attribute unsigned long unmaskedStart;
+  readonly attribute unsigned long unmaskedEnd;
+
+  /**
+   * autoMaskingEnabled is true if unmasked range and newly inputted characters
+   * are masked automatically.  That's the default state.  If false, until
+   * `mask()` is called, unmasked range and newly inputted characters are
+   * unmasked.
+   */
+  readonly attribute boolean autoMaskingEnabled;
+
+  /**
+   * passwordMask attribute is a mask character which is used to mask password.
+   */
+  readonly attribute AString passwordMask;
+
 %{C++
   /**
    * AsEditorBase() returns a pointer to EditorBase class.

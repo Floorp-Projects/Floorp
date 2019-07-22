@@ -15,12 +15,14 @@ VARCACHE_PREF(
   Live,
   "accessibility.monoaudio.enable",
    accessibility_monoaudio_enable,
+   accessibility_monoaudio_enable,
   RelaxedAtomicBool, false
 )
 
 VARCACHE_PREF(
   Live,
   "accessibility.browsewithcaret",
+   accessibility_browsewithcaret,
    accessibility_browsewithcaret,
   RelaxedAtomicBool, false
 )

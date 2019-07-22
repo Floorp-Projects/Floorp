@@ -164,6 +164,32 @@ var tests = [
     [ 'input-maxlength-ui-invalid-change.html', 'input-invalid-ref.html'] ,
     [ 'input-minlength-ui-valid-change.html', 'input-valid-ref.html'] ,
     [ 'input-minlength-ui-invalid-change.html', 'input-invalid-ref.html'] ,
+    [ 'input-password-remask.html', 'input-password-remask-ref.html' ],
+
+    // The following hash means language.
+    [ 'input-password-RTL-input.html#arabic', 'input-password-RTL-input-ref.html'],
+    [ 'input-password-RTL-input.html#hebrew', 'input-password-RTL-input-ref.html'],
+
+    // The following hash means "text ('_' is a space)" - unmarsk start - unmask end - selection start - selection end[ - text-transform].
+    [ 'input-password-unmask.html#abc_def-0-7-7-7', 'input-password-unmask-ref.html#abc_def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-7-7-7-capitalize', 'input-password-unmask-ref.html#Abc_Def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-7-7-7-uppercase', 'input-password-unmask-ref.html#ABC_DEF-0-7-7-7'],
+    [ 'input-password-unmask.html#ABC_DEF-0-7-7-7-lowercase', 'input-password-unmask-ref.html#abc_def-0-7-7-7'],
+    [ 'input-password-unmask.html#abc_def-0-1-1-1', 'input-password-unmask-ref.html#abc_def-0-1-1-1'],
+    [ 'input-password-unmask.html#abc_def-2-4-1-5', 'input-password-unmask-ref.html#abc_def-2-4-1-5'],
+    [ 'input-password-unmask.html#abc_def-6-7-7-7', 'input-password-unmask-ref.html#abc_def-6-7-7-7'],
+
+    // The following hash means unmarsk start - unmask end - selection start - selection end.
+    // The value is "a&#x1f914;b" so that the range is 0-4.
+    [ 'input-password-unmask-around-emoji.html#0-4-4-4', 'input-password-unmask-around-emoji-ref.html#0-4-4-4'],
+    [ 'input-password-unmask-around-emoji.html#0-3-3-3', 'input-password-unmask-around-emoji-ref.html#0-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#0-1-3-3', 'input-password-unmask-around-emoji-ref.html#0-1-3-3'],
+    [ 'input-password-unmask-around-emoji.html#1-2-3-3', 'input-password-unmask-around-emoji-ref.html#1-2-3-3'],
+    [ 'input-password-unmask-around-emoji.html#1-3-3-3', 'input-password-unmask-around-emoji-ref.html#1-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#2-3-3-3', 'input-password-unmask-around-emoji-ref.html#2-3-3-3'],
+    [ 'input-password-unmask-around-emoji.html#3-4-4-4', 'input-password-unmask-around-emoji-ref.html#3-4-4-4'],
+    [ 'input-password-unmask-around-emoji.html#1-4-4-4', 'input-password-unmask-around-emoji-ref.html#1-4-4-4'],
+
     [ 'input-stoppropagation.html', 'input-stoppropagation-ref.html'] ,
     [ 'textarea-maxlength-valid-before-change.html', 'textarea-valid-ref.html'] ,
     [ 'textarea-maxlength-valid-change.html', 'textarea-valid-ref.html'] ,

@@ -473,7 +473,7 @@ void RenderLayers(ContainerT* aContainer, LayerManagerComposite* aManager,
       layerToRender->RenderLayer(clipRect, geometry);
     }
 
-    if (StaticPrefs::layers_uniformity_info()) {
+    if (StaticPrefs::layers_uniformity_info_AtStartup()) {
       PrintUniformityInfo(layer);
     }
 

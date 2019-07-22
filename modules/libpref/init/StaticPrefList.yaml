@@ -52,44 +52,51 @@
 #
 # - `mirror` indicates how the pref value is mirrored into a C++ variable.
 #
-#   * `never`: There is no global variable mirror. The pref value can only be
+#   * `never`: There is no C++ mirror variable. The pref value can only be
 #     accessed via the standard libpref API functions.
 #
 #   * `once`: The pref value is mirrored into a variable at startup; the
 #     mirror variable is left unchanged after that. (The exact point at which
 #     all `once` mirror variables are set is when the first `once` mirror
-#     variable is accessed, via its getter function.) This is mostly useful
-#     for graphics prefs where we often don't want a new pref value to apply
-#     until restart. Otherwise, this update policy is best avoided because its
+#     variable is accessed, via its getter function.) This is mostly useful for
+#     graphics prefs where we often don't want a new pref value to apply until
+#     restart. Otherwise, this update policy is best avoided because its
 #     behaviour can cause confusion and bugs.
 #
-#   * `always`: The mirror value is always kept in sync with the pref value.
+#   * `always`: The mirror variable is always kept in sync with the pref value.
 #     This is the most common choice.
 #
-#   The getter function's name is the same as the pref's name, but with '.' or
-#   '-' chars converted to '_', to make a valid identifier. For example, the
-#   getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear, and
-#   you can search for both the pref name and the getter using the regexp
-#   /foo.bar.baz/.
-#
-#   Using the getter function to read the pref's value has the two following
-#   advantages over the normal API functions.
+#   When a mirror variable is present, a getter will be created that can access
+#   it. Using the getter function to read the pref's value has the two
+#   following advantages over the normal API functions.
 #
 #   * A direct variable access is faster than a hash table lookup.
 #
-#   * A variable can be accessed off the main thread. If a pref *is* accessed
-#     off the main thread, it should have an atomic type. Assertions enforce
-#     this.
+#   * A mirror variable can be accessed off the main thread. If a pref *is*
+#     accessed off the main thread, it should have an atomic type. Assertions
+#     enforce this.
 #
-#   Note that Rust code must access the global variable directly, rather than
-#   via the getter.
+#   Note that Rust code must access the mirror variable directly, rather than
+#   via the getter function.
 #
-# - `do_not_use_directly` dictates if `_do_not_use_directly` should be
-#   appended to the name of the getter function. This is simply a naming
-#   convention indicating that there is some other wrapper getter function
-#   that should be used in preference to the normal static pref getter.
-#   Defaults to `false` if not present. Cannot be used with a `never` mirror
-#   value, because there is no getter function in that case.
+# - `do_not_use_directly` dictates if `_DoNotUseDirectly` should be appended to
+#   the name of the getter function. This is simply a naming convention
+#   indicating that there is some other wrapper getter function that should be
+#   used in preference to the normal static pref getter. Defaults to `false` if
+#   not present. Cannot be used with a `never` mirror value, because there is
+#   no getter function in that case.
+#
+# The getter function's base name is the same as the pref's name, but with
+# '.' or '-' chars converted to '_', to make a valid identifier. For example,
+# the getter for `foo.bar_baz` is `foo_bar_baz()`. This is ugly but clear,
+# and you can search for both the pref name and the getter using the regexp
+# /foo.bar.baz/. Suffixes are added as follows:
+#
+# - If the `mirror` value is `once`, `_AtStartup` is appended, to indicate the
+#   value was obtained at startup.
+#
+# - If the `do_not_use_directly` value is true, `_DoNotUseDirectly` is
+#   appended.
 #
 # Preprocessor
 # ------------
@@ -2190,6 +2197,28 @@
 - name: dom.webidl.test2
   type: bool
   value: true
+  mirror: always
+
+#---------------------------------------------------------------------------
+# Prefs starting with "editor"
+#---------------------------------------------------------------------------
+
+# Delay to mask last input character in password fields.
+# If negative value, to use platform's default behavior.
+# If 0, no delay to mask password.
+# Otherwise, password fields unmask last input character(s) during specified
+# time (in milliseconds).
+- name: editor.password.mask_delay
+  type: int32_t
+  value: -1
+  mirror: always
+
+# Set to true when you test mask_delay of password editor.  If this is set
+# to true, "MozLastInputMasked" is fired when last input characters are
+# masked by timeout.
+- name: editor.password.testing.mask_delay
+  type: bool
+  value: false
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -5000,7 +5029,7 @@
 #define PREF_VALUE false
 #endif
 - name: media.hls.enabled
-  type: bool
+  type: RelaxedAtomicBool
   value: @PREF_VALUE@
   mirror: always
 #undef PREF_VALUE

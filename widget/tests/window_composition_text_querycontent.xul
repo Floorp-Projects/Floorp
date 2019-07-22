@@ -8,6 +8,7 @@
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js" />
 
   <panel id="panel" hidden="true" orient="vertical">
     <vbox id="vbox">
@@ -27,7 +28,10 @@
         src="data:text/html,&lt;body onload='document.designMode=%22on%22'&gt;body content&lt;/body&gt;"></iframe><br/>
 <iframe id="iframe4" width="300" height="150"
         src="data:text/html,&lt;div contenteditable id='contenteditable'&gt;&lt;/div&gt;"></iframe><br/>
+<iframe id="iframe5" width="200" height="50" src="data:text/html,&lt;input id='input'&gt;"></iframe>
+<iframe id="iframe6" width="200" height="50" src="data:text/html,&lt;input id='password' type='password'&gt;"></iframe><br/>
 <input id="input" type="text"/><br/>
+<input id="password" type="password"/><br/>
 </p>
 <div id="content" style="display: none">
 
@@ -95,6 +99,7 @@ var iframe3 = document.getElementById("iframe3");
 var contenteditable;
 var windowOfContenteditable;
 var input = document.getElementById("input");
+var password = document.getElementById("password");
 var textareaInFrame;
 
 const nsITextInputProcessorCallback = Ci.nsITextInputProcessorCallback;
@@ -4586,6 +4591,403 @@ function runQueryIMESelectionTest()
   synthesizeComposition({ type: "compositioncommitasis" });
 }
 
+function runQueryPasswordTest() {
+  function checkRange(aOffset, aLength, aExpectedResult, aDescription) {
+    password.focus();
+    let result = synthesizeQueryTextContent(aOffset, aLength);
+    is(result.text, aExpectedResult,
+       `${aDescription}: synthesizeQueryTextContent(${aOffset}, ${aLength})`);
+    password.setSelectionRange(aOffset, aOffset + aLength);
+    result = synthesizeQuerySelectedText();
+    is(result.text, aExpectedResult,
+       `${aDescription}: synthesizeQuerySelectedText(${aOffset}, ${aLength})`);
+  }
+
+  let editor = password.editor;
+  const kMask = editor.passwordMask;
+  password.value = "abcdef";
+
+  editor.mask();
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range is not specified #1");
+  checkRange(0, 3, `${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range is not specified #2");
+  checkRange(3, 3, `${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range is not specified #3");
+  checkRange(2, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range is not specified #4");
+
+  editor.unmask(0, 6);
+  checkRange(0, 6, "abcdef",
+             "runQueryPasswordTest: unmasked range 0-6 #1");
+  checkRange(0, 3, "abc",
+             "runQueryPasswordTest: unmasked range 0-6 #2");
+  checkRange(3, 3, "def",
+             "runQueryPasswordTest: unmasked range 0-6 #3");
+  checkRange(2, 2, "cd",
+             "runQueryPasswordTest: unmasked range 0-6 #4");
+
+  editor.unmask(0, 3);
+  checkRange(0, 6, `abc${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range 0-3 #1");
+  checkRange(0, 3, "abc",
+             "runQueryPasswordTest: unmasked range 0-3 #2");
+  checkRange(3, 3, `${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range 0-3 #3");
+  checkRange(2, 2, `c${kMask}`,
+             "runQueryPasswordTest: unmasked range 0-3 #4");
+
+  editor.unmask(3, 6);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}def`,
+             "runQueryPasswordTest: unmasked range 3-6 #1");
+  checkRange(0, 3, `${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range 3-6 #2");
+  checkRange(3, 3, `def`,
+             "runQueryPasswordTest: unmasked range 3-6 #3");
+  checkRange(2, 2, `${kMask}d`,
+             "runQueryPasswordTest: unmasked range 3-6 #4");
+
+  editor.unmask(2, 4);
+  checkRange(0, 6, `${kMask}${kMask}cd${kMask}${kMask}`,
+             "runQueryPasswordTest: unmasked range 3-4 #1");
+  checkRange(1, 2, `${kMask}c`,
+             "runQueryPasswordTest: unmasked range 3-4 #2");
+  checkRange(1, 3, `${kMask}cd`,
+             "runQueryPasswordTest: unmasked range 3-4 #3");
+  checkRange(1, 4, `${kMask}cd${kMask}`,
+             "runQueryPasswordTest: unmasked range 3-4 #4");
+  checkRange(2, 2, "cd",
+             "runQueryPasswordTest: unmasked range 3-4 #5");
+  checkRange(2, 3, `cd${kMask}`,
+             "runQueryPasswordTest: unmasked range 3-4 #6");
+
+
+  const kEmoji = String.fromCodePoint(0x1f914);
+  password.value = `${kEmoji}${kEmoji}${kEmoji}`
+
+  editor.mask();
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range is not specified");
+
+  editor.unmask(0, 2);
+  checkRange(0, 6, `${kEmoji}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 0-2 #1");
+  checkRange(0, 2, `${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 0-2 #2");
+  checkRange(2, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 0-2 #3");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 0-2 #4");
+
+  editor.unmask(2, 4);
+  checkRange(0, 6, `${kMask}${kMask}${kEmoji}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 2-4 #1");
+  checkRange(0, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 2-4 #2");
+  checkRange(2, 2, `${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 2-4 #3");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 2-4 #4");
+
+  editor.unmask(4, 6);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 4-6 #1");
+  checkRange(0, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 4-6 #2");
+  checkRange(2, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 4-6 #3");
+  checkRange(4, 2, `${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 4-6 #4");
+
+  editor.unmask(0, 1);
+  checkRange(0, 6, `${kEmoji}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 0-1");
+
+  editor.unmask(1, 2);
+  checkRange(0, 6, `${kEmoji}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 1-2");
+
+  editor.unmask(2, 3);
+  checkRange(0, 6, `${kMask}${kMask}${kEmoji}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 2-3");
+
+  editor.unmask(3, 4);
+  checkRange(0, 6, `${kMask}${kMask}${kEmoji}${kMask}${kMask}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 3-4");
+
+  editor.unmask(4, 5);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 4-5");
+
+  editor.unmask(5, 6);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kEmoji}`,
+             "runQueryPasswordTest: Emojis in password, unmasked range 5-6");
+
+
+  const kEmojiSuperhero = String.fromCodePoint(0x1f9b8);
+  const kEmojiMediumSkinTone = String.fromCodePoint(0x1f3fd);
+  const kZeroWidthJoiner = "\u200d";
+  const kFemaleSign = "\u2640";
+  const kVariationSelector16 = "\ufe0f";
+  const kComplicatedEmoji = `${kEmojiSuperhero}${kEmojiMediumSkinTone}${kZeroWidthJoiner}${kFemaleSign}${kVariationSelector16}`;
+  password.value = `${kComplicatedEmoji}${kComplicatedEmoji}${kComplicatedEmoji}`
+  editor.mask();
+  checkRange(0, 21, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range is not specified");
+
+  editor.unmask(0, 7);
+  checkRange(0, 21, `${kComplicatedEmoji}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 0-7 #1");
+  checkRange(0, 7, `${kComplicatedEmoji}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 0-7 #2");
+  checkRange(7, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 0-7 #3");
+  checkRange(14, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 0-7 #4");
+
+  editor.unmask(7, 14);
+  checkRange(0, 21, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kComplicatedEmoji}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 7-14 #1");
+  checkRange(0, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 7-14 #2");
+  checkRange(7, 7, `${kComplicatedEmoji}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 7-14 #3");
+  checkRange(14, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 7-14 #4");
+
+  editor.unmask(14, 21);
+  checkRange(0, 21, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kComplicatedEmoji}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 14-21 #1");
+  checkRange(0, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 14-21 #2");
+  checkRange(7, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 14-21 #3");
+  checkRange(14, 7, `${kComplicatedEmoji}`,
+             "runQueryPasswordTest: Complicated emojis in password, unmasked range 14-21 #4");
+
+  password.value = `${kComplicatedEmoji}`
+  editor.unmask(0, 1);
+  checkRange(0, 7, `${kEmojiSuperhero}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 0-1");
+
+  editor.unmask(1, 2);
+  checkRange(0, 7, `${kEmojiSuperhero}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 1-2");
+
+  editor.unmask(2, 3);
+  checkRange(0, 7, `${kMask}${kMask}${kEmojiMediumSkinTone}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 2-3");
+
+  editor.unmask(3, 4);
+  checkRange(0, 7, `${kMask}${kMask}${kEmojiMediumSkinTone}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 3-4");
+
+  editor.unmask(4, 5);
+  checkRange(0, 7, `${kMask}${kMask}${kMask}${kMask}${kZeroWidthJoiner}${kMask}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 4-5");
+
+  editor.unmask(5, 6);
+  checkRange(0, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kFemaleSign}${kMask}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 5-6");
+
+  editor.unmask(6, 7);
+  checkRange(0, 7, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kVariationSelector16}`,
+             "runQueryPasswordTest: Complicated emoji in password, unmasked range 6-7");
+
+
+  const kKanji = "\u8fba";
+  const kIVS = String.fromCodePoint(0xe0101);
+  const kKanjiWithIVS = `${kKanji}${kIVS}`;
+  password.value = `${kKanjiWithIVS}${kKanjiWithIVS}${kKanjiWithIVS}`
+
+  editor.mask();
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range is not specified");
+
+  editor.unmask(0, 3);
+  checkRange(0, 9, `${kKanjiWithIVS}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #1");
+  checkRange(0, 3, `${kKanjiWithIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #2");
+  checkRange(1, 3, `${kIVS}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #3");
+  checkRange(0, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #4");
+  checkRange(1, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #5");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #6");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #7");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #8");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #9");
+
+  editor.unmask(0, 1);
+  checkRange(0, 9, `${kKanji}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #1");
+  checkRange(0, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #2");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #3");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #4");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #5");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #6");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-1 #7");
+
+  editor.unmask(1, 3);
+  checkRange(0, 9, `${kMask}${kIVS}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #1");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #2");
+  checkRange(1, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #3");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #4");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #5");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #6");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-3 #7");
+
+  editor.unmask(3, 6);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kKanjiWithIVS}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #1");
+  checkRange(3, 3, `${kKanjiWithIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #2");
+  checkRange(4, 3, `${kIVS}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #3");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #4");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #5");
+  checkRange(3, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #6");
+  checkRange(4, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #7");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #8");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-6 #9");
+
+  editor.unmask(3, 4);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kKanji}${kMask}${kMask}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #1");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #2");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #3");
+  checkRange(3, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #4");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #5");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #6");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-4 #7");
+
+  editor.unmask(4, 6);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kMask}${kIVS}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #1");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #2");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #3");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #4");
+  checkRange(4, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #5");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #6");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-6 #7");
+
+  editor.unmask(6, 9);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kKanjiWithIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #1");
+  checkRange(6, 3, `${kKanjiWithIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #2");
+  checkRange(4, 3, `${kMask}${kMask}${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #3");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #4");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #5");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #6");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #7");
+  checkRange(6, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #8");
+  checkRange(7, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-9 #9");
+
+  editor.unmask(6, 7);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kKanji}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #1");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #2");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #3");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #4");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #5");
+  checkRange(6, 1, `${kKanji}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #6");
+  checkRange(7, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 6-7 #7");
+
+  editor.unmask(7, 9);
+  checkRange(0, 9, `${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kMask}${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #1");
+  checkRange(0, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #2");
+  checkRange(1, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #3");
+  checkRange(3, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #4");
+  checkRange(4, 2, `${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #5");
+  checkRange(6, 1, `${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #6");
+  checkRange(7, 2, `${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 7-9 #7");
+
+  password.value = `${kKanjiWithIVS}${kKanjiWithIVS}`;
+  editor.unmask(0, 2);
+  checkRange(0, 6, `${kKanjiWithIVS}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 0-2");
+
+  editor.unmask(1, 2);
+  checkRange(0, 6, `${kMask}${kIVS}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 1-2");
+
+  editor.unmask(2, 3);
+  checkRange(0, 6, `${kMask}${kIVS}${kMask}${kMask}${kMask}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 2-3");
+
+  editor.unmask(3, 5);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kKanjiWithIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 3-5");
+
+  editor.unmask(4, 5);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 4-5");
+
+  editor.unmask(5, 6);
+  checkRange(0, 6, `${kMask}${kMask}${kMask}${kMask}${kIVS}`,
+             "runQueryPasswordTest: Pairs of Kanji and IVS in password, unmasked range 5-6");
+
+  editor.mask();
+}
+
 function runQueryContentEventRelativeToInsertionPoint()
 {
   textarea.focus();
@@ -8372,6 +8774,304 @@ async function runIMEContentObserverTest()
   // await testWithHTMLEditor("runIMEContentObserverTest in designMode (defaultParagraphSeparator is div): ", iframe2.contentDocument.body, "div");
 }
 
+async function runPasswordMaskDelayTest() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["editor.password.mask_delay", 600],
+          ["editor.password.testing.mask_delay", true],
+         ],
+  });
+
+  let iframe5 = document.getElementById("iframe5");
+  let iframe6 = document.getElementById("iframe6");
+  let inputWindow = iframe5.contentWindow;
+  let passwordWindow = iframe6.contentWindow;
+
+  let inputElement = iframe5.contentDocument.getElementById("input");
+  let passwordElement = iframe6.contentDocument.getElementById("password");
+
+  const kMask = passwordElement.editor.passwordMask;
+
+  function promiseAllPasswordMasked() {
+    return new Promise(resolve => {
+      passwordElement.addEventListener("MozLastInputMasked", resolve, {once: true});
+    });
+  }
+
+  function checkSnapshots(aResult, aReference, aMatch, aDescription) {
+    let [correct, data1, data2] = compareSnapshots(aResult, aReference, true);
+    is(correct, aMatch, `${aDescription}\nREFTEST   IMAGE 1 (TEST): ${data1}\nREFTEST   IMAGE 2 (REFERENCE): ${data2}`);
+  }
+
+  // First character input
+  passwordElement.value = "";
+  passwordElement.focus();
+  let waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("a");
+  let unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  let maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = "a";
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  let unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = kMask;
+  inputElement.setSelectionRange(1, 1);
+  let maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): first inputted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): first inputted character should be masked after a while");
+
+  // Second character input
+  passwordElement.value = "a";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("b");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}b`;
+  inputElement.focus();
+  inputElement.setSelectionRange(2, 2);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.setSelectionRange(2, 2);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): second inputted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): second inputted character should be masked after a while");
+
+  // Typing new character should mask the previous unmasked characters
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(2, 2);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("c");
+  synthesizeKey("d");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}${kMask}${kMask}d`;
+  inputElement.focus();
+  inputElement.setSelectionRange(4, 4);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(4, 4);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): forth character input should mask the third character");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): forth inputted character should be masked after a while");
+
+  // Typing middle of password should unmask the last input character
+  passwordElement.value = "abcd";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(2, 2);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeKey("e");
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}${kMask}e${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(3, 3);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(3, 3);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): inserted character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): inserted character should be masked after a while");
+
+  // Composition string should be unmasked for a while, and shouldn't be committed at masking
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #1");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: kMask,
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): composing character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): composing character should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Updating composition string should unmask the composition string for a while
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "d",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #2");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "d",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: kMask,
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): updated composing character should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): updated composing character should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Composing multi-characters should be unmasked for a while.
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "c",
+        clauses: [{ length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 1, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+  is(getEditor(passwordElement).composing, true,
+     "runPasswordMaskDelayTest(): composition shouldn't be commited at masking the composing string #3");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  inputElement.value = `${kMask}${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(1, 1);
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  synthesizeCompositionChange(
+    { composition:
+      { string: `${kMask}${kMask}`,
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): all of composing string should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): all of composing string should be masked after a while");
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+
+  // Committing composition should make the commit string unmasked.
+  passwordElement.value = "ab";
+  passwordElement.focus();
+  passwordElement.setSelectionRange(1, 1);
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeCompositionChange(
+    { composition:
+      { string: "cd",
+        clauses: [{ length: 2, attr: COMPOSITION_ATTR_RAW_CLAUSE }],
+      },
+      caret: { start: 2, length: 0 },
+    });
+  await waitForMaskingLastInput;
+  waitForMaskingLastInput = promiseAllPasswordMasked();
+  synthesizeComposition({ type: "compositioncommitasis", key: { key: "KEY_Enter" } });
+  unmaskedResult = snapshotWindow(passwordWindow, true);
+  await waitForMaskingLastInput;
+  maskedResult = snapshotWindow(passwordWindow, true);
+
+  inputElement.value = `${kMask}cd${kMask}`;
+  inputElement.focus();
+  inputElement.setSelectionRange(3, 3);
+  unmaskedReference = snapshotWindow(inputWindow, true);
+  inputElement.value = `${kMask}${kMask}${kMask}${kMask}`;
+  inputElement.setSelectionRange(3, 3);
+  maskedReference = snapshotWindow(inputWindow, true);
+  checkSnapshots(unmaskedResult, unmaskedReference, true,
+                 "runPasswordMaskDelayTest(): committed string should be unmasked for a while");
+  checkSnapshots(maskedResult, maskedReference, true,
+                 "runPasswordMaskDelayTest(): committed string should be masked after a while");
+}
+
 async function runTest()
 {
   window.addEventListener("unload", window.opener.wrappedJSObject.SimpleTest.finish, {once: true, capture: true});
@@ -8385,6 +9085,7 @@ async function runTest()
   await runAsyncForceCommitTest();
   await runRemoveContentTest();
   await runPanelTest();
+  await runPasswordMaskDelayTest();
 
   runUndoRedoTest();
   runCompositionCommitAsIsTest();
@@ -8399,6 +9100,7 @@ async function runTest()
   runQuerySelectionEventTest();
   runQueryIMESelectionTest();
   runQueryContentEventRelativeToInsertionPoint();
+  runQueryPasswordTest();
   runCSSTransformTest();
   runBug722639Test();
   runBug1375825Test();

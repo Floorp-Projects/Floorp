@@ -81,7 +81,8 @@ bool VRProcessParent::WaitForLaunch() {
     return !!mVRChild;
   }
 
-  int32_t timeoutMs = StaticPrefs::dom_vr_process_startup_timeout_ms();
+  int32_t timeoutMs =
+      StaticPrefs::dom_vr_process_startup_timeout_ms_AtStartup();
 
   // If one of the following environment variables are set we can effectively
   // ignore the timeout - as we can guarantee the compositor process will be

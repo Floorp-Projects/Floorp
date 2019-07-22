@@ -93,6 +93,7 @@ VARCACHE_PREF(
   Once,
   "my.int",
    my_int,
+   my_int_AtStartup,
   int32_t, -123
 )
 
@@ -100,13 +101,15 @@ VARCACHE_PREF(
   Live,
   "my.uint",
    my_uint,
+   my_uint,
   uint32_t, 999
 )
 
 VARCACHE_PREF(
   Once,
   "my.float",
-   my_float_do_not_use_directly,
+   my_float,
+   my_float_AtStartup_DoNotUseDirectly,
   float, 0.0f
 )
 
@@ -118,13 +121,15 @@ VARCACHE_PREF(
   Live,
   "my.atomic.bool",
    my_atomic_bool,
+   my_atomic_bool,
   RelaxedAtomicBool, true
 )
 
 VARCACHE_PREF(
   Live,
   "my.atomic.int",
-   my_atomic_int_do_not_use_directly,
+   my_atomic_int,
+   my_atomic_int_DoNotUseDirectly,
   ReleaseAcquireAtomicInt32, 10 + 10 * 20
 )
 
@@ -132,6 +137,7 @@ VARCACHE_PREF(
   Once,
   "my.atomic.uint",
    my_atomic_uint,
+   my_atomic_uint_AtStartup,
   SequentiallyConsistentAtomicUint32, 68
 )
 

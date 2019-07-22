@@ -62,10 +62,14 @@ enum {
   // This bit is set if the node may be modified frequently.  This is typically
   // specified if the instance is in <input> or <textarea>.
   NS_MAYBE_MODIFIED_FREQUENTLY = CHARACTER_DATA_FLAG_BIT(6),
+
+  // This bit is set if the node may be masked because of being in a password
+  // field.
+  NS_MAYBE_MASKED = CHARACTER_DATA_FLAG_BIT(7),
 };
 
 // Make sure we have enough space for those bits
-ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 7);
+ASSERT_NODE_FLAGS_SPACE(NODE_TYPE_SPECIFIC_BITS_OFFSET + 8);
 
 #undef CHARACTER_DATA_FLAG_BIT
 
@@ -87,6 +91,7 @@ class CharacterData : public nsIContent {
   void MarkAsMaybeModifiedFrequently() {
     SetFlags(NS_MAYBE_MODIFIED_FREQUENTLY);
   }
+  void MarkAsMaybeMasked() { SetFlags(NS_MAYBE_MASKED); }
 
   NS_IMPL_FROMNODE_HELPER(CharacterData, IsCharacterData())
 

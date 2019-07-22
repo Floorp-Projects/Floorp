@@ -54,6 +54,13 @@ DeleteNodeTransaction::DoTransaction() {
     return NS_OK;
   }
 
+  if (!mEditorBase->AsHTMLEditor() && mNodeToDelete->IsText()) {
+    uint32_t length = mNodeToDelete->AsText()->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
+  }
+
   // Remember which child mNodeToDelete was (by remembering which child was
   // next).  Note that mRefNode can be nullptr.
   mRefNode = mNodeToDelete->GetNextSibling();
@@ -68,6 +75,7 @@ DeleteNodeTransaction::DoTransaction() {
   return error.StealNSResult();
 }
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 DeleteNodeTransaction::UndoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
@@ -75,9 +83,25 @@ DeleteNodeTransaction::UndoTransaction() {
     return NS_OK;
   }
   ErrorResult error;
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsINode> parent = mParentNode;
+  nsCOMPtr<nsINode> nodeToDelete = mNodeToDelete;
   nsCOMPtr<nsIContent> refNode = mRefNode;
-  mParentNode->InsertBefore(*mNodeToDelete, refNode, error);
-  return error.StealNSResult();
+  parent->InsertBefore(*nodeToDelete, refNode, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+  if (!editorBase->AsHTMLEditor() && nodeToDelete->IsText()) {
+    uint32_t length = nodeToDelete->AsText()->TextLength();
+    if (length > 0) {
+      error = MOZ_KnownLive(editorBase->AsTextEditor())
+                  ->DidInsertText(length, 0, length);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -85,6 +109,13 @@ DeleteNodeTransaction::RedoTransaction() {
   if (NS_WARN_IF(!CanDoIt())) {
     // This is a legal state, the transaction is a no-op.
     return NS_OK;
+  }
+
+  if (!mEditorBase->AsHTMLEditor() && mNodeToDelete->IsText()) {
+    uint32_t length = mNodeToDelete->AsText()->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
   }
 
   mEditorBase->RangeUpdaterRef().SelAdjDeleteNode(mNodeToDelete);

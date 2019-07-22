@@ -1470,7 +1470,7 @@ bool gfxUtils::DumpDisplayList() {
 
 wr::RenderRoot gfxUtils::GetContentRenderRoot() {
   if (gfx::gfxVars::UseWebRender() &&
-      StaticPrefs::gfx_webrender_split_render_roots()) {
+      StaticPrefs::gfx_webrender_split_render_roots_AtStartup()) {
     return wr::RenderRoot::Content;
   }
   return wr::RenderRoot::Default;
@@ -1478,7 +1478,7 @@ wr::RenderRoot gfxUtils::GetContentRenderRoot() {
 
 Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
   if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots() ||
+      !StaticPrefs::gfx_webrender_split_render_roots_AtStartup() ||
       !XRE_IsParentProcess()) {
     return Nothing();
   }
@@ -1503,7 +1503,7 @@ Maybe<wr::RenderRoot> gfxUtils::GetRenderRootForFrame(const nsIFrame* aFrame) {
 wr::RenderRoot gfxUtils::RecursivelyGetRenderRootForFrame(
     const nsIFrame* aFrame) {
   if (!gfxVars::UseWebRender() ||
-      !StaticPrefs::gfx_webrender_split_render_roots() ||
+      !StaticPrefs::gfx_webrender_split_render_roots_AtStartup() ||
       !XRE_IsParentProcess()) {
     return wr::RenderRoot::Default;
   }

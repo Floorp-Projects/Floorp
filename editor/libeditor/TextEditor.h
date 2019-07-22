@@ -9,8 +9,10 @@
 #include "mozilla/EditorBase.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsINamed.h"
 #include "nsIPlaintextEditor.h"
 #include "nsISupportsImpl.h"
+#include "nsITimer.h"
 #include "nscore.h"
 
 class nsIContent;
@@ -22,6 +24,8 @@ class nsITransferable;
 
 namespace mozilla {
 class AutoEditInitRulesTrigger;
+class DeleteNodeTransaction;
+class InsertNodeTransaction;
 enum class EditSubAction : int32_t;
 
 namespace dom {
@@ -33,7 +37,10 @@ class Selection;
  * The text editor implementation.
  * Use to edit text document represented as a DOM tree.
  */
-class TextEditor : public EditorBase, public nsIPlaintextEditor {
+class TextEditor : public EditorBase,
+                   public nsIPlaintextEditor,
+                   public nsITimerCallback,
+                   public nsINamed {
  public:
   /****************************************************************************
    * NOTE: DO NOT MAKE YOUR NEW METHODS PUBLIC IF they are called by other
@@ -50,8 +57,9 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
 
   TextEditor();
 
-  // nsIPlaintextEditor methods
   NS_DECL_NSIPLAINTEXTEDITOR
+  NS_DECL_NSITIMERCALLBACK
+  NS_DECL_NSINAMED
 
   // Overrides of nsIEditor
   NS_IMETHOD GetDocumentIsEmpty(bool* aDocumentIsEmpty) override;
@@ -316,6 +324,44 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    */
   void SetWrapColumn(int32_t aWrapColumn) { mWrapColumn = aWrapColumn; }
 
+  /**
+   * The following methods are available only when the instance is a password
+   * editor.  They return whether there is unmasked range or not and range
+   * start and length.
+   */
+  bool IsAllMasked() const {
+    MOZ_ASSERT(IsPasswordEditor());
+    return mUnmaskedStart == UINT32_MAX && mUnmaskedLength == 0;
+  }
+  uint32_t UnmaskedStart() const {
+    MOZ_ASSERT(IsPasswordEditor());
+    return mUnmaskedStart;
+  }
+  uint32_t UnmaskedLength() const {
+    MOZ_ASSERT(IsPasswordEditor());
+    return mUnmaskedLength;
+  }
+  uint32_t UnmaskedEnd() const {
+    MOZ_ASSERT(IsPasswordEditor());
+    return mUnmaskedStart + mUnmaskedLength;
+  }
+
+  /**
+   * IsMaskingPassword() returns false when the last caller of `Unmask()`
+   * didn't want to mask again automatically.  When this returns true, user
+   * input causes masking the password even before timed-out.
+   */
+  bool IsMaskingPassword() const {
+    MOZ_ASSERT(IsPasswordEditor());
+    return mIsMaskingPassword;
+  }
+
+  /**
+   * PasswordMask() returns a character which masks each character in password
+   * fields.
+   */
+  static char16_t PasswordMask();
+
  protected:  // May be called by friends.
   /****************************************************************************
    * Some classes like TextEditRules, HTMLEditRules, WSRunObject which are
@@ -413,16 +459,97 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
    */
   nsresult ExtendSelectionForDelete(nsIEditor::EDirection* aAction);
 
-  /**
-   * HideLastPasswordInput() is called by timer callback of TextEditRules.
-   * This should be called only by TextEditRules::Notify().
-   * When this is called, the TextEditRules wants to call its
-   * HideLastPasswordInput() with AutoEditActionDataSetter instance.
-   */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult HideLastPasswordInput();
-
   static void GetDefaultEditorPrefs(int32_t& aNewLineHandling,
                                     int32_t& aCaretStyle);
+
+  /**
+   * SetUnmaskRange() is available only when the instance is a password
+   * editor.  This just updates unmask range.  I.e., caller needs to
+   * guarantee to update the layout.
+   *
+   * @param aStart      First index to show the character.
+   *                    If aLength is 0, this value is ignored.
+   * @param aLength     Optional, Length to show characters.
+   *                    If UINT32_MAX, it means unmasking all characters after
+   *                    aStart.
+   *                    If 0, it means that masking all characters.
+   * @param aTimeout    Optional, specify milliseconds to hide the unmasked
+   *                    characters after this call.
+   *                    If 0, it means this won't mask the characters
+   *                    automatically.
+   *                    If aLength is 0, this value is ignored.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult SetUnmaskRange(
+      uint32_t aStart, uint32_t aLength = UINT32_MAX, uint32_t aTimeout = 0) {
+    return SetUnmaskRangeInternal(aStart, aLength, aTimeout, false, false);
+  }
+
+  /**
+   * SetUnmaskRangeAndNotify() is available only when the instance is a
+   * password editor.  This updates unmask range and notifying the text frame
+   * to update the visible characters.
+   *
+   * @param aStart      First index to show the character.
+   *                    If UINT32_MAX, it means masking all.
+   * @param aLength     Optional, Length to show characters.
+   *                    If UINT32_MAX, it means unmasking all characters after
+   *                    aStart.
+   * @param aTimeout    Optional, specify milliseconds to hide the unmasked
+   *                    characters after this call.
+   *                    If 0, it means this won't mask the characters
+   *                    automatically.
+   *                    If aLength is 0, this value is ignored.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult SetUnmaskRangeAndNotify(
+      uint32_t aStart, uint32_t aLength = UINT32_MAX, uint32_t aTimeout = 0) {
+    return SetUnmaskRangeInternal(aStart, aLength, aTimeout, true, false);
+  }
+
+  /**
+   * MaskAllCharacters() is an alias of SetUnmaskRange() to mask all characters.
+   * In other words, this removes existing unmask range.
+   * After this is called, TextEditor starts masking password automatically.
+   */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult MaskAllCharacters() {
+    return SetUnmaskRangeInternal(UINT32_MAX, 0, 0, false, true);
+  }
+
+  /**
+   * MaskAllCharactersAndNotify() is an alias of SetUnmaskRangeAndNotify() to
+   * mask all characters and notifies the text frame.  In other words, this
+   * removes existing unmask range.
+   * After this is called, TextEditor starts masking password automatically.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult MaskAllCharactersAndNotify() {
+    return SetUnmaskRangeInternal(UINT32_MAX, 0, 0, true, true);
+  }
+
+  /**
+   * WillDeleteText() is called before `DeleteTextTransaction` or something
+   * removes text in a text node.  Note that this won't be called if the
+   * instance is `HTMLEditor` since supporting it makes the code complicated
+   * due to mutation events.
+   *
+   * @param aCurrentLength      Current text length of the node.
+   * @param aRemoveStartOffset  Start offset of the range to be removed.
+   * @param aRemoveLength       Length of the range to be removed.
+   */
+  void WillDeleteText(uint32_t aCurrentLength, uint32_t aRemoveStartOffset,
+                      uint32_t aRemoveLength);
+
+  /**
+   * DidInsertText() is called after `InsertTextTransaction` or something
+   * inserts text into a text node.  Note that this won't be called if the
+   * instance is `HTMLEditor` since supporting it makes the code complicated
+   * due to mutatione events.
+   *
+   * @param aNewLength          New text length after the insertion.
+   * @param aInsertedOffset     Start offset of the inserted text.
+   * @param aInsertedLength     Length of the inserted text.
+   * @return                    NS_OK or NS_ERROR_EDITOR_DESTROYED.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidInsertText(
+      uint32_t aNewLength, uint32_t aInsertedOffset, uint32_t aInsertedLength);
 
  protected:  // Called by helper classes.
   virtual void OnStartToHandleTopLevelEditSubAction(
@@ -587,16 +714,47 @@ class TextEditor : public EditorBase, public nsIPlaintextEditor {
 
   virtual already_AddRefed<Element> GetInputEventTargetElement() override;
 
+  /**
+   * See SetUnmaskRange() and SetUnmaskRangeAndNotify() for the detail.
+   *
+   * @param aForceStartMasking  If true, forcibly starts masking.  This should
+   *                            be used only when `nsIEditor::Mask()` is called.
+   */
+  MOZ_CAN_RUN_SCRIPT nsresult SetUnmaskRangeInternal(uint32_t aStart,
+                                                     uint32_t aLength,
+                                                     uint32_t aTimeout,
+                                                     bool aNotify,
+                                                     bool aForceStartMasking);
+
  protected:
   mutable nsCOMPtr<nsIDocumentEncoder> mCachedDocumentEncoder;
+
+  // Timer to mask unmasked characters automatically.  Used only when it's
+  // a password field.
+  nsCOMPtr<nsITimer> mMaskTimer;
+
   mutable nsString mCachedDocumentEncoderType;
+
   int32_t mWrapColumn;
   int32_t mMaxTextLength;
   int32_t mInitTriggerCounter;
   int32_t mNewlineHandling;
   int32_t mCaretStyle;
 
+  // Unmasked character range.  Used only when it's a password field.
+  // If mUnmaskedLength is 0, it means there is no unmasked characters.
+  uint32_t mUnmaskedStart;
+  uint32_t mUnmaskedLength;
+
+  // Set to true if all characters are masked or waiting notification from
+  // `mMaskTimer`.  Otherwise, i.e., part of or all of password is unmasked
+  // without setting `mMaskTimer`, set to false.
+  bool mIsMaskingPassword;
+
   friend class AutoEditInitRulesTrigger;
+  friend class DeleteNodeTransaction;
+  friend class EditorBase;
+  friend class InsertNodeTransaction;
   friend class TextEditRules;
 };
 

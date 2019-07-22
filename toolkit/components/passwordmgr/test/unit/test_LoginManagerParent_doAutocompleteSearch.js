@@ -39,6 +39,14 @@ add_task(async function test_doAutocompleteSearch_generated_noLogins() {
     messageManager: {
       sendAsyncMessage: sendMessageStub,
     },
+    ownerGlobal: {
+      docShell: {
+        // eslint-disable-next-line mozilla/use-chromeutils-generateqi
+        QueryInterface() {
+          return { usePrivateBrowsing: false };
+        },
+      },
+    },
   };
 
   sinon

@@ -62,6 +62,7 @@ NS_IMPL_RELEASE_INHERITED(InsertNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(InsertNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 NS_IMETHODIMP
 InsertNodeTransaction::DoTransaction() {
   if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mContentToInsert) ||
@@ -91,14 +92,28 @@ InsertNodeTransaction::DoTransaction() {
     }
   }
 
-  mEditorBase->MarkNodeDirty(mContentToInsert);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsIContent> contentToInsert = mContentToInsert;
+  nsCOMPtr<nsINode> container = mPointToInsert.GetContainer();
+  nsCOMPtr<nsIContent> refChild = mPointToInsert.GetChild();
+  editorBase->MarkNodeDirty(contentToInsert);
 
   ErrorResult error;
-  mPointToInsert.GetContainer()->InsertBefore(*mContentToInsert,
-                                              mPointToInsert.GetChild(), error);
+  container->InsertBefore(*contentToInsert, refChild, error);
   error.WouldReportJSException();
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
+  }
+
+  if (!editorBase->AsHTMLEditor() && contentToInsert->IsText()) {
+    uint32_t length = contentToInsert->AsText()->TextLength();
+    if (length > 0) {
+      error = MOZ_KnownLive(editorBase->AsTextEditor())
+                  ->DidInsertText(length, 0, length);
+      if (NS_WARN_IF(error.Failed())) {
+        return error.StealNSResult();
+      }
+    }
   }
 
   if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
@@ -124,8 +139,15 @@ InsertNodeTransaction::DoTransaction() {
 
 NS_IMETHODIMP
 InsertNodeTransaction::UndoTransaction() {
-  if (NS_WARN_IF(!mContentToInsert) || NS_WARN_IF(!mPointToInsert.IsSet())) {
+  if (NS_WARN_IF(!mEditorBase) || NS_WARN_IF(!mContentToInsert) ||
+      NS_WARN_IF(!mPointToInsert.IsSet())) {
     return NS_ERROR_NOT_INITIALIZED;
+  }
+  if (!mEditorBase->AsHTMLEditor() && mContentToInsert->IsText()) {
+    uint32_t length = mContentToInsert->TextLength();
+    if (length > 0) {
+      mEditorBase->AsTextEditor()->WillDeleteText(length, 0, length);
+    }
   }
   // XXX If the inserted node has been moved to different container node or
   //     just removed from the DOM tree, this always fails.

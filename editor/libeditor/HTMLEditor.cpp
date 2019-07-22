@@ -3537,15 +3537,15 @@ HTMLEditor::DeleteNode(nsINode* aNode) {
   return NS_OK;
 }
 
-nsresult HTMLEditor::DeleteTextWithTransaction(CharacterData& aCharData,
+nsresult HTMLEditor::DeleteTextWithTransaction(Text& aTextNode,
                                                uint32_t aOffset,
                                                uint32_t aLength) {
   // Do nothing if the node is read-only
-  if (!IsModifiableNode(aCharData)) {
+  if (!IsModifiableNode(aTextNode)) {
     return NS_ERROR_FAILURE;
   }
 
-  return EditorBase::DeleteTextWithTransaction(aCharData, aOffset, aLength);
+  return EditorBase::DeleteTextWithTransaction(aTextNode, aOffset, aLength);
 }
 
 nsresult HTMLEditor::InsertTextWithTransaction(

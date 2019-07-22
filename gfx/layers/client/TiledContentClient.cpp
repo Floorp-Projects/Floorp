@@ -678,7 +678,7 @@ Maybe<AcquiredBackBuffer> TileClient::AcquireBackBuffer(
   RefPtr<DrawTargetCapture> capture;
   if (aFlags & TilePaintFlags::Async) {
     capture = Factory::CreateCaptureDrawTargetForTarget(
-        target, StaticPrefs::layers_omtp_capture_limit());
+        target, StaticPrefs::layers_omtp_capture_limit_AtStartup());
     target = capture;
   }
 

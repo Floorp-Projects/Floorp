@@ -416,7 +416,8 @@ this.LoginManagerParent = {
     if (
       isPasswordField &&
       autocompleteInfo.fieldName == "new-password" &&
-      Services.logins.getLoginSavingEnabled(formOrigin)
+      Services.logins.getLoginSavingEnabled(formOrigin) &&
+      !PrivateBrowsingUtils.isWindowPrivate(target.ownerGlobal)
     ) {
       generatedPassword = this.getGeneratedPassword(browsingContextId);
     }

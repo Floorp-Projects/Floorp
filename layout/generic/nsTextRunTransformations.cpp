@@ -9,6 +9,7 @@
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/TextEditor.h"
 
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
@@ -278,6 +279,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
 
   uint32_t length = aString.Length();
   const char16_t* str = aString.BeginReading();
+  const char16_t kPasswordMask = TextEditor::PasswordMask();
 
   bool mergeNeeded = false;
 
@@ -334,6 +336,7 @@ bool nsCaseTransformTextRunFactory::TransformString(
       }
     }
 
+    bool maskPassword = charStyle && charStyle->mMaskPassword;
     int extraChars = 0;
     const mozilla::unicode::MultiCharMapping* mcm;
     bool inhibitBreakBefore = false;  // have we just deleted preceding hyphen?
@@ -343,413 +346,421 @@ bool nsCaseTransformTextRunFactory::TransformString(
       ch = SURROGATE_TO_UCS4(ch, str[i + 1]);
     }
 
-    switch (style.case_) {
-      case StyleTextTransformCase::None:
-        break;
+    // Skip case transform if we're masking current character.
+    if (!maskPassword) {
+      switch (style.case_) {
+        case StyleTextTransformCase::None:
+          break;
 
-      case StyleTextTransformCase::Lowercase:
-        if (languageSpecificCasing == eLSCB_Turkish) {
-          if (ch == 'I') {
-            ch = LATIN_SMALL_LETTER_DOTLESS_I;
-            prevIsLetter = true;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-          if (ch == LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE) {
-            ch = 'i';
-            prevIsLetter = true;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-        }
-
-        if (languageSpecificCasing == eLSCB_Lithuanian) {
-          // clang-format off
-          /* From SpecialCasing.txt:
-           * # Introduce an explicit dot above when lowercasing capital I's and J's
-           * # whenever there are more accents above.
-           * # (of the accents used in Lithuanian: grave, acute, tilde above, and ogonek)
-           *
-           * 0049; 0069 0307; 0049; 0049; lt More_Above; # LATIN CAPITAL LETTER I
-           * 004A; 006A 0307; 004A; 004A; lt More_Above; # LATIN CAPITAL LETTER J
-           * 012E; 012F 0307; 012E; 012E; lt More_Above; # LATIN CAPITAL LETTER I WITH OGONEK
-           * 00CC; 0069 0307 0300; 00CC; 00CC; lt; # LATIN CAPITAL LETTER I WITH GRAVE
-           * 00CD; 0069 0307 0301; 00CD; 00CD; lt; # LATIN CAPITAL LETTER I WITH ACUTE
-           * 0128; 0069 0307 0303; 0128; 0128; lt; # LATIN CAPITAL LETTER I WITH TILDE
-           */
-          // clang-format on
-          if (ch == 'I' || ch == 'J' || ch == 0x012E) {
-            ch = ToLowerCase(ch);
-            prevIsLetter = true;
-            seenSoftDotted = true;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-          if (ch == 0x00CC) {
-            aConvertedString.Append('i');
-            aConvertedString.Append(0x0307);
-            extraChars += 2;
-            ch = 0x0300;
-            prevIsLetter = true;
-            seenSoftDotted = false;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-          if (ch == 0x00CD) {
-            aConvertedString.Append('i');
-            aConvertedString.Append(0x0307);
-            extraChars += 2;
-            ch = 0x0301;
-            prevIsLetter = true;
-            seenSoftDotted = false;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-          if (ch == 0x0128) {
-            aConvertedString.Append('i');
-            aConvertedString.Append(0x0307);
-            extraChars += 2;
-            ch = 0x0303;
-            prevIsLetter = true;
-            seenSoftDotted = false;
-            sigmaIndex = uint32_t(-1);
-            break;
-          }
-        }
-
-        cat = mozilla::unicode::GetGenCategory(ch);
-
-        if (languageSpecificCasing == eLSCB_Irish &&
-            cat == nsUGenCategory::kLetter) {
-          // See bug 1018805 for Irish lowercasing requirements
-          if (!prevIsLetter && (ch == 'n' || ch == 't')) {
-            ntPrefix = true;
-          } else {
-            if (ntPrefix && mozilla::IrishCasing::IsUpperVowel(ch)) {
-              aConvertedString.Append('-');
-              ++extraChars;
+        case StyleTextTransformCase::Lowercase:
+          if (languageSpecificCasing == eLSCB_Turkish) {
+            if (ch == 'I') {
+              ch = LATIN_SMALL_LETTER_DOTLESS_I;
+              prevIsLetter = true;
+              sigmaIndex = uint32_t(-1);
+              break;
             }
+            if (ch == LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE) {
+              ch = 'i';
+              prevIsLetter = true;
+              sigmaIndex = uint32_t(-1);
+              break;
+            }
+          }
+
+          if (languageSpecificCasing == eLSCB_Lithuanian) {
+            // clang-format off
+            /* From SpecialCasing.txt:
+             * # Introduce an explicit dot above when lowercasing capital I's and J's
+             * # whenever there are more accents above.
+             * # (of the accents used in Lithuanian: grave, acute, tilde above, and ogonek)
+             *
+             * 0049; 0069 0307; 0049; 0049; lt More_Above; # LATIN CAPITAL LETTER I
+             * 004A; 006A 0307; 004A; 004A; lt More_Above; # LATIN CAPITAL LETTER J
+             * 012E; 012F 0307; 012E; 012E; lt More_Above; # LATIN CAPITAL LETTER I WITH OGONEK
+             * 00CC; 0069 0307 0300; 00CC; 00CC; lt; # LATIN CAPITAL LETTER I WITH GRAVE
+             * 00CD; 0069 0307 0301; 00CD; 00CD; lt; # LATIN CAPITAL LETTER I WITH ACUTE
+             * 0128; 0069 0307 0303; 0128; 0128; lt; # LATIN CAPITAL LETTER I WITH TILDE
+             */
+            // clang-format on
+            if (ch == 'I' || ch == 'J' || ch == 0x012E) {
+              ch = ToLowerCase(ch);
+              prevIsLetter = true;
+              seenSoftDotted = true;
+              sigmaIndex = uint32_t(-1);
+              break;
+            }
+            if (ch == 0x00CC) {
+              aConvertedString.Append('i');
+              aConvertedString.Append(0x0307);
+              extraChars += 2;
+              ch = 0x0300;
+              prevIsLetter = true;
+              seenSoftDotted = false;
+              sigmaIndex = uint32_t(-1);
+              break;
+            }
+            if (ch == 0x00CD) {
+              aConvertedString.Append('i');
+              aConvertedString.Append(0x0307);
+              extraChars += 2;
+              ch = 0x0301;
+              prevIsLetter = true;
+              seenSoftDotted = false;
+              sigmaIndex = uint32_t(-1);
+              break;
+            }
+            if (ch == 0x0128) {
+              aConvertedString.Append('i');
+              aConvertedString.Append(0x0307);
+              extraChars += 2;
+              ch = 0x0303;
+              prevIsLetter = true;
+              seenSoftDotted = false;
+              sigmaIndex = uint32_t(-1);
+              break;
+            }
+          }
+
+          cat = mozilla::unicode::GetGenCategory(ch);
+
+          if (languageSpecificCasing == eLSCB_Irish &&
+              cat == nsUGenCategory::kLetter) {
+            // See bug 1018805 for Irish lowercasing requirements
+            if (!prevIsLetter && (ch == 'n' || ch == 't')) {
+              ntPrefix = true;
+            } else {
+              if (ntPrefix && mozilla::IrishCasing::IsUpperVowel(ch)) {
+                aConvertedString.Append('-');
+                ++extraChars;
+              }
+              ntPrefix = false;
+            }
+          } else {
             ntPrefix = false;
           }
-        } else {
-          ntPrefix = false;
-        }
 
-        if (seenSoftDotted && cat == nsUGenCategory::kMark) {
-          // The seenSoftDotted flag will only be set in Lithuanian mode.
-          if (ch == 0x0300 || ch == 0x0301 || ch == 0x0303) {
-            aConvertedString.Append(0x0307);
-            ++extraChars;
+          if (seenSoftDotted && cat == nsUGenCategory::kMark) {
+            // The seenSoftDotted flag will only be set in Lithuanian mode.
+            if (ch == 0x0300 || ch == 0x0301 || ch == 0x0303) {
+              aConvertedString.Append(0x0307);
+              ++extraChars;
+            }
           }
-        }
-        seenSoftDotted = false;
+          seenSoftDotted = false;
 
-        // Special lowercasing behavior for Greek Sigma: note that this is
-        // listed as context-sensitive in Unicode's SpecialCasing.txt, but is
-        // *not* a language-specific mapping; it applies regardless of the
-        // language of the element.
-        //
-        // The lowercase mapping for CAPITAL SIGMA should be to SMALL SIGMA
-        // (i.e. the non-final form) whenever there is a following letter, or
-        // when the CAPITAL SIGMA occurs in isolation (neither preceded nor
-        // followed by a LETTER); and to FINAL SIGMA when it is preceded by
-        // another letter but not followed by one.
-        //
-        // To implement the context-sensitive nature of this mapping, we keep
-        // track of whether the previous character was a letter. If not, CAPITAL
-        // SIGMA will map directly to SMALL SIGMA. If the previous character
-        // was a letter, CAPITAL SIGMA maps to FINAL SIGMA and we record the
-        // position in the converted string; if we then encounter another
-        // letter, that FINAL SIGMA is replaced with a standard SMALL SIGMA.
+          // Special lowercasing behavior for Greek Sigma: note that this is
+          // listed as context-sensitive in Unicode's SpecialCasing.txt, but is
+          // *not* a language-specific mapping; it applies regardless of the
+          // language of the element.
+          //
+          // The lowercase mapping for CAPITAL SIGMA should be to SMALL SIGMA
+          // (i.e. the non-final form) whenever there is a following letter, or
+          // when the CAPITAL SIGMA occurs in isolation (neither preceded nor
+          // followed by a LETTER); and to FINAL SIGMA when it is preceded by
+          // another letter but not followed by one.
+          //
+          // To implement the context-sensitive nature of this mapping, we keep
+          // track of whether the previous character was a letter. If not,
+          // CAPITAL SIGMA will map directly to SMALL SIGMA. If the previous
+          // character was a letter, CAPITAL SIGMA maps to FINAL SIGMA and we
+          // record the position in the converted string; if we then encounter
+          // another letter, that FINAL SIGMA is replaced with a standard
+          // SMALL SIGMA.
 
-        // If sigmaIndex is not -1, it marks where we have provisionally mapped
-        // a CAPITAL SIGMA to FINAL SIGMA; if we now find another letter, we
-        // need to change it to SMALL SIGMA.
-        if (sigmaIndex != uint32_t(-1)) {
-          if (cat == nsUGenCategory::kLetter) {
-            aConvertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
+          // If sigmaIndex is not -1, it marks where we have provisionally
+          // mapped a CAPITAL SIGMA to FINAL SIGMA; if we now find another
+          // letter, we need to change it to SMALL SIGMA.
+          if (sigmaIndex != uint32_t(-1)) {
+            if (cat == nsUGenCategory::kLetter) {
+              aConvertedString.SetCharAt(GREEK_SMALL_LETTER_SIGMA, sigmaIndex);
+            }
           }
-        }
 
-        if (ch == GREEK_CAPITAL_LETTER_SIGMA) {
-          // If preceding char was a letter, map to FINAL instead of SMALL,
-          // and note where it occurred by setting sigmaIndex; we'll change it
-          // to standard SMALL SIGMA later if another letter follows
-          if (prevIsLetter) {
-            ch = GREEK_SMALL_LETTER_FINAL_SIGMA;
-            sigmaIndex = aConvertedString.Length();
-          } else {
-            // CAPITAL SIGMA not preceded by a letter is unconditionally mapped
-            // to SMALL SIGMA
-            ch = GREEK_SMALL_LETTER_SIGMA;
+          if (ch == GREEK_CAPITAL_LETTER_SIGMA) {
+            // If preceding char was a letter, map to FINAL instead of SMALL,
+            // and note where it occurred by setting sigmaIndex; we'll change
+            // it to standard SMALL SIGMA later if another letter follows
+            if (prevIsLetter) {
+              ch = GREEK_SMALL_LETTER_FINAL_SIGMA;
+              sigmaIndex = aConvertedString.Length();
+            } else {
+              // CAPITAL SIGMA not preceded by a letter is unconditionally
+              // mapped to SMALL SIGMA
+              ch = GREEK_SMALL_LETTER_SIGMA;
+              sigmaIndex = uint32_t(-1);
+            }
+            prevIsLetter = true;
+            break;
+          }
+
+          // ignore diacritics for the purpose of contextual sigma mapping;
+          // otherwise, reset prevIsLetter appropriately and clear the
+          // sigmaIndex marker
+          if (cat != nsUGenCategory::kMark) {
+            prevIsLetter = (cat == nsUGenCategory::kLetter);
             sigmaIndex = uint32_t(-1);
           }
-          prevIsLetter = true;
-          break;
-        }
 
-        // ignore diacritics for the purpose of contextual sigma mapping;
-        // otherwise, reset prevIsLetter appropriately and clear the
-        // sigmaIndex marker
-        if (cat != nsUGenCategory::kMark) {
-          prevIsLetter = (cat == nsUGenCategory::kLetter);
-          sigmaIndex = uint32_t(-1);
-        }
-
-        mcm = mozilla::unicode::SpecialLower(ch);
-        if (mcm) {
-          int j = 0;
-          while (j < 2 && mcm->mMappedChars[j + 1]) {
-            aConvertedString.Append(mcm->mMappedChars[j]);
-            ++extraChars;
-            ++j;
-          }
-          ch = mcm->mMappedChars[j];
-          break;
-        }
-
-        ch = ToLowerCase(ch);
-        break;
-
-      case StyleTextTransformCase::Uppercase:
-        if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
-          ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
-          break;
-        }
-
-        if (languageSpecificCasing == eLSCB_Greek) {
-          bool markEta;
-          bool updateEta;
-          ch = mozilla::GreekCasing::UpperCase(ch, greekState, markEta,
-                                               updateEta);
-          if (markEta) {
-            greekMark = aConvertedString.Length();
-          } else if (updateEta) {
-            // Remove the TONOS from an uppercase ETA-TONOS that turned out
-            // not to be disjunctive-eta.
-            MOZ_ASSERT(aConvertedString.Length() > 0 &&
-                           greekMark < aConvertedString.Length(),
-                       "bad greekMark!");
-            aConvertedString.SetCharAt(kGreekUpperEta, greekMark);
-            greekMark = uint32_t(-1);
-          }
-          break;
-        }
-
-        if (languageSpecificCasing == eLSCB_Lithuanian) {
-          /*
-           * # Remove DOT ABOVE after "i" with upper or titlecase
-           *
-           * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
-           */
-          if (ch == 'i' || ch == 'j' || ch == 0x012F) {
-            seenSoftDotted = true;
-            ch = ToTitleCase(ch);
+          mcm = mozilla::unicode::SpecialLower(ch);
+          if (mcm) {
+            int j = 0;
+            while (j < 2 && mcm->mMappedChars[j + 1]) {
+              aConvertedString.Append(mcm->mMappedChars[j]);
+              ++extraChars;
+              ++j;
+            }
+            ch = mcm->mMappedChars[j];
             break;
           }
-          if (seenSoftDotted) {
-            seenSoftDotted = false;
-            if (ch == 0x0307) {
-              ch = uint32_t(-1);
+
+          ch = ToLowerCase(ch);
+          break;
+
+        case StyleTextTransformCase::Uppercase:
+          if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
+            ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+            break;
+          }
+
+          if (languageSpecificCasing == eLSCB_Greek) {
+            bool markEta;
+            bool updateEta;
+            ch = mozilla::GreekCasing::UpperCase(ch, greekState, markEta,
+                                                 updateEta);
+            if (markEta) {
+              greekMark = aConvertedString.Length();
+            } else if (updateEta) {
+              // Remove the TONOS from an uppercase ETA-TONOS that turned out
+              // not to be disjunctive-eta.
+              MOZ_ASSERT(aConvertedString.Length() > 0 &&
+                             greekMark < aConvertedString.Length(),
+                         "bad greekMark!");
+              aConvertedString.SetCharAt(kGreekUpperEta, greekMark);
+              greekMark = uint32_t(-1);
+            }
+            break;
+          }
+
+          if (languageSpecificCasing == eLSCB_Lithuanian) {
+            /*
+             * # Remove DOT ABOVE after "i" with upper or titlecase
+             *
+             * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
+             */
+            if (ch == 'i' || ch == 'j' || ch == 0x012F) {
+              seenSoftDotted = true;
+              ch = ToTitleCase(ch);
               break;
             }
-          }
-        }
-
-        if (languageSpecificCasing == eLSCB_Irish) {
-          bool mark;
-          uint8_t action;
-          ch = mozilla::IrishCasing::UpperCase(ch, irishState, mark, action);
-          if (mark) {
-            irishMark = aConvertedString.Length();
-            irishMarkSrc = i;
-            break;
-          } else if (action) {
-            nsString& str = aConvertedString;  // shorthand
-            switch (action) {
-              case 1:
-                // lowercase a single prefix letter
-                NS_ASSERTION(str.Length() > 0 && irishMark < str.Length(),
-                             "bad irishMark!");
-                str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
-                irishMark = uint32_t(-1);
-                irishMarkSrc = uint32_t(-1);
-                break;
-              case 2:
-                // lowercase two prefix letters (immediately before current pos)
-                NS_ASSERTION(str.Length() >= 2 && irishMark == str.Length() - 2,
-                             "bad irishMark!");
-                str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
-                str.SetCharAt(ToLowerCase(str[irishMark + 1]), irishMark + 1);
-                irishMark = uint32_t(-1);
-                irishMarkSrc = uint32_t(-1);
-                break;
-              case 3:
-                // lowercase one prefix letter, and delete following hyphen
-                // (which must be the immediately-preceding char)
-                NS_ASSERTION(str.Length() >= 2 && irishMark == str.Length() - 2,
-                             "bad irishMark!");
-                MOZ_ASSERT(
-                    irishMark != uint32_t(-1) && irishMarkSrc != uint32_t(-1),
-                    "failed to set irishMarks");
-                str.Replace(irishMark, 2, ToLowerCase(str[irishMark]));
-                aDeletedCharsArray[irishMarkSrc + 1] = true;
-                // Remove the trailing entries (corresponding to the deleted
-                // hyphen) from the auxiliary arrays.
-                aCharsToMergeArray.SetLength(aCharsToMergeArray.Length() - 1);
-                if (auxiliaryOutputArrays) {
-                  aStyleArray->SetLength(aStyleArray->Length() - 1);
-                  aCanBreakBeforeArray->SetLength(
-                      aCanBreakBeforeArray->Length() - 1);
-                  inhibitBreakBefore = true;
-                }
-                mergeNeeded = true;
-                irishMark = uint32_t(-1);
-                irishMarkSrc = uint32_t(-1);
-                break;
-            }
-            // ch has been set to the uppercase for current char;
-            // No need to check for SpecialUpper here as none of the characters
-            // that could trigger an Irish casing action have special mappings.
-            break;
-          }
-          // If we didn't have any special action to perform, fall through
-          // to check for special uppercase (ß)
-        }
-
-        mcm = mozilla::unicode::SpecialUpper(ch);
-        if (mcm) {
-          int j = 0;
-          while (j < 2 && mcm->mMappedChars[j + 1]) {
-            aConvertedString.Append(mcm->mMappedChars[j]);
-            ++extraChars;
-            ++j;
-          }
-          ch = mcm->mMappedChars[j];
-          break;
-        }
-
-        // Bug 1476304: we exclude Georgian letters U+10D0..10FF because of lack
-        // of widespread font support for the corresponding Mtavruli characters
-        // at this time (July 2018).
-        // This condition is to be removed once the major platforms ship with
-        // fonts that support U+1C90..1CBF.
-        if (ch < 0x10D0 || ch > 0x10FF) {
-          ch = ToUpperCase(ch);
-        }
-        break;
-
-      case StyleTextTransformCase::Capitalize:
-        if (aTextRun) {
-          if (capitalizeDutchIJ && ch == 'j') {
-            ch = 'J';
-            capitalizeDutchIJ = false;
-            break;
-          }
-          capitalizeDutchIJ = false;
-          if (aOffsetInTextRun < aTextRun->mCapitalize.Length() &&
-              aTextRun->mCapitalize[aOffsetInTextRun]) {
-            if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
-              ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
-              break;
-            }
-            if (languageSpecificCasing == eLSCB_Dutch && ch == 'i') {
-              ch = 'I';
-              capitalizeDutchIJ = true;
-              break;
-            }
-            if (languageSpecificCasing == eLSCB_Lithuanian) {
-              /*
-               * # Remove DOT ABOVE after "i" with upper or titlecase
-               *
-               * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
-               */
-              if (ch == 'i' || ch == 'j' || ch == 0x012F) {
-                seenSoftDotted = true;
-                ch = ToTitleCase(ch);
+            if (seenSoftDotted) {
+              seenSoftDotted = false;
+              if (ch == 0x0307) {
+                ch = uint32_t(-1);
                 break;
               }
-              if (seenSoftDotted) {
-                seenSoftDotted = false;
-                if (ch == 0x0307) {
-                  ch = uint32_t(-1);
+            }
+          }
+
+          if (languageSpecificCasing == eLSCB_Irish) {
+            bool mark;
+            uint8_t action;
+            ch = mozilla::IrishCasing::UpperCase(ch, irishState, mark, action);
+            if (mark) {
+              irishMark = aConvertedString.Length();
+              irishMarkSrc = i;
+              break;
+            } else if (action) {
+              nsString& str = aConvertedString;  // shorthand
+              switch (action) {
+                case 1:
+                  // lowercase a single prefix letter
+                  NS_ASSERTION(str.Length() > 0 && irishMark < str.Length(),
+                               "bad irishMark!");
+                  str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
+                  irishMark = uint32_t(-1);
+                  irishMarkSrc = uint32_t(-1);
+                  break;
+                case 2:
+                  // lowercase two prefix letters (immediately before current
+                  // pos)
+                  NS_ASSERTION(
+                      str.Length() >= 2 && irishMark == str.Length() - 2,
+                      "bad irishMark!");
+                  str.SetCharAt(ToLowerCase(str[irishMark]), irishMark);
+                  str.SetCharAt(ToLowerCase(str[irishMark + 1]), irishMark + 1);
+                  irishMark = uint32_t(-1);
+                  irishMarkSrc = uint32_t(-1);
+                  break;
+                case 3:
+                  // lowercase one prefix letter, and delete following hyphen
+                  // (which must be the immediately-preceding char)
+                  NS_ASSERTION(
+                      str.Length() >= 2 && irishMark == str.Length() - 2,
+                      "bad irishMark!");
+                  MOZ_ASSERT(
+                      irishMark != uint32_t(-1) && irishMarkSrc != uint32_t(-1),
+                      "failed to set irishMarks");
+                  str.Replace(irishMark, 2, ToLowerCase(str[irishMark]));
+                  aDeletedCharsArray[irishMarkSrc + 1] = true;
+                  // Remove the trailing entries (corresponding to the deleted
+                  // hyphen) from the auxiliary arrays.
+                  aCharsToMergeArray.SetLength(aCharsToMergeArray.Length() - 1);
+                  if (auxiliaryOutputArrays) {
+                    aStyleArray->SetLength(aStyleArray->Length() - 1);
+                    aCanBreakBeforeArray->SetLength(
+                        aCanBreakBeforeArray->Length() - 1);
+                    inhibitBreakBefore = true;
+                  }
+                  mergeNeeded = true;
+                  irishMark = uint32_t(-1);
+                  irishMarkSrc = uint32_t(-1);
+                  break;
+              }
+              // ch has been set to the uppercase for current char;
+              // No need to check for SpecialUpper here as none of the
+              // characters that could trigger an Irish casing action have
+              // special mappings.
+              break;
+            }
+            // If we didn't have any special action to perform, fall through
+            // to check for special uppercase (ß)
+          }
+
+          mcm = mozilla::unicode::SpecialUpper(ch);
+          if (mcm) {
+            int j = 0;
+            while (j < 2 && mcm->mMappedChars[j + 1]) {
+              aConvertedString.Append(mcm->mMappedChars[j]);
+              ++extraChars;
+              ++j;
+            }
+            ch = mcm->mMappedChars[j];
+            break;
+          }
+
+          // Bug 1476304: we exclude Georgian letters U+10D0..10FF because of
+          // lack of widespread font support for the corresponding Mtavruli
+          // characters at this time (July 2018).
+          // This condition is to be removed once the major platforms ship with
+          // fonts that support U+1C90..1CBF.
+          if (ch < 0x10D0 || ch > 0x10FF) {
+            ch = ToUpperCase(ch);
+          }
+          break;
+
+        case StyleTextTransformCase::Capitalize:
+          if (aTextRun) {
+            if (capitalizeDutchIJ && ch == 'j') {
+              ch = 'J';
+              capitalizeDutchIJ = false;
+              break;
+            }
+            capitalizeDutchIJ = false;
+            if (aOffsetInTextRun < aTextRun->mCapitalize.Length() &&
+                aTextRun->mCapitalize[aOffsetInTextRun]) {
+              if (languageSpecificCasing == eLSCB_Turkish && ch == 'i') {
+                ch = LATIN_CAPITAL_LETTER_I_WITH_DOT_ABOVE;
+                break;
+              }
+              if (languageSpecificCasing == eLSCB_Dutch && ch == 'i') {
+                ch = 'I';
+                capitalizeDutchIJ = true;
+                break;
+              }
+              if (languageSpecificCasing == eLSCB_Lithuanian) {
+                /*
+                 * # Remove DOT ABOVE after "i" with upper or titlecase
+                 *
+                 * 0307; 0307; ; ; lt After_Soft_Dotted; # COMBINING DOT ABOVE
+                 */
+                if (ch == 'i' || ch == 'j' || ch == 0x012F) {
+                  seenSoftDotted = true;
+                  ch = ToTitleCase(ch);
                   break;
                 }
+                if (seenSoftDotted) {
+                  seenSoftDotted = false;
+                  if (ch == 0x0307) {
+                    ch = uint32_t(-1);
+                    break;
+                  }
+                }
               }
-            }
 
-            mcm = mozilla::unicode::SpecialTitle(ch);
-            if (mcm) {
-              int j = 0;
-              while (j < 2 && mcm->mMappedChars[j + 1]) {
-                aConvertedString.Append(mcm->mMappedChars[j]);
-                ++extraChars;
-                ++j;
+              mcm = mozilla::unicode::SpecialTitle(ch);
+              if (mcm) {
+                int j = 0;
+                while (j < 2 && mcm->mMappedChars[j + 1]) {
+                  aConvertedString.Append(mcm->mMappedChars[j]);
+                  ++extraChars;
+                  ++j;
+                }
+                ch = mcm->mMappedChars[j];
+                break;
               }
-              ch = mcm->mMappedChars[j];
-              break;
-            }
 
-            ch = ToTitleCase(ch);
+              ch = ToTitleCase(ch);
+            }
+          }
+          break;
+
+        default:
+          MOZ_ASSERT_UNREACHABLE("all cases should be handled");
+          break;
+      }
+
+      if (!aCaseTransformsOnly) {
+        if (!forceNonFullWidth &&
+            (style.other_ & StyleTextTransformOther_FULL_WIDTH)) {
+          ch = mozilla::unicode::GetFullWidth(ch);
+        }
+
+        if (style.other_ & StyleTextTransformOther_FULL_SIZE_KANA) {
+          // clang-format off
+          static const uint16_t kSmallKanas[] = {
+              // ぁ   ぃ      ぅ      ぇ      ぉ      っ      ゃ      ゅ      ょ
+              0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 0x3063, 0x3083, 0x3085, 0x3087,
+              // ゎ   ゕ      ゖ
+              0x308E, 0x3095, 0x3096,
+              // ァ   ィ      ゥ      ェ      ォ      ッ      ャ      ュ      ョ
+              0x30A1, 0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30C3, 0x30E3, 0x30E5, 0x30E7,
+              // ヮ   ヵ      ヶ      ㇰ      ㇱ      ㇲ      ㇳ      ㇴ      ㇵ
+              0x30EE, 0x30F5, 0x30F6, 0x31F0, 0x31F1, 0x31F2, 0x31F3, 0x31F4, 0x31F5,
+              // ㇶ   ㇷ      ㇸ      ㇹ      ㇺ      ㇻ      ㇼ      ㇽ      ㇾ
+              0x31F6, 0x31F7, 0x31F8, 0x31F9, 0x31FA, 0x31FB, 0x31FC, 0x31FD, 0x31FE,
+              // ㇿ
+              0x31FF,
+              // ｧ    ｨ       ｩ       ｪ       ｫ       ｬ       ｭ       ｮ       ｯ
+              0xFF67, 0xFF68, 0xFF69, 0xFF6A, 0xFF6B, 0xFF6C, 0xFF6D, 0xFF6E, 0xFF6F};
+          static const uint16_t kFullSizeKanas[] = {
+              // あ   い      う      え      お      つ      や      ゆ      よ
+              0x3042, 0x3044, 0x3046, 0x3048, 0x304A, 0x3064, 0x3084, 0x3086, 0x3088,
+              // わ   か      け
+              0x308F, 0x304B, 0x3051,
+              // ア   イ      ウ      エ      オ      ツ      ヤ      ユ      ヨ
+              0x30A2, 0x30A4, 0x30A6, 0x30A8, 0x30AA, 0x30C4, 0x30E4, 0x30E6, 0x30E8,
+              // ワ   カ      ケ      ク      シ      ス      ト      ヌ      ハ
+              0x30EF, 0x30AB, 0x30B1, 0x30AF, 0x30B7, 0x30B9, 0x30C8, 0x30CC, 0x30CF,
+              // ヒ   フ      ヘ      ホ      ム      ラ      リ      ル      レ
+              0x30D2, 0x30D5, 0x30D8, 0x30DB, 0x30E0, 0x30E9, 0x30EA, 0x30EB, 0x30EC,
+              // ロ
+              0x30ED,
+              // ｱ    ｲ       ｳ       ｴ       ｵ       ﾔ       ﾕ       ﾖ        ﾂ
+              0xFF71, 0xFF72, 0xFF73, 0xFF74, 0xFF75, 0xFF94, 0xFF95, 0xFF96, 0xFF82};
+          // clang-format on
+
+          size_t index;
+          const uint16_t len = MOZ_ARRAY_LENGTH(kSmallKanas);
+          if (mozilla::BinarySearch(kSmallKanas, 0, len, ch, &index)) {
+            ch = kFullSizeKanas[index];
           }
         }
-        break;
-
-      default:
-        MOZ_ASSERT_UNREACHABLE("all cases should be handled");
-        break;
-    }
-
-    if (!aCaseTransformsOnly) {
-      if (!forceNonFullWidth &&
-          (style.other_ & StyleTextTransformOther_FULL_WIDTH)) {
-        ch = mozilla::unicode::GetFullWidth(ch);
       }
 
-      if (style.other_ & StyleTextTransformOther_FULL_SIZE_KANA) {
-        // clang-format off
-        static const uint16_t kSmallKanas[] = {
-            // ぁ   ぃ      ぅ      ぇ      ぉ      っ      ゃ      ゅ      ょ
-            0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 0x3063, 0x3083, 0x3085, 0x3087,
-            // ゎ   ゕ      ゖ
-            0x308E, 0x3095, 0x3096,
-            // ァ   ィ      ゥ      ェ      ォ      ッ      ャ      ュ      ョ
-            0x30A1, 0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30C3, 0x30E3, 0x30E5, 0x30E7,
-            // ヮ   ヵ      ヶ      ㇰ      ㇱ      ㇲ      ㇳ      ㇴ      ㇵ
-            0x30EE, 0x30F5, 0x30F6, 0x31F0, 0x31F1, 0x31F2, 0x31F3, 0x31F4, 0x31F5,
-            // ㇶ   ㇷ      ㇸ      ㇹ      ㇺ      ㇻ      ㇼ      ㇽ      ㇾ
-            0x31F6, 0x31F7, 0x31F8, 0x31F9, 0x31FA, 0x31FB, 0x31FC, 0x31FD, 0x31FE,
-            // ㇿ
-            0x31FF,
-            // ｧ    ｨ       ｩ       ｪ       ｫ       ｬ       ｭ       ｮ       ｯ
-            0xFF67, 0xFF68, 0xFF69, 0xFF6A, 0xFF6B, 0xFF6C, 0xFF6D, 0xFF6E, 0xFF6F};
-        static const uint16_t kFullSizeKanas[] = {
-            // あ   い      う      え      お      つ      や      ゆ      よ
-            0x3042, 0x3044, 0x3046, 0x3048, 0x304A, 0x3064, 0x3084, 0x3086, 0x3088,
-            // わ   か      け
-            0x308F, 0x304B, 0x3051,
-            // ア   イ      ウ      エ      オ      ツ      ヤ      ユ      ヨ
-            0x30A2, 0x30A4, 0x30A6, 0x30A8, 0x30AA, 0x30C4, 0x30E4, 0x30E6, 0x30E8,
-            // ワ   カ      ケ      ク      シ      ス      ト      ヌ      ハ
-            0x30EF, 0x30AB, 0x30B1, 0x30AF, 0x30B7, 0x30B9, 0x30C8, 0x30CC, 0x30CF,
-            // ヒ   フ      ヘ      ホ      ム      ラ      リ      ル      レ
-            0x30D2, 0x30D5, 0x30D8, 0x30DB, 0x30E0, 0x30E9, 0x30EA, 0x30EB, 0x30EC,
-            // ロ
-            0x30ED,
-            // ｱ    ｲ       ｳ       ｴ       ｵ       ﾔ       ﾕ       ﾖ        ﾂ
-            0xFF71, 0xFF72, 0xFF73, 0xFF74, 0xFF75, 0xFF94, 0xFF95, 0xFF96, 0xFF82};
-        // clang-format on
-
-        size_t index;
-        const uint16_t len = MOZ_ARRAY_LENGTH(kSmallKanas);
-        if (mozilla::BinarySearch(kSmallKanas, 0, len, ch, &index)) {
-          ch = kFullSizeKanas[index];
-        }
+      if (forceNonFullWidth) {
+        ch = mozilla::unicode::GetFullWidthInverse(ch);
       }
-    }
-
-    if (forceNonFullWidth) {
-      ch = mozilla::unicode::GetFullWidthInverse(ch);
     }
 
     if (ch == uint32_t(-1)) {
@@ -767,16 +778,21 @@ bool nsCaseTransformTextRunFactory::TransformString(
       }
 
       if (IS_IN_BMP(ch)) {
-        aConvertedString.Append(ch);
+        aConvertedString.Append(maskPassword ? kPasswordMask : ch);
       } else {
-        aConvertedString.Append(H_SURROGATE(ch));
-        aConvertedString.Append(L_SURROGATE(ch));
-        i++;
-        aOffsetInTextRun++;
-        aDeletedCharsArray.AppendElement(
-            true);  // not exactly deleted, but the
-                    // trailing surrogate is skipped
+        if (maskPassword) {
+          aConvertedString.Append(kPasswordMask);
+          // TODO: We should show a password mask for a surrogate pair later.
+          aConvertedString.Append(kPasswordMask);
+        } else {
+          aConvertedString.Append(H_SURROGATE(ch));
+          aConvertedString.Append(L_SURROGATE(ch));
+        }
         ++extraChars;
+        ++i;
+        ++aOffsetInTextRun;
+        // Skip the trailing surrogate.
+        aDeletedCharsArray.AppendElement(true);
       }
 
       while (extraChars-- > 0) {

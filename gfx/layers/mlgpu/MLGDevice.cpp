@@ -85,7 +85,7 @@ bool MLGDevice::Initialize() {
 
   // We allow this to be pref'd off for testing. Switching it off enables
   // Direct3D 11.0/Windows 7/OpenGL-style buffer code paths.
-  if (!StaticPrefs::layers_mlgpu_enable_buffer_sharing()) {
+  if (!StaticPrefs::layers_mlgpu_enable_buffer_sharing_AtStartup()) {
     gfxConfig::EnableFallback(Fallback::NO_CONSTANT_BUFFER_OFFSETTING,
                               "Disabled by pref");
     mCanUseConstantBufferOffsetBinding = false;
@@ -99,7 +99,7 @@ bool MLGDevice::Initialize() {
   // We allow this to be pref'd off for testing. Disabling it turns on
   // ID3D11DeviceContext1::ClearView support, which is present on
   // newer Windows 8+ drivers.
-  if (!StaticPrefs::layers_mlgpu_enable_clear_view()) {
+  if (!StaticPrefs::layers_mlgpu_enable_clear_view_AtStartup()) {
     mCanUseClearView = false;
   }
 
@@ -127,7 +127,7 @@ bool MLGDevice::Initialize() {
                 "Failed to allocate a shared shader buffer");
   }
 
-  if (StaticPrefs::layers_mlgpu_enable_buffer_cache()) {
+  if (StaticPrefs::layers_mlgpu_enable_buffer_cache_AtStartup()) {
     mConstantBufferCache = MakeUnique<BufferCache>(this);
   }
 

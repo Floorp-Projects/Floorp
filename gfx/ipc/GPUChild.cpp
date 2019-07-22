@@ -142,7 +142,7 @@ mozilla::ipc::IPCResult GPUChild::RecvInitCrashReporter(
 mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
   // Make sure create VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (StaticPrefs::dom_vr_process_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     VRProcessManager::Initialize();
     VRProcessManager* vr = VRProcessManager::Get();
     MOZ_ASSERT(vr, "VRProcessManager must be initialized first.");
@@ -158,7 +158,7 @@ mozilla::ipc::IPCResult GPUChild::RecvCreateVRProcess() {
 mozilla::ipc::IPCResult GPUChild::RecvShutdownVRProcess() {
   // Make sure stopping VR process at the main process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if (StaticPrefs::dom_vr_process_enabled()) {
+  if (StaticPrefs::dom_vr_process_enabled_AtStartup()) {
     VRProcessManager::Shutdown();
   }
 

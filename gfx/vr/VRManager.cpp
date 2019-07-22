@@ -153,7 +153,7 @@ VRManager::VRManager()
   // XRE_IsGPUProcess() is helping us to check some platforms like
   // Win 7 try which are not using GPU process but VR process is enabled.
   mVRProcessEnabled =
-      StaticPrefs::dom_vr_process_enabled() && XRE_IsGPUProcess();
+      StaticPrefs::dom_vr_process_enabled_AtStartup() && XRE_IsGPUProcess();
   VRServiceHost::Init(mVRProcessEnabled);
   mServiceHost = VRServiceHost::Get();
   // We must shutdown before VRServiceHost, which is cleared

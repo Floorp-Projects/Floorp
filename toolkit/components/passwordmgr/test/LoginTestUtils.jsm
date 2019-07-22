@@ -43,6 +43,25 @@ this.LoginTestUtils = {
   },
 
   /**
+   * Add a new login to the store
+   */
+  async addLogin({ username, password, origin = "https://example.com" }) {
+    const login = LoginTestUtils.testData.formLogin({
+      origin,
+      formActionOrigin: origin,
+      username,
+      password,
+    });
+    let storageChangedPromised = TestUtils.topicObserved(
+      "passwordmgr-storage-changed",
+      (_, data) => data == "addLogin"
+    );
+    Services.logins.addLogin(login);
+    await storageChangedPromised;
+    return login;
+  },
+
+  /**
    * Checks that the currently stored list of nsILoginInfo matches the provided
    * array.  The comparison uses the "equals" method of nsILoginInfo, that does
    * not include nsILoginMetaInfo properties in the test.

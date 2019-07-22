@@ -15,9 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIEditor.h"
-#include "nsINamed.h"
 #include "nsISupportsImpl.h"
-#include "nsITimer.h"
 #include "nsString.h"
 #include "nscore.h"
 
@@ -55,7 +53,7 @@ class Selection;
  *    return nsresult directly or with simple class like EditActionResult.
  *    And such methods should be marked as MOZ_MUST_USE.
  */
-class TextEditRules : public nsITimerCallback, public nsINamed {
+class TextEditRules {
  protected:
   typedef EditorBase::AutoSelectionRestorer AutoSelectionRestorer;
   typedef EditorBase::AutoTopLevelEditSubActionNotifier
@@ -70,10 +68,8 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   template <typename T>
   using OwningNonNull = OwningNonNull<T>;
 
-  NS_DECL_NSITIMERCALLBACK
-  NS_DECL_NSINAMED
-  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TextEditRules, nsITimerCallback)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(TextEditRules)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(TextEditRules)
 
   TextEditRules();
 
@@ -82,7 +78,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
 
   MOZ_CAN_RUN_SCRIPT
   virtual nsresult Init(TextEditor* aTextEditor);
-  virtual nsresult SetInitialValue(const nsAString& aValue);
   virtual nsresult DetachEditor();
   virtual nsresult BeforeEdit(EditSubAction aEditSubAction,
                               nsIEditor::EDirection aDirection);
@@ -107,12 +102,12 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    */
   virtual bool DocumentIsEmpty();
 
+  bool DontEchoPassword() const;
+
  protected:
-  virtual ~TextEditRules();
+  virtual ~TextEditRules() = default;
 
  public:
-  void ResetIMETextPWBuf();
-
   /**
    * Handles the newline characters according to the default system prefs
    * (editor.singleLine.pasteNewlines).
@@ -135,26 +130,7 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    */
   void HandleNewLines(nsString& aString);
 
-  /**
-   * Prepare a string buffer for being displayed as the contents of a password
-   * field.  This function uses the platform-specific character for representing
-   * characters entered into password fields.
-   *
-   * @param aOutString the output string.  When this function returns,
-   *        aOutString will contain aLength password characters.
-   * @param aLength the number of password characters that aOutString should
-   *        contain.
-   */
-  static void FillBufWithPWChars(nsAString* aOutString, int32_t aLength);
-
   bool HasBogusNode() { return !!mBogusNode; }
-
-  /**
-   * HideLastPasswordInput() is called when Nodify() calls
-   * TextEditor::HideLastPasswordInput().  It guarantees that there is a
-   * AutoEditActionDataSetter instance in the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT nsresult HideLastPasswordInput();
 
  protected:
   void InitFields();
@@ -300,11 +276,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
                                      bool* aTruncated);
 
   /**
-   * Remove IME composition text from password buffer.
-   */
-  void RemoveIMETextFromPWBuf(uint32_t& aStart, nsAString* aIMEString);
-
-  /**
    * Create a normal <br> element and insert it to aPointToInsert.
    *
    * @param aPointToInsert  The point where the new <br> element will be
@@ -351,14 +322,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
                                      bool* aCancel);
 
   /**
-   * HideLastPasswordInputInternal() replaces last password characters which
-   * have not been replaced with mask character like '*' with with the mask
-   * character.  This method may cause destroying the editor.
-   */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult HideLastPasswordInputInternal();
-
-  /**
    * CollapseSelectionToTrailingBRIfNeeded() collapses selection after the
    * text node if:
    * - the editor is text editor
@@ -368,12 +331,12 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
   bool IsPasswordEditor() const;
+  bool IsMaskingPassword() const;
   bool IsSingleLineEditor() const;
   bool IsPlaintextEditor() const;
   bool IsReadonly() const;
   bool IsDisabled() const;
   bool IsMailEditor() const;
-  bool DontEchoPassword() const;
 
  private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
@@ -473,11 +436,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // A buffer we use to store the real value of password editors.
-  nsString mPasswordText;
-  // A buffer we use to track the IME composition string.
-  nsString mPasswordIMEText;
-  uint32_t mPasswordIMEIndex;
   // Magic node acts as placeholder in empty doc.
   nsCOMPtr<nsIContent> mBogusNode;
   // Cached selected node.
@@ -493,9 +451,6 @@ class TextEditRules : public nsITimerCallback, public nsINamed {
   bool mIsHTMLEditRules;
   // The top level editor action.
   EditSubAction mTopLevelEditSubAction;
-  nsCOMPtr<nsITimer> mTimer;
-  uint32_t mLastStart;
-  uint32_t mLastLength;
 
   // friends
   friend class AutoLockRulesSniffing;

@@ -95,7 +95,6 @@ class DataTransfer;
 class DragEvent;
 class Element;
 class EventTarget;
-class Text;
 }  // namespace dom
 
 namespace widget {
@@ -943,7 +942,8 @@ class EditorBase : public nsIEditor,
       const nsAString& aStringToInsert, Text& aTextNode, int32_t aOffset,
       bool aSuppressIME = false);
 
-  nsresult SetTextImpl(const nsAString& aString, Text& aTextNode);
+  MOZ_CAN_RUN_SCRIPT nsresult SetTextImpl(const nsAString& aString,
+                                          Text& aTextNode);
 
   /**
    * DeleteNodeWithTransaction() removes aNode from the DOM tree.
@@ -1245,10 +1245,28 @@ class EditorBase : public nsIEditor,
   already_AddRefed<Element> CreateHTMLContent(const nsAtom* aTag);
 
   /**
-   * Creates text node which is marked as "maybe modified frequently".
+   * Creates text node which is marked as "maybe modified frequently" and
+   * "maybe masked" if this is a password editor.
    */
-  static already_AddRefed<nsTextNode> CreateTextNode(Document& aDocument,
-                                                     const nsAString& aData);
+  already_AddRefed<nsTextNode> CreateTextNode(const nsAString& aData);
+
+  /**
+   * DoInsertText(), DoDeleteText(), DoReplaceText() and DoSetText() are
+   * wrapper of `CharacterData::InsertData()`, `CharacterData::DeleteData()`,
+   * `CharacterData::ReplaceData()` and `CharacterData::SetData()`.
+   */
+  MOZ_CAN_RUN_SCRIPT void DoInsertText(dom::Text& aText, uint32_t aOffset,
+                                       const nsAString& aStringToInsert,
+                                       ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void DoDeleteText(dom::Text& aText, uint32_t aOffset,
+                                       uint32_t aCount, ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void DoReplaceText(dom::Text& aText, uint32_t aOffset,
+                                        uint32_t aCount,
+                                        const nsAString& aStringToInsert,
+                                        ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void DoSetText(dom::Text& aText,
+                                    const nsAString& aStringToSet,
+                                    ErrorResult& aRv);
 
   /**
    * Create an element node whose name is aTag at before aPointToInsert.  When
@@ -1302,15 +1320,15 @@ class EditorBase : public nsIEditor,
       int32_t* aOffset, int32_t* aLength);
 
   /**
-   * DeleteTextWithTransaction() removes text in the range from aCharData.
+   * DeleteTextWithTransaction() removes text in the range from aTextNode.
    *
-   * @param aCharData           The data node which should be modified.
-   * @param aOffset             Start offset of removing text in aCharData.
+   * @param aTextNode           The text node which should be modified.
+   * @param aOffset             Start offset of removing text in aTextNode.
    * @param aLength             Length of removing text.
    */
-  MOZ_CAN_RUN_SCRIPT
-  nsresult DeleteTextWithTransaction(dom::CharacterData& aCharacterData,
-                                     uint32_t aOffset, uint32_t aLength);
+  MOZ_CAN_RUN_SCRIPT nsresult DeleteTextWithTransaction(dom::Text& aTextNode,
+                                                        uint32_t aOffset,
+                                                        uint32_t aLength);
 
   /**
    * ReplaceContainerWithTransactionInternal() is implementation of
@@ -1375,9 +1393,9 @@ class EditorBase : public nsIEditor,
    *                            node if necessary), returns no error.
    *                            Otherwise, an error.
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
-  void DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
-                   nsIContent& aNewLeftNode, ErrorResult& aError);
+  MOZ_CAN_RUN_SCRIPT void DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
+                                      nsIContent& aNewLeftNode,
+                                      ErrorResult& aError);
 
   /**
    * DoJoinNodes() merges contents in aNodeToJoin to aNodeToKeep and remove
@@ -1391,8 +1409,9 @@ class EditorBase : public nsIEditor,
    *                      same type.
    * @param aParent       The parent of aNodeToKeep
    */
-  nsresult DoJoinNodes(nsINode* aNodeToKeep, nsINode* aNodeToJoin,
-                       nsINode* aParent);
+  MOZ_CAN_RUN_SCRIPT nsresult DoJoinNodes(nsINode* aNodeToKeep,
+                                          nsINode* aNodeToJoin,
+                                          nsINode* aParent);
 
   /**
    * SplitNodeDeepWithTransaction() splits aMostAncestorToSplit deeply.

@@ -141,7 +141,7 @@ void TextureClientPool::AllocateTextureClient() {
   }
 
   RefPtr<TextureClient> newClient;
-  if (StaticPrefs::layers_force_shmem_tiles()) {
+  if (StaticPrefs::layers_force_shmem_tiles_AtStartup()) {
     // gfx::BackendType::NONE means use the content backend
     newClient = TextureClient::CreateForRawBufferAccess(
         mSurfaceAllocator, mFormat, mSize, gfx::BackendType::NONE, mBackend,

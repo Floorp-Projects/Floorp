@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<body onload="document.getElementsByTagName('input')[0].focus();
+              document.getElementsByTagName('input')[0].blur();
+              document.documentElement.removeAttribute('class');">
+    <input type="password" value="&#x3042;&#x6f22;&#x0410;&#x0600;&#x0E01;&#xE001;"><!-- original character shouldn't affect the mask's font -->
+</body>
+</html>

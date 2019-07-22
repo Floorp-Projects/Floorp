@@ -607,7 +607,7 @@ static uint32_t GetSkiaGlyphCacheSize() {
   // cache thrash due to asian character sets in talos.
   // Only increase memory on the content process
   uint32_t cacheSize =
-      StaticPrefs::gfx_content_skia_font_cache_size() * 1024 * 1024;
+      StaticPrefs::gfx_content_skia_font_cache_size_AtStartup() * 1024 * 1024;
   if (mozilla::BrowserTabsRemoteAutostart()) {
     return XRE_IsContentProcess() ? cacheSize : kDefaultGlyphCacheSize;
   }
@@ -913,14 +913,17 @@ void gfxPlatform::Init() {
   {
     nsAutoCString forcedPrefs;
     // D2D prefs
-    forcedPrefs.AppendPrintf("FP(D%d%d", StaticPrefs::gfx_direct2d_disabled(),
-                             StaticPrefs::gfx_direct2d_force_enabled());
+    forcedPrefs.AppendPrintf(
+        "FP(D%d%d", StaticPrefs::gfx_direct2d_disabled_AtStartup(),
+        StaticPrefs::gfx_direct2d_force_enabled_AtStartup());
     // Layers prefs
     forcedPrefs.AppendPrintf(
-        "-L%d%d%d%d", StaticPrefs::layers_amd_switchable_gfx_enabled(),
-        StaticPrefs::layers_acceleration_disabled_do_not_use_directly(),
-        StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly(),
-        StaticPrefs::layers_d3d11_force_warp());
+        "-L%d%d%d%d",
+        StaticPrefs::layers_amd_switchable_gfx_enabled_AtStartup(),
+        StaticPrefs::layers_acceleration_disabled_AtStartup_DoNotUseDirectly(),
+        StaticPrefs::
+            layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly(),
+        StaticPrefs::layers_d3d11_force_warp_AtStartup());
     // WebGL prefs
     forcedPrefs.AppendPrintf(
         "-W%d%d%d%d%d%d%d%d", StaticPrefs::webgl_angle_force_d3d11(),
@@ -931,9 +934,9 @@ void gfxPlatform::Init() {
         StaticPrefs::webgl_msaa_force());
     // Prefs that don't fit into any of the other sections
     forcedPrefs.AppendPrintf("-T%d%d%d) ",
-                             StaticPrefs::gfx_android_rgb16_force(),
+                             StaticPrefs::gfx_android_rgb16_force_AtStartup(),
                              0,  // SkiaGL canvas no longer supported
-                             StaticPrefs::layers_force_shmem_tiles());
+                             StaticPrefs::layers_force_shmem_tiles_AtStartup());
     ScopedGfxFeatureReporter::AppNote(forcedPrefs);
   }
 
@@ -1137,8 +1140,9 @@ int32_t gfxPlatform::MaxTextureSize() {
   // Make sure we don't completely break rendering because of a typo in the
   // pref or whatnot.
   const int32_t kMinSizePref = 2048;
-  return std::max(kMinSizePref,
-                  StaticPrefs::gfx_max_texture_size_do_not_use_directly());
+  return std::max(
+      kMinSizePref,
+      StaticPrefs::gfx_max_texture_size_AtStartup_DoNotUseDirectly());
 }
 
 /* static */
@@ -1147,14 +1151,14 @@ int32_t gfxPlatform::MaxAllocSize() {
   // pref or whatnot.
   const int32_t kMinAllocPref = 10000000;
   return std::max(kMinAllocPref,
-                  StaticPrefs::gfx_max_alloc_size_do_not_use_directly());
+                  StaticPrefs::gfx_max_alloc_size_AtStartup_DoNotUseDirectly());
 }
 
 /* static */
 void gfxPlatform::InitMoz2DLogging() {
   auto fwd = new CrashStatsLogForwarder(
       CrashReporter::Annotation::GraphicsCriticalError);
-  fwd->SetCircularBufferSize(StaticPrefs::gfx_logging_crash_length());
+  fwd->SetCircularBufferSize(StaticPrefs::gfx_logging_crash_length_AtStartup());
 
   mozilla::gfx::Config cfg;
   cfg.mLogForwarder = fwd;
@@ -1558,10 +1562,10 @@ void gfxPlatform::ComputeTileSize() {
     return;
   }
 
-  int32_t w = StaticPrefs::layers_tile_width();
-  int32_t h = StaticPrefs::layers_tile_height();
+  int32_t w = StaticPrefs::layers_tile_width_AtStartup();
+  int32_t h = StaticPrefs::layers_tile_height_AtStartup();
 
-  if (StaticPrefs::layers_tiles_adjust()) {
+  if (StaticPrefs::layers_tiles_adjust_AtStartup()) {
     gfx::IntSize screenSize = GetScreenSize();
     if (screenSize.width > 0) {
       // Choose a size so that there are between 2 and 4 tiles per screen width.
@@ -2432,7 +2436,7 @@ void gfxPlatform::InitAcceleration() {
           gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_HARDWARE_VIDEO_DECODING,
                                     discardFailureId, &status))) {
     if (status == nsIGfxInfo::FEATURE_STATUS_OK ||
-        StaticPrefs::media_hardware_video_decoding_force_enabled()) {
+        StaticPrefs::media_hardware_video_decoding_force_enabled_AtStartup()) {
       sLayersSupportsHardwareVideoDecoding = true;
     }
   }
@@ -2453,8 +2457,8 @@ void gfxPlatform::InitAcceleration() {
 void gfxPlatform::InitGPUProcessPrefs() {
   // We want to hide this from about:support, so only set a default if the
   // pref is known to be true.
-  if (!StaticPrefs::layers_gpu_process_enabled() &&
-      !StaticPrefs::layers_gpu_process_force_enabled()) {
+  if (!StaticPrefs::layers_gpu_process_enabled_AtStartup() &&
+      !StaticPrefs::layers_gpu_process_force_enabled_AtStartup()) {
     return;
   }
 
@@ -2473,7 +2477,7 @@ void gfxPlatform::InitGPUProcessPrefs() {
         StaticPrefs::GetPrefDefault_layers_gpu_process_enabled());
   }
 
-  if (StaticPrefs::layers_gpu_process_force_enabled()) {
+  if (StaticPrefs::layers_gpu_process_force_enabled_AtStartup()) {
     gpuProc.UserForceEnable("User force-enabled via pref");
   }
 
@@ -2505,7 +2509,8 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
   // Base value - does the platform allow acceleration?
   if (feature.SetDefault(AccelerateLayersByDefault(), FeatureStatus::Blocked,
                          "Acceleration blocked by platform")) {
-    if (StaticPrefs::layers_acceleration_disabled_do_not_use_directly()) {
+    if (StaticPrefs::
+            layers_acceleration_disabled_AtStartup_DoNotUseDirectly()) {
       feature.UserDisable("Disabled by pref",
                           NS_LITERAL_CSTRING("FEATURE_FAILURE_COMP_PREF"));
     } else if (acceleratedEnv && *acceleratedEnv == '0') {
@@ -2519,7 +2524,8 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
   }
 
   // This has specific meaning elsewhere, so we always record it.
-  if (StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly()) {
+  if (StaticPrefs::
+          layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly()) {
     feature.UserForceEnable("Force-enabled by pref");
   }
 
@@ -2543,8 +2549,8 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
 
 /*static*/
 bool gfxPlatform::WebRenderPrefEnabled() {
-  return StaticPrefs::gfx_webrender_all() ||
-         StaticPrefs::gfx_webrender_enabled_do_not_use_directly();
+  return StaticPrefs::gfx_webrender_all_AtStartup() ||
+         StaticPrefs::gfx_webrender_enabled_AtStartup_DoNotUseDirectly();
 }
 
 /*static*/
@@ -2997,7 +3003,7 @@ void gfxPlatform::InitWebRenderConfig() {
   // If the user set the pref to force-disable, let's do that. This will
   // override all the other enabling prefs (gfx.webrender.enabled,
   // gfx.webrender.all, and gfx.webrender.all.qualified).
-  if (StaticPrefs::gfx_webrender_force_disabled() ||
+  if (StaticPrefs::gfx_webrender_force_disabled_AtStartup() ||
       (WebRenderEnvvarDisabled() && !InMarionetteRolloutTest())) {
     featureWebRender.UserDisable(
         "User force-disabled WR",
@@ -3077,7 +3083,7 @@ void gfxPlatform::InitWebRenderConfig() {
 
     if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING) &&
         gfxConfig::IsEnabled(Feature::GPU_PROCESS) &&
-        !StaticPrefs::layers_gpu_process_allow_software()) {
+        !StaticPrefs::layers_gpu_process_allow_software_AtStartup()) {
       // We have neither WebRender nor OpenGL, we don't allow the GPU process
       // for basic compositor, and it wasn't disabled already.
       gfxConfig::Disable(Feature::GPU_PROCESS, FeatureStatus::Unavailable,
@@ -3172,7 +3178,7 @@ bool gfxPlatform::BufferRotationEnabled() {
   MutexAutoLock autoLock(*gGfxPlatformPrefsLock);
 
   return sBufferRotationCheckPref &&
-         StaticPrefs::layers_bufferrotation_enabled();
+         StaticPrefs::layers_bufferrotation_enabled_AtStartup();
 }
 
 void gfxPlatform::DisableBufferRotation() {
@@ -3193,11 +3199,12 @@ bool gfxPlatform::UsesOffMainThreadCompositing() {
   if (firstTime) {
     MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
     result = gfxVars::BrowserTabsRemoteAutostart() ||
-             !StaticPrefs::layers_offmainthreadcomposition_force_disabled();
+             !StaticPrefs::
+                 layers_offmainthreadcomposition_force_disabled_AtStartup();
 #if defined(MOZ_WIDGET_GTK)
     // Linux users who chose OpenGL are being grandfathered in to OMTC
-    result |=
-        StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly();
+    result |= StaticPrefs::
+        layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly();
 
 #endif
     firstTime = false;
@@ -3213,12 +3220,12 @@ bool gfxPlatform::UsesTiling() const {
   // this function is used when initializing the PaintThread. So instead we
   // check the conditions that enable OMTP with parallel painting.
   bool usesPOMTP = XRE_IsContentProcess() && gfxVars::UseOMTP() &&
-                   (StaticPrefs::layers_omtp_paint_workers() == -1 ||
-                    StaticPrefs::layers_omtp_paint_workers() > 1);
+                   (StaticPrefs::layers_omtp_paint_workers_AtStartup() == -1 ||
+                    StaticPrefs::layers_omtp_paint_workers_AtStartup() > 1);
 
-  return StaticPrefs::layers_enable_tiles() ||
-         (StaticPrefs::layers_enable_tiles_if_skia_pomtp() && usesSkia &&
-          usesPOMTP);
+  return StaticPrefs::layers_enable_tiles_AtStartup() ||
+         (StaticPrefs::layers_enable_tiles_if_skia_pomtp_AtStartup() &&
+          usesSkia && usesPOMTP);
 }
 
 bool gfxPlatform::ContentUsesTiling() const {
@@ -3230,12 +3237,13 @@ bool gfxPlatform::ContentUsesTiling() const {
 
   bool contentUsesSkia = contentBackend == BackendType::SKIA;
   bool contentUsesPOMTP =
-      gfxVars::UseOMTP() && (StaticPrefs::layers_omtp_paint_workers() == -1 ||
-                             StaticPrefs::layers_omtp_paint_workers() > 1);
+      gfxVars::UseOMTP() &&
+      (StaticPrefs::layers_omtp_paint_workers_AtStartup() == -1 ||
+       StaticPrefs::layers_omtp_paint_workers_AtStartup() > 1);
 
-  return StaticPrefs::layers_enable_tiles() ||
-         (StaticPrefs::layers_enable_tiles_if_skia_pomtp() && contentUsesSkia &&
-          contentUsesPOMTP);
+  return StaticPrefs::layers_enable_tiles_AtStartup() ||
+         (StaticPrefs::layers_enable_tiles_if_skia_pomtp_AtStartup() &&
+          contentUsesSkia && contentUsesPOMTP);
 }
 
 /***
@@ -3358,7 +3366,7 @@ void gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj) {
 }
 
 void gfxPlatform::GetTilesSupportInfo(mozilla::widget::InfoObject& aObj) {
-  if (!StaticPrefs::layers_enable_tiles()) {
+  if (!StaticPrefs::layers_enable_tiles_AtStartup()) {
     return;
   }
 
@@ -3438,7 +3446,7 @@ class FrameStatsComparator {
 };
 
 void gfxPlatform::NotifyFrameStats(nsTArray<FrameStats>&& aFrameStats) {
-  if (!StaticPrefs::gfx_logging_slow_frames_enabled()) {
+  if (!StaticPrefs::gfx_logging_slow_frames_enabled_AtStartup()) {
     return;
   }
 
@@ -3474,7 +3482,8 @@ bool gfxPlatform::AsyncPanZoomEnabled() {
 #ifdef MOZ_WIDGET_ANDROID
   return true;
 #else
-  return StaticPrefs::layers_async_pan_zoom_enabled_do_not_use_directly();
+  return StaticPrefs::
+      layers_async_pan_zoom_enabled_AtStartup_DoNotUseDirectly();
 #endif
 }
 
@@ -3599,7 +3608,7 @@ bool gfxPlatform::SupportsApzDragInput() const {
 }
 
 bool gfxPlatform::SupportsApzKeyboardInput() const {
-  return StaticPrefs::apz_keyboard_enabled();
+  return StaticPrefs::apz_keyboard_enabled_AtStartup();
 }
 
 bool gfxPlatform::SupportsApzAutoscrolling() const {
@@ -3636,7 +3645,8 @@ void gfxPlatform::InitOpenGLConfig() {
 
   // When layers acceleration is force-enabled, enable it even for blacklisted
   // devices.
-  if (StaticPrefs::layers_acceleration_force_enabled_do_not_use_directly()) {
+  if (StaticPrefs::
+          layers_acceleration_force_enabled_AtStartup_DoNotUseDirectly()) {
     openGLFeature.UserForceEnable("Force-enabled by pref");
     return;
   }
