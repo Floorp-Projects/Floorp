@@ -226,8 +226,8 @@ class MockRuntime {
       this.setViewerOrigin(fakeDeviceInit.viewerOrigin);
     }
 
-    if (fakeDeviceInit.localToFloorLevelTransform != null) {
-      this.setLocalToFloorLevelTransform(fakeDeviceInit.localToFloorLevelTransform);
+    if (fakeDeviceInit.floorOrigin != null) {
+      this.setFloorOrigin(fakeDeviceInit.floorOrigin);
     }
 
     // This appropriately handles if the coordinates are null
@@ -312,7 +312,7 @@ class MockRuntime {
     }
   }
 
-  setLocalToFloorLevelTransform(transform) {
+  setFloorOrigin(floorOrigin) {
     if (!this.displayInfo_.stageParameters) {
       this.displayInfo_.stageParameters = default_stage_parameters;
       this.displayInfo_.stageParameters.bounds = this.bounds_;
@@ -320,14 +320,14 @@ class MockRuntime {
 
     this.displayInfo_.stageParameters.standingTransform = new gfx.mojom.Transform();
     this.displayInfo_.stageParameters.standingTransform.matrix =
-      getMatrixFromTransform(transform);
+      getMatrixFromTransform(floorOrigin);
 
     if (this.sessionClient_.ptr.isBound()) {
       this.sessionClient_.onChanged(this.displayInfo_);
     }
   }
 
-  clearLocalToFloorLevelTransform() {
+  clearFloorOrigin() {
     if (this.displayInfo_.stageParameters) {
       this.displayInfo_.stageParameters = null;
 
