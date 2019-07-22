@@ -10,6 +10,11 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ProcessLifecycleOwner
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.BroadcastChannel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Observer
 import mozilla.components.lib.state.State
@@ -81,6 +86,44 @@ fun <S : State, A : Action> Store<S, A>.observeForever(
     observer: Observer<S>
 ) {
     observeManually(observer).resume()
+}
+
+/**
+ * Creates a conflated [BroadcastChannel] for observing [State] changes in the [Store].
+ *
+ * Multiple receivers can subscribe to the channel and read from it.
+ *
+ * The advantage of a [Channel] is that [State] changes can be processed sequentially in order from
+ * a single coroutine.
+ *
+ * @param owner A [LifecycleOwner] that will be used to determine when to pause and resume the store
+ * subscription. When the [Lifecycle] is in STOPPED state then no [State] will be received. Once the
+ * [Lifecycle] switches back to at least STARTED state then the latest [State] and further updates
+ * will be received.
+ */
+@ExperimentalCoroutinesApi
+@MainThread
+fun <S : State, A : Action> Store<S, A>.broadcastChannel(
+    owner: LifecycleOwner = ProcessLifecycleOwner.get()
+): BroadcastChannel<S> {
+    if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
+        // This owner is already destroyed. No need to register.
+        throw IllegalArgumentException("Lifecycle is already DESTROYED")
+    }
+
+    val channel = BroadcastChannel<S>(Channel.CONFLATED)
+
+    val subscription = observeManually { state ->
+        runBlocking { channel.send(state) }
+    }
+
+    subscription.binding = SubscriptionLifecycleBinding(owner, subscription).apply {
+        owner.lifecycle.addObserver(this)
+    }
+
+    channel.invokeOnClose { subscription.unsubscribe() }
+
+    return channel
 }
 
 /**

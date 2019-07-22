@@ -83,6 +83,7 @@ permalink: /changelog/
   * When using `observeManually` the returned `Subscription` is in paused state by default.
   * When binding a subscription to a `LifecycleOwner` then this subscription will automatically paused and resumed based on whether the lifecycle is in STARTED state.
   * When binding a subscription to a `View` then this subscription will be paused until the `View` gets attached.
+  * Added `Store.broadcastChannel()` to observe state from a coroutine sequentially ordered.
 
 * **support-ktx**
   * ⚠️ **This is a breaking behavior change**: `JSONArray.mapNotNull` is now an inline function, changing the behavior of the `return` keyword within its lambda.
