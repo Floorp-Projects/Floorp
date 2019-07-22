@@ -79,12 +79,14 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
                                   const std::string& aPwd,
                                   size_t aComponentCount) override;
 
+  void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
+                                             uint16_t aTargetPort) override;
+
   // We set default-route-only as late as possible because it depends on what
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
-  void StartIceGathering(bool aDefaultRouteOnly, const std::string& aRemoteIp,
-                         uint16_t aRemotePort,
+  void StartIceGathering(bool aDefaultRouteOnly,
                          // This will go away once mtransport moves to its
                          // own process, because we won't need to get this
                          // via IPC anymore
@@ -641,9 +643,18 @@ void MediaTransportHandlerSTS::ActivateTransport(
       [](const std::string& aError) {});
 }
 
+void MediaTransportHandlerSTS::SetTargetForDefaultLocalAddressLookup(
+    const std::string& aTargetIp, uint16_t aTargetPort) {
+  mInitPromise->Then(
+      mStsThread, __func__,
+      [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
+        mIceCtx->SetTargetForDefaultLocalAddressLookup(aTargetIp, aTargetPort);
+      },
+      [](const std::string& aError) {});
+}
+
 void MediaTransportHandlerSTS::StartIceGathering(
-    bool aDefaultRouteOnly, const std::string& aRemoteIp, uint16_t aRemotePort,
-    const nsTArray<NrIceStunAddr>& aStunAddrs) {
+    bool aDefaultRouteOnly, const nsTArray<NrIceStunAddr>& aStunAddrs) {
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -652,8 +663,6 @@ void MediaTransportHandlerSTS::StartIceGathering(
         // setting those flags happens in StartGathering.  We could probably
         // just set them here, and only do it here.
         mIceCtx->SetCtxFlags(aDefaultRouteOnly, mProxyOnly);
-          
-        mIceCtx->SetRemoteAddr(aRemoteIp, aRemotePort);
 
         if (aStunAddrs.Length()) {
           mIceCtx->SetStunAddrs(aStunAddrs);
