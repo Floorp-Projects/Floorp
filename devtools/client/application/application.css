@@ -14,7 +14,14 @@
 @import "resource://devtools/client/application/src/components/Worker.css";
 @import "resource://devtools/client/application/src/components/WorkerList.css";
 @import "resource://devtools/client/application/src/components/WorkerListEmpty.css";
-@import "resource://devtools/client/application/src/components/ui/UIButton.css";
+
+
+/*
+* Reset
+*/
+* {
+  box-sizing: border-box;
+}
 
 html,
 body,
