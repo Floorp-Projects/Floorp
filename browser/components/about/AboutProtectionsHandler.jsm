@@ -20,6 +20,11 @@ ChromeUtils.defineModuleGetter(
   "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -170,11 +175,13 @@ var AboutProtectionsHandler = {
    * @return {{ monitoredEmails: Number,
    *            numBreaches: Number,
    *            passwords: Number,
+   *            potentiallyBreachedLogins: Number,
    *            error: Boolean }}
    *         Monitor data.
    */
   async getMonitorData() {
     let monitorData = {};
+    let potentiallyBreachedLogins = 0;
     const hasFxa = await fxAccounts.accountStatus();
 
     if (hasFxa) {
@@ -201,6 +208,12 @@ var AboutProtectionsHandler = {
           monitorData.errorMessage = e.message;
         }
       }
+
+      // Get the stats for number of potentially breached Lockwise passwords
+      const logins = await LoginHelper.getAllUserFacingLogins();
+      potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
+        logins
+      );
     } else {
       // If no account exists, then the user is not logged in with an fxAccount.
       monitorData = {
@@ -210,6 +223,7 @@ var AboutProtectionsHandler = {
 
     return {
       ...monitorData,
+      potentiallyBreachedLogins: potentiallyBreachedLogins.size,
       error: !!monitorData.errorMessage,
     };
   },

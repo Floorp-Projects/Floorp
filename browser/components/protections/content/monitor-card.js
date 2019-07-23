@@ -78,14 +78,13 @@ export default class MonitorClass {
       "span[data-type='exposed-passwords']"
     );
     const exposedLockwisePasswords = this.doc.querySelector(
-      ".number-of-breaches.block"
+      "span[data-type='breached-lockwise-passwords']"
     );
 
     storedEmail.textContent = monitorData.monitoredEmails;
     knownBreaches.textContent = monitorData.numBreaches;
     exposedPasswords.textContent = monitorData.passwords;
-
-    // TODO: Bug 1559427: Display data from Lockwise here
-    exposedLockwisePasswords.textContent = 2;
+    exposedLockwisePasswords.textContent =
+      monitorData.potentiallyBreachedLogins;
   }
 }

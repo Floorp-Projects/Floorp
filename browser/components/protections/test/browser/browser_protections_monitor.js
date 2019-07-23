@@ -28,7 +28,7 @@ let fakeDataWithNoError = {
   monitoredEmails: 1,
   numBreaches: 11,
   passwords: 8,
-  lockwisePasswords: 2,
+  potentiallyBreachedLogins: 2,
   error: false,
 };
 
@@ -36,7 +36,7 @@ let fakeDataWithError = {
   monitoredEmails: null,
   numBreaches: null,
   passwords: null,
-  lockwisePasswords: null,
+  potentiallyBreachedLogins: null,
   error: true,
 };
 
@@ -108,10 +108,18 @@ add_task(async function() {
     const breaches = content.document.querySelector(
       ".monitor-stat span[data-type='known-breaches']"
     );
+    const breachedLockwisePasswords = content.document.querySelector(
+      ".monitor-breached-passwords span[data-type='breached-lockwise-passwords']"
+    );
 
     is(emails.textContent, 1, "1 monitored email is displayed");
-    is(passwords.textContent, 8, "8 exposed stored passwords is displayed");
-    is(breaches.textContent, 11, "11 known data breaches is displayed.");
+    is(passwords.textContent, 8, "8 exposed passwords are displayed");
+    is(breaches.textContent, 11, "11 known data breaches are displayed.");
+    is(
+      breachedLockwisePasswords.textContent,
+      2,
+      "2 saved passwords are displayed."
+    );
   });
 
   info(

@@ -21,6 +21,12 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "RemoteSettings",
+  "resource://services-settings/remote-settings.js"
+);
+
 /**
  * Contains functions shared by different Login Manager components.
  */
@@ -1081,6 +1087,49 @@ this.LoginHelper = {
       "passwordmgr-storage-changed",
       changeType
     );
+  },
+
+  isUserFacingLogin(login) {
+    return !login.origin.startsWith("chrome://");
+  },
+
+  async getAllUserFacingLogins() {
+    try {
+      let logins = await Services.logins.getAllLoginsAsync();
+      return logins.filter(this.isUserFacingLogin);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_ABORT) {
+        // If the user cancels the MP prompt then return no logins.
+        return [];
+      }
+      throw e;
+    }
+  },
+
+  async getBreachesForLogins(logins, breaches = null) {
+    if (!breaches) {
+      breaches = await RemoteSettings("fxmonitor-breaches").get();
+    }
+
+    // Determine potentially breached logins by checking their origin and the last time
+    // they were changed. It's important to note here that we are NOT considering the
+    // username and password of that login.
+    const breachesByLoginGUID = new Map();
+    for (const login of logins) {
+      const loginURI = Services.io.newURI(login.origin);
+      for (const breach of breaches) {
+        if (!breach.Domain) {
+          continue;
+        }
+        if (
+          Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
+          login.timePasswordChanged < new Date(breach.BreachDate).getTime()
+        ) {
+          breachesByLoginGUID.set(login.guid, breach);
+        }
+      }
+    }
+    return breachesByLoginGUID;
   },
 };
 
