@@ -230,9 +230,9 @@ void RsdparsaSdpMediaSection::LoadFormats() {
 }
 
 UniquePtr<SdpConnection> convertRustConnection(RustSdpConnection conn) {
-  std::string addr(conn.addr.unicastAddr);
-  sdp::AddrType type = convertAddressType(conn.addr.addrType);
-  return MakeUnique<SdpConnection>(type, addr, conn.ttl, conn.amount);
+  auto address = convertExplicitlyTypedAddress(&conn.addr);
+  return MakeUnique<SdpConnection>(address.first, address.second, conn.ttl,
+                                   conn.amount);
 }
 
 void RsdparsaSdpMediaSection::LoadConnection() {

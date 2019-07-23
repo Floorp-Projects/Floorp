@@ -28,17 +28,26 @@ std::vector<std::string> convertStringVec(StringVec* vec) {
   return ret;
 }
 
-sdp::AddrType convertAddressType(RustSdpAddrType addrType) {
+sdp::AddrType convertAddressType(RustSdpAddressType addrType) {
   switch (addrType) {
-    case RustSdpAddrType::kRustAddrNone:
-      return sdp::kAddrTypeNone;
-    case RustSdpAddrType::kRustAddrIp4:
+    case RustSdpAddressType::kRustAddrIp4:
       return sdp::kIPv4;
-    case RustSdpAddrType::kRustAddrIp6:
+    case RustSdpAddressType::kRustAddrIp6:
       return sdp::kIPv6;
   }
 
   MOZ_CRASH("unknown address type");
+}
+
+std::string convertAddress(RustAddress* address) {
+  return address->isFqdn ? convertStringView(address->fqdn)
+                         : std::string(address->ipAddress);
+}
+
+std::pair<sdp::AddrType, std::string> convertExplicitlyTypedAddress(
+    RustExplicitlyTypedAddress* address) {
+  return std::make_pair(convertAddressType(address->addressType),
+                        convertAddress(&address->address));
 }
 
 std::vector<uint8_t> convertU8Vec(U8Vec* vec) {
