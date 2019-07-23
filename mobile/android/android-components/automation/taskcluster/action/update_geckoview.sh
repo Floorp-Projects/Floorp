@@ -50,7 +50,7 @@ elif [ "$CHANNEL" = "beta" ]
 then
     ./gradlew browser-engine-gecko-beta:assemble \
           browser-engine-gecko-beta:test \
-          sample-browser:assembleGeckoBetaArm
+          sample-browser:assembleGeckoBetaUniversal
 elif [ "$CHANNEL" = "release" ]
 then
     ./gradlew browser-engine-gecko:assemble \
