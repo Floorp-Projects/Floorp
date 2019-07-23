@@ -1,3 +1,5 @@
+extern crate nserror;
+
 use std::net::IpAddr;
 use std::os::raw::c_char;
 use std::ffi::{CStr, CString};
@@ -5,23 +7,49 @@ use std::ffi::{CStr, CString};
 use libc::{uint8_t, uint64_t};
 
 use rsdparsa::{SdpOrigin, SdpConnection, SdpBandwidth};
-
-use types::StringView;
+use rsdparsa::address::{Address, AddressType, AddressTyped, ExplicitlyTypedAddress};
+use types::{StringView, NULL_STRING};
+use std::convert::TryFrom;
 
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq)]
-pub enum RustSdpAddrType {
-    None,
+pub enum RustAddressType {
     IP4,
     IP6
 }
 
-impl<'a> From<&'a IpAddr> for RustSdpAddrType {
-    fn from(addr: &IpAddr) -> RustSdpAddrType {
-        match *addr {
-            IpAddr::V4(_) => RustSdpAddrType::IP4,
-            IpAddr::V6(_) => RustSdpAddrType::IP6
+impl TryFrom<u32> for RustAddressType {
+    type Error = nserror::nsresult;
+    fn try_from(address_type: u32) -> Result<Self, Self::Error> {
+        match address_type {
+            1 => Ok(RustAddressType::IP4),
+            2 => Ok(RustAddressType::IP6),
+            _ => Err(nserror::NS_ERROR_INVALID_ARG),
         }
+    }
+}
+
+impl From<AddressType> for RustAddressType {
+    fn from(address_type: AddressType) -> Self {
+        match address_type {
+            AddressType::IpV4 => RustAddressType::IP4,
+            AddressType::IpV6 => RustAddressType::IP6,
+        }
+    }
+}
+
+impl Into<AddressType> for RustAddressType {
+    fn into(self) -> AddressType {
+        match self {
+            RustAddressType::IP4 => AddressType::IpV4,
+            RustAddressType::IP6 => AddressType::IpV6,
+        }
+    }
+}
+
+impl<'a> From<&'a IpAddr> for RustAddressType {
+    fn from(addr: &IpAddr) -> RustAddressType {
+        addr.address_type().into()
     }
 }
 
@@ -41,12 +69,28 @@ pub fn get_octets(addr: &IpAddr) -> [u8; 16] {
 }
 
 #[repr(C)]
-pub struct RustIpAddr {
-    addr_type: RustSdpAddrType,
-    unicast_addr: [u8; 50]
+pub struct RustAddress {
+    ip_address: [u8; 50],
+    fqdn: StringView,
+    is_fqdn: bool,
 }
 
-impl<'a> From<&'a IpAddr> for RustIpAddr {
+impl<'a> From<&'a Address> for RustAddress {
+    fn from(address: &Address) -> Self {
+        match address {
+            Address::Ip(ip) => Self::from(ip),
+            Address::Fqdn(fqdn) => {
+                Self {
+                    ip_address: [0; 50],
+                    fqdn: fqdn.as_str().into(),
+                    is_fqdn: true,
+                }
+            }
+        }
+    }
+}
+
+impl<'a> From<&'a IpAddr> for RustAddress {
     fn from(addr: &IpAddr) -> Self {
         let mut c_addr = [0; 50];
         let str_addr = format!("{}", addr);
@@ -54,26 +98,73 @@ impl<'a> From<&'a IpAddr> for RustIpAddr {
         if str_bytes.len() < 50 {
             c_addr[..str_bytes.len()].copy_from_slice(&str_bytes);
         }
-        RustIpAddr {addr_type: RustSdpAddrType::from(addr),
-                    unicast_addr: c_addr }
+        Self {ip_address: c_addr, fqdn:NULL_STRING, is_fqdn:false }
     }
 }
 
-impl<'a> From<&'a Option<IpAddr>> for RustIpAddr {
+#[repr(C)]
+pub struct RustExplicitlyTypedAddress {
+    address_type: RustAddressType,
+    address: RustAddress,
+}
+
+impl Default for RustExplicitlyTypedAddress {
+    fn default() -> Self {
+        Self {
+            address_type: RustAddressType::IP4,
+            address: RustAddress {
+                ip_address: [0; 50],
+                fqdn: NULL_STRING,
+                is_fqdn: false,
+            }
+        }
+    }
+}
+
+impl<'a> From<&'a ExplicitlyTypedAddress> for RustExplicitlyTypedAddress {
+    fn from(address: &ExplicitlyTypedAddress) -> Self {
+        match address {
+            ExplicitlyTypedAddress::Fqdn {domain, ..} => {
+                Self {
+                    address_type: address.address_type().into(),
+                    address: RustAddress {
+                        ip_address: [0; 50],
+                        fqdn: StringView::from(domain.as_str()),
+                        is_fqdn: true,
+                    },
+                }
+            },
+            ExplicitlyTypedAddress::Ip(ip_address) => {
+                Self {
+                    address_type: ip_address.address_type().into(),
+                    address: ip_address.into(),
+                }
+            },
+        }
+    }
+}
+
+// TODO @@NG remove
+impl<'a> From<&'a Option<IpAddr>> for RustExplicitlyTypedAddress {
     fn from(addr: &Option<IpAddr>) -> Self {
         match *addr {
-            Some(ref x) => RustIpAddr::from(x),
-            None => RustIpAddr {
-                addr_type: RustSdpAddrType::None,
-                unicast_addr: [0; 50]
-            }
+            Some(ref x) => {
+                Self {
+                    address_type: RustAddressType::from(x.address_type()),
+                    address: RustAddress::from(x),
+                }
+            },
+            None => {
+                Self::default()
+            },
         }
     }
 }
 
 #[repr(C)]
 pub struct RustSdpConnection {
-    pub addr: RustIpAddr,
+    pub addr: RustExplicitlyTypedAddress
+,
     pub ttl: uint8_t,
     pub amount: uint64_t
 }
@@ -88,7 +179,8 @@ impl<'a> From<&'a SdpConnection> for RustSdpConnection {
             Some(x) => x as u64,
             None => 0
         };
-        RustSdpConnection { addr: RustIpAddr::from(&sdp_connection.address),
+        RustSdpConnection { addr: RustExplicitlyTypedAddress
+    ::from(&sdp_connection.address),
                             ttl: ttl, amount: amount }
     }
 }
@@ -98,7 +190,8 @@ pub struct RustSdpOrigin {
     username: StringView,
     session_id: u64,
     session_version: u64,
-    addr: RustIpAddr,
+    addr: RustExplicitlyTypedAddress
+,
 }
 
 
@@ -175,6 +268,7 @@ pub unsafe fn origin_view_helper(origin: &SdpOrigin) -> RustSdpOrigin {
         username: StringView::from(origin.username.as_str()),
         session_id: origin.session_id,
         session_version: origin.session_version,
-        addr: RustIpAddr::from(&origin.unicast_addr)
+        addr: RustExplicitlyTypedAddress
+    ::from(&origin.unicast_addr)
     }
 }
