@@ -76,6 +76,11 @@ bool RenderCompositorEGL::BeginFrame() {
       RenderThread::Get()->HandleWebRenderError(WebRenderError::NEW_SURFACE);
     }
   }
+  if (mEGLSurface == EGL_NO_SURFACE) {
+    gfxCriticalNote
+        << "We don't have EGLSurface to draw into. Called too early?";
+    return false;
+  }
 #endif
   if (!MakeCurrent()) {
     gfxCriticalNote << "Failed to make render context current, can't draw.";
