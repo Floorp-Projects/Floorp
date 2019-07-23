@@ -69,3 +69,23 @@
 .menuitem-faq {
   background-image: url("chrome://browser/content/aboutlogins/icons/faq.svg");
 }
+
+.menuitem-mobile {
+  background-image: url("chrome://browser/content/aboutlogins/icons/mobile.svg");
+}
+
+.menuitem-mobile-android {
+  position: relative;
+  margin-top: 6px;
+}
+
+.menuitem-mobile-android::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  background-color: var(--in-content-button-background);
+  height: 2px;
+  display: block;
+  top: -5px;
+  inset-inline-start: 0;
+}
