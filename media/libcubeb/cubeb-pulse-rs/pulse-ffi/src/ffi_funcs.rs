@@ -84,6 +84,7 @@ mod static_fns {
                                       new_balance: c_float)
                                       -> *mut pa_cvolume;
         pub fn pa_frame_size(spec: *const pa_sample_spec) -> usize;
+        pub fn pa_sample_size(spec: *const pa_sample_spec) -> usize;
         pub fn pa_mainloop_api_once(m: *mut pa_mainloop_api,
                                     callback: pa_mainloop_api_once_cb_t,
                                     userdata: *mut c_void);
@@ -360,6 +361,13 @@ mod dynamic_fns {
             };
             PA_FRAME_SIZE = {
                 let fp = dlsym(h, cstr!("pa_frame_size"));
+                if fp.is_null() {
+                    return None;
+                }
+                fp
+            };
+            PA_SAMPLE_SIZE = {
+                let fp = dlsym(h, cstr!("pa_sample_size"));
                 if fp.is_null() {
                     return None;
                 }
@@ -997,6 +1005,12 @@ mod dynamic_fns {
     #[inline]
     pub unsafe fn pa_frame_size(spec: *const pa_sample_spec) -> usize {
         (::std::mem::transmute::<_, extern "C" fn(*const pa_sample_spec) -> usize>(PA_FRAME_SIZE))(spec)
+    }
+
+    static mut PA_SAMPLE_SIZE: *mut ::libc::c_void = 0 as *mut _;
+    #[inline]
+    pub unsafe fn pa_sample_size(spec: *const pa_sample_spec) -> usize {
+        (::std::mem::transmute::<_, extern "C" fn(*const pa_sample_spec) -> usize>(PA_SAMPLE_SIZE))(spec)
     }
 
     static mut PA_MAINLOOP_API_ONCE: *mut ::libc::c_void = 0 as *mut _;
