@@ -9,7 +9,7 @@ extern crate xpcom;
 
 mod bag;
 
-use libc::{c_double, int64_t, uint16_t};
+use libc::c_double;
 use nserror::{nsresult, NS_OK};
 use nsstring::{nsACString, nsAString, nsCString, nsString};
 use xpcom::{getter_addrefs, interfaces::nsIVariant, RefPtr};
@@ -17,10 +17,10 @@ use xpcom::{getter_addrefs, interfaces::nsIVariant, RefPtr};
 pub use crate::bag::HashPropertyBag;
 
 extern "C" {
-    fn NS_GetDataType(variant: *const nsIVariant) -> uint16_t;
+    fn NS_GetDataType(variant: *const nsIVariant) -> u16;
     fn NS_NewStorageNullVariant(result: *mut *const nsIVariant);
     fn NS_NewStorageBooleanVariant(value: bool, result: *mut *const nsIVariant);
-    fn NS_NewStorageIntegerVariant(value: int64_t, result: *mut *const nsIVariant);
+    fn NS_NewStorageIntegerVariant(value: i64, result: *mut *const nsIVariant);
     fn NS_NewStorageFloatVariant(value: c_double, result: *mut *const nsIVariant);
     fn NS_NewStorageTextVariant(value: *const nsAString, result: *mut *const nsIVariant);
     fn NS_NewStorageUTF8TextVariant(value: *const nsACString, result: *mut *const nsIVariant);
@@ -52,19 +52,19 @@ pub enum DataType {
 // and since that enum is unlikely to change frequently, this workaround
 // seems sufficient.)
 //
-pub const DATA_TYPE_INT32: uint16_t = DataType::INT32 as u16;
-pub const DATA_TYPE_DOUBLE: uint16_t = DataType::DOUBLE as u16;
-pub const DATA_TYPE_BOOL: uint16_t = DataType::BOOL as u16;
-pub const DATA_TYPE_VOID: uint16_t = DataType::VOID as u16;
-pub const DATA_TYPE_WSTRING: uint16_t = DataType::WSTRING as u16;
-pub const DATA_TYPE_EMPTY: uint16_t = DataType::EMPTY as u16;
+pub const DATA_TYPE_INT32: u16 = DataType::INT32 as u16;
+pub const DATA_TYPE_DOUBLE: u16 = DataType::DOUBLE as u16;
+pub const DATA_TYPE_BOOL: u16 = DataType::BOOL as u16;
+pub const DATA_TYPE_VOID: u16 = DataType::VOID as u16;
+pub const DATA_TYPE_WSTRING: u16 = DataType::WSTRING as u16;
+pub const DATA_TYPE_EMPTY: u16 = DataType::EMPTY as u16;
 
 pub trait GetDataType {
-    fn get_data_type(&self) -> uint16_t;
+    fn get_data_type(&self) -> u16;
 }
 
 impl GetDataType for nsIVariant {
-    fn get_data_type(&self) -> uint16_t {
+    fn get_data_type(&self) -> u16 {
         unsafe { NS_GetDataType(self) }
     }
 }

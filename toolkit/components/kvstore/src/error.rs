@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use libc::uint16_t;
 use nserror::{
     nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_IMPLEMENTED, NS_ERROR_NO_INTERFACE,
     NS_ERROR_NULL_POINTER, NS_ERROR_UNEXPECTED,
@@ -53,7 +52,7 @@ pub enum KeyValueError {
     UnexpectedValue,
 
     #[fail(display = "unsupported variant type: {}", _0)]
-    UnsupportedVariant(uint16_t),
+    UnsupportedVariant(u16),
 }
 
 impl From<nsresult> for KeyValueError {

@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use error::KeyValueError;
-use libc::int32_t;
 use nsstring::nsString;
 use rkv::OwnedValue;
 use storage_variant::{
@@ -35,7 +34,7 @@ pub fn variant_to_owned(variant: &nsIVariant) -> Result<Option<OwnedValue>, KeyV
 
     match data_type {
         DATA_TYPE_INT32 => {
-            let mut val: int32_t = 0;
+            let mut val: i32 = 0;
             unsafe { variant.GetAsInt32(&mut val) }.to_result()?;
             Ok(Some(OwnedValue::I64(val.into())))
         }
