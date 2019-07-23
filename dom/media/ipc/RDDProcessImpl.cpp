@@ -24,6 +24,10 @@ RDDProcessImpl::~RDDProcessImpl() {}
 
 bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
 #if defined(MOZ_SANDBOX) && defined(OS_WIN)
+  // Preload AV dlls so we can enable Binary Signature Policy
+  // to restrict further dll loads.
+  LoadLibraryW(L"mozavcodec.dll");
+  LoadLibraryW(L"mozavutil.dll");
   mozilla::SandboxTarget::Instance()->StartSandbox();
 #endif
   char* parentBuildID = nullptr;
