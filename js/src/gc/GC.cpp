@@ -924,7 +924,7 @@ bool Chunk::decommitOneFreeArena(JSRuntime* rt, AutoLockGC& lock) {
   bool ok;
   {
     AutoUnlockGC unlock(lock);
-    ok = MarkPagesUnused(arena, ArenaSize);
+    ok = MarkPagesUnusedSoft(arena, ArenaSize);
   }
 
   if (ok) {
@@ -943,7 +943,7 @@ void Chunk::decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock) {
       continue;
     }
 
-    if (MarkPagesUnused(&arenas[i], ArenaSize)) {
+    if (MarkPagesUnusedSoft(&arenas[i], ArenaSize)) {
       info.numArenasFreeCommitted--;
       decommittedArenas.set(i);
     }

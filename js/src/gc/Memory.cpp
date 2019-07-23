@@ -740,7 +740,7 @@ void UnmapPages(void* region, size_t length) {
   UnmapInternal(region, length);
 }
 
-bool MarkPagesUnused(void* region, size_t length) {
+bool MarkPagesUnusedSoft(void* region, size_t length) {
   MOZ_RELEASE_ASSERT(region);
   MOZ_RELEASE_ASSERT(length > 0);
 
@@ -771,7 +771,7 @@ bool MarkPagesUnused(void* region, size_t length) {
 #endif
 }
 
-void MarkPagesInUse(void* region, size_t length) {
+void MarkPagesInUseSoft(void* region, size_t length) {
   MOZ_RELEASE_ASSERT(region);
   MOZ_RELEASE_ASSERT(length > 0);
 

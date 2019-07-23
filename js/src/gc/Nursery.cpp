@@ -196,7 +196,7 @@ void js::NurseryDecommitTask::decommitRange(AutoLockHelperThreadState& lock) {
   partialChunk = nullptr;
   {
     AutoUnlockHelperThreadState unlock(lock);
-    MarkPagesUnused((void*)rangeStart, rangeLen);
+    MarkPagesUnusedSoft((void*)rangeStart, rangeLen);
   }
 }
 
