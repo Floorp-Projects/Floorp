@@ -225,7 +225,7 @@ class SearchFragment : Fragment(), BackHandler {
             val showShortcuts = searchState.showShortcutEnginePicker
             search_shortcuts_button?.isChecked = showShortcuts
 
-            val color = if (showShortcuts) R.attr.foundation else R.attr.primaryText
+            val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
 
             search_shortcuts_button.compoundDrawables[0]?.setTint(
                 ContextCompat.getColor(
