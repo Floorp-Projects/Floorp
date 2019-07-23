@@ -45,7 +45,14 @@ class InProcessParent : public nsIObserver, public PInProcessParent {
   static IProtocol* ChildActorFor(IProtocol* aActor);
 
  protected:
+  mozilla::dom::PWindowGlobalParent* AllocPWindowGlobalParent(
+      const WindowGlobalInit& aInit);
+
   bool DeallocPWindowGlobalParent(mozilla::dom::PWindowGlobalParent* aActor);
+
+  virtual IPCResult RecvPWindowGlobalConstructor(
+      mozilla::dom::PWindowGlobalParent* aActor,
+      const WindowGlobalInit& aInit) override;
 
  private:
   // Lifecycle management is implemented in InProcessImpl.cpp

@@ -38,7 +38,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 
 // for painting the background window
 #include "mozilla/LookAndFeel.h"
@@ -104,11 +103,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
     const OriginAttributes& aOriginAttributes,
     dom::BrowsingContext* aBrowsingContext,
-    dom::WindowGlobalChild* aInitialWindowChild,
     bool aDisableHistory /* = false */) {
-  MOZ_ASSERT_IF(aInitialWindowChild,
-                aInitialWindowChild->BrowsingContext() == aBrowsingContext);
-
   RefPtr<nsWebBrowser> browser = new nsWebBrowser(
       aBrowsingContext->IsContent() ? typeContentWrapper : typeChromeWrapper);
 
@@ -121,11 +116,7 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
     return nullptr;
   }
 
-  uint64_t outerWindowId =
-      aInitialWindowChild ? aInitialWindowChild->OuterWindowId() : 0;
-
-  RefPtr<nsDocShell> docShell =
-      nsDocShell::Create(aBrowsingContext, outerWindowId);
+  RefPtr<nsDocShell> docShell = nsDocShell::Create(aBrowsingContext);
   if (NS_WARN_IF(!docShell)) {
     return nullptr;
   }
@@ -186,10 +177,6 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
 
   docShellTreeOwner->AddToWatcher();  // evil twin of Remove in SetDocShell(0)
   docShellTreeOwner->AddChromeListeners();
-
-  if (aInitialWindowChild) {
-    docShell->CreateContentViewerForActor(aInitialWindowChild);
-  }
 
   return browser.forget();
 }

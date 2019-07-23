@@ -13,7 +13,6 @@
 #include "mozilla/dom/ContentProcessManager.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
-#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/layers/InputAPZContext.h"
 
 using namespace mozilla::ipc;
@@ -35,12 +34,9 @@ BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
-                                   const WindowGlobalInit& aWindowInit,
+                                   CanonicalBrowsingContext* aBrowsingContext,
                                    const uint32_t& aChromeFlags, TabId aTabId) {
   mIPCOpen = true;
-
-  RefPtr<CanonicalBrowsingContext> browsingContext =
-      aWindowInit.browsingContext()->Canonical();
 
   // We can inherit most TabContext fields for the new BrowserParent actor from
   // our Manager BrowserParent.
@@ -66,8 +62,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 
   // Ensure that our content process is subscribed to our newly created
   // BrowsingContextGroup.
-  browsingContext->Group()->EnsureSubscribed(constructorSender);
-  browsingContext->SetOwnerProcessId(constructorSender->ChildID());
+  aBrowsingContext->Group()->EnsureSubscribed(constructorSender);
+  aBrowsingContext->SetOwnerProcessId(constructorSender->ChildID());
 
   ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
   cpm->RegisterRemoteFrame(aTabId, ContentParentId(0), TabId(0),
@@ -75,8 +71,8 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                            constructorSender->ChildID());
 
   // Construct the BrowserParent object for our subframe.
-  auto browserParent = MakeRefPtr<BrowserParent>(
-      constructorSender, aTabId, tabContext, browsingContext, aChromeFlags);
+  RefPtr<BrowserParent> browserParent(new BrowserParent(
+      constructorSender, aTabId, tabContext, aBrowsingContext, aChromeFlags));
   browserParent->SetBrowserBridgeParent(this);
 
   // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
@@ -88,23 +84,11 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
     return NS_ERROR_FAILURE;
   }
 
-  auto windowParent =
-      MakeRefPtr<WindowGlobalParent>(aWindowInit, /* inprocess */ false);
-
-  // DeallocPWindowGlobalParent releases the ref taken.
-  ManagedEndpoint<PWindowGlobalChild> windowChildEp =
-      browserParent->OpenPWindowGlobalEndpoint(do_AddRef(windowParent).take());
-  if (NS_WARN_IF(!windowChildEp.IsValid())) {
-    MOZ_ASSERT(false, "WindowGlobal Open Endpoint Failed");
-    return NS_ERROR_FAILURE;
-  }
-
   // Tell the content process to set up its PBrowserChild.
   bool ok = constructorSender->SendConstructBrowser(
-      std::move(childEp), std::move(windowChildEp), aTabId, TabId(0),
-      tabContext.AsIPCTabContext(), aWindowInit, aChromeFlags,
-      constructorSender->ChildID(), constructorSender->IsForBrowser(),
-      /* aIsTopLevel */ false);
+      std::move(childEp), aTabId, TabId(0), tabContext.AsIPCTabContext(),
+      aBrowsingContext, aChromeFlags, constructorSender->ChildID(),
+      constructorSender->IsForBrowser(), /* aIsTopLevel */ false);
   if (NS_WARN_IF(!ok)) {
     MOZ_ASSERT(false, "Browser Constructor Failed");
     return NS_ERROR_FAILURE;
@@ -114,8 +98,6 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   mBrowserParent = browserParent.forget();
   mBrowserParent->SetOwnerElement(Manager()->GetOwnerElement());
   mBrowserParent->InitRendering();
-
-  windowParent->Init(aWindowInit);
 
   // Send the newly created layers ID back into content.
   Unused << SendSetLayersId(mBrowserParent->GetLayersId());
