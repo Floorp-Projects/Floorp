@@ -514,7 +514,6 @@ pwmgr:
       - "fennec"
       - "geckoview"
     record_in_processes: [content]
-
   autocomplete_field:
     objects: ["generatedpassword"]
     methods: ["autocomplete_field"]
@@ -526,6 +525,18 @@ pwmgr:
       - "firefox"
       - "fennec"
       - "geckoview"
+    record_in_processes: ["main"]
+    release_channel_collection: opt-out
+    expiry_version: never
+  filled_field_edited:
+    objects: ["generatedpassword"]
+    methods: ["filled_field_edited"]
+    description: >
+      The first time each generated password filled in a website form field is edited by the user in a field it was filled in
+    bug_numbers: [1548880]
+    notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org"]
+    products:
+      - "firefox"
     record_in_processes: ["main"]
     release_channel_collection: opt-out
     expiry_version: never
