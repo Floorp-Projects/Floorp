@@ -11,6 +11,7 @@
 #include <winerror.h>
 #include <winnt.h>
 #include <winternl.h>
+#include <objbase.h>
 
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
@@ -400,6 +401,10 @@ class MOZ_RAII AutoVirtualProtect final {
   HANDLE mTargetProcess;
   DWORD mPrevProt;
   WindowsError mError;
+};
+
+struct CoTaskMemFreeDeleter {
+  void operator()(void* aPtr) { ::CoTaskMemFree(aPtr); }
 };
 
 }  // namespace mozilla
