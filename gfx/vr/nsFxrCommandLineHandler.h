@@ -17,8 +17,6 @@
     }                                                \
   }
 
-// nsFxrCommandLineHandler is responsible for handling parameters used to
-// bootstrap Firefox Reality running on desktop-class machines.
 class nsFxrCommandLineHandler : public nsICommandLineHandler {
  public:
   nsFxrCommandLineHandler() = default;
