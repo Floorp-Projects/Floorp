@@ -86,12 +86,12 @@ namespace quota {
 
 // Telemetry keys to indicate types of errors.
 #ifdef NIGHTLY_BUILD
-extern const nsLiteralCString kInternalError;
-extern const nsLiteralCString kExternalError;
+extern const nsLiteralCString kQuotaInternalError;
+extern const nsLiteralCString kQuotaExternalError;
 #else
 // No need for these when we're not collecting telemetry.
-#  define kInternalError
-#  define kExternalError
+#  define kQuotaInternalError
+#  define kQuotaExternalError
 #endif
 
 class BackgroundThreadObject {
