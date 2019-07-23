@@ -249,7 +249,7 @@ class TaskBuilder(object):
             "features": features,
             "env": env_vars,
             "maxRunTime": 7200,
-            "image": "mozillamobile/android-components:1.19",
+            "image": "mozillamobile/android-components:1.20",
             "command": [
                 "/bin/bash",
                 "--login",
