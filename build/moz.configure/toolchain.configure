@@ -1442,16 +1442,15 @@ def pgo_flags(compiler, build_env, target):
         else:
             gen_ldflags = ['-fprofile-generate']
 
-        if gen_ldflags:
-            return namespace(
-                gen_cflags=[prefix + '-fprofile-generate'],
-                gen_ldflags=gen_ldflags,
-                use_cflags=[prefix + '-fprofile-use=%s' % profdata,
-                            # Some error messages about mismatched profile data
-                            # come in via -Wbackend-plugin, so disable those too.
-                            '-Wno-error=backend-plugin'],
-                use_ldflags=[],
-            )
+        return namespace(
+            gen_cflags=[prefix + '-fprofile-generate'],
+            gen_ldflags=gen_ldflags,
+            use_cflags=[prefix + '-fprofile-use=%s' % profdata,
+                        # Some error messages about mismatched profile data
+                        # come in via -Wbackend-plugin, so disable those too.
+                        '-Wno-error=backend-plugin'],
+            use_ldflags=[],
+        )
 
 
 set_config('PROFILE_GEN_CFLAGS', pgo_flags.gen_cflags)

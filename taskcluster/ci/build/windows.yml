@@ -1119,6 +1119,7 @@ win64-aarch64-shippable/opt:
 
 win64-aarch64-shippable-no-eme/opt:
     description: "AArch64 Win64 Shippable w/o EME"
+    use-pgo: win64-shippable/opt
     index:
         product: firefox
         job-name: win64-aarch64-no-eme-opt
