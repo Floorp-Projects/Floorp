@@ -75,7 +75,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        components.publicSuffixList.prefetch()
+        components.utils.publicSuffixList.prefetch()
         setupThemeAndBrowsingMode()
 
         setContentView(R.layout.activity_home)
