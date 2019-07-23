@@ -31,7 +31,8 @@ async function performTests() {
   for (const [errorMessageName, expression] of Object.entries(
     ErrorDocStatements
   )) {
-    const title = ErrorDocs.GetURL({ errorMessageName }).split("?")[0];
+    const errorUrl = ErrorDocs.GetURL({ errorMessageName });
+    const title = errorUrl.split("?")[0];
 
     hud.ui.clearOutput();
     const onMessage = waitForMessage(hud, "RangeError:");
@@ -46,6 +47,11 @@ async function performTests() {
       learnMoreLink.title,
       title,
       `The link has the expected "${title}" title`
+    );
+    is(
+      learnMoreLink.href,
+      errorUrl,
+      `The link has the expected "${errorUrl}" href value`
     );
   }
 }

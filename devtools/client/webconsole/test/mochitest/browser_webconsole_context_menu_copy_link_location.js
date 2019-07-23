@@ -73,4 +73,29 @@ add_task(async function() {
   ok(true, "Expected text was copied to the clipboard.");
 
   await hideContextMenu(hud);
+  hud.ui.clearOutput();
+
+  info("Test Copy URL menu item from [Learn More] link");
+
+  info("Generate a Reference Error in the JS Console");
+  message = await executeAndWaitForMessage(
+    hud,
+    "area51.aliens",
+    "ReferenceError:"
+  );
+  ok(message, "Error log found in the console");
+
+  const learnMoreElement = message.node.querySelector(".learn-more-link");
+  menuPopup = await openContextMenu(hud, learnMoreElement);
+  copyURLItem = menuPopup.querySelector(CONTEXT_MENU_ID);
+  ok(copyURLItem, "Copy url menu item is available in context menu");
+
+  info("Click on Copy URL menu item and wait for clipboard to be updated");
+  await waitForClipboardPromise(
+    () => copyURLItem.click(),
+    learnMoreElement.href
+  );
+  ok(true, "Expected text was copied to the clipboard.");
+
+  await hideContextMenu(hud);
 });
