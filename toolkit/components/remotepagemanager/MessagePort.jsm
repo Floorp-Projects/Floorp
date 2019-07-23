@@ -62,6 +62,7 @@ let RPMAccessManager = {
         "browser.contentblocking.report.lockwise.enabled",
         "browser.contentblocking.report.monitor.enabled",
       ],
+      getStringPref: ["browser.contentblocking.category"],
     },
     "about:newinstall": {
       getUpdateChannel: ["yes"],
@@ -388,6 +389,16 @@ class MessagePort {
       throw new Error("RPMAccessManager does not allow access to getIntPref");
     }
     return Services.prefs.getIntPref(aPref);
+  }
+
+  getStringPref(aPref) {
+    let principal = this.window.document.nodePrincipal;
+    if (!RPMAccessManager.checkAllowAccess(principal, "getStringPref", aPref)) {
+      throw new Error(
+        "RPMAccessManager does not allow access to getStringPref"
+      );
+    }
+    return Services.prefs.getStringPref(aPref);
   }
 
   getBoolPref(aPref, defaultValue = false) {

@@ -29,24 +29,23 @@ document.addEventListener("DOMContentLoaded", e => {
     RPMSendAsyncMessage("OpenContentBlockingPreferences");
   });
 
-  RPMAddMessageListener("SendCBCategory", message => {
-    if (message.data == "custom") {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-custom"
-      );
-    } else if (message.data == "strict") {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-strict"
-      );
-    } else {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-standard"
-      );
-    }
-  });
+  let cbCategory = RPMGetStringPref("browser.contentblocking.category");
+  if (cbCategory == "custom") {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-custom"
+    );
+  } else if (cbCategory == "strict") {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-strict"
+    );
+  } else {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-standard"
+    );
+  }
 
   let createGraph = data => {
     // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
