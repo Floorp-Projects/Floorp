@@ -291,7 +291,8 @@ ul.children + .tag-line::before {
 }
 
 .flash-out {
-  transition: background,color .5s;
+  transition-property: background,color;
+  transition-duration: .5s .5s;
 }
 
 .editor {
