@@ -1,36 +1,7 @@
-.. _addressbar:
+Architecture Overview
+=====================
 
-===========
-Address Bar
-===========
-
-The *Address Bar* component drives the browser's url bar, a specialized search
-access point (SAP) including different sources of information:
-  * Places: the History, Bookmarks, Favicons and Tags component
-  * Search Engines and Suggestions
-  * WebExtensions
-  * Open Tabs
-  * Keywords and aliases
-
-The *Address Bar* component lives in the
-`browser/components/urlbar/ <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/>`_ folder.
-
-.. note::
-
-  The current *Address Bar* is driven by the legacy
-  `toolkit autocomplete <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/autocomplete>`_
-  binding, along with the *Places UnifiedComplete* component. This documentation
-  describes a new rewrite of the feature, also known as the **Quantum Bar**.
-
-.. caution::
-
-  This code is under heavy development and may change abruptly.
-
-
-Global Architecture Overview
-============================
-
-The *Address Bar* is implemented as a *Model-View-Controller* (MVC) system. One of
+The address bar is implemented as a *model-view-controller* (MVC) system. One of
 the scopes of this architecture is to allow easy replacement of its components,
 for easier experimentation.
 
@@ -46,7 +17,7 @@ and responsibilities.
 
 
 The UrlbarQueryContext
-======================
+----------------------
 
 The *UrlbarQueryContext* object describes a single instance of a search.
 It is augmented as it progresses through the system, with various information:
@@ -85,7 +56,7 @@ It is augmented as it progresses through the system, with various information:
 
 
 The Model
-=========
+---------
 
 The *Model* is the component responsible for retrieving search results based on
 the user's input, and sorting them accordingly to their importance.
@@ -134,7 +105,7 @@ used by the user to restrict the search to specific result type (See the
   }
 
 UrlbarProvider
---------------
+~~~~~~~~~~~~~~
 
 A provider is specialized into searching and returning results from different
 information sources. Internal providers are usually implemented in separate
@@ -218,7 +189,7 @@ implementation details may vary deeply among different providers.
   }
 
 UrlbarMuxer
------------
+~~~~~~~~~~~
 
 The *Muxer* is responsible for sorting results based on their importance and
 additional rules that depend on the UrlbarQueryContext. The muxer to use is
@@ -253,7 +224,7 @@ indicated by the UrlbarQueryContext.muxer property.
 
 
 The Controller
-==============
+--------------
 
 `UrlbarController <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarController.jsm>`_
 is the component responsible for reacting to user's input, by communicating
@@ -282,7 +253,7 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
 
 
 The View
-=========
+--------
 
 The View is the component responsible for presenting search results to the
 user and handling their input.
@@ -293,7 +264,7 @@ user and handling their input.
   reference for the default View, but may not be valid for other implementations.
 
 `UrlbarInput.jsm <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarInput.jsm>`_
--------------------------------------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Implements an input box *View*, owns an *UrlbarView*.
 
@@ -340,7 +311,7 @@ Implements an input box *View*, owns an *UrlbarView*.
   }
 
 `UrlbarView.jsm <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarView.jsm>`_
------------------------------------------------------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Represents the base *View* implementation, communicates with the *Controller*.
 
@@ -367,7 +338,7 @@ Represents the base *View* implementation, communicates with the *Controller*.
 
 
 UrlbarResult
-============
+------------
 
 An `UrlbarResult <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarResult.jsm>`_
 instance represents a single search result with a result type, that
@@ -415,54 +386,3 @@ The following RESULT_TYPEs are supported:
     OMNIBOX: 5,
     // Payload: { icon, url, device, title }
     REMOTE_TAB: 6,
-
-
-Shared Modules
-==============
-
-Various modules provide shared utilities to the other components:
-
-`UrlbarPrefs.jsm <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarPrefs.jsm>`_
--------------------------------------------------------------------------------------------------------------
-
-Implements a Map-like storage or urlbar related preferences. The values are kept
-up-to-date.
-
-.. highlight:: JavaScript
-.. code::
-
-  // Always use browser.urlbar. relative branch, except for the preferences in
-  // PREF_OTHER_DEFAULTS.
-  UrlbarPrefs.get("delay"); // Gets value of browser.urlbar.delay.
-
-.. note::
-
-  Newly added preferences should always be properly documented in UrlbarPrefs.
-
-`UrlbarUtils.jsm <https://dxr.mozilla.org/mozilla-central/source/browser/components/urlbar/UrlbarUtils.jsm>`_
--------------------------------------------------------------------------------------------------------------
-
-Includes shared utils and constants shared across all the components.
-
-
-Telemetry Probes
-================
-
-*Content to be written*
-
-
-Debugging & Logging
-===================
-
-*Content to be written*
-
-
-Getting in Touch
-================
-
-For any questions regarding the Address Bar, the team is available through
-the #fx-search channel on irc.mozilla.org and the fx-search@mozilla.com mailing
-list.
-
-Issues can be `filed in Bugzilla <https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox&component=Address%20Bar>`_
-under the Firefox / Address Bar component.
