@@ -1114,6 +1114,27 @@ File.remove = function remove(path, options) {
   return Scheduler.post("remove", [Type.path.toMsg(path), options], path);
 };
 
+// Extended attribute functions are MacOS only at this point.
+if (SharedAll.Constants.Sys.Name == "Darwin") {
+  /**
+   * Remove an extended attribute (xattr) from a file.
+   *
+   * @param {string} path The name of the file.
+   * @param {string} name The name of the extended attribute.
+   *
+   * @returns {promise}
+   * @resolves {null}
+   * @rejects {OS.File.Error} In case of an I/O error.
+   */
+  File.macRemoveXAttr = function macRemoveXAttr(path, name) {
+    return Scheduler.post(
+      "macRemoveXAttr",
+      [Type.path.toMsg(path), Type.cstring.toMsg(name)],
+      [path, name]
+    );
+  };
+}
+
 /**
  * Create a directory and, optionally, its parent directories.
  *

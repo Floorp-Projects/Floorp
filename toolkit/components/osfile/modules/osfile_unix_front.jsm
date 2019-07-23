@@ -916,6 +916,24 @@
       return serialized;
     };
 
+    // Extended attribute functions are MacOS only at this point.
+    if (OS.Constants.Sys.Name == "Darwin") {
+      /**
+       * Remove an extended attribute (xattr) from a file.
+       *
+       * @param {string} path The name of the file.
+       * @param {string} name The name of the extended attribute.
+       *
+       * @throws {OS.File.Error} In case of an I/O error.
+       */
+      File.macRemoveXAttr = function removexattr(path, name) {
+        let result = UnixFile.removexattr(path, name, 0 /* follow links */);
+        if (result == -1) {
+          throw new File.Error("removexattr", ctypes.errno, path);
+        }
+      };
+    }
+
     let gStatData = new Type.stat.implementation();
     let gStatDataPtr = gStatData.address();
 
