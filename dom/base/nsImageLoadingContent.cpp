@@ -43,6 +43,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
@@ -352,18 +353,22 @@ already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
     return nullptr;
   }
 
-  class QueueDecodeTask final : public Runnable {
+  class QueueDecodeTask final : public MicroTaskRunnable {
    public:
     QueueDecodeTask(nsImageLoadingContent* aOwner, Promise* aPromise,
                     uint32_t aRequestGeneration)
-        : Runnable("nsImageLoadingContent::QueueDecodeTask"),
+        : MicroTaskRunnable(),
           mOwner(aOwner),
           mPromise(aPromise),
           mRequestGeneration(aRequestGeneration) {}
 
-    NS_IMETHOD Run() override {
+    virtual void Run(AutoSlowOperation& aAso) override {
       mOwner->DecodeAsync(std::move(mPromise), mRequestGeneration);
-      return NS_OK;
+    }
+
+    virtual bool Suppressed() override {
+      nsIGlobalObject* global = mOwner->GetOurOwnerDoc()->GetScopeObject();
+      return global && global->IsInSyncOperation();
     }
 
    private:
@@ -378,13 +383,12 @@ already_AddRefed<Promise> nsImageLoadingContent::QueueDecodeAsync(
   }
 
   auto task = MakeRefPtr<QueueDecodeTask>(this, promise, mRequestGeneration);
-  nsContentUtils::RunInStableState(task.forget());
+  CycleCollectedJSContext::Get()->DispatchToMicroTask(task.forget());
   return promise.forget();
 }
 
 void nsImageLoadingContent::DecodeAsync(RefPtr<Promise>&& aPromise,
                                         uint32_t aRequestGeneration) {
-  MOZ_ASSERT(nsContentUtils::IsInStableOrMetaStableState());
   MOZ_ASSERT(aPromise);
   MOZ_ASSERT(mOutstandingDecodePromises > mDecodePromises.Length());
 

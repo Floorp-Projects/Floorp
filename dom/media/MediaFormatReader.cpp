@@ -1472,14 +1472,14 @@ void MediaFormatReader::DoDemuxVideo() {
 
 void MediaFormatReader::OnVideoDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-  LOGV("%zu video samples demuxed (sid:%d)", aSamples->mSamples.Length(),
-       aSamples->mSamples[0]->mTrackInfo
-           ? aSamples->mSamples[0]->mTrackInfo->GetID()
+  LOGV("%zu video samples demuxed (sid:%d)", aSamples->GetSamples().Length(),
+       aSamples->GetSamples()[0]->mTrackInfo
+           ? aSamples->GetSamples()[0]->mTrackInfo->GetID()
            : 0);
   DDLOG(DDLogCategory::Log, "video_demuxed_samples",
-        uint64_t(aSamples->mSamples.Length()));
+        uint64_t(aSamples->GetSamples().Length()));
   mVideo.mDemuxRequest.Complete();
-  mVideo.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mVideo.mQueuedSamples.AppendElements(aSamples->GetSamples());
   ScheduleUpdate(TrackInfo::kVideoTrack);
 }
 
@@ -1550,14 +1550,14 @@ void MediaFormatReader::DoDemuxAudio() {
 
 void MediaFormatReader::OnAudioDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-  LOGV("%zu audio samples demuxed (sid:%d)", aSamples->mSamples.Length(),
-       aSamples->mSamples[0]->mTrackInfo
-           ? aSamples->mSamples[0]->mTrackInfo->GetID()
+  LOGV("%zu audio samples demuxed (sid:%d)", aSamples->GetSamples().Length(),
+       aSamples->GetSamples()[0]->mTrackInfo
+           ? aSamples->GetSamples()[0]->mTrackInfo->GetID()
            : 0);
   DDLOG(DDLogCategory::Log, "audio_demuxed_samples",
-        uint64_t(aSamples->mSamples.Length()));
+        uint64_t(aSamples->GetSamples().Length()));
   mAudio.mDemuxRequest.Complete();
-  mAudio.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mAudio.mQueuedSamples.AppendElements(aSamples->GetSamples());
   ScheduleUpdate(TrackInfo::kAudioTrack);
 }
 
@@ -3091,7 +3091,7 @@ void MediaFormatReader::OnFirstDemuxCompleted(
 
   auto& decoder = GetDecoderData(aType);
   MOZ_ASSERT(decoder.mFirstDemuxedSampleTime.isNothing());
-  decoder.mFirstDemuxedSampleTime.emplace(aSamples->mSamples[0]->mTime);
+  decoder.mFirstDemuxedSampleTime.emplace(aSamples->GetSamples()[0]->mTime);
   MaybeResolveMetadataPromise();
 }
 

@@ -1848,9 +1848,6 @@ AC_SUBST(MOZ_ENABLE_STARTUP_NOTIFICATION)
 AC_SUBST_LIST(TK_CFLAGS)
 AC_SUBST_LIST(TK_LIBS)
 
-AC_SUBST(MOC)
-AC_SUBST(RCC)
-
 dnl ========================================================
 dnl =
 dnl = Components & Features

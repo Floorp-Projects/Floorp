@@ -19,49 +19,63 @@
 //! conflicting requirements will need to be resolved before the build will
 //! succeed.
 
-#![doc(html_root_url = "https://docs.rs/rayon-core/1.4")]
+#![doc(html_root_url = "https://docs.rs/rayon-core/1.5")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
-#![cfg_attr(test, feature(conservative_impl_trait))]
+#![deny(unreachable_pub)]
 
 use std::any::Any;
 use std::env;
-use std::io;
 use std::error::Error;
+use std::fmt;
+use std::io;
 use std::marker::PhantomData;
 use std::str::FromStr;
-use std::fmt;
 
 extern crate crossbeam_deque;
+extern crate crossbeam_queue;
+extern crate crossbeam_utils;
+#[cfg(any(debug_assertions, rayon_unstable))]
 #[macro_use]
 extern crate lazy_static;
-extern crate libc;
 extern crate num_cpus;
+
+#[cfg(test)]
 extern crate rand;
+#[cfg(test)]
+extern crate rand_xorshift;
 
 #[macro_use]
 mod log;
+#[macro_use]
+mod private;
 
-mod latch;
-mod join;
 mod job;
+mod join;
+mod latch;
 mod registry;
 mod scope;
 mod sleep;
 mod spawn;
-mod test;
 mod thread_pool;
 mod unwind;
 mod util;
 
+mod compile_fail;
+mod test;
+
 #[cfg(rayon_unstable)]
 pub mod internal;
-pub use thread_pool::ThreadPool;
-pub use thread_pool::current_thread_index;
-pub use thread_pool::current_thread_has_pending_tasks;
 pub use join::{join, join_context};
+pub use registry::ThreadBuilder;
 pub use scope::{scope, Scope};
-pub use spawn::spawn;
+pub use scope::{scope_fifo, ScopeFifo};
+pub use spawn::{spawn, spawn_fifo};
+pub use thread_pool::current_thread_has_pending_tasks;
+pub use thread_pool::current_thread_index;
+pub use thread_pool::ThreadPool;
+
+use registry::{CustomSpawn, DefaultSpawn, ThreadSpawn};
 
 /// Returns the number of threads in the current registry. If this
 /// code is executing within a Rayon thread-pool, then this will be
@@ -115,8 +129,7 @@ enum ErrorKind {
 ///
 /// [`ThreadPool`]: struct.ThreadPool.html
 /// [`build_global()`]: struct.ThreadPoolBuilder.html#method.build_global
-#[derive(Default)]
-pub struct ThreadPoolBuilder {
+pub struct ThreadPoolBuilder<S = DefaultSpawn> {
     /// The number of threads in the rayon thread pool.
     /// If zero will use the RAYON_NUM_THREADS environment variable.
     /// If RAYON_NUM_THREADS is invalid or zero will use the default.
@@ -138,6 +151,9 @@ pub struct ThreadPoolBuilder {
     /// Closure invoked on worker thread exit.
     exit_handler: Option<Box<ExitHandler>>,
 
+    /// Closure invoked to spawn threads.
+    spawn_handler: S,
+
     /// If false, worker threads will execute spawned jobs in a
     /// "depth-first" fashion. If true, they will do a "breadth-first"
     /// fashion. Depth-first is the default.
@@ -148,7 +164,6 @@ pub struct ThreadPoolBuilder {
 ///
 /// [`ThreadPoolBuilder`]: struct.ThreadPoolBuilder.html
 #[deprecated(note = "Use `ThreadPoolBuilder`")]
-#[derive(Default)]
 pub struct Configuration {
     builder: ThreadPoolBuilder,
 }
@@ -167,15 +182,38 @@ type StartHandler = Fn(usize) + Send + Sync;
 /// Note that this same closure may be invoked multiple times in parallel.
 type ExitHandler = Fn(usize) + Send + Sync;
 
+// NB: We can't `#[derive(Default)]` because `S` is left ambiguous.
+impl Default for ThreadPoolBuilder {
+    fn default() -> Self {
+        ThreadPoolBuilder {
+            num_threads: 0,
+            panic_handler: None,
+            get_thread_name: None,
+            stack_size: None,
+            start_handler: None,
+            exit_handler: None,
+            spawn_handler: DefaultSpawn,
+            breadth_first: false,
+        }
+    }
+}
+
 impl ThreadPoolBuilder {
     /// Creates and returns a valid rayon thread pool builder, but does not initialize it.
-    pub fn new() -> ThreadPoolBuilder {
-        ThreadPoolBuilder::default()
+    pub fn new() -> Self {
+        Self::default()
     }
+}
 
+/// Note: the `S: ThreadSpawn` constraint is an internal implementation detail for the
+/// default spawn and those set by [`spawn_handler`](#method.spawn_handler).
+impl<S> ThreadPoolBuilder<S>
+where
+    S: ThreadSpawn,
+{
     /// Create a new `ThreadPool` initialized using this configuration.
     pub fn build(self) -> Result<ThreadPool, ThreadPoolBuildError> {
-        thread_pool::build(self)
+        ThreadPool::build(self)
     }
 
     /// Initializes the global thread pool. This initialization is
@@ -196,9 +234,157 @@ impl ThreadPoolBuilder {
     /// will return an error. An `Ok` result indicates that this
     /// is the first initialization of the thread pool.
     pub fn build_global(self) -> Result<(), ThreadPoolBuildError> {
-        let registry = try!(registry::init_global_registry(self));
+        let registry = registry::init_global_registry(self)?;
         registry.wait_until_primed();
         Ok(())
+    }
+}
+
+impl ThreadPoolBuilder {
+    /// Create a scoped `ThreadPool` initialized using this configuration.
+    ///
+    /// This is a convenience function for building a pool using [`crossbeam::scope`]
+    /// to spawn threads in a [`spawn_handler`](#method.spawn_handler).
+    /// The threads in this pool will start by calling `wrapper`, which should
+    /// do initialization and continue by calling `ThreadBuilder::run()`.
+    ///
+    /// [`crossbeam::scope`]: https://docs.rs/crossbeam/0.7/crossbeam/fn.scope.html
+    ///
+    /// # Examples
+    ///
+    /// A scoped pool may be useful in combination with scoped thread-local variables.
+    ///
+    /// ```
+    /// #[macro_use]
+    /// extern crate scoped_tls;
+    /// # use rayon_core as rayon;
+    ///
+    /// scoped_thread_local!(static POOL_DATA: Vec<i32>);
+    ///
+    /// fn main() -> Result<(), rayon::ThreadPoolBuildError> {
+    ///     let pool_data = vec![1, 2, 3];
+    ///
+    ///     // We haven't assigned any TLS data yet.
+    ///     assert!(!POOL_DATA.is_set());
+    ///
+    ///     rayon::ThreadPoolBuilder::new()
+    ///         .build_scoped(
+    ///             // Borrow `pool_data` in TLS for each thread.
+    ///             |thread| POOL_DATA.set(&pool_data, || thread.run()),
+    ///             // Do some work that needs the TLS data.
+    ///             |pool| pool.install(|| assert!(POOL_DATA.is_set())),
+    ///         )?;
+    ///
+    ///     // Once we've returned, `pool_data` is no longer borrowed.
+    ///     drop(pool_data);
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn build_scoped<W, F, R>(self, wrapper: W, with_pool: F) -> Result<R, ThreadPoolBuildError>
+    where
+        W: Fn(ThreadBuilder) + Sync, // expected to call `run()`
+        F: FnOnce(&ThreadPool) -> R,
+    {
+        let result = crossbeam_utils::thread::scope(|scope| {
+            let wrapper = &wrapper;
+            let pool = self
+                .spawn_handler(|thread| {
+                    let mut builder = scope.builder();
+                    if let Some(name) = thread.name() {
+                        builder = builder.name(name.to_string());
+                    }
+                    if let Some(size) = thread.stack_size() {
+                        builder = builder.stack_size(size);
+                    }
+                    builder.spawn(move |_| wrapper(thread))?;
+                    Ok(())
+                })
+                .build()?;
+            Ok(with_pool(&pool))
+        });
+
+        match result {
+            Ok(result) => result,
+            Err(err) => unwind::resume_unwinding(err),
+        }
+    }
+}
+
+impl<S> ThreadPoolBuilder<S> {
+    /// Set a custom function for spawning threads.
+    ///
+    /// Note that the threads will not exit until after the pool is dropped. It
+    /// is up to the caller to wait for thread termination if that is important
+    /// for any invariants. For instance, threads created in [`crossbeam::scope`]
+    /// will be joined before that scope returns, and this will block indefinitely
+    /// if the pool is leaked. Furthermore, the global thread pool doesn't terminate
+    /// until the entire process exits!
+    ///
+    /// [`crossbeam::scope`]: https://docs.rs/crossbeam/0.7/crossbeam/fn.scope.html
+    ///
+    /// # Examples
+    ///
+    /// A minimal spawn handler just needs to call `run()` from an independent thread.
+    ///
+    /// ```
+    /// # use rayon_core as rayon;
+    /// fn main() -> Result<(), rayon::ThreadPoolBuildError> {
+    ///     let pool = rayon::ThreadPoolBuilder::new()
+    ///         .spawn_handler(|thread| {
+    ///             std::thread::spawn(|| thread.run());
+    ///             Ok(())
+    ///         })
+    ///         .build()?;
+    ///
+    ///     pool.install(|| println!("Hello from my custom thread!"));
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// The default spawn handler sets the name and stack size if given, and propagates
+    /// any errors from the thread builder.
+    ///
+    /// ```
+    /// # use rayon_core as rayon;
+    /// fn main() -> Result<(), rayon::ThreadPoolBuildError> {
+    ///     let pool = rayon::ThreadPoolBuilder::new()
+    ///         .spawn_handler(|thread| {
+    ///             let mut b = std::thread::Builder::new();
+    ///             if let Some(name) = thread.name() {
+    ///                 b = b.name(name.to_owned());
+    ///             }
+    ///             if let Some(stack_size) = thread.stack_size() {
+    ///                 b = b.stack_size(stack_size);
+    ///             }
+    ///             b.spawn(|| thread.run())?;
+    ///             Ok(())
+    ///         })
+    ///         .build()?;
+    ///
+    ///     pool.install(|| println!("Hello from my fully custom thread!"));
+    ///     Ok(())
+    /// }
+    /// ```
+    pub fn spawn_handler<F>(self, spawn: F) -> ThreadPoolBuilder<CustomSpawn<F>>
+    where
+        F: FnMut(ThreadBuilder) -> io::Result<()>,
+    {
+        ThreadPoolBuilder {
+            spawn_handler: CustomSpawn::new(spawn),
+            // ..self
+            num_threads: self.num_threads,
+            panic_handler: self.panic_handler,
+            get_thread_name: self.get_thread_name,
+            stack_size: self.stack_size,
+            start_handler: self.start_handler,
+            exit_handler: self.exit_handler,
+            breadth_first: self.breadth_first,
+        }
+    }
+
+    /// Returns a reference to the current spawn handler.
+    fn get_spawn_handler(&mut self) -> &mut S {
+        &mut self.spawn_handler
     }
 
     /// Get the number of threads that will be used for the thread
@@ -207,14 +393,20 @@ impl ThreadPoolBuilder {
         if self.num_threads > 0 {
             self.num_threads
         } else {
-            match env::var("RAYON_NUM_THREADS").ok().and_then(|s| usize::from_str(&s).ok()) {
+            match env::var("RAYON_NUM_THREADS")
+                .ok()
+                .and_then(|s| usize::from_str(&s).ok())
+            {
                 Some(x) if x > 0 => return x,
                 Some(x) if x == 0 => return num_cpus::get(),
-                _ => {},
+                _ => {}
             }
 
             // Support for deprecated `RAYON_RS_NUM_CPUS`.
-            match env::var("RAYON_RS_NUM_CPUS").ok().and_then(|s| usize::from_str(&s).ok()) {
+            match env::var("RAYON_RS_NUM_CPUS")
+                .ok()
+                .and_then(|s| usize::from_str(&s).ok())
+            {
                 Some(x) if x > 0 => x,
                 _ => num_cpus::get(),
             }
@@ -223,13 +415,16 @@ impl ThreadPoolBuilder {
 
     /// Get the thread name for the thread with the given index.
     fn get_thread_name(&mut self, index: usize) -> Option<String> {
-        self.get_thread_name.as_mut().map(|c| c(index))
+        let f = self.get_thread_name.as_mut()?;
+        Some(f(index))
     }
 
     /// Set a closure which takes a thread index and returns
     /// the thread's name.
     pub fn thread_name<F>(mut self, closure: F) -> Self
-    where F: FnMut(usize) -> String + 'static {
+    where
+        F: FnMut(usize) -> String + 'static,
+    {
         self.get_thread_name = Some(Box::new(closure));
         self
     }
@@ -260,7 +455,7 @@ impl ThreadPoolBuilder {
     /// replacement of the now deprecated `RAYON_RS_NUM_CPUS` environment
     /// variable. If both variables are specified, `RAYON_NUM_THREADS` will
     /// be prefered.
-    pub fn num_threads(mut self, num_threads: usize) -> ThreadPoolBuilder {
+    pub fn num_threads(mut self, num_threads: usize) -> Self {
         self.num_threads = num_threads;
         self
     }
@@ -284,15 +479,16 @@ impl ThreadPoolBuilder {
     /// If the panic handler itself panics, this will abort the
     /// process. To prevent this, wrap the body of your panic handler
     /// in a call to `std::panic::catch_unwind()`.
-    pub fn panic_handler<H>(mut self, panic_handler: H) -> ThreadPoolBuilder
-        where H: Fn(Box<Any + Send>) + Send + Sync + 'static
+    pub fn panic_handler<H>(mut self, panic_handler: H) -> Self
+    where
+        H: Fn(Box<Any + Send>) + Send + Sync + 'static,
     {
         self.panic_handler = Some(Box::new(panic_handler));
         self
     }
 
     /// Get the stack size of the worker threads
-    fn get_stack_size(&self) -> Option<usize>{
+    fn get_stack_size(&self) -> Option<usize> {
         self.stack_size
     }
 
@@ -302,16 +498,17 @@ impl ThreadPoolBuilder {
         self
     }
 
-    /// Suggest to worker threads that they execute spawned jobs in a
-    /// "breadth-first" fashion. Typically, when a worker thread is
-    /// idle or blocked, it will attempt to execute the job from the
-    /// *top* of its local deque of work (i.e., the job most recently
-    /// spawned). If this flag is set to true, however, workers will
-    /// prefer to execute in a *breadth-first* fashion -- that is,
-    /// they will search for jobs at the *bottom* of their local
-    /// deque. (At present, workers *always* steal from the bottom of
-    /// other worker's deques, regardless of the setting of this
-    /// flag.)
+    /// **(DEPRECATED)** Suggest to worker threads that they execute
+    /// spawned jobs in a "breadth-first" fashion.
+    ///
+    /// Typically, when a worker thread is idle or blocked, it will
+    /// attempt to execute the job from the *top* of its local deque of
+    /// work (i.e., the job most recently spawned). If this flag is set
+    /// to true, however, workers will prefer to execute in a
+    /// *breadth-first* fashion -- that is, they will search for jobs at
+    /// the *bottom* of their local deque. (At present, workers *always*
+    /// steal from the bottom of other worker's deques, regardless of
+    /// the setting of this flag.)
     ///
     /// If you think of the tasks as a tree, where a parent task
     /// spawns its children in the tree, then this flag loosely
@@ -322,6 +519,14 @@ impl ThreadPoolBuilder {
     /// execution is highly dynamic and the precise order in which
     /// independent tasks are executed is not intended to be
     /// guaranteed.
+    ///
+    /// This `breadth_first()` method is now deprecated per [RFC #1],
+    /// and in the future its effect may be removed. Consider using
+    /// [`scope_fifo()`] for a similar effect.
+    ///
+    /// [RFC #1]: https://github.com/rayon-rs/rfcs/blob/master/accepted/rfc0001-scope-scheduling.md
+    /// [`scope_fifo()`]: fn.scope_fifo.html
+    #[deprecated(note = "use `scope_fifo` and `spawn_fifo` for similar effect")]
     pub fn breadth_first(mut self) -> Self {
         self.breadth_first = true;
         self
@@ -342,8 +547,9 @@ impl ThreadPoolBuilder {
     /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then startup will continue normally.
-    pub fn start_handler<H>(mut self, start_handler: H) -> ThreadPoolBuilder
-        where H: Fn(usize) + Send + Sync + 'static
+    pub fn start_handler<H>(mut self, start_handler: H) -> Self
+    where
+        H: Fn(usize) + Send + Sync + 'static,
     {
         self.start_handler = Some(Box::new(start_handler));
         self
@@ -360,8 +566,9 @@ impl ThreadPoolBuilder {
     /// Note that this same closure may be invoked multiple times in parallel.
     /// If this closure panics, the panic will be passed to the panic handler.
     /// If that handler returns, then the thread will exit normally.
-    pub fn exit_handler<H>(mut self, exit_handler: H) -> ThreadPoolBuilder
-        where H: Fn(usize) + Send + Sync + 'static
+    pub fn exit_handler<H>(mut self, exit_handler: H) -> Self
+    where
+        H: Fn(usize) + Send + Sync + 'static,
     {
         self.exit_handler = Some(Box::new(exit_handler));
         self
@@ -372,19 +579,23 @@ impl ThreadPoolBuilder {
 impl Configuration {
     /// Creates and return a valid rayon thread pool configuration, but does not initialize it.
     pub fn new() -> Configuration {
-        Configuration { builder: ThreadPoolBuilder::new() }
+        Configuration {
+            builder: ThreadPoolBuilder::new(),
+        }
     }
 
     /// Deprecated in favor of `ThreadPoolBuilder::build`.
     pub fn build(self) -> Result<ThreadPool, Box<Error + 'static>> {
-        self.builder.build().map_err(|e| e.into())
+        self.builder.build().map_err(Box::from)
     }
 
     /// Deprecated in favor of `ThreadPoolBuilder::thread_name`.
     pub fn thread_name<F>(mut self, closure: F) -> Self
-    where F: FnMut(usize) -> String + 'static {
+    where
+        F: FnMut(usize) -> String + 'static,
+    {
         self.builder = self.builder.thread_name(closure);
-        self 
+        self
     }
 
     /// Deprecated in favor of `ThreadPoolBuilder::num_threads`.
@@ -395,7 +606,8 @@ impl Configuration {
 
     /// Deprecated in favor of `ThreadPoolBuilder::panic_handler`.
     pub fn panic_handler<H>(mut self, panic_handler: H) -> Configuration
-        where H: Fn(Box<Any + Send>) + Send + Sync + 'static
+    where
+        H: Fn(Box<Any + Send>) + Send + Sync + 'static,
     {
         self.builder = self.builder.panic_handler(panic_handler);
         self
@@ -415,7 +627,8 @@ impl Configuration {
 
     /// Deprecated in favor of `ThreadPoolBuilder::start_handler`.
     pub fn start_handler<H>(mut self, start_handler: H) -> Configuration
-        where H: Fn(usize) + Send + Sync + 'static
+    where
+        H: Fn(usize) + Send + Sync + 'static,
     {
         self.builder = self.builder.start_handler(start_handler);
         self
@@ -423,7 +636,8 @@ impl Configuration {
 
     /// Deprecated in favor of `ThreadPoolBuilder::exit_handler`.
     pub fn exit_handler<H>(mut self, exit_handler: H) -> Configuration
-        where H: Fn(usize) + Send + Sync + 'static
+    where
+        H: Fn(usize) + Send + Sync + 'static,
     {
         self.builder = self.builder.exit_handler(exit_handler);
         self
@@ -437,14 +651,16 @@ impl Configuration {
 
 impl ThreadPoolBuildError {
     fn new(kind: ErrorKind) -> ThreadPoolBuildError {
-        ThreadPoolBuildError { kind: kind }
+        ThreadPoolBuildError { kind }
     }
 }
 
 impl Error for ThreadPoolBuildError {
     fn description(&self) -> &str {
         match self.kind {
-            ErrorKind::GlobalPoolAlreadyInitialized => "The global thread pool has already been initialized.",
+            ErrorKind::GlobalPoolAlreadyInitialized => {
+                "The global thread pool has already been initialized."
+            }
             ErrorKind::IOError(ref e) => e.description(),
         }
     }
@@ -463,15 +679,21 @@ impl fmt::Display for ThreadPoolBuildError {
 #[deprecated(note = "use `ThreadPoolBuilder::build_global`")]
 #[allow(deprecated)]
 pub fn initialize(config: Configuration) -> Result<(), Box<Error>> {
-    config.into_builder().build_global().map_err(|e| e.into())
+    config.into_builder().build_global().map_err(Box::from)
 }
 
-impl fmt::Debug for ThreadPoolBuilder {
+impl<S> fmt::Debug for ThreadPoolBuilder<S> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let ThreadPoolBuilder { ref num_threads, ref get_thread_name,
-                                ref panic_handler, ref stack_size,
-                                ref start_handler, ref exit_handler,
-                                ref breadth_first } = *self;
+        let ThreadPoolBuilder {
+            ref num_threads,
+            ref get_thread_name,
+            ref panic_handler,
+            ref stack_size,
+            ref start_handler,
+            ref exit_handler,
+            spawn_handler: _,
+            ref breadth_first,
+        } = *self;
 
         // Just print `Some(<closure>)` or `None` to the debug
         // output.
@@ -487,14 +709,23 @@ impl fmt::Debug for ThreadPoolBuilder {
         let exit_handler = exit_handler.as_ref().map(|_| ClosurePlaceholder);
 
         f.debug_struct("ThreadPoolBuilder")
-         .field("num_threads", num_threads)
-         .field("get_thread_name", &get_thread_name)
-         .field("panic_handler", &panic_handler)
-         .field("stack_size", &stack_size)
-         .field("start_handler", &start_handler)
-         .field("exit_handler", &exit_handler)
-         .field("breadth_first", &breadth_first)
-         .finish()
+            .field("num_threads", num_threads)
+            .field("get_thread_name", &get_thread_name)
+            .field("panic_handler", &panic_handler)
+            .field("stack_size", &stack_size)
+            .field("start_handler", &start_handler)
+            .field("exit_handler", &exit_handler)
+            .field("breadth_first", &breadth_first)
+            .finish()
+    }
+}
+
+#[allow(deprecated)]
+impl Default for Configuration {
+    fn default() -> Self {
+        Configuration {
+            builder: Default::default(),
+        }
     }
 }
 
@@ -518,7 +749,7 @@ impl FnContext {
     #[inline]
     fn new(migrated: bool) -> Self {
         FnContext {
-            migrated: migrated,
+            migrated,
             _marker: PhantomData,
         }
     }

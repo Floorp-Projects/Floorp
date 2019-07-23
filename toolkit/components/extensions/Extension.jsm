@@ -152,6 +152,7 @@ const PRIVILEGED_PERMS = new Set([
   "telemetry",
   "urlbar",
   "normandyAddonStudy",
+  "networkStatus",
 ]);
 
 /**

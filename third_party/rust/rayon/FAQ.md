@@ -40,7 +40,7 @@ is an homage to that work.
 
 ## What should I do if I use `Rc`, `Cell`, `RefCell` or other non-Send-and-Sync types?
 
-There a number of non-threadsafe types in the Rust standard library,
+There are a number of non-threadsafe types in the Rust standard library,
 and if your code is using them, you will not be able to combine it
 with Rayon. Similarly, even if you don't have such types, but you try
 to have multiple closures mutating the same state, you will get
@@ -196,7 +196,7 @@ these are preferable to random failures in my experience.
 ## But wait, isn't Rust supposed to free me from this kind of thinking?
 
 You might think that Rust is supposed to mean that you don't have to
-think about atomicity at all. In fact, if you avoid inherent
+think about atomicity at all. In fact, if you avoid interior
 mutability (`Cell` and `RefCell` in a sequential setting, or
 `AtomicUsize`, `RwLock`, `Mutex`, et al. in parallel code), then this
 is true: the type system will basically guarantee that you don't have
