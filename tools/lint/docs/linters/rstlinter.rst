@@ -1,7 +1,7 @@
 RST Linter
 ==========
 
-`Restructuredtext lint`_ is a popular linter for restructuredtext.
+`rstcheck`_ is a popular linter for restructuredtext.
 
 
 Run Locally
@@ -22,4 +22,4 @@ If you wish to exclude a subdirectory of an included one, you can add it to the 
 directive.
 
 
-.. _Restructuredtext lint: https://github.com/twolfson/restructuredtext-lint
+.. _rstcheck: https://github.com/myint/rstcheck
