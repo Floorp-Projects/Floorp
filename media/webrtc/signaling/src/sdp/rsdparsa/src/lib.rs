@@ -1,23 +1,26 @@
-#![cfg_attr(feature = "clippy", feature(plugin))]
+#![warn(clippy::all)]
+#![forbid(unsafe_code)]
 
 #[macro_use]
 extern crate log;
 #[cfg(feature = "serialize")]
 #[macro_use]
 extern crate serde_derive;
+#[cfg(test)]
+extern crate enum_display_derive;
 #[cfg(feature = "serialize")]
 extern crate serde;
-
-use std::net::IpAddr;
-use std::str::FromStr;
+use std::convert::TryFrom;
 
 #[macro_use]
 pub mod attribute_type;
+pub mod address;
 pub mod anonymizer;
 pub mod error;
 pub mod media_type;
 pub mod network;
 
+use address::{AddressTyped, ExplicitlyTypedAddress};
 use anonymizer::{AnonymizingClone, StatefulSdpAnonymizer};
 use attribute_type::{
     parse_attribute, SdpAttribute, SdpAttributeRid, SdpAttributeSimulcastVersion, SdpAttributeType,
@@ -28,7 +31,7 @@ use media_type::{
     parse_media, parse_media_vector, SdpFormatList, SdpMedia, SdpMediaLine, SdpMediaValue,
     SdpProtocolValue,
 };
-use network::{address_to_string, parse_address_type, parse_network_type, parse_unicast_address};
+use network::{parse_address_type, parse_network_type};
 
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
@@ -53,7 +56,7 @@ impl ToString for SdpBandwidth {
 #[derive(Clone)]
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpConnection {
-    pub address: IpAddr,
+    pub address: ExplicitlyTypedAddress,
     pub ttl: Option<u8>,
     pub amount: Option<u32>,
 }
@@ -62,7 +65,7 @@ impl ToString for SdpConnection {
     fn to_string(&self) -> String {
         format!(
             "{address}{ttl}{amount}",
-            address = address_to_string(self.address),
+            address = self.address,
             ttl = option_to_string!("/{}", self.ttl),
             amount = option_to_string!("/{}", self.amount)
         )
@@ -72,7 +75,7 @@ impl ToString for SdpConnection {
 impl AnonymizingClone for SdpConnection {
     fn masked_clone(&self, anon: &mut StatefulSdpAnonymizer) -> Self {
         let mut masked = self.clone();
-        masked.address = anon.mask_ip(&self.address);
+        masked.address = anon.mask_typed_address(&self.address);
         masked
     }
 }
@@ -83,7 +86,7 @@ pub struct SdpOrigin {
     pub username: String,
     pub session_id: u64,
     pub session_version: u64,
-    pub unicast_addr: IpAddr,
+    pub unicast_addr: ExplicitlyTypedAddress,
 }
 
 impl ToString for SdpOrigin {
@@ -93,7 +96,7 @@ impl ToString for SdpOrigin {
             username = self.username.clone(),
             sess_id = self.session_id.to_string(),
             sess_vers = self.session_version.to_string(),
-            unicast_addr = address_to_string(self.unicast_addr)
+            unicast_addr = self.unicast_addr
         )
     }
 }
@@ -102,7 +105,7 @@ impl AnonymizingClone for SdpOrigin {
     fn masked_clone(&self, anon: &mut StatefulSdpAnonymizer) -> Self {
         let mut masked = self.clone();
         masked.username = anon.mask_origin_user(&self.username);
-        masked.unicast_addr = anon.mask_ip(&masked.unicast_addr);
+        masked.unicast_addr = anon.mask_typed_address(&masked.unicast_addr);
         masked
     }
 }
@@ -265,7 +268,7 @@ impl SdpSession {
         direction: SdpAttribute,
         port: u32,
         protocol: SdpProtocolValue,
-        addr: String,
+        addr: ExplicitlyTypedAddress,
     ) -> Result<(), SdpParserInternalError> {
         let mut media = SdpMedia::new(SdpMediaLine {
             media: media_type,
@@ -278,7 +281,7 @@ impl SdpSession {
         media.add_attribute(direction)?;
 
         media.set_connection(SdpConnection {
-            address: IpAddr::from_str(addr.as_str())?,
+            address: addr,
             ttl: None,
             amount: None,
         })?;
@@ -401,9 +404,9 @@ fn parse_origin(value: &str) -> Result<SdpType, SdpParserInternalError> {
                 "Origin type is missing IP address token".to_string(),
             ));
         }
-        Some(x) => parse_unicast_address(x)?,
+        Some(x) => ExplicitlyTypedAddress::try_from((addrtype, x))?,
     };
-    if !addrtype.same_protocol(&unicast_addr) {
+    if addrtype != unicast_addr.address_type() {
         return Err(SdpParserInternalError::Generic(
             "Origin addrtype does not match address.".to_string(),
         ));
@@ -438,12 +441,7 @@ fn parse_connection(value: &str) -> Result<SdpType, SdpParserInternalError> {
         ttl = Some(addr_tokens[1].parse::<u8>()?);
         addr_token = addr_tokens[0];
     }
-    let address = parse_unicast_address(addr_token)?;
-    if !addrtype.same_protocol(&address) {
-        return Err(SdpParserInternalError::Generic(
-            "connection addrtype does not match address.".to_string(),
-        ));
-    }
+    let address = ExplicitlyTypedAddress::try_from((addrtype, addr_token))?;
     let c = SdpConnection {
         address,
         ttl,
@@ -587,10 +585,13 @@ fn parse_sdp_line(line: &str, line_number: usize) -> Result<SdpLine, SdpParserEr
         sdp_type,
     })
     .map_err(|e| match e {
-        SdpParserInternalError::Generic(..)
+        SdpParserInternalError::UnknownAddressType(..)
+        | SdpParserInternalError::AddressTypeMismatch { .. }
+        | SdpParserInternalError::Generic(..)
         | SdpParserInternalError::Integer(..)
         | SdpParserInternalError::Float(..)
-        | SdpParserInternalError::Address(..) => SdpParserError::Line {
+        | SdpParserInternalError::Domain(..)
+        | SdpParserInternalError::IpAddress(..) => SdpParserError::Line {
             error: e,
             line: line.to_string(),
             line_number,
@@ -734,7 +735,6 @@ fn sanity_check_sdp_session(session: &SdpSession) -> Result<(), SdpParserError> 
     Ok(())
 }
 
-// TODO add unit tests
 fn parse_sdp_vector(lines: &mut Vec<SdpLine>) -> Result<SdpSession, SdpParserError> {
     if lines.len() < 4 {
         return Err(SdpParserError::Sequence {
@@ -875,9 +875,13 @@ pub fn parse_sdp(sdp: &str, fail_on_warning: bool) -> Result<SdpSession, SdpPars
 
 #[cfg(test)]
 mod tests {
+    extern crate url;
     use super::*;
+    use address::{Address, AddressType};
     use anonymizer::ToBytesVec;
     use media_type::create_dummy_media_section;
+    use std::net::IpAddr;
+    use std::net::Ipv4Addr;
 
     fn create_dummy_sdp_session() -> SdpSession {
         let origin = parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0");
@@ -900,13 +904,15 @@ mod tests {
     }
 
     #[test]
-    fn test_session_works() {
-        assert!(parse_session("topic").is_ok());
+    fn test_session_works() -> Result<(), SdpParserInternalError> {
+        parse_session("topic")?;
+        Ok(())
     }
 
     #[test]
-    fn test_version_works() {
-        assert!(parse_version("0").is_ok());
+    fn test_version_works() -> Result<(), SdpParserInternalError> {
+        parse_version("0")?;
+        Ok(())
     }
 
     #[test]
@@ -917,9 +923,10 @@ mod tests {
     }
 
     #[test]
-    fn test_origin_works() {
-        assert!(parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0").is_ok());
-        assert!(parse_origin("mozilla 506705521068071134 0 IN IP6 2001:db8::1").is_ok());
+    fn test_origin_works() -> Result<(), SdpParserInternalError> {
+        parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0")?;
+        parse_origin("mozilla 506705521068071134 0 IN IP6 2001:db8::1")?;
+        Ok(())
     }
 
     #[test]
@@ -974,16 +981,18 @@ mod tests {
     }
 
     #[test]
-    fn connection_works() {
-        assert!(parse_connection("IN IP4 127.0.0.1").is_ok());
-        assert!(parse_connection("IN IP4 127.0.0.1/10/10").is_ok());
-        assert!(parse_connection("IN IP6 ::1").is_ok());
-        assert!(parse_connection("IN IP6 ::1/1/1").is_ok());
+    fn connection_works() -> Result<(), SdpParserInternalError> {
+        parse_connection("IN IP4 127.0.0.1")?;
+        parse_connection("IN IP4 127.0.0.1/10/10")?;
+        parse_connection("IN IP6 ::1")?;
+        parse_connection("IN IP6 ::1/1/1")?;
+        Ok(())
     }
 
     #[test]
-    fn connection_lots_of_whitespace() {
-        assert!(parse_connection("IN   IP4   127.0.0.1").is_ok());
+    fn connection_lots_of_whitespace() -> Result<(), SdpParserInternalError> {
+        parse_connection("IN   IP4   127.0.0.1")?;
+        Ok(())
     }
 
     #[test]
@@ -1014,10 +1023,11 @@ mod tests {
     }
 
     #[test]
-    fn bandwidth_works() {
-        assert!(parse_bandwidth("AS:1").is_ok());
-        assert!(parse_bandwidth("CT:123").is_ok());
-        assert!(parse_bandwidth("TIAS:12345").is_ok());
+    fn bandwidth_works() -> Result<(), SdpParserInternalError> {
+        parse_bandwidth("AS:1")?;
+        parse_bandwidth("CT:123")?;
+        parse_bandwidth("TIAS:12345")?;
+        Ok(())
     }
 
     #[test]
@@ -1027,13 +1037,15 @@ mod tests {
     }
 
     #[test]
-    fn bandwidth_unsupported_type() {
-        assert!(parse_bandwidth("UNSUPPORTED:12345").is_ok());
+    fn bandwidth_unsupported_type() -> Result<(), SdpParserInternalError> {
+        parse_bandwidth("UNSUPPORTED:12345")?;
+        Ok(())
     }
 
     #[test]
-    fn test_timing_works() {
-        assert!(parse_timing("0 0").is_ok());
+    fn test_timing_works() -> Result<(), SdpParserInternalError> {
+        parse_timing("0 0")?;
+        Ok(())
     }
 
     #[test]
@@ -1049,9 +1061,10 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_sdp_line_works() {
-        assert!(parse_sdp_line("v=0", 0).is_ok());
-        assert!(parse_sdp_line("s=somesession", 0).is_ok());
+    fn test_parse_sdp_line_works() -> Result<(), SdpParserError> {
+        parse_sdp_line("v=0", 0)?;
+        parse_sdp_line("s=somesession", 0)?;
+        Ok(())
     }
 
     #[test]
@@ -1099,8 +1112,9 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_sdp_line_valid_a_line() {
-        assert!(parse_sdp_line("a=rtpmap:8 PCMA/8000", 0).is_ok());
+    fn test_parse_sdp_line_valid_a_line() -> Result<(), SdpParserError> {
+        parse_sdp_line("a=rtpmap:8 PCMA/8000", 0)?;
+        Ok(())
     }
 
     #[test]
@@ -1109,7 +1123,17 @@ mod tests {
     }
 
     #[test]
-    fn test_sanity_check_sdp_session_timing() {
+    fn test_add_attribute() -> Result<(), SdpParserInternalError> {
+        let mut sdp_session = create_dummy_sdp_session();
+
+        sdp_session.add_attribute(SdpAttribute::Sendrecv)?;
+        assert!(sdp_session.add_attribute(SdpAttribute::BundleOnly).is_err());
+        assert_eq!(sdp_session.attribute.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_sanity_check_sdp_session_timing() -> Result<(), SdpParserError> {
         let mut sdp_session = create_dummy_sdp_session();
         sdp_session.extend_media(vec![create_dummy_media_section()]);
 
@@ -1118,28 +1142,29 @@ mod tests {
         let t = SdpTiming { start: 0, stop: 0 };
         sdp_session.set_timing(t);
 
-        assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        sanity_check_sdp_session(&sdp_session)?;
+        Ok(())
     }
 
     #[test]
-    fn test_sanity_check_sdp_session_media() {
+    fn test_sanity_check_sdp_session_media() -> Result<(), SdpParserError> {
         let mut sdp_session = create_dummy_sdp_session();
         let t = SdpTiming { start: 0, stop: 0 };
         sdp_session.set_timing(t);
 
-        assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        sanity_check_sdp_session(&sdp_session)?;
 
         sdp_session.extend_media(vec![create_dummy_media_section()]);
 
-        assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        sanity_check_sdp_session(&sdp_session)?;
+        Ok(())
     }
 
     #[test]
-    fn test_sanity_check_sdp_connection() {
-        let origin = parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0");
-        assert!(origin.is_ok());
+    fn test_sanity_check_sdp_connection() -> Result<(), SdpParserInternalError> {
+        let origin = parse_origin("mozilla 506705521068071134 0 IN IP4 0.0.0.0")?;
         let mut sdp_session;
-        if let SdpType::Origin(o) = origin.unwrap() {
+        if let SdpType::Origin(o) = origin {
             sdp_session = SdpSession::new(0, o, "-".to_string());
         } else {
             unreachable!();
@@ -1154,9 +1179,8 @@ mod tests {
 
         assert!(sanity_check_sdp_session(&sdp_session).is_err());
 
-        let connection = parse_connection("IN IP6 ::1");
-        assert!(connection.is_ok());
-        if let Ok(SdpType::Connection(c)) = connection {
+        let connection = parse_connection("IN IP6 ::1")?;
+        if let SdpType::Connection(c) = connection {
             sdp_session.connection = Some(c);
         } else {
             unreachable!();
@@ -1165,10 +1189,9 @@ mod tests {
         assert!(sanity_check_sdp_session(&sdp_session).is_ok());
 
         let mut second_media = create_dummy_media_section();
-        let mconnection = parse_connection("IN IP4 0.0.0.0");
-        assert!(mconnection.is_ok());
-        if let Ok(SdpType::Connection(c)) = mconnection {
-            assert!(second_media.set_connection(c).is_ok());
+        let mconnection = parse_connection("IN IP4 0.0.0.0")?;
+        if let SdpType::Connection(c) = mconnection {
+            second_media.set_connection(c)?;
         } else {
             unreachable!();
         }
@@ -1176,43 +1199,37 @@ mod tests {
         assert!(sdp_session.media.len() == 2);
 
         assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_sanity_check_sdp_session_extmap() {
+    fn test_sanity_check_sdp_session_extmap() -> Result<(), SdpParserInternalError> {
         let mut sdp_session = create_dummy_sdp_session();
         let t = SdpTiming { start: 0, stop: 0 };
         sdp_session.set_timing(t);
         sdp_session.extend_media(vec![create_dummy_media_section()]);
 
         let attribute =
-            parse_attribute("extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time");
-        assert!(attribute.is_ok());
-        let extmap;
-        if let SdpType::Attribute(a) = attribute.unwrap() {
-            extmap = a;
+            parse_attribute("extmap:3 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time")?;
+        if let SdpType::Attribute(a) = attribute {
+            sdp_session.add_attribute(a)?;
         } else {
             unreachable!();
         }
-        let ret = sdp_session.add_attribute(extmap);
-        assert!(ret.is_ok());
         assert!(sdp_session
             .get_attribute(SdpAttributeType::Extmap)
             .is_some());
 
         assert!(sanity_check_sdp_session(&sdp_session).is_ok());
 
+        let mut second_media = create_dummy_media_section();
         let mattribute =
-            parse_attribute("extmap:1/sendonly urn:ietf:params:rtp-hdrext:ssrc-audio-level");
-        assert!(mattribute.is_ok());
-        let mextmap;
-        if let SdpType::Attribute(ma) = mattribute.unwrap() {
-            mextmap = ma;
+            parse_attribute("extmap:1/sendonly urn:ietf:params:rtp-hdrext:ssrc-audio-level")?;
+        if let SdpType::Attribute(ma) = mattribute {
+            second_media.add_attribute(ma)?;
         } else {
             unreachable!();
         }
-        let mut second_media = create_dummy_media_section();
-        assert!(second_media.add_attribute(mextmap).is_ok());
         assert!(second_media
             .get_attribute(SdpAttributeType::Extmap)
             .is_some());
@@ -1225,16 +1242,18 @@ mod tests {
         sdp_session.attribute = Vec::new();
 
         assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_sanity_check_sdp_session_simulcast() {
+    fn test_sanity_check_sdp_session_simulcast() -> Result<(), SdpParserError> {
         let mut sdp_session = create_dummy_sdp_session();
         let t = SdpTiming { start: 0, stop: 0 };
         sdp_session.set_timing(t);
         sdp_session.extend_media(vec![create_dummy_media_section()]);
 
-        assert!(sanity_check_sdp_session(&sdp_session).is_ok());
+        sanity_check_sdp_session(&sdp_session)?;
+        Ok(())
     }
 
     #[test]
@@ -1248,16 +1267,16 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_sdp_minimal_sdp_successfully() {
-        assert!(parse_sdp(
+    fn test_parse_sdp_minimal_sdp_successfully() -> Result<(), SdpParserError> {
+        parse_sdp(
             "v=0\r\n
 o=- 0 0 IN IP6 ::1\r\n
 s=-\r\n
 c=IN IP6 ::1\r\n
 t=0 0\r\n",
-            true
-        )
-        .is_ok());
+            true,
+        )?;
+        Ok(())
     }
 
     #[test]
@@ -1298,8 +1317,8 @@ m=foobar 0 UDP/TLS/RTP/SAVPF 0\r\n",
     }
 
     #[test]
-    fn test_parse_sdp_unsupported_warning() {
-        assert!(parse_sdp(
+    fn test_parse_sdp_unsupported_warning() -> Result<(), SdpParserError> {
+        parse_sdp(
             "v=0\r\n
 o=- 0 0 IN IP4 0.0.0.0\r\n
 s=-\r\n
@@ -1307,9 +1326,9 @@ c=IN IP4 198.51.100.7\r\n
 t=0 0\r\n
 m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n
 a=unsupported\r\n",
-            false
-        )
-        .is_ok());
+            false,
+        )?;
+        Ok(())
     }
 
     #[test]
@@ -1317,8 +1336,9 @@ a=unsupported\r\n",
         assert!(parse_sdp(
             "v=0\r\n
 o=- 0 0 IN IP4 0.0.0.0\r\n
-t=0 0\r\n
 s=-\r\n
+t=0 0\r\n
+a=bundle-only\r\n
 m=audio 0 UDP/TLS/RTP/SAVPF 0\r\n",
             true
         )
@@ -1389,7 +1409,10 @@ a=ice-lite\r\n",
             for _ in 0..2 {
                 let masked = origin_1.masked_clone(&mut anon);
                 assert_eq!(masked.username, "origin-user-00000001");
-                assert_eq!(masked.unicast_addr, std::net::Ipv4Addr::from(1));
+                assert_eq!(
+                    masked.unicast_addr,
+                    ExplicitlyTypedAddress::Ip(IpAddr::V4(Ipv4Addr::from(1)))
+                );
             }
         } else {
             unreachable!();
@@ -1417,10 +1440,13 @@ a=ice-lite\r\n",
         .unwrap();
         let mut masked = sdp.masked_clone(&mut anon);
         assert_eq!(masked.origin.username, "origin-user-00000001");
-        assert_eq!(masked.origin.unicast_addr, std::net::Ipv4Addr::from(1));
+        assert_eq!(
+            masked.origin.unicast_addr,
+            ExplicitlyTypedAddress::Ip(IpAddr::V4(Ipv4Addr::from(1)))
+        );
         assert_eq!(
             masked.connection.unwrap().address,
-            std::net::Ipv4Addr::from(2)
+            ExplicitlyTypedAddress::Ip(IpAddr::V4(Ipv4Addr::from(2)))
         );
         let mut attributes = masked.attribute;
         for m in &mut masked.media {
@@ -1428,10 +1454,10 @@ a=ice-lite\r\n",
                 attributes.push(attribute.clone());
             }
         }
-        for mut attribute in attributes {
+        for attribute in attributes {
             match attribute {
                 SdpAttribute::Candidate(c) => {
-                    assert_eq!(c.address, std::net::Ipv4Addr::from(3));
+                    assert_eq!(c.address, Address::Ip(IpAddr::V4(Ipv4Addr::from(3))));
                     assert_eq!(c.port, 1);
                 }
                 SdpAttribute::Fingerprint(f) => {
@@ -1444,11 +1470,165 @@ a=ice-lite\r\n",
                     assert_eq!(u, "ice-user-00000001");
                 }
                 SdpAttribute::RemoteCandidate(r) => {
-                    assert_eq!(r.address, std::net::Ipv4Addr::from(4));
+                    assert_eq!(r.address, Address::Ip(IpAddr::V4(Ipv4Addr::from(4))));
                     assert_eq!(r.port, 2);
                 }
                 _ => {}
             }
         }
+    }
+
+    #[test]
+    fn test_parse_session_vector() -> Result<(), SdpParserError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("a=sendrecv", 1)?);
+        sdp_session.parse_session_vector(&mut lines)?;
+        assert_eq!(sdp_session.attribute.len(), 1);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_session_vector_non_session_attribute() -> Result<(), SdpParserError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("a=bundle-only", 2)?);
+        assert!(sdp_session.parse_session_vector(&mut lines).is_err());
+        assert_eq!(sdp_session.attribute.len(), 0);
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_session_vector_version_repeated() -> Result<(), SdpParserError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 3)?);
+        assert!(sdp_session.parse_session_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_session_vector_contains_media_type() -> Result<(), SdpParserError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("m=audio 0 UDP/TLS/RTP/SAVPF 0", 4)?);
+        assert!(sdp_session.parse_session_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_no_media_section() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 1)?);
+        lines.push(parse_sdp_line(
+            "o=ausername 4294967296 2 IN IP4 127.0.0.1",
+            1,
+        )?);
+        lines.push(parse_sdp_line("s=SIP Call", 1)?);
+        lines.push(parse_sdp_line("t=0 0", 1)?);
+        lines.push(parse_sdp_line("c=IN IP6 ::1", 1)?);
+        assert!(parse_sdp_vector(&mut lines).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_with_media_section() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 1)?);
+        lines.push(parse_sdp_line(
+            "o=ausername 4294967296 2 IN IP4 127.0.0.1",
+            1,
+        )?);
+        lines.push(parse_sdp_line("s=SIP Call", 1)?);
+        lines.push(parse_sdp_line("t=0 0", 1)?);
+        lines.push(parse_sdp_line("m=video 56436 RTP/SAVPF 120", 1)?);
+        lines.push(parse_sdp_line("c=IN IP6 ::1", 1)?);
+        assert!(parse_sdp_vector(&mut lines).is_ok());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_too_short() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 1)?);
+        assert!(parse_sdp_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_missing_version() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line(
+            "o=ausername 4294967296 2 IN IP4 127.0.0.1",
+            1,
+        )?);
+        for _ in 0..3 {
+            lines.push(parse_sdp_line("a=sendrecv", 1)?);
+        }
+        assert!(parse_sdp_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_missing_origin() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 1)?);
+        for _ in 0..3 {
+            lines.push(parse_sdp_line("a=sendrecv", 1)?);
+        }
+        assert!(parse_sdp_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_parse_sdp_vector_missing_session() -> Result<(), SdpParserError> {
+        let mut lines: Vec<SdpLine> = Vec::new();
+        lines.push(parse_sdp_line("v=0", 1)?);
+        lines.push(parse_sdp_line(
+            "o=ausername 4294967296 2 IN IP4 127.0.0.1",
+            1,
+        )?);
+        for _ in 0..2 {
+            lines.push(parse_sdp_line("a=sendrecv", 1)?);
+        }
+        assert!(parse_sdp_vector(&mut lines).is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_session_add_media_works() -> Result<(), SdpParserError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        assert!(sdp_session
+            .add_media(
+                SdpMediaValue::Audio,
+                SdpAttribute::Sendrecv,
+                99,
+                SdpProtocolValue::RtpSavpf,
+                ExplicitlyTypedAddress::from(Ipv4Addr::new(127, 0, 0, 1))
+            )
+            .is_ok());
+        assert!(sdp_session.get_connection().is_some());
+        assert_eq!(sdp_session.attribute.len(), 0);
+        assert_eq!(sdp_session.media.len(), 1);
+        assert_eq!(sdp_session.media[0].get_attributes().len(), 1);
+        assert!(sdp_session.media[0]
+            .get_attribute(SdpAttributeType::Sendrecv)
+            .is_some());
+        Ok(())
+    }
+
+    #[test]
+    fn test_session_add_media_invalid_attribute_fails() -> Result<(), SdpParserInternalError> {
+        let mut sdp_session = create_dummy_sdp_session();
+        assert!(sdp_session
+            .add_media(
+                SdpMediaValue::Audio,
+                SdpAttribute::IceLite,
+                99,
+                SdpProtocolValue::RtpSavpf,
+                ExplicitlyTypedAddress::try_from((AddressType::IpV4, "127.0.0.1"))?
+            )
+            .is_err());
+        Ok(())
     }
 }

@@ -1,11 +1,14 @@
+extern crate url;
+use std::convert::TryFrom;
+use std::fmt;
 use std::iter;
-use std::net::IpAddr;
 use std::str::FromStr;
 
 use error::SdpParserInternalError;
-use network::{address_to_string, parse_address_type, parse_network_type, parse_unicast_address};
+use network::{parse_network_type, parse_unicast_address};
 use SdpType;
 
+use address::{Address, AddressType, ExplicitlyTypedAddress};
 use anonymizer::{AnonymizingClone, StatefulSdpAnonymizer};
 
 // Serialization helper marcos and functions
@@ -164,10 +167,10 @@ pub struct SdpAttributeCandidate {
     pub component: u32,
     pub transport: SdpAttributeCandidateTransport,
     pub priority: u64,
-    pub address: IpAddr,
+    pub address: Address,
     pub port: u32,
     pub c_type: SdpAttributeCandidateType,
-    pub raddr: Option<IpAddr>,
+    pub raddr: Option<Address>,
     pub rport: Option<u32>,
     pub tcp_type: Option<SdpAttributeCandidateTcpType>,
     pub generation: Option<u32>,
@@ -182,7 +185,7 @@ impl SdpAttributeCandidate {
         component: u32,
         transport: SdpAttributeCandidateTransport,
         priority: u64,
-        address: IpAddr,
+        address: Address,
         port: u32,
         c_type: SdpAttributeCandidateType,
     ) -> SdpAttributeCandidate {
@@ -204,8 +207,8 @@ impl SdpAttributeCandidate {
         }
     }
 
-    fn set_remote_address(&mut self, ip: IpAddr) {
-        self.raddr = Some(ip)
+    fn set_remote_address(&mut self, addr: Address) {
+        self.raddr = Some(addr)
     }
 
     fn set_remote_port(&mut self, p: u32) {
@@ -265,9 +268,12 @@ impl ToString for SdpAttributeCandidate {
 impl AnonymizingClone for SdpAttributeCandidate {
     fn masked_clone(&self, anonymizer: &mut StatefulSdpAnonymizer) -> Self {
         let mut masked = self.clone();
-        masked.address = anonymizer.mask_ip(&self.address);
+        masked.address = anonymizer.mask_address(&self.address);
         masked.port = anonymizer.mask_port(self.port);
-        masked.raddr = self.raddr.and_then(|addr| Some(anonymizer.mask_ip(&addr)));
+        masked.raddr = self
+            .raddr
+            .clone()
+            .and_then(|addr| Some(anonymizer.mask_address(&addr)));
         masked.rport = self.rport.and_then(|port| Some(anonymizer.mask_port(port)));
         masked
     }
@@ -293,7 +299,7 @@ impl ToString for SdpAttributeDtlsMessage {
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpAttributeRemoteCandidate {
     pub component: u32,
-    pub address: IpAddr,
+    pub address: Address,
     pub port: u32,
 }
 
@@ -302,7 +308,7 @@ impl ToString for SdpAttributeRemoteCandidate {
         format!(
             "{component} {addr} {port}",
             component = self.component.to_string(),
-            addr = self.address.to_string(),
+            addr = self.address,
             port = self.port.to_string()
         )
     }
@@ -311,7 +317,7 @@ impl ToString for SdpAttributeRemoteCandidate {
 impl AnonymizingClone for SdpAttributeRemoteCandidate {
     fn masked_clone(&self, anon: &mut StatefulSdpAnonymizer) -> Self {
         SdpAttributeRemoteCandidate {
-            address: anon.mask_ip(&self.address),
+            address: anon.mask_address(&self.address),
             port: anon.mask_port(self.port),
             component: self.component,
         }
@@ -401,7 +407,7 @@ impl ToString for SdpAttributeSimulcast {
 #[cfg_attr(feature = "serialize", derive(Serialize))]
 pub struct SdpAttributeRtcp {
     pub port: u16,
-    pub unicast_addr: Option<IpAddr>,
+    pub unicast_addr: Option<ExplicitlyTypedAddress>,
 }
 
 impl SdpAttributeRtcp {
@@ -412,22 +418,17 @@ impl SdpAttributeRtcp {
         }
     }
 
-    fn set_addr(&mut self, addr: IpAddr) {
+    fn set_addr(&mut self, addr: ExplicitlyTypedAddress) {
         self.unicast_addr = Some(addr)
     }
 }
 
-impl ToString for SdpAttributeRtcp {
-    fn to_string(&self) -> String {
-        let unicast_addr_str_opt = match self.unicast_addr {
-            None => None,
-            Some(x) => Some(address_to_string(x)),
-        };
-        format!(
-            "{port}{unicast_addr}",
-            port = self.port.to_string(),
-            unicast_addr = option_to_string!(" {}", unicast_addr_str_opt)
-        )
+impl fmt::Display for SdpAttributeRtcp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self.unicast_addr {
+            Some(ref addr) => write!(f, "{} {}", self.port, addr),
+            None => self.port.fmt(f),
+        }
     }
 }
 
@@ -666,7 +667,7 @@ impl AnonymizingClone for SdpAttributeFingerprint {
     }
 }
 
-fn imageattr_discrete_value_list_to_string<T>(values: Vec<T>) -> String
+fn imageattr_discrete_value_list_to_string<T>(values: &[T]) -> String
 where
     T: ToString,
 {
@@ -700,7 +701,7 @@ impl ToString for SdpAttributeImageAttrXYRange {
                 }
             }
             SdpAttributeImageAttrXYRange::DiscreteValues(ref values) => {
-                imageattr_discrete_value_list_to_string(values.to_vec())
+                imageattr_discrete_value_list_to_string(values)
             }
         }
     }
@@ -718,7 +719,7 @@ impl ToString for SdpAttributeImageAttrSRange {
         match *self {
             SdpAttributeImageAttrSRange::Range(ref min, ref max) => format!("[{}-{}]", min, max),
             SdpAttributeImageAttrSRange::DiscreteValues(ref values) => {
-                imageattr_discrete_value_list_to_string(values.to_vec())
+                imageattr_discrete_value_list_to_string(values)
             }
         }
     }
@@ -1518,7 +1519,7 @@ fn parse_candidate(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalErro
         }
     };
     let priority = tokens[3].parse::<u64>()?;
-    let address = parse_unicast_address(tokens[4])?;
+    let address = Address::from_str(tokens[4])?;
     let port = tokens[5].parse::<u32>()?;
     if port > 65535 {
         return Err(SdpParserInternalError::Generic(
@@ -1999,6 +2000,10 @@ fn parse_imageattr_tokens(to_parse: &str, separator: char) -> Vec<String> {
 }
 
 fn parse_imagettr_braced_token(to_parse: &str) -> Option<&str> {
+    if !to_parse.starts_with('[') {
+        return None;
+    }
+
     if !to_parse.ends_with(']') {
         return None;
     }
@@ -2492,24 +2497,17 @@ fn parse_rtcp(to_parse: &str) -> Result<SdpAttribute, SdpParserInternalError> {
                     ));
                 }
                 Some(x) => {
-                    let addrtype = parse_address_type(x)?;
+                    let addrtype = AddressType::from_str(x)?;
                     let addr = match tokens.next() {
                         None => {
                             return Err(SdpParserInternalError::Generic(
                                 "Rtcp attribute is missing ip address token".to_string(),
                             ));
                         }
-                        Some(x) => {
-                            let addr = parse_unicast_address(x)?;
-                            if !addrtype.same_protocol(&addr) {
-                                return Err(SdpParserInternalError::Generic(
-                                    "Failed to parse unicast address attribute.\
-                                     addrtype does not match address."
-                                        .to_string(),
-                                ));
-                            }
-                            addr
-                        }
+                        Some(x) => match ExplicitlyTypedAddress::try_from((addrtype, x)) {
+                            Ok(address) => address,
+                            Err(e) => return Err(e),
+                        },
                     };
                     rtcp.set_addr(addr);
                 }
@@ -2776,7 +2774,9 @@ pub fn parse_attribute(value: &str) -> Result<SdpType, SdpParserInternalError> {
 
 #[cfg(test)]
 mod tests {
+    extern crate url;
     use super::*;
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
     macro_rules! make_check_parse {
         ($attr_type:ty, $attr_kind:path) => {
@@ -2867,13 +2867,13 @@ mod tests {
         assert_eq!(candidate.priority, 1_685_987_071);
         assert_eq!(
             candidate.address,
-            IpAddr::from_str("24.23.204.141").unwrap()
+            Address::from_str("24.23.204.141").unwrap()
         );
         assert_eq!(candidate.port, 54609);
         assert_eq!(candidate.c_type, SdpAttributeCandidateType::Srflx);
         assert_eq!(
             candidate.raddr,
-            Some(IpAddr::from_str("192.168.1.4").unwrap())
+            Some(Address::from_str("192.168.1.4").unwrap())
         );
         assert_eq!(candidate.rport, Some(61665));
         assert_eq!(
@@ -2890,16 +2890,15 @@ mod tests {
     }
 
     #[test]
-    fn test_anonymize_attribute_candidate() {
+    fn test_anonymize_attribute_candidate() -> Result<(), SdpParserInternalError> {
         let mut anon = StatefulSdpAnonymizer::new();
-        let candidate_1 =
-            parse_attribute("candidate:0 1 TCP 2122252543 ::8 49760 typ host").unwrap();
+        let candidate_1 = parse_attribute("candidate:0 1 TCP 2122252543 ::8 49760 typ host")?;
         let candidate_2 =
-            parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 19361 typ srflx").unwrap();
-        let candidate_3 = parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd").unwrap();
+            parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 19361 typ srflx")?;
+        let candidate_3 = parse_attribute("candidate:1 1 TCP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 61665 tcptype passive generation 1 ufrag +DGd")?;
         if let SdpType::Attribute(SdpAttribute::Candidate(candidate)) = candidate_1 {
             let masked = candidate.masked_clone(&mut anon);
-            assert!(masked.address == std::net::Ipv6Addr::from(1));
+            assert!(masked.address == Address::Ip(IpAddr::V6(Ipv6Addr::from(1))));
             assert!(masked.port == 1);
         } else {
             unreachable!();
@@ -2907,7 +2906,7 @@ mod tests {
 
         if let SdpType::Attribute(SdpAttribute::Candidate(candidate)) = candidate_2 {
             let masked = candidate.masked_clone(&mut anon);
-            assert!(masked.address == std::net::Ipv4Addr::from(1));
+            assert!(masked.address == Address::Ip(IpAddr::V4(Ipv4Addr::from(1))));
             assert!(masked.port == 2);
         } else {
             unreachable!();
@@ -2915,13 +2914,14 @@ mod tests {
 
         if let SdpType::Attribute(SdpAttribute::Candidate(candidate)) = candidate_3 {
             let masked = candidate.masked_clone(&mut anon);
-            assert!(masked.address == std::net::Ipv4Addr::from(2));
+            assert!(masked.address == Address::Ip(IpAddr::V4(Ipv4Addr::from(2))));
             assert!(masked.port == 3);
-            assert!(masked.raddr.unwrap() == std::net::Ipv4Addr::from(3));
+            assert!(masked.raddr.unwrap() == Address::Ip(IpAddr::V4(Ipv4Addr::from(3))));
             assert!(masked.rport.unwrap() == 4);
         } else {
             unreachable!();
         }
+        Ok(())
     }
 
     #[test]
@@ -2935,7 +2935,7 @@ mod tests {
             parse_attribute("candidate:0 1 FOO 2122252543 172.16.156.106 49760 typ host").is_err()
         );
         assert!(parse_attribute("candidate:0 1 UDP foo 172.16.156.106 49760 typ host").is_err());
-        assert!(parse_attribute("candidate:0 1 UDP 2122252543 172.16.156 49760 typ host").is_err());
+        assert!(parse_attribute("candidate:0 1 UDP 2122252543 372.16.356 49760 typ host").is_err());
         assert!(
             parse_attribute("candidate:0 1 UDP 2122252543 172.16.156.106 70000 typ host").is_err()
         );
@@ -2959,17 +2959,13 @@ mod tests {
         )
         .is_err());
         assert!(parse_attribute(
-        "candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1 rport 61665"
+        "candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 1%92.168.1 rport 61665"
     )
     .is_err());
         assert!(parse_attribute(
             "candidate:0 1 TCP 2122252543 172.16.156.106 49760 typ host tcptype foobar"
         )
         .is_err());
-        assert!(parse_attribute(
-        "candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1 rport 61665"
-    )
-    .is_err());
         assert!(parse_attribute(
         "candidate:1 1 UDP 1685987071 24.23.204.141 54609 typ srflx raddr 192.168.1.4 rport 70000"
     )
@@ -2987,8 +2983,7 @@ mod tests {
         check_parse_and_serialize("dtls-message:client IGlzdCBl/W4gUeiBtaXQg+JSB1bmQCAkJJkSNEQ=");
         check_parse_and_serialize("dtls-message:server IGlzdCBl/W4gUeiBtaXQg+JSB1bmQCAkJJkSNEQ=");
 
-        let mut dtls_message = check_parse("dtls-message:client SGVsbG8gV29ybGQ=");
-        match dtls_message {
+        match check_parse("dtls-message:client SGVsbG8gV29ybGQ=") {
             SdpAttributeDtlsMessage::Client(x) => {
                 assert_eq!(x, "SGVsbG8gV29ybGQ=");
             }
@@ -2997,8 +2992,7 @@ mod tests {
             }
         }
 
-        dtls_message = check_parse("dtls-message:server SGVsbG8gV29ybGQ=");
-        match dtls_message {
+        match check_parse("dtls-message:server SGVsbG8gV29ybGQ=") {
             SdpAttributeDtlsMessage::Server(x) => {
                 assert_eq!(x, "SGVsbG8gV29ybGQ=");
             }
@@ -3153,17 +3147,16 @@ mod tests {
     }
 
     #[test]
-    fn test_anonymize_attribute_fingerprint() {
+    fn test_anonymize_attribute_fingerprint() -> Result<(), SdpParserInternalError> {
         let mut anon = StatefulSdpAnonymizer::new();
-        let print_1 = parse_attribute(
+        if let SdpType::Attribute(SdpAttribute::Fingerprint(print)) = parse_attribute(
             "fingerprint:sha-1 CD:34:D1:62:16:95:7B:B7:EB:74:E2:39:27:97:EB:0B:23:73:AC:BC",
-        )
-        .unwrap();
-        if let SdpType::Attribute(SdpAttribute::Fingerprint(print)) = print_1 {
+        )? {
             assert!(print.masked_clone(&mut anon).to_string() == "sha-1 00:00:00:00:00:00:00:01");
         } else {
             unreachable!();
         }
+        Ok(())
     }
 
     #[test]
@@ -3286,6 +3279,10 @@ mod tests {
         assert!(parse_attribute("imageattr:").is_err());
         assert!(parse_attribute("imageattr:100").is_err());
         assert!(parse_attribute("imageattr:120 send * recv * send *").is_err());
+        assert!(parse_attribute("imageattr:99 send [x=320]").is_err());
+        assert!(parse_attribute("imageattr:99 recv [y=240]").is_err());
+        assert!(parse_attribute("imageattr:99 send [x=320,y=240").is_err());
+        assert!(parse_attribute("imageattr:99 send x=320,y=240]").is_err());
         assert!(
             parse_attribute("imageattr:97 send [x=800,y=640,sar=1.1] send [x=330,y=250]").is_err()
         );
@@ -3484,16 +3481,18 @@ mod tests {
     }
 
     #[test]
-    fn test_anonymize_remote_candidate() {
+    fn test_anonymize_remote_candidate() -> Result<(), SdpParserInternalError> {
         let mut anon = StatefulSdpAnonymizer::new();
-        let remote_1 = parse_attribute("remote-candidates:0 10.0.0.1 5555").unwrap();
-        if let SdpType::Attribute(SdpAttribute::RemoteCandidate(remote)) = remote_1 {
-            let mut masked = remote.masked_clone(&mut anon);
-            assert_eq!(masked.address, std::net::Ipv4Addr::from(1));
+        if let SdpType::Attribute(SdpAttribute::RemoteCandidate(remote)) =
+            parse_attribute("remote-candidates:0 10.0.0.1 5555")?
+        {
+            let masked = remote.masked_clone(&mut anon);
+            assert_eq!(masked.address, Address::Ip(IpAddr::V4(Ipv4Addr::from(1))));
             assert_eq!(masked.port, 1);
         } else {
             unreachable!();
         }
+        Ok(())
     }
 
     #[test]
@@ -3581,7 +3580,6 @@ mod tests {
         check_parse_and_serialize("remote-candidates:12345 ::1 5555");
 
         assert!(parse_attribute("remote-candidates:abc 10.0.0.1 5555").is_err());
-        assert!(parse_attribute("remote-candidates:0 10.a.0.1 5555").is_err());
         assert!(parse_attribute("remote-candidates:0 10.0.0.1 70000").is_err());
         assert!(parse_attribute("remote-candidates:0 10.0.0.1").is_err());
         assert!(parse_attribute("remote-candidates:0").is_err());
