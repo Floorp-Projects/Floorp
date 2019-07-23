@@ -80,16 +80,16 @@ impl SyncedBookmarksMerger {
 
     xpcom_method!(
         merge => Merge(
-            local_time_seconds: libc::int64_t,
-            remote_time_seconds: libc::int64_t,
+            local_time_seconds: i64,
+            remote_time_seconds: i64,
             weak_uploads: *const ThinVec<::nsstring::nsString>,
             callback: *const mozISyncedBookmarksMirrorCallback
         )
     );
     fn merge(
         &self,
-        local_time_seconds: libc::int64_t,
-        remote_time_seconds: libc::int64_t,
+        local_time_seconds: i64,
+        remote_time_seconds: i64,
         weak_uploads: Option<&ThinVec<nsString>>,
         callback: &mozISyncedBookmarksMirrorCallback,
     ) -> Result<(), nsresult> {
