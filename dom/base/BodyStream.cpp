@@ -67,7 +67,6 @@ NS_IMPL_ISUPPORTS(BodyStream, nsIInputStreamCallback, nsIObserver,
 /* static */
 void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
                         nsIGlobalObject* aGlobal, nsIInputStream* aInputStream,
-                        JS::MutableHandle<JSObject*> aStream,
                         ErrorResult& aRv) {
   MOZ_DIAGNOSTIC_ASSERT(aCx);
   MOZ_DIAGNOSTIC_ASSERT(aStreamHolder);
@@ -119,7 +118,7 @@ void BodyStream::Create(JSContext* aCx, BodyStreamHolder* aStreamHolder,
   // js object is finalized.
   NS_ADDREF(stream.get());
 
-  aStream.set(body);
+  aStreamHolder->SetReadableStreamBody(body);
 }
 
 void BodyStream::requestData(JSContext* aCx, JS::HandleObject aStream,

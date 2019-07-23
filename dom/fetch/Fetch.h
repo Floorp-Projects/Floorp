@@ -199,6 +199,10 @@ class FetchBody : public BodyStreamHolder, public AbortFollower {
     mFetchStreamReader = nullptr;
   }
 
+  void SetReadableStreamBody(JSObject* aBody) override {
+    mReadableStreamBody = aBody;
+  }
+
   JSObject* GetReadableStreamBody() override { return mReadableStreamBody; }
 
   void MarkAsRead() override { mBodyUsed = true; }
