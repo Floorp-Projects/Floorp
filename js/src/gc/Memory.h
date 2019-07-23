@@ -33,12 +33,12 @@ void UnmapPages(void* p, size_t size);
 
 // Tell the OS that the given pages are not in use, so they should not be
 // written to a paging file. This may be a no-op on some platforms.
-bool MarkPagesUnused(void* p, size_t size);
+bool MarkPagesUnusedSoft(void* p, size_t size);
 
-// Undo |MarkPagesUnused|: tell the OS that the given pages are of interest
+// Undo |MarkPagesUnusedSoft|: tell the OS that the given pages are of interest
 // and should be paged in and out normally. This may be a no-op on some
 // platforms.
-void MarkPagesInUse(void* p, size_t size);
+void MarkPagesInUseSoft(void* p, size_t size);
 
 // Returns #(hard faults) + #(soft faults)
 size_t GetPageFaultCount();
