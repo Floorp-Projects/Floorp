@@ -410,6 +410,7 @@ RefPtr<MP4TrackDemuxer::SeekPromise> MP4TrackDemuxer::Seek(
       continue;
     }
     if (sample->mKeyframe) {
+      MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
       mQueuedSample = sample;
       seekTime = mQueuedSample->mTime;
     }
@@ -491,7 +492,7 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
 
   if (mQueuedSample) {
     NS_ASSERTION(mQueuedSample->mKeyframe, "mQueuedSample must be a keyframe");
-    samples->mSamples.AppendElement(mQueuedSample);
+    samples->AppendSample(mQueuedSample);
     mQueuedSample = nullptr;
     aNumSamples--;
   }
@@ -500,15 +501,16 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
     if (!sample->Size()) {
       continue;
     }
-    samples->mSamples.AppendElement(sample);
+    MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
+    samples->AppendSample(sample);
     aNumSamples--;
   }
 
-  if (samples->mSamples.IsEmpty()) {
+  if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   }
-  for (const auto& sample : samples->mSamples) {
+  for (const auto& sample : samples->GetSamples()) {
     // Collect telemetry from h264 Annex B SPS.
     if (mNeedSPSForTelemetry && mType == kH264 && AnnexB::IsAVCC(sample)) {
       RefPtr<MediaByteBuffer> extradata = H264::ExtractExtraData(sample);
@@ -520,7 +522,7 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
   }
 
   if (mNextKeyframeTime.isNothing() ||
-      samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value()) {
+      samples->GetSamples().LastElement()->mTime >= mNextKeyframeTime.value()) {
     SetNextKeyFrameTime();
   }
   return SamplesPromise::CreateAndResolve(samples, __func__);
@@ -561,6 +563,7 @@ MP4TrackDemuxer::SkipToNextRandomAccessPoint(
   RefPtr<MediaRawData> sample;
   while (!found && (sample = GetNextSample())) {
     parsed++;
+    MOZ_DIAGNOSTIC_ASSERT(sample->HasValidTime());
     if (sample->mKeyframe && sample->mTime >= aTimeThreshold) {
       found = true;
       mQueuedSample = sample;

@@ -95,6 +95,7 @@ struct LoadInfoArgs
   bool                        initialSecurityCheckDone;
   bool                        isInThirdPartyContext;
   bool                        isDocshellReload;
+  bool                        isFormSubmission;
   bool                        sendCSPViolationEvents;
   OriginAttributes            originAttributes;
   RedirectHistoryEntryInfo[]  redirectChainIncludingInternalRedirects;

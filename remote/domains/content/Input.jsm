@@ -14,7 +14,10 @@ class Input extends ContentProcessDomain {
   constructor(session) {
     super(session);
 
-    // Map of event name -> event handler promise.
+    // Internal id used to track existing event handlers.
+    this._eventId = 0;
+
+    // Map of event id -> event handler promise.
     this._eventPromises = new Map();
   }
 
@@ -22,13 +25,14 @@ class Input extends ContentProcessDomain {
    * Not a CDP method.
    *
    * Add an event listener in the content page for the provided eventName.
-   * To wait for the event, you should use `waitForContentEvent` with the same event name.
+   * This method will return a unique handler id that can be used to wait
+   * for the event.
    *
    * Example usage from a parent process domain:
    *
-   *   await this.executeInChild("addContentEventListener", "click");
+   *   const id = await this.executeInChild("addContentEventListener", "click");
    *   // do something that triggers a click in content
-   *   await this.executeInChild("waitForContentEvent", "click");
+   *   await this.executeInChild("waitForContentEvent", id);
    */
   addContentEventListener(eventName) {
     const eventPromise = new Promise(r => {
@@ -37,7 +41,9 @@ class Input extends ContentProcessDomain {
         once: true,
       });
     });
-    this._eventPromises.set(eventName, eventPromise);
+    this._eventId++;
+    this._eventPromises.set(this._eventId, eventPromise);
+    return this._eventId;
   }
 
   /**
@@ -45,12 +51,12 @@ class Input extends ContentProcessDomain {
    *
    * Wait for an event listener added via `addContentEventListener` to be fired.
    */
-  async waitForContentEvent(eventName) {
-    const eventPromise = this._eventPromises.get(eventName);
+  async waitForContentEvent(eventId) {
+    const eventPromise = this._eventPromises.get(eventId);
     if (!eventPromise) {
-      throw new Error("No event promise available for " + eventName);
+      throw new Error("No event promise found for id " + eventId);
     }
     await eventPromise;
-    this._eventPromises.delete(eventName);
+    this._eventPromises.delete(eventId);
   }
 }

@@ -67,13 +67,13 @@ function test_binary_streams() {
   Assert.equal(msg, HelloStr);
   msg = null;
   countObj.value = -1;
-  os.writeByteArray(HelloArray, HelloArray.length);
+  os.writeByteArray(HelloArray);
   Assert.equal(is.available(), HelloStr.length);
   msg = is.readByteArray(HelloStr.length);
   Assert.equal(typeof msg, typeof HelloArray);
   Assert.equal(msg.toSource(), HelloArray.toSource());
   Assert.equal(is.available(), 0);
-  os.writeByteArray(HelloArray, HelloArray.length);
+  os.writeByteArray(HelloArray);
   Assert.equal(
     is.readArrayBuffer(buffer.byteLength, buffer),
     HelloArray.length
@@ -96,7 +96,7 @@ function test_binary_streams() {
   os.writeStringZ("Mozilla");
   os.writeWStringZ("Gecko");
   os.writeBytes(HelloStr, HelloStr.length);
-  os.writeByteArray(HelloArray, HelloArray.length);
+  os.writeByteArray(HelloArray);
   // Available should not be zero after a long write like this.
   Assert.notEqual(is.available(), 0);
 

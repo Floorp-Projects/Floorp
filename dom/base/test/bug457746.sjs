@@ -6,6 +6,6 @@ function handleRequest(request, response)
       .createInstance(Components.interfaces.nsIBinaryOutputStream);
   bos.setOutputStream(response.bodyOutputStream);
 
-  bos.writeByteArray(body, body.length);
+  bos.writeByteArray(body);
 }
 
