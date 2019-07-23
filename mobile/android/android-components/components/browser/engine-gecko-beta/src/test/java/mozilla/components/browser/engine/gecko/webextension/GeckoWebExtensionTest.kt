@@ -86,7 +86,7 @@ class GeckoWebExtensionTest {
         val extension = GeckoWebExtension("mozacTest", "url", true, nativeGeckoWebExt)
         assertFalse(extension.hasContentMessageHandler(session, "mozacTest"))
         extension.registerContentMessageHandler(session, "mozacTest", messageHandler)
-        verify(geckoSession).setMessageDelegate(messageDelegateCaptor.capture(), eq("mozacTest"))
+        verify(geckoSession).setMessageDelegate(eq(nativeGeckoWebExt), messageDelegateCaptor.capture(), eq("mozacTest"))
 
         // Verify messages are forwarded to message handler and return value passed on
         val message: Any = mock()
