@@ -161,10 +161,10 @@ void TlsAgent::DelegateCredential(const std::string& name,
                                   PRUint32 dc_valid_for, PRTime now,
                                   SECItem* dc) {
   ScopedCERTCertificate cert;
-  ScopedSECKEYPrivateKey certPriv;
-  EXPECT_TRUE(TlsAgent::LoadCertificate(name, &cert, &certPriv));
+  ScopedSECKEYPrivateKey cert_priv;
+  EXPECT_TRUE(TlsAgent::LoadCertificate(name, &cert, &cert_priv));
   EXPECT_EQ(SECSuccess,
-            SSL_DelegateCredential(cert.get(), certPriv.get(), dc_pub.get(),
+            SSL_DelegateCredential(cert.get(), cert_priv.get(), dc_pub.get(),
                                    dc_cert_verify_alg, dc_valid_for, now, dc));
 }
 
@@ -370,10 +370,6 @@ bool TlsAgent::GetPeerChainLength(size_t* count) {
 
 void TlsAgent::CheckCipherSuite(uint16_t suite) {
   EXPECT_EQ(csinfo_.cipherSuite, suite);
-}
-
-void TlsAgent::CheckPeerDelegCred(bool expected) {
-  EXPECT_EQ(expected, info_.peerDelegCred);
 }
 
 void TlsAgent::RequestClientAuth(bool requireAuth) {
@@ -787,26 +783,26 @@ void TlsAgent::WaitForErrorCode(int32_t expected, uint32_t delay) const {
 }
 
 void TlsAgent::CheckPreliminaryInfo() {
-  SSLPreliminaryChannelInfo info;
+  SSLPreliminaryChannelInfo preinfo;
   EXPECT_EQ(SECSuccess,
-            SSL_GetPreliminaryChannelInfo(ssl_fd(), &info, sizeof(info)));
-  EXPECT_EQ(sizeof(info), info.length);
-  EXPECT_TRUE(info.valuesSet & ssl_preinfo_version);
-  EXPECT_TRUE(info.valuesSet & ssl_preinfo_cipher_suite);
+            SSL_GetPreliminaryChannelInfo(ssl_fd(), &preinfo, sizeof(preinfo)));
+  EXPECT_EQ(sizeof(preinfo), preinfo.length);
+  EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_version);
+  EXPECT_TRUE(preinfo.valuesSet & ssl_preinfo_cipher_suite);
 
   // A version of 0 is invalid and indicates no expectation.  This value is
   // initialized to 0 so that tests that don't explicitly set an expected
   // version can negotiate a version.
   if (!expected_version_) {
-    expected_version_ = info.protocolVersion;
+    expected_version_ = preinfo.protocolVersion;
   }
-  EXPECT_EQ(expected_version_, info.protocolVersion);
+  EXPECT_EQ(expected_version_, preinfo.protocolVersion);
 
   // As with the version; 0 is the null cipher suite (and also invalid).
   if (!expected_cipher_suite_) {
-    expected_cipher_suite_ = info.cipherSuite;
+    expected_cipher_suite_ = preinfo.cipherSuite;
   }
-  EXPECT_EQ(expected_cipher_suite_, info.cipherSuite);
+  EXPECT_EQ(expected_cipher_suite_, preinfo.cipherSuite);
 }
 
 // Check that all the expected callbacks have been called.

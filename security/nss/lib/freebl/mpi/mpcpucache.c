@@ -727,7 +727,7 @@ static inline void
 dcbzl(char *array)
 {
     register char *a asm("r2") = array;
-    __asm__ __volatile__("dcbzl %0,r0"
+    __asm__ __volatile__("dcbzl %0,0"
                          : "=r"(a)
                          : "0"(a));
 }
