@@ -7,7 +7,7 @@ use rsdparsa::attribute_type::*;
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 
 use types::StringView;
-use network::RustIpAddr;
+use network::{RustExplicitlyTypedAddress, RustAddress};
 
 
 #[no_mangle]
@@ -593,14 +593,27 @@ pub unsafe extern "C" fn sdp_get_groups(attributes: *const Vec<SdpAttribute>, re
 #[repr(C)]
 pub struct RustSdpAttributeRtcp {
     pub port: uint32_t,
-    pub unicast_addr: RustIpAddr,
+    pub unicast_addr: RustExplicitlyTypedAddress,
+    pub has_address: bool,
 }
 
 impl<'a> From<&'a SdpAttributeRtcp> for RustSdpAttributeRtcp {
     fn from(other: &SdpAttributeRtcp) -> Self {
-        RustSdpAttributeRtcp {
-            port: other.port as u32,
-            unicast_addr: RustIpAddr::from(&other.unicast_addr)
+        match other.unicast_addr {
+            Some(ref address) => {
+                RustSdpAttributeRtcp {
+                    port: other.port as u32,
+                    unicast_addr: address.into(),
+                    has_address: true,
+                }
+            },
+            None => {
+                RustSdpAttributeRtcp {
+                    port: other.port as u32,
+                    unicast_addr: RustExplicitlyTypedAddress::default(),
+                    has_address: false,
+                }
+            }
         }
     }
 }
@@ -1032,7 +1045,7 @@ pub unsafe extern "C" fn sdp_get_direction(attributes: *const Vec<SdpAttribute>)
 #[repr(C)]
 pub struct RustSdpAttributeRemoteCandidate {
     pub component: uint32_t,
-    pub address: RustIpAddr,
+    pub address: RustAddress,
     pub port: uint32_t,
 }
 
@@ -1041,7 +1054,7 @@ impl<'a> From<&'a SdpAttributeRemoteCandidate> for RustSdpAttributeRemoteCandida
     fn from(other: &SdpAttributeRemoteCandidate) -> Self {
         RustSdpAttributeRemoteCandidate {
             component: other.component,
-            address: RustIpAddr::from(&other.address),
+            address: RustAddress::from(&other.address),
             port: other.port
         }
     }
