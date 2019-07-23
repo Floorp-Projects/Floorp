@@ -19,6 +19,8 @@ menu =
 menu-menuitem-faq = Frequently Asked Questions
 menu-menuitem-feedback = Leave Feedback
 menu-menuitem-import = Import Passwords…
+menu-menuitem-download-android = Lockwise for Android
+menu-menuitem-download-iphone = Lockwise for iPhone and iPad
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
