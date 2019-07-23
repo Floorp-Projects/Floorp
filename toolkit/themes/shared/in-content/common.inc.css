@@ -957,7 +957,7 @@ xul|treechildren::-moz-tree-image(selected) {
   transition: box-shadow 150ms;
 }
 
-.card:hover {
+.card:not(.card-no-hover):hover {
   box-shadow: var(--card-shadow-hover);
 }
 
