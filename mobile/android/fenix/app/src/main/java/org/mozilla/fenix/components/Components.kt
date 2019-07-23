@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.test.Mockable
 
 /**
