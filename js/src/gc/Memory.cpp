@@ -778,14 +778,43 @@ bool MarkPagesUnusedSoft(void* region, size_t length) {
 #endif
 }
 
+bool MarkPagesUnusedHard(void* region, size_t length) {
+  CheckDecommit(region, length);
+
+  MOZ_MAKE_MEM_NOACCESS(region, length);
+
+  if (!DecommitEnabled()) {
+    return true;
+  }
+
+#if defined(XP_WIN)
+  return VirtualFree(region, length, MEM_DECOMMIT);
+#else
+  return MarkPagesUnusedSoft(region, length);
+#endif
+}
+
 void MarkPagesInUseSoft(void* region, size_t length) {
+  CheckDecommit(region, length);
+
+  MOZ_MAKE_MEM_UNDEFINED(region, length);
+}
+
+bool MarkPagesInUseHard(void* region, size_t length) {
   CheckDecommit(region, length);
 
   MOZ_MAKE_MEM_UNDEFINED(region, length);
 
   if (!DecommitEnabled()) {
-    return;
+    return true;
   }
+
+#if defined(XP_WIN)
+  return VirtualAlloc(region, length, MEM_COMMIT,
+                      DWORD(PageAccess::ReadWrite)) == region;
+#else
+  return true;
+#endif
 }
 
 size_t GetPageFaultCount() {
