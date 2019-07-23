@@ -396,7 +396,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
     lazy->setStrict();
   }
   MOZ_ASSERT(lazy->isBinAST());
-  fun->initLazyScript(lazy);
+  funbox->initLazyScript(lazy);
 
   return Ok();
 }

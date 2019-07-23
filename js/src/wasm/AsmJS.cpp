@@ -7107,7 +7107,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   // asm.js module function. Special cases in the bytecode emitter avoid
   // generating bytecode for asm.js functions, allowing this asm.js module
   // function to be the finished result.
-  MOZ_ASSERT(funbox->function()->isInterpreted());
+  MOZ_ASSERT(funbox->isInterpreted());
   funbox->clobberFunction(moduleFun);
 
   // Success! Write to the console with a "warning" message indicating
