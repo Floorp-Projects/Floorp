@@ -8,6 +8,7 @@
 
 #include "nsExceptionHandler.h"
 #include "nsExceptionHandlerUtils.h"
+#include "prio.h"
 
 namespace CrashReporter {
 
@@ -100,7 +101,13 @@ int GetAnnotationTimeCrashFd() { return 7; }
 #endif
 
 void RegisterChildCrashAnnotationFileDescriptor(ProcessId aProcess,
-                                                PRFileDesc* aFd) {}
+                                                PRFileDesc* aFd) {
+  // The real implementation of this function takes ownership of aFd
+  // and closes it when the process exits; if we don't close it, it
+  // causes a leak.  With no crash reporter we'll never write to the
+  // pipe, so it's safe to close the read end immediately.
+  PR_Close(aFd);
+}
 
 void DeregisterChildCrashAnnotationFileDescriptor(ProcessId aProcess) {}
 
