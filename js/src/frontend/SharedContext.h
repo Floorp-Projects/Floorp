@@ -400,6 +400,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
   JSFunction::FunctionKind kind_;
   JSAtom* explicitName_;
 
+  uint16_t nargs_;
+
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
@@ -600,6 +602,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // the toString ending position with the end of the class definition.
     bufEnd = toStringEnd = end;
   }
+
+  void setArgCount(uint16_t args) { nargs_ = args; }
+
+  size_t nargs() { return nargs_; }
+
+  // Flush the acquired argCount to the associated function.
+  void synchronizeArgCount() { function()->setArgCount(nargs_); }
 
   void trace(JSTracer* trc) override;
 };
