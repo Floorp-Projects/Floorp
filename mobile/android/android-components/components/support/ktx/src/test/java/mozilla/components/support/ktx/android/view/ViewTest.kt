@@ -159,12 +159,6 @@ class ViewTest {
         verify(viewTreeObserver).removeOnGlobalLayoutListener(any())
     }
 
-    @Test(expected = IllegalStateException::class)
-    fun `toScope throws if view is not attached`() {
-        val view = View(testContext)
-        view.toScope()
-    }
-
     @Test
     fun `can dispatch coroutines to view scope`() {
         val activity = Robolectric.buildActivity(Activity::class.java).create().get()

@@ -14,13 +14,11 @@ import android.view.inputmethod.InputMethodManager
 import androidx.annotation.MainThread
 import androidx.core.content.getSystemService
 import androidx.core.view.ViewCompat
-import androidx.fragment.app.Fragment
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.ktx.android.util.dpToPx
-import java.lang.IllegalStateException
 import java.lang.ref.WeakReference
 
 /**
@@ -112,19 +110,11 @@ fun View.setPadding(padding: Padding) {
  *
  * By default coroutines dispatched on the created [CoroutineScope] run on the main dispatcher.
  *
- * @throws IllegalArgumentException if this [View] is not attached yet. It is the responsibility of
- * the caller to make sure the [View] is attached before turning it into a [CoroutineScope], e.g.
- * inside a [Fragment] call this from [Fragment.onViewCreated].
+ * Note: This scope gets only cancelled if the [View] gets detached. In cases where the [View] never
+ * gets attached this may create a scope that never gets cancelled!
  */
 @MainThread
 fun View.toScope(): CoroutineScope {
-    if (!isAttachedToWindow) {
-        // We can't pause a CoroutineScope until the View is attached; So we just throw in this
-        // situation. The calling code needs to make sure the View is attached first (e.g. call
-        // this from onViewCreated in a Fragment).
-        throw IllegalStateException("View is not attached")
-    }
-
     val scope = CoroutineScope(Dispatchers.Main)
 
     addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
