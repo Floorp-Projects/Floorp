@@ -941,7 +941,8 @@ void MediaStreamGraphImpl::DeviceChanged() {
   // and acted upon on the graph thread.
   if (!NS_IsMainThread()) {
     RefPtr<nsIRunnable> runnable =
-        WrapRunnable(this, &MediaStreamGraphImpl::DeviceChanged);
+        WrapRunnable(RefPtr<MediaStreamGraphImpl>(this),
+                     &MediaStreamGraphImpl::DeviceChanged);
     mAbstractMainThread->Dispatch(runnable.forget());
     return;
   }
