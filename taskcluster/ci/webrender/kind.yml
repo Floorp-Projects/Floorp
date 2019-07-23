@@ -268,6 +268,7 @@ jobs:
             symbol: WR(B)
         when:
             files-changed:
+                - 'build.gradle'
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/wrench-android-build.sh'
 
@@ -300,6 +301,7 @@ jobs:
             symbol: WR(B)
         when:
             files-changed:
+                - 'build.gradle'
                 - 'gfx/wr/**'
                 - 'taskcluster/scripts/misc/wrench-android-build.sh'
                 - 'mobile/android/debug_sign_tool.py'
