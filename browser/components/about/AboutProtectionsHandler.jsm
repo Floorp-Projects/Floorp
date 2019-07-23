@@ -65,13 +65,7 @@ var AboutProtectionsHandler = {
     "FetchContentBlockingEvents",
     "FetchMonitorData",
     "FetchUserLoginsData",
-    // Getting prefs
-    "GetEnabledPrefs",
   ],
-  _prefs: {
-    LockwiseCard: "browser.contentblocking.report.lockwise.enabled",
-    MonitorCard: "browser.contentblocking.report.monitor.enabled",
-  },
   PREF_CB_CATEGORY: "browser.contentblocking.category",
 
   init() {
@@ -300,18 +294,6 @@ var AboutProtectionsHandler = {
           "SendUserLoginsData",
           await this.getLoginData()
         );
-        break;
-      case "GetEnabledPrefs":
-        const prefs = Object.keys(this._prefs);
-
-        // Get all the enabled prefs and send separate messages depending on their names.
-        for (let name of prefs) {
-          const message = `SendEnabled${name}Pref`;
-          const isEnabled = Services.prefs.getBoolPref(this._prefs[name]);
-          this.sendMessage(aMessage.target, message, {
-            isEnabled,
-          });
-        }
         break;
     }
   },

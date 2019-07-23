@@ -57,6 +57,12 @@ let RPMAccessManager = {
       getFormatURLPref: ["app.support.baseURL"],
       isWindowPrivate: ["yes"],
     },
+    "about:protections": {
+      getBoolPref: [
+        "browser.contentblocking.report.lockwise.enabled",
+        "browser.contentblocking.report.monitor.enabled",
+      ],
+    },
     "about:newinstall": {
       getUpdateChannel: ["yes"],
       getFxAccountsEndpoint: ["yes"],
