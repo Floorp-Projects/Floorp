@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "debugger/NoExecute.h"
+#include "mozilla/Sprintf.h"
 
 #include "vm/Realm-inl.h"
 
