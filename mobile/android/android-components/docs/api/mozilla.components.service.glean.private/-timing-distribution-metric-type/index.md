@@ -2,7 +2,7 @@
 
 # TimingDistributionMetricType
 
-`data class TimingDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L21)
+`data class TimingDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md)`, `[`HistogramBase`](../-histogram-base/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L21)
 
 This implements the developer facing API for recording timing distribution metrics.
 
@@ -36,6 +36,7 @@ allowing developers to record values that were previously registered in the metr
 
 | Name | Summary |
 |---|---|
+| [accumulateSamples](accumulate-samples.md) | `fun accumulateSamples(samples: `[`LongArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long-array/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Accumulates the provided samples in the metric. |
 | [cancel](cancel.md) | `fun cancel(timerId: `[`GleanTimerId`](../../mozilla.components.service.glean.timing/-glean-timer-id.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Abort a previous [start](start.md) call. No error is recorded if no [start](start.md) was called. |
 | [start](start.md) | `fun start(): `[`GleanTimerId`](../../mozilla.components.service.glean.timing/-glean-timer-id.md)`?`<br>Start tracking time for the provided metric and [GleanTimerId](../../mozilla.components.service.glean.timing/-glean-timer-id.md). This records an error if it’s already tracking time (i.e. start was already called with no corresponding [stopAndAccumulate](stop-and-accumulate.md)): in that case the original start time will be preserved. |
 | [stopAndAccumulate](stop-and-accumulate.md) | `fun stopAndAccumulate(timerId: `[`GleanTimerId`](../../mozilla.components.service.glean.timing/-glean-timer-id.md)`?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop tracking time for the provided metric and associated timer id. Add a count to the corresponding bucket in the timing distribution. This will record an error if no [start](start.md) was called. |

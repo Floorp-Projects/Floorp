@@ -2,4 +2,4 @@
 
 # &lt;init&gt;
 
-`WebAppShortcutManager(storage: `[`ManifestStorage`](../-manifest-storage/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`
+`WebAppShortcutManager(context: <ERROR CLASS>, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, storage: `[`ManifestStorage`](../-manifest-storage/index.md)` = ManifestStorage(context), supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`

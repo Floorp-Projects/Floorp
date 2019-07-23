@@ -16,7 +16,9 @@ as well as including a helper function to calculate the bucket sizes.
 
 `bucketCount` - total number of buckets
 
-`range` - an array always containing 2 elements: the minimum and maximum bucket values
+`rangeMin` - the minimum value that can be represented
+
+`rangeMax` - the maximum value that can be represented
 
 `histogramType` - the [HistogramType](../../mozilla.components.service.glean.private/-histogram-type/index.md) representing the bucket layout
 

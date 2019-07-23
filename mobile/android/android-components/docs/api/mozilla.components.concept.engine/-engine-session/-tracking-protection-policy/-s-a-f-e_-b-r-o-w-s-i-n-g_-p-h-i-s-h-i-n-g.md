@@ -2,7 +2,7 @@
 
 # SAFE_BROWSING_PHISHING
 
-`const val SAFE_BROWSING_PHISHING: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L179)
+`const val SAFE_BROWSING_PHISHING: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/EngineSession.kt#L180)
 
 Blocks phishing sites.
 

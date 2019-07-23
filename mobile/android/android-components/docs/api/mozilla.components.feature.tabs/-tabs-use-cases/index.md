@@ -12,10 +12,11 @@ Contains use cases related to the tabs feature.
 |---|---|
 | [AddNewPrivateTabUseCase](-add-new-private-tab-use-case/index.md) | `class AddNewPrivateTabUseCase : `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) |
 | [AddNewTabUseCase](-add-new-tab-use-case/index.md) | `class AddNewTabUseCase : `[`LoadUrlUseCase`](../../mozilla.components.feature.session/-session-use-cases/-load-url-use-case/index.md) |
+| [DefaultSelectTabUseCase](-default-select-tab-use-case/index.md) | `class DefaultSelectTabUseCase : `[`SelectTabUseCase`](-select-tab-use-case/index.md) |
 | [RemoveAllTabsOfTypeUseCase](-remove-all-tabs-of-type-use-case/index.md) | `class RemoveAllTabsOfTypeUseCase` |
 | [RemoveAllTabsUseCase](-remove-all-tabs-use-case/index.md) | `class RemoveAllTabsUseCase` |
 | [RemoveTabUseCase](-remove-tab-use-case/index.md) | `class RemoveTabUseCase` |
-| [SelectTabUseCase](-select-tab-use-case/index.md) | `class SelectTabUseCase` |
+| [SelectTabUseCase](-select-tab-use-case/index.md) | `interface SelectTabUseCase`<br>Contract for use cases that select a tab. |
 
 ### Constructors
 

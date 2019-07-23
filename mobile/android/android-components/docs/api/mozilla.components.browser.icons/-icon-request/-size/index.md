@@ -14,6 +14,7 @@ We are trying to limit the supported sizes in order to optimize our caching stra
 |---|---|
 | [DEFAULT](-d-e-f-a-u-l-t.md) |  |
 | [LAUNCHER](-l-a-u-n-c-h-e-r.md) |  |
+| [LAUNCHER_ADAPTIVE](-l-a-u-n-c-h-e-r_-a-d-a-p-t-i-v-e.md) |  |
 
 ### Properties
 

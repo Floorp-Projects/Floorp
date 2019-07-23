@@ -9,3 +9,9 @@
 | Name | Summary |
 |---|---|
 | [getIconData](get-icon-data.md) | `abstract fun getIconData(context: <ERROR CLASS>, resource: `[`Resource`](../../../mozilla.components.browser.icons/-icon-request/-resource/index.md)`): `[`ByteArray`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/index.html)`?` |
+
+### Inheritors
+
+| Name | Summary |
+|---|---|
+| [IconDiskCache](../../../mozilla.components.browser.icons.utils/-icon-disk-cache/index.md) | `class IconDiskCache : `[`LoaderDiskCache`](./index.md)`, `[`PreparerDiskCache`](../../../mozilla.components.browser.icons.preparer/-disk-icon-preparer/-preparer-disk-cache/index.md)`, `[`ProcessorDiskCache`](../../../mozilla.components.browser.icons.processor/-disk-icon-processor/-processor-disk-cache/index.md)<br>Caching bitmaps and resource URLs on disk. |

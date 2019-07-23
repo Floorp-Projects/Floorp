@@ -2,7 +2,7 @@
 
 # toSafeIntent
 
-`fun <ERROR CLASS>.toSafeIntent(): `[`SafeIntent`](-safe-intent/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L104)
+`fun <ERROR CLASS>.toSafeIntent(): `[`SafeIntent`](-safe-intent/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/utils/src/main/java/mozilla/components/support/utils/SafeIntent.kt#L99)
 
 Returns a [SafeIntent](-safe-intent/index.md) for the given [Intent](#).
 

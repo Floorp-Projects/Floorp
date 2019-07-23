@@ -2,7 +2,7 @@
 
 # BrowserStore
 
-`class BrowserStore : `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L18)
+`class BrowserStore : `[`Store`](../../mozilla.components.lib.state/-store/index.md)`<`[`BrowserState`](../../mozilla.components.browser.state.state/-browser-state/index.md)`, `[`BrowserAction`](../../mozilla.components.browser.state.action/-browser-action.md)`>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/state/src/main/java/mozilla/components/browser/state/store/BrowserStore.kt#L20)
 
 The [BrowserStore](./index.md) holds the [BrowserState](../../mozilla.components.browser.state.state/-browser-state/index.md) (state tree).
 

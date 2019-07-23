@@ -6,7 +6,8 @@
 
 | Name | Summary |
 |---|---|
-| [IntentProcessor](-intent-processor/index.md) | `class IntentProcessor`<br>Processor for intents which should trigger session-related actions. |
+| [IntentProcessor](-intent-processor/index.md) | `class ~~IntentProcessor~~`<br>Processor for intents which should trigger session-related actions. |
+| [TabIntentProcessor](-tab-intent-processor/index.md) | `class TabIntentProcessor : `[`IntentProcessor`](../mozilla.components.browser.session.intent/-intent-processor/index.md)<br>Processor for intents which should trigger session-related actions. |
 
 ### Type Aliases
 

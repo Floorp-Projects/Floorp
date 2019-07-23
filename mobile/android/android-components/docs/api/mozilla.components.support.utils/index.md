@@ -24,4 +24,5 @@
 | Name | Summary |
 |---|---|
 | [segmentAwareDomainMatch](segment-aware-domain-match.md) | `fun segmentAwareDomainMatch(query: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, urls: `[`Iterable`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-iterable/index.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>): `[`DomainMatch`](-domain-match/index.md)`?` |
+| [toSafeBundle](to-safe-bundle.md) | `fun <ERROR CLASS>.toSafeBundle(): <ERROR CLASS>`<br>Returns a [SafeBundle](-safe-bundle/index.md) for the given [Bundle](#). |
 | [toSafeIntent](to-safe-intent.md) | `fun <ERROR CLASS>.toSafeIntent(): `[`SafeIntent`](-safe-intent/index.md)<br>Returns a [SafeIntent](-safe-intent/index.md) for the given [Intent](#). |

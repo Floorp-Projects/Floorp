@@ -13,6 +13,12 @@
 | [Request](-request/index.md) | `data class Request`<br>The [Request](-request/index.md) data class represents a resource request to be send by a [Client](-client/index.md). |
 | [Response](-response/index.md) | `data class Response : `[`Closeable`](https://developer.android.com/reference/java/io/Closeable.html)<br>The [Response](-response/index.md) data class represents a response to a [Request](-request/index.md) send by a [Client](-client/index.md). |
 
+### Extensions for External Classes
+
+| Name | Summary |
+|---|---|
+| [kotlin.collections.List](kotlin.collections.-list/index.md) |  |
+
 ### Properties
 
 | Name | Summary |

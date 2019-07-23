@@ -2,7 +2,7 @@
 
 # WebAppUseCases
 
-`class WebAppUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L14)
+`class WebAppUseCases` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppUseCases.kt#L15)
 
 These use cases allow for adding a web app or web site to the homescreen.
 
@@ -16,7 +16,7 @@ These use cases allow for adding a web app or web site to the homescreen.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `WebAppUseCases(applicationContext: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>These use cases allow for adding a web app or web site to the homescreen. |
+| [&lt;init&gt;](-init-.md) | `WebAppUseCases(applicationContext: <ERROR CLASS>, sessionManager: `[`SessionManager`](../../mozilla.components.browser.session/-session-manager/index.md)`, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, supportWebApps: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = true)`<br>These use cases allow for adding a web app or web site to the homescreen. |
 
 ### Properties
 

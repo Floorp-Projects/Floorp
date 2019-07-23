@@ -2,7 +2,7 @@
 
 # ContextMenuCandidate
 
-`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L29)
+`data class ContextMenuCandidate` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/contextmenu/src/main/java/mozilla/components/feature/contextmenu/ContextMenuCandidate.kt#L28)
 
 A candidate for an item to be displayed in the context menu.
 

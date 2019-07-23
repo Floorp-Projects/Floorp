@@ -15,7 +15,7 @@
 |---|---|
 | [enterToImmersiveMode](enter-to-immersive-mode.md) | `fun <ERROR CLASS>.enterToImmersiveMode(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Attempts to call immersive mode using the View to hide the status bar and navigation buttons. |
 | [exitImmersiveModeIfNeeded](exit-immersive-mode-if-needed.md) | `fun <ERROR CLASS>.exitImmersiveModeIfNeeded(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Attempts to come out from immersive mode using the View. |
-| [forEach](for-each.md) | `fun <ERROR CLASS>.forEach(action: (<ERROR CLASS>) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Performs the given action on each View in this ViewGroup. |
+| [forEach](for-each.md) | `fun <ERROR CLASS>.~~forEach~~(action: (<ERROR CLASS>) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): <ERROR CLASS>`<br>Performs the given action on each View in this ViewGroup. |
 | [getRectWithViewLocation](get-rect-with-view-location.md) | `fun <ERROR CLASS>.getRectWithViewLocation(): <ERROR CLASS>`<br>Fills the given [Rect](#) with data about location view in the window. |
 | [hideKeyboard](hide-keyboard.md) | `fun <ERROR CLASS>.hideKeyboard(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Hides the soft input window. |
 | [isGone](is-gone.md) | `fun <ERROR CLASS>.~~isGone~~(): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Returns true if this view's visibility is set to View.GONE. |

@@ -40,3 +40,9 @@ for more.
 | [getStringArrayListExtra](get-string-array-list-extra.md) | `fun getStringArrayListExtra(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`ArrayList`](https://developer.android.com/reference/java/util/ArrayList.html)`<`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`>?` |
 | [getStringExtra](get-string-extra.md) | `fun getStringExtra(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?` |
 | [hasExtra](has-extra.md) | `fun hasExtra(name: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) |
+
+### Extension Functions
+
+| Name | Summary |
+|---|---|
+| [getSessionId](../../mozilla.components.browser.session.intent/get-session-id.md) | `fun `[`SafeIntent`](./index.md)`.getSessionId(): `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>Retrieves [mozilla.components.browser.session.Session](../../mozilla.components.browser.session/-session/index.md) ID from the intent. |

@@ -4,6 +4,7 @@ $dokka.location:mozilla.components.browser.engine.gecko$await(org.mozilla.geckov
 $dokka.location:mozilla.components.browser.engine.gecko$launchGeckoResult(kotlinx.coroutines.CoroutineScope, kotlin.coroutines.CoroutineContext, kotlinx.coroutines.CoroutineStart, kotlin.SuspendFunction1((kotlinx.coroutines.CoroutineScope, mozilla.components.browser.engine.gecko.launchGeckoResult.T)))mozilla.components.browser.engine.gecko/kotlinx.coroutines.-coroutine-scope/launch-gecko-result.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reverse(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reverse.md
 $dokka.location:mozilla.components.browser.engine.system.matcher$reversible(kotlin.String)mozilla.components.browser.engine.system.matcher/kotlin.-string/reversible.md
+$dokka.location:mozilla.components.concept.fetch$toMutableHeaders(kotlin.collections.List((mozilla.components.concept.fetch.Header)))mozilla.components.concept.fetch/kotlin.collections.-list/to-mutable-headers.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Boolean)mozilla.components.lib.jexl.ext/kotlin.-boolean/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Double)mozilla.components.lib.jexl.ext/kotlin.-double/to-jexl.md
 $dokka.location:mozilla.components.lib.jexl.ext$toJexl(kotlin.Float)mozilla.components.lib.jexl.ext/kotlin.-float/to-jexl.md
@@ -75,6 +76,7 @@ mozilla.components.browser.icons.generator
 mozilla.components.browser.icons.loader
 mozilla.components.browser.icons.preparer
 mozilla.components.browser.icons.processor
+mozilla.components.browser.icons.utils
 mozilla.components.browser.menu
 mozilla.components.browser.menu.item
 mozilla.components.browser.search
@@ -85,6 +87,7 @@ mozilla.components.browser.search.suggestions
 mozilla.components.browser.session
 mozilla.components.browser.session.engine.request
 mozilla.components.browser.session.ext
+mozilla.components.browser.session.intent
 mozilla.components.browser.session.storage
 mozilla.components.browser.session.tab
 mozilla.components.browser.session.utils
@@ -100,6 +103,7 @@ mozilla.components.browser.toolbar
 mozilla.components.browser.toolbar.behavior
 mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
+mozilla.components.concept.engine.content.blocking
 mozilla.components.concept.engine.history
 mozilla.components.concept.engine.manifest
 mozilla.components.concept.engine.media
@@ -186,6 +190,7 @@ mozilla.components.service.glean.private
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
 mozilla.components.service.glean.timing
+mozilla.components.service.location
 mozilla.components.service.pocket
 mozilla.components.service.pocket.data
 mozilla.components.service.pocket.net

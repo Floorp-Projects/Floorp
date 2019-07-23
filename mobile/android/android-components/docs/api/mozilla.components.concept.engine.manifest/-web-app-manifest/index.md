@@ -51,4 +51,4 @@ https://developers.google.com/web/fundamentals/web-app-manifest/
 | Name | Summary |
 |---|---|
 | [asTaskDescription](../../mozilla.components.feature.pwa.ext/as-task-description.md) | `fun `[`WebAppManifest`](./index.md)`.asTaskDescription(icon: <ERROR CLASS>?): <ERROR CLASS>`<br>Create a [TaskDescription](#) for the activity manager based on the manifest. |
-| [toIconRequest](../../mozilla.components.browser.icons.extension/to-icon-request.md) | `fun `[`WebAppManifest`](./index.md)`.toIconRequest(): `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md) |
+| [toIconRequest](../../mozilla.components.browser.icons.extension/to-icon-request.md) | `fun `[`WebAppManifest`](./index.md)`.toIconRequest(): `[`IconRequest`](../../mozilla.components.browser.icons/-icon-request/index.md)<br>Creates an [IconRequest](../../mozilla.components.browser.icons/-icon-request/index.md) for retrieving the icon specified in the manifest. |

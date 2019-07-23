@@ -4,4 +4,4 @@
 
 | Name | Summary |
 |---|---|
-| [toBundle](to-bundle.md) | `fun <K, V> `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`K`](to-bundle.md#K)`, `[`V`](to-bundle.md#V)`>.toBundle(): <ERROR CLASS>`<br>Converts a Map to a Bundle |
+| [toBundle](to-bundle.md) | `fun <K, V> `[`Map`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html)`<`[`K`](to-bundle.md#K)`, `[`V`](to-bundle.md#V)`>.~~toBundle~~(): <ERROR CLASS>`<br>Converts a Map to a Bundle |

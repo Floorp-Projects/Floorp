@@ -2,7 +2,7 @@
 
 # DownloadDialogFragment
 
-`abstract class DownloadDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L17)
+`abstract class DownloadDialogFragment : DialogFragment` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/downloads/src/main/java/mozilla/components/feature/downloads/DownloadDialogFragment.kt#L18)
 
 This is a general representation of a dialog meant to be used in collaboration with [DownloadsFeature](../-downloads-feature/index.md)
 to show a dialog before a download is triggered.
