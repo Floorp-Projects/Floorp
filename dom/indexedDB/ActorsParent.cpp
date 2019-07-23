@@ -15992,7 +15992,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
   nsresult rv =
       GetDirectory(aPersistenceType, aOrigin, getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetDirectory);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDirectory);
     return rv;
   }
 
@@ -16007,7 +16007,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                             /* aForUpgrade */ false, subdirsToProcess,
                             databaseFilenames, &obsoleteFilenames);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetDBFilenames);
+    REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetDBFilenames);
     return rv;
   }
 
@@ -16024,7 +16024,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       // If there is an unexpected directory in the idb directory, trying to
       // delete at first instead of breaking the whole initialization.
       if (NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetBaseFilename);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetBaseFilename);
         return NS_ERROR_UNEXPECTED;
       }
 
@@ -16039,7 +16039,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
         // If we somehow running into here, it probably means we are in a
         // serious situation. e.g. Filesystem corruption.
         // Will handle this in bug 1521541.
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_RemoveDBFiles);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_RemoveDBFiles);
         return NS_ERROR_UNEXPECTED;
       }
 
@@ -16052,7 +16052,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     // delete at first instead of breaking the whole initialization.
     if (NS_WARN_IF(!databaseFilenames.GetEntry(subdirNameBase)) &&
         NS_WARN_IF(NS_FAILED(DeleteFilesNoQuota(directory, subdirName)))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetEntry);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetEntry);
       return NS_ERROR_UNEXPECTED;
     }
   }
@@ -16069,26 +16069,26 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     nsCOMPtr<nsIFile> fmDirectory;
     rv = directory->Clone(getter_AddRefs(fmDirectory));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Clone);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone);
       return rv;
     }
 
     rv = fmDirectory->Append(databaseFilename + filesSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Append);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append);
       return rv;
     }
 
     nsCOMPtr<nsIFile> databaseFile;
     rv = directory->Clone(getter_AddRefs(databaseFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Clone2);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone2);
       return rv;
     }
 
     rv = databaseFile->Append(databaseFilename + sqliteSuffix);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Append2);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append2);
       return rv;
     }
 
@@ -16096,13 +16096,13 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
     if (aUsageInfo) {
       rv = directory->Clone(getter_AddRefs(walFile));
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Clone3);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Clone3);
         return rv;
       }
 
       rv = walFile->Append(databaseFilename + walSuffix);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_Append3);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_Append3);
         return rv;
       }
     }
@@ -16111,7 +16111,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                     aGroup, aOrigin,
                                     TelemetryIdForFile(databaseFile));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_INIT_ERR(kInternalError, IDB_InitDirectory);
+      REPORT_TELEMETRY_INIT_ERR(kQuotaInternalError, IDB_InitDirectory);
       return rv;
     }
 
@@ -16119,7 +16119,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
       int64_t fileSize;
       rv = databaseFile->GetFileSize(&fileSize);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetFileSize);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetFileSize);
         return rv;
       }
 
@@ -16133,14 +16133,14 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
         aUsageInfo->AppendToDatabaseUsage(uint64_t(fileSize));
       } else if (NS_WARN_IF(rv != NS_ERROR_FILE_NOT_FOUND &&
                             rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetWalFileSize);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetWalFileSize);
         return rv;
       }
 
       uint64_t usage;
       rv = FileManager::GetUsage(fmDirectory, &usage);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_INIT_ERR(kExternalError, IDB_GetUsage);
+        REPORT_TELEMETRY_INIT_ERR(kQuotaExternalError, IDB_GetUsage);
         return rv;
       }
 
