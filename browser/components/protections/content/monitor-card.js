@@ -37,9 +37,7 @@ export default class MonitorClass {
       this.buildContent(loginData, monitorData);
 
       // Show the Monitor card.
-      const monitorCard = this.doc.querySelector(
-        ".card.monitor-card.hidden"
-      );
+      const monitorCard = this.doc.querySelector(".card.monitor-card.hidden");
       monitorCard.classList.remove("hidden");
     });
   }
