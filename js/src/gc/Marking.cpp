@@ -973,9 +973,7 @@ void LazyScript::traceChildren(JSTracer* trc) {
     TraceNullableEdge(trc, &script_, "script");
   }
 
-  if (function_) {
-    TraceEdge(trc, &function_, "function");
-  }
+  TraceEdge(trc, &function_, "function");
 
   if (enclosingLazyScriptOrScope_) {
     TraceGenericPointerRoot(
@@ -1009,9 +1007,7 @@ inline void js::GCMarker::eagerlyMarkChildren(LazyScript* thing) {
 
   // script_ is weak so is not traced here.
 
-  if (thing->function_) {
-    traverseEdge(thing, static_cast<JSObject*>(thing->function_));
-  }
+  traverseEdge(thing, static_cast<JSObject*>(thing->function_));
 
   if (thing->enclosingLazyScriptOrScope_) {
     TraceManuallyBarrieredGenericPointerEdge(
