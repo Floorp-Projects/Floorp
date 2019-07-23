@@ -219,6 +219,10 @@ void MobileViewportManager::UpdateResolution(
   CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
   LayoutDeviceToLayerScale res(mContext->GetResolution());
   CSSToScreenScale zoom = ResolutionToZoom(res, cssToDev);
+  // Non-positive zoom factors can produce NaN or negative viewport sizes,
+  // so we better be sure we've got a positive zoom factor.
+  MOZ_ASSERT(zoom > CSSToScreenScale(0.0f), "zoom factor must be positive");
+
   Maybe<CSSToScreenScale> newZoom;
 
   ScreenIntSize compositionSize = GetCompositionSize(aDisplaySize);
@@ -391,6 +395,10 @@ void MobileViewportManager::UpdateResolution(
 
   // If the zoom has changed, update the pres shell resolution accordingly.
   if (newZoom) {
+    // Non-positive zoom factors can produce NaN or negative viewport sizes,
+    // so we better be sure we've got a positive zoom factor.
+    MOZ_ASSERT(*newZoom > CSSToScreenScale(0.0f),
+               "zoom factor must be positive");
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
     mContext->SetResolutionAndScaleTo(resolution.scale);
