@@ -287,7 +287,7 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
                                              __func__);
     }
     MOZ_ASSERT(mQueuedSample->mKeyframe, "mQueuedSample must be a keyframe");
-    samples->mSamples.AppendElement(mQueuedSample);
+    samples->AppendSample(mQueuedSample);
     mQueuedSample = nullptr;
     aNumSamples--;
   }
@@ -313,7 +313,7 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
     java::GeckoHLSSample::LocalRef sample(std::move(demuxedSample));
     if (sample->IsEOS()) {
       HLS_DEBUG("HLSTrackDemuxer", "Met BUFFER_FLAG_END_OF_STREAM.");
-      if (samples->mSamples.IsEmpty()) {
+      if (samples->GetSamples().IsEmpty()) {
         return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                                __func__);
       }
@@ -325,11 +325,16 @@ RefPtr<HLSTrackDemuxer::SamplesPromise> HLSTrackDemuxer::DoGetSamples(
     if (!mrd) {
       return SamplesPromise::CreateAndReject(NS_ERROR_OUT_OF_MEMORY, __func__);
     }
-    samples->mSamples.AppendElement(mrd);
+    if (!mrd->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
+    samples->AppendSample(mrd);
   }
   if (mType == TrackInfo::kVideoTrack &&
       (mNextKeyframeTime.isNothing() ||
-       samples->mSamples.LastElement()->mTime >= mNextKeyframeTime.value())) {
+       samples->GetSamples().LastElement()->mTime >=
+           mNextKeyframeTime.value())) {
     // Only need to find NextKeyFrame for Video
     UpdateNextKeyFrameTime();
   }
@@ -569,11 +574,19 @@ HLSTrackDemuxer::DoSkipToNextRandomAccessPoint(const TimeUnit& aTimeThreshold) {
     if (sample->IsKeyFrame()) {
       java::sdk::BufferInfo::LocalRef info = sample->Info();
       int64_t presentationTimeUs = 0;
-      bool ok = NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs));
-      if (ok &&
+      if (NS_SUCCEEDED(info->PresentationTimeUs(&presentationTimeUs)) &&
           TimeUnit::FromMicroseconds(presentationTimeUs) >= aTimeThreshold) {
+        RefPtr<MediaRawData> rawData = ConvertToMediaRawData(sample);
+        if (!rawData) {
+          result = NS_ERROR_OUT_OF_MEMORY;
+          break;
+        }
+        if (!rawData->HasValidTime()) {
+          result = NS_ERROR_DOM_MEDIA_DEMUXER_ERR;
+          break;
+        }
         found = true;
-        mQueuedSample = ConvertToMediaRawData(sample);
+        mQueuedSample = rawData;
         break;
       }
     }

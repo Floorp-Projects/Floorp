@@ -21,10 +21,10 @@ function handleRequest(request, response) {
   response.processAsync();
 
   var part = bodyBytes.splice(0, 256);
-  bos.writeByteArray(part, part.length);
+  bos.writeByteArray(part);
 
   response.timer1 = new Timer(function(timer) {
-    bos.writeByteArray(bodyBytes, bodyBytes.length);
+    bos.writeByteArray(bodyBytes);
   }, 1000, Components.interfaces.nsITimer.TYPE_ONE_SHOT);
 
   response.timer2 = new Timer(function(timer) {

@@ -296,6 +296,13 @@ class MediaData {
 
   media::TimeUnit GetEndTime() const { return mTime + mDuration; }
 
+  media::TimeUnit GetEndTimecode() const { return mTimecode + mDuration; }
+
+  bool HasValidTime() const {
+    return mTime.IsValid() && mTimecode.IsValid() && mDuration.IsValid() &&
+           GetEndTime().IsValid() && GetEndTimecode().IsValid();
+  }
+
   // Return true if the adjusted time is valid. Caller should handle error when
   // the result is invalid.
   virtual bool AdjustForStartTime(const media::TimeUnit& aStartTime) {

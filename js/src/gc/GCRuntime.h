@@ -690,6 +690,10 @@ class GCRuntime {
   void updateRuntimePointersToRelocatedCells(AutoGCSession& session);
   void protectAndHoldArenas(Arena* arenaList);
   void unprotectHeldRelocatedArenas();
+  void clearRelocatedArenas(Arena* arenaList, JS::GCReason reason);
+  void clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
+                                            JS::GCReason reason,
+                                            const AutoLockGC& lock);
   void releaseRelocatedArenas(Arena* arenaList);
   void releaseRelocatedArenasWithoutUnlocking(Arena* arenaList,
                                               const AutoLockGC& lock);

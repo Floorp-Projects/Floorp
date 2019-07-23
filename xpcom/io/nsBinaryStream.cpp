@@ -26,6 +26,7 @@
 #include "mozilla/EndianUtils.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
 
 #include "nsCRT.h"
@@ -41,8 +42,11 @@
 #include "js/RootingAPI.h"  // JS::{Handle,Rooted}
 #include "js/Value.h"       // JS::Value
 
+using mozilla::AsBytes;
+using mozilla::MakeSpan;
 using mozilla::MakeUnique;
 using mozilla::PodCopy;
+using mozilla::Span;
 using mozilla::UniquePtr;
 
 already_AddRefed<nsIObjectOutputStream> NS_NewObjectOutputStream(
@@ -206,11 +210,8 @@ nsBinaryOutputStream::WriteStringZ(const char* aString) {
 
 NS_IMETHODIMP
 nsBinaryOutputStream::WriteWStringZ(const char16_t* aString) {
-  uint32_t length, byteCount;
-  nsresult rv;
-
-  length = NS_strlen(aString);
-  rv = Write32(length);
+  uint32_t length = NS_strlen(aString);
+  nsresult rv = Write32(length);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -218,10 +219,9 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString) {
   if (length == 0) {
     return NS_OK;
   }
-  byteCount = length * sizeof(char16_t);
 
 #ifdef IS_BIG_ENDIAN
-  rv = WriteBytes(reinterpret_cast<const char*>(aString), byteCount);
+  rv = WriteBytes(AsBytes(MakeSpan(aString, length)));
 #else
   // XXX use WriteSegments here to avoid copy!
   char16_t* copy;
@@ -229,14 +229,14 @@ nsBinaryOutputStream::WriteWStringZ(const char16_t* aString) {
   if (length <= 64) {
     copy = temp;
   } else {
-    copy = reinterpret_cast<char16_t*>(malloc(byteCount));
+    copy = static_cast<char16_t*>(malloc(length * sizeof(char16_t)));
     if (!copy) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
   NS_ASSERTION((uintptr_t(aString) & 0x1) == 0, "aString not properly aligned");
   mozilla::NativeEndian::copyAndSwapToBigEndian(copy, aString, length);
-  rv = WriteBytes(reinterpret_cast<const char*>(copy), byteCount);
+  rv = WriteBytes(AsBytes(MakeSpan(copy, length)));
   if (copy != temp) {
     free(copy);
   }
@@ -250,24 +250,29 @@ nsBinaryOutputStream::WriteUtf8Z(const char16_t* aString) {
   return WriteStringZ(NS_ConvertUTF16toUTF8(aString).get());
 }
 
-NS_IMETHODIMP
-nsBinaryOutputStream::WriteBytes(const char* aString, uint32_t aLength) {
+nsresult nsBinaryOutputStream::WriteBytes(Span<const uint8_t> aBytes) {
   nsresult rv;
   uint32_t bytesWritten;
 
-  rv = Write(aString, aLength, &bytesWritten);
+  rv = Write(reinterpret_cast<const char*>(aBytes.Elements()), aBytes.Length(),
+             &bytesWritten);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (bytesWritten != aLength) {
+  if (bytesWritten != aBytes.Length()) {
     return NS_ERROR_FAILURE;
   }
   return rv;
 }
 
 NS_IMETHODIMP
-nsBinaryOutputStream::WriteByteArray(uint8_t* aBytes, uint32_t aLength) {
-  return WriteBytes(reinterpret_cast<char*>(aBytes), aLength);
+nsBinaryOutputStream::WriteBytesFromJS(const char* aString, uint32_t aLength) {
+  return WriteBytes(AsBytes(MakeSpan(aString, aLength)));
+}
+
+NS_IMETHODIMP
+nsBinaryOutputStream::WriteByteArray(const nsTArray<uint8_t>& aByteArray) {
+  return WriteBytes(aByteArray);
 }
 
 NS_IMETHODIMP
@@ -340,7 +345,7 @@ nsBinaryOutputStream::WriteID(const nsIID& aIID) {
     return rv;
   }
 
-  rv = WriteBytes(reinterpret_cast<const char*>(&aIID.m3[0]), sizeof(aIID.m3));
+  rv = WriteBytes(aIID.m3);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

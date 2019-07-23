@@ -10147,6 +10147,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     loadInfo->SetIsFromProcessingFrameAttributes();
   }
 
+  // Propagate the IsFormSubmission flag to the loadInfo.
+  if (aLoadState->IsFormSubmission()) {
+    loadInfo->SetIsFormSubmission(true);
+  }
+
   nsIURI* baseURI = aLoadState->BaseURI();
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(
@@ -12956,6 +12961,7 @@ nsresult nsDocShell::OnLinkClickSync(
   loadState->SetLoadType(loadType);
   loadState->SetFirstParty(true);
   loadState->SetSourceDocShell(this);
+  loadState->SetIsFormSubmission(aContent->IsHTMLElement(nsGkAtoms::form));
   nsresult rv = InternalLoad(loadState, aDocShell, aRequest);
 
   if (NS_SUCCEEDED(rv)) {
@@ -13646,9 +13652,9 @@ NS_IMETHODIMP
 nsDocShell::SetColorMatrix(const nsTArray<float>& aMatrix) {
   if (aMatrix.Length() == MATRIX_LENGTH) {
     mColorMatrix.reset(new gfx::Matrix5x4());
-    static_assert(MATRIX_LENGTH * sizeof(float) ==
-                  sizeof(mColorMatrix->components),
-                  "Size mismatch for our memcpy");
+    static_assert(
+        MATRIX_LENGTH * sizeof(float) == sizeof(mColorMatrix->components),
+        "Size mismatch for our memcpy");
     memcpy(mColorMatrix->components, aMatrix.Elements(),
            sizeof(mColorMatrix->components));
   } else if (aMatrix.Length() == 0) {
@@ -13676,9 +13682,9 @@ NS_IMETHODIMP
 nsDocShell::GetColorMatrix(nsTArray<float>& aMatrix) {
   if (mColorMatrix) {
     aMatrix.SetLength(MATRIX_LENGTH);
-    static_assert(MATRIX_LENGTH * sizeof(float) ==
-                  sizeof(mColorMatrix->components),
-                  "Size mismatch for our memcpy");
+    static_assert(
+        MATRIX_LENGTH * sizeof(float) == sizeof(mColorMatrix->components),
+        "Size mismatch for our memcpy");
     memcpy(aMatrix.Elements(), mColorMatrix->components,
            MATRIX_LENGTH * sizeof(float));
   }

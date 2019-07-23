@@ -1,5 +1,5 @@
-use std::sync::atomic::AtomicUsize;
 use super::*;
+use std::sync::atomic::AtomicUsize;
 
 #[test]
 fn same_range_first_consumers_return_correct_answer() {
@@ -31,8 +31,10 @@ fn same_range_first_consumers_return_correct_answer() {
     assert!(!right_folder.full());
     assert!(far_right_consumer.full());
     let right_folder = right_folder.consume(2).consume(3);
-    assert_eq!(reducer.reduce(left_folder.complete(), right_folder.complete()),
-               Some(0));
+    assert_eq!(
+        reducer.reduce(left_folder.complete(), right_folder.complete()),
+        Some(0)
+    );
 }
 
 #[test]
@@ -65,8 +67,10 @@ fn same_range_last_consumers_return_correct_answer() {
     assert!(!left_folder.full());
     assert!(far_left_consumer.full());
     let left_folder = left_folder.consume(0).consume(1);
-    assert_eq!(reducer.reduce(left_folder.complete(), right_folder.complete()),
-               Some(2));
+    assert_eq!(
+        reducer.reduce(left_folder.complete(), right_folder.complete()),
+        Some(2)
+    );
 }
 
 // These tests requires that a folder be assigned to an iterator with more than
@@ -99,51 +103,4 @@ fn find_last_folder_yields_last_match() {
     };
     let f = f.consume(0_i32).consume(1_i32).consume(2_i32);
     assert_eq!(f.complete(), Some(2_i32));
-}
-
-
-/// Produce a parallel iterator for 0u128..10²⁷
-fn octillion() -> impl ParallelIterator<Item = u128> {
-    (0u32..1_000_000_000)
-        .into_par_iter()
-        .with_max_len(1_000)
-        .map(|i| i as u64 * 1_000_000_000)
-        .flat_map(
-            |i| {
-                (0u32..1_000_000_000)
-                    .into_par_iter()
-                    .with_max_len(1_000)
-                    .map(move |j| i + j as u64)
-            }
-        )
-        .map(|i| i as u128 * 1_000_000_000)
-        .flat_map(
-            |i| {
-                (0u32..1_000_000_000)
-                    .into_par_iter()
-                    .with_max_len(1_000)
-                    .map(move |j| i + j as u128)
-            }
-        )
-}
-
-#[test]
-fn find_first_octillion() {
-    let x = octillion().find_first(|_| true);
-    assert_eq!(x, Some(0));
-}
-
-#[test]
-fn find_last_octillion() {
-    // FIXME: If we don't use at least two threads, then we end up walking
-    // through the entire iterator sequentially, without the benefit of any
-    // short-circuiting.  We probably don't want testing to wait that long. ;)
-    // It would be nice if `find_last` could prioritize the later splits,
-    // basically flipping the `join` args, without needing indexed `rev`.
-    // (or could we have an unindexed `rev`?)
-    let builder = ::ThreadPoolBuilder::new().num_threads(2);
-    let pool = builder.build().unwrap();
-
-    let x = pool.install(|| octillion().find_last(|_| true));
-    assert_eq!(x, Some(999999999999999999999999999));
 }

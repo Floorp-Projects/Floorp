@@ -14,7 +14,7 @@
 const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 
-const { ChromeDebuggerActor } = require("devtools/server/actors/thread");
+const { ThreadActor } = require("devtools/server/actors/thread");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { Pool } = require("devtools/shared/protocol");
@@ -115,7 +115,7 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     }
 
     if (!this.threadActor) {
-      this.threadActor = new ChromeDebuggerActor(this.conn, this);
+      this.threadActor = new ThreadActor(this, null);
       this.manage(this.threadActor);
     }
     if (!this.memoryActor) {
@@ -134,7 +134,7 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
       name: "Content process",
 
       consoleActor: this._consoleActor.actorID,
-      chromeDebugger: this.threadActor.actorID,
+      threadActor: this.threadActor.actorID,
       memoryActor: this.memoryActor.actorID,
       promisesActor: this._promisesActor.actorID,
 

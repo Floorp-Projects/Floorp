@@ -7,8 +7,8 @@
 use iter::*;
 use rayon_core;
 use slice::ParallelSliceMut;
-use std::mem::size_of;
 use std::mem;
+use std::mem::size_of;
 use std::ptr;
 use std::slice;
 
@@ -64,7 +64,9 @@ where
             //    performance than with the 2nd method.
             //
             // All methods were benchmarked, and the 3rd showed best results. So we chose that one.
-            let mut tmp = NoDrop { value: Some(ptr::read(&v[0])) };
+            let mut tmp = NoDrop {
+                value: Some(ptr::read(&v[0])),
+            };
 
             // Intermediate state of the insertion process is always tracked by `hole`, which
             // serves two purposes:
@@ -132,8 +134,8 @@ where
 {
     let len = v.len();
     let v = v.as_mut_ptr();
-    let v_mid = v.offset(mid as isize);
-    let v_end = v.offset(len as isize);
+    let v_mid = v.add(mid);
+    let v_end = v.add(len);
 
     // The merge process first copies the shorter run into `buf`. Then it traces the newly copied
     // run and the longer run forwards (or backwards), comparing their next unconsumed elements and
@@ -159,7 +161,7 @@ where
         ptr::copy_nonoverlapping(v, buf, mid);
         hole = MergeHole {
             start: buf,
-            end: buf.offset(mid as isize),
+            end: buf.add(mid),
             dest: v,
         };
 
@@ -183,7 +185,7 @@ where
         ptr::copy_nonoverlapping(v_mid, buf, len - mid);
         hole = MergeHole {
             start: buf,
-            end: buf.offset((len - mid) as isize),
+            end: buf.add(len - mid),
             dest: v_mid,
         };
 
@@ -216,7 +218,7 @@ where
     impl<T> Drop for MergeHole<T> {
         fn drop(&mut self) {
             // `T` is not a zero-sized type, so it's okay to divide by its size.
-            let len = (self.end as usize - self.start as usize) / mem::size_of::<T>();
+            let len = (self.end as usize - self.start as usize) / size_of::<T>();
             unsafe {
                 ptr::copy_nonoverlapping(self.start, self.dest, len);
             }
@@ -261,10 +263,11 @@ struct Run {
 fn collapse(runs: &[Run]) -> Option<usize> {
     let n = runs.len();
 
-    if n >= 2 && (runs[n - 1].start == 0 ||
-                  runs[n - 2].len <= runs[n - 1].len ||
-                  (n >= 3 && runs[n - 3].len <= runs[n - 2].len + runs[n - 1].len) ||
-                  (n >= 4 && runs[n - 4].len <= runs[n - 3].len + runs[n - 2].len))
+    if n >= 2
+        && (runs[n - 1].start == 0
+            || runs[n - 2].len <= runs[n - 1].len
+            || (n >= 3 && runs[n - 3].len <= runs[n - 2].len + runs[n - 1].len)
+            || (n >= 4 && runs[n - 4].len <= runs[n - 3].len + runs[n - 2].len))
     {
         if n >= 3 && runs[n - 3].len < runs[n - 1].len {
             Some(n - 3)
@@ -352,7 +355,7 @@ where
 
         // Push this run onto the stack.
         runs.push(Run {
-            start: start,
+            start,
             len: end - start,
         });
         end = start;
@@ -361,7 +364,12 @@ where
         while let Some(r) = collapse(&runs) {
             let left = runs[r + 1];
             let right = runs[r];
-            merge(&mut v[left.start..right.start + right.len], left.len, buf, &is_less);
+            merge(
+                &mut v[left.start..right.start + right.len],
+                left.len,
+                buf,
+                &is_less,
+            );
 
             runs[r] = Run {
                 start: left.start,
@@ -461,10 +469,10 @@ where
     // remaining parts of `left` and `right` into `dest`.
     let mut s = State {
         left_start: left.as_mut_ptr(),
-        left_end: left.as_mut_ptr().offset(left_len as isize),
+        left_end: left.as_mut_ptr().add(left_len),
         right_start: right.as_mut_ptr(),
-        right_end: right.as_mut_ptr().offset(right_len as isize),
-        dest: dest,
+        right_end: right.as_mut_ptr().add(right_len),
+        dest,
     };
 
     if left_len == 0 || right_len == 0 || left_len + right_len < MAX_SEQUENTIAL {
@@ -492,7 +500,7 @@ where
 
         // Convert the pointers to `usize` because `*mut T` is not `Send`.
         let dest_l = dest as usize;
-        let dest_r = dest.offset((left_l.len() + right_l.len()) as isize) as usize;
+        let dest_r = dest.add(left_l.len() + right_l.len()) as usize;
         rayon_core::join(
             || par_merge(left_l, right_l, dest_l as *mut T, is_less),
             || par_merge(left_r, right_r, dest_r as *mut T, is_less),
@@ -513,14 +521,14 @@ where
 
     impl<T> Drop for State<T> {
         fn drop(&mut self) {
-            let size = mem::size_of::<T>();
+            let size = size_of::<T>();
             let left_len = (self.left_end as usize - self.left_start as usize) / size;
-            let right_len = (self.right_end as usize -  self.right_start as usize) / size;
+            let right_len = (self.right_end as usize - self.right_start as usize) / size;
 
             // Copy array `left`, followed by `right`.
             unsafe {
                 ptr::copy_nonoverlapping(self.left_start, self.dest, left_len);
-                self.dest = self.dest.offset(left_len as isize);
+                self.dest = self.dest.add(left_len);
                 ptr::copy_nonoverlapping(self.right_start, self.dest, right_len);
             }
         }
@@ -545,8 +553,7 @@ unsafe fn recurse<T, F>(
     chunks: &[(usize, usize)],
     into_buf: bool,
     is_less: &F,
-)
-where
+) where
     T: Send,
     F: Fn(&T, &T) -> bool + Sync,
 {
@@ -559,8 +566,8 @@ where
         if into_buf {
             // Copy the chunk from `v` into `buf`.
             let (start, end) = chunks[0];
-            let src = v.offset(start as isize);
-            let dest = buf.offset(start as isize);
+            let src = v.add(start);
+            let dest = buf.add(start);
             ptr::copy_nonoverlapping(src, dest, end - start);
         }
         return;
@@ -587,8 +594,8 @@ where
     // be executed, thus copying everything from `src` into `dest`. This way we ensure that all
     // chunks are in fact copied into `dest`, even if the merge process doesn't finish.
     let guard = CopyOnDrop {
-        src: src.offset(start as isize),
-        dest: dest.offset(start as isize),
+        src: src.add(start),
+        dest: dest.add(start),
         len: end - start,
     };
 
@@ -605,16 +612,16 @@ where
     mem::forget(guard);
 
     // Merge chunks `(start, mid)` and `(mid, end)` from `src` into `dest`.
-    let src_left = slice::from_raw_parts_mut(src.offset(start as isize), mid - start);
-    let src_right = slice::from_raw_parts_mut(src.offset(mid as isize), end - mid);
-    par_merge(src_left, src_right, dest.offset(start as isize), is_less);
+    let src_left = slice::from_raw_parts_mut(src.add(start), mid - start);
+    let src_right = slice::from_raw_parts_mut(src.add(mid), end - mid);
+    par_merge(src_left, src_right, dest.add(start), is_less);
 }
 
 /// Sorts `v` using merge sort in parallel.
 ///
 /// The algorithm is stable, allocates memory, and `O(n log n)` worst-case.
 /// The allocated temporary buffer is of the same length as is `v`.
-pub fn par_mergesort<T, F>(v: &mut [T], is_less: F)
+pub(super) fn par_mergesort<T, F>(v: &mut [T], is_less: F)
 where
     T: Send,
     F: Fn(&T, &T) -> bool + Sync,
@@ -671,7 +678,7 @@ where
                 let l = CHUNK_LENGTH * i;
                 let r = l + chunk.len();
                 unsafe {
-                    let buf = (buf as *mut T).offset(l as isize);
+                    let buf = (buf as *mut T).add(l);
                     (l, r, mergesort(chunk, buf, &is_less))
                 }
             })
@@ -709,20 +716,23 @@ where
     // All chunks are properly sorted.
     // Now we just have to merge them together.
     unsafe {
-        recurse(v.as_mut_ptr(), buf as *mut T, &chunks, false, &is_less);
+        recurse(v.as_mut_ptr(), buf, &chunks, false, &is_less);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use rand::{thread_rng, Rng};
     use super::split_for_merge;
+    use rand::distributions::Uniform;
+    use rand::{thread_rng, Rng};
 
     #[test]
     fn test_split_for_merge() {
         fn check(left: &[u32], right: &[u32]) {
             let (l, r) = split_for_merge(left, right, &|&a, &b| a < b);
-            assert!(left[..l].iter().all(|&x| right[r..].iter().all(|&y| x <= y)));
+            assert!(left[..l]
+                .iter()
+                .all(|&x| right[r..].iter().all(|&y| x <= y)));
             assert!(right[..r].iter().all(|&x| left[l..].iter().all(|&y| x < y)));
         }
 
@@ -730,19 +740,19 @@ mod tests {
         check(&[1, 2, 2, 2, 2, 3], &[]);
         check(&[], &[1, 2, 2, 2, 2, 3]);
 
+        let mut rng = thread_rng();
+
         for _ in 0..100 {
-            let mut rng = thread_rng();
+            let limit: u32 = rng.gen_range(1, 21);
+            let left_len: usize = rng.gen_range(0, 20);
+            let right_len: usize = rng.gen_range(0, 20);
 
-            let limit = rng.gen::<u32>() % 20 + 1;
-            let left_len = rng.gen::<usize>() % 20;
-            let right_len = rng.gen::<usize>() % 20;
-
-            let mut left = rng.gen_iter::<u32>()
-                .map(|x| x % limit)
+            let mut left = rng
+                .sample_iter(&Uniform::new(0, limit))
                 .take(left_len)
                 .collect::<Vec<_>>();
-            let mut right = rng.gen_iter::<u32>()
-                .map(|x| x % limit)
+            let mut right = rng
+                .sample_iter(&Uniform::new(0, limit))
                 .take(right_len)
                 .collect::<Vec<_>>();
 

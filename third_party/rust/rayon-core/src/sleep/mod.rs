@@ -7,7 +7,7 @@ use std::sync::{Condvar, Mutex};
 use std::thread;
 use std::usize;
 
-pub struct Sleep {
+pub(super) struct Sleep {
     state: AtomicUsize,
     data: Mutex<()>,
     tickle: Condvar,
@@ -20,7 +20,7 @@ const ROUNDS_UNTIL_SLEEPY: usize = 32;
 const ROUNDS_UNTIL_ASLEEP: usize = 64;
 
 impl Sleep {
-    pub fn new() -> Sleep {
+    pub(super) fn new() -> Sleep {
         Sleep {
             state: AtomicUsize::new(AWAKE),
             data: Mutex::new(()),
@@ -46,7 +46,7 @@ impl Sleep {
     }
 
     #[inline]
-    pub fn work_found(&self, worker_index: usize, yields: usize) -> usize {
+    pub(super) fn work_found(&self, worker_index: usize, yields: usize) -> usize {
         log!(FoundWork {
             worker: worker_index,
             yields: yields,
@@ -61,7 +61,7 @@ impl Sleep {
     }
 
     #[inline]
-    pub fn no_work_found(&self, worker_index: usize, yields: usize) -> usize {
+    pub(super) fn no_work_found(&self, worker_index: usize, yields: usize) -> usize {
         log!(DidNotFindWork {
             worker: worker_index,
             yields: yields,
@@ -81,7 +81,9 @@ impl Sleep {
             if self.still_sleepy(worker_index) {
                 yields + 1
             } else {
-                log!(GotInterrupted { worker: worker_index });
+                log!(GotInterrupted {
+                    worker: worker_index
+                });
                 0
             }
         } else {
@@ -91,7 +93,7 @@ impl Sleep {
         }
     }
 
-    pub fn tickle(&self, worker_index: usize) {
+    pub(super) fn tickle(&self, worker_index: usize) {
         // As described in README.md, this load must be SeqCst so as to ensure that:
         // - if anyone is sleepy or asleep, we *definitely* see that now (and not eventually);
         // - if anyone after us becomes sleepy or asleep, they see memory events that
@@ -140,11 +142,13 @@ impl Sleep {
             });
             if self.any_worker_is_sleepy(state) {
                 // somebody else is already sleepy, so we'll just wait our turn
-                debug_assert!(!self.worker_is_sleepy(state, worker_index),
-                              "worker {} called `is_sleepy()`, \
-                               but they are already sleepy (state={})",
-                              worker_index,
-                              state);
+                debug_assert!(
+                    !self.worker_is_sleepy(state, worker_index),
+                    "worker {} called `is_sleepy()`, \
+                     but they are already sleepy (state={})",
+                    worker_index,
+                    state
+                );
                 return false;
             } else {
                 // make ourselves the sleepy one
@@ -163,9 +167,11 @@ impl Sleep {
                 //
                 // The failure ordering doesn't matter since we are
                 // about to spin around and do a fresh load.
-                if self.state
+                if self
+                    .state
                     .compare_exchange(state, new_state, Ordering::SeqCst, Ordering::Relaxed)
-                    .is_ok() {
+                    .is_ok()
+                {
                     log!(GotSleepy {
                         worker: worker_index,
                         old_state: state,
@@ -244,22 +250,30 @@ impl Sleep {
                 //
                 // The failure ordering doesn't matter since we are
                 // about to spin around and do a fresh load.
-                if self.state
+                if self
+                    .state
                     .compare_exchange(state, SLEEPING, Ordering::SeqCst, Ordering::Relaxed)
-                    .is_ok() {
+                    .is_ok()
+                {
                     // Don't do this in a loop. If we do it in a loop, we need
                     // some way to distinguish the ABA scenario where the pool
                     // was awoken but before we could process it somebody went
                     // to sleep. Note that if we get a false wakeup it's not a
                     // problem for us, we'll just loop around and maybe get
                     // sleepy again.
-                    log!(FellAsleep { worker: worker_index });
+                    log!(FellAsleep {
+                        worker: worker_index
+                    });
                     let _ = self.tickle.wait(data).unwrap();
-                    log!(GotAwoken { worker: worker_index });
+                    log!(GotAwoken {
+                        worker: worker_index
+                    });
                     return;
                 }
             } else {
-                log!(GotInterrupted { worker: worker_index });
+                log!(GotInterrupted {
+                    worker: worker_index
+                });
                 return;
             }
         }

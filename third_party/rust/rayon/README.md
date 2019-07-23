@@ -54,7 +54,7 @@ all). In other words, **if your code compiles**, it typically does the
 same thing it did before.
 
 For the most, parallel iterators in particular are guaranteed to
-produce the same results as their sequential counterparts. One caevat:
+produce the same results as their sequential counterparts. One caveat:
 If your iterator has side effects (for example, sending methods to
 other threads through a [Rust channel] or writing to disk), those side
 effects may occur in a different order. Note also that, in some cases,
@@ -71,10 +71,10 @@ as:
 
 ```toml
 [dependencies]
-rayon = "1.0"
+rayon = "1.1"
 ```
 
-and then add the following to to your `lib.rs`:
+and then add the following to your `lib.rs`:
 
 ```rust
 extern crate rayon;
@@ -90,7 +90,7 @@ just add:
 use rayon::prelude::*;
 ```
 
-Rayon currently requires `rustc 1.13.0` or greater.
+Rayon currently requires `rustc 1.26.0` or greater.
 
 ## Contribution
 
@@ -104,19 +104,17 @@ command to get a visualization of an nbody simulation. To see the
 effect of using Rayon, press `s` to run sequentially and `p` to run in
 parallel.
 
-```
+```text
 > cd rayon-demo
-> cargo +nightly run --release -- nbody visualize
+> cargo run --release -- nbody visualize
 ```
 
 For more information on demos, try:
 
-```
+```text
 > cd rayon-demo
-> cargo +nightly run --release -- --help
+> cargo run --release -- --help
 ```
-
-**Note:** While Rayon is usable as a library with the stable compiler, running demos or executing tests requires nightly Rust.
 
 ## Other questions?
 

@@ -267,7 +267,7 @@ class WebMTrackDemuxer : public MediaTrackDemuxer,
  private:
   friend class WebMDemuxer;
   ~WebMTrackDemuxer();
-  void UpdateSamples(nsTArray<RefPtr<MediaRawData>>& aSamples);
+  void UpdateSamples(const nsTArray<RefPtr<MediaRawData>>& aSamples);
   void SetNextKeyFrameTime();
   nsresult NextSample(RefPtr<MediaRawData>& aData);
   RefPtr<WebMDemuxer> mParent;
