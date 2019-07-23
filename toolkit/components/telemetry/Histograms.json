@@ -9459,17 +9459,6 @@
     "bug_numbers": [902075, 1345894],
     "alert_emails": ["flashvideo-2015@mozilla.com"]
   },
-  "PLUGINS_NOTIFICATION_PLUGIN_COUNT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "releaseChannelCollection": "opt-out",
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 5,
-    "description": "The number of plugins present in the click-to-activate notification, minus one (1, 2, 3, 4, more than 4)",
-    "bug_numbers": [902075, 1345894],
-    "alert_emails": ["flashvideo-2015@mozilla.com"]
-  },
   "PLUGINS_NOTIFICATION_USER_ACTION_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],

@@ -1,3 +1,9 @@
+"use strict";
+
+let { PluginManager } = ChromeUtils.import(
+  "resource:///actors/PluginParent.jsm"
+);
+
 /**
  * Test that the notification bar for crashed GMPs works.
  */
@@ -8,6 +14,13 @@ add_task(async function() {
       url: "about:blank",
     },
     async function(browser) {
+      // Ensure the parent has heard before the client.
+      // In practice, this is always true for GMP crashes (but not for NPAPI ones!)
+      PluginManager.gmpCrashes.set(1, {
+        pluginID: 1,
+        pluginName: "GlobalTestPlugin",
+      });
+
       await ContentTask.spawn(browser, null, async function() {
         const GMP_CRASH_EVENT = {
           pluginID: 1,

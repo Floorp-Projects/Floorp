@@ -260,6 +260,18 @@ class ContextMenuChild extends JSWindowActorChild {
           imageName: null,
         });
       }
+
+      case "ContextMenu:PluginCommand": {
+        let target = ContentDOMReference.resolve(message.data.targetIdentifier);
+        let actor = this.manager.getActor("Plugin");
+        let { command } = message.data;
+        if (command == "play") {
+          actor.showClickToPlayNotification(target, true);
+        } else if (command == "hide") {
+          actor.hideClickToPlayOverlay(target);
+        }
+        break;
+      }
     }
 
     return undefined;

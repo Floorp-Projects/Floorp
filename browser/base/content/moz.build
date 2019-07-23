@@ -139,9 +139,6 @@ with Files("browser-pageActions.js"):
 with Files("browser-places.js"):
     BUG_COMPONENT = ("Firefox", "Bookmarks & History")
 
-with Files("browser-plugins.js"):
-    BUG_COMPONENT = ("Core", "Plug-ins")
-
 with Files("browser-safebrowsing.js"):
     BUG_COMPONENT = ("Toolkit", "Safe Browsing")
 
