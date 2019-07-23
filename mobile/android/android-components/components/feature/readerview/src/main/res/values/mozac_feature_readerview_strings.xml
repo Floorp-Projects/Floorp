@@ -6,6 +6,6 @@
   -->
 
 <resources>
-    <string name="mozac_feature_readerview_negative_sign" translatable="false">-</string>
+    <string name="mozac_feature_readerview_negative_sign" translatable="false">−</string>
     <string name="mozac_feature_readerview_positive_sign" translatable="false">+</string>
 </resources>

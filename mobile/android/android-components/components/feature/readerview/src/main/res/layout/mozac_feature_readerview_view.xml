@@ -32,7 +32,7 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:contentDescription="@string/mozac_feature_readerview_sans_serif_font_desc"
-            android:textSize="21sp"
+            android:textSize="24sp"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:layout_weight="1" />
