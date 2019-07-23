@@ -1,4 +1,4 @@
-﻿<!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html>
 <head>
   <script type="application/javascript" src="pc.js"></script>
@@ -17,11 +17,15 @@ runNetworkTest(function () {
   test.chain.removeAfter("PC_LOCAL_SET_LOCAL_DESCRIPTION");
 
   test.chain.append([
-    function PC_LOCAL_SET_REMOTE_OFFER(test) {
-      test.pcLocal._pc.setRemoteDescription(test.pcLocal._latest_offer)
-        .then(generateErrorCallback('setRemoteDescription should fail'),
-              err =>
-              is(err.name, "InvalidStateError", "Error is InvalidStateError"));
+    async function PC_LOCAL_SET_REMOTE_OFFER(test) {
+      const p = test.pcLocal._pc.setRemoteDescription(test.pcLocal._latest_offer);
+      await new Promise(r => test.pcLocal.onsignalingstatechange = r);
+      is(test.pcLocal._pc.signalingState, 'stable', 'should fire stable');
+      await new Promise(r => test.pcLocal.onsignalingstatechange = r);
+      is(test.pcLocal._pc.signalingState, 'have-remote-offer',
+         'should fire have-remote-offer');
+      await p;
+      ok(true, 'setRemoteDescription should succeed');
     }
   ]);
 
