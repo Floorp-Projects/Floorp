@@ -257,3 +257,48 @@ add_task(async function testToggleSwitchFlow() {
   ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
 });
+
+/**
+ * A test for ensuring the tracking protection icon will show a correct
+ * icon according to the TP enabling state.
+ */
+add_task(async function testTrackingProtectionIcon() {
+  // Open a tab and its protection panel.
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "https://example.com"
+  );
+
+  let TPIcon = document.getElementById("tracking-protection-icon");
+  // Check the icon url. It will show a shield icon if TP is enabled.
+  is(
+    gBrowser.ownerGlobal
+      .getComputedStyle(TPIcon)
+      .getPropertyValue("list-style-image"),
+    `url("chrome://browser/skin/tracking-protection.svg")`,
+    "The tracking protection icon shows a shield icon."
+  );
+
+  // Disable the tracking protection.
+  let browserLoadedPromise = BrowserTestUtils.browserLoaded(
+    tab.linkedBrowser,
+    false,
+    "https://example.com/"
+  );
+  gProtectionsHandler.disableForCurrentPage();
+  await browserLoadedPromise;
+
+  // Check that the tracking protection icon should show a strike-through shield
+  // icon after page is reloaded.
+  is(
+    gBrowser.ownerGlobal
+      .getComputedStyle(TPIcon)
+      .getPropertyValue("list-style-image"),
+    `url("chrome://browser/skin/tracking-protection-disabled.svg")`,
+    "The tracking protection icon shows a strike through shield icon."
+  );
+
+  // Clean up the TP state.
+  ContentBlockingAllowList.remove(tab.linkedBrowser);
+  BrowserTestUtils.removeTab(tab);
+});
