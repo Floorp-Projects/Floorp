@@ -140,8 +140,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   friend nsGlobalWindowInner;
   friend nsGlobalWindowOuter;
 
-  nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow,
-                     mozilla::dom::WindowGlobalChild* aActor);
+  explicit nsPIDOMWindowInner(nsPIDOMWindowOuter* aOuterWindow);
 
   ~nsPIDOMWindowInner();
 
@@ -876,9 +875,8 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    *
    * aDocument must not be null.
    */
-  virtual nsresult SetNewDocument(
-      Document* aDocument, nsISupports* aState, bool aForceReuseInnerWindow,
-      mozilla::dom::WindowGlobalChild* aActor = nullptr) = 0;
+  virtual nsresult SetNewDocument(Document* aDocument, nsISupports* aState,
+                                  bool aForceReuseInnerWindow) = 0;
 
   /**
    * Set the opener window.  aOriginalOpener is true if and only if this is the

@@ -69,7 +69,7 @@ class AsyncMessageToParent : public Runnable {
 void JSWindowActorChild::SendRawMessage(const JSWindowActorMessageMeta& aMeta,
                                         ipc::StructuredCloneData&& aData,
                                         ErrorResult& aRv) {
-  if (NS_WARN_IF(!mCanSend || !mManager || !mManager->CanSend())) {
+  if (NS_WARN_IF(!mCanSend || !mManager || mManager->IsClosed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }

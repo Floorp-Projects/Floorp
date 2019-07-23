@@ -834,7 +834,7 @@ nsresult ExternalResourceMap::AddExternalResource(nsIURI* aURI,
       // Make sure that hiding our viewer will tear down its presentation.
       aViewer->SetSticky(false);
 
-      rv = aViewer->Init(nullptr, nsIntRect(0, 0, 0, 0), nullptr);
+      rv = aViewer->Init(nullptr, nsIntRect(0, 0, 0, 0));
       if (NS_SUCCEEDED(rv)) {
         rv = aViewer->Open(nullptr, nullptr);
       }
@@ -3375,8 +3375,9 @@ void Document::SetDocumentURI(nsIURI* aURI) {
 
   // Tell our WindowGlobalParent that the document's URI has been changed.
   nsPIDOMWindowInner* inner = GetInnerWindow();
-  if (inner && inner->GetWindowGlobalChild()) {
-    inner->GetWindowGlobalChild()->SetDocumentURI(mDocumentURI);
+  WindowGlobalChild* wgc = inner ? inner->GetWindowGlobalChild() : nullptr;
+  if (wgc) {
+    Unused << wgc->SendUpdateDocumentURI(mDocumentURI);
   }
 }
 

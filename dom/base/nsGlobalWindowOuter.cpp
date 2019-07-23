@@ -1875,8 +1875,7 @@ static nsresult CreateNativeGlobalForInner(JSContext* aCx,
 
 nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
                                              nsISupports* aState,
-                                             bool aForceReuseInnerWindow,
-                                             WindowGlobalChild* aActor) {
+                                             bool aForceReuseInnerWindow) {
   MOZ_ASSERT(mDocumentPrincipal == nullptr,
              "mDocumentPrincipal prematurely set!");
   MOZ_ASSERT(mDocumentStoragePrincipal == nullptr,
@@ -2009,7 +2008,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       newInnerWindow = wsh->GetInnerWindow();
       newInnerGlobal = newInnerWindow->GetWrapper();
     } else {
-      newInnerWindow = nsGlobalWindowInner::Create(this, thisChrome, aActor);
+      newInnerWindow = nsGlobalWindowInner::Create(this, thisChrome);
       if (StaticPrefs::dom_timeout_defer_during_load()) {
         // ensure the initial loading state is known
         newInnerWindow->SetActiveLoadingState(
@@ -2216,9 +2215,9 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
 
   // Tell the WindowGlobalParent that it should become the current window global
   // for our BrowsingContext if it isn't already.
-  WindowGlobalChild* wgc = mInnerWindow->GetWindowGlobalChild();
-  wgc->SetDocumentURI(aDocument->GetDocumentURI());
-  wgc->SendBecomeCurrentWindowGlobal();
+  mInnerWindow->GetWindowGlobalChild()->SendUpdateDocumentURI(
+      aDocument->GetDocumentURI());
+  mInnerWindow->GetWindowGlobalChild()->SendBecomeCurrentWindowGlobal();
 
   // We no longer need the old inner window.  Start its destruction if
   // its not being reused and clear our reference.
