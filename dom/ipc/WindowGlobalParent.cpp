@@ -88,6 +88,12 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   mBrowsingContext = CanonicalBrowsingContext::Cast(aInit.browsingContext());
   MOZ_ASSERT(mBrowsingContext);
 
+  MOZ_DIAGNOSTIC_ASSERT(
+      !mBrowsingContext->GetParent() ||
+          mBrowsingContext->GetEmbedderWindowGlobal(),
+      "When creating a non-root WindowGlobalParent, the WindowGlobalParent "
+      "for our embedder should've already been created.");
+
   // Attach ourself to the browsing context.
   mBrowsingContext->RegisterWindowGlobal(this);
 
