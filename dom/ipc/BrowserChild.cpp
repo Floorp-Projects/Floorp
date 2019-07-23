@@ -490,11 +490,8 @@ bool BrowserChild::DoUpdateZoomConstraints(
   return true;
 }
 
-nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
-                            WindowGlobalChild* aInitialWindowChild) {
+nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
   MOZ_DIAGNOSTIC_ASSERT(mTabGroup);
-  MOZ_ASSERT_IF(aInitialWindowChild,
-                aInitialWindowChild->BrowsingContext() == mBrowsingContext);
 
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(this);
   mPuppetWidget = static_cast<PuppetWidget*>(widget.get());
@@ -505,10 +502,11 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent,
   mPuppetWidget->InfallibleCreate(nullptr,
                                   nullptr,  // no parents
                                   LayoutDeviceIntRect(0, 0, 0, 0),
-                                  nullptr);  // HandleWidgetEvent
+                                  nullptr  // HandleWidgetEvent
+  );
 
   mWebBrowser = nsWebBrowser::Create(this, mPuppetWidget, OriginAttributesRef(),
-                                     mBrowsingContext, aInitialWindowChild);
+                                     mBrowsingContext);
   nsIWebBrowser* webBrowser = mWebBrowser;
 
   mWebNav = do_QueryInterface(webBrowser);
@@ -3287,9 +3285,11 @@ bool BrowserChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
   return true;
 }
 
-PBrowserBridgeChild* BrowserChild::AllocPBrowserBridgeChild(
-    const nsString&, const nsString&, const WindowGlobalInit&, const uint32_t&,
-    const TabId&) {
+PBrowserBridgeChild* BrowserChild::AllocPBrowserBridgeChild(const nsString&,
+                                                            const nsString&,
+                                                            BrowsingContext*,
+                                                            const uint32_t&,
+                                                            const TabId&) {
   MOZ_CRASH(
       "We should never be manually allocating PBrowserBridgeChild actors");
   return nullptr;

@@ -120,7 +120,6 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ScriptLoader.h"
-#include "mozilla/dom/WindowGlobalChild.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -345,7 +344,6 @@ class nsDocumentViewer final : public nsIContentViewer,
    * called if the window's current document is already mDocument.
    */
   nsresult InitInternal(nsIWidget* aParentWidget, nsISupports* aState,
-                        mozilla::dom::WindowGlobalChild* aActor,
                         const nsIntRect& aBounds, bool aDoCreation,
                         bool aNeedMakeCX = true,
                         bool aForceSetNewDocument = true);
@@ -715,9 +713,8 @@ nsDocumentViewer::GetContainer(nsIDocShell** aResult) {
 }
 
 NS_IMETHODIMP
-nsDocumentViewer::Init(nsIWidget* aParentWidget, const nsIntRect& aBounds,
-                       WindowGlobalChild* aActor) {
-  return InitInternal(aParentWidget, nullptr, aActor, aBounds, true);
+nsDocumentViewer::Init(nsIWidget* aParentWidget, const nsIntRect& aBounds) {
+  return InitInternal(aParentWidget, nullptr, aBounds, true);
 }
 
 nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
@@ -848,10 +845,12 @@ static nsPresContext* CreatePresContext(Document* aDocument,
 // This method can be used to initial the "presentation"
 // The aDoCreation indicates whether it should create
 // all the new objects or just initialize the existing ones
-nsresult nsDocumentViewer::InitInternal(
-    nsIWidget* aParentWidget, nsISupports* aState, WindowGlobalChild* aActor,
-    const nsIntRect& aBounds, bool aDoCreation, bool aNeedMakeCX /*= true*/,
-    bool aForceSetNewDocument /* = true*/) {
+nsresult nsDocumentViewer::InitInternal(nsIWidget* aParentWidget,
+                                        nsISupports* aState,
+                                        const nsIntRect& aBounds,
+                                        bool aDoCreation,
+                                        bool aNeedMakeCX /*= true*/,
+                                        bool aForceSetNewDocument /* = true*/) {
   if (mIsPageMode) {
     // XXXbz should the InitInternal in SetPageModeForTesting just pass false
     // here itself?
@@ -957,7 +956,7 @@ nsresult nsDocumentViewer::InitInternal(
     if (window) {
       nsCOMPtr<Document> curDoc = window->GetExtantDoc();
       if (aForceSetNewDocument || curDoc != mDocument) {
-        rv = window->SetNewDocument(mDocument, aState, false, aActor);
+        rv = window->SetNewDocument(mDocument, aState, false);
         if (NS_FAILED(rv)) {
           Destroy();
           return rv;
@@ -1556,7 +1555,7 @@ nsDocumentViewer::Open(nsISupports* aState, nsISHEntry* aSHEntry) {
     mDocument->SetContainer(mContainer);
   }
 
-  nsresult rv = InitInternal(mParentWidget, aState, nullptr, mBounds, false);
+  nsresult rv = InitInternal(mParentWidget, aState, mBounds, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mHidden = false;
@@ -2015,8 +2014,7 @@ nsDocumentViewer::SetDocumentInternal(Document* aDocument,
     DestroyPresContext();
 
     mWindow = nullptr;
-    rv = InitInternal(mParentWidget, nullptr, nullptr, mBounds, true, true,
-                      false);
+    rv = InitInternal(mParentWidget, nullptr, mBounds, true, true, false);
   }
 
   return rv;
@@ -4131,9 +4129,8 @@ NS_IMETHODIMP nsDocumentViewer::SetPageModeForTesting(
     nsresult rv = mPresContext->Init(mDeviceContext);
     NS_ENSURE_SUCCESS(rv, rv);
   }
-  NS_ENSURE_SUCCESS(
-      InitInternal(mParentWidget, nullptr, nullptr, mBounds, true, false),
-      NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(InitInternal(mParentWidget, nullptr, mBounds, true, false),
+                    NS_ERROR_FAILURE);
 
   Show();
   return NS_OK;
