@@ -899,8 +899,6 @@ void gfxPlatform::Init() {
       gfxVars::SetProfDirectory(nsString(path));
     }
 
-    gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
-
     nsAutoCString path;
     Preferences::GetCString("layers.windowrecording.path", path);
     gfxVars::SetLayersWindowRecordingPath(path);
@@ -3112,6 +3110,9 @@ void gfxPlatform::InitWebRenderConfig() {
     }
   }
 #endif
+  // The RemoveShaderCacheFromDiskIfNecessary() needs to be called after
+  // WebRenderConfig initialization.
+  gfxUtils::RemoveShaderCacheFromDiskIfNecessary();
 }
 
 void gfxPlatform::InitOMTPConfig() {
