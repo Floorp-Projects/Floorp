@@ -324,20 +324,16 @@ static already_AddRefed<BrowsingContext> CreateBrowsingContext(
   nsAutoString frameName;
   GetFrameName(aOwner, frameName);
 
-  RefPtr<BrowsingContext> browsingContext;
   if (IsTopContent(parentContext, aOwner)) {
     // Create toplevel content without a parent & as Type::Content.
-    browsingContext = BrowsingContext::Create(nullptr, aOpener, frameName,
-                                              BrowsingContext::Type::Content);
-  } else {
-    auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
-                                           : BrowsingContext::Type::Chrome;
-    browsingContext =
-        BrowsingContext::Create(parentContext, aOpener, frameName, type);
+    return BrowsingContext::Create(nullptr, aOpener, frameName,
+                                   BrowsingContext::Type::Content);
   }
 
-  browsingContext->SetEmbedderElement(aOwner);
-  return browsingContext.forget();
+  auto type = parentContext->IsContent() ? BrowsingContext::Type::Content
+                                         : BrowsingContext::Type::Chrome;
+
+  return BrowsingContext::Create(parentContext, aOpener, frameName, type);
 }
 
 nsFrameLoader* nsFrameLoader::Create(Element* aOwner, BrowsingContext* aOpener,
