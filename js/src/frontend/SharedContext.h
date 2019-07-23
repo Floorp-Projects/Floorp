@@ -526,7 +526,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   JSFunction::FunctionKind kind() { return kind_; }
 
-  JSAtom* explicitName() const { return function()->explicitName(); }
+  JSAtom* explicitName() const { return explicitName_; }
 
   void setHasExtensibleScope() { hasExtensibleScope_ = true; }
   void setHasThisBinding() { hasThisBinding_ = true; }
