@@ -12,6 +12,12 @@ use pulse_ffi::*;
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_long, c_void};
+use std::slice;
+use ringbuf::RingBuffer;
+
+use self::RingBufferConsumer::*;
+use self::RingBufferProducer::*;
+use self::LinearInputBuffer::*;
 
 const PULSE_NO_GAIN: f32 = -1.0;
 
@@ -112,6 +118,141 @@ impl Drop for Device {
     }
 }
 
+
+enum RingBufferConsumer {
+    IntegerRingBufferConsumer(ringbuf::Consumer<i16>),
+    FloatRingBufferConsumer(ringbuf::Consumer<f32>)
+}
+
+enum RingBufferProducer {
+    IntegerRingBufferProducer(ringbuf::Producer<i16>),
+    FloatRingBufferProducer(ringbuf::Producer<f32>)
+}
+
+enum LinearInputBuffer {
+    IntegerLinearInputBuffer(Vec<i16>),
+    FloatLinearInputBuffer(Vec<f32>)
+}
+
+struct BufferManager {
+    consumer: RingBufferConsumer,
+    producer: RingBufferProducer,
+    linear_input_buffer: LinearInputBuffer
+}
+
+impl BufferManager {
+    // When opening a duplex stream, the sample-spec are guaranteed to match. It's ok to have
+    // either the input or output sample-spec here.
+    fn new(input_buffer_size: usize, sample_spec: &pulse::SampleSpec) -> BufferManager {
+        if sample_spec.format == PA_SAMPLE_S16BE ||
+           sample_spec.format == PA_SAMPLE_S16LE  {
+                let ring = RingBuffer::<i16>::new(input_buffer_size);
+                let (prod, cons) = ring.split();
+                return BufferManager {
+                    producer: IntegerRingBufferProducer(prod),
+                    consumer: IntegerRingBufferConsumer(cons),
+                    linear_input_buffer: IntegerLinearInputBuffer(Vec::<i16>::with_capacity(input_buffer_size))
+                };
+            } else {
+                let ring = RingBuffer::<f32>::new(input_buffer_size);
+                let (prod, cons) = ring.split();
+                return BufferManager {
+                    producer: FloatRingBufferProducer(prod),
+                    consumer: FloatRingBufferConsumer(cons),
+                    linear_input_buffer: FloatLinearInputBuffer(Vec::<f32>::with_capacity(input_buffer_size))
+                };
+            }
+    }
+
+    fn push_input_data(&mut self, input_data: *const c_void, read_samples: usize) {
+        match &mut self.producer {
+            RingBufferProducer::FloatRingBufferProducer(p) => {
+                let input_data = unsafe { slice::from_raw_parts::<f32>(input_data as *const f32, read_samples) };
+                match p.push_slice(input_data) {
+                    Ok(_) => { }
+                    Err(_) => {
+                        // do nothing: the data are ignored. This happens when underruning the
+                        // output callback.
+                    }
+                }
+            }
+            RingBufferProducer::IntegerRingBufferProducer(p) => {
+                let input_data = unsafe { slice::from_raw_parts::<i16>(input_data as *const i16, read_samples) };
+                match p.push_slice(input_data) {
+                    Ok(_) => { }
+                    Err(_) => {
+                        // do nothing: the data are ignored. This happens when underruning the
+                        // output callback.
+                    }
+                }
+            }
+        }
+    }
+
+    fn pull_input_data(&mut self, input_data: *mut c_void, needed_samples: usize) {
+        match &mut self.consumer {
+            IntegerRingBufferConsumer(p) => {
+                let mut input: &mut[i16] = unsafe { slice::from_raw_parts_mut::<i16>(input_data as *mut i16, needed_samples) };
+                match p.pop_slice(&mut input) {
+                    Ok(read) => {
+                        if read < needed_samples {
+                            for i in 0..(needed_samples - read) {
+                                input[read + i] = 0;
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        // Buffer empty
+                        for i in input.iter_mut() {
+                            *i = 0;
+                        }
+                    }
+                }
+            }
+            FloatRingBufferConsumer(p) => {
+                let mut input: &mut[f32] = unsafe { slice::from_raw_parts_mut::<f32>(input_data as *mut f32, needed_samples) };
+                match p.pop_slice(&mut input) {
+                    Ok(read) => {
+                        if read < needed_samples {
+                            for i in 0..(needed_samples - read) {
+                                input[read + i] = 0.;
+                            }
+                        }
+                    }
+                    Err(_) => {
+                        // Buffer empty
+                        for i in input.iter_mut() {
+                            *i = 0.;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    fn get_linear_input_data(&mut self, nsamples: usize) -> *const c_void {
+        let p: *mut c_void;
+        match &mut self.linear_input_buffer {
+            LinearInputBuffer::IntegerLinearInputBuffer(b) => {
+                b.resize(nsamples, 0);
+                p = b.as_mut_ptr() as *mut c_void;
+            }
+            LinearInputBuffer::FloatLinearInputBuffer(b) => {
+                b.resize(nsamples, 0.);
+                p = b.as_mut_ptr() as *mut c_void;
+            }
+        }
+        self.pull_input_data(p, nsamples);
+
+        return p;
+    }
+}
+
+impl std::fmt::Debug for BufferManager {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "")
+    }
+}
+
 #[repr(C)]
 #[derive(Debug)]
 pub struct PulseStream<'ctx> {
@@ -127,6 +268,7 @@ pub struct PulseStream<'ctx> {
     shutdown: bool,
     volume: f32,
     state: ffi::cubeb_state,
+    input_buffer_manager: Option<BufferManager>
 }
 
 impl<'ctx> PulseStream<'ctx> {
@@ -177,13 +319,11 @@ impl<'ctx> PulseStream<'ctx> {
                 if !read_data.is_null() {
                     let in_frame_size = stm.input_sample_spec.frame_size();
                     let read_frames = read_size / in_frame_size;
+                    let read_samples = read_size / stm.input_sample_spec.sample_size();
 
                     if stm.output_stream.is_some() {
-                        // input/capture + output/playback operation
-                        let out_frame_size = stm.output_sample_spec.frame_size();
-                        let write_size = read_frames * out_frame_size;
-                        // Offer full duplex data for writing
-                        stm.trigger_user_callback(read_data, write_size);
+                        // duplex stream: push the input data to the ring buffer.
+                        stm.input_buffer_manager.as_mut().unwrap().push_input_data(read_data, read_samples);
                     } else {
                         // input/capture only operation. Call callback directly
                         let got = unsafe {
@@ -221,7 +361,12 @@ impl<'ctx> PulseStream<'ctx> {
                 return;
             }
 
-            if stm.input_stream.is_none() {
+            if stm.input_stream.is_some() {
+                let nframes = nbytes / stm.output_sample_spec.frame_size();
+                let nsamples_input = nframes * stm.input_sample_spec.channels as usize;
+                let p = stm.input_buffer_manager.as_mut().unwrap().get_linear_input_data(nsamples_input);
+                stm.trigger_user_callback(p, nbytes);
+            } else {
                 // Output/playback only operation.
                 // Write directly to output
                 debug_assert!(stm.output_stream.is_some());
@@ -242,6 +387,7 @@ impl<'ctx> PulseStream<'ctx> {
             shutdown: false,
             volume: PULSE_NO_GAIN,
             state: ffi::CUBEB_STATE_ERROR,
+            input_buffer_manager: None
         });
 
         if let Some(ref context) = stm.context.context {
@@ -256,8 +402,15 @@ impl<'ctx> PulseStream<'ctx> {
                         s.set_state_callback(check_error, stm.as_mut() as *mut _ as *mut _);
                         s.set_write_callback(write_data, stm.as_mut() as *mut _ as *mut _);
 
-                        let battr =
-                            set_buffering_attribute(latency_frames, &stm.output_sample_spec);
+                        let buffer_size_bytes = latency_frames * stm.output_sample_spec.frame_size() as u32;
+
+                        let battr = pa_buffer_attr {
+                            maxlength: u32::max_value(),
+                            prebuf: u32::max_value(),
+                            fragsize: u32::max_value(),
+                            tlength: buffer_size_bytes * 2,
+                            minreq: buffer_size_bytes / 4
+                        };
                         let device_name = super::try_cstr_from(output_device as *const _);
                         let _ = s.connect_playback(
                             device_name,
@@ -289,7 +442,14 @@ impl<'ctx> PulseStream<'ctx> {
                         s.set_state_callback(check_error, stm.as_mut() as *mut _ as *mut _);
                         s.set_read_callback(read_data, stm.as_mut() as *mut _ as *mut _);
 
-                        let battr = set_buffering_attribute(latency_frames, &stm.input_sample_spec);
+                        let buffer_size_bytes = latency_frames * stm.input_sample_spec.frame_size() as u32;
+                        let battr = pa_buffer_attr {
+                            maxlength: u32::max_value(),
+                            prebuf: u32::max_value(),
+                            fragsize: buffer_size_bytes,
+                            tlength: buffer_size_bytes,
+                            minreq: buffer_size_bytes
+                        };
                         let device_name = super::try_cstr_from(input_device as *const _);
                         let _ = s.connect_record(
                             device_name,
@@ -308,6 +468,13 @@ impl<'ctx> PulseStream<'ctx> {
                         return Err(e);
                     }
                 }
+            }
+
+            // Duplex, set up the ringbuffer
+            if input_stream_params.is_some() && output_stream_params.is_some() {
+                // A bit more room in case of output underrun.
+                let buffer_size_bytes = 2 * latency_frames * stm.input_sample_spec.frame_size() as u32;
+                stm.input_buffer_manager = Some(BufferManager::new(buffer_size_bytes as usize, &stm.input_sample_spec))
             }
 
             let r = if stm.wait_until_ready() {
@@ -399,17 +566,17 @@ impl<'ctx> StreamOps for PulseStream<'ctx> {
                 let size = stm.output_stream
                     .as_ref()
                     .map_or(0, |s| s.writable_size().unwrap_or(0));
-                stm.trigger_user_callback(ptr::null_mut(), size);
+                stm.trigger_user_callback(std::ptr::null(), size);
             }
         }
 
         self.shutdown = false;
         self.cork(CorkState::uncork() | CorkState::notify());
 
-        if self.output_stream.is_some() && self.input_stream.is_none() {
-            /* On output only case need to manually call user cb once in order to make
-             * things roll. This is done via a defer event in order to execute it
-             * from PA server thread. */
+        if self.output_stream.is_some() {
+            /* When doing output-only or duplex, we need to manually call user cb once in order to
+             * make things roll. This is done via a defer event in order to execute it from PA
+             * server thread. */
             self.context.mainloop.lock();
             self.context
                 .mainloop
@@ -797,6 +964,7 @@ impl<'ctx> PulseStream<'ctx> {
         true
     }
 
+
     #[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
     fn trigger_user_callback(&mut self, input_data: *const c_void, nbytes: usize) {
         fn drained_cb(
@@ -938,29 +1106,6 @@ fn context_success(_: &pulse::Context, success: i32, u: *mut c_void) {
         cubeb_log!("context_success ignored failure: {}", success);
     }
     ctx.mainloop.signal();
-}
-
-fn set_buffering_attribute(latency_frames: u32, sample_spec: &pa_sample_spec) -> pa_buffer_attr {
-    let tlength = latency_frames * sample_spec.frame_size() as u32;
-    let minreq = tlength / 4;
-    let battr = pa_buffer_attr {
-        maxlength: u32::max_value(),
-        prebuf: u32::max_value(),
-        tlength: tlength,
-        minreq: minreq,
-        fragsize: minreq,
-    };
-
-    cubeb_log!(
-        "Requested buffer attributes maxlength {}, tlength {}, prebuf {}, minreq {}, fragsize {}",
-        battr.maxlength,
-        battr.tlength,
-        battr.prebuf,
-        battr.minreq,
-        battr.fragsize
-    );
-
-    battr
 }
 
 fn invalid_format() -> Error {
