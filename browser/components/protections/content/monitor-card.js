@@ -38,7 +38,7 @@ export default class MonitorClass {
 
       // Show the Monitor card.
       const monitorCard = this.doc.querySelector(
-        ".card.monitor-card.hidden"
+        ".report-card.monitor-card.hidden"
       );
       monitorCard.classList.remove("hidden");
     });
@@ -50,7 +50,7 @@ export default class MonitorClass {
     const headerContent = this.doc.querySelector(
       "#monitor-header-content span"
     );
-    const monitorCard = this.doc.querySelector(".card.monitor-card");
+    const monitorCard = this.doc.querySelector(".report-card.monitor-card");
     if (isLoggedIn && !monitorData.error) {
       monitorCard.classList.add("has-logins");
       headerContent.textContent =
