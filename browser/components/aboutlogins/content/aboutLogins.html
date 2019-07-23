@@ -37,16 +37,15 @@
       <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/confirm-delete-dialog.css">
       <div class="overlay">
         <div class="container" role="dialog" aria-labelledby="title" aria-describedby="message">
-          <div class="title-bar">
-            <h1 class="title" id="title" data-l10n-id="confirm-delete-dialog-title"></h1>
-            <button class="dismiss-button" data-l10n-id="confirm-delete-dialog-dismiss-button"></button>
-          </div>
+          <button class="dismiss-button" data-l10n-id="confirm-delete-dialog-dismiss-button"></button>
           <div class="content">
+            <img class="warning-icon" src="chrome://global/skin/icons/warning.svg"/>
+            <h1 class="title" id="title" data-l10n-id="confirm-delete-dialog-title"></h1>
             <p class="message" id="message" data-l10n-id="confirm-delete-dialog-message"></p>
           </div>
           <div class="buttons">
+            <button class="confirm-button danger-button" data-l10n-id="confirm-delete-dialog-confirm-button"></button>
             <button class="cancel-button" data-l10n-id="confirm-delete-dialog-cancel-button"></button>
-            <button class="confirm-button" data-l10n-id="confirm-delete-dialog-confirm-button"></button>
           </div>
         </div>
       </div>
