@@ -46,6 +46,9 @@ permalink: /changelog/
 * **service-firefox-account**
  * Added `isSyncActive(): Boolean` method to `FxaAccountManager`
 
+* **feature-customtabs**
+  * `CustomTabsToolbarFeature` now optionally takes `Window` as a parameter. It will update the status bar color to match the toolbar color.
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)

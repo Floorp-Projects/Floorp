@@ -10,6 +10,7 @@ import android.app.PendingIntent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.view.ViewGroup
+import android.view.Window
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -140,6 +141,25 @@ class CustomTabsToolbarFeatureTest {
 
         verify(toolbar).setBackgroundColor(anyInt())
         verify(toolbar).textColor = anyInt()
+    }
+
+    @Test
+    fun `updateToolbarColor changes status bar color`() {
+        val session: Session = mock()
+        val toolbar: BrowserToolbar = mock()
+        val window: Window = mock()
+        `when`(session.customTabConfig).thenReturn(mock())
+        `when`(window.decorView).thenReturn(mock())
+
+        val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", window = window) {})
+
+        feature.updateToolbarColor(null)
+
+        verify(window, never()).statusBarColor = anyInt()
+
+        feature.updateToolbarColor(123)
+
+        verify(window).statusBarColor = 123
     }
 
     @Test

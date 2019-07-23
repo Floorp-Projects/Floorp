@@ -66,8 +66,8 @@ abstract class AbstractWebAppShellActivity : AppCompatActivity(), CoroutineScope
 
         applyOrientation(manifest)
 
-        manifest?.themeColor?.let { setStatusBarTheme(it) }
-        manifest?.backgroundColor?.let { setNavigationBarTheme(it) }
+        manifest?.themeColor?.let { window.setStatusBarTheme(it) }
+        manifest?.backgroundColor?.let { window.setNavigationBarTheme(it) }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

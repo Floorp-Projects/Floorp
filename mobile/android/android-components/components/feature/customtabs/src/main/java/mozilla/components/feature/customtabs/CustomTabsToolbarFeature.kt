@@ -11,6 +11,8 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
+import android.view.Window
+import androidx.annotation.ColorInt
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -26,6 +28,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 
 /**
@@ -37,6 +40,7 @@ class CustomTabsToolbarFeature(
     private val sessionId: String? = null,
     private val menuBuilder: BrowserMenuBuilder? = null,
     private val menuItemIndex: Int = menuBuilder?.items?.size ?: 0,
+    private val window: Window? = null,
     private val shareListener: (() -> Unit)? = null,
     private val closeListener: () -> Unit
 ) : LifecycleAwareFeature, BackHandler {
@@ -91,13 +95,15 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun updateToolbarColor(toolbarColor: Int?) {
+    internal fun updateToolbarColor(@ColorInt toolbarColor: Int?) {
         toolbarColor?.let { color ->
             toolbar.setBackgroundColor(color)
             toolbar.textColor = readableColor
             toolbar.titleColor = readableColor
             toolbar.siteSecurityColor = Pair(readableColor, readableColor)
             toolbar.menuViewColor = readableColor
+
+            window?.setStatusBarTheme(toolbarColor)
         }
     }
 

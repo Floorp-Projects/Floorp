@@ -26,6 +26,7 @@ class WebAppBrowserFragment : BaseBrowserFragment(), BackHandler {
                 layout.toolbar,
                 sessionId,
                 components.menuBuilder,
+                window = activity?.window,
                 closeListener = { activity?.finish() }),
             owner = this,
             view = layout)
