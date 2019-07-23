@@ -32,7 +32,7 @@ pub const LOCAL_ITEMS_SQL_FRAGMENT: &str = "
   WHERE b.guid <> 'tags________')";
 
 extern "C" {
-    fn NS_NavBookmarksTotalSyncChanges() -> libc::int64_t;
+    fn NS_NavBookmarksTotalSyncChanges() -> i64;
 }
 
 fn total_sync_changes() -> i64 {
