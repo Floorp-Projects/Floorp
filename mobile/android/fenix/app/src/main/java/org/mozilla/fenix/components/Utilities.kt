@@ -35,7 +35,7 @@ class Utilities(
     }
 
     val customTabIntentProcessor by lazy {
-        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources.displayMetrics)
+        CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources)
     }
 
     /**
