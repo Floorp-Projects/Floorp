@@ -204,11 +204,18 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
                                              const char* aTopic,
                                              const char16_t* aData) {
   nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(aSubject);
-  if (NS_WARN_IF(!inner)) {
-    return NS_ERROR_FAILURE;
+  RefPtr<WindowGlobalChild> wgc;
+
+  if (!inner) {
+    nsCOMPtr<nsPIDOMWindowOuter> outer = do_QueryInterface(aSubject);
+    if (NS_WARN_IF(!outer) || NS_WARN_IF(!outer->GetCurrentInnerWindow())) {
+      return NS_ERROR_FAILURE;
+    }
+    wgc = outer->GetCurrentInnerWindow()->GetWindowGlobalChild();
+  } else {
+    wgc = inner->GetWindowGlobalChild();
   }
 
-  RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild();
   if (NS_WARN_IF(!wgc)) {
     return NS_ERROR_FAILURE;
   }
