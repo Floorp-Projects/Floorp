@@ -25,9 +25,7 @@ var gStringBundle = Services.strings.createBundle(
 );
 
 XPCOMUtils.defineLazyGetter(window, "gChromeWin", function() {
-  return window.docShell.rootTreeItem.domWindow.QueryInterface(
-    Ci.nsIDOMChromeWindow
-  );
+  return window.docShell.rootTreeItem.domWindow;
 });
 ChromeUtils.defineModuleGetter(
   window,

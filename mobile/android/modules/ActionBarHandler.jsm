@@ -587,8 +587,7 @@ var ActionBarHandler = {
         if (chrome.BrowserApp && chrome.BrowserApp.loadURI) {
           chrome.BrowserApp.loadURI(uri);
         } else {
-          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow)
-            .browserDOMWindow;
+          let bwin = chrome.browserDOMWindow;
           if (bwin) {
             bwin.openURI(
               Services.io.newURI(uri),
@@ -647,8 +646,7 @@ var ActionBarHandler = {
             isPrivate: isPrivate,
           });
         } else {
-          let bwin = chrome.QueryInterface(Ci.nsIDOMChromeWindow)
-            .browserDOMWindow;
+          let bwin = chrome.browserDOMWindow;
           if (bwin) {
             bwin.openURI(
               searchSubmission.uri,
