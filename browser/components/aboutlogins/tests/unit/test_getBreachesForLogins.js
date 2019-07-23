@@ -1,5 +1,5 @@
 /**
- * Test AboutLoginsParent.getBreachesForLogins
+ * Test LoginHelper.getBreachesForLogins
  */
 
 "use strict";
@@ -7,6 +7,12 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AboutLoginsParent } = ChromeUtils.import(
   "resource:///modules/AboutLoginsParent.jsm"
+);
+
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
 );
 
 const TEST_BREACHES = [
@@ -65,7 +71,7 @@ const BREACHED_SUBDOMAIN_LOGIN = LoginTestUtils.testData.formLogin({
 add_task(async function test_getBreachesForLogins_notBreachedLogin() {
   Services.logins.addLogin(NOT_BREACHED_LOGIN);
 
-  const breachesByLoginGUID = await AboutLoginsParent.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
     [NOT_BREACHED_LOGIN],
     TEST_BREACHES
   );
@@ -79,7 +85,7 @@ add_task(async function test_getBreachesForLogins_notBreachedLogin() {
 add_task(async function test_getBreachesForLogins_breachedLogin() {
   Services.logins.addLogin(BREACHED_LOGIN);
 
-  const breachesByLoginGUID = await AboutLoginsParent.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
     [NOT_BREACHED_LOGIN, BREACHED_LOGIN],
     TEST_BREACHES
   );
@@ -93,7 +99,7 @@ add_task(async function test_getBreachesForLogins_breachedLogin() {
 add_task(async function test_getBreachesForLogins_notBreachedSubdomain() {
   Services.logins.addLogin(NOT_BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await AboutLoginsParent.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
     [NOT_BREACHED_LOGIN, NOT_BREACHED_SUBDOMAIN_LOGIN],
     TEST_BREACHES
   );
@@ -107,7 +113,7 @@ add_task(async function test_getBreachesForLogins_notBreachedSubdomain() {
 add_task(async function test_getBreachesForLogins_breachedSubdomain() {
   Services.logins.addLogin(BREACHED_SUBDOMAIN_LOGIN);
 
-  const breachesByLoginGUID = await AboutLoginsParent.getBreachesForLogins(
+  const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
     [NOT_BREACHED_SUBDOMAIN_LOGIN, BREACHED_SUBDOMAIN_LOGIN],
     TEST_BREACHES
   );
