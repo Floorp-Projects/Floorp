@@ -5417,12 +5417,23 @@ var XULBrowserWindow = {
     elt.label = tooltip;
     elt.style.direction = direction;
 
-    elt.openPopupAtScreen(
-      browser.screenX + x,
-      browser.screenY + y,
-      false,
-      null
-    );
+    let screenX;
+    let screenY;
+
+    if (browser instanceof XULElement) {
+      // XUL element such as <browser> has the `screenX` and `screenY` fields.
+      // https://searchfox.org/mozilla-central/source/dom/webidl/XULElement.webidl
+      screenX = browser.screenX;
+      screenY = browser.screenY;
+    } else {
+      // In case of HTML element such as <iframe> which RDM uses,
+      // calculate the coordinate manually since it does not have the fields.
+      const componentBounds = browser.getBoundingClientRect();
+      screenX = window.screenX + componentBounds.x;
+      screenY = window.screenY + componentBounds.y;
+    }
+
+    elt.openPopupAtScreen(screenX + x, screenY + y, false, null);
   },
 
   hideTooltip() {
