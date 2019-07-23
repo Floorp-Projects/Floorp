@@ -8,7 +8,7 @@ const { openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
-  Component,
+  PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const {
   a,
@@ -27,7 +27,7 @@ const Localized = createFactory(FluentReact.Localized);
  * and also displays a suggestion to use about debugging for debugging other service
  * workers.
  */
-class WorkerList extends Component {
+class WorkerList extends PureComponent {
   static get propTypes() {
     return {
       canDebugWorkers: PropTypes.bool.isRequired,
