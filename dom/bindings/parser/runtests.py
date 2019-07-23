@@ -22,22 +22,22 @@ class TestHarness(object):
 
     def finish(self):
         if self.verbose or self.printed_intro:
-            print "Finished test %s" % self.test
+            print("Finished test %s" % self.test)
 
     def maybe_print_intro(self):
         if not self.printed_intro:
-            print "Starting test %s" % self.test
+            print("Starting test %s" % self.test)
             self.printed_intro = True
 
     def test_pass(self, msg):
         self.passed += 1
         if self.verbose:
-            print "TEST-PASS | %s" % msg
+            print("TEST-PASS | %s" % msg)
 
     def test_fail(self, msg):
         self.maybe_print_intro()
         self.failures.append(msg)
-        print "TEST-UNEXPECTED-FAIL | %s" % msg
+        print("TEST-UNEXPECTED-FAIL | %s" % msg)
 
     def ok(self, condition, msg):
         if condition:
@@ -68,7 +68,7 @@ def run_tests(tests, verbose):
         harness.start()
         try:
             _test.WebIDLTest.__call__(WebIDL.Parser(), harness)
-        except Exception, ex:
+        except Exception as ex:
             harness.test_fail("Unhandled exception in test %s: %s" %
                               (testpath, ex))
             traceback.print_exc()
@@ -79,15 +79,15 @@ def run_tests(tests, verbose):
             failed_tests.append((test, harness.failures))
 
     if verbose or failed_tests:
-        print
-        print 'Result summary:'
-        print 'Successful: %d' % all_passed
-        print 'Unexpected: %d' % \
-                sum(len(failures) for _, failures in failed_tests)
+        print()
+        print('Result summary:')
+        print('Successful: %d' % all_passed)
+        print('Unexpected: %d' % \
+                sum(len(failures) for _, failures in failed_tests))
         for test, failures in failed_tests:
-            print '%s:' % test
+            print('%s:' % test)
             for failure in failures:
-                print 'TEST-UNEXPECTED-FAIL | %s' % failure
+                print('TEST-UNEXPECTED-FAIL | %s' % failure)
     return 1 if failed_tests else 0
 
 def get_parser():
