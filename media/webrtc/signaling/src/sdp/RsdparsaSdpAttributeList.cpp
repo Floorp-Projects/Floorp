@@ -840,13 +840,12 @@ void RsdparsaSdpAttributeList::LoadGroup(RustAttributeList* attributeList) {
 void RsdparsaSdpAttributeList::LoadRtcp(RustAttributeList* attributeList) {
   RustSdpAttributeRtcp rtcp;
   if (NS_SUCCEEDED(sdp_get_rtcp(attributeList, &rtcp))) {
-    sdp::AddrType addrType = convertAddressType(rtcp.unicastAddr.addrType);
-    if (sdp::kAddrTypeNone == addrType) {
-      SetAttribute(new SdpRtcpAttribute(rtcp.port));
+    if (rtcp.has_address) {
+      auto address = convertExplicitlyTypedAddress(&rtcp.unicastAddr);
+      SetAttribute(new SdpRtcpAttribute(rtcp.port, sdp::kInternet,
+                                        address.first, address.second));
     } else {
-      std::string addr(rtcp.unicastAddr.unicastAddr);
-      SetAttribute(
-          new SdpRtcpAttribute(rtcp.port, sdp::kInternet, addrType, addr));
+      SetAttribute(new SdpRtcpAttribute(rtcp.port));
     }
   }
 }
@@ -1072,7 +1071,7 @@ void RsdparsaSdpAttributeList::LoadRemoteCandidates(
     SdpRemoteCandidatesAttribute::Candidate candidate;
     candidate.port = rustCandidate.port;
     candidate.id = std::to_string(rustCandidate.component);
-    candidate.address = std::string(rustCandidate.address.unicastAddr);
+    candidate.address = convertAddress(&rustCandidate.address);
     candidates.push_back(candidate);
   }
   SdpRemoteCandidatesAttribute* candidatesList;
