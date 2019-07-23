@@ -11,7 +11,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
 });
 
 /**
@@ -58,25 +57,25 @@ function hexToInt(hexString) {
 const kBuiltInInputs = {
   Back: {
     title: "back",
-    image: "chrome://browser/skin/back.svg",
+    image: "back.pdf",
     type: "button",
     callback: () => execCommand("Browser:Back", "Back"),
   },
   Forward: {
     title: "forward",
-    image: "chrome://browser/skin/forward.svg",
+    image: "forward.pdf",
     type: "button",
     callback: () => execCommand("Browser:Forward", "Forward"),
   },
   Reload: {
     title: "reload",
-    image: "chrome://browser/skin/reload.svg",
+    image: "refresh.pdf",
     type: "button",
     callback: () => execCommand("Browser:Reload", "Reload"),
   },
   Home: {
     title: "home",
-    image: "chrome://browser/skin/home.svg",
+    image: "home.pdf",
     type: "button",
     callback: () => {
       let win = BrowserWindowTracker.getTopWindow();
@@ -89,25 +88,25 @@ const kBuiltInInputs = {
   },
   Fullscreen: {
     title: "fullscreen",
-    image: "chrome://browser/skin/fullscreen.svg",
+    image: "fullscreen.pdf",
     type: "button",
     callback: () => execCommand("View:FullScreen", "Fullscreen"),
   },
   Find: {
     title: "find",
-    image: "chrome://browser/skin/search-glass.svg",
+    image: "search.pdf",
     type: "button",
     callback: () => execCommand("cmd_find", "Find"),
   },
   NewTab: {
     title: "new-tab",
-    image: "chrome://browser/skin/add.svg",
+    image: "new.pdf",
     type: "button",
     callback: () => execCommand("cmd_newNavigatorTabNoEvent", "NewTab"),
   },
   Sidebar: {
     title: "open-sidebar",
-    image: "chrome://browser/skin/sidebars.svg",
+    image: "sidebar-left.pdf",
     type: "button",
     callback: () => {
       let win = BrowserWindowTracker.getTopWindow();
@@ -120,20 +119,20 @@ const kBuiltInInputs = {
   },
   AddBookmark: {
     title: "add-bookmark",
-    image: "chrome://browser/skin/bookmark-hollow.svg",
+    image: "bookmark.pdf",
     type: "button",
     callback: () => execCommand("Browser:AddBookmarkAs", "AddBookmark"),
   },
   ReaderView: {
     title: "reader-view",
-    image: "chrome://browser/skin/readerMode.svg",
+    image: "reader-mode.pdf",
     type: "button",
     callback: () => execCommand("View:ReaderView", "ReaderView"),
     disabled: true, // Updated when the page is found to be Reader View-able.
   },
   OpenLocation: {
     title: "open-location",
-    image: "chrome://browser/skin/search-glass.svg",
+    image: "search.pdf",
     type: "mainButton",
     callback: () => execCommand("Browser:OpenLocation", "OpenLocation"),
   },
@@ -143,7 +142,7 @@ const kBuiltInInputs = {
   Share: {
     title: "share",
     type: "scrubber",
-    image: "chrome://browser/skin/share.svg",
+    image: "share.pdf",
     callback: () => execCommand("cmd_share", "Share"),
   },
 };
@@ -294,10 +293,8 @@ class TouchBarHelper {
         break;
       case "bookmark-icon-updated":
         data == "starred"
-          ? (kBuiltInInputs.AddBookmark.image =
-              "chrome://browser/skin/bookmark.svg")
-          : (kBuiltInInputs.AddBookmark.image =
-              "chrome://browser/skin/bookmark-hollow.svg");
+          ? (kBuiltInInputs.AddBookmark.image = "bookmark-filled.pdf")
+          : (kBuiltInInputs.AddBookmark.image = "bookmark.pdf");
         this._updateTouchBarInputs("AddBookmark");
         break;
       case "reader-mode-available":
@@ -368,7 +365,7 @@ class TouchBarInput {
     this._title = title;
   }
   get image() {
-    return PlacesUtils.toURI(this._image);
+    return this._image;
   }
   set image(image) {
     this._image = image;
@@ -396,10 +393,6 @@ class TouchBarInput {
   }
   set disabled(disabled) {
     this._disabled = disabled;
-  }
-  // Required as context to load our input icons.
-  get document() {
-    return BrowserWindowTracker.getTopWindow().document;
   }
 }
 
