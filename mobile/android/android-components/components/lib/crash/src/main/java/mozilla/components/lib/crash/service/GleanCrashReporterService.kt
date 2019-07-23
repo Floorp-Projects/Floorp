@@ -8,7 +8,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.GleanMetrics.CrashMetrics
-import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.content.isMainProcess
 import java.io.File
@@ -49,11 +48,6 @@ class GleanCrashReporterService(
             // it's not technically the main process.
             if (!context.isMainProcess()) {
                 logger.info("GleanCrashReporterService initialized off of main process")
-                return@run
-            }
-
-            if (!Glean.isInitialized()) {
-                logger.error("Glean is not initialized, crash reporter service cannot record metrics")
                 return@run
             }
 

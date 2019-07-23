@@ -29,11 +29,6 @@ class CrashApplication : Application() {
         // We want the log messages of all builds to go to Android logcat
         Log.addSink(AndroidLogSink())
 
-        // Make sure to initialize Glean before instantiating and registering the service with
-        // the CrashReporter
-        Glean.setUploadEnabled(true)
-        Glean.initialize(applicationContext)
-
         crashReporter = CrashReporter(
             services = listOf(createDummyCrashService(this), GleanCrashReporterService(applicationContext)),
             shouldPrompt = CrashReporter.Prompt.ALWAYS,
@@ -46,6 +41,10 @@ class CrashApplication : Application() {
             nonFatalCrashIntent = createNonFatalPendingIntent(this),
             enabled = true
         ).install(this)
+
+        // Initialize Glean for recording by the GleanCrashReporterService
+        Glean.setUploadEnabled(true)
+        Glean.initialize(applicationContext)
     }
 
     companion object {
