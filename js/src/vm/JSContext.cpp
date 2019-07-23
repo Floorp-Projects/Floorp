@@ -155,7 +155,6 @@ JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
     js_delete(runtime);
     return nullptr;
   }
-  cx->setThread();
 
   if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
     runtime->destroyRuntime();
@@ -1227,7 +1226,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       freeLists_(this, nullptr),
       atomsZoneFreeLists_(this),
       defaultFreeOp_(this, runtime, true),
-      freeUnusedMemory(false),
       jitActivation(this, nullptr),
       regexpStack(this),
       activation_(this, nullptr),
@@ -1307,6 +1305,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
+
+  MOZ_ASSERT(!TlsContext.get());
+  TlsContext.set(this);
 }
 
 JSContext::~JSContext() {
@@ -1336,17 +1337,7 @@ JSContext::~JSContext() {
 
   js_delete(atomsZoneFreeLists_.ref());
 
-  clearThread();
-}
-
-void JSContext::setThread() {
-  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
-  TlsContext.set(this);
-  currentThread_ = ThisThread::GetId();
-}
-
-void JSContext::clearThread() {
-  currentThread_ = Thread::Id();
+  MOZ_ASSERT(TlsContext.get() == this);
   TlsContext.set(nullptr);
 }
 
