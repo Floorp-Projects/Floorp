@@ -23,7 +23,7 @@ use futures::Future;
 use slab;
 use std::cell::RefCell;
 use std::convert::From;
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::mem::{size_of, ManuallyDrop};
 use std::os::raw::{c_long, c_void};
 use std::{panic, slice};
@@ -36,7 +36,7 @@ fn error(error: cubeb::Error) -> ClientMessage {
 }
 
 type ContextKey = RefCell<Option<cubeb::Result<cubeb::Context>>>;
-thread_local!(static CONTEXT_KEY:ContextKey = RefCell::new(None));
+thread_local!(static CONTEXT_KEY: ContextKey = RefCell::new(None));
 
 fn with_local_context<T, F>(f: F) -> T
 where
@@ -45,8 +45,14 @@ where
     CONTEXT_KEY.with(|k| {
         let mut context = k.borrow_mut();
         if context.is_none() {
-            let name = CString::new("AudioIPC Server").unwrap();
-            *context = Some(cubeb::Context::init(Some(name.as_c_str()), None));
+            let params = super::G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
+            let context_name = Some(params.context_name.as_c_str());
+            let backend_name = if let Some(ref name) = params.backend_name {
+                Some(name.as_c_str())
+            } else {
+                None
+            };
+            *context = Some(cubeb::Context::init(context_name, backend_name));
         }
         f(context.as_ref().unwrap())
     })
