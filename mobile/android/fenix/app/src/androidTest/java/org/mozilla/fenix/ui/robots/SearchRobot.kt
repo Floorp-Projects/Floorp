@@ -37,7 +37,6 @@ class SearchRobot {
     fun verifySearchView() = assertSearchView()
     fun verifyBrowserToolbar() = assertBrowserToolbarEditView()
     fun verifyScanButton() = assertScanButton()
-    fun verifyScanPrompt() = assertScanPrompt()
     fun verifyShortcutsButton() = assertShortcutsButton()
     fun verifySearchWithText() = assertSearchWithText()
     fun verifyDuckDuckGoResults() = assertDuckDuckGoResults()
@@ -107,9 +106,15 @@ private fun allowPermissionButton(): UiObject {
     return mDevice.findObject(UiSelector().text("Allow"))
 }
 
-private fun scanButton() = onView(allOf(withId(R.id.search_scan_button)))
+private fun scanButton(): ViewInteraction {
+    mDevice.wait(Until.findObject(By.res("R.id.search_scan_button")), TestAssetHelper.waitingTime)
+    return onView(allOf(withId(R.id.search_scan_button)))
+}
 
-private fun shortcutsButton() = onView(withId(R.id.search_shortcuts_button))
+private fun shortcutsButton(): ViewInteraction {
+    mDevice.wait(Until.findObjects(By.res("R.id.search_shortcuts_button")), TestAssetHelper.waitingTime)
+    return onView(withId(R.id.search_shortcuts_button))
+}
 
 private fun assertDuckDuckGoURL() {
     onView(allOf(withText(startsWith("https://duckduckgo.com"))))
@@ -127,10 +132,6 @@ private fun assertSearchView() {
 
 private fun assertBrowserToolbarEditView() =
     onView(Matchers.allOf(withId(R.id.mozac_browser_toolbar_edit_url_view)))
-        .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
-
-private fun assertScanPrompt() =
-    onView(Matchers.allOf(withText("Allow Firefox Preview to take pictures and record video?")))
         .check(matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
 private fun assertScanButton() =
