@@ -512,18 +512,6 @@ static_assert(
     sizeof(BaselineScript) % sizeof(uintptr_t) == 0,
     "The data attached to the script must be aligned for fast JIT access.");
 
-inline bool IsBaselineInterpreterEnabled() {
-#ifdef JS_CODEGEN_NONE
-  return false;
-#else
-  return JitOptions.baselineInterpreter && JitOptions.supportsFloatingPoint;
-#endif
-}
-
-inline bool IsBaselineJitEnabled() {
-  return IsBaselineInterpreterEnabled() && JitOptions.baselineJit;
-}
-
 enum class BaselineTier { Interpreter, Compiler };
 
 template <BaselineTier Tier>
