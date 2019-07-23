@@ -259,7 +259,7 @@
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
 }
 
-#tracking-protection-icon-box[hasException] > #tracking-protection-icon {
+#urlbar[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box[hasException] > #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection-disabled.svg);
 }
 
