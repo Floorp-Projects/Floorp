@@ -367,9 +367,9 @@ add_task(async function groupByHostNonDefaultStddevMultiplier() {
   await cleanup();
 });
 
-// This is similar to bookmarked() in autofill_tasks.js, but it adds
-// unbookmarked visits for multiple URLs with the same origin.
-add_task(async function bookmarkedMultiple() {
+// This is similar to suggestHistoryFalse_bookmark_0 in autofill_tasks.js, but
+// it adds unbookmarked visits for multiple URLs with the same origin.
+add_task(async function suggestHistoryFalse_bookmark_multiple() {
   // Force only bookmarked pages to be suggested and therefore only bookmarked
   // pages to be completed.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
@@ -439,9 +439,10 @@ add_task(async function bookmarkedMultiple() {
   await cleanup();
 });
 
-// This is similar to bookmarkedPrefix() in autofill_tasks.js, but it adds
-// unbookmarked visits for multiple URLs with the same origin.
-add_task(async function bookmarkedPrefixMultiple() {
+// This is similar to suggestHistoryFalse_bookmark_prefix_0 in
+// autofill_tasks.js, but it adds unbookmarked visits for multiple URLs with the
+// same origin.
+add_task(async function suggestHistoryFalse_bookmark_prefix_multiple() {
   // Force only bookmarked pages to be suggested and therefore only bookmarked
   // pages to be completed.
   Services.prefs.setBoolPref("browser.urlbar.suggest.history", false);
