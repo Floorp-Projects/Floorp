@@ -11,12 +11,15 @@ use libc::size_t;
 
 use std::rc::Rc;
 
+use std::convert::{TryFrom, TryInto};
+
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 use rsdparsa::{SdpTiming, SdpBandwidth, SdpSession};
 use rsdparsa::error::SdpParserError;
 use rsdparsa::media_type::{SdpMediaValue, SdpProtocolValue};
 use rsdparsa::attribute_type::{SdpAttribute};
 use rsdparsa::anonymizer::{StatefulSdpAnonymizer, AnonymizingClone};
+use rsdparsa::address::ExplicitlyTypedAddress;
 
 pub mod types;
 pub mod network;
@@ -25,14 +28,14 @@ pub mod media_section;
 
 pub use types::{StringView, NULL_STRING};
 use network::{RustSdpOrigin, origin_view_helper, RustSdpConnection,
-              get_bandwidth};
+              get_bandwidth, RustAddressType};
 
 #[no_mangle]
 pub unsafe extern "C" fn parse_sdp(sdp: StringView,
                                    fail_on_warning: bool,
                                    session: *mut *const SdpSession,
                                    error: *mut *const SdpParserError) -> nsresult {
-    let sdp_str = match sdp.into() {
+    let sdp_str:String = match sdp.try_into() {
         Ok(string) => string,
         Err(boxed_error) => {
             *session = ptr::null();
@@ -139,14 +142,21 @@ pub unsafe extern "C" fn sdp_get_session_connection(session: *const SdpSession,
 pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
                                                media_type: u32, direction: u32,
                                                port: u16, protocol: u32,
-                                               addr_type: u32, addr: StringView) -> nsresult {
-
-    let addr_str:String = match addr.into() {
+                                               addr_type: u32, address: StringView) -> nsresult {
+    let addr_type = match RustAddressType::try_from(addr_type) {
+        Ok(a) => a.into(),
+        Err(e) => { return e;},
+    };
+    let address_string:String = match address.try_into(){
        Ok(x) => x,
        Err(boxed_error) => {
            println!("Error while pasing string, description: {:?}", (*boxed_error).description());
            return NS_ERROR_INVALID_ARG;
        }
+    };
+    let address = match ExplicitlyTypedAddress::try_from((addr_type, address_string.as_str())) {
+        Ok(a) => a,
+        Err(_) => {return NS_ERROR_INVALID_ARG;},
     };
 
     let media_type = match media_type {
@@ -179,18 +189,7 @@ pub unsafe extern "C" fn sdp_add_media_section(session: *mut SdpSession,
       }
     };
 
-    // Check that the provided address type is valid. The rust parser will find out
-    // on his own which address type was provided
-    match addr_type {
-      // enum AddrType { kAddrTypeNone, kIPv4, kIPv6 };
-      // kAddrTypeNone is explicitly not covered as it is an 'invalid' flag
-      1 | 2 => (),
-      _ => {
-          return NS_ERROR_INVALID_ARG;
-      }
-    }
-
-    match (*session).add_media(media_type, direction, port as u32, protocol, addr_str) {
+    match (*session).add_media(media_type, direction, port as u32, protocol, address) {
         Ok(_) => NS_OK,
         Err(_) => NS_ERROR_INVALID_ARG
     }

@@ -3,6 +3,7 @@ use std::ffi::CStr;
 use std::{str, slice};
 use std::error::Error;
 use std::boxed::Box;
+use std::convert::TryInto;
 
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 
@@ -22,8 +23,9 @@ impl<'a> From<&'a str> for StringView {
     }
 }
 
-impl Into<Result<String, Box<dyn Error>>> for StringView {
-    fn into(self) -> Result<String, Box<dyn Error>> {
+impl TryInto<String> for StringView {
+    type Error = Box<dyn Error>;
+    fn try_into(self) -> Result<String, Box<dyn Error>> {
 
         // This block must be unsafe as it converts a StringView, most likly provided from the
         // C++ code, into a rust String and thus needs to operate with raw pointers.

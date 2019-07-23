@@ -1,5 +1,6 @@
 use std::ptr;
 use std::os::raw::c_char;
+use std::convert::TryInto;
 
 use libc::{size_t, uint32_t};
 
@@ -170,9 +171,9 @@ pub unsafe extern "C" fn sdp_media_clear_codecs(sdp_media: *mut SdpMedia) {
 pub unsafe extern "C" fn sdp_media_add_codec(sdp_media: *mut SdpMedia, pt: u8,
                                              codec_name: StringView, clockrate: u32,
                                              channels: u16) -> nsresult {
-     let rtpmap = SdpAttributeRtpmap{
+     let rtpmap = SdpAttributeRtpmap {
                      payload_type: pt,
-                     codec_name: match codec_name.into() {
+                     codec_name: match codec_name.try_into() {
                          Ok(x) => x,
                          Err(boxed_error) => {
                              println!("Error while pasing string, description: {:?}", (*boxed_error).description());
@@ -193,7 +194,7 @@ pub unsafe extern "C" fn sdp_media_add_codec(sdp_media: *mut SdpMedia, pt: u8,
 pub unsafe extern "C" fn sdp_media_add_datachannel(sdp_media: *mut SdpMedia, name: StringView,
                                                     port: u16, streams: u16, message_size: u32)
                                                     -> nsresult {
-    let name_str = match name.into() {
+    let name_str = match name.try_into() {
         Ok(x) => x,
         Err(_) => {
             return NS_ERROR_INVALID_ARG;
