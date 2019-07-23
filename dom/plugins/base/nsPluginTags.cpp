@@ -142,6 +142,9 @@ static nsresult IsEnabledStateLockedForPlugin(nsIInternalPluginTag* aTag,
 }
 
 /* nsIInternalPluginTag */
+
+uint32_t nsIInternalPluginTag::sNextId;
+
 nsIInternalPluginTag::nsIInternalPluginTag() {}
 
 nsIInternalPluginTag::nsIInternalPluginTag(const char* aName,
@@ -179,8 +182,6 @@ bool nsIInternalPluginTag::HasMimeType(const nsACString& aMimeType) const {
 }
 
 /* nsPluginTag */
-
-uint32_t nsPluginTag::sNextId;
 
 nsPluginTag::nsPluginTag(nsPluginInfo* aPluginInfo, int64_t aLastModifiedTime,
                          bool fromExtension, uint32_t aBlocklistState)
@@ -678,11 +679,15 @@ nsPluginTag::GetLastModifiedTime(PRTime* aLastModifiedTime) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPluginTag::GetId(uint32_t* aId) {
+  *aId = mId;
+  return NS_OK;
+}
+
 bool nsPluginTag::IsFromExtension() const { return mIsFromExtension; }
 
 /* nsFakePluginTag */
-
-uint32_t nsFakePluginTag::sNextId;
 
 nsFakePluginTag::nsFakePluginTag()
     : mId(sNextId++), mState(nsPluginTag::ePluginState_Disabled) {}

@@ -1739,11 +1739,6 @@ var gBrowserInit = {
   onLoad() {
     gBrowser.addEventListener("DOMUpdateBlockedPopups", gPopupBlockerObserver);
 
-    Services.obs.addObserver(
-      gPluginHandler.NPAPIPluginCrashed,
-      "plugin-crashed"
-    );
-
     window.addEventListener("AppCommand", HandleAppCommandEvent, true);
 
     // These routines add message listeners. They must run before
@@ -2418,11 +2413,6 @@ var gBrowserInit = {
     gSync.uninit();
 
     gExtensionsNotifications.uninit();
-
-    Services.obs.removeObserver(
-      gPluginHandler.NPAPIPluginCrashed,
-      "plugin-crashed"
-    );
 
     try {
       gBrowser.removeProgressListener(window.XULBrowserWindow);
