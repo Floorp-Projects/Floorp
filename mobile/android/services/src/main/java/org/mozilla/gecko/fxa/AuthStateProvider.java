@@ -25,8 +25,10 @@ import android.util.Log;
 import org.mozilla.apache.commons.codec.digest.DigestUtils;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.login.Cohabiting;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.TokensAndKeysState;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,6 +37,9 @@ import java.util.Map;
 /**
  * Provides external access to Firefox Account state. This allows sharing account state with other
  * applications. Access is provided based on a signature whitelist.
+ *
+ * In some circumstances (e.g. account password change), FxA credentials provided here may be invalid.
+ * Consumers of this class are thus expected to gracefully deal with invalid credentials.
  *
  * Consumers of this must verify signature of the applicationId which provides a ContentProvider
  * servicing AUTHORITY. Failure to do so may lead to interacting with a ContentProvider that's squatting
@@ -105,13 +110,20 @@ public class AuthStateProvider extends ContentProvider {
                 final MatrixCursor cursor = new MatrixCursor(queryProjection, 1);
 
                 // We have an account, but it may not be in a fully-functioning state.
-                // If we're not "Married" (which is the final, "all good" state), only return an 'email'.
-                // Otherwise, return the necessary token/keys.
-                if (accountState instanceof Married) {
-                    final Married marriedState = (Married) accountState;
-                    final byte[] sessionToken = marriedState.getSessionToken();
-                    final byte[] kSync = marriedState.getKSync();
-                    final String kXSCS = marriedState.getKXCS();
+                // We are able to share our credentials if we're in either of Married or Cohabiting
+                // states. See https://bugzilla.mozilla.org/show_bug.cgi?id=1568336 for background.
+                // It's important to note that even though we have credentials we can share, it's not
+                // guaranteed that these credentials are valid. For example, account's password may
+                // have changed since we last tried using these credentials ourselves - we just didn't
+                // have a chance to discover that yet.
+                // Clients are responsible for dealing with invalid credentials - we don't go out of
+                // our way to ensure they're good.
+                // If we're not in one of these states, only return an 'email'.
+                if (accountState instanceof Cohabiting || accountState instanceof Married) {
+                    final TokensAndKeysState tokensAndKeysState = (TokensAndKeysState) accountState;
+                    final byte[] sessionToken = tokensAndKeysState.getSessionToken();
+                    final byte[] kSync = tokensAndKeysState.getKSync();
+                    final String kXSCS = tokensAndKeysState.getKXCS();
 
                     cursor.addRow(new Object[] { email, sessionToken, kSync, kXSCS });
                 } else {
