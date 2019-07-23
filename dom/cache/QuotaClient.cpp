@@ -383,14 +383,15 @@ class CacheQuotaClient final : public Client {
     nsresult rv = qm->GetDirectoryForOrigin(aPersistenceType, aOrigin,
                                             getter_AddRefs(dir));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                    Cache_GetDirForOri);
       return rv;
     }
 
     rv = dir->Append(NS_LITERAL_STRING(DOMCACHE_DIRECTORY_NAME));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError, Cache_Append);
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
+                                   Cache_Append);
       return rv;
     }
 
@@ -406,7 +407,7 @@ class CacheQuotaClient final : public Client {
               dir, &paddingSize)))) {
         rv = LockedGetPaddingSizeFromDB(dir, aGroup, aOrigin, &paddingSize);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kInternalError,
+          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaInternalError,
                                        Cache_GetPaddingSize);
           return rv;
         }
@@ -418,7 +419,7 @@ class CacheQuotaClient final : public Client {
     nsCOMPtr<nsIDirectoryEnumerator> entries;
     rv = dir->GetDirectoryEntries(getter_AddRefs(entries));
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+      REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                    Cache_GetDirEntries);
       return rv;
     }
@@ -429,7 +430,7 @@ class CacheQuotaClient final : public Client {
       nsAutoString leafName;
       rv = file->GetLeafName(leafName);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                      Cache_GetLeafName);
         return rv;
       }
@@ -437,7 +438,7 @@ class CacheQuotaClient final : public Client {
       bool isDir;
       rv = file->IsDirectory(&isDir);
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+        REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                      Cache_IsDirectory);
         return rv;
       }
@@ -446,7 +447,7 @@ class CacheQuotaClient final : public Client {
         if (leafName.EqualsLiteral("morgue")) {
           rv = GetBodyUsage(file, aCanceled, aUsageInfo);
           if (NS_WARN_IF(NS_FAILED(rv))) {
-            REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+            REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                          Cache_GetBodyUsage);
             return rv;
           }
@@ -471,7 +472,7 @@ class CacheQuotaClient final : public Client {
         int64_t fileSize;
         rv = file->GetFileSize(&fileSize);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kExternalError,
+          REPORT_TELEMETRY_ERR_IN_INIT(aInitializing, kQuotaExternalError,
                                        Cache_GetFileSize);
           return rv;
         }

@@ -27,16 +27,17 @@ add_task(async function() {
   await waitUntil(() => getWorkerContainers(doc).length === 1);
 
   const container = getWorkerContainers(doc)[0];
-  info("Wait until the debug link is displayed and enabled");
-  await waitUntil(() =>
-    container.querySelector(".js-link-debug:not(.worker__debug-link--disabled)")
-  );
+  info("Wait until the debug button is displayed and enabled");
+  await waitUntil(() => {
+    const button = container.querySelector(".js-debug-button");
+    return button && !button.disabled;
+  });
 
-  info("Click on the debug link and wait for the new toolbox to be ready");
+  info("Click on the debug button and wait for the new toolbox to be ready");
   const onToolboxReady = gDevTools.once("toolbox-ready");
 
-  const debugLink = container.querySelector(".js-link-debug");
-  debugLink.click();
+  const debugButton = container.querySelector(".js-debug-button");
+  debugButton.click();
 
   const serviceWorkerToolbox = await onToolboxReady;
   await serviceWorkerToolbox.selectTool("jsdebugger");
