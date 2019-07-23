@@ -391,6 +391,34 @@ async function runTest10() {
   exitprintpreview();
   ok(compareCanvases(), "Printing pages with fonts loaded from a mozPrintCallback should be the same.");
 
+  requestAnimationFrame(function() { setTimeout(runTest11); } );
+}
+
+async function compareFiles(src1, src2) {
+  const iframeElement = document.getElementsByTagName("iframe")[0];
+  await new Promise((resolve) => {
+    iframeElement.addEventListener("load", resolve, { capture: true, once: true });
+    iframeElement.setAttribute("src", src1);
+  });
+  printpreview();
+  ctx1.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+
+  await new Promise((resolve) => {
+    iframeElement.addEventListener("load", resolve, { capture: true, once: true });
+    iframeElement.setAttribute("src", src2);
+  });
+
+  printpreview();
+  ctx2.drawWindow(frameElts[1].contentWindow, 0, 0, 400, 400, "rgb(255,255,255)");
+  exitprintpreview();
+
+  ok(compareCanvases(), `Printing ${src1} and ${src2} should produce the same results`);
+}
+
+// bug 1567105
+async function runTest11() {
+  await compareFiles("printpreview_quirks.html", "printpreview_quirks_ref.html");
   finish();
 }
 
