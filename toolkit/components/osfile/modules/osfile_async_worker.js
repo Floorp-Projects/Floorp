@@ -285,6 +285,12 @@ if (this.Components) {
     removeDir(path, options) {
       return File.removeDir(Type.path.fromMsg(path), options);
     },
+    macRemoveXAttr(path, name) {
+      return File.macRemoveXAttr(
+        Type.path.fromMsg(path),
+        Type.cstring.fromMsg(name)
+      );
+    },
     new_DirectoryIterator: function new_DirectoryIterator(path, options) {
       let directoryPath = Type.path.fromMsg(path);
       let iterator = new File.DirectoryIterator(directoryPath, options);
