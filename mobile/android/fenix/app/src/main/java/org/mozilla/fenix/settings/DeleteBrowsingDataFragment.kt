@@ -40,30 +40,11 @@ class DeleteBrowsingDataFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         sessionObserver = object : SessionManager.Observer {
-            override fun onSessionAdded(session: Session) {
-                super.onSessionAdded(session)
-                updateTabCount()
-            }
-
-            override fun onSessionRemoved(session: Session) {
-                super.onSessionRemoved(session)
-                updateTabCount()
-            }
-
-            override fun onSessionSelected(session: Session) {
-                super.onSessionSelected(session)
-                updateTabCount()
-            }
-
-            override fun onSessionsRestored() {
-                super.onSessionsRestored()
-                updateTabCount()
-            }
-
-            override fun onAllSessionsRemoved() {
-                super.onAllSessionsRemoved()
-                updateTabCount()
-            }
+            override fun onSessionAdded(session: Session) = updateTabCount()
+            override fun onSessionRemoved(session: Session) = updateTabCount()
+            override fun onSessionSelected(session: Session) = updateTabCount()
+            override fun onSessionsRestored() = updateTabCount()
+            override fun onAllSessionsRemoved() = updateTabCount()
         }
 
         requireComponents.core.sessionManager.register(sessionObserver, owner = this)

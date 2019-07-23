@@ -19,7 +19,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.PARENT_ID
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.Observer
+import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProviders
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
@@ -32,13 +35,14 @@ import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
+import mozilla.components.feature.tab.collections.TabCollection
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.BOTTOM
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.END
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
@@ -69,7 +73,6 @@ import org.mozilla.fenix.home.sessioncontrol.SessionControlState
 import org.mozilla.fenix.home.sessioncontrol.SessionControlViewModel
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabAction
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.home.sessioncontrol.viewholders.CollectionViewHolder
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
@@ -84,37 +87,23 @@ import kotlin.math.roundToInt
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment(), AccountObserver {
     private val bus = ActionBusFactory.get(this)
-    private var tabCollectionObserver: Observer<List<TabCollection>>? = null
 
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
-            super.onTitleChanged(session, title)
-            if (deleteAllSessionsJob != null) return
-            emitSessionChanges()
+            if (deleteAllSessionsJob == null) emitSessionChanges()
         }
     }
 
-    private lateinit var sessionObserver: BrowserSessionsObserver
-
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            super.onCollectionCreated(title, sessions)
             scrollAndAnimateCollection(sessions.size)
         }
 
-        override fun onTabsAdded(
-            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
-            sessions: List<Session>
-        ) {
-            super.onTabsAdded(tabCollection, sessions)
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
             scrollAndAnimateCollection(sessions.size, tabCollection)
         }
 
-        override fun onCollectionRenamed(
-            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
-            title: String
-        ) {
-            super.onCollectionRenamed(tabCollection, title)
+        override fun onCollectionRenamed(tabCollection: TabCollection, title: String) {
             showRenamedSnackbar()
         }
     }
@@ -152,9 +141,10 @@ class HomeFragment : Fragment(), AccountObserver {
 //        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
 //            .setDuration(SHARED_TRANSITION_MS)
 
-        sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
+        val sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
         }
+        lifecycle.addObserver(sessionObserver)
 
         if (!onboarding.userHasBeenOnboarded()) {
             requireComponents.analytics.metrics.track(Event.OpenedAppFirstRun)
@@ -229,17 +219,14 @@ class HomeFragment : Fragment(), AccountObserver {
 
         setupHomeMenu()
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Default) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
-            val searchIcon = requireComponents.search.searchEngineManager.getDefaultSearchEngine(
-                requireContext()
-            ).let {
-                BitmapDrawable(resources, it.icon)
-            }
+            val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+            val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
-            runBlocking(Dispatchers.Main) {
+            withContext(Dispatchers.Main) {
                 search_engine_icon?.setImageDrawable(searchIcon)
             }
         }
@@ -250,9 +237,8 @@ class HomeFragment : Fragment(), AccountObserver {
                 orientation = BrowserMenu.Orientation.DOWN
             )
         }
-        val roundToInt =
+        view.toolbar.compoundDrawablePadding =
             (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
-        view.toolbar.compoundDrawablePadding = roundToInt
         view.toolbar.setOnClickListener {
             invokePendingDeleteJobs()
             onboarding.finish()
@@ -328,20 +314,10 @@ class HomeFragment : Fragment(), AccountObserver {
 
     override fun onStart() {
         super.onStart()
-        sessionObserver.onStart()
-        tabCollectionObserver = subscribeToTabCollections()
+        subscribeToTabCollections()
 
         // We only want this observer live just before we navigate away to the collection creation screen
         requireComponents.core.tabCollectionStorage.unregister(collectionStorageObserver)
-    }
-
-    override fun onStop() {
-        sessionObserver.onStop()
-        tabCollectionObserver?.let {
-            requireComponents.core.tabCollectionStorage.getCollections().removeObserver(it)
-        }
-
-        super.onStop()
     }
 
     private fun handleOnboardingAction(action: OnboardingAction) {
@@ -616,12 +592,12 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
-        val observer = Observer<List<TabCollection>> {
+        return Observer<List<TabCollection>> {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+        }.also { observer ->
+            requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
         }
-        requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
-        return observer
     }
 
     private fun removeAllTabsWithUndo(listOfSessionsToDelete: List<Session>) {
@@ -687,11 +663,6 @@ class HomeFragment : Fragment(), AccountObserver {
         return sessionManager.filteredSessions(isPrivate, notPendingDeletion)
     }
 
-    private fun emitAccountChanges() {
-        val mode = currentMode()
-        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
-    }
-
     private fun showCollectionCreationFragment(
         selectedTabId: String? = null,
         selectedTabCollection: TabCollection? = null,
@@ -746,21 +717,15 @@ class HomeFragment : Fragment(), AccountObserver {
         Mode.Normal
     }
 
-    override fun onAuthenticationProblems() {
-        emitAccountChanges()
+    private fun emitAccountChanges() {
+        val mode = currentMode()
+        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
     }
 
-    override fun onAuthenticated(account: OAuthAccount) {
-        emitAccountChanges()
-    }
-
-    override fun onLoggedOut() {
-        emitAccountChanges()
-    }
-
-    override fun onProfileUpdated(profile: Profile) {
-        emitAccountChanges()
-    }
+    override fun onAuthenticationProblems() = emitAccountChanges()
+    override fun onAuthenticated(account: OAuthAccount) = emitAccountChanges()
+    override fun onLoggedOut() = emitAccountChanges()
+    override fun onProfileUpdated(profile: Profile) = emitAccountChanges()
 
     private fun scrollAndAnimateCollection(tabsAddedToCollectionSize: Int, changedCollection: TabCollection? = null) {
         if (view != null) {
@@ -898,15 +863,12 @@ private class BrowserSessionsObserver(
     private val manager: SessionManager,
     private val observer: Session.Observer,
     private val onChanged: () -> Unit
-) {
-
-    // TODO This is workaround. Should be removed when [mozilla.components.support.base.observer.ObserverRegistry]
-    // will not allow to subscribe to single session more than once.
-    private val observedSessions = mutableSetOf<Session>()
+) : LifecycleObserver {
 
     /**
      * Start observing
      */
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
     fun onStart() {
         manager.register(managerObserver)
         subscribeToAll()
@@ -915,6 +877,7 @@ private class BrowserSessionsObserver(
     /**
      * Stop observing (will not receive updates till next [onStop] call)
      */
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
     fun onStop() {
         manager.unregister(managerObserver)
         unsubscribeFromAll()
@@ -929,21 +892,14 @@ private class BrowserSessionsObserver(
     }
 
     private fun subscribeTo(session: Session) {
-        if (!observedSessions.contains(session)) {
-            session.register(observer)
-            observedSessions += session
-        }
+        session.register(observer)
     }
 
     private fun unsubscribeFrom(session: Session) {
-        if (observedSessions.contains(session)) {
-            session.unregister(observer)
-            observedSessions -= session
-        }
+        session.unregister(observer)
     }
 
     private val managerObserver = object : SessionManager.Observer {
-
         override fun onSessionAdded(session: Session) {
             subscribeTo(session)
             onChanged()

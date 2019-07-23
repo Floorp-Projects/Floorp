@@ -244,7 +244,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
 
     private val sessionObserver = object : Session.Observer {
         override fun onUrlChanged(session: Session, url: String) {
-            super.onUrlChanged(session, url)
             lifecycleScope.launch(Dispatchers.IO) {
                 val host = session.url.toUri()?.host
                 val sitePermissions: SitePermissions? = host?.let {
@@ -265,7 +264,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         }
 
         override fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) {
-            super.onTrackerBlockingEnabledChanged(session, blockingEnabled)
             getManagedEmitter<QuickSettingsChange>().onNext(
                 QuickSettingsChange.Change(
                     session.url,
@@ -277,7 +275,6 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
         }
 
         override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) {
-            super.onSecurityChanged(session, securityInfo)
             getManagedEmitter<QuickSettingsChange>().onNext(
                 QuickSettingsChange.Change(
                     session.url,

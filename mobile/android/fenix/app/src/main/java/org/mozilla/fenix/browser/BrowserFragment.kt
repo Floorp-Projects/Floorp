@@ -4,9 +4,6 @@
 
 package org.mozilla.fenix.browser
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -19,7 +16,6 @@ import android.widget.RadioButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.content.ContextCompat
-import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
@@ -55,6 +51,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
@@ -74,7 +71,6 @@ import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.components.TabCollectionStorage
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.Event.BrowserMenuItemTapped.Item
 import org.mozilla.fenix.components.toolbar.SearchAction
 import org.mozilla.fenix.components.toolbar.SearchState
 import org.mozilla.fenix.components.toolbar.ToolbarComponent
@@ -82,6 +78,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
 import org.mozilla.fenix.components.toolbar.ToolbarViewModel
+import org.mozilla.fenix.components.toolbar.trackToolbarItemInteraction
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.enterToImmersiveMode
@@ -89,7 +86,6 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.toTab
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
-import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
@@ -131,15 +127,17 @@ class BrowserFragment : Fragment(), BackHandler {
 
     var customTabSessionId: String? = null
 
+    /*
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-// Disabled while awaiting a better solution to #3209
-//        postponeEnterTransition()
-//        sharedElementEnterTransition =
-//            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
-//                SHARED_TRANSITION_MS
-//            )
+        // Disabled while awaiting a better solution to #3209
+        postponeEnterTransition()
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
+                SHARED_TRANSITION_MS
+            )
     }
+    */
 
     @SuppressWarnings("ComplexMethod")
     override fun onCreateView(
@@ -502,7 +500,8 @@ class BrowserFragment : Fragment(), BackHandler {
                         )
                     }
                     is SearchAction.ToolbarMenuItemTapped -> {
-                        trackToolbarItemInteraction(it)
+                        val metrics = requireComponents.analytics.metrics
+                        trackToolbarItemInteraction(metrics, it)
                         handleToolbarItemInteraction(it)
                     }
                 }
@@ -623,31 +622,6 @@ class BrowserFragment : Fragment(), BackHandler {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
-    }
-
-    // This method triggers the complexity warning. However it's actually not that hard to understand.
-    @SuppressWarnings("ComplexMethod")
-    private fun trackToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
-        val item = when (action.item) {
-            ToolbarMenu.Item.Back -> Item.BACK
-            ToolbarMenu.Item.Forward -> Item.FORWARD
-            ToolbarMenu.Item.Reload -> Item.RELOAD
-            ToolbarMenu.Item.Stop -> Item.STOP
-            ToolbarMenu.Item.Settings -> Item.SETTINGS
-            ToolbarMenu.Item.Library -> Item.LIBRARY
-            is ToolbarMenu.Item.RequestDesktop ->
-                if (action.item.isChecked) Item.DESKTOP_VIEW_ON else Item.DESKTOP_VIEW_OFF
-            ToolbarMenu.Item.NewPrivateTab -> Item.NEW_PRIVATE_TAB
-            ToolbarMenu.Item.FindInPage -> Item.FIND_IN_PAGE
-            ToolbarMenu.Item.ReportIssue -> Item.REPORT_SITE_ISSUE
-            ToolbarMenu.Item.Help -> Item.HELP
-            ToolbarMenu.Item.NewTab -> Item.NEW_TAB
-            ToolbarMenu.Item.OpenInFenix -> Item.OPEN_IN_FENIX
-            ToolbarMenu.Item.Share -> Item.SHARE
-            ToolbarMenu.Item.SaveToCollection -> Item.SAVE_TO_COLLECTION
-        }
-
-        requireComponents.analytics.metrics.track(Event.BrowserMenuItemTapped(item))
     }
 
     // This method triggers the complexity warning. However it's actually not that hard to understand.
@@ -790,60 +764,43 @@ class BrowserFragment : Fragment(), BackHandler {
     }
 
     private fun getSessionById(): Session? {
-        val components = context?.components ?: return null
+        val sessionManager = context?.components?.core?.sessionManager ?: return null
         return if (customTabSessionId != null) {
-            components.core.sessionManager.findSessionById(customTabSessionId!!)
+            sessionManager.findSessionById(customTabSessionId!!)
         } else {
-            components.core.sessionManager.selectedSession
+            sessionManager.selectedSession
         }
     }
 
-    private fun getAppropriateLayoutGravity() = if (customTabSessionId != null) {
-        Gravity.TOP
-    } else {
-        Gravity.BOTTOM
-    }
+    private fun getAppropriateLayoutGravity() = if (customTabSessionId != null) Gravity.TOP else Gravity.BOTTOM
 
-    private fun Session.copyUrl(context: Context) {
-        context.getSystemService<ClipboardManager>()?.apply {
-            primaryClip = ClipData.newPlainText(url, url)
-        }
-    }
-
-    private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
-        val observer = Observer<List<TabCollection>> {
+    private fun subscribeToTabCollections() =
+        Observer<List<TabCollection>> {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+        }.also { observer ->
+            requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
         }
-        requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
-        return observer
-    }
 
     private fun subscribeToSession(): Session.Observer {
-        val observer = object : Session.Observer {
+        return object : Session.Observer {
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 if (!loading) {
                     updateBookmarkState(session)
                     quickActionSheetStore.dispatch(QuickActionSheetAction.BounceNeededChange)
                 }
-
-                super.onLoadingStateChanged(session, loading)
             }
 
             override fun onUrlChanged(session: Session, url: String) {
-                super.onUrlChanged(session, url)
                 updateBookmarkState(session)
                 updateAppLinksState(session)
             }
-        }
-        getSessionById()?.register(observer, this)
-        return observer
+        }.also { observer -> getSessionById()?.register(observer, this) }
     }
 
     private fun subscribeToSessions(): SessionManager.Observer {
         return object : SessionManager.Observer {
             override fun onSessionSelected(session: Session) {
-                super.onSessionSelected(session)
                 (activity as HomeActivity).updateThemeForSession(session)
                 updateBookmarkState(session)
             }
@@ -883,27 +840,20 @@ class BrowserFragment : Fragment(), BackHandler {
 
     private val collectionStorageObserver = object : TabCollectionStorage.Observer {
         override fun onCollectionCreated(title: String, sessions: List<Session>) {
-            super.onCollectionCreated(title, sessions)
             showTabSavedToCollectionSnackbar()
         }
 
-        override fun onTabsAdded(
-            tabCollection: mozilla.components.feature.tab.collections.TabCollection,
-            sessions: List<Session>
-        ) {
-            super.onTabsAdded(tabCollection, sessions)
+        override fun onTabsAdded(tabCollection: TabCollection, sessions: List<Session>) {
             showTabSavedToCollectionSnackbar()
         }
     }
 
     private fun showTabSavedToCollectionSnackbar() {
-        context?.let { context: Context ->
-            view?.let { view: View ->
-                val string = context.getString(R.string.create_collection_tab_saved)
-                FenixSnackbar.make(view, Snackbar.LENGTH_SHORT).setText(string)
-                    .setAnchorView(toolbarComponent.uiView.view)
-                    .show()
-            }
+        view?.let { view ->
+            FenixSnackbar.make(view, Snackbar.LENGTH_SHORT)
+                .setText(view.context.getString(R.string.create_collection_tab_saved))
+                .setAnchorView(toolbarComponent.uiView.view)
+                .show()
         }
     }
 
