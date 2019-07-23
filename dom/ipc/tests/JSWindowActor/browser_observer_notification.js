@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+/* eslint-disable no-unused-vars */
 declTest("test observer triggering actor creation", {
   async test(browser) {
     await ContentTask.spawn(browser, {}, async function() {
@@ -64,7 +65,8 @@ declTest("observers don't notify with wrong window", {
 });
 
 declTest("observers notify with audio-playback", {
-  url: "http://example.com/browser/dom/ipc/tests/JSWindowActor/file_mediaPlayback.html",
+  url:
+    "http://example.com/browser/dom/ipc/tests/JSWindowActor/file_mediaPlayback.html",
 
   async test(browser) {
     await ContentTask.spawn(browser, {}, async function() {
@@ -76,10 +78,11 @@ declTest("observers notify with audio-playback", {
       ok(actorChild, "JSWindowActorChild should have value.");
 
       let observePromise = new Promise(resolve => {
-        actorChild.done = ({subject, topic, data}) => resolve({subject, topic, data});
+        actorChild.done = ({ subject, topic, data }) =>
+          resolve({ subject, topic, data });
       });
 
-      let {subject, topic, data} = await observePromise;
+      let { subject, topic, data } = await observePromise;
       is(topic, "audio-playback", "Topic matches");
       is(data, "active", "Data matches");
     });
