@@ -1257,6 +1257,10 @@ RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
   // We adjust the start time of the sample to account for the potential ogg
   // chaining.
   data->mTime += totalDuration;
+  if (!data->mTime.IsValid()) {
+    return nullptr;
+  }
+
   return data;
 }
 
