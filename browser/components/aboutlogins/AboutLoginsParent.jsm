@@ -50,12 +50,6 @@ const PRIVILEGEDABOUT_PROCESS_ENABLED = Services.prefs.getBoolPref(
   false
 );
 
-const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
-const FEEDBACK_URL = Services.urlFormatter.formatURLPref(FEEDBACK_URL_PREF);
-
-const FAQ_URL_PREF = "signon.management.page.faqURL";
-const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
-
 // When the privileged content process is enabled, we expect about:logins
 // to load in it. Otherwise, it's in a normal web content process.
 const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = PRIVILEGEDABOUT_PROCESS_ENABLED
@@ -136,13 +130,40 @@ var AboutLoginsParent = {
         break;
       }
       case "AboutLogins:OpenFeedback": {
+        const FEEDBACK_URL_PREF = "signon.management.page.feedbackURL";
+        const FEEDBACK_URL = Services.urlFormatter.formatURLPref(
+          FEEDBACK_URL_PREF
+        );
         message.target.ownerGlobal.openWebLinkIn(FEEDBACK_URL, "tab", {
           relatedToCurrent: true,
         });
         break;
       }
       case "AboutLogins:OpenFAQ": {
+        const FAQ_URL_PREF = "signon.management.page.faqURL";
+        const FAQ_URL = Services.prefs.getStringPref(FAQ_URL_PREF);
         message.target.ownerGlobal.openWebLinkIn(FAQ_URL, "tab", {
+          relatedToCurrent: true,
+        });
+        break;
+      }
+      case "AboutLogins:OpenMobileAndroid": {
+        const MOBILE_ANDROID_URL_PREF =
+          "signon.management.page.mobileAndroidURL";
+        const MOBILE_ANDROID_URL = Services.prefs.getStringPref(
+          MOBILE_ANDROID_URL_PREF
+        );
+        message.target.ownerGlobal.openWebLinkIn(MOBILE_ANDROID_URL, "tab", {
+          relatedToCurrent: true,
+        });
+        break;
+      }
+      case "AboutLogins:OpenMobileIos": {
+        const MOBILE_IOS_URL_PREF = "signon.management.page.mobileAppleURL";
+        const MOBILE_IOS_URL = Services.prefs.getStringPref(
+          MOBILE_IOS_URL_PREF
+        );
+        message.target.ownerGlobal.openWebLinkIn(MOBILE_IOS_URL, "tab", {
           relatedToCurrent: true,
         });
         break;
