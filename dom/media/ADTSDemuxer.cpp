@@ -313,6 +313,10 @@ bool ADTSTrackDemuxer::Init() {
   // Rewind back to the stream begin to avoid dropping the first frame.
   FastSeek(TimeUnit::Zero());
 
+  if (!mSamplesPerSecond) {
+    return false;
+  }
+
   if (!mInfo) {
     mInfo = MakeUnique<AudioInfo>();
   }
@@ -342,7 +346,7 @@ bool ADTSTrackDemuxer::Init() {
   // https://developer.apple.com/library/content/documentation/QuickTime/QTFF/QTFFAppenG/QTFFAppenG.html
   // So we always seek 2112 frames prior the seeking point.
   mPreRoll = TimeUnit::FromMicroseconds(2112 * 1000000ULL / mSamplesPerSecond);
-  return mSamplesPerSecond && mChannels;
+  return mChannels;
 }
 
 UniquePtr<TrackInfo> ADTSTrackDemuxer::GetInfo() const {
