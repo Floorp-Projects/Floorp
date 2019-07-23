@@ -36,9 +36,6 @@ XPCOMUtils.defineLazyGetter(this, "logger", () =>
   Log.repository.getLogger("Urlbar.Provider.UnifiedComplete")
 );
 
-// See UnifiedComplete.
-const TITLE_TAGS_SEPARATOR = " \u2013 ";
-
 /**
  * Class used to create the provider.
  */
@@ -210,7 +207,6 @@ function convertResultToMatches(context, result, urls) {
       continue;
     }
     urls.add(url);
-    // Not used yet: result.getLabelAt(i)
     let style = result.getStyleAt(i);
     let match = makeUrlbarResult(context.tokens, {
       url,
@@ -388,7 +384,7 @@ function makeUrlbarResult(tokens, info) {
     source = UrlbarUtils.RESULT_SOURCE.BOOKMARKS;
     if (info.style.includes("tag")) {
       // Split title and tags.
-      [comment, tags] = info.comment.split(TITLE_TAGS_SEPARATOR);
+      [comment, tags] = info.comment.split(UrlbarUtils.TITLE_TAGS_SEPARATOR);
       // Tags are separated by a comma and in a random order.
       // We should also just include tags that match the searchString.
       tags = tags

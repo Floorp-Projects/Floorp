@@ -103,15 +103,15 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSPageRule, css::Rule)
   tmp->mDecls.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSPageRule, css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSPageRule)
   // Keep this in sync with IsCCLeaf.
 
-  // Unlink the wrapper for our declaraton.  This just expands out
-  // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
-  // directly because the wrapper is on the declaration, not on us.
-  tmp->mDecls.ReleaseWrapper(static_cast<nsISupports*>(p));
+  // Unlink the wrapper for our declaration.
+  //
+  // Note that this has to happen before unlinking css::Rule.
+  tmp->UnlinkDeclarationWrapper(tmp->mDecls);
   tmp->mDecls.mDecls->SetOwningRule(nullptr);
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSPageRule, css::Rule)
   // Keep this in sync with IsCCLeaf.

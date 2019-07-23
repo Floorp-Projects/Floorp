@@ -12,8 +12,6 @@
 #include "mozilla/Casting.h"
 #include "mozilla/Preferences.h"
 #include "nsComponentManagerUtils.h"
-#include "nsIFile.h"
-#include "nsIFileStreams.h"
 #include "nsIX509CertDB.h"
 #include "nsNSSCertificate.h"
 #include "nsNetUtil.h"
@@ -33,14 +31,8 @@ using namespace mozilla::pkix;
 
 extern mozilla::LazyLogModule gPIPNSSLog;
 
-static char kDevImportedDER[] = "network.http.signed-packages.developer-root";
-
 namespace mozilla {
 namespace psm {
-
-StaticMutex AppTrustDomain::sMutex;
-UniquePtr<unsigned char[]> AppTrustDomain::sDevImportedDERData;
-unsigned int AppTrustDomain::sDevImportedDERLen = 0;
 
 AppTrustDomain::AppTrustDomain(UniqueCERTCertList& certChain, void* pinArg)
     : mCertChain(certChain), mPinArg(pinArg) {}
@@ -71,50 +63,6 @@ nsresult AppTrustDomain::SetTrustedRoot(AppTrustedRoot trustedRoot) {
       trustedDER.data = const_cast<uint8_t*>(privilegedPackageRoot);
       trustedDER.len = mozilla::ArrayLength(privilegedPackageRoot);
       break;
-
-    case nsIX509CertDB::DeveloperImportedRoot: {
-      StaticMutexAutoLock lock(sMutex);
-      if (!sDevImportedDERData) {
-        MOZ_ASSERT(!NS_IsMainThread());
-        nsCOMPtr<nsIFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
-        if (!file) {
-          return NS_ERROR_FAILURE;
-        }
-        nsAutoCString path;
-        Preferences::GetCString(kDevImportedDER, path);
-        nsresult rv = file->InitWithNativePath(path);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        nsCOMPtr<nsIInputStream> inputStream;
-        rv = NS_NewLocalFileInputStream(getter_AddRefs(inputStream), file, -1,
-                                        -1, nsIFileInputStream::CLOSE_ON_EOF);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        uint64_t length;
-        rv = inputStream->Available(&length);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        auto data = MakeUnique<char[]>(length);
-        rv = inputStream->Read(data.get(), length, &sDevImportedDERLen);
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
-        MOZ_ASSERT(length == sDevImportedDERLen);
-        sDevImportedDERData.reset(
-            BitwiseCast<unsigned char*, char*>(data.release()));
-      }
-
-      trustedDER.data = sDevImportedDERData.get();
-      trustedDER.len = sDevImportedDERLen;
-      break;
-    }
 
     default:
       return NS_ERROR_INVALID_ARG;

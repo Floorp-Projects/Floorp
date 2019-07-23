@@ -130,6 +130,20 @@ struct DefaultJitOptions {
 
 extern DefaultJitOptions JitOptions;
 
+inline bool IsBaselineInterpreterEnabled() {
+#ifdef JS_CODEGEN_NONE
+  return false;
+#else
+  return JitOptions.baselineInterpreter && JitOptions.supportsFloatingPoint;
+#endif
+}
+
+inline bool IsBaselineJitEnabled() {
+  return IsBaselineInterpreterEnabled() && JitOptions.baselineJit;
+}
+
+inline bool IsIonEnabled() { return IsBaselineJitEnabled() && JitOptions.ion; }
+
 }  // namespace jit
 }  // namespace js
 

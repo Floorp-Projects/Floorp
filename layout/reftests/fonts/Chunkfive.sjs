@@ -19,7 +19,7 @@ function handleRequest(request, response)
   response.setHeader("Cache-Control", "no-cache", false);
 
   var stream = new BinaryOutputStream(response.bodyOutputStream);
-  stream.writeByteArray(FONT_DATA, FONT_DATA.length);
+  stream.writeByteArray(FONT_DATA);
 }
 
 /**

@@ -14,6 +14,7 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
 #include "nsUnicharUtils.h"
+#include "mozilla/CountingAllocatorBase.h"
 #include "mozilla/Preferences.h"
 #include "nsZipArchive.h"
 #include "mozilla/Services.h"
@@ -27,6 +28,58 @@ using namespace mozilla;
 
 static const char kIntlHyphenationAliasPrefix[] = "intl.hyphenation-alias.";
 static const char kMemoryPressureNotification[] = "memory-pressure";
+
+class HyphenReporter final : public nsIMemoryReporter,
+                             public CountingAllocatorBase<HyphenReporter> {
+ private:
+  ~HyphenReporter() = default;
+
+ public:
+  NS_DECL_ISUPPORTS
+
+  static void* Malloc(long aSize) { return CountingMalloc(aSize); }
+
+  static void Free(void* aPtr) { return CountingFree(aPtr); }
+
+  static void* Realloc(void* aPtr, long aNewSize) {
+    return CountingRealloc(aPtr, aNewSize);
+  }
+
+  NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                            nsISupports* aData, bool aAnonymize) override {
+    size_t total = MemoryAllocated();
+    if (nsHyphenationManager::Instance()) {
+      total += nsHyphenationManager::Instance()->SizeOfIncludingThis(
+          moz_malloc_size_of);
+    }
+    MOZ_COLLECT_REPORT("explicit/hyphenation", KIND_HEAP, UNITS_BYTES, total,
+                       "Memory used by hyphenation data.");
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(HyphenReporter, nsIMemoryReporter)
+
+template <>
+CountingAllocatorBase<HyphenReporter>::AmountType
+    CountingAllocatorBase<HyphenReporter>::sAmount(0);
+
+/**
+ * Allocation wrappers to track the amount of memory allocated by libhyphen.
+ */
+extern "C" {
+void* hnj_malloc(size_t aSize);
+void* hnj_realloc(void* aPtr, size_t aSize);
+void hnj_free(void* aPtr);
+};
+
+void* hnj_malloc(size_t aSize) { return HyphenReporter::Malloc(aSize); }
+
+void* hnj_realloc(void* aPtr, size_t aSize) {
+  return HyphenReporter::Realloc(aPtr, aSize);
+}
+
+void hnj_free(void* aPtr) { HyphenReporter::Free(aPtr); }
 
 nsHyphenationManager* nsHyphenationManager::sInstance = nullptr;
 
@@ -57,6 +110,8 @@ nsHyphenationManager* nsHyphenationManager::Instance() {
       obs->AddObserver(new MemoryPressureObserver, kMemoryPressureNotification,
                        false);
     }
+
+    RegisterStrongMemoryReporter(new HyphenReporter());
   }
   return sInstance;
 }
@@ -295,4 +350,21 @@ void nsHyphenationManager::LoadAliases() {
       }
     }
   }
+}
+
+size_t nsHyphenationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
+  size_t result = aMallocSizeOf(this);
+
+  result += mHyphAliases.ShallowSizeOfExcludingThis(aMallocSizeOf);
+
+  result += mPatternFiles.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  // Measurement of the URIs stored in mPatternFiles may be added later if DMD
+  // finds it is worthwhile.
+
+  result += mHyphenators.ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (auto i = mHyphenators.ConstIter(); !i.Done(); i.Next()) {
+    result += aMallocSizeOf(i.Data().get());
+  }
+
+  return result;
 }

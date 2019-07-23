@@ -318,10 +318,14 @@ RefPtr<WAVTrackDemuxer::SamplesPromise> WAVTrackDemuxer::GetSamples(
     if (!datachunk) {
       break;
     }
-    datachunks->mSamples.AppendElement(datachunk);
+    if (!datachunk->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
+    datachunks->AppendSample(datachunk);
   }
 
-  if (datachunks->mSamples.IsEmpty()) {
+  if (datachunks->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   }

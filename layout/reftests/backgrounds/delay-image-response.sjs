@@ -43,7 +43,7 @@ function handleRequest(request, response) {
 
   function imageWrite() {
     var stream = new BinaryOutputStream(response.bodyOutputStream);
-    stream.writeByteArray(IMAGE_DATA, IMAGE_DATA.length);
+    stream.writeByteArray(IMAGE_DATA);
   }
 
   // If there is no delay, we write the image and leave.
