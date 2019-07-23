@@ -1,3 +1,5 @@
+extern crate url;
+use address::{Address, ExplicitlyTypedAddress};
 use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::num::Wrapping;
@@ -35,6 +37,7 @@ pub struct StatefulSdpAnonymizer {
     ips: HashMap<IpAddr, IpAddr>,
     ip_v4_inc: Wrapping<u32>,
     ip_v6_inc: Wrapping<u128>,
+    host_names: AnonymizationStrMap,
     ports: HashMap<u32, u32>,
     port_inc: Wrapping<u32>,
     origin_users: AnonymizationStrMap,
@@ -56,6 +59,7 @@ impl StatefulSdpAnonymizer {
             ips: HashMap::new(),
             ip_v4_inc: Wrapping(0),
             ip_v6_inc: Wrapping(0),
+            host_names: AnonymizationStrMap::new("fqdn-", 8),
             ports: HashMap::new(),
             port_inc: Wrapping(0),
             origin_users: AnonymizationStrMap::new("origin-user-", 8),
@@ -64,6 +68,10 @@ impl StatefulSdpAnonymizer {
             cert_finger_prints: HashMap::new(),
             cert_finger_print_inc: Wrapping(0),
         }
+    }
+
+    pub fn mask_host(&mut self, host: &str) -> String {
+        self.host_names.mask(host)
     }
 
     pub fn mask_ip(&mut self, addr: &IpAddr) -> IpAddr {
@@ -82,6 +90,29 @@ impl StatefulSdpAnonymizer {
         };
         self.ips.insert(*addr, mapped);
         mapped
+    }
+
+    pub fn mask_address(&mut self, address: &Address) -> Address {
+        match address {
+            Address::Fqdn(host) => Address::Fqdn(self.mask_host(host)),
+            Address::Ip(ip) => Address::Ip(self.mask_ip(ip)),
+        }
+    }
+
+    pub fn mask_typed_address(
+        &mut self,
+        address: &ExplicitlyTypedAddress,
+    ) -> ExplicitlyTypedAddress {
+        match address {
+            ExplicitlyTypedAddress::Fqdn {
+                address_type,
+                domain,
+            } => ExplicitlyTypedAddress::Fqdn {
+                address_type: *address_type,
+                domain: self.mask_host(domain),
+            },
+            ExplicitlyTypedAddress::Ip(ip) => ExplicitlyTypedAddress::Ip(self.mask_ip(ip)),
+        }
     }
 
     pub fn mask_port(&mut self, port: u32) -> u32 {
