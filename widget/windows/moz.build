@@ -19,6 +19,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'ShellHeaderOnlyUtils.h',
     'WindowsConsole.h',
     'WinHeaderOnlyUtils.h',
 ]
