@@ -1319,19 +1319,15 @@ void FetchBody<Derived>::GetBody(JSContext* aCx,
     return;
   }
 
-  JS::Rooted<JSObject*> body(aCx);
   BodyStream::Create(aCx, this, DerivedClass()->GetParentObject(), inputStream,
-                     &body, aRv);
+                     aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  MOZ_ASSERT(body);
+  MOZ_ASSERT(mReadableStreamBody);
 
-  // We must break the cycle between the body and the stream in case we do an
-  // early return.
-  auto raii =
-      mozilla::MakeScopeExit([&] { JS::ReadableStreamReleaseCCObject(body); });
+  JS::Rooted<JSObject*> body(aCx, mReadableStreamBody);
 
   // If the body has been already consumed, we lock the stream.
   bool bodyUsed = GetBodyUsed(aRv);
@@ -1357,9 +1353,6 @@ void FetchBody<Derived>::GetBody(JSContext* aCx,
     }
   }
 
-  raii.release();
-
-  mReadableStreamBody = body;
   aBodyOut.set(mReadableStreamBody);
 }
 
