@@ -97,7 +97,7 @@ Try Configuration
     ``try_mode`` is not ``try_option_syntax``.
 
 ``try_task_config``
-    The contents of the ``try_task_config.json`` file, or ``None`` if
+    The contents of the ``try_task_config.json`` file, or ``{}`` if
     ``try_mode`` is not ``try_task_config``.
 
 Target Set

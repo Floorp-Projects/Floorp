@@ -7,6 +7,7 @@
 #ifndef ds_BitArray_h
 #define ds_BitArray_h
 
+#include "mozilla/MathAlgorithms.h"
 #include "mozilla/TemplateLib.h"
 
 #include <limits.h>
@@ -16,15 +17,34 @@
 
 namespace js {
 
+namespace detail {
+
+template <typename WordT>
+inline uint_fast8_t CountTrailingZeroes(WordT word);
+
+template <>
+inline uint_fast8_t CountTrailingZeroes(uint32_t word) {
+  return mozilla::CountTrailingZeroes32(word);
+}
+
+template <>
+inline uint_fast8_t CountTrailingZeroes(uint64_t word) {
+  return mozilla::CountTrailingZeroes64(word);
+}
+
+}  // namespace detail
+
 template <size_t nbits>
 class BitArray {
- private:
+ public:
   // Use a 32 bit word to make it easier to access a BitArray from JIT code.
   using WordT = uint32_t;
 
   static const size_t bitsPerElement = sizeof(WordT) * CHAR_BIT;
   static const size_t numSlots =
       nbits / bitsPerElement + (nbits % bitsPerElement == 0 ? 0 : 1);
+
+ private:
   static const size_t paddingBits = (numSlots * bitsPerElement) - nbits;
   static_assert(paddingBits < bitsPerElement,
                 "More padding bits than expected.");
@@ -46,6 +66,7 @@ class BitArray {
     size_t index;
     WordT mask;
     getIndexAndMask(offset, &index, &mask);
+    MOZ_ASSERT(index < nbits);
     return map[index] & mask;
   }
 
@@ -72,7 +93,14 @@ class BitArray {
     return true;
   }
 
+  // For iterating over the set bits in the bit array, get a word at a time.
+  WordT getWord(size_t elementIndex) const {
+    MOZ_ASSERT(elementIndex < nbits);
+    return map[elementIndex];
+  }
+
   static void getIndexAndMask(size_t offset, size_t* indexp, WordT* maskp) {
+    MOZ_ASSERT(offset < nbits);
     static_assert(bitsPerElement == 32, "unexpected bitsPerElement value");
     *indexp = offset / bitsPerElement;
     *maskp = WordT(1) << (offset % bitsPerElement);

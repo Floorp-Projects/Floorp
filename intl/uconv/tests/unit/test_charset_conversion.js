@@ -89,7 +89,7 @@ function test_cross_conversion()
     while ((av = fin.available()) > 0)
     {
       var data = fin.readByteArray(av);
-      bos.writeByteArray(data, data.length);
+      bos.writeByteArray(data);
     }
     fin.close();
     bos.close();

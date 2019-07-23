@@ -761,7 +761,7 @@ nsUpdateProcessor::ProcessUpdate() {
 }
 
 NS_IMETHODIMP
-nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
+nsUpdateProcessor::FixUpdateDirectoryPerms(bool aUseServiceOnFailure) {
 #ifndef XP_WIN
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
@@ -774,10 +774,11 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
 
   class FixUpdateDirectoryPermsRunnable final : public mozilla::Runnable {
    public:
-    FixUpdateDirectoryPermsRunnable(const char* aName, bool aShouldUseService,
+    FixUpdateDirectoryPermsRunnable(const char* aName,
+                                    bool aUseServiceOnFailure,
                                     const nsAutoString& aInstallPath)
         : Runnable(aName),
-          mShouldUseService(aShouldUseService),
+          mUseServiceOnFailure(aUseServiceOnFailure),
           mState(State::Initializing) {
       size_t installPathSize = aInstallPath.Length() + 1;
       mInstallPath = mozilla::MakeUnique<wchar_t[]>(installPathSize);
@@ -816,7 +817,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
         if (SUCCEEDED(permResult)) {
           LOG(("Successfully fixed permissions from within Firefox\n"));
           return NS_OK;
-        } else if (!mShouldUseService) {
+        } else if (!mUseServiceOnFailure) {
           LOG(
               ("Error: Unable to fix permissions within Firefox and "
                "maintenance service is disabled\n"));
@@ -934,7 +935,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
     }
 
    private:
-    bool mShouldUseService;
+    bool mUseServiceOnFailure;
     unsigned int mCurrentTry;
     State mState;
     mozilla::UniquePtr<wchar_t[]> mInstallPath;
@@ -988,7 +989,7 @@ nsUpdateProcessor::FixUpdateDirectoryPerms(bool aShouldUseService) {
   NS_ENSURE_TRUE(eventTarget, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIRunnable> runnable = new FixUpdateDirectoryPermsRunnable(
-      "FixUpdateDirectoryPermsRunnable", aShouldUseService, installPath);
+      "FixUpdateDirectoryPermsRunnable", aUseServiceOnFailure, installPath);
   rv = eventTarget->Dispatch(runnable.forget());
   NS_ENSURE_SUCCESS(rv, rv);
 #endif

@@ -147,7 +147,7 @@ async function testtag_tree(
 
   tree.startEditing(1, ecolumn);
   var inputField = tree.inputField;
-  is(inputField.localName, "textbox", testid + "inputField");
+  is(inputField.localName, "input", testid + "inputField");
   inputField.value = "Changed Value";
   tree.stopEditing(true);
   is(

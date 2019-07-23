@@ -54,11 +54,6 @@ ChromeUtils.defineModuleGetter(
   "UpdateUtils",
   "resource://gre/modules/UpdateUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "UrlbarPrefs",
-  "resource:///modules/UrlbarPrefs.jsm"
-);
 
 // See LOG_LEVELS in Console.jsm. Common examples: "All", "Info", "Warn", & "Error".
 const PREF_LOG_LEVEL = "browser.uitour.loglevel";
@@ -1512,17 +1507,10 @@ var UITour = {
       pageAction.doCommand(aWindow);
     } else if (aMenuName == "urlbar") {
       let urlbar = aWindow.gURLBar;
-      let quantumbar = UrlbarPrefs.get("quantumbar");
       if (aOpenCallback) {
-        if (quantumbar) {
-          urlbar.panel.addEventListener("popupshown", aOpenCallback, {
-            once: true,
-          });
-        } else {
-          urlbar.popup.addEventListener("popupshown", aOpenCallback, {
-            once: true,
-          });
-        }
+        urlbar.panel.addEventListener("popupshown", aOpenCallback, {
+          once: true,
+        });
       }
       urlbar.focus();
       // To demonstrate the ability of searching, we type "Firefox" in advance
@@ -1533,14 +1521,10 @@ var UITour = {
       const SEARCH_STRING = "Firefox";
       urlbar.value = SEARCH_STRING;
       urlbar.select();
-      if (quantumbar) {
-        urlbar.startQuery({
-          searchString: SEARCH_STRING,
-          allowAutofill: false,
-        });
-      } else {
-        urlbar.controller.startSearch(SEARCH_STRING);
-      }
+      urlbar.startQuery({
+        searchString: SEARCH_STRING,
+        allowAutofill: false,
+      });
     }
   },
 

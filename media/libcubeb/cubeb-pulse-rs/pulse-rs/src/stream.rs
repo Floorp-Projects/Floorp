@@ -8,7 +8,7 @@ use context;
 use ffi;
 use operation;
 use std::ffi::CStr;
-use std::mem;
+use std::mem::{self, forget, MaybeUninit};
 use std::os::raw::{c_int, c_void};
 use std::ptr;
 use util::*;
@@ -184,15 +184,15 @@ impl Stream {
     pub fn update_timing_info<CB>(&self, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Stream, i32, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
             where F: Fn(&Stream, i32, *mut c_void)
         {
-            use std::mem::{forget, uninitialized};
             let mut stm = stream::from_raw_ptr(s);
-            let result = uninitialized::<F>()(&mut stm, success, userdata);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, success, userdata);
             forget(stm);
 
             result
@@ -219,15 +219,15 @@ impl Stream {
     pub fn set_state_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, userdata: *mut c_void)
             where F: Fn(&Stream, *mut c_void)
         {
-            use std::mem::{forget, uninitialized};
             let mut stm = stream::from_raw_ptr(s);
-            let result = uninitialized::<F>()(&mut stm, userdata);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, userdata);
             forget(stm);
 
             result
@@ -247,15 +247,15 @@ impl Stream {
     pub fn set_write_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, usize, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
             where F: Fn(&Stream, usize, *mut c_void)
         {
-            use std::mem::{forget, uninitialized};
             let mut stm = stream::from_raw_ptr(s);
-            let result = uninitialized::<F>()(&mut stm, nbytes, userdata);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, nbytes, userdata);
             forget(stm);
 
             result
@@ -275,15 +275,15 @@ impl Stream {
     pub fn set_read_callback<CB>(&self, _: CB, userdata: *mut c_void)
         where CB: Fn(&Stream, usize, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, nbytes: usize, userdata: *mut c_void)
             where F: Fn(&Stream, usize, *mut c_void)
         {
-            use std::mem::{forget, uninitialized};
             let mut stm = stream::from_raw_ptr(s);
-            let result = uninitialized::<F>()(&mut stm, nbytes, userdata);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, nbytes, userdata);
             forget(stm);
 
             result
@@ -297,15 +297,15 @@ impl Stream {
     pub fn cork<CB>(&self, b: i32, _: CB, userdata: *mut c_void) -> Result<Operation>
         where CB: Fn(&Stream, i32, *mut c_void)
     {
-        debug_assert_eq!(mem::size_of::<CB>(), 0);
+        assert_eq!(mem::size_of::<CB>(), 0);
 
         // See: A note about `wrapped` functions
         unsafe extern "C" fn wrapped<F>(s: *mut ffi::pa_stream, success: c_int, userdata: *mut c_void)
             where F: Fn(&Stream, i32, *mut c_void)
         {
-            use std::mem::{forget, uninitialized};
             let mut stm = stream::from_raw_ptr(s);
-            let result = uninitialized::<F>()(&mut stm, success, userdata);
+            let cb = MaybeUninit::<F>::uninit();
+            let result = (*cb.as_ptr())(&mut stm, success, userdata);
             forget(stm);
 
             result
