@@ -298,12 +298,12 @@ class BlobBodyStreamHolder final : public BodyStreamHolder {
 
   void MarkAsRead() override {}
 
-  JSObject* GetReadableStreamBody() override { return mStream; }
-
-  void SetStream(JSObject* aObject) {
-    MOZ_ASSERT(aObject);
-    mStream = aObject;
+  void SetReadableStreamBody(JSObject* aBody) override {
+    MOZ_ASSERT(aBody);
+    mStream = aBody;
   }
+
+  JSObject* GetReadableStreamBody() override { return mStream; }
 
   // Public to make trace happy.
   JS::Heap<JSObject*> mStream;
@@ -352,16 +352,12 @@ void Blob::Stream(JSContext* aCx, JS::MutableHandle<JSObject*> aStream,
 
   RefPtr<BlobBodyStreamHolder> holder = new BlobBodyStreamHolder();
 
-  JS::Rooted<JSObject*> body(aCx);
-  BodyStream::Create(aCx, holder, global, stream, &body, aRv);
+  BodyStream::Create(aCx, holder, global, stream, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
 
-  MOZ_ASSERT(body);
-
-  holder->SetStream(body);
-  aStream.set(body);
+  aStream.set(holder->GetReadableStreamBody());
 }
 
 }  // namespace dom
