@@ -15,6 +15,7 @@
 
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonOutput
+import org.gradle.api.internal.artifacts.ArtifactAttributes
 
 // This installs a Miniconda3 environment into the gradle user home directory
 // so that it will be shared between all libraries that use Glean.  This is
@@ -99,7 +100,7 @@ task createBuildDir {
         !file(buildDir).exists()
     }
     doLast {
-        println "Creating build directory:" + buildDir.getPath()
+        project.logger.lifecycle("Creating build directory:" + buildDir.getPath())
         buildDir.mkdir()
     }
 }
@@ -126,6 +127,49 @@ clean {
     delete GLEAN_BOOTSTRAP_DIR
 }
 
+// Support for extracting metrics.yaml from artifact files.
+
+// This is how to extract `metrics.yaml` and `pings.yaml` from AAR files: an "artifact transform"
+// identifies the files in an "exploded AAR" directory.  See
+// https://docs.gradle.org/current/userguide/dependency_management_attribute_based_matching.html#sec:abm_artifact_transforms.
+// This is exactly how elements of AAR files are consumed by the Android-Gradle plugin; see the
+// transforms defined in
+// https://android.googlesource.com/platform/tools/base/+/studio-master-dev/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/dependency/AarTransform.java
+// and their usage at
+// https://android.googlesource.com/platform/tools/base/+/studio-master-dev/build-system/gradle-core/src/main/java/com/android/build/gradle/internal/VariantManager.java#592.
+//
+// Note that this mechanism only applies to `module` dependencies (i.e., AAR files downloaded from
+// Maven) and not to `project` dependencies in the same root project or substituted as part of a
+// Gradle composite build.
+class GleanMetricsYamlTransform extends ArtifactTransform {
+    List<File> transform(File file) {
+        def f = new File(file, "metrics.yaml")
+        if (f.exists()) {
+            return [f]
+        }
+        return []
+    }
+}
+
+if (project.ext.has("allowMetricsFromAAR")) {
+    dependencies {
+        registerTransform { reg ->
+            // The type here should be
+            // `com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.EXPLODED_AAR.getType())`,
+            // but there's no good way to access the including script's classpath from `apply from:`
+            // scripts. See https://stackoverflow.com/a/37060550. The 'android-exploded-aar' string is
+            // very unlikely to change, so it's just hard-coded.
+            reg.getFrom().attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    'android-exploded-aar')
+            reg.getTo().attribute(
+                    ArtifactAttributes.ARTIFACT_FORMAT,
+                    'glean-metrics-yaml')
+            reg.artifactTransform(GleanMetricsYamlTransform.class)
+        }
+    }
+}
+
 // Generate the Metrics API
 ext.gleanGenerateMetricsAPI = {
     variant ->
@@ -141,6 +185,18 @@ ext.gleanGenerateMetricsAPI = {
     def fullNamespace = "${originalPackageName}.GleanMetrics"
     def generateKotlinAPI = task("generateMetricsSourceFor${variant.name.capitalize()}", type: Exec) {
         description = "Generate the Kotlin code for the Metrics API"
+
+        if (project.ext.has("allowMetricsFromAAR")) {
+            // This is sufficiently lazy to be valid at configuration time.  See the model at
+            // https://github.com/google/protobuf-gradle-plugin/blob/6d99a421c8d15710045e4e8d31a3af6cb0cc3b70/src/main/groovy/com/google/protobuf/gradle/ProtobufPlugin.groovy#L270-L277
+            inputs.files variant.compileConfiguration.incoming.artifactView {
+                attributes {
+                    it.attribute(ArtifactAttributes.ARTIFACT_FORMAT, 'glean-metrics-yaml')
+                }
+            }.files
+        }
+
+        outputs.dir sourceOutputDir
 
         workingDir  rootDir
         // Note that the command line is OS dependant: on linux/mac is Miniconda3/bin/python.
@@ -161,6 +217,8 @@ ext.gleanGenerateMetricsAPI = {
         args "$sourceOutputDir"
         args "-s"
         args "namespace=$fullNamespace"
+        // We intentionally don't let out the local metrics.yaml, even if another one will
+        // be extracted from the AAR file. The parser will just ignore this one, if not present.
         args "$projectDir/metrics.yaml"
         args "$projectDir/pings.yaml"
 
@@ -169,6 +227,17 @@ ext.gleanGenerateMetricsAPI = {
         // use metrics in the "glean..." category
         if (project.name == 'service-glean') {
             args "--allow-reserved"
+        }
+
+        doFirst {
+            // Add the potential 'metrics.yaml' files at evaluation-time, rather than
+            // configuration-time. Otherwise the Gradle build will fail.
+            if (project.ext.has("allowMetricsFromAAR")) {
+                inputs.files.forEach{ file ->
+                    project.logger.lifecycle("Glean SDK - generating API from ${file.path}")
+                    args file.path
+                }
+            }
         }
 
         // Only show the output if something went wrong.
@@ -182,10 +251,12 @@ ext.gleanGenerateMetricsAPI = {
         }
     }
 
-    // Only attach the generation task if the metrics file is available. We don't need to
-    // fail hard otherwise, as some 3rd party project might just want metrics included in
-    // Glean and nothing more.
-    if (file("$projectDir/metrics.yaml").exists() || file("$projectDir/pings.yaml").exists()) {
+    // Only attach the generation task if the metrics file is available or we're requested
+    // to fetch them from AAR files. We don't need to fail hard otherwise, as some 3rd party
+    // project might just want metrics included in Glean and nothing more.
+    if (file("$projectDir/metrics.yaml").exists()
+        || file("$projectDir/pings.yaml").exists()
+        || project.ext.has("allowMetricsFromAAR")) {
         // This is an Android-Gradle plugin 3+-ism.  Culted from reading the source,
         // searching for "registerJavaGeneratingTask", and finding
         // https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin/commit/2f2b91476fb1c6647791e2c6fe531a47615a1e85.
