@@ -23,20 +23,26 @@ struct U16Vec;
 struct F32Vec;
 struct RustHeapString;
 
-enum class RustSdpAddrType { kRustAddrNone, kRustAddrIp4, kRustAddrIp6 };
-
-struct RustIpAddr {
-  RustSdpAddrType addrType;
-  char unicastAddr[50];
-};
+enum class RustSdpAddressType { kRustAddrIp4, kRustAddrIp6 };
 
 struct StringView {
   const char* buf;
   size_t len;
 };
 
+struct RustAddress {
+  char ipAddress[50];
+  StringView fqdn;
+  bool isFqdn;
+};
+
+struct RustExplicitlyTypedAddress {
+  RustSdpAddressType addressType;
+  RustAddress address;
+};
+
 struct RustSdpConnection {
-  RustIpAddr addr;
+  RustExplicitlyTypedAddress addr;
   uint8_t ttl;
   uint64_t amount;
 };
@@ -45,7 +51,7 @@ struct RustSdpOrigin {
   StringView username;
   uint64_t sessionId;
   uint64_t sessionVersion;
-  RustIpAddr addr;
+  RustExplicitlyTypedAddress addr;  // TODO address
 };
 
 enum class RustSdpMediaValue { kRustAudio, kRustVideo, kRustApplication };
@@ -246,7 +252,8 @@ struct RustSdpAttributeGroup {
 
 struct RustSdpAttributeRtcp {
   uint32_t port;
-  RustIpAddr unicastAddr;
+  RustExplicitlyTypedAddress unicastAddr;
+  bool has_address;
 };
 
 struct RustSdpAttributeSctpmap {
@@ -279,7 +286,7 @@ enum class RustDirection {
 
 struct RustSdpAttributeRemoteCandidate {
   uint32_t component;
-  RustIpAddr address;
+  RustAddress address;
   uint32_t port;
 };
 
