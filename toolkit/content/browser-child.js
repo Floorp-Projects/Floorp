@@ -16,10 +16,15 @@ const { WebProgressChild } = ChromeUtils.import(
 
 this.WebProgress = new WebProgressChild(this);
 
-docShell
-  .QueryInterface(Ci.nsIInterfaceRequestor)
-  .getInterface(Ci.nsIBrowserChild)
-  .beginSendingWebProgressEventsToParent();
+try {
+  docShell
+    .QueryInterface(Ci.nsIInterfaceRequestor)
+    .getInterface(Ci.nsIBrowserChild)
+    .beginSendingWebProgressEventsToParent();
+} catch (e) {
+  // In responsive design mode, we do not have a BrowserChild for the in-parent
+  // document.
+}
 
 // This message is used to measure content process startup performance in Talos
 // tests.
