@@ -1,29 +1,33 @@
-#![feature(conservative_impl_trait)]
-
 extern crate rayon;
 
-use rayon::prelude::*;
 use rayon::iter::plumbing::*;
+use rayon::prelude::*;
 
 /// Stress-test indexes for `Producer::split_at`.
 fn check<F, I>(expected: &[I::Item], mut f: F)
-    where F: FnMut() -> I,
-          I: IntoParallelIterator,
-          I::Iter: IndexedParallelIterator,
-          I::Item: PartialEq + std::fmt::Debug
+where
+    F: FnMut() -> I,
+    I: IntoParallelIterator,
+    I::Iter: IndexedParallelIterator,
+    I::Item: PartialEq + std::fmt::Debug,
 {
-    for (i, j, k) in triples(expected.len() + 1) {
+    map_triples(expected.len() + 1, |i, j, k| {
         Split::forward(f(), i, j, k, expected);
         Split::reverse(f(), i, j, k, expected);
-    }
+    });
 }
 
-fn triples(end: usize) -> impl Iterator<Item=(usize, usize, usize)> {
-    (0..end).flat_map(move |i| {
-        (i..end).flat_map(move |j| {
-            (j..end).map(move |k| (i, j, k))
-        })
-    })
+fn map_triples<F>(end: usize, mut f: F)
+where
+    F: FnMut(usize, usize, usize),
+{
+    for i in 0..end {
+        for j in i..end {
+            for k in j..end {
+                f(i, j, k);
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -31,27 +35,37 @@ struct Split {
     i: usize,
     j: usize,
     k: usize,
-    reverse: bool
+    reverse: bool,
 }
 
 impl Split {
     fn forward<I>(iter: I, i: usize, j: usize, k: usize, expected: &[I::Item])
-        where I: IntoParallelIterator,
-              I::Iter: IndexedParallelIterator,
-              I::Item: PartialEq + std::fmt::Debug
+    where
+        I: IntoParallelIterator,
+        I::Iter: IndexedParallelIterator,
+        I::Item: PartialEq + std::fmt::Debug,
     {
-        let result = iter.into_par_iter()
-            .with_producer(Split { i, j, k, reverse: false });
+        let result = iter.into_par_iter().with_producer(Split {
+            i,
+            j,
+            k,
+            reverse: false,
+        });
         assert_eq!(result, expected);
     }
 
     fn reverse<I>(iter: I, i: usize, j: usize, k: usize, expected: &[I::Item])
-        where I: IntoParallelIterator,
-              I::Iter: IndexedParallelIterator,
-              I::Item: PartialEq + std::fmt::Debug
+    where
+        I: IntoParallelIterator,
+        I::Iter: IndexedParallelIterator,
+        I::Item: PartialEq + std::fmt::Debug,
     {
-        let result = iter.into_par_iter()
-            .with_producer(Split { i, j, k, reverse: true });
+        let result = iter.into_par_iter().with_producer(Split {
+            i,
+            j,
+            k,
+            reverse: true,
+        });
         assert!(result.iter().eq(expected.iter().rev()));
     }
 }
@@ -60,7 +74,8 @@ impl<T> ProducerCallback<T> for Split {
     type Output = Vec<T>;
 
     fn callback<P>(self, producer: P) -> Self::Output
-        where P: Producer<Item = T>
+    where
+        P: Producer<Item = T>,
     {
         println!("{:?}", self);
 
@@ -93,13 +108,12 @@ fn check_len<I: ExactSizeIterator>(iter: &I, len: usize) {
     assert_eq!(iter.len(), len);
 }
 
-
 // **** Base Producers ****
 
 #[test]
 fn empty() {
     let v = vec![42];
-    check(&v[..0], || rayon::iter::empty());
+    check(&v[..0], rayon::iter::empty);
 }
 
 #[test]
@@ -121,6 +135,12 @@ fn range() {
 }
 
 #[test]
+fn range_inclusive() {
+    let v: Vec<_> = (0u16..=10).collect();
+    check(&v, || 0u16..=10);
+}
+
+#[test]
 fn repeatn() {
     let v: Vec<_> = std::iter::repeat(1).take(5).collect();
     check(&v, || rayon::iter::repeatn(1, 5));
@@ -139,28 +159,31 @@ fn slice_iter_mut() {
     let mut v: Vec<_> = s.clone();
     let expected: Vec<_> = v.iter_mut().collect();
 
-    for (i, j, k) in triples(expected.len() + 1) {
+    map_triples(expected.len() + 1, |i, j, k| {
         Split::forward(s.par_iter_mut(), i, j, k, &expected);
         Split::reverse(s.par_iter_mut(), i, j, k, &expected);
-    }
+    });
 }
 
 #[test]
 fn slice_chunks() {
     let s: Vec<_> = (0..10).collect();
-    let v: Vec<_> = s.chunks(2).collect();
-    check(&v, || s.par_chunks(2));
+    for len in 1..s.len() + 2 {
+        let v: Vec<_> = s.chunks(len).collect();
+        check(&v, || s.par_chunks(len));
+    }
 }
 
 #[test]
 fn slice_chunks_mut() {
     let mut s: Vec<_> = (0..10).collect();
     let mut v: Vec<_> = s.clone();
-    let expected: Vec<_> = v.chunks_mut(2).collect();
-
-    for (i, j, k) in triples(expected.len() + 1) {
-        Split::forward(s.par_chunks_mut(2), i, j, k, &expected);
-        Split::reverse(s.par_chunks_mut(2), i, j, k, &expected);
+    for len in 1..s.len() + 2 {
+        let expected: Vec<_> = v.chunks_mut(len).collect();
+        map_triples(expected.len() + 1, |i, j, k| {
+            Split::forward(s.par_chunks_mut(len), i, j, k, &expected);
+            Split::reverse(s.par_chunks_mut(len), i, j, k, &expected);
+        });
     }
 }
 
@@ -176,7 +199,6 @@ fn vec() {
     let v: Vec<_> = (0..10).collect();
     check(&v, || v.clone());
 }
-
 
 // **** Adaptors ****
 
@@ -243,6 +265,18 @@ fn map() {
 fn map_with() {
     let v: Vec<_> = (0..10).collect();
     check(&v, || v.par_iter().map_with(vec![0], |_, &x| x));
+}
+
+#[test]
+fn map_init() {
+    let v: Vec<_> = (0..10).collect();
+    check(&v, || v.par_iter().map_init(|| vec![0], |_, &x| x));
+}
+
+#[test]
+fn panic_fuse() {
+    let v: Vec<_> = (0..10).collect();
+    check(&v, || (0..10).into_par_iter().panic_fuse());
 }
 
 #[test]

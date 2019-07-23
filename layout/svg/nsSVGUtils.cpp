@@ -1517,18 +1517,11 @@ float nsSVGUtils::GetOpacity(nsStyleSVGOpacitySource aOpacityType,
     case eStyleSVGOpacitySource_ContextFillOpacity:
       if (aContextPaint) {
         opacity = aContextPaint->GetFillOpacity();
-      } else {
-        NS_WARNING(
-            "Content used context-fill-opacity when not in a context element");
       }
       break;
     case eStyleSVGOpacitySource_ContextStrokeOpacity:
       if (aContextPaint) {
         opacity = aContextPaint->GetStrokeOpacity();
-      } else {
-        NS_WARNING(
-            "Content used context-stroke-opacity when not in a context "
-            "element");
       }
       break;
     default:

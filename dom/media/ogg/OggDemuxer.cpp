@@ -1257,6 +1257,10 @@ RefPtr<MediaRawData> OggTrackDemuxer::NextSample() {
   // We adjust the start time of the sample to account for the potential ogg
   // chaining.
   data->mTime += totalDuration;
+  if (!data->mTime.IsValid()) {
+    return nullptr;
+  }
+
   return data;
 }
 
@@ -1273,11 +1277,15 @@ RefPtr<OggTrackDemuxer::SamplesPromise> OggTrackDemuxer::GetSamples(
     if (!sample) {
       break;
     }
-    samples->mSamples.AppendElement(sample);
+    if (!sample->HasValidTime()) {
+      return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_DEMUXER_ERR,
+                                             __func__);
+    }
+    samples->AppendSample(sample);
     aNumSamples--;
   }
 
-  if (samples->mSamples.IsEmpty()) {
+  if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
   } else {

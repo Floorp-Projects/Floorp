@@ -740,7 +740,7 @@ void UnmapPages(void* region, size_t length) {
   UnmapInternal(region, length);
 }
 
-bool MarkPagesUnused(void* region, size_t length) {
+static void CheckDecommit(void* region, size_t length) {
   MOZ_RELEASE_ASSERT(region);
   MOZ_RELEASE_ASSERT(length > 0);
 
@@ -750,14 +750,21 @@ bool MarkPagesUnused(void* region, size_t length) {
   MOZ_ASSERT(OffsetFromAligned(region, ArenaSize) == 0);
   MOZ_ASSERT(length % ArenaSize == 0);
 
+  if (DecommitEnabled()) {
+    // We can't decommit part of a page.
+    MOZ_RELEASE_ASSERT(OffsetFromAligned(region, pageSize) == 0);
+    MOZ_RELEASE_ASSERT(length % pageSize == 0);
+  }
+}
+
+bool MarkPagesUnusedSoft(void* region, size_t length) {
+  CheckDecommit(region, length);
+
   MOZ_MAKE_MEM_NOACCESS(region, length);
 
   if (!DecommitEnabled()) {
     return true;
   }
-  // We can't decommit part of a page.
-  MOZ_RELEASE_ASSERT(OffsetFromAligned(region, pageSize) == 0);
-  MOZ_RELEASE_ASSERT(length % pageSize == 0);
 
 #if defined(XP_WIN)
   return VirtualAlloc(region, length, MEM_RESET,
@@ -771,24 +778,43 @@ bool MarkPagesUnused(void* region, size_t length) {
 #endif
 }
 
-void MarkPagesInUse(void* region, size_t length) {
-  MOZ_RELEASE_ASSERT(region);
-  MOZ_RELEASE_ASSERT(length > 0);
+bool MarkPagesUnusedHard(void* region, size_t length) {
+  CheckDecommit(region, length);
 
-  // pageSize == ArenaSize doesn't necessarily hold, but this function is
-  // used by the GC to recommit Arenas that were previously decommitted,
-  // so we don't want to assert if pageSize > ArenaSize.
-  MOZ_ASSERT(OffsetFromAligned(region, ArenaSize) == 0);
-  MOZ_ASSERT(length % ArenaSize == 0);
+  MOZ_MAKE_MEM_NOACCESS(region, length);
+
+  if (!DecommitEnabled()) {
+    return true;
+  }
+
+#if defined(XP_WIN)
+  return VirtualFree(region, length, MEM_DECOMMIT);
+#else
+  return MarkPagesUnusedSoft(region, length);
+#endif
+}
+
+void MarkPagesInUseSoft(void* region, size_t length) {
+  CheckDecommit(region, length);
+
+  MOZ_MAKE_MEM_UNDEFINED(region, length);
+}
+
+bool MarkPagesInUseHard(void* region, size_t length) {
+  CheckDecommit(region, length);
 
   MOZ_MAKE_MEM_UNDEFINED(region, length);
 
   if (!DecommitEnabled()) {
-    return;
+    return true;
   }
-  // We can't commit part of a page.
-  MOZ_RELEASE_ASSERT(OffsetFromAligned(region, pageSize) == 0);
-  MOZ_RELEASE_ASSERT(length % pageSize == 0);
+
+#if defined(XP_WIN)
+  return VirtualAlloc(region, length, MEM_COMMIT,
+                      DWORD(PageAccess::ReadWrite)) == region;
+#else
+  return true;
+#endif
 }
 
 size_t GetPageFaultCount() {

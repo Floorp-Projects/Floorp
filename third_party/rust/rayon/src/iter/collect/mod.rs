@@ -1,4 +1,4 @@
-use super::{ParallelIterator, IndexedParallelIterator, IntoParallelIterator, ParallelExtend};
+use super::{IndexedParallelIterator, IntoParallelIterator, ParallelExtend, ParallelIterator};
 use std::collections::LinkedList;
 use std::slice;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -11,10 +11,11 @@ mod test;
 
 /// Collects the results of the exact iterator into the specified vector.
 ///
-/// This is not directly public, but called by `IndexedParallelIterator::collect_into_vec`.
-pub fn collect_into_vec<I, T>(pi: I, v: &mut Vec<T>)
-    where I: IndexedParallelIterator<Item = T>,
-          T: Send
+/// This is called by `IndexedParallelIterator::collect_into_vec`.
+pub(super) fn collect_into_vec<I, T>(pi: I, v: &mut Vec<T>)
+where
+    I: IndexedParallelIterator<Item = T>,
+    T: Send,
 {
     v.truncate(0); // clear any old data
     let mut collect = Collect::new(v, pi.len());
@@ -34,8 +35,9 @@ pub fn collect_into_vec<I, T>(pi: I, v: &mut Vec<T>)
 /// `UnindexedConsumer`.  That implementation panics `unreachable!` in case
 /// there's a bug where we actually do try to use this unindexed.
 fn special_extend<I, T>(pi: I, len: usize, v: &mut Vec<T>)
-    where I: ParallelIterator<Item = T>,
-          T: Send
+where
+    I: ParallelIterator<Item = T>,
+    T: Send,
 {
     let mut collect = Collect::new(v, len);
     pi.drive_unindexed(collect.as_consumer());
@@ -44,11 +46,12 @@ fn special_extend<I, T>(pi: I, len: usize, v: &mut Vec<T>)
 
 /// Unzips the results of the exact iterator into the specified vectors.
 ///
-/// This is not directly public, but called by `IndexedParallelIterator::unzip_into_vecs`.
-pub fn unzip_into_vecs<I, A, B>(pi: I, left: &mut Vec<A>, right: &mut Vec<B>)
-    where I: IndexedParallelIterator<Item = (A, B)>,
-          A: Send,
-          B: Send
+/// This is called by `IndexedParallelIterator::unzip_into_vecs`.
+pub(super) fn unzip_into_vecs<I, A, B>(pi: I, left: &mut Vec<A>, right: &mut Vec<B>)
+where
+    I: IndexedParallelIterator<Item = (A, B)>,
+    A: Send,
+    B: Send,
 {
     // clear any old data
     left.truncate(0);
@@ -64,7 +67,6 @@ pub fn unzip_into_vecs<I, A, B>(pi: I, left: &mut Vec<A>, right: &mut Vec<B>)
     right.complete();
 }
 
-
 /// Manage the collection vector.
 struct Collect<'c, T: Send + 'c> {
     writes: AtomicUsize,
@@ -76,13 +78,13 @@ impl<'c, T: Send + 'c> Collect<'c, T> {
     fn new(vec: &'c mut Vec<T>, len: usize) -> Self {
         Collect {
             writes: AtomicUsize::new(0),
-            vec: vec,
-            len: len,
+            vec,
+            len,
         }
     }
 
     /// Create a consumer on a slice of our memory.
-    fn as_consumer(&mut self) -> CollectConsumer<T> {
+    fn as_consumer(&mut self) -> CollectConsumer<'_, T> {
         // Reserve the new space.
         self.vec.reserve(self.len);
 
@@ -104,23 +106,26 @@ impl<'c, T: Send + 'c> Collect<'c, T> {
             // have happened. Unless some code is buggy, that means we
             // should have seen `len` total writes.
             let actual_writes = self.writes.load(Ordering::Relaxed);
-            assert!(actual_writes == self.len,
-                    "expected {} total writes, but got {}",
-                    self.len,
-                    actual_writes);
+            assert!(
+                actual_writes == self.len,
+                "expected {} total writes, but got {}",
+                self.len,
+                actual_writes
+            );
             let new_len = self.vec.len() + self.len;
             self.vec.set_len(new_len);
         }
     }
 }
 
-
 /// Extend a vector with items from a parallel iterator.
 impl<T> ParallelExtend<T> for Vec<T>
-    where T: Send
+where
+    T: Send,
 {
     fn par_extend<I>(&mut self, par_iter: I)
-        where I: IntoParallelIterator<Item = T>
+    where
+        I: IntoParallelIterator<Item = T>,
     {
         // See the vec_collect benchmarks in rayon-demo for different strategies.
         let par_iter = par_iter.into_par_iter();

@@ -303,7 +303,7 @@ fuzzy-if(skiaContent,0-1,0-5) == 262998-1.html 262998-1-ref.html
 == 269908-5.html 269908-5-ref.html
 == 271747-1a.html 271747-1-ref.html
 == 271747-1b.html 271747-1-ref.html
-fails == chrome://reftest/content/bugs/272646-1.xul chrome://reftest/content/bugs/272646-1-ref.xul
+== chrome://reftest/content/bugs/272646-1.xul chrome://reftest/content/bugs/272646-1-ref.xul
 == chrome://reftest/content/bugs/272646-2a.xul chrome://reftest/content/bugs/272646-2-ref.xul
 == chrome://reftest/content/bugs/272646-2b.xul chrome://reftest/content/bugs/272646-2-ref.xul
 == chrome://reftest/content/bugs/272646-2c.xul chrome://reftest/content/bugs/272646-2-ref.xul

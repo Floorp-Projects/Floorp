@@ -38,7 +38,7 @@
     "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
     "babel-preset-react": "^6.24.1",
     "devtools-config": "^0.0.16",
-    "devtools-launchpad": "^0.0.155",
+    "devtools-launchpad": "^0.0.156",
     "devtools-license-check": "^0.7.0",
     "devtools-modules": "~1.1.0",
     "devtools-services": "^0.0.1",

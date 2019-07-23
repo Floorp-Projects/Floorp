@@ -1,0 +1,66 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "$extend": "Permission",
+        "choices": [{
+          "type": "string",
+          "enum": [
+            "networkStatus"
+          ]
+        }]
+      }
+    ]
+  },
+  {
+    "namespace": "networkStatus",
+    "description": "This API provides the ability to determine the status of and detect changes in the network connection. This API can only be used in privileged extensions.",
+    "permissions": ["networkStatus"],
+    "types": [
+      {
+        "id": "NetworkLinkInfo",
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["unknown", "up", "down"],
+            "description": "Status of the network link, if \"unknown\" then link is usually assumed to be \"up\""
+          },
+          "type": {
+            "type": "string",
+            "enum": ["unknown", "ethernet", "usb", "wifi", "wimax", "2g", "3g", "4g"],
+            "description": "If known, the type of network connection that is avialable."
+          },
+          "id": {
+            "type": "string",
+            "optional": true,
+            "description": "If known, the network id or name."
+          }
+        }
+      }
+    ],
+    "functions": [
+      {
+        "name": "getLinkInfo",
+        "type": "function",
+        "description": "Returns the $(ref:NetworkLinkInfo} of the current network connection.",
+        "async": true,
+        "parameters": []
+      }
+    ],
+    "events": [
+      {
+        "name": "onConnectionChanged",
+        "type": "function",
+        "description": "Fired when the network connection state changes.",
+        "parameters": [
+          {
+            "name": "details",
+            "$ref": "NetworkLinkInfo"
+          }
+        ]
+      }
+    ]
+  }
+]

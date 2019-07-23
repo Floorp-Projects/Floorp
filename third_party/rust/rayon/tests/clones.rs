@@ -1,12 +1,11 @@
-#![feature(clone_closures)]
-
 extern crate rayon;
 
 use rayon::prelude::*;
 
 fn check<I>(iter: I)
-    where I: ParallelIterator + Clone,
-          I::Item: std::fmt::Debug + PartialEq
+where
+    I: ParallelIterator + Clone,
+    I::Item: std::fmt::Debug + PartialEq,
 {
     let a: Vec<_> = iter.clone().collect();
     let b: Vec<_> = iter.collect();
@@ -24,7 +23,7 @@ fn clone_binary_heap() {
 #[test]
 fn clone_btree_map() {
     use std::collections::BTreeMap;
-    let map: BTreeMap<_,_> = (0..1000).enumerate().collect();
+    let map: BTreeMap<_, _> = (0..1000).enumerate().collect();
     check(map.par_iter());
 }
 
@@ -38,7 +37,7 @@ fn clone_btree_set() {
 #[test]
 fn clone_hash_map() {
     use std::collections::HashMap;
-    let map: HashMap<_,_> = (0..1000).enumerate().collect();
+    let map: HashMap<_, _> = (0..1000).enumerate().collect();
     check(map.par_iter());
 }
 
@@ -85,6 +84,11 @@ fn clone_range() {
 }
 
 #[test]
+fn clone_range_inclusive() {
+    check((0..=1000).into_par_iter());
+}
+
+#[test]
 fn clone_str() {
     let s = include_str!("clones.rs");
     check(s.par_chars());
@@ -116,6 +120,8 @@ fn clone_adaptors() {
     check(v.par_iter().flatten());
     check(v.par_iter().with_max_len(1).fold(|| 0, |x, _| x));
     check(v.par_iter().with_max_len(1).fold_with(0, |x, _| x));
+    check(v.par_iter().with_max_len(1).try_fold(|| 0, |_, &x| x));
+    check(v.par_iter().with_max_len(1).try_fold_with(0, |_, &x| x));
     check(v.par_iter().inspect(|_| ()));
     check(v.par_iter().update(|_| ()));
     check(v.par_iter().interleave(&v));
@@ -124,6 +130,8 @@ fn clone_adaptors() {
     check(v.par_iter().chunks(3));
     check(v.par_iter().map(|x| x));
     check(v.par_iter().map_with(0, |_, x| x));
+    check(v.par_iter().map_init(|| 0, |_, x| x));
+    check(v.par_iter().panic_fuse());
     check(v.par_iter().rev());
     check(v.par_iter().skip(1));
     check(v.par_iter().take(1));
@@ -155,4 +163,3 @@ fn clone_repeat() {
 fn clone_splitter() {
     check(rayon::iter::split(0..1000, |x| (x, None)));
 }
-

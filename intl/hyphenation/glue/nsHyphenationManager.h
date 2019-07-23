@@ -26,6 +26,8 @@ class nsHyphenationManager {
 
   static void Shutdown();
 
+  size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
+
  private:
   ~nsHyphenationManager();
 

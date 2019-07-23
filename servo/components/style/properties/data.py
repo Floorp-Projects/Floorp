@@ -591,7 +591,7 @@ class PropertiesData(object):
         shorthand.alias = list(map(lambda xp: Alias(xp[0], shorthand, xp[1]), shorthand.alias))
         self.shorthand_aliases += shorthand.alias
         self.shorthands.append(shorthand)
-        self.shorthands_by_name[name] = shorthand;
+        self.shorthands_by_name[name] = shorthand
         return shorthand
 
     def shorthands_except_all(self):
@@ -604,6 +604,9 @@ class PropertiesData(object):
 def _add_logical_props(data, props):
     groups = set()
     for prop in props:
+        if prop not in data.longhands_by_name:
+            assert data.product == "servo"
+            continue
         prop = data.longhands_by_name[prop]
         if prop.logical_group:
             groups.add(prop.logical_group)
@@ -611,25 +614,27 @@ def _add_logical_props(data, props):
         for prop in data.longhands_by_logical_group[group]:
             props.add(prop.name)
 
+
 # These are probably Gecko bugs and should be supported per spec.
-def _remove_common_first_line_and_first_letter_properties(props):
-    props.remove("-moz-tab-size")
-    props.remove("hyphens")
-    props.remove("line-break")
+def _remove_common_first_line_and_first_letter_properties(props, product):
+    if product == "gecko":
+        props.remove("-moz-tab-size")
+        props.remove("hyphens")
+        props.remove("line-break")
+        props.remove("text-align-last")
+        props.remove("text-emphasis-position")
+        props.remove("text-emphasis-style")
+        props.remove("text-emphasis-color")
+        props.remove("text-decoration-skip-ink")
+        props.remove("text-decoration-thickness")
+        props.remove("text-underline-offset")
+
     props.remove("overflow-wrap")
     props.remove("text-align")
-    props.remove("text-align-last")
     props.remove("text-justify")
     props.remove("white-space")
     props.remove("word-break")
-
-    props.remove("text-emphasis-position")
-    props.remove("text-emphasis-style")
-    props.remove("text-emphasis-color")
     props.remove("text-indent")
-    props.remove("text-decoration-skip-ink")
-    props.remove("text-decoration-thickness")
-    props.remove("text-underline-offset")
 
 
 class PropertyRestrictions:
@@ -665,19 +670,18 @@ class PropertyRestrictions:
 
             # Kinda like css-backgrounds?
             "background-blend-mode",
-        ] + PropertyRestrictions.shorthand(data, "padding") \
-          + PropertyRestrictions.shorthand(data, "margin") \
-          + PropertyRestrictions.spec(data, "css-fonts") \
-          + PropertyRestrictions.spec(data, "css-backgrounds") \
-          + PropertyRestrictions.spec(data, "css-text") \
-          + PropertyRestrictions.spec(data, "css-shapes") \
+        ] + PropertyRestrictions.shorthand(data, "padding")
+          + PropertyRestrictions.shorthand(data, "margin")
+          + PropertyRestrictions.spec(data, "css-fonts")
+          + PropertyRestrictions.spec(data, "css-backgrounds")
+          + PropertyRestrictions.spec(data, "css-text")
+          + PropertyRestrictions.spec(data, "css-shapes")
           + PropertyRestrictions.spec(data, "css-text-decor"))
 
         _add_logical_props(data, props)
 
-        _remove_common_first_line_and_first_letter_properties(props)
+        _remove_common_first_line_and_first_letter_properties(props, data.product)
         return props
-
 
     # https://drafts.csswg.org/css-pseudo/#first-line-styling
     @staticmethod
@@ -698,9 +702,9 @@ class PropertyRestrictions:
 
             # Kinda like css-backgrounds?
             "background-blend-mode",
-        ] + PropertyRestrictions.spec(data, "css-fonts") \
-          + PropertyRestrictions.spec(data, "css-backgrounds") \
-          + PropertyRestrictions.spec(data, "css-text") \
+        ] + PropertyRestrictions.spec(data, "css-fonts")
+          + PropertyRestrictions.spec(data, "css-backgrounds")
+          + PropertyRestrictions.spec(data, "css-text")
           + PropertyRestrictions.spec(data, "css-text-decor"))
 
         # These are probably Gecko bugs and should be supported per spec.
@@ -710,7 +714,7 @@ class PropertyRestrictions:
             props.remove(prop)
         props.remove("box-shadow")
 
-        _remove_common_first_line_and_first_letter_properties(props)
+        _remove_common_first_line_and_first_letter_properties(props, data.product)
         return props
 
     # https://drafts.csswg.org/css-pseudo/#placeholder
@@ -760,7 +764,7 @@ class PropertyRestrictions:
             # background shorthand, and get reset, per
             # https://drafts.fxtf.org/compositing/#background-blend-mode
             "background-blend-mode",
-        ] + PropertyRestrictions.shorthand(data, "text-decoration") \
-          + PropertyRestrictions.shorthand(data, "background") \
-          + PropertyRestrictions.shorthand(data, "outline") \
+        ] + PropertyRestrictions.shorthand(data, "text-decoration")
+          + PropertyRestrictions.shorthand(data, "background")
+          + PropertyRestrictions.shorthand(data, "outline")
           + PropertyRestrictions.shorthand(data, "font"))

@@ -729,21 +729,6 @@ $(COBJS):
 	$(REPORT_BUILD_VERBOSE)
 	$(CC) $(OUTOPTION)$@ -c $(COMPILE_CFLAGS) $($(notdir $<)_FLAGS) $(_VPATH_SRCS)
 
-# DEFINES and ACDEFINES are needed here to enable conditional compilation of Q_OBJECTs:
-# 'moc' only knows about #defines it gets on the command line (-D...), not in
-# included headers like mozilla-config.h
-$(filter moc_%.cpp,$(CPPSRCS)): moc_%.cpp: %.h
-	$(REPORT_BUILD_VERBOSE)
-	$(MOC) $(DEFINES) $(ACDEFINES) $< $(OUTOPTION)$@
-
-$(filter moc_%.cc,$(CPPSRCS)): moc_%.cc: %.cc
-	$(REPORT_BUILD_VERBOSE)
-	$(MOC) $(DEFINES) $(ACDEFINES) $(_VPATH_SRCS:.cc=.h) $(OUTOPTION)$@
-
-$(filter qrc_%.cpp,$(CPPSRCS)): qrc_%.cpp: %.qrc
-	$(REPORT_BUILD_VERBOSE)
-	$(RCC) -name $* $< $(OUTOPTION)$@
-
 ifdef ASFILES
 # The AS_DASH_C_FLAG is needed cause not all assemblers (Solaris) accept
 # a '-c' flag.

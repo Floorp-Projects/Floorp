@@ -106,6 +106,14 @@
       ["management"]
     ]
   },
+  "networkStatus": {
+    "url": "chrome://extensions/content/parent/ext-networkStatus.js",
+    "schema": "chrome://extensions/content/schemas/network_status.json",
+    "scopes": ["addon_parent"],
+    "paths": [
+      ["networkStatus"]
+    ]
+  },
   "notifications": {
     "url": "chrome://extensions/content/parent/ext-notifications.js",
     "schema": "chrome://extensions/content/schemas/notifications.json",

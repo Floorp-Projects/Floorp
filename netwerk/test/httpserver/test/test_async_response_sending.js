@@ -867,19 +867,9 @@ function CustomPipe(name) {
     //
     // see nsIBinaryOutputStream.writeByteArray
     //
-    writeByteArray: function writeByteArray(bytes, length) {
-      dumpn(
-        "*** [" +
-          this.name +
-          "].writeByteArray" +
-          "([" +
-          bytes +
-          "], " +
-          length +
-          ")"
-      );
+    writeByteArray: function writeByteArray(bytes) {
+      dumpn(`*** [${this.name}].writeByteArray([${bytes}])`);
 
-      Assert.equal(bytes.length, length, "sanity");
       if (!Components.isSuccessCode(self._status)) {
         throw self._status;
       }
@@ -890,12 +880,12 @@ function CustomPipe(name) {
         "writeByteArray can't support specified-length writes"
       );
 
-      if (this._writable < length) {
+      if (this._writable < bytes.length) {
         throw Cr.NS_BASE_STREAM_WOULD_BLOCK;
       }
 
       self._data.push.apply(self._data, bytes);
-      this._writable -= length;
+      this._writable -= bytes.length;
 
       if (
         input._readable === Infinity &&
@@ -1164,7 +1154,7 @@ CopyTest.prototype = {
 
       try {
         self._copyableDataStream.makeWritable(bytes.length);
-        self._copyableDataStream.writeByteArray(bytes, bytes.length);
+        self._copyableDataStream.writeByteArray(bytes);
       } finally {
         self._stageNextTask();
       }

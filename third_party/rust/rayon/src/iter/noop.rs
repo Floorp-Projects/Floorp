@@ -1,9 +1,9 @@
 use super::plumbing::*;
 
-pub struct NoopConsumer;
+pub(super) struct NoopConsumer;
 
 impl NoopConsumer {
-    pub fn new() -> Self {
+    pub(super) fn new() -> Self {
         NoopConsumer
     }
 }
@@ -33,10 +33,13 @@ impl<T> Folder<T> for NoopConsumer {
         self
     }
 
-   fn consume_iter<I>(self, iter: I) -> Self where I: IntoIterator<Item=T> {
+    fn consume_iter<I>(self, iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
         iter.into_iter().fold((), |_, _| ());
         self
-   }
+    }
 
     fn complete(self) {}
 
@@ -55,7 +58,7 @@ impl<T> UnindexedConsumer<T> for NoopConsumer {
     }
 }
 
-pub struct NoopReducer;
+pub(super) struct NoopReducer;
 
 impl Reducer<()> for NoopReducer {
     fn reduce(self, _left: (), _right: ()) {}

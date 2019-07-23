@@ -1583,11 +1583,13 @@ devtools.copy.unique.css.selector:
     bug_numbers:
       - 1323700
       - 1352115
+      - 1566395
     description: Number of times the DevTools copy unique CSS selector has been used.
-    expires: "59"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -1601,11 +1603,13 @@ devtools.copy.full.css.selector:
     bug_numbers:
       - 1323700
       - 1352115
+      - 1566395
     description: Number of times the DevTools copy full CSS selector has been used.
-    expires: "59"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -1618,11 +1622,13 @@ devtools.copy.xpath:
   opened:
     bug_numbers:
       - 987877
+      - 1566395
     description: Number of times the DevTools copy XPath has been used.
-    expires: "59"
+    expires: never
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
+      - mbalfanz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -1797,15 +1803,17 @@ devtools.inspector:
   three_pane_enabled:
     bug_numbers:
       - 1437881
+      - 1566395
     description: >
       Number of times the DevTools inspector was opened with the 3 pane inspector enabled,
       keyed by true/false.
-    expires: "65"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
       - gl@mozilla.com
+      - mbalfanz@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

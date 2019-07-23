@@ -13,6 +13,7 @@
 #include "nsHashKeys.h"
 #include "nsCoord.h"
 #include "nsTArray.h"
+#include "nsLineBox.h"
 
 #ifdef DrawText
 #  undef DrawText
@@ -25,7 +26,6 @@ class nsFontMetrics;
 class nsIFrame;
 class nsBlockFrame;
 class nsPresContext;
-class nsBlockInFlowLineIterator;
 struct nsSize;
 template <class T>
 class nsTHashtable;
@@ -418,8 +418,7 @@ class nsBidiPresUtils {
    *  than one paragraph for bidi resolution, resolve the paragraph up to that
    *  point.
    */
-  static void TraverseFrames(nsBlockInFlowLineIterator* aLineIter,
-                             nsIFrame* aCurrentFrame, BidiParagraphData* aBpd);
+  static void TraverseFrames(nsIFrame* aCurrentFrame, BidiParagraphData* aBpd);
 
   /**
    * Perform a recursive "pre-traversal" of the child frames of a block or
@@ -538,6 +537,7 @@ class nsBidiPresUtils {
    * create a continuation frame for the remainder of its content.
    *
    * @param aFrame       the original frame
+   * @param aLine        the line box containing aFrame
    * @param aNewFrame    [OUT] the new frame that was created
    * @param aStart       [IN] the start of the content mapped by aFrame (and
    *                          any fluid continuations)
@@ -546,9 +546,9 @@ class nsBidiPresUtils {
    * @see Resolve()
    * @see RemoveBidiContinuation()
    */
-  static inline nsresult EnsureBidiContinuation(nsIFrame* aFrame,
-                                                nsIFrame** aNewFrame,
-                                                int32_t aStart, int32_t aEnd);
+  static inline nsresult EnsureBidiContinuation(
+      nsIFrame* aFrame, const nsLineList::iterator aLine, nsIFrame** aNewFrame,
+      int32_t aStart, int32_t aEnd);
 
   /**
    * Helper method for Resolve()

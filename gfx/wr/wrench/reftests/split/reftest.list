@@ -19,3 +19,4 @@ platform(linux,mac) fuzzy(1,20) == same-plane.yaml same-plane.png
 == mixed-order.yaml mixed-order-ref.yaml
 fuzzy(1,40000) == filter.yaml filter-ref.yaml
 fuzzy(1,10000) == gradient.yaml gradient-ref.yaml
+== order-3.yaml order-3-ref.yaml

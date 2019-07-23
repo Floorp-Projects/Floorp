@@ -5,8 +5,8 @@
 //!
 //! [std::result]: https://doc.rust-lang.org/stable/std/result/
 
-use iter::*;
 use iter::plumbing::*;
+use iter::*;
 use std::sync::Mutex;
 
 use option;
@@ -22,15 +22,16 @@ impl<T: Send, E> IntoParallelIterator for Result<T, E> {
     type Iter = IntoIter<T>;
 
     fn into_par_iter(self) -> Self::Iter {
-        IntoIter { inner: self.ok().into_par_iter() }
+        IntoIter {
+            inner: self.ok().into_par_iter(),
+        }
     }
 }
 
-delegate_indexed_iterator!{
+delegate_indexed_iterator! {
     IntoIter<T> => T,
     impl<T: Send>
 }
-
 
 /// Parallel iterator over an immutable reference to a result
 #[derive(Debug)]
@@ -40,7 +41,9 @@ pub struct Iter<'a, T: Sync + 'a> {
 
 impl<'a, T: Sync> Clone for Iter<'a, T> {
     fn clone(&self) -> Self {
-        Iter { inner: self.inner.clone() }
+        Iter {
+            inner: self.inner.clone(),
+        }
     }
 }
 
@@ -49,15 +52,16 @@ impl<'a, T: Sync, E> IntoParallelIterator for &'a Result<T, E> {
     type Iter = Iter<'a, T>;
 
     fn into_par_iter(self) -> Self::Iter {
-        Iter { inner: self.as_ref().ok().into_par_iter() }
+        Iter {
+            inner: self.as_ref().ok().into_par_iter(),
+        }
     }
 }
 
-delegate_indexed_iterator!{
+delegate_indexed_iterator! {
     Iter<'a, T> => &'a T,
     impl<'a, T: Sync + 'a>
 }
-
 
 /// Parallel iterator over a mutable reference to a result
 #[derive(Debug)]
@@ -70,46 +74,49 @@ impl<'a, T: Send, E> IntoParallelIterator for &'a mut Result<T, E> {
     type Iter = IterMut<'a, T>;
 
     fn into_par_iter(self) -> Self::Iter {
-        IterMut { inner: self.as_mut().ok().into_par_iter() }
+        IterMut {
+            inner: self.as_mut().ok().into_par_iter(),
+        }
     }
 }
 
-delegate_indexed_iterator!{
+delegate_indexed_iterator! {
     IterMut<'a, T> => &'a mut T,
     impl<'a, T: Send + 'a>
 }
-
 
 /// Collect an arbitrary `Result`-wrapped collection.
 ///
 /// If any item is `Err`, then all previous `Ok` items collected are
 /// discarded, and it returns that error.  If there are multiple errors, the
 /// one returned is not deterministic.
-impl<'a, C, T, E> FromParallelIterator<Result<T, E>> for Result<C, E>
-    where C: FromParallelIterator<T>,
-          T: Send,
-          E: Send
+impl<C, T, E> FromParallelIterator<Result<T, E>> for Result<C, E>
+where
+    C: FromParallelIterator<T>,
+    T: Send,
+    E: Send,
 {
     fn from_par_iter<I>(par_iter: I) -> Self
-        where I: IntoParallelIterator<Item = Result<T, E>>
+    where
+        I: IntoParallelIterator<Item = Result<T, E>>,
     {
         let saved_error = Mutex::new(None);
         let collection = par_iter
             .into_par_iter()
             .map(|item| match item {
-                     Ok(item) => Some(item),
-                     Err(error) => {
-                         // We don't need a blocking `lock()`, as anybody
-                         // else holding the lock will also be writing
-                         // `Some(error)`, and then ours is irrelevant.
-                         if let Ok(mut guard) = saved_error.try_lock() {
-                             if guard.is_none() {
-                                 *guard = Some(error);
-                             }
-                         }
-                         None
-                     }
-                 })
+                Ok(item) => Some(item),
+                Err(error) => {
+                    // We don't need a blocking `lock()`, as anybody
+                    // else holding the lock will also be writing
+                    // `Some(error)`, and then ours is irrelevant.
+                    if let Ok(mut guard) = saved_error.try_lock() {
+                        if guard.is_none() {
+                            *guard = Some(error);
+                        }
+                    }
+                    None
+                }
+            })
             .while_some()
             .collect();
 

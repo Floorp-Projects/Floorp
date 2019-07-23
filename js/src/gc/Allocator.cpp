@@ -646,7 +646,7 @@ Arena* Chunk::fetchNextDecommittedArena() {
   decommittedArenas.unset(offset);
 
   Arena* arena = &arenas[offset];
-  MarkPagesInUse(arena, ArenaSize);
+  MarkPagesInUseSoft(arena, ArenaSize);
   arena->setAsNotAllocated();
 
   return arena;
@@ -787,7 +787,7 @@ void Chunk::init(JSRuntime* rt) {
 
 void Chunk::decommitAllArenas() {
   decommittedArenas.clear(true);
-  MarkPagesUnused(&arenas[0], ArenasPerChunk * ArenaSize);
+  MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
 
   info.freeArenasHead = nullptr;
   info.lastDecommittedArenaOffset = 0;

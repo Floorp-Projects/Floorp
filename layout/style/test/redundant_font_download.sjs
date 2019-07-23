@@ -39,11 +39,11 @@ function handleRequest(request, response)
   if (query["q"] == "init") {
     log = "init"; // initialize the log, and return a PNG image
     response.setHeader("Content-Type", "image/png", false);
-    stream.writeByteArray(RED_SQUARE, RED_SQUARE.length);
+    stream.writeByteArray(RED_SQUARE);
   } else if (query["q"] == "image") {
     log = log + ";" + query["q"];
     response.setHeader("Content-Type", "image/png", false);
-    stream.writeByteArray(RED_SQUARE, RED_SQUARE.length);
+    stream.writeByteArray(RED_SQUARE);
   } else if (query["q"] == "font") {
     log = log + ";" + query["q"];
     // we don't provide a real font; that's ok, OTS will just reject it

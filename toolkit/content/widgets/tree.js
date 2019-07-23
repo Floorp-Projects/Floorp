@@ -596,7 +596,9 @@
                        class="hidevscroll-scrollbar"
                        style="position:relative; z-index:2147483647;"></scrollbar>
           </hbox>
-          <textbox class="tree-input" left="0" top="0" hidden="true"></textbox>
+          <box class="tree-input-wrapper" left="0" top="0" hidden="true">
+            <html:input class="tree-input" type="text"/>
+          </box>
         </stack>
         <hbox class="hidehscroll-box">
           <scrollbar orient="horizontal" flex="1" increment="16" style="position:relative; z-index:2147483647;"></scrollbar>
@@ -800,7 +802,7 @@
         "blur",
         event => {
           this.focused = false;
-          if (event.originalTarget == this.inputField.inputField) {
+          if (event.target == this.inputField) {
             this.stopEditing(true);
           }
         },
@@ -1051,11 +1053,7 @@
     get inputField() {
       if (!this._inputField) {
         this._inputField = this.shadowRoot.querySelector(".tree-input");
-        this._inputField.addEventListener(
-          "blur",
-          () => this.stopEditing(true),
-          true
-        );
+        this._inputField.addEventListener("blur", () => this.stopEditing(true));
       }
       return this._inputField;
     }
@@ -1281,6 +1279,11 @@
 
       var input = this.inputField;
 
+      // XUL positioning doesn't work with HTML elements and CSS absolute
+      // positioning doesn't work well with XUL elements, which is why we need
+      // this wrapper
+      var inputWrapper = this.shadowRoot.querySelector(".tree-input-wrapper");
+
       this.ensureCellIsVisible(row, column);
 
       // Get the coordinates of the text inside the cell.
@@ -1290,9 +1293,9 @@
       var cellRect = this.getCoordsForCellItem(row, column, "cell");
 
       // Calculate the top offset of the textbox.
-      var style = window.getComputedStyle(input);
+      var style = window.getComputedStyle(inputWrapper);
       var topadj = parseInt(style.borderTopWidth) + parseInt(style.paddingTop);
-      input.top = textRect.y - topadj;
+      inputWrapper.top = textRect.y - topadj;
 
       // The leftside of the textbox is aligned to the left side of the text
       // in LTR mode, and left side of the cell in RTL mode.
@@ -1305,19 +1308,19 @@
         widthdiff = textRect.x - cellRect.x;
       }
 
-      input.left = left;
-      input.height =
+      inputWrapper.left = left;
+      inputWrapper.height =
         textRect.height +
         topadj +
         parseInt(style.borderBottomWidth) +
         parseInt(style.paddingBottom);
-      input.width = cellRect.width - widthdiff;
-      input.hidden = false;
+      inputWrapper.width = cellRect.width - widthdiff;
+      inputWrapper.hidden = false;
 
       input.value = this.view.getCellText(row, column);
 
       input.select();
-      input.inputField.focus();
+      input.focus();
 
       this._editingRow = row;
       this._editingColumn = column;
@@ -1343,7 +1346,8 @@
         var value = input.value;
         this.view.setCellText(editingRow, editingColumn, value);
       }
-      input.hidden = true;
+      var inputWrapper = this.shadowRoot.querySelector(".tree-input-wrapper");
+      inputWrapper.hidden = true;
       input.value = "";
       this.removeAttribute("editing");
     }

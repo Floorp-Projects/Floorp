@@ -62,6 +62,12 @@ struct NurseryChunk {
   void poisonRange(size_t from, size_t size, uint8_t value,
                    MemCheckKind checkKind);
   void poisonAfterEvict(size_t extent = ChunkSize);
+
+  // The end of the range is always ChunkSize - ArenaSize.
+  void markPagesUnusedHard(size_t from);
+  // The start of the range is always the beginning of the chunk.
+  MOZ_MUST_USE bool markPagesInUseHard(size_t to);
+
   uintptr_t start() const { return uintptr_t(&data); }
   uintptr_t end() const { return uintptr_t(&trailer); }
   gc::Chunk* toChunk(JSRuntime* rt);
@@ -94,6 +100,17 @@ inline void js::NurseryChunk::poisonRange(size_t from, size_t size,
 inline void js::NurseryChunk::poisonAfterEvict(size_t extent) {
   MOZ_ASSERT(extent <= ChunkSize);
   poisonRange(0, extent, JS_SWEPT_NURSERY_PATTERN, MemCheckKind::MakeNoAccess);
+}
+
+inline void js::NurseryChunk::markPagesUnusedHard(size_t from) {
+  MOZ_ASSERT(from < ChunkSize - ArenaSize);
+  MarkPagesUnusedHard(reinterpret_cast<void*>(start() + from),
+                      ChunkSize - ArenaSize - from);
+}
+
+inline bool js::NurseryChunk::markPagesInUseHard(size_t to) {
+  MOZ_ASSERT(to <= ChunkSize - ArenaSize);
+  return MarkPagesInUseHard(reinterpret_cast<void*>(start()), to);
 }
 
 // static
@@ -179,24 +196,16 @@ void js::NurseryDecommitTask::decommitChunk(Chunk* chunk) {
 }
 
 void js::NurseryDecommitTask::decommitRange(AutoLockHelperThreadState& lock) {
-  uintptr_t rangeStart = JS_ROUNDUP(
-      partialChunk->start() + (uintptr_t)partialCapacity, SystemPageSize());
-  MOZ_ASSERT(rangeStart > partialChunk->start() &&
-             rangeStart < partialChunk->end());
-  uintptr_t rangeLen =
-      JS_ROUNDDOWN(partialChunk->end(), SystemPageSize()) - rangeStart;
-  MOZ_ASSERT(rangeLen < Nursery::NurseryChunkUsableSize);
-  MOZ_ASSERT(rangeLen > 0);
-  MOZ_ASSERT(rangeLen % SystemPageSize() == 0);
-
   // Clear this field here before releasing the lock. While the lock is
   // released the main thread may make new decommit requests or update the range
   // of the current requested chunk, but it won't attempt to use any
   // might-be-decommitted-soon memory.
+  NurseryChunk* thisPartialChunk = partialChunk;
+  size_t thisPartialCapacity = partialCapacity;
   partialChunk = nullptr;
   {
     AutoUnlockHelperThreadState unlock(lock);
-    MarkPagesUnused((void*)rangeStart, rangeLen);
+    thisPartialChunk->markPagesUnusedHard(thisPartialCapacity);
   }
 }
 
@@ -370,6 +379,9 @@ void js::Nursery::enterZealMode() {
       // which could be attempting to decommit the currently-unused part of this
       // chunk.
       decommitTask.join();
+      if (!chunk(0).markPagesInUseHard(ChunkSize - ArenaSize)) {
+        MOZ_CRASH("Out of memory trying to extend chunk for zeal mode");
+      }
 
       // It'd be simpler to poison the whole chunk, but we can't do that
       // because the nursery might be partially used.
@@ -1471,13 +1483,20 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
     // Avoid growing into an area that's about to be decommitted.
     decommitTask.join();
 
+    MOZ_ASSERT(currentChunk_ == 0);
+
+    // The remainder of the chunk may have been decommitted.
+    if (!chunk(0).markPagesInUseHard(Min(newCapacity, ChunkSize - ArenaSize))) {
+      // The OS won't give us the memory we need, we can't grow.
+      return;
+    }
+
     // The capacity has changed and since we were in sub-chunk mode we need to
     // update the poison values / asan infomation for the now-valid region of
     // this chunk.
     size_t poisonSize = Min(newCapacity, NurseryChunkUsableSize) - capacity();
     // Don't poison the trailer.
     MOZ_ASSERT(capacity() + poisonSize <= NurseryChunkUsableSize);
-    MOZ_ASSERT(currentChunk_ == 0);
     chunk(0).poisonRange(capacity(), poisonSize, JS_FRESH_NURSERY_PATTERN,
                          MemCheckKind::MakeUndefined);
   }
@@ -1487,12 +1506,27 @@ void js::Nursery::growAllocableSpace(size_t newCapacity) {
   setCurrentEnd();
 }
 
-void js::Nursery::freeChunksFrom(unsigned firstFreeChunk) {
+void js::Nursery::freeChunksFrom(const unsigned firstFreeChunk) {
   MOZ_ASSERT(firstFreeChunk < chunks_.length());
+
+  // The loop below may need to skip the first chunk, so we may use this so we
+  // can modify it.
+  unsigned firstChunkToDecommit = firstFreeChunk;
+
+  if ((firstChunkToDecommit == 0) && isSubChunkMode()) {
+    // Part of the first chunk may be hard-decommitted, un-decommit it so that
+    // the GC's normal chunk-handling doesn't segfault.
+    MOZ_ASSERT(currentChunk_ == 0);
+    if (!chunk(0).markPagesInUseHard(ChunkSize - ArenaSize)) {
+      // Free the chunk if we can't allocate its pages.
+      UnmapPages(static_cast<void*>(&chunk(0)), ChunkSize);
+      firstChunkToDecommit = 1;
+    }
+  }
 
   {
     AutoLockHelperThreadState lock;
-    for (size_t i = firstFreeChunk; i < chunks_.length(); i++) {
+    for (size_t i = firstChunkToDecommit; i < chunks_.length(); i++) {
       decommitTask.queueChunk(chunks_[i], lock);
     }
     decommitTask.startOrRunIfIdle(lock);

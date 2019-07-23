@@ -75,6 +75,8 @@ Structure:
           medium: <string>, // category of the source, such as "organic" for a search engine
           campaign: <string>, // identifier of the particular campaign that led to the download of the product
           content: <string>, // identifier to indicate the particular link within a campaign
+          variation: <string>, // name/id of the variation cohort used in the enrolled funnel experiment
+          experiment: <string>, // name/id of the enrolled funnel experiment
         },
         sandbox: {
           effectiveContentProcessLevel: <integer>,

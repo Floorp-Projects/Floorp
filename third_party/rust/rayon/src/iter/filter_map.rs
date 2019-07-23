@@ -16,34 +16,31 @@ pub struct FilterMap<I: ParallelIterator, P> {
 }
 
 impl<I: ParallelIterator + Debug, P> Debug for FilterMap<I, P> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("FilterMap")
             .field("base", &self.base)
             .finish()
     }
 }
 
-/// Create a new `FilterMap` iterator.
-///
-/// NB: a free fn because it is NOT part of the end-user API.
-pub fn new<I, P>(base: I, filter_op: P) -> FilterMap<I, P>
-    where I: ParallelIterator
-{
-    FilterMap {
-        base: base,
-        filter_op: filter_op,
+impl<I: ParallelIterator, P> FilterMap<I, P> {
+    /// Create a new `FilterMap` iterator.
+    pub(super) fn new(base: I, filter_op: P) -> Self {
+        FilterMap { base, filter_op }
     }
 }
 
 impl<I, P, R> ParallelIterator for FilterMap<I, P>
-    where I: ParallelIterator,
-          P: Fn(I::Item) -> Option<R> + Sync + Send,
-          R: Send
+where
+    I: ParallelIterator,
+    P: Fn(I::Item) -> Option<R> + Sync + Send,
+    R: Send,
 {
     type Item = R;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let consumer = FilterMapConsumer::new(consumer, &self.filter_op);
         self.base.drive_unindexed(consumer)
@@ -60,16 +57,14 @@ struct FilterMapConsumer<'p, C, P: 'p> {
 
 impl<'p, C, P: 'p> FilterMapConsumer<'p, C, P> {
     fn new(base: C, filter_op: &'p P) -> Self {
-        FilterMapConsumer {
-            base: base,
-            filter_op: filter_op,
-        }
+        FilterMapConsumer { base, filter_op }
     }
 }
 
 impl<'p, T, U, C, P> Consumer<T> for FilterMapConsumer<'p, C, P>
-    where C: Consumer<U>,
-          P: Fn(T) -> Option<U> + Sync + 'p
+where
+    C: Consumer<U>,
+    P: Fn(T) -> Option<U> + Sync + 'p,
 {
     type Folder = FilterMapFolder<'p, C::Folder, P>;
     type Reducer = C::Reducer;
@@ -77,15 +72,17 @@ impl<'p, T, U, C, P> Consumer<T> for FilterMapConsumer<'p, C, P>
 
     fn split_at(self, index: usize) -> (Self, Self, Self::Reducer) {
         let (left, right, reducer) = self.base.split_at(index);
-        (FilterMapConsumer::new(left, self.filter_op),
-         FilterMapConsumer::new(right, self.filter_op),
-         reducer)
+        (
+            FilterMapConsumer::new(left, self.filter_op),
+            FilterMapConsumer::new(right, self.filter_op),
+            reducer,
+        )
     }
 
     fn into_folder(self) -> Self::Folder {
         let base = self.base.into_folder();
         FilterMapFolder {
-            base: base,
+            base,
             filter_op: self.filter_op,
         }
     }
@@ -96,8 +93,9 @@ impl<'p, T, U, C, P> Consumer<T> for FilterMapConsumer<'p, C, P>
 }
 
 impl<'p, T, U, C, P> UnindexedConsumer<T> for FilterMapConsumer<'p, C, P>
-    where C: UnindexedConsumer<U>,
-          P: Fn(T) -> Option<U> + Sync + 'p
+where
+    C: UnindexedConsumer<U>,
+    P: Fn(T) -> Option<U> + Sync + 'p,
 {
     fn split_off_left(&self) -> Self {
         FilterMapConsumer::new(self.base.split_off_left(), &self.filter_op)
@@ -114,8 +112,9 @@ struct FilterMapFolder<'p, C, P: 'p> {
 }
 
 impl<'p, T, U, C, P> Folder<T> for FilterMapFolder<'p, C, P>
-    where C: Folder<U>,
-          P: Fn(T) -> Option<U> + Sync + 'p
+where
+    C: Folder<U>,
+    P: Fn(T) -> Option<U> + Sync + 'p,
 {
     type Result = C::Result;
 
@@ -123,14 +122,15 @@ impl<'p, T, U, C, P> Folder<T> for FilterMapFolder<'p, C, P>
         let filter_op = self.filter_op;
         if let Some(mapped_item) = filter_op(item) {
             let base = self.base.consume(mapped_item);
-            FilterMapFolder {
-                base: base,
-                filter_op: filter_op,
-            }
+            FilterMapFolder { base, filter_op }
         } else {
             self
         }
     }
+
+    // This cannot easily specialize `consume_iter` to be better than
+    // the default, because that requires checking `self.base.full()`
+    // during a call to `self.base.consume_iter()`. (#632)
 
     fn complete(self) -> C::Result {
         self.base.complete()

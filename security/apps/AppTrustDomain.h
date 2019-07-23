@@ -8,8 +8,6 @@
 #define AppTrustDomain_h
 
 #include "mozpkix/pkixtypes.h"
-#include "mozilla/StaticMutex.h"
-#include "mozilla/UniquePtr.h"
 #include "nsDebug.h"
 #include "nsIX509CertDB.h"
 #include "ScopedNSSTypes.h"
@@ -78,10 +76,6 @@ class AppTrustDomain final : public mozilla::pkix::TrustDomain {
   void* mPinArg;  // non-owning!
   UniqueCERTCertificate mTrustedRoot;
   UniqueCERTCertificate mAddonsIntermediate;
-
-  static StaticMutex sMutex;
-  static UniquePtr<unsigned char[]> sDevImportedDERData;
-  static unsigned int sDevImportedDERLen;
 };
 
 }  // namespace psm

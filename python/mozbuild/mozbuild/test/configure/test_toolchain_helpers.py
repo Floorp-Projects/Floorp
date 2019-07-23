@@ -30,7 +30,7 @@ class CompilerPreprocessor(Preprocessor):
     # simple "FOO" case.
     VARSUBST = re.compile('(?<!")(?P<VAR>\w+)(?!")', re.U)
     NON_WHITESPACE = re.compile('\S')
-    HAS_FEATURE_OR_BUILTIN = re.compile('(__has_(feature|builtin|attribute))\(([^\)]*)\)')
+    HAS_FEATURE_OR_BUILTIN = re.compile('(__has_(feature|builtin|attribute|warning))\(([^\)]*)\)')
 
     def __init__(self, *args, **kwargs):
         Preprocessor.__init__(self, *args, **kwargs)

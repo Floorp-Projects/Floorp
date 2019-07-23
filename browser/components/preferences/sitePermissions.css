@@ -29,7 +29,7 @@
 }
 
 #permissionsDisableDescription {
-  color: #737373;
+  color: var(--in-content-deemphasized-text);
   line-height: 110%;
 }
 

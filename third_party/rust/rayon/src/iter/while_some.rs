@@ -1,6 +1,6 @@
-use std::sync::atomic::{AtomicBool, Ordering};
 use super::plumbing::*;
 use super::*;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 /// `WhileSome` is an iterator that yields the `Some` elements of an iterator,
 /// halting as soon as any `None` is produced.
@@ -15,23 +15,26 @@ pub struct WhileSome<I: ParallelIterator> {
     base: I,
 }
 
-/// Create a new `WhileSome` iterator.
-///
-/// NB: a free fn because it is NOT part of the end-user API.
-pub fn new<I>(base: I) -> WhileSome<I>
-    where I: ParallelIterator
+impl<I> WhileSome<I>
+where
+    I: ParallelIterator,
 {
-    WhileSome { base: base }
+    /// Create a new `WhileSome` iterator.
+    pub(super) fn new(base: I) -> Self {
+        WhileSome { base }
+    }
 }
 
 impl<I, T> ParallelIterator for WhileSome<I>
-    where I: ParallelIterator<Item = Option<T>>,
-          T: Send
+where
+    I: ParallelIterator<Item = Option<T>>,
+    T: Send,
 {
     type Item = T;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<Self::Item>
+    where
+        C: UnindexedConsumer<Self::Item>,
     {
         let full = AtomicBool::new(false);
         let consumer1 = WhileSomeConsumer {
@@ -42,7 +45,6 @@ impl<I, T> ParallelIterator for WhileSome<I>
     }
 }
 
-
 /// ////////////////////////////////////////////////////////////////////////
 /// Consumer implementation
 
@@ -52,8 +54,9 @@ struct WhileSomeConsumer<'f, C> {
 }
 
 impl<'f, T, C> Consumer<Option<T>> for WhileSomeConsumer<'f, C>
-    where C: Consumer<T>,
-          T: Send
+where
+    C: Consumer<T>,
+    T: Send,
 {
     type Folder = WhileSomeFolder<'f, C::Folder>;
     type Reducer = C::Reducer;
@@ -61,9 +64,14 @@ impl<'f, T, C> Consumer<Option<T>> for WhileSomeConsumer<'f, C>
 
     fn split_at(self, index: usize) -> (Self, Self, Self::Reducer) {
         let (left, right, reducer) = self.base.split_at(index);
-        (WhileSomeConsumer { base: left, ..self },
-         WhileSomeConsumer { base: right, ..self },
-         reducer)
+        (
+            WhileSomeConsumer { base: left, ..self },
+            WhileSomeConsumer {
+                base: right,
+                ..self
+            },
+            reducer,
+        )
     }
 
     fn into_folder(self) -> Self::Folder {
@@ -79,11 +87,15 @@ impl<'f, T, C> Consumer<Option<T>> for WhileSomeConsumer<'f, C>
 }
 
 impl<'f, T, C> UnindexedConsumer<Option<T>> for WhileSomeConsumer<'f, C>
-    where C: UnindexedConsumer<T>,
-          T: Send
+where
+    C: UnindexedConsumer<T>,
+    T: Send,
 {
     fn split_off_left(&self) -> Self {
-        WhileSomeConsumer { base: self.base.split_off_left(), ..*self }
+        WhileSomeConsumer {
+            base: self.base.split_off_left(),
+            ..*self
+        }
     }
 
     fn to_reducer(&self) -> Self::Reducer {
@@ -97,7 +109,8 @@ struct WhileSomeFolder<'f, C> {
 }
 
 impl<'f, T, C> Folder<Option<T>> for WhileSomeFolder<'f, C>
-    where C: Folder<T>
+where
+    C: Folder<T>,
 {
     type Result = C::Result;
 
@@ -106,6 +119,25 @@ impl<'f, T, C> Folder<Option<T>> for WhileSomeFolder<'f, C>
             Some(item) => self.base = self.base.consume(item),
             None => self.full.store(true, Ordering::Relaxed),
         }
+        self
+    }
+
+    fn consume_iter<I>(mut self, iter: I) -> Self
+    where
+        I: IntoIterator<Item = Option<T>>,
+    {
+        let full = self.full;
+        self.base = self.base.consume_iter(
+            iter.into_iter()
+                .take_while(|x| match *x {
+                    Some(_) => !full.load(Ordering::Relaxed),
+                    None => {
+                        full.store(true, Ordering::Relaxed);
+                        false
+                    }
+                })
+                .map(Option::unwrap),
+        );
         self
     }
 

@@ -25,56 +25,56 @@ nsAutoLayoutPhase::~nsAutoLayoutPhase() {
 
 void nsAutoLayoutPhase::Enter() {
   switch (mPhase) {
-    case eLayoutPhase_Paint:
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+    case nsLayoutPhase::Paint:
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Paint] == 0,
                  "recurring into paint");
       MOZ_ASSERT(
-          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+          mPresContext->mLayoutPhaseCount[nsLayoutPhase::DisplayListBuilding] ==
               0,
           "recurring into paint from display list building");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Reflow] == 0,
                  "painting in the middle of reflow");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::FrameC] == 0,
                  "painting in the middle of frame construction");
       break;
-    case eLayoutPhase_DisplayListBuilding:
+    case nsLayoutPhase::DisplayListBuilding:
       // It's fine and expected to be in a paint here.
       MOZ_ASSERT(
-          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+          mPresContext->mLayoutPhaseCount[nsLayoutPhase::DisplayListBuilding] ==
               0,
           "recurring into display list building");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Reflow] == 0,
                  "display list building in the middle of reflow");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::FrameC] == 0,
                  "display list building in the middle of frame construction");
       break;
-    case eLayoutPhase_Reflow:
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+    case nsLayoutPhase::Reflow:
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Paint] == 0,
                  "reflowing in the middle of a paint");
       MOZ_ASSERT(
-          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+          mPresContext->mLayoutPhaseCount[nsLayoutPhase::DisplayListBuilding] ==
               0,
           "reflowing in the middle of a display list building");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Reflow] == 0,
                  "recurring into reflow");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::FrameC] == 0,
                  "reflowing in the middle of frame construction");
       break;
-    case eLayoutPhase_FrameC:
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Paint] == 0,
+    case nsLayoutPhase::FrameC:
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Paint] == 0,
                  "constructing frames in the middle of a paint");
       MOZ_ASSERT(
-          mPresContext->mLayoutPhaseCount[eLayoutPhase_DisplayListBuilding] ==
+          mPresContext->mLayoutPhaseCount[nsLayoutPhase::DisplayListBuilding] ==
               0,
           "constructing frames in the middle of a display list building");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_Reflow] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::Reflow] == 0,
                  "constructing frames in the middle of reflow");
-      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[eLayoutPhase_FrameC] == 0,
+      MOZ_ASSERT(mPresContext->mLayoutPhaseCount[nsLayoutPhase::FrameC] == 0,
                  "recurring into frame construction");
       MOZ_ASSERT(!nsContentUtils::IsSafeToRunScript(),
                  "constructing frames and scripts are not blocked");
       break;
-    case eLayoutPhase_COUNT:
+    case nsLayoutPhase::COUNT:
       break;
   }
 

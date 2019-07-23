@@ -5,6 +5,13 @@
 
 #include "nsIOutputStream.idl"
 
+%{C++
+namespace mozilla {
+template<class ElementType, size_t Extent> class Span;
+}
+%}
+native Bytes(mozilla::Span<const uint8_t>);
+
 /**
  * This interface allows writing of primitive data types (integers,
  * floating-point values, booleans, etc.) to a stream in a binary, untagged,
@@ -55,15 +62,20 @@ interface nsIBinaryOutputStream : nsIOutputStream {
     /**
      * Write an opaque byte array to the stream.
      */
+    [binaryname(WriteBytesFromJS)]
     void writeBytes([size_is(aLength)] in string aString,
                     [optional] in uint32_t aLength);
 
     /**
+     * Non-scriptable and saner-signature version of the same.
+     */
+    [noscript, nostdcall, binaryname(WriteBytes)]
+    void writeBytesNative(in Bytes aBytes);
+
+    /**
      * Write an opaque byte array to the stream.
      */
-    void writeByteArray([array, size_is(aLength)] in uint8_t aBytes,
-                        [optional] in uint32_t aLength);
-
+    void writeByteArray(in Array<uint8_t> aBytes);
 };
 
 %{C++

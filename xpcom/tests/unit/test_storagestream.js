@@ -117,7 +117,7 @@ function test4() {
   );
   bos.setOutputStream(outStream);
 
-  bos.writeByteArray(bytes, bytes.length);
+  bos.writeByteArray(bytes);
   bos.close();
 
   var inp = ss.newInputStream(0);

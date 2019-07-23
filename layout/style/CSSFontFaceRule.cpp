@@ -150,15 +150,14 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(CSSFontFaceRule,
   tmp->mDecl.TraceWrapper(aCallbacks, aClosure);
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(CSSFontFaceRule,
-                                                mozilla::css::Rule)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(CSSFontFaceRule)
   // Keep this in sync with IsCCLeaf.
 
-  // Unlink the wrapper for our declaraton.  This just expands out
-  // NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER which we can't use
-  // directly because the wrapper is on the declaration, not on us.
-  tmp->mDecl.ReleaseWrapper(static_cast<nsISupports*>(p));
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+  // Unlink the wrapper for our declaration.
+  //
+  // Note that this has to happen before unlinking css::Rule.
+  tmp->UnlinkDeclarationWrapper(tmp->mDecl);
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END_INHERITED(mozilla::css::Rule)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(CSSFontFaceRule,
                                                   mozilla::css::Rule)

@@ -94,7 +94,7 @@ base_schema = {
     Required('tasks_for'): basestring,
     Required('try_mode'): Any(None, basestring),
     Required('try_options'): Any(None, dict),
-    Required('try_task_config'): Any(None, dict),
+    Required('try_task_config'): dict,
     Required('version'): basestring,
 }
 

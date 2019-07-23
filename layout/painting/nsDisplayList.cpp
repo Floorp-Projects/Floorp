@@ -1661,7 +1661,7 @@ void nsDisplayListBuilder::EnterPresShell(nsIFrame* aReferenceFrame,
 
 #ifdef DEBUG
   state->mAutoLayoutPhase.emplace(aReferenceFrame->PresContext(),
-                                  eLayoutPhase_DisplayListBuilding);
+                                  nsLayoutPhase::DisplayListBuilding);
 #endif
 
   state->mPresShell->UpdateCanvasBackground();

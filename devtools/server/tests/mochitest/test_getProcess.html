@@ -88,7 +88,7 @@ function runTests() {
       client.mainRoot.getProcess(content.id).then(front => {
         const actor = front.targetForm;
         ok(actor.consoleActor, "Got the console actor");
-        ok(actor.chromeDebugger, "Got the thread actor");
+        ok(actor.threadActor, "Got the thread actor");
 
         // Ensure sending at least one request to an actor...
         client.request({

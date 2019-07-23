@@ -1106,32 +1106,31 @@ static nsresult GetPermissionState(AVMediaType aMediaType, uint16_t& aState) {
   MOZ_ASSERT(aMediaType == AVMediaTypeVideo || aMediaType == AVMediaTypeAudio);
 
   // Only attempt to check authorization status on 10.14+.
-  if (!nsCocoaFeatures::OnMojaveOrLater()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  if (@available(macOS 10.14, *)) {
+    GeckoAVAuthorizationStatus authStatus = static_cast<GeckoAVAuthorizationStatus>(
+        [AVCaptureDevice authorizationStatusForMediaType:aMediaType]);
+    LogAuthorizationStatus(aMediaType, authStatus);
 
-  GeckoAVAuthorizationStatus authStatus = static_cast<GeckoAVAuthorizationStatus>(
-      [AVCaptureDevice authorizationStatusForMediaType:aMediaType]);
-  LogAuthorizationStatus(aMediaType, authStatus);
-
-  // Convert GeckoAVAuthorizationStatus to nsIOSPermissionRequest const
-  switch (authStatus) {
-    case GeckoAVAuthorizationStatusAuthorized:
-      aState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
-      return NS_OK;
-    case GeckoAVAuthorizationStatusDenied:
-      aState = nsIOSPermissionRequest::PERMISSION_STATE_DENIED;
-      return NS_OK;
-    case GeckoAVAuthorizationStatusNotDetermined:
-      aState = nsIOSPermissionRequest::PERMISSION_STATE_NOTDETERMINED;
-      return NS_OK;
-    case GeckoAVAuthorizationStatusRestricted:
-      aState = nsIOSPermissionRequest::PERMISSION_STATE_RESTRICTED;
-      return NS_OK;
-    default:
-      MOZ_ASSERT(false, "Invalid authorization status");
-      return NS_ERROR_UNEXPECTED;
+    // Convert GeckoAVAuthorizationStatus to nsIOSPermissionRequest const
+    switch (authStatus) {
+      case GeckoAVAuthorizationStatusAuthorized:
+        aState = nsIOSPermissionRequest::PERMISSION_STATE_AUTHORIZED;
+        return NS_OK;
+      case GeckoAVAuthorizationStatusDenied:
+        aState = nsIOSPermissionRequest::PERMISSION_STATE_DENIED;
+        return NS_OK;
+      case GeckoAVAuthorizationStatusNotDetermined:
+        aState = nsIOSPermissionRequest::PERMISSION_STATE_NOTDETERMINED;
+        return NS_OK;
+      case GeckoAVAuthorizationStatusRestricted:
+        aState = nsIOSPermissionRequest::PERMISSION_STATE_RESTRICTED;
+        return NS_OK;
+      default:
+        MOZ_ASSERT(false, "Invalid authorization status");
+        return NS_ERROR_UNEXPECTED;
+    }
   }
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult nsCocoaUtils::GetVideoCapturePermissionState(uint16_t& aPermissionState) {
@@ -1170,44 +1169,49 @@ nsresult nsCocoaUtils::RequestCapturePermission(AVMediaType aType, RefPtr<Promis
   // Ensure our enum constants match. We can only do this when
   // compiling on 10.14+ because AVAuthorizationStatus is
   // prohibited by preprocessor checks on earlier OS versions.
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusNotDetermined ==
-             (int)AVAuthorizationStatusNotDetermined);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied);
-  MOZ_ASSERT((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized);
+  if (@available(macOS 10.14, *)) {
+    static_assert(
+        (int)GeckoAVAuthorizationStatusNotDetermined == (int)AVAuthorizationStatusNotDetermined,
+        "GeckoAVAuthorizationStatusNotDetermined  does not match");
+    static_assert((int)GeckoAVAuthorizationStatusRestricted == (int)AVAuthorizationStatusRestricted,
+                  "GeckoAVAuthorizationStatusRestricted does not match");
+    static_assert((int)GeckoAVAuthorizationStatusDenied == (int)AVAuthorizationStatusDenied,
+                  "GeckoAVAuthorizationStatusDenied does not match");
+    static_assert((int)GeckoAVAuthorizationStatusAuthorized == (int)AVAuthorizationStatusAuthorized,
+                  "GeckoAVAuthorizationStatusAuthorized does not match");
+  }
 #endif
   LOG("RequestCapturePermission(%s)", AVMediaTypeToString(aType));
 
   // Only attempt to request authorization on 10.14+.
-  if (!nsCocoaFeatures::OnMojaveOrLater()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
+  if (@available(macOS 10.14, *)) {
+    sMediaCaptureMutex.Lock();
 
-  sMediaCaptureMutex.Lock();
+    // Initialize our list of promises on first invocation
+    if (aPromiseList == nullptr) {
+      aPromiseList = new nsTArray<RefPtr<Promise>>;
+      ClearOnShutdown(&aPromiseList);
+    }
 
-  // Initialize our list of promises on first invocation
-  if (aPromiseList == nullptr) {
-    aPromiseList = new nsTArray<RefPtr<Promise>>;
-    ClearOnShutdown(&aPromiseList);
-  }
+    aPromiseList->AppendElement(aPromise);
+    size_t nPromises = aPromiseList->Length();
 
-  aPromiseList->AppendElement(aPromise);
-  size_t nPromises = aPromiseList->Length();
+    sMediaCaptureMutex.Unlock();
 
-  sMediaCaptureMutex.Unlock();
+    LOG("RequestCapturePermission(%s): %ld promise(s) unresolved", AVMediaTypeToString(aType),
+        nPromises);
 
-  LOG("RequestCapturePermission(%s): %ld promise(s) unresolved", AVMediaTypeToString(aType),
-      nPromises);
+    // If we had one or more more existing promises waiting to be resolved
+    // by the completion handler, we don't need to start another request.
+    if (nPromises > 1) {
+      return NS_OK;
+    }
 
-  // If we had one or more more existing promises waiting to be resolved
-  // by the completion handler, we don't need to start another request.
-  if (nPromises > 1) {
+    // Start the request
+    [AVCaptureDevice requestAccessForMediaType:aType completionHandler:aHandler];
     return NS_OK;
   }
-
-  // Start the request
-  [AVCaptureDevice requestAccessForMediaType:aType completionHandler:aHandler];
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //

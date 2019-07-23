@@ -1,10 +1,10 @@
 #![cfg(rayon_unstable)]
 
-use internal::task::{ScopeHandle, ToScopeHandle, Task};
+use super::{Scope, ScopeBase};
+use internal::task::{ScopeHandle, Task, ToScopeHandle};
 use std::any::Any;
 use std::mem;
 use std::sync::Arc;
-use super::Scope;
 
 impl<'scope> ToScopeHandle<'scope> for Scope<'scope> {
     type ScopeHandle = LocalScopeHandle<'scope>;
@@ -16,7 +16,7 @@ impl<'scope> ToScopeHandle<'scope> for Scope<'scope> {
 
 #[derive(Debug)]
 pub struct LocalScopeHandle<'scope> {
-    scope: *const Scope<'scope>
+    scope: *const ScopeBase<'scope>,
 }
 
 impl<'scope> LocalScopeHandle<'scope> {
@@ -24,8 +24,8 @@ impl<'scope> LocalScopeHandle<'scope> {
     /// until the scope completes. Since we acquire a ref,
     /// that means it will remain valid until we release it.
     unsafe fn new(scope: &Scope<'scope>) -> Self {
-        scope.job_completed_latch.increment();
-        LocalScopeHandle { scope: scope }
+        scope.base.increment();
+        LocalScopeHandle { scope: &scope.base }
     }
 }
 

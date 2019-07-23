@@ -9,9 +9,10 @@
 
 #ifdef DEBUG
 
-// We can't forward declare an enum before C++11 which means we have to include
-// nsPresContext.h just because nsLayoutPhase is passed to the ctor.
-#  include "nsPresContext.h"
+#  include <stdint.h>
+
+enum class nsLayoutPhase : uint8_t;
+class nsPresContext;
 
 struct nsAutoLayoutPhase {
   nsAutoLayoutPhase(nsPresContext* aPresContext, nsLayoutPhase aPhase);
@@ -27,7 +28,7 @@ struct nsAutoLayoutPhase {
 };
 
 #  define AUTO_LAYOUT_PHASE_ENTRY_POINT(pc_, phase_) \
-    nsAutoLayoutPhase autoLayoutPhase((pc_), (eLayoutPhase_##phase_))
+    nsAutoLayoutPhase autoLayoutPhase((pc_), (nsLayoutPhase::phase_))
 #  define LAYOUT_PHASE_TEMP_EXIT() \
     PR_BEGIN_MACRO                 \
     autoLayoutPhase.Exit();        \

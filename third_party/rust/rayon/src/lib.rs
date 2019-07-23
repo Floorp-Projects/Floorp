@@ -1,8 +1,7 @@
-#![doc(html_root_url = "https://docs.rs/rayon/1.0")]
+#![doc(html_root_url = "https://docs.rs/rayon/1.1")]
 #![deny(missing_debug_implementations)]
-#![cfg_attr(test, feature(conservative_impl_trait))]
-#![cfg_attr(test, feature(i128_type))]
 #![deny(missing_docs)]
+#![deny(unreachable_pub)]
 
 //! Data-parallelism library that makes it easy to convert sequential
 //! computations into parallel
@@ -28,7 +27,7 @@
 //!   - [`ThreadPoolBuilder`] can be used to create your own thread pools or customize
 //!     the global one.
 //!
-//! [iter module]: iter
+//! [iter module]: iter/index.html
 //! [`join`]: fn.join.html
 //! [`scope`]: fn.scope.html
 //! [`par_sort`]: slice/trait.ParallelSliceMut.html#method.par_sort
@@ -50,7 +49,7 @@
 //! parallel implementations of many iterative functions such as [`map`],
 //! [`for_each`], [`filter`], [`fold`], and [more].
 //!
-//! [`rayon::prelude::*`]: prelude/index.html
+//! [`rayon::prelude`]: prelude/index.html
 //! [`map`]: iter/trait.ParallelIterator.html#method.map
 //! [`for_each`]: iter/trait.ParallelIterator.html#method.for_each
 //! [`filter`]: iter/trait.ParallelIterator.html#method.filter
@@ -79,11 +78,20 @@
 //!
 //! [faq]: https://github.com/rayon-rs/rayon/blob/master/FAQ.md
 
-extern crate rayon_core;
+extern crate crossbeam_deque;
 extern crate either;
+extern crate rayon_core;
 
 #[cfg(test)]
 extern crate rand;
+#[cfg(test)]
+extern crate rand_xorshift;
+#[cfg(test)]
+#[macro_use]
+extern crate doc_comment;
+
+#[cfg(test)]
+doctest!("../README.md");
 
 #[macro_use]
 mod delegate;
@@ -98,20 +106,24 @@ pub mod iter;
 pub mod option;
 pub mod prelude;
 pub mod range;
+pub mod range_inclusive;
 pub mod result;
 pub mod slice;
 pub mod str;
 pub mod vec;
 
-mod par_either;
 mod math;
-mod test;
+mod par_either;
 
-pub use rayon_core::current_num_threads;
-pub use rayon_core::ThreadPool;
-pub use rayon_core::ThreadPoolBuilder;
-pub use rayon_core::ThreadPoolBuildError;
-pub use rayon_core::{join, join_context};
+mod compile_fail;
+
 pub use rayon_core::FnContext;
+pub use rayon_core::ThreadBuilder;
+pub use rayon_core::ThreadPool;
+pub use rayon_core::ThreadPoolBuildError;
+pub use rayon_core::ThreadPoolBuilder;
+pub use rayon_core::{current_num_threads, current_thread_index};
+pub use rayon_core::{join, join_context};
 pub use rayon_core::{scope, Scope};
-pub use rayon_core::spawn;
+pub use rayon_core::{scope_fifo, ScopeFifo};
+pub use rayon_core::{spawn, spawn_fifo};

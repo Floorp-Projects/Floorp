@@ -111,7 +111,7 @@ function handler(metadata, response) {
   response.setHeader("Content-Type", "", false);
   var body = getFileContents(do_get_file(tests[testRan].path));
   var bos = new BinaryOutputStream(response.bodyOutputStream);
-  bos.writeByteArray(body, body.length);
+  bos.writeByteArray(body);
 }
 
 function run_test() {

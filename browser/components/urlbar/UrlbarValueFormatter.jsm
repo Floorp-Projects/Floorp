@@ -337,9 +337,7 @@ class UrlbarValueFormatter {
       return false;
     }
 
-    let alias = UrlbarPrefs.get("quantumbar")
-      ? this._getSearchAlias()
-      : this._getSearchAliasAwesomebar();
+    let alias = this._getSearchAlias();
     if (!alias) {
       return false;
     }
@@ -413,42 +411,6 @@ class UrlbarValueFormatter {
       return this._selectedResult.payload.keyword || null;
     }
     return null;
-  }
-
-  _getSearchAliasAwesomebar() {
-    let popup = this.urlbarInput.popup;
-
-    // To determine whether the input contains a valid alias, check the value of
-    // the selected result -- whether it's a search engine result with an alias.
-    // Actually, check the selected listbox item, not the result in the
-    // controller, because we want to continue highlighting the alias when the
-    // popup is closed and the search has stopped.  The selected index when the
-    // popup is closed is zero, however, which is why we also check the previous
-    // selected index.
-    let itemIndex =
-      popup.selectedIndex < 0
-        ? popup._previousSelectedIndex
-        : popup.selectedIndex;
-    if (itemIndex < 0) {
-      return null;
-    }
-    let item = popup.richlistbox.children[itemIndex] || null;
-
-    // This actiontype check isn't necessary because we call _parseActionUrl
-    // below and we could check action.type instead.  But since this method is
-    // called very often, as an optimization, first do a simple string
-    // comparison on actiontype before continuing with the more expensive regexp
-    // that _parseActionUrl uses.
-    if (!item || item.getAttribute("actiontype") != "searchengine") {
-      return null;
-    }
-
-    let url = item.getAttribute("url");
-    let action = this.urlbarInput._parseActionUrl(url);
-    if (!action) {
-      return null;
-    }
-    return action.params.alias || null;
   }
 
   /**

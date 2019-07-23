@@ -59,6 +59,18 @@ add_task(async function() {
   }
   await checkWindowTestValue("hhhhhh", context.id, Runtime);
 
+  info("Write 'aaaaaa' with 6 consecutive keydown and one keyup");
+  await Promise.all([
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+    dispatchKeyEvent(Input, "a", 65, "keyDown"),
+  ]);
+  await dispatchKeyEvent(Input, "a", 65, "keyUp");
+  await checkWindowTestValue("hhhhhhaaaaaa", context.id, Runtime);
+
   await client.close();
   ok(true, "The client is closed");
 

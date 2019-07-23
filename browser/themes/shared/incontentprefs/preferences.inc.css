@@ -55,7 +55,7 @@ html|h2 {
 
 description.indent,
 .indent > description {
-  color: #737373;
+  color: var(--in-content-deemphasized-text);
 }
 
 button,

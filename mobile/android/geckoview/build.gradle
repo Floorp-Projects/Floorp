@@ -326,6 +326,18 @@ android.libraryVariants.all { variant ->
     }
 }
 
+android.libraryVariants.all { variant ->
+    // At this point, the Android-Gradle plugin has created all the Android tasks and
+    // configurations.  This is the time for us to declare additional Glean files to package into
+    // AAR files.  This packs `metrics.yaml` in the root of the AAR, sibling to
+    // `AndroidManifest.xml` and `classes.jar`.  By default, consumers of the AAR will ignore this
+    // file, but consumers that look for it can find it (provided GeckoView is a `module()`
+    // dependency and not a `project()` dependency.)  Under the hood this uses that the
+    // `packageLibrary` task is a Maven `Zip` task, and we can simply extend its inputs.  See
+    // https://android.googlesource.com/platform/tools/base/+/0cbe8846f7d02c0bb6f07156b9f4fde16d96d329/build-system/gradle-core/src/main/java/com/android/build/gradle/tasks/BundleAar.kt#94.
+    variant.packageLibrary.from("${topsrcdir}/toolkit/components/telemetry/geckoview/streaming/metrics.yaml")
+}
+
 apply plugin: 'maven-publish'
 
 version = computeVersionNumber()

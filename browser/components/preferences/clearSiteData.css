@@ -15,6 +15,6 @@
 }
 
 .option-description {
-  color: #737373;
+  color: var(--in-content-deemphasized-text);
   margin-top: -0.5em !important;
 }

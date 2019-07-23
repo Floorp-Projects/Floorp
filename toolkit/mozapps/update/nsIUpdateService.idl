@@ -414,14 +414,14 @@ interface nsIUpdateProcessor : nsISupports
    * Since this function does its work off of the main thread and does not
    * block, it will only throw if it was unable to dispatch to another thread.
    *
-   * @param shouldUseService If set to false, Firefox will attempt to fix the
-   *                         permissions itself, but the maintenance service
-   *                         will not be used. If set to true and Firefox is
-   *                         unable to fix the permissions itself, it will
-   *                         attempt to call into the maintenance service to
-   *                         request that it attempt to fix the permissions.
+   * @param useServiceOnFailure
+   *        If set to false, Firefox will attempt to fix the permissions itself,
+   *        but the maintenance service will not be used. If set to true and
+   *        Firefox is unable to fix the permissions itself, it will attempt to
+   *        call into the maintenance service to request that it attempt to fix
+   *        the permissions.
    */
-  void fixUpdateDirectoryPerms(in boolean shouldUseService);
+  void fixUpdateDirectoryPerms(in boolean useServiceOnFailure);
 };
 
 /**

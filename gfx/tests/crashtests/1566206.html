@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<head>
+  <style>
+    #init-rose {
+        animation: 20s infinite spin;
+    }
+
+    @keyframes spin {
+        0% {transform: rotate(0deg);}
+        100% {transform: rotate(359deg);}
+    }
+  </style>
+</head>
+<body>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink" width="100%" height="100%">
+    <defs>
+      <g id="rose">
+        <g id="sL" stroke="#3f3f3f">
+          <line x1="0" y1="-10000000" x2="0" y2="10000000"/>
+          <line x1="-10000000" y1="0" x2="10000000" y2="0"/>
+        </g>
+      </g>
+    </defs>
+    <g id="initial" opacity=1>
+      <use xlink:href="#rose" id="init-rose" x="50%" y="50%"></use>
+    </g>
+  </svg>
+</body>

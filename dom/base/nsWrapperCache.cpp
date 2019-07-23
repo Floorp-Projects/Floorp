@@ -45,6 +45,8 @@ void nsWrapperCache::SetWrapperJSObject(JSObject* aWrapper) {
 }
 
 void nsWrapperCache::ReleaseWrapper(void* aScriptObjectHolder) {
+  // If the behavior here changes in a substantive way, you may need
+  // to update css::Rule::UnlinkDeclarationWrapper as well.
   if (PreservingWrapper()) {
     SetPreservingWrapper(false);
     cyclecollector::DropJSObjectsImpl(aScriptObjectHolder);

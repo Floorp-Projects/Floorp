@@ -1,7 +1,7 @@
 use super::plumbing::*;
 use super::*;
 use std::cell::Cell;
-use std::iter::Fuse;
+use std::iter::{self, Fuse};
 
 /// `Intersperse` is an iterator that inserts a particular item between each
 /// item of the adapted iterator.  This struct is created by the
@@ -12,51 +12,56 @@ use std::iter::Fuse;
 #[must_use = "iterator adaptors are lazy and do nothing unless consumed"]
 #[derive(Clone, Debug)]
 pub struct Intersperse<I>
-    where I: ParallelIterator,
-          I::Item: Clone
+where
+    I: ParallelIterator,
+    I::Item: Clone,
 {
     base: I,
     item: I::Item,
 }
 
-/// Create a new `Intersperse` iterator
-///
-/// NB: a free fn because it is NOT part of the end-user API.
-pub fn new<I>(base: I, item: I::Item) -> Intersperse<I>
-    where I: ParallelIterator,
-          I::Item: Clone
+impl<I> Intersperse<I>
+where
+    I: ParallelIterator,
+    I::Item: Clone,
 {
-    Intersperse { base: base, item: item }
+    /// Create a new `Intersperse` iterator
+    pub(super) fn new(base: I, item: I::Item) -> Self {
+        Intersperse { base, item }
+    }
 }
 
 impl<I> ParallelIterator for Intersperse<I>
-    where I: ParallelIterator,
-          I::Item: Clone + Send
+where
+    I: ParallelIterator,
+    I::Item: Clone + Send,
 {
     type Item = I::Item;
 
     fn drive_unindexed<C>(self, consumer: C) -> C::Result
-        where C: UnindexedConsumer<I::Item>
+    where
+        C: UnindexedConsumer<I::Item>,
     {
         let consumer1 = IntersperseConsumer::new(consumer, self.item);
         self.base.drive_unindexed(consumer1)
     }
 
     fn opt_len(&self) -> Option<usize> {
-        match self.base.opt_len() {
-            None => None,
-            Some(0) => Some(0),
-            Some(len) => len.checked_add(len - 1),
+        match self.base.opt_len()? {
+            0 => Some(0),
+            len => len.checked_add(len - 1),
         }
     }
 }
 
 impl<I> IndexedParallelIterator for Intersperse<I>
-    where I: IndexedParallelIterator,
-          I::Item: Clone + Send
+where
+    I: IndexedParallelIterator,
+    I::Item: Clone + Send,
 {
     fn drive<C>(self, consumer: C) -> C::Result
-        where C: Consumer<Self::Item>
+    where
+        C: Consumer<Self::Item>,
     {
         let consumer1 = IntersperseConsumer::new(consumer, self.item);
         self.base.drive(consumer1)
@@ -72,14 +77,15 @@ impl<I> IndexedParallelIterator for Intersperse<I>
     }
 
     fn with_producer<CB>(self, callback: CB) -> CB::Output
-        where CB: ProducerCallback<Self::Item>
+    where
+        CB: ProducerCallback<Self::Item>,
     {
         let len = self.len();
         return self.base.with_producer(Callback {
-                                           callback: callback,
-                                           item: self.item,
-                                           len: len,
-                                       });
+            callback,
+            item: self.item,
+            len,
+        });
 
         struct Callback<CB, T> {
             callback: CB,
@@ -88,13 +94,15 @@ impl<I> IndexedParallelIterator for Intersperse<I>
         }
 
         impl<T, CB> ProducerCallback<T> for Callback<CB, T>
-            where CB: ProducerCallback<T>,
-                  T: Clone + Send
+        where
+            CB: ProducerCallback<T>,
+            T: Clone + Send,
         {
             type Output = CB::Output;
 
             fn callback<P>(self, base: P) -> CB::Output
-                where P: Producer<Item = T>
+            where
+                P: Producer<Item = T>,
             {
                 let producer = IntersperseProducer::new(base, self.item, self.len);
                 self.callback.callback(producer)
@@ -103,9 +111,9 @@ impl<I> IndexedParallelIterator for Intersperse<I>
     }
 }
 
-
 struct IntersperseProducer<P>
-    where P: Producer
+where
+    P: Producer,
 {
     base: P,
     item: P::Item,
@@ -114,21 +122,23 @@ struct IntersperseProducer<P>
 }
 
 impl<P> IntersperseProducer<P>
-    where P: Producer
+where
+    P: Producer,
 {
     fn new(base: P, item: P::Item, len: usize) -> Self {
         IntersperseProducer {
-            base: base,
-            item: item,
-            len: len,
+            base,
+            item,
+            len,
             clone_first: false,
         }
     }
 }
 
 impl<P> Producer for IntersperseProducer<P>
-    where P: Producer,
-          P::Item: Clone + Send
+where
+    P: Producer,
+    P::Item: Clone + Send,
 {
     type Item = P::Item;
     type IntoIter = IntersperseIter<P::IntoIter>;
@@ -182,7 +192,8 @@ impl<P> Producer for IntersperseProducer<P>
     }
 
     fn fold_with<F>(self, folder: F) -> F
-        where F: Folder<Self::Item>
+    where
+        F: Folder<Self::Item>,
     {
         let folder1 = IntersperseFolder {
             base: folder,
@@ -193,9 +204,9 @@ impl<P> Producer for IntersperseProducer<P>
     }
 }
 
-
 struct IntersperseIter<I>
-    where I: Iterator
+where
+    I: Iterator,
 {
     base: Fuse<I>,
     item: I::Item,
@@ -204,8 +215,9 @@ struct IntersperseIter<I>
 }
 
 impl<I> Iterator for IntersperseIter<I>
-    where I: DoubleEndedIterator + ExactSizeIterator,
-          I::Item: Clone
+where
+    I: DoubleEndedIterator + ExactSizeIterator,
+    I::Item: Clone,
 {
     type Item = I::Item;
 
@@ -232,8 +244,9 @@ impl<I> Iterator for IntersperseIter<I>
 }
 
 impl<I> DoubleEndedIterator for IntersperseIter<I>
-    where I: DoubleEndedIterator + ExactSizeIterator,
-          I::Item: Clone
+where
+    I: DoubleEndedIterator + ExactSizeIterator,
+    I::Item: Clone,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
         if self.clone_last {
@@ -253,17 +266,15 @@ impl<I> DoubleEndedIterator for IntersperseIter<I>
 }
 
 impl<I> ExactSizeIterator for IntersperseIter<I>
-    where I: DoubleEndedIterator + ExactSizeIterator,
-          I::Item: Clone
+where
+    I: DoubleEndedIterator + ExactSizeIterator,
+    I::Item: Clone,
 {
     fn len(&self) -> usize {
         let len = self.base.len();
-        len + len.saturating_sub(1)
-            + self.clone_first as usize
-            + self.clone_last as usize
+        len + len.saturating_sub(1) + self.clone_first as usize + self.clone_last as usize
     }
 }
-
 
 struct IntersperseConsumer<C, T> {
     base: C,
@@ -272,20 +283,22 @@ struct IntersperseConsumer<C, T> {
 }
 
 impl<C, T> IntersperseConsumer<C, T>
-    where C: Consumer<T>
+where
+    C: Consumer<T>,
 {
     fn new(base: C, item: T) -> Self {
         IntersperseConsumer {
-            base: base,
-            item: item,
+            base,
+            item,
             clone_first: false.into(),
         }
     }
 }
 
 impl<C, T> Consumer<T> for IntersperseConsumer<C, T>
-    where C: Consumer<T>,
-          T: Clone + Send
+where
+    C: Consumer<T>,
+    T: Clone + Send,
 {
     type Folder = IntersperseFolder<C::Folder, T>;
     type Reducer = C::Reducer;
@@ -320,8 +333,9 @@ impl<C, T> Consumer<T> for IntersperseConsumer<C, T>
 }
 
 impl<C, T> UnindexedConsumer<T> for IntersperseConsumer<C, T>
-    where C: UnindexedConsumer<T>,
-          T: Clone + Send
+where
+    C: UnindexedConsumer<T>,
+    T: Clone + Send,
 {
     fn split_off_left(&self) -> Self {
         let left = IntersperseConsumer {
@@ -345,8 +359,9 @@ struct IntersperseFolder<C, T> {
 }
 
 impl<C, T> Folder<T> for IntersperseFolder<C, T>
-    where C: Folder<T>,
-          T: Clone
+where
+    C: Folder<T>,
+    T: Clone,
 {
     type Result = C::Result;
 
@@ -361,6 +376,28 @@ impl<C, T> Folder<T> for IntersperseFolder<C, T>
         }
         self.base = self.base.consume(item);
         self
+    }
+
+    fn consume_iter<I>(self, iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
+        let mut clone_first = self.clone_first;
+        let between_item = self.item;
+        let base = self.base.consume_iter(iter.into_iter().flat_map(|item| {
+            let first = if clone_first {
+                Some(between_item.clone())
+            } else {
+                clone_first = true;
+                None
+            };
+            first.into_iter().chain(iter::once(item))
+        }));
+        IntersperseFolder {
+            base,
+            item: between_item,
+            clone_first,
+        }
     }
 
     fn complete(self) -> C::Result {

@@ -1419,11 +1419,11 @@ void TrackBuffersManager::MaybeDispatchEncryptedEvent(
 void TrackBuffersManager::OnVideoDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%zu video samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%zu video samples demuxed", aSamples->GetSamples().Length());
   mVideoTracks.mDemuxRequest.Complete();
-  mVideoTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mVideoTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
 
-  MaybeDispatchEncryptedEvent(aSamples->mSamples);
+  MaybeDispatchEncryptedEvent(aSamples->GetSamples());
   DoDemuxAudio();
 }
 
@@ -1443,12 +1443,12 @@ void TrackBuffersManager::DoDemuxAudio() {
 void TrackBuffersManager::OnAudioDemuxCompleted(
     RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
   MOZ_ASSERT(OnTaskQueue());
-  MSE_DEBUG("%zu audio samples demuxed", aSamples->mSamples.Length());
+  MSE_DEBUG("%zu audio samples demuxed", aSamples->GetSamples().Length());
   mAudioTracks.mDemuxRequest.Complete();
-  mAudioTracks.mQueuedSamples.AppendElements(aSamples->mSamples);
+  mAudioTracks.mQueuedSamples.AppendElements(aSamples->GetSamples());
   CompleteCodedFrameProcessing();
 
-  MaybeDispatchEncryptedEvent(aSamples->mSamples);
+  MaybeDispatchEncryptedEvent(aSamples->GetSamples());
 }
 
 void TrackBuffersManager::CompleteCodedFrameProcessing() {
@@ -2477,7 +2477,7 @@ uint32_t TrackBuffersManager::SkipToNextRandomAccessPoint(
       aFound = true;
       break;
     }
-    nextSampleTimecode = sample->mTimecode + sample->mDuration;
+    nextSampleTimecode = sample->GetEndTimecode();
     nextSampleTime = sample->GetEndTime();
     parsed++;
   }
@@ -2528,6 +2528,11 @@ const MediaRawData* TrackBuffersManager::GetSample(TrackInfo::TrackType aTrack,
     return nullptr;
   }
 
+  if (!(aExpectedDts + aFuzz).IsValid() || !(aExpectedPts + aFuzz).IsValid()) {
+    // Time overflow, it seems like we also reached the end.
+    return nullptr;
+  }
+
   const RefPtr<MediaRawData>& sample = track[aIndex];
   if (!aIndex || sample->mTimecode <= aExpectedDts + aFuzz ||
       sample->mTime <= aExpectedPts + aFuzz) {
@@ -2570,7 +2575,7 @@ already_AddRefed<MediaRawData> TrackBuffersManager::GetSample(
     }
     trackData.mNextGetSampleIndex.ref()++;
     // Estimate decode timestamp and timestamp of the next sample.
-    TimeUnit nextSampleTimecode = sample->mTimecode + sample->mDuration;
+    TimeUnit nextSampleTimecode = sample->GetEndTimecode();
     TimeUnit nextSampleTime = sample->GetEndTime();
     const MediaRawData* nextSample =
         GetSample(aTrack, trackData.mNextGetSampleIndex.ref(),
@@ -2612,7 +2617,7 @@ already_AddRefed<MediaRawData> TrackBuffersManager::GetSample(
   UpdateEvictionIndex(trackData, i);
 
   trackData.mNextGetSampleIndex.ref()++;
-  trackData.mNextSampleTimecode = sample->mTimecode + sample->mDuration;
+  trackData.mNextSampleTimecode = sample->GetEndTimecode();
   trackData.mNextSampleTime = sample->GetEndTime();
   return p.forget();
 }
@@ -2626,8 +2631,7 @@ int32_t TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
   // Perform an exact search first.
   for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
-    TimeInterval sampleInterval{sample->mTimecode,
-                                sample->mTimecode + sample->mDuration};
+    TimeInterval sampleInterval{sample->mTimecode, sample->GetEndTimecode()};
 
     if (sampleInterval.ContainsStrict(trackData.mNextSampleTimecode)) {
       return i;
@@ -2641,8 +2645,8 @@ int32_t TrackBuffersManager::FindCurrentPosition(TrackInfo::TrackType aTrack,
 
   for (uint32_t i = 0; i < track.Length(); i++) {
     const RefPtr<MediaRawData>& sample = track[i];
-    TimeInterval sampleInterval{sample->mTimecode,
-                                sample->mTimecode + sample->mDuration, aFuzz};
+    TimeInterval sampleInterval{sample->mTimecode, sample->GetEndTimecode(),
+                                aFuzz};
 
     if (sampleInterval.ContainsWithStrictEnd(trackData.mNextSampleTimecode)) {
       return i;
@@ -2699,7 +2703,7 @@ TimeUnit TrackBuffersManager::GetNextRandomAccessPoint(
     if (sample->mKeyframe) {
       return sample->mTime;
     }
-    nextSampleTimecode = sample->mTimecode + sample->mDuration;
+    nextSampleTimecode = sample->GetEndTimecode();
     nextSampleTime = sample->GetEndTime();
   }
   return TimeUnit::FromInfinity();
@@ -2726,8 +2730,7 @@ nsresult TrackBuffersManager::SetNextGetSampleIndexIfNeeded(
     return NS_OK;
   }
 
-  if (trackData.mNextSampleTimecode >
-      track.LastElement()->mTimecode + track.LastElement()->mDuration) {
+  if (trackData.mNextSampleTimecode > track.LastElement()->GetEndTimecode()) {
     // The next element is past our last sample. We're done.
     trackData.mNextGetSampleIndex = Some(uint32_t(track.Length()));
     return NS_ERROR_DOM_MEDIA_END_OF_STREAM;

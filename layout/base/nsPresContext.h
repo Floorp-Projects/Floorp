@@ -10,6 +10,7 @@
 #define nsPresContext_h___
 
 #include "mozilla/Attributes.h"
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/ScrollStyles.h"
@@ -106,12 +107,12 @@ const uint8_t kPresContext_DefaultFixedFont_ID = 0x01;
 #ifdef DEBUG
 struct nsAutoLayoutPhase;
 
-enum nsLayoutPhase {
-  eLayoutPhase_Paint,
-  eLayoutPhase_DisplayListBuilding,  // sometimes a subset of the paint phase
-  eLayoutPhase_Reflow,
-  eLayoutPhase_FrameC,
-  eLayoutPhase_COUNT
+enum class nsLayoutPhase : uint8_t {
+  Paint,
+  DisplayListBuilding,  // sometimes a subset of the paint phase
+  Reflow,
+  FrameC,
+  COUNT
 };
 #endif
 
@@ -1275,7 +1276,8 @@ class nsPresContext : public nsISupports,
 #ifdef DEBUG
  private:
   friend struct nsAutoLayoutPhase;
-  uint32_t mLayoutPhaseCount[eLayoutPhase_COUNT];
+  mozilla::EnumeratedArray<nsLayoutPhase, nsLayoutPhase::COUNT, uint32_t>
+      mLayoutPhaseCount;
 
  public:
   uint32_t LayoutPhaseCount(nsLayoutPhase aPhase) {

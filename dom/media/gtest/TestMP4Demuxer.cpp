@@ -85,7 +85,7 @@ class MP4DemuxerBinding {
                 binding->mTaskQueue, __func__,
                 [track, time,
                  binding](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-                  EXPECT_EQ(time, aSamples->mSamples[0]->mTime);
+                  EXPECT_EQ(time, aSamples->GetSamples()[0]->mTime);
                   binding->CheckTrackKeyFrame(track);
                 },
                 DO_FAIL);
@@ -108,8 +108,8 @@ class MP4DemuxerBinding {
       track->GetSamples()->Then(
           binding->mTaskQueue, __func__,
           [track, binding](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-            if (aSamples->mSamples.Length()) {
-              binding->mSamples.AppendElements(aSamples->mSamples);
+            if (aSamples->GetSamples().Length()) {
+              binding->mSamples.AppendElements(aSamples->GetSamples());
               binding->CheckTrackSamples(track);
             }
           },
