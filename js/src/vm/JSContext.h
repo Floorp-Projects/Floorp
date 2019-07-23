@@ -176,12 +176,18 @@ struct JSContext : public JS::RootingContext,
 
   js::ContextData<js::FreeOp> defaultFreeOp_;
 
+  // Thread that the JSContext is currently running on, if in use.
+  js::Thread::Id currentThread_;
+
   js::ParseTask* parseTask_;
 
  public:
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
   void setRuntime(JSRuntime* rt);
+
+  void setThread();
+  void clearThread();
 
   bool isMainThreadContext() const {
     return kind_ == js::ContextKind::MainThread;
@@ -470,7 +476,7 @@ struct JSContext : public JS::RootingContext,
   }
 
   /* Base address of the native stack for the current thread. */
-  const uintptr_t nativeStackBase;
+  uintptr_t nativeStackBase;
 
  public:
   /* If non-null, report JavaScript entry points to this monitor. */

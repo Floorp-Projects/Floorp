@@ -2486,6 +2486,7 @@ void HelperThread::threadLoop() {
   JSContext cx(nullptr, JS::ContextOptions());
   {
     AutoEnterOOMUnsafeRegion oomUnsafe;
+    cx.setThread();
     if (!cx.init(ContextKind::HelperThread)) {
       oomUnsafe.crash("HelperThread cx.init()");
     }
