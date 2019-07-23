@@ -34,10 +34,6 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
     val channel = store.broadcastChannel(owner = this)
 
     scope.launch {
-        try {
-            channel.consumeEach { state -> block(state) }
-        } finally {
-            channel.close()
-        }
+        channel.consumeEach { state -> block(state) }
     }
 }

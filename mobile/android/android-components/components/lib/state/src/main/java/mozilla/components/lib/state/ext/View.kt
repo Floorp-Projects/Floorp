@@ -36,10 +36,6 @@ fun <S : State, A : Action> View.consumeFrom(
     val channel = store.broadcastChannel(owner)
 
     scope.launch {
-        try {
-            channel.consumeEach { state -> block(state) }
-        } finally {
-            channel.close()
-        }
+        channel.consumeEach { state -> block(state) }
     }
 }
