@@ -11,6 +11,7 @@
 #include <winerror.h>
 #include <winnt.h>
 #include <winternl.h>
+#include <objbase.h>
 
 #include <stdlib.h>
 
@@ -531,6 +532,10 @@ inline WindowsErrorResult<ModuleVersion> GetModuleVersion(nsIFile* aFile) {
   return GetModuleVersion(fullPath.get());
 }
 #endif  // defined(MOZILLA_INTERNAL_API)
+
+struct CoTaskMemFreeDeleter {
+  void operator()(void* aPtr) { ::CoTaskMemFree(aPtr); }
+};
 
 }  // namespace mozilla
 
