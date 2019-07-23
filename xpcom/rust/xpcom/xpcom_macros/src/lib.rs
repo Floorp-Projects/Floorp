@@ -124,7 +124,7 @@
 //!
 //! ```ignore
 //! // nsISupports foo(in long long bar, in AString baz);
-//! unsafe fn Foo(&self, bar: libc::int64_t, baz: *const nsAString,
+//! unsafe fn Foo(&self, bar: i64, baz: *const nsAString,
 //!               _retval: *mut *const nsISupports) -> nsresult;
 //!
 //! // AString qux(in nsISupports ham);
