@@ -56,17 +56,14 @@ promise_test(async function() {
   assert_true(scrollable.scrollTopMax > 0, "Should be able to scroll #scrollable");
   assert_equals(unscrollable.scrollTopMax, 0, "#unscrollable should not be able to scroll at all (checking scrollTopMax)");
 
-  {
-    scrollable.focus();
-    await doPageDown(scrollable);
-    assert_not_equals(scrollable.scrollTop, 0, "Should have scrolled when pressing space");
-  }
-  {
-    unscrollable.focus();
-    let rootScrollTop = rootScroller.scrollTop; // Could've scrolled to scroll `scrollable` into view before.
-    await doPageDown(window);
-    assert_equals(unscrollable.scrollTop, 0, "Should not be able to scroll the unscrollable div");
-    assert_not_equals(rootScroller.scrollTop, rootScrollTop, "Root should be able to scroll");
-  }
+  scrollable.focus();
+  await doPageDown(scrollable);
+  assert_not_equals(scrollable.scrollTop, 0, "Should have scrolled when pressing space");
+
+  unscrollable.focus();
+  let rootScrollTop = rootScroller.scrollTop; // Could've scrolled to scroll `scrollable` into view before.
+  await doPageDown(window);
+  assert_equals(unscrollable.scrollTop, 0, "Should not be able to scroll the unscrollable div");
+  assert_not_equals(rootScroller.scrollTop, rootScrollTop, "Root should be able to scroll");
 }, "Overflow scroll without range doesn't block scrolling of the main document");
 </script>
