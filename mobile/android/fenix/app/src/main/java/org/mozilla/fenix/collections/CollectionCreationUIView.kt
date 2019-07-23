@@ -267,6 +267,7 @@ class CollectionCreationUIView(
             }
             is SaveCollectionStep.RenameCollection -> {
                 view.tab_list.isClickable = false
+                name_collection_edittext.isClickable = true
 
                 it.selectedTabCollection?.let { tabCollection ->
                     tabCollection.tabs.map { tab ->
