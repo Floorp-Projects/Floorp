@@ -319,7 +319,7 @@ macosx1014-64-tests:
     - marionette
     - mochitest
     - mochitest-a11y
-    # - mochitest-browser-chrome
+    - mochitest-browser-chrome
     - mochitest-chrome
     - mochitest-devtools-chrome
     - mochitest-devtools-webreplay
@@ -343,10 +343,6 @@ macosx1014-64-tests:
 macosx1014-64-qr-tests:
     - crashtest
     - reftest
-
-macosx64-tests:
-    - mochitest-browser-chrome
-    # - mochitest-webgl2-ext test timeouts
 
 macosx64-talos:
     - talos-bcv

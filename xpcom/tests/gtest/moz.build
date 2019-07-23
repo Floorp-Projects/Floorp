@@ -21,7 +21,6 @@ UNIFIED_SOURCES += [
     'TestEscape.cpp',
     'TestEventPriorities.cpp',
     'TestEventTargetQI.cpp',
-    'TestExpirationTracker.cpp',
     'TestFile.cpp',
     'TestGCPostBarriers.cpp',
     'TestID.cpp',
@@ -53,14 +52,19 @@ UNIFIED_SOURCES += [
     'TestTaskQueue.cpp',
     'TestTextFormatter.cpp',
     'TestThreadManager.cpp',
-    'TestThreadMetrics.cpp',
-    'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
     'TestThrottledEventQueue.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
     'TestUTF.cpp',
 ]
+
+if CONFIG['OS_TARGET'] != 'Darwin':
+    UNIFIED_SOURCES += [
+        'TestExpirationTracker.cpp',
+        'TestThreadMetrics.cpp',
+        'TestThreadPool.cpp',
+    ]
 
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
