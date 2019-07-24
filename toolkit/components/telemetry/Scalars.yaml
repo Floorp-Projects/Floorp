@@ -2203,15 +2203,17 @@ devtools.toolbox:
   tabs_reordered:
     bug_numbers:
       - 1456551
+      - 1566362
     description: >
       Number of times the DevTools tab was reordered.
       Keyed by tab's id.
-    expires: "65"
+    expires: never
     kind: uint
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
       - daisuke@mozilla.com
+      - hkirschner@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
