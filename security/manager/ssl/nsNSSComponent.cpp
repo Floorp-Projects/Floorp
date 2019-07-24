@@ -1776,10 +1776,6 @@ nsresult nsNSSComponent::InitializeNSS() {
 
   mozilla::pkix::RegisterErrorTable();
 
-  if (PK11_IsFIPS()) {
-    Telemetry::Accumulate(Telemetry::FIPS_ENABLED, true);
-  }
-
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("NSS Initialization done\n"));
 
   {
