@@ -18,11 +18,7 @@ loader.lazyRequireGetter(
   "devtools/shared/client/debugger-client",
   true
 );
-loader.lazyRequireGetter(
-  this,
-  "l10n",
-  "devtools/client/webconsole/webconsole-l10n"
-);
+loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");
 loader.lazyRequireGetter(
   this,
   "WebConsole",

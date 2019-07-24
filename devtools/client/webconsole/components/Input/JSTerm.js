@@ -50,7 +50,7 @@ loader.lazyRequireGetter(
   true
 );
 
-const l10n = require("devtools/client/webconsole/webconsole-l10n");
+const l10n = require("devtools/client/webconsole/utils/l10n");
 
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
