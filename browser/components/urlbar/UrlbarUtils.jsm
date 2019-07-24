@@ -128,14 +128,6 @@ var UrlbarUtils = {
   // much time building text runs.
   MAX_TEXT_LENGTH: 255,
 
-  // UnifiedComplete's autocomplete results store their titles and tags together
-  // in their comments.  This separator is used to separate them.  When we
-  // rewrite UnifiedComplete for quantumbar, we should stop using this old hack
-  // and store titles and tags separately.  It's important that this be a
-  // character that no title would ever have.  We use \x1F, the non-printable
-  // unit separator.
-  TITLE_TAGS_SEPARATOR: "\x1F",
-
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.
