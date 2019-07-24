@@ -1492,7 +1492,7 @@ var gIdentityHandler = {
     indicator.setAttribute("id", "blocked-popup-indicator-item");
 
     let icon = document.createXULElement("image");
-    icon.setAttribute("class", "popup-subitem identity-popup-permission-icon");
+    icon.setAttribute("class", "popup-subitem");
 
     let text = document.createXULElement("label", { is: "text-link" });
     text.setAttribute("flex", "1");

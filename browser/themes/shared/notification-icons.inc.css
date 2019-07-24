@@ -218,7 +218,9 @@ html|*#webRTC-previewVideo {
 
 .popup-subitem {
   list-style-image: url("chrome://browser/skin/notification-icons/popup-subitem.svg");
-  margin-inline-start: 30px;
+  margin-inline-start: 42px;
+  width: 16px;
+  height: 16px;
 }
 
 .identity-popup-popup-menulist {
