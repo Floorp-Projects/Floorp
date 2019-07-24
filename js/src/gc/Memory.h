@@ -31,28 +31,28 @@ bool UsingScattershotAllocator();
 
 // Allocate or deallocate pages from the system with the given alignment.
 // Pages will be read/write-able.
-void* MapAlignedPages(size_t size, size_t alignment);
-void UnmapPages(void* p, size_t size);
+void* MapAlignedPages(size_t length, size_t alignment);
+void UnmapPages(void* region, size_t length);
 
 // Tell the OS that the given pages are not in use, so they should not be
 // written to a paging file. This may be a no-op on some platforms.
-bool MarkPagesUnusedSoft(void* p, size_t size);
+bool MarkPagesUnusedSoft(void* region, size_t length);
 
 // Tell the OS that the given pages are not in use and it can decommit them
 // immediately. This may defer to MarkPagesUnusedSoft and must be paired with
 // MarkPagesInUse to use the pages again.
-bool MarkPagesUnusedHard(void* p, size_t size);
+bool MarkPagesUnusedHard(void* region, size_t length);
 
 // Undo |MarkPagesUnusedSoft|: tell the OS that the given pages are of interest
 // and should be paged in and out normally. This may be a no-op on some
 // platforms.  May make pages read/write-able.
-void MarkPagesInUseSoft(void* p, size_t size);
+void MarkPagesInUseSoft(void* region, size_t length);
 
 // Undo |MarkPagesUnusedHard|: tell the OS that the given pages are of interest
 // and should be paged in and out normally. This may be a no-op on some
 // platforms. Callers must check the result, false could mean that the pages
 // are not available.  May make pages read/write.
-MOZ_MUST_USE bool MarkPagesInUseHard(void* p, size_t size);
+MOZ_MUST_USE bool MarkPagesInUseHard(void* region, size_t length);
 
 // Returns #(hard faults) + #(soft faults)
 size_t GetPageFaultCount();
@@ -63,13 +63,13 @@ void* AllocateMappedContent(int fd, size_t offset, size_t length,
                             size_t alignment);
 
 // Deallocate memory mapped content.
-void DeallocateMappedContent(void* p, size_t length);
+void DeallocateMappedContent(void* region, size_t length);
 
 void* TestMapAlignedPagesLastDitch(size_t size, size_t alignment);
 
-void ProtectPages(void* p, size_t size);
-void MakePagesReadOnly(void* p, size_t size);
-void UnprotectPages(void* p, size_t size);
+void ProtectPages(void* region, size_t length);
+void MakePagesReadOnly(void* region, size_t length);
+void UnprotectPages(void* region, size_t length);
 
 }  // namespace gc
 }  // namespace js
