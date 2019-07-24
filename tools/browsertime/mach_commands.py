@@ -131,7 +131,7 @@ class MachBrowsertime(MachCommandBase):
         sys.path.append(mozpath.join(self.topsrcdir, 'tools', 'lint', 'eslint'))
         import setup_helper
 
-        if host_platform().startswith('linux'):
+        if not os.environ.get('MOZ_AUTOMATION') and host_platform().startswith('linux'):
             # On Linux ImageMagick needs to be installed manually, and `mach bootstrap` doesn't
             # do that (yet).  Provide some guidance.
             try:
