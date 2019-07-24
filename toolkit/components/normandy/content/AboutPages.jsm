@@ -244,13 +244,22 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * @param {String} studyName
      */
     async removeAddonStudy(recipeId, reason) {
-      const action = new AddonStudyAction();
-      await action.unenroll(recipeId, reason);
-
-      // Update any open tabs with the new study list now that it has changed.
-      Services.mm.broadcastAsyncMessage("Shield:ReceiveAddonStudyList", {
-        studies: await AddonStudies.getAll(),
-      });
+      try {
+        const action = new AddonStudyAction();
+        await action.unenroll(recipeId, reason);
+      } catch (err) {
+        // If the exception was that the study was already removed, that's ok.
+        // If not, rethrow the error.
+        if (!err.toString().includes("already inactive")) {
+          throw err;
+        }
+      } finally {
+        // Update any open tabs with the new study list now that it has changed,
+        // even if the above failed.
+        Services.mm.broadcastAsyncMessage("Shield:ReceiveAddonStudyList", {
+          studies: await AddonStudies.getAll(),
+        });
+      }
     },
 
     /**
@@ -258,12 +267,21 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
      * @param {String} studyName
      */
     async removePreferenceStudy(experimentName, reason) {
-      PreferenceExperiments.stop(experimentName, { reason });
-
-      // Update any open tabs with the new study list now that it has changed.
-      Services.mm.broadcastAsyncMessage("Shield:ReceivePreferenceStudyList", {
-        studies: await PreferenceExperiments.getAll(),
-      });
+      try {
+        await PreferenceExperiments.stop(experimentName, { reason });
+      } catch (err) {
+        // If the exception was that the study was already removed, that's ok.
+        // If not, rethrow the error.
+        if (!err.toString().includes("already expired")) {
+          throw err;
+        }
+      } finally {
+        // Update any open tabs with the new study list now that it has changed,
+        // even if the above failed.
+        Services.mm.broadcastAsyncMessage("Shield:ReceivePreferenceStudyList", {
+          studies: await PreferenceExperiments.getAll(),
+        });
+      }
     },
 
     openDataPreferences() {
