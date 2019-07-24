@@ -351,16 +351,14 @@
   mirror: always
 #endif
 
-#if !defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: apz.keyboard.enabled
   type: bool
-  value: @PREF_VALUE@
+#if !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: apz.keyboard.passive-listeners
   type: RelaxedAtomicBool
@@ -932,16 +930,14 @@
 # Prefs starting with "clipboard."
 #---------------------------------------------------------------------------
 
-#if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: clipboard.autocopy
   type: bool
-  value: @PREF_VALUE@
+#if !defined(ANDROID) && !defined(XP_MACOSX) && defined(XP_UNIX)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 #---------------------------------------------------------------------------
 # Prefs starting with "consoleservice."
@@ -1324,16 +1320,14 @@
 # How long a content process can take before closing its IPC channel
 # after shutdown is initiated.  If the process exceeds the timeout,
 # we fear the worst and kill it.
-#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && !defined(MOZ_TSAN)
-#define PREF_VALUE 5
-#else
-#define PREF_VALUE 0
-#endif
 - name: dom.ipc.tabs.shutdownTimeoutSecs
   type: RelaxedAtomicUint32
-  value: @PREF_VALUE@
+#if !defined(DEBUG) && !defined(MOZ_ASAN) && !defined(MOZ_VALGRIND) && !defined(MOZ_TSAN)
+  value: 5
+#else
+  value: 0
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.ipc.cpows.forbid-unsafe-from-browser
   type: bool
@@ -1429,16 +1423,14 @@
   mirror: always
 
 # Network Information API
-#if defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.netinfo.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Is support for Window.paintWorklet enabled?
 - name: dom.paintWorklet.enabled
@@ -1536,7 +1528,7 @@
   value: false
 #endif
   mirror: always
-  
+
 - name: dom.presentation.controller.enabled
   type: bool
 #if defined(ANDROID)
@@ -1753,16 +1745,14 @@
   mirror: always
 
 # Enable Storage API for all platforms except Android.
-#if !defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.storageManager.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Is support for Storage test APIs enabled?
 - name: dom.storage.testing
@@ -1816,16 +1806,14 @@
 # Is support for WebVR APIs enabled?
 # Enabled by default in beta and release for Windows and OS X and for all
 # platforms in nightly and aurora.
-#if defined(XP_WIN) || defined(XP_DARWIN) || !defined(RELEASE_OR_BETA)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.vr.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_WIN) || defined(XP_DARWIN) || !defined(RELEASE_OR_BETA)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.vr.autoactivate.enabled
   type: RelaxedAtomicBool
@@ -1873,18 +1861,16 @@
   mirror: always
 
 # Oculus device
-#if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-# We are only enabling WebVR by default on 64-bit builds (Bug 1384459)
-#define PREF_VALUE true
-#else
-# On Android, this pref is irrelevant.
-#define PREF_VALUE false
-#endif
 - name: dom.vr.oculus.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
+# We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
+  value: true
+#else
+# On Android, this pref is irrelevant.
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: dom.vr.oculus.invisible.enabled
   type: RelaxedAtomicBool
@@ -1897,21 +1883,19 @@
   mirror: always
 
 # OpenVR device
-#if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
-# We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
-#define PREF_VALUE false
-#elif defined(XP_WIN) || defined(XP_MACOSX)
-# We enable OpenVR by default for Windows and macOS.
-#define PREF_VALUE true
-#else
-# See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
-#define PREF_VALUE false
-#endif
 - name: dom.vr.openvr.enabled
   type: bool
-  value: @PREF_VALUE@
+#if !defined(HAVE_64BIT_BUILD) && !defined(ANDROID)
+# We are only enabling WebVR by default on 64-bit builds (Bug 1384459).
+  value: false
+#elif defined(XP_WIN) || defined(XP_MACOSX)
+# We enable OpenVR by default for Windows and macOS.
+  value: true
+#else
+# See Bug 1310663 (Linux).  On Android, this pref is irrelevant.
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: dom.vr.openvr.action_input
   type: bool
@@ -1930,16 +1914,14 @@
   mirror: always
 
 # Enable a separate process for VR module.
-#if defined(XP_WIN)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.vr.process.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_WIN)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: dom.vr.process.startup_timeout_ms
   type: int32_t
@@ -1957,16 +1939,14 @@
   mirror: always
 
 # W3C draft pointer events
-#ifdef ANDROID
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.w3c_pointer_events.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#ifdef ANDROID
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # If the value is >= 0, it will be used for max touch points in child processes.
 - name: dom.maxtouchpoints.testing.value
@@ -1994,16 +1974,14 @@
   value: true
   mirror: always
 
-#if !defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.webkitBlink.dirPicker.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # NOTE: This preference is used in unit tests. If it is removed or its default
 # value changes, please update test_sharedMap_var_caches.js accordingly.
@@ -2019,16 +1997,14 @@
   mirror: always
 
 # Is support for HTMLInputElement.webkitEntries enabled?
-#if !defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.webkitBlink.filesystem.enabled
   type: bool
-  value: @PREF_VALUE@
+#if !defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Whether the WebMIDI API is enabled
 - name: dom.webmidi.enabled
@@ -3047,16 +3023,14 @@
 
 # The default amount of time to wait from the user being idle to starting a
 # shrinking GC. Measured in milliseconds.
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE  15000
-#else
-#define PREF_VALUE 300000
-#endif
 - name: javascript.options.compact_on_user_inactive_delay
   type: uint32_t
-  value: @PREF_VALUE@
+#ifdef NIGHTLY_BUILD
+  value: 15000
+#else
+  value: 300000
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: javascript.options.experimental.fields
   type: RelaxedAtomicBool
@@ -3071,20 +3045,18 @@
 # nsJSEnvironmentObserver observes the memory-pressure notifications and
 # forces a garbage collection and cycle collection when it happens, if the
 # appropriate pref is set.
+- name: javascript.options.gc_on_memory_pressure
+  type: bool
 #ifdef ANDROID
 # Disable the JS engine's GC on memory pressure, since we do one in the
 # mobile browser (bug 669346).
 # XXX: this value possibly should be changed, or the pref removed entirely.
 #      See bug 1450787.
-#define PREF_VALUE false
+  value: false
 #else
-#define PREF_VALUE true
+  value: true
 #endif
-- name: javascript.options.gc_on_memory_pressure
-  type: bool
-  value: @PREF_VALUE@
   mirror: always
-#undef PREF_VALUE
 
 - name: javascript.options.mem.log
   type: bool
@@ -3272,27 +3244,23 @@
   value: false
   mirror: always
 
-#if defined(XP_MACOSX) || defined (XP_OPENBSD)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.enable-tiles
   type: bool
-  value: @PREF_VALUE@
-  mirror: once
-#undef PREF_VALUE
-
-#if defined(XP_WIN)
-#define PREF_VALUE true
+#if defined(XP_MACOSX) || defined (XP_OPENBSD)
+  value: true
 #else
-#define PREF_VALUE false
+  value: false
 #endif
+  mirror: once
+
 - name: layers.enable-tiles-if-skia-pomtp
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_WIN)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: layers.flash-borders
   type: RelaxedAtomicBool
@@ -3329,29 +3297,23 @@
   value: false
   mirror: always
 
-#if defined(XP_WIN)
-#define PREF_VALUE true
-#elif defined(MOZ_WIDGET_GTK)
-#define PREF_VALUE false
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.gpu-process.allow-software
   type: bool
-  value: @PREF_VALUE@
-  mirror: once
-#undef PREF_VALUE
-
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-#define PREF_VALUE true
+#if defined(XP_WIN)
+  value: true
 #else
-#define PREF_VALUE false
+  value: false
 #endif
+  mirror: once
+
 - name: layers.gpu-process.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: layers.gpu-process.force-enabled
   type: bool
@@ -3399,17 +3361,15 @@
   value: -1
   mirror: always
 
-#if defined(XP_WIN)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.mlgpu.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_WIN)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
   do_not_use_directly: true
-#undef PREF_VALUE
 
 - name: layers.mlgpu.enable-buffer-cache
   type: bool
@@ -3441,18 +3401,16 @@
   value: true
   mirror: always
 
-#if defined(XP_WIN)
 # Both this and the master "enabled" pref must be on to use Advanced Layers
 # on Windows 7.
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.mlgpu.enable-on-windows7
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_WIN)
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: layers.offmainthreadcomposition.force-disabled
   type: bool
@@ -3555,16 +3513,14 @@
   value: true
   mirror: once
 
-#ifdef MOZ_WIDGET_ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.tiles.edge-padding
   type: bool
-  value: @PREF_VALUE@
+#ifdef MOZ_WIDGET_ANDROID
+  value: true
+#else
+  value: false
+#endif
   mirror: once
-#undef PREF_VALUE
 
 - name: layers.tiles.fade-in.enabled
   type: RelaxedAtomicBool
@@ -3877,16 +3833,14 @@
 
 # Pref to control whether @-moz-document url-prefix() is parsed in content
 # pages. Only effective when layout.css.moz-document.content.enabled is false.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: layout.css.moz-document.url-prefix-hack.enabled
   type: bool
-  value: @PREF_VALUE@
+#ifdef EARLY_BETA_OR_EARLIER
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Whether the offset-* logical property aliases are enabled.
 - name: layout.css.offset-logical-properties.enabled
@@ -3895,16 +3849,14 @@
   mirror: always
 
 # Is -moz-osx-font-smoothing enabled? (Only supported in OSX builds)
-#if defined(XP_MACOSX)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layout.css.osx-font-smoothing.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(XP_MACOSX)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Is support for CSS overflow-clip-box enabled for non-UA sheets?
 - name: layout.css.overflow-clip-box.enabled
@@ -4361,17 +4313,15 @@
   value: false
   mirror: always
 
-#if defined(XP_WIN) || defined(XP_DARWIN) || defined(MOZ_PULSEAUDIO)
-# libcubeb backend implement .get_preferred_channel_layout
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
+# libcubeb backend implements .get_preferred_channel_layout
 - name: media.forcestereo.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_WIN) || defined(XP_DARWIN) || defined(MOZ_PULSEAUDIO)
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # MediaSource
 
@@ -4413,12 +4363,10 @@
   mirror: always
 
 # Encrypted Media Extensions
+- name: media.eme.enabled
+  type: bool
 #if defined(ANDROID)
-#if defined(NIGHTLY_BUILD)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
+  value: @IS_NIGHTLY_BUILD@
 #elif defined(XP_LINUX)
 # On Linux EME is visible but disabled by default. This is so that the "Play
 # DRM content" checkbox in the Firefox UI is unchecked by default. DRM
@@ -4427,15 +4375,11 @@
 # using EME is encountered, the user will be prompted to enable DRM,
 # whereupon the EME plugin binaries will be downloaded if permission is
 # granted.
-#define PREF_VALUE false
+  value: false
 #else
-#define PREF_VALUE true
+  value: true
 #endif
-- name: media.eme.enabled
-  type: bool
-  value: @PREF_VALUE@
   mirror: always
-#undef PREF_VALUE
 
 # Whether we expose the functionality proposed in
 # https://github.com/WICG/encrypted-media-encryption-scheme/blob/master/explainer.md
@@ -4471,85 +4415,71 @@
   value: false
   mirror: always
 
-#if defined(XP_WIN)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.gpu-process-decoder
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
-  mirror: always
-#undef PREF_VALUE
-
 #if defined(XP_WIN)
-#if defined(_ARM64_)
-#define PREF_VALUE false
+  value: true
 #else
-#define PREF_VALUE true
+  value: false
 #endif
-#elif defined(XP_MACOSX)
-#define PREF_VALUE true
-#elif defined(XP_LINUX) && !defined(ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
+  mirror: always
+
 - name: media.rdd-process.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_WIN)
+#if defined(_ARM64_)
+  value: false
+#else
+  value: true
+#endif
+#elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: media.rdd-process.startup_timeout_ms
   type: RelaxedAtomicInt32
   value: 5000
   mirror: always
 
-#if defined(XP_LINUX) && !defined(ANDROID)
-#define PREF_VALUE true
-#elif defined(XP_WIN) && !defined(_ARM64_)
-#define PREF_VALUE false
-#elif defined(XP_MACOSX)
-#define PREF_VALUE false
-#else
-#define PREF_VALUE false
-#endif
 - name: media.rdd-vorbis.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
-  mirror: always
-#undef PREF_VALUE
-
 #if defined(XP_LINUX) && !defined(ANDROID)
-#define PREF_VALUE true
-#elif defined(XP_WIN) && !defined(_ARM64_)
-#define PREF_VALUE false
-#elif defined(XP_MACOSX)
-#define PREF_VALUE true
+  value: true
 #else
-#define PREF_VALUE false
+  value: false
 #endif
+  mirror: always
+
 - name: media.rdd-wav.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
-  mirror: always
-#undef PREF_VALUE
-
 #if defined(XP_LINUX) && !defined(ANDROID)
-#define PREF_VALUE true
+  value: true
 #elif defined(XP_WIN) && !defined(_ARM64_)
-#define PREF_VALUE false
+  value: false
 #elif defined(XP_MACOSX)
-#define PREF_VALUE true
+  value: true
 #else
-#define PREF_VALUE false
+  value: false
 #endif
+  mirror: always
+
 - name: media.rdd-opus.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_LINUX) && !defined(ANDROID)
+  value: true
+#elif defined(XP_WIN) && !defined(_ARM64_)
+  value: false
+#elif defined(XP_MACOSX)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 #ifdef ANDROID
 
@@ -4575,16 +4505,14 @@
 
 #ifdef MOZ_FFMPEG
 
-#if defined(XP_MACOSX)
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: media.ffmpeg.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_MACOSX)
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: media.libavcodec.allow-obsolete
   type: bool
@@ -4792,40 +4720,34 @@
   mirror: always
 #endif  # MOZ_WEBSPEECH
 
-#if defined(MOZ_WEBM_ENCODER)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.encoder.webm.enabled
   type: RelaxedAtomicBool
+#if defined(MOZ_WEBM_ENCODER)
   value: true
-  mirror: always
-#undef PREF_VALUE
-
-#if defined(RELEASE_OR_BETA)
-#define PREF_VALUE 3
 #else
-# Zero tolerance in pre-release builds to detect any decoder regression.
-#define PREF_VALUE 0
+  value: false
 #endif
+  mirror: always
+
 - name: media.audio-max-decode-error
   type: uint32_t
-  value: @PREF_VALUE@
-  mirror: always
-#undef PREF_VALUE
-
 #if defined(RELEASE_OR_BETA)
-#define PREF_VALUE 2
+  value: 3
 #else
 # Zero tolerance in pre-release builds to detect any decoder regression.
-#define PREF_VALUE 0
+  value: 0
 #endif
+  mirror: always
+
 - name: media.video-max-decode-error
   type: uint32_t
-  value: @PREF_VALUE@
+#if defined(RELEASE_OR_BETA)
+  value: 2
+#else
+# Zero tolerance in pre-release builds to detect any decoder regression.
+  value: 0
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Opus
 - name: media.opus.enabled
@@ -4852,20 +4774,18 @@
   mirror: always
 
 # AV1
-#if defined(XP_WIN) && !defined(_ARM64_)
-#define PREF_VALUE true
-#elif defined(XP_MACOSX)
-#define PREF_VALUE true
-#elif defined(XP_UNIX) && !defined(ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.av1.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(XP_WIN) && !defined(_ARM64_)
+  value: true
+#elif defined(XP_MACOSX)
+  value: true
+#elif defined(XP_UNIX) && !defined(ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: media.av1.use-dav1d
 #if defined(XP_WIN) && !defined(_ARM64_)
@@ -4903,16 +4823,14 @@
   mirror: always
 #endif
 
-#ifdef MOZ_FMP4
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.mp4.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#ifdef MOZ_FMP4
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Error/warning handling, Decoder Doctor.
 #
@@ -5056,29 +4974,25 @@
 # Use MediaDataDecoder API for VP8/VP9 in WebRTC. This includes hardware
 # acceleration for decoding.
 # disable on android bug 1509316
-#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.navigator.mediadatadecoder_vpx_enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(NIGHTLY_BUILD) && !defined(ANDROID)
+  value: true
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 # Use MediaDataDecoder API for H264 in WebRTC. This includes hardware
 # acceleration for decoding. False on Android due to bug 1509316.
-#if defined(ANDROID)
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: media.navigator.mediadatadecoder_h264_enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#if defined(ANDROID)
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 #endif  # MOZ_WEBRTC
 
@@ -5648,16 +5562,14 @@
   mirror: always
 
 # No way to enable on Android, Bug 1552602
-#if defined(MOZ_WIDGET_ANDROID)
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: security.webauth.u2f
   type: bool
-  value: @PREF_VALUE@
+#if defined(MOZ_WIDGET_ANDROID)
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 #---------------------------------------------------------------------------
 # Prefs starting with "slider."
@@ -5799,16 +5711,14 @@
   value: true
   mirror: always
 
-#ifdef MOZ_WIDGET_ANDROID
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: webgl.default-antialias
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+#ifdef MOZ_WIDGET_ANDROID
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: webgl.default-low-power
   type: RelaxedAtomicBool
@@ -5978,16 +5888,14 @@
 # Pref to control whether arrow-panel animations are enabled or not.
 # Transitions are currently disabled on Linux due to rendering issues on
 # certain configurations.
-#ifdef MOZ_WIDGET_GTK
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: xul.panel-animations.enabled
   type: bool
-  value: @PREF_VALUE@
+#ifdef MOZ_WIDGET_GTK
+  value: false
+#else
+  value: true
+#endif
   mirror: always
-#undef PREF_VALUE
 
 
 #---------------------------------------------------------------------------
