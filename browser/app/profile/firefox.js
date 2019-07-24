@@ -403,6 +403,8 @@ pref("permissions.desktop-notification.postPrompt.enabled", true);
 pref("permissions.desktop-notification.postPrompt.enabled", false);
 #endif
 
+pref("permissions.fullscreen.allowed", false);
+
 pref("permissions.postPrompt.animate", true);
 
 // This is primarily meant to be enabled for studies.
