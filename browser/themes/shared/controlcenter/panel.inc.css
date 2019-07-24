@@ -796,6 +796,13 @@ description#identity-popup-content-verifier,
   position: relative;
 }
 
+/* This is needed in order to show a correct height if the 'Site not working?'
+   link is not displaying. */
+#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-label-box,
+#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-box {
+  min-height: 30px;
+}
+
 .protections-popup-tp-switch-on-header,
 .protections-popup-tp-switch-off-header {
   font-weight: 600;

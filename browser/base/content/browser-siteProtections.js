@@ -959,6 +959,12 @@ var gProtectionsHandler = {
       "protections-popup-tp-switch-breakage-link"
     ));
   },
+  get _protectionsPopupTPSwitchSection() {
+    delete this._protectionsPopupTPSwitchSection;
+    return (this._protectionsPopupTPSwitchSection = document.getElementById(
+      "protections-popup-tp-switch-section"
+    ));
+  },
   get _protectionsPopupTPSwitch() {
     delete this._protectionsPopupTPSwitch;
     return (this._protectionsPopupTPSwitch = document.getElementById(
@@ -1433,6 +1439,17 @@ var gProtectionsHandler = {
 
     // Toggle the breakage link according to the current enable state.
     this.toggleBreakageLink();
+
+    // Display a short TP switch section depending on the enable state. We need
+    // to use a separate attribute here since the 'hasException' attribute will
+    // be toggled as well as the TP switch, we cannot rely on that to decide the
+    // height of TP switch section, or it will change when toggling the switch,
+    // which is not desirable for us. So, we need to use a different attribute
+    // here.
+    this._protectionsPopupTPSwitchSection.toggleAttribute(
+      "short",
+      !currentlyEnabled
+    );
 
     // Set the counter of the 'Trackers blocked This Week'.
     // We need to get the statistics of trackers. So far, we haven't implemented
