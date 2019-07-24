@@ -19,7 +19,7 @@ loadHelperScript("helper_html_tooltip.js");
 // The test toolbox will be 200px tall, the anchors are 50px tall, therefore, the maximum
 // tooltip height that could fit in the toolbox is 150px. Setting 160px, the tooltip will
 // either have to overflow or to be resized.
-const TOOLTIP_HEIGHT = 200;
+const TOOLTIP_HEIGHT = 160;
 const TOOLTIP_WIDTH = 200;
 
 add_task(async function() {

@@ -17,13 +17,13 @@
 #include "nsIContentPolicy.h"
 
 class nsIURI;
-class nsIContent;
+class nsINode;
 class nsIPrincipal;
 class imgRequestProxy;
 
 class nsIconLoaderService : public imgINotificationObserver {
  public:
-  nsIconLoaderService(nsIContent* aContent, nsIntRect* aImageRegionRect,
+  nsIconLoaderService(nsINode* aContent, nsIntRect* aImageRegionRect,
                       RefPtr<nsIconLoaderObserver> aObserver,
                       uint32_t aIconHeight, uint32_t aIconWidth);
 
@@ -31,9 +31,11 @@ class nsIconLoaderService : public imgINotificationObserver {
   NS_DECL_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
 
-  // LoadIcon will set a placeholder image and start a load request for the
-  // icon.  The request may not complete until after LoadIcon returns.
+  // LoadIcon will start a load request for the icon.
+  // The request may not complete until after LoadIcon returns.
   nsresult LoadIcon(nsIURI* aIconURI);
+
+  NSImage* GetNativeIconImage();
 
   // Unless we take precautions, we may outlive the object that created us
   // (mMenuObject, which owns our native menu item (mNativeMenuItem)).
@@ -47,7 +49,7 @@ class nsIconLoaderService : public imgINotificationObserver {
  private:
   nsresult OnFrameComplete(imgIRequest* aRequest);
 
-  nsCOMPtr<nsIContent> mContent;
+  nsCOMPtr<nsINode> mContent;
   nsContentPolicyType mContentType;
   RefPtr<imgRequestProxy> mIconRequest;
   nsIntRect* mImageRegionRect;
@@ -57,5 +59,4 @@ class nsIconLoaderService : public imgINotificationObserver {
   uint32_t mIconWidth;
   RefPtr<nsIconLoaderObserver> mCompletionHandler;
 };
-
 #endif  // nsIconLoaderService_h_
