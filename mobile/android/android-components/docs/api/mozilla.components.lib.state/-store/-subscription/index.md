@@ -17,4 +17,6 @@ A [Subscription](./index.md) is returned whenever an observer is registered via 
 
 | Name | Summary |
 |---|---|
-| [unsubscribe](unsubscribe.md) | `fun unsubscribe(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [pause](pause.md) | `fun pause(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Pauses the [Subscription](./index.md). The [Observer](../../-observer.md) will not get notified when the state changes until [resume](resume.md) is called. |
+| [resume](resume.md) | `fun resume(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Resumes the [Subscription](./index.md). The [Observer](../../-observer.md) will get notified for every state change. Additionally it will get invoked immediately with the latest state. |
+| [unsubscribe](unsubscribe.md) | `fun unsubscribe(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Unsubscribe from the [Store](../index.md). |

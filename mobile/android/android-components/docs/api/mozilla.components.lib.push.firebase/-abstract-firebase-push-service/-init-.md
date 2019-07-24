@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AbstractFirebasePushService()`
+`AbstractFirebasePushService(coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO)`
 
 A Firebase Cloud Messaging implementation of the [PushService](../../mozilla.components.concept.push/-push-service/index.md) for Android devices that support Google Play Services.
 

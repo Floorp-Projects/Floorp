@@ -28,6 +28,7 @@ Listen also for push messages for each registered [PushType](../-push-type/index
 
 | Name | Summary |
 |---|---|
+| [forceRegistrationRenewal](force-registration-renewal.md) | `fun forceRegistrationRenewal(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Deletes the registration token locally so that it forces the service to get a new one the next time hits it's messaging server. |
 | [initialize](initialize.md) | `fun initialize(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the push service provided. |
 | [onError](on-error.md) | `fun onError(error: `[`PushError`](../../mozilla.components.concept.push/-push-error/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>An error has occurred. |
 | [onMessageReceived](on-message-received.md) | `fun onMessageReceived(message: `[`EncryptedPushMessage`](../../mozilla.components.concept.push/-encrypted-push-message/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>New encrypted messages received from a supported push messaging service. |
