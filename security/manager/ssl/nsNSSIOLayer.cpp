@@ -116,7 +116,6 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
       mSharedState(aState),
       mForSTARTTLS(false),
       mHandshakePending(true),
-      mRememberClientAuthCertificate(false),
       mPreliminaryHandshakeDone(false),
       mNPNCompleted(false),
       mEarlyDataAccepted(false),
@@ -150,7 +149,7 @@ nsNSSSocketInfo::nsNSSSocketInfo(SharedSSLState& aState, uint32_t providerFlags,
 nsNSSSocketInfo::~nsNSSSocketInfo() {}
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNSSSocketInfo, TransportSecurityInfo,
-                            nsISSLSocketControl, nsIClientAuthUserDecision)
+                            nsISSLSocketControl)
 
 NS_IMETHODIMP
 nsNSSSocketInfo::GetProviderFlags(uint32_t* aProviderFlags) {
@@ -223,19 +222,6 @@ nsNSSSocketInfo::GetBypassAuthentication(bool* arg) {
 NS_IMETHODIMP
 nsNSSSocketInfo::GetFailedVerification(bool* arg) {
   *arg = mFailedVerification;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetRememberClientAuthCertificate(bool* aRemember) {
-  NS_ENSURE_ARG_POINTER(aRemember);
-  *aRemember = mRememberClientAuthCertificate;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetRememberClientAuthCertificate(bool aRemember) {
-  mRememberClientAuthCertificate = aRemember;
   return NS_OK;
 }
 
@@ -2215,17 +2201,16 @@ void ClientAuthDataRunnable::RunOnTargetThread() {
 
       uint32_t selectedIndex = 0;
       bool certChosen = false;
-      rv = dialogs->ChooseCertificate(mSocketInfo, hostname,
-                                      mSocketInfo->GetPort(), org, issuer,
-                                      certArray, &selectedIndex, &certChosen);
-      if (NS_FAILED(rv)) {
-        goto loser;
-      }
 
       // even if the user has canceled, we want to remember that, to avoid
       // repeating prompts
       bool wantRemember = false;
-      mSocketInfo->GetRememberClientAuthCertificate(&wantRemember);
+      rv = dialogs->ChooseCertificate(hostname, mSocketInfo->GetPort(), org,
+                                      issuer, certArray, &selectedIndex,
+                                      &wantRemember, &certChosen);
+      if (NS_FAILED(rv)) {
+        goto loser;
+      }
 
       if (certChosen) {
         nsCOMPtr<nsIX509Cert> selectedCert =
