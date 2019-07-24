@@ -649,7 +649,7 @@ class BranchedAddonStudyAction extends BaseAction {
 
     await AddonStudies.markAsEnded(study, reason);
 
-    // Study branches may inidicate that no add-on should be installed, as a
+    // Study branches may indicate that no add-on should be installed, as a
     // form of control branch. In that case, `study.addonId` will be null (as
     // will the other add-on related fields). Only try to uninstall the add-on
     // if we expect one should be installed.
