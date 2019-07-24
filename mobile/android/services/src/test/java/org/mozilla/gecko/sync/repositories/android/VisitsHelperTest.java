@@ -5,6 +5,7 @@ package org.mozilla.gecko.sync.repositories.android;
 
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.net.Uri;
 
@@ -17,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
 import org.mozilla.gecko.db.BrowserContract;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import static org.junit.Assert.assertEquals;
@@ -58,7 +60,7 @@ public class VisitsHelperTest {
 
         final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
         try {
-            final ShadowContentResolver cr = new ShadowContentResolver();
+            final ContentResolver cr = RuntimeEnvironment.application.getContentResolver();
             ContentProviderClient historyClient = cr.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
             ContentProviderClient visitsClient = cr.acquireContentProviderClient(BrowserContractHelpers.VISITS_CONTENT_URI);
 

@@ -5,10 +5,12 @@ package org.mozilla.gecko;
 
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.RemoteException;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.db.DelegatingTestContentProvider;
@@ -17,20 +19,28 @@ import org.mozilla.gecko.db.BrowserContract.PageMetadata;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import static org.junit.Assert.*;
 
 @RunWith(RobolectricTestRunner.class)
 public class GlobalPageMetadataTest {
+    ContentResolver contentResolver;
+
+    @Before
+    public void setUp() throws Exception {
+        contentResolver = RuntimeEnvironment.application.getContentResolver();
+    }
+
     @Test
     public void testQueueing() throws Exception {
         BrowserDB db = new LocalBrowserDB("default");
 
         final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
         try {
-            ShadowContentResolver cr = new ShadowContentResolver();
-            ContentProviderClient pageMetadataClient = cr.acquireContentProviderClient(PageMetadata.CONTENT_URI);
+            ContentProviderClient pageMetadataClient = contentResolver.acquireContentProviderClient(
+                    PageMetadata.CONTENT_URI);
 
             assertEquals(0, GlobalPageMetadata.getInstance().getMetadataQueueSize());
 
@@ -63,9 +73,8 @@ public class GlobalPageMetadataTest {
 
         final ContentProvider provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
         try {
-            ShadowContentResolver cr = new ShadowContentResolver();
-            ContentProviderClient historyClient = cr.acquireContentProviderClient(BrowserContract.History.CONTENT_URI);
-            ContentProviderClient pageMetadataClient = cr.acquireContentProviderClient(PageMetadata.CONTENT_URI);
+            ContentProviderClient historyClient = contentResolver.acquireContentProviderClient(BrowserContract.History.CONTENT_URI);
+            ContentProviderClient pageMetadataClient = contentResolver.acquireContentProviderClient(PageMetadata.CONTENT_URI);
 
             // Insert required history item...
             ContentValues cv = new ContentValues();

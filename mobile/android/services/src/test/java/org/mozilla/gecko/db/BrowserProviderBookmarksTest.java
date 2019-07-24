@@ -21,6 +21,7 @@ import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowContentResolver;
 
 import java.util.ArrayList;
@@ -60,8 +61,8 @@ public class BrowserProviderBookmarksTest {
     public void setUp() throws Exception {
         provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
 
-        ShadowContentResolver contentResolver = new ShadowContentResolver();
-        bookmarksClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
+        bookmarksClient = RuntimeEnvironment.application.getContentResolver()
+                .acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
     }
 
     @After
@@ -481,8 +482,8 @@ public class BrowserProviderBookmarksTest {
         data.putSerializable(BrowserContract.METHOD_PARAM_DATA, guidsToVersionMap);
 
         // Bulk sync version updates are only allowed for bookmarks.
-        ShadowContentResolver contentResolver = new ShadowContentResolver();
-        ContentProviderClient client = contentResolver.acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
+        ContentProviderClient client = RuntimeEnvironment.application.getContentResolver()
+                .acquireContentProviderClient(BrowserContractHelpers.HISTORY_CONTENT_URI);
         try {
             client.call(
                     BrowserContract.METHOD_UPDATE_SYNC_VERSIONS,
