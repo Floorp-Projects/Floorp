@@ -88,6 +88,8 @@ class UpdateMetadata(Step):
         with state.push(["local_tree", "sync_tree", "paths", "serve_root"]):
             state.run_log = kwargs["run_log"]
             state.disable_intermittent = kwargs["disable_intermittent"]
+            state.update_intermittent = kwargs["update_intermittent"]
+            state.remove_intermittent = kwargs["remove_intermittent"]
             state.patch = kwargs["patch"]
             state.suite_name = kwargs["suite_name"]
             state.product = kwargs["product"]
