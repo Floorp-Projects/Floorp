@@ -4738,7 +4738,7 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
         hasLine(false),
         line(0),
         innermost(false),
-        innermostForRealm(cx->zone()),
+        innermostForRealm(cx, cx->zone()),
         scriptVector(cx, ScriptVector(cx)),
         lazyScriptVector(cx, LazyScriptVector(cx)),
         wasmInstanceVector(cx, WasmInstanceObjectVector(cx)) {}
@@ -5005,14 +5005,14 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
   bool innermost;
 
   using RealmToScriptMap =
-      HashMap<Realm*, JSScript*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
+      GCHashMap<Realm*, JSScript*, DefaultHasher<Realm*>, ZoneAllocPolicy>;
 
   /*
    * For 'innermost' queries, a map from realms to the innermost script
    * we've seen so far in that realm. (Template instantiation code size
    * explosion ho!)
    */
-  RealmToScriptMap innermostForRealm;
+  Rooted<RealmToScriptMap> innermostForRealm;
 
   /*
    * Accumulate the scripts in an Rooted<ScriptVector> and
