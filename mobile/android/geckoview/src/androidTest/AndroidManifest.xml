@@ -17,6 +17,7 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme">
         <activity android:name=".TestRunnerActivity" android:exported="true"/>
+        <activity android:name=".GeckoViewTestActivity" android:exported="true"/>
         <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
