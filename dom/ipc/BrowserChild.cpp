@@ -595,10 +595,11 @@ nsresult BrowserChild::Init(mozIDOMWindowProxy* aParent) {
     mPuppetWidget->CreateCompositor();
   }
 
+#if !defined(MOZ_WIDGET_ANDROID)
   mSessionStoreListener = new TabListener(docShell, nullptr);
   rv = mSessionStoreListener->Init();
   NS_ENSURE_SUCCESS(rv, rv);
-
+#endif
   return NS_OK;
 }
 

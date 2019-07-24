@@ -7212,8 +7212,7 @@ void Document::EndLoad() {
 
 #if defined(DEBUG) && !defined(ANDROID)
   // only assert if nothing stopped the load on purpose
-  // TODO: we probably also want to check XUL documents here too
-  if (!mParserAborted && !IsXULDocument()) {
+  if (!mParserAborted) {
     AssertAboutPageHasCSP(this);
   }
 #endif

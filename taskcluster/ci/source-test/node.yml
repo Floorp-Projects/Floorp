@@ -46,6 +46,7 @@ devtools-tests:
             cd /builds/worker/checkouts/gecko/devtools/client/bin/ &&
             node devtools-node-test-runner.js --suite=aboutdebugging-new &&
             node devtools-node-test-runner.js --suite=accessibility &&
+            node devtools-node-test-runner.js --suite=application &&
             node devtools-node-test-runner.js --suite=framework &&
             node devtools-node-test-runner.js --suite=netmonitor &&
             node devtools-node-test-runner.js --suite=webconsole

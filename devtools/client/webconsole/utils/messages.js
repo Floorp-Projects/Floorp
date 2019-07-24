@@ -6,7 +6,7 @@
 
 "use strict";
 
-const l10n = require("devtools/client/webconsole/webconsole-l10n");
+const l10n = require("devtools/client/webconsole/utils/l10n");
 const {
   getUrlDetails,
 } = require("devtools/client/netmonitor/src/utils/request-utils");
