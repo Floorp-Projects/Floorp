@@ -306,8 +306,6 @@
 
       this._csp = null;
 
-      this._referrerInfo = null;
-
       this._contentRequestContextID = null;
 
       this._fullZoom = 1;
@@ -802,22 +800,6 @@
         }
       } else {
         this.markupDocumentViewer.fullZoom = val;
-      }
-    }
-    
-    get referrerInfo() {
-      return this.isRemoteBrowser ? this._referrerInfo : this.contentDocument.referrerInfo;
-    }
-
-    get contentRequestContextID() {
-      if (this.isRemoteBrowser) {
-        return this._contentRequestContextID;
-      }
-      try {
-        return this.contentDocument.documentLoadGroup
-          .requestContextID;
-      } catch (e) {
-        return null;
       }
     }
 
@@ -1578,7 +1560,6 @@
       aContentPrincipal,
       aContentStoragePrincipal,
       aCSP,
-      aReferrerInfo,
       aIsSynthetic,
       aInnerWindowID,
       aHaveRequestContextID,
@@ -1603,7 +1584,6 @@
         this._contentPrincipal = aContentPrincipal;
         this._contentStoragePrincipal = aContentStoragePrincipal;
         this._csp = aCSP;
-        this._referrerInfo = aReferrerInfo;
         this._isSyntheticDocument = aIsSynthetic;
         this._innerWindowID = aInnerWindowID;
         this._contentRequestContextID = aHaveRequestContextID
