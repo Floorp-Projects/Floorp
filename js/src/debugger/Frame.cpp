@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/ScopeExit.h"
 
+#include "debugger/DebugScript.h"
 #include "debugger/Environment.h"
 #include "debugger/NoExecute.h"
 #include "debugger/Object.h"
@@ -303,7 +304,7 @@ bool DebuggerFrame::setGenerator(JSContext* cx,
 
   {
     AutoRealm ar(cx, script);
-    if (!script->incrementGeneratorObserverCount(cx)) {
+    if (!DebugScript::incrementGeneratorObserverCount(cx, script)) {
       return false;
     }
   }
@@ -334,11 +335,11 @@ void DebuggerFrame::clearGenerator(FreeOp* fop) {
   // calls may.
   HeapPtr<JSScript*>& generatorScript = info->generatorScript();
   if (!IsAboutToBeFinalized(&generatorScript)) {
-    generatorScript->decrementGeneratorObserverCount(fop);
+    DebugScript::decrementGeneratorObserverCount(fop, generatorScript);
 
     OnStepHandler* handler = onStepHandler();
     if (handler) {
-      generatorScript->decrementStepperCount(fop);
+      DebugScript::decrementStepperCount(fop, generatorScript);
       handler->drop(fop, this);
       setReservedSlot(ONSTEP_HANDLER_SLOT, UndefinedValue());
     }
@@ -667,12 +668,13 @@ bool DebuggerFrame::setOnStepHandler(JSContext* cx, HandleDebuggerFrame frame,
                                                           referent.script())) {
         return false;
       }
-      if (!referent.script()->incrementStepperCount(cx)) {
+      if (!DebugScript::incrementStepperCount(cx, referent.script())) {
         return false;
       }
     } else if (!handler && prior) {
       // Single stepping toggled on->off.
-      referent.script()->decrementStepperCount(cx->runtime()->defaultFreeOp());
+      DebugScript::decrementStepperCount(cx->runtime()->defaultFreeOp(),
+                                         referent.script());
     }
   }
 
@@ -1008,7 +1010,7 @@ void DebuggerFrame::maybeDecrementFrameScriptStepperCount(
     instance->debug().decrementStepperCount(
         fop, frame.asWasmDebugFrame()->funcIndex());
   } else {
-    frame.script()->decrementStepperCount(fop);
+    DebugScript::decrementStepperCount(fop, frame.script());
   }
 
   // In the case of generator frames, we may end up trying to clean up the step

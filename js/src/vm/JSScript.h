@@ -68,14 +68,14 @@ class JitScript;
 #define BASELINE_DISABLED_SCRIPT ((js::jit::BaselineScript*)0x1)
 
 class AutoSweepJitScript;
-class BreakpointSite;
-class Debugger;
 class GCParallelTask;
 class LazyScript;
 class ModuleObject;
 class RegExpObject;
 class SourceCompressionTask;
 class Shape;
+class DebugAPI;
+class DebugScript;
 
 namespace frontend {
 struct BytecodeEmitter;
@@ -252,58 +252,6 @@ using ScriptNameMap = HashMap<JSScript*, JS::UniqueChars,
 using ScriptVTuneIdMap =
     HashMap<JSScript*, uint32_t, DefaultHasher<JSScript*>, SystemAllocPolicy>;
 #endif
-
-class DebugScript {
-  friend class ::JSScript;
-  friend class JS::Realm;
-
-  /*
-   * If this is a generator script, this is the number of Debugger.Frames
-   * referring to calls to this generator, whether live or suspended. Closed
-   * generators do not contribute a count.
-   *
-   * When greater than zero, this script should be compiled with debug
-   * instrumentation to call Debugger::onResumeFrame at each resumption site, so
-   * that Debugger can reconnect any extant Debugger.Frames with the new
-   * concrete frame.
-   */
-  uint32_t generatorObserverCount;
-
-  /*
-   * The number of Debugger.Frame objects that refer to frames running this
-   * script and that have onStep handlers. When nonzero, the interpreter and JIT
-   * must arrange to call Debugger::onSingleStep before each bytecode, or at
-   * least at some useful granularity.
-   */
-  uint32_t stepperCount;
-
-  /*
-   * Number of breakpoint sites at opcodes in the script. This is the number
-   * of populated entries in DebugScript::breakpoints, below.
-   */
-  uint32_t numSites;
-
-  /*
-   * Breakpoints set in our script. For speed and simplicity, this array is
-   * parallel to script->code(): the BreakpointSite for the opcode at
-   * script->code()[offset] is debugScript->breakpoints[offset]. Naturally,
-   * this array's true length is script->length().
-   */
-  BreakpointSite* breakpoints[1];
-
-  /*
-   * True if this DebugScript carries any useful information. If false, it
-   * should be removed from its JSScript.
-   */
-  bool needed() const {
-    return generatorObserverCount > 0 || stepperCount > 0 || numSites > 0;
-  }
-
-  static size_t allocSize(size_t codeLength) {
-    return offsetof(DebugScript, breakpoints) +
-           codeLength * sizeof(BreakpointSite*);
-  }
-};
 
 using UniqueDebugScript = js::UniquePtr<DebugScript, JS::FreePolicy>;
 using DebugScriptMap = HashMap<JSScript*, UniqueDebugScript,
@@ -3104,65 +3052,14 @@ class JSScript : public js::BaseScript {
   bool formalIsAliased(unsigned argSlot);
   bool formalLivesInArgumentsObject(unsigned argSlot);
 
- private:
-  /* Change this->stepMode to |newValue|. */
-  void setNewStepMode(js::FreeOp* fop, uint32_t newValue);
-
-  js::DebugScript* getOrCreateDebugScript(JSContext* cx);
-  js::DebugScript* debugScript();
-  js::DebugScript* releaseDebugScript();
-  void destroyDebugScript(js::FreeOp* fop);
-  void freeDebugScript(js::FreeOp* fop);
-
-  bool hasDebugScript() const { return hasFlag(MutableFlags::HasDebugScript); }
-
- public:
-  bool hasBreakpointsAt(jsbytecode* pc);
-  bool hasAnyBreakpointsOrStepMode() { return hasDebugScript(); }
-
   // See comment above 'debugMode' in Realm.h for explanation of
   // invariants of debuggee compartments, scripts, and frames.
   inline bool isDebuggee() const;
 
-  js::BreakpointSite* getBreakpointSite(jsbytecode* pc) {
-    return hasDebugScript() ? debugScript()->breakpoints[pcToOffset(pc)]
-                            : nullptr;
-  }
-
-  js::BreakpointSite* getOrCreateBreakpointSite(JSContext* cx, jsbytecode* pc);
-
-  void destroyBreakpointSite(js::FreeOp* fop, jsbytecode* pc);
-
-  void clearBreakpointsIn(js::FreeOp* fop, js::Debugger* dbg,
-                          JSObject* handler);
-
-  /*
-   * Increment or decrement the single-step count. If the count is non-zero
-   * then the script is in single-step mode.
-   *
-   * Only incrementing is fallible, as it could allocate a DebugScript.
-   */
-  bool incrementStepperCount(JSContext* cx);
-  void decrementStepperCount(js::FreeOp* fop);
-
-  bool stepModeEnabled() {
-    return hasDebugScript() && debugScript()->stepperCount > 0;
-  }
-
-#ifdef DEBUG
-  uint32_t stepperCount() {
-    return hasDebugScript() ? debugScript()->stepperCount : 0;
-  }
-#endif
-
-  /*
-   * Increment or decrement the generator observer count. If the count is
-   * non-zero then the script reports resumptions to the debugger.
-   *
-   * Only incrementing is fallible, as it could allocate a DebugScript.
-   */
-  bool incrementGeneratorObserverCount(JSContext* cx);
-  void decrementGeneratorObserverCount(js::FreeOp* fop);
+  // Access the flag for whether this script has a DebugScript in its realm's
+  // map. This should only be used by the DebugScript class.
+  bool hasDebugScript() const { return hasFlag(MutableFlags::HasDebugScript); }
+  void setHasDebugScript(bool b) { setFlag(MutableFlags::HasDebugScript, b); }
 
   void finalize(js::FreeOp* fop);
 

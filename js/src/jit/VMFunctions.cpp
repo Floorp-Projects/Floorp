@@ -8,7 +8,6 @@
 
 #include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineIC.h"
@@ -1127,9 +1126,10 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
   // is in step mode or has breakpoints. The Baseline Compiler can toggle
   // breakpoints more granularly for specific bytecode PCs.
   if (frame->runningInInterpreter()) {
-    MOZ_ASSERT(script->hasAnyBreakpointsOrStepMode());
+    MOZ_ASSERT(DebugAPI::hasAnyBreakpointsOrStepMode(script));
   } else {
-    MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+    MOZ_ASSERT(DebugAPI::stepModeEnabled(script) ||
+               DebugAPI::hasBreakpointsAt(script, pc));
   }
 
   if (*pc == JSOP_AFTERYIELD) {
@@ -1157,11 +1157,12 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
   RootedValue rval(cx);
   ResumeMode resumeMode = ResumeMode::Continue;
 
-  if (script->stepModeEnabled()) {
+  if (DebugAPI::stepModeEnabled(script)) {
     resumeMode = DebugAPI::onSingleStep(cx, &rval);
   }
 
-  if (resumeMode == ResumeMode::Continue && script->hasBreakpointsAt(pc)) {
+  if (resumeMode == ResumeMode::Continue &&
+      DebugAPI::hasBreakpointsAt(script, pc)) {
     resumeMode = DebugAPI::onTrap(cx, &rval);
   }
 
@@ -1212,7 +1213,7 @@ bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
 bool GlobalHasLiveOnDebuggerStatement(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
   return cx->realm()->isDebuggee() &&
-         Debugger::hasLiveHook(cx->global(), Debugger::OnDebuggerStatement);
+         DebugAPI::hasDebuggerStatementHook(cx->global());
 }
 
 bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,

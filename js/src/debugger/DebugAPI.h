@@ -65,6 +65,9 @@ enum class ResumeMode {
   Return,
 };
 
+class DebugScript;
+class DebuggerVector;
+
 class DebugAPI {
  public:
   friend class Debugger;
@@ -91,6 +94,19 @@ class DebugAPI {
   static void traceAllForMovingGC(JSTracer* trc);
   static void sweepAll(FreeOp* fop);
   static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
+  static inline void sweepBreakpoints(FreeOp* fop, JSScript* script);
+  static void destroyDebugScript(FreeOp* fop, JSScript* script);
+#ifdef JSGC_HASH_TABLE_CHECKS
+  static void checkDebugScriptAfterMovingGC(DebugScript* ds);
+#endif
+
+  /*** Methods for querying script breakpoint state. **************************/
+
+  static inline bool stepModeEnabled(JSScript* script);
+
+  static inline bool hasBreakpointsAt(JSScript* script, jsbytecode* pc);
+
+  static inline bool hasAnyBreakpointsOrStepMode(JSScript* script);
 
   /*** Methods for interacting with the runtime. ******************************/
 
@@ -213,6 +229,15 @@ class DebugAPI {
   static inline void onPromiseSettled(JSContext* cx,
                                       Handle<PromiseObject*> promise);
 
+  // Whether any debugger is observing execution in a global.
+  static bool debuggerObservesAllExecution(GlobalObject* global);
+
+  // Whether any debugger is observing JS execution coverage in a global.
+  static bool debuggerObservesCoverage(GlobalObject* global);
+
+  // Whether any Debugger is observing asm.js execution in a global.
+  static bool debuggerObservesAsmJS(GlobalObject* global);
+
   /*
    * Announce to the debugger that a generator object has been created,
    * via JSOP_GENERATOR.
@@ -238,10 +263,36 @@ class DebugAPI {
   static bool isObservedByDebuggerTrackingAllocations(
       const GlobalObject& debuggee);
 
+  // Announce to the debugger that a global object is being collected by the
+  // specified major GC.
+  static inline void notifyParticipatesInGC(GlobalObject* global,
+                                            uint64_t majorGCNumber);
+
+  static mozilla::Maybe<double> allocationSamplingProbability(
+      GlobalObject* global);
+
+  // Allocate an object which holds a GlobalObject::DebuggerVector.
+  static JSObject* newGlobalDebuggersHolder(JSContext* cx);
+
+  // Get the GlobalObject::DebuggerVector for an object allocated by
+  // newGlobalDebuggersObject.
+  static GlobalObject::DebuggerVector* getGlobalDebuggers(JSObject* holder);
+
+  // Whether any debugger is observing exception unwinds in a realm.
+  static bool hasExceptionUnwindHook(GlobalObject* global);
+
+  // Whether any debugger is observing debugger statements in a realm.
+  static bool hasDebuggerStatementHook(GlobalObject* global);
+
  private:
+  static bool stepModeEnabledSlow(JSScript* script);
+  static bool hasBreakpointsAtSlow(JSScript* script, jsbytecode* pc);
+  static void sweepBreakpointsSlow(FreeOp* fop, JSScript* script);
   static void slowPathOnNewScript(JSContext* cx, HandleScript script);
   static void slowPathOnNewGlobalObject(JSContext* cx,
                                         Handle<GlobalObject*> global);
+  static void slowPathNotifyParticipatesInGC(
+      uint64_t majorGCNumber, GlobalObject::DebuggerVector& dbgs);
   static MOZ_MUST_USE bool slowPathOnLogAllocationSite(
       JSContext* cx, HandleObject obj, HandleSavedFrame frame,
       mozilla::TimeStamp when, GlobalObject::DebuggerVector& dbgs);

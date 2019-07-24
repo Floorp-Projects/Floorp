@@ -14,6 +14,21 @@
 namespace js {
 
 /* static */
+bool DebugAPI::stepModeEnabled(JSScript* script) {
+  return script->hasDebugScript() && stepModeEnabledSlow(script);
+}
+
+/* static */
+bool DebugAPI::hasBreakpointsAt(JSScript* script, jsbytecode* pc) {
+  return script->hasDebugScript() && hasBreakpointsAtSlow(script, pc);
+}
+
+/* static */
+bool DebugAPI::hasAnyBreakpointsOrStepMode(JSScript* script) {
+  return script->hasDebugScript();
+}
+
+/* static */
 void DebugAPI::onNewScript(JSContext* cx, HandleScript script) {
   // We early return in slowPathOnNewScript for self-hosted scripts, so we can
   // ignore those in our assertion here.
@@ -44,6 +59,15 @@ void DebugAPI::onNewGlobalObject(JSContext* cx,
 }
 
 /* static */
+void DebugAPI::notifyParticipatesInGC(GlobalObject* global,
+                                      uint64_t majorGCNumber) {
+  GlobalObject::DebuggerVector* dbgs = global->getDebuggers();
+  if (dbgs && !dbgs->empty()) {
+    slowPathNotifyParticipatesInGC(majorGCNumber, *dbgs);
+  }
+}
+
+/* static */
 bool DebugAPI::onLogAllocationSite(JSContext* cx, JSObject* obj,
                                    HandleSavedFrame frame,
                                    mozilla::TimeStamp when) {
@@ -64,7 +88,7 @@ bool DebugAPI::onLeaveFrame(JSContext* cx, AbstractFramePtr frame,
                 frame.isDebuggee());
   /* Traps must be cleared from eval frames, see slowPathOnLeaveFrame. */
   mozilla::DebugOnly<bool> evalTraps =
-      frame.isEvalFrame() && frame.script()->hasAnyBreakpointsOrStepMode();
+      frame.isEvalFrame() && frame.script()->hasDebugScript();
   MOZ_ASSERT_IF(evalTraps, frame.isDebuggee());
   if (frame.isDebuggee()) {
     ok = slowPathOnLeaveFrame(cx, frame, pc, ok);
@@ -146,6 +170,13 @@ void DebugAPI::onNewPromise(JSContext* cx, Handle<PromiseObject*> promise) {
 void DebugAPI::onPromiseSettled(JSContext* cx, Handle<PromiseObject*> promise) {
   if (MOZ_UNLIKELY(promise->realm()->isDebuggee())) {
     slowPathOnPromiseSettled(cx, promise);
+  }
+}
+
+/* static */
+void DebugAPI::sweepBreakpoints(FreeOp* fop, JSScript* script) {
+  if (script->hasDebugScript()) {
+    sweepBreakpointsSlow(fop, script);
   }
 }
 
