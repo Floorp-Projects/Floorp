@@ -280,7 +280,7 @@ class StoreExtensionsKtTest {
     }
 }
 
-private class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
+internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
     val lifecycleRegistry = LifecycleRegistry(this).apply {
         markState(initialState)
     }
