@@ -34,7 +34,7 @@ add_task(async function test_show_form() {
       await TabStateFlusher.flush(browser);
 
       // Now crash the browser.
-      await BrowserTestUtils.crashBrowser(browser);
+      await BrowserTestUtils.crashFrame(browser);
 
       let doc = browser.contentDocument;
 
@@ -87,7 +87,7 @@ add_task(async function test_show_form() {
     async function(browser) {
       await TabStateFlusher.flush(browser);
       // Now crash the browser.
-      await BrowserTestUtils.crashBrowser(browser);
+      await BrowserTestUtils.crashFrame(browser);
 
       let doc = browser.contentDocument;
 
@@ -138,7 +138,7 @@ add_task(async function test_no_offer() {
       prepareNoDump();
 
       // Now crash the browser.
-      await BrowserTestUtils.crashBrowser(browser);
+      await BrowserTestUtils.crashFrame(browser);
 
       let doc = browser.contentDocument;
 
