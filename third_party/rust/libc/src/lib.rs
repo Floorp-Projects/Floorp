@@ -21,11 +21,13 @@
     feature = "rustc-dep-of-std",
     feature(cfg_target_vendor, link_cfg, no_core)
 )]
+#![cfg_attr(libc_thread_local, feature(thread_local))]
 // Enable extra lints:
 #![cfg_attr(feature = "extra_traits", deny(missing_debug_implementations))]
 #![deny(missing_copy_implementations, safe_packed_borrows)]
 #![no_std]
 #![cfg_attr(feature = "rustc-dep-of-std", no_core)]
+#![cfg_attr(target_os = "redox", feature(static_nobundle))]
 
 #[macro_use]
 mod macros;
@@ -89,30 +91,51 @@ cfg_if! {
 
 cfg_if! {
     if #[cfg(windows)] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod windows;
         pub use windows::*;
-    } else if #[cfg(target_os = "redox")] {
-        mod redox;
-        pub use redox::*;
     } else if #[cfg(target_os = "cloudabi")] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod cloudabi;
         pub use cloudabi::*;
     } else if #[cfg(target_os = "fuchsia")] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod fuchsia;
         pub use fuchsia::*;
     } else if #[cfg(target_os = "switch")] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod switch;
         pub use switch::*;
     } else if #[cfg(unix)] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod unix;
         pub use unix::*;
     } else if #[cfg(target_os = "hermit")] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod hermit;
         pub use hermit::*;
     } else if #[cfg(all(target_env = "sgx", target_vendor = "fortanix"))] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod sgx;
         pub use sgx::*;
-    } else if #[cfg(target_env = "wasi")] {
+    } else if #[cfg(any(target_env = "wasi", target_os = "wasi"))] {
+        mod fixed_width_ints;
+        pub use fixed_width_ints::*;
+
         mod wasi;
         pub use wasi::*;
     } else {

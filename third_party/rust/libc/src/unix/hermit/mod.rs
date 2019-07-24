@@ -964,6 +964,11 @@ f! {
 }
 
 extern {
+    pub fn getrlimit(resource: ::c_int, rlim: *mut ::rlimit) -> ::c_int;
+    pub fn setrlimit(resource: ::c_int, rlim: *const ::rlimit) -> ::c_int;
+    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
+                      buflen: ::size_t) -> ::c_int;
+
     pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
     pub fn sem_init(sem: *mut sem_t,
                     pshared: ::c_int,
@@ -981,6 +986,8 @@ extern {
 
     pub fn clock_gettime(clock_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
 
+    pub fn gettimeofday(tp: *mut ::timeval,
+                        tz: *mut ::c_void) -> ::c_int;
     pub fn getpwuid_r(uid: ::uid_t, pwd: *mut passwd, buf: *mut ::c_char,
         buflen: ::size_t, result: *mut *mut passwd) -> ::c_int;
 
