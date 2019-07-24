@@ -213,7 +213,8 @@
 }
 
 #tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
-#tracking-protection-icon-box:not([animationsenabled]) > #tracking-protection-icon-animatable-box,
+#tracking-protection-icon-box:not([animationsenabled])[active] > #tracking-protection-icon,
+#tracking-protection-icon-box:not([animationsenabled]):not([active]) > #tracking-protection-icon-animatable-box,
 #tracking-protection-icon-box:not([active]) > #tracking-protection-icon-animatable-box {
   display: none;
 }
@@ -244,14 +245,14 @@
   transform: scaleX(-1) translateX(-256px);
 }
 
-#tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image {
+#tracking-protection-icon-box[animationsenabled][active][animate] #tracking-protection-icon-animatable-image {
   animation-name: tp-icon-animation;
   animation-timing-function: steps(16);
   animation-duration: 1s;
   animation-fill-mode: forwards;
 }
 
-#tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
+#tracking-protection-icon-box[animationsenabled][active][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
   animation-name: tp-icon-animation-rtl;
 }
 
