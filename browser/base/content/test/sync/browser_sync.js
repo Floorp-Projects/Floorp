@@ -22,9 +22,6 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
 });
 
 add_task(async function test_ui_state_signedin() {
-  const msBadgeEnabled = Services.prefs.getBoolPref(
-    "browser.messaging-system.fxatoolbarbadge.enabled"
-  );
   const relativeDateAnchor = new Date();
   let state = {
     status: UIState.STATUS_SIGNED_IN,
@@ -55,11 +52,7 @@ add_task(async function test_ui_state_signedin() {
   checkRemoteTabsPanel("PanelUI-remotetabs-main", false);
   checkMenuBarItem("sync-syncnowitem");
   checkFxaToolbarButtonPanel("PanelUI-fxa-menu");
-  if (msBadgeEnabled) {
-    await checkFxABadged();
-  } else {
-    checkFxAAvatar("signedin");
-  }
+  checkFxAAvatar("signedin");
   gSync.relativeTimeFormat = origRelativeTimeFormat;
 });
 
@@ -89,9 +82,6 @@ add_task(async function test_ui_state_syncing() {
 });
 
 add_task(async function test_ui_state_unconfigured() {
-  const msBadgeEnabled = Services.prefs.getBoolPref(
-    "browser.messaging-system.fxatoolbarbadge.enabled"
-  );
   let state = {
     status: UIState.STATUS_NOT_CONFIGURED,
   };
@@ -105,11 +95,7 @@ add_task(async function test_ui_state_unconfigured() {
   checkRemoteTabsPanel("PanelUI-remotetabs-setupsync");
   checkMenuBarItem("sync-setup");
   checkFxaToolbarButtonPanel("PanelUI-fxa-signin");
-  if (msBadgeEnabled) {
-    await checkFxABadged();
-  } else {
-    checkFxAAvatar("not_configured");
-  }
+  checkFxAAvatar("not_configured");
 });
 
 add_task(async function test_ui_state_unverified() {
@@ -271,16 +257,6 @@ async function checkFxaToolbarButtonPanel(expectedShownItemId) {
     ["PanelUI-fxa-signin", "PanelUI-fxa-unverified", "PanelUI-fxa-menu"],
     expectedShownItemId
   );
-}
-
-async function checkFxABadged() {
-  const button = document.getElementById("fxa-toolbar-menu-button");
-  await BrowserTestUtils.waitForCondition(() => {
-    return button.querySelector("label.feature-callout");
-  });
-  const badge = button.querySelector("label.feature-callout");
-  ok(badge, "expected feature-callout style badge");
-  ok(BrowserTestUtils.is_visible(badge), "expected the badge to be visible");
 }
 
 // fxaStatus is one of 'not_configured', 'unverified', or 'signedin'.
