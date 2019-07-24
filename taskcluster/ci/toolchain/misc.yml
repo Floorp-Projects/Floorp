@@ -129,6 +129,23 @@ linux64-custom-v8:
         ]
         toolchain-artifact: public/build/d8.zip
 
+browsertime:
+    description: "npm install browsertime node_modules"
+    treeherder:
+        symbol: TL(browsertime)
+    worker:
+        env:
+            NODEJS: "/builds/worker/workspace/build/src/node/bin/node"
+    run:
+        script: browsertime.sh
+        sparse-profile: null
+        resources:
+            - 'tools/browsertime/package.json'
+            - 'tools/browsertime/mach_commands.py'
+        toolchain-artifact: public/build/browsertime.zip
+    toolchains:
+        - linux64-node
+
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
     treeherder:
