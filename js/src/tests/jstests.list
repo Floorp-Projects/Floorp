@@ -533,3 +533,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 
 # Test requires signDisplay option to not exist.
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
+
+# https://github.com/tc39/test262/pull/2240
+skip script test262/intl402/NumberFormat/currencyDisplay-unit.js

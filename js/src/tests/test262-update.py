@@ -40,7 +40,6 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-formatRange",
     "Intl.ListFormat",
     "Intl.Segmenter",
-    "Intl.NumberFormat-unified",
     "Promise.allSettled",
 ])
 FEATURE_CHECK_NEEDED = {
@@ -54,6 +53,7 @@ FEATURE_CHECK_NEEDED = {
 }
 RELEASE_OR_BETA = set([
     "numeric-separator-literal",
+    "Intl.NumberFormat-unified",
 ])
 
 
