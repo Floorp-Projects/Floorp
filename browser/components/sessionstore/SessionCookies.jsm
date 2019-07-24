@@ -79,7 +79,7 @@ var SessionCookiesInternal = {
             /* isSession = */ true,
             expiry,
             cookie.originAttributes || {},
-            Ci.nsICookie.SAMESITE_NONE
+            cookie.sameSite || Ci.nsICookie.SAMESITE_NONE
           );
         } catch (ex) {
           Cu.reportError(
@@ -241,6 +241,10 @@ var CookieStore = {
 
     if (cookie.originAttributes) {
       jscookie.originAttributes = cookie.originAttributes;
+    }
+
+    if (cookie.sameSite) {
+      jscookie.sameSite = cookie.sameSite;
     }
 
     this._entries.set(this._getKeyForCookie(cookie), jscookie);
