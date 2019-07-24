@@ -58,8 +58,12 @@ function resolvePluralRulesInternals(lazyPluralRulesData) {
 
     // Step 9.
     internalProps.minimumIntegerDigits = lazyPluralRulesData.minimumIntegerDigits;
-    internalProps.minimumFractionDigits = lazyPluralRulesData.minimumFractionDigits;
-    internalProps.maximumFractionDigits = lazyPluralRulesData.maximumFractionDigits;
+
+    if ("minimumFractionDigits" in lazyPluralRulesData) {
+        assert("maximumFractionDigits" in lazyPluralRulesData, "min/max frac digits mismatch");
+        internalProps.minimumFractionDigits = lazyPluralRulesData.minimumFractionDigits;
+        internalProps.maximumFractionDigits = lazyPluralRulesData.maximumFractionDigits;
+    }
 
     if ("minimumSignificantDigits" in lazyPluralRulesData) {
         assert("maximumSignificantDigits" in lazyPluralRulesData, "min/max sig digits mismatch");
@@ -119,10 +123,12 @@ function InitializePluralRules(pluralRules, locales, options) {
     //       }
     //
     //     minimumIntegerDigits: integer ∈ [1, 21],
+    //
+    //     // optional, mutually exclusive with the significant-digits option
     //     minimumFractionDigits: integer ∈ [0, 20],
     //     maximumFractionDigits: integer ∈ [0, 20],
     //
-    //     // optional
+    //     // optional, mutually exclusive with the fraction-digits option
     //     minimumSignificantDigits: integer ∈ [1, 21],
     //     maximumSignificantDigits: integer ∈ [1, 21],
     //   }
@@ -233,11 +239,19 @@ function Intl_PluralRules_resolvedOptions() {
         locale: internals.locale,
         type: internals.type,
         minimumIntegerDigits: internals.minimumIntegerDigits,
-        minimumFractionDigits: internals.minimumFractionDigits,
-        maximumFractionDigits: internals.maximumFractionDigits,
     };
 
-    // Min/Max significant digits are either both present or not at all.
+    // Min/Max fraction digits are either both present or not present at all.
+    assert(hasOwn("minimumFractionDigits", internals) ===
+           hasOwn("maximumFractionDigits", internals),
+           "minimumFractionDigits is present iff maximumFractionDigits is present");
+
+    if (hasOwn("minimumFractionDigits", internals)) {
+        _DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
+        _DefineDataProperty(result, "maximumFractionDigits", internals.maximumFractionDigits);
+    }
+
+    // Min/Max significant digits are either both present or not present at all.
     assert(hasOwn("minimumSignificantDigits", internals) ===
            hasOwn("maximumSignificantDigits", internals),
            "minimumSignificantDigits is present iff maximumSignificantDigits is present");
