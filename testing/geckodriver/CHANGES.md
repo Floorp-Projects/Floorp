@@ -67,6 +67,12 @@ Unreleased
   By mistake, earlier versions of geckodriver failed to print incorrect
   flag use.  With this release problems are again written to stderr.
 
+- Search system path for Firefox binary on BSDs
+
+  geckodriver would previously only search the system path for the
+  `firefox` binary on Linux.  Now it supports different BSD flavours
+  as well.
+
 
 0.24.0 (2019-01-28, `917474f3473e`)
 -----------------------------------
