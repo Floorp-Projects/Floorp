@@ -8156,8 +8156,7 @@ var CanvasPermissionPromptHelper = {
 
     let browser;
     if (aSubject instanceof Ci.nsIDOMWindow) {
-      let contentWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
-      browser = contentWindow.docShell.chromeEventHandler;
+      let browser = aSubject.docShell.chromeEventHandler;
     } else {
       browser = aSubject;
     }
@@ -8603,7 +8602,6 @@ function BrowserOpenAddonsMgr(aView) {
       if (aView) {
         aSubject.loadView(aView);
       }
-      aSubject.QueryInterface(Ci.nsIDOMWindow);
       aSubject.focus();
       resolve(aSubject);
     }, "EM-loaded");

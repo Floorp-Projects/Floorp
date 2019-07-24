@@ -23,12 +23,11 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       sendAsyncMessage("waitForXULAlert", false);
     }, 2000);
 
-    var windowObserver = function(aSubject, aTopic, aData) {
+    var windowObserver = function(win, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
 
-      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("load", function() {
         let windowType = win.document.documentElement.getAttribute("windowtype");
         if (windowType == "alert:alert") {
