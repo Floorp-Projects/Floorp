@@ -141,7 +141,7 @@ export function _List(props) {
           <PlaceholderListItem key={`ds-list-item-${index}`} />
         ) : (
           <ListItem
-            key={`ds-list-item-${index}`}
+            key={`ds-list-item-${rec.id}`}
             dispatch={props.dispatch}
             campaignId={rec.campaign_id}
             domain={rec.domain}
