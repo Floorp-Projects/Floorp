@@ -161,19 +161,22 @@ class WebConsoleWrapper {
          * Retrieve the FrameActor ID given a frame depth, or the selected one if no
          * frame depth given.
          *
+         * @param {Number} frame: optional frame depth.
          * @return { frameActor: String|null, client: Object }:
          *         frameActor is the FrameActor ID for the given frame depth
          *         (or the selected frame if it exists), null if no frame was found.
          *         client is the WebConsole client for the thread the frame is
          *         associated with.
          */
-        getFrameActor: () => {
+        getFrameActor: (frame = null) => {
           const state = this.hud.getDebuggerFrames();
           if (!state) {
             return { frameActor: null, client: webConsoleUI.webConsoleClient };
           }
 
-          const grip = state.frames[state.selected];
+          const grip = Number.isInteger(frame)
+            ? state.frames[frame]
+            : state.frames[state.selected];
 
           if (!grip) {
             return { frameActor: null, client: webConsoleUI.webConsoleClient };
