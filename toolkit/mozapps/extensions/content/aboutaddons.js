@@ -813,13 +813,21 @@ class AddonOptions extends HTMLElement {
   }
 
   update(card, addon, updateInstall) {
-    for (let el of this.querySelectorAll("panel-item")) {
+    for (let el of this.items) {
       this.setElementState(el, card, addon, updateInstall);
     }
 
     // Update the separators visibility based on the updated visibility
     // of the actions in the panel-list.
     this.updateSeparatorsVisibility();
+  }
+
+  get items() {
+    return this.querySelectorAll("panel-item");
+  }
+
+  get visibleItems() {
+    return Array.from(this.items).filter(item => !item.hidden);
   }
 }
 customElements.define("addon-options", AddonOptions);
@@ -1848,10 +1856,15 @@ class AddonCard extends HTMLElement {
     // Set the items in the more options menu.
     this.options.update(this, addon, this.updateInstall);
 
-    // Badge the more options menu if there's an update.
-    card
-      .querySelector(".more-options-button")
-      .classList.toggle("more-options-button-badged", !!this.updateInstall);
+    // Badge the more options button if there's an update.
+    let moreOptionsButton = card.querySelector(".more-options-button");
+    moreOptionsButton.classList.toggle(
+      "more-options-button-badged",
+      !!this.updateInstall
+    );
+
+    // Hide the more options button if it's empty.
+    moreOptionsButton.hidden = this.options.visibleItems.length === 0;
 
     // Set the private browsing badge visibility.
     if (
