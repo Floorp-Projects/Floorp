@@ -115,9 +115,9 @@
 
 
 #ifdef RELEASE_OR_BETA
-#define NOT_IN_RELEASE_OR_BETA_VALUE false
+#define IS_NOT_RELEASE_OR_BETA false
 #else
-#define NOT_IN_RELEASE_OR_BETA_VALUE true
+#define IS_NOT_RELEASE_OR_BETA true
 #endif
 
 #---------------------------------------------------------------------------
@@ -936,7 +936,7 @@
 # Disable sending console to logcat on release builds.
 - name: consoleservice.logcat
   type: RelaxedAtomicBool
-  value: @NOT_IN_RELEASE_OR_BETA_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 #endif
 
@@ -1006,28 +1006,16 @@
   mirror: always
 
 # Is support for automatically removing replaced filling animations enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.animations-api.autoremove.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for composite operations from the Web Animations API enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.animations-api.compositing.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for the core interfaces of Web Animations API enabled?
 - name: dom.animations-api.core.enabled
@@ -1041,41 +1029,23 @@
 # Before enabling this by default, make sure also CSSPseudoElement interface
 # has been spec'ed properly, or we should add a separate pref for
 # CSSPseudoElement interface. See Bug 1174575 for further details.
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.animations-api.getAnimations.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for animations from the Web Animations API without 0%/100%
 # keyframes enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.animations-api.implicit-keyframes.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for timelines from the Web Animations API enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: dom.animations-api.timelines.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for AudioWorklet enabled?
 - name: dom.audioworklet.enabled
@@ -1254,16 +1224,10 @@
   value: true
   mirror: always
 
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE  false
-#else
-#define PREF_VALUE  true
-#endif
 - name: dom.gamepad.non_standard_events.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.gamepad.test.enabled
   type: bool
@@ -1327,7 +1291,7 @@
 # Is support for HTMLInputElement.inputMode enabled?
 - name: dom.forms.inputmode
   type: bool
-  value: @NOT_IN_RELEASE_OR_BETA_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
 # Enable Directory API. By default, disabled.
@@ -1561,28 +1525,32 @@
   mirror: always
 
 # Presentation API
-#if defined(ANDROID)
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.presentation.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(ANDROID)
+  value: @IS_NOT_RELEASE_OR_BETA@
+#else
+  value: false
+#endif
   mirror: always
+  
 - name: dom.presentation.controller.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(ANDROID)
+  value: @IS_NOT_RELEASE_OR_BETA@
+#else
+  value: false
+#endif
   mirror: always
+
 - name: dom.presentation.receiver.enabled
   type: bool
-  value: @PREF_VALUE@
+#if defined(ANDROID)
+  value: @IS_NOT_RELEASE_OR_BETA@
+#else
+  value: false
+#endif
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.presentation.testing.simulate-receiver
   type: bool
@@ -2715,16 +2683,10 @@
   value: false
   mirror: always
 
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: gfx.omta.background-color
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 - name: gfx.partialpresent.force
   type: RelaxedAtomicInt32
@@ -3851,21 +3813,15 @@
   mirror: always
 
 # Should stray control characters be rendered visibly?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: layout.css.control-characters.visible
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for GeometryUtils.convert*FromNode enabled?
 - name: layout.css.convertFromNode.enabled
   type: bool
-  value: @NOT_IN_RELEASE_OR_BETA_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
 # Is support for DOMMatrix enabled?
@@ -3911,16 +3867,10 @@
   mirror: always
 
 # Is support for GeometryUtils.getBoxQuads enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: layout.css.getBoxQuads.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
 #ifdef NIGHTLY_BUILD
@@ -3955,7 +3905,7 @@
 # Is support for motion-path enabled?
 - name: layout.css.motion-path.enabled
   type: bool
-  value: @NOT_IN_RELEASE_OR_BETA_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 
 # Is support for -moz-binding enabled?
@@ -4161,16 +4111,10 @@
   mirror: always
 
 # Are style system use counters enabled?
-#ifdef RELEASE_OR_BETA
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: layout.css.use-counters.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
-#undef PREF_VALUE
 
 # Should the :visited selector ever match (otherwise :link matches instead)?
 - name: layout.css.visited_links_enabled
@@ -6163,4 +6107,3 @@
 #---------------------------------------------------------------------------
 # End of prefs
 #---------------------------------------------------------------------------
-
