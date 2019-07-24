@@ -42,7 +42,7 @@ class WindowObserver {
   async start() {
     if (this.registerExisting) {
       for (const window of Services.wm.getEnumerator("navigator:browser")) {
-        await this.onOpenWindow(window);
+        await this.onOpenDOMWindow(window);
       }
     }
 
@@ -53,14 +53,18 @@ class WindowObserver {
     Services.wm.removeListener(this);
   }
 
+  async onOpenDOMWindow(window) {
+    await new DOMContentLoadedPromise(window);
+    this.emit("open", window);
+  }
+
   // nsIWindowMediatorListener
 
   async onOpenWindow(xulWindow) {
     const window = xulWindow
       .QueryInterface(Ci.nsIInterfaceRequestor)
       .getInterface(Ci.nsIDOMWindow);
-    await new DOMContentLoadedPromise(window);
-    this.emit("open", window);
+    await this.onOpenDOMWindow(window);
   }
 
   onCloseWindow(xulWindow) {
