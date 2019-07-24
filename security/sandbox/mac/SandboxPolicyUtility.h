@@ -23,13 +23,15 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (moz-deny default)
   ; These are not included in (deny default)
   (moz-deny process-info*)
-  (allow process-info-pidinfo (target self))
   ; This isn't available in some older macOS releases.
   (if (defined? 'nvram*)
     (moz-deny nvram*))
   ; This property requires macOS 10.10+
   (if (defined? 'file-map-executable)
     (moz-deny file-map-executable))
+
+  ; Needed for things like getpriority()/setpriority()/pthread_setname()
+  (allow process-info-pidinfo process-info-setcontrol (target self))
 
   (if (defined? 'file-map-executable)
     (allow file-map-executable file-read*
