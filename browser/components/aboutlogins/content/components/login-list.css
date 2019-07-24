@@ -13,9 +13,22 @@
 .meta {
   display: flex;
   align-items: center;
-  padding: 10px 18px;
+  padding: 5px 18px;
   border-bottom: 1px solid var(--in-content-box-border-color);
-  background-color: var(--in-content-box-info-background);
+  background-color: var(--in-content-box-background);
+  color: var(--in-content-deemphasized-text);
+}
+
+#login-sort {
+  min-height: initial;
+  line-height: 1.1;
+  font: inherit;
+  font-weight: 600;
+  color: var(--in-content-text-color) !important;
+}
+
+#login-sort > option {
+  font-weight: normal;
 }
 
 .count {
@@ -35,7 +48,7 @@ ol {
 }
 
 .create-login-button {
-  margin: 18px;
+  margin: 16px;
 }
 
 .login-list-item {
@@ -69,8 +82,8 @@ ol {
   border-inline-start-color: var(--in-content-border-invalid);
 }
 
-.title {
-  font-weight: bold;
+.login-list-item.selected .title {
+  font-weight: 600;
 }
 
 .title,
@@ -79,4 +92,9 @@ ol {
   max-width: 50ch;
   text-overflow: ellipsis;
   overflow: hidden;
+}
+
+.username {
+  font-size: 0.85em;
+  color: var(--in-content-deemphasized-text);
 }
