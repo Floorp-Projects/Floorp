@@ -60,6 +60,7 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     if (style === "currency") {
         internalProps.currency = lazyNumberFormatData.currency;
         internalProps.currencyDisplay = lazyNumberFormatData.currencyDisplay;
+        internalProps.currencySign = lazyNumberFormatData.currencySign;
     }
 
     // Intl.NumberFormat Unified API Proposal
@@ -271,6 +272,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //     // fields present only if style === "currency":
     //     currency: a well-formed currency code (IsWellFormedCurrencyCode),
     //     currencyDisplay: "code" / "symbol" / "name",
+    //     currencySign: "standard" / "accounting",
     //
     //     opt: // opt object computed in InitializeNumberFormat
     //       {
@@ -332,8 +334,15 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Steps 14-17.
     var currency = GetOption(options, "currency", "string", undefined, undefined);
+
+    // Per the Intl.NumberFormat Unified API Proposal, this check should only
+    // happen for |style === "currency"|, which seems inconsistent, given that
+    // we normally validate all options when present, even the ones which are
+    // unused.
+    // TODO: File issue at <https://github.com/tc39/proposal-unified-intl-numberformat>.
     if (currency !== undefined && !IsWellFormedCurrencyCode(currency))
         ThrowRangeError(JSMSG_INVALID_CURRENCY_CODE, currency);
+
     var cDigits;
     if (style === "currency") {
         if (currency === undefined)
@@ -350,6 +359,12 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
                                     ["code", "symbol", "name"], "symbol");
     if (style === "currency")
         lazyNumberFormatData.currencyDisplay = currencyDisplay;
+
+    // Intl.NumberFormat Unified API Proposal
+    var currencySign = GetOption(options, "currencySign", "string",
+                                 ["standard", "accounting"], "standard");
+    if (style === "currency")
+        lazyNumberFormatData.currencySign = currencySign;
 
     // Steps 20-21.
     var mnfdDefault, mxfdDefault;
@@ -577,15 +592,19 @@ function Intl_NumberFormat_resolvedOptions() {
         style: internals.style,
     };
 
-    // currency and currencyDisplay are only present for currency formatters.
+    // currency, currencyDisplay, and currencySign are only present for currency
+    // formatters.
     assert(hasOwn("currency", internals) === (internals.style === "currency"),
            "currency is present iff style is 'currency'");
     assert(hasOwn("currencyDisplay", internals) === (internals.style === "currency"),
            "currencyDisplay is present iff style is 'currency'");
+    assert(hasOwn("currencySign", internals) === (internals.style === "currency"),
+           "currencySign is present iff style is 'currency'");
 
     if (hasOwn("currency", internals)) {
         _DefineDataProperty(result, "currency", internals.currency);
         _DefineDataProperty(result, "currencyDisplay", internals.currencyDisplay);
+        _DefineDataProperty(result, "currencySign", internals.currencySign);
     }
 
     _DefineDataProperty(result, "minimumIntegerDigits", internals.minimumIntegerDigits);

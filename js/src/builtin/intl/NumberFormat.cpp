@@ -333,6 +333,12 @@ bool js::intl::NumberFormatterSkeleton::signDisplay(SignDisplay display) {
       return appendToken(u"sign-never");
     case SignDisplay::ExceptZero:
       return appendToken(u"sign-except-zero");
+    case SignDisplay::Accounting:
+      return appendToken(u"sign-accounting");
+    case SignDisplay::AccountingAlways:
+      return appendToken(u"sign-accounting-always");
+    case SignDisplay::AccountingExceptZero:
+      return appendToken(u"sign-accounting-except-zero");
   }
   MOZ_CRASH("unexpected sign display type");
 }
@@ -383,6 +389,7 @@ static UNumberFormatter* NewUNumberFormatter(
     return nullptr;
   }
 
+  bool accountingSign = false;
   {
     JSLinearString* style = value.toString()->ensureLinear(cx);
     if (!style) {
@@ -422,6 +429,21 @@ static UNumberFormatter* NewUNumberFormatter(
 
       if (!skeleton.currency(display, currency)) {
         return nullptr;
+      }
+
+      if (!GetProperty(cx, internals, internals, cx->names().currencySign,
+                       &value)) {
+        return nullptr;
+      }
+      JSLinearString* currencySign = value.toString()->ensureLinear(cx);
+      if (!currencySign) {
+        return nullptr;
+      }
+
+      if (StringEqualsAscii(currencySign, "accounting")) {
+        accountingSign = true;
+      } else {
+        MOZ_ASSERT(StringEqualsAscii(currencySign, "standard"));
       }
     } else if (StringEqualsAscii(style, "percent")) {
       if (!skeleton.percent()) {
@@ -558,14 +580,26 @@ static UNumberFormatter* NewUNumberFormatter(
 
     SignDisplay display;
     if (StringEqualsAscii(signDisplay, "auto")) {
-      display = SignDisplay::Auto;
+      if (accountingSign) {
+        display = SignDisplay::Accounting;
+      } else {
+        display = SignDisplay::Auto;
+      }
     } else if (StringEqualsAscii(signDisplay, "never")) {
       display = SignDisplay::Never;
     } else if (StringEqualsAscii(signDisplay, "always")) {
-      display = SignDisplay::Always;
+      if (accountingSign) {
+        display = SignDisplay::AccountingAlways;
+      } else {
+        display = SignDisplay::Always;
+      }
     } else {
       MOZ_ASSERT(StringEqualsAscii(signDisplay, "exceptZero"));
-      display = SignDisplay::ExceptZero;
+      if (accountingSign) {
+        display = SignDisplay::AccountingExceptZero;
+      } else {
+        display = SignDisplay::ExceptZero;
+      }
     }
 
     if (!skeleton.signDisplay(display)) {

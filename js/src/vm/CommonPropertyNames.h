@@ -99,6 +99,7 @@
         "CreateResolvingFunctions")                                            \
   MACRO(currency, currency, "currency")                                        \
   MACRO(currencyDisplay, currencyDisplay, "currencyDisplay")                   \
+  MACRO(currencySign, currencySign, "currencySign")                            \
   MACRO(DateTimeFormat, DateTimeFormat, "DateTimeFormat")                      \
   MACRO(day, day, "day")                                                       \
   MACRO(dayPeriod, dayPeriod, "dayPeriod")                                     \
