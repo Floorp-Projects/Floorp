@@ -5600,6 +5600,95 @@ static bool GlobalLexicals(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool MonitorType(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject callee(cx, &args.callee());
+
+  // First argument must be either a scripted function or null/undefined (in
+  // this case we use the caller's script).
+  RootedFunction fun(cx);
+  RootedScript script(cx);
+  if (args.get(0).isNullOrUndefined()) {
+    script = cx->currentScript();
+    if (!script) {
+      ReportUsageErrorASCII(cx, callee, "No scripted caller");
+      return false;
+    }
+  } else {
+    if (!IsFunctionObject(args.get(0), fun.address()) ||
+        !fun->isInterpreted()) {
+      ReportUsageErrorASCII(
+          cx, callee,
+          "First argument must be a scripted function or null/undefined");
+      return false;
+    }
+
+    script = JSFunction::getOrCreateScript(cx, fun);
+    if (!script) {
+      return false;
+    }
+  }
+
+  int32_t index;
+  if (!ToInt32(cx, args.get(1), &index)) {
+    return false;
+  }
+
+  if (index < 0 || uint32_t(index) >= jit::JitScript::NumTypeSets(script)) {
+    ReportUsageErrorASCII(cx, callee, "Index out of range");
+    return false;
+  }
+
+  RootedValue val(cx, args.get(2));
+
+  // If val is "unknown" or "unknownObject" we mark the TypeSet as unknown or
+  // unknownObject, respectively.
+  bool unknown = false;
+  bool unknownObject = false;
+  if (val.isString()) {
+    if (!JS_StringEqualsAscii(cx, val.toString(), "unknown", &unknown)) {
+      return false;
+    }
+    if (!JS_StringEqualsAscii(cx, val.toString(), "unknownObject",
+                              &unknownObject)) {
+      return false;
+    }
+  }
+
+  // Avoid assertion failures if Baseline is disabled or we can't Baseline
+  // Interpret this script.
+  if (!jit::IsBaselineInterpreterEnabled() ||
+      !jit::CanBaselineInterpretScript(script)) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  AutoRealm ar(cx, script);
+
+  if (!cx->realm()->ensureJitRealmExists(cx)) {
+    return false;
+  }
+
+  jit::AutoKeepJitScripts keepJitScript(cx);
+  if (!script->ensureHasJitScript(cx, keepJitScript)) {
+    return false;
+  }
+
+  AutoEnterAnalysis enter(cx);
+  AutoSweepJitScript sweep(script);
+  StackTypeSet* typeSet = script->jitScript()->typeArray(sweep) + index;
+  if (unknown) {
+    typeSet->addType(sweep, cx, TypeSet::UnknownType());
+  } else if (unknownObject) {
+    typeSet->addType(sweep, cx, TypeSet::AnyObjectType());
+  } else {
+    typeSet->addType(sweep, cx, TypeSet::GetValueType(val));
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 JSScript* js::TestingFunctionArgumentToScript(
     JSContext* cx, HandleValue v, JSFunction** funp /* = nullptr */) {
   if (v.isString()) {
@@ -6594,6 +6683,14 @@ gc::ZealModeHelpText),
 "globalLexicals()",
 "  Returns an object containing a copy of all global lexical bindings.\n"
 "  Example use: let x = 1; assertEq(globalLexicals().x, 1);\n"),
+
+    JS_FN_HELP("monitorType", MonitorType, 3, 0,
+"monitorType(fun, index, val)",
+"  Adds val's type to the index'th StackTypeSet of the function's\n"
+"  JitScript.\n"
+"  If fun is null or undefined, the caller's script is used.\n"
+"  If the value is the string 'unknown' or 'unknownObject'\n"
+"  the TypeSet is marked as unknown or unknownObject, respectively.\n"),
 
     JS_FN_HELP("baselineCompile", BaselineCompile, 2, 0,
 "baselineCompile([fun/code], forceDebugInstrumentation=false)",
