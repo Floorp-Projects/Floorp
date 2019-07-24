@@ -786,10 +786,6 @@ class JSTerm extends Component {
    *        String to execute.
    * @param object [options]
    *        Options for evaluation:
-   *        - bindObjectActor: tells the ObjectActor ID for which you want to do
-   *        the evaluation. The Debugger.Object of the OA will be bound to
-   *        |_self| during evaluation, such that it's usable in the string you
-   *        execute.
    *        - selectedNodeActor: tells the NodeActor ID of the current selection
    *        in the Inspector, if such a selection exists. This is used by
    *        helper functions that can evaluate on the current selection.
