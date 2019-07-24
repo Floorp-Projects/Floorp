@@ -29,6 +29,8 @@ using dom::ContentChild;
 using namespace ipc;
 using namespace layers;
 
+StaticMutex RemoteDecoderModule::sLaunchMonitor;
+
 RemoteDecoderModule::RemoteDecoderModule()
     : mManagerThread(RemoteDecoderManagerChild::GetManagerThread()) {}
 
@@ -61,6 +63,8 @@ void RemoteDecoderModule::LaunchRDDProcessIfNeeded() {
   if (!XRE_IsContentProcess()) {
     return;
   }
+
+  StaticMutexAutoLock mon(sLaunchMonitor);
 
   // We have a couple possible states here.  We are in a content process
   // and:
