@@ -9,6 +9,7 @@ with Files("**"):
 
 EXPORTS.mozilla.jni += [
     'Accessors.h',
+    'Conversions.h',
     'GeckoBundleUtils.h',
     'Natives.h',
     'Refs.h',
@@ -17,6 +18,7 @@ EXPORTS.mozilla.jni += [
 ]
 
 UNIFIED_SOURCES += [
+    'Conversions.cpp',
     'Utils.cpp',
 ]
 

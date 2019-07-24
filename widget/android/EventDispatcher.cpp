@@ -467,49 +467,21 @@ nsresult UnboxArrayObject(JSContext* aCx, const jni::Object::LocalRef& aData,
   return NS_OK;
 }
 
-template <class T>
-jfieldID GetValueFieldID(const char* aType) {
-  MOZ_ASSERT(NS_IsMainThread());
-  JNIEnv* const env = jni::GetGeckoThreadEnv();
-  const jfieldID id = env->GetFieldID(
-      typename T::Context(env, nullptr).ClassRef(), "value", aType);
-  env->ExceptionClear();
-  return id;
-}
-
 nsresult UnboxValue(JSContext* aCx, const jni::Object::LocalRef& aData,
                     JS::MutableHandleValue aOut) {
-  static jfieldID booleanValueField = GetValueFieldID<java::sdk::Boolean>("Z");
-  static jfieldID intValueField = GetValueFieldID<java::sdk::Integer>("I");
-  static jfieldID doubleValueField = GetValueFieldID<java::sdk::Double>("D");
+  using jni::Java2Native;
 
   if (!aData) {
     aOut.setNull();
   } else if (aData.IsInstanceOf<jni::Boolean>()) {
-    if (booleanValueField) {
-      aOut.setBoolean(aData.Env()->GetBooleanField(
-                          aData.Get(), booleanValueField) != JNI_FALSE);
-      MOZ_CATCH_JNI_EXCEPTION(aData.Env());
-    } else {
-      aOut.setBoolean(java::sdk::Boolean::Ref::From(aData)->BooleanValue());
-    }
+    aOut.setBoolean(Java2Native<bool>(aData, aData.Env()));
   } else if (aData.IsInstanceOf<jni::Integer>()) {
-    if (intValueField) {
-      aOut.setInt32(aData.Env()->GetIntField(aData.Get(), intValueField));
-      MOZ_CATCH_JNI_EXCEPTION(aData.Env());
-    } else {
-      aOut.setInt32(java::sdk::Number::Ref::From(aData)->IntValue());
-    }
+    aOut.setInt32(Java2Native<int>(aData, aData.Env()));
   } else if (aData.IsInstanceOf<jni::Byte>() ||
              aData.IsInstanceOf<jni::Short>()) {
     aOut.setInt32(java::sdk::Number::Ref::From(aData)->IntValue());
   } else if (aData.IsInstanceOf<jni::Double>()) {
-    if (doubleValueField) {
-      aOut.setNumber(
-          aData.Env()->GetDoubleField(aData.Get(), doubleValueField));
-    } else {
-      aOut.setNumber(java::sdk::Number::Ref::From(aData)->DoubleValue());
-    }
+    aOut.setNumber(Java2Native<double>(aData, aData.Env()));
   } else if (aData.IsInstanceOf<jni::Float>() ||
              aData.IsInstanceOf<jni::Long>()) {
     aOut.setNumber(java::sdk::Number::Ref::From(aData)->DoubleValue());
