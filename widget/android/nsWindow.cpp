@@ -13,8 +13,11 @@
 
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 
@@ -1132,9 +1135,15 @@ class nsWindow::LayerViewSupport final
 
   void RequestScreenPixels(jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    mCapturePixelsResults.push(
-        java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
-    if (mCapturePixelsResults.size() == 1) {
+
+    int size = 0;
+    if (LockedWindowPtr window{mWindow}) {
+      mCapturePixelsResults.push(
+          java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
+      size = mCapturePixelsResults.size();
+    }
+
+    if (size == 1) {
       if (RefPtr<UiCompositorControllerChild> child =
               GetUiCompositorControllerChild()) {
         child->RequestScreenPixels();
@@ -1144,7 +1153,10 @@ class nsWindow::LayerViewSupport final
 
   void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    auto aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+    java::GeckoResult::LocalRef aResult = nullptr;
+    if (LockedWindowPtr window{mWindow}) {
+      aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+    }
     if (aResult) {
       auto pixels = mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize),
                                                   aMem.Size<int8_t>());
@@ -1152,7 +1164,10 @@ class nsWindow::LayerViewSupport final
           aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
       bitmap->CopyPixelsFromBuffer(pixels);
       aResult->Complete(bitmap);
-      mCapturePixelsResults.pop();
+
+      if (LockedWindowPtr window{mWindow}) {
+        mCapturePixelsResults.pop();
+      }
     }
 
     // Pixels have been copied, so Dealloc Shmem
@@ -1160,8 +1175,10 @@ class nsWindow::LayerViewSupport final
             GetUiCompositorControllerChild()) {
       child->DeallocPixelBuffer(aMem);
 
-      if (!mCapturePixelsResults.empty()) {
-        child->RequestScreenPixels();
+      if (LockedWindowPtr window{mWindow}) {
+        if (!mCapturePixelsResults.empty()) {
+          child->RequestScreenPixels();
+        }
       }
     }
   }
