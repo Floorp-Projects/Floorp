@@ -184,7 +184,6 @@ class TlsAgent : public PollTarget {
   void DisableECDHEServerKeyReuse();
   bool GetPeerChainLength(size_t* count);
   void CheckCipherSuite(uint16_t cipher_suite);
-  void CheckPeerDelegCred(bool expected);
   void SetResumptionTokenCallback();
   bool MaybeSetResumptionToken();
   void SetResumptionToken(const std::vector<uint8_t>& resumption_token) {
@@ -224,16 +223,17 @@ class TlsAgent : public PollTarget {
   PRFileDesc* ssl_fd() const { return ssl_fd_.get(); }
   std::shared_ptr<DummyPrSocket>& adapter() { return adapter_; }
 
+  const SSLChannelInfo& info() const {
+    EXPECT_EQ(STATE_CONNECTED, state_);
+    return info_;
+  }
   bool is_compressed() const {
-    return info_.compressionMethod != ssl_compression_null;
+    return info().compressionMethod != ssl_compression_null;
   }
   uint16_t server_key_bits() const { return server_key_bits_; }
   uint16_t min_version() const { return vrange_.min; }
   uint16_t max_version() const { return vrange_.max; }
-  uint16_t version() const {
-    EXPECT_EQ(STATE_CONNECTED, state_);
-    return info_.protocolVersion;
-  }
+  uint16_t version() const { return info().protocolVersion; }
 
   bool cipher_suite(uint16_t* suite) const {
     if (state_ != STATE_CONNECTED) return false;

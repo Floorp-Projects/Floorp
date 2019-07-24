@@ -299,7 +299,13 @@ typedef struct SSLChannelInfoStr {
     PRUint16 protocolVersion;
     PRUint16 cipherSuite;
 
-    /* server authentication info */
+    /* The strength of the key used to authenticate the peer.  Before
+     * interpreting this value, check authType, signatureScheme, and
+     * peerDelegCred, to determine the type of the key and how it was used.
+     *
+     * Typically, this is the length of the key from the peer's end-entity
+     * certificate.  If delegated credentials are used (i.e., peerDelegCred is
+     * PR_TRUE), then this is the strength of the delegated credential key. */
     PRUint32 authKeyBits;
 
     /* key exchange algorithm info */
