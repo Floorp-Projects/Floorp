@@ -22,6 +22,7 @@
 #include "vm/Interpreter.h"
 #include "vm/TraceLogging.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/PrivateIterators-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -855,7 +856,8 @@ void BaselineScript::toggleDebugTraps(JSScript* script, jsbytecode* pc) {
 
       if (!pc || pc == curPC) {
         bool enabled =
-            script->stepModeEnabled() || script->hasBreakpointsAt(curPC);
+            DebugAPI::stepModeEnabled(script) ||
+            DebugAPI::hasBreakpointsAt(script, curPC);
 
         // Patch the trap.
         CodeLocationLabel label(method(), CodeOffset(nativeOffset));
