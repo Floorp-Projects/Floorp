@@ -1368,6 +1368,7 @@ void nsWindow::GeckoViewSupport::AttachAccessibility(
 }
 
 void nsWindow::InitNatives() {
+  jni::InitConversionStatics();
   nsWindow::GeckoViewSupport::Base::Init();
   nsWindow::LayerViewSupport::Init();
   nsWindow::NPZCSupport::Init();
