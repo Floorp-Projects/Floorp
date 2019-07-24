@@ -1597,14 +1597,19 @@ class nsDisplayListBuilder {
    * Accumulates opaque stuff into the window opaque region.
    */
   void AddWindowOpaqueRegion(nsIFrame* aFrame, const nsRect& aBounds) {
-    mWindowOpaqueRegion.Add(aFrame, aBounds);
+    if (IsRetainingDisplayList()) {
+      mRetainedWindowOpaqueRegion.Add(aFrame, aBounds);
+      return;
+    }
+    mWindowOpaqueRegion.Or(mWindowOpaqueRegion, aBounds);
   }
   /**
    * Returns the window opaque region built so far. This may be incomplete
    * since the opaque region is built during layer construction.
    */
   const nsRegion GetWindowOpaqueRegion() {
-    return mWindowOpaqueRegion.ToRegion();
+    return IsRetainingDisplayList() ? mRetainedWindowOpaqueRegion.ToRegion()
+                                    : mWindowOpaqueRegion;
   }
 
   void SetGlassDisplayItem(nsDisplayItem* aItem);
@@ -1910,11 +1915,12 @@ class nsDisplayListBuilder {
   WeakFrameRegion mRetainedWindowNoDraggingRegion;
 
   // Window opaque region is calculated during layer building.
-  WeakFrameRegion mWindowOpaqueRegion;
+  WeakFrameRegion mRetainedWindowOpaqueRegion;
 
   // Optimized versions for non-retained display list.
   LayoutDeviceIntRegion mWindowDraggingRegion;
   LayoutDeviceIntRegion mWindowNoDraggingRegion;
+  nsRegion mWindowOpaqueRegion;
 
   // The display item for the Windows window glass background, if any
   // Set during full display list builds or during display list merging only,
