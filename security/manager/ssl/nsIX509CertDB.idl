@@ -250,7 +250,6 @@ interface nsIX509CertDB : nsISupports {
   const AppTrustedRoot AppXPCShellRoot = 6;
   const AppTrustedRoot AddonsPublicRoot = 7;
   const AppTrustedRoot AddonsStageRoot = 8;
-  const AppTrustedRoot PrivilegedPackageRoot = 9;
   [must_use]
   void openSignedAppFileAsync(in AppTrustedRoot trustedRoot,
                               in nsIFile aJarFile,
