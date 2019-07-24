@@ -222,7 +222,15 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    */
   MOZ_MUST_USE bool notation(Notation style);
 
-  enum class SignDisplay { Auto, Never, Always, ExceptZero };
+  enum class SignDisplay {
+    Auto,
+    Never,
+    Always,
+    ExceptZero,
+    Accounting,
+    AccountingAlways,
+    AccountingExceptZero
+  };
 
   /**
    * Set the sign-display for this skeleton.
