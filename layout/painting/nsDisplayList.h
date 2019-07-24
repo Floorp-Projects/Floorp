@@ -3453,6 +3453,11 @@ class nsDisplayList {
    */
   template <typename Item, typename Comparator>
   void Sort(const Comparator& aComparator) {
+    if (Count() < 2) {
+      // Only sort lists with more than one item.
+      return;
+    }
+
     // Some casual local browsing testing suggests that a local preallocated
     // array of 20 items should be able to avoid a lot of dynamic allocations
     // here.
