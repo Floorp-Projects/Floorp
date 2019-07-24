@@ -205,6 +205,46 @@ GetNeonSupport()
     return PR_FALSE;
 }
 
+#ifdef __linux__
+static long
+ReadCPUInfoForHWCAP2()
+{
+    FILE *cpuinfo;
+    char buf[512];
+    char *p;
+    long hwcap2 = 0;
+
+    cpuinfo = fopen("/proc/cpuinfo", "r");
+    if (!cpuinfo) {
+        return 0;
+    }
+    while (fgets(buf, 511, cpuinfo)) {
+        if (!memcmp(buf, "Features", 8)) {
+            p = strstr(buf, " aes");
+            if (p && (p[4] == ' ' || p[4] == '\n')) {
+                hwcap2 |= HWCAP2_AES;
+            }
+            p = strstr(buf, " sha1");
+            if (p && (p[5] == ' ' || p[5] == '\n')) {
+                hwcap2 |= HWCAP2_SHA1;
+            }
+            p = strstr(buf, " sha2");
+            if (p && (p[5] == ' ' || p[5] == '\n')) {
+                hwcap2 |= HWCAP2_SHA2;
+            }
+            p = strstr(buf, " pmull");
+            if (p && (p[6] == ' ' || p[6] == '\n')) {
+                hwcap2 |= HWCAP2_PMULL;
+            }
+            break;
+        }
+    }
+
+    fclose(cpuinfo);
+    return hwcap2;
+}
+#endif /* __linux__ */
+
 void
 CheckARMSupport()
 {
@@ -217,6 +257,13 @@ CheckARMSupport()
         // AT_HWCAP2 isn't supported by glibc or Linux kernel, getauxval will
         // returns 0.
         long hwcaps = getauxval(AT_HWCAP2);
+#ifdef __linux__
+        if (!hwcaps) {
+            // Some ARMv8 devices may not implement AT_HWCAP2. So we also
+            // read /proc/cpuinfo if AT_HWCAP2 is 0.
+            hwcaps = ReadCPUInfoForHWCAP2();
+        }
+#endif
         arm_aes_support_ = hwcaps & HWCAP2_AES && disable_hw_aes == NULL;
         arm_pmull_support_ = hwcaps & HWCAP2_PMULL;
         arm_sha1_support_ = hwcaps & HWCAP2_SHA1;
