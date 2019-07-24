@@ -75,10 +75,10 @@ var testFramesLoaded = function() {
   var test11 = frame.contentDocument.getElementById("test").textContent;
   is(test11, "allow-from-allow", "test allow-from-allow");
 
-  // iframe from different origin, with allow-from: other - should not load
+  // iframe from different origin, with allow-from: other - should load as we no longer support allow-from (Bug 1301529)
   frame = harness.contentDocument.getElementById("allow-from-deny");
   var test12 = frame.contentDocument.getElementById("test");
-  is(test12, null, "test allow-from-deny");
+  isnot(test12, null, "test allow-from-deny");
 
   // iframe from different origin, X-F-O: SAMEORIGIN, multipart - should not load
   frame = harness.contentDocument.getElementById("sameorigin-multipart");
@@ -91,7 +91,7 @@ var testFramesLoaded = function() {
   is(test14, "sameorigin-multipart2", "test sameorigin-multipart2");
 
 
-  // frames from bug 836132 tests
+  // frames from bug 836132 tests, no longer supported allow-from
   {
     frame = harness.contentDocument.getElementById("allow-from-allow-1");
     var theTestResult = frame.contentDocument.getElementById("test");
@@ -100,10 +100,11 @@ var testFramesLoaded = function() {
       is(theTestResult.textContent, "allow-from-allow-1", "test allow-from-allow-1");
     }
   }
+  // Verify allow-from no longer works
   for (var i = 1; i<=14; i++) {
     frame = harness.contentDocument.getElementById("allow-from-deny-" + i);
     var theTestResult = frame.contentDocument.getElementById("test");
-    is(theTestResult, null, "test allow-from-deny-" + i);
+    isnot(theTestResult, null, "test allow-from-deny-" + i);
   }
 
   // call tests to check principal comparison, e.g. a document can open a window
