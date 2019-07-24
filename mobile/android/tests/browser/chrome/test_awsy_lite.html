@@ -139,7 +139,7 @@
         // this point, so ideally we would test for that. but i can't find a
         // property that reflects whether or not UIReady has been fired, so
         // for now just assume the window is ready
-        attachTo(enumerator.getNext().QueryInterface(Ci.nsIDOMWindow));
+        attachTo(enumerator.getNext());
     }
     Services.wm.addListener(browserListener);
   }

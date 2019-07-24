@@ -203,7 +203,7 @@ var withBookmarksDialog = async function(
       data
     ) {
       if (topic == "domwindowopened") {
-        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        let win = subject;
         win.addEventListener(
           "load",
           function() {

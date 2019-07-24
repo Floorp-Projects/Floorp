@@ -19,6 +19,8 @@ extern crate slab;
 extern crate tokio_core;
 extern crate tokio_uds;
 extern crate audio_thread_priority;
+#[macro_use]
+extern crate lazy_static;
 
 use audioipc::core;
 use audioipc::platformhandle_passing::framed_with_platformhandles;
@@ -30,8 +32,22 @@ use std::error::Error;
 use std::os::raw::c_void;
 use std::ptr;
 use audio_thread_priority::promote_current_thread_to_real_time;
+use std::ffi::{CStr, CString};
+use std::sync::Mutex;
 
 mod server;
+
+struct CubebContextParams {
+    context_name: CString,
+    backend_name: Option<CString>,
+}
+
+lazy_static! {
+    static ref G_CUBEB_CONTEXT_PARAMS: Mutex<CubebContextParams> = Mutex::new(CubebContextParams {
+        context_name: CString::new("AudioIPC Server").unwrap(),
+        backend_name: None,
+    });
+}
 
 #[allow(deprecated)]
 pub mod errors {
@@ -93,7 +109,16 @@ fn run() -> Result<ServerWrapper> {
 }
 
 #[no_mangle]
-pub extern "C" fn audioipc_server_start() -> *mut c_void {
+pub extern "C" fn audioipc_server_start(context_name: *const std::os::raw::c_char,
+                                        backend_name: *const std::os::raw::c_char) -> *mut c_void {
+    let mut params = G_CUBEB_CONTEXT_PARAMS.lock().unwrap();
+    if !context_name.is_null() {
+        params.context_name = unsafe { CStr::from_ptr(context_name) }.to_owned();
+    }
+    if !backend_name.is_null() {
+        let backend_string = unsafe { CStr::from_ptr(backend_name) }.to_owned();
+        params.backend_name = Some(backend_string);
+    }
     match run() {
         Ok(server) => Box::into_raw(Box::new(server)) as *mut _,
         Err(_) => ptr::null_mut() as *mut _,

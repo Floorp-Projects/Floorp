@@ -22,6 +22,7 @@
 #endif
 #include "2D.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/StaticPrefs.h"
 #include "Point.h"
 #include "BaseRect.h"
 #include "Matrix.h"
@@ -51,16 +52,6 @@ inline mozilla::LogLevel PRLogLevelForLevel(int aLevel) {
   return LogLevel::Debug;
 }
 #endif
-
-class LoggingPrefs {
- public:
-  // Used to choose the level of logging we get.  The higher the number,
-  // the more logging we get.  Value of zero will give you no logging,
-  // 1 just errors, 2 adds warnings and 3 or 4 add debug logging.
-  // In addition to setting the value to 4, you will need to set the
-  // environment variable MOZ_LOG to gfx:4. See mozilla/Logging.h for details.
-  static Atomic<int32_t> sGfxLogLevel;
-};
 
 /// Graphics logging is available in both debug and release builds and is
 /// controlled with a gfx.logging.level preference. If not set, the default
@@ -146,7 +137,7 @@ struct BasicLogger {
   // OutputMessage below.  If making any changes here, also make it
   // in the appropriate places in that method.
   static bool ShouldOutputMessage(int aLevel) {
-    if (LoggingPrefs::sGfxLogLevel >= aLevel) {
+    if (StaticPrefs::gfx_logging_level() >= aLevel) {
 #if defined(MOZ_WIDGET_ANDROID)
       return true;
 #else
@@ -155,7 +146,7 @@ struct BasicLogger {
         return true;
       } else
 #  endif
-          if ((LoggingPrefs::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
+          if ((StaticPrefs::gfx_logging_level() >= LOG_DEBUG_PRLOG) ||
               (aLevel < LOG_DEBUG)) {
         return true;
       }
@@ -172,13 +163,12 @@ struct BasicLogger {
     // This behavior (the higher the preference, the more we log)
     // is consistent with what prlog does in general.  Note that if prlog
     // is in the build, but disabled, we will printf if the preferences
-    // requires us to log something (see sGfxLogLevel for the special
-    // treatment of LOG_DEBUG and LOG_DEBUG_PRLOG)
+    // requires us to log something.
     //
     // If making any logic changes to this method, you should probably
     // make the corresponding change in the ShouldOutputMessage method
     // above.
-    if (LoggingPrefs::sGfxLogLevel >= aLevel) {
+    if (StaticPrefs::gfx_logging_level() >= aLevel) {
 #if defined(MOZ_WIDGET_ANDROID)
       printf_stderr("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
 #else
@@ -188,7 +178,7 @@ struct BasicLogger {
                 ("%s%s", aString.c_str(), aNoNewline ? "" : "\n"));
       } else
 #  endif
-          if ((LoggingPrefs::sGfxLogLevel >= LOG_DEBUG_PRLOG) ||
+          if ((StaticPrefs::gfx_logging_level() >= LOG_DEBUG_PRLOG) ||
               (aLevel < LOG_DEBUG)) {
         printf("%s%s", aString.c_str(), aNoNewline ? "" : "\n");
       }

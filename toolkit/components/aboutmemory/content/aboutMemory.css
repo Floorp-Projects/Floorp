@@ -113,7 +113,11 @@ div.non-verbose pre.entries {
 h1 {
   padding: 0;
   margin: 0;
+  background: inherit; /* When sticky give it the solid background of the parent */
   display: inline;  /* allow subsequent text to the right of the heading */
+  position: sticky; /* Stay at the top of the page when scrolling */
+  top: 0;
+  z-index: 1; /* When sticky it should appear above the tree lines */
 }
 
 h2 {

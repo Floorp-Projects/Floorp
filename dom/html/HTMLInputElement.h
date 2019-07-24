@@ -1379,11 +1379,6 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
   static bool IsDateTimeInputType(uint8_t aType);
 
   /**
-   * Flushes the layout frame tree to make sure we have up-to-date frames.
-   */
-  void FlushFrames();
-
-  /**
    * Returns true if the element should prevent dispatching another DOMActivate.
    * This is used in situations where the anonymous subtree should already have
    * sent a DOMActivate and prevents firing more than once.

@@ -255,7 +255,6 @@ var SaveToPocket = {
 
   observe(subject, topic, data) {
     if (topic == "browser-delayed-startup-finished") {
-      subject.QueryInterface(Ci.nsIDOMWindow);
       // We only get here if pocket is disabled; the observer is removed when
       // we're enabled.
       this.updateElementsInWindow(subject, false);

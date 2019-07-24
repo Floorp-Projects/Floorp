@@ -24,14 +24,13 @@ var args = {
 function test() {
   waitForExplicitFinish();
 
-  let windowObserver = function(aSubject, aTopic, aData) {
+  let windowObserver = function(win, aTopic, aData) {
     if (aTopic != "domwindowopened") {
       return;
     }
 
     Services.ww.unregisterNotification(windowObserver);
 
-    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener(
       "load",
       function() {
@@ -92,13 +91,12 @@ function bug523784_test1(win) {
 }
 
 function bug523784_test2(win) {
-  let windowObserver = function(aSubject, aTopic, aData) {
+  let windowObserver = function(win, aTopic, aData) {
     if (aTopic != "domwindowopened") {
       return;
     }
 
     Services.ww.unregisterNotification(windowObserver);
-    let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
     win.addEventListener(
       "load",
       function() {

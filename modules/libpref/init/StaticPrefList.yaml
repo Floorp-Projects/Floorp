@@ -2658,7 +2658,13 @@
   value: 23456
   mirror: always
 
-# Note that        "gfx.logging.level" is defined in Logging.h.
+# The level of logging:
+# - 0: no logging;
+# - 1: adds errors;
+# - 2: adds warnings;
+# - 3 or 4: adds debug logging.
+# If you set the value to 4, you will also need to set the environment
+# variable MOZ_LOG to gfx:4. See mozilla/Logging.h for details.
 - name: gfx.logging.level
   type: RelaxedAtomicInt32
   value: mozilla::gfx::LOG_DEFAULT

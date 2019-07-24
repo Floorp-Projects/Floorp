@@ -88,7 +88,7 @@ function test() {
     if (aTopic == "domwindowopened") {
       Services.ww.unregisterNotification(windowObserver);
 
-      newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      newWindow = aSubject;
       newWindow.addEventListener(
         "load",
         function() {

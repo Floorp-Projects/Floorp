@@ -1224,8 +1224,18 @@ class RTCPeerConnection {
     let origin = Cu.getWebIDLCallerPrincipal().origin;
 
     return this._chain(async () => {
-      let haveSetRemote = (async () => {
+      const haveSetRemote = (async () => {
         await this._getPermission();
+        if (type == "offer" && this.signalingState == "have-local-offer") {
+          await new Promise((resolve, reject) => {
+            this._onSetLocalDescriptionSuccess = resolve;
+            this._onSetLocalDescriptionFailure = reject;
+            this._impl.setLocalDescription(
+              Ci.IPeerConnection.kActionRollback,
+              ""
+            );
+          });
+        }
         await new Promise((resolve, reject) => {
           this._onSetRemoteDescriptionSuccess = resolve;
           this._onSetRemoteDescriptionFailure = reject;

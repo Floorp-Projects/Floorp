@@ -45,7 +45,7 @@ function test() {
 
 function windowObserver(subject, topic, data) {
   if (topic == "domwindowopened") {
-    const win = subject.QueryInterface(Ci.nsIDOMWindow);
+    const win = subject;
     win.addEventListener(
       "load",
       function() {

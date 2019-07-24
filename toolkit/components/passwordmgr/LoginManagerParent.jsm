@@ -467,6 +467,7 @@ this.LoginManagerParent = {
     }
 
     generatedPW = {
+      edited: false,
       filled: false,
       value: PasswordGenerator.generatePassword(),
     };
@@ -703,6 +704,17 @@ this.LoginManagerParent = {
     if (passwordInField != password) {
       // The user edited the field after generation to a non-empty value.
       log("The field containing the generated password has changed");
+
+      // Record telemetry for the first edit
+      if (!generatedPW.edited) {
+        Services.telemetry.recordEvent(
+          "pwmgr",
+          "filled_field_edited",
+          "generatedpassword"
+        );
+        log("filled_field_edited telemetry event recorded");
+        generatedPW.edited = true;
+      }
       return;
     }
 

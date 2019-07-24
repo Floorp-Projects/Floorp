@@ -162,6 +162,61 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     !fakePromptToSavePassword.getCall(0).args[2],
     "promptToSavePassword had a falsey 'notifySaved' argument"
   );
+
+  // Edit the password
+  const newPassword = password1 + "🔥";
+  await LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    password: newPassword,
+  });
+  ok(
+    LMP._generatedPasswordsByPrincipalOrigin.get(
+      "https://www.example.com^userContextId=6"
+    ).edited,
+    "Cached edited state should be true"
+  );
+
+  // Simulate a second edit to check that the telemetry event for the first edit
+  // is not recorded twice
+  const newerPassword = newPassword + "🦊";
+  await LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    password: newerPassword,
+  });
+  ok(
+    LMP._generatedPasswordsByPrincipalOrigin.get(
+      "https://www.example.com^userContextId=6"
+    ).edited,
+    "Cached edited state should remain true"
+  );
+
+  // Check that expected telemetry event was recorded
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    false
+  );
+  const telemetryProps = Object.freeze({
+    category: "pwmgr",
+    method: "filled_field_edited",
+    object: "generatedpassword",
+  });
+  const results = snapshot.parent.filter(([time, category, method, object]) => {
+    return (
+      category === telemetryProps.category &&
+      method === telemetryProps.method &&
+      object === telemetryProps.object
+    );
+  });
+
+  equal(
+    results.length,
+    1,
+    "Found telemetry event for generated password editing"
+  );
+
+  // Clean up
   LMP._getPrompter.resetHistory();
   fakePromptToSavePassword.resetHistory();
 

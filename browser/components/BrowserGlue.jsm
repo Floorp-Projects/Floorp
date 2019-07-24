@@ -61,6 +61,40 @@ let ACTORS = {
     allFrames: true,
   },
 
+  Plugin: {
+    parent: {
+      moduleURI: "resource:///actors/PluginParent.jsm",
+      messages: [
+        "PluginContent:ShowClickToPlayNotification",
+        "PluginContent:RemoveNotification",
+        "PluginContent:ShowPluginCrashedNotification",
+        "PluginContent:SubmitReport",
+        "PluginContent:LinkClickCallback",
+        "PluginContent:GetCrashData",
+      ],
+    },
+    child: {
+      moduleURI: "resource:///actors/PluginChild.jsm",
+      events: {
+        PluginBindingAttached: { capture: true, wantUntrusted: true },
+        PluginCrashed: { capture: true },
+        PluginOutdated: { capture: true },
+        PluginInstantiated: { capture: true },
+        PluginRemoved: { capture: true },
+        HiddenPlugin: { capture: true },
+      },
+
+      messages: [
+        "PluginParent:ActivatePlugins",
+        "PluginParent:Test:ClearCrashData",
+      ],
+
+      observers: ["decoder-doctor-notification"],
+    },
+
+    allFrames: true,
+  },
+
   SwitchDocumentDirection: {
     child: {
       moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
@@ -96,6 +130,8 @@ let LEGACY_ACTORS = {
         AboutLoginsInit: { wantUntrusted: true },
         AboutLoginsOpenFAQ: { wantUntrusted: true },
         AboutLoginsOpenFeedback: { wantUntrusted: true },
+        AboutLoginsOpenMobileAndroid: { wantUntrusted: true },
+        AboutLoginsOpenMobileIos: { wantUntrusted: true },
         AboutLoginsOpenPreferences: { wantUntrusted: true },
         AboutLoginsOpenSite: { wantUntrusted: true },
         AboutLoginsRecordTelemetryEvent: { wantUntrusted: true },
@@ -265,30 +301,6 @@ let LEGACY_ACTORS = {
       // Only matching web pages, as opposed to internal about:, chrome: or
       // resource: pages. See https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
       matches: ["*://*/*"],
-    },
-  },
-
-  Plugin: {
-    child: {
-      module: "resource:///actors/PluginChild.jsm",
-      events: {
-        PluginBindingAttached: { capture: true, wantUntrusted: true },
-        PluginCrashed: { capture: true },
-        PluginOutdated: { capture: true },
-        PluginInstantiated: { capture: true },
-        PluginRemoved: { capture: true },
-        HiddenPlugin: { capture: true },
-      },
-
-      messages: [
-        "BrowserPlugins:ActivatePlugins",
-        "BrowserPlugins:ContextMenuCommand",
-        "BrowserPlugins:NPAPIPluginProcessCrashed",
-        "BrowserPlugins:CrashReportSubmitted",
-        "BrowserPlugins:Test:ClearCrashData",
-      ],
-
-      observers: ["decoder-doctor-notification"],
     },
   },
 
@@ -520,6 +532,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ContentClick: "resource:///modules/ContentClick.jsm",
   FormValidationHandler: "resource:///modules/FormValidationHandler.jsm",
   LoginManagerParent: "resource://gre/modules/LoginManagerParent.jsm",
+  PluginManager: "resource:///actors/PluginParent.jsm",
   PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
   RemotePrompt: "resource:///modules/RemotePrompt.jsm",
@@ -554,7 +567,6 @@ let initializedModules = {};
 
 if (AppConstants.MOZ_CRASHREPORTER) {
   XPCOMUtils.defineLazyModuleGetters(this, {
-    PluginCrashReporter: "resource:///modules/ContentCrashHandlers.jsm",
     UnsubmittedCrashHandler: "resource:///modules/ContentCrashHandlers.jsm",
   });
 }
@@ -585,6 +597,8 @@ const listeners = {
     "update-downloaded": ["UpdateListener"],
     "update-available": ["UpdateListener"],
     "update-error": ["UpdateListener"],
+    "gmp-plugin-crash": ["PluginManager"],
+    "plugin-crashed": ["PluginManager"],
   },
 
   ppmm: {
@@ -610,6 +624,8 @@ const listeners = {
     "AboutLogins:OpenFAQ": ["AboutLoginsParent"],
     "AboutLogins:OpenFeedback": ["AboutLoginsParent"],
     "AboutLogins:OpenPreferences": ["AboutLoginsParent"],
+    "AboutLogins:OpenMobileAndroid": ["AboutLoginsParent"],
+    "AboutLogins:OpenMobileIos": ["AboutLoginsParent"],
     "AboutLogins:OpenSite": ["AboutLoginsParent"],
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
@@ -1534,9 +1550,6 @@ BrowserGlue.prototype = {
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
     TabCrashHandler.init();
-    if (AppConstants.MOZ_CRASHREPORTER) {
-      PluginCrashReporter.init();
-    }
 
     ProcessHangMonitor.init();
 

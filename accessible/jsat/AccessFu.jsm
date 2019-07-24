@@ -206,7 +206,7 @@ var AccessFu = {
   observe: function observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "domwindowopened": {
-        let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
+        let win = aSubject;
         win.addEventListener(
           "load",
           () => {
