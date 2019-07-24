@@ -492,6 +492,8 @@
     <!-- Collections -->
     <!-- Collections header on home fragment -->
     <string name="collections_header">Collections</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">Collection menu</string>
     <!-- No Open Tabs Message Header -->
     <string name="no_collections_header">No collections</string>
     <!-- No Open Tabs Message Description -->
@@ -531,6 +533,9 @@
     <!-- Share -->
     <!-- Share screen header -->
     <string name="share_header">Send and Share</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">Share</string>
     <!-- Sub-header in the dialog to share a link to another app -->
     <string name="share_link_subheader">Share a link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
