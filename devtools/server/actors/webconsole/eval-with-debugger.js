@@ -41,7 +41,7 @@ function isObject(value) {
  * Evaluates a string using the debugger API.
  *
  * To allow the variables view to update properties from the Web Console we
- * provide the "selectedObjectActor" mechanism: the Web Console tells the
+ * provide the "bindObjectActor" mechanism: the Web Console tells the
  * ObjectActor ID for which it desires to evaluate an expression. The
  * Debugger.Object pointed at by the actor ID is bound such that it is
  * available during expression evaluation (executeInGlobalWithBindings()).
@@ -64,7 +64,7 @@ function isObject(value) {
  * Console Commands helpers - they need to be Debugger.Objects coming from the
  * jsdebugger's Debugger instance.
  *
- * When |selectedObjectActor| is used objects can come from different iframes,
+ * When |bindObjectActor| is used objects can come from different iframes,
  * from different domains. To avoid permission-related errors when objects
  * come from a different window, we also determine the object's own global,
  * such that evaluation happens in the context of that global. This means that
@@ -75,10 +75,12 @@ function isObject(value) {
  *        String to evaluate.
  * @param object [options]
  *        Options for evaluation:
- *        - selectedObjectActor: the ObjectActor ID to use for evaluation.
+ *        - bindObjectActor: the ObjectActor ID to use for evaluation.
  *          |evalWithBindings()| will be called with one additional binding:
  *          |_self| which will point to the Debugger.Object of the given
- *          ObjectActor. Executes with the top level window as the global.
+ *          ObjectActor.
+ *        - selectedObjectActor: Like bindObjectActor, but executes with the
+ *          top level window as the global.
  *        - frameActor: the FrameActor ID to use for evaluation. The given
  *        debugger frame is used for evaluation, instead of the global window.
  *        - selectedNodeActor: the NodeActor ID of the currently selected node
@@ -311,11 +313,13 @@ function getDbgWindow(options, dbg, webConsole) {
 
   // If we have an object to bind to |_self|, create a Debugger.Object
   // referring to that object, belonging to dbg.
-  if (!options.selectedObjectActor) {
+  if (!options.bindObjectActor && !options.selectedObjectActor) {
     return { bindSelf: null, dbgWindow };
   }
 
-  const objActor = webConsole.getActorByID(options.selectedObjectActor);
+  const objActor = webConsole.getActorByID(
+    options.bindObjectActor || options.selectedObjectActor
+  );
 
   if (!objActor) {
     return { bindSelf: null, dbgWindow };
@@ -332,6 +336,15 @@ function getDbgWindow(options, dbg, webConsole) {
   // that is, without wrappers. The evalWithBindings call will then wrap
   // jsVal appropriately for the evaluation compartment.
   const bindSelf = dbgWindow.makeDebuggeeValue(jsVal);
+  if (options.bindObjectActor) {
+    const global = Cu.getGlobalForObject(jsVal);
+    try {
+      const _dbgWindow = dbg.makeGlobalObjectReference(global);
+      return { bindSelf, dbgWindow: _dbgWindow };
+    } catch (err) {
+      // The above will throw if `global` is invisible to debugger.
+    }
+  }
   return { bindSelf, dbgWindow };
 }
 
