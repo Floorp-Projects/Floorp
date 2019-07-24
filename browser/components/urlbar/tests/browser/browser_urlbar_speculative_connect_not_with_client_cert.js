@@ -26,13 +26,13 @@ let chooseCertificateCalled = false;
 
 const clientAuthDialogs = {
   chooseCertificate(
-    ctx,
     hostname,
     port,
     organization,
     issuerOrg,
     certList,
-    selectedIndex
+    selectedIndex,
+    rememberClientAuthCertificate
   ) {
     ok(
       expectingChooseCertificate,
@@ -42,6 +42,7 @@ const clientAuthDialogs = {
     );
     is(certList.length, 1, "should have only one client certificate available");
     selectedIndex.value = 0;
+    rememberClientAuthCertificate.value = false;
     chooseCertificateCalled = true;
     return true;
   },
