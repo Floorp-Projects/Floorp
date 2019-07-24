@@ -37,22 +37,22 @@ add_task(async function updateBookmarkButton() {
   // nsITouchBarHelper to load on Macs without Touch Bars so that it will be
   // listening for "bookmark-icon-updated".
   Assert.equal(
-    TouchBarHelper.getTouchBarInput("AddBookmark").image,
-    "bookmark.pdf",
+    TouchBarHelper.getTouchBarInput("AddBookmark").image.spec,
+    "chrome://browser/skin/bookmark-hollow.svg",
     "AddBookmark image should be unfilled bookmark after event."
   );
 
   Services.obs.notifyObservers(null, "bookmark-icon-updated", "starred");
   Assert.equal(
-    TouchBarHelper.getTouchBarInput("AddBookmark").image,
-    "bookmark-filled.pdf",
+    TouchBarHelper.getTouchBarInput("AddBookmark").image.spec,
+    "chrome://browser/skin/bookmark.svg",
     "AddBookmark image should be filled bookmark after event."
   );
 
   Services.obs.notifyObservers(null, "bookmark-icon-updated", "unstarred");
   Assert.equal(
-    TouchBarHelper.getTouchBarInput("AddBookmark").image,
-    "bookmark.pdf",
+    TouchBarHelper.getTouchBarInput("AddBookmark").image.spec,
+    "chrome://browser/skin/bookmark-hollow.svg",
     "AddBookmark image should be unfilled bookmark after event."
   );
 });
