@@ -2373,6 +2373,7 @@ void nsDisplayListBuilder::AddSizeOfExcludingThis(nsWindowSizes& aSizes) const {
   n += mWindowExcludeGlassRegion.SizeOfExcludingThis(mallocSizeOf);
   n += mRetainedWindowDraggingRegion.SizeOfExcludingThis(mallocSizeOf);
   n += mRetainedWindowNoDraggingRegion.SizeOfExcludingThis(mallocSizeOf);
+  n += mWindowOpaqueRegion.SizeOfExcludingThis(mallocSizeOf);
   // XXX can't measure mClipDeduplicator since it uses std::unordered_set.
 
   aSizes.mLayoutRetainedDisplayListSize += n;
@@ -2441,6 +2442,7 @@ void nsDisplayListBuilder::RemoveModifiedWindowRegions() {
   mRetainedWindowDraggingRegion.RemoveModifiedFramesAndRects();
   mRetainedWindowNoDraggingRegion.RemoveModifiedFramesAndRects();
   mWindowExcludeGlassRegion.RemoveModifiedFramesAndRects();
+  mWindowOpaqueRegion.RemoveModifiedFramesAndRects();
 
   mHasGlassItemDuringPartial = false;
 }
@@ -2449,6 +2451,7 @@ void nsDisplayListBuilder::ClearRetainedWindowRegions() {
   mRetainedWindowDraggingRegion.Clear();
   mRetainedWindowNoDraggingRegion.Clear();
   mWindowExcludeGlassRegion.Clear();
+  mWindowOpaqueRegion.Clear();
 
   mGlassDisplayItem = nullptr;
 }
@@ -2706,6 +2709,9 @@ static nsRegion TreatAsOpaque(nsDisplayItem* aItem,
                               nsDisplayListBuilder* aBuilder) {
   bool snap;
   nsRegion opaque = aItem->GetOpaqueRegion(aBuilder, &snap);
+  MOZ_ASSERT(
+      (aBuilder->IsForEventDelivery() && aBuilder->HitTestIsForVisibility()) ||
+      !opaque.IsComplex());
   if (aBuilder->IsForPluginGeometry() &&
       aItem->GetType() != DisplayItemType::TYPE_COMPOSITOR_HITTEST_INFO) {
     // Treat all leaf chrome items as opaque, unless their frames are opacity:0.

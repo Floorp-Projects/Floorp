@@ -2238,11 +2238,12 @@ WebRenderCommandBuilder::GenerateFallbackData(
                                     : gfx::SurfaceFormat::B8G8R8A8;
     if (useBlobImage) {
       bool snapped;
-      wr::OpacityType opacity =
-          aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped)
-                  .Contains(paintBounds)
-              ? wr::OpacityType::Opaque
-              : wr::OpacityType::HasAlphaChannel;
+      nsRegion opaqueRegion =
+          aItem->GetOpaqueRegion(aDisplayListBuilder, &snapped);
+      MOZ_ASSERT(!opaqueRegion.IsComplex());
+      wr::OpacityType opacity = opaqueRegion.Contains(paintBounds)
+                                    ? wr::OpacityType::Opaque
+                                    : wr::OpacityType::HasAlphaChannel;
       std::vector<RefPtr<ScaledFont>> fonts;
       bool validFonts = true;
       RefPtr<WebRenderDrawEventRecorder> recorder =
