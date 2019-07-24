@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 include('/media/webrtc/webrtc.mozbuild')
 
+DIRS += [ 'ipc' ]
+
 LOCAL_INCLUDES += [
     '!/ipc/ipdl/_ipdlheaders',
     '/dom/base',
