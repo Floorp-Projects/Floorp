@@ -203,7 +203,7 @@ void nsFrameMessageManager::AddMessageListener(const nsAString& aMessageName,
                                                MessageListener& aListener,
                                                bool aListenWhenClosed,
                                                ErrorResult& aError) {
-  auto listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
+  auto& listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
     return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
   });
   uint32_t len = listeners->Length();
@@ -272,7 +272,7 @@ void nsFrameMessageManager::AddWeakMessageListener(
   }
 #endif
 
-  auto listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
+  auto& listeners = mListeners.LookupForAdd(aMessageName).OrInsert([]() {
     return new nsAutoTObserverArray<nsMessageListenerInfo, 1>();
   });
   uint32_t len = listeners->Length();

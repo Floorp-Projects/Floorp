@@ -72,6 +72,12 @@ class nsBaseHashtable
   uint32_t Count() const { return nsTHashtable<EntryType>::Count(); }
 
   /**
+   * Return whether the table is empty.
+   * @return    whether empty
+   */
+  bool IsEmpty() const { return nsTHashtable<EntryType>::IsEmpty(); }
+
+  /**
    * retrieve the value for a key.
    * @param aKey the key to retreive
    * @param aData data associated with this key will be placed at this
@@ -286,7 +292,7 @@ class nsBaseHashtable
     }
 
     template <class F>
-    UserDataType OrInsert(F func) {
+    DataType& OrInsert(F func) {
       MOZ_ASSERT(mTableGeneration == mTable.GetGeneration());
       MOZ_ASSERT(mEntry);
       if (!mExistingEntry) {
