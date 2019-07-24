@@ -23,11 +23,6 @@ case "$target" in
     ASFLAGS="$directory_include_args -DANDROID $ASFLAGS"
 
     LDFLAGS="-L$android_platform/usr/lib -Wl,-rpath-link=$android_platform/usr/lib --sysroot=$android_platform $LDFLAGS"
-    ANDROID_PLATFORM="${android_platform}"
-
-    AC_DEFINE(ANDROID)
-    AC_SUBST(ANDROID_PLATFORM)
-
     ;;
 esac
 
