@@ -423,8 +423,8 @@ label:hover {
   grid-column: span 3;
   display: grid;
   align-items: center;
-  font-size: 0.85rem;
-  border-top: var(--card-divider);
+  font-size: 0.85em;
+  border-top: 1px solid var(--in-content-border-color);
   padding-top: 20px;
   line-height: 18px;
   grid-column-gap: 10px;
@@ -432,7 +432,7 @@ label:hover {
 
 .monitor-scanned-text {
   background-image: url("chrome://browser/skin/reload.svg");
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 
 .monitor-card #monitor-header-content > a {
@@ -483,12 +483,12 @@ label:hover {
 .monitor-view-full-report {
   grid-row: 2;
   grid-column: span 2;
-  font-size: 0.85rem;
+  font-size: 0.85em;
 }
 
 .monitor-stat {
   display: flex;
-  font-size: 1.75rem;
+  font-size: 1.75em;
   font-weight: bold;
   margin-block-end: 5px;
   word-break: break-all;
@@ -510,7 +510,7 @@ label:hover {
 }
 
 .info-text {
-  font-size: .69rem;
+  font-size: .75em;
   line-height: 13px;
   margin-block-start: 5px;
 }
