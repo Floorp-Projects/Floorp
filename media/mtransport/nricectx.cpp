@@ -519,9 +519,10 @@ void NrIceCtx::InitializeGlobals(bool allow_loopback, bool tcp_enabled,
   }
 }
 
-void NrIceCtx::SetRemoteAddr(const std::string& remote_ip,
-                             uint16_t remote_port) {
-  nr_ice_set_remote_address(ctx_, remote_ip.c_str(), remote_port);
+void NrIceCtx::SetTargetForDefaultLocalAddressLookup(
+    const std::string& target_ip, uint16_t target_port) {
+  nr_ice_set_target_for_default_local_address_lookup(ctx_, target_ip.c_str(),
+                                                     target_port);
 }
 
 #define MAXADDRS 100  // mirrors setting in ice_ctx.c
