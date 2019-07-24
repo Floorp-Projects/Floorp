@@ -98,8 +98,9 @@ nsresult DetailsFrame::CreateAnonymousContent(
   mDefaultSummary = new HTMLSummaryElement(nodeInfo.forget());
 
   nsAutoString defaultSummaryText;
-  nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                     "DefaultSummary", defaultSummaryText);
+  nsContentUtils::GetLocalizedString(
+      nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "DefaultSummary",
+      defaultSummaryText);
   RefPtr<nsTextNode> description = new nsTextNode(nodeInfoManager);
   description->SetText(defaultSummaryText, false);
   mDefaultSummary->AppendChildTo(description, false);

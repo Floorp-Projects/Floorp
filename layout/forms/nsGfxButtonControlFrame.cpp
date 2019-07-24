@@ -88,8 +88,8 @@ nsresult nsGfxButtonControlFrame::GetDefaultLabel(nsAString& aString) const {
     return NS_OK;
   }
 
-  return nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                            prop, aString);
+  return nsContentUtils::GetLocalizedString(
+      nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, prop, aString);
 }
 
 nsresult nsGfxButtonControlFrame::GetLabel(nsString& aLabel) {
