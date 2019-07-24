@@ -34,7 +34,7 @@ if (!kUseKeyboardEvent) {
 function doPageDown(targetExpectedToScroll) {
   let promise = waitForScrollEvent(targetExpectedToScroll);
   if (kUseKeyboardEvent) {
-    synthesizeKey("KEY_PageDown", {}, aWindow);
+    synthesizeKey("KEY_PageDown", {}, window);
   } else {
     selectionController.pageMove(true, false);
   }
