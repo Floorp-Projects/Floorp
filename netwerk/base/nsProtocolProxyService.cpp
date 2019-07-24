@@ -767,7 +767,9 @@ nsProtocolProxyService::nsProtocolProxyService()
       mSessionStart(PR_Now()),
       mFailedProxyTimeout(30 * 60)  // 30 minute default
       ,
-      mIsShutdown(false) {}
+      mIsShutdown(false) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+}
 
 nsProtocolProxyService::~nsProtocolProxyService() {
   // These should have been cleaned up in our Observe method.

@@ -17,7 +17,8 @@ interface nsIEventTarget;
 
 /**
  * nsIProtocolProxyService provides methods to access information about
- * various network proxies.
+ * various network proxies. This service is meant to be used on the parent
+ * process only.
  */
 [scriptable, builtinclass, uuid(ef57c8b6-e09d-4cd4-9222-2a5d2402e15d)]
 interface nsIProtocolProxyService : nsISupports
