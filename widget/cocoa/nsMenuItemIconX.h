@@ -10,9 +10,6 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
-#include "mozilla/RefPtr.h"
-#include "nsCOMPtr.h"
-#include "imgINotificationObserver.h"
 #include "nsIContentPolicy.h"
 #include "nsIconLoaderService.h"
 
@@ -53,7 +50,6 @@ class nsMenuItemIconX : public nsIconLoaderObserver {
 
  protected:
   nsCOMPtr<nsIContent> mContent;
-  nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsContentPolicyType mContentType;
   nsMenuObjectX* mMenuObject;  // [weak]
   nsIntRect mImageRegionRect;

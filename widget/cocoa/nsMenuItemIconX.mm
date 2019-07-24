@@ -42,7 +42,6 @@ static const uint32_t kIconSize = 16;
 nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
                                  NSMenuItem* aNativeMenuItem)
     : mContent(aContent),
-      mTriggeringPrincipal(aContent->NodePrincipal()),
       mContentType(nsIContentPolicy::TYPE_INTERNAL_IMAGE),
       mMenuObject(aMenuItem),
       mSetIcon(false),
@@ -63,7 +62,6 @@ void nsMenuItemIconX::Destroy() {
     mIconLoader->Destroy();
     mIconLoader = nullptr;
   }
-
   mMenuObject = nullptr;
   mNativeMenuItem = nil;
 }
@@ -87,34 +85,16 @@ nsresult nsMenuItemIconX::SetupIcon() {
     return NS_OK;
   }
 
-  if (!mSetIcon) {
-    // Set a completely transparent 16x16 image as the icon on this menu item
-    // as a placeholder.  This keeps the menu item text displayed in the same
-    // position that it will be displayed when the real icon is loaded, and
-    // prevents it from jumping around or looking misaligned.
-
-    static bool sInitializedPlaceholder;
-    static NSImage* sPlaceholderIconImage;
-    if (!sInitializedPlaceholder) {
-      sInitializedPlaceholder = true;
-
-      // Note that we only create the one and reuse it forever, so this is not a leak.
-      sPlaceholderIconImage = [[NSImage alloc] initWithSize:NSMakeSize(kIconSize, kIconSize)];
-    }
-
-    if (!sPlaceholderIconImage) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (mNativeMenuItem) {
-      [mNativeMenuItem setImage:sPlaceholderIconImage];
-    }
-  }
   if (!mIconLoader) {
     mIconLoader = new nsIconLoaderService(mContent, &mImageRegionRect, this, kIconSize, kIconSize);
     if (!mIconLoader) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+  }
+
+  if (!mSetIcon) {
+    // Load placeholder icon.
+    [mNativeMenuItem setImage:mIconLoader->GetNativeIconImage()];
   }
 
   rv = mIconLoader->LoadIcon(iconURI);
@@ -176,8 +156,9 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
     }
   } else {
     uint64_t dummy = 0;
+    nsCOMPtr<nsIPrincipal> triggeringPrincipal = mContent->NodePrincipal();
     nsContentUtils::GetContentPolicyTypeForUIImageLoading(
-        mContent, getter_AddRefs(mTriggeringPrincipal), mContentType, &dummy);
+        mContent, getter_AddRefs(triggeringPrincipal), mContentType, &dummy);
 
     // If this menu item shouldn't have an icon, the string will be empty,
     // and NS_NewURI will fail.
