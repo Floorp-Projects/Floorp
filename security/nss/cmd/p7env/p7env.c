@@ -66,7 +66,7 @@ EncryptFile(FILE *outFile, FILE *inFile, struct recipient *recipients,
     SEC_PKCS7ContentInfo *cinfo;
     SEC_PKCS7EncoderContext *ecx;
     struct recipient *rcpt;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     if (outFile == NULL || inFile == NULL || recipients == NULL)
         return -1;
@@ -133,7 +133,7 @@ main(int argc, char **argv)
     struct recipient *recipients, *rcpt;
     PLOptState *optstate;
     PLOptStatus status;
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName + 1 : argv[0];
