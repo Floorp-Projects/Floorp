@@ -120,6 +120,30 @@
 #define IS_NOT_RELEASE_OR_BETA true
 #endif
 
+#ifdef NIGHTLY_BUILD
+#define IS_NIGHTLY_BUILD  true
+#else
+#define IS_NIGHTLY_BUILD  false
+#endif
+
+#ifdef MOZILLA_OFFICIAL
+#define IS_NOT_MOZILLA_OFFICIAL false
+#else
+#define IS_NOT_MOZILLA_OFFICIAL true
+#endif
+
+#ifdef EARLY_BETA_OR_EARLIER
+#define IS_EARLY_BETA_OR_EARLIER true
+#else
+#define IS_EARLY_BETA_OR_EARLIER false
+#endif
+
+#ifdef ANDROID
+#define IS_ANDROID true
+#else
+#define IS_ANDROID false
+#endif
+
 #---------------------------------------------------------------------------
 # Prefs starting with "apz."
 # The apz prefs are explained in AsyncPanZoomController.cpp
@@ -749,19 +773,10 @@
   value: true
   mirror: always
 
-# IMPORTANT: Keep this in condition in sync with all.js. The value
-# of MOZILLA_OFFICIAL is different between full and artifact builds, so without
-# it being specified there, dump is disabled in artifact builds (see Bug 1490412).
-#ifdef MOZILLA_OFFICIAL
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: browser.dom.window.dump.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
-#undef PREF_VALUE
 
 # Fix up common scheme typos?
 - name: browser.fixup.typo.scheme
@@ -979,16 +994,10 @@
   value: false
   mirror: always
 
-#ifdef MOZILLA_OFFICIAL
-#define PREF_VALUE false
-#else
-#define PREF_VALUE true
-#endif
 - name: devtools.console.stdout.chrome
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_NOT_MOZILLA_OFFICIAL@
   mirror: always
-#undef PREF_VALUE
 
 - name: devtools.console.stdout.content
   type: RelaxedAtomicBool
@@ -1266,16 +1275,10 @@
   value: true
   mirror: always
 
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE  true
-#else
-#define PREF_VALUE  false
-#endif
 - name: dom.ipc.cancel_content_js_when_navigating
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.ipc.plugins.asyncdrawing.enabled
   type: RelaxedAtomicBool
@@ -1583,32 +1586,20 @@
   mirror: always
 
 # Reporting API.
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.reporting.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.reporting.testing.enabled
   type: RelaxedAtomicBool
   value: false
   mirror: always
 
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.reporting.featurePolicy.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.reporting.header.enabled
   type: RelaxedAtomicBool
@@ -1694,28 +1685,24 @@
   value: true
   mirror: always
 
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 # This pref enables FeaturePolicy logic and the parsing of 'allow' attribute in
 # HTMLIFrameElement objects.
 - name: dom.security.featurePolicy.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
+
 # This pref enables the featurePolicy header support.
 - name: dom.security.featurePolicy.header.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
+
 # Expose the 'policy' attribute in document and HTMLIFrameElement
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for selection event APIs enabled?
 - name: dom.select_events.enabled
@@ -1785,16 +1772,10 @@
 
 # For area and anchor elements with target=_blank and no rel set to
 # opener/noopener.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.targetBlankNoOpener.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for Selection.GetRangesForInterval enabled?
 - name: dom.testing.selection.GetRangesForInterval
@@ -2002,16 +1983,10 @@
 # In case Touch API is enabled, this pref controls whether to support
 # ontouch* event handlers, document.createTouch, document.createTouchList and
 # document.createEvent("TouchEvent").
-#ifdef ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: dom.w3c_touch_events.legacy_apis.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for the Web Audio API enabled?
 - name: dom.webaudio.enabled
@@ -2071,27 +2046,15 @@
   value: true
   mirror: always
 
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE  true
-#else
-#define PREF_VALUE  false
-#endif
 - name: dom.webnotifications.requireuserinteraction
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE  true
-#else
-#define PREF_VALUE  false
-#endif
 - name: dom.webnotifications.requireinteraction.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 - name: dom.webnotifications.serviceworker.enabled
   type: RelaxedAtomicBool
@@ -2193,17 +2156,11 @@
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
 
-#ifdef ANDROID
 # Private browsing opt-in is only supported on Firefox desktop.
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: extensions.allowPrivateBrowsingByDefault
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: always
-#undef PREF_VALUE
 
 # This pref should be set to true only in case of regression related to the
 # changes applied in Bug 152591 (to be removed as part of Bug 1537753).
@@ -3182,22 +3139,17 @@
   mirror: always
 
 # Whether to force acceleration on, ignoring blacklists.
-#ifdef ANDROID
+
 # bug 838603 -- on Android, accidentally blacklisting OpenGL layers
 # means a startup crash for everyone.
 # Temporarily force-enable GL compositing.  This is default-disabled
 # deep within the bowels of the widgetry system.  Remove me when GL
 # compositing isn't default disabled in widget/android.
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layers.acceleration.force-enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: once
   do_not_use_directly: true
-#undef PREF_VALUE
 
 - name: layers.advanced.basic-layer.enabled
   type: RelaxedAtomicBool
@@ -3873,16 +3825,10 @@
   mirror: always
 
 # Is support for CSS "grid-template-{columns,rows}: subgrid X" enabled?
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE  true
-#else
-#define PREF_VALUE  false
-#endif
 - name: layout.css.grid-template-subgrid-value.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for CSS individual transform enabled?
 - name: layout.css.individual-transform.enabled
@@ -4216,16 +4162,10 @@
   mirror: always
 
 # Are dynamic reflow roots enabled?
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layout.dynamic-reflow-roots.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
 - name: layout.frame_rate
   type: RelaxedAtomicInt32
@@ -4301,16 +4241,10 @@
   value: false
   mirror: always
 
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layout.css.shadow-parts.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for CSS text-justify property enabled?
 - name: layout.css.text-justify.enabled
@@ -4339,29 +4273,17 @@
 # from [1].
 #
 # [1]: https://github.com/w3c/csswg-drafts/issues/3749#issuecomment-477287453
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: layout.css.line-height.normal-as-resolved-value.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 # Are the width and height attributes on image-like elements mapped to the
 # internal-for-now aspect-ratio property?
 - name: layout.css.width-and-height-map-to-aspect-ratio.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
@@ -4765,16 +4687,10 @@
   mirror: once
 
 # Whether to check the decoder supports recycling.
-#ifdef ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.decoder.recycle.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: always
-#undef PREF_VALUE
 
 # Should MFR try to skip to the next key frame?
 - name: media.decoder.skip-to-next-key-frame.enabled
@@ -4973,16 +4889,10 @@
   mirror: always
 
 # Hls
-#ifdef ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.hls.enabled
   type: RelaxedAtomicBool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: always
-#undef PREF_VALUE
 
 # Max number of HLS players that can be created concurrently. Used only on
 # Android and when "media.hls.enabled" is true.
@@ -5019,16 +4929,10 @@
   value: true
   mirror: always
 
-#ifdef ANDROID
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.videocontrols.lock-video-orientation
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_ANDROID@
   mirror: always
-#undef PREF_VALUE
 
 # Media Seamless Looping
 - name: media.seamless-looping
@@ -5180,16 +5084,10 @@
 
 # HTMLMediaElement.allowedToPlay should be exposed to web content when
 # block autoplay rides the trains to release. Until then, Nightly only.
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: media.allowed-to-play.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 # Is support for MediaKeys.getStatusForPolicy enabled?
 - name: media.eme.hdcp-policy-check.enabled
@@ -5555,16 +5453,10 @@
 
 # Annotate trackers using the strict list. If set to false, the basic list will
 # be used instead.
-#ifdef EARLY_BETA_OR_EARLIER
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: privacy.annotate_channels.strict_list.enabled
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
-#undef PREF_VALUE
 
 # Enforce tracking protection in all modes.
 - name: privacy.trackingprotection.enabled
@@ -5644,16 +5536,10 @@
 # list.  Note that this requires the
 # privacy.trackingprotection.annotate_channels pref to be on in order to have
 # any effect.
-#ifdef NIGHTLY_BUILD
-#define PREF_VALUE true
-#else
-#define PREF_VALUE false
-#endif
 - name: privacy.trackingprotection.lower_network_priority
   type: bool
-  value: @PREF_VALUE@
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
-#undef PREF_VALUE
 
 - name: privacy.resistFingerprinting
   type: bool
