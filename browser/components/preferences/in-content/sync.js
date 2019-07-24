@@ -31,14 +31,30 @@ const FXA_LOGIN_UNVERIFIED = 1;
 const FXA_LOGIN_FAILED = 2;
 
 Preferences.addAll([
-  { id: "services.sync.engine.addons", type: "bool" },
-  { id: "services.sync.engine.bookmarks", type: "bool" },
-  { id: "services.sync.engine.history", type: "bool" },
-  { id: "services.sync.engine.tabs", type: "bool" },
-  { id: "services.sync.engine.prefs", type: "bool" },
-  { id: "services.sync.engine.passwords", type: "bool" },
-  { id: "services.sync.engine.addresses", type: "bool" },
-  { id: "services.sync.engine.creditcards", type: "bool" },
+  { id: "engine.addons", name: "services.sync.engine.addons", type: "bool" },
+  {
+    id: "engine.bookmarks",
+    name: "services.sync.engine.bookmarks",
+    type: "bool",
+  },
+  { id: "engine.history", name: "services.sync.engine.history", type: "bool" },
+  { id: "engine.tabs", name: "services.sync.engine.tabs", type: "bool" },
+  { id: "engine.prefs", name: "services.sync.engine.prefs", type: "bool" },
+  {
+    id: "engine.passwords",
+    name: "services.sync.engine.passwords",
+    type: "bool",
+  },
+  {
+    id: "engine.addresses",
+    name: "services.sync.engine.addresses",
+    type: "bool",
+  },
+  {
+    id: "engine.creditcards",
+    name: "services.sync.engine.creditcards",
+    type: "bool",
+  },
 ]);
 
 var gSyncPane = {
@@ -95,14 +111,8 @@ var gSyncPane = {
     // These 2 engines are unique in that there are prefs that make the
     // entire engine unavailable (which is distinct from "disabled").
     let enginePrefs = [
-      [
-        "services.sync.engine.addresses.available",
-        "services.sync.engine.addresses",
-      ],
-      [
-        "services.sync.engine.creditcards.available",
-        "services.sync.engine.creditcards",
-      ],
+      ["services.sync.engine.addresses.available", "engine.addresses"],
+      ["services.sync.engine.creditcards.available", "engine.creditcards"],
     ];
     let numHidden = 0;
     for (let [availablePref, prefName] of enginePrefs) {
@@ -118,12 +128,8 @@ var gSyncPane = {
     // the second column. (If we only moved one, it's still unbalanced, but
     // there's an odd number of engines so that can't be avoided)
     if (numHidden == 2) {
-      let history = document.querySelector(
-        '[preference="services.sync.engine.history"]'
-      );
-      let addons = document.querySelector(
-        '[preference="services.sync.engine.addons"]'
-      );
+      let history = document.querySelector('[preference="engine.history"]');
+      let addons = document.querySelector('[preference="engine.addons"]');
       addons.parentNode.insertBefore(history, addons);
     }
   },
