@@ -2,6 +2,10 @@
  * Bug 1277803 - A test case for testing favicon loading across different first party domains.
  */
 
+if (Services.prefs.getBoolPref("fission.autostart")) {
+  requestLongerTimeout(2);
+}
+
 const CC = Components.Constructor;
 
 const { PlacesUtils } = ChromeUtils.import(
