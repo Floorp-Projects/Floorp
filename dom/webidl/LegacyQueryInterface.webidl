@@ -20,7 +20,6 @@ Document implements LegacyQueryInterface;
 DocumentFragment implements LegacyQueryInterface;
 Element implements LegacyQueryInterface;
 Event implements LegacyQueryInterface;
-Selection implements LegacyQueryInterface;
 TreeColumns implements LegacyQueryInterface;
 TreeContentView implements LegacyQueryInterface;
 Window implements LegacyQueryInterface;
