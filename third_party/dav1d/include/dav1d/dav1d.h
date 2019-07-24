@@ -144,7 +144,7 @@ DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
  *                                  passed-in arguments.
  *
  * @note To drain buffered frames from the decoder (i.e. on end of stream),
- *       call this function until it returns -EAGAIN.
+ *       call this function until it returns DAV1D_ERR(EAGAIN).
  *
  * @code{.c}
  *  Dav1dData data = { 0 };
@@ -157,11 +157,11 @@ DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
  *      // Keep going even if the function can't consume the current data
  *         packet. It eventually will after one or more frames have been
  *         returned in this loop.
- *      if (res < 0 && res != -EAGAIN)
+ *      if (res < 0 && res != DAV1D_ERR(EAGAIN))
  *          free_and_abort();
  *      res = dav1d_get_picture(c, &p);
  *      if (res < 0) {
- *          if (res != -EAGAIN)
+ *          if (res != DAV1D_ERR(EAGAIN))
  *              free_and_abort();
  *      } else
  *          output_and_unref_picture(&p);
@@ -172,7 +172,7 @@ DAV1D_API int dav1d_send_data(Dav1dContext *c, Dav1dData *in);
  *  do {
  *      res = dav1d_get_picture(c, &p);
  *      if (res < 0) {
- *          if (res != -EAGAIN)
+ *          if (res != DAV1D_ERR(EAGAIN))
  *              free_and_abort();
  *      } else
  *          output_and_unref_picture(&p);

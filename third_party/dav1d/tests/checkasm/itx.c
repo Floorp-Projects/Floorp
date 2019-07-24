@@ -273,11 +273,12 @@ void bitfn(checkasm_check_itx)(void) {
                              HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, w * sizeof(*c_dst), coeff[1], eob
                              HIGHBD_TAIL_SUFFIX);
-                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)) ||
-                        memcmp(coeff[0], coeff[1], sizeof(*coeff)))
-                    {
+
+                    checkasm_check_pixel(c_dst, w * sizeof(*c_dst),
+                                         a_dst, w * sizeof(*a_dst),
+                                         w, h, "dst");
+                    if (memcmp(coeff[0], coeff[1], sizeof(*coeff)))
                         fail();
-                    }
 
                     bench_new(a_dst, w * sizeof(*c_dst), coeff[0], eob
                               HIGHBD_TAIL_SUFFIX);

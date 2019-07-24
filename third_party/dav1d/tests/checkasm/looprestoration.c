@@ -43,18 +43,6 @@ static void init_tmp(pixel *buf, const ptrdiff_t stride,
     }
 }
 
-static int cmp2d(const pixel *a, const pixel *b, const ptrdiff_t stride,
-                 const int w, const int h)
-{
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++)
-            if (a[x] != b[x]) return (y << 16) | x;
-        a += PXSTRIDE(stride);
-        b += PXSTRIDE(stride);
-    }
-    return -1;
-}
-
 static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
     ALIGN_STK_32(pixel, c_dst, 448 * 64,);
     ALIGN_STK_32(pixel, a_dst, 448 * 64,);
@@ -115,8 +103,9 @@ static void check_wiener(Dav1dLoopRestorationDSPContext *const c) {
                 call_new(a_dst + 32, 448 * sizeof(pixel), left,
                          h_edge + 32, 448 * sizeof(pixel),
                          w, h, filter_h, filter_v, edges HIGHBD_TAIL_SUFFIX);
-                const int res = cmp2d(c_dst + 32, a_dst + 32, 448 * sizeof(pixel), w, h);
-                if (res != -1) fail();
+                checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
+                                     a_dst + 32, 448 * sizeof(pixel),
+                                     w, h, "dst");
             }
             bench_new(a_dst + 32, 448 * sizeof(pixel), left,
                       h_edge + 32, 448 * sizeof(pixel),
@@ -173,8 +162,9 @@ static void check_sgr(Dav1dLoopRestorationDSPContext *const c) {
                 call_new(a_dst + 32, 448 * sizeof(pixel), left,
                          h_edge + 32, 448 * sizeof(pixel),
                          w, h, sgr_idx, sgr_wt, edges HIGHBD_TAIL_SUFFIX);
-                const int res = cmp2d(c_dst + 32, a_dst + 32, 448 * sizeof(pixel), w, h);
-                if (res != -1) fail();
+                checkasm_check_pixel(c_dst + 32, 448 * sizeof(pixel),
+                                     a_dst + 32, 448 * sizeof(pixel),
+                                     w, h, "dst");
             }
             bench_new(a_dst + 32, 448 * sizeof(pixel), left,
                       h_edge + 32, 448 * sizeof(pixel),

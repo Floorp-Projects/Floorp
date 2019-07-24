@@ -34,6 +34,8 @@
 ; as this feature might be useful for others as well.  Send patches or ideas
 ; to x264-devel@videolan.org .
 
+%include "config.asm"
+
 %ifndef private_prefix
     %define private_prefix dav1d
 %endif

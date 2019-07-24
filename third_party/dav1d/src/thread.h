@@ -128,4 +128,20 @@ static inline int pthread_cond_broadcast(pthread_cond_t *const cond) {
 
 #endif
 
+/* Thread naming support */
+
+#ifdef __linux__
+
+#include <sys/prctl.h>
+
+static inline void dav1d_set_thread_name(const char* name) {
+    prctl(PR_SET_NAME, name);
+}
+
+#else
+
+#define dav1d_set_thread_name(name)
+
+#endif
+
 #endif /* DAV1D_SRC_THREAD_H */
