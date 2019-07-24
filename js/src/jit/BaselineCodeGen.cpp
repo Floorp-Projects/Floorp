@@ -29,7 +29,6 @@
 #include "vm/TraceLogging.h"
 #include "vtune/VTuneWrapper.h"
 
-#include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrameInfo-inl.h"
 #include "jit/MacroAssembler-inl.h"
 #include "jit/SharedICHelpers-inl.h"
@@ -1579,8 +1578,7 @@ bool BaselineCompiler::emitDebugTrap() {
 
   JSScript* script = handler.script();
   bool enabled =
-      DebugAPI::stepModeEnabled(script) ||
-      DebugAPI::hasBreakpointsAt(script, handler.pc());
+      script->stepModeEnabled() || script->hasBreakpointsAt(handler.pc());
 
 #if defined(JS_CODEGEN_ARM64)
   // Flush any pending constant pools to prevent incorrect
