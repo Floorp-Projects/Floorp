@@ -265,10 +265,9 @@ class AndroidProcessLauncher : public PosixProcessLauncher {
 
  protected:
   virtual RefPtr<ProcessHandlePromise> DoLaunch() override;
-  void LaunchAndroidService(
+  RefPtr<ProcessHandlePromise> LaunchAndroidService(
       const char* type, const std::vector<std::string>& argv,
-      const base::file_handle_mapping_vector& fds_to_remap,
-      base::ProcessHandle* process_handle);
+      const base::file_handle_mapping_vector& fds_to_remap);
 };
 typedef AndroidProcessLauncher ProcessLauncher;
 // NB: Technically Android is linux (i.e. XP_LINUX is defined), but we want
@@ -1136,12 +1135,8 @@ bool PosixProcessLauncher::DoSetup() {
 
 #if defined(MOZ_WIDGET_ANDROID)
 RefPtr<ProcessHandlePromise> AndroidProcessLauncher::DoLaunch() {
-  ProcessHandle handle = 0;
-  LaunchAndroidService(ChildProcessType(), mChildArgv,
-                       mLaunchOptions->fds_to_remap, &handle);
-  return handle != 0
-             ? ProcessHandlePromise::CreateAndResolve(handle, __func__)
-             : ProcessHandlePromise::CreateAndReject(LaunchError{}, __func__);
+  return LaunchAndroidService(ChildProcessType(), mChildArgv,
+                              mLaunchOptions->fds_to_remap);
 }
 #endif  // MOZ_WIDGET_ANDROID
 
@@ -1553,10 +1548,9 @@ void GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue) {
 }
 
 #ifdef MOZ_WIDGET_ANDROID
-void AndroidProcessLauncher::LaunchAndroidService(
+RefPtr<ProcessHandlePromise> AndroidProcessLauncher::LaunchAndroidService(
     const char* type, const std::vector<std::string>& argv,
-    const base::file_handle_mapping_vector& fds_to_remap,
-    base::ProcessHandle* process_handle) {
+    const base::file_handle_mapping_vector& fds_to_remap) {
   MOZ_RELEASE_ASSERT((2 <= fds_to_remap.size()) && (fds_to_remap.size() <= 5));
   JNIEnv* const env = mozilla::jni::GetEnvForThread();
   MOZ_ASSERT(env);
@@ -1586,12 +1580,10 @@ void AndroidProcessLauncher::LaunchAndroidService(
     crashAnnotationFd = fds_to_remap[4].first;
   }
 
-  int32_t handle = java::GeckoProcessManager::Start(
+  auto genericResult = java::GeckoProcessManager::Start(
       type, jargs, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd);
-
-  if (process_handle) {
-    *process_handle = handle;
-  }
+  auto typedResult = java::GeckoResult::LocalRef(std::move(genericResult));
+  return ProcessHandlePromise::FromGeckoResult(typedResult);
 }
 #endif
 
