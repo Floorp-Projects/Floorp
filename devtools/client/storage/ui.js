@@ -8,7 +8,6 @@
 const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper, ELLIPSIS } = require("devtools/shared/l10n");
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
-const JSOL = require("devtools/client/shared/vendor/jsol");
 const { KeyCodes } = require("devtools/client/shared/keycodes");
 const { getUnicodeHostname } = require("devtools/client/shared/unicode-url");
 
@@ -40,6 +39,7 @@ loader.lazyRequireGetter(
   "validator",
   "devtools/client/shared/vendor/stringvalidator/validator"
 );
+loader.lazyRequireGetter(this, "JSON5", "devtools/client/shared/vendor/json5");
 
 /**
  * Localization convenience methods.
@@ -955,7 +955,7 @@ class StorageUI {
 
     let obj = null;
     try {
-      obj = JSOL.parse(value);
+      obj = JSON5.parse(value);
     } catch (ex) {
       obj = null;
     }
