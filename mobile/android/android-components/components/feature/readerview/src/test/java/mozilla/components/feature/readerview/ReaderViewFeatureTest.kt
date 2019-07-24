@@ -33,6 +33,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.`when`
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
@@ -101,6 +102,7 @@ class ReaderViewFeatureTest {
         val engineSession = mock<EngineSession>()
         val ext = mock<WebExtension>()
         val messageHandler = argumentCaptor<MessageHandler>()
+        val message = argumentCaptor<JSONObject>()
 
         ReaderViewFeature.installedWebExt = ext
 
@@ -116,7 +118,8 @@ class ReaderViewFeatureTest {
 
         messageHandler.value.onPortConnected(port)
         assertTrue(ReaderViewFeature.ports.containsValue(port))
-        verify(readerViewFeature).updateReaderViewState(eq(session))
+        verify(port).postMessage(message.capture())
+        assertEquals(ReaderViewFeature.ACTION_CHECK_READERABLE, message.value[ReaderViewFeature.ACTION_MESSAGE_KEY])
 
         val readerableMessage = JSONObject().put("readerable", true)
         messageHandler.value.onPortMessage(readerableMessage, port)
@@ -219,6 +222,7 @@ class ReaderViewFeatureTest {
         val engineSession = mock<EngineSession>()
         val ext = mock<WebExtension>()
         val messageHandler = argumentCaptor<MessageHandler>()
+        val message = argumentCaptor<JSONObject>()
 
         ReaderViewFeature.installedWebExt = ext
 
@@ -233,7 +237,8 @@ class ReaderViewFeatureTest {
 
         messageHandler.value.onPortConnected(port)
         assertTrue(ReaderViewFeature.ports.containsValue(port))
-        verify(readerViewFeature).updateReaderViewState(eq(session))
+        verify(port).postMessage(message.capture())
+        assertEquals(ReaderViewFeature.ACTION_CHECK_READERABLE, message.value[ReaderViewFeature.ACTION_MESSAGE_KEY])
     }
 
     @Test
@@ -419,13 +424,44 @@ class ReaderViewFeatureTest {
         whenever(session.readerMode).thenReturn(true)
         whenever(view.visibility).thenReturn(View.VISIBLE)
         assertTrue(readerViewFeature.onBackPressed())
-        verify(readerViewFeature, never()).hideReaderView()
+        verify(readerViewFeature, never()).hideReaderView(any())
         verify(readerViewFeature, times(1)).hideControls()
 
         whenever(view.visibility).thenReturn(View.GONE)
         assertTrue(readerViewFeature.onBackPressed())
-        verify(readerViewFeature, times(1)).hideReaderView()
+        verify(readerViewFeature, times(1)).hideReaderView(any())
         verify(readerViewFeature, times(1)).hideControls()
+    }
+
+    @Test
+    fun `reader mode is activated when port connects`() {
+        val engine = mock<Engine>()
+        val sessionManager = mock<SessionManager>()
+        val view = mock<ReaderViewControlsView>()
+        val session = mock<Session>()
+        val engineSession = mock<EngineSession>()
+        val ext = mock<WebExtension>()
+        val messageHandler = argumentCaptor<MessageHandler>()
+        val message = argumentCaptor<JSONObject>()
+
+        ReaderViewFeature.installedWebExt = ext
+
+        whenever(sessionManager.getOrCreateEngineSession(session)).thenReturn(engineSession)
+        whenever(sessionManager.selectedSession).thenReturn(session)
+        val readerViewFeature = spy(ReaderViewFeature(testContext, engine, sessionManager, view))
+
+        readerViewFeature.start()
+        verify(ext).registerContentMessageHandler(eq(engineSession), eq(ReaderViewFeature.READER_VIEW_EXTENSION_ID), messageHandler.capture())
+
+        val port = mock<Port>()
+        whenever(port.engineSession).thenReturn(engineSession)
+
+        `when`(session.readerMode).thenReturn(true)
+        messageHandler.value.onPortConnected(port)
+        assertTrue(ReaderViewFeature.ports.containsValue(port))
+        verify(port, times(2)).postMessage(message.capture())
+        assertEquals(ReaderViewFeature.ACTION_CHECK_READERABLE, message.allValues[0][ReaderViewFeature.ACTION_MESSAGE_KEY])
+        assertEquals(ReaderViewFeature.ACTION_SHOW, message.allValues[1][ReaderViewFeature.ACTION_MESSAGE_KEY])
     }
 
     private fun prepareFeatureForTest(port: Port, session: Session = mock()): ReaderViewFeature {

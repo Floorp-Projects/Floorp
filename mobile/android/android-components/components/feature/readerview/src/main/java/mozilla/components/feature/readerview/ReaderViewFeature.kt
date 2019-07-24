@@ -24,6 +24,7 @@ import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
 import org.json.JSONObject
+import java.lang.ref.WeakReference
 import java.util.WeakHashMap
 import kotlin.properties.Delegates.observable
 
@@ -90,7 +91,7 @@ class ReaderViewFeature(
     override fun start() {
         observeSelected()
 
-        registerContentMessageHandler(activeSession)
+        registerContentMessageHandler()
 
         if (ReaderViewFeature.installedWebExt == null) {
             ReaderViewFeature.install(engine)
@@ -150,16 +151,7 @@ class ReaderViewFeature(
      */
     fun showReaderView(session: Session? = activeSession) {
         session?.let {
-            val config = JSONObject()
-                .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
-                .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase())
-                .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase())
-
-            val message = JSONObject()
-                .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
-                .put(ACTION_VALUE, config)
-
-            sendContentMessage(message, it)
+            showReaderView(sessionManager.getEngineSession(session), config)
             it.readerMode = true
         }
     }
@@ -167,12 +159,12 @@ class ReaderViewFeature(
     /**
      * Hides the reader view UI.
      */
-    fun hideReaderView() {
-        activeSession?.let {
+    fun hideReaderView(session: Session? = activeSession) {
+        session?.let {
             it.readerMode = false
             // We will re-determine if the original page is readerable when it's loaded.
             it.readerable = false
-            sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE), it)
+            hideReaderView(sessionManager.getEngineSession(session))
         }
     }
 
@@ -190,43 +182,28 @@ class ReaderViewFeature(
         controlsPresenter.hide()
     }
 
+    @VisibleForTesting
     internal fun checkReaderable(session: Session? = activeSession) {
         session?.let {
-            if (portConnected()) {
-                sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
-            }
+            checkReaderable(sessionManager.getEngineSession(session))
         }
     }
 
-    private fun registerContentMessageHandler(session: Session?) {
+    @VisibleForTesting
+    internal fun registerContentMessageHandler(session: Session? = activeSession) {
         if (session == null) {
             return
         }
 
-        val messageHandler = object : MessageHandler {
-            override fun onPortConnected(port: Port) {
-                ports[port.engineSession] = port
-                updateReaderViewState(session)
-            }
-
-            override fun onPortDisconnected(port: Port) {
-                ports.remove(port.engineSession)
-            }
-
-            override fun onPortMessage(message: Any, port: Port) {
-                if (message is JSONObject) {
-                    session.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
-                }
-            }
-        }
-
-        registerMessageHandler(sessionManager.getOrCreateEngineSession(session), messageHandler)
+        val engineSession = sessionManager.getOrCreateEngineSession(session)
+        val messageHandler = ReaderViewContentMessageHandler(session, engineSession, WeakReference(config))
+        registerMessageHandler(engineSession, messageHandler)
     }
 
-    private fun sendContentMessage(msg: Any, session: Session? = activeSession) {
+    @VisibleForTesting
+    internal fun sendContentMessage(msg: Any, session: Session? = activeSession) {
         session?.let {
-            val port = ports[sessionManager.getEngineSession(session)]
-            port?.postMessage(msg) ?: logger.error("No port connected for provided session. Message $msg not sent.")
+            sendContentMessage(msg, sessionManager.getEngineSession(session))
         }
     }
 
@@ -244,7 +221,38 @@ class ReaderViewFeature(
 
     @VisibleForTesting
     internal fun portConnected(session: Session? = activeSession): Boolean {
-        return session?.let { ports.containsKey(sessionManager.getEngineSession(session)) } ?: false
+        return session?.let { portConnected(sessionManager.getEngineSession(session)) } ?: false
+    }
+
+    private class ReaderViewContentMessageHandler(
+        private val session: Session,
+        private val engineSession: EngineSession,
+        // This needs to be a weak reference because the engine session this message handler will be
+        // attached to has a longer lifespan than the feature instance i.e. a tab can remain open,
+        // but we don't want to prevent the feature (and therefore its context/fragment) from
+        // being garbage collected. The config has references to both the context and feature.
+        private val config: WeakReference<Config>
+    ) : MessageHandler {
+        override fun onPortConnected(port: Port) {
+            val config = config.get() ?: return
+
+            ports[port.engineSession] = port
+
+            checkReaderable(engineSession)
+            if (session.readerMode) {
+                showReaderView(engineSession, config)
+            }
+        }
+
+        override fun onPortDisconnected(port: Port) {
+            ports.remove(port.engineSession)
+        }
+
+        override fun onPortMessage(message: Any, port: Port) {
+            if (message is JSONObject) {
+                session.readerable = message.optBoolean(READERABLE_RESPONSE_MESSAGE_KEY, false)
+            }
+        }
     }
 
     @VisibleForTesting
@@ -305,12 +313,50 @@ class ReaderViewFeature(
 
         fun registerMessageHandler(session: EngineSession, messageHandler: MessageHandler) {
             registerContentMessageHandler = {
-                if (!it.hasContentMessageHandler(session, READER_VIEW_EXTENSION_ID)) {
-                    it.registerContentMessageHandler(session, READER_VIEW_EXTENSION_ID, messageHandler)
-                }
+                it.registerContentMessageHandler(session, READER_VIEW_EXTENSION_ID, messageHandler)
             }
 
             installedWebExt?.let { registerContentMessageHandler(it) }
+        }
+
+        private fun checkReaderable(engineSession: EngineSession?) {
+            engineSession?.let {
+                if (portConnected(it)) {
+                    sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_CHECK_READERABLE), it)
+                }
+            }
+        }
+
+        private fun portConnected(engineSession: EngineSession?): Boolean {
+            return engineSession?.let { ports.containsKey(it) } ?: false
+        }
+
+        private fun sendContentMessage(msg: Any, engineSession: EngineSession?) {
+            engineSession?.let {
+                val port = ports[it]
+                port?.postMessage(msg) ?: logger.error("No port connected for provided session. Message $msg not sent.")
+            }
+        }
+
+        private fun showReaderView(engineSession: EngineSession?, config: Config) {
+            engineSession?.let {
+                val configJson = JSONObject()
+                        .put(ACTION_VALUE_SHOW_FONT_SIZE, config.fontSize)
+                        .put(ACTION_VALUE_SHOW_FONT_TYPE, config.fontType.name.toLowerCase())
+                        .put(ACTION_VALUE_SHOW_COLOR_SCHEME, config.colorScheme.name.toLowerCase())
+
+                val message = JSONObject()
+                        .put(ACTION_MESSAGE_KEY, ACTION_SHOW)
+                        .put(ACTION_VALUE, configJson)
+
+                sendContentMessage(message, engineSession)
+            }
+        }
+
+        private fun hideReaderView(engineSession: EngineSession?) {
+            engineSession?.let {
+                sendContentMessage(JSONObject().put(ACTION_MESSAGE_KEY, ACTION_HIDE), engineSession)
+            }
         }
     }
 }
