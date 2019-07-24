@@ -2,6 +2,10 @@
  * Bug 1270338 - Add a mochitest to ensure Sanitizer clears data for all containers
  */
 
+if (Services.prefs.getBoolPref("fission.autostart")) {
+  requestLongerTimeout(4);
+}
+
 const CC = Components.Constructor;
 
 const TEST_DOMAIN = "http://example.net/";

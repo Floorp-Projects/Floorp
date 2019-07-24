@@ -1,3 +1,7 @@
+if (Services.prefs.getBoolPref("fission.autostart")) {
+  requestLongerTimeout(2);
+}
+
 add_task(async function setup() {
   Services.prefs.setBoolPref("privacy.firstparty.isolate", true);
   Services.prefs.setBoolPref("signon.management.page.enabled", true);
