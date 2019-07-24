@@ -1155,6 +1155,7 @@ WebConsoleActor.prototype = {
     const timestamp = Date.now();
 
     const evalOptions = {
+      bindObjectActor: request.bindObjectActor,
       frameActor: request.frameActor,
       url: request.url,
       selectedNodeActor: request.selectedNodeActor,

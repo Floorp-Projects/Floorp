@@ -152,6 +152,7 @@ const webconsoleSpecPrototype = {
     evaluateJS: {
       request: {
         text: Option(0, "string"),
+        bindObjectActor: Option(0, "string"),
         frameActor: Option(0, "string"),
         url: Option(0, "string"),
         selectedNodeActor: Option(0, "string"),
@@ -163,6 +164,7 @@ const webconsoleSpecPrototype = {
     evaluateJSAsync: {
       request: {
         text: Option(0, "string"),
+        bindObjectActor: Option(0, "string"),
         frameActor: Option(0, "string"),
         url: Option(0, "string"),
         selectedNodeActor: Option(0, "string"),
