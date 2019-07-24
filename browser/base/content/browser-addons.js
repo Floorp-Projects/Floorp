@@ -443,7 +443,7 @@ var gXPInstallObserver = {
       PopupNotifications.getNotification(id, browser)
     ).filter(notification => notification != null);
 
-    PopupNotifications.remove(notifications);
+    PopupNotifications.remove(notifications, true);
   },
 
   observe(aSubject, aTopic, aData) {

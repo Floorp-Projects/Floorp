@@ -625,7 +625,7 @@ var PermissionPromptPrototype = {
       options.hideClose = true;
     }
 
-    options.eventCallback = (topic, nextRemovalReason) => {
+    options.eventCallback = (topic, nextRemovalReason, isCancel) => {
       // When the docshell of the browser is aboout to be swapped to another one,
       // the "swapping" event is called. Returning true causes the notification
       // to be moved to the new browser.
@@ -652,6 +652,9 @@ var PermissionPromptPrototype = {
             this._buttonAction,
             nextRemovalReason
           );
+        }
+        if (isCancel) {
+          this.cancel();
         }
         this.onAfterShow();
       }

@@ -346,20 +346,24 @@ PopupNotifications.prototype = {
   },
 
   /**
-   * Retrieve a Notification object associated with the browser/ID pair.
-   * @param id
-   *        The Notification ID to search for.
-   * @param browser
+   * Retrieve one or many Notification object/s associated with the browser/ID pair.
+   * @param {string|string[]} id
+   *        The Notification ID or an array of IDs to search for.
+   * @param [browser]
    *        The browser whose notifications should be searched. If null, the
    *        currently selected browser's notifications will be searched.
    *
-   * @returns the corresponding Notification object, or null if no such
+   * @returns {Notification|Notification[]|null} If passed a single id, returns the corresponding Notification object, or null if no such
    *          notification exists.
+   *          If passed an id array, returns an array of Notification objects which match the ids.
    */
   getNotification: function PopupNotifications_getNotification(id, browser) {
     let notifications = this._getNotificationsForBrowser(
       browser || this.tabbrowser.selectedBrowser
     );
+    if (Array.isArray(id)) {
+      return notifications.filter(x => id.includes(x.id));
+    }
     return notifications.find(x => x.id == id) || null;
   },
 
@@ -732,15 +736,18 @@ PopupNotifications.prototype = {
   /**
    * Removes one or many Notifications.
    * @param {Notification|Notification[]} notification - The Notification object/s to remove.
+   * @param {Boolean} [isCancel] - Whether to signal,  in the notification event, that removal
+   *  should be treated as cancel. This is currently used to cancel permission requests
+   *  when their Notifications are removed.
    */
-  remove: function PopupNotifications_remove(notification) {
+  remove: function PopupNotifications_remove(notification, isCancel = false) {
     let notificationArray = Array.isArray(notification)
       ? notification
       : [notification];
     let activeBrowser;
 
     notificationArray.forEach(n => {
-      this._remove(n);
+      this._remove(n, isCancel);
       if (!activeBrowser && this._isActiveBrowser(n.browser)) {
         activeBrowser = n.browser;
       }
@@ -796,7 +803,10 @@ PopupNotifications.prototype = {
       : [];
   },
 
-  _remove: function PopupNotifications_removeHelper(notification) {
+  _remove: function PopupNotifications_removeHelper(
+    notification,
+    isCancel = false
+  ) {
     // This notification may already be removed, in which case let's just fail
     // silently.
     let notifications = this._getNotificationsForBrowser(notification.browser);
@@ -818,7 +828,8 @@ PopupNotifications.prototype = {
     this._fireCallback(
       notification,
       NOTIFICATION_EVENT_REMOVED,
-      this.nextRemovalReason
+      this.nextRemovalReason,
+      isCancel
     );
   },
 

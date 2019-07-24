@@ -572,7 +572,7 @@ function prompt(aBrowser, aRequest) {
     name: getHostOrExtensionName(principal.URI),
     persistent: true,
     hideClose: true,
-    eventCallback(aTopic, aNewBrowser) {
+    eventCallback(aTopic, aNewBrowser, isCancel) {
       if (aTopic == "swapping") {
         return true;
       }
@@ -600,6 +600,11 @@ function prompt(aBrowser, aRequest) {
           );
           menupopup._commandEventListener = null;
         }
+      }
+
+      // If the notification has been cancelled (e.g. due to entering full-screen), also cancel the webRTC request
+      if (aTopic == "removed" && notification && isCancel) {
+        denyRequest(notification.browser, aRequest);
       }
 
       if (aTopic != "showing") {
