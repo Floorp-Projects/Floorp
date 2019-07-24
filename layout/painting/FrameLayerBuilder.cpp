@@ -4294,6 +4294,7 @@ nsIntRegion ContainerState::ComputeOpaqueRect(
     bool* aOpaqueForAnimatedGeometryRootParent) {
   bool snapOpaque;
   nsRegion opaque = aItem->GetOpaqueRegion(mBuilder, &snapOpaque);
+  MOZ_ASSERT(!opaque.IsComplex());
   if (opaque.IsEmpty()) {
     return nsIntRegion();
   }
@@ -4314,7 +4315,7 @@ nsIntRegion ContainerState::ComputeOpaqueRect(
   // etc will mess us up (and opaque contributions from other containers are
   // not needed).
   if (!nsLayoutUtils::GetCrossDocParentFrame(mContainerFrame)) {
-    mBuilder->AddWindowOpaqueRegion(opaqueClipped);
+    mBuilder->AddWindowOpaqueRegion(aItem->Frame(), opaqueClipped.GetBounds());
   }
   opaquePixels = ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
 
