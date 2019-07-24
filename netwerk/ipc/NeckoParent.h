@@ -228,7 +228,7 @@ class NeckoParent : public PNeckoParent {
       const Maybe<LoadInfoArgs>& aLoadInfo);
 
   bool DeallocPClassifierDummyChannelParent(
-      PClassifierDummyChannelParent* aParent);
+      PClassifierDummyChannelParent* aChild);
 
   virtual mozilla::ipc::IPCResult RecvPClassifierDummyChannelConstructor(
       PClassifierDummyChannelParent* aActor, nsIURI* aURI,
@@ -240,13 +240,6 @@ class NeckoParent : public PNeckoParent {
 
   mozilla::ipc::IPCResult RecvEnsureHSTSData(
       EnsureHSTSDataResolver&& aResolver);
-
-  PProxyConfigLookupParent* AllocPProxyConfigLookupParent();
-
-  virtual mozilla::ipc::IPCResult RecvPProxyConfigLookupConstructor(
-      PProxyConfigLookupParent* aActor) override;
-
-  bool DeallocPProxyConfigLookupParent(PProxyConfigLookupParent* aActor);
 };
 
 }  // namespace net
