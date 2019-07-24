@@ -7189,36 +7189,6 @@ class MTypedArrayElementShift : public MUnaryInstruction,
   void computeRange(TempAllocator& alloc) override;
 };
 
-class MSetDisjointTypedElements : public MTernaryInstruction,
-                                  public NoTypePolicy::Data {
-  explicit MSetDisjointTypedElements(MDefinition* target,
-                                     MDefinition* targetOffset,
-                                     MDefinition* source)
-      : MTernaryInstruction(classOpcode, target, targetOffset, source) {
-    MOZ_ASSERT(target->type() == MIRType::Object);
-    MOZ_ASSERT(targetOffset->type() == MIRType::Int32);
-    MOZ_ASSERT(source->type() == MIRType::Object);
-    setResultType(MIRType::None);
-  }
-
- public:
-  INSTRUCTION_HEADER(SetDisjointTypedElements)
-  NAMED_OPERANDS((0, target), (1, targetOffset), (2, source))
-
-  static MSetDisjointTypedElements* New(TempAllocator& alloc,
-                                        MDefinition* target,
-                                        MDefinition* targetOffset,
-                                        MDefinition* source) {
-    return new (alloc) MSetDisjointTypedElements(target, targetOffset, source);
-  }
-
-  AliasSet getAliasSet() const override {
-    return AliasSet::Store(AliasSet::UnboxedElement);
-  }
-
-  ALLOW_CLONE(MSetDisjointTypedElements)
-};
-
 // Load a binary data object's "elements", which is just its opaque
 // binary data space. Eventually this should probably be
 // unified with `MTypedArrayElements`.

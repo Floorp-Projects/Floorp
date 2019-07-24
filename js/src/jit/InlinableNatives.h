@@ -152,7 +152,6 @@
   _(IntrinsicPossiblyWrappedTypedArrayLength)      \
   _(IntrinsicTypedArrayByteOffset)                 \
   _(IntrinsicTypedArrayElementShift)               \
-  _(IntrinsicSetDisjointTypedElements)             \
                                                    \
   _(IntrinsicObjectIsTypedObject)                  \
   _(IntrinsicObjectIsTransparentTypedObject)       \

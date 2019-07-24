@@ -144,6 +144,7 @@ class Message extends Component {
   onLearnMoreClick(e) {
     const { exceptionDocURL } = this.props;
     this.props.serviceContainer.openLink(exceptionDocURL, e);
+    e.preventDefault();
   }
 
   toggleMessage(e) {
@@ -428,6 +429,7 @@ class Message extends Component {
       learnMore = dom.a(
         {
           className: "learn-more-link webconsole-learn-more-link",
+          href: exceptionDocURL,
           title: exceptionDocURL.split("?")[0],
           onClick: this.onLearnMoreClick,
         },
