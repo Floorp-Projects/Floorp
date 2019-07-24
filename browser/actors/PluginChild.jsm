@@ -6,22 +6,15 @@
 
 var EXPORTED_SYMBOLS = ["PluginChild"];
 
-const { ActorChild } = ChromeUtils.import(
-  "resource://gre/modules/ActorChild.jsm"
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
 );
-
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { BrowserUtils } = ChromeUtils.import(
   "resource://gre/modules/BrowserUtils.jsm"
 );
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "ContextMenuChild",
-  "resource:///actors/ContextMenuChild.jsm"
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
@@ -29,10 +22,11 @@ XPCOMUtils.defineLazyGetter(this, "gNavigatorBundle", function() {
   return Services.strings.createBundle(url);
 });
 
-ChromeUtils.defineModuleGetter(
+XPCOMUtils.defineLazyServiceGetter(
   this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
+  "gPluginHost",
+  "@mozilla.org/plugin/host;1",
+  "nsIPluginHost"
 );
 
 const OVERLAY_DISPLAY = {
@@ -44,67 +38,47 @@ const OVERLAY_DISPLAY = {
   FULL: 5, // The full overlay: 48x48 plugin icon, close button and label
 };
 
-class PluginChild extends ActorChild {
-  constructor(dispatcher) {
-    super(dispatcher);
+// This gets sent through the content process message manager because the parent
+// can't know exactly which child needs to hear about the progress of the
+// submission, so we listen "manually" on the CPMM instead of through the actor
+// definition.
+const kSubmitMsg = "PluginParent:NPAPIPluginCrashReportSubmitted";
 
-    // Cache of plugin actions for the current page.
-    this.pluginData = new Map();
+class PluginChild extends JSWindowActorChild {
+  constructor() {
+    super();
+
     // Cache of plugin crash information sent from the parent
     this.pluginCrashData = new Map();
+    Services.cpmm.addMessageListener(kSubmitMsg, this);
+  }
 
-    this.mm.addEventListener("pagehide", this, {
-      capture: true,
-      mozSystemGroup: true,
-    });
-    this.mm.addEventListener("pageshow", this, {
-      capture: true,
-      mozSystemGroup: true,
-    });
+  willDestroy() {
+    Services.cpmm.removeMessageListener(kSubmitMsg, this);
+    if (this._addedListeners) {
+      this.contentWindow.removeEventListener("pagehide", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+      this.contentWindow.removeEventListener("pageshow", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+    }
   }
 
   receiveMessage(msg) {
     switch (msg.name) {
-      case "BrowserPlugins:ActivatePlugins":
-        this.activatePlugins(msg.data.pluginInfo, msg.data.newState);
+      case "PluginParent:ActivatePlugins":
+        this.activatePlugins(msg.data.activationInfo, msg.data.newState);
         break;
-      case "BrowserPlugins:ContextMenuCommand":
-        switch (msg.data.command) {
-          case "play":
-            this._showClickToPlayNotification(
-              ContextMenuChild.getTarget(
-                this.docShell.browsingContext,
-                msg,
-                "plugin"
-              ),
-              true
-            );
-            break;
-          case "hide":
-            this.hideClickToPlayOverlay(
-              ContextMenuChild.getTarget(
-                this.docShell.browsingContext,
-                msg,
-                "plugin"
-              )
-            );
-            break;
-        }
-        break;
-      case "BrowserPlugins:NPAPIPluginProcessCrashed":
-        this.NPAPIPluginProcessCrashed({
-          pluginName: msg.data.pluginName,
-          runID: msg.data.runID,
-          state: msg.data.state,
-        });
-        break;
-      case "BrowserPlugins:CrashReportSubmitted":
+      case "PluginParent:NPAPIPluginCrashReportSubmitted":
         this.NPAPIPluginCrashReportSubmitted({
           runID: msg.data.runID,
           state: msg.data.state,
         });
         break;
-      case "BrowserPlugins:Test:ClearCrashData":
+      case "PluginParent:Test:ClearCrashData":
         // This message should ONLY ever be sent by automated tests.
         if (Services.prefs.getBoolPref("plugins.testmode")) {
           this.pluginCrashData.clear();
@@ -120,17 +94,17 @@ class PluginChild extends ActorChild {
         if (
           type == "cannot-play" &&
           this.haveShownNotification &&
-          aSubject.top.document == this.content.document &&
+          aSubject.top.document == this.document &&
           data.formats.toLowerCase().includes("application/x-mpegurl", 0)
         ) {
-          this.content.pluginRequiresReload = true;
+          this.contentWindow.pluginRequiresReload = true;
         }
     }
   }
 
   onPageShow(event) {
     // Ignore events that aren't from the main document.
-    if (!this.content || event.target != this.content.document) {
+    if (!this.contentWindow || event.target != this.document) {
       return;
     }
 
@@ -144,7 +118,7 @@ class PluginChild extends ActorChild {
 
   onPageHide(event) {
     // Ignore events that aren't from the main document.
-    if (!this.content || event.target != this.content.document) {
+    if (!this.contentWindow || event.target != this.document) {
       return;
     }
 
@@ -152,80 +126,34 @@ class PluginChild extends ActorChild {
     this.haveShownNotification = false;
   }
 
-  getPluginUI(plugin, anonid) {
+  getPluginUI(pluginElement, anonid) {
     if (
-      plugin.openOrClosedShadowRoot &&
-      plugin.openOrClosedShadowRoot.isUAWidget()
+      pluginElement.openOrClosedShadowRoot &&
+      pluginElement.openOrClosedShadowRoot.isUAWidget()
     ) {
-      return plugin.openOrClosedShadowRoot.getElementById(anonid);
+      return pluginElement.openOrClosedShadowRoot.getElementById(anonid);
     }
     return null;
   }
 
   _getPluginInfo(pluginElement) {
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-      Ci.nsIPluginHost
-    );
     pluginElement.QueryInterface(Ci.nsIObjectLoadingContent);
-
-    let tagMimetype;
-    let pluginName = gNavigatorBundle.GetStringFromName(
-      "pluginInfo.unknownPlugin"
-    );
-    let pluginTag = null;
-    let permissionString = null;
-    let fallbackType = null;
-    let blocklistState = null;
-
-    tagMimetype = pluginElement.actualType;
-    if (tagMimetype == "") {
-      tagMimetype = pluginElement.type;
-    }
-
     if (this.isKnownPlugin(pluginElement)) {
-      pluginTag = pluginHost.getPluginTagForType(pluginElement.actualType);
-      pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
-
-      // Convert this from nsIPluginTag so it can be serialized.
-      let properties = [
-        "name",
-        "description",
-        "filename",
-        "version",
-        "enabledState",
-        "niceName",
-      ];
-      let pluginTagCopy = {};
-      for (let prop of properties) {
-        pluginTagCopy[prop] = pluginTag[prop];
-      }
-      pluginTag = pluginTagCopy;
-
-      permissionString = pluginHost.getPermissionStringForType(
+      let pluginTag = gPluginHost.getPluginTagForType(pluginElement.actualType);
+      let pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
+      let fallbackType = pluginElement.defaultFallbackType;
+      let permissionString = gPluginHost.getPermissionStringForType(
         pluginElement.actualType
       );
-      fallbackType = pluginElement.defaultFallbackType;
-      blocklistState = pluginHost.getBlocklistStateForType(
-        pluginElement.actualType
-      );
-      // Make state-softblocked == state-notblocked for our purposes,
-      // they have the same UI. STATE_OUTDATED should not exist for plugin
-      // items, but let's alias it anyway, just in case.
-      if (
-        blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED ||
-        blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED
-      ) {
-        blocklistState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-      }
+      return { pluginTag, pluginName, fallbackType, permissionString };
     }
-
     return {
-      mimetype: tagMimetype,
-      pluginName,
-      pluginTag,
-      permissionString,
-      fallbackType,
-      blocklistState,
+      fallbackType: null,
+      permissionString: null,
+      pluginName: gNavigatorBundle.GetStringFromName(
+        "pluginInfo.unknownPlugin"
+      ),
+      pluginTag: null,
     };
   }
 
@@ -235,60 +163,24 @@ class PluginChild extends ActorChild {
    * nsIObjectLoadingContent. This only should happen if the plugin is
    * click-to-play (see bug 1186948).
    */
-  _getPluginInfoForTag(pluginTag, tagMimetype) {
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-      Ci.nsIPluginHost
-    );
-
-    let pluginName = gNavigatorBundle.GetStringFromName(
-      "pluginInfo.unknownPlugin"
-    );
-    let permissionString = null;
-    let blocklistState = null;
-
+  _getPluginInfoForTag(pluginTag) {
+    // Since we should only have entered _getPluginInfoForTag when
+    // examining a click-to-play plugin, we can safely hard-code
+    // this fallback type, since we don't actually have an
+    // nsIObjectLoadingContent to check.
+    let fallbackType = Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY;
     if (pluginTag) {
-      pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
-
-      permissionString = pluginHost.getPermissionStringForTag(pluginTag);
-      blocklistState = pluginTag.blocklistState;
-
-      // Convert this from nsIPluginTag so it can be serialized.
-      let properties = [
-        "name",
-        "description",
-        "filename",
-        "version",
-        "enabledState",
-        "niceName",
-      ];
-      let pluginTagCopy = {};
-      for (let prop of properties) {
-        pluginTagCopy[prop] = pluginTag[prop];
-      }
-      pluginTag = pluginTagCopy;
-
-      // Make state-softblocked == state-notblocked for our purposes,
-      // they have the same UI. STATE_OUTDATED should not exist for plugin
-      // items, but let's alias it anyway, just in case.
-      if (
-        blocklistState == Ci.nsIBlocklistService.STATE_SOFTBLOCKED ||
-        blocklistState == Ci.nsIBlocklistService.STATE_OUTDATED
-      ) {
-        blocklistState = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
-      }
+      let pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
+      let permissionString = gPluginHost.getPermissionStringForTag(pluginTag);
+      return { pluginTag, pluginName, permissionString, fallbackType };
     }
-
     return {
-      mimetype: tagMimetype,
-      pluginName,
-      pluginTag,
-      permissionString,
-      // Since we should only have entered _getPluginInfoForTag when
-      // examining a click-to-play plugin, we can safely hard-code
-      // this fallback type, since we don't actually have an
-      // nsIObjectLoadingContent to check.
-      fallbackType: Ci.nsIObjectLoadingContent.PLUGIN_CLICK_TO_PLAY,
-      blocklistState,
+      fallbackType,
+      permissionString: null,
+      pluginName: gNavigatorBundle.GetStringFromName(
+        "pluginInfo.unknownPlugin"
+      ),
+      pluginTag: null,
     };
   }
 
@@ -337,8 +229,7 @@ class PluginChild extends ActorChild {
     }
 
     let overlayDisplay = OVERLAY_DISPLAY.FULL;
-    let contentWindow = plugin.ownerGlobal;
-    let cwu = contentWindow.windowUtils;
+    let cwu = plugin.ownerGlobal.windowUtils;
 
     // Is the <object>'s size too small to hold what we want to show?
     let pluginRect = flushLayout
@@ -501,6 +392,28 @@ class PluginChild extends ActorChild {
   }
 
   handleEvent(event) {
+    // Ignore events for other frames.
+    let eventDoc = event.target.ownerDocument || event.target.document;
+    if (eventDoc && eventDoc != this.document) {
+      return;
+    }
+    if (!this._addedListeners) {
+      // Only add pageshow/pagehide listeners here. We don't want this actor
+      // to be instantiated for every frame, we only care if a plugin actually
+      // gets used in a frame. So we don't add these listeners in the actor
+      // specification, but only at runtime once one of our Plugin* events
+      // fires.
+      this.contentWindow.addEventListener("pagehide", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+      this.contentWindow.addEventListener("pageshow", this, {
+        capture: true,
+        mozSystemGroup: true,
+      });
+      this._addedListeners = true;
+    }
+
     let eventType = event.type;
 
     if (eventType == "pagehide") {
@@ -530,15 +443,12 @@ class PluginChild extends ActorChild {
 
     if (eventType == "HiddenPlugin") {
       let pluginTag = event.tag.QueryInterface(Ci.nsIPluginTag);
-      if (event.target.defaultView.top.document != this.content.document) {
-        return;
-      }
-      this._showClickToPlayNotification(pluginTag, false);
+      this.showClickToPlayNotification(pluginTag, false);
     }
 
-    let plugin = event.target;
+    let pluginElement = event.target;
 
-    if (!(plugin instanceof Ci.nsIObjectLoadingContent)) {
+    if (!(pluginElement instanceof Ci.nsIObjectLoadingContent)) {
       return;
     }
 
@@ -546,14 +456,14 @@ class PluginChild extends ActorChild {
       // The plugin binding fires this event when it is created.
       // As an untrusted event, ensure that this object actually has a binding
       // and make sure we don't handle it twice
-      let overlay = this.getPluginUI(plugin, "main");
+      let overlay = this.getPluginUI(pluginElement, "main");
       if (!overlay || overlay._bindingHandled) {
         return;
       }
       overlay._bindingHandled = true;
 
       // Lookup the handler for this binding
-      eventType = this._getBindingType(plugin);
+      eventType = this._getBindingType(pluginElement);
       if (!eventType) {
         // Not all bindings have handlers
         return;
@@ -563,7 +473,7 @@ class PluginChild extends ActorChild {
     let shouldShowNotification = false;
     switch (eventType) {
       case "PluginCrashed":
-        this.onPluginCrashed(plugin, event);
+        this.onPluginCrashed(pluginElement, event);
         break;
 
       case "PluginNotFound": {
@@ -577,25 +487,25 @@ class PluginChild extends ActorChild {
         break;
 
       case "PluginVulnerableUpdatable":
-        let updateLink = this.getPluginUI(plugin, "checkForUpdatesLink");
-        let { pluginTag } = this._getPluginInfo(plugin);
+        let updateLink = this.getPluginUI(pluginElement, "checkForUpdatesLink");
+        let { pluginTag } = this._getPluginInfo(pluginElement);
         this.addLinkClickCallback(
           updateLink,
           "forwardCallback",
           "openPluginUpdatePage",
-          pluginTag
+          pluginTag.id
         );
       /* FALLTHRU */
 
       case "PluginVulnerableNoUpdate":
       case "PluginClickToPlay":
-        this._handleClickToPlayEvent(plugin);
-        let pluginName = this._getPluginInfo(plugin).pluginName;
+        this._handleClickToPlayEvent(pluginElement);
+        let { pluginName } = this._getPluginInfo(pluginElement);
         let messageString = gNavigatorBundle.formatStringFromName(
           "PluginClickToActivate2",
           [pluginName]
         );
-        let overlayText = this.getPluginUI(plugin, "clickToPlay");
+        let overlayText = this.getPluginUI(pluginElement, "clickToPlay");
         overlayText.textContent = messageString;
         if (
           eventType == "PluginVulnerableUpdatable" ||
@@ -605,7 +515,7 @@ class PluginChild extends ActorChild {
             eventType
           );
           let vulnerabilityText = this.getPluginUI(
-            plugin,
+            pluginElement,
             "vulnerabilityStatus"
           );
           vulnerabilityText.textContent = vulnerabilityString;
@@ -614,7 +524,7 @@ class PluginChild extends ActorChild {
         break;
 
       case "PluginDisabled":
-        let manageLink = this.getPluginUI(plugin, "managePluginsLink");
+        let manageLink = this.getPluginUI(pluginElement, "managePluginsLink");
         this.addLinkClickCallback(
           manageLink,
           "forwardCallback",
@@ -629,34 +539,34 @@ class PluginChild extends ActorChild {
     }
 
     // Show the in-content UI if it's not too big. The crashed plugin handler already did this.
-    let overlay = this.getPluginUI(plugin, "main");
+    let overlay = this.getPluginUI(pluginElement, "main");
     if (eventType != "PluginCrashed") {
       if (overlay != null) {
         this.setVisibility(
-          plugin,
+          pluginElement,
           overlay,
-          this.computeAndAdjustOverlayDisplay(plugin, overlay, false)
+          this.computeAndAdjustOverlayDisplay(pluginElement, overlay, false)
         );
 
         let resizeListener = () => {
           this.setVisibility(
-            plugin,
+            pluginElement,
             overlay,
-            this.computeAndAdjustOverlayDisplay(plugin, overlay, true)
+            this.computeAndAdjustOverlayDisplay(pluginElement, overlay, true)
           );
         };
-        plugin.addEventListener("overflow", resizeListener);
-        plugin.addEventListener("underflow", resizeListener);
+        pluginElement.addEventListener("overflow", resizeListener);
+        pluginElement.addEventListener("underflow", resizeListener);
       }
     }
 
-    let closeIcon = this.getPluginUI(plugin, "closeIcon");
+    let closeIcon = this.getPluginUI(pluginElement, "closeIcon");
     if (closeIcon) {
       closeIcon.addEventListener(
         "click",
         clickEvent => {
           if (clickEvent.button == 0 && clickEvent.isTrusted) {
-            this.hideClickToPlayOverlay(plugin);
+            this.hideClickToPlayOverlay(pluginElement);
             overlay.setAttribute("dismissed", "true");
           }
         },
@@ -665,7 +575,7 @@ class PluginChild extends ActorChild {
     }
 
     if (shouldShowNotification) {
-      this._showClickToPlayNotification(plugin, false);
+      this.showClickToPlayNotification(pluginElement, false);
     }
   }
 
@@ -685,10 +595,7 @@ class PluginChild extends ActorChild {
       return false;
     }
 
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-      Ci.nsIPluginHost
-    );
-    let permissionString = pluginHost.getPermissionStringForType(
+    let permissionString = gPluginHost.getPermissionStringForType(
       objLoadingContent.actualType
     );
     let principal = objLoadingContent.ownerGlobal.top.document.nodePrincipal;
@@ -710,18 +617,18 @@ class PluginChild extends ActorChild {
     );
   }
 
-  hideClickToPlayOverlay(plugin) {
-    let overlay = this.getPluginUI(plugin, "main");
+  hideClickToPlayOverlay(pluginElement) {
+    let overlay = this.getPluginUI(pluginElement, "main");
     if (overlay) {
       overlay.classList.remove("visible");
     }
   }
 
   // Forward a link click callback to the chrome process.
-  forwardCallback(name, pluginTag) {
-    this.mm.sendAsyncMessage("PluginContent:LinkClickCallback", {
+  forwardCallback(name, pluginId) {
+    this.sendAsyncMessage("PluginContent:LinkClickCallback", {
       name,
-      pluginTag,
+      pluginId,
     });
   }
 
@@ -754,7 +661,7 @@ class PluginChild extends ActorChild {
       keyVals.PluginContentURL = plugin.ownerDocument.URL;
     }
 
-    this.mm.sendAsyncMessage("PluginContent:SubmitReport", {
+    this.sendAsyncMessage("PluginContent:SubmitReport", {
       runID,
       keyVals,
       submitURLOptIn,
@@ -762,22 +669,19 @@ class PluginChild extends ActorChild {
   }
 
   reloadPage() {
-    this.content.location.reload();
+    this.contentWindow.location.reload();
   }
 
   // Event listener for click-to-play plugins.
   _handleClickToPlayEvent(plugin) {
     let doc = plugin.ownerDocument;
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-      Ci.nsIPluginHost
-    );
     let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     // guard against giving pluginHost.getPermissionStringForType a type
     // not associated with any known plugin
     if (!this.isKnownPlugin(objLoadingContent)) {
       return;
     }
-    let permissionString = pluginHost.getPermissionStringForType(
+    let permissionString = gPluginHost.getPermissionStringForType(
       objLoadingContent.actualType
     );
     let principal = doc.defaultView.top.document.nodePrincipal;
@@ -819,16 +723,14 @@ class PluginChild extends ActorChild {
       event.button == 0 &&
       event.isTrusted
     ) {
-      this._showClickToPlayNotification(plugin, true);
+      this.showClickToPlayNotification(plugin, true);
       event.stopPropagation();
       event.preventDefault();
     }
   }
 
   reshowClickToPlayNotification() {
-    let contentWindow = this.content;
-    let cwu = contentWindow.windowUtils;
-    let plugins = cwu.plugins;
+    let { plugins } = this.contentWindow.windowUtils;
     for (let plugin of plugins) {
       let overlay = this.getPluginUI(plugin, "main");
       if (overlay) {
@@ -839,19 +741,14 @@ class PluginChild extends ActorChild {
         this._handleClickToPlayEvent(plugin);
       }
     }
-    this._showClickToPlayNotification(null, false);
+    this.showClickToPlayNotification(null, false);
   }
 
   /**
    * Activate the plugins that the user has specified.
    */
-  activatePlugins(pluginInfo, newState) {
-    let contentWindow = this.content;
-    let cwu = contentWindow.windowUtils;
-    let plugins = cwu.plugins;
-    let pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-      Ci.nsIPluginHost
-    );
+  activatePlugins(activationInfo, newState) {
+    let { plugins } = this.contentWindow.windowUtils;
 
     let pluginFound = false;
     for (let plugin of plugins) {
@@ -860,8 +757,8 @@ class PluginChild extends ActorChild {
         continue;
       }
       if (
-        pluginInfo.permissionString ==
-        pluginHost.getPermissionStringForType(plugin.actualType)
+        activationInfo.permissionString ==
+        gPluginHost.getPermissionStringForType(plugin.actualType)
       ) {
         let overlay = this.getPluginUI(plugin, "main");
         pluginFound = true;
@@ -873,7 +770,7 @@ class PluginChild extends ActorChild {
           if (overlay) {
             overlay.addEventListener("click", this, true);
           }
-          plugin.pluginFallbackTypeOverride = pluginInfo.fallbackType;
+          plugin.pluginFallbackTypeOverride = activationInfo.fallbackType;
           plugin.reload(true);
         } else if (this.canActivatePlugin(plugin)) {
           if (overlay) {
@@ -891,45 +788,42 @@ class PluginChild extends ActorChild {
       newState != "block" &&
       newState != "blockalways" &&
       newState != "continueblocking" &&
-      (!pluginFound || contentWindow.pluginRequiresReload)
+      (!pluginFound || this.contentWindow.pluginRequiresReload)
     ) {
       this.reloadPage();
     }
   }
 
-  _showClickToPlayNotification(plugin, showNow) {
+  showClickToPlayNotification(pluginElOrTag, showNow) {
     let plugins = [];
 
-    // If plugin is null, that means the user has navigated back to a page with
+    // If pluginElOrTag is null, that means the user has navigated back to a page with
     // plugins, and we need to collect all the plugins.
-    if (plugin === null) {
-      let contentWindow = this.content;
-      let cwu = contentWindow.windowUtils;
+    if (pluginElOrTag === null) {
       // cwu.plugins may contain non-plugin <object>s, filter them out
-      plugins = cwu.plugins.filter(
+      plugins = this.contentWindow.windowUtils.plugins.filter(
         p =>
           p.getContentTypeForMIMEType(p.actualType) ==
           Ci.nsIObjectLoadingContent.TYPE_PLUGIN
       );
 
       if (plugins.length == 0) {
-        this.removeNotification("click-to-play-plugins");
+        this.removeNotification();
         return;
       }
     } else {
-      plugins = [plugin];
+      plugins = [pluginElOrTag];
     }
 
-    let pluginData = this.pluginData;
-
-    let principal = this.content.document.nodePrincipal;
-    let location = this.content.document.location.href;
-
+    // Iterate over the plugins and ensure we have one value for each
+    // permission string - though in principle there should only be 1 anyway
+    // (for flash), in practice there are still some automated tests where we
+    // could encounter other ones.
+    let permissionMap = new Map();
     for (let p of plugins) {
       let pluginInfo;
       if (p instanceof Ci.nsIPluginTag) {
-        let mimeType = p.getMimeTypes() > 0 ? p.getMimeTypes()[0] : null;
-        pluginInfo = this._getPluginInfoForTag(p, mimeType);
+        pluginInfo = this._getPluginInfoForTag(p);
       } else {
         pluginInfo = this._getPluginInfo(p);
       }
@@ -937,47 +831,37 @@ class PluginChild extends ActorChild {
         Cu.reportError("No permission string for active plugin.");
         continue;
       }
-      if (pluginData.has(pluginInfo.permissionString)) {
+      if (!permissionMap.has(pluginInfo.permissionString)) {
+        permissionMap.set(pluginInfo.permissionString, pluginInfo);
         continue;
       }
-
-      let permissionObj = Services.perms.getPermissionObject(
-        principal,
-        pluginInfo.permissionString,
-        false
+    }
+    if (permissionMap.size > 1) {
+      Cu.reportError(
+        "Err, we're not meant to have more than 1 plugin anymore!"
       );
-      if (permissionObj) {
-        pluginInfo.pluginPermissionPrePath =
-          permissionObj.principal.originNoSuffix;
-        pluginInfo.pluginPermissionType = permissionObj.expireType;
-      } else {
-        pluginInfo.pluginPermissionPrePath = principal.originNoSuffix;
-        pluginInfo.pluginPermissionType = undefined;
-      }
-
-      this.pluginData.set(pluginInfo.permissionString, pluginInfo);
+    }
+    if (!permissionMap.size) {
+      return;
     }
 
     this.haveShownNotification = true;
 
-    this.mm.sendAsyncMessage(
-      "PluginContent:ShowClickToPlayNotification",
-      {
-        plugins: [...this.pluginData.values()],
-        showNow,
-        location,
-      },
-      null,
-      principal
-    );
+    let permissionItem = permissionMap.values().next().value;
+    let plugin = {
+      id: permissionItem.pluginTag.id,
+      fallbackType: permissionItem.fallbackType,
+    };
+
+    let msg = "PluginContent:ShowClickToPlayNotification";
+    this.sendAsyncMessage(msg, { plugin, showNow });
   }
 
-  removeNotification(name) {
-    this.mm.sendAsyncMessage("PluginContent:RemoveNotification", { name });
+  removeNotification() {
+    this.sendAsyncMessage("PluginContent:RemoveNotification");
   }
 
   clearPluginCaches() {
-    this.pluginData.clear();
     this.pluginCrashData.clear();
   }
 
@@ -1031,15 +915,16 @@ class PluginChild extends ActorChild {
    * fired for both NPAPI and Gecko Media plugins. In the latter case, the
    * target of the event is the document that the GMP is being used in.
    */
-  onPluginCrashed(target, aEvent) {
-    if (!(aEvent instanceof this.content.PluginCrashedEvent)) {
+  async onPluginCrashed(target, aEvent) {
+    if (!(aEvent instanceof this.contentWindow.PluginCrashedEvent)) {
       return;
     }
 
-    let fullScreenElement = this.content.document.mozFullScreenElement;
+    let fullScreenElement = this.contentWindow.top.document
+      .mozFullScreenElement;
     if (fullScreenElement) {
       if (this.isWithinFullScreenElement(fullScreenElement, target)) {
-        this.content.document.mozCancelFullScreen();
+        this.contentWindow.top.document.mozCancelFullScreen();
       }
     }
 
@@ -1055,102 +940,61 @@ class PluginChild extends ActorChild {
     let crashData = this.pluginCrashData.get(target.runID);
     if (!crashData) {
       // We haven't received information from the parent yet about
-      // this crash, so we should hold off showing the crash report
-      // UI.
-      return;
-    }
-
-    crashData.instances.delete(target);
-    if (crashData.instances.length == 0) {
-      this.pluginCrashData.delete(target.runID);
+      // this crash, so go get it:
+      crashData = await this.sendQuery("PluginContent:GetCrashData", {
+        runID: target.runID,
+      });
+      this.pluginCrashData.set(target.runID, crashData);
     }
 
     this.setCrashedNPAPIPluginState({
-      plugin: target,
+      pluginElement: target,
       state: crashData.state,
-      message: crashData.message,
+      pluginName: crashData.pluginName,
     });
   }
 
-  NPAPIPluginProcessCrashed({ pluginName, runID, state }) {
-    let message = gNavigatorBundle.formatStringFromName(
-      "crashedpluginsMessage.title",
-      [pluginName]
-    );
-
-    let contentWindow = this.content;
-    let cwu = contentWindow.windowUtils;
-    let plugins = cwu.plugins;
-
-    for (let plugin of plugins) {
-      if (
-        plugin instanceof Ci.nsIObjectLoadingContent &&
-        plugin.runID == runID
-      ) {
-        // The parent has told us that the plugin process has died.
-        // It's possible that this content process hasn't yet noticed,
-        // in which case we need to stash this data around until the
-        // PluginCrashed events get sent up.
-        if (
-          plugin.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CRASHED
-        ) {
-          // This plugin has already been put into the crashed state by the
-          // content process, so we can tweak its crash UI without delay.
-          this.setCrashedNPAPIPluginState({ plugin, state, message });
-        } else {
-          // The content process hasn't yet determined that the plugin has crashed.
-          // Stash the data in our map, and throw the plugin into a WeakSet. When
-          // the PluginCrashed event fires on the <object>/<embed>, we'll retrieve
-          // the information we need from the Map and remove the instance from the
-          // WeakSet. Once the WeakSet is empty, we can clear the map.
-          if (!this.pluginCrashData.has(runID)) {
-            this.pluginCrashData.set(runID, {
-              state,
-              message,
-              instances: new WeakSet(),
-            });
-          }
-          let crashData = this.pluginCrashData.get(runID);
-          crashData.instances.add(plugin);
-        }
-      }
-    }
-  }
-
-  setCrashedNPAPIPluginState({ plugin, state, message }) {
+  setCrashedNPAPIPluginState({ pluginElement, state, pluginName }) {
     // Force a layout flush so the binding is attached.
-    plugin.clientTop;
-    let overlay = this.getPluginUI(plugin, "main");
-    let statusDiv = this.getPluginUI(plugin, "submitStatus");
-    let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
+    pluginElement.clientTop;
+    let overlay = this.getPluginUI(pluginElement, "main");
+    let statusDiv = this.getPluginUI(pluginElement, "submitStatus");
+    let optInCB = this.getPluginUI(pluginElement, "submitURLOptIn");
 
-    this.getPluginUI(plugin, "submitButton").addEventListener(
+    this.getPluginUI(pluginElement, "submitButton").addEventListener(
       "click",
       event => {
         if (event.button != 0 || !event.isTrusted) {
           return;
         }
-        this.submitReport(plugin);
+        this.submitReport(pluginElement);
       }
     );
 
-    let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
-    optInCB.checked = pref.getBoolPref("");
+    optInCB.checked = Services.prefs.getBoolPref(
+      "dom.ipc.plugins.reportCrashURL",
+      true
+    );
 
     statusDiv.setAttribute("status", state);
 
-    let helpIcon = this.getPluginUI(plugin, "helpIcon");
+    let helpIcon = this.getPluginUI(pluginElement, "helpIcon");
     this.addLinkClickCallback(helpIcon, "openHelpPage");
 
-    let crashText = this.getPluginUI(plugin, "crashedText");
+    let crashText = this.getPluginUI(pluginElement, "crashedText");
+
+    let message = gNavigatorBundle.formatStringFromName(
+      "crashedpluginsMessage.title",
+      [pluginName]
+    );
     crashText.textContent = message;
 
-    let link = this.getPluginUI(plugin, "reloadLink");
+    let link = this.getPluginUI(pluginElement, "reloadLink");
     this.addLinkClickCallback(link, "reloadPage");
 
     // This might trigger force reflow, but plug-in crashing code path shouldn't be hot.
     let overlayDisplayState = this.computeAndAdjustOverlayDisplay(
-      plugin,
+      pluginElement,
       overlay,
       true
     );
@@ -1161,73 +1005,62 @@ class PluginChild extends ActorChild {
       statusDiv.removeAttribute("status");
 
       overlayDisplayState = this.computeAndAdjustOverlayDisplay(
-        plugin,
+        pluginElement,
         overlay,
         true
       );
     }
-    this.setVisibility(plugin, overlay, overlayDisplayState);
+    this.setVisibility(pluginElement, overlay, overlayDisplayState);
 
-    let doc = plugin.ownerDocument;
-    let runID = plugin.runID;
+    let doc = pluginElement.ownerDocument;
+    let runID = pluginElement.runID;
 
     if (overlayDisplayState == OVERLAY_DISPLAY.FULL) {
       doc.mozNoPluginCrashedNotification = true;
 
       // Notify others that the crash reporter UI is now ready.
       // Currently, this event is only used by tests.
-      let winUtils = this.content.windowUtils;
-      let event = new this.content.CustomEvent("PluginCrashReporterDisplayed", {
-        bubbles: true,
-      });
-      winUtils.dispatchEventToChromeOnly(plugin, event);
+      let winUtils = this.contentWindow.windowUtils;
+      let event = new this.contentWindow.CustomEvent(
+        "PluginCrashReporterDisplayed",
+        {
+          bubbles: true,
+        }
+      );
+      winUtils.dispatchEventToChromeOnly(pluginElement, event);
     } else if (!doc.mozNoPluginCrashedNotification) {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
-      this.mm.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification", {
-        messageString: message,
-        pluginID: runID,
+      this.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification", {
+        pluginCrashID: { runID },
       });
     }
   }
 
   NPAPIPluginCrashReportSubmitted({ runID, state }) {
     this.pluginCrashData.delete(runID);
-    let contentWindow = this.content;
-    let cwu = contentWindow.windowUtils;
-    let plugins = cwu.plugins;
+    let { plugins } = this.contentWindow.windowUtils;
 
-    for (let plugin of plugins) {
+    for (let pluginElement of plugins) {
       if (
-        plugin instanceof Ci.nsIObjectLoadingContent &&
-        plugin.runID == runID
+        pluginElement instanceof Ci.nsIObjectLoadingContent &&
+        pluginElement.runID == runID
       ) {
-        let statusDiv = this.getPluginUI(plugin, "submitStatus");
+        let statusDiv = this.getPluginUI(pluginElement, "submitStatus");
         statusDiv.setAttribute("status", state);
       }
     }
   }
 
   GMPCrashed(aEvent) {
-    let target = aEvent.target;
-    let pluginName = aEvent.pluginName;
-    let gmpPlugin = aEvent.gmpPlugin;
-    let pluginID = aEvent.pluginID;
-    let doc = target.document;
-
-    if (!gmpPlugin || !doc) {
+    let { target, gmpPlugin, pluginID } = aEvent;
+    if (!gmpPlugin || !target.document) {
       // TODO: Throw exception? How did we get here?
       return;
     }
 
-    let messageString = gNavigatorBundle.formatStringFromName(
-      "crashedpluginsMessage.title",
-      [pluginName]
-    );
-
-    this.mm.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification", {
-      messageString,
-      pluginID,
+    this.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification", {
+      pluginCrashID: { pluginID },
     });
   }
 }

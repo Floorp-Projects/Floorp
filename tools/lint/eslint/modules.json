@@ -37,7 +37,7 @@
   "ContactDB.jsm": ["ContactDB", "DB_NAME", "STORE_NAME", "SAVED_GETALL_STORE_NAME", "REVISION_STORE", "DB_VERSION"],
   "content-process.jsm": ["init"],
   "content.jsm": ["registerContentFrame"],
-  "ContentCrashHandlers.jsm": ["TabCrashHandler", "PluginCrashReporter", "UnsubmittedCrashHandler"],
+  "ContentCrashHandlers.jsm": ["TabCrashHandler", "SubframeCrashHandler", "UnsubmittedCrashHandler"],
   "ContentObservers.js": [],
   "ContentPrefUtils.jsm": ["ContentPref", "cbHandleResult", "cbHandleError", "cbHandleCompletion", "safeCallback", "_methodsCallableFromChild"],
   "cookies.js": ["Cookies"],

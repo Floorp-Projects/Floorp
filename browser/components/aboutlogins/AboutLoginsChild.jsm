@@ -68,6 +68,14 @@ class AboutLoginsChild extends ActorChild {
         this.mm.sendAsyncMessage("AboutLogins:OpenFAQ");
         break;
       }
+      case "AboutLoginsOpenMobileAndroid": {
+        this.mm.sendAsyncMessage("AboutLogins:OpenMobileAndroid");
+        break;
+      }
+      case "AboutLoginsOpenMobileIos": {
+        this.mm.sendAsyncMessage("AboutLogins:OpenMobileIos");
+        break;
+      }
       case "AboutLoginsOpenFeedback": {
         this.mm.sendAsyncMessage("AboutLogins:OpenFeedback");
         break;

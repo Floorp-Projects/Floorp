@@ -3371,6 +3371,17 @@ HelperThreadPool::HelperThreadPool() {
   mPool = new nsThreadPool();
   mPool->SetName(NS_LITERAL_CSTRING("JSHelperThreads"));
   mPool->SetThreadLimit(GetAndClampCPUCount());
+  // Helper threads need a larger stack size than the default nsThreadPool stack
+  // size. These values are described in detail in HelperThreads.cpp.
+  const uint32_t kDefaultHelperStackSize = 2048 * 1024 - 2 * 4096;
+
+#if defined(MOZ_TSAN)
+  const uint32_t HELPER_STACK_SIZE = 2 * kDefaultHelperStackSize;
+#else
+  const uint32_t HELPER_STACK_SIZE = kDefaultHelperStackSize;
+#endif
+
+  mPool->SetThreadStackSize(HELPER_STACK_SIZE);
 }
 
 void HelperThreadPool::Shutdown() { mPool->Shutdown(); }

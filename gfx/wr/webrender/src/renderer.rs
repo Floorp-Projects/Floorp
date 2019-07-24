@@ -1099,7 +1099,7 @@ impl TextureResolver {
                             None => &self.dummy_cache_texture,
                         };
                         device.bind_texture(sampler, texture);
-                    } else if Some(saved_index) == self.prev_pass_color.as_ref().and_then(|at| at.saved_index) {
+                    } else if Some(saved_index) == self.prev_pass_alpha.as_ref().and_then(|at| at.saved_index) {
                         let texture = match self.prev_pass_alpha {
                             Some(ref at) => &at.texture,
                             None => &self.dummy_cache_texture,

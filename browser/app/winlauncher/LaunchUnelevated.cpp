@@ -11,18 +11,10 @@
 #include "mozilla/LauncherResult.h"
 #include "mozilla/mscom/ProcessRuntime.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/ShellHeaderOnlyUtils.h"
 #include "nsWindowsHelpers.h"
 
-// For _bstr_t and _variant_t
-#include <comdef.h>
-#include <comutil.h>
-
 #include <windows.h>
-#include <exdisp.h>
-#include <objbase.h>
-#include <servprov.h>
-#include <shlobj.h>
-#include <shobjidl.h>
 
 static mozilla::LauncherResult<TOKEN_ELEVATION_TYPE> GetElevationType(
     const nsAutoHandle& aToken) {
@@ -109,78 +101,6 @@ LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
     return LAUNCHER_ERROR_FROM_HRESULT(mscom.GetHResult());
   }
 
-  // NB: Explorer is a local server, not an inproc server
-  RefPtr<IShellWindows> shellWindows;
-  HRESULT hr =
-      ::CoCreateInstance(CLSID_ShellWindows, nullptr, CLSCTX_LOCAL_SERVER,
-                         IID_IShellWindows, getter_AddRefs(shellWindows));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // 1. Find the shell view for the desktop.
-  _variant_t loc(CSIDL_DESKTOP);
-  _variant_t empty;
-  long hwnd;
-  RefPtr<IDispatch> dispDesktop;
-  hr = shellWindows->FindWindowSW(&loc, &empty, SWC_DESKTOP, &hwnd,
-                                  SWFO_NEEDDISPATCH,
-                                  getter_AddRefs(dispDesktop));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  RefPtr<IServiceProvider> servProv;
-  hr = dispDesktop->QueryInterface(IID_IServiceProvider,
-                                   getter_AddRefs(servProv));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  RefPtr<IShellBrowser> browser;
-  hr = servProv->QueryService(SID_STopLevelBrowser, IID_IShellBrowser,
-                              getter_AddRefs(browser));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  RefPtr<IShellView> activeShellView;
-  hr = browser->QueryActiveShellView(getter_AddRefs(activeShellView));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // 2. Get the automation object for the desktop.
-  RefPtr<IDispatch> dispView;
-  hr = activeShellView->GetItemObject(SVGIO_BACKGROUND, IID_IDispatch,
-                                      getter_AddRefs(dispView));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  RefPtr<IShellFolderViewDual> folderView;
-  hr = dispView->QueryInterface(IID_IShellFolderViewDual,
-                                getter_AddRefs(folderView));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // 3. Get the interface to IShellDispatch2
-  RefPtr<IDispatch> dispShell;
-  hr = folderView->get_Application(getter_AddRefs(dispShell));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  RefPtr<IShellDispatch2> shellDisp;
-  hr =
-      dispShell->QueryInterface(IID_IShellDispatch2, getter_AddRefs(shellDisp));
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  // 4. Now call IShellDispatch2::ShellExecute to ask Explorer to re-launch us.
-
   // Omit argv[0] because ShellExecute doesn't need it in params
   UniquePtr<wchar_t[]> cmdLine(MakeCommandLine(aArgc - 1, aArgv + 1));
   if (!cmdLine) {
@@ -192,12 +112,7 @@ LauncherVoidResult LaunchUnelevated(int aArgc, wchar_t* aArgv[]) {
   _variant_t operation(L"open");
   _variant_t directory;
   _variant_t showCmd(SW_SHOWNORMAL);
-  hr = shellDisp->ShellExecute(exe, args, operation, directory, showCmd);
-  if (FAILED(hr)) {
-    return LAUNCHER_ERROR_FROM_HRESULT(hr);
-  }
-
-  return Ok();
+  return ShellExecuteByExplorer(exe, args, operation, directory, showCmd);
 }
 
 LauncherResult<ElevationState> GetElevationState(

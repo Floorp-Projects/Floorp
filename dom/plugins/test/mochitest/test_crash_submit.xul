@@ -109,14 +109,16 @@ var testObserver = {
 };
 
 
-function onPluginCrashed(aEvent) {
+async function onPluginCrashed(aEvent) {
   ok(true, "Plugin crashed notification received");
   is(aEvent.type, "PluginCrashed", "event is correct type");
 
-  let submitButton = document.getAnonymousElementByAttribute(aEvent.target,
-                                                             "class",
-                                                             "submitButton") ||
-                     aEvent.target.openOrClosedShadowRoot.getElementById("submitButton");
+  await SimpleTest.promiseWaitForCondition(
+    () => aEvent.target.openOrClosedShadowRoot.getElementById("submitButton"),
+    "Waiting for submit button to exist."
+  );
+  let submitButton = aEvent.target.openOrClosedShadowRoot.getElementById("submitButton");
+
   // try to submit this report
   sendMouseEvent({type:'click'}, submitButton, window);
 }

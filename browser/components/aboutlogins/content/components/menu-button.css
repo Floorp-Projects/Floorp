@@ -26,8 +26,8 @@
   padding: 5px 0;
   background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
-  border-radius: 2px;
-  box-shadow: var(--shadow-10);
+  border-radius: 5px;
+  box-shadow: var(--shadow-30);
   min-width: max-content;
   list-style-type: none;
   display: flex;
@@ -35,23 +35,30 @@
 }
 
 .menuitem-button {
-  padding: 4px 8px;
+  padding: 2px 8px;
   /* 32px = 8px (padding) + 16px (icon) + 8px (padding) */
   padding-inline-start: 32px;
   background-repeat: no-repeat;
   background-position: left 8px center;
   background-size: 16px;
-  margin: 0;
-  border-radius: 0;
-  /* Override common.inc.css box-shadow on these buttons */
-  box-shadow: none !important;
-  text-align: start;
   -moz-context-properties: fill;
   fill: currentColor;
+
+  /* Override common.inc.css properties */
+  margin: 0;
+  border-radius: 0;
+  text-align: start;
+  min-height: initial;
 }
 
 .menuitem-button:dir(rtl) {
   background-position: right 8px center;
+}
+
+.menuitem-separator {
+  border-top-width: 2px;
+  margin-block: 5px;
+  width: 100%;
 }
 
 .menuitem-import {
@@ -63,9 +70,13 @@
 }
 
 .menuitem-feedback {
-  background-image: url("chrome://browser/content/aboutlogins/icons/feedback.svg");
+  background-image: url("chrome://browser/skin/notification-icons/desktop-notification.svg");
 }
 
 .menuitem-faq {
-  background-image: url("chrome://browser/content/aboutlogins/icons/faq.svg");
+  background-image: url("chrome://global/skin/icons/help.svg");
+}
+
+.menuitem-mobile {
+  background-image: url("chrome://browser/skin/device-phone.svg");
 }

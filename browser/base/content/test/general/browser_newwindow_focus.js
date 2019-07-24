@@ -19,10 +19,9 @@ const PAGE = `data:text/html,<a id="target" href="%23" onclick="window.open('htt
  */
 function promiseNewWindow() {
   return new Promise(resolve => {
-    let observer = (subject, topic, data) => {
+    let observer = (win, topic, data) => {
       if (topic == "domwindowopened") {
         Services.ww.unregisterNotification(observer);
-        let win = subject.QueryInterface(Ci.nsIDOMWindow);
         win.addEventListener(
           "load",
           function() {
