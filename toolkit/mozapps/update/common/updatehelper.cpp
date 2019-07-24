@@ -9,12 +9,13 @@
 #ifndef ONLY_SERVICE_LAUNCHING
 
 #  include <stdio.h>
-#  include "shlobj.h"
-#  include "updatehelper.h"
-#  include "uachelper.h"
-#  include "pathhash.h"
 #  include "mozilla/UniquePtr.h"
 #  include "nsWindowsHelpers.h"
+#  include "pathhash.h"
+#  include "shlobj.h"
+#  include "uachelper.h"
+#  include "updatehelper.h"
+#  include "updateutils_win.h"
 
 // Needed for PathAppendW
 #  include <shlwapi.h>
@@ -22,7 +23,6 @@
 using mozilla::MakeUnique;
 using mozilla::UniquePtr;
 
-BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer, LPCWSTR siblingFilePath,
                             LPCWSTR newFileName);
 
@@ -230,59 +230,6 @@ LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR* argv) {
   DWORD ret = StartServiceCommand(argc + 2, updaterServiceArgv);
   delete[] updaterServiceArgv;
   return ret;
-}
-
-/**
- * Joins a base directory path with a filename.
- *
- * @param  base  The base directory path of size MAX_PATH + 1
- * @param  extra The filename to append
- * @return TRUE if the file name was successful appended to base
- */
-BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra) {
-  if (wcslen(base) + wcslen(extra) >= MAX_PATH) {
-    return FALSE;
-  }
-
-  return PathAppendW(base, extra);
-}
-
-/**
- * Build a temporary file path whose name component is a UUID.
- *
- * @param  basePath  The base directory path for the temp file
- * @param  prefix    Optional prefix for the beginning of the file name
- * @param  tmpPath   Output full path, with the base directory and the file
- * name. Must already have been allocated with size >= MAX_PATH.
- * @return TRUE if tmpPath was successfully filled in, FALSE on errors
- */
-BOOL GetUUIDTempFilePath(LPCWSTR basePath, LPCWSTR prefix, LPWSTR tmpPath) {
-  WCHAR filename[MAX_PATH + 1] = {L"\0"};
-  if (prefix) {
-    wcsncpy(filename, prefix, MAX_PATH);
-  }
-
-  UUID tmpFileNameUuid;
-  RPC_WSTR tmpFileNameString = nullptr;
-  if (UuidCreate(&tmpFileNameUuid) != RPC_S_OK) {
-    return FALSE;
-  }
-  if (UuidToStringW(&tmpFileNameUuid, &tmpFileNameString) != RPC_S_OK) {
-    return FALSE;
-  }
-  if (!tmpFileNameString) {
-    return FALSE;
-  }
-
-  wcsncat(filename, (LPCWSTR)tmpFileNameString, MAX_PATH);
-  RpcStringFreeW(&tmpFileNameString);
-
-  wcsncpy(tmpPath, basePath, MAX_PATH);
-  if (!PathAppendSafe(tmpPath, filename)) {
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 /**
