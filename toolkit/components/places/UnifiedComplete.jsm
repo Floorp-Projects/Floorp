@@ -18,6 +18,11 @@ const QUERYTYPE_AUTOFILL_ORIGIN = 1;
 const QUERYTYPE_AUTOFILL_URL = 2;
 const QUERYTYPE_ADAPTIVE = 3;
 
+// This separator is used as an RTL-friendly way to split the title and tags.
+// It can also be used by an nsIAutoCompleteResult consumer to re-split the
+// "comment" back into the title and the tag.
+const TITLE_TAGS_SEPARATOR = " \u2013 ";
+
 // Telemetry probes.
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
@@ -2420,7 +2425,7 @@ Search.prototype = {
 
     // If we have tags and should show them, we need to add them to the title.
     if (showTags) {
-      title += UrlbarUtils.TITLE_TAGS_SEPARATOR + tags;
+      title += TITLE_TAGS_SEPARATOR + tags;
     }
 
     // We have to determine the right style to display.  Tags show the tag icon,
