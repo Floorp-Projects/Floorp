@@ -27,7 +27,7 @@ add_task(async function test_show_form() {
       });
 
       // Now crash the browser.
-      await BrowserTestUtils.crashBrowser(browser);
+      await BrowserTestUtils.crashFrame(browser);
 
       let doc = browser.contentDocument;
 
