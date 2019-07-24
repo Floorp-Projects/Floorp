@@ -8581,7 +8581,7 @@ var gCSSProperties = {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     applies_to_first_letter: true,
-    initial_values: ["0", "0.0000", "-3"],
+    initial_values: ["0", "0.0000", "-3", "0%", "-100%"],
     other_values: [
       "0.4",
       "1",
@@ -8593,8 +8593,10 @@ var gCSSProperties = {
       "3e0",
       "3e+0",
       "3e-0",
+      "50%",
+      "300%",
     ],
-    invalid_values: ["0px", "1px", "20%", "default", "auto"],
+    invalid_values: ["0px", "1px", "default", "auto"],
   },
   "shape-margin": {
     domProp: "shapeMargin",
