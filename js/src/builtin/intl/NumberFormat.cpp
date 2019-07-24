@@ -305,6 +305,21 @@ bool js::intl::NumberFormatterSkeleton::useGrouping(bool on) {
   return on || appendToken(u"group-off");
 }
 
+bool js::intl::NumberFormatterSkeleton::signDisplay(SignDisplay display) {
+  switch (display) {
+    case SignDisplay::Auto:
+      // Default, no additional tokens needed.
+      return true;
+    case SignDisplay::Always:
+      return appendToken(u"sign-always");
+    case SignDisplay::Never:
+      return appendToken(u"sign-never");
+    case SignDisplay::ExceptZero:
+      return appendToken(u"sign-except-zero");
+  }
+  MOZ_CRASH("unexpected sign display type");
+}
+
 bool js::intl::NumberFormatterSkeleton::roundingModeHalfUp() {
   return appendToken(u"rounding-mode-half-up");
 }
@@ -457,6 +472,35 @@ static UNumberFormatter* NewUNumberFormatter(
   }
   if (!skeleton.useGrouping(value.toBoolean())) {
     return nullptr;
+  }
+
+  if (!GetProperty(cx, internals, internals, cx->names().signDisplay, &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* signDisplay = value.toString()->ensureLinear(cx);
+    if (!signDisplay) {
+      return nullptr;
+    }
+
+    using SignDisplay = intl::NumberFormatterSkeleton::SignDisplay;
+
+    SignDisplay display;
+    if (StringEqualsAscii(signDisplay, "auto")) {
+      display = SignDisplay::Auto;
+    } else if (StringEqualsAscii(signDisplay, "never")) {
+      display = SignDisplay::Never;
+    } else if (StringEqualsAscii(signDisplay, "always")) {
+      display = SignDisplay::Always;
+    } else {
+      MOZ_ASSERT(StringEqualsAscii(signDisplay, "exceptZero"));
+      display = SignDisplay::ExceptZero;
+    }
+
+    if (!skeleton.signDisplay(display)) {
+      return nullptr;
+    }
   }
 
   if (!skeleton.roundingModeHalfUp()) {
@@ -614,16 +658,11 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
       return &JSAtomState::fraction;
 
     case UNUM_SIGN_FIELD: {
-      // Manual trawling through the ICU call graph appears to indicate that
-      // the basic formatting we request will never include a positive sign.
-      // But this analysis may be mistaken, so don't absolutely trust it.
-      MOZ_ASSERT(!x.isNumber() || !IsNaN(x.toNumber()),
-                 "ICU appearing not to produce positive-sign among fields, "
-                 "plus our coercing all NaNs to one with sign bit unset "
-                 "(i.e. \"positive\"), means we shouldn't reach here with a "
-                 "NaN value");
-      bool isNegative =
-          x.isNumber() ? IsNegative(x.toNumber()) : x.toBigInt()->isNegative();
+      // We coerce all NaNs to one with the sign bit unset, so all NaNs are
+      // positive in our implementation.
+      bool isNegative = x.isNumber()
+                            ? !IsNaN(x.toNumber()) && IsNegative(x.toNumber())
+                            : x.toBigInt()->isNegative();
       return isNegative ? &JSAtomState::minusSign : &JSAtomState::plusSign;
     }
 
