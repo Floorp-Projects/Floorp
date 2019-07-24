@@ -299,7 +299,7 @@ impl Runner for FirefoxRunner {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(all(not(target_os = "macos"), unix))]
 pub mod platform {
     use path::find_binary;
     use std::path::PathBuf;
