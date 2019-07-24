@@ -87,6 +87,7 @@ public class VarCache {
   private static boolean silent;
   private static int contentVersion;
   private static Map<String, Object> userAttributes;
+  private static Map<String, Object> variantDebugInfo = new HashMap<>();
 
   private static final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
   private static final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
@@ -322,25 +323,38 @@ public class VarCache {
     return hasReceivedDiffs;
   }
 
+  public static Map<String, Object> getVariantDebugInfo() {
+    return variantDebugInfo;
+  }
+
+  public static void setVariantDebugInfo(Map<String, Object> variantDebugInfo) {
+    if (variantDebugInfo != null) {
+      VarCache.variantDebugInfo = variantDebugInfo;
+    } else {
+      VarCache.variantDebugInfo = new HashMap<>();
+    }
+  }
+
   public static void loadDiffs() {
     if (Constants.isNoop()) {
       return;
     }
     Context context = Leanplum.getContext();
     SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
-    if (Request.token() == null) {
+    if (RequestOld.token() == null) {
       applyVariableDiffs(
           new HashMap<String, Object>(),
           new HashMap<String, Object>(),
           new ArrayList<Map<String, Object>>(),
           new ArrayList<Map<String, Object>>(),
           new HashMap<String, Object>(),
-          new ArrayList<Map<String, Object>>());
+          new ArrayList<Map<String, Object>>(),
+          new HashMap<String, Object>());
       return;
     }
     try {
       // Crypt functions return input text if there was a problem.
-      AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+      AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
       String variables = aesContext.decodePreference(
           defaults, Constants.Defaults.VARIABLES_KEY, "{}");
       String messages = aesContext.decodePreference(
@@ -351,17 +365,19 @@ public class VarCache {
           defaults, Constants.Defaults.EVENT_RULES_KEY, "[]");
       String regions = aesContext.decodePreference(defaults, Constants.Defaults.REGIONS_KEY, "{}");
       String variants = aesContext.decodePreference(defaults, Constants.Keys.VARIANTS, "[]");
+      String variantDebugInfo = aesContext.decodePreference(defaults, Constants.Keys.VARIANT_DEBUG_INFO, "{}");
       applyVariableDiffs(
           JsonConverter.fromJson(variables),
           JsonConverter.fromJson(messages),
           JsonConverter.<Map<String, Object>>listFromJson(new JSONArray(updateRules)),
           JsonConverter.<Map<String, Object>>listFromJson(new JSONArray(eventRules)),
           JsonConverter.fromJson(regions),
-          JsonConverter.<Map<String, Object>>listFromJson(new JSONArray(variants)));
+          JsonConverter.<Map<String, Object>>listFromJson(new JSONArray(variants)),
+          JsonConverter.fromJson(variantDebugInfo));
       String deviceId = aesContext.decodePreference(defaults, Constants.Params.DEVICE_ID, null);
       if (deviceId != null) {
         if (Util.isValidDeviceId(deviceId)) {
-          Request.setDeviceId(deviceId);
+          RequestOld.setDeviceId(deviceId);
         } else {
           Log.w("Invalid stored device id found: \"" + deviceId + "\"; discarding.");
         }
@@ -369,7 +385,7 @@ public class VarCache {
       String userId = aesContext.decodePreference(defaults, Constants.Params.USER_ID, null);
       if (userId != null) {
         if (Util.isValidUserId(userId)) {
-          Request.setUserId(userId);
+          RequestOld.setUserId(userId);
         } else {
           Log.w("Invalid stored user id found: \"" + userId + "\"; discarding.");
         }
@@ -383,13 +399,14 @@ public class VarCache {
       Log.e("Could not load variable diffs.\n" + Log.getStackTraceString(e));
     }
     userAttributes();
+    Leanplum.countAggregator().incrementCount("load_diffs");
   }
 
   public static void saveDiffs() {
     if (Constants.isNoop()) {
       return;
     }
-    if (Request.token() == null) {
+    if (RequestOld.token() == null) {
       return;
     }
     Context context = Leanplum.getContext();
@@ -397,7 +414,7 @@ public class VarCache {
     SharedPreferences.Editor editor = defaults.edit();
 
     // Crypt functions return input text if there was a problem.
-    AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+    AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
     String variablesCipher = aesContext.encrypt(JsonConverter.toJson(diffs));
     editor.putString(Constants.Defaults.VARIABLES_KEY, variablesCipher);
 
@@ -405,17 +422,21 @@ public class VarCache {
     editor.putString(Constants.Defaults.MESSAGES_KEY, messagesCipher);
 
     try {
-      String updateRulesCipher = aesContext.encrypt(
-          JsonConverter.listToJsonArray(updateRuleDiffs).toString());
-      editor.putString(Constants.Defaults.UPDATE_RULES_KEY, updateRulesCipher);
+      if (updateRuleDiffs != null && !updateRuleDiffs.isEmpty()) {
+        String updateRulesCipher = aesContext.encrypt(
+            JsonConverter.listToJsonArray(updateRuleDiffs).toString());
+        editor.putString(Constants.Defaults.UPDATE_RULES_KEY, updateRulesCipher);
+      }
     } catch (JSONException e) {
       Log.e("Error converting updateRuleDiffs to JSON", e);
     }
 
     try {
-      String eventRulesCipher = aesContext.encrypt(
-          JsonConverter.listToJsonArray(eventRuleDiffs).toString());
-      editor.putString(Constants.Defaults.EVENT_RULES_KEY, eventRulesCipher);
+      if (eventRuleDiffs != null && !eventRuleDiffs.isEmpty()) {
+        String eventRulesCipher = aesContext.encrypt(
+            JsonConverter.listToJsonArray(eventRuleDiffs).toString());
+        editor.putString(Constants.Defaults.EVENT_RULES_KEY, eventRulesCipher);
+      }
     } catch (JSONException e) {
       Log.e("Error converting eventRuleDiffs to JSON", e);
     }
@@ -424,16 +445,27 @@ public class VarCache {
     editor.putString(Constants.Defaults.REGIONS_KEY, regionsCipher);
 
     try {
-      String variantsJson = JsonConverter.listToJsonArray(variants).toString();
-      editor.putString(Constants.Keys.VARIANTS, aesContext.encrypt(variantsJson));
+      if (variants != null && !variants.isEmpty()) {
+        String variantsJson = JsonConverter.listToJsonArray(variants).toString();
+        editor.putString(Constants.Keys.VARIANTS, aesContext.encrypt(variantsJson));
+      }
     } catch (JSONException e1) {
       Log.e("Error converting " + variants + " to JSON.\n" + Log.getStackTraceString(e1));
     }
-    editor.putString(Constants.Params.DEVICE_ID, aesContext.encrypt(Request.deviceId()));
-    editor.putString(Constants.Params.USER_ID, aesContext.encrypt(Request.userId()));
+
+    if (variantDebugInfo != null) {
+      editor.putString(
+          Constants.Keys.VARIANT_DEBUG_INFO,
+          aesContext.encrypt(JsonConverter.toJson(variantDebugInfo)));
+    }
+
+    editor.putString(Constants.Params.DEVICE_ID, aesContext.encrypt(RequestOld.deviceId()));
+    editor.putString(Constants.Params.USER_ID, aesContext.encrypt(RequestOld.userId()));
     editor.putString(Constants.Keys.LOGGING_ENABLED,
         aesContext.encrypt(String.valueOf(Constants.loggingEnabled)));
     SharedPreferencesUtil.commitChanges(editor);
+
+    Leanplum.countAggregator().incrementCount("send_diffs");
   }
 
   /**
@@ -467,9 +499,9 @@ public class VarCache {
       }
       String overrideFile = var.stringValue;
       if (var.isResource && Constants.Kinds.FILE.equals(var.kind()) && overrideFile != null &&
-              !overrideFile.equals(var.defaultValue())) {
+          !overrideFile.equals(var.defaultValue())) {
         Map<String, Object> variationAttributes = CollectionUtil.uncheckedCast(fileAttributes.get
-                (overrideFile));
+            (overrideFile));
         InputStream stream = fileStreams.get(overrideFile);
         if (variationAttributes != null && stream != null) {
           var.setOverrideResId(getResIdFromPath(var.stringValue()));
@@ -484,7 +516,8 @@ public class VarCache {
       List<Map<String, Object>> updateRules,
       List<Map<String, Object>> eventRules,
       Map<String, Object> regions,
-      List<Map<String, Object>> variants) {
+      List<Map<String, Object>> variants,
+      Map<String, Object> variantDebugInfo) {
     if (diffs != null) {
       VarCache.diffs = diffs;
       computeMergedDictionary();
@@ -561,6 +594,10 @@ public class VarCache {
       VarCache.variants = variants;
     }
 
+    if (variantDebugInfo != null) {
+      VarCache.setVariantDebugInfo(variantDebugInfo);
+    }
+
     contentVersion++;
 
     if (!silent) {
@@ -575,6 +612,7 @@ public class VarCache {
         eventsUpdateBlock.updateCache();
       }
     }
+    Leanplum.countAggregator().incrementCount("apply_variable_diffs");
   }
 
   static void applyUpdateRuleDiffs(List<Map<String, Object>> updateRuleDiffs) {
@@ -668,7 +706,7 @@ public class VarCache {
         params.put(Constants.Params.ACTION_DEFINITIONS, JsonConverter.toJson(actionDefinitions));
       }
       params.put(Constants.Params.FILE_ATTRIBUTES, JsonConverter.toJson(fileAttributes));
-      Request.post(Constants.Methods.SET_VARS, params).sendIfConnected();
+      RequestOld.post(Constants.Methods.SET_VARS, params).sendIfConnected();
     }
 
     return changed;
@@ -713,7 +751,7 @@ public class VarCache {
           Map<String, Object> params = new HashMap<>();
           params.put(Constants.Params.DATA, fileData.toString());
 
-          Request.post(Constants.Methods.UPLOAD_FILE, params).sendFilesNow(filenames,
+          RequestOld.post(Constants.Methods.UPLOAD_FILE, params).sendFilesNow(filenames,
               streams);
 
           filenames = new ArrayList<>();
@@ -744,7 +782,7 @@ public class VarCache {
     if (filenames.size() > 0) {
       Map<String, Object> params = new HashMap<>();
       params.put(Constants.Params.DATA, fileData.toString());
-      Request.post(Constants.Methods.UPLOAD_FILE, params).sendFilesNow(filenames, streams);
+      RequestOld.post(Constants.Methods.UPLOAD_FILE, params).sendFilesNow(filenames, streams);
     }
   }
 
@@ -769,14 +807,17 @@ public class VarCache {
 
   public static void onUpdate(CacheUpdateBlock block) {
     updateBlock = block;
+    Leanplum.countAggregator().incrementCount("on_update_varcache");
   }
 
   public static void onInterfaceUpdate(CacheUpdateBlock block) {
     interfaceUpdateBlock = block;
+    Leanplum.countAggregator().incrementCount("on_interface_update");
   }
 
   public static void onEventsUpdate(CacheUpdateBlock block) {
     eventsUpdateBlock = block;
+    Leanplum.countAggregator().incrementCount("on_events_update");
   }
 
   public static List<Map<String, Object>> variants() {
@@ -841,7 +882,7 @@ public class VarCache {
     if (userAttributes == null) {
       Context context = Leanplum.getContext();
       SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
-      AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+      AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
       try {
         userAttributes = JsonConverter.fromJson(
             aesContext.decodePreference(defaults, Constants.Defaults.ATTRIBUTES_KEY, "{}"));
@@ -854,7 +895,7 @@ public class VarCache {
   }
 
   public static void saveUserAttributes() {
-    if (Constants.isNoop() || Request.appId() == null || userAttributes == null) {
+    if (Constants.isNoop() || RequestOld.appId() == null || userAttributes == null) {
       return;
     }
     Context context = Leanplum.getContext();
@@ -862,9 +903,27 @@ public class VarCache {
     SharedPreferences.Editor editor = defaults.edit();
     // Crypt functions return input text if there was a problem.
     String plaintext = JsonConverter.toJson(userAttributes);
-    AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+    AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
     editor.putString(Constants.Defaults.ATTRIBUTES_KEY, aesContext.encrypt(plaintext));
     SharedPreferencesUtil.commitChanges(editor);
+
+    Leanplum.countAggregator().incrementCount("save_user_attributes");
+  }
+
+  public static void clearUserContent() {
+    vars.clear();
+    variants.clear();
+    variantDebugInfo.clear();
+
+    diffs.clear();
+    messageDiffs.clear();
+    messages = null;
+    userAttributes = null;
+    merged = null;
+
+    devModeValuesFromServer = null;
+    devModeFileAttributesFromServer = null;
+    devModeActionDefinitionsFromServer = null;
   }
 
   /**
@@ -872,6 +931,7 @@ public class VarCache {
    */
   public static void reset() {
     vars.clear();
+    variantDebugInfo.clear();
     fileAttributes.clear();
     fileStreams.clear();
     valuesFromClient.clear();
