@@ -78,8 +78,17 @@ Accessible* OuterDocAccessible::ChildAtPoint(int32_t aX, int32_t aY,
   Accessible* child = GetChildAt(0);
   NS_ENSURE_TRUE(child, nullptr);
 
-  if (aWhichChild == eDeepestChild)
+  if (aWhichChild == eDeepestChild) {
+#if defined(XP_WIN)
+    // On Windows, OuterDocAccessible::GetChildAt can return a proxy wrapper
+    // for a remote document. These aren't real Accessibles and
+    // shouldn't be returned except to the Windows a11y code (which doesn't use
+    // eDeepestChild). Calling ChildAtPoint on these will crash!
+    return nullptr;
+#else
     return child->ChildAtPoint(aX, aY, eDeepestChild);
+#endif  // defined(XP_WIN)
+  }
   return child;
 }
 
