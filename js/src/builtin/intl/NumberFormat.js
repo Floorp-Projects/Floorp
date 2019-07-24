@@ -470,7 +470,12 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // Compute formatting options.
     // Step 12.
     var style = GetOption(options, "style", "string",
-                          ["decimal", "percent", "currency", "unit"], "decimal");
+#ifdef NIGHTLY_BUILD
+                          ["decimal", "percent", "currency", "unit"],
+#else
+                          ["decimal", "percent", "currency"],
+#endif
+                          "decimal");
     lazyNumberFormatData.style = style;
 
     // Steps 14-17.
@@ -497,16 +502,26 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Step 18.
     var currencyDisplay = GetOption(options, "currencyDisplay", "string",
-                                    ["code", "symbol", "narrowSymbol", "name"], "symbol");
+#ifdef NIGHTLY_BUILD
+                                    ["code", "symbol", "narrowSymbol", "name"],
+#else
+                                    ["code", "symbol", "name"],
+#endif
+                                    "symbol");
     if (style === "currency")
         lazyNumberFormatData.currencyDisplay = currencyDisplay;
 
+#ifdef NIGHTLY_BUILD
     // Intl.NumberFormat Unified API Proposal
     var currencySign = GetOption(options, "currencySign", "string",
                                  ["standard", "accounting"], "standard");
+#else
+    var currencySign = "standard";
+#endif
     if (style === "currency")
         lazyNumberFormatData.currencySign = currencySign;
 
+#ifdef NIGHTLY_BUILD
     // Intl.NumberFormat Unified API Proposal
     var unit = GetOption(options, "unit", "string", undefined, undefined);
 
@@ -524,6 +539,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
         lazyNumberFormatData.unit = unit;
         lazyNumberFormatData.unitDisplay = unitDisplay;
     }
+#endif
 
     // Steps 20-21.
     var mnfdDefault, mxfdDefault;
@@ -535,27 +551,37 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
         mxfdDefault = style === "percent" ? 0 : 3;
     }
 
+#ifdef NIGHTLY_BUILD
     // Intl.NumberFormat Unified API Proposal
     var notation = GetOption(options, "notation", "string",
                              ["standard", "scientific", "engineering", "compact"], "standard");
+#else
+    var notation = "standard";
+#endif
     lazyNumberFormatData.notation = notation;
 
     // Step 22.
     SetNumberFormatDigitOptions(lazyNumberFormatData, options, mnfdDefault, mxfdDefault, notation);
 
+#ifdef NIGHTLY_BUILD
     // Intl.NumberFormat Unified API Proposal
     var compactDisplay = GetOption(options, "compactDisplay", "string",
                                    ["short", "long"], "short");
     if (notation === "compact")
         lazyNumberFormatData.compactDisplay = compactDisplay;
+#endif
 
     // Steps 23.
     var useGrouping = GetOption(options, "useGrouping", "boolean", undefined, true);
     lazyNumberFormatData.useGrouping = useGrouping;
 
+#ifdef NIGHTLY_BUILD
     // Intl.NumberFormat Unified API Proposal
     var signDisplay = GetOption(options, "signDisplay", "string",
                                 ["auto", "never", "always", "exceptZero"], "auto");
+#else
+    var signDisplay = "auto";
+#endif
     lazyNumberFormatData.signDisplay = signDisplay;
 
     // Step 31.
@@ -763,7 +789,9 @@ function Intl_NumberFormat_resolvedOptions() {
     if (hasOwn("currency", internals)) {
         _DefineDataProperty(result, "currency", internals.currency);
         _DefineDataProperty(result, "currencyDisplay", internals.currencyDisplay);
+#ifdef NIGHTLY_BUILD
         _DefineDataProperty(result, "currencySign", internals.currencySign);
+#endif
     }
 
     // unit and unitDisplay are only present for unit formatters.
@@ -804,12 +832,16 @@ function Intl_NumberFormat_resolvedOptions() {
     _DefineDataProperty(result, "useGrouping", internals.useGrouping);
 
     var notation = internals.notation;
+#ifdef NIGHTLY_BUILD
     _DefineDataProperty(result, "notation", notation);
+#endif
 
     if (notation === "compact")
         _DefineDataProperty(result, "compactDisplay", internals.compactDisplay);
 
+#ifdef NIGHTLY_BUILD
     _DefineDataProperty(result, "signDisplay", internals.signDisplay);
+#endif
 
     // Step 6.
     return result;

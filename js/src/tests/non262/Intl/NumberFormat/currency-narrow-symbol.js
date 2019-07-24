@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty("Intl"))
+// |reftest| skip-if(!this.hasOwnProperty("Intl")||release_or_beta)
 
 const {
     Integer, Decimal, Fraction, Currency, Literal,
