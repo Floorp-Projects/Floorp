@@ -10,6 +10,7 @@
 
 #include "jsutil.h"
 
+#include "debugger/Debugger.h"
 #include "gc/Marking.h"
 #include "jit/BaselineDebugModeOSR.h"
 #include "jit/BaselineFrame.h"
@@ -159,7 +160,8 @@ static void HandleExceptionIon(JSContext* cx, const InlineFrameIterator& frame,
     // We need to bail when there is a catchable exception, and we are the
     // debuggee of a Debugger with a live onExceptionUnwind hook, or if a
     // Debugger has observed this frame (e.g., for onPop).
-    bool shouldBail = DebugAPI::hasExceptionUnwindHook(cx->global());
+    bool shouldBail =
+        Debugger::hasLiveHook(cx->global(), Debugger::OnExceptionUnwind);
     RematerializedFrame* rematFrame = nullptr;
     if (!shouldBail) {
       JitActivation* act = cx->activation()->asJit();

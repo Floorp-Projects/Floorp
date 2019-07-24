@@ -7,7 +7,6 @@
 #include "debugger/Script-inl.h"
 
 #include "debugger/Debugger.h"
-#include "debugger/DebugScript.h"
 #include "wasm/WasmInstance.h"
 
 #include "vm/BytecodeUtil-inl.h"
@@ -1750,8 +1749,7 @@ struct DebuggerScript::SetBreakpointMatcher {
     }
 
     jsbytecode* pc = script->offsetToPC(offset_);
-    BreakpointSite* site =
-        DebugScript::getOrCreateBreakpointSite(cx_, script, pc);
+    BreakpointSite* site = script->getOrCreateBreakpointSite(cx_, pc);
     if (!site) {
       return false;
     }
@@ -1846,8 +1844,7 @@ bool DebuggerScript::getBreakpoints(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   for (unsigned i = 0; i < script->length(); i++) {
-    BreakpointSite* site =
-        DebugScript::getBreakpointSite(script, script->offsetToPC(i));
+    BreakpointSite* site = script->getBreakpointSite(script->offsetToPC(i));
     if (!site) {
       continue;
     }
@@ -1877,8 +1874,7 @@ class DebuggerScript::ClearBreakpointMatcher {
   using ReturnType = bool;
 
   ReturnType match(HandleScript script) {
-    DebugScript::clearBreakpointsIn(cx_->runtime()->defaultFreeOp(), script,
-                                    dbg_, handler_);
+    script->clearBreakpointsIn(cx_->runtime()->defaultFreeOp(), dbg_, handler_);
     return true;
   }
   ReturnType match(Handle<LazyScript*> lazyScript) {
