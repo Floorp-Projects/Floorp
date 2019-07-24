@@ -57,73 +57,75 @@ const CONFIG_PREFS = [
 ];
 
 var FxAccountsConfig = {
-  async promiseSignUpURI(entrypoint) {
+  async promiseSignUpURI(entrypoint, extraParams = {}) {
     return this._buildURL("signup", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
     });
   },
 
-  async promiseSignInURI(entrypoint) {
+  async promiseSignInURI(entrypoint, extraParams = {}) {
     return this._buildURL("signin", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
     });
   },
 
-  async promiseEmailURI(email, entrypoint) {
+  async promiseEmailURI(email, entrypoint, extraParams = {}) {
     return this._buildURL("", {
-      extraParams: { entrypoint, email },
+      extraParams: { entrypoint, email, ...extraParams },
     });
   },
 
-  async promiseEmailFirstURI(entrypoint) {
+  async promiseEmailFirstURI(entrypoint, extraParams = {}) {
     return this._buildURL("", {
-      extraParams: { entrypoint, action: "email" },
+      extraParams: { entrypoint, action: "email", ...extraParams },
     });
   },
 
-  async promiseForceSigninURI(entrypoint) {
+  async promiseForceSigninURI(entrypoint, extraParams = {}) {
     return this._buildURL("force_auth", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
 
-  async promiseManageURI(entrypoint) {
+  async promiseManageURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
 
-  async promiseChangeAvatarURI(entrypoint) {
+  async promiseChangeAvatarURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings/avatar/change", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
 
-  async promiseManageDevicesURI(entrypoint) {
+  async promiseManageDevicesURI(entrypoint, extraParams = {}) {
     return this._buildURL("settings/clients", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
 
-  async promiseConnectDeviceURI(entrypoint) {
+  async promiseConnectDeviceURI(entrypoint, extraParams = {}) {
     return this._buildURL("connect_another_device", {
-      extraParams: { entrypoint },
+      extraParams: { entrypoint, ...extraParams },
       addAccountIdentifiers: true,
     });
   },
 
-  async promisePairingURI() {
+  async promisePairingURI(extraParams = {}) {
     return this._buildURL("pair", {
+      extraParams,
       includeDefaultParams: false,
     });
   },
 
-  async promiseOAuthURI() {
+  async promiseOAuthURI(extraParams = {}) {
     return this._buildURL("oauth", {
+      extraParams,
       includeDefaultParams: false,
     });
   },
