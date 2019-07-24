@@ -84,6 +84,9 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     // Step 24.
     internalProps.useGrouping = lazyNumberFormatData.useGrouping;
 
+    // Intl.NumberFormat Unified API Proposal
+    internalProps.signDisplay = lazyNumberFormatData.signDisplay;
+
     // The caller is responsible for associating |internalProps| with the right
     // object using |setInternalProperties|.
     return internalProps;
@@ -273,6 +276,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //     maximumSignificantDigits: integer ∈ [1, 21],
     //
     //     useGrouping: true / false,
+    //
+    //     signDisplay: "auto" / "never" / "always" / "exceptZero",
     //   }
     //
     // Note that lazy data is only installed as a final step of initialization,
@@ -343,6 +348,11 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     // Steps 23.
     var useGrouping = GetOption(options, "useGrouping", "boolean", undefined, true);
     lazyNumberFormatData.useGrouping = useGrouping;
+
+    // Intl.NumberFormat Unified API Proposal
+    var signDisplay = GetOption(options, "signDisplay", "string",
+                                ["auto", "never", "always", "exceptZero"], "auto");
+    lazyNumberFormatData.signDisplay = signDisplay;
 
     // Step 31.
     //
@@ -573,6 +583,8 @@ function Intl_NumberFormat_resolvedOptions() {
     }
 
     _DefineDataProperty(result, "useGrouping", internals.useGrouping);
+
+    _DefineDataProperty(result, "signDisplay", internals.signDisplay);
 
     // Step 6.
     return result;

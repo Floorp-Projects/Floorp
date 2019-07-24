@@ -530,3 +530,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/grandfathered.js
 
 # Deprecated variant subtag mappings are no longer supported.
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
+
+# Test requires signDisplay option to not exist.
+skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js

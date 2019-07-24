@@ -377,6 +377,7 @@
   MACRO(setPrefix, setPrefix, "set ")                                          \
   MACRO(setPrototypeOf, setPrototypeOf, "setPrototypeOf")                      \
   MACRO(shape, shape, "shape")                                                 \
+  MACRO(signDisplay, signDisplay, "signDisplay")                               \
   MACRO(size, size, "size")                                                    \
   MACRO(source, source, "source")                                              \
   MACRO(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor")          \

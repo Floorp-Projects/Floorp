@@ -207,6 +207,15 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    */
   MOZ_MUST_USE bool useGrouping(bool on);
 
+  enum class SignDisplay { Auto, Never, Always, ExceptZero };
+
+  /**
+   * Set the sign-display for this skeleton.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#sign-display
+   */
+  MOZ_MUST_USE bool signDisplay(SignDisplay display);
+
   /**
    * Set the rounding mode to 'half-up' for this skeleton.
    *
