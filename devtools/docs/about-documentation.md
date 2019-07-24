@@ -13,6 +13,9 @@ npm install -g gitbook-cli
 # Go into the docs directory
 cd /path/to/mozilla-central/devtools/docs/
 
+# Install plugins
+gitbook install
+
 # Generate the docs and start a local server
 gitbook serve
 
