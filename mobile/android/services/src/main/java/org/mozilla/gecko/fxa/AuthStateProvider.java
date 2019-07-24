@@ -178,12 +178,22 @@ public class AuthStateProvider extends ContentProvider {
     private boolean isTrustedCaller(@NonNull Context context) {
         final PackageManager packageManager = context.getPackageManager();
 
+        // Signatures can be easily obtained locally. For an APK in question, unzip it and run:
+        // keytool -printcert -file META-INF/SIGNATURE.RSA
+        // SHA256 certificate fingerprint is what's listed below.
+        // To obtain the same formatting, use this:
+        // keytool -printcert -file META-INF/SIGNATURE.RSA | grep -i sha256: | cut -d ' ' -f 3 | sed 's/://g' | tr '[:upper:]' '[:lower:]'
+
         // We will only service query requests from callers that exactly match our whitelist.
         // Whitelist is local to this function to avoid exposing it to the world more than necessary.
         final HashMap<String, String> packageToSignatureWhitelist = new HashMap<>();
         // Main Fenix channel.
         packageToSignatureWhitelist.put(
             "org.mozilla.fenix", "5004779088e7f988d5bc5cc5f8798febf4f8cd084a1b2a46efd4c8ee4aeaf211"
+        );
+        // Fenix Nightly channel.
+        packageToSignatureWhitelist.put(
+            "org.mozilla.fenix.nightly", "77eac4ceed36afefba76179931dd4cc195ab0cd54baf355d215e7bbdd28e402a"
         );
         // Main Lockwise channel.
         packageToSignatureWhitelist.put(
