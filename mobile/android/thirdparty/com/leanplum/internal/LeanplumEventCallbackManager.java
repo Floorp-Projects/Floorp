@@ -1,5 +1,3 @@
-package com.leanplum.internal;
-
 /*
  * Copyright 2017, Leanplum, Inc. All rights reserved.
  *
@@ -20,9 +18,12 @@ package com.leanplum.internal;
  * specific language governing permissions and limitations
  * under the License.
  */
+package com.leanplum.internal;
 
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
+
+import com.leanplum.Leanplum;
 
 import org.json.JSONObject;
 
@@ -36,117 +37,120 @@ import java.util.Map;
  * @author Anna Orlova
  */
 class LeanplumEventCallbackManager {
-    // Event callbacks map.
-    private final Map<Request, LeanplumEventCallbacks> eventCallbacks = new HashMap<>();
+  // Event callbacks map.
+  private final Map<RequestOld, LeanplumEventCallbacks> eventCallbacks = new HashMap<>();
 
-    /**
-     * Add callbacks to the event callbacks Map.
-     *
-     * @param request          Event.
-     * @param responseCallback Response callback.
-     * @param errorCallback    Error callback.
-     */
-    void addCallbacks(Request request, Request.ResponseCallback responseCallback,
-                      Request.ErrorCallback errorCallback) {
-        if (request == null) {
-            return;
-        }
-
-        if (responseCallback == null && errorCallback == null) {
-            return;
-        }
-
-        eventCallbacks.put(request, new LeanplumEventCallbacks(responseCallback, errorCallback));
+  /**
+   * Add callbacks to the event callbacks Map.
+   *
+   * @param request Event.
+   * @param responseCallback Response callback.
+   * @param errorCallback Error callback.
+   */
+  void addCallbacks(RequestOld request, RequestOld.ResponseCallback responseCallback,
+                    RequestOld.ErrorCallback errorCallback) {
+    if (request == null) {
+      return;
     }
 
-    /**
-     * Invoke potential error callbacks for all events with database index less than a count of events
-     * that we got from database.
-     *
-     * @param error         Exception.
-     * @param countOfEvents Count of events that we got from database.
-     */
-    void invokeAllCallbacksWithError(@NonNull final Exception error, int countOfEvents) {
-        if (eventCallbacks.size() == 0) {
-            return;
-        }
-
-        Iterator<Map.Entry<Request, LeanplumEventCallbacks>> iterator =
-                eventCallbacks.entrySet().iterator();
-        // Loop over all callbacks.
-        for (; iterator.hasNext(); ) {
-            final Map.Entry<Request, LeanplumEventCallbacks> entry = iterator.next();
-            if (entry.getKey() == null) {
-                continue;
-            }
-            if (entry.getKey().getDataBaseIndex() >= countOfEvents) {
-                entry.getKey().setDataBaseIndex(entry.getKey().getDataBaseIndex() - countOfEvents);
-            } else {
-                if (entry.getValue() != null && entry.getValue().errorCallback != null) {
-                    // Start callback asynchronously, to avoid creation of new Request object from the same
-                    // thread.
-                    Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
-                        @Override
-                        protected Void doInBackground(Void... params) {
-                            entry.getValue().errorCallback.error(error);
-                            return null;
-                        }
-                    });
-                }
-                iterator.remove();
-            }
-        }
+    if (responseCallback == null && errorCallback == null) {
+      return;
     }
 
-    /**
-     * Invoke potential response callbacks for all events with database index less than a count of
-     * events that we got from database.
-     *
-     * @param responseBody  JSONObject withs server response.
-     * @param countOfEvents Count of events that we got from database.
-     */
-    void invokeAllCallbacksForResponse(@NonNull final JSONObject responseBody, int countOfEvents) {
-        if (eventCallbacks.size() == 0) {
-            return;
-        }
+    eventCallbacks.put(request, new LeanplumEventCallbacks(responseCallback, errorCallback));
+    Leanplum.countAggregator().incrementCount("add_event_callback_at");
+  }
 
-        Iterator<Map.Entry<Request, LeanplumEventCallbacks>> iterator =
-                eventCallbacks.entrySet().iterator();
-        // Loop over all callbacks.
-        for (; iterator.hasNext(); ) {
-            final Map.Entry<Request, LeanplumEventCallbacks> entry = iterator.next();
-            if (entry.getKey() == null) {
-                continue;
-            }
-
-            if (entry.getKey().getDataBaseIndex() >= countOfEvents) {
-                entry.getKey().setDataBaseIndex(entry.getKey().getDataBaseIndex() - countOfEvents);
-            } else {
-                if (entry.getValue() != null && entry.getValue().responseCallback != null) {
-                    // Start callback asynchronously, to avoid creation of new Request object from the same
-                    // thread.
-                    Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
-                        @Override
-                        protected Void doInBackground(Void... params) {
-                            entry.getValue().responseCallback.response(Request.getResponseAt(responseBody,
-                                    (int) entry.getKey().getDataBaseIndex()));
-                            return null;
-                        }
-                    });
-                }
-                iterator.remove();
-            }
-        }
+  /**
+   * Invoke potential error callbacks for all events with database index less than a count of events
+   * that we got from database.
+   *
+   * @param error Exception.
+   * @param countOfEvents Count of events that we got from database.
+   */
+  void invokeAllCallbacksWithError(@NonNull final Exception error, int countOfEvents) {
+    if (eventCallbacks.size() == 0) {
+      return;
     }
 
-    private static class LeanplumEventCallbacks {
-        private Request.ResponseCallback responseCallback;
-        private Request.ErrorCallback errorCallback;
-
-        LeanplumEventCallbacks(Request.ResponseCallback responseCallback, Request.ErrorCallback
-                errorCallback) {
-            this.responseCallback = responseCallback;
-            this.errorCallback = errorCallback;
+    Iterator<Map.Entry<RequestOld, LeanplumEventCallbacks>> iterator =
+        eventCallbacks.entrySet().iterator();
+    // Loop over all callbacks.
+    for (; iterator.hasNext(); ) {
+      final Map.Entry<RequestOld, LeanplumEventCallbacks> entry = iterator.next();
+      if (entry.getKey() == null) {
+        continue;
+      }
+      if (entry.getKey().getDataBaseIndex() >= countOfEvents) {
+        entry.getKey().setDataBaseIndex(entry.getKey().getDataBaseIndex() - countOfEvents);
+      } else {
+        if (entry.getValue() != null && entry.getValue().errorCallback != null) {
+          // Start callback asynchronously, to avoid creation of new RequestOld object from the same
+          // thread.
+          Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+              entry.getValue().errorCallback.error(error);
+              return null;
+            }
+          });
         }
+        iterator.remove();
+      }
     }
+    Leanplum.countAggregator().incrementCount("invoke_error_callbacks_on_responses");
+  }
+
+  /**
+   * Invoke potential response callbacks for all events with database index less than a count of
+   * events that we got from database.
+   *
+   * @param responseBody JSONObject withs server response.
+   * @param countOfEvents Count of events that we got from database.
+   */
+  void invokeAllCallbacksForResponse(@NonNull final JSONObject responseBody, int countOfEvents) {
+    if (eventCallbacks.size() == 0) {
+      return;
+    }
+
+    Iterator<Map.Entry<RequestOld, LeanplumEventCallbacks>> iterator =
+        eventCallbacks.entrySet().iterator();
+    // Loop over all callbacks.
+    for (; iterator.hasNext(); ) {
+      final Map.Entry<RequestOld, LeanplumEventCallbacks> entry = iterator.next();
+      if (entry.getKey() == null) {
+        continue;
+      }
+
+      if (entry.getKey().getDataBaseIndex() >= countOfEvents) {
+        entry.getKey().setDataBaseIndex(entry.getKey().getDataBaseIndex() - countOfEvents);
+      } else {
+        if (entry.getValue() != null && entry.getValue().responseCallback != null) {
+          // Start callback asynchronously, to avoid creation of new RequestOld object from the same
+          // thread.
+          Util.executeAsyncTask(false, new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... params) {
+              entry.getValue().responseCallback.response(RequestOld.getResponseAt(responseBody,
+                  (int) entry.getKey().getDataBaseIndex()));
+              return null;
+            }
+          });
+        }
+        iterator.remove();
+      }
+    }
+    Leanplum.countAggregator().incrementCount("invoke_success_callbacks_on_responses");
+  }
+
+  private static class LeanplumEventCallbacks {
+    private RequestOld.ResponseCallback responseCallback;
+    private RequestOld.ErrorCallback errorCallback;
+
+    LeanplumEventCallbacks(RequestOld.ResponseCallback responseCallback, RequestOld.ErrorCallback
+        errorCallback) {
+      this.responseCallback = responseCallback;
+      this.errorCallback = errorCallback;
+    }
+  }
 }
