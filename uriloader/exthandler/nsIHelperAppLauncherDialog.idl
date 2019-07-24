@@ -7,6 +7,7 @@
 
 interface nsIHelperAppLauncher;
 interface nsIFile;
+interface nsIInterfaceRequestor;
 
 /**
  * This interface is used to display a confirmation dialog before
@@ -54,7 +55,7 @@ interface nsIHelperAppLauncherDialog : nsISupports {
    *        REASON_CANTHANDLE.
    */
   void show(in nsIHelperAppLauncher aLauncher,
-            in nsISupports aWindowContext,
+            in nsIInterfaceRequestor aWindowContext,
             in unsigned long aReason);
 
   /**
@@ -77,7 +78,7 @@ interface nsIHelperAppLauncherDialog : nsISupports {
    *        prompted.
    */
   void promptForSaveToFileAsync(in nsIHelperAppLauncher aLauncher,
-                                in nsISupports aWindowContext,
+                                in nsIInterfaceRequestor aWindowContext,
                                 in wstring aDefaultFileName,
                                 in wstring aSuggestedFileExtension,
                                 in boolean aForcePrompt);

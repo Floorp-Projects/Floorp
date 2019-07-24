@@ -150,9 +150,7 @@ nsUnknownContentTypeDialog.prototype = {
 
     // Cache some information in case this context goes away:
     try {
-      let parent = aContext
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
+      let parent = aContext.getInterface(Ci.nsIDOMWindow);
       this._mDownloadDir = new downloadModule.DownloadLastDir(parent);
     } catch (ex) {
       Cu.reportError(
@@ -172,8 +170,7 @@ nsUnknownContentTypeDialog.prototype = {
   // activate the OK button.  So we wait a bit before doing opening it.
   reallyShow() {
     try {
-      let ir = this.mContext.QueryInterface(Ci.nsIInterfaceRequestor);
-      let docShell = ir.getInterface(Ci.nsIDocShell);
+      let docShell = this.mContext.getInterface(Ci.nsIDocShell);
       let rootWin = docShell.rootTreeItem.domWindow;
       this.mDialog = Services.ww.openWindow(
         rootWin,
@@ -235,9 +232,7 @@ nsUnknownContentTypeDialog.prototype = {
     let parent;
     let gDownloadLastDir;
     try {
-      parent = aContext
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
+      parent = aContext.getInterface(Ci.nsIDOMWindow);
     } catch (ex) {}
 
     if (parent) {
