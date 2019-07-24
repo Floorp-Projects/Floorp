@@ -919,6 +919,55 @@
     // Extended attribute functions are MacOS only at this point.
     if (OS.Constants.Sys.Name == "Darwin") {
       /**
+       * Get an extended attribute (xattr) from a file.
+       *
+       * @param {string} path The name of the file.
+       * @param {string} name The name of the extended attribute.
+       *
+       * @returns {Uint8Array} An array containing the value of the attribute.
+       * @throws {OS.File.Error} In case of an I/O error.
+       */
+      File.macGetXAttr = function getxattr(path, name) {
+        // Get the size of the xattr
+        let result = UnixFile.getxattr(
+          path,
+          name,
+          null,
+          0,
+          // The position arg is not used unless
+          // interacting with a resouce fork.
+          0 /* position arg */,
+          0 /* follow links */
+        );
+        if (result == -1) {
+          throw new File.Error("getxattr", ctypes.errno, path);
+        }
+        // Loop until we fetch the whole xattr. This covers the edge case
+        // where the xattr is set in between calls and attempts to avoid us
+        // less than the full size of the xattr.
+        while (true) {
+          let size = result;
+          let buffer = new Uint8Array(size);
+          result = UnixFile.getxattr(
+            path,
+            name,
+            buffer,
+            size,
+            // The position arg is not used unless
+            // interacting with a resouce fork.
+            0 /* position arg */,
+            0 /* follow links */
+          );
+          if (result == -1) {
+            throw new File.Error("getxattr", ctypes.errno, path);
+          }
+          if (size == result) {
+            return buffer;
+          }
+        }
+      };
+
+      /**
        * Remove an extended attribute (xattr) from a file.
        *
        * @param {string} path The name of the file.
@@ -930,6 +979,32 @@
         let result = UnixFile.removexattr(path, name, 0 /* follow links */);
         if (result == -1) {
           throw new File.Error("removexattr", ctypes.errno, path);
+        }
+      };
+
+      /**
+       * Set an extended attribute (xattr) on a file.
+       *
+       * @param {string} path The name of the file.
+       * @param {string} name The name of the extended attribute.
+       * @param {Uint8Array} value The value of the xattr to be set.
+       *
+       * @throws {OS.File.Error} In case of an I/O error.
+       */
+      File.macSetXAttr = function setxattr(path, name, value) {
+        let size = value.length;
+        let result = UnixFile.setxattr(
+          path,
+          name,
+          value,
+          size,
+          // The position arg is not used unless
+          // interacting with a resouce fork.
+          0 /* position arg */,
+          0 /* follow links */
+        );
+        if (result == -1) {
+          throw new File.Error("setxattr", ctypes.errno, path);
         }
       };
     }
