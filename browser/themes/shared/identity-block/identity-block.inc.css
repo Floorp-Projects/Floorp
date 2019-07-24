@@ -209,7 +209,7 @@
 #tracking-protection-icon-box {
   overflow: hidden;
   width: 20px;
-  height: 20px;
+  height: 16px;
 }
 
 #tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
@@ -223,16 +223,16 @@
   overflow: hidden;
   margin-inline-start: 4px;
   width: 16px;
-  height: 20px;
+  height: 16px;
 }
 
 #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
   background-image: url(chrome://browser/skin/tracking-protection-animation.svg);
-  transform: translateX(-2816px);
-  width: 2832px;
+  transform: translateX(-256px);
+  width: 272px;
   background-size: auto;
   height: 16px;
-  min-height: 20px;
+  min-height: 16px;
   -moz-context-properties: fill, fill-opacity;
 }
 
@@ -241,13 +241,13 @@
 }
 
 #tracking-protection-icon-box[active] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
-  transform: scaleX(-1) translateX(-2816px);
+  transform: scaleX(-1) translateX(-256px);
 }
 
 #tracking-protection-icon-box[active][animate] #tracking-protection-icon-animatable-image {
   animation-name: tp-icon-animation;
-  animation-timing-function: steps(176);
-  animation-duration: 3s;
+  animation-timing-function: steps(16);
+  animation-duration: 1s;
   animation-fill-mode: forwards;
 }
 
@@ -272,7 +272,7 @@
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-2816px);
+    transform: translateX(-256px);
   }
 }
 
@@ -281,7 +281,7 @@
     transform: scaleX(-1) translateX(0);
   }
   100% {
-    transform: scaleX(-1) translateX(-2816px);
+    transform: scaleX(-1) translateX(-256px);
   }
 }
 
