@@ -558,15 +558,26 @@ inline int64_t ToInt64(double d) { return ToSignedInteger<int64_t>(d); }
 inline uint64_t ToUint64(double d) { return ToUnsignedInteger<uint64_t>(d); }
 
 /**
- * The maximum space needed for the null-terminated result of |ToString| on a
- * Number (sign, fractional part, "e+", and exponent of at most three digits,
- * e.g. |String(-Number.MAX_VALUE)| as "-1.7976931348623157e+308" is length 24).
+ * An amount of space large enough to store the null-terminated result of
+ * |ToString| on any Number.
+ *
+ * The <https://tc39.es/ecma262/#sec-tostring-applied-to-the-number-type>
+ * |NumberToString| algorithm is specified in terms of results, not an
+ * algorithm.  It is extremely unclear from the algorithm's definition what its
+ * longest output can be.  |-(2**-19 - 2**-72)| requires 25 + 1 characters and
+ * is believed to be at least *very close* to the upper bound, so we round that
+ * *very generously* upward to a 64-bit pointer-size boundary (to be extra
+ * cautious) and assume that's adequate.
+ *
+ * If you can supply better reasoning for a tighter bound, file a bug to improve
+ * this!
  */
-static constexpr size_t MaximumNumberToStringLength = 24 + 1;
+static constexpr size_t MaximumNumberToStringLength = 31 + 1;
 
 /**
  * Store in |out| the null-terminated, base-10 result of |ToString| applied to
  * |d| per <https://tc39.es/ecma262/#sec-tostring-applied-to-the-number-type>.
+ * (This will produce "NaN", "-Infinity", or "Infinity" for non-finite |d|.)
  */
 extern JS_PUBLIC_API void NumberToString(
     double d, char (&out)[MaximumNumberToStringLength]);
