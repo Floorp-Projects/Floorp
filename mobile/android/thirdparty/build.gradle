@@ -4,6 +4,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion project.ext.compileSdkVersion
+    useLibrary 'org.apache.http.legacy'
 
     defaultConfig {
         targetSdkVersion project.ext.targetSdkVersion

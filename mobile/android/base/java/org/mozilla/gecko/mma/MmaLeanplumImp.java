@@ -13,6 +13,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 
 import com.leanplum.Leanplum;
@@ -80,12 +81,7 @@ public class MmaLeanplumImp implements MmaInterface {
         // SDK initialization and Activity lifecycle in the future.
         //
         // I put it under runOnUiThread because in current Leanplum's SDK design, this should be run in main thread.
-        activity.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                LeanplumActivityHelper.onResume(activity);
-            }
-        });
+        activity.runOnUiThread(() -> LeanplumActivityHelper.onResume(activity));
     }
 
     @SuppressLint("NewApi")
@@ -100,6 +96,11 @@ public class MmaLeanplumImp implements MmaInterface {
                     builder.setChannelId(NotificationHelper.getInstance(builder.mContext)
                             .getNotificationChannel(NotificationHelper.Channel.DEFAULT).getId());
                 }
+            }
+
+            @Override
+            public void customize(Notification.Builder builder, Bundle notificationPayload, @Nullable Notification.Style notificationStyle) {
+
             }
         });
     }
@@ -147,7 +148,7 @@ public class MmaLeanplumImp implements MmaInterface {
 
     @Override
     public boolean handleGcmMessage(Context context, String from, Bundle bundle) {
-        if (from != null && from.equals(MmaConstants.MOZ_MMA_SENDER_ID) && bundle.containsKey(Constants.Keys.PUSH_MESSAGE_TEXT)) {
+        if (from != null && bundle.containsKey(Constants.Keys.PUSH_MESSAGE_TEXT)) {
             LeanplumPushService.handleNotification(context, bundle);
             return true;
         }

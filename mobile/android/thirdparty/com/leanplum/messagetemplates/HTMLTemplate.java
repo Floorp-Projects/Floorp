@@ -26,6 +26,7 @@ import android.graphics.Point;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.MotionEvent;
+
 import com.leanplum.ActionContext;
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
@@ -50,32 +51,32 @@ public class HTMLTemplate extends BaseMessageDialog {
 
   @Override
   public boolean dispatchTouchEvent(@NonNull MotionEvent ev) {
-      if (!htmlOptions.isFullScreen()) {
-          Point size = SizeUtil.getDisplaySize(activity);
-          int dialogWidth = webView.getWidth();
-          int left = (size.x - dialogWidth) / 2;
-          int right = (size.x + dialogWidth) / 2;
-          int height = SizeUtil.dpToPx(Leanplum.getContext(), htmlOptions.getHtmlHeight());
-          int statusBarHeight = SizeUtil.getStatusBarHeight(Leanplum.getContext());
-          int htmlYOffset = htmlOptions.getHtmlYOffset(activity);
-          int top;
-          int bottom;
-          if (MessageTemplates.Args.HTML_ALIGN_BOTTOM.equals(htmlOptions.getHtmlAlign())) {
-              top = size.y - height - statusBarHeight - htmlYOffset;
-              bottom = size.y - htmlYOffset - statusBarHeight;
-          } else {
-              top = htmlYOffset + statusBarHeight;
-              bottom = height + statusBarHeight + htmlYOffset;
-          }
-
-          if (ev.getY() < top || ev.getY() > bottom || ev.getX() < left || ev.getX() > right) {
-              if (htmlOptions.isHtmlTabOutsideToClose()) {
-                  cancel();
-              }
-              activity.dispatchTouchEvent(ev);
-          }
+    if (!htmlOptions.isFullScreen()) {
+      Point size = SizeUtil.getDisplaySize(activity);
+      int dialogWidth = webView.getWidth();
+      int left = (size.x - dialogWidth) / 2;
+      int right = (size.x + dialogWidth) / 2;
+      int height = SizeUtil.dpToPx(Leanplum.getContext(), htmlOptions.getHtmlHeight());
+      int statusBarHeight = SizeUtil.getStatusBarHeight(Leanplum.getContext());
+      int htmlYOffset = htmlOptions.getHtmlYOffset(activity);
+      int top;
+      int bottom;
+      if (MessageTemplates.Args.HTML_ALIGN_BOTTOM.equals(htmlOptions.getHtmlAlign())) {
+        top = size.y - height - statusBarHeight - htmlYOffset;
+        bottom = size.y - htmlYOffset - statusBarHeight;
+      } else {
+        top = htmlYOffset + statusBarHeight;
+        bottom = height + statusBarHeight + htmlYOffset;
       }
-      return super.dispatchTouchEvent(ev);
+
+      if (ev.getY() < top || ev.getY() > bottom || ev.getX() < left || ev.getX() > right) {
+        if (htmlOptions.isHtmlTabOutsideToClose()) {
+          cancel();
+        }
+        activity.dispatchTouchEvent(ev);
+      }
+    }
+    return super.dispatchTouchEvent(ev);
   }
 
   public static void register() {

@@ -73,6 +73,7 @@ public class LeanplumInternal {
   private static final Queue<Map<String, ?>> userAttributeChanges = new ConcurrentLinkedQueue<>();
   private static final ArrayList<Runnable> startIssuedHandlers = new ArrayList<>();
   private static boolean isScreenTrackingEnabled = false;
+  private static boolean isVariantDebugInfoEnabled = false;
 
   private static void onHasStartedAndRegisteredAsDeveloperAndFinishedSyncing() {
     if (!hasStartedAndRegisteredAsDeveloper) {
@@ -183,6 +184,7 @@ public class LeanplumInternal {
         result.matchedTrigger |= conditionResult.matchedTrigger;
         result.matchedUnlessTrigger |= conditionResult.matchedUnlessTrigger;
         result.matchedLimit |= conditionResult.matchedLimit;
+        result.matchedActivePeriod |= conditionResult.matchedActivePeriod;
       }
 
       // Make sure we cancel before matching in case the criteria overlap.
@@ -203,6 +205,11 @@ public class LeanplumInternal {
                 }
               }
             });
+      }
+
+      // Make sure message is within the active period.
+      if(!result.matchedActivePeriod){
+        continue;
       }
 
       if (result.matchedTrigger) {
@@ -252,7 +259,7 @@ public class LeanplumInternal {
             @Override
             public void variablesChanged() {
               try {
-                ActionManager.getInstance().recordMessageImpression(actionContext.getMessageId());
+                Leanplum.triggerMessageDisplayed(actionContext);
               } catch (Throwable t) {
                 Util.handleException(t);
               }
@@ -328,7 +335,7 @@ public class LeanplumInternal {
    */
   private static void trackInternal(String event, Map<String, ?> params,
       Map<String, Object> requestArgs) {
-    Request.post(Constants.Methods.TRACK, requestArgs).send();
+    RequestOld.post(Constants.Methods.TRACK, requestArgs).send();
 
     String eventTriggerName = event;
     String messageId = null;
@@ -426,14 +433,14 @@ public class LeanplumInternal {
               } catch (Throwable ignored) {
               }
             }
-            Request req = Request.post(Constants.Methods.SET_USER_ATTRIBUTES, params);
-            req.onResponse(new Request.ResponseCallback() {
+            RequestOld req = RequestOld.post(Constants.Methods.SET_USER_ATTRIBUTES, params);
+            req.onResponse(new RequestOld.ResponseCallback() {
               @Override
               public void response(JSONObject response) {
                 callback.response(true);
               }
             });
-            req.onError(new Request.ErrorCallback() {
+            req.onError(new RequestOld.ErrorCallback() {
               @Override
               public void error(Exception e) {
                 callback.response(false);
@@ -665,6 +672,14 @@ public class LeanplumInternal {
 
   public static boolean getIsScreenTrackingEnabled() {
     return isScreenTrackingEnabled;
+  }
+
+  public static boolean getIsVariantDebugInfoEnabled() {
+    return isVariantDebugInfoEnabled;
+  }
+
+  public static void setIsVariantDebugInfoEnabled(boolean isVariantDebugInfoEnabled) {
+    LeanplumInternal.isVariantDebugInfoEnabled = isVariantDebugInfoEnabled;
   }
 
   public static void enableAutomaticScreenTracking() {
