@@ -44,6 +44,9 @@ public class LeanplumPushListenerService extends GcmListenerService {
   public void onMessageReceived(String senderId, Bundle data) {
     try {
       if (data.containsKey(Keys.PUSH_MESSAGE_TEXT)) {
+        if (Leanplum.getContext() == null) {
+          Leanplum.setApplicationContext(this);
+        }
         LeanplumPushService.handleNotification(this, data);
       }
       Log.i("Received: " + data.toString());
