@@ -157,18 +157,19 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor* ctx,
 }
 
 NS_IMETHODIMP
-nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
-                                const nsACString& hostname, int32_t port,
+nsNSSDialogs::ChooseCertificate(const nsACString& hostname, int32_t port,
                                 const nsACString& organization,
                                 const nsACString& issuerOrg, nsIArray* certList,
                                 /*out*/ uint32_t* selectedIndex,
+                                /*out*/ bool* rememberClientAuthCertificate,
                                 /*out*/ bool* certificateChosen) {
-  NS_ENSURE_ARG_POINTER(ctx);
   NS_ENSURE_ARG_POINTER(certList);
   NS_ENSURE_ARG_POINTER(selectedIndex);
+  NS_ENSURE_ARG_POINTER(rememberClientAuthCertificate);
   NS_ENSURE_ARG_POINTER(certificateChosen);
 
   *certificateChosen = false;
+  *rememberClientAuthCertificate = false;
 
   nsCOMPtr<nsIMutableArray> argArray = nsArrayBase::Create();
   if (!argArray) {
@@ -232,14 +233,10 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
     return rv;
   }
 
-  nsCOMPtr<nsIClientAuthUserDecision> extraResult = do_QueryInterface(ctx);
-  if (extraResult) {
-    bool rememberSelection = false;
-    rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("rememberSelection"),
-                                    &rememberSelection);
-    if (NS_SUCCEEDED(rv)) {
-      extraResult->SetRememberClientAuthCertificate(rememberSelection);
-    }
+  rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("rememberSelection"),
+                                  rememberClientAuthCertificate);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   rv = retVals->GetPropertyAsBool(NS_LITERAL_STRING("certChosen"),

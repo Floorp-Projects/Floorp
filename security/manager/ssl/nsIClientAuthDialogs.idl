@@ -16,8 +16,6 @@ interface nsIClientAuthDialogs : nsISupports
   /**
    * Called when a user is asked to choose a certificate for client auth.
    *
-   * @param ctx Context that allows at least nsIClientAuthUserDecision to be
-   *            queried.
    * @param hostname Hostname of the server.
    * @param port Port of the server.
    * @param organization Organization field of the server cert.
@@ -25,22 +23,17 @@ interface nsIClientAuthDialogs : nsISupports
    * @param certList List of certificates the user can choose from.
    * @param selectedIndex Index of the cert in |certList| that the user chose.
    *                      Ignored if the return value is false.
+   * @param rememberClientAuthCertificate Whether to remember selection.
    * @return true if a certificate was chosen. false if the user canceled.
    */
   [must_use]
-  boolean chooseCertificate(in nsIInterfaceRequestor ctx,
-                            in AUTF8String hostname,
+  boolean chooseCertificate(in AUTF8String hostname,
                             in long port,
                             in AUTF8String organization,
                             in AUTF8String issuerOrg,
                             in nsIArray certList,
-                            out unsigned long selectedIndex);
-};
-
-[scriptable, uuid(95c4373e-bdd4-4a63-b431-f5b000367721)]
-interface nsIClientAuthUserDecision : nsISupports
-{
-  attribute boolean rememberClientAuthCertificate;
+                            out unsigned long selectedIndex,
+                            out boolean rememberClientAuthCertificate);
 };
 
 %{C++

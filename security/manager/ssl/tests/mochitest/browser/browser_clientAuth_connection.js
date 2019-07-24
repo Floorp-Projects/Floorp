@@ -55,13 +55,13 @@ const gClientAuthDialogs = {
   },
 
   chooseCertificate(
-    ctx,
     hostname,
     port,
     organization,
     issuerOrg,
     certList,
-    selectedIndex
+    selectedIndex,
+    rememberClientAuthCertificate
   ) {
     this.chooseCertificateCalled = true;
     Assert.notEqual(
@@ -70,14 +70,7 @@ const gClientAuthDialogs = {
       "chooseCertificate() should be called only when expected"
     );
 
-    let caud = ctx.QueryInterface(Ci.nsIClientAuthUserDecision);
-    Assert.notEqual(
-      caud,
-      null,
-      "nsIClientAuthUserDecision should be queryable from the " +
-        "given context"
-    );
-    caud.rememberClientAuthCertificate = this.rememberClientAuthCertificate;
+    rememberClientAuthCertificate.value = this.rememberClientAuthCertificate;
 
     Assert.equal(
       hostname,
