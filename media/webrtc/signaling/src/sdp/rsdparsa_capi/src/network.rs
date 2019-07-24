@@ -4,8 +4,6 @@ use std::net::IpAddr;
 use std::os::raw::c_char;
 use std::ffi::{CStr, CString};
 
-use libc::{uint8_t, uint64_t};
-
 use rsdparsa::{SdpOrigin, SdpConnection, SdpBandwidth};
 use rsdparsa::address::{Address, AddressType, AddressTyped, ExplicitlyTypedAddress};
 use types::{StringView, NULL_STRING};
@@ -165,8 +163,8 @@ impl<'a> From<&'a Option<IpAddr>> for RustExplicitlyTypedAddress {
 pub struct RustSdpConnection {
     pub addr: RustExplicitlyTypedAddress
 ,
-    pub ttl: uint8_t,
-    pub amount: uint64_t
+    pub ttl: u8,
+    pub amount: u64
 }
 
 impl<'a> From<&'a SdpConnection> for RustSdpConnection {

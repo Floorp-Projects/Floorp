@@ -2,7 +2,7 @@ use std::ptr;
 use std::os::raw::c_char;
 use std::convert::TryInto;
 
-use libc::{size_t, uint32_t};
+use libc::size_t;
 
 use nserror::{nsresult, NS_OK, NS_ERROR_INVALID_ARG};
 use rsdparsa::{SdpBandwidth, SdpSession};
@@ -118,23 +118,23 @@ pub unsafe extern "C" fn sdp_get_format_u32_vec(sdp_media: *const SdpMedia) -> *
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_set_media_port(sdp_media: *mut SdpMedia, port: uint32_t) {
+pub unsafe extern "C" fn sdp_set_media_port(sdp_media: *mut SdpMedia, port: u32) {
     (*sdp_media).set_port(port);
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_media_port(sdp_media: *const SdpMedia) -> uint32_t {
+pub unsafe extern "C" fn sdp_get_media_port(sdp_media: *const SdpMedia) -> u32 {
     (*sdp_media).get_port()
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_media_port_count(sdp_media: *const SdpMedia) -> uint32_t {
+pub unsafe extern "C" fn sdp_get_media_port_count(sdp_media: *const SdpMedia) -> u32 {
     (*sdp_media).get_port_count()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn sdp_get_media_bandwidth(sdp_media: *const SdpMedia,
-                                                bandwidth_type: *const c_char) -> uint32_t {
+                                                bandwidth_type: *const c_char) -> u32 {
     get_bandwidth((*sdp_media).get_bandwidth(), bandwidth_type)
 }
 
