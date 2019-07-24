@@ -75,7 +75,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
 
    // Test QI on new dom bindings.
    try {
-     var QIed = win.QueryInterface(Ci.nsIClassInfo);
+     var QIed = win.document.documentElement.QueryInterface(Ci.nsIClassInfo);
      ok(false, "Should throw for new binding objects not having classinfo");
    } catch(e) {
      is(e.name, "NS_NOINTERFACE", "Threw while QI-ing on wrapper");
