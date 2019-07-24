@@ -287,7 +287,7 @@ class SessionLifecycleTest : BaseSessionTest() {
             GeckoView(InstrumentationRegistry.getTargetContext()).apply {
                 id = 0
                 if (fromSession != null) {
-                    setSession(fromSession, sessionRule.runtime)
+                    setSession(fromSession)
                 }
 
                 val state = SparseArray<Parcelable>()
@@ -296,7 +296,7 @@ class SessionLifecycleTest : BaseSessionTest() {
                 if (ontoSession !== fromSession) {
                     releaseSession()
                     if (ontoSession != null) {
-                        setSession(ontoSession, sessionRule.runtime)
+                        setSession(ontoSession)
                     }
                 }
                 restoreHierarchyState(state)
@@ -382,20 +382,14 @@ class SessionLifecycleTest : BaseSessionTest() {
     }
 
     @ClosedSessionAtStart
-    @Test fun restoreInstanceState_closedSessionOntoOpenSession() {
-        val view = testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
-        assertThat("View session is not restored", view.session, not(equalTo(mainSession)))
-        assertThat("View session is open", view.session?.isOpen, equalTo(true))
-        view.session?.reload()
-        sessionRule.waitForPageStop()
+    @Test(expected = IllegalStateException::class)
+    fun restoreInstanceState_closedSessionOntoOpenSession() {
+        testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
     }
 
-    @Test fun restoreInstanceState_openSessionOntoOpenSession() {
-        val view = testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
-        assertThat("View session is restored", view.session, equalTo(mainSession))
-        assertThat("View session is open", view.session?.isOpen, equalTo(true))
-        view.session?.reload()
-        sessionRule.waitForPageStop()
+    @Test(expected = IllegalStateException::class)
+    fun restoreInstanceState_openSessionOntoOpenSession() {
+        testRestoreInstanceState(mainSession, sessionRule.createOpenSession())
     }
 
     @ClosedSessionAtStart

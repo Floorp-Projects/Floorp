@@ -182,8 +182,9 @@ public class GeckoViewActivity extends AppCompatActivity {
                 mGeckoView.setSession(session);
             } else {
                 session = createSession();
+                session.open(sGeckoRuntime);
                 mTabSessionManager.setCurrentSession(session);
-                mGeckoView.setSession(session, sGeckoRuntime);
+                mGeckoView.setSession(session);
 
                 loadFromIntent(getIntent());
             }
