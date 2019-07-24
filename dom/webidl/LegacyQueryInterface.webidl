@@ -16,10 +16,7 @@ interface LegacyQueryInterface {
   nsISupports QueryInterface(any iid);
 };
 
-Document implements LegacyQueryInterface;
-DocumentFragment implements LegacyQueryInterface;
 Element implements LegacyQueryInterface;
-Event implements LegacyQueryInterface;
 TreeColumns implements LegacyQueryInterface;
 TreeContentView implements LegacyQueryInterface;
 Window implements LegacyQueryInterface;
