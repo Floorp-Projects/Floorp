@@ -7,6 +7,8 @@
 #define include_dom_media_ipc_RemoteDecoderModule_h
 #include "PlatformDecoderModule.h"
 
+#include "mozilla/StaticMutex.h"
+
 namespace mozilla {
 
 // A PDM implementation that creates a RemoteMediaDataDecoder (a
@@ -31,6 +33,7 @@ class RemoteDecoderModule : public PlatformDecoderModule {
 
  private:
   RefPtr<nsIThread> mManagerThread;
+  static StaticMutex sLaunchMonitor;
 };
 
 }  // namespace mozilla
