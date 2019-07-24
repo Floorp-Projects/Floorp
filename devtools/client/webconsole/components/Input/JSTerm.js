@@ -802,9 +802,7 @@ class JSTerm extends Component {
       lines: str.split(/\n/).length,
     });
 
-    const { frameActor, client } = this.props.serviceContainer.getFrameActor(
-      options.frame
-    );
+    const { frameActor, client } = this.props.serviceContainer.getFrameActor();
 
     return client.evaluateJSAsync(str, {
       frameActor,
