@@ -125,9 +125,6 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
         )
       : null;
 
-    // Call then parent class' show function
-    await super.show();
-
     // Then set spectrum's color and listen to color changes to preview them
     if (this.activeSwatch) {
       this.currentSwatchColor = this.activeSwatch.nextSibling;
@@ -139,6 +136,9 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       this.spectrum.on("changed", this._onSpectrumColorChange);
       this.spectrum.updateUI();
     }
+
+    // Call then parent class' show function
+    await super.show();
 
     const eyeButton = this.tooltip.container.querySelector(
       "#eyedropper-button"
@@ -160,11 +160,6 @@ class SwatchColorPickerTooltip extends SwatchBasedEditorTooltip {
       learnMoreButton.addEventListener("click", this._openDocLink);
       learnMoreButton.addEventListener("keydown", e => e.stopPropagation());
     }
-
-    // After spectrum properties are set, update the tooltip content size.
-    // If contrast is enabled, the tooltip will have additional contrast content
-    // and tooltip size needs to be updated to account for it.
-    this.tooltip.updateContainerBounds(super.tooltipAnchor);
 
     // Add focus to the first focusable element in the tooltip and attach keydown
     // event listener to tooltip
