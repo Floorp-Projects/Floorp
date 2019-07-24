@@ -55,6 +55,7 @@ from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
 from manifest import get_raptor_test_list
 from memory import generate_android_memory_profile
+from performance_tuning import tune_performance
 from power import init_android_power_test, finish_android_power_test
 from results import RaptorResultsHandler
 from utils import view_gecko_profile, write_yml_file
@@ -754,7 +755,7 @@ class RaptorAndroid(Raptor):
     def setup_adb_device(self):
         if self.device is None:
             self.device = ADBDevice(verbose=True)
-            self.tune_performance()
+            tune_performance(self.device, log=LOG)
 
         LOG.info("creating remote root folder for raptor: %s" % self.remote_test_root)
         self.device.rm(self.remote_test_root, force=True, recursive=True)
@@ -763,177 +764,6 @@ class RaptorAndroid(Raptor):
 
         self.clear_app_data()
         self.set_debug_app_flag()
-
-    def tune_performance(self):
-        """Set various performance-oriented parameters, to reduce jitter.
-
-        For more information, see https://bugzilla.mozilla.org/show_bug.cgi?id=1547135.
-        """
-        LOG.info("tuning android device performance")
-        self.set_svc_power_stayon()
-        if (self.device._have_su or self.device._have_android_su):
-            LOG.info("executing additional tuning commands requiring root")
-            device_name = self.device.shell_output('getprop ro.product.model')
-            # all commands require root shell from here on
-            self.set_scheduler()
-            self.set_virtual_memory_parameters()
-            self.turn_off_services()
-            self.set_cpu_performance_parameters(device_name)
-            self.set_gpu_performance_parameters(device_name)
-            self.set_kernel_performance_parameters()
-        self.device.clear_logcat()
-        LOG.info("android device performance tuning complete")
-
-    def _set_value_and_check_exitcode(self, file_name, value, root=False):
-        LOG.info('setting {} to {}'.format(file_name, value))
-        process = self.device.shell(' '.join(['echo', str(value), '>', str(file_name)]), root=root)
-        if process.exitcode == 0:
-            LOG.info('successfully set {} to {}'.format(file_name, value))
-        else:
-            LOG.warning('command failed with exitcode {}'.format(str(process.exitcode)))
-
-    def set_svc_power_stayon(self):
-        LOG.info('set device to stay awake on usb')
-        self.device.shell('svc power stayon usb')
-
-    def set_scheduler(self):
-        LOG.info('setting scheduler to noop')
-        scheduler_location = '/sys/block/sda/queue/scheduler'
-
-        self._set_value_and_check_exitcode(scheduler_location, 'noop')
-
-    def turn_off_services(self):
-        services = [
-            'mpdecision',
-            'thermal-engine',
-            'thermald',
-        ]
-        for service in services:
-            LOG.info(' '.join(['turning off service:', service]))
-            self.device.shell(' '.join(['stop', service]), root=True)
-
-        services_list_output = self.device.shell_output('service list')
-        for service in services:
-            if service not in services_list_output:
-                LOG.info(' '.join(['successfully terminated:', service]))
-            else:
-                LOG.warning(' '.join(['failed to terminate:', service]))
-
-    def disable_animations(self):
-        LOG.info('disabling animations')
-        commands = {
-            'animator_duration_scale': 0.0,
-            'transition_animation_scale': 0.0,
-            'window_animation_scale': 0.0
-        }
-
-        for key, value in commands.items():
-            command = ' '.join(['settings', 'put', 'global', key, str(value)])
-            LOG.info('setting {} to {}'.format(key, value))
-            self.device.shell(command)
-
-    def restore_animations(self):
-        # animation settings are not restored to default by reboot
-        LOG.info('restoring animations')
-        commands = {
-            'animator_duration_scale': 1.0,
-            'transition_animation_scale': 1.0,
-            'window_animation_scale': 1.0
-        }
-
-        for key, value in commands.items():
-            command = ' '.join(['settings', 'put', 'global', key, str(value)])
-            self.device.shell(command)
-
-    def set_virtual_memory_parameters(self):
-        LOG.info('setting virtual memory parameters')
-        commands = {
-            '/proc/sys/vm/swappiness': 0,
-            '/proc/sys/vm/dirty_ratio': 85,
-            '/proc/sys/vm/dirty_background_ratio': 70
-        }
-
-        for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
-
-    def set_cpu_performance_parameters(self, device_name):
-        LOG.info('setting cpu performance parameters')
-        commands = {}
-
-        if device_name == 'Pixel 2':
-            # MSM8998 (4x 2.35GHz, 4x 1.9GHz)
-            # values obtained from:
-            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
-            #   /sys/devices/system/cpu/cpufreq/policy4/scaling_available_frequencies
-            commands.update({
-                '/sys/devices/system/cpu/cpufreq/policy0/scaling_governor': 'performance',
-                '/sys/devices/system/cpu/cpufreq/policy4/scaling_governor': 'performance',
-                '/sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq': '1900800',
-                '/sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq': '2457600',
-            })
-        elif device_name == 'Moto G (5)':
-            # MSM8937(8x 1.4GHz)
-            # values obtained from:
-            #   /sys/devices/system/cpu/cpufreq/policy0/scaling_available_frequencies
-            for x in xrange(0, 8):
-                commands.update({
-                    '/sys/devices/system/cpu/cpu{}/'
-                    'cpufreq/scaling_governor'.format(x): 'performance',
-                    '/sys/devices/system/cpu/cpu{}/'
-                    'cpufreq/scaling_min_freq'.format(x): '1401000'
-                })
-        else:
-            pass
-
-        for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
-
-    def set_gpu_performance_parameters(self, device_name):
-        LOG.info('setting gpu performance parameters')
-        commands = {
-            '/sys/class/kgsl/kgsl-3d0/bus_split': '0',
-            '/sys/class/kgsl/kgsl-3d0/force_bus_on': '1',
-            '/sys/class/kgsl/kgsl-3d0/force_rail_on': '1',
-            '/sys/class/kgsl/kgsl-3d0/force_clk_on': '1',
-            '/sys/class/kgsl/kgsl-3d0/force_no_nap': '1',
-            '/sys/class/kgsl/kgsl-3d0/idle_timer': '1000000',
-        }
-
-        if device_name == 'Pixel 2':
-            # Adreno 540 (710MHz)
-            # values obtained from:
-            #   /sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clk_mhz
-            commands.update({
-                '/sys/devices/soc/5000000.qcom,kgsl-3d0/devfreq/'
-                '5000000.qcom,kgsl-3d0/governor': 'performance',
-                '/sys/devices/soc/soc:qcom,kgsl-busmon/devfreq/'
-                'soc:qcom,kgsl-busmon/governor': 'performance',
-                '/sys/devices/soc/5000000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz': '710',
-            })
-        elif device_name == 'Moto G (5)':
-            # Adreno 505 (450MHz)
-            # values obtained from:
-            #   /sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/max_clock_mhz
-            commands.update({
-                '/sys/devices/soc/1c00000.qcom,kgsl-3d0/devfreq/'
-                '1c00000.qcom,kgsl-3d0/governor': 'performance',
-                '/sys/devices/soc/1c00000.qcom,kgsl-3d0/kgsl/kgsl-3d0/min_clock_mhz': '450',
-            })
-        else:
-            pass
-        for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
-
-    def set_kernel_performance_parameters(self):
-        LOG.info('setting kernel performance parameters')
-        commands = {
-            '/sys/kernel/debug/msm-bus-dbg/shell-client/update_request': '1',
-            '/sys/kernel/debug/msm-bus-dbg/shell-client/mas': '1',
-            '/sys/kernel/debug/msm-bus-dbg/shell-client/ab': '0',
-            '/sys/kernel/debug/msm-bus-dbg/shell-client/slv': '512',
-        }
-        for key, value in commands.items():
-            self._set_value_and_check_exitcode(key, value, root=True)
 
     def build_browser_profile(self):
         super(RaptorAndroid, self).build_browser_profile()

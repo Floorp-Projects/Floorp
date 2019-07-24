@@ -23,7 +23,7 @@ add_task(async function() {
   let observerWindowOpened = {
     observe(aSubject, aTopic, aData) {
       if (aTopic == "domwindowopened") {
-        newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
+        newWindow = aSubject;
         newWindow.addEventListener(
           "load",
           function() {

@@ -63,6 +63,11 @@ interface nsIPluginTag : nsISupports
   Array<AUTF8String> getMimeTypes();
   Array<AUTF8String> getMimeDescriptions();
   Array<AUTF8String> getExtensions();
+
+  /**
+   * An id for this plugin. 0 is a valid id.
+   */
+  readonly attribute unsigned long id;
 };
 
 /**
@@ -89,9 +94,4 @@ interface nsIFakePluginTag : nsIPluginTag
    * can use to access the element that instantiates the plugin.
    */
   readonly attribute AString sandboxScript;
-
-  /**
-   * A unique id for this JS-implemented plugin. 0 is a valid id.
-   */
-  readonly attribute unsigned long id;
 };

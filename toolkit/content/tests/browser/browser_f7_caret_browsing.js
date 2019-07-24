@@ -40,7 +40,7 @@ function promiseCaretPromptOpened() {
     function observer(subject, topic, data) {
       if (topic == "domwindowopened") {
         Services.ww.unregisterNotification(observer);
-        let win = subject.QueryInterface(Ci.nsIDOMWindow);
+        let win = subject;
         BrowserTestUtils.waitForEvent(
           win,
           "load",

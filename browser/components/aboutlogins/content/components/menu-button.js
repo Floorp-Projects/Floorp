@@ -60,7 +60,8 @@ export default class MenuButton extends HTMLElement {
           classList.contains("menuitem-import") ||
           classList.contains("menuitem-faq") ||
           classList.contains("menuitem-feedback") ||
-          classList.contains("menuitem-preferences")
+          classList.contains("menuitem-preferences") ||
+          classList.contains("menuitem-mobile")
         ) {
           let eventName = event.originalTarget.dataset.eventName;
           document.dispatchEvent(
