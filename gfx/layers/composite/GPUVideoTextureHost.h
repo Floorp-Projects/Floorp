@@ -50,7 +50,7 @@ class GPUVideoTextureHost : public TextureHost {
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
-  uint32_t NumSubTextures() const override;
+  uint32_t NumSubTextures() override;
 
   void PushResourceUpdates(wr::TransactionBuilder& aResources,
                            ResourceUpdateOp aOp,
