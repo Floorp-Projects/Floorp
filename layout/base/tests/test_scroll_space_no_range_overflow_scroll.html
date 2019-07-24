@@ -1,0 +1,64 @@
+<!doctype html>
+<title>Test for bug 1567237</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<style>
+  .spacer { height: 200vh; }
+  .scroller { height: 300px; overflow: scroll; }
+</style>
+<div id="unscrollable" class="scroller" tabindex=0></div>
+<div id="scrollable" class="scroller" tabindex=0>
+  <div class="spacer"></div>
+</div>
+<div class="spacer"></div>
+<script>
+function waitForScrollEvent(target) {
+  return new Promise(resolve => {
+    target.addEventListener("scroll", resolve, { once: true });
+  });
+}
+
+let selectionController =
+  SpecialPowers.wrap(window)
+             .docShell
+             .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+             .getInterface(SpecialPowers.Ci.nsISelectionDisplay)
+             .QueryInterface(SpecialPowers.Ci.nsISelectionController);
+
+function doPageDown(targetExpectedToScroll) {
+  let promise = waitForScrollEvent(targetExpectedToScroll);
+  selectionController.pageMove(true, false);
+  return promise;
+}
+
+promise_test(async function() {
+  await SpecialPowers.pushPrefEnv({"set": [["general.smoothScroll", false]]});
+
+  const rootScroller = document.documentElement;
+  const scrollable = document.querySelector("#scrollable");
+  const unscrollable = document.querySelector("#unscrollable");
+
+  assert_equals(rootScroller.scrollTop, 0, "Root should start unscrolled");
+  assert_equals(scrollable.scrollTop, 0, "#scrollable should start unscrolled");
+  assert_equals(unscrollable.scrollTop, 0, "#unscrollable should not be able to scroll at all");
+
+  assert_true(rootScroller.scrollTopMax > 0, "Should be able to scroll the document element");
+  assert_true(scrollable.scrollTopMax > 0, "Should be able to scroll #scrollable");
+  assert_equals(unscrollable.scrollTopMax, 0, "#unscrollable should not be able to scroll at all (checking scrollTopMax)");
+
+  scrollable.focus();
+  await doPageDown(scrollable);
+  assert_not_equals(scrollable.scrollTop, 0, "Should have scrolled when pressing space");
+
+  unscrollable.focus();
+  let rootScrollTop = rootScroller.scrollTop; // Could've scrolled to scroll `scrollable` into view before.
+  await doPageDown(window);
+  assert_equals(unscrollable.scrollTop, 0, "Should not be able to scroll the unscrollable div");
+  assert_not_equals(rootScroller.scrollTop, rootScrollTop, "Root should be able to scroll");
+
+  // Null out the controller. Otherwise we leak the whole window because
+  // PresShell is not cycle-collectable. See bug 1567237.
+  selectionController = null;
+}, "Overflow scroll without range doesn't block scrolling of the main document");
+</script>
