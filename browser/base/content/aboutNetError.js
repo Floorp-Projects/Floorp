@@ -398,7 +398,8 @@ function initPageCertError() {
     checkbox.checked = !!errorReportingAutomatic;
   }
   let hideAddExceptionButton = RPMGetBoolPref(
-    "security.certerror.hideAddException"
+    "security.certerror.hideAddException",
+    false
   );
   if (hideAddExceptionButton) {
     document.querySelector(".exceptionDialogButtonContainer").hidden = true;
@@ -573,7 +574,8 @@ async function setCertErrorDetails(event) {
 
     case "MOZILLA_PKIX_ERROR_MITM_DETECTED":
       let autoEnabledEnterpriseRoots = RPMGetBoolPref(
-        "security.enterprise_roots.auto-enabled"
+        "security.enterprise_roots.auto-enabled",
+        false
       );
       if (mitmPrimingEnabled && autoEnabledEnterpriseRoots) {
         RPMSendAsyncMessage("Browser:ResetEnterpriseRootsPref");
@@ -619,9 +621,9 @@ async function setCertErrorDetails(event) {
       learnMoreLink.href = baseURL + "time-errors";
       // We check against the remote-settings server time first if available, because that allows us
       // to give the user an approximation of what the correct time is.
-      let difference = RPMGetIntPref("services.settings.clock_skew_seconds");
+      let difference = RPMGetIntPref("services.settings.clock_skew_seconds", 0);
       let lastFetched =
-        RPMGetIntPref("services.settings.last_update_seconds") * 1000;
+        RPMGetIntPref("services.settings.last_update_seconds", 0) * 1000;
 
       let now = Date.now();
       let certRange = {
