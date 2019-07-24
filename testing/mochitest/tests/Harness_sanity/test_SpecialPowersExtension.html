@@ -82,9 +82,15 @@ async function starttest(){
   
   // QueryInterface and getPrivilegedProps tests
   is(SpecialPowers.can_QI(SpecialPowers), false);
-  ok(SpecialPowers.can_QI(window));
-  ok(SpecialPowers.do_QueryInterface(window, "nsIDOMWindow"));
-  is(SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(window, "nsIDOMWindow"), "document.nodeName"), "#document");
+  let doc = SpecialPowers.wrap(document);
+  is(SpecialPowers.getPrivilegedProps(doc, "baseURIObject.fileName"), null,
+     "Should not have a fileName property yet");
+  let uri = SpecialPowers.getPrivilegedProps(doc, "baseURIObject");
+  ok(SpecialPowers.can_QI(uri));
+  ok(SpecialPowers.do_QueryInterface(uri, "nsIURL"));
+  is(SpecialPowers.getPrivilegedProps(doc, "baseURIObject.fileName"),
+     "test_SpecialPowersExtension.html",
+     "Should have a fileName property now");
   
   //try to run garbage collection
   SpecialPowers.gc();
