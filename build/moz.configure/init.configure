@@ -1047,6 +1047,15 @@ set_define('XP_LINUX', target_is_linux)
 
 
 @depends(target)
+def target_is_android(target):
+    if target.os == 'Android':
+        return True
+
+
+set_define('ANDROID', target_is_android)
+
+
+@depends(target)
 def target_is_openbsd(target):
     if target.kernel == 'OpenBSD':
         return True
