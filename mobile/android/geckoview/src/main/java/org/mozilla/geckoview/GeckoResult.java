@@ -157,6 +157,32 @@ import java.util.function.Consumer;
 public class GeckoResult<T> {
     private static final String LOGTAG = "GeckoResult";
 
+    private interface Dispatcher {
+        void dispatch(Runnable r);
+    }
+
+    private static class HandlerDispatcher implements Dispatcher {
+        HandlerDispatcher(Handler h) {
+            mHandler = h;
+        }
+        public void dispatch(Runnable r) {
+            mHandler.post(r);
+        }
+        @Override
+        public boolean equals(Object other) {
+            if (!(other instanceof HandlerDispatcher)) {
+                return false;
+            }
+            return mHandler.equals(((HandlerDispatcher)other).mHandler);
+        }
+        @Override
+        public int hashCode() {
+            return mHandler.hashCode();
+        }
+
+        Handler mHandler;
+    }
+
     public static final class UncaughtException extends RuntimeException {
         public UncaughtException(final Throwable cause) {
             super(cause);
@@ -173,7 +199,7 @@ public class GeckoResult<T> {
      */
     public static final GeckoResult<AllowOrDeny> DENY = GeckoResult.fromValue(AllowOrDeny.DENY);
 
-    private final Handler mHandler;
+    private final Dispatcher mDispatcher;
     private boolean mComplete;
     private T mValue;
     private Throwable mError;
@@ -187,11 +213,11 @@ public class GeckoResult<T> {
     @WrapForJNI
     public GeckoResult() {
         if (ThreadUtils.isOnUiThread()) {
-            mHandler = ThreadUtils.getUiHandler();
+            mDispatcher = new HandlerDispatcher(ThreadUtils.getUiHandler());
         } else if (Looper.myLooper() != null) {
-            mHandler = new Handler();
+            mDispatcher = new HandlerDispatcher(new Handler());
         } else {
-            mHandler = null;
+            mDispatcher = null;
         }
     }
 
@@ -203,7 +229,7 @@ public class GeckoResult<T> {
      *                listeners registered via {@link #then(OnValueListener, OnExceptionListener)}.
      */
     public GeckoResult(final Handler handler) {
-        mHandler = handler;
+        mDispatcher = new HandlerDispatcher(handler);
     }
 
     /**
@@ -374,7 +400,7 @@ public class GeckoResult<T> {
             throw new IllegalArgumentException("At least one listener should be non-null");
         }
 
-        if (mHandler == null) {
+        if (mDispatcher == null) {
             throw new IllegalThreadStateException("Must have a Handler");
         }
 
@@ -419,11 +445,11 @@ public class GeckoResult<T> {
      *         {@link #then(OnValueListener, OnExceptionListener)}.
      */
     public @Nullable Looper getLooper() {
-        if (mHandler == null) {
+        if (mDispatcher == null || !(mDispatcher instanceof HandlerDispatcher)) {
             return null;
         }
 
-        return mHandler.getLooper();
+        return ((HandlerDispatcher)mDispatcher).mHandler.getLooper();
     }
 
     /**
@@ -469,12 +495,12 @@ public class GeckoResult<T> {
             throw new IllegalStateException("Cannot dispatch unless result is complete");
         }
 
-        if (mHandler == null) {
+        if (mDispatcher == null) {
             runnable.run();
             return;
         }
 
-        mHandler.post(runnable);
+        mDispatcher.dispatch(runnable);
     }
 
     /**
