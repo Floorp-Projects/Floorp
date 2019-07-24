@@ -15,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.config.Configuration
+import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.private.Lifetime
@@ -206,6 +207,7 @@ class GleanTest {
             sendInPings = listOf("store1")
         )
         Glean.initialized = false
+        Dispatchers.API.testingMode = false
         stringMetric.set("foo")
         assertNull(
             "Metrics should not be recorded if Glean is not initialized",
@@ -213,6 +215,38 @@ class GleanTest {
         )
 
         Glean.initialized = true
+    }
+
+    @Test
+    fun `queued recorded metrics correctly record during init`() {
+        val counterMetric = CounterMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "counter_metric",
+            sendInPings = listOf("store1")
+        )
+
+        // First set to a pre-init state
+        Glean.initialized = false
+        Dispatchers.API.setTaskQueueing(true)
+
+        // This will queue 3 tasks that will add to the metric value once Glean is initialized
+        for (i in 0..2) {
+            counterMetric.add()
+        }
+
+        // Ensure that no value has been stored yet since the tasks have only been queued and not
+        // executed yet
+        assertFalse("No value must be stored", counterMetric.testHasValue())
+
+        // Calling resetGlean here will cause Glean to be initialized and should cause the queued
+        // tasks recording metrics to execute
+        resetGlean(clearStores = false)
+
+        // Verify that the callback was executed by testing for the correct value
+        assertTrue("Value must exist", counterMetric.testHasValue())
+        assertEquals("Value must match", 3, counterMetric.testGetValue())
     }
 
     @Test

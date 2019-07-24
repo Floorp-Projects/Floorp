@@ -39,12 +39,6 @@ interface CommonMetricData {
     val identifier: String get() = if (category.isEmpty()) { name } else { "$category.$name" }
 
     fun shouldRecord(logger: Logger): Boolean {
-        // Don't record metrics if we aren't initialized
-        if (!Glean.isInitialized()) {
-            logger.error("Glean must be initialized before metrics are recorded")
-            return false
-        }
-
         // Silently drop if metrics are turned off globally or locally
         if (!Glean.getUploadEnabled() || disabled) {
             return false

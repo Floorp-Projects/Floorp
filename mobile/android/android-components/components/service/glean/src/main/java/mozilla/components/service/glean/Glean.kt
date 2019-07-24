@@ -85,6 +85,7 @@ open class GleanInternalAPI internal constructor () {
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
+    @Suppress("LongMethod")
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()
@@ -133,6 +134,10 @@ open class GleanInternalAPI internal constructor () {
         if (!Dispatchers.API.testingMode) {
             metricsPingScheduler.startupCheck()
         }
+
+        // Signal Dispatcher that init is complete
+        @Suppress("EXPERIMENTAL_API_USAGE")
+        Dispatchers.API.flushQueuedInitialTasks()
 
         // At this point, all metrics and events can be recorded.
         ProcessLifecycleOwner.get().lifecycle.addObserver(gleanLifecycleObserver)
