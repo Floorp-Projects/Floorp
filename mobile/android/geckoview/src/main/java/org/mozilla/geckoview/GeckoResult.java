@@ -1,6 +1,7 @@
 package org.mozilla.geckoview;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.os.Handler;
@@ -463,6 +464,25 @@ public class GeckoResult<T> {
         }
     }
 
+    @WrapForJNI
+    public void nativeThen(final GeckoCallback accept, final GeckoCallback reject) {
+        // NB: We could use the lambda syntax here, but given all the layers
+        // of abstraction it's helpful to see the types written explicitly.
+        thenInternal(DirectDispatcher.sInstance, new OnValueListener<T, Void>() {
+            @Override
+            public GeckoResult<Void> onValue(final T value) {
+                accept.call(value);
+                return null;
+            }
+        }, new OnExceptionListener<Void>() {
+            @Override
+            public GeckoResult<Void> onException(final Throwable exception) {
+                reject.call(exception);
+                return null;
+            }
+        });
+    }
+
     /**
      * @return Get the {@link Looper} that will be used to schedule listeners registered via
      *         {@link #then(OnValueListener, OnExceptionListener)}.
@@ -682,6 +702,15 @@ public class GeckoResult<T> {
         @AnyThread
         @Nullable GeckoResult<V> onException(@NonNull Throwable exception) throws Throwable;
     }
+
+    @WrapForJNI
+    private static class GeckoCallback extends JNIObject {
+        private native void call(Object arg);
+
+        @Override
+        protected native void disposeNative();
+    }
+
 
     private boolean haveValue() {
         return mComplete && mError == null;
