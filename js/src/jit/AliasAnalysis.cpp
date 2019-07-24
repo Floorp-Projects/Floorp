@@ -130,7 +130,6 @@ static inline const MDefinition* GetObject(const MDefinition* ins) {
     case MDefinition::Opcode::TypedArrayLength:
     case MDefinition::Opcode::TypedArrayByteOffset:
     case MDefinition::Opcode::SetTypedObjectOffset:
-    case MDefinition::Opcode::SetDisjointTypedElements:
     case MDefinition::Opcode::ArrayPopShift:
     case MDefinition::Opcode::ArrayPush:
     case MDefinition::Opcode::LoadTypedArrayElementHole:

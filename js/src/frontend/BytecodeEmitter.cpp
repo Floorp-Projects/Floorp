@@ -110,8 +110,7 @@ BytecodeEmitter::BytecodeEmitter(
 
   if (sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
-    bytecodeSection().setNumICEntries(sc->asFunctionBox()->function()->nargs() +
-                                      1);
+    bytecodeSection().setNumICEntries(sc->asFunctionBox()->nargs() + 1);
   }
 }
 

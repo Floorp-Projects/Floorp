@@ -702,6 +702,7 @@ class PanelList extends HTMLElement {
   }
 
   onHide() {
+    requestAnimationFrame(() => this.sendEvent("hidden"));
     this.removeHideListeners();
   }
 
@@ -1740,6 +1741,10 @@ class AddonCard extends HTMLElement {
       if (action == "more-options") {
         this.panel.toggle(e);
       }
+    } else if (e.type === "shown" || e.type === "hidden") {
+      // The card will be dimmed if it's disabled, but when the panel is open
+      // that should be reverted so the menu items can be easily read.
+      this.toggleAttribute("panelopen", e.type === "shown");
     }
   }
 
@@ -1751,12 +1756,16 @@ class AddonCard extends HTMLElement {
     this.addEventListener("change", this);
     this.addEventListener("click", this);
     this.addEventListener("mousedown", this);
+    this.panel.addEventListener("shown", this);
+    this.panel.addEventListener("hidden", this);
   }
 
   removeListeners() {
     this.removeEventListener("change", this);
     this.removeEventListener("click", this);
     this.removeEventListener("mousedown", this);
+    this.panel.removeEventListener("shown", this);
+    this.panel.removeEventListener("hidden", this);
   }
 
   onNewInstall(install) {
@@ -1810,6 +1819,8 @@ class AddonCard extends HTMLElement {
    */
   update() {
     let { addon, card } = this;
+
+    card.setAttribute("active", addon.isActive);
 
     // Update the icon.
     let icon;
