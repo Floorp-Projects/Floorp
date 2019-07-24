@@ -22,14 +22,24 @@ class FramingChecker {
                                 nsIContentSecurityPolicy* aCSP);
 
  protected:
-  enum XFOHeader { eDENY, eSAMEORIGIN, eALLOWFROM };
+  enum XFOHeader { eDENY, eSAMEORIGIN };
+
+  /**
+   * Logs to the window about a X-Frame-Options error.
+   *
+   * @param aMessageTag the error message identifier to log
+   * @param aParentDocShellItem the containing docshell that the frame is
+   * loading into
+   * @param aChildURI the URI of the frame attempting to load
+   * @param aPolicy the header value string from the frame
+   */
+  static void ReportError(const char* aMessageTag,
+                          nsIDocShellTreeItem* aParentDocShellItem,
+                          nsIURI* aChildURI, const nsAString& aPolicy);
 
   static bool CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
                                          const nsAString& aPolicy,
                                          nsIDocShell* aDocShell);
-
-  static void ReportXFOViolation(nsIDocShellTreeItem* aTopDocShellItem,
-                                 nsIURI* aThisURI, XFOHeader aHeader);
 };
 
 #endif /* mozilla_dom_FramingChecker_h */
