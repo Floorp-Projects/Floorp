@@ -14,6 +14,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/IntentionalCrash.h"
 #include "mozilla/PerformanceMetricsCollector.h"
 #include "mozilla/PerfStats.h"
 #include "mozilla/Preferences.h"
@@ -1116,6 +1117,16 @@ bool ChromeUtils::IsClassifierBlockingErrorCode(GlobalObject& aGlobal,
                                                 uint32_t aError) {
   return net::UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(
       static_cast<nsresult>(aError));
+}
+
+/* static */
+void ChromeUtils::PrivateNoteIntentionalCrash(const GlobalObject& aGlobal,
+                                              ErrorResult& aError) {
+  if (XRE_IsContentProcess()) {
+    NoteIntentionalCrash("tab");
+    return;
+  }
+  aError.Throw(NS_ERROR_NOT_IMPLEMENTED);
 }
 
 }  // namespace dom
