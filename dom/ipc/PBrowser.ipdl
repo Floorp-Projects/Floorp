@@ -153,6 +153,7 @@ struct WebProgressLocationChangeData
   PrincipalInfo contentPrincipal;
   PrincipalInfo contentStoragePrincipal;
   CSPInfo? csp;
+  nsIReferrerInfo referrerInfo;
   uint64_t? requestContextID;
 };
 
