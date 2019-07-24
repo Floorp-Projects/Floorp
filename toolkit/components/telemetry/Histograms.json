@@ -9128,16 +9128,6 @@
     "description": "Killed, likely due to an OOM condition",
     "operating_systems": ["android"]
   },
-  "FIPS_ENABLED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["seceng@mozilla.org"],
-    "expires_in_version": "54",
-    "kind": "flag",
-    "bug_numbers": [1241317],
-    "releaseChannelCollection": "opt-out",
-    "description": "Has FIPS mode been enabled?"
-  },
   "SECURITY_UI": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
