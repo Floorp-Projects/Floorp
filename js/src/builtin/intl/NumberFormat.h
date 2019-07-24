@@ -116,6 +116,17 @@ extern MOZ_MUST_USE bool intl_numberingSystem(JSContext* cx, unsigned argc,
 extern MOZ_MUST_USE bool intl_FormatNumber(JSContext* cx, unsigned argc,
                                            Value* vp);
 
+#if DEBUG || MOZ_SYSTEM_ICU
+/**
+ * Returns an object with all available measurement units.
+ *
+ * Usage: units = intl_availableMeasurementUnits()
+ */
+extern MOZ_MUST_USE bool intl_availableMeasurementUnits(JSContext* cx,
+                                                        unsigned argc,
+                                                        Value* vp);
+#endif
+
 namespace intl {
 
 /**

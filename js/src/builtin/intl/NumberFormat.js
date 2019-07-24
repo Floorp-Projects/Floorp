@@ -286,6 +286,12 @@ function IsWellFormedUnitIdentifier(unitIdentifier) {
            IsSanctionedSimpleUnitIdentifier(denominator);
 }
 
+#if DEBUG || MOZ_SYSTEM_ICU
+var availableMeasurementUnits = {
+    value: null
+};
+#endif
+
 /**
  * Verifies that the given string is a sanctioned simple core unit identifier.
  *
@@ -296,7 +302,31 @@ function IsWellFormedUnitIdentifier(unitIdentifier) {
 function IsSanctionedSimpleUnitIdentifier(unitIdentifier) {
     assert(typeof unitIdentifier === "string", "unitIdentifier is a string value");
 
-    return hasOwn(unitIdentifier, sanctionedSimpleUnitIdentifiers);
+    var isSanctioned = hasOwn(unitIdentifier, sanctionedSimpleUnitIdentifiers);
+
+#if DEBUG || MOZ_SYSTEM_ICU
+    if (isSanctioned) {
+        if (availableMeasurementUnits.value === null)
+            availableMeasurementUnits.value = intl_availableMeasurementUnits();
+
+        var isSupported = hasOwn(unitIdentifier, availableMeasurementUnits.value);
+
+#if MOZ_SYSTEM_ICU
+        // A system ICU may support fewer measurement units, so we need to make
+        // sure the unit is actually supported.
+        isSanctioned = isSupported;
+#else
+        // Otherwise just assert that the sanctioned unit is also supported.
+        assert(isSupported,
+`"${unitIdentifier}" is sanctioned but not supported. Did you forget to update
+intl/icu/data_filter.json to include the unit (and any implicit compound units)?
+For example "speed/kilometer-per-hour" is implied by "length/kilometer" and
+"duration/hour" and must therefore also be present.`);
+#endif
+    }
+#endif
+
+    return isSanctioned;
 }
 
 /**

@@ -1327,6 +1327,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/uclean.h',
         'unicode/ucol.h',
         'unicode/udat.h',
+        'unicode/udata.h',
         'unicode/udatpg.h',
         'unicode/udisplaycontext.h',
         'unicode/uenum.h',
@@ -1337,6 +1338,7 @@ if CONFIG['MOZ_SYSTEM_ICU']:
         'unicode/unumberformatter.h',
         'unicode/upluralrules.h',
         'unicode/ureldatefmt.h',
+        'unicode/ures.h',
         'unicode/ustring.h',
         'unicode/utypes.h',
     ]
