@@ -74,12 +74,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=500931
    ok(Object.prototype.__lookupGetter__.call(win.document, 'title'), 'found getter on document');
 
    // Test QI on new dom bindings.
-   var contentXHR = XPCNativeWrapper(win.wrappedJSObject.xhr);
    try {
-     var QIed = contentXHR.QueryInterface(Ci.nsIClassInfo);
+     var QIed = win.QueryInterface(Ci.nsIClassInfo);
      ok(false, "Should throw for new binding objects not having classinfo");
    } catch(e) {
-     ok(true, "Threw while QI-ing on wrapper");
+     is(e.name, "NS_NOINTERFACE", "Threw while QI-ing on wrapper");
    }
   }
 
