@@ -28,7 +28,6 @@ class HistoryStore(initialState: HistoryState) :
  */
 sealed class HistoryAction : Action {
     data class Change(val list: List<HistoryItem>) : HistoryAction()
-    data class EnterEditMode(val item: HistoryItem) : HistoryAction()
     object ExitEditMode : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
@@ -44,7 +43,7 @@ sealed class HistoryAction : Action {
 data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : State {
     sealed class Mode {
         object Normal : Mode()
-        data class Editing(val selectedItems: List<HistoryItem>) : Mode()
+        data class Editing(val selectedItems: Set<HistoryItem>) : Mode()
         object Deleting : Mode()
     }
 }
@@ -55,28 +54,21 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : State {
 fun historyStateReducer(state: HistoryState, action: HistoryAction): HistoryState {
     return when (action) {
         is HistoryAction.Change -> state.copy(mode = HistoryState.Mode.Normal, items = action.list)
-        is HistoryAction.EnterEditMode -> state.copy(
-            mode = HistoryState.Mode.Editing(listOf(action.item))
-        )
         is HistoryAction.AddItemForRemoval -> {
             val mode = state.mode
             if (mode is HistoryState.Mode.Editing) {
-                val items = mode.selectedItems + listOf(action.item)
+                val items = mode.selectedItems + setOf(action.item)
                 state.copy(mode = HistoryState.Mode.Editing(items))
             } else {
-                state
+                state.copy(mode = HistoryState.Mode.Editing(setOf(action.item)))
             }
         }
         is HistoryAction.RemoveItemForRemoval -> {
             var mode = state.mode
 
             if (mode is HistoryState.Mode.Editing) {
-                val items = mode.selectedItems.filter { it.id != action.item.id }
-                mode = if (items.isEmpty()) HistoryState.Mode.Normal else HistoryState.Mode.Editing(
-                    items
-                )
-
-                state.copy(mode = mode)
+                val items = mode.selectedItems.minus(action.item)
+                state.copy(mode = HistoryState.Mode.Editing(items))
             } else {
                 state
             }

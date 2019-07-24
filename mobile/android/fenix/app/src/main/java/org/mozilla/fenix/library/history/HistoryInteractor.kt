@@ -13,26 +13,43 @@ class HistoryInteractor(
     private val openToBrowser: (item: HistoryItem) -> Unit,
     private val displayDeleteAll: () -> Unit,
     private val invalidateOptionsMenu: () -> Unit,
-    private val deleteHistoryItems: (List<HistoryItem>) -> Unit
+    private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
 ) : HistoryViewInteractor {
-    override fun onHistoryItemOpened(item: HistoryItem) {
-        openToBrowser(item)
+    override fun onItemPress(item: HistoryItem) {
+        val mode = store.state.mode
+        when (mode) {
+            is HistoryState.Mode.Normal -> openToBrowser(item)
+            is HistoryState.Mode.Editing -> {
+                val isSelected = mode.selectedItems.contains(item)
+
+                if (isSelected) {
+                    store.dispatch(HistoryAction.RemoveItemForRemoval(item))
+                } else {
+                    store.dispatch(HistoryAction.AddItemForRemoval(item))
+                }
+            }
+        }
     }
 
-    override fun onEnterEditMode(selectedItem: HistoryItem) {
-        store.dispatch(HistoryAction.EnterEditMode(selectedItem))
+    override fun onItemLongPress(item: HistoryItem) {
+        val isSelected = (store.state.mode as? HistoryState.Mode.Editing)?.let {
+            it.selectedItems.contains(item)
+        } ?: false
+
+        if (isSelected) {
+            store.dispatch(HistoryAction.RemoveItemForRemoval(item))
+        } else {
+            store.dispatch(HistoryAction.AddItemForRemoval(item))
+        }
     }
 
-    override fun onBackPressed() {
-        store.dispatch(HistoryAction.ExitEditMode)
-    }
-
-    override fun onItemAddedForRemoval(item: HistoryItem) {
-        store.dispatch(HistoryAction.AddItemForRemoval(item))
-    }
-
-    override fun onItemRemovedForRemoval(item: HistoryItem) {
-        store.dispatch(HistoryAction.RemoveItemForRemoval(item))
+    override fun onBackPressed(): Boolean {
+        return if (store.state.mode is HistoryState.Mode.Editing) {
+            store.dispatch(HistoryAction.ExitEditMode)
+            true
+        } else {
+            false
+        }
     }
 
     override fun onModeSwitched() {
@@ -44,10 +61,10 @@ class HistoryInteractor(
     }
 
     override fun onDeleteOne(item: HistoryItem) {
-        deleteHistoryItems.invoke(listOf(item))
+        deleteHistoryItems.invoke(setOf(item))
     }
 
-    override fun onDeleteSome(items: List<HistoryItem>) {
+    override fun onDeleteSome(items: Set<HistoryItem>) {
         deleteHistoryItems.invoke(items)
     }
 }

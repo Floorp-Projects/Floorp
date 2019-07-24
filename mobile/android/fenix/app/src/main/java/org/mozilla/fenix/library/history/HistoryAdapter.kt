@@ -8,25 +8,14 @@ import android.content.Context
 import android.text.format.DateUtils
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.history.viewholders.HistoryDeleteButtonViewHolder
-import org.mozilla.fenix.library.history.viewholders.HistoryHeaderViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
 import java.util.Calendar
 import java.util.Date
 
-private sealed class AdapterItem {
-    object DeleteButton : AdapterItem()
-    data class SectionHeader(val range: Range) : AdapterItem()
-    data class Item(val item: HistoryItem) : AdapterItem()
-}
-
-private enum class Range {
+enum class HistoryItemTimeGroup {
     Today, ThisWeek, ThisMonth, Older;
 
     fun humanReadable(context: Context): String = when (this) {
@@ -37,54 +26,41 @@ private enum class Range {
     }
 }
 
-private class HistoryList(val history: List<HistoryItem>) {
-    val items: List<AdapterItem>
+class HistoryAdapter(
+    private val historyInteractor: HistoryInteractor
+) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback) {
+    private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
-    init {
-        val oneDayAgo = getDaysAgo(zero_days).time
-        val sevenDaysAgo = getDaysAgo(seven_days).time
-        val thirtyDaysAgo = getDaysAgo(thirty_days).time
+    override fun getItemViewType(position: Int): Int = HistoryListItemViewHolder.LAYOUT_ID
 
-        val lastWeek = LongRange(sevenDaysAgo, oneDayAgo)
-        val lastMonth = LongRange(thirtyDaysAgo, sevenDaysAgo)
-        val items = mutableListOf<AdapterItem>()
-        items.add(AdapterItem.DeleteButton)
-
-        val groups = history.groupBy { item ->
-            when {
-                DateUtils.isToday(item.visitedAt) -> Range.Today
-                lastWeek.contains(item.visitedAt) -> Range.ThisWeek
-                lastMonth.contains(item.visitedAt) -> Range.ThisMonth
-                else -> Range.Older
-            }
-        }
-
-        items.addAll(groups.adapterItemsForRange(Range.Today))
-        items.addAll(groups.adapterItemsForRange(Range.ThisWeek))
-        items.addAll(groups.adapterItemsForRange(Range.ThisMonth))
-        items.addAll(groups.adapterItemsForRange(Range.Older))
-        // No history only the delete button, so let's clear the list to show the empty text
-        if (items.size == 1) items.clear()
-        this.items = items
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+        return HistoryListItemViewHolder(view, historyInteractor)
     }
 
-    private fun Map<Range, List<HistoryItem>>.adapterItemsForRange(range: Range): List<AdapterItem> {
-        return this[range]?.let { historyItems ->
-            val items = mutableListOf<AdapterItem>()
-            if (historyItems.isNotEmpty()) {
-                items.add(AdapterItem.SectionHeader(range))
-                for (item in historyItems) {
-                    items.add(AdapterItem.Item(item))
-                }
-            }
-            items
-        } ?: listOf()
+    fun updateMode(mode: HistoryState.Mode) {
+        this.mode = mode
+    }
+
+    override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
+        val previous = if (position == 0) null else getItem(position - 1)
+        val current = getItem(position) ?: return
+
+        val previousHeader = previous?.let(::timeGroupForHistoryItem)
+        val currentHeader = timeGroupForHistoryItem(current)
+        val timeGroup = if (currentHeader != previousHeader) currentHeader else null
+        holder.bind(current, timeGroup, position == 0, mode)
     }
 
     companion object {
-        private const val zero_days = 0
-        private const val seven_days = 7
-        private const val thirty_days = 30
+        private const val zeroDays = 0
+        private const val sevenDays = 7
+        private const val thirtyDays = 30
+        private val oneDayAgo = getDaysAgo(zeroDays).time
+        private val sevenDaysAgo = getDaysAgo(sevenDays).time
+        private val thirtyDaysAgo = getDaysAgo(thirtyDays).time
+        private val lastWeekRange = LongRange(sevenDaysAgo, oneDayAgo)
+        private val lastMonthRange = LongRange(thirtyDaysAgo, sevenDaysAgo)
 
         private fun getDaysAgo(daysAgo: Int): Date {
             val calendar = Calendar.getInstance()
@@ -92,96 +68,27 @@ private class HistoryList(val history: List<HistoryItem>) {
 
             return calendar.time
         }
-    }
-}
 
-class HistoryAdapter(private val historyInteractor: HistoryInteractor) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-    private var historyList: HistoryList = HistoryList(emptyList())
-    private var mode: HistoryState.Mode = HistoryState.Mode.Normal
-    var selected = listOf<HistoryItem>()
-
-    fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
-        val diffUtil = DiffUtil.calculateDiff(
-            HistoryDiffUtil(
-                this.historyList,
-                HistoryList(items),
-                HistoryList(selected),
-                HistoryList((mode as? HistoryState.Mode.Editing)?.selectedItems ?: listOf()),
-                this.mode,
-                mode
-            )
-        )
-
-        this.historyList = HistoryList(items)
-        this.mode = mode
-        this.selected = if (mode is HistoryState.Mode.Editing) mode.selectedItems else listOf()
-
-        diffUtil.dispatchUpdatesTo(this)
-    }
-
-    private class HistoryDiffUtil(
-        val old: HistoryList,
-        val new: HistoryList,
-        val oldSelected: HistoryList,
-        val newSelected: HistoryList,
-        val oldMode: HistoryState.Mode,
-        val newMode: HistoryState.Mode
-    ) : DiffUtil.Callback() {
-        override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            old.items[oldItemPosition] == new.items[newItemPosition]
-
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val modesEqual = oldMode::class == newMode::class
-            val isStillSelected =
-                oldSelected.items.contains(old.items[oldItemPosition]) &&
-                        newSelected.items.contains(new.items[newItemPosition])
-            val isStillNotSelected =
-                !oldSelected.items.contains(old.items[oldItemPosition]) &&
-                        !newSelected.items.contains(new.items[newItemPosition])
-            return modesEqual && (isStillSelected || isStillNotSelected)
-        }
-
-        override fun getOldListSize(): Int = old.items.size
-        override fun getNewListSize(): Int = new.items.size
-    }
-
-    override fun getItemCount(): Int = historyList.items.size
-
-    override fun getItemViewType(position: Int): Int {
-        return when (historyList.items[position]) {
-            is AdapterItem.DeleteButton -> HistoryDeleteButtonViewHolder.LAYOUT_ID
-            is AdapterItem.SectionHeader -> HistoryHeaderViewHolder.LAYOUT_ID
-            is AdapterItem.Item -> HistoryListItemViewHolder.ID
-        }
-    }
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == HistoryListItemViewHolder.ID) {
-            val view = LibrarySiteItemView(parent.context).apply {
-                layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            }
-            HistoryListItemViewHolder(view, historyInteractor)
-        } else {
-            val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-            when (viewType) {
-                HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, historyInteractor)
-                HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-                else -> throw IllegalStateException()
+        private fun timeGroupForHistoryItem(item: HistoryItem): HistoryItemTimeGroup {
+            return when {
+                DateUtils.isToday(item.visitedAt) -> HistoryItemTimeGroup.Today
+                lastWeekRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisWeek
+                lastMonthRange.contains(item.visitedAt) -> HistoryItemTimeGroup.ThisMonth
+                else -> HistoryItemTimeGroup.Older
             }
         }
-    }
 
-    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        when (holder) {
-            is HistoryDeleteButtonViewHolder -> holder.bind(mode)
-            is HistoryHeaderViewHolder -> historyList.items[position].also {
-                if (it is AdapterItem.SectionHeader) {
-                    holder.bind(it.range.humanReadable(holder.itemView.context))
-                }
+        private val historyDiffCallback = object : DiffUtil.ItemCallback<HistoryItem>() {
+            override fun areItemsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
+                return oldItem == newItem
             }
-            is HistoryListItemViewHolder -> (historyList.items[position] as AdapterItem.Item).also {
-                holder.bind(it.item, mode)
+
+            override fun areContentsTheSame(oldItem: HistoryItem, newItem: HistoryItem): Boolean {
+                return oldItem == newItem
+            }
+
+            override fun getChangePayload(oldItem: HistoryItem, newItem: HistoryItem): Any? {
+                return newItem
             }
         }
     }
