@@ -204,6 +204,7 @@
 @BINPATH@/res/grabber.gif
 @BINPATH@/res/dtd/*
 @BINPATH@/res/language.properties
+@BINPATH@/res/locale/layout/HtmlForm.properties
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*
