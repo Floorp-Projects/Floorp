@@ -30,6 +30,7 @@ import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
+import android.support.v4.view.ViewCompat;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -123,7 +124,9 @@ public class GeckoView extends FrameLayout {
 
         public GeckoDisplay release() {
             if (mValid) {
-                mDisplay.surfaceDestroyed();
+                if (mDisplay != null) {
+                    mDisplay.surfaceDestroyed();
+                }
                 GeckoView.this.setActive(false);
             }
 
@@ -349,7 +352,10 @@ public class GeckoView extends FrameLayout {
         releaseSession();
 
         mSession = session;
-        mDisplay.acquire(session.acquireDisplay());
+
+        if (ViewCompat.isAttachedToWindow(this)) {
+            mDisplay.acquire(session.acquireDisplay());
+        }
 
         final Context context = getContext();
         session.getOverscrollEdgeEffect().setTheme(context);
@@ -424,8 +430,10 @@ public class GeckoView extends FrameLayout {
             if (runtime != null) {
                 runtime.orientationChanged();
             }
+        }
 
-
+        if (mSession != null) {
+            mDisplay.acquire(mSession.acquireDisplay());
         }
 
         super.onAttachedToWindow();
