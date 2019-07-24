@@ -85,7 +85,8 @@ fn derive_peek_from_for_enum(s: &mut Structure) -> TokenStream {
     assert!(!is_struct(s));
     s.bind_with(|_| BindStyle::Move);
 
-    let discriminant_size_type = get_discriminant_size_type(s.variants().len());
+    let num_variants = s.variants().len();
+    let discriminant_size_type = get_discriminant_size_type(num_variants);
     let body = s
         .variants()
         .iter()
@@ -119,13 +120,19 @@ fn derive_peek_from_for_enum(s: &mut Structure) -> TokenStream {
             }
         });
 
+    let type_name = s.ast().ident.to_string();
+    let max_tag_value = num_variants - 1;
+
     quote! {
         #[inline(always)]
         unsafe fn peek_from(bytes: *const u8, output: *mut Self) -> *const u8 {
             let (variant, bytes) = peek_poke::peek_from_default::<#discriminant_size_type>(bytes);
             match variant {
                 #body
-                _ => unreachable!()
+                out_of_range_tag => {
+                    panic!("WRDL: memory corruption detected while parsing {} - enum tag should be <= {}, but was {}",
+                        #type_name, #max_tag_value, out_of_range_tag);
+                }
             }
         }
     }

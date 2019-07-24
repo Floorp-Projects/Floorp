@@ -53,19 +53,19 @@ pub unsafe fn peek_from_default<T: Default + Peek>(bytes: *const u8) -> (T, *con
 pub fn peek_from_slice<'a, T: Peek>(src: &'a [u8], dst: &mut T) -> &'a [u8] {
     unsafe {
         // If src.len() == T::max_size() then src is at the start of the red-zone.
-        assert!(T::max_size() < src.len());
+        assert!(T::max_size() < src.len(), "WRDL: unexpected end of display list");
         let end_ptr = T::peek_from(src.as_ptr(), dst);
         let len = end_ptr as usize - src.as_ptr() as usize;
         // Did someone break the T::peek_from() can't read more than T::max_size()
         // bytes contract?
-        assert!(len <= src.len());
+        assert!(len <= src.len(), "WRDL: Peek::max_size was wrong");
         slice::from_raw_parts(end_ptr, src.len() - len)
     }
 }
 
 /// Poke helper to insert a serialized version of `src` at the beginning for `dst`.
 pub fn poke_inplace_slice<T: Poke>(src: &T, dst: &mut [u8]) {
-    assert!(T::max_size() <= dst.len());
+    assert!(T::max_size() <= dst.len(),  "WRDL: buffer too small to write into");
     unsafe {
         src.poke_into(dst.as_mut_ptr());
     }

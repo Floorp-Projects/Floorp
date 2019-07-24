@@ -430,7 +430,6 @@ impl<'a> BuiltDisplayListIter<'a> {
                 di::DisplayItem::PopStackingContext => depth -= 1,
                 _ => {}
             }
-            debug_assert!(depth >= 0);
         }
     }
 
@@ -590,12 +589,14 @@ impl Serialize for BuiltDisplayList {
                     item.iter.cur_filters.iter().collect()
                 ),
                 Real::SetFilterData => {
-                    debug_assert!(!item.iter.cur_filter_data.is_empty());
+                    debug_assert!(!item.iter.cur_filter_data.is_empty(),
+                        "next_raw should have populated cur_filter_data");
                     let temp_filter_data = &item.iter.cur_filter_data[item.iter.cur_filter_data.len()-1];
 
                     let func_types: Vec<di::ComponentTransferFuncType> =
                         temp_filter_data.func_types.iter().collect();
-                    debug_assert!(func_types.len() == 4);
+                    debug_assert!(func_types.len() == 4,
+                        "someone changed the number of filter funcs without updating this code");
                     Debug::SetFilterData(di::FilterData {
                         func_r_type: func_types[0],
                         r_values: temp_filter_data.r_values.iter().collect(),
@@ -910,14 +911,15 @@ impl DisplayListBuilder {
         poke_into_vec(&0usize, data);
         poke_into_vec(&len, data);
         let count = poke_extend_vec(iter, data);
-        debug_assert_eq!(len, count);
+        debug_assert_eq!(len, count, "iterator.len() returned two different values");
 
         // Add red zone
         ensure_red_zone::<I::Item>(data);
 
         // Now write the actual byte_size
         let final_offset = data.len();
-        debug_assert!(final_offset >= (byte_size_offset + mem::size_of::<usize>()));
+        debug_assert!(final_offset >= (byte_size_offset + mem::size_of::<usize>()),
+            "space was never allocated for this array's byte_size");
         let byte_size = final_offset - byte_size_offset - mem::size_of::<usize>();
         poke_inplace_slice(&byte_size, &mut data[byte_size_offset..]);
     }
