@@ -184,7 +184,11 @@ static_assert(
     (JSVAL_SHIFTED_TAG_NULL ^ JSVAL_SHIFTED_TAG_OBJECT) == ValueObjectOrNullBit,
     "ValueObjectOrNullBit must be consistent with object and null tags");
 
-constexpr uint64_t ValuePrivateDoubleBit = 0x8000'0000'0000'0000;
+constexpr uint64_t IsValidUserModePointer(uint64_t bits) {
+  // All 64-bit platforms that we support actually have a 48-bit address space
+  // for user-mode pointers, with the top 16 bits all set to zero.
+  return (bits & 0xFFFF'0000'0000'0000) == 0;
+}
 
 #endif /* JS_PUNBOX64 */
 
@@ -837,7 +841,7 @@ union alignas(8) Value {
     s_.tag_ = JSValueTag(0);
     s_.payload_.ptr_ = ptr;
 #elif defined(JS_PUNBOX64)
-    MOZ_ASSERT((uintptr_t(ptr) & detail::ValuePrivateDoubleBit) == 0);
+    MOZ_ASSERT(detail::IsValidUserModePointer(uintptr_t(ptr)));
     asBits_ = uintptr_t(ptr);
 #endif
     MOZ_ASSERT(isDouble());
@@ -848,7 +852,7 @@ union alignas(8) Value {
 #if defined(JS_NUNBOX32)
     return s_.payload_.ptr_;
 #elif defined(JS_PUNBOX64)
-    MOZ_ASSERT((asBits_ & detail::ValuePrivateDoubleBit) == 0);
+    MOZ_ASSERT(detail::IsValidUserModePointer(asBits_));
     return reinterpret_cast<void*>(asBits_);
 #endif
   }
