@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  padding: 18px;
+  padding: 40px;
 
   --reveal-checkbox-opacity: .8;
   --reveal-checkbox-opacity-hover: .6;
@@ -38,15 +38,24 @@
 :host(:not([data-editing])) input[type="password"],
 :host(:not([data-editing])) input[type="text"],
 :host(:not([data-editing])) input[type="url"] {
-  all: unset;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 1.1em;
   display: inline-block;
   width: -moz-available;
   background-color: transparent !important; /* override common.inc.css */
 }
 
+.detail-cell input:not([type="checkbox"]),
+.save-changes-button {
+  margin-inline-start: 0; /* align all elements on the start side */
+}
+
 .header {
   display: flex;
   border-bottom: 1px solid var(--in-content-box-border-color);
+  margin-bottom: 40px;
 }
 
 .title {
@@ -100,7 +109,7 @@
 }
 
 .detail-row {
-  margin-bottom: 20px;
+  margin-bottom: 40px;
 }
 
 .detail-cell {
@@ -132,6 +141,7 @@
 
 .meta-info {
   font-size: smaller;
+  color: var(--in-content-deemphasized-text);
 }
 
 .meta-info:first-of-type {
