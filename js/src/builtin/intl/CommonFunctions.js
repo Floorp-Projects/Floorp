@@ -145,9 +145,14 @@ function getUnicodeExtensions(locale) {
     if (!callFunction(ts.nextToken, ts))    \
         return null;
 
+#ifdef DEBUG
 #define NEXT_TOKEN_OR_ASSERT(ts)            \
     if (!callFunction(ts.nextToken, ts))    \
         assert(false, "unexpected invalid subtag");
+#else
+#define NEXT_TOKEN_OR_ASSERT(ts)            \
+    callFunction(ts.nextToken, ts);
+#endif
 
 // Assigns the current subtag part transformed to lower-case to the target.
 #define SUBTAG_VAR_OR_RETURN_NULL(ts, target)                                   \
