@@ -535,8 +535,6 @@ var TrackingProtection = {
 
 var ThirdPartyCookies = {
   PREF_ENABLED: "network.cookie.cookieBehavior",
-  PREF_REPORT_BREAKAGE_ENABLED:
-    "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
   PREF_ENABLED_VALUES: [
     // These values match the ones exposed under the Content Blocking section
     // of the Preferences UI.
@@ -649,12 +647,6 @@ var ThirdPartyCookies = {
       this.PREF_ENABLED,
       Ci.nsICookieService.BEHAVIOR_ACCEPT,
       this.updateCategoryLabel.bind(this)
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED,
-      false
     );
     this.updateCategoryLabel();
   },
@@ -907,8 +899,6 @@ var ThirdPartyCookies = {
  */
 var gProtectionsHandler = {
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
-  PREF_REPORT_BREAKAGE_ENABLED:
-    "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_SHOW_ALLOWED_LABELS:
@@ -1103,12 +1093,6 @@ var gProtectionsHandler = {
           blocker.updateCategoryLabel();
         }
       }
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED,
-      false
     );
 
     for (let blocker of this.blockers) {
