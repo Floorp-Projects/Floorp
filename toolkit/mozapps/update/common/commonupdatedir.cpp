@@ -27,7 +27,7 @@
 #  include <strsafe.h>
 #  include <winerror.h>
 #  include "nsWindowsHelpers.h"
-#  include "win_dirent.h"
+#  include "updateutils_win.h"
 #endif
 
 #ifdef XP_WIN
@@ -45,6 +45,8 @@
 // This defines the leaf update directory, where the MAR file is downloaded to
 // (i.e. C:\ProgramData\Mozilla\updates\<hash>\updates\<PATCH_DIRECTORY>)
 #  define PATCH_DIRECTORY "0"
+// This defines the prefix of files created to lock a directory
+#  define LOCK_FILE_PREFIX "mozlock."
 
 enum class WhichUpdateDir {
   CommonAppData,
@@ -104,12 +106,25 @@ class SimpleAutoString {
 
   /**
    * These functions can potentially return null if no buffer has yet been
-   * allocated.
+   * allocated. After changing a string retrieved with MutableString, the Check
+   * method should be called to synchronize other members (ex: mLength) with the
+   * new buffer.
    */
   wchar_t* MutableString() { return mString.get(); }
   const wchar_t* String() const { return mString.get(); }
 
   size_t Length() const { return mLength; }
+
+  /**
+   * This method should be called after manually changing the string's buffer
+   * via MutableString to synchronize other members (ex: mLength) with the
+   * new buffer.
+   * Returns true if the string is now in a valid state.
+   */
+  bool Check() {
+    mLength = wcslen(mString.get());
+    return true;
+  }
 
   void SwapBufferWith(mozilla::UniquePtr<wchar_t[]>& other) {
     mString.swap(other);
@@ -120,10 +135,24 @@ class SimpleAutoString {
     }
   }
 
-  void Truncate() {
-    mLength = 0;
+  void Swap(SimpleAutoString& other) {
+    mString.swap(other.mString);
+    size_t newLength = other.mLength;
+    other.mLength = mLength;
+    mLength = newLength;
+  }
+
+  /**
+   * Truncates the string to the length specified. This must not be greater than
+   * or equal to the size of the string's buffer.
+   */
+  void Truncate(size_t len = 0) {
+    if (len > mLength) {
+      return;
+    }
+    mLength = len;
     if (mString) {
-      mString.get()[0] = L'\0';
+      mString.get()[len] = L'\0';
     }
   }
 
@@ -330,14 +359,329 @@ struct CoTaskMemFreeDeleter {
  */
 struct AutoPerms {
   SID_IDENTIFIER_AUTHORITY sidIdentifierAuthority;
-  nsAutoSid usersSID;
-  nsAutoSid adminsSID;
-  nsAutoSid systemSID;
+  UniqueSidPtr usersSID;
+  UniqueSidPtr adminsSID;
+  UniqueSidPtr systemSID;
   EXPLICIT_ACCESS_W ea[3];
   mozilla::UniquePtr<ACL, LocalFreeDeleter> acl;
   mozilla::UniquePtr<uint8_t[]> securityDescriptorBuffer;
   PSECURITY_DESCRIPTOR securityDescriptor;
   SECURITY_ATTRIBUTES securityAttributes;
+};
+
+static HRESULT GetFilename(SimpleAutoString& path, SimpleAutoString& filename);
+
+enum class Tristate { False, True, Unknown };
+
+enum class Lockstate { Locked, Unlocked };
+
+/**
+ * This class will look up and store some data about the file or directory at
+ * the path given.
+ * The path can additionally be locked. For files, this is done by holding a
+ * handle to that file. For directories, this is done by holding a handle to a
+ * file within the directory.
+ */
+class FileOrDirectory {
+ private:
+  Tristate mIsHardLink;
+  DWORD mAttributes;
+  nsAutoHandle mLockHandle;
+  // This stores the name of the lock file. We need to keep track of this for
+  // directories, which are locked via a randomly named lock file inside. But
+  // we do not store a value here for files, as they do not have a separate lock
+  // file.
+  SimpleAutoString mDirLockFilename;
+
+  /**
+   * Locks the path. For directories, this is done by opening a file in the
+   * directory and storing its handle in mLockHandle. For files, we just open
+   * the file itself and store the handle.
+   * Returns true on success and false on failure.
+   *
+   * Calling this function will result in mAttributes being updated.
+   *
+   * This function is private to prevent callers from locking the directory
+   * after its attributes have been read. Part of the purpose of locking a
+   * directory is to ensure that its attributes are what we think they are and
+   * that they don't change while we hold the lock. If we get the lock after
+   * attributes are looked up, we can no longer provide that guarantee.
+   * If you think you want to call Lock(), you probably actually want to call
+   * Reset().
+   */
+  bool Lock(const wchar_t* path) {
+    mAttributes = GetFileAttributesW(path);
+    Tristate isDir = IsDirectory();
+    if (isDir == Tristate::Unknown) {
+      return false;
+    }
+
+    if (isDir == Tristate::True) {
+      SimpleAutoString lockPath;
+      if (!lockPath.AllocEmpty(MAX_PATH)) {
+        return false;
+      }
+      BOOL success = GetUUIDTempFilePath(path, NS_T(LOCK_FILE_PREFIX),
+                                         lockPath.MutableString());
+      if (!success || !lockPath.Check()) {
+        return false;
+      }
+
+      HRESULT hrv = GetFilename(lockPath, mDirLockFilename);
+      if (FAILED(hrv) || mDirLockFilename.Length() == 0) {
+        return false;
+      }
+
+      mLockHandle.own(CreateFileW(lockPath.String(), 0, 0, nullptr, OPEN_ALWAYS,
+                                  FILE_FLAG_DELETE_ON_CLOSE, nullptr));
+    } else {  // If path is not a directory
+      // The usual reason for us to lock a file is to read and change the
+      // permissions so, unlike the directory lock file, make sure we request
+      // the access necessary to read and write permissions.
+      mLockHandle.own(CreateFileW(path, WRITE_DAC | READ_CONTROL, 0, nullptr,
+                                  OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,
+                                  nullptr));
+    }
+    if (!IsLocked()) {
+      return false;
+    }
+    mAttributes = GetFileAttributesW(path);
+    // Directories and files are locked in different ways. If we think that we
+    // just locked one but we actually locked the other, our lock will be
+    // ineffective and we should not tell callers that this is locked.
+    // (This should fail earlier, since files cannot have children and
+    // directories cannot be opened with FILE_ATTRIBUTE_NORMAL. But just to be
+    // safe...)
+    if (isDir != IsDirectory()) {
+      Unlock();
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Helper function to normalize the access mask by converting generic access
+   * flags to specific ones to make it easier to check if permissions match.
+   */
+  void NormalizeAccessMask(ACCESS_MASK& mask) {
+    if ((mask & GENERIC_ALL) == GENERIC_ALL) {
+      mask &= ~GENERIC_ALL;
+      mask |= FILE_ALL_ACCESS;
+    }
+    if ((mask & GENERIC_READ) == GENERIC_READ) {
+      mask &= ~GENERIC_READ;
+      mask |= FILE_GENERIC_READ;
+    }
+    if ((mask & GENERIC_WRITE) == GENERIC_WRITE) {
+      mask &= ~GENERIC_WRITE;
+      mask |= FILE_GENERIC_WRITE;
+    }
+    if ((mask & GENERIC_EXECUTE) == GENERIC_EXECUTE) {
+      mask &= ~GENERIC_EXECUTE;
+      mask |= FILE_GENERIC_EXECUTE;
+    }
+  }
+
+ public:
+  FileOrDirectory()
+      : mIsHardLink(Tristate::Unknown),
+        mAttributes(INVALID_FILE_ATTRIBUTES),
+        mLockHandle(INVALID_HANDLE_VALUE) {}
+
+  /**
+   * If shouldLock is Locked:Locked, the file or directory will be locked.
+   * Note that locking is fallible and success should be checked via the
+   * IsLocked method.
+   */
+  FileOrDirectory(const SimpleAutoString& path, Lockstate shouldLock)
+      : FileOrDirectory() {
+    Reset(path, shouldLock);
+  }
+
+  /**
+   * Initializes the FileOrDirectory to the file with the path given.
+   *
+   * If shouldLock is Locked:Locked, the file or directory will be locked.
+   * Note that locking is fallible and success should be checked via the
+   * IsLocked method.
+   */
+  void Reset(const SimpleAutoString& path, Lockstate shouldLock) {
+    Unlock();
+    mDirLockFilename.Truncate();
+    if (shouldLock == Lockstate::Locked) {
+      // This will also update mAttributes.
+      Lock(path.String());
+    } else {
+      mAttributes = GetFileAttributesW(path.String());
+    }
+
+    mIsHardLink = Tristate::Unknown;
+    nsAutoHandle autoHandle;
+    HANDLE handle;
+    if (IsLocked() && IsDirectory() == Tristate::False) {
+      // If the path is a file and we locked it, we already have a handle to it.
+      // No need to open it again.
+      handle = mLockHandle.get();
+    } else {
+      handle = CreateFileW(path.String(), 0, FILE_SHARE_READ, nullptr,
+                           OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+      // Make sure this handle gets freed automatically.
+      autoHandle.own(handle);
+    }
+
+    Tristate isLink = Tristate::Unknown;
+    if (handle != INVALID_HANDLE_VALUE) {
+      BY_HANDLE_FILE_INFORMATION info;
+      BOOL success = GetFileInformationByHandle(handle, &info);
+      if (success) {
+        if (info.nNumberOfLinks > 1) {
+          isLink = Tristate::True;
+        } else {
+          isLink = Tristate::False;
+        }
+      }
+    }
+
+    mIsHardLink = Tristate::Unknown;
+    Tristate isSymLink = IsSymLink();
+    if (isLink == Tristate::False || isSymLink == Tristate::True) {
+      mIsHardLink = Tristate::False;
+    } else if (isLink == Tristate::True && isSymLink == Tristate::False) {
+      mIsHardLink = Tristate::True;
+    }
+  }
+
+  void Unlock() { mLockHandle.own(INVALID_HANDLE_VALUE); }
+
+  bool IsLocked() const { return mLockHandle.get() != INVALID_HANDLE_VALUE; }
+
+  Tristate IsSymLink() const {
+    if (mAttributes == INVALID_FILE_ATTRIBUTES) {
+      return Tristate::Unknown;
+    }
+    if (mAttributes & FILE_ATTRIBUTE_REPARSE_POINT) {
+      return Tristate::True;
+    }
+    return Tristate::False;
+  }
+
+  Tristate IsHardLink() const { return mIsHardLink; }
+
+  Tristate IsLink() const {
+    Tristate isSymLink = IsSymLink();
+    if (mIsHardLink == Tristate::True || isSymLink == Tristate::True) {
+      return Tristate::True;
+    }
+    if (mIsHardLink == Tristate::Unknown || isSymLink == Tristate::Unknown) {
+      return Tristate::Unknown;
+    }
+    return Tristate::False;
+  }
+
+  Tristate IsDirectory() const {
+    if (mAttributes == INVALID_FILE_ATTRIBUTES) {
+      return Tristate::Unknown;
+    }
+    if (mAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+      return Tristate::True;
+    }
+    return Tristate::False;
+  }
+
+  Tristate IsReadonly() const {
+    if (mAttributes == INVALID_FILE_ATTRIBUTES) {
+      return Tristate::Unknown;
+    }
+    if (mAttributes & FILE_ATTRIBUTE_READONLY) {
+      return Tristate::True;
+    }
+    return Tristate::False;
+  }
+
+  DWORD Attributes() const { return mAttributes; }
+
+  /**
+   * Sets the permissions to those passed. For this to be done safely, the file
+   * must be locked and must not be a directory or a link. If these conditions
+   * are not met, the function will fail.
+   * Without locking, we can't guarantee that the file is the one we think it
+   * is. Someone might have replaced a component of the path with a symlink.
+   * With directories, setting the permissions can have the effect of setting
+   * the permissions of a malicious hardlink within.
+   */
+  HRESULT SetPerms(const AutoPerms& perms) {
+    if (IsDirectory() != Tristate::False || !IsLocked() ||
+        IsHardLink() != Tristate::False) {
+      return E_FAIL;
+    }
+
+    DWORD drv = SetSecurityInfo(mLockHandle.get(), SE_FILE_OBJECT,
+                                DACL_SECURITY_INFORMATION, nullptr, nullptr,
+                                perms.acl.get(), nullptr);
+    return HRESULT_FROM_WIN32(drv);
+  }
+
+  /**
+   * Checks the permissions of a file to make sure that they match the expected
+   * permissions.
+   */
+  Tristate PermsOk(const SimpleAutoString& path, const AutoPerms& perms) {
+    nsAutoHandle autoHandle;
+    HANDLE handle;
+    if (IsDirectory() == Tristate::False && IsLocked()) {
+      handle = mLockHandle.get();
+    } else {
+      handle =
+          CreateFileW(path.String(), READ_CONTROL, FILE_SHARE_READ, nullptr,
+                      OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, nullptr);
+      // Make sure this handle gets freed automatically.
+      autoHandle.own(handle);
+    }
+
+    PACL dacl = nullptr;
+    SECURITY_DESCRIPTOR* securityDescriptor = nullptr;
+    DWORD drv = GetSecurityInfo(
+        handle, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, nullptr, nullptr,
+        &dacl, nullptr,
+        reinterpret_cast<PSECURITY_DESCRIPTOR*>(&securityDescriptor));
+    // Store the security descriptor in a UniquePtr so that it automatically
+    // gets freed properly. We don't need to worry about dacl, since it will
+    // point within the security descriptor.
+    mozilla::UniquePtr<SECURITY_DESCRIPTOR, LocalFreeDeleter>
+        autoSecurityDescriptor(securityDescriptor);
+    if (drv != ERROR_SUCCESS || dacl == nullptr) {
+      return Tristate::Unknown;
+    }
+
+    size_t eaLen = sizeof(perms.ea) / sizeof(perms.ea[0]);
+    for (size_t eaIndex = 0; eaIndex < eaLen; ++eaIndex) {
+      PTRUSTEE_W trustee = const_cast<PTRUSTEE_W>(&perms.ea[eaIndex].Trustee);
+      ACCESS_MASK expectedMask = perms.ea[eaIndex].grfAccessPermissions;
+      ACCESS_MASK actualMask;
+      drv = GetEffectiveRightsFromAclW(dacl, trustee, &actualMask);
+      if (drv != ERROR_SUCCESS) {
+        return Tristate::Unknown;
+      }
+      NormalizeAccessMask(expectedMask);
+      NormalizeAccessMask(actualMask);
+      if ((actualMask & expectedMask) != expectedMask) {
+        return Tristate::False;
+      }
+    }
+
+    return Tristate::True;
+  }
+
+  /**
+   * Valid only if IsDirectory() == True.
+   * Checks to see if the string given matches the filename of the lock file.
+   */
+  bool LockFilenameMatches(const wchar_t* filename) {
+    if (mDirLockFilename.Length() == 0) {
+      return false;
+    }
+    return wcscmp(filename, mDirLockFilename.String()) == 0;
+  }
 };
 
 static bool GetCachedHash(const char16_t* installPath, HKEY rootKey,
@@ -348,19 +692,28 @@ static HRESULT GetUpdateDirectory(const wchar_t* installPath,
                                   WhichUpdateDir whichDir,
                                   SetPermissionsOf permsToSet,
                                   mozilla::UniquePtr<wchar_t[]>& result);
-static HRESULT SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
-                                             const SimpleAutoString& updatePath,
-                                             bool fullUpdatePath,
-                                             SetPermissionsOf permsToSet);
+static HRESULT EnsureUpdateDirectoryPermissions(
+    const SimpleAutoString& basePath, const SimpleAutoString& updatePath,
+    bool fullUpdatePath, SetPermissionsOf permsToSet);
 static HRESULT GeneratePermissions(AutoPerms& result);
-static HRESULT SetPathPerms(SimpleAutoString& path, const AutoPerms& perms);
-static HRESULT MoveConflicting(const SimpleAutoString& path);
-static HRESULT SetPermissionsOfContents(const SimpleAutoString& basePath,
+static HRESULT MakeDir(const SimpleAutoString& path, const AutoPerms& perms);
+static HRESULT RemoveRecursive(const SimpleAutoString& path,
+                               FileOrDirectory& file);
+static HRESULT MoveConflicting(const SimpleAutoString& path,
+                               FileOrDirectory& file,
+                               SimpleAutoString* outPath);
+static HRESULT EnsureCorrectPermissions(SimpleAutoString& path,
+                                        FileOrDirectory& file,
                                         const SimpleAutoString& leafUpdateDir,
                                         const AutoPerms& perms);
+static HRESULT FixDirectoryPermissions(const SimpleAutoString& path,
+                                       FileOrDirectory& directory,
+                                       const AutoPerms& perms,
+                                       bool& permissionsFixed);
+static HRESULT SplitPath(const SimpleAutoString& path,
+                         SimpleAutoString& parentPath,
+                         SimpleAutoString& filename);
 static bool PathConflictsWithLeaf(const SimpleAutoString& path,
-                                  DWORD pathAttributes,
-                                  bool permsSuccessfullySet,
                                   const SimpleAutoString& leafPath);
 #endif  // XP_WIN
 
@@ -376,18 +729,22 @@ static bool PathConflictsWithLeaf(const SimpleAutoString& path,
  * mode is retained only so that we can properly get the old update directory
  * when migrating it.
  *
- * @param installPath The null-terminated path to the installation directory
- *                    (i.e. the directory that contains the binary). Must not be
- *                    null. The path must not include a trailing slash.
- * @param vendor A pointer to a null-terminated string containing the vendor
- *               name, or null. This is only used to look up a registry key on
- *               Windows. On other platforms, the value has no effect. If null
- *               is passed on Windows, "Mozilla" will be used.
- * @param result The out parameter that will be set to contain the resulting
- *               hash. The value is wrapped in a UniquePtr to make cleanup
- *               easier on the caller.
- * @param useCompatibilityMode Enables compatibiliy mode. Defaults to false.
- * @return NS_OK, if successful.
+ * @param   installPath
+ *          The null-terminated path to the installation directory (i.e. the
+ *          directory that contains the binary). Must not be null. The path must
+ *          not include a trailing slash.
+ * @param   vendor
+ *          A pointer to a null-terminated string containing the vendor name, or
+ *          null. This is only used to look up a registry key on Windows. On
+ *          other platforms, the value has no effect. If null is passed on
+ *          Windows, "Mozilla" will be used.
+ * @param   result
+ *          The out parameter that will be set to contain the resulting hash.
+ *          The value is wrapped in a UniquePtr to make cleanup easier on the
+ *          caller.
+ * @param   useCompatibilityMode
+ *          Enables compatibility mode. Defaults to false.
+ * @return  NS_OK, if successful.
  */
 nsresult GetInstallHash(const char16_t* installPath, const char* vendor,
                         mozilla::UniquePtr<NS_tchar[]>& result,
@@ -464,37 +821,41 @@ static bool GetCachedHash(const char16_t* installPath, HKEY rootKey,
  * data is available, it is probably available via XREAppData::vendor and
  * XREAppData::name.
  *
- * @param installPath The null-terminated path to the installation directory
- *                    (i.e. the directory that contains the binary). The path
- *                    must not include a trailing slash. If null is passed for
- *                    this value, the entire update directory path cannot be
- *                    retrieved, so the function will return the update
- *                    directory without the installation-specific leaf
- *                    directory. This feature exists for when the caller wants
- *                    to use this function to set directory permissions and does
- *                    not need the full update directory path.
- * @param vendor A pointer to a null-terminated string containing the vendor
- *               name. Will default to "Mozilla" if null is passed.
- * @param appName A pointer to a null-terminated string containing the
- *                application name, or null.
- * @param permsToSet Determines how aggressive to be when setting permissions.
- *                   This is the behavior by value:
- *                     BaseDir - Sets the permissions on the base directory
- *                               (Most likely C:\ProgramData\Mozilla)
- *                     BaseDirIfNotExists - Sets the permissions on the base
- *                                          directory, but only if it does not
- *                                          already exist.
- *                     AllFilesAndDirs - Recurses through the base directory,
- *                                       setting the permissions on all files
- *                                       and directories contained. Symlinks
- *                                       are removed. Files with names
- *                                       conflicting with the creation of the
- *                                       update directory are moved or removed.
- * @param result The out parameter that will be set to contain the resulting
- *               path. The value is wrapped in a UniquePtr to make cleanup
- *               easier on the caller.
+ * @param   installPath
+ *          The null-terminated path to the installation directory (i.e. the
+ *          directory that contains the binary). The path must not include a
+ *          trailing slash. If null is passed for this value, the entire update
+ *          directory path cannot be retrieved, so the function will return the
+ *          update directory without the installation-specific leaf directory.
+ *          This feature exists for when the caller wants to use this function
+ *          to set directory permissions and does not need the full update
+ *          directory path.
+ * @param   vendor
+ *          A pointer to a null-terminated string containing the vendor name.
+ *          Will default to "Mozilla" if null is passed.
+ * @param   appName
+ *          A pointer to a null-terminated string containing the application
+ *          name, or null.
+ * @param   permsToSet
+ *          Determines how aggressive to be when setting permissions.
+ *          This is the behavior by value:
+ *          BaseDir - Sets the permissions on the base directory
+ *                    (Most likely C:\ProgramData\Mozilla)
+ *          BaseDirIfNotExists - Sets the permissions on the base
+ *                               directory, but only if it does not
+ *                               already exist.
+ *          AllFilesAndDirs - Recurses through the base directory,
+ *                            setting the permissions on all files
+ *                            and directories contained. Symlinks
+ *                            are removed. Files with names
+ *                            conflicting with the creation of the
+ *                            update directory are moved or removed.
+ * @param   result
+ *          The out parameter that will be set to contain the resulting path.
+ *          The value is wrapped in a UniquePtr to make cleanup easier on the
+ *          caller.
  *
- * @return An HRESULT that should be tested with SUCCEEDED or FAILED.
+ * @return  An HRESULT that should be tested with SUCCEEDED or FAILED.
  */
 HRESULT
 GetCommonUpdateDirectory(const wchar_t* installPath,
@@ -517,10 +878,10 @@ HRESULT
 GetUserUpdateDirectory(const wchar_t* installPath, const char* vendor,
                        const char* appName,
                        mozilla::UniquePtr<wchar_t[]>& result) {
-  return GetUpdateDirectory(installPath, vendor, appName,
-                            WhichUpdateDir::UserAppData,
-                            SetPermissionsOf::BaseDir,  // Arbitrary value
-                            result);
+  return GetUpdateDirectory(
+      installPath, vendor, appName, WhichUpdateDir::UserAppData,
+      SetPermissionsOf::BaseDirIfNotExists,  // Arbitrary value
+      result);
 }
 
 /**
@@ -613,11 +974,11 @@ static HRESULT GetUpdateDirectory(const wchar_t* installPath,
 
   if (whichDir == WhichUpdateDir::CommonAppData) {
     if (updatePath.Length() > 0) {
-      hrv =
-          SetUpdateDirectoryPermissions(basePath, updatePath, true, permsToSet);
+      hrv = EnsureUpdateDirectoryPermissions(basePath, updatePath, true,
+                                             permsToSet);
     } else {
-      hrv =
-          SetUpdateDirectoryPermissions(basePath, basePath, false, permsToSet);
+      hrv = EnsureUpdateDirectoryPermissions(basePath, basePath, false,
+                                             permsToSet);
     }
     if (FAILED(hrv)) {
       return hrv;
@@ -637,37 +998,50 @@ static HRESULT GetUpdateDirectory(const wchar_t* installPath,
 }
 
 /**
- * If the basePath does not exist, it is created. If it does exist, it and its
- * contents may have their permissions reset based on the value of permsToSet.
+ * If the basePath does not exist, it is created with the expected permissions.
  *
- * This function tries to set as many permissions as possible, even if an error
- * is encountered along the way. Any encountered error eventually causes the
- * function to return failure, but does not stop the execution of the function.
+ * It used to be that if basePath exists and SetPermissionsOf::AllFilesAndDirs
+ * was passed in, this function would aggressively set the permissions of
+ * the directory and everything in it. But that caused a problem: There does not
+ * seem to be a good way to ensure that, when setting permissions on a
+ * directory, a malicious process does not sneak a hard link into that directory
+ * (causing it to inherit the permissions set on the directory).
  *
- * @param basePath The top directory within the application data directory.
- *                 Typically "C:\ProgramData\Mozilla".
- * @param updatePath The update directory to be checked for conflicts. If files
- *                   conflicting with this directory structure exist, they may
- *                   be moved or deleted depending on the value of permsToSet.
- * @param fullUpdatePath Set to true if updatePath is the full update path. If
- *                       set to false, it means that we don't have the
- *                       installation-specific path component.
- * @param permsToSet See the documentation for GetCommonUpdateDirectory for the
- *                   descriptions of the effects of each SetPermissionsOf value.
+ * To address that issue, this function now takes a different approach.
+ * To prevent abuse, permissions of directories will not be changed.
+ * Instead, directories with bad permissions are deleted and re-created with the
+ * correct permissions.
+ *
+ * @param   basePath
+ *          The top directory within the application data directory.
+ *          Typically "C:\ProgramData\Mozilla".
+ * @param   updatePath
+ *          The update directory to be checked for conflicts. If files
+ *          conflicting with this directory structure exist, they may be moved
+ *          or deleted depending on the value of permsToSet.
+ * @param   fullUpdatePath
+ *          Set to true if updatePath is the full update path. If set to false,
+ *          it means that we don't have the installation-specific path
+ *          component.
+ * @param   permsToSet
+ *          See the documentation for GetCommonUpdateDirectory for the
+ *          descriptions of the effects of each SetPermissionsOf value.
  */
-static HRESULT SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
-                                             const SimpleAutoString& updatePath,
-                                             bool fullUpdatePath,
-                                             SetPermissionsOf permsToSet) {
+static HRESULT EnsureUpdateDirectoryPermissions(
+    const SimpleAutoString& basePath, const SimpleAutoString& updatePath,
+    bool fullUpdatePath, SetPermissionsOf permsToSet) {
   HRESULT returnValue = S_OK;  // Stores the value that will eventually be
                                // returned. If errors occur, this is set to the
                                // first error encountered.
-  DWORD attributes = GetFileAttributesW(basePath.String());
+
+  Lockstate shouldLock = permsToSet == SetPermissionsOf::AllFilesAndDirs
+                             ? Lockstate::Locked
+                             : Lockstate::Unlocked;
+  FileOrDirectory baseDir(basePath, shouldLock);
   // validBaseDir will be true if the basePath exists, and is a non-symlinked
   // directory.
-  bool validBaseDir = attributes != INVALID_FILE_ATTRIBUTES &&
-                      attributes & FILE_ATTRIBUTE_DIRECTORY &&
-                      !(attributes & FILE_ATTRIBUTE_REPARSE_POINT);
+  bool validBaseDir = baseDir.IsDirectory() == Tristate::True &&
+                      baseDir.IsLink() == Tristate::False;
 
   // The most common case when calling this function is when the caller of
   // GetCommonUpdateDirectory just wants the update directory path, and passes
@@ -685,78 +1059,24 @@ static HRESULT SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
     return hrv;
   }
 
-  // If the base directory looks ok, we want to ensure that the permissions on
-  // it are correct (we already exited early in the case where we don't need to
-  // check permissions).
-  // If the base directory doesn't look right, we may as well attempt to fix the
-  // permissions before we attempt to get rid of the conflicting file.
-  // Either way, attempt to set the permissions here.
-  // Annoyingly, setting the permissions requires a mutable string.
-  SimpleAutoString mutableBasePath;
-  mutableBasePath.CopyFrom(basePath);
-  if (mutableBasePath.Length() == 0) {
-    // If we don't have a valid base directory, we are about to try to recreate
-    // it, in which case we only care about the success of creating the base
-    // directory. But if we aren't doing that, we are failing here by not
-    // successfully setting the directory's permissions.
-    if (validBaseDir) {
-      returnValue = FAILED(returnValue) ? returnValue : E_OUTOFMEMORY;
-    }
-  } else {
-    hrv = SetPathPerms(mutableBasePath, perms);
-    // Don't set returnValue for this error. The error means that that path is
-    // inaccessible, but if we can successfuly move/remove it, then the function
-    // will have done its job.
-    if (FAILED(hrv)) {
-      validBaseDir = false;
-    }
+  if (permsToSet == SetPermissionsOf::BaseDirIfNotExists) {
+    // We know that the base directory is invalid, because otherwise we would
+    // have exited already.
+    // Ignore errors here. It could be that the directory doesn't exist at all.
+    // And ultimately, we are only interested in whether or not we successfully
+    // create the new directory.
+    MoveConflicting(basePath, baseDir, nullptr);
+
+    hrv = MakeDir(basePath, perms);
+    returnValue = FAILED(returnValue) ? returnValue : hrv;
+    return returnValue;
   }
 
-  if (!validBaseDir) {
-    MoveConflicting(basePath);
-    // Don't bother checking the error here. Just check once for whether we
-    // created the directory or not.
-
-    // Now that there is nothing in the way of our base directory, create it.
-    BOOL success =
-        CreateDirectoryW(basePath.String(), &perms.securityAttributes);
-    if (success) {
-      // We successfully created a directory. It is safe to assume that it is
-      // empty, so there is no reason to check the permissions of its contents.
-      return returnValue;
-    } else {
-      DWORD error = GetLastError();
-      if (error != ERROR_ALREADY_EXISTS) {
-        returnValue =
-            FAILED(returnValue) ? returnValue : HRESULT_FROM_WIN32(error);
-      } else {
-        // There is a bit of a race condition here that needs to be resolved.
-        // Make sure no one else created the directory just before this process
-        // tried to.
-        attributes = GetFileAttributesW(basePath.String());
-        if (attributes == INVALID_FILE_ATTRIBUTES ||
-            !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-          returnValue =
-              FAILED(returnValue) ? returnValue : HRESULT_FROM_WIN32(error);
-        } else if (permsToSet != SetPermissionsOf::BaseDirIfNotExists) {
-          // Great! The update directory seems to exist and is a directory. Now,
-          // if the caller requested it, set the permissions of the directory.
-          mutableBasePath.CopyFrom(basePath);
-          if (mutableBasePath.Length() == 0) {
-            returnValue = FAILED(returnValue) ? returnValue : E_OUTOFMEMORY;
-          } else {
-            hrv = SetPathPerms(mutableBasePath, perms);
-            returnValue = FAILED(returnValue) ? returnValue : hrv;
-          }
-        }
-      }
-    }
-  }
-
-  // We have now done our best to ensure that the base directory exists and has
-  // the right permissions set. We only need to continue if we are setting the
-  // permissions on all contained files.
-  if (permsToSet != SetPermissionsOf::AllFilesAndDirs) {
+  // We need to pass a mutable basePath to EnsureCorrectPermissions, so copy it.
+  SimpleAutoString mutBasePath;
+  hrv = mutBasePath.CopyFrom(basePath);
+  if (FAILED(hrv) || mutBasePath.Length() == 0) {
+    returnValue = FAILED(returnValue) ? returnValue : hrv;
     return returnValue;
   }
 
@@ -769,28 +1089,55 @@ static HRESULT SetUpdateDirectoryPermissions(const SimpleAutoString& basePath,
     wchar_t updateSubdirectoryName[] = NS_T(UPDATE_SUBDIRECTORY);
     wchar_t patchDirectoryName[] = NS_T(PATCH_DIRECTORY);
     size_t leafDirLen = updatePath.Length() + wcslen(updateSubdirectoryName) +
-                        wcslen(patchDirectoryName) + 2; /* 2 path seperators */
+                        wcslen(patchDirectoryName) + 2; /* 2 path separators */
     leafDirPath.AllocAndAssignSprintf(
         leafDirLen, L"%s\\%s\\%s", updatePath.String(), updateSubdirectoryName,
         patchDirectoryName);
     if (leafDirPath.Length() == leafDirLen) {
-      hrv = SetPermissionsOfContents(basePath, leafDirPath, perms);
+      hrv = EnsureCorrectPermissions(mutBasePath, baseDir, leafDirPath, perms);
     } else {
       // If we cannot generate the leaf path, just do the best we can by using
       // the updatePath.
       returnValue = FAILED(returnValue) ? returnValue : E_FAIL;
-      hrv = SetPermissionsOfContents(basePath, updatePath, perms);
+      hrv = EnsureCorrectPermissions(mutBasePath, baseDir, updatePath, perms);
     }
   } else {
-    hrv = SetPermissionsOfContents(basePath, updatePath, perms);
+    hrv = EnsureCorrectPermissions(mutBasePath, baseDir, updatePath, perms);
   }
-  return FAILED(returnValue) ? returnValue : hrv;
+  returnValue = FAILED(returnValue) ? returnValue : hrv;
+
+  // EnsureCorrectPermissions does its best to remove links and conflicting
+  // files but, in doing so, it may leave us without a base update directory.
+  // Rather than checking whether it exists first, just try to create it. If
+  // successful, the directory now exists with the right permissions and no
+  // contents, which this function considers a success. If unsuccessful,
+  // most likely the directory just already exists. But we need to verify that
+  // before we can return success.
+  BOOL success = CreateDirectoryW(
+      basePath.String(),
+      const_cast<LPSECURITY_ATTRIBUTES>(&perms.securityAttributes));
+  if (success) {
+    return S_OK;
+  }
+  if (SUCCEEDED(returnValue)) {
+    baseDir.Reset(basePath, Lockstate::Unlocked);
+    if (baseDir.IsDirectory() != Tristate::True ||
+        baseDir.IsLink() != Tristate::False ||
+        baseDir.PermsOk(basePath, perms) != Tristate::True) {
+      return E_FAIL;
+    }
+  }
+
+  return returnValue;
 }
 
 /**
  * Generates the permission set that we want to be applied to the update
  * directory and its contents. Returns the permissions data via the result
  * outparam.
+ *
+ * These are also the permissions that will be used to check that file
+ * permissions are correct.
  */
 static HRESULT GeneratePermissions(AutoPerms& result) {
   result.sidIdentifierAuthority = SECURITY_NT_AUTHORITY;
@@ -801,7 +1148,7 @@ static HRESULT GeneratePermissions(AutoPerms& result) {
   BOOL success = AllocateAndInitializeSid(
       &result.sidIdentifierAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
       DOMAIN_ALIAS_RID_USERS, 0, 0, 0, 0, 0, 0, &usersSID);
-  result.usersSID.own(usersSID);
+  result.usersSID.reset(usersSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
@@ -817,7 +1164,7 @@ static HRESULT GeneratePermissions(AutoPerms& result) {
   success = AllocateAndInitializeSid(
       &result.sidIdentifierAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
       DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &adminsSID);
-  result.adminsSID.own(adminsSID);
+  result.adminsSID.reset(adminsSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
@@ -833,7 +1180,7 @@ static HRESULT GeneratePermissions(AutoPerms& result) {
   success = AllocateAndInitializeSid(&result.sidIdentifierAuthority, 1,
                                      SECURITY_LOCAL_SYSTEM_RID, 0, 0, 0, 0, 0,
                                      0, 0, &systemSID);
-  result.systemSID.own(systemSID);
+  result.systemSID.reset(systemSID);
   if (!success) {
     return HRESULT_FROM_WIN32(GetLastError());
   }
@@ -879,31 +1226,52 @@ static HRESULT GeneratePermissions(AutoPerms& result) {
 }
 
 /**
- * Sets the permissions of the file indicated by path to the permissions passed.
- * Unfortunately this does not take a const string because SetNamedSecurityInfoW
- * doesn't take one.
+ * Creates a directory with the permissions specified. If the directory already
+ * exists, this function will return success as long as it is a non-link
+ * directory.
  */
-static HRESULT SetPathPerms(SimpleAutoString& path, const AutoPerms& perms) {
-  DWORD drv = SetNamedSecurityInfoW(path.MutableString(), SE_FILE_OBJECT,
-                                    DACL_SECURITY_INFORMATION, nullptr, nullptr,
-                                    perms.acl.get(), nullptr);
-  return HRESULT_FROM_WIN32(drv);
+static HRESULT MakeDir(const SimpleAutoString& path, const AutoPerms& perms) {
+  BOOL success = CreateDirectoryW(
+      path.String(),
+      const_cast<LPSECURITY_ATTRIBUTES>(&perms.securityAttributes));
+  if (success) {
+    return S_OK;
+  }
+  DWORD error = GetLastError();
+  if (error != ERROR_ALREADY_EXISTS) {
+    return HRESULT_FROM_WIN32(error);
+  }
+  FileOrDirectory dir(path, Lockstate::Unlocked);
+  if (dir.IsDirectory() == Tristate::True && dir.IsLink() == Tristate::False) {
+    return S_OK;
+  }
+  return HRESULT_FROM_WIN32(error);
 }
 
 /**
  * Attempts to move the file or directory to the Windows Recycle Bin.
  * If removal fails with an ERROR_FILE_NOT_FOUND, the file must not exist, so
  * this will return success in that case.
+ *
+ * The file will be unlocked in order to remove it.
+ *
+ * Whether this function succeeds or fails, the file parameter should no longer
+ * be considered accurate. If it succeeds, it will be inaccurate because the
+ * file no longer exists. If it fails, it may be inaccurate due to this function
+ * potentially setting file attributes.
  */
-static HRESULT RemoveRecursive(const SimpleAutoString& path) {
-  DWORD attributes = GetFileAttributesW(path.String());
-
-  // Ignore errors setting attributes. We only care if it was successfully
-  // deleted.
-  if (attributes == INVALID_FILE_ATTRIBUTES) {
-    SetFileAttributesW(path.String(), FILE_ATTRIBUTE_NORMAL);
-  } else if (attributes & FILE_ATTRIBUTE_READONLY) {
-    SetFileAttributesW(path.String(), attributes & ~FILE_ATTRIBUTE_READONLY);
+static HRESULT RemoveRecursive(const SimpleAutoString& path,
+                               FileOrDirectory& file) {
+  file.Unlock();
+  if (file.IsReadonly() != Tristate::False) {
+    // Ignore errors setting attributes. We only care if it was successfully
+    // deleted.
+    DWORD attributes = file.Attributes();
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+      SetFileAttributesW(path.String(), FILE_ATTRIBUTE_NORMAL);
+    } else {
+      SetFileAttributesW(path.String(), attributes & ~FILE_ATTRIBUTE_READONLY);
+    }
   }
 
   // The SHFILEOPSTRUCTW expects a list of paths. The list is simply one long
@@ -921,21 +1289,40 @@ static HRESULT RemoveRecursive(const SimpleAutoString& path) {
   fileOperation.lpszProgressTitle = nullptr;
 
   int rv = SHFileOperationW(&fileOperation);
-  if (rv != 0 && rv != ERROR_FILE_NOT_FOUND) {
-    return E_FAIL;
+  if (rv == 0 || rv == ERROR_FILE_NOT_FOUND) {
+    return S_OK;
   }
 
-  return S_OK;
+  // Some files such as hard links can't be deleted properly with
+  // SHFileOperation, so additionally try DeleteFile.
+  BOOL success = DeleteFileW(path.String());
+  return success ? S_OK : HRESULT_FROM_WIN32(GetLastError());
 }
 
 /**
  * Attempts to move the file or directory to a path that will not conflict with
- * our directory structure.
+ * our directory structure. If this fails, the path will instead be deleted.
  *
  * If an attempt results in the error ERROR_FILE_NOT_FOUND, this function
  * considers the file to no longer be a conflict and returns success.
+ *
+ * The file will be unlocked in order to move it. Strictly speaking, it may be
+ * possible to move non-directories without unlocking them, but this function
+ * will unconditionally unlock the file.
+ *
+ * If a non-null pointer is passed for outPath, the path that the file was moved
+ * to will be stored there. If the file was removed, an empty string will be
+ * stored. Note that if outPath is set to an empty string, it may not have a
+ * buffer allocated, so outPath.Length() should be checked before using
+ * outPath.String().
+ * It is ok for outPath to point to the path parameter.
+ * This function guarantees that if failure is returned, outPath will not be
+ * modified.
  */
-static HRESULT MoveConflicting(const SimpleAutoString& path) {
+static HRESULT MoveConflicting(const SimpleAutoString& path,
+                               FileOrDirectory& file,
+                               SimpleAutoString* outPath) {
+  file.Unlock();
   // Try to move the file to a backup location
   SimpleAutoString newPath;
   unsigned int maxTries = 9;
@@ -963,114 +1350,164 @@ static HRESULT MoveConflicting(const SimpleAutoString& path) {
                               MOVEFILE_REPLACE_EXISTING);
       }
       if (success) {
+        if (outPath) {
+          outPath->Swap(newPath);
+        }
         return S_OK;
       }
       DWORD drv = GetLastError();
       if (drv == ERROR_FILE_NOT_FOUND) {
+        if (outPath) {
+          outPath->Truncate();
+        }
         return S_OK;
       }
       // If the move failed because newPath already exists, loop to try a new
       // suffix. If the move failed for any other reason, a new suffix will
       // probably not help.
-      if (drv != ERROR_ALREADY_EXISTS) {
+      // Sometimes, however, if we cannot read the existing file due to lack of
+      // permissions, we may get an "Access Denied" error. So retry in that case
+      // too.
+      if (drv != ERROR_ALREADY_EXISTS && drv != ERROR_ACCESS_DENIED) {
         break;
       }
     }
   }
 
   // Moving failed. Try to delete.
-  return RemoveRecursive(path);
+  HRESULT hrv = RemoveRecursive(path, file);
+  if (SUCCEEDED(hrv)) {
+    if (outPath) {
+      outPath->Truncate();
+    }
+  }
+  return hrv;
 }
 
 /**
- * This function recurses through the files and directories in the path passed.
- * All files and directories have their permissions set to those described in
- * perms.
+ * This function will ensure that the specified path and all contained files and
+ * subdirectories have the correct permissions.
+ * Files will have their permissions set to match those specified.
+ * Unfortunately, setting the permissions on directories is prone to abuse,
+ * since it can potentially result in a hard link within the directory
+ * inheriting those permissions. To get around this issue, directories will not
+ * have their permissions changed. Instead, the directory will be moved
+ * elsewhere so that it can be recreated with the correct permissions and its
+ * contents moved back in.
  *
- * This function attempts to set as many permissions as possible. If an error is
- * encountered, the function will return the error *after* it attempts to set
- * permissions on all remaining files.
+ * Symlinks and hard links are removed from the checked directories.
+ *
+ * This function also ensures that nothing is in the way of leafUpdateDir.
+ * Non-directory files that conflict with this are moved or deleted.
+ *
+ * This function's second argument must receive a locked FileOrDirectory to
+ * ensure that it is not tampered with while fixing the permissions of the
+ * file/directory and any contents.
+ *
+ * If we cannot successfully determine if the path is a file or directory, we
+ * simply attempt to delete it.
+ *
+ * Note that the path parameter is not constant. Its contents may be changed by
+ * this function.
  */
-static HRESULT SetPermissionsOfContents(const SimpleAutoString& basePath,
+static HRESULT EnsureCorrectPermissions(SimpleAutoString& path,
+                                        FileOrDirectory& file,
                                         const SimpleAutoString& leafUpdateDir,
                                         const AutoPerms& perms) {
   HRESULT returnValue = S_OK;  // Stores the value that will eventually be
                                // returned. If errors occur, this is set to the
                                // first error encountered.
+  HRESULT hrv;
+  bool conflictsWithLeaf = PathConflictsWithLeaf(path, leafUpdateDir);
+  if (file.IsDirectory() != Tristate::True ||
+      file.IsLink() != Tristate::False) {
+    // We want to keep track of the result of trying to set the permissions
+    // separately from returnValue. If we later remove the file, we should not
+    // report an error to set permissions.
+    // SetPerms will automatically abort and return failure if it is unsafe to
+    // set the permissions on the file (for example, if it is a hard link).
+    HRESULT permSetResult = file.SetPerms(perms);
 
-  SimpleAutoString pathBuffer;
-  if (!pathBuffer.AllocEmpty(MAX_PATH)) {
+    bool removed = false;
+    if (file.IsLink() != Tristate::False) {
+      hrv = RemoveRecursive(path, file);
+      returnValue = FAILED(returnValue) ? returnValue : hrv;
+      if (SUCCEEDED(hrv)) {
+        removed = true;
+      }
+    }
+
+    if (FAILED(permSetResult) && !removed) {
+      returnValue = FAILED(returnValue) ? returnValue : permSetResult;
+    }
+
+    if (conflictsWithLeaf && !removed) {
+      hrv = MoveConflicting(path, file, nullptr);
+      returnValue = FAILED(returnValue) ? returnValue : hrv;
+    }
+    return returnValue;
+  }
+
+  if (file.PermsOk(path, perms) != Tristate::True) {
+    bool permissionsFixed;
+    hrv = FixDirectoryPermissions(path, file, perms, permissionsFixed);
+    returnValue = FAILED(returnValue) ? returnValue : hrv;
+    // We only need to move conflicting directories if they have bad permissions
+    // that we are unable to fix. If its permissions are correct, it isn't
+    // conflicting with the leaf path, it is a component of the leaf path.
+    if (!permissionsFixed && conflictsWithLeaf) {
+      // No need to check for error here. returnValue is already a failure code
+      // because FixDirectoryPermissions failed. MoveConflicting will ensure
+      // that path is correct (or empty, on deletion) whether it succeeds or
+      // fails.
+      MoveConflicting(path, file, &path);
+      if (path.Length() == 0) {
+        // Path has been deleted.
+        return returnValue;
+      }
+    }
+    if (!file.IsLocked()) {
+      // FixDirectoryPermissions or MoveConflicting may have left the directory
+      // unlocked, but we still want to recurse into it, so re-lock it.
+      file.Reset(path, Lockstate::Locked);
+    }
+  }
+
+  // We MUST not recurse into unlocked directories or links.
+  if (!file.IsLocked() || file.IsLink() != Tristate::False ||
+      file.IsDirectory() != Tristate::True) {
+    returnValue = FAILED(returnValue) ? returnValue : E_FAIL;
+    return returnValue;
+  }
+
+  SimpleAutoString childBuffer;
+  if (!childBuffer.AllocEmpty(MAX_PATH)) {
     // Fatal error. We need a buffer to put the path in.
     return FAILED(returnValue) ? returnValue : E_OUTOFMEMORY;
   }
 
-  DIR directoryHandle(basePath.String());
+  // Recurse into the directory.
+  DIR directoryHandle(path.String());
   errno = 0;
-
   for (dirent* entry = readdir(&directoryHandle); entry;
        entry = readdir(&directoryHandle)) {
-    if (wcscmp(entry->d_name, L".") == 0 || wcscmp(entry->d_name, L"..") == 0) {
+    if (wcscmp(entry->d_name, L".") == 0 || wcscmp(entry->d_name, L"..") == 0 ||
+        file.LockFilenameMatches(entry->d_name)) {
       continue;
     }
 
-    pathBuffer.AssignSprintf(MAX_PATH + 1, L"%s\\%s", basePath.String(),
-                             entry->d_name);
-    if (pathBuffer.Length() == 0) {
+    childBuffer.AssignSprintf(MAX_PATH + 1, L"%s\\%s", path.String(),
+                              entry->d_name);
+    if (childBuffer.Length() == 0) {
       returnValue = FAILED(returnValue)
                         ? returnValue
                         : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
       continue;
     }
 
-    HRESULT hrv = SetPathPerms(pathBuffer, perms);
+    FileOrDirectory child(childBuffer, Lockstate::Locked);
+    hrv = EnsureCorrectPermissions(childBuffer, child, leafUpdateDir, perms);
     returnValue = FAILED(returnValue) ? returnValue : hrv;
-    bool permsSuccessfullySet = SUCCEEDED(hrv);
-
-    // Rewrite the path buffer, since we cannot guarantee that SetPathPerms did
-    // not change it.
-    pathBuffer.AssignSprintf(MAX_PATH + 1, L"%s\\%s", basePath.String(),
-                             entry->d_name);
-    if (pathBuffer.Length() == 0) {
-      returnValue = FAILED(returnValue)
-                        ? returnValue
-                        : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
-      continue;
-    }
-
-    DWORD attributes = GetFileAttributesW(pathBuffer.String());
-
-    if (attributes == INVALID_FILE_ATTRIBUTES ||
-        attributes & FILE_ATTRIBUTE_REPARSE_POINT) {
-      // Remove symlinks.
-      hrv = RemoveRecursive(pathBuffer);
-      if (SUCCEEDED(hrv)) {
-        // If we successfully deleted the file, move on to the next file. There
-        // is nothing else to do for this one.
-        continue;
-      } else {
-        // Do not call continue in the error case. If this file conflicts with
-        // our directory structure, we want to attempt to move it (which may
-        // succeed even though deletion failed).
-        returnValue = FAILED(returnValue) ? returnValue : hrv;
-      }
-    }
-    if (PathConflictsWithLeaf(pathBuffer, attributes, permsSuccessfullySet,
-                              leafUpdateDir)) {
-      hrv = MoveConflicting(pathBuffer);
-      if (SUCCEEDED(hrv)) {
-        // File is out of the way. Move on to the next one.
-        continue;
-      }
-      returnValue = FAILED(returnValue) ? returnValue : hrv;
-    }
-
-    // Recursively set permissions for non-symlink directories
-    if (attributes != INVALID_FILE_ATTRIBUTES &&
-        attributes & FILE_ATTRIBUTE_DIRECTORY &&
-        !(attributes & FILE_ATTRIBUTE_REPARSE_POINT)) {
-      hrv = SetPermissionsOfContents(pathBuffer, leafUpdateDir, perms);
-      returnValue = FAILED(returnValue) ? returnValue : hrv;
-    }
 
     // Before looping, clear any errors that might have been encountered so we
     // can correctly get errors from readdir.
@@ -1084,18 +1521,206 @@ static HRESULT SetPermissionsOfContents(const SimpleAutoString& basePath,
 }
 
 /**
+ * This function fixes directory permissions without setting them directly.
+ * The reasoning behind this is that if someone puts a hardlink in the
+ * directory before we set the permissions, the permissions of the linked file
+ * will be changed too. To prevent this, we will instead move the directory,
+ * recreate it with the correct permissions, and move the contents back in.
+ *
+ * The new directory will be locked with the directory parameter so that the
+ * caller can safely use the new directory. If the function fails, the directory
+ * parameter may be left locked or unlocked. However, the function will never
+ * leave the directory parameter locking something invalid. In other words, if
+ * the directory parameter is locked after this function exits, it is safe to
+ * assume that it is a locked non-link directory at the same location as the
+ * original path.
+ *
+ * The permissionsFixed outparam serves as sort of a supplement to the return
+ * value. The return value will be an error code if any part of this function
+ * fails. But the function can fail at some parts while still completing its
+ * main goal of fixing the directory permissions. To distinguish between these,
+ * this value will be set to true if the directory permissions were successfully
+ * fixed.
+ */
+static HRESULT FixDirectoryPermissions(const SimpleAutoString& path,
+                                       FileOrDirectory& directory,
+                                       const AutoPerms& perms,
+                                       bool& permissionsFixed) {
+  permissionsFixed = false;
+
+  SimpleAutoString parent;
+  SimpleAutoString dirName;
+  HRESULT hrv = SplitPath(path, parent, dirName);
+  if (FAILED(hrv)) {
+    return E_FAIL;
+  }
+
+  SimpleAutoString tempPath;
+  if (!tempPath.AllocEmpty(MAX_PATH)) {
+    return E_FAIL;
+  }
+  BOOL success = GetUUIDTempFilePath(parent.String(), dirName.String(),
+                                     tempPath.MutableString());
+  if (!success || !tempPath.Check() || tempPath.Length() == 0) {
+    return E_FAIL;
+  }
+
+  directory.Unlock();
+  success = MoveFileW(path.String(), tempPath.String());
+  if (!success) {
+    return HRESULT_FROM_WIN32(GetLastError());
+  }
+
+  success = CreateDirectoryW(path.String(), const_cast<LPSECURITY_ATTRIBUTES>(
+                                                &perms.securityAttributes));
+  if (!success) {
+    return E_FAIL;
+  }
+  directory.Reset(path, Lockstate::Locked);
+  if (!directory.IsLocked() || directory.IsLink() != Tristate::False ||
+      directory.IsDirectory() != Tristate::True ||
+      directory.PermsOk(path, perms) != Tristate::True) {
+    // Don't leave an invalid file locked when we return.
+    directory.Unlock();
+    return E_FAIL;
+  }
+  permissionsFixed = true;
+
+  FileOrDirectory tempDir(tempPath, Lockstate::Locked);
+  if (!tempDir.IsLocked() || tempDir.IsLink() != Tristate::False ||
+      tempDir.IsDirectory() != Tristate::True) {
+    return E_FAIL;
+  }
+
+  SimpleAutoString moveFrom;
+  SimpleAutoString moveTo;
+  if (!moveFrom.AllocEmpty(MAX_PATH) || !moveTo.AllocEmpty(MAX_PATH)) {
+    return E_OUTOFMEMORY;
+  }
+
+  // If we fail to copy one file, we still want to try for the others. This will
+  // store the first error we encounter so it can be returned.
+  HRESULT returnValue = S_OK;
+
+  // Copy the contents of tempDir back to the original directory.
+  DIR directoryHandle(tempPath.String());
+  errno = 0;
+  for (dirent* entry = readdir(&directoryHandle); entry;
+       entry = readdir(&directoryHandle)) {
+    if (wcscmp(entry->d_name, L".") == 0 || wcscmp(entry->d_name, L"..") == 0 ||
+        tempDir.LockFilenameMatches(entry->d_name)) {
+      continue;
+    }
+
+    moveFrom.AssignSprintf(MAX_PATH + 1, L"%s\\%s", tempPath.String(),
+                           entry->d_name);
+    if (moveFrom.Length() == 0) {
+      returnValue = FAILED(returnValue)
+                        ? returnValue
+                        : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+      continue;
+    }
+
+    moveTo.AssignSprintf(MAX_PATH + 1, L"%s\\%s", path.String(), entry->d_name);
+    if (moveTo.Length() == 0) {
+      returnValue = FAILED(returnValue)
+                        ? returnValue
+                        : HRESULT_FROM_WIN32(ERROR_BUFFER_OVERFLOW);
+      continue;
+    }
+
+    success = MoveFileW(moveFrom.String(), moveTo.String());
+    if (!success) {
+      returnValue = FAILED(returnValue) ? returnValue
+                                        : HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    // Before looping, clear any errors that might have been encountered so we
+    // can correctly get errors from readdir.
+    errno = 0;
+  }
+  if (errno != 0) {
+    returnValue = FAILED(returnValue) ? returnValue : E_FAIL;
+  }
+
+  hrv = RemoveRecursive(tempPath, tempDir);
+  returnValue = FAILED(returnValue) ? returnValue : hrv;
+
+  return returnValue;
+}
+
+/**
+ * Splits an absolute path into its parent directory and filename.
+ * For example, splits path="C:\foo\bar" into parentPath="C:\foo" and
+ * filename="bar".
+ */
+static HRESULT SplitPath(const SimpleAutoString& path,
+                         SimpleAutoString& parentPath,
+                         SimpleAutoString& filename) {
+  HRESULT hrv = parentPath.CopyFrom(path);
+  if (FAILED(hrv) || parentPath.Length() == 0) {
+    return hrv;
+  }
+
+  hrv = GetFilename(parentPath, filename);
+  if (FAILED(hrv)) {
+    return hrv;
+  }
+
+  size_t parentPathLen = parentPath.Length();
+  if (parentPathLen < filename.Length() + 1) {
+    return E_FAIL;
+  }
+  parentPathLen -= filename.Length() + 1;
+  parentPath.Truncate(parentPathLen);
+  if (parentPath.Length() == 0) {
+    return E_FAIL;
+  }
+
+  return S_OK;
+}
+
+/**
+ * Gets the filename of the given path. Also removes trailing path separators
+ * from the input path.
+ * Ex: If path="C:\foo\bar", filename="bar"
+ */
+static HRESULT GetFilename(SimpleAutoString& path, SimpleAutoString& filename) {
+  // Remove trailing path separators.
+  size_t pathLen = path.Length();
+  if (pathLen == 0) {
+    return E_FAIL;
+  }
+  wchar_t lastChar = path.String()[pathLen - 1];
+  while (lastChar == '/' || lastChar == '\\') {
+    --pathLen;
+    path.Truncate(pathLen);
+    if (pathLen == 0) {
+      return E_FAIL;
+    }
+    lastChar = path.String()[pathLen - 1];
+  }
+
+  const wchar_t* separator1 = wcsrchr(path.String(), '/');
+  const wchar_t* separator2 = wcsrchr(path.String(), '\\');
+  const wchar_t* separator =
+      (separator1 > separator2) ? separator1 : separator2;
+  if (separator == nullptr) {
+    return E_FAIL;
+  }
+
+  HRESULT hrv = filename.CopyFrom(separator + 1);
+  if (FAILED(hrv) || filename.Length() == 0) {
+    return E_FAIL;
+  }
+  return S_OK;
+}
+
+/**
  * Returns true if the path conflicts with the leaf path.
  */
 static bool PathConflictsWithLeaf(const SimpleAutoString& path,
-                                  DWORD pathAttributes,
-                                  bool permsSuccessfullySet,
                                   const SimpleAutoString& leafPath) {
-  // Directories only conflict with our directory structure if we don't have
-  // access to them
-  if (pathAttributes != INVALID_FILE_ATTRIBUTES &&
-      pathAttributes & FILE_ATTRIBUTE_DIRECTORY && permsSuccessfullySet) {
-    return false;
-  }
   if (!leafPath.StartsWith(path)) {
     return false;
   }
