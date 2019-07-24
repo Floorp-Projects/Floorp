@@ -7,6 +7,8 @@
 #include "Conversions.h"
 #include "JavaBuiltins.h"
 
+#include "mozilla/ipc/GeckoChildProcessHost.h"
+
 namespace mozilla {
 namespace jni {
 
@@ -85,6 +87,11 @@ double Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
   }
 
   return result;
+}
+
+template <>
+ipc::LaunchError Java2Native(mozilla::jni::Object::Param aData, JNIEnv* aEnv) {
+  return ipc::LaunchError{};
 }
 
 }  // namespace jni
