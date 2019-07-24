@@ -1,0 +1,115 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Service Worker List: renders the expected snapshot for a workerList with multiple workers list 1`] = `
+Array [
+  <article
+    className="workers-container"
+    key="workers-container"
+  >
+    <Localized
+      id="serviceworker-list-header"
+    >
+      <h1
+        className="application--title"
+      />
+    </Localized>
+    <ul>
+      <Worker
+        client={Object {}}
+        worker={
+          Object {
+            "active": true,
+            "name": "worker1",
+            "registrationFront": "",
+            "scope": "SCOPE 123",
+            "workerTargetFront": "",
+          }
+        }
+      />
+      <Worker
+        client={Object {}}
+        worker={
+          Object {
+            "active": false,
+            "name": "worker2",
+            "registrationFront": "",
+            "scope": "SCOPE 456",
+            "workerTargetFront": "",
+          }
+        }
+      />
+      <Worker
+        client={Object {}}
+        worker={
+          Object {
+            "active": true,
+            "name": "worker3",
+            "registrationFront": "",
+            "scope": "SCOPE 789",
+            "workerTargetFront": "",
+          }
+        }
+      />
+    </ul>
+  </article>,
+  <Localized
+    a={
+      <a
+        className="aboutdebugging-plug__link"
+        onClick={[Function]}
+      />
+    }
+    id="serviceworker-list-aboutdebugging"
+    key="serviceworkerlist-footer"
+  >
+    <footer
+      className="aboutdebugging-plug"
+    />
+  </Localized>,
+]
+`;
+
+exports[`Service Worker List: renders the expected snapshot for a workerList with single worker list 1`] = `
+Array [
+  <article
+    className="workers-container"
+    key="workers-container"
+  >
+    <Localized
+      id="serviceworker-list-header"
+    >
+      <h1
+        className="application--title"
+      />
+    </Localized>
+    <ul>
+      <Worker
+        client={Object {}}
+        worker={
+          Object {
+            "active": true,
+            "name": "worker1",
+            "registrationFront": "",
+            "scope": "SCOPE 123",
+            "workerTargetFront": "",
+          }
+        }
+      />
+    </ul>
+  </article>,
+  <Localized
+    a={
+      <a
+        className="aboutdebugging-plug__link"
+        onClick={[Function]}
+      />
+    }
+    id="serviceworker-list-aboutdebugging"
+    key="serviceworkerlist-footer"
+  >
+    <footer
+      className="aboutdebugging-plug"
+    />
+  </Localized>,
+]
+`;
