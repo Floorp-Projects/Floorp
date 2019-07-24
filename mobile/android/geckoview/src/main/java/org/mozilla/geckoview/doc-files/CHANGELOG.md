@@ -18,6 +18,10 @@ exclude: true
 [70.1]: ../GeckoSessionSettings.Builder.html#contextId-java.lang.String-
 [70.2]: ../StorageController.html#clearDataForSessionContext-java.lang.String-
 
+- Removed `setSession(session, runtime)` from `GeckoView`. With this change, `GeckoView` will no longer
+  manage opening/closing of the `GeckoSession` and instead leave that up to the app. It's also now allowed
+  to call `setSession` with a closed `GeckoSession`.
+
 ## v69
 - Modified behavior of ['setAutomaticFontSizeAdjustment'][69.1] so that it no 
   longer has any effect on ['setFontInflationEnabled'][69.2]
@@ -359,4 +363,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 17974580cb71870c61063156846294b3b75fa987
+[api-version]: d770e67f7e5b87640574810468c76208ce4c1a43

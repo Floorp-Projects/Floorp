@@ -32,7 +32,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -55,7 +54,6 @@ public class GeckoView extends FrameLayout {
 
     protected final @NonNull Display mDisplay = new Display();
     protected @Nullable GeckoSession mSession;
-    protected @Nullable GeckoRuntime mRuntime;
     private boolean mStateSaved;
 
     protected @Nullable SurfaceView mSurfaceView;
@@ -329,13 +327,11 @@ public class GeckoView extends FrameLayout {
             mSession.setFocused(false);
         }
         mSession = null;
-        mRuntime = null;
         return session;
     }
 
     /**
-     * Attach a session to this view. The session should be opened before
-     * attaching. If this instance already has an open session, you must use
+     * Attach a session to this view. If this instance already has an open session, you must use
      * {@link #releaseSession()} first, otherwise {@link IllegalStateException}
      * will be thrown. This is to avoid potentially leaking the currently opened session.
      *
@@ -346,29 +342,6 @@ public class GeckoView extends FrameLayout {
     public void setSession(@NonNull final GeckoSession session) {
         ThreadUtils.assertOnUiThread();
 
-        if (!session.isOpen()) {
-            throw new IllegalArgumentException("Session must be open before attaching");
-        }
-
-        setSession(session, session.getRuntime());
-    }
-
-    /**
-     * Attach a session to this view. The session should be opened before
-     * attaching or a runtime needs to be provided for automatic opening.
-     * If this instance already has an open session, you must use
-     * {@link #releaseSession()} first, otherwise {@link IllegalStateException}
-     * will be thrown. This is to avoid potentially leaking the currently opened session.
-     *
-     * @param session The session to be attached.
-     * @param runtime The runtime to be used for opening the session.
-     * @throws IllegalArgumentException if an existing open session is already set.
-     */
-    @UiThread
-    public void setSession(@NonNull final GeckoSession session,
-                           @Nullable final GeckoRuntime runtime) {
-        ThreadUtils.assertOnUiThread();
-
         if (mSession != null && mSession.isOpen()) {
             throw new IllegalStateException("Current session is open");
         }
@@ -376,17 +349,6 @@ public class GeckoView extends FrameLayout {
         releaseSession();
 
         mSession = session;
-        mRuntime = runtime;
-
-        if (session.isOpen()) {
-            if (runtime != null && runtime != session.getRuntime()) {
-                throw new IllegalArgumentException("Session was opened with non-matching runtime");
-            }
-            mRuntime = session.getRuntime();
-        } else if (runtime == null) {
-            throw new IllegalArgumentException("Session must be open before attaching");
-        }
-
         mDisplay.acquire(session.acquireDisplay());
 
         final Context context = getContext();
@@ -457,13 +419,13 @@ public class GeckoView extends FrameLayout {
 
     @Override
     public void onAttachedToWindow() {
-        if (mSession != null && mRuntime != null) {
-            if (!mSession.isOpen()) {
-                mSession.open(mRuntime);
+        if (mSession != null) {
+            final GeckoRuntime runtime = mSession.getRuntime();
+            if (runtime != null) {
+                runtime.orientationChanged();
             }
-            mRuntime.orientationChanged();
-        } else {
-            Log.w(LOGTAG, "No GeckoSession attached to this GeckoView instance. Call setSession to attach a GeckoSession to this instance.");
+
+
         }
 
         super.onAttachedToWindow();
@@ -479,24 +441,21 @@ public class GeckoView extends FrameLayout {
 
         // Release the display before we detach from the window.
         mSession.releaseDisplay(mDisplay.release());
-
-        // If we saved state earlier, we don't want to close the window.
-        if (!mStateSaved && mSession.isOpen()) {
-            mSession.close();
-        }
-
     }
 
     @Override
     protected void onConfigurationChanged(final Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        if (mRuntime != null) {
-            // onConfigurationChanged is not called for 180 degree orientation changes,
-            // we will miss such rotations and the screen orientation will not be
-            // updated.
-            mRuntime.orientationChanged(newConfig.orientation);
-            mRuntime.configurationChanged(newConfig);
+        if (mSession != null) {
+            final GeckoRuntime runtime = mSession.getRuntime();
+            if (runtime != null) {
+                // onConfigurationChanged is not called for 180 degree orientation changes,
+                // we will miss such rotations and the screen orientation will not be
+                // updated.
+                runtime.orientationChanged(newConfig.orientation);
+                runtime.configurationChanged(newConfig);
+            }
         }
     }
 
@@ -537,29 +496,8 @@ public class GeckoView extends FrameLayout {
             return;
         }
 
-        GeckoRuntime runtimeToRestore = savedSession.getRuntime();
-        // Note: setSession sets either both mSession and mRuntime, or none of them. So if we don't
-        // have an mRuntime here, we won't have an mSession, either.
-        if (mRuntime == null) {
-            if (runtimeToRestore == null) {
-                // If the saved session is closed, we fall back to using the default runtime, same
-                // as we do when we don't even have an mSession in onAttachedToWindow().
-                runtimeToRestore = GeckoRuntime.getDefault(getContext());
-            }
-            setSession(savedSession, runtimeToRestore);
-        // We already have a session. We only want to transfer the saved session if its close/open
-        // state is the same or better as our current session.
-        } else if (savedSession.isOpen() || !mSession.isOpen()) {
-            if (mSession.isOpen()) {
-                mSession.close();
-            }
-            mSession.transferFrom(savedSession);
-            if (runtimeToRestore != null) {
-                // If the saved session was open, we transfer its runtime as well. Otherwise we just
-                // keep the runtime we already had in mRuntime.
-                mRuntime = runtimeToRestore;
-            }
-        }
+        // This can throw if there's already an open session set, but that's the right thing to do.
+        setSession(savedSession);
     }
 
     @Override
