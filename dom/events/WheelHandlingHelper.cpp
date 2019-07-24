@@ -69,7 +69,7 @@ bool WheelHandlingUtils::CanScrollOn(nsIScrollableFrame* aScrollFrame,
 
   nsPoint scrollPt = aScrollFrame->GetScrollPosition();
   nsRect scrollRange = aScrollFrame->GetScrollRange();
-  uint32_t directions = aScrollFrame->GetAvailableScrollingDirections();
+  uint32_t directions = aScrollFrame->GetPerceivedScrollingDirections();
 
   return (aDirectionX && (directions & nsIScrollableFrame::HORIZONTAL) &&
           CanScrollInRange(scrollRange.x, scrollPt.x, scrollRange.XMost(),
@@ -741,12 +741,12 @@ void ESMAutoDirWheelDeltaAdjuster::OnAdjusted() {
 }
 
 bool ESMAutoDirWheelDeltaAdjuster::CanScrollAlongXAxis() const {
-  return mScrollTargetFrame->GetAvailableScrollingDirections() &
+  return mScrollTargetFrame->GetPerceivedScrollingDirections() &
          nsIScrollableFrame::HORIZONTAL;
 }
 
 bool ESMAutoDirWheelDeltaAdjuster::CanScrollAlongYAxis() const {
-  return mScrollTargetFrame->GetAvailableScrollingDirections() &
+  return mScrollTargetFrame->GetPerceivedScrollingDirections() &
          nsIScrollableFrame::VERTICAL;
 }
 

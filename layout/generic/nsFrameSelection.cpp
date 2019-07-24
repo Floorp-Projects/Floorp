@@ -1622,7 +1622,7 @@ nsIFrame* nsFrameSelection::GetFrameToPageSelect() const {
       if (scrollStyles.mVertical == StyleOverflow::Hidden) {
         continue;
       }
-      uint32_t directions = scrollableFrame->GetAvailableScrollingDirections();
+      uint32_t directions = scrollableFrame->GetPerceivedScrollingDirections();
       if (directions & nsIScrollableFrame::VERTICAL) {
         // If there is sub scrollable frame, let's use its page size to select.
         return frame;

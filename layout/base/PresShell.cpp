@@ -3350,7 +3350,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   ScrollStyles ss = aFrameAsScrollable->GetScrollStyles();
   nsRect allowedRange(scrollPt, nsSize(0, 0));
   bool needToScroll = false;
-  uint32_t directions = aFrameAsScrollable->GetAvailableScrollingDirections();
+  uint32_t directions = aFrameAsScrollable->GetPerceivedScrollingDirections();
 
   if (((aScrollFlags & ScrollFlags::ScrollOverflowHidden) ||
        ss.mVertical != StyleOverflow::Hidden) &&
