@@ -72,6 +72,25 @@ static BYTE GetSystemTextQuality() {
   return DEFAULT_QUALITY;
 }
 
+#ifndef SPI_GETFONTSMOOTHINGCONTRAST
+#  define SPI_GETFONTSMOOTHINGCONTRAST 0x200c
+#endif
+
+// "Retrieves a contrast value that is used in ClearType smoothing. Valid
+// contrast values are from 1000 to 2200. The default value is 1400."
+static FLOAT GetSystemGDIGamma() {
+  static FLOAT sGDIGamma = 0.0f;
+  if (!sGDIGamma) {
+    UINT value = 0;
+    if (!SystemParametersInfo(SPI_GETFONTSMOOTHINGCONTRAST, 0, &value, 0) ||
+        value < 1000 || value > 2200) {
+      value = 1400;
+    }
+    sGDIGamma = value / 1000.0f;
+  }
+  return sGDIGamma;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFont
 gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
@@ -649,11 +668,13 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     DWRITE_RENDERING_MODE renderingMode =
       forceGDI ? DWRITE_RENDERING_MODE_GDI_CLASSIC : params->GetRenderingMode();
 
+    FLOAT gamma = forceGDI ? GetSystemGDIGamma() : params->GetGamma();
+
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, (int)renderingMode,
-        params, params->GetGamma(), params->GetEnhancedContrast());
+        useEmbeddedBitmap, (int)renderingMode, params, gamma,
+        params->GetEnhancedContrast());
     if (!mAzureScaledFont) {
       return nullptr;
     }

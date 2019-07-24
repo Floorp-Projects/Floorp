@@ -437,11 +437,8 @@ void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {
 #elif defined(MOZ_SKIA)
     rec->setContrast(fContrast);
 
-    // GDI gamma should be 2.3
-    // See the LUT gamma values comment for GDI fonts.
-    float gamma = ForceGDI() ? 2.3f : fGamma;
-    rec->setDeviceGamma(gamma);
-    rec->setPaintGamma(gamma);
+    rec->setDeviceGamma(fGamma);
+    rec->setPaintGamma(fGamma);
 #endif
 }
 
