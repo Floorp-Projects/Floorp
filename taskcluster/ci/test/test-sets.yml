@@ -500,6 +500,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-24-fenix-cold
     - raptor-tp6m-25-fenix-cold
     - raptor-tp6m-26-fenix-cold
+    - raptor-tp6m-27-fenix-cold
     - raptor-tp6m-1-geckoview-cold
     - raptor-tp6m-2-geckoview-cold
     - raptor-tp6m-3-geckoview-cold
@@ -526,6 +527,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-24-geckoview-cold
     - raptor-tp6m-25-geckoview-cold
     - raptor-tp6m-26-geckoview-cold
+    - raptor-tp6m-27-geckoview-cold
     - raptor-tp6m-1-fennec64
     - raptor-tp6m-2-fennec64
     - raptor-tp6m-3-fennec64
@@ -562,6 +564,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-24-fennec-cold
     - raptor-tp6m-25-fennec-cold
     - raptor-tp6m-26-fennec-cold
+    - raptor-tp6m-27-fennec-cold
     - raptor-tp6m-1-fennec64-cold
     - raptor-tp6m-2-fennec64-cold
     - raptor-tp6m-3-fennec64-cold
@@ -602,6 +605,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-24-refbrow-cold
     - raptor-tp6m-25-refbrow-cold
     - raptor-tp6m-26-refbrow-cold
+    - raptor-tp6m-27-refbrow-cold
 
 android-hw-aarch64-raptor:
     - raptor-speedometer-geckoview
@@ -664,6 +668,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-24-fenix-cold
     - raptor-tp6m-25-fenix-cold
     - raptor-tp6m-26-fenix-cold
+    - raptor-tp6m-27-fenix-cold
     - raptor-tp6m-1-geckoview-cold
     - raptor-tp6m-2-geckoview-cold
     - raptor-tp6m-3-geckoview-cold
@@ -690,6 +695,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-24-geckoview-cold
     - raptor-tp6m-25-geckoview-cold
     - raptor-tp6m-26-geckoview-cold
+    - raptor-tp6m-27-geckoview-cold
     - raptor-tp6m-1-fennec-cold
     - raptor-tp6m-2-fennec-cold
     - raptor-tp6m-3-fennec-cold
@@ -716,6 +722,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-24-fennec-cold
     - raptor-tp6m-25-fennec-cold
     - raptor-tp6m-26-fennec-cold
+    - raptor-tp6m-27-fennec-cold
     - raptor-tp6m-1-fennec64-cold
     - raptor-tp6m-2-fennec64-cold
     - raptor-tp6m-3-fennec64-cold
@@ -756,6 +763,7 @@ android-hw-aarch64-raptor:
     - raptor-tp6m-24-refbrow-cold
     - raptor-tp6m-25-refbrow-cold
     - raptor-tp6m-26-refbrow-cold
+    - raptor-tp6m-27-refbrow-cold
 
 android-hw-arm7-raptor-power:
     - raptor-speedometer-geckoview-power
