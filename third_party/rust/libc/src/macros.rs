@@ -74,10 +74,13 @@ macro_rules! s {
         __item! {
             #[repr(C)]
             #[cfg_attr(feature = "extra_traits", derive(Debug, Eq, Hash, PartialEq))]
+            #[allow(deprecated)]
             $(#[$attr])*
             pub struct $i { $($field)* }
         }
+        #[allow(deprecated)]
         impl ::Copy for $i {}
+        #[allow(deprecated)]
         impl ::Clone for $i {
             fn clone(&self) -> $i { *self }
         }
@@ -154,4 +157,39 @@ macro_rules! align_const {
             __align: [],
         };
     )*)
+}
+
+// This macro is used to deprecate items that should be accessed via the mach crate
+#[allow(unused_macros)]
+macro_rules! deprecated_mach {
+    (pub const $id:ident: $ty:ty = $expr:expr;) => {
+        #[deprecated(
+            since = "0.2.55",
+            note = "Use the `mach` crate instead",
+        )]
+        #[allow(deprecated)]
+        pub const $id: $ty = $expr;
+    };
+    ($(pub const $id:ident: $ty:ty = $expr:expr;)*) => {
+        $(
+            deprecated_mach!(
+                pub const $id: $ty = $expr;
+            );
+        )*
+    };
+    (pub type $id:ident = $ty:ty;) => {
+        #[deprecated(
+            since = "0.2.55",
+            note = "Use the `mach` crate instead",
+        )]
+        #[allow(deprecated)]
+        pub type $id = $ty;
+    };
+    ($(pub type $id:ident = $ty:ty;)*) => {
+        $(
+            deprecated_mach!(
+                pub type $id = $ty;
+            );
+        )*
+    }
 }
