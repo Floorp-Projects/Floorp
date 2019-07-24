@@ -2464,6 +2464,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // See builtin/intl/*.h for descriptions of the intl_* functions.
     JS_FN("intl_availableCalendars", intl_availableCalendars, 1, 0),
     JS_FN("intl_availableCollations", intl_availableCollations, 1, 0),
+#if DEBUG || MOZ_SYSTEM_ICU
+    JS_FN("intl_availableMeasurementUnits", intl_availableMeasurementUnits, 0,
+          0),
+#endif
     JS_FN("intl_canonicalizeTimeZone", intl_canonicalizeTimeZone, 1, 0),
     JS_FN("intl_Collator", intl_Collator, 2, 0),
     JS_FN("intl_Collator_availableLocales", intl_Collator_availableLocales, 0,

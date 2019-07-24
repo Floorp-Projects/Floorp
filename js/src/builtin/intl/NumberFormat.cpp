@@ -12,6 +12,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/UniquePtr.h"
 
 #include <algorithm>
 #include <cstring>
@@ -255,6 +256,89 @@ bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setString(jsname);
   return true;
 }
+
+#if DEBUG || MOZ_SYSTEM_ICU
+class UResourceBundleDeleter {
+ public:
+  void operator()(UResourceBundle* aPtr) { ures_close(aPtr); }
+};
+
+using UniqueUResourceBundle =
+    mozilla::UniquePtr<UResourceBundle, UResourceBundleDeleter>;
+
+bool js::intl_availableMeasurementUnits(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 0);
+
+  RootedObject measurementUnits(
+      cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
+  if (!measurementUnits) {
+    return false;
+  }
+
+  // Lookup the available measurement units in the resource boundle of the root
+  // locale.
+
+  static const char packageName[] =
+      U_ICUDATA_NAME U_TREE_SEPARATOR_STRING "unit";
+  static const char rootLocale[] = "";
+
+  UErrorCode status = U_ZERO_ERROR;
+  UResourceBundle* rawRes = ures_open(packageName, rootLocale, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+  UniqueUResourceBundle res(rawRes);
+
+  UResourceBundle* rawUnits =
+      ures_getByKey(res.get(), "units", nullptr, &status);
+  if (U_FAILURE(status)) {
+    intl::ReportInternalError(cx);
+    return false;
+  }
+  UniqueUResourceBundle units(rawUnits);
+
+  RootedAtom unitAtom(cx);
+
+  int32_t unitsSize = ures_getSize(units.get());
+  for (int32_t i = 0; i < unitsSize; i++) {
+    UResourceBundle* rawType =
+        ures_getByIndex(units.get(), i, nullptr, &status);
+    if (U_FAILURE(status)) {
+      intl::ReportInternalError(cx);
+      return false;
+    }
+    UniqueUResourceBundle type(rawType);
+
+    int32_t typeSize = ures_getSize(type.get());
+    for (int32_t j = 0; j < typeSize; j++) {
+      UResourceBundle* rawSubtype =
+          ures_getByIndex(type.get(), j, nullptr, &status);
+      if (U_FAILURE(status)) {
+        intl::ReportInternalError(cx);
+        return false;
+      }
+      UniqueUResourceBundle subtype(rawSubtype);
+
+      const char* unitIdentifier = ures_getKey(subtype.get());
+
+      unitAtom = Atomize(cx, unitIdentifier, strlen(unitIdentifier));
+      if (!unitAtom) {
+        return false;
+      }
+      if (!DefineDataProperty(cx, measurementUnits, unitAtom->asPropertyName(),
+                              TrueHandleValue)) {
+        return false;
+      }
+    }
+  }
+
+  args.rval().setObject(*measurementUnits);
+  return true;
+}
+#endif
 
 bool js::intl::NumberFormatterSkeleton::currency(JSLinearString* currency) {
   MOZ_ASSERT(currency->length() == 3,

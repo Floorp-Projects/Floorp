@@ -94,6 +94,7 @@ included_inclnames_to_ignore = set([
     'unicode/uclean.h',         # ICU
     'unicode/ucol.h',           # ICU
     'unicode/udat.h',           # ICU
+    'unicode/udata.h',          # ICU
     'unicode/udatpg.h',         # ICU
     'unicode/udisplaycontext.h',  # ICU
     'unicode/uenum.h',          # ICU
@@ -106,6 +107,7 @@ included_inclnames_to_ignore = set([
     'unicode/unumsys.h',        # ICU
     'unicode/upluralrules.h',   # ICU
     'unicode/ureldatefmt.h',    # ICU
+    'unicode/ures.h',           # ICU
     'unicode/ustring.h',        # ICU
     'unicode/utypes.h',         # ICU
     'unicode/uversion.h',       # ICU
