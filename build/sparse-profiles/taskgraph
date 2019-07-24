@@ -63,3 +63,7 @@ path:modules/libmar/
 path:other-licenses/bsdiff/
 path:other-licenses/nsis/Contrib/CityHash/cityhash/
 path:toolkit/mozapps/update/updater
+
+# for the browsertime toolchain task
+path:tools/browsertime/mach_commands.py
+path:tools/browsertime/package.json
