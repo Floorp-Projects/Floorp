@@ -24,7 +24,8 @@
 using namespace js;
 using namespace js::jit;
 
-static size_t NumTypeSets(JSScript* script) {
+/* static */
+size_t JitScript::NumTypeSets(JSScript* script) {
   // We rely on |num| not overflowing below.
   static_assert(JSScript::MaxBytecodeTypeSets == UINT16_MAX,
                 "JSScript typesets should have safe range to avoid overflow");
@@ -83,7 +84,7 @@ bool JSScript::createJitScript(JSContext* cx) {
     }
   }
 
-  size_t numTypeSets = NumTypeSets(this);
+  size_t numTypeSets = JitScript::NumTypeSets(this);
 
   static_assert(sizeof(JitScript) % sizeof(uintptr_t) == 0,
                 "Trailing arrays must be aligned properly");

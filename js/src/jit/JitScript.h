@@ -229,6 +229,8 @@ class alignas(uintptr_t) JitScript final {
   inline StackTypeSet* argTypes(const AutoSweepJitScript& sweep,
                                 JSScript* script, unsigned i);
 
+  static size_t NumTypeSets(JSScript* script);
+
   /* Get the type set for values observed at an opcode. */
   inline StackTypeSet* bytecodeTypes(const AutoSweepJitScript& sweep,
                                      JSScript* script, jsbytecode* pc);
