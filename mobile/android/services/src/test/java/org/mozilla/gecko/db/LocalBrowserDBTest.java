@@ -53,8 +53,8 @@ public class LocalBrowserDBTest {
         context = RuntimeEnvironment.application;
         provider = DelegatingTestContentProvider.createDelegatingBrowserProvider();
 
-        ShadowContentResolver contentResolver = new ShadowContentResolver();
-        bookmarkClient = contentResolver.acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
+        bookmarkClient = context.getContentResolver()
+                .acquireContentProviderClient(BrowserContractHelpers.BOOKMARKS_CONTENT_URI);
     }
 
     @After

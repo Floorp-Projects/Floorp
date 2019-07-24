@@ -12,8 +12,6 @@ import android.util.SparseArray;
 
 import org.mozilla.gecko.annotation.WrapForJNI;
 
-import java.lang.Thread;
-
 public class GeckoJavaSampler {
     private static final String LOGTAG = "JavaSampler";
     private static Thread sSamplingThread;
