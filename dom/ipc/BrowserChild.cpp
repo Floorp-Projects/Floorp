@@ -3616,6 +3616,7 @@ NS_IMETHODIMP BrowserChild::OnLocationChange(nsIWebProgress* aWebProgress,
       MOZ_TRY(CSPToCSPInfo(csp, &locationChangeData->csp().ref()));
     }
 
+    locationChangeData->referrerInfo() = document->ReferrerInfo();
     locationChangeData->isSyntheticDocument() = document->IsSyntheticDocument();
 
     if (nsCOMPtr<nsILoadGroup> loadGroup = document->GetDocumentLoadGroup()) {
