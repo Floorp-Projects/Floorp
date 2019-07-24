@@ -202,19 +202,31 @@ var AboutLoginsParent = {
         let messageManager = message.target.messageManager;
 
         const logins = await this.getAllLogins();
-        messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
+        try {
+          messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
 
-        if (!BREACH_ALERTS_ENABLED) {
-          return;
+          if (!BREACH_ALERTS_ENABLED) {
+            return;
+          }
+
+          const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+            logins
+          );
+          messageManager.sendAsyncMessage(
+            "AboutLogins:UpdateBreaches",
+            breachesByLoginGUID
+          );
+        } catch (ex) {
+          if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
+            throw ex;
+          }
+
+          // The message manager may be destroyed before the replies can be sent.
+          log.debug(
+            "AboutLogins:Subscribe: exception when replying with logins",
+            ex
+          );
         }
-
-        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-          logins
-        );
-        messageManager.sendAsyncMessage(
-          "AboutLogins:UpdateBreaches",
-          breachesByLoginGUID
-        );
 
         break;
       }
@@ -381,7 +393,17 @@ var AboutLoginsParent = {
     for (let subscriber of this._subscriberIterator()) {
       try {
         subscriber.messageManager.sendAsyncMessage(name, details);
-      } catch (ex) {}
+      } catch (ex) {
+        if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
+          throw ex;
+        }
+
+        // The message manager may be destroyed before the message is sent.
+        log.debug(
+          "messageSubscribers: exception when calling sendAsyncMessage",
+          ex
+        );
+      }
     }
   },
 
