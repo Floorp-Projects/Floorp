@@ -39,7 +39,7 @@ describe("CSSWarning component:", () => {
     );
     const {
       timestampString,
-    } = require("devtools/client/webconsole/webconsole-l10n");
+    } = require("devtools/client/webconsole/utils/l10n");
 
     expect(wrapper.find(".timestamp").text()).toBe(
       timestampString(message.timeStamp)

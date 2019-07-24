@@ -112,7 +112,10 @@ const SOURCE_MAP_LEARN_MORE =
   "https://developer.mozilla.org/en-US/docs/Tools/Debugger/Source_map_errors";
 const TLS_LEARN_MORE =
   "https://blog.mozilla.org/security/2018/10/15/removing-old-versions-of-tls/";
+const X_FRAME_OPTIONS_LEARN_MORE =
+  "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Frame-Options";
 const ErrorCategories = {
+  "X-Frame-Options": X_FRAME_OPTIONS_LEARN_MORE,
   "Insecure Password Field": INSECURE_PASSWORDS_LEARN_MORE,
   "Mixed Content Message": MIXED_CONTENT_LEARN_MORE,
   "Mixed Content Blocker": MIXED_CONTENT_LEARN_MORE,

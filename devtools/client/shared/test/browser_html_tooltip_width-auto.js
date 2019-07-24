@@ -44,8 +44,8 @@ async function runTests(doc) {
   info("Show the tooltip and check the tooltip panel width.");
   await showTooltip(tooltip, doc.getElementById("box1"));
 
-  const panelRect = tooltip.panel.getBoundingClientRect();
-  is(panelRect.width, 150, "Tooltip panel has the expected width.");
+  const containerRect = tooltip.container.getBoundingClientRect();
+  is(containerRect.width, 150, "Tooltip container has the expected width.");
 
   await hideTooltip(tooltip);
 
