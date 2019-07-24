@@ -376,20 +376,30 @@ class MessagePort {
     return Services.appinfo.appBuildID;
   }
 
-  getIntPref(aPref) {
+  getIntPref(aPref, defaultValue) {
     let principal = this.window.document.nodePrincipal;
     if (!RPMAccessManager.checkAllowAccess(principal, "getIntPref", aPref)) {
       throw new Error("RPMAccessManager does not allow access to getIntPref");
     }
+    // Only call with a default value if it's defined, to be able to throw
+    // errors for non-existent prefs.
+    if (defaultValue !== undefined) {
+      return Services.prefs.getIntPref(aPref, defaultValue);
+    }
     return Services.prefs.getIntPref(aPref);
   }
 
-  getBoolPref(aPref, defaultValue = false) {
+  getBoolPref(aPref, defaultValue) {
     let principal = this.window.document.nodePrincipal;
     if (!RPMAccessManager.checkAllowAccess(principal, "getBoolPref", aPref)) {
       throw new Error("RPMAccessManager does not allow access to getBoolPref");
     }
-    return Services.prefs.getBoolPref(aPref, defaultValue);
+    // Only call with a default value if it's defined, to be able to throw
+    // errors for non-existent prefs.
+    if (defaultValue !== undefined) {
+      return Services.prefs.getBoolPref(aPref, defaultValue);
+    }
+    return Services.prefs.getBoolPref(aPref);
   }
 
   setBoolPref(aPref, aVal) {
