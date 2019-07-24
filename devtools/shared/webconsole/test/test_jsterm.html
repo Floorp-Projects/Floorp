@@ -166,14 +166,6 @@ async function doEvalWithBinding() {
   let response = await evaluateJS("document;");
   let documentActor = response.result.actor;
 
-  info("running a command with _self as document using bindObjectActor");
-  let bindObjectSame = await evaluateJS("_self === document", {
-    bindObjectActor: documentActor
-  });
-  checkObject(bindObjectSame, {
-    result: true
-  });
-
   info("running a command with _self as document using selectedObjectActor");
   let selectedObjectSame = await evaluateJS("_self === document", {
     selectedObjectActor: documentActor
@@ -194,14 +186,6 @@ async function doEvalWithBindingFrame() {
   );
   let iframeObjectActor = response.result.actor;
   ok(iframeObjectActor, "There is an actor associated with the response");
-
-  let bindObjectGlobal = await evaluateJS("this.temp0 = _self;", {
-    bindObjectActor: iframeObjectActor
-  });
-  ok(!top.temp0,
-    "Global doesn't match the top global with bindObjectActor");
-  ok(frameWin.temp0 && frameWin.temp0.bar === 1,
-    "Global matches the object's global with bindObjectActor");
 
   let selectedObjectGlobal = await evaluateJS("this.temp1 = _self;", {
     selectedObjectActor: iframeObjectActor
