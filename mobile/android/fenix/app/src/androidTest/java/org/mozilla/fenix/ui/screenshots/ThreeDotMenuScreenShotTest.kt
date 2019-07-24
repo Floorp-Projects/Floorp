@@ -111,4 +111,4 @@ fun settingsTheme() = ClickActions.click { text(R.string.preferences_theme) }
 fun settingsAccessibility() = ClickActions.click { text(R.string.preferences_accessibility) }
 fun settingsTp() = ClickActions.click { text(R.string.preferences_tracking_protection) }
 fun settingsRemoveData() = ClickActions.click { text(R.string.preferences_delete_browsing_data) }
-fun settingsTelemetry() = ClickActions.click { text(R.string.preferences_data_choices) }
+fun settingsTelemetry() = ClickActions.click { text(R.string.preferences_data_collection) }
