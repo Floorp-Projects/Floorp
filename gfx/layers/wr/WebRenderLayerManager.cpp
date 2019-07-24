@@ -209,7 +209,7 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
       !mWebRenderCommandBuilder.NeedsEmptyTransaction()) {
     bool haveScrollUpdates = false;
     for (auto renderRoot : wr::kRenderRoots) {
-      if (!mPendingScrollUpdates[renderRoot].empty()) {
+      if (!mPendingScrollUpdates[renderRoot].IsEmpty()) {
         haveScrollUpdates = true;
         break;
       }
@@ -251,25 +251,26 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
   for (auto& stateManager : mStateManagers) {
     auto renderRoot = stateManager.GetRenderRoot();
     if (stateManager.mAsyncResourceUpdates ||
-        !mPendingScrollUpdates[renderRoot].empty() ||
+        !mPendingScrollUpdates[renderRoot].IsEmpty() ||
         WrBridge()->HasWebRenderParentCommands(renderRoot)) {
       auto updates = renderRootUpdates.AppendElement();
       updates->mRenderRoot = renderRoot;
+      updates->mPaintSequenceNumber = mPaintSequenceNumber;
       if (stateManager.mAsyncResourceUpdates) {
         stateManager.mAsyncResourceUpdates->Flush(updates->mResourceUpdates,
                                                   updates->mSmallShmems,
                                                   updates->mLargeShmems);
       }
       updates->mScrollUpdates = std::move(mPendingScrollUpdates[renderRoot]);
-      for (const auto& entry : updates->mScrollUpdates) {
-        nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/entry.first);
+      for (auto it = updates->mScrollUpdates.Iter(); !it.Done(); it.Next()) {
+        nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/it.Key());
       }
     }
   }
 
   Maybe<wr::IpcResourceUpdateQueue> nothing;
   WrBridge()->EndEmptyTransaction(mFocusTarget, renderRootUpdates,
-                                  mPaintSequenceNumber, mLatestTransactionId,
+                                  mLatestTransactionId,
                                   mTransactionIdAllocator->GetVsyncId(),
                                   mTransactionIdAllocator->GetVsyncStart(),
                                   refreshStart, mTransactionStart, mURL);
