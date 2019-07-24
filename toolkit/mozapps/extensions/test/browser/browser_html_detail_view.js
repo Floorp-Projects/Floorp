@@ -10,6 +10,9 @@ const { ExtensionPermissions } = ChromeUtils.import(
   {}
 );
 
+const DEFAULT_THEME_ID = "default-theme@mozilla.org";
+const DARK_THEME_ID = "firefox-compact-dark@mozilla.org";
+
 let gProvider;
 let promptService;
 
@@ -641,7 +644,7 @@ add_task(async function testDefaultTheme() {
   let doc = win.document;
 
   // The list card.
-  let card = getAddonCard(doc, "default-theme@mozilla.org");
+  let card = getAddonCard(doc, DEFAULT_THEME_ID);
   ok(!card.hasAttribute("expanded"), "The list card is not expanded");
 
   // Make sure the preview is hidden.
@@ -652,7 +655,7 @@ add_task(async function testDefaultTheme() {
   card.querySelector('[action="expand"]').click();
   await loaded;
 
-  card = getAddonCard(doc, "default-theme@mozilla.org");
+  card = getAddonCard(doc, DEFAULT_THEME_ID);
 
   // Make sure the preview is hidden.
   preview = card.querySelector(".card-heading-image");
@@ -1095,6 +1098,56 @@ add_task(async function testGoBackButton() {
 
   await loadDetailView();
   checkBackButtonState();
+
+  await closeView(win);
+});
+
+add_task(async function testEmptyMoreOptionsMenu() {
+  let theme = await AddonManager.getAddonByID(DEFAULT_THEME_ID);
+  ok(theme.isActive, "The default theme is enabled");
+
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+
+  let card = getAddonCard(doc, DEFAULT_THEME_ID);
+  let enabledItems = card.options.visibleItems;
+  is(enabledItems.length, 1, "There is one enabled item");
+  is(enabledItems[0].getAttribute("action"), "expand", "Expand is enabled");
+  let moreOptionsButton = card.querySelector(".more-options-button");
+  ok(!moreOptionsButton.hidden, "The more options button is visible");
+
+  let loaded = waitForViewLoad(win);
+  enabledItems[0].click();
+  await loaded;
+
+  card = getAddonCard(doc, DEFAULT_THEME_ID);
+  enabledItems = card.options.visibleItems;
+  is(enabledItems.length, 0, "There are no enabled items");
+  moreOptionsButton = card.querySelector(".more-options-button");
+  ok(moreOptionsButton.hidden, "The more options button is now hidden");
+
+  // Switch themes, this should show the menu again.
+  let darkTheme = await AddonManager.getAddonByID(DARK_THEME_ID);
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
+  await darkTheme.enable();
+  await updated;
+
+  enabledItems = card.options.visibleItems;
+  is(enabledItems.length, 1, "There is one item visible");
+  is(
+    enabledItems[0].getAttribute("action"),
+    "toggle-disabled",
+    "Enable is the item"
+  );
+  ok(!moreOptionsButton.hidden, "The more options button is now visible");
+
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  await enabledItems[0].click();
+  await updated;
+
+  enabledItems = card.options.visibleItems;
+  is(enabledItems.length, 0, "There are no items visible");
+  ok(moreOptionsButton.hidden, "The more options button is hidden again");
 
   await closeView(win);
 });
