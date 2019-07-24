@@ -8908,8 +8908,7 @@ JS_PUBLIC_API bool JS::IsIncrementalGCEnabled(JSContext* cx) {
 }
 
 JS_PUBLIC_API bool JS::IsIncrementalGCInProgress(JSContext* cx) {
-  return cx->runtime()->gc.isIncrementalGCInProgress() &&
-         !cx->runtime()->gc.isVerifyPreBarriersEnabled();
+  return cx->runtime()->gc.isIncrementalGCInProgress();
 }
 
 JS_PUBLIC_API bool JS::IsIncrementalGCInProgress(JSRuntime* rt) {

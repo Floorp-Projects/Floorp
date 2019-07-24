@@ -354,7 +354,9 @@ class GCRuntime {
             mode == JSGC_MODE_ZONE_INCREMENTAL) &&
            incrementalAllowed;
   }
-  bool isIncrementalGCInProgress() const { return state() != State::NotActive; }
+  bool isIncrementalGCInProgress() const {
+    return state() != State::NotActive && !isVerifyPreBarriersEnabled();
+  }
   bool hasForegroundWork() const;
 
   bool isCompactingGCEnabled() const;
@@ -489,7 +491,7 @@ class GCRuntime {
   void startVerifyPreBarriers();
   void endVerifyPreBarriers();
   void finishVerifier();
-  bool isVerifyPreBarriersEnabled() const { return !!verifyPreData; }
+  bool isVerifyPreBarriersEnabled() const { return verifyPreData; }
   bool shouldYieldForZeal(ZealMode mode);
 #else
   bool isVerifyPreBarriersEnabled() const { return false; }
