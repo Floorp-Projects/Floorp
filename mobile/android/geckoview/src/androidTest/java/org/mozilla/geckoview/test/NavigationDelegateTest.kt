@@ -1174,6 +1174,40 @@ class NavigationDelegateTest : BaseSessionTest() {
                    equalTo(referrer))
     }
 
+    @Test fun loadUriReferrerSession() {
+        val uri = "https://example.com/bar"
+        val referrer = "https://example.org/foo"
+
+        sessionRule.session.loadUri(referrer)
+        sessionRule.session.waitForPageStop()
+
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadUri(uri, sessionRule.session, GeckoSession.LOAD_FLAGS_NONE)
+        newSession.waitForPageStop()
+
+        assertThat("Referrer should match",
+                newSession.evaluateJS("document.referrer") as String,
+                equalTo(referrer))
+    }
+
+    @Test fun loadUriReferrerSessionFileUrl() {
+        val uri = "file:///system/etc/fonts.xml"
+        val referrer = "https://example.org"
+
+        sessionRule.session.loadUri(referrer)
+        sessionRule.session.waitForPageStop()
+
+        val newSession = sessionRule.createOpenSession()
+        newSession.loadUri(uri, sessionRule.session, GeckoSession.LOAD_FLAGS_NONE)
+        newSession.waitUntilCalled(object : Callbacks.NavigationDelegate {
+            @AssertCalled
+            override fun onLoadError(session: GeckoSession, uri: String?, error: WebRequestError): GeckoResult<String>? {
+                return null
+            }
+        })
+    }
+
+
     @Test(expected = GeckoResult.UncaughtException::class)
     fun onNewSession_doesNotAllowOpened() {
         // Disable popup blocker.
