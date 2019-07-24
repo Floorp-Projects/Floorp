@@ -754,3 +754,53 @@ add_task(async function testExtensionGenericIcon() {
   await extension.unload();
   await closeView(win);
 });
+
+add_task(async function testDisabledDimming() {
+  const id = "disabled@mochi.test";
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      name: "Disable me",
+      applications: { gecko: { id } },
+    },
+    useAddonManager: "temporary",
+  });
+  await extension.startup();
+
+  let addon = await AddonManager.getAddonByID(id);
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  const checkOpacity = (card, expected, msg) => {
+    let { opacity } = card.ownerGlobal.getComputedStyle(card.firstElementChild);
+    is(opacity, expected, msg);
+  };
+  const waitForTransition = card =>
+    BrowserTestUtils.waitForEvent(
+      card.firstElementChild,
+      "transitionend",
+      e => e.propertyName === "opacity"
+    );
+
+  let card = getCardByAddonId(doc, id);
+  checkOpacity(card, "1", "The opacity is 1 when enabled");
+
+  // Disable the add-on, check again.
+  await addon.disable();
+  checkOpacity(card, "0.6", "The opacity is dimmed when disabled");
+
+  // Click on the menu button, this should un-dim the card.
+  let transitionEnded = waitForTransition(card);
+  card.panel.open = true;
+  await transitionEnded;
+  checkOpacity(card, "1", "The opacity is 1 when the menu is open");
+
+  // Close the menu, opacity should return.
+  transitionEnded = waitForTransition(card);
+  card.panel.open = false;
+  await transitionEnded;
+  checkOpacity(card, "0.6", "The card is dimmed again");
+
+  await closeView(win);
+  await extension.unload();
+});

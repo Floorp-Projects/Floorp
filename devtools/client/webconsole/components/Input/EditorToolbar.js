@@ -14,6 +14,12 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
 const Services = require("Services");
 const isMacOS = Services.appinfo.OS === "Darwin";
 
+// Constants used for defining the direction of JSTerm input history navigation.
+const {
+  HISTORY_BACK,
+  HISTORY_FORWARD,
+} = require("devtools/client/webconsole/constants");
+
 class EditorToolbar extends Component {
   static get propTypes() {
     return {
@@ -46,6 +52,26 @@ class EditorToolbar extends Component {
         },
         l10n.getStr("webconsole.editor.toolbar.executeButton.label")
       ),
+      dom.button({
+        className:
+          "devtools-button webconsole-editor-toolbar-history-prevExpressionButton",
+        title: l10n.getStr(
+          "webconsole.editor.toolbar.history.prevExpressionButton.tooltip"
+        ),
+        onClick: () => {
+          webConsoleUI.jsterm.historyPeruse(HISTORY_BACK);
+        },
+      }),
+      dom.button({
+        className:
+          "devtools-button webconsole-editor-toolbar-history-nextExpressionButton",
+        title: l10n.getStr(
+          "webconsole.editor.toolbar.history.nextExpressionButton.tooltip"
+        ),
+        onClick: () => {
+          webConsoleUI.jsterm.historyPeruse(HISTORY_FORWARD);
+        },
+      }),
       dom.button({
         className:
           "devtools-button webconsole-editor-toolbar-closeButton checked",

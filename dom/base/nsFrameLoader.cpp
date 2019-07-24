@@ -2857,7 +2857,7 @@ nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
 
   nsCOMPtr<Document> clonedDoc = doc->CreateStaticClone(aDest->GetDocShell());
 
-  viewer->SetDocument(clonedDoc);
+  MOZ_ASSERT(viewer->GetDocument() == clonedDoc);
   return NS_OK;
 }
 

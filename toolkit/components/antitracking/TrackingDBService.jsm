@@ -60,7 +60,7 @@ const SQL = {
   sumAllEvents: "SELECT sum(count) FROM events;",
 
   getEarliestDate:
-    "SELECT timestamp FROM events ORDER BY timestamp DESC LIMIT 1;",
+    "SELECT timestamp FROM events ORDER BY timestamp ASC LIMIT 1;",
 };
 
 /**

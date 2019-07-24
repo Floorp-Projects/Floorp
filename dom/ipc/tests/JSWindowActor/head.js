@@ -18,7 +18,7 @@ let windowActorOptions = {
       mozshowdropdown: {},
     },
 
-    observers: ["test-js-window-actor-child-observer"],
+    observers: ["test-js-window-actor-child-observer", "audio-playback"],
   },
 };
 

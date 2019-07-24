@@ -389,9 +389,13 @@ add_task(async function test_getEarliestRecordedDate() {
 
   // populate the database
   await addEventsToDB(db);
+  let d = new Date(1521009000000);
+  let daysBefore9 = new Date(d - 9 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
 
   date = await TrackingDBService.getEarliestRecordedDate();
-  equal(date, "2018-03-14", "The earliest recorded event is 2018-03-14");
+  equal(date, daysBefore9, "The earliest recorded event is nine days before.");
 
   await TrackingDBService.clearAll();
   await db.close();

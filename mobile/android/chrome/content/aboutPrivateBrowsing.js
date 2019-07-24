@@ -12,8 +12,10 @@ const { PrivateBrowsingUtils } = ChromeUtils.import(
   "resource://gre/modules/PrivateBrowsingUtils.jsm"
 );
 
-XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
-  window.docShell.rootTreeItem.domWindow.QueryInterface(Ci.nsIDOMChromeWindow)
+XPCOMUtils.defineLazyGetter(
+  window,
+  "gChromeWin",
+  () => window.docShell.rootTreeItem.domWindow
 );
 
 document.addEventListener("DOMContentLoaded", function() {

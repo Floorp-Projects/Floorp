@@ -29,3 +29,5 @@ BROWSER_CHROME_MANIFESTS += [
     'tests/browser/browser.ini',
 ]
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
+
+SPHINX_TREES['/browser/browser/urlbar'] = 'docs'

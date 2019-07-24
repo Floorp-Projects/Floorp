@@ -8385,8 +8385,8 @@ AbortReasonOr<Ok> IonBuilder::jsop_intrinsic(PropertyName* name) {
   TemporaryTypeSet* types = bytecodeTypes(pc);
 
   Value vp = UndefinedValue();
-  // If the intrinsic value doesn't yet exist, we haven't executed this
-  // opcode yet, so we need to get it and monitor the result.
+  // If the intrinsic value doesn't yet exist, we generate code to get
+  // it and monitor the result.
   if (!script()->global().maybeExistingIntrinsicValue(name, &vp)) {
     MCallGetIntrinsicValue* ins = MCallGetIntrinsicValue::New(alloc(), name);
 
@@ -8398,16 +8398,14 @@ AbortReasonOr<Ok> IonBuilder::jsop_intrinsic(PropertyName* name) {
     return pushTypeBarrier(ins, types, BarrierKind::TypeSet);
   }
 
-  if (types->empty()) {
+  // Otherwise, we can bake in the intrinsic.
+  pushConstant(vp);
+
+  // Make sure that TI agrees with us on the type.
+  if (!types->hasType(TypeSet::GetValueType(vp))) {
     types->addType(TypeSet::GetValueType(vp), alloc().lifoAlloc());
   }
 
-  // Bake in the intrinsic, guaranteed to exist because a non-empty typeset
-  // means the intrinsic was successfully gotten in the VM call above.
-  // Assert that TI agrees with us on the type.
-  MOZ_ASSERT(types->hasType(TypeSet::GetValueType(vp)));
-
-  pushConstant(vp);
   return Ok();
 }
 

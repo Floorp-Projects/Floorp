@@ -102,10 +102,11 @@ nsresult nsPrintObject::InitAsRootObject(nsIDocShell* aDocShell, Document* aDoc,
   mDocument = aDoc->CreateStaticClone(mDocShell);
   NS_ENSURE_STATE(mDocument);
 
+#ifdef DEBUG
   nsCOMPtr<nsIContentViewer> viewer;
   mDocShell->GetContentViewer(getter_AddRefs(viewer));
-  NS_ENSURE_STATE(viewer);
-  viewer->SetDocument(mDocument);
+  MOZ_ASSERT(viewer && viewer->GetDocument() == mDocument);
+#endif
 
   return NS_OK;
 }

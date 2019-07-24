@@ -10,13 +10,6 @@
 #define builtin_TypedObjectConstants_h
 
 ///////////////////////////////////////////////////////////////////////////
-// Values to be returned by SetFromTypedArrayApproach
-
-#define JS_SETTYPEDARRAY_SAME_TYPE 0
-#define JS_SETTYPEDARRAY_OVERLAPPING 1
-#define JS_SETTYPEDARRAY_DISJOINT 2
-
-///////////////////////////////////////////////////////////////////////////
 // Slots for objects using the typed array layout
 
 #define JS_TYPEDARRAYLAYOUT_BUFFER_SLOT 0

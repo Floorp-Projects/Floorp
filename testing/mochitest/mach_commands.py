@@ -454,11 +454,13 @@ class MachCommands(MachCommandBase):
             if not app:
                 app = "org.mozilla.geckoview.test"
             device_serial = kwargs.get('deviceSerial')
+            install = not kwargs.get('no_install')
 
             # verify installation
-            verify_android_device(self, install=True, xre=False, network=True,
+            verify_android_device(self, install=install, xre=False, network=True,
                                   app=app, device_serial=device_serial)
-            grant_runtime_permissions(self, app, device_serial=device_serial)
+            if install:
+                grant_runtime_permissions(self, app, device_serial=device_serial)
             run_mochitest = mochitest.run_android_test
         else:
             run_mochitest = mochitest.run_desktop_test

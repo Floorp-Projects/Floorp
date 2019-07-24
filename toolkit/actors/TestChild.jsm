@@ -37,7 +37,14 @@ class TestChild extends JSWindowActorChild {
   }
 
   observe(subject, topic, data) {
-    this.lastObserved = { subject, topic, data };
+    switch (topic) {
+      case "audio-playback":
+        this.done({ subject, topic, data });
+        break;
+      default:
+        this.lastObserved = { subject, topic, data };
+        break;
+    }
   }
 
   show() {

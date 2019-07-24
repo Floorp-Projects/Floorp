@@ -11,6 +11,11 @@
 using namespace mozilla;
 
 void nsViewportInfo::ConstrainViewportValues() {
+  // Non-positive zoom factors can produce NaN or negative viewport sizes,
+  // so we better be sure our constraints will produce positive zoom factors.
+  MOZ_ASSERT(mMinZoom > CSSToScreenScale(0.0f), "zoom factor must be positive");
+  MOZ_ASSERT(mMaxZoom > CSSToScreenScale(0.0f), "zoom factor must be positive");
+
   if (mDefaultZoom > mMaxZoom) {
     mDefaultZoomValid = false;
     mDefaultZoom = mMaxZoom;

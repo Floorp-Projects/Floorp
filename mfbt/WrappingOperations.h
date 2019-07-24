@@ -257,30 +257,6 @@ constexpr T WrappingMultiply(T aX, T aY) {
   return detail::WrappingMultiplyHelper<T>::compute(aX, aY);
 }
 
-// The |mozilla::Wrapping*| functions are constexpr. Unfortunately, MSVC warns
-// about well-defined unsigned integer overflows that may occur within the
-// constexpr math.
-//
-//   https://msdn.microsoft.com/en-us/library/4kze989h.aspx (C4307)
-//   https://developercommunity.visualstudio.com/content/problem/211134/unsigned-integer-overflows-in-constexpr-functionsa.html
-//   (bug report)
-//
-// So we need a way to suppress these warnings. Unfortunately, the warnings are
-// issued at the very top of the `constexpr` chain, which is often some
-// distance from the triggering Wrapping*() operation. So we can't suppress
-// them within this file. Instead, callers have to do it with these macros.
-//
-// If/when MSVC fix this bug, we should remove these macros.
-#ifdef _MSC_VER
-#  define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
-    __pragma(warning(push)) __pragma(warning(disable : 4307))
-#  define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING \
-    __pragma(warning(pop))
-#else
-#  define MOZ_PUSH_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-#  define MOZ_POP_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING
-#endif
-
 } /* namespace mozilla */
 
 #endif /* mozilla_WrappingOperations_h */

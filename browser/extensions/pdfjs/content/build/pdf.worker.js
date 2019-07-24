@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.27';
-const pdfjsBuild = '13ebfec9';
+const pdfjsVersion = '2.3.45';
+const pdfjsBuild = '71d9f5f8';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.27';
+    let workerVersion = '2.3.45';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -750,7 +750,7 @@ Object.defineProperty(exports, "URL", {
     return _url_polyfill.URL;
   }
 });
-exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = void 0;
+exports.createObjectURL = exports.FormatError = exports.Util = exports.UnknownErrorException = exports.UnexpectedResponseException = exports.TextRenderingMode = exports.StreamType = exports.PermissionFlag = exports.PasswordResponses = exports.PasswordException = exports.NativeImageDecoding = exports.MissingPDFException = exports.InvalidPDFException = exports.AbortException = exports.CMapCompressionType = exports.ImageKind = exports.FontType = exports.AnnotationType = exports.AnnotationStateModelType = exports.AnnotationReviewState = exports.AnnotationReplyType = exports.AnnotationMarkedState = exports.AnnotationFlag = exports.AnnotationFieldFlag = exports.AnnotationBorderStyleType = exports.UNSUPPORTED_FEATURES = exports.VerbosityLevel = exports.OPS = exports.IDENTITY_MATRIX = exports.FONT_IDENTITY_MATRIX = void 0;
 
 __w_pdfjs_require__(3);
 
@@ -827,6 +827,29 @@ const AnnotationType = {
   REDACT: 26
 };
 exports.AnnotationType = AnnotationType;
+const AnnotationStateModelType = {
+  MARKED: 'Marked',
+  REVIEW: 'Review'
+};
+exports.AnnotationStateModelType = AnnotationStateModelType;
+const AnnotationMarkedState = {
+  MARKED: 'Marked',
+  UNMARKED: 'Unmarked'
+};
+exports.AnnotationMarkedState = AnnotationMarkedState;
+const AnnotationReviewState = {
+  ACCEPTED: 'Accepted',
+  REJECTED: 'Rejected',
+  CANCELLED: 'Cancelled',
+  COMPLETED: 'Completed',
+  NONE: 'None'
+};
+exports.AnnotationReviewState = AnnotationReviewState;
+const AnnotationReplyType = {
+  GROUP: 'Group',
+  REPLY: 'R'
+};
+exports.AnnotationReplyType = AnnotationReplyType;
 const AnnotationFlag = {
   INVISIBLE: 0x01,
   HIDDEN: 0x02,
@@ -2298,7 +2321,10 @@ class ChunkedStream {
       return -1;
     }
 
-    this.ensureByte(pos);
+    if (pos >= this.progressiveDataLength) {
+      this.ensureByte(pos);
+    }
+
     return this.bytes[this.pos++];
   }
 
@@ -2327,7 +2353,10 @@ class ChunkedStream {
     const strEnd = this.end;
 
     if (!length) {
-      this.ensureRange(pos, strEnd);
+      if (strEnd > this.progressiveDataLength) {
+        this.ensureRange(pos, strEnd);
+      }
+
       const subarray = bytes.subarray(pos, strEnd);
       return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
     }
@@ -2338,7 +2367,10 @@ class ChunkedStream {
       end = strEnd;
     }
 
-    this.ensureRange(pos, end);
+    if (end > this.progressiveDataLength) {
+      this.ensureRange(pos, end);
+    }
+
     this.pos = end;
     const subarray = bytes.subarray(pos, end);
     return forceClamped ? new Uint8ClampedArray(subarray) : subarray;
@@ -2357,7 +2389,18 @@ class ChunkedStream {
   }
 
   getByteRange(begin, end) {
-    this.ensureRange(begin, end);
+    if (begin < 0) {
+      begin = 0;
+    }
+
+    if (end > this.end) {
+      end = this.end;
+    }
+
+    if (end > this.progressiveDataLength) {
+      this.ensureRange(begin, end);
+    }
+
     return this.bytes.subarray(begin, end);
   }
 
@@ -2379,9 +2422,13 @@ class ChunkedStream {
 
   makeSubStream(start, length, dict) {
     if (length) {
-      this.ensureRange(start, start + length);
+      if (start + length > this.progressiveDataLength) {
+        this.ensureRange(start, start + length);
+      }
     } else {
-      this.ensureByte(start);
+      if (start >= this.progressiveDataLength) {
+        this.ensureByte(start);
+      }
     }
 
     function ChunkedStreamSubstream() {}
@@ -3440,21 +3487,17 @@ class PDFDocument {
     if (Array.isArray(idArray) && idArray[0] && (0, _util.isString)(idArray[0]) && idArray[0] !== EMPTY_FINGERPRINT) {
       hash = (0, _util.stringToBytes)(idArray[0]);
     } else {
-      if (this.stream.ensureRange) {
-        this.stream.ensureRange(0, Math.min(FINGERPRINT_FIRST_BYTES, this.stream.end));
-      }
-
-      hash = (0, _crypto.calculateMD5)(this.stream.bytes.subarray(0, FINGERPRINT_FIRST_BYTES), 0, FINGERPRINT_FIRST_BYTES);
+      hash = (0, _crypto.calculateMD5)(this.stream.getByteRange(0, FINGERPRINT_FIRST_BYTES), 0, FINGERPRINT_FIRST_BYTES);
     }
 
-    let fingerprint = '';
+    const fingerprintBuf = [];
 
     for (let i = 0, ii = hash.length; i < ii; i++) {
       const hex = hash[i].toString(16);
-      fingerprint += hex.length === 1 ? '0' + hex : hex;
+      fingerprintBuf.push(hex.padStart(2, '0'));
     }
 
-    return (0, _util.shadow)(this, 'fingerprint', fingerprint);
+    return (0, _util.shadow)(this, 'fingerprint', fingerprintBuf.join(''));
   }
 
   _getLinearizationPage(pageIndex) {
@@ -7154,6 +7197,18 @@ var Stream = function StreamClosure() {
       return bytes;
     },
 
+    getByteRange(begin, end) {
+      if (begin < 0) {
+        begin = 0;
+      }
+
+      if (end > this.end) {
+        end = this.end;
+      }
+
+      return this.bytes.subarray(begin, end);
+    },
+
     skip: function Stream_skip(n) {
       if (!n) {
         n = 1;
@@ -7314,6 +7369,11 @@ var DecodeStream = function DecodeStreamClosure() {
 
       return new Stream(this.buffer, start, length, dict);
     },
+
+    getByteRange(begin, end) {
+      (0, _util.unreachable)('Should not call DecodeStream.getByteRange');
+    },
+
     skip: function DecodeStream_skip(n) {
       if (!n) {
         n = 1;
@@ -18564,14 +18624,51 @@ class MarkupAnnotation extends Annotation {
     super(parameters);
     const dict = parameters.dict;
 
-    if (!dict.has('C')) {
-      this.data.color = null;
+    if (dict.has('IRT')) {
+      const rawIRT = dict.getRaw('IRT');
+      this.data.inReplyTo = (0, _primitives.isRef)(rawIRT) ? rawIRT.toString() : null;
+      const rt = dict.get('RT');
+      this.data.replyType = (0, _primitives.isName)(rt) ? rt.name : _util.AnnotationReplyType.REPLY;
     }
 
-    this.setCreationDate(dict.get('CreationDate'));
-    this.data.creationDate = this.creationDate;
-    this.data.hasPopup = dict.has('Popup');
-    this.data.title = (0, _util.stringToPDFString)(dict.get('T') || '');
+    if (this.data.replyType === _util.AnnotationReplyType.GROUP) {
+      const parent = dict.get('IRT');
+      this.data.title = (0, _util.stringToPDFString)(parent.get('T') || '');
+      this.setContents(parent.get('Contents'));
+      this.data.contents = this.contents;
+
+      if (!parent.has('CreationDate')) {
+        this.data.creationDate = null;
+      } else {
+        this.setCreationDate(parent.get('CreationDate'));
+        this.data.creationDate = this.creationDate;
+      }
+
+      if (!parent.has('M')) {
+        this.data.modificationDate = null;
+      } else {
+        this.setModificationDate(parent.get('M'));
+        this.data.modificationDate = this.modificationDate;
+      }
+
+      this.data.hasPopup = parent.has('Popup');
+
+      if (!parent.has('C')) {
+        this.data.color = null;
+      } else {
+        this.setColor(parent.getArray('C'));
+        this.data.color = this.color;
+      }
+    } else {
+      this.data.title = (0, _util.stringToPDFString)(dict.get('T') || '');
+      this.setCreationDate(dict.get('CreationDate'));
+      this.data.creationDate = this.creationDate;
+      this.data.hasPopup = dict.has('Popup');
+
+      if (!dict.has('C')) {
+        this.data.color = null;
+      }
+    }
   }
 
   setCreationDate(creationDate) {
@@ -18855,6 +18952,7 @@ class TextAnnotation extends MarkupAnnotation {
   constructor(parameters) {
     const DEFAULT_ICON_SIZE = 22;
     super(parameters);
+    const dict = parameters.dict;
     this.data.annotationType = _util.AnnotationType.TEXT;
 
     if (this.data.hasAppearance) {
@@ -18862,7 +18960,15 @@ class TextAnnotation extends MarkupAnnotation {
     } else {
       this.data.rect[1] = this.data.rect[3] - DEFAULT_ICON_SIZE;
       this.data.rect[2] = this.data.rect[0] + DEFAULT_ICON_SIZE;
-      this.data.name = parameters.dict.has('Name') ? parameters.dict.get('Name').name : 'Note';
+      this.data.name = dict.has('Name') ? dict.get('Name').name : 'Note';
+    }
+
+    if (dict.has('State')) {
+      this.data.state = dict.get('State') || null;
+      this.data.stateModel = dict.get('StateModel') || null;
+    } else {
+      this.data.state = null;
+      this.data.stateModel = null;
     }
   }
 
@@ -18896,9 +19002,13 @@ class PopupAnnotation extends Annotation {
 
     let parentSubtype = parentItem.get('Subtype');
     this.data.parentType = (0, _primitives.isName)(parentSubtype) ? parentSubtype.name : null;
-    this.data.parentId = dict.getRaw('Parent').toString();
-    this.data.title = (0, _util.stringToPDFString)(parentItem.get('T') || '');
-    this.data.contents = (0, _util.stringToPDFString)(parentItem.get('Contents') || '');
+    const rawParent = dict.getRaw('Parent');
+    this.data.parentId = (0, _primitives.isRef)(rawParent) ? rawParent.toString() : null;
+    const rt = parentItem.get('RT');
+
+    if ((0, _primitives.isName)(rt, _util.AnnotationReplyType.GROUP)) {
+      parentItem = parentItem.get('IRT');
+    }
 
     if (!parentItem.has('M')) {
       this.data.modificationDate = null;
@@ -18921,6 +19031,9 @@ class PopupAnnotation extends Annotation {
         this.setFlags(parentFlags);
       }
     }
+
+    this.data.title = (0, _util.stringToPDFString)(parentItem.get('T') || '');
+    this.data.contents = (0, _util.stringToPDFString)(parentItem.get('Contents') || '');
   }
 
 }

@@ -37,9 +37,7 @@ export default class MonitorClass {
       this.buildContent(loginData, monitorData);
 
       // Show the Monitor card.
-      const monitorCard = this.doc.querySelector(
-        ".report-card.monitor-card.hidden"
-      );
+      const monitorCard = this.doc.querySelector(".card.monitor-card.hidden");
       monitorCard.classList.remove("hidden");
     });
   }
@@ -50,7 +48,7 @@ export default class MonitorClass {
     const headerContent = this.doc.querySelector(
       "#monitor-header-content span"
     );
-    const monitorCard = this.doc.querySelector(".report-card.monitor-card");
+    const monitorCard = this.doc.querySelector(".card.monitor-card");
     if (isLoggedIn && !monitorData.error) {
       monitorCard.classList.add("has-logins");
       headerContent.textContent =
@@ -80,14 +78,13 @@ export default class MonitorClass {
       "span[data-type='exposed-passwords']"
     );
     const exposedLockwisePasswords = this.doc.querySelector(
-      ".number-of-breaches.block"
+      "span[data-type='breached-lockwise-passwords']"
     );
 
     storedEmail.textContent = monitorData.monitoredEmails;
     knownBreaches.textContent = monitorData.numBreaches;
     exposedPasswords.textContent = monitorData.passwords;
-
-    // TODO: Bug 1559427: Display data from Lockwise here
-    exposedLockwisePasswords.textContent = 2;
+    exposedLockwisePasswords.textContent =
+      monitorData.potentiallyBreachedLogins;
   }
 }

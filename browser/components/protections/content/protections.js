@@ -29,31 +29,30 @@ document.addEventListener("DOMContentLoaded", e => {
     RPMSendAsyncMessage("OpenContentBlockingPreferences");
   });
 
-  // Get the display prefs for each component
-  RPMSendAsyncMessage("GetEnabledPrefs");
-
-  RPMAddMessageListener("SendCBCategory", message => {
-    if (message.data == "custom") {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-custom"
-      );
-    } else if (message.data == "strict") {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-strict"
-      );
-    } else {
-      protectionDetails.setAttribute(
-        "data-l10n-id",
-        "protection-header-details-standard"
-      );
-    }
-  });
+  let cbCategory = RPMGetStringPref("browser.contentblocking.category");
+  if (cbCategory == "custom") {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-custom"
+    );
+  } else if (cbCategory == "strict") {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-strict"
+    );
+  } else {
+    protectionDetails.setAttribute(
+      "data-l10n-id",
+      "protection-header-details-standard"
+    );
+  }
 
   let createGraph = data => {
+    // All of our dates are recorded as 00:00 GMT, add 12 hours to the timestamp
+    // to ensure we display the correct date no matter the user's location.
+    let hoursInMS12 = 12 * 60 * 60 * 1000;
     let dateInMS = data.earliestDate
-      ? new Date(data.earliestDate).getTime()
+      ? new Date(data.earliestDate).getTime() + hoursInMS12
       : Date.now();
 
     let summary = document.getElementById("graph-total-summary");
@@ -169,29 +168,31 @@ document.addEventListener("DOMContentLoaded", e => {
     createGraph(message.data);
   });
 
-  // Display Monitor card
-  RPMAddMessageListener("SendEnabledMonitorCardPref", message => {
-    if (message.data.isEnabled) {
-      const monitorCard = new MonitorCard(document);
-      monitorCard.init();
-    }
+  let lockwiseEnabled = RPMGetBoolPref(
+    "browser.contentblocking.report.lockwise.enabled",
+    true
+  );
+  if (lockwiseEnabled) {
+    const lockwiseCard = new LockwiseCard(document);
+    lockwiseCard.init();
+  }
 
-    // For tests
-    const monitorUI = document.querySelector(".monitor-card");
-    monitorUI.dataset.enabled = message.data.isEnabled;
-  });
+  // For tests
+  const lockwiseUI = document.querySelector(".lockwise-card");
+  lockwiseUI.dataset.enabled = lockwiseEnabled;
 
-  // Display Lockwise card
-  RPMAddMessageListener("SendEnabledLockwiseCardPref", message => {
-    if (message.data.isEnabled) {
-      const lockwiseCard = new LockwiseCard(document);
-      lockwiseCard.init();
-    }
+  let monitorEnabled = RPMGetBoolPref(
+    "browser.contentblocking.report.monitor.enabled",
+    true
+  );
+  if (monitorEnabled) {
+    const monitorCard = new MonitorCard(document);
+    monitorCard.init();
+  }
 
-    // For tests
-    const lockwiseUI = document.querySelector(".lockwise-card");
-    lockwiseUI.dataset.enabled = message.data.isEnabled;
-  });
+  // For tests
+  const monitorUI = document.querySelector(".monitor-card");
+  monitorUI.dataset.enabled = monitorEnabled;
 
   // Dispatch messages to retrieve data for the Lockwise & Monitor
   // cards.
