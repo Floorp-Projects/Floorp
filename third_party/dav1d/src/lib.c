@@ -152,14 +152,7 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
         for (int m = 0; m < s->n_tile_threads; m++) {
             Dav1dTileContext *const t = &f->tc[m];
             t->f = f;
-            t->cf = dav1d_alloc_aligned(32 * 32 * sizeof(int32_t), 32);
-            if (!t->cf) goto error;
-            t->scratch.mem = dav1d_alloc_aligned(128 * 128 * 4, 32);
-            if (!t->scratch.mem) goto error;
-            memset(t->cf, 0, 32 * 32 * sizeof(int32_t));
-            t->emu_edge =
-                dav1d_alloc_aligned(320 * (256 + 7) * sizeof(uint16_t), 32);
-            if (!t->emu_edge) goto error;
+            memset(t->cf_16bpc, 0, sizeof(t->cf_16bpc));
             if (f->n_tc > 1) {
                 if (pthread_mutex_init(&t->tile_thread.td.lock, NULL)) goto error;
                 if (pthread_cond_init(&t->tile_thread.td.cond, NULL)) {
@@ -501,12 +494,6 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
             pthread_cond_destroy(&f->tile_thread.icond);
             freep(&f->tile_thread.task_idx_to_sby_and_tile_idx);
         }
-        for (int m = 0; f->tc && m < f->n_tc; m++) {
-            Dav1dTileContext *const t = &f->tc[m];
-            dav1d_free_aligned(t->cf);
-            dav1d_free_aligned(t->scratch.mem);
-            dav1d_free_aligned(t->emu_edge);
-        }
         for (int m = 0; f->ts && m < f->n_ts; m++) {
             Dav1dTileState *const ts = &f->ts[m];
             pthread_cond_destroy(&ts->tile_thread.cond);
@@ -522,8 +509,8 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
         free(f->lf.level);
         free(f->lf.tx_lpf_right_edge[0]);
         if (f->libaom_cm) dav1d_free_ref_mv_common(f->libaom_cm);
-        dav1d_free_aligned(f->lf.cdef_line);
-        dav1d_free_aligned(f->lf.lr_lpf_line);
+        dav1d_free_aligned(f->lf.cdef_line[0][0][0]);
+        dav1d_free_aligned(f->lf.lr_lpf_line[0]);
     }
     dav1d_free_aligned(c->fc);
     dav1d_data_unref_internal(&c->in);

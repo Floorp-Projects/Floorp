@@ -27,6 +27,7 @@
 
 #include "config.h"
 #include "vcs_version.h"
+#include "cli_config.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -44,6 +45,9 @@
 #ifdef _WIN32
 # include <windows.h>
 #endif
+#if defined(HAVE_MACH_ABSOLUTE_TIME)
+#include <mach/mach_time.h>
+#endif
 
 #include "dav1d/dav1d.h"
 
@@ -60,10 +64,14 @@ static uint64_t get_time_nanos(void) {
     LARGE_INTEGER t;
     QueryPerformanceCounter(&t);
     return 1000000000 * t.QuadPart / frequency.QuadPart;
-#else
+#elif defined(HAVE_CLOCK_GETTIME)
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return 1000000000ULL * ts.tv_sec + ts.tv_nsec;
+#elif defined(HAVE_MACH_ABSOLUTE_TIME)
+    mach_timebase_info_data_t info;
+    mach_timebase_info(&info);
+    return mach_absolute_time() * info.numer / info.denom;
 #endif
 }
 
@@ -208,7 +216,7 @@ int main(const int argc, char *const *const argv) {
         if ((res = dav1d_send_data(c, &data)) < 0) {
             if (res != DAV1D_ERR(EAGAIN)) {
                 fprintf(stderr, "Error decoding frame: %s\n",
-                        strerror(-res));
+                        strerror(DAV1D_ERR(res)));
                 break;
             }
         }
@@ -216,7 +224,7 @@ int main(const int argc, char *const *const argv) {
         if ((res = dav1d_get_picture(c, &p)) < 0) {
             if (res != DAV1D_ERR(EAGAIN)) {
                 fprintf(stderr, "Error decoding frame: %s\n",
-                        strerror(-res));
+                        strerror(DAV1D_ERR(res)));
                 break;
             }
             res = 0;
@@ -252,7 +260,7 @@ int main(const int argc, char *const *const argv) {
         if ((res = dav1d_get_picture(c, &p)) < 0) {
             if (res != DAV1D_ERR(EAGAIN)) {
                 fprintf(stderr, "Error decoding frame: %s\n",
-                        strerror(-res));
+                        strerror(DAV1D_ERR(res)));
             } else {
                 res = 0;
                 break;

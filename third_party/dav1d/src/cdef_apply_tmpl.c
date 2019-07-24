@@ -109,7 +109,7 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
 
         if (edges & CDEF_HAVE_BOTTOM) {
             // backup pre-filter data for next iteration
-            backup2lines(f->lf.cdef_line_ptr[!tf], ptrs, f->cur.stride,
+            backup2lines(f->lf.cdef_line[!tf], ptrs, f->cur.stride,
                          8, f->bw * 4, layout);
         }
 
@@ -173,8 +173,8 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                 if (y_lvl) {
                     dsp->cdef.fb[0](bptrs[0], f->cur.stride[0], lr_bak[bit][0],
                                     (pixel *const [2]) {
-                                        &f->lf.cdef_line_ptr[tf][0][0][bx * 4],
-                                        &f->lf.cdef_line_ptr[tf][0][1][bx * 4],
+                                        &f->lf.cdef_line[tf][0][0][bx * 4],
+                                        &f->lf.cdef_line[tf][0][1][bx * 4],
                                     },
                                     adjust_strength(y_pri_lvl, variance),
                                     y_sec_lvl, y_pri_lvl ? dir : 0,
@@ -188,8 +188,8 @@ void bytefn(dav1d_cdef_brow)(Dav1dFrameContext *const f,
                         dsp->cdef.fb[uv_idx](bptrs[pl], f->cur.stride[1],
                                              lr_bak[bit][pl],
                                              (pixel *const [2]) {
-                                                 &f->lf.cdef_line_ptr[tf][pl][0][bx * 4 >> ss_hor],
-                                                 &f->lf.cdef_line_ptr[tf][pl][1][bx * 4 >> ss_hor],
+                                                 &f->lf.cdef_line[tf][pl][0][bx * 4 >> ss_hor],
+                                                 &f->lf.cdef_line[tf][pl][1][bx * 4 >> ss_hor],
                                              },
                                              uv_pri_lvl, uv_sec_lvl,
                                              uv_pri_lvl ? uvdir : 0,

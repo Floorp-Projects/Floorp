@@ -104,8 +104,8 @@ static void check_intra_pred(Dav1dIntraPredDSPContext *const c) {
                              HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, stride, topleft, w, h, a, maxw, maxh
                              HIGHBD_TAIL_SUFFIX);
-                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                        fail();
+                    checkasm_check_pixel(c_dst, stride, a_dst, stride,
+                                         w, h, "dst");
 
                     bench_new(a_dst, stride, topleft, w, h, a, 128, 128
                               HIGHBD_TAIL_SUFFIX);
@@ -144,8 +144,9 @@ static void check_cfl_ac(Dav1dIntraPredDSPContext *const c) {
 
                             call_ref(c_dst, luma, stride, w_pad, h_pad, w, h);
                             call_new(a_dst, luma, stride, w_pad, h_pad, w, h);
-                            if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                                fail();
+                            checkasm_check(int16_t, c_dst, w * sizeof(*c_dst),
+                                                    a_dst, w * sizeof(*a_dst),
+                                                    w, h, "dst");
                         }
                     }
 
@@ -198,8 +199,8 @@ static void check_cfl_pred(Dav1dIntraPredDSPContext *const c) {
                              HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, stride, topleft, w, h, ac, alpha
                              HIGHBD_TAIL_SUFFIX);
-                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                        fail();
+                    checkasm_check_pixel(c_dst, stride, a_dst, stride,
+                                         w, h, "dst");
 
                     bench_new(a_dst, stride, topleft, w, h, ac, alpha
                               HIGHBD_TAIL_SUFFIX);
@@ -236,8 +237,7 @@ static void check_pal_pred(Dav1dIntraPredDSPContext *const c) {
 
                 call_ref(c_dst, stride, pal, idx, w, h);
                 call_new(a_dst, stride, pal, idx, w, h);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, stride, a_dst, stride, w, h, "dst");
 
                 bench_new(a_dst, stride, pal, idx, w, h);
             }

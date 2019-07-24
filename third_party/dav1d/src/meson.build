@@ -86,6 +86,7 @@ if is_asm_enabled
         )
         libdav1d_tmpl_sources += files(
             'arm/cdef_init_tmpl.c',
+            'arm/itx_init_tmpl.c',
             'arm/loopfilter_init_tmpl.c',
             'arm/looprestoration_init_tmpl.c',
             'arm/mc_init_tmpl.c',
@@ -93,6 +94,7 @@ if is_asm_enabled
         if host_machine.cpu_family() == 'aarch64'
             libdav1d_sources += files(
                 'arm/64/cdef.S',
+                'arm/64/itx.S',
                 'arm/64/loopfilter.S',
                 'arm/64/looprestoration.S',
                 'arm/64/mc.S',
@@ -148,6 +150,10 @@ if is_asm_enabled
 
         # Compile the ASM sources with NASM
         libdav1d_nasm_objs = nasm_gen.process(libdav1d_sources_asm)
+    elif host_machine.cpu() == 'ppc64le'
+        libdav1d_sources += files(
+            'ppc/cpu.c',
+        )
     endif
 endif
 

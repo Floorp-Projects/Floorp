@@ -165,7 +165,7 @@ static int decode_coefs(Dav1dTileContext *const t,
     int dc_tok;
 
     if (eob) {
-        ALIGN_STK_16(uint8_t, levels, 36 * 36,);
+        uint8_t *const levels = t->scratch.levels;
         const int sw = imin(t_dim->w, 8), sh = imin(t_dim->h, 8);
         const ptrdiff_t stride = 4 * (sh + 1);
         memset(levels, 0, stride * 4 * (sw + 1));
@@ -394,7 +394,7 @@ static void read_coef_tree(Dav1dTileContext *const t,
             ts->frame_thread.cf += imin(t_dim->w, 8) * imin(t_dim->h, 8) * 16;
             cbi = &f->frame_thread.cbi[t->by * f->b4_stride + t->bx];
         } else {
-            cf = t->cf;
+            cf = bitfn(t->cf);
         }
         if (f->frame_thread.pass != 2) {
             eob = decode_coefs(t, &t->a->lcoef[bx4], &t->l.lcoef[by4],
@@ -613,11 +613,12 @@ static int mc(Dav1dTileContext *const t,
             dx + bw4 * h_mul + !!mx * 4 > w ||
             dy + bh4 * v_mul + !!my * 4 > h)
         {
+            pixel *const emu_edge_buf = bitfn(t->scratch.emu_edge);
             f->dsp->mc.emu_edge(bw4 * h_mul + !!mx * 7, bh4 * v_mul + !!my * 7,
                                 w, h, dx - !!mx * 3, dy - !!my * 3,
-                                t->emu_edge, 192 * sizeof(pixel),
+                                emu_edge_buf, 192 * sizeof(pixel),
                                 refp->p.data[pl], ref_stride);
-            ref = &t->emu_edge[192 * !!my * 3 + !!mx * 3];
+            ref = &emu_edge_buf[192 * !!my * 3 + !!mx * 3];
             ref_stride = 192 * sizeof(pixel);
         } else {
             ref = ((pixel *) refp->p.data[pl]) + PXSTRIDE(ref_stride) * dy + dx;
@@ -663,11 +664,12 @@ static int mc(Dav1dTileContext *const t,
         const int w = (refp->p.p.w + ss_hor) >> ss_hor;
         const int h = (refp->p.p.h + ss_ver) >> ss_ver;
         if (left < 3 || top < 3 || right + 4 > w || bottom + 4 > h) {
+            pixel *const emu_edge_buf = bitfn(t->scratch.emu_edge);
             f->dsp->mc.emu_edge(right - left + 7, bottom - top + 7,
                                 w, h, left - 3, top - 3,
-                                t->emu_edge, 320 * sizeof(pixel),
+                                emu_edge_buf, 320 * sizeof(pixel),
                                 refp->p.data[pl], ref_stride);
-            ref = &t->emu_edge[320 * 3 + 3];
+            ref = &emu_edge_buf[320 * 3 + 3];
             ref_stride = 320 * sizeof(pixel);
             if (DEBUG_BLOCK_INFO) printf("Emu\n");
         } else {
@@ -702,7 +704,7 @@ static int obmc(Dav1dTileContext *const t,
     assert(!(t->bx & 1) && !(t->by & 1));
     const Dav1dFrameContext *const f = t->f;
     const refmvs *const r = &f->mvs[t->by * f->b4_stride + t->bx];
-    pixel *const lap = t->scratch.lap;
+    pixel *const lap = bitfn(t->scratch.lap);
     const int ss_ver = !!pl && f->cur.p.layout == DAV1D_PIXEL_LAYOUT_I420;
     const int ss_hor = !!pl && f->cur.p.layout != DAV1D_PIXEL_LAYOUT_I444;
     const int h_mul = 4 >> ss_hor, v_mul = 4 >> ss_ver;
@@ -799,11 +801,12 @@ static int warp_affine(Dav1dTileContext *const t,
                 return -1;
             }
             if (dx < 3 || dx + 8 + 4 > width || dy < 3 || dy + 8 + 4 > height) {
+                pixel *const emu_edge_buf = bitfn(t->scratch.emu_edge);
                 f->dsp->mc.emu_edge(15, 15, width, height, dx - 3, dy - 3,
-                                    t->emu_edge, 192 * sizeof(pixel),
+                                    emu_edge_buf, 32 * sizeof(pixel),
                                     refp->p.data[pl], ref_stride);
-                ref_ptr = &t->emu_edge[192 * 3 + 3];
-                ref_stride = 192 * sizeof(pixel);
+                ref_ptr = &emu_edge_buf[32 * 3 + 3];
+                ref_stride = 32 * sizeof(pixel);
             } else {
                 ref_ptr = ((pixel *) refp->p.data[pl]) + PXSTRIDE(ref_stride) * dy + dx;
             }
@@ -842,8 +845,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
     const TxfmInfo *const uv_t_dim = &dav1d_txfm_dimensions[b->uvtx];
 
     // coefficient coding
-    ALIGN_STK_32(pixel, edge_buf, 257,);
-    pixel *const edge = edge_buf + 128;
+    pixel *const edge = bitfn(t->scratch.edge) + 128;
     const int cbw4 = (bw4 + ss_hor) >> ss_hor, cbh4 = (bh4 + ss_ver) >> ss_ver;
 
     const int intra_edge_filter_flag = f->seq_hdr->intra_edge_filter << 10;
@@ -862,7 +864,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
                 }
                 const uint16_t *const pal = f->frame_thread.pass ?
                     f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                                        ((t->bx >> 1) + (t->by & 1))][0] : t->pal[0];
+                                        ((t->bx >> 1) + (t->by & 1))][0] : t->scratch.pal[0];
                 f->dsp->ipred.pal_pred(dst, f->cur.stride[0], pal,
                                        pal_idx, bw4 * 4, bh4 * 4);
                 if (DEBUG_BLOCK_INFO && DEBUG_B_PIXELS)
@@ -947,7 +949,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
                             txtp = cbi->txtp[0];
                         } else {
                             uint8_t cf_ctx;
-                            cf = t->cf;
+                            cf = bitfn(t->cf);
                             eob = decode_coefs(t, &t->a->lcoef[bx4 + x],
                                                &t->l.lcoef[by4 + y], b->tx, bs,
                                                b, 1, 0, cf, &txtp, &cf_ctx);
@@ -1048,24 +1050,23 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
             } else if (b->pal_sz[1]) {
                 ptrdiff_t uv_dstoff = 4 * ((t->bx >> ss_hor) +
                                            (t->by >> ss_ver) * PXSTRIDE(f->cur.stride[1]));
+                const uint16_t (*pal)[8];
                 const uint8_t *pal_idx;
                 if (f->frame_thread.pass) {
+                    pal = f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
+                                              ((t->bx >> 1) + (t->by & 1))];
                     pal_idx = ts->frame_thread.pal_idx;
                     ts->frame_thread.pal_idx += cbw4 * cbh4 * 16;
                 } else {
+                    pal = t->scratch.pal;
                     pal_idx = &t->scratch.pal_idx[bw4 * bh4 * 16];
                 }
-                const uint16_t *const pal_u = f->frame_thread.pass ?
-                    f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                                        ((t->bx >> 1) + (t->by & 1))][1] : t->pal[1];
+
                 f->dsp->ipred.pal_pred(((pixel *) f->cur.data[1]) + uv_dstoff,
-                                       f->cur.stride[1], pal_u,
+                                       f->cur.stride[1], pal[1],
                                        pal_idx, cbw4 * 4, cbh4 * 4);
-                const uint16_t *const pal_v = f->frame_thread.pass ?
-                    f->frame_thread.pal[((t->by >> 1) + (t->bx & 1)) * (f->b4_stride >> 1) +
-                                        ((t->bx >> 1) + (t->by & 1))][2] : t->pal[2];
                 f->dsp->ipred.pal_pred(((pixel *) f->cur.data[2]) + uv_dstoff,
-                                       f->cur.stride[1], pal_v,
+                                       f->cur.stride[1], pal[2],
                                        pal_idx, cbw4 * 4, cbh4 * 4);
                 if (DEBUG_BLOCK_INFO && DEBUG_B_PIXELS) {
                     hex_dump(((pixel *) f->cur.data[1]) + uv_dstoff,
@@ -1170,7 +1171,7 @@ void bytefn(dav1d_recon_b_intra)(Dav1dTileContext *const t, const enum BlockSize
                                 txtp = cbi->txtp[pl + 1];
                             } else {
                                 uint8_t cf_ctx;
-                                cf = t->cf;
+                                cf = bitfn(t->cf);
                                 eob = decode_coefs(t, &t->a->ccoef[pl][cbx4 + x],
                                                    &t->l.ccoef[pl][cby4 + y],
                                                    b->uvtx, bs, b, 1, 1 + pl, cf,
@@ -1281,11 +1282,10 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
             }
         }
         if (b->interintra_type) {
-            ALIGN_STK_32(pixel, tl_edge_buf, 65,);
-            pixel *const tl_edge = tl_edge_buf + 32;
+            pixel *const tl_edge = bitfn(t->scratch.edge) + 32;
             enum IntraPredMode m = b->interintra_mode == II_SMOOTH_PRED ?
                                    SMOOTH_PRED : b->interintra_mode;
-            pixel *const tmp = t->scratch.interintra;
+            pixel *const tmp = bitfn(t->scratch.interintra);
             int angle = 0;
             const pixel *top_sb_edge = NULL;
             if (!(t->by & (f->sb_step - 1))) {
@@ -1415,9 +1415,8 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
                          dav1d_wedge_masks[bs][chr_layout_idx][0][b->wedge_idx];
 
                 for (int pl = 0; pl < 2; pl++) {
-                    pixel *const tmp = t->scratch.interintra;
-                    ALIGN_STK_32(pixel, tl_edge_px, 65,);
-                    pixel *const tl_edge = &tl_edge_px[32];
+                    pixel *const tmp = bitfn(t->scratch.interintra);
+                    pixel *const tl_edge = bitfn(t->scratch.edge) + 32;
                     enum IntraPredMode m =
                         b->interintra_mode == II_SMOOTH_PRED ?
                         SMOOTH_PRED : b->interintra_mode;
@@ -1455,9 +1454,9 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
     } else {
         const enum Filter2d filter_2d = b->filter2d;
         // Maximum super block size is 128x128
-        int16_t (*tmp)[128 * 128] = (int16_t (*)[128 * 128]) t->scratch.compinter;
+        int16_t (*tmp)[128 * 128] = t->scratch.compinter;
         int jnt_weight;
-        uint8_t *const seg_mask = t->scratch_seg_mask;
+        uint8_t *const seg_mask = t->scratch.seg_mask;
         const uint8_t *mask;
 
         for (int i = 0; i < 2; i++) {
@@ -1619,7 +1618,7 @@ int bytefn(dav1d_recon_b_inter)(Dav1dTileContext *const t, const enum BlockSize 
                             txtp = cbi->txtp[1 + pl];
                         } else {
                             uint8_t cf_ctx;
-                            cf = t->cf;
+                            cf = bitfn(t->cf);
                             txtp = t->txtp_map[(by4 + (y << ss_ver)) * 32 +
                                                 bx4 + (x << ss_hor)];
                             eob = decode_coefs(t, &t->a->ccoef[pl][cbx4 + x],

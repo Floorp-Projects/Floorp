@@ -28,6 +28,9 @@
 #include "tests/checkasm/checkasm.h"
 
 #include <string.h>
+#include <stdio.h>
+
+#include "common/dump.h"
 
 #include "src/levels.h"
 #include "src/cdef.h"
@@ -80,7 +83,12 @@ static void check_cdef_filter(const cdef_fn fn, const int w, const int h,
                          (pixel *[2]) { top_ptr, top_ptr + 16 },
                          pri_strength, sec_strength, dir, damping, edges
                          HIGHBD_TAIL_SUFFIX);
-                if (memcmp(a_src, c_src, (10 * 16 + 8) * sizeof(pixel))) fail();
+                checkasm_check_pixel(c_src, 16 * sizeof(pixel),
+                                     a_src, 16 * sizeof(pixel),
+                                     16, 10, "src");
+                checkasm_check_pixel(c_src + 16 * 10, 16 * sizeof(pixel),
+                                     a_src + 16 * 10, 16 * sizeof(pixel),
+                                     8, 1, "src last row");
                 bench_new(a_src_ptr, 16 * sizeof(pixel), left,
                           (pixel *[2]) { top_ptr, top_ptr + 16 },
                           pri_strength, sec_strength, dir, damping, edges
@@ -108,7 +116,12 @@ static void check_cdef_direction(const cdef_dir_fn fn) {
 
         const int c_dir = call_ref(src, 8 * sizeof(pixel), &c_var HIGHBD_TAIL_SUFFIX);
         const int a_dir = call_new(src, 8 * sizeof(pixel), &a_var HIGHBD_TAIL_SUFFIX);
-        if (c_var != a_var || c_dir != a_dir) fail();
+        if (c_var != a_var || c_dir != a_dir) {
+            if (fail()) {
+                hex_fdump(stderr, src, 8 * sizeof(pixel), 8, 8, "src");
+                fprintf(stderr, "c_dir %d a_dir %d\n", c_dir, a_dir);
+            }
+        }
         bench_new(src, 8 * sizeof(pixel), &a_var HIGHBD_TAIL_SUFFIX);
     }
     report("cdef_dir");

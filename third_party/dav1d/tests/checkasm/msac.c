@@ -30,6 +30,7 @@
 #include "src/cpu.h"
 #include "src/msac.h"
 
+#include <stdio.h>
 #include <string.h>
 
 #define BUF_SIZE 8192
@@ -65,6 +66,41 @@ static int msac_cmp(const MsacContext *const a, const MsacContext *const b) {
            a->allow_update_cdf != b->allow_update_cdf;
 }
 
+static void msac_dump(unsigned c_res, unsigned a_res,
+                      const MsacContext *const a, const MsacContext *const b,
+                      const uint16_t *const cdf_a, const uint16_t *const cdf_b,
+                      int num_cdf)
+{
+    if (c_res != a_res)
+        fprintf(stderr, "c_res %u a_res %u\n", c_res, a_res);
+    if (a->buf_pos != b->buf_pos)
+        fprintf(stderr, "buf_pos %p vs %p\n", a->buf_pos, b->buf_pos);
+    if (a->buf_end != b->buf_end)
+        fprintf(stderr, "buf_end %p vs %p\n", a->buf_end, b->buf_end);
+    if (a->dif != b->dif)
+        fprintf(stderr, "dif %zx vs %zx\n", a->dif, b->dif);
+    if (a->rng != b->rng)
+        fprintf(stderr, "rng %u vs %u\n", a->rng, b->rng);
+    if (a->cnt != b->cnt)
+        fprintf(stderr, "cnt %d vs %d\n", a->cnt, b->cnt);
+    if (a->allow_update_cdf)
+        fprintf(stderr, "allow_update_cdf %d vs %d\n",
+                a->allow_update_cdf, b->allow_update_cdf);
+    if (cdf_a != NULL && cdf_b != NULL &&
+        memcmp(cdf_a, cdf_b, sizeof(*cdf_a) * num_cdf)) {
+        fprintf(stderr, "cdf:\n");
+        for (int i = 0; i < num_cdf; i++)
+            fprintf(stderr, " %5u", cdf_a[i]);
+        fprintf(stderr, "\n");
+        for (int i = 0; i < num_cdf; i++)
+            fprintf(stderr, " %5u", cdf_b[i]);
+        fprintf(stderr, "\n");
+        for (int i = 0; i < num_cdf; i++)
+            fprintf(stderr, "     %c", cdf_a[i] != cdf_b[i] ? 'x' : '.');
+        fprintf(stderr, "\n");
+    }
+}
+
 #define CHECK_SYMBOL_ADAPT(n, n_min, n_max) do {                           \
     if (check_func(c->symbol_adapt##n, "msac_decode_symbol_adapt%d", n)) { \
         for (int cdf_update = 0; cdf_update <= 1; cdf_update++) {          \
@@ -79,7 +115,9 @@ static int msac_cmp(const MsacContext *const a, const MsacContext *const b) {
                     if (c_res != a_res || msac_cmp(&s_c, &s_a) ||          \
                         memcmp(cdf[0], cdf[1], sizeof(**cdf) * (ns + 1)))  \
                     {                                                      \
-                        fail();                                            \
+                        if (fail())                                        \
+                            msac_dump(c_res, a_res, &s_c, &s_a,            \
+                                      cdf[0], cdf[1], ns + 1);             \
                     }                                                      \
                 }                                                          \
                 if (cdf_update && ns == n)                                 \
@@ -119,7 +157,8 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
                 if (c_res != a_res || msac_cmp(&s_c, &s_a) ||
                     memcmp(cdf[0], cdf[1], sizeof(*cdf)))
                 {
-                    fail();
+                    if (fail())
+                        msac_dump(c_res, a_res, &s_c, &s_a, cdf[0], cdf[1], 2);
                 }
             }
             if (cdf_update)
@@ -134,8 +173,10 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
         for (int i = 0; i < 64; i++) {
             unsigned c_res = call_ref(&s_c);
             unsigned a_res = call_new(&s_a);
-            if (c_res != a_res || msac_cmp(&s_c, &s_a))
-                fail();
+            if (c_res != a_res || msac_cmp(&s_c, &s_a)) {
+                if (fail())
+                    msac_dump(c_res, a_res, &s_c, &s_a, NULL, NULL, 0);
+            }
         }
         bench_new(&s_a);
     }
@@ -148,8 +189,10 @@ static void check_decode_bool(MsacDSPContext *const c, uint8_t *const buf) {
             const unsigned f = rnd() & 0x7fff;
             unsigned c_res = call_ref(&s_c, f);
             unsigned a_res = call_new(&s_a, f);
-            if (c_res != a_res || msac_cmp(&s_c, &s_a))
-                fail();
+            if (c_res != a_res || msac_cmp(&s_c, &s_a)) {
+                if (fail())
+                    msac_dump(c_res, a_res, &s_c, &s_a, NULL, NULL, 0);
+            }
         }
         bench_new(&s_a, 16384);
     }

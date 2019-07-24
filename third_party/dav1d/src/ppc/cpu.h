@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2019, Janne Grunau
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,13 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_SRC_ITX_H
-#define DAV1D_SRC_ITX_H
+#ifndef DAV1D_SRC_PPC_CPU_H
+#define DAV1D_SRC_PPC_CPU_H
 
-#include <stddef.h>
+enum CpuFlags {
+    DAV1D_PPC_CPU_FLAG_VSX = 1 << 0,
+};
 
-#include "common/bitdepth.h"
+unsigned dav1d_get_cpu_flags_ppc(void);
 
-#include "src/levels.h"
-
-#define decl_itx_fn(name) \
-void (name)(pixel *dst, ptrdiff_t dst_stride, coef *coeff, int eob \
-            HIGHBD_DECL_SUFFIX)
-typedef decl_itx_fn(*itxfm_fn);
-
-typedef struct Dav1dInvTxfmDSPContext {
-    itxfm_fn itxfm_add[N_RECT_TX_SIZES][N_TX_TYPES_PLUS_LL];
-} Dav1dInvTxfmDSPContext;
-
-bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c);
-bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c);
-bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c);
-
-#endif /* DAV1D_SRC_ITX_H */
+#endif /* DAV1D_SRC_PPC_CPU_H */
