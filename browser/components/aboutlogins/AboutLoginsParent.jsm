@@ -26,11 +26,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "RemoteSettings",
-  "resource://services-settings/remote-settings.js"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "Services",
   "resource://gre/modules/Services.jsm"
 );
@@ -67,14 +62,10 @@ const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = PRIVILEGEDABOUT_PROCESS_ENABLED
   ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
   : E10SUtils.DEFAULT_REMOTE_TYPE;
 
-const isValidLogin = login => {
-  return !(login.origin || "").startsWith("chrome://");
-};
-
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
   const login = LoginHelper.loginToVanillaObject(subject);
-  if (!isValidLogin(login)) {
+  if (!LoginHelper.isUserFacingLogin(login)) {
     return null;
   }
   return augmentVanillaLoginObject(login);
@@ -188,22 +179,22 @@ var AboutLoginsParent = {
         this._subscribers.add(message.target);
 
         let messageManager = message.target.messageManager;
-        this.getAllLogins().then(async logins => {
-          messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-          if (!BREACH_ALERTS_ENABLED) {
-            return;
-          }
 
-          const breaches = await RemoteSettings("fxmonitor-breaches").get();
-          const breachesByLoginGUID = await this.getBreachesForLogins(
-            logins,
-            breaches
-          );
-          messageManager.sendAsyncMessage(
-            "AboutLogins:UpdateBreaches",
-            breachesByLoginGUID
-          );
-        });
+        const logins = await this.getAllLogins();
+        messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
+
+        if (!BREACH_ALERTS_ENABLED) {
+          return;
+        }
+
+        const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+          logins
+        );
+        messageManager.sendAsyncMessage(
+          "AboutLogins:UpdateBreaches",
+          breachesByLoginGUID
+        );
+
         break;
       }
       case "AboutLogins:UpdateLogin": {
@@ -375,9 +366,8 @@ var AboutLoginsParent = {
 
   async getAllLogins() {
     try {
-      let logins = await Services.logins.getAllLoginsAsync();
+      let logins = await LoginHelper.getAllUserFacingLogins();
       return logins
-        .filter(isValidLogin)
         .map(LoginHelper.loginToVanillaObject)
         .map(augmentVanillaLoginObject);
     } catch (e) {
@@ -387,24 +377,5 @@ var AboutLoginsParent = {
       }
       throw e;
     }
-  },
-
-  async getBreachesForLogins(logins, breaches) {
-    const breachesByLoginGUID = new Map();
-    for (const login of logins) {
-      const loginURI = Services.io.newURI(login.origin);
-      for (const breach of breaches) {
-        if (!breach.Domain) {
-          continue;
-        }
-        if (
-          Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
-          login.timePasswordChanged < new Date(breach.BreachDate).getTime()
-        ) {
-          breachesByLoginGUID.set(login.guid, breach);
-        }
-      }
-    }
-    return breachesByLoginGUID;
   },
 };

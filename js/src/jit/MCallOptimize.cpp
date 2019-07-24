@@ -161,7 +161,6 @@ static bool CanInlineCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicTypedArrayLength:
     case InlinableNative::IntrinsicTypedArrayByteOffset:
     case InlinableNative::IntrinsicTypedArrayElementShift:
-    case InlinableNative::IntrinsicSetDisjointTypedElements:
     case InlinableNative::IntrinsicObjectIsTypedObject:
     case InlinableNative::IntrinsicObjectIsTransparentTypedObject:
     case InlinableNative::IntrinsicObjectIsOpaqueTypedObject:
@@ -551,8 +550,6 @@ IonBuilder::InliningResult IonBuilder::inlineNativeCall(CallInfo& callInfo,
       return inlineTypedArrayByteOffset(callInfo);
     case InlinableNative::IntrinsicTypedArrayElementShift:
       return inlineTypedArrayElementShift(callInfo);
-    case InlinableNative::IntrinsicSetDisjointTypedElements:
-      return inlineSetDisjointTypedElements(callInfo);
 
     // TypedObject intrinsics.
     case InlinableNative::IntrinsicObjectIsTypedObject:
@@ -3324,49 +3321,6 @@ IonBuilder::InliningResult IonBuilder::inlineTypedArrayElementShift(
   current->add(ins);
   current->push(ins);
 
-  callInfo.setImplicitlyUsedUnchecked();
-  return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningResult IonBuilder::inlineSetDisjointTypedElements(
-    CallInfo& callInfo) {
-  MOZ_ASSERT(!callInfo.constructing());
-  MOZ_ASSERT(callInfo.argc() == 3);
-
-  // Initial argument requirements.
-
-  MDefinition* target = callInfo.getArg(0);
-  if (target->type() != MIRType::Object) {
-    return InliningStatus_NotInlined;
-  }
-
-  if (getInlineReturnType() != MIRType::Undefined) {
-    return InliningStatus_NotInlined;
-  }
-
-  MDefinition* targetOffset = callInfo.getArg(1);
-  MOZ_ASSERT(targetOffset->type() == MIRType::Int32);
-
-  MDefinition* sourceTypedArray = callInfo.getArg(2);
-  if (sourceTypedArray->type() != MIRType::Object) {
-    return InliningStatus_NotInlined;
-  }
-
-  // Only attempt to optimize if |target| and |sourceTypedArray| are both
-  // definitely typed arrays.  (The former always is.  The latter is not,
-  // necessarily, because of wrappers.)
-  if (!IsTypedArrayObject(constraints(), target) ||
-      !IsTypedArrayObject(constraints(), sourceTypedArray)) {
-    return InliningStatus_NotInlined;
-  }
-
-  auto sets = MSetDisjointTypedElements::New(alloc(), target, targetOffset,
-                                             sourceTypedArray);
-  current->add(sets);
-
-  pushConstant(UndefinedValue());
-
-  MOZ_TRY(resumeAfter(sets));
   callInfo.setImplicitlyUsedUnchecked();
   return InliningStatus_Inlined;
 }

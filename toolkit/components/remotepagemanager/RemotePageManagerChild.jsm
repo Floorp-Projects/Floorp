@@ -38,6 +38,9 @@ class ChildMessagePort extends MessagePort {
     Cu.exportFunction(this.getIntPref.bind(this), window, {
       defineAs: "RPMGetIntPref",
     });
+    Cu.exportFunction(this.getStringPref.bind(this), window, {
+      defineAs: "RPMGetStringPref",
+    });
     Cu.exportFunction(this.getBoolPref.bind(this), window, {
       defineAs: "RPMGetBoolPref",
     });

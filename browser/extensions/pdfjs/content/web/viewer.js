@@ -653,10 +653,8 @@ let PDFViewerApplication = {
     this.pdfViewer.currentScaleValue = newScale;
   },
 
-  zoomReset(ignoreDuplicate = false) {
+  zoomReset() {
     if (this.pdfViewer.isInPresentationMode) {
-      return;
-    } else if (ignoreDuplicate && this.pdfViewer.currentScaleValue === _ui_utils.DEFAULT_SCALE_VALUE) {
       return;
     }
 
@@ -714,12 +712,9 @@ let PDFViewerApplication = {
     this.externalServices.initPassiveLoading({
       onOpenWithTransport(url, length, transport) {
         PDFViewerApplication.open(url, {
+          length,
           range: transport
         });
-
-        if (length) {
-          PDFViewerApplication.pdfDocumentProperties.setFileSize(length);
-        }
       },
 
       onOpenWithData(data) {
@@ -845,21 +840,27 @@ let PDFViewerApplication = {
       parameters.url = file.url;
     }
 
-    parameters.docBaseUrl = this.baseUrl;
-
     const apiParameters = _app_options.AppOptions.getAll(_app_options.OptionKind.API);
 
     for (let key in apiParameters) {
-      parameters[key] = apiParameters[key];
+      let value = apiParameters[key];
+
+      if (key === 'docBaseUrl' && !value) {
+        value = this.baseUrl;
+      }
+
+      parameters[key] = value;
     }
 
     if (args) {
-      for (let prop in args) {
-        if (prop === 'length') {
-          this.pdfDocumentProperties.setFileSize(args[prop]);
+      for (let key in args) {
+        const value = args[key];
+
+        if (key === 'length') {
+          this.pdfDocumentProperties.setFileSize(value);
         }
 
-        parameters[prop] = args[prop];
+        parameters[key] = value;
       }
     }
 
@@ -1878,8 +1879,8 @@ function webViewerZoomOut() {
   PDFViewerApplication.zoomOut();
 }
 
-function webViewerZoomReset(evt) {
-  PDFViewerApplication.zoomReset(evt && evt.ignoreDuplicate);
+function webViewerZoomReset() {
+  PDFViewerApplication.zoomReset();
 }
 
 function webViewerPageNumberChanged(evt) {
@@ -3287,6 +3288,10 @@ const defaultOptions = {
   disableStream: {
     value: false,
     kind: OptionKind.API + OptionKind.PREFERENCE
+  },
+  docBaseUrl: {
+    value: '',
+    kind: OptionKind.API
   },
   isEvalSupported: {
     value: true,
@@ -8411,6 +8416,7 @@ class BaseViewer {
 
     this.scroll = (0, _ui_utils.watchScroll)(this.container, this._scrollUpdate.bind(this));
     this.presentationModeState = _ui_utils.PresentationModeState.UNKNOWN;
+    this._onBeforeDraw = this._onAfterDraw = null;
 
     this._resetView();
 
@@ -8607,21 +8613,32 @@ class BaseViewer {
     });
     const onePageRenderedCapability = (0, _pdfjsLib.createPromiseCapability)();
     this.onePageRendered = onePageRenderedCapability.promise;
+    const firstPagePromise = pdfDocument.getPage(1);
+    this.firstPagePromise = firstPagePromise;
 
-    let bindOnAfterAndBeforeDraw = pageView => {
-      pageView.onBeforeDraw = () => {
-        this._buffer.push(pageView);
-      };
+    this._onBeforeDraw = evt => {
+      const pageView = this._pages[evt.pageNumber - 1];
 
-      pageView.onAfterDraw = () => {
-        if (!onePageRenderedCapability.settled) {
-          onePageRenderedCapability.resolve();
-        }
-      };
+      if (!pageView) {
+        return;
+      }
+
+      this._buffer.push(pageView);
     };
 
-    let firstPagePromise = pdfDocument.getPage(1);
-    this.firstPagePromise = firstPagePromise;
+    this.eventBus.on('pagerender', this._onBeforeDraw);
+
+    this._onAfterDraw = evt => {
+      if (evt.cssTransform || onePageRenderedCapability.settled) {
+        return;
+      }
+
+      onePageRenderedCapability.resolve();
+      this.eventBus.off('pagerendered', this._onAfterDraw);
+      this._onAfterDraw = null;
+    };
+
+    this.eventBus.on('pagerendered', this._onAfterDraw);
     firstPagePromise.then(pdfPage => {
       let scale = this.currentScale;
       let viewport = pdfPage.getViewport({
@@ -8653,7 +8670,6 @@ class BaseViewer {
           maxCanvasPixels: this.maxCanvasPixels,
           l10n: this.l10n
         });
-        bindOnAfterAndBeforeDraw(pageView);
 
         this._pages.push(pageView);
       }
@@ -8742,6 +8758,17 @@ class BaseViewer {
     this._pageViewsReady = false;
     this._scrollMode = _ui_utils.ScrollMode.VERTICAL;
     this._spreadMode = _ui_utils.SpreadMode.NONE;
+
+    if (this._onBeforeDraw) {
+      this.eventBus.off('pagerender', this._onBeforeDraw);
+      this._onBeforeDraw = null;
+    }
+
+    if (this._onAfterDraw) {
+      this.eventBus.off('pagerendered', this._onAfterDraw);
+      this._onAfterDraw = null;
+    }
+
     this.viewer.textContent = '';
 
     this._updateScrollMode();
@@ -9515,8 +9542,6 @@ class PDFPageView {
     this.renderingState = _pdf_rendering_queue.RenderingStates.INITIAL;
     this.resume = null;
     this.error = null;
-    this.onBeforeDraw = null;
-    this.onAfterDraw = null;
     this.annotationLayer = null;
     this.textLayer = null;
     this.zoomLayer = null;
@@ -9855,11 +9880,6 @@ class PDFPageView {
 
       this.error = error;
       this.stats = pdfPage.stats;
-
-      if (this.onAfterDraw) {
-        this.onAfterDraw();
-      }
-
       this.eventBus.dispatch('pagerendered', {
         source: this,
         pageNumber: this.id,
@@ -9898,11 +9918,10 @@ class PDFPageView {
     }
 
     div.setAttribute('data-loaded', true);
-
-    if (this.onBeforeDraw) {
-      this.onBeforeDraw();
-    }
-
+    this.eventBus.dispatch('pagerender', {
+      source: this,
+      pageNumber: this.id
+    });
     return resultPromise;
   }
 
@@ -11179,6 +11198,8 @@ var _pdfjsLib = __webpack_require__(4);
 
 var _preferences = __webpack_require__(35);
 
+var _ui_utils = __webpack_require__(2);
+
 var _app = __webpack_require__(1);
 
 ;
@@ -11326,7 +11347,7 @@ class MozL10n {
     }
 
     if (type === 'findbarclose') {
-      _app.PDFViewerApplication.eventBus.dispatch('findbarclose', {
+      _app.PDFViewerApplication.eventBus.dispatch(type, {
         source: window
       });
 
@@ -11361,9 +11382,12 @@ class MozL10n {
       return;
     }
 
+    if (type === 'zoomreset' && _app.PDFViewerApplication.pdfViewer.currentScaleValue === _ui_utils.DEFAULT_SCALE_VALUE) {
+      return;
+    }
+
     _app.PDFViewerApplication.eventBus.dispatch(type, {
-      source: window,
-      ignoreDuplicate: type === 'zoomreset' ? true : undefined
+      source: window
     });
   };
 

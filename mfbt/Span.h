@@ -35,25 +35,6 @@
 #  include <cstring>
 #  include <iterator>
 
-#  ifdef _MSC_VER
-#    pragma warning(push)
-
-// turn off some warnings that are noisy about our MOZ_RELEASE_ASSERT statements
-#    pragma warning(disable : 4127)  // conditional expression is constant
-
-// blanket turn off warnings from CppCoreCheck for now
-// so people aren't annoyed by them when running the tool.
-// more targeted suppressions will be added in a future update to the GSL
-#    pragma warning( \
-        disable : 26481 26482 26483 26485 26490 26491 26492 26493 26495)
-
-#    if _MSC_VER < 1910
-#      pragma push_macro("constexpr")
-#      define constexpr /*constexpr*/
-
-#    endif  // _MSC_VER < 1910
-#  endif    // _MSC_VER
-
 namespace mozilla {
 
 // Stuff from gsl_util
@@ -928,15 +909,5 @@ inline Span<const char16_t> MakeStringSpan(const char16_t* aZeroTerminated) {
 }
 
 }  // namespace mozilla
-
-#  ifdef _MSC_VER
-#    if _MSC_VER < 1910
-#      undef constexpr
-#      pragma pop_macro("constexpr")
-
-#    endif  // _MSC_VER < 1910
-
-#    pragma warning(pop)
-#  endif  // _MSC_VER
 
 #endif  // mozilla_Span_h

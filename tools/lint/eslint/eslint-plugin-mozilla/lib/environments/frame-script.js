@@ -27,6 +27,7 @@ module.exports = {
     tabEventTarget: false,
     RPMGetAppBuildID: false,
     RPMGetIntPref: false,
+    RPMGetStringPref: false,
     RPMGetBoolPref: false,
     RPMSetBoolPref: false,
     RPMGetFormatURLPref: false,

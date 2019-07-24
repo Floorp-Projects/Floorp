@@ -220,12 +220,32 @@ body {
   grid-row: 2 / 3;
   display: grid;
   /* We're going to have the run button, the history nav and the close button */
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto auto auto;
   height: unset;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton {
+  grid-column: -3 / -4;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton {
+  grid-column: -2 / -3;
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton {
   grid-column: -1 / -2;
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-prevExpressionButton::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-up.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
+}
+
+.jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-history-nextExpressionButton::before {
+  background-image: url("chrome://devtools/skin/images/arrowhead-down.svg");
+  background-size: 16px;
+  fill: var(--comment-node-color);
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {

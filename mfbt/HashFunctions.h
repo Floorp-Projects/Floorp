@@ -285,9 +285,6 @@ inline HashNumber HashString(const unsigned char* aStr, size_t aLength) {
   return HashStringKnownLength(aStr, aLength);
 }
 
-// You may need to use the
-// MOZ_{PUSH,POP}_DISABLE_INTEGRAL_CONSTANT_OVERFLOW_WARNING macros if you use
-// this function. See the comment on those macros' definitions for more detail.
 MOZ_MUST_USE constexpr HashNumber HashString(const char16_t* aStr) {
   return HashStringUntilZero(aStr);
 }

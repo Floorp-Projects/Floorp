@@ -8,7 +8,7 @@ const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
-  Component,
+  PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const {
   a,
@@ -29,7 +29,7 @@ const DOC_URL =
  * This component displays help information when no service workers are found for the
  * current target.
  */
-class WorkerListEmpty extends Component {
+class WorkerListEmpty extends PureComponent {
   static get propTypes() {
     return {
       serviceContainer: PropTypes.object.isRequired,

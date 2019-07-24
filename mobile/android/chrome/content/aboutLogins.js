@@ -11,8 +11,10 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 const { Accounts } = ChromeUtils.import("resource://gre/modules/Accounts.jsm");
 
-XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
-  window.docShell.rootTreeItem.domWindow.QueryInterface(Ci.nsIDOMChromeWindow)
+XPCOMUtils.defineLazyGetter(
+  window,
+  "gChromeWin",
+  () => window.docShell.rootTreeItem.domWindow
 );
 
 ChromeUtils.defineModuleGetter(

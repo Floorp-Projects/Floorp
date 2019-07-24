@@ -852,6 +852,11 @@ class AndroidArguments(ArgumentContainer):
     """Android specific arguments."""
 
     args = [
+        [["--no-install"],
+         {"action": "store_true",
+          "default": False,
+          "help": "Skip the installation of the APK.",
+          }],
         [["--deviceSerial"],
          {"dest": "deviceSerial",
           "help": "adb serial number of remote device. This is required "

@@ -11084,11 +11084,13 @@ nsresult Document::CloneDocHelper(Document* clone) const {
       GetScriptHandlingObject(hasHadScriptObject);
   NS_ENSURE_STATE(scriptObject || !hasHadScriptObject);
   if (mCreatingStaticClone) {
-    // If we're doing a static clone (print, print preview), then we're going to
-    // be setting a scope object after the clone. It's better to set it only
-    // once, so we don't do that here. However, we do want to act as if there is
-    // a script handling object. So we set mHasHadScriptHandlingObject.
-    clone->mHasHadScriptHandlingObject = true;
+    // If we're doing a static clone (print, print preview), then immediately
+    // embed this newly created document into our container. This will set our
+    // script handling object for us.
+    nsCOMPtr<nsIContentViewer> contentViewer;
+    mDocumentContainer->GetContentViewer(getter_AddRefs(contentViewer));
+    MOZ_ASSERT(contentViewer);
+    contentViewer->SetDocument(clone);
   } else if (scriptObject) {
     clone->SetScriptHandlingObject(scriptObject);
   } else {
@@ -11102,7 +11104,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   // State from Document
   clone->mCharacterSet = mCharacterSet;
   clone->mCharacterSetSource = mCharacterSetSource;
-  clone->mCompatMode = mCompatMode;
+  clone->SetCompatibilityMode(mCompatMode);
   clone->mBidiOptions = mBidiOptions;
   clone->mContentLanguage = mContentLanguage;
   clone->SetContentTypeInternal(GetContentTypeInternal());

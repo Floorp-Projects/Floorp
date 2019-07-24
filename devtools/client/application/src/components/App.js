@@ -7,7 +7,7 @@
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
-  Component,
+  PureComponent,
 } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { main } = require("devtools/client/shared/vendor/react-dom-factories");
@@ -21,7 +21,7 @@ const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
 /**
  * This is the main component for the application panel.
  */
-class App extends Component {
+class App extends PureComponent {
   static get propTypes() {
     return {
       // mapped from state

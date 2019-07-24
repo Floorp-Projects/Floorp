@@ -161,8 +161,11 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       isGetter_(fun->isGetter()),
       isSetter_(fun->isSetter()),
       isMethod_(fun->isMethod()),
+      isInterpreted_(fun->isInterpreted()),
+      isInterpretedLazy_(fun->isInterpretedLazy()),
       kind_(fun->kind()),
-      explicitName_(fun->explicitName()) {
+      explicitName_(fun->explicitName()),
+      nargs_(0) {
   // Functions created at parse time may be set singleton after parsing and
   // baked into JIT code, so they must be allocated tenured. They are held by
   // the JSScript so cannot be collected during a minor GC anyway.

@@ -119,3 +119,6 @@ fuzzy-if(cocoaWidget,0-1,0-5000) == 745025-1.html 745025-1-ref.html
 == 1321803-1a.html 1321803-1-ref.html
 == content-url-element.html image.html
 == content-url-pseudo.html content-url-pseudo-ref.html
+
+== quirks.html quirks-ref.html
+!= quirks.html quirks-notref.html

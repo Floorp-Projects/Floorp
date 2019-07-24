@@ -20,6 +20,11 @@ ChromeUtils.defineModuleGetter(
   "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "LoginHelper",
+  "resource://gre/modules/LoginHelper.jsm"
+);
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -65,14 +70,7 @@ var AboutProtectionsHandler = {
     "FetchContentBlockingEvents",
     "FetchMonitorData",
     "FetchUserLoginsData",
-    // Getting prefs
-    "GetEnabledPrefs",
   ],
-  _prefs: {
-    LockwiseCard: "browser.contentblocking.report.lockwise.enabled",
-    MonitorCard: "browser.contentblocking.report.monitor.enabled",
-  },
-  PREF_CB_CATEGORY: "browser.contentblocking.category",
 
   init() {
     this.receiveMessage = this.receiveMessage.bind(this);
@@ -177,11 +175,13 @@ var AboutProtectionsHandler = {
    * @return {{ monitoredEmails: Number,
    *            numBreaches: Number,
    *            passwords: Number,
+   *            potentiallyBreachedLogins: Number,
    *            error: Boolean }}
    *         Monitor data.
    */
   async getMonitorData() {
     let monitorData = {};
+    let potentiallyBreachedLogins = 0;
     const hasFxa = await fxAccounts.accountStatus();
 
     if (hasFxa) {
@@ -208,6 +208,12 @@ var AboutProtectionsHandler = {
           monitorData.errorMessage = e.message;
         }
       }
+
+      // Get the stats for number of potentially breached Lockwise passwords
+      const logins = await LoginHelper.getAllUserFacingLogins();
+      potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
+        logins
+      );
     } else {
       // If no account exists, then the user is not logged in with an fxAccount.
       monitorData = {
@@ -217,6 +223,7 @@ var AboutProtectionsHandler = {
 
     return {
       ...monitorData,
+      potentiallyBreachedLogins: potentiallyBreachedLogins.size,
       error: !!monitorData.errorMessage,
     };
   },
@@ -253,9 +260,6 @@ var AboutProtectionsHandler = {
         win.openTrustedLinkIn("about:preferences#sync", "tab");
         break;
       case "FetchContentBlockingEvents":
-        let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
-        this.sendMessage(aMessage.target, "SendCBCategory", category);
-
         let sumEvents = await TrackingDBService.sumAllEvents();
         let earliestDate = await TrackingDBService.getEarliestRecordedDate();
         let eventsByDate = await TrackingDBService.getEventsByDateRange(
@@ -300,18 +304,6 @@ var AboutProtectionsHandler = {
           "SendUserLoginsData",
           await this.getLoginData()
         );
-        break;
-      case "GetEnabledPrefs":
-        const prefs = Object.keys(this._prefs);
-
-        // Get all the enabled prefs and send separate messages depending on their names.
-        for (let name of prefs) {
-          const message = `SendEnabled${name}Pref`;
-          const isEnabled = Services.prefs.getBoolPref(this._prefs[name]);
-          this.sendMessage(aMessage.target, message, {
-            isEnabled,
-          });
-        }
         break;
     }
   },
