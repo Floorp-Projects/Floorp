@@ -2015,7 +2015,7 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrameForDirection(
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(f);
     if (scrollableFrame) {
       ScrollStyles ss = scrollableFrame->GetScrollStyles();
-      uint32_t directions = scrollableFrame->GetPerceivedScrollingDirections();
+      uint32_t directions = scrollableFrame->GetAvailableScrollingDirections();
       if (aDirection == eVertical
               ? (ss.mVertical != StyleOverflow::Hidden &&
                  (directions & nsIScrollableFrame::VERTICAL))
