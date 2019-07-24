@@ -49,14 +49,13 @@ parent:
   async DeleteCompositorAnimations(uint64_t[] aIds);
   async SetDisplayList(RenderRootDisplayListData[] displayLists,
                        OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
-                       IdNamespace aIdNamespace, bool containsSVGGroup,
+                       bool containsSVGGroup,
                        VsyncId vsyncId, TimeStamp vsyncStartTime,
                        TimeStamp refreshStartTime, TimeStamp txnStartTime, nsCString txnURL, TimeStamp fwdTime,
                        CompositionPayload[] payloads);
-  async EmptyTransaction(FocusTarget focusTarget, uint32_t aPaintSequenceNumber,
+  async EmptyTransaction(FocusTarget focusTarget,
                          RenderRootUpdates[] renderRootUpdates,
                          OpDestroy[] toDestroy, uint64_t fwdTransactionId, TransactionId transactionId,
-                         IdNamespace aIdNamespace,
                          VsyncId vsyncId, TimeStamp vsyncStartTime,
                          TimeStamp refreshStartTime, TimeStamp txnStartTime,
                          nsCString txnURL, TimeStamp fwdTime,
