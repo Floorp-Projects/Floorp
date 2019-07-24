@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+  <title>Testcase transform-box on a path with fill=none</title>
+
+  <!-- From https://bugzilla.mozilla.org/show_bug.cgi?id=1474834 -->
+
+  <style>
+    path {
+      stroke-width: 12;
+      transform-origin: 50% 50%;
+      transform-box: fill-box;
+      transform: rotate(180deg);
+    }
+  </style>
+  <rect fill="lime" width="100" height="100" stroke="red" stroke-width="10"/>
+  <path fill="none" stroke="lime" d="M0 0 0 100 100 100 100 0z"/>
+</svg>
