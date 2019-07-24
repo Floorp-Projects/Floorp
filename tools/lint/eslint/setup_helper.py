@@ -76,7 +76,7 @@ def eslint_setup(should_clobber=False):
     package_setup(get_project_root(), 'eslint', should_clobber=should_clobber)
 
 
-def package_setup(package_root, package_name, should_clobber=False):
+def package_setup(package_root, package_name, should_clobber=False, no_optional=False):
     """Ensure `package_name` at `package_root` is installed.
 
     This populates `package_root/node_modules`.
@@ -110,6 +110,9 @@ def package_setup(package_root, package_name, should_clobber=False):
             return 1
 
         extra_parameters = ["--loglevel=error"]
+
+        if no_optional:
+            extra_parameters.append('--no-optional')
 
         package_lock_json_path = os.path.join(get_project_root(), "package-lock.json")
         package_lock_json_tmp_path = os.path.join(tempfile.gettempdir(), "package-lock.json.tmp")
