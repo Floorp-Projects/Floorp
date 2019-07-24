@@ -44,7 +44,7 @@ public class LeanplumPushInstanceIDService extends InstanceIDListenerService {
         LeanplumNotificationHelper.startPushRegistrationService(this, "GCM");
       } else {
         LeanplumNotificationHelper.scheduleJobService(this,
-                LeanplumGcmRegistrationJobService.class, LeanplumGcmRegistrationJobService.JOB_ID);
+            LeanplumGcmRegistrationJobService.class, LeanplumGcmRegistrationJobService.JOB_ID);
       }
     } catch (Throwable t) {
       Log.e("Failed to update GCM token.", t);

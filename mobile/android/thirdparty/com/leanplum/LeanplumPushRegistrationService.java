@@ -23,6 +23,7 @@ package com.leanplum;
 
 import android.app.IntentService;
 import android.content.Intent;
+import android.text.TextUtils;
 
 import com.leanplum.internal.Log;
 
@@ -41,22 +42,26 @@ public class LeanplumPushRegistrationService extends IntentService {
 
   @Override
   protected void onHandleIntent(Intent intent) {
-    LeanplumCloudMessagingProvider provider = LeanplumPushService.getCloudMessagingProvider();
-    if (provider == null) {
-      Log.e("Failed to complete registration token refresh.");
-      return;
-    }
-    String registrationId = provider.getRegistrationId();
-    if (registrationId != null) {
-      if (existingRegistrationId != null && !registrationId.equals(existingRegistrationId)) {
-        Log.e("WARNING: It appears your app is registering " +
-            "with GCM/FCM using multiple GCM/FCM sender ids. Please be sure to call " +
-            "LeanplumPushService.setGcmSenderIds() with " +
-            "all of the GCM sender ids that you use, not just the one that you use with " +
-            "Leanplum. Otherwise, GCM/FCM push notifications may not work consistently.");
+    try {
+      LeanplumCloudMessagingProvider provider = LeanplumPushService.getCloudMessagingProvider();
+      if (provider == null) {
+        Log.e("Failed to complete registration token refresh.");
+        return;
       }
-      existingRegistrationId = registrationId;
-      provider.onRegistrationIdReceived(getApplicationContext(), registrationId);
+      String registrationId = provider.getRegistrationId();
+      if (!TextUtils.isEmpty(registrationId)) {
+        if (existingRegistrationId != null && !registrationId.equals(existingRegistrationId)) {
+          Log.e("WARNING: It appears your app is registering " +
+              "with GCM/FCM using multiple GCM/FCM sender ids. Please be sure to call " +
+              "LeanplumPushService.setGcmSenderIds() with " +
+              "all of the GCM sender ids that you use, not just the one that you use with " +
+              "Leanplum. Otherwise, GCM/FCM push notifications may not work consistently.");
+        }
+        existingRegistrationId = registrationId;
+        provider.onRegistrationIdReceived(getApplicationContext(), registrationId);
+      }
+    } catch (Throwable t) {
+      Log.e("Failed to complete registration token refresh.", t);
     }
   }
 }

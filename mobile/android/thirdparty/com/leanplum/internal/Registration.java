@@ -21,6 +21,7 @@
 
 package com.leanplum.internal;
 
+import com.leanplum.Leanplum;
 import com.leanplum.callbacks.StartCallback;
 
 import org.json.JSONObject;
@@ -32,21 +33,21 @@ public class Registration {
   public static void registerDevice(String email, final StartCallback callback) {
     Map<String, Object> params = new HashMap<>();
     params.put(Constants.Params.EMAIL, email);
-    Request request = Request.post(Constants.Methods.REGISTER_FOR_DEVELOPMENT, params);
-    request.onResponse(new Request.ResponseCallback() {
+    RequestOld request = RequestOld.post(Constants.Methods.REGISTER_FOR_DEVELOPMENT, params);
+    request.onResponse(new RequestOld.ResponseCallback() {
       @Override
       public void response(final JSONObject response) {
         OsHandler.getInstance().post(new Runnable() {
           @Override
           public void run() {
             try {
-              boolean isSuccess = Request.isResponseSuccess(response);
+              boolean isSuccess = RequestOld.isResponseSuccess(response);
               if (isSuccess) {
                 if (callback != null) {
                   callback.onResponse(true);
                 }
               } else {
-                Log.e(Request.getResponseError(response));
+                Log.e(RequestOld.getResponseError(response));
                 if (callback != null) {
                   callback.onResponse(false);
                 }
@@ -58,7 +59,7 @@ public class Registration {
         });
       }
     });
-    request.onError(new Request.ErrorCallback() {
+    request.onError(new RequestOld.ErrorCallback() {
       @Override
       public void error(final Exception e) {
         OsHandler.getInstance().post(new Runnable() {
@@ -72,5 +73,6 @@ public class Registration {
       }
     });
     request.sendIfConnected();
+    Leanplum.countAggregator().incrementCount("register_device");
   }
 }

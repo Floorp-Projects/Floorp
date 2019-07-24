@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Leanplum, Inc. All rights reserved.
+ * Copyright 2013, Leanplum, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,25 +21,24 @@
 
 package com.leanplum.callbacks;
 
-/**
- * Callback that gets run when forceContentUpdate was called.
- *
- * @author Anna Orlova
- */
-public abstract class InboxSyncedCallback implements Runnable {
-  private boolean success;
+import com.leanplum.models.MessageArchiveData;
 
-  public void setSuccess(boolean success) {
-    this.success = success;
+/**
+ * Message displayed callback.
+ *
+ * @author Mayank Sanganeria
+ */
+public abstract class MessageDisplayedCallback implements Runnable {
+
+  private MessageArchiveData messageArchiveData;
+
+  public void setMessageArchiveData(MessageArchiveData messageArchiveData) {
+    this.messageArchiveData = messageArchiveData;
   }
 
   public void run() {
-    this.onForceContentUpdate(success);
+    this.messageDisplayed(messageArchiveData);
   }
 
-  /**
-   * Call when forceContentUpdate was called.
-   * @param success True if syncing was successful.
-   */
-  public abstract void onForceContentUpdate(boolean success);
+  public abstract void messageDisplayed(MessageArchiveData messageArchiveData);
 }

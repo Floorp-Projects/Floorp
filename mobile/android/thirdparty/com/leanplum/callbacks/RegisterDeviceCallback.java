@@ -21,6 +21,8 @@
 
 package com.leanplum.callbacks;
 
+import com.leanplum.Leanplum;
+
 /**
  * Callback that gets run when the device needs to be registered.
  *
@@ -45,10 +47,10 @@ public abstract class RegisterDeviceCallback implements Runnable {
 
   public void setResponseHandler(EmailCallback callback) {
     this.callback = callback;
+    Leanplum.countAggregator().incrementCount("init_with_callback");
   }
 
-  public void run() {
-    this.onResponse(callback);
+  public void run() { this.onResponse(callback);
   }
 
   public abstract void onResponse(EmailCallback callback);

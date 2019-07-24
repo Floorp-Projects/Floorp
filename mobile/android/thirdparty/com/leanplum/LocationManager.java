@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  * Public interface to LocationManager. This is abstracted away so that the Google Play Services
- * dependencies are constrained to {@link LocationManagerImplementation}.
+ * dependencies are constrained to LocationManagerImplementation in AndroidSDKLocation.
  *
  * @author Andrew First
  */

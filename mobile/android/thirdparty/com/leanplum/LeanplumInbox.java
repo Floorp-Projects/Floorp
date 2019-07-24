@@ -33,7 +33,7 @@ import com.leanplum.internal.Constants;
 import com.leanplum.internal.JsonConverter;
 import com.leanplum.internal.Log;
 import com.leanplum.internal.OsHandler;
-import com.leanplum.internal.Request;
+import com.leanplum.internal.RequestOld;
 import com.leanplum.internal.Util;
 import com.leanplum.utils.SharedPreferencesUtil;
 
@@ -61,15 +61,15 @@ public class LeanplumInbox {
   static Set<String> downloadedImageUrls;
   static boolean isInboxImagePrefetchingEnabled = true;
 
-  private int unreadCount;
-  private Map<String, LeanplumInboxMessage> messages;
-  private boolean didLoad = false;
+  private volatile int unreadCount;
+  private volatile Map<String, LeanplumInboxMessage> messages;
+  private volatile boolean didLoad = false;
 
   private final List<InboxChangedCallback> changedCallbacks;
   private final List<InboxSyncedCallback> syncedCallbacks;
   private final Object updatingLock = new Object();
 
-  protected LeanplumInbox() {
+  private LeanplumInbox() {
     this.unreadCount = 0;
     this.messages = new HashMap<>();
     this.didLoad = false;
@@ -255,7 +255,7 @@ public class LeanplumInbox {
 
     Map<String, Object> params = new HashMap<>();
     params.put(Constants.Params.INBOX_MESSAGE_ID, messageId);
-    Request req = Request.post(Constants.Methods.DELETE_INBOX_MESSAGE, params);
+    RequestOld req = RequestOld.post(Constants.Methods.DELETE_INBOX_MESSAGE, params);
     req.send();
   }
 
@@ -287,12 +287,12 @@ public class LeanplumInbox {
     Context context = Leanplum.getContext();
     SharedPreferences defaults = context.getSharedPreferences(
         "__leanplum__", Context.MODE_PRIVATE);
-    if (Request.token() == null) {
+    if (RequestOld.token() == null) {
       update(new HashMap<String, LeanplumInboxMessage>(), 0, false);
       return;
     }
     int unreadCount = 0;
-    AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+    AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
     String newsfeedString = aesContext.decodePreference(
         defaults, Constants.Defaults.INBOX_KEY, "{}");
     Map<String, Object> newsfeed = JsonConverter.fromJson(newsfeedString);
@@ -322,7 +322,7 @@ public class LeanplumInbox {
     if (Constants.isNoop()) {
       return;
     }
-    if (Request.token() == null) {
+    if (RequestOld.token() == null) {
       return;
     }
     Context context = Leanplum.getContext();
@@ -337,7 +337,7 @@ public class LeanplumInbox {
       messages.put(messageId, data);
     }
     String messagesJson = JsonConverter.toJson(messages);
-    AESCrypt aesContext = new AESCrypt(Request.appId(), Request.token());
+    AESCrypt aesContext = new AESCrypt(RequestOld.appId(), RequestOld.token());
     editor.putString(Constants.Defaults.INBOX_KEY, aesContext.encrypt(messagesJson));
     SharedPreferencesUtil.commitChanges(editor);
   }
@@ -347,8 +347,8 @@ public class LeanplumInbox {
       return;
     }
 
-    final Request req = Request.post(Constants.Methods.GET_INBOX_MESSAGES, null);
-    req.onResponse(new Request.ResponseCallback() {
+    final RequestOld req = RequestOld.post(Constants.Methods.GET_INBOX_MESSAGES, null);
+    req.onResponse(new RequestOld.ResponseCallback() {
       @Override
       public void response(JSONObject response) {
         try {
@@ -411,7 +411,7 @@ public class LeanplumInbox {
         }
       }
     });
-    req.onError(new Request.ErrorCallback() {
+    req.onError(new RequestOld.ErrorCallback() {
       @Override
       public void error(Exception e) {
         triggerInboxSyncedWithStatus(false);
@@ -430,11 +430,15 @@ public class LeanplumInbox {
     }
     try {
       for (String messageId : messagesIds()) {
-        messages.add(messageForId(messageId));
+        LeanplumInboxMessage message = messageForId(messageId);
+        if (message != null) {
+          messages.add(message);
+        }
       }
     } catch (Throwable t) {
       Util.handleException(t);
     }
+    Leanplum.countAggregator().incrementCount("all_messages_inbox");
     return messages;
   }
 
