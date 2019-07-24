@@ -38,6 +38,7 @@ DEFAULTS = dict(
         tpcycles=10,
         tpmozafterpaint=False,
         tphero=False,
+        pdfpaint=True,
         fnbpaint=False,
         firstpaint=False,
         format_pagename=True,
@@ -72,6 +73,7 @@ GLOBAL_OVERRIDES = (
     'tpmozafterpaint',
     'tphero',
     'fnbpaint',
+    'pdfpaint',
     'firstpaint',
     'userready',
 )
@@ -227,6 +229,7 @@ def get_test(config, global_overrides, counters, test_instance):
     firstPaint = getattr(test_instance, 'firstpaint', None)
     userReady = getattr(test_instance, 'userready', None)
     firstNonBlankPaint = getattr(test_instance, 'fnbpaint', None)
+    pdfPaint = getattr(test_instance, 'pdfpaint', None)
 
     test_instance.update(**global_overrides)
 
@@ -242,6 +245,8 @@ def get_test(config, global_overrides, counters, test_instance):
         test_instance.userready = userReady
     if hero is not None:
         test_instance.tphero = hero
+    if pdfPaint is not None:
+        test_instance.pdfpaint = pdfPaint
 
     # fix up url
     url = getattr(test_instance, 'url', None)

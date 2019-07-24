@@ -253,7 +253,7 @@ class PageloaderTest(Test):
             'profile_path', 'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'format_pagename', 'filters', 'preferences', 'extensions', 'setup', 'cleanup',
             'lower_is_better', 'alert_threshold', 'unit', 'webextensions', 'profile',
-            'subtest_alerts', 'perfherder_framework']
+            'subtest_alerts', 'perfherder_framework', 'pdfpaint']
 
 
 class QuantumPageloadTest(PageloaderTest):
@@ -289,6 +289,22 @@ class twinopen(PageloaderTest):
     unit = 'ms'
     preferences = {
         'browser.startup.homepage': 'about:blank'
+    }
+
+
+@register_test()
+class pdfpaint(PageloaderTest):
+    """
+    Tests the amount of time it takes for the the first page of a PDF to
+    be rendered.
+    """
+    tpmanifest = '${talos}/tests/pdfpaint/pdfpaint.manifest'
+    tppagecycles = 20
+    gecko_profile_entries = 1000000
+    pdfpaint = True
+    unit = 'ms'
+    preferences = {
+        'pdfjs.eventBusDispatchToDOM': True
     }
 
 
