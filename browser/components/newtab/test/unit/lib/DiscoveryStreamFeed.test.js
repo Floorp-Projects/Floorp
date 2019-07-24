@@ -1429,6 +1429,20 @@ describe("DiscoveryStreamFeed", () => {
         "not_a_spoc.com"
       );
     });
+    it("should dispatch a DISCOVERY_STREAM_SPOC_BLOCKED for a blocked spoc", async () => {
+      Object.defineProperty(feed, "showSpocs", { get: () => true });
+      sandbox.spy(feed.store, "dispatch");
+
+      await feed.onAction({
+        type: at.PLACES_LINK_BLOCKED,
+        data: { url: "foo.com" },
+      });
+
+      assert.equal(
+        feed.store.dispatch.thirdCall.args[0].type,
+        "DISCOVERY_STREAM_SPOC_BLOCKED"
+      );
+    });
   });
 
   describe("#onAction: INIT", () => {

@@ -26,8 +26,10 @@ export const selectLayoutRender = (state, prefs, rickRollCache) => {
 
       if (rickRoll <= spocsConfig.probability) {
         spocIndex++;
-        recommendations.splice(position.index, 0, spoc);
-        chosenSpocs.add(spoc);
+        if (!spocs.blocked.includes(spoc.url)) {
+          recommendations.splice(position.index, 0, spoc);
+          chosenSpocs.add(spoc);
+        }
       } else {
         unchosenSpocs.add(spoc);
       }
