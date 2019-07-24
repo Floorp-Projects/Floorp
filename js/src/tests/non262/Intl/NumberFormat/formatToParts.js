@@ -19,37 +19,10 @@ assertEq("formatToParts" in Intl.NumberFormat(), true);
 //       properly test the conversion from ICU's nested-field exposure to
 //       ECMA-402's sequential-parts exposure.
 
-function GenericPartCreator(type)
-{
-  return function(str) { return { type, value: str }; };
-}
-
-var Nan = GenericPartCreator("nan");
-var Inf = GenericPartCreator("infinity");
-var Integer = GenericPartCreator("integer");
-var Group = GenericPartCreator("group");
-var Decimal = GenericPartCreator("decimal");
-var Fraction = GenericPartCreator("fraction");
-var MinusSign = GenericPartCreator("minusSign");
-var PlusSign = GenericPartCreator("plusSign");
-var PercentSign = GenericPartCreator("percentSign");
-var Currency = GenericPartCreator("currency");
-var Literal = GenericPartCreator("literal");
-
-function assertParts(nf, x, expected)
-{
-  var parts = nf.formatToParts(x);
-  assertEq(parts.map(part => part.value).join(""), nf.format(x),
-           "formatToParts and format must agree");
-
-  var len = parts.length;
-  assertEq(len, expected.length, "parts count mismatch");
-  for (var i = 0; i < len; i++)
-  {
-    assertEq(parts[i].type, expected[i].type, "type mismatch at " + i);
-    assertEq(parts[i].value, expected[i].value, "value mismatch at " + i);
-  }
-}
+var {
+  Nan, Inf, Integer, Group, Decimal, Fraction,
+  MinusSign, PlusSign, PercentSign, Currency, Literal,
+} = NumberFormatParts;
 
 //-----------------------------------------------------------------------------
 
