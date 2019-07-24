@@ -101,16 +101,4 @@ class ScreenshotTest : BaseSessionTest() {
             sessionRule.waitForResult(result)
         }
     }
-
-    @Ignore //Disable test for frequent failures Bug 1557569
-    @Test
-    fun capturePixelsThrowsCompositorNotReady() {
-        expectedEx.expect(IllegalStateException::class.java)
-        expectedEx.expectMessage("Compositor must be ready before pixels can be captured")
-        val session = sessionRule.createClosedSession()
-        val display = session.acquireDisplay()
-
-        sessionRule.waitForResult(display.capturePixels())
-        fail("IllegalStateException expected to be thrown")
-    }
 }
