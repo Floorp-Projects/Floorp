@@ -104,7 +104,8 @@ public class WebAppActivity extends AppCompatActivity
                 .useMultiprocess(false)
                 .build();
         mGeckoSession = new GeckoSession(settings);
-        mGeckoView.setSession(mGeckoSession, GeckoApplication.ensureRuntime(this));
+        mGeckoSession.open(GeckoApplication.ensureRuntime(this));
+        mGeckoView.setSession(mGeckoSession);
 
         mGeckoSession.setNavigationDelegate(this);
         mGeckoSession.setContentDelegate(this);

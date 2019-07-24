@@ -132,8 +132,9 @@ public class CustomTabsActivity extends AppCompatActivity
         mGeckoSession.setNavigationDelegate(this);
         mGeckoSession.setProgressDelegate(this);
         mGeckoSession.setContentDelegate(this);
+        mGeckoSession.open(GeckoApplication.ensureRuntime(this));
 
-        mGeckoView.setSession(mGeckoSession, GeckoApplication.ensureRuntime(this));
+        mGeckoView.setSession(mGeckoSession);
 
         mPromptService = new PromptService(this, GeckoViewBridge.getEventDispatcher(mGeckoView));
         mDoorHangerPopup = new DoorHangerPopup(this,
