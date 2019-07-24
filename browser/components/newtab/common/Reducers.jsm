@@ -66,6 +66,7 @@ const INITIAL_STATE = {
       data: {}, // {spocs: []}
       loaded: false,
       frequency_caps: [],
+      blocked: [],
     },
   },
   Search: {
@@ -612,6 +613,14 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
         };
       }
       return prevState;
+    case at.DISCOVERY_STREAM_SPOC_BLOCKED:
+      return {
+        ...prevState,
+        spocs: {
+          ...prevState.spocs,
+          blocked: [...prevState.spocs.blocked, action.data.url],
+        },
+      };
     case at.DISCOVERY_STREAM_LINK_BLOCKED:
       return isNotReady()
         ? prevState
