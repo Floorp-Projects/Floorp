@@ -90,7 +90,8 @@ SCOPED(SECMODModule);
 
 struct StackSECItem : public SECItem {
   StackSECItem() : SECItem({siBuffer, nullptr, 0}) {}
-  ~StackSECItem() { SECITEM_FreeItem(this, PR_FALSE); }
+  ~StackSECItem() { Reset(); }
+  void Reset() { SECITEM_FreeItem(this, PR_FALSE); }
 };
 
 #endif  // nss_scoped_ptrs_h__

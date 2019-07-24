@@ -4143,7 +4143,8 @@ SECStatus
 tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
 {
     sslDelegatedCredential *dc = ss->xtnData.peerDelegCred;
-    CERTSubjectPublicKeyInfo *spki = NULL;
+    CERTSubjectPublicKeyInfo *spki;
+    SECKEYPublicKey *pubKey = NULL;
     SECItem signed_hash = { siBuffer, NULL, 0 };
     SECStatus rv;
     SSLSignatureScheme sigScheme;
@@ -4239,16 +4240,26 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
         return SECFailure;
     }
 
-    rv = ssl3_VerifySignedHashesWithSpki(
-        ss, spki, sigScheme, &tbsHash, &signed_hash);
+    pubKey = SECKEY_ExtractPublicKey(spki);
+    if (pubKey == NULL) {
+        ssl_MapLowLevelError(SSL_ERROR_EXTRACT_PUBLIC_KEY_FAILURE);
+        return SECFailure;
+    }
+
+    rv = ssl_VerifySignedHashesWithPubKey(ss, pubKey, sigScheme,
+                                          &tbsHash, &signed_hash);
     if (rv != SECSuccess) {
         FATAL_ERROR(ss, PORT_GetError(), decrypt_error);
-        return SECFailure;
+        goto loser;
     }
 
     /* Set the auth type. */
     if (!ss->sec.isServer) {
         ss->sec.authType = ssl_SignatureSchemeToAuthType(sigScheme);
+        rv = ssl_SetAuthKeyBits(ss, pubKey);
+        if (rv != SECSuccess) {
+            goto loser; /* Alert sent and code set. */
+        }
     }
 
     /* Request a client certificate now if one was requested. */
@@ -4259,13 +4270,17 @@ tls13_HandleCertificateVerify(sslSocket *ss, PRUint8 *b, PRUint32 length)
             &ss->xtnData.certReqAuthorities);
         if (rv != SECSuccess) {
             FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
-            return rv;
+            goto loser;
         }
     }
 
+    SECKEY_DestroyPublicKey(pubKey);
     TLS13_SET_HS_STATE(ss, wait_finished);
-
     return SECSuccess;
+
+loser:
+    SECKEY_DestroyPublicKey(pubKey);
+    return SECFailure;
 }
 
 static SECStatus
