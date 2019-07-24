@@ -25,6 +25,15 @@ add_task(async function testToggleSwitch() {
     "https://example.com"
   );
   await openProtectionsPanel();
+
+  // Check the visibility of the "Site not working?" link.
+  ok(
+    BrowserTestUtils.is_visible(
+      gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
+    ),
+    "The 'Site not working?' link should be visible."
+  );
+
   ok(
     gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
     "TP Switch should be enabled"
@@ -35,6 +44,15 @@ add_task(async function testToggleSwitch() {
   );
   let browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   gProtectionsHandler._protectionsPopupTPSwitch.click();
+
+  // The 'Site not working?' link should be hidden after clicking the TP switch.
+  ok(
+    BrowserTestUtils.is_hidden(
+      gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
+    ),
+    "The 'Site not working?' link should be hidden after TP switch turns to off."
+  );
+
   await popuphiddenPromise;
 
   // We need to wait toast's popup shown and popup hidden events. It won't fire
@@ -60,6 +78,30 @@ add_task(async function testToggleSwitch() {
     !gProtectionsHandler._protectionsPopupTPSwitch.hasAttribute("enabled"),
     "TP Switch should be disabled"
   );
+
+  // The 'Site not working?' link should be hidden if the TP is off.
+  ok(
+    BrowserTestUtils.is_hidden(
+      gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
+    ),
+    "The 'Site not working?' link should be hidden if TP is off."
+  );
+
+  // Click the TP switch again and check the visibility of the 'Site not
+  // Working?'. It should be hidden after toggling the TP switch.
+  browserLoadedPromise = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+  gProtectionsHandler._protectionsPopupTPSwitch.click();
+
+  ok(
+    BrowserTestUtils.is_hidden(
+      gProtectionsHandler._protectionsPopupTPSwitchBreakageLink
+    ),
+    `The 'Site not working?' link should be still hidden after toggling TP
+     switch to on from off.`
+  );
+
+  await browserLoadedPromise;
+
   ContentBlockingAllowList.remove(tab.linkedBrowser);
   BrowserTestUtils.removeTab(tab);
 });
