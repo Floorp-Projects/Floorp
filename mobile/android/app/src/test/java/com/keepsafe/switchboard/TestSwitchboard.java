@@ -127,19 +127,9 @@ public class TestSwitchboard {
     }
 
     @Test
-    public void testMatching() {
-        final Context c = RuntimeEnvironment.application;
-        assertTrue("is-experiment is matching", SwitchBoard.isInExperiment(c, "is-matching"));
-        assertFalse("is-not-matching is not matching", SwitchBoard.isInExperiment(c, "is-not-matching"));
-    }
-
-    @Test
     public void testNotExisting() {
         final Context c = RuntimeEnvironment.application;
         assertFalse("F0O does not exists", SwitchBoard.isInExperiment(c, "F0O"));
         assertFalse("BaAaz does not exists", SwitchBoard.hasExperimentValues(c, "BaAaz"));
     }
-
-
-
 }

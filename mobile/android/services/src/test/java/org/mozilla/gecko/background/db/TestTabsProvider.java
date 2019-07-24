@@ -5,6 +5,7 @@ package org.mozilla.gecko.background.db;
 
 import android.content.ContentProvider;
 import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
@@ -21,6 +22,7 @@ import org.mozilla.gecko.sync.repositories.android.BrowserContractHelpers;
 import org.mozilla.gecko.sync.repositories.android.FennecTabsRepository;
 import org.mozilla.gecko.sync.repositories.domain.TabsRecord;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.RuntimeEnvironment;
 import org.robolectric.shadows.ShadowContentResolver;
 
 @RunWith(RobolectricTestRunner.class)
@@ -36,10 +38,12 @@ public class TestTabsProvider {
     protected Tab testTab3;
 
     protected ContentProvider provider;
+    protected ContentResolver resolver;
 
     @Before
     public void setUp() {
         provider = DelegatingTestContentProvider.createDelegatingTabsProvider();
+        resolver = RuntimeEnvironment.application.getContentResolver();
     }
 
     @After
@@ -49,13 +53,11 @@ public class TestTabsProvider {
     }
 
     protected ContentProviderClient getClientsClient() {
-        final ShadowContentResolver cr = new ShadowContentResolver();
-        return cr.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
+        return resolver.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
     }
 
     protected ContentProviderClient getTabsClient() {
-        final ShadowContentResolver cr = new ShadowContentResolver();
-        return cr.acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
+        return resolver.acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
     }
 
     protected int deleteTestClient(final ContentProviderClient clientsClient) throws RemoteException {

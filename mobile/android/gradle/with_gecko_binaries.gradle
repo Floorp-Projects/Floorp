@@ -84,18 +84,9 @@ ext.configureVariantWithGeckoBinaries = { variant ->
 }
 
 ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
-    // Library variants have two essentially independent transform* tasks:
-    //
-    // - ...WithSyncLibJars... is used by assemble* and bundle*
-    // - ...WithPrepareIntermediateJars... is used by consuming applications.
-    //
-    // It's not really possible to insert something immediately _after_
-    // ...WithPrepareIntermediateJars..., so we make the consuming moz.build
-    // system invoke this target directly, and force the
-    // ...WithPrepareIntermediateJars... dependency.  The real consumer of the
-    // JNI wrappers is the moz.build system, which always builds geckoview to
-    // consume from Fennec, so that dependency likely adds less to the build time.
-    def jarTask = tasks["transformClassesAndResourcesWithPrepareIntermediateJarsFor${variant.name.capitalize()}"]
+    // BundleLibRuntime prepares the library for further processing to be
+    // incorporated in an app. We use this version to create the JNI wrappers.
+    def jarTask = tasks["bundleLibRuntime${variant.name.capitalize()}"]
     def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar
@@ -114,7 +105,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
             doFirst {
                 classpath variant.javaCompile.classpath
                 // Include android.jar.
-                classpath variant.javaCompile.options.bootClasspath
+                classpath variant.javaCompile.options.bootstrapClasspath
             }
     
             main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
@@ -144,7 +135,7 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
 }
 
 ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
-    def jarTask = tasks["packageAppClasses${variant.name.capitalize()}"]
+    def jarTask = tasks["bundle${variant.name.capitalize()}Classes"]
     def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     def annotationProcessorsJarTask = project(':annotations').jar
@@ -163,7 +154,7 @@ ext.configureApplicationVariantWithJNIWrappers = { variant, module ->
             doFirst {
                 classpath variant.javaCompile.classpath
                 // Include android.jar.
-                classpath variant.javaCompile.options.bootClasspath
+                classpath variant.javaCompile.options.bootstrapClasspath
             }
         
             main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
