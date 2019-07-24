@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Dummy test shallow renders a component 1`] = `
+exports[`Empty Service Worker List: renders the expected snapshot for a workerListEmpty with empty worker list 1`] = `
 <article
   className="worker-list-empty js-worker-list-empty"
 >
@@ -13,7 +13,7 @@ exports[`Dummy test shallow renders a component 1`] = `
     }
     id="serviceworker-empty-intro"
   >
-    <h1
+    <p
       className="worker-list-empty__title"
     />
   </Localized>

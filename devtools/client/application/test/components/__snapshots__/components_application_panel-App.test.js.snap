@@ -1,0 +1,337 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`App: renders the expected snapshot for an App with empty worker list 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <LocalizationProvider
+    messages={Array []}
+  >
+    <Connect(App)
+      canDebugWorkers={true}
+      domain="domain"
+      fluentBundles={Array []}
+      serviceContainer={Object {}}
+    >
+      <App
+        canDebugWorkers={false}
+        dispatch={[Function]}
+        domain={null}
+        fluentBundles={Array []}
+        serviceContainer={Object {}}
+        workers={Array []}
+      >
+        <LocalizationProvider
+          messages={Array []}
+        >
+          <main
+            className="application application--empty"
+          >
+            <WorkerListEmpty
+              serviceContainer={Object {}}
+            >
+              <article
+                className="worker-list-empty js-worker-list-empty"
+              >
+                <Localized
+                  a={
+                    <a
+                      className="external-link"
+                      onClick={[Function]}
+                    />
+                  }
+                  id="serviceworker-empty-intro"
+                >
+                  <p
+                    className="worker-list-empty__title"
+                  />
+                </Localized>
+                <Localized
+                  id="serviceworker-empty-suggestions"
+                >
+                  <p />
+                </Localized>
+                <ul
+                  className="worker-list-empty__tips"
+                >
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-console"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-debugger"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link js-trusted-link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-aboutdebugging"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                </ul>
+              </article>
+            </WorkerListEmpty>
+          </main>
+        </LocalizationProvider>
+      </App>
+    </Connect(App)>
+  </LocalizationProvider>
+</Provider>
+`;
+
+exports[`App: renders the expected snapshot for an App with multiple workers list 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <LocalizationProvider
+    messages={Array []}
+  >
+    <Connect(App)
+      canDebugWorkers={true}
+      domain="domain"
+      fluentBundles={Array []}
+      serviceContainer={Object {}}
+    >
+      <App
+        canDebugWorkers={false}
+        dispatch={[Function]}
+        domain={null}
+        fluentBundles={Array []}
+        serviceContainer={Object {}}
+        workers={Array []}
+      >
+        <LocalizationProvider
+          messages={Array []}
+        >
+          <main
+            className="application application--empty"
+          >
+            <WorkerListEmpty
+              serviceContainer={Object {}}
+            >
+              <article
+                className="worker-list-empty js-worker-list-empty"
+              >
+                <Localized
+                  a={
+                    <a
+                      className="external-link"
+                      onClick={[Function]}
+                    />
+                  }
+                  id="serviceworker-empty-intro"
+                >
+                  <p
+                    className="worker-list-empty__title"
+                  />
+                </Localized>
+                <Localized
+                  id="serviceworker-empty-suggestions"
+                >
+                  <p />
+                </Localized>
+                <ul
+                  className="worker-list-empty__tips"
+                >
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-console"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-debugger"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link js-trusted-link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-aboutdebugging"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                </ul>
+              </article>
+            </WorkerListEmpty>
+          </main>
+        </LocalizationProvider>
+      </App>
+    </Connect(App)>
+  </LocalizationProvider>
+</Provider>
+`;
+
+exports[`App: renders the expected snapshot for an App with single worker list 1`] = `
+<Provider
+  store={
+    Object {
+      "dispatch": [Function],
+      "getState": [Function],
+      "replaceReducer": [Function],
+      "subscribe": [Function],
+      Symbol(observable): [Function],
+    }
+  }
+>
+  <LocalizationProvider
+    messages={Array []}
+  >
+    <Connect(App)
+      canDebugWorkers={true}
+      domain="domain"
+      fluentBundles={Array []}
+      serviceContainer={Object {}}
+    >
+      <App
+        canDebugWorkers={false}
+        dispatch={[Function]}
+        domain={null}
+        fluentBundles={Array []}
+        serviceContainer={Object {}}
+        workers={Array []}
+      >
+        <LocalizationProvider
+          messages={Array []}
+        >
+          <main
+            className="application application--empty"
+          >
+            <WorkerListEmpty
+              serviceContainer={Object {}}
+            >
+              <article
+                className="worker-list-empty js-worker-list-empty"
+              >
+                <Localized
+                  a={
+                    <a
+                      className="external-link"
+                      onClick={[Function]}
+                    />
+                  }
+                  id="serviceworker-empty-intro"
+                >
+                  <p
+                    className="worker-list-empty__title"
+                  />
+                </Localized>
+                <Localized
+                  id="serviceworker-empty-suggestions"
+                >
+                  <p />
+                </Localized>
+                <ul
+                  className="worker-list-empty__tips"
+                >
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-console"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-debugger"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                  <Localized
+                    a={
+                      <a
+                        className="link js-trusted-link"
+                        onClick={[Function]}
+                      />
+                    }
+                    id="serviceworker-empty-suggestions-aboutdebugging"
+                  >
+                    <li
+                      className="worker-list-empty__tips__item"
+                    />
+                  </Localized>
+                </ul>
+              </article>
+            </WorkerListEmpty>
+          </main>
+        </LocalizationProvider>
+      </App>
+    </Connect(App)>
+  </LocalizationProvider>
+</Provider>
+`;
