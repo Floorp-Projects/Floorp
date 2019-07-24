@@ -9,6 +9,7 @@ import android.os.SystemClock;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.util.SimpleArrayMap;
 
 import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
@@ -183,6 +184,15 @@ public class GeckoResult<T> {
         Handler mHandler;
     }
 
+    private static class DirectDispatcher implements Dispatcher {
+        public void dispatch(Runnable r) {
+            r.run();
+        }
+        static DirectDispatcher sInstance = new DirectDispatcher();
+        private DirectDispatcher() {}
+
+    }
+
     public static final class UncaughtException extends RuntimeException {
         public UncaughtException(final Throwable cause) {
             super(cause);
@@ -199,12 +209,14 @@ public class GeckoResult<T> {
      */
     public static final GeckoResult<AllowOrDeny> DENY = GeckoResult.fromValue(AllowOrDeny.DENY);
 
+    // The default dispatcher for listeners on this GeckoResult. Other dispatchers can be specified
+    // when the listener is registered.
     private final Dispatcher mDispatcher;
     private boolean mComplete;
     private T mValue;
     private Throwable mError;
     private boolean mIsUncaughtError;
-    private ArrayList<Runnable> mListeners;
+    private SimpleArrayMap<Dispatcher, ArrayList<Runnable>> mListeners = new SimpleArrayMap<>();
 
     /**
      * Construct an incomplete GeckoResult. Call {@link #complete(Object)} or
@@ -396,16 +408,23 @@ public class GeckoResult<T> {
      */
     public @NonNull <U> GeckoResult<U> then(@Nullable final OnValueListener<T, U> valueListener,
                                             @Nullable final OnExceptionListener<U> exceptionListener) {
-        if (valueListener == null && exceptionListener == null) {
-            throw new IllegalArgumentException("At least one listener should be non-null");
-        }
-
         if (mDispatcher == null) {
             throw new IllegalThreadStateException("Must have a Handler");
         }
 
+        return thenInternal(mDispatcher, valueListener, exceptionListener);
+    }
+
+
+    private @NonNull <U> GeckoResult<U> thenInternal(@NonNull final Dispatcher dispatcher,
+                                                     @Nullable final OnValueListener<T, U> valueListener,
+                                                     @Nullable final OnExceptionListener<U> exceptionListener) {
+        if (valueListener == null && exceptionListener == null) {
+            throw new IllegalArgumentException("At least one listener should be non-null");
+        }
+
         final GeckoResult<U> result = new GeckoResult<U>();
-        then(() -> {
+        thenInternal(dispatcher, () -> {
             try {
                 if (haveValue()) {
                     result.completeFrom(valueListener != null ? valueListener.onValue(mValue)
@@ -423,20 +442,24 @@ public class GeckoResult<T> {
                 if (!result.mComplete) {
                     result.mIsUncaughtError = true;
                     result.completeExceptionally(e);
+                } else if (e instanceof RuntimeException) {
+                    // This should only be UncaughtException, but we rethrow all RuntimeExceptions
+                    // to avoid squelching logic errors in GeckoResult itself.
+                    throw (RuntimeException) e;
                 }
             }
         });
         return result;
     }
 
-    private synchronized void then(@NonNull final Runnable listener) {
+    private synchronized void thenInternal(@NonNull final Dispatcher dispatcher, @NonNull final Runnable listener) {
         if (mComplete) {
-            dispatchLocked(listener);
+            dispatcher.dispatch(listener);
         } else {
-            if (mListeners == null) {
-                mListeners = new ArrayList<>(1);
+            if (!mListeners.containsKey(dispatcher)) {
+                mListeners.put(dispatcher, new ArrayList<>(1));
             }
-            mListeners.add(listener);
+            mListeners.get(dispatcher).add(listener);
         }
     }
 
@@ -471,36 +494,29 @@ public class GeckoResult<T> {
             throw new IllegalStateException("Cannot dispatch unless result is complete");
         }
 
-        if (mListeners == null && !mIsUncaughtError) {
+        if (mListeners.isEmpty()) {
+             if (mIsUncaughtError) {
+                 // We have no listeners to forward the uncaught exception to;
+                 // rethrow the exception to make it visible.
+                 throw new UncaughtException(mError);
+             }
             return;
-        }
-
-        final Runnable dispatcher = () -> {
-            if (mListeners != null) {
-                for (final Runnable listener : mListeners) {
-                    listener.run();
-                }
-            } else if (mIsUncaughtError) {
-                // We have no listeners to forward the uncaught exception to;
-                // rethrow the exception to make it visible.
-                throw new UncaughtException(mError);
-            }
-        };
-
-        dispatchLocked(dispatcher);
-    }
-
-    private void dispatchLocked(final Runnable runnable) {
-        if (!mComplete) {
-            throw new IllegalStateException("Cannot dispatch unless result is complete");
         }
 
         if (mDispatcher == null) {
-            runnable.run();
-            return;
+            throw new AssertionError("Shouldn't have listeners with null dispatcher");
         }
 
-        mDispatcher.dispatch(runnable);
+        for (int i = 0; i < mListeners.size(); ++i) {
+            Dispatcher dispatcher = mListeners.keyAt(i);
+            ArrayList<Runnable> jobs = mListeners.valueAt(i);
+            dispatcher.dispatch(() -> {
+                for (final Runnable job : jobs) {
+                    job.run();
+                }
+            });
+        }
+        mListeners.clear();
     }
 
     /**
@@ -514,7 +530,7 @@ public class GeckoResult<T> {
             return;
         }
 
-        other.then(() -> {
+        other.thenInternal(DirectDispatcher.sInstance, () -> {
             if (other.haveValue()) {
                 complete(other.mValue);
             } else {
