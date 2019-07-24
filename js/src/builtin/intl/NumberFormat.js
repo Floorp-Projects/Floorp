@@ -64,6 +64,12 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     }
 
     // Intl.NumberFormat Unified API Proposal
+    if (style === "unit") {
+        internalProps.unit = lazyNumberFormatData.unit;
+        internalProps.unitDisplay = lazyNumberFormatData.unitDisplay;
+    }
+
+    // Intl.NumberFormat Unified API Proposal
     var notation = lazyNumberFormatData.notation;
     internalProps.notation = notation;
 
@@ -249,6 +255,106 @@ function IsWellFormedCurrencyCode(currency) {
 }
 
 /**
+ * Verifies that the given string is a well-formed core unit identifier as
+ * defined in UTS #35, Part 2, Section 6. In addition to obeying the UTS #35
+ * core unit identifier syntax, |unitIdentifier| must be one of the identifiers
+ * sanctioned by UTS #35 or be a compound unit composed of two sanctioned simple
+ * units.
+ *
+ * Intl.NumberFormat Unified API Proposal
+ */
+function IsWellFormedUnitIdentifier(unitIdentifier) {
+    assert(typeof unitIdentifier === "string", "unitIdentifier is a string value");
+
+    // Step 1.
+    if (IsSanctionedSimpleUnitIdentifier(unitIdentifier))
+        return true;
+
+    // Step 2.
+    var pos = callFunction(std_String_indexOf, unitIdentifier, "-per-");
+    if (pos < 0)
+        return false;
+
+    var next = pos + "-per-".length;
+
+    // Steps 3 and 5.
+    var numerator = Substring(unitIdentifier, 0, pos);
+    var denominator = Substring(unitIdentifier, next, unitIdentifier.length - next);
+
+    // Steps 4 and 6.
+    return IsSanctionedSimpleUnitIdentifier(numerator) &&
+           IsSanctionedSimpleUnitIdentifier(denominator);
+}
+
+/**
+ * Verifies that the given string is a sanctioned simple core unit identifier.
+ *
+ * Intl.NumberFormat Unified API Proposal
+ *
+ * Also see: https://unicode.org/reports/tr35/tr35-general.html#Unit_Elements
+ */
+function IsSanctionedSimpleUnitIdentifier(unitIdentifier) {
+    assert(typeof unitIdentifier === "string", "unitIdentifier is a string value");
+
+    return hasOwn(unitIdentifier, sanctionedSimpleUnitIdentifiers);
+}
+
+/**
+ * The list of currently supported simple unit identifiers.
+ *
+ * Note: Keep in sync with the measure unit lists in
+ * - js/src/builtin/intl/NumberFormat.cpp
+ * - intl/icu/data_filter.json
+ *
+ * Intl.NumberFormat Unified API Proposal
+ */
+var sanctionedSimpleUnitIdentifiers = {
+    "acre": true,
+    "bit": true,
+    "byte": true,
+    "celsius": true,
+    "centimeter": true,
+    "day": true,
+    "degree": true,
+    "fahrenheit": true,
+    "fluid-ounce": true,
+    "foot": true,
+    "gallon": true,
+    "gigabit": true,
+    "gigabyte": true,
+    "gram": true,
+    "hectare": true,
+    "hour": true,
+    "inch": true,
+    "kilobit": true,
+    "kilobyte": true,
+    "kilogram": true,
+    "kilometer": true,
+    "liter": true,
+    "megabit": true,
+    "megabyte": true,
+    "meter": true,
+    "mile": true,
+    "mile-scandinavian": true,
+    "milliliter": true,
+    "millimeter": true,
+    "millisecond": true,
+    "minute": true,
+    "month": true,
+    "ounce": true,
+    "percent": true,
+    "petabyte": true,
+    "pound": true,
+    "second": true,
+    "stone": true,
+    "terabit": true,
+    "terabyte": true,
+    "week": true,
+    "yard": true,
+    "year": true,
+};
+
+/**
  * Initializes an object as a NumberFormat.
  *
  * This method is complicated a moderate bit by its implementing initialization
@@ -267,12 +373,16 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //
     //   {
     //     requestedLocales: List of locales,
-    //     style: "decimal" / "percent" / "currency",
+    //     style: "decimal" / "percent" / "currency" / "unit",
     //
     //     // fields present only if style === "currency":
     //     currency: a well-formed currency code (IsWellFormedCurrencyCode),
     //     currencyDisplay: "code" / "symbol" / "name",
     //     currencySign: "standard" / "accounting",
+    //
+    //     // fields present only if style === "unit":
+    //     unit: a well-formed unit identifier (IsWellFormedUnitIdentifier),
+    //     unitDisplay: "short" / "narrow" / "long",
     //
     //     opt: // opt object computed in InitializeNumberFormat
     //       {
@@ -329,7 +439,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Compute formatting options.
     // Step 12.
-    var style = GetOption(options, "style", "string", ["decimal", "percent", "currency"], "decimal");
+    var style = GetOption(options, "style", "string",
+                          ["decimal", "percent", "currency", "unit"], "decimal");
     lazyNumberFormatData.style = style;
 
     // Steps 14-17.
@@ -365,6 +476,24 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
                                  ["standard", "accounting"], "standard");
     if (style === "currency")
         lazyNumberFormatData.currencySign = currencySign;
+
+    // Intl.NumberFormat Unified API Proposal
+    var unit = GetOption(options, "unit", "string", undefined, undefined);
+
+    // Aligned with |currency| check from above, see note about spec issue there.
+    if (unit !== undefined && !IsWellFormedUnitIdentifier(unit))
+        ThrowRangeError(JSMSG_INVALID_UNIT_IDENTIFIER, unit);
+
+    var unitDisplay = GetOption(options, "unitDisplay", "string",
+                                ["short", "narrow", "long"], "short");
+
+    if (style === "unit") {
+        if (unit === undefined)
+            ThrowTypeError(JSMSG_UNDEFINED_UNIT);
+
+        lazyNumberFormatData.unit = unit;
+        lazyNumberFormatData.unitDisplay = unitDisplay;
+    }
 
     // Steps 20-21.
     var mnfdDefault, mxfdDefault;
@@ -605,6 +734,17 @@ function Intl_NumberFormat_resolvedOptions() {
         _DefineDataProperty(result, "currency", internals.currency);
         _DefineDataProperty(result, "currencyDisplay", internals.currencyDisplay);
         _DefineDataProperty(result, "currencySign", internals.currencySign);
+    }
+
+    // unit and unitDisplay are only present for unit formatters.
+    assert(hasOwn("unit", internals) === (internals.style === "unit"),
+           "unit is present iff style is 'unit'");
+    assert(hasOwn("unitDisplay", internals) === (internals.style === "unit"),
+           "unitDisplay is present iff style is 'unit'");
+
+    if (hasOwn("unit", internals)) {
+        _DefineDataProperty(result, "unit", internals.unit);
+        _DefineDataProperty(result, "unitDisplay", internals.unitDisplay);
     }
 
     _DefineDataProperty(result, "minimumIntegerDigits", internals.minimumIntegerDigits);

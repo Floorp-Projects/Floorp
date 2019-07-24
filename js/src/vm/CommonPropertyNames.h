@@ -439,6 +439,7 @@
   MACRO(uneval, uneval, "uneval")                                              \
   MACRO(unicode, unicode, "unicode")                                           \
   MACRO(unit, unit, "unit")                                                    \
+  MACRO(unitDisplay, unitDisplay, "unitDisplay")                               \
   MACRO(uninitialized, uninitialized, "uninitialized")                         \
   MACRO(unsized, unsized, "unsized")                                           \
   MACRO(unwatch, unwatch, "unwatch")                                           \
