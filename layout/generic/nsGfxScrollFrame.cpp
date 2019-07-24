@@ -6654,10 +6654,10 @@ void ScrollFrameHelper::FireScrolledAreaEvent() {
   }
 }
 
-uint32_t nsIScrollableFrame::GetAvailableScrollingDirections() const {
+uint32_t nsIScrollableFrame::GetPerceivedScrollingDirections() const {
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
-  uint32_t directions = 0;
+  uint32_t directions = GetScrollbarVisibility();
   nsRect scrollRange = GetScrollRange();
   if (scrollRange.width >= oneDevPixel) {
     directions |= HORIZONTAL;
