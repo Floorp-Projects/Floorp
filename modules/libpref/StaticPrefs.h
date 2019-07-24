@@ -9,7 +9,6 @@
 #ifndef mozilla_StaticPrefs_h
 #define mozilla_StaticPrefs_h
 
-#include "gfxPlatform.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/TypeTraits.h"
