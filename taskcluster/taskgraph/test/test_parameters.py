@@ -52,7 +52,7 @@ class TestParameters(unittest.TestCase):
         'tasks_for': 'tasks_for',
         'try_mode': 'try_mode',
         'try_options': None,
-        'try_task_config': None,
+        'try_task_config': {},
         'version': 'version',
     }
 

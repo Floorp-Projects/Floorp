@@ -16,6 +16,11 @@ const TEST_URI =
 add_task(async function() {
   requestLongerTimeout(2);
 
+  // Bug 1518138: GC heuristics are broken for this test, so that the test
+  // ends up running out of memory. Try to work-around the problem by GCing
+  // before the test begins.
+  Cu.forceShrinkingGC();
+
   const hud = await openNewTabAndConsole(
     "data:text/html;charset=utf8,<p>hello"
   );
