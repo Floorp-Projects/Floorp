@@ -14,6 +14,10 @@ const NumberFormatParts = {
     PercentSign: GenericPartCreator("percentSign"),
     Currency: GenericPartCreator("currency"),
     Literal: GenericPartCreator("literal"),
+    ExponentSeparator: GenericPartCreator("exponentSeparator"),
+    ExponentMinusSign: GenericPartCreator("exponentMinusSign"),
+    ExponentInteger: GenericPartCreator("exponentInteger"),
+    Compact: GenericPartCreator("compact"),
 };
 
 function assertParts(nf, x, expected) {

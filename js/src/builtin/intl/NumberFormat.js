@@ -62,6 +62,10 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
         internalProps.currencyDisplay = lazyNumberFormatData.currencyDisplay;
     }
 
+    // Intl.NumberFormat Unified API Proposal
+    var notation = lazyNumberFormatData.notation;
+    internalProps.notation = notation;
+
     // Step 22.
     internalProps.minimumIntegerDigits = lazyNumberFormatData.minimumIntegerDigits;
 
@@ -80,6 +84,10 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
         internalProps.minimumSignificantDigits = lazyNumberFormatData.minimumSignificantDigits;
         internalProps.maximumSignificantDigits = lazyNumberFormatData.maximumSignificantDigits;
     }
+
+    // Intl.NumberFormat Unified API Proposal
+    if (notation === "compact")
+        internalProps.compactDisplay = lazyNumberFormatData.compactDisplay;
 
     // Step 24.
     internalProps.useGrouping = lazyNumberFormatData.useGrouping;
@@ -133,7 +141,7 @@ function UnwrapNumberFormat(nf) {
  *
  * Spec: ECMAScript Internationalization API Specification, 11.1.1.
  */
-function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault) {
+function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault, notation) {
     // We skip step 1 because we set the properties on a lazyData object.
 
     // Steps 2-4.
@@ -141,6 +149,7 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
     assert(typeof mnfdDefault === "number", "SetNumberFormatDigitOptions");
     assert(typeof mxfdDefault === "number", "SetNumberFormatDigitOptions");
     assert(mnfdDefault <= mxfdDefault, "SetNumberFormatDigitOptions");
+    assert(typeof notation === "string", "SetNumberFormatDigitOptions");
 
     // Steps 5-9.
     const mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
@@ -189,7 +198,10 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
         lazyData.maximumFractionDigits = mxfd;
     }
 
-    // Step 13 (TODO: Not yet implemented).
+    // Step 13.
+    else if (notation === "compact") {
+        // Step 13.a (Omitted).
+    }
 
     // Step 14.
     else {
@@ -277,6 +289,11 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //
     //     useGrouping: true / false,
     //
+    //     notation: "standard" / "scientific" / "engineering" / "compact",
+    //
+    //     // optional, if notation is "compact"
+    //     compactDisplay: "short" / "long",
+    //
     //     signDisplay: "auto" / "never" / "always" / "exceptZero",
     //   }
     //
@@ -334,7 +351,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     if (style === "currency")
         lazyNumberFormatData.currencyDisplay = currencyDisplay;
 
-    // Steps 20-22.
+    // Steps 20-21.
     var mnfdDefault, mxfdDefault;
     if (style === "currency") {
         mnfdDefault = cDigits;
@@ -343,7 +360,20 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
         mnfdDefault = 0;
         mxfdDefault = style === "percent" ? 0 : 3;
     }
-    SetNumberFormatDigitOptions(lazyNumberFormatData, options, mnfdDefault, mxfdDefault);
+
+    // Intl.NumberFormat Unified API Proposal
+    var notation = GetOption(options, "notation", "string",
+                             ["standard", "scientific", "engineering", "compact"], "standard");
+    lazyNumberFormatData.notation = notation;
+
+    // Step 22.
+    SetNumberFormatDigitOptions(lazyNumberFormatData, options, mnfdDefault, mxfdDefault, notation);
+
+    // Intl.NumberFormat Unified API Proposal
+    var compactDisplay = GetOption(options, "compactDisplay", "string",
+                                   ["short", "long"], "short");
+    if (notation === "compact")
+        lazyNumberFormatData.compactDisplay = compactDisplay;
 
     // Steps 23.
     var useGrouping = GetOption(options, "useGrouping", "boolean", undefined, true);
@@ -583,6 +613,12 @@ function Intl_NumberFormat_resolvedOptions() {
     }
 
     _DefineDataProperty(result, "useGrouping", internals.useGrouping);
+
+    var notation = internals.notation;
+    _DefineDataProperty(result, "notation", notation);
+
+    if (notation === "compact")
+        _DefineDataProperty(result, "compactDisplay", internals.compactDisplay);
 
     _DefineDataProperty(result, "signDisplay", internals.signDisplay);
 

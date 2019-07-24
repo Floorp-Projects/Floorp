@@ -305,6 +305,23 @@ bool js::intl::NumberFormatterSkeleton::useGrouping(bool on) {
   return on || appendToken(u"group-off");
 }
 
+bool js::intl::NumberFormatterSkeleton::notation(Notation style) {
+  switch (style) {
+    case Notation::Standard:
+      // Default, no additional tokens needed.
+      return true;
+    case Notation::Scientific:
+      return appendToken(u"scientific");
+    case Notation::Engineering:
+      return appendToken(u"engineering");
+    case Notation::CompactShort:
+      return appendToken(u"compact-short");
+    case Notation::CompactLong:
+      return appendToken(u"compact-long");
+  }
+  MOZ_CRASH("unexpected notation style");
+}
+
 bool js::intl::NumberFormatterSkeleton::signDisplay(SignDisplay display) {
   switch (display) {
     case SignDisplay::Auto:
@@ -438,7 +455,15 @@ static UNumberFormatter* NewUNumberFormatter(
                                     maximumSignificantDigits)) {
       return nullptr;
     }
-  } else {
+  }
+
+  bool hasMinimumFractionDigits;
+  if (!HasProperty(cx, internals, cx->names().minimumFractionDigits,
+                   &hasMinimumFractionDigits)) {
+    return nullptr;
+  }
+
+  if (hasMinimumFractionDigits) {
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
       return nullptr;
@@ -472,6 +497,51 @@ static UNumberFormatter* NewUNumberFormatter(
   }
   if (!skeleton.useGrouping(value.toBoolean())) {
     return nullptr;
+  }
+
+  if (!GetProperty(cx, internals, internals, cx->names().notation, &value)) {
+    return nullptr;
+  }
+
+  {
+    JSLinearString* notation = value.toString()->ensureLinear(cx);
+    if (!notation) {
+      return nullptr;
+    }
+
+    using Notation = intl::NumberFormatterSkeleton::Notation;
+
+    Notation style;
+    if (StringEqualsAscii(notation, "standard")) {
+      style = Notation::Standard;
+    } else if (StringEqualsAscii(notation, "scientific")) {
+      style = Notation::Scientific;
+    } else if (StringEqualsAscii(notation, "engineering")) {
+      style = Notation::Engineering;
+    } else {
+      MOZ_ASSERT(StringEqualsAscii(notation, "compact"));
+
+      if (!GetProperty(cx, internals, internals, cx->names().compactDisplay,
+                       &value)) {
+        return nullptr;
+      }
+
+      JSLinearString* compactDisplay = value.toString()->ensureLinear(cx);
+      if (!compactDisplay) {
+        return nullptr;
+      }
+
+      if (StringEqualsAscii(compactDisplay, "short")) {
+        style = Notation::CompactShort;
+      } else {
+        MOZ_ASSERT(StringEqualsAscii(compactDisplay, "long"));
+        style = Notation::CompactLong;
+      }
+    }
+
+    if (!skeleton.notation(style)) {
+      return nullptr;
+    }
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().signDisplay, &value)) {
@@ -680,13 +750,13 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
       break;
 
     case UNUM_EXPONENT_SYMBOL_FIELD:
+      return &JSAtomState::exponentSeparator;
+
     case UNUM_EXPONENT_SIGN_FIELD:
+      return &JSAtomState::exponentMinusSign;
+
     case UNUM_EXPONENT_FIELD:
-      MOZ_ASSERT_UNREACHABLE(
-          "exponent field unexpectedly found in "
-          "formatted number, even though UNUM_SCIENTIFIC "
-          "and scientific notation were never requested");
-      break;
+      return &JSAtomState::exponentInteger;
 
 #ifndef U_HIDE_DRAFT_API
     case UNUM_MEASURE_UNIT_FIELD:
@@ -697,25 +767,19 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
       break;
 
     case UNUM_COMPACT_FIELD:
-      MOZ_ASSERT_UNREACHABLE(
-          "unexpected compact field found, even though "
-          "we don't use any user-defined patterns that "
-          "would require a compact number notation");
-      break;
+      return &JSAtomState::compact;
 #endif
 
 #ifndef U_HIDE_DEPRECATED_API
     case UNUM_FIELD_COUNT:
       MOZ_ASSERT_UNREACHABLE(
-          "format field sentinel value returned by "
-          "iterator!");
+          "format field sentinel value returned by iterator!");
       break;
 #endif
   }
 
   MOZ_ASSERT_UNREACHABLE(
-      "unenumerated, undocumented format field returned "
-      "by iterator");
+      "unenumerated, undocumented format field returned by iterator");
   return nullptr;
 }
 
