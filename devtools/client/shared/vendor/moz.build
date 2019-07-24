@@ -12,7 +12,7 @@ DevToolsModules(
     'fluent-react.js',
     'fluent.js',
     'immutable.js',
-    'jsol.js',
+    'json5.js',
     'jszip.js',
     'lodash.js',
     'react-dom-factories.js',
