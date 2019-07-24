@@ -367,16 +367,15 @@ ${helpers.predefined_type(
                     % endfor
                 };
 
-                let mut system = mem::MaybeUninit::<nsFont>::uninit();
-                let system = unsafe {
+                let mut system: nsFont = unsafe { mem::uninitialized() };
+                unsafe {
                     bindings::Gecko_nsFont_InitSystem(
-                        system.as_mut_ptr(),
+                        &mut system,
                         id as i32,
                         cx.style().get_font().gecko(),
                         cx.device().document()
-                    );
-                    &mut *system.as_mut_ptr()
-                };
+                    )
+                }
                 let font_weight = longhands::font_weight::computed_value::T::from_gecko_weight(system.weight);
                 let font_stretch = FontStretch(NonNegative(Percentage(unsafe {
                     bindings::Gecko_FontStretch_ToFloat(system.stretch)
@@ -414,7 +413,7 @@ ${helpers.predefined_type(
                     system_font: *self,
                     default_font_type: system.fontlist.mDefaultFontType,
                 };
-                unsafe { bindings::Gecko_nsFont_Destroy(system); }
+                unsafe { bindings::Gecko_nsFont_Destroy(&mut system); }
                 ret
             }
 

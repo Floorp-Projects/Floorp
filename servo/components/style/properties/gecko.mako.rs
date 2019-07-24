@@ -44,9 +44,9 @@ use crate::properties::computed_value_flags::*;
 use crate::properties::longhands;
 use crate::rule_tree::StrongRuleNode;
 use crate::selector_parser::PseudoElement;
-use servo_arc::{Arc, RawOffsetArc, UniqueArc};
+use servo_arc::{Arc, RawOffsetArc};
 use std::marker::PhantomData;
-use std::mem::{forget, zeroed, ManuallyDrop};
+use std::mem::{forget, uninitialized, zeroed, ManuallyDrop};
 use std::{cmp, ops, ptr};
 use crate::values::{self, CustomIdent, Either, KeyframesName, None_};
 use crate::values::computed::{Percentage, TransitionProperty};
@@ -215,18 +215,19 @@ impl ComputedValuesInner {
             Some(p) => p.pseudo_type(),
             None => structs::PseudoStyleType::NotPseudo,
         };
-        unsafe {
-            let mut arc = UniqueArc::<ComputedValues>::new_uninit();
+        let arc = unsafe {
+            let arc: Arc<ComputedValues> = Arc::new(uninitialized());
             bindings::Gecko_ComputedStyle_Init(
-                &mut (*arc.as_mut_ptr()).0,
+                &arc.0 as *const _ as *mut _,
                 &self,
                 pseudo_ty,
             );
-            // We're simulating move semantics by having C++ do a memcpy and then forgetting
+            // We're simulating a move by having C++ do a memcpy and then forgetting
             // it on this end.
             forget(self);
-            UniqueArc::assume_init(arc).shareable()
-        }
+            arc
+        };
+        arc
     }
 }
 
