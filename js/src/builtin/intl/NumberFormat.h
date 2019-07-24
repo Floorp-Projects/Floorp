@@ -150,6 +150,10 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
     return append(token) && append(' ');
   }
 
+  bool append(const char* chars, size_t length) {
+    return vector_.append(chars, length);
+  }
+
  public:
   explicit NumberFormatterSkeleton(JSContext* cx) : vector_(cx) {}
 
@@ -167,6 +171,24 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    */
   MOZ_MUST_USE bool currency(CurrencyDisplay display, JSLinearString* currency);
+
+  /**
+   * Set this skeleton to display a unit amount. |unit| must be a well-formed
+   * unit identifier.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#per-unit
+   */
+  MOZ_MUST_USE bool unit(JSLinearString* unit);
+
+  enum class UnitDisplay { Short, Narrow, Long };
+
+  /**
+   * Set the unit display style for this skeleton.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit-width
+   */
+  MOZ_MUST_USE bool unitDisplay(UnitDisplay display);
 
   /**
    * Set this skeleton to display a percent number.

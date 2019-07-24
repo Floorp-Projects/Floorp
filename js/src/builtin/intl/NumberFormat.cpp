@@ -8,13 +8,17 @@
 
 #include "builtin/intl/NumberFormat.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 
 #include <algorithm>
+#include <cstring>
+#include <iterator>
 #include <stddef.h>
 #include <stdint.h>
+#include <string>
 #include <type_traits>
 
 #include "builtin/intl/CommonFunctions.h"
@@ -32,6 +36,7 @@
 #include "vm/JSContext.h"
 #include "vm/SelfHosting.h"
 #include "vm/Stack.h"
+#include "vm/StringType.h"
 
 #include "vm/JSObject-inl.h"
 
@@ -277,6 +282,143 @@ bool js::intl::NumberFormatterSkeleton::currency(CurrencyDisplay display,
   MOZ_CRASH("unexpected currency display type");
 }
 
+struct MeasureUnit {
+  const char* const type;
+  const char* const subtype;
+};
+
+/**
+ * The list of currently supported simple unit identifiers.
+ *
+ * Note: Keep in sync with the measure unit lists in
+ * - js/src/builtin/intl/NumberFormat.js
+ * - intl/icu/data_filter.json
+ *
+ * The list must be kept in alphabetical order of the |subtype|.
+ */
+const MeasureUnit simpleMeasureUnits[] = {
+    // clang-format off
+    {"area", "acre"},
+    {"digital", "bit"},
+    {"digital", "byte"},
+    {"temperature", "celsius"},
+    {"length", "centimeter"},
+    {"duration", "day"},
+    {"angle", "degree"},
+    {"temperature", "fahrenheit"},
+    {"volume", "fluid-ounce"},
+    {"length", "foot"},
+    {"volume", "gallon"},
+    {"digital", "gigabit"},
+    {"digital", "gigabyte"},
+    {"mass", "gram"},
+    {"area", "hectare"},
+    {"duration", "hour"},
+    {"length", "inch"},
+    {"digital", "kilobit"},
+    {"digital", "kilobyte"},
+    {"mass", "kilogram"},
+    {"length", "kilometer"},
+    {"volume", "liter"},
+    {"digital", "megabit"},
+    {"digital", "megabyte"},
+    {"length", "meter"},
+    {"length", "mile"},
+    {"length", "mile-scandinavian"},
+    {"volume", "milliliter"},
+    {"length", "millimeter"},
+    {"duration", "millisecond"},
+    {"duration", "minute"},
+    {"duration", "month"},
+    {"mass", "ounce"},
+    {"concentr", "percent"},
+    {"digital", "petabyte"},
+    {"mass", "pound"},
+    {"duration", "second"},
+    {"mass", "stone"},
+    {"digital", "terabit"},
+    {"digital", "terabyte"},
+    {"duration", "week"},
+    {"length", "yard"},
+    {"duration", "year"},
+    // clang-format on
+};
+
+static const MeasureUnit& FindSimpleMeasureUnit(const char* subtype) {
+  auto measureUnit = std::lower_bound(
+      std::begin(simpleMeasureUnits), std::end(simpleMeasureUnits), subtype,
+      [](const auto& measureUnit, const char* subtype) {
+        return strcmp(measureUnit.subtype, subtype) < 0;
+      });
+  MOZ_ASSERT(measureUnit != std::end(simpleMeasureUnits),
+             "unexpected unit identifier: unit not found");
+  MOZ_ASSERT(strcmp(measureUnit->subtype, subtype) == 0,
+             "unexpected unit identifier: wrong unit found");
+  return *measureUnit;
+}
+
+static constexpr size_t MaxUnitLength() {
+  // Enable by default when bug 1560664 is fixed.
+#if __cplusplus >= 201703L
+  size_t length = 0;
+  for (const auto& unit : simpleMeasureUnits) {
+    length = std::max(length, std::char_traits<char>::length(unit.subtype));
+  }
+  return length * 2 + std::char_traits<char>::length("-per-");
+#else
+  return mozilla::ArrayLength("mile-scandinavian-per-mile-scandinavian") - 1;
+#endif
+}
+
+bool js::intl::NumberFormatterSkeleton::unit(JSLinearString* unit) {
+  MOZ_RELEASE_ASSERT(unit->length() <= MaxUnitLength());
+
+  char unitChars[MaxUnitLength() + 1] = {};
+  CopyChars(reinterpret_cast<Latin1Char*>(unitChars), *unit);
+
+  auto appendUnit = [this](const MeasureUnit& unit) {
+    return append(unit.type, strlen(unit.type)) && append('-') &&
+           append(unit.subtype, strlen(unit.subtype));
+  };
+
+  // |unit| can be a compound unit identifier, separated by "-per-".
+
+  static constexpr char separator[] = "-per-";
+  if (char* p = strstr(unitChars, separator)) {
+    // Split into two strings.
+    p[0] = '\0';
+
+    auto& numerator = FindSimpleMeasureUnit(unitChars);
+    if (!append(u"measure-unit/") || !appendUnit(numerator) || !append(' ')) {
+      return false;
+    }
+
+    auto& denominator = FindSimpleMeasureUnit(p + strlen(separator));
+    if (!append(u"per-measure-unit/") || !appendUnit(denominator) ||
+        !append(' ')) {
+      return false;
+    }
+  } else {
+    auto& simple = FindSimpleMeasureUnit(unitChars);
+    if (!append(u"measure-unit/") || !appendUnit(simple) || !append(' ')) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool js::intl::NumberFormatterSkeleton::unitDisplay(UnitDisplay display) {
+  switch (display) {
+    case UnitDisplay::Short:
+      return appendToken(u"unit-width-short");
+    case UnitDisplay::Narrow:
+      return appendToken(u"unit-width-narrow");
+    case UnitDisplay::Long:
+      return appendToken(u"unit-width-full-name");
+  }
+  MOZ_CRASH("unexpected unit display type");
+}
+
 bool js::intl::NumberFormatterSkeleton::percent() {
   return appendToken(u"percent scale/100");
 }
@@ -447,6 +589,43 @@ static UNumberFormatter* NewUNumberFormatter(
       }
     } else if (StringEqualsAscii(style, "percent")) {
       if (!skeleton.percent()) {
+        return nullptr;
+      }
+    } else if (StringEqualsAscii(style, "unit")) {
+      if (!GetProperty(cx, internals, internals, cx->names().unit, &value)) {
+        return nullptr;
+      }
+      JSLinearString* unit = value.toString()->ensureLinear(cx);
+      if (!unit) {
+        return nullptr;
+      }
+
+      if (!skeleton.unit(unit)) {
+        return nullptr;
+      }
+
+      if (!GetProperty(cx, internals, internals, cx->names().unitDisplay,
+                       &value)) {
+        return nullptr;
+      }
+      JSLinearString* unitDisplay = value.toString()->ensureLinear(cx);
+      if (!unitDisplay) {
+        return nullptr;
+      }
+
+      using UnitDisplay = intl::NumberFormatterSkeleton::UnitDisplay;
+
+      UnitDisplay display;
+      if (StringEqualsAscii(unitDisplay, "short")) {
+        display = UnitDisplay::Short;
+      } else if (StringEqualsAscii(unitDisplay, "narrow")) {
+        display = UnitDisplay::Narrow;
+      } else {
+        MOZ_ASSERT(StringEqualsAscii(unitDisplay, "long"));
+        display = UnitDisplay::Long;
+      }
+
+      if (!skeleton.unitDisplay(display)) {
         return nullptr;
       }
     } else {
@@ -794,11 +973,7 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
 
 #ifndef U_HIDE_DRAFT_API
     case UNUM_MEASURE_UNIT_FIELD:
-      MOZ_ASSERT_UNREACHABLE(
-          "unexpected measure unit field found, even though "
-          "we don't use any user-defined patterns that "
-          "would require a measure unit field");
-      break;
+      return &JSAtomState::unit;
 
     case UNUM_COMPACT_FIELD:
       return &JSAtomState::compact;
