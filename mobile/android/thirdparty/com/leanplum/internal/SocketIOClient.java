@@ -30,21 +30,24 @@ import com.leanplum.Leanplum;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.thirdparty_unused.BuildConfig;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.methods.HttpPost;
+import ch.boye.httpclientandroidlib.client.methods.HttpUriRequest;
+import ch.boye.httpclientandroidlib.impl.client.CloseableHttpClient;
+import ch.boye.httpclientandroidlib.impl.client.HttpClients;
+
+// Suppressing deprecated apache dependency.
+@SuppressWarnings("deprecation")
 class SocketIOClient {
   interface Handler {
     void onConnect();
@@ -70,30 +73,22 @@ class SocketIOClient {
     mHandler = handler;
   }
 
-  private String downloadUriAsString()
-          throws IOException {
-    URL url = new URL(this.mURL);
-    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+  private static String userAgentString() {
+    String appName = (Leanplum.getContext() != null) ?
+        Util.getApplicationName(Leanplum.getContext()) + "/" + Util.getVersionName() : "websocket";
+    return appName + "(" + RequestOld.appId() + "; " + Constants.CLIENT + "; "
+        + Constants.LEANPLUM_VERSION + "/" + Constants.LEANPLUM_PACKAGE_IDENTIFIER + ")";
+  }
 
+  private static String downloadUriAsString(final HttpUriRequest req)
+      throws IOException {
+    CloseableHttpClient client = HttpClients.createMinimal();
+    req.setHeader("User-Agent", userAgentString());
     try {
-      InputStream inputStream = connection.getInputStream();
-      BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-
-      String tempStr;
-      StringBuffer stringBuffer = new StringBuffer();
-
-      while ((tempStr = bufferedReader.readLine()) != null) {
-        stringBuffer.append(tempStr);
-      }
-
-      bufferedReader.close();
-      inputStream.close();
-      return stringBuffer.toString();
-
+      HttpResponse res = client.execute(req);
+      return readToEnd(res.getEntity().getContent());
     } finally {
-      if (connection != null) {
-        connection.disconnect();
-      }
+      client.close();
     }
   }
 
@@ -244,9 +239,9 @@ class SocketIOClient {
       return;
     new Thread() {
       public void run() {
-
+        HttpPost post = new HttpPost(mURL);
         try {
-          String line = downloadUriAsString();
+          String line = downloadUriAsString(post);
           String[] parts = line.split(":");
           mSession = parts[0];
           String heartbeat = parts[1];

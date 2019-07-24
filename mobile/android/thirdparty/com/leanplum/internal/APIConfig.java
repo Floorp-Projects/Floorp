@@ -1,5 +1,5 @@
 /*
- * Copyright 2015, Leanplum, Inc. All rights reserved.
+ * Copyright 2018, Leanplum, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,18 +19,29 @@
  * under the License.
  */
 
-package com.leanplum.callbacks;
+package com.leanplum.internal;
 
-/**
- * Newsfeed changed callback.
- *
- * @author Aleksandar Gyorev
- */
-public abstract class NewsfeedChangedCallback extends InboxChangedCallback {
-  @Override
-  public void inboxChanged() {
-    newsfeedChanged();
+public class APIConfig {
+  private final FeatureFlagManager featureFlagManager;
+  private final CountAggregator countAggregator;
+  private String appId;
+  private String accessKey;
+  private String token;
+
+  public APIConfig(FeatureFlagManager featureFlagManager, CountAggregator countAggregator) {
+    this.featureFlagManager = featureFlagManager;
+    this.countAggregator = countAggregator;
   }
 
-  public abstract void newsfeedChanged();
+  public void setAppId(String appId, String accessKey) {
+    this.appId = appId;
+    this.accessKey = accessKey;
+
+    this.countAggregator.incrementCount("set_app_id");
+  }
+
+  public void loadToken(String token) {
+    this.token = token;
+  }
 }
+

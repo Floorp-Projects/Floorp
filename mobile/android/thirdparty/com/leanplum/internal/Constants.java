@@ -22,7 +22,6 @@
 package com.leanplum.internal;
 
 
-import org.mozilla.gecko.thirdparty_unused.BuildConfig;
 
 /**
  * Leanplum constants.
@@ -39,7 +38,7 @@ public class Constants {
   public static int NETWORK_TIMEOUT_SECONDS_FOR_DOWNLOADS = 10;
   static final String LEANPLUM_PACKAGE_IDENTIFIER = "s"; //TODO investigate what this should be
 
-  public static String LEANPLUM_VERSION = "3.0.2";
+  public static String LEANPLUM_VERSION = "4.2.7";
   public static String CLIENT = "android";
 
   static final String INVALID_MAC_ADDRESS = "02:00:00:00:00:00";
@@ -146,12 +145,15 @@ public class Constants {
     public static final String IAP_CURRENCY_CODE = "currencyCode";
     public static final String IAP_ITEM = "item";
     public static final String INCLUDE_DEFAULTS = "includeDefaults";
+    public static final String INCLUDE_VARIANT_DEBUG_INFO = "includeVariantDebugInfo";
     public static final String INCLUDE_MESSAGE_ID = "includeMessageId";
     public static final String INFO = "info";
     public static final String INSTALL_DATE = "installDate";
     public static final String KINDS = "kinds";
     public static final String LIMIT_TRACKING = "limitTracking";
     public static final String MESSAGE = "message";
+    public static final String NAME = "name";
+    public static final String COUNT = "count";
     public static final String MESSAGE_ID = "messageId";
     public static final String NEW_USER_ID = "newUserId";
     public static final String INBOX_MESSAGE_ID = "newsfeedMessageId";
@@ -202,10 +204,13 @@ public class Constants {
     public static final String REGION = "region";
     public static final String REGION_STATE = "regionState";
     public static final String REGIONS = "regions";
+    public static final String VARIANT_DEBUG_INFO = "variantDebugInfo";
     public static final String SIZE = "size";
     public static final String SUBTITLE = "Subtitle";
     public static final String SYNC_INBOX = "syncNewsfeed";
     public static final String LOGGING_ENABLED = "loggingEnabled";
+    public static final String ENABLED_COUNTERS = "enabledSdkCounters";
+    public static final String ENABLED_FEATURE_FLAGS = "enabledFeatureFlags";
     public static final String TIMEZONE = "timezone";
     public static final String TIMEZONE_OFFSET_SECONDS = "timezoneOffsetSeconds";
     public static final String TITLE = "Title";
@@ -250,6 +255,7 @@ public class Constants {
     public static final String DEFAULT_PUSH_MESSAGE = "Push message goes here.";
     public static final String SDK_LOG = "sdkLog";
     public static final String SDK_ERROR = "sdkError";
+    public static final String SDK_COUNT = "sdkCount";
     public static final String FILE_PREFIX = "__file__";
   }
 
