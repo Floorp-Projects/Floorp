@@ -6,6 +6,8 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
+ChromeUtils.import("resource:///modules/PermissionUI.jsm", this);
+
 var PointerlockFsWarning = {
   _element: null,
   _origin: null,
@@ -246,7 +248,19 @@ var FullScreen = {
     "DOMFullscreen:Painted",
   ],
 
+  _permissionNotificationIDs: Object.values(PermissionUI)
+    .filter(value => value.prototype && value.prototype.notificationID)
+    .map(value => value.prototype.notificationID)
+    // Additionally include webRTC permission prompt which does not use PermissionUI
+    .concat(["webRTC-shareDevices"]),
+
   init() {
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "permissionsFullScreenAllowed",
+      "permissions.fullscreen.allowed"
+    );
+
     // called when we go into full screen, even if initiated by a web page script
     window.addEventListener("fullscreen", this, true);
     window.addEventListener("willenterfullscreen", this, true);
@@ -385,11 +399,6 @@ var FullScreen = {
           browser = event.target.ownerGlobal.docShell.chromeEventHandler;
         }
 
-        // Addon installation should be cancelled when entering fullscreen for security and usability reasons.
-        // Installation prompts in fullscreen can trick the user into installing unwanted addons.
-        // In fullscreen the notification box does not have a clear visual association with its parent anymore.
-        gXPInstallObserver.removeAllNotifications(browser);
-
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         this.enterDomFullscreen(browser);
         break;
@@ -398,6 +407,18 @@ var FullScreen = {
         TelemetryStopwatch.start("FULLSCREEN_CHANGE_MS");
         this.cleanupDomFullscreen();
         break;
+    }
+  },
+
+  _handlePermPromptShow() {
+    if (
+      !FullScreen.permissionsFullScreenAllowed &&
+      window.fullScreen &&
+      PopupNotifications.getNotification(
+        this._permissionNotificationIDs
+      ).filter(n => !n.dismissed).length > 0
+    ) {
+      this.exitDomFullScreen();
     }
   },
 
@@ -465,6 +486,14 @@ var FullScreen = {
       return;
     }
 
+    // Remove permission prompts when entering full-screen.
+    if (!FullScreen.permissionsFullScreenAllowed) {
+      let notifications = PopupNotifications.getNotification(
+        this._permissionNotificationIDs
+      ).filter(n => !n.dismissed);
+      PopupNotifications.remove(notifications, true);
+    }
+
     document.documentElement.setAttribute("inDOMFullscreen", true);
 
     if (gFindBarInitialized) {
@@ -478,6 +507,17 @@ var FullScreen = {
     // If a fullscreen window loses focus, we show a warning when the
     // fullscreen window is refocused.
     window.addEventListener("activate", this);
+
+    // Addon installation should be cancelled when entering fullscreen for security and usability reasons.
+    // Installation prompts in fullscreen can trick the user into installing unwanted addons.
+    // In fullscreen the notification box does not have a clear visual association with its parent anymore.
+    gXPInstallObserver.removeAllNotifications(aBrowser);
+
+    PopupNotifications.panel.addEventListener(
+      "popupshowing",
+      () => this._handlePermPromptShow(),
+      true
+    );
   },
 
   cleanup() {
@@ -490,6 +530,11 @@ var FullScreen = {
   },
 
   cleanupDomFullscreen() {
+    PopupNotifications.panel.removeEventListener(
+      "popupshowing",
+      () => this._handlePermPromptShow(),
+      true
+    );
     window.messageManager.broadcastAsyncMessage("DOMFullscreen:CleanUp");
 
     PointerlockFsWarning.close();
