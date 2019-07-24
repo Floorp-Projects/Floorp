@@ -76,9 +76,9 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
-confirm-delete-dialog-title = Confirm Deletion
-confirm-delete-dialog-message = Are you sure you want to delete this login?
+confirm-delete-dialog-title = Delete this login?
+confirm-delete-dialog-message = This action cannot be undone.
 confirm-delete-dialog-dismiss-button =
   .title = Cancel
 confirm-delete-dialog-cancel-button = Cancel
-confirm-delete-dialog-confirm-button = Delete login
+confirm-delete-dialog-confirm-button = Delete

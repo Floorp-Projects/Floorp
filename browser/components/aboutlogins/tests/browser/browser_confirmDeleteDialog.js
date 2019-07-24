@@ -29,12 +29,12 @@ add_task(async function test() {
 
     is(
       title.textContent,
-      "Confirm Deletion",
+      "Delete this login?",
       "Title contents should match l10n attribute set on outer element"
     );
     is(
       message.textContent,
-      "Are you sure you want to delete this login?",
+      "This action cannot be undone.",
       "Message contents should match l10n attribute set on outer element"
     );
     is(
@@ -44,7 +44,7 @@ add_task(async function test() {
     );
     is(
       confirmDeleteButton.textContent,
-      "Delete login",
+      "Delete",
       "Delete button contents should match l10n attribute set on outer element"
     );
 
