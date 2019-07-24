@@ -262,6 +262,8 @@ using namespace js::gc;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
+using mozilla::Nothing;
+using mozilla::Some;
 using mozilla::Swap;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
@@ -7128,8 +7130,9 @@ static bool ShouldSweepOnBackgroundThread(JS::GCReason reason) {
          CanUseExtraThreads();
 }
 
-void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
-                                 AutoGCSession& session) {
+void GCRuntime::incrementalSlice(SliceBudget& budget,
+                                 const MaybeInvocationKind& gckind,
+                                 JS::GCReason reason, AutoGCSession& session) {
   AutoDisableBarriers disableBarriers(rt);
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
@@ -7181,6 +7184,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
   switch (incrementalState) {
     case State::NotActive:
       incMajorGcNumber();
+      invocationKind = gckind.value();
       initialReason = reason;
       cleanUpEverything = ShouldCleanUpEverything(reason, invocationKind);
       sweepOnBackgroundThread = ShouldSweepOnBackgroundThread(reason);
@@ -7600,7 +7604,8 @@ void GCRuntime::maybeCallGCCallback(JSGCStatus status) {
  * implementation.
  */
 MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
-    bool nonincrementalByAPI, SliceBudget budget, JS::GCReason reason) {
+    bool nonincrementalByAPI, SliceBudget budget,
+    const MaybeInvocationKind& gckind, JS::GCReason reason) {
   // Assert if this is a GC unsafe region.
   rt->mainContextFromOwnThread()->verifyIsSafeToGC();
 
@@ -7612,8 +7617,8 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   AutoCallGCCallbacks callCallbacks(*this);
 
   ScheduleZones(this);
-  gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(), invocationKind, budget,
-                           reason);
+  gcstats::AutoGCSlice agc(stats(), scanZonesBeforeGC(),
+                           gckind.valueOr(invocationKind), budget, reason);
 
   auto result = budgetIncrementalGC(nonincrementalByAPI, reason, budget);
   if (result == IncrementalResult::ResetIncremental) {
@@ -7655,7 +7660,7 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
 
   gcTracer.traceMajorGCStart();
 
-  incrementalSlice(budget, reason, session);
+  incrementalSlice(budget, gckind, reason, session);
 
   chunkAllocationSinceLastGC = false;
 
@@ -7807,8 +7812,12 @@ bool GCRuntime::shouldRepeatForDeadZone(JS::GCReason reason) {
 }
 
 void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
+                        const MaybeInvocationKind& gckindArg,
                         JS::GCReason reason) {
   MOZ_ASSERT(reason != JS::GCReason::NO_REASON);
+
+  MaybeInvocationKind gckind = gckindArg;
+  MOZ_ASSERT_IF(!isIncrementalGCInProgress(), gckind.isSome());
 
   // Checks run for each request, even if we do not actually GC.
   checkCanCallAPI();
@@ -7835,7 +7844,7 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
   bool repeat;
   do {
     IncrementalResult cycleResult =
-        gcCycle(nonincrementalByAPI, budget, reason);
+        gcCycle(nonincrementalByAPI, budget, gckind, reason);
 
     if (reason == JS::GCReason::ABORT_GC) {
       MOZ_ASSERT(!isIncrementalGCInProgress());
@@ -7864,6 +7873,10 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
         repeat = true;
         reason = JS::GCReason::COMPARTMENT_REVIVED;
       }
+    }
+
+    if (repeat) {
+      gckind = Some(invocationKind);
     }
   } while (repeat);
 
@@ -7922,8 +7935,7 @@ void GCRuntime::gc(JSGCInvocationKind gckind, JS::GCReason reason) {
     return;
   }
 
-  invocationKind = gckind;
-  collect(true, SliceBudget::unlimited(), reason);
+  collect(true, SliceBudget::unlimited(), mozilla::Some(gckind), reason);
 }
 
 void GCRuntime::startGC(JSGCInvocationKind gckind, JS::GCReason reason,
@@ -7933,13 +7945,12 @@ void GCRuntime::startGC(JSGCInvocationKind gckind, JS::GCReason reason,
     gc(gckind, reason);
     return;
   }
-  invocationKind = gckind;
-  collect(false, defaultBudget(reason, millis), reason);
+  collect(false, defaultBudget(reason, millis), Some(gckind), reason);
 }
 
 void GCRuntime::gcSlice(JS::GCReason reason, int64_t millis) {
   MOZ_ASSERT(isIncrementalGCInProgress());
-  collect(false, defaultBudget(reason, millis), reason);
+  collect(false, defaultBudget(reason, millis), Nothing(), reason);
 }
 
 void GCRuntime::finishGC(JS::GCReason reason) {
@@ -7957,7 +7968,7 @@ void GCRuntime::finishGC(JS::GCReason reason) {
     isCompacting = false;
   }
 
-  collect(false, SliceBudget::unlimited(), reason);
+  collect(false, SliceBudget::unlimited(), Nothing(), reason);
 }
 
 void GCRuntime::abortGC() {
@@ -7965,7 +7976,7 @@ void GCRuntime::abortGC() {
   checkCanCallAPI();
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
-  collect(false, SliceBudget::unlimited(), JS::GCReason::ABORT_GC);
+  collect(false, SliceBudget::unlimited(), Nothing(), JS::GCReason::ABORT_GC);
 }
 
 static bool ZonesSelected(JSRuntime* rt) {
@@ -7982,8 +7993,7 @@ void GCRuntime::startDebugGC(JSGCInvocationKind gckind, SliceBudget& budget) {
   if (!ZonesSelected(rt)) {
     JS::PrepareForFullGC(rt->mainContextFromOwnThread());
   }
-  invocationKind = gckind;
-  collect(false, budget, JS::GCReason::DEBUG_GC);
+  collect(false, budget, Some(gckind), JS::GCReason::DEBUG_GC);
 }
 
 void GCRuntime::debugGCSlice(SliceBudget& budget) {
@@ -7991,7 +8001,7 @@ void GCRuntime::debugGCSlice(SliceBudget& budget) {
   if (!ZonesSelected(rt)) {
     JS::PrepareForIncrementalGC(rt->mainContextFromOwnThread());
   }
-  collect(false, budget, JS::GCReason::DEBUG_GC);
+  collect(false, budget, Nothing(), JS::GCReason::DEBUG_GC);
 }
 
 /* Schedule a full GC unless a zone will already be collected. */
@@ -8433,10 +8443,9 @@ void GCRuntime::runDebugGC() {
     budget = SliceBudget(WorkBudget(incrementalLimit));
 
     js::gc::State initialState = incrementalState;
-    if (!isIncrementalGCInProgress()) {
-      invocationKind = GC_SHRINK;
-    }
-    collect(false, budget, JS::GCReason::DEBUG_GC);
+    Maybe<JSGCInvocationKind> gckind =
+        isIncrementalGCInProgress() ? Nothing() : Some(GC_SHRINK);
+    collect(false, budget, gckind, JS::GCReason::DEBUG_GC);
 
     /* Reset the slice size when we get to the sweep or compact phases. */
     if ((initialState == State::Mark && incrementalState == State::Sweep) ||
@@ -8448,10 +8457,9 @@ void GCRuntime::runDebugGC() {
     // supplied budget is ignored by incrementalSlice.
     budget = SliceBudget(WorkBudget(1));
 
-    if (!isIncrementalGCInProgress()) {
-      invocationKind = GC_NORMAL;
-    }
-    collect(false, budget, JS::GCReason::DEBUG_GC);
+    Maybe<JSGCInvocationKind> gckind =
+        isIncrementalGCInProgress() ? Nothing() : Some(GC_NORMAL);
+    collect(false, budget, gckind, JS::GCReason::DEBUG_GC);
   } else if (hasZealMode(ZealMode::Compact)) {
     gc(GC_SHRINK, JS::GCReason::DEBUG_GC);
   } else {

@@ -593,7 +593,11 @@ class GCRuntime {
   MOZ_MUST_USE bool checkIfGCAllowedInCurrentState(JS::GCReason reason);
 
   gcstats::ZoneGCStats scanZonesBeforeGC();
+
+  using MaybeInvocationKind = mozilla::Maybe<JSGCInvocationKind>;
+
   void collect(bool nonincrementalByAPI, SliceBudget budget,
+               const MaybeInvocationKind& gckind,
                JS::GCReason reason) JS_HAZ_GC_CALL;
 
   /*
@@ -607,10 +611,11 @@ class GCRuntime {
    */
   MOZ_MUST_USE IncrementalResult gcCycle(bool nonincrementalByAPI,
                                          SliceBudget budget,
+                                         const MaybeInvocationKind& gckind,
                                          JS::GCReason reason);
   bool shouldRepeatForDeadZone(JS::GCReason reason);
-  void incrementalSlice(SliceBudget& budget, JS::GCReason reason,
-                        AutoGCSession& session);
+  void incrementalSlice(SliceBudget& budget, const MaybeInvocationKind& gckind,
+                        JS::GCReason reason, AutoGCSession& session);
   MOZ_MUST_USE bool shouldCollectNurseryForSlice(bool nonincrementalByAPI,
                                                  SliceBudget& budget);
 
