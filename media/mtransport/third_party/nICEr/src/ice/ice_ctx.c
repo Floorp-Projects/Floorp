@@ -420,7 +420,7 @@ int nr_ice_ctx_create(char *label, UINT4 flags, nr_ice_ctx **ctxp)
       }
     }
 
-    ctx->remote_addr=0;
+    ctx->target_for_default_local_address_lookup=0;
 
     STAILQ_INIT(&ctx->streams);
     STAILQ_INIT(&ctx->sockets);
@@ -457,7 +457,7 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
 
     RFREE(ctx->local_addrs);
 
-    RFREE(ctx->remote_addr);
+    RFREE(ctx->target_for_default_local_address_lookup);
 
     for (i = 0; i < ctx->turn_server_ct; i++) {
         RFREE(ctx->turn_servers[i].username);
@@ -612,36 +612,37 @@ static int nr_ice_ctx_pair_new_trickle_candidates(nr_ice_ctx *ctx, nr_ice_candid
    are sent. This lets us query the local address assigned to the socket by the
    kernel.
 
-   If the context's remote address is NULL, we can fall back on connecting to a
-   known public address (namely Google's):
+   If the context's remote address is NULL, then the application wasn't loaded
+   over the network, and we can fall back on connecting to a known public
+   address (namely Google's):
 
    IPv4: 8.8.8.8
    IPv6: 2001:4860:4860::8888
 */
-static int nr_ice_get_default_address(nr_ice_ctx *ctx, int ip_version, nr_transport_addr *addrp)
+static int nr_ice_get_default_address(nr_ice_ctx *ctx, int ip_version, nr_transport_addr* addrp)
   {
     int r,_status;
     nr_transport_addr addr, known_remote_addr;
-    nr_transport_addr *remote_addr=ctx->remote_addr;
+    nr_transport_addr *remote_addr=ctx->target_for_default_local_address_lookup;
     nr_socket *sock=0;
 
     switch(ip_version) {
       case NR_IPV4:
         if ((r=nr_str_port_to_transport_addr("0.0.0.0", 0, IPPROTO_UDP, &addr)))
           ABORT(r);
-        if (!remote_addr) {
+        if (!remote_addr || nr_transport_addr_is_loopback(remote_addr)) {
           if ((r=nr_str_port_to_transport_addr("8.8.8.8", 53, IPPROTO_UDP, &known_remote_addr)))
             ABORT(r);
-          remote_addr = &known_remote_addr;
+          remote_addr=&known_remote_addr;
         }
         break;
       case NR_IPV6:
         if ((r=nr_str_port_to_transport_addr("::0", 0, IPPROTO_UDP, &addr)))
           ABORT(r);
-        if (!remote_addr) {
+        if (!remote_addr || nr_transport_addr_is_loopback(remote_addr)) {
           if ((r=nr_str_port_to_transport_addr("2001:4860:4860::8888", 53, IPPROTO_UDP, &known_remote_addr)))
             ABORT(r);
-          remote_addr = &known_remote_addr;
+          remote_addr=&known_remote_addr;
         }
         break;
       default:
@@ -752,14 +753,23 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
           ctx->label,
           (char*)(ctx->flags & NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS?"yes":"no"));
     if ((!addr_ct) || (ctx->flags & NR_ICE_CTX_FLAGS_ONLY_DEFAULT_ADDRS)) {
-      /* Get just the default IPv4 and IPv6 addrs */
-      if(!nr_ice_get_default_local_address(ctx, NR_IPV4, local_addrs, addr_ct,
-                                           &default_addrs[default_addr_ct])) {
-        ++default_addr_ct;
-      }
-      if(!nr_ice_get_default_local_address(ctx, NR_IPV6, local_addrs, addr_ct,
-                                           &default_addrs[default_addr_ct])) {
-        ++default_addr_ct;
+      if (ctx->target_for_default_local_address_lookup) {
+        /* Get just the default IPv4 or IPv6 addr */
+        if(!nr_ice_get_default_local_address(
+               ctx, ctx->target_for_default_local_address_lookup->ip_version,
+               local_addrs, addr_ct, &default_addrs[default_addr_ct])) {
+          ++default_addr_ct;
+        }
+      } else {
+        /* Get just the default IPv4 and IPv6 addrs */
+        if(!nr_ice_get_default_local_address(ctx, NR_IPV4, local_addrs, addr_ct,
+                                             &default_addrs[default_addr_ct])) {
+          ++default_addr_ct;
+        }
+        if(!nr_ice_get_default_local_address(ctx, NR_IPV6, local_addrs, addr_ct,
+                                             &default_addrs[default_addr_ct])) {
+          ++default_addr_ct;
+        }
       }
       if (!default_addr_ct) {
         r_log(LOG_ICE,LOG_ERR,"ICE(%s): failed to find default addresses",ctx->label);
@@ -795,19 +805,19 @@ int nr_ice_set_local_addresses(nr_ice_ctx *ctx,
     return(_status);
   }
 
-int nr_ice_set_remote_address(nr_ice_ctx *ctx, const char *remote_ip, UINT2 remote_port)
+int nr_ice_set_target_for_default_local_address_lookup(nr_ice_ctx *ctx, const char *target_ip, UINT2 target_port)
   {
     int r,_status;
 
-    if (ctx->remote_addr) {
-      RFREE(ctx->remote_addr);
-      ctx->remote_addr=0;
+    if (ctx->target_for_default_local_address_lookup) {
+      RFREE(ctx->target_for_default_local_address_lookup);
+      ctx->target_for_default_local_address_lookup=0;
     }
 
-    if (!(ctx->remote_addr=RCALLOC(sizeof(nr_transport_addr))))
+    if (!(ctx->target_for_default_local_address_lookup=RCALLOC(sizeof(nr_transport_addr))))
       ABORT(R_NO_MEMORY);
 
-    if ((r=nr_str_port_to_transport_addr(remote_ip, remote_port, IPPROTO_UDP, ctx->remote_addr)))
+    if ((r=nr_str_port_to_transport_addr(target_ip, target_port, IPPROTO_UDP, ctx->target_for_default_local_address_lookup)))
       ABORT(r);
 
     _status=0;
