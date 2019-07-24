@@ -224,6 +224,10 @@ class NrIceCtx {
                                 bool tcp_enabled = true,
                                 bool allow_link_local = false);
 
+  // Set the IP address and port number for the remote. Must be called before
+  // SetStunAddrs.
+  void SetRemoteAddr(const std::string& remote_ip, uint16_t remote_port);
+
   // static GetStunAddrs for use in parent process to support
   // sandboxing restrictions
   static nsTArray<NrIceStunAddr> GetStunAddrs();

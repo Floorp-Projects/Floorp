@@ -236,6 +236,9 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   // Used to store the result of the stun addr IPC request
   nsTArray<NrIceStunAddr> mStunAddrs;
 
+  nsCString mRemoteIp;
+  int32_t mRemotePort;
+
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PeerConnectionMedia)
 };
 
