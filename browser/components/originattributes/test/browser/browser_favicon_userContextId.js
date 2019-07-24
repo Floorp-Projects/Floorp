@@ -2,6 +2,10 @@
  * Bug 1277803 - A test caes for testing favicon loading across different userContextId.
  */
 
+if (Services.prefs.getBoolPref("fission.autostart")) {
+  requestLongerTimeout(2);
+}
+
 let EventUtils = {};
 Services.scriptloader.loadSubScript(
   "chrome://mochikit/content/tests/SimpleTest/EventUtils.js",
