@@ -162,15 +162,22 @@ class MOZ_STACK_CLASS NumberFormatterSkeleton final {
    */
   UNumberFormatter* toFormatter(JSContext* cx, const char* locale);
 
-  enum class CurrencyDisplay { Code, Name, Symbol };
-
   /**
    * Set this skeleton to display a currency amount. |currency| must be a
    * three-letter currency code.
    *
    * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit
    */
-  MOZ_MUST_USE bool currency(CurrencyDisplay display, JSLinearString* currency);
+  MOZ_MUST_USE bool currency(JSLinearString* currency);
+
+  enum class CurrencyDisplay { Code, Name, Symbol, NarrowSymbol };
+
+  /**
+   * Set the currency display style for this skeleton.
+   *
+   * https://github.com/unicode-org/icu/blob/master/docs/userguide/format_parse/numbers/skeletons.md#unit-width
+   */
+  MOZ_MUST_USE bool currencyDisplay(CurrencyDisplay display);
 
   /**
    * Set this skeleton to display a unit amount. |unit| must be a well-formed

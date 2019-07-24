@@ -377,7 +377,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //
     //     // fields present only if style === "currency":
     //     currency: a well-formed currency code (IsWellFormedCurrencyCode),
-    //     currencyDisplay: "code" / "symbol" / "name",
+    //     currencyDisplay: "code" / "symbol" / "narrowSymbol" / "name",
     //     currencySign: "standard" / "accounting",
     //
     //     // fields present only if style === "unit":
@@ -467,7 +467,7 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
 
     // Step 18.
     var currencyDisplay = GetOption(options, "currencyDisplay", "string",
-                                    ["code", "symbol", "name"], "symbol");
+                                    ["code", "symbol", "narrowSymbol", "name"], "symbol");
     if (style === "currency")
         lazyNumberFormatData.currencyDisplay = currencyDisplay;
 
