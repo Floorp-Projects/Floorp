@@ -38,9 +38,7 @@
 :host(:not([data-editing])) input[type="password"],
 :host(:not([data-editing])) input[type="text"],
 :host(:not([data-editing])) input[type="url"] {
-  border: none;
-  background: none;
-  padding: 0;
+  all: unset;
   font-size: 1.1em;
   display: inline-block;
   width: -moz-available;
