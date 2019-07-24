@@ -92,6 +92,8 @@
   MACRO(CopyDataPropertiesUnfiltered, CopyDataPropertiesUnfiltered,            \
         "CopyDataPropertiesUnfiltered")                                        \
   MACRO(copyWithin, copyWithin, "copyWithin")                                  \
+  MACRO(compact, compact, "compact")                                           \
+  MACRO(compactDisplay, compactDisplay, "compactDisplay")                      \
   MACRO(count, count, "count")                                                 \
   MACRO(CreateResolvingFunctions, CreateResolvingFunctions,                    \
         "CreateResolvingFunctions")                                            \
@@ -141,6 +143,9 @@
   MACRO(escape, escape, "escape")                                              \
   MACRO(eval, eval, "eval")                                                    \
   MACRO(exec, exec, "exec")                                                    \
+  MACRO(exponentInteger, exponentInteger, "exponentInteger")                   \
+  MACRO(exponentMinusSign, exponentMinusSign, "exponentMinusSign")             \
+  MACRO(exponentSeparator, exponentSeparator, "exponentSeparator")             \
   MACRO(export, export_, "export")                                             \
   MACRO(extends, extends, "extends")                                           \
   MACRO(false, false_, "false")                                                \
@@ -299,6 +304,7 @@
   MACRO(noFilename, noFilename, "noFilename")                                  \
   MACRO(nonincrementalReason, nonincrementalReason, "nonincrementalReason")    \
   MACRO(noStack, noStack, "noStack")                                           \
+  MACRO(notation, notation, "notation")                                        \
   MACRO(notes, notes, "notes")                                                 \
   MACRO(NumberFormat, NumberFormat, "NumberFormat")                            \
   MACRO(numeric, numeric, "numeric")                                           \
