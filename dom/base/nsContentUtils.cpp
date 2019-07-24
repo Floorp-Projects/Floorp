@@ -3560,7 +3560,7 @@ void nsContentUtils::GetEventArgNames(int32_t aNameSpaceID, nsAtom* aEventName,
 
 // Note: The list of content bundles in nsStringBundle.cpp should be updated
 // whenever entries are added or removed from this list.
-static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
+static const char* gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT] = {
     // Must line up with the enum values in |PropertiesFile| enum.
     "chrome://global/locale/css.properties",
     "chrome://global/locale/xbl.properties",
@@ -3575,7 +3575,9 @@ static const char gPropertiesFiles[nsContentUtils::PropertiesFile_COUNT][56] = {
     "chrome://global/locale/commonDialogs.properties",
     "chrome://global/locale/mathml/mathml.properties",
     "chrome://global/locale/security/security.properties",
-    "chrome://necko/locale/necko.properties"};
+    "chrome://necko/locale/necko.properties",
+    "chrome://global/locale/layout/HtmlForm.properties",
+    "resource://gre/res/locale/layout/HtmlForm.properties"};
 
 /* static */
 nsresult nsContentUtils::EnsureStringBundle(PropertiesFile aFile) {
@@ -3624,10 +3626,22 @@ void nsContentUtils::AsyncPrecreateStringBundles() {
   }
 }
 
+static bool SpoofLocaleEnglish() {
+  // 0 - will prompt
+  // 1 - don't spoof
+  // 2 - spoof
+  return StaticPrefs::privacy_spoof_english() == 2;
+}
+
 /* static */
 nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
                                             const char* aKey,
                                             nsAString& aResult) {
+  // When we spoof English, use en-US default strings in HTML forms.
+  if (aFile == eFORMS_PROPERTIES_MAYBESPOOF && SpoofLocaleEnglish()) {
+    aFile = eFORMS_PROPERTIES_en_US;
+  }
+
   nsresult rv = EnsureStringBundle(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle* bundle = sStringBundles[aFile];
@@ -3638,6 +3652,11 @@ nsresult nsContentUtils::GetLocalizedString(PropertiesFile aFile,
 nsresult nsContentUtils::FormatLocalizedString(
     PropertiesFile aFile, const char* aKey, const nsTArray<nsString>& aParams,
     nsAString& aResult) {
+  // When we spoof English, use en-US default strings in HTML forms.
+  if (aFile == eFORMS_PROPERTIES_MAYBESPOOF && SpoofLocaleEnglish()) {
+    aFile = eFORMS_PROPERTIES_en_US;
+  }
+
   nsresult rv = EnsureStringBundle(aFile);
   NS_ENSURE_SUCCESS(rv, rv);
   nsIStringBundle* bundle = sStringBundles[aFile];
@@ -5124,11 +5143,13 @@ nsIWidget* nsContentUtils::GetTopLevelWidget(nsIWidget* aWidget) {
 const nsDependentString nsContentUtils::GetLocalizedEllipsis() {
   static char16_t sBuf[4] = {0, 0, 0, 0};
   if (!sBuf[0]) {
-    nsAutoString tmp;
-    Preferences::GetLocalizedString("intl.ellipsis", tmp);
-    uint32_t len =
-        std::min(uint32_t(tmp.Length()), uint32_t(ArrayLength(sBuf) - 1));
-    CopyUnicodeTo(tmp, 0, sBuf, len);
+    if (!SpoofLocaleEnglish()) {
+      nsAutoString tmp;
+      Preferences::GetLocalizedString("intl.ellipsis", tmp);
+      uint32_t len =
+          std::min(uint32_t(tmp.Length()), uint32_t(ArrayLength(sBuf) - 1));
+      CopyUnicodeTo(tmp, 0, sBuf, len);
+    }
     if (!sBuf[0]) sBuf[0] = char16_t(0x2026);
   }
   return nsDependentString(sBuf);
