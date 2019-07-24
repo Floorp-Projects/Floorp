@@ -642,7 +642,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
 
   /// Returns the number of actual textures that will be used to render this.
   /// For example in a lot of YUV cases it will be 3
-  virtual uint32_t NumSubTextures() const { return 1; }
+  virtual uint32_t NumSubTextures() { return 1; }
 
   enum ResourceUpdateOp {
     ADD_IMAGE,
@@ -779,7 +779,7 @@ class BufferTextureHost : public TextureHost {
   void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
-  uint32_t NumSubTextures() const override;
+  uint32_t NumSubTextures() override;
 
   void PushResourceUpdates(wr::TransactionBuilder& aResources,
                            ResourceUpdateOp aOp,
