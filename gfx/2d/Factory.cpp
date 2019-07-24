@@ -190,10 +190,6 @@ void mozilla_UnlockFTLibrary(FT_Library aFTLibrary) {
 namespace mozilla {
 namespace gfx {
 
-// In Gecko, this value is managed by gfx.logging.level and gets updated when
-// the pref change.
-Atomic<int32_t> LoggingPrefs::sGfxLogLevel(LOG_DEFAULT);
-
 #ifdef MOZ_ENABLE_FREETYPE
 FT_Library Factory::mFTLibrary = nullptr;
 StaticMutex Factory::mFTLock;
@@ -219,18 +215,9 @@ DrawEventRecorder* Factory::mRecorder;
 
 mozilla::gfx::Config* Factory::sConfig = nullptr;
 
-static void PrefChanged(const char* aPref, void*) {
-  mozilla::gfx::LoggingPrefs::sGfxLogLevel =
-      Preferences::GetInt(StaticPrefs::GetPrefName_gfx_logging_level(),
-                          StaticPrefs::GetPrefDefault_gfx_logging_level());
-}
-
 void Factory::Init(const Config& aConfig) {
   MOZ_ASSERT(!sConfig);
   sConfig = new Config(aConfig);
-  Preferences::RegisterCallback(
-      PrefChanged,
-      nsDependentCString(StaticPrefs::GetPrefName_gfx_logging_level()));
 }
 
 void Factory::ShutDown() {
