@@ -8,7 +8,6 @@
 #define GFX_FRAMEMETRICS_H
 
 #include <stdint.h>  // for uint8_t, uint32_t, uint64_t
-#include <map>
 #include "Units.h"                  // for CSSRect, CSSPixel, etc
 #include "mozilla/DefineEnum.h"     // for MOZ_DEFINE_ENUM
 #include "mozilla/HashFunctions.h"  // for HashGeneric
@@ -21,6 +20,7 @@
 #include "mozilla/layers/ScrollableLayerGuid.h"  // for ScrollableLayerGuid
 #include "mozilla/StaticPtr.h"                   // for StaticAutoPtr
 #include "mozilla/TimeStamp.h"                   // for TimeStamp
+#include "nsDataHashtable.h"                     // for nsDataHashtable
 #include "nsString.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "PLDHashTable.h"  // for PLDHashNumber
@@ -1099,7 +1099,7 @@ struct ScrollMetadata {
   // Please add new fields above this comment.
 };
 
-typedef std::map<ScrollableLayerGuid::ViewID, ScrollUpdateInfo>
+typedef nsDataHashtable<ScrollableLayerGuid::ViewIDHashKey, ScrollUpdateInfo>
     ScrollUpdatesMap;
 
 }  // namespace layers

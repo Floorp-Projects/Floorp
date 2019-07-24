@@ -21,6 +21,7 @@
 #include "mozilla/layers/RenderRootBoundary.h"
 #include "mozilla/layers/WebRenderMessageUtils.h"
 #include "mozilla/webrender/WebRenderTypes.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/Maybe.h"
 #include "nsTArrayForwardDeclare.h"
 
@@ -199,8 +200,7 @@ class WebRenderScrollData final {
   void SetPaintSequenceNumber(uint32_t aPaintSequenceNumber);
   uint32_t GetPaintSequenceNumber() const;
 
-  void ApplyUpdates(const ScrollUpdatesMap& aUpdates,
-                    uint32_t aPaintSequenceNumber);
+  void ApplyUpdates(ScrollUpdatesMap& aUpdates, uint32_t aPaintSequenceNumber);
 
   friend struct IPC::ParamTraits<WebRenderScrollData>;
 
@@ -223,7 +223,7 @@ class WebRenderScrollData final {
   // valid on both the child and parent.
   // The key into this map is the scrollId of a ScrollMetadata, and the value is
   // an index into the mScrollMetadatas array.
-  std::map<ScrollableLayerGuid::ViewID, size_t> mScrollIdMap;
+  HashMap<ScrollableLayerGuid::ViewID, size_t> mScrollIdMap;
 
   // A list of all the unique ScrollMetadata objects from the layer tree. Each
   // ScrollMetadata in this list must have a unique scroll id.

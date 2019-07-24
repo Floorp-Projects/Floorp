@@ -122,6 +122,7 @@ void WebRenderBridgeChild::EndTransaction(
                (XRE_IsParentProcess() &&
                 StaticPrefs::gfx_webrender_split_render_roots_AtStartup()));
     renderRoot.mCommands = std::move(mParentCommands[renderRoot.mRenderRoot]);
+    renderRoot.mIdNamespace = mIdNamespace;
   }
 
   nsTArray<CompositionPayload> payloads;
@@ -129,11 +130,10 @@ void WebRenderBridgeChild::EndTransaction(
     mManager->TakeCompositionPayloads(payloads);
   }
 
-  this->SendSetDisplayList(std::move(aRenderRoots), mDestroyedActors,
-                           GetFwdTransactionId(), aTransactionId, mIdNamespace,
-                           aContainsSVGGroup, aVsyncId, aVsyncStartTime,
-                           aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime,
-                           payloads);
+  this->SendSetDisplayList(
+    std::move(aRenderRoots), mDestroyedActors, GetFwdTransactionId(),
+    aTransactionId, aContainsSVGGroup, aVsyncId, aVsyncStartTime,
+    aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime, payloads);
 
   // With multiple render roots, we may not have sent all of our
   // mParentCommands, so go ahead and go through our mParentCommands and ensure
@@ -146,8 +146,8 @@ void WebRenderBridgeChild::EndTransaction(
 void WebRenderBridgeChild::EndEmptyTransaction(
     const FocusTarget& aFocusTarget,
     nsTArray<RenderRootUpdates>& aRenderRootUpdates,
-    uint32_t aPaintSequenceNumber, TransactionId aTransactionId,
-    const mozilla::VsyncId& aVsyncId, const mozilla::TimeStamp& aVsyncStartTime,
+    TransactionId aTransactionId, const mozilla::VsyncId& aVsyncId,
+    const mozilla::TimeStamp& aVsyncStartTime,
     const mozilla::TimeStamp& aRefreshStartTime,
     const mozilla::TimeStamp& aTxnStartTime, const nsCString& aTxnURL) {
   MOZ_ASSERT(!mDestroyed);
@@ -168,10 +168,9 @@ void WebRenderBridgeChild::EndEmptyTransaction(
   }
 
   this->SendEmptyTransaction(
-      aFocusTarget, aPaintSequenceNumber, std::move(aRenderRootUpdates),
-      mDestroyedActors, GetFwdTransactionId(), aTransactionId, mIdNamespace,
-      aVsyncId, aVsyncStartTime, aRefreshStartTime, aTxnStartTime, aTxnURL,
-      fwdTime, payloads);
+      aFocusTarget, std::move(aRenderRootUpdates), mDestroyedActors,
+      GetFwdTransactionId(), aTransactionId, aVsyncId, aVsyncStartTime,
+      aRefreshStartTime, aTxnStartTime, aTxnURL, fwdTime, payloads);
 
   // With multiple render roots, we may not have sent all of our
   // mParentCommands, so go ahead and go through our mParentCommands and ensure

@@ -27,6 +27,7 @@ namespace layers {
 struct ScrollableLayerGuid {
   // We use IDs to identify frames across processes.
   typedef uint64_t ViewID;
+  typedef nsUint64HashKey ViewIDHashKey;
   static const ViewID NULL_SCROLL_ID;  // This container layer does not scroll.
   static const ViewID START_SCROLL_ID = 2;  // This is the ID that scrolling
                                             // subframes will begin at.

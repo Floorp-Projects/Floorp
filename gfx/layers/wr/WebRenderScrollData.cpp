@@ -158,13 +158,14 @@ WebRenderLayerManager* WebRenderScrollData::GetManager() const {
 
 size_t WebRenderScrollData::AddMetadata(const ScrollMetadata& aMetadata) {
   ScrollableLayerGuid::ViewID scrollId = aMetadata.GetMetrics().GetScrollId();
-  auto insertResult = mScrollIdMap.insert(std::make_pair(scrollId, 0));
-  if (insertResult.second) {
-    // Insertion took place, therefore it's a scrollId we hadn't seen before
-    insertResult.first->second = mScrollMetadatas.Length();
+  auto p = mScrollIdMap.lookupForAdd(scrollId);
+  if (!p) {
+    // It's a scrollId we hadn't seen before
+    bool ok = mScrollIdMap.add(p, scrollId, mScrollMetadatas.Length());
+    MOZ_RELEASE_ASSERT(ok);
     mScrollMetadatas.AppendElement(aMetadata);
   }  // else we didn't insert, because it already existed
-  return insertResult.first->second;
+  return p->value();
 }
 
 size_t WebRenderScrollData::AddLayerData(
@@ -193,8 +194,8 @@ const ScrollMetadata& WebRenderScrollData::GetScrollMetadata(
 
 Maybe<size_t> WebRenderScrollData::HasMetadataFor(
     const ScrollableLayerGuid::ViewID& aScrollId) const {
-  auto it = mScrollIdMap.find(aScrollId);
-  return (it == mScrollIdMap.end() ? Nothing() : Some(it->second));
+  auto ptr = mScrollIdMap.lookup(aScrollId);
+  return (ptr ? Some(ptr->value()) : Nothing());
 }
 
 void WebRenderScrollData::SetIsFirstPaint() { mIsFirstPaint = true; }
@@ -210,12 +211,11 @@ uint32_t WebRenderScrollData::GetPaintSequenceNumber() const {
   return mPaintSequenceNumber;
 }
 
-void WebRenderScrollData::ApplyUpdates(const ScrollUpdatesMap& aUpdates,
+void WebRenderScrollData::ApplyUpdates(ScrollUpdatesMap& aUpdates,
                                        uint32_t aPaintSequenceNumber) {
-  for (const auto& update : aUpdates) {
-    if (Maybe<size_t> index = HasMetadataFor(update.first)) {
-      mScrollMetadatas[*index].GetMetrics().UpdatePendingScrollInfo(
-          update.second);
+  for (auto it = aUpdates.Iter(); !it.Done(); it.Next()) {
+    if (Maybe<size_t> index = HasMetadataFor(it.Key())) {
+      mScrollMetadatas[*index].GetMetrics().UpdatePendingScrollInfo(it.Data());
     }
   }
   mPaintSequenceNumber = aPaintSequenceNumber;
@@ -234,7 +234,8 @@ bool WebRenderScrollData::RepopulateMap() {
   for (size_t i = 0; i < mScrollMetadatas.Length(); i++) {
     ScrollableLayerGuid::ViewID scrollId =
         mScrollMetadatas[i].GetMetrics().GetScrollId();
-    mScrollIdMap.emplace(scrollId, i);
+    bool ok = mScrollIdMap.putNew(scrollId, i);
+    MOZ_RELEASE_ASSERT(ok);
   }
   return true;
 }
