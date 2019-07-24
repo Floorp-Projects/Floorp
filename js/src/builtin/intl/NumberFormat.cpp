@@ -256,19 +256,18 @@ bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-bool js::intl::NumberFormatterSkeleton::currency(CurrencyDisplay display,
-                                                 JSLinearString* currency) {
+bool js::intl::NumberFormatterSkeleton::currency(JSLinearString* currency) {
   MOZ_ASSERT(currency->length() == 3,
              "IsWellFormedCurrencyCode permits only length-3 strings");
 
   char16_t currencyChars[] = {currency->latin1OrTwoByteChar(0),
                               currency->latin1OrTwoByteChar(1),
                               currency->latin1OrTwoByteChar(2), '\0'};
+  return append(u"currency/") && append(currencyChars) && append(' ');
+}
 
-  if (!(append(u"currency/") && append(currencyChars) && append(' '))) {
-    return false;
-  }
-
+bool js::intl::NumberFormatterSkeleton::currencyDisplay(
+    CurrencyDisplay display) {
   switch (display) {
     case CurrencyDisplay::Code:
       return appendToken(u"unit-width-iso-code");
@@ -277,8 +276,9 @@ bool js::intl::NumberFormatterSkeleton::currency(CurrencyDisplay display,
     case CurrencyDisplay::Symbol:
       // Default, no additional tokens needed.
       return true;
+    case CurrencyDisplay::NarrowSymbol:
+      return appendToken(u"unit-width-narrow");
   }
-
   MOZ_CRASH("unexpected currency display type");
 }
 
@@ -539,7 +539,18 @@ static UNumberFormatter* NewUNumberFormatter(
     }
 
     if (StringEqualsAscii(style, "currency")) {
-      using CurrencyDisplay = intl::NumberFormatterSkeleton::CurrencyDisplay;
+      if (!GetProperty(cx, internals, internals, cx->names().currency,
+                       &value)) {
+        return nullptr;
+      }
+      JSLinearString* currency = value.toString()->ensureLinear(cx);
+      if (!currency) {
+        return nullptr;
+      }
+
+      if (!skeleton.currency(currency)) {
+        return nullptr;
+      }
 
       if (!GetProperty(cx, internals, internals, cx->names().currencyDisplay,
                        &value)) {
@@ -550,26 +561,21 @@ static UNumberFormatter* NewUNumberFormatter(
         return nullptr;
       }
 
+      using CurrencyDisplay = intl::NumberFormatterSkeleton::CurrencyDisplay;
+
       CurrencyDisplay display;
       if (StringEqualsAscii(currencyDisplay, "code")) {
         display = CurrencyDisplay::Code;
       } else if (StringEqualsAscii(currencyDisplay, "symbol")) {
         display = CurrencyDisplay::Symbol;
+      } else if (StringEqualsAscii(currencyDisplay, "narrowSymbol")) {
+        display = CurrencyDisplay::NarrowSymbol;
       } else {
         MOZ_ASSERT(StringEqualsAscii(currencyDisplay, "name"));
         display = CurrencyDisplay::Name;
       }
 
-      if (!GetProperty(cx, internals, internals, cx->names().currency,
-                       &value)) {
-        return nullptr;
-      }
-      JSLinearString* currency = value.toString()->ensureLinear(cx);
-      if (!currency) {
-        return nullptr;
-      }
-
-      if (!skeleton.currency(display, currency)) {
+      if (!skeleton.currencyDisplay(display)) {
         return nullptr;
       }
 
