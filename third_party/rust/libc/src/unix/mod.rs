@@ -3,15 +3,6 @@
 //! More functions and definitions can be found in the more specific modules
 //! according to the platform in question.
 
-pub type int8_t = i8;
-pub type int16_t = i16;
-pub type int32_t = i32;
-pub type int64_t = i64;
-pub type uint8_t = u8;
-pub type uint16_t = u16;
-pub type uint32_t = u32;
-pub type uint64_t = u64;
-
 pub type c_schar = i8;
 pub type c_uchar = u8;
 pub type c_short = i16;
@@ -45,12 +36,7 @@ impl ::Copy for DIR {}
 impl ::Clone for DIR {
     fn clone(&self) -> DIR { *self }
 }
-#[cfg_attr(feature = "extra_traits", derive(Debug))]
-pub enum locale_t {}
-impl ::Copy for locale_t {}
-impl ::Clone for locale_t {
-    fn clone(&self) -> locale_t { *self }
-}
+pub type locale_t = *mut :: c_void;
 
 s! {
     pub struct group {
@@ -223,16 +209,20 @@ pub const DT_REG: u8 = 8;
 pub const DT_LNK: u8 = 10;
 pub const DT_SOCK: u8 = 12;
 
-pub const FD_CLOEXEC: ::c_int = 0x1;
+cfg_if! {
+    if #[cfg(not(target_os = "redox"))] {
+        pub const FD_CLOEXEC: ::c_int = 0x1;
+    }
+}
 
 pub const USRQUOTA: ::c_int = 0;
 pub const GRPQUOTA: ::c_int = 1;
 
 pub const SIGIOT: ::c_int = 6;
 
-pub const S_ISUID: ::c_int = 0x800;
-pub const S_ISGID: ::c_int = 0x400;
-pub const S_ISVTX: ::c_int = 0x200;
+pub const S_ISUID: ::mode_t = 0x800;
+pub const S_ISGID: ::mode_t = 0x400;
+pub const S_ISVTX: ::mode_t = 0x200;
 
 pub const IF_NAMESIZE: ::size_t = 16;
 pub const IFNAMSIZ: ::size_t = IF_NAMESIZE;
@@ -303,7 +293,7 @@ pub const ATF_USETRAILERS: ::c_int = 0x10;
 cfg_if! {
     if #[cfg(target_os = "l4re")] {
         // required libraries for L4Re are linked externally, ATM
-    } else if #[cfg(feature = "use_std")] {
+    } else if #[cfg(feature = "std")] {
         // cargo build, don't pull in anything extra as the libstd dep
         // already pulls in all libs.
     } else if #[cfg(target_env = "musl")] {
@@ -327,8 +317,7 @@ cfg_if! {
     } else if #[cfg(any(target_os = "macos",
                         target_os = "ios",
                         target_os = "android",
-                        target_os = "openbsd",
-                        target_os = "bitrig"))] {
+                        target_os = "openbsd"))] {
         #[link(name = "c")]
         #[link(name = "m")]
         extern {}
@@ -348,6 +337,13 @@ cfg_if! {
     } else if #[cfg(target_env = "illumos")] {
         #[link(name = "c")]
         #[link(name = "m")]
+        extern {}
+    } else if #[cfg(target_os = "redox")] {
+        #[cfg_attr(feature = "rustc-dep-of-std",
+                   link(name = "c", kind = "static-nobundle",
+                        cfg(target_feature = "crt-static")))]
+        #[cfg_attr(feature = "rustc-dep-of-std",
+                   link(name = "c", cfg(not(target_feature = "crt-static"))))]
         extern {}
     } else {
         #[link(name = "c")]
@@ -512,8 +508,11 @@ extern {
     pub fn snprintf(s: *mut ::c_char, n: ::size_t,
                     format: *const ::c_char, ...) -> ::c_int;
     pub fn sprintf(s: *mut ::c_char, format: *const ::c_char, ...) -> ::c_int;
+    #[cfg_attr(target_os = "linux", link_name = "__isoc99_fscanf")]
     pub fn fscanf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
+    #[cfg_attr(target_os = "linux", link_name = "__isoc99_scanf")]
     pub fn scanf(format: *const ::c_char, ...) -> ::c_int;
+    #[cfg_attr(target_os = "linux", link_name = "__isoc99_sscanf")]
     pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...) -> ::c_int;
     pub fn getchar_unlocked() -> ::c_int;
     pub fn putchar_unlocked(c: ::c_int) -> ::c_int;
@@ -567,14 +566,20 @@ extern {
 
     #[cfg_attr(target_os = "macos", link_name = "fstat$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__fstat50")]
-    #[cfg_attr(target_os = "freebsd", link_name = "fstat@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "fstat@FBSD_1.0"
+    )]
     pub fn fstat(fildes: ::c_int, buf: *mut stat) -> ::c_int;
 
     pub fn mkdir(path: *const c_char, mode: mode_t) -> ::c_int;
 
     #[cfg_attr(target_os = "macos", link_name = "stat$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__stat50")]
-    #[cfg_attr(target_os = "freebsd", link_name = "stat@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "stat@FBSD_1.0"
+    )]
     pub fn stat(path: *const c_char, buf: *mut stat) -> ::c_int;
 
     pub fn pclose(stream: *mut ::FILE) -> ::c_int;
@@ -608,13 +613,23 @@ extern {
 
     #[cfg_attr(target_os = "macos", link_name = "readdir$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__readdir30")]
-    #[cfg_attr(target_os = "freebsd", link_name = "readdir@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "readdir@FBSD_1.0"
+    )]
     pub fn readdir(dirp: *mut ::DIR) -> *mut ::dirent;
     #[cfg_attr(target_os = "macos", link_name = "readdir_r$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__readdir_r30")]
-    #[cfg_attr(any(target_os = "solaris", target_os = "illumos"),
-               link_name = "__posix_readdir_r")]
-    #[cfg_attr(target_os = "freebsd", link_name = "readdir_r@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "readdir_r@FBSD_1.0"
+    )]
+    /// The 64-bit libc on Solaris and illumos only has readdir_r.  If a
+    /// 32-bit Solaris or illumos target is ever created, it should use
+    /// __posix_readdir_r.  See libc(3LIB) on Solaris or illumos:
+    /// https://illumos.org/man/3lib/libc
+    /// https://docs.oracle.com/cd/E36784_01/html/E36873/libc-3lib.html
+    /// https://www.unix.com/man-page/opensolaris/3LIB/libc/
     pub fn readdir_r(dirp: *mut ::DIR, entry: *mut ::dirent,
                      result: *mut *mut ::dirent) -> ::c_int;
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
@@ -637,7 +652,10 @@ extern {
                     owner: ::uid_t, group: ::gid_t,
                     flags: ::c_int) -> ::c_int;
     #[cfg_attr(target_os = "macos", link_name = "fstatat$INODE64")]
-    #[cfg_attr(target_os = "freebsd", link_name = "fstatat@FBSD_1.1")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "fstatat@FBSD_1.1"
+    )]
     pub fn fstatat(dirfd: ::c_int, pathname: *const ::c_char,
                    buf: *mut stat, flags: ::c_int) -> ::c_int;
     pub fn linkat(olddirfd: ::c_int, oldpath: *const ::c_char,
@@ -736,6 +754,10 @@ extern {
     pub fn tcgetpgrp(fd: ::c_int) -> pid_t;
     pub fn tcsetpgrp(fd: ::c_int, pgrp: ::pid_t) -> ::c_int;
     pub fn ttyname(fd: ::c_int) -> *mut c_char;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "ttyname_r$UNIX2003")]
+    pub fn ttyname_r(fd: ::c_int,
+                     buf: *mut c_char, buflen: ::size_t) -> ::c_int;
     pub fn unlink(c: *const c_char) -> ::c_int;
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
                link_name = "wait$UNIX2003")]
@@ -792,7 +814,10 @@ extern {
 
     #[cfg_attr(target_os = "macos", link_name = "lstat$INODE64")]
     #[cfg_attr(target_os = "netbsd", link_name = "__lstat50")]
-    #[cfg_attr(target_os = "freebsd", link_name = "lstat@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "lstat@FBSD_1.0"
+    )]
     pub fn lstat(path: *const c_char, buf: *mut stat) -> ::c_int;
 
     #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
@@ -816,12 +841,6 @@ extern {
 
     pub fn signal(signum: ::c_int, handler: sighandler_t) -> sighandler_t;
 
-    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
-               link_name = "getrlimit$UNIX2003")]
-    pub fn getrlimit(resource: ::c_int, rlim: *mut rlimit) -> ::c_int;
-    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
-               link_name = "setrlimit$UNIX2003")]
-    pub fn setrlimit(resource: ::c_int, rlim: *const rlimit) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__getrusage50")]
     pub fn getrusage(resource: ::c_int, usage: *mut rusage) -> ::c_int;
 
@@ -832,9 +851,6 @@ extern {
 
     pub fn flock(fd: ::c_int, operation: ::c_int) -> ::c_int;
 
-    #[cfg_attr(target_os = "netbsd", link_name = "__gettimeofday50")]
-    pub fn gettimeofday(tp: *mut ::timeval,
-                        tz: *mut ::c_void) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__times13")]
     pub fn times(buf: *mut ::tms) -> ::clock_t;
 
@@ -917,10 +933,6 @@ extern {
     pub fn pthread_rwlockattr_init(attr: *mut pthread_rwlockattr_t) -> ::c_int;
     pub fn pthread_rwlockattr_destroy(attr: *mut pthread_rwlockattr_t)
                                       -> ::c_int;
-    #[cfg_attr(all(target_os = "linux", not(target_env = "musl")),
-               link_name = "__xpg_strerror_r")]
-    pub fn strerror_r(errnum: ::c_int, buf: *mut c_char,
-                      buflen: ::size_t) -> ::c_int;
 
     #[cfg_attr(target_os = "illumos", link_name = "__xnet_getsockopt")]
     pub fn getsockopt(sockfd: ::c_int,
@@ -979,7 +991,10 @@ extern {
     pub fn difftime(time1: time_t, time0: time_t) -> ::c_double;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__mknod50")]
-    #[cfg_attr(target_os = "freebsd", link_name = "mknod@FBSD_1.0")]
+    #[cfg_attr(
+        all(target_os = "freebsd", not(freebsd12)),
+        link_name = "mknod@FBSD_1.0"
+    )]
     pub fn mknod(pathname: *const ::c_char, mode: ::mode_t,
                  dev: ::dev_t) -> ::c_int;
     pub fn gethostname(name: *mut ::c_char, len: ::size_t) -> ::c_int;
@@ -1136,15 +1151,14 @@ cfg_if! {
     } else if #[cfg(any(target_os = "linux",
                         target_os = "android",
                         target_os = "emscripten"))] {
-        mod notbsd;
-        pub use self::notbsd::*;
+        mod linux_like;
+        pub use self::linux_like::*;
     } else if #[cfg(any(target_os = "macos",
                         target_os = "ios",
                         target_os = "freebsd",
                         target_os = "dragonfly",
                         target_os = "openbsd",
-                        target_os = "netbsd",
-                        target_os = "bitrig"))] {
+                        target_os = "netbsd"))] {
         mod bsd;
         pub use self::bsd::*;
     } else if #[cfg(any(target_os = "solaris",
@@ -1157,6 +1171,9 @@ cfg_if! {
     } else if #[cfg(target_os = "hermit")] {
         mod hermit;
         pub use self::hermit::*;
+    } else if #[cfg(target_os = "redox")] {
+        mod redox;
+        pub use self::redox::*;
     } else {
         // Unknown target_os
     }
