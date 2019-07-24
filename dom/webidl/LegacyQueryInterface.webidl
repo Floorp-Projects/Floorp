@@ -16,7 +16,6 @@ interface LegacyQueryInterface {
   nsISupports QueryInterface(any iid);
 };
 
-DOMParser implements LegacyQueryInterface;
 Document implements LegacyQueryInterface;
 DocumentFragment implements LegacyQueryInterface;
 Element implements LegacyQueryInterface;
