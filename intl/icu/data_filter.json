@@ -27,9 +27,6 @@
         },
         "translit": {
             "filterType": "exclude"
-        },
-        "unit_tree": {
-            "filterType": "exclude"
         }
     },
     "resourceFilters": [
@@ -39,6 +36,67 @@
             ],
             "rules": [
                 "-/zoneStrings/*/ec"
+            ]
+        },
+        {
+            "categories": [
+                "unit_tree"
+            ],
+            "rules": [
+                "-/*",
+
+                "+/*/area/acre",
+                "+/*/digital/bit",
+                "+/*/digital/byte",
+                "+/*/temperature/celsius",
+                "+/*/length/centimeter",
+                "+/*/duration/day",
+                "+/*/angle/degree",
+                "+/*/temperature/fahrenheit",
+                "+/*/volume/fluid-ounce",
+                "+/*/length/foot",
+                "+/*/volume/gallon",
+                "+/*/digital/gigabit",
+                "+/*/digital/gigabyte",
+                "+/*/mass/gram",
+                "+/*/area/hectare",
+                "+/*/duration/hour",
+                "+/*/length/inch",
+                "+/*/digital/kilobit",
+                "+/*/digital/kilobyte",
+                "+/*/mass/kilogram",
+                "+/*/length/kilometer",
+                "+/*/volume/liter",
+                "+/*/digital/megabit",
+                "+/*/digital/megabyte",
+                "+/*/length/meter",
+                "+/*/length/mile",
+                "+/*/length/mile-scandinavian",
+                "+/*/volume/milliliter",
+                "+/*/length/millimeter",
+                "+/*/duration/millisecond",
+                "+/*/duration/minute",
+                "+/*/duration/month",
+                "+/*/mass/ounce",
+                "+/*/concentr/percent",
+                "+/*/digital/petabyte",
+                "+/*/mass/pound",
+                "+/*/duration/second",
+                "+/*/mass/stone",
+                "+/*/digital/terabit",
+                "+/*/digital/terabyte",
+                "+/*/duration/week",
+                "+/*/length/yard",
+                "+/*/duration/year",
+
+                "+/*/compound",
+                "+/*/speed/kilometer-per-hour",
+                "+/*/consumption/liter-per-kilometer",
+                "+/*/speed/meter-per-second",
+                "+/*/consumption/mile-per-gallon",
+                "+/*/speed/mile-per-hour",
+
+                "-/*/dnam"
             ]
         }
     ]
