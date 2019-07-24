@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import
 
-from abc import ABCMeta, abstractmethod
 import json
 import os
 import posixpath
@@ -79,11 +78,8 @@ class SignalHandlerException(Exception):
     pass
 
 
-class Perftest(object):
-    """Abstract base class for perftests that execute via a subharness,
-either Raptor or browsertime."""
-
-    __metaclass__ = ABCMeta
+class Raptor(object):
+    """Container class for Raptor"""
 
     def __init__(self, app, binary, run_local=False, obj_path=None, profile_class=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
@@ -120,6 +116,8 @@ either Raptor or browsertime."""
             self.config['e10s'] = False
 
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
+        self.raptor_webext = None
+        self.control_server = None
         self.playback = None
         self.benchmark = None
         self.benchmark_port = 0
@@ -143,23 +141,9 @@ either Raptor or browsertime."""
 
         # setup the control server
         self.results_handler = RaptorResultsHandler(self.config)
+        self.start_control_server()
 
         self.build_browser_profile()
-
-    def build_browser_profile(self):
-        self.profile = create_profile(self.profile_class)
-
-        # Merge extra profile data from testing/profiles
-        with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
-            base_profiles = json.load(fh)['raptor']
-
-        for profile in base_profiles:
-            path = os.path.join(self.profile_data_dir, profile)
-            LOG.info("Merging profile: {}".format(path))
-            self.profile.merge(path)
-
-        # share the profile dir with the config and the control server
-        self.config['local_profile_dir'] = self.profile.profile
 
     @property
     def profile_data_dir(self):
@@ -169,78 +153,10 @@ either Raptor or browsertime."""
             return os.path.join(build.topsrcdir, 'testing', 'profiles')
         return os.path.join(here, 'profile_data')
 
-    @abstractmethod
     def check_for_crashes(self):
-        pass
-
-    @abstractmethod
-    def run_test_setup(self, test):
-        LOG.info("starting test: %s" % test['name'])
-
-    def run_tests(self, tests, test_names):
-        try:
-            for test in tests:
-                try:
-                    self.run_test(test, timeout=int(test.get('page_timeout')))
-                finally:
-                    self.run_test_teardown(test)
-
-            return self.process_results(test_names)
-
-        finally:
-            self.clean_up()
-
-    @abstractmethod
-    def run_test(self, test, timeout):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def run_test_teardown(self, test):
-        self.check_for_crashes()
-
-        # gecko profiling symbolication
-        if self.config['gecko_profile'] is True:
-            self.gecko_profiler.symbolicate()
-            # clean up the temp gecko profiling folders
-            LOG.info("cleaning up after gecko profiling")
-            self.gecko_profiler.clean()
-
-    def process_results(self, test_names):
-        # when running locally output results in build/raptor.json; when running
-        # in production output to a local.json to be turned into tc job artifact
-        if self.config.get('run_local', False):
-            if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
-                raptor_json_path = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'],
-                                                'testing', 'mozharness', 'build', 'raptor.json')
-            else:
-                raptor_json_path = os.path.join(here, 'raptor.json')
-        else:
-            raptor_json_path = os.path.join(os.getcwd(), 'local.json')
-
-        self.config['raptor_json_path'] = raptor_json_path
-        return self.results_handler.summarize_and_output(self.config, test_names)
-
-    @abstractmethod
-    def clean_up(self):
-        pass
-
-    def get_page_timeout_list(self):
-        return self.results_handler.page_timeout_list
-
-
-class Raptor(Perftest):
-    """Container class for Raptor"""
-
-    def __init__(self, *args, **kwargs):
-        super(Raptor, self).__init__(*args, **kwargs)
-
-        self.raptor_webext = None
-        self.control_server = None
-        self.start_control_server()
+        raise NotImplementedError
 
     def run_test_setup(self, test):
-        super(Raptor, self).run_test_setup(test)
-
         LOG.info("starting raptor test: %s" % test['name'])
         LOG.info("test settings: %s" % str(test))
         LOG.info("raptor config: %s" % str(self.config))
@@ -325,13 +241,20 @@ class Raptor(Perftest):
                     raise RuntimeError("Test failed to finish. "
                                        "Application timed out after {} seconds".format(timeout))
 
-    def run_test_teardown(self, test):
-        super(Raptor, self).run_test_teardown(test)
+    def run_test_teardown(self):
+        self.check_for_crashes()
 
         if self.playback is not None:
             self.playback.stop()
 
         self.remove_raptor_webext()
+
+        # gecko profiling symbolication
+        if self.config['gecko_profile'] is True:
+            self.gecko_profiler.symbolicate()
+            # clean up the temp gecko profiling folders
+            LOG.info("cleaning up after gecko profiling")
+            self.gecko_profiler.clean()
 
     def set_browser_test_prefs(self, raw_prefs):
         # add test specific preferences
@@ -339,8 +262,19 @@ class Raptor(Perftest):
         self.profile.set_preferences(json.loads(raw_prefs))
 
     def build_browser_profile(self):
-        super(Raptor, self).build_browser_profile(self)
+        self.profile = create_profile(self.profile_class)
 
+        # Merge extra profile data from testing/profiles
+        with open(os.path.join(self.profile_data_dir, 'profiles.json'), 'r') as fh:
+            base_profiles = json.load(fh)['raptor']
+
+        for profile in base_profiles:
+            path = os.path.join(self.profile_data_dir, profile)
+            LOG.info("Merging profile: {}".format(path))
+            self.profile.merge(path)
+
+        # share the profile dir with the config and the control server
+        self.config['local_profile_dir'] = self.profile.profile
         self.control_server.user_profile = self.profile
 
     def start_control_server(self):
@@ -513,9 +447,25 @@ class Raptor(Perftest):
                                                self.config,
                                                test)
 
-    def clean_up(self):
-        super(Raptor, self).clean_up()
+    def process_results(self, test_names):
+        # when running locally output results in build/raptor.json; when running
+        # in production output to a local.json to be turned into tc job artifact
+        if self.config.get('run_local', False):
+            if 'MOZ_DEVELOPER_REPO_DIR' in os.environ:
+                raptor_json_path = os.path.join(os.environ['MOZ_DEVELOPER_REPO_DIR'],
+                                                'testing', 'mozharness', 'build', 'raptor.json')
+            else:
+                raptor_json_path = os.path.join(here, 'raptor.json')
+        else:
+            raptor_json_path = os.path.join(os.getcwd(), 'local.json')
 
+        self.config['raptor_json_path'] = raptor_json_path
+        return self.results_handler.summarize_and_output(self.config, test_names)
+
+    def get_page_timeout_list(self):
+        return self.results_handler.page_timeout_list
+
+    def clean_up(self):
         if self.config['enable_control_server_wait']:
             self.control_server_wait_clear('all')
 
@@ -644,24 +594,30 @@ class RaptorDesktop(Raptor):
 
             self.wait_for_test_finish(test, timeout)
 
+        self.run_test_teardown()
+
     def __run_test_warm(self, test, timeout):
         self.run_test_setup(test)
 
-        if test.get('playback') is not None:
-            self.start_playback(test)
+        try:
+            if test.get('playback') is not None:
+                self.start_playback(test)
 
-        if self.config['host'] not in ('localhost', '127.0.0.1'):
-            self.delete_proxy_settings_from_profile()
+            if self.config['host'] not in ('localhost', '127.0.0.1'):
+                self.delete_proxy_settings_from_profile()
 
-        # start the browser/app under test
-        self.launch_desktop_browser(test)
+            # start the browser/app under test
+            self.launch_desktop_browser(test)
 
-        # set our control server flag to indicate we are running the browser/app
-        self.control_server._finished = False
+            # set our control server flag to indicate we are running the browser/app
+            self.control_server._finished = False
 
-        self.wait_for_test_finish(test, timeout)
+            self.wait_for_test_finish(test, timeout)
 
-    def run_test_teardown(self, test):
+        finally:
+            self.run_test_teardown()
+
+    def run_test_teardown(self):
         # browser should be closed by now but this is a backup-shutdown (if not in debug-mode)
         if not self.debug_mode:
             if self.runner.is_running():
@@ -672,11 +628,9 @@ class RaptorDesktop(Raptor):
                 LOG.info("* debug-mode enabled - please shutdown the browser manually...")
                 self.runner.wait(timeout=None)
 
-        super(RaptorDesktop, self).run_test_teardown(test)
+        super(RaptorDesktop, self).run_test_teardown()
 
     def check_for_crashes(self):
-        super(RaptorDesktop, self).check_for_crashes()
-
         try:
             self.runner.check_for_crashes()
         except NotImplementedError:  # not implemented for Chrome
@@ -974,11 +928,11 @@ class RaptorAndroid(Raptor):
         is_benchmark = test.get('type') == "benchmark"
         self.set_reverse_ports(is_benchmark=is_benchmark)
 
-    def run_test_teardown(self, test):
+    def run_test_teardown(self):
         LOG.info('removing reverse socket connections')
         self.device.remove_socket_connections('reverse')
 
-        super(RaptorAndroid, self).run_test_teardown(test)
+        super(RaptorAndroid, self).run_test_teardown()
 
     def run_test(self, test, timeout):
         # tests will be run warm (i.e. NO browser restart between page-cycles)
@@ -1006,6 +960,7 @@ class RaptorAndroid(Raptor):
         finally:
             if self.config['power_test']:
                 finish_android_power_test(self, test['name'])
+            self.run_test_teardown()
 
     def __run_test_cold(self, test, timeout):
         '''
@@ -1144,13 +1099,10 @@ class RaptorAndroid(Raptor):
             self.runner.wait(timeout=None)
 
     def check_for_crashes(self):
-        super(RaptorAndroid, self).check_for_crashes()
-
         if not self.app_launched:
             LOG.info("skipping check_for_crashes: application has not been launched")
             return
         self.app_launched = False
-
         # Turn off verbose to prevent logcat from being inserted into the main log.
         verbose = self.device._verbose
         self.device._verbose = False
