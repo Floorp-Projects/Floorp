@@ -427,7 +427,6 @@ package org.mozilla.geckoview {
     method @AnyThread public void loadUri(@NonNull String);
     method @AnyThread public void loadUri(@NonNull String, int);
     method @AnyThread public void loadUri(@NonNull String, @Nullable String, int);
-    method @AnyThread public void loadUri(@NonNull String, @Nullable GeckoSession, int);
     method @AnyThread public void loadUri(@NonNull Uri);
     method @AnyThread public void loadUri(@NonNull Uri, int);
     method @AnyThread public void loadUri(@NonNull Uri, @Nullable Uri, int);
