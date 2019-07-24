@@ -4405,6 +4405,11 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     }
   }
 
+  // Test if the error should be displayed
+  if (!error) {
+    return NS_OK;
+  }
+
   if (mLoadURIDelegate) {
     nsCOMPtr<nsIURI> errorPageURI;
     rv = mLoadURIDelegate->HandleLoadError(aURI, aError,
@@ -4420,11 +4425,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
           NS_SUCCEEDED(LoadErrorPage(errorPageURI, aURI, aFailedChannel));
       return NS_OK;
     }
-  }
-
-  // Test if the error should be displayed
-  if (!error) {
-    return NS_OK;
   }
 
   if (!errorDescriptionID) {
