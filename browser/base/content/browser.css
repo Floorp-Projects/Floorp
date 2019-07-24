@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
 :root {
@@ -530,7 +529,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 
 /* Display URLs left-to-right but right aligned in RTL mode. */
-html|*#urlbar-input:-moz-locale-dir(rtl) {
+#urlbar-input:-moz-locale-dir(rtl) {
   direction: ltr !important;
   text-align: right !important;
 }
@@ -538,7 +537,7 @@ html|*#urlbar-input:-moz-locale-dir(rtl) {
 /* Make sure that the location bar's alignment in RTL mode changes according
    to the input box direction if the user switches the text direction using
    cmd_switchTextDirection (which applies a dir attribute to the <input>). */
-html|*#urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
+#urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
   text-align: left !important;
 }
 
@@ -568,7 +567,7 @@ html|*#urlbar-input[dir=ltr]:-moz-locale-dir(rtl) {
   position: relative;
   direction: ltr;
 }
-html|*#urlbar-scheme {
+#urlbar-scheme {
   position: absolute;
   height: 100%;
   visibility: hidden;
@@ -578,22 +577,22 @@ html|*#urlbar-scheme {
 
 /* Visible if the urlbar is not focused and it overflows at the start.
    Uses the required-valid trick to check if it contains a value */
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|*#urlbar-scheme:valid {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > #urlbar-scheme:valid {
   visibility: visible;
 }
 
 /* Fade out URL on overflow
    This mask may be overriden when a Contextual Feature Recommendation is shown,
    see browser/themes/shared/urlbar-searchbar.inc.css for details */
-#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > html|*#urlbar-input {
+#urlbar[textoverflow="end"]:not([focused]) > .urlbar-input-box > #urlbar-input {
   mask-image: linear-gradient(to left, transparent, black 3ch);
 }
 
-#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > html|*#urlbar-input {
+#urlbar[textoverflow="start"]:not([focused]) > .urlbar-input-box > #urlbar-input {
   mask-image: linear-gradient(to right, transparent var(--urlbar-scheme-size), black calc(var(--urlbar-scheme-size) + 3ch));
 }
 
-html|*#urlbar-input {
+#urlbar-input {
   mask-repeat: no-repeat;
 }
 
@@ -814,7 +813,7 @@ window[chromehidden~="toolbar"] toolbar:not(#nav-bar):not(#TabsToolbar):not(#pri
   background: black;
 }
 
-html|*#fullscreen-and-pointerlock-wrapper {
+#fullscreen-and-pointerlock-wrapper {
   position: fixed;
   width: 100vw;
   height: 100vh;
@@ -822,7 +821,7 @@ html|*#fullscreen-and-pointerlock-wrapper {
   pointer-events: none;
 }
 
-html|*.pointerlockfswarning {
+.pointerlockfswarning {
   position: fixed;
   z-index: 2147483647 !important;
   visibility: visible;
@@ -836,32 +835,32 @@ html|*.pointerlockfswarning {
   max-width: 95%;
   pointer-events: none;
 }
-html|*.pointerlockfswarning:not([hidden]) {
+.pointerlockfswarning:not([hidden]) {
   display: flex;
   will-change: transform;
 }
-html|*.pointerlockfswarning[onscreen] {
+.pointerlockfswarning[onscreen] {
   transform: translate(-50%, 50px);
 }
-html|*.pointerlockfswarning[ontop] {
+.pointerlockfswarning[ontop] {
   /* Use -10px to hide the border and border-radius on the top */
   transform: translate(-50%, -10px);
 }
-:root[OSXLionFullscreen] html|*.pointerlockfswarning[ontop] {
+:root[OSXLionFullscreen] .pointerlockfswarning[ontop] {
   transform: translate(-50%, 80px);
 }
 
-html|*.pointerlockfswarning-domain-text,
-html|*.pointerlockfswarning-generic-text {
+.pointerlockfswarning-domain-text,
+.pointerlockfswarning-generic-text {
   word-wrap: break-word;
   /* We must specify a min-width, otherwise word-wrap:break-word doesn't work. Bug 630864. */
   min-width: 1px
 }
-html|*.pointerlockfswarning-domain-text:not([hidden]) + html|*.pointerlockfswarning-generic-text {
+.pointerlockfswarning-domain-text:not([hidden]) + .pointerlockfswarning-generic-text {
   display: none;
 }
 
-html|*#fullscreen-exit-button {
+#fullscreen-exit-button {
   pointer-events: auto;
 }
 
