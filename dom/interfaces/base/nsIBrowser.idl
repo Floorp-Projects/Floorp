@@ -7,6 +7,7 @@ interface nsIContentSecurityPolicy;
 interface nsIPrincipal;
 interface nsIURI;
 interface nsIWebProgress;
+interface nsIReferrerInfo;
 
 webidl FrameLoader;
 
@@ -81,6 +82,7 @@ interface nsIBrowser : nsISupports
 
   readonly attribute nsIPrincipal contentPrincipal;
   readonly attribute nsIContentSecurityPolicy csp;
+  readonly attribute nsIReferrerInfo referrerInfo;
 
   /**
    * Whether or not the browser is in the process of an nsIWebNavigation
@@ -136,6 +138,7 @@ interface nsIBrowser : nsISupports
    * @param aContentStoragePrincipal the security principal for the new
    *                                 document's storage
    * @param aCSP the content security policy of the new document
+   * @param aReferrerInfo the referrer info of the new document
    * @param aIsSynthetic whether or not the document is synthetic
    * @param aInnerWindowID the inner window ID of the document
    * @param aHasRequestContextID whether or not the the request context has a
@@ -152,6 +155,7 @@ interface nsIBrowser : nsISupports
                                in nsIPrincipal aContentPrincipal,
                                in nsIPrincipal aContentStoragePrincipal,
                                in nsIContentSecurityPolicy aCSP,
+                               in nsIReferrerInfo aReferrerInfo,
                                in boolean aIsSynthetic,
                                in uint64_t aInnerWindowID,
                                in boolean aHasRequestContextID,
