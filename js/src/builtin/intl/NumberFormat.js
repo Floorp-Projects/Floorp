@@ -64,8 +64,14 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
 
     // Step 22.
     internalProps.minimumIntegerDigits = lazyNumberFormatData.minimumIntegerDigits;
-    internalProps.minimumFractionDigits = lazyNumberFormatData.minimumFractionDigits;
-    internalProps.maximumFractionDigits = lazyNumberFormatData.maximumFractionDigits;
+
+    if ("minimumFractionDigits" in lazyNumberFormatData) {
+        // Note: Intl.NumberFormat.prototype.resolvedOptions() exposes the
+        // actual presence (versus undefined-ness) of these properties.
+        assert("maximumFractionDigits" in lazyNumberFormatData, "min/max frac digits mismatch");
+        internalProps.minimumFractionDigits = lazyNumberFormatData.minimumFractionDigits;
+        internalProps.maximumFractionDigits = lazyNumberFormatData.maximumFractionDigits;
+    }
 
     if ("minimumSignificantDigits" in lazyNumberFormatData) {
         // Note: Intl.NumberFormat.prototype.resolvedOptions() exposes the
@@ -133,27 +139,64 @@ function SetNumberFormatDigitOptions(lazyData, options, mnfdDefault, mxfdDefault
     assert(typeof mxfdDefault === "number", "SetNumberFormatDigitOptions");
     assert(mnfdDefault <= mxfdDefault, "SetNumberFormatDigitOptions");
 
-    // Steps 5-8.
+    // Steps 5-9.
     const mnid = GetNumberOption(options, "minimumIntegerDigits", 1, 21, 1);
-    const mnfd = GetNumberOption(options, "minimumFractionDigits", 0, 20, mnfdDefault);
-    const mxfdActualDefault = std_Math_max(mnfd, mxfdDefault);
-    const mxfd = GetNumberOption(options, "maximumFractionDigits", mnfd, 20, mxfdActualDefault);
-
-    // Steps 9-10.
+    let mnfd = options.minimumFractionDigits;
+    let mxfd = options.maximumFractionDigits;
     let mnsd = options.minimumSignificantDigits;
     let mxsd = options.maximumSignificantDigits;
 
-    // Steps 11-13.
+    // Step 10.
     lazyData.minimumIntegerDigits = mnid;
-    lazyData.minimumFractionDigits = mnfd;
-    lazyData.maximumFractionDigits = mxfd;
+
+    // Step 11.
+    if (mnsd !== undefined || mxsd !== undefined) {
+        // Step 11.a (Omitted).
+
+        // Step 11.b.
+        mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
+
+        // Step 11.c.
+        mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
+
+        // Step 11.d.
+        lazyData.minimumSignificantDigits = mnsd;
+
+        // Step 11.e.
+        lazyData.maximumSignificantDigits = mxsd;
+    }
+
+    // Step 12.
+    else if (mnfd !== undefined || mxfd !== undefined) {
+        // Step 12.a (Omitted).
+
+        // Step 12.b.
+        mnfd = DefaultNumberOption(mnfd, 0, 20, mnfdDefault);
+
+        // Step 12.c.
+        const mxfdActualDefault = std_Math_max(mnfd, mxfdDefault);
+
+        // Step 12.d.
+        mxfd = DefaultNumberOption(mxfd, mnfd, 20, mxfdActualDefault);
+
+        // Step 12.e.
+        lazyData.minimumFractionDigits = mnfd;
+
+        // Step 12.f.
+        lazyData.maximumFractionDigits = mxfd;
+    }
+
+    // Step 13 (TODO: Not yet implemented).
 
     // Step 14.
-    if (mnsd !== undefined || mxsd !== undefined) {
-        mnsd = DefaultNumberOption(mnsd, 1, 21, 1);
-        mxsd = DefaultNumberOption(mxsd, mnsd, 21, 21);
-        lazyData.minimumSignificantDigits = mnsd;
-        lazyData.maximumSignificantDigits = mxsd;
+    else {
+        // Step 14.a (Omitted).
+
+        // Step 14.b.
+        lazyData.minimumFractionDigits = mnfdDefault;
+
+        // Step 14.c.
+        lazyData.maximumFractionDigits = mxfdDefault;
     }
 }
 
@@ -220,10 +263,12 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
     //       }
     //
     //     minimumIntegerDigits: integer ∈ [1, 21],
+    //
+    //     // optional, mutually exclusive with the significant-digits option
     //     minimumFractionDigits: integer ∈ [0, 20],
     //     maximumFractionDigits: integer ∈ [0, 20],
     //
-    //     // optional
+    //     // optional, mutually exclusive with the fraction-digits option
     //     minimumSignificantDigits: integer ∈ [1, 21],
     //     maximumSignificantDigits: integer ∈ [1, 21],
     //
@@ -503,10 +548,18 @@ function Intl_NumberFormat_resolvedOptions() {
     }
 
     _DefineDataProperty(result, "minimumIntegerDigits", internals.minimumIntegerDigits);
-    _DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
-    _DefineDataProperty(result, "maximumFractionDigits", internals.maximumFractionDigits);
 
-    // Min/Max significant digits are either both present or not at all.
+    // Min/Max fraction digits are either both present or not present at all.
+    assert(hasOwn("minimumFractionDigits", internals) ===
+           hasOwn("maximumFractionDigits", internals),
+           "minimumFractionDigits is present iff maximumFractionDigits is present");
+
+    if (hasOwn("minimumFractionDigits", internals)) {
+        _DefineDataProperty(result, "minimumFractionDigits", internals.minimumFractionDigits);
+        _DefineDataProperty(result, "maximumFractionDigits", internals.maximumFractionDigits);
+    }
+
+    // Min/Max significant digits are either both present or not present at all.
     assert(hasOwn("minimumSignificantDigits", internals) ===
            hasOwn("maximumSignificantDigits", internals),
            "minimumSignificantDigits is present iff maximumSignificantDigits is present");

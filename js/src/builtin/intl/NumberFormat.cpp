@@ -424,12 +424,6 @@ static UNumberFormatter* NewUNumberFormatter(
       return nullptr;
     }
   } else {
-    if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
-                     &value)) {
-      return nullptr;
-    }
-    uint32_t minimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
-
     if (!GetProperty(cx, internals, internals,
                      cx->names().minimumFractionDigits, &value)) {
       return nullptr;
@@ -446,9 +440,16 @@ static UNumberFormatter* NewUNumberFormatter(
                                  maximumFractionDigits)) {
       return nullptr;
     }
-    if (!skeleton.integerWidth(minimumIntegerDigits)) {
-      return nullptr;
-    }
+  }
+
+  if (!GetProperty(cx, internals, internals, cx->names().minimumIntegerDigits,
+                   &value)) {
+    return nullptr;
+  }
+  uint32_t minimumIntegerDigits = AssertedCast<uint32_t>(value.toInt32());
+
+  if (!skeleton.integerWidth(minimumIntegerDigits)) {
+    return nullptr;
   }
 
   if (!GetProperty(cx, internals, internals, cx->names().useGrouping, &value)) {
