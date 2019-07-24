@@ -73,7 +73,7 @@ function test() {
 
   function firstWindowObserver(aSubject, aTopic, aData) {
     if (aTopic == "domwindowopened") {
-      newWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
+      newWindow = aSubject;
       Services.ww.unregisterNotification(firstWindowObserver);
     }
   }

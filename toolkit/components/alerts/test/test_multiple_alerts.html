@@ -26,7 +26,7 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
       sendAsyncMessage("waitedForPosition", null);
     }, 2000);
 
-    var windowObserver = function(aSubject, aTopic, aData) {
+    var windowObserver = function(win, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
@@ -36,7 +36,6 @@ const chromeScript = SpecialPowers.loadChromeScript(_ => {
 
       Services.ww.unregisterNotification(windowObserver);
 
-      var win = aSubject.QueryInterface(Ci.nsIDOMWindow);
       win.addEventListener("pageshow", function() {
         var x = win.screenX;
         var y = win.screenY;

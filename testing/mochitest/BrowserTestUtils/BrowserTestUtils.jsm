@@ -765,7 +765,7 @@ var BrowserTestUtils = {
     return new Promise(resolve => {
       async function observer(subject, topic, data) {
         if (topic == "domwindowopened" && (!win || subject === win)) {
-          let observedWindow = subject.QueryInterface(Ci.nsIDOMWindow);
+          let observedWindow = subject;
           if (checkFn && !(await checkFn(observedWindow))) {
             return;
           }
@@ -791,7 +791,7 @@ var BrowserTestUtils = {
       function observer(subject, topic, data) {
         if (topic == "domwindowclosed" && (!win || subject === win)) {
           Services.ww.unregisterNotification(observer);
-          resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+          resolve(subject);
         }
       }
       Services.ww.registerNotification(observer);

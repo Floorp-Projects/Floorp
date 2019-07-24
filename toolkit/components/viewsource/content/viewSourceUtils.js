@@ -65,17 +65,14 @@ var gViewSourceUtils = {
     }
     // No browser window created yet, try to create one.
     let utils = this;
-    Services.ww.registerNotification(function onOpen(subj, topic) {
+    Services.ww.registerNotification(function onOpen(win, topic) {
       if (
-        subj.document.documentURI !== "about:blank" ||
+        win.document.documentURI !== "about:blank" ||
         topic !== "domwindowopened"
       ) {
         return;
       }
       Services.ww.unregisterNotification(onOpen);
-      let win = subj
-        .QueryInterface(Ci.nsIInterfaceRequestor)
-        .getInterface(Ci.nsIDOMWindow);
       win.addEventListener(
         "load",
         () => {

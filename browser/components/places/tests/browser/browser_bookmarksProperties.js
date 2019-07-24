@@ -497,12 +497,11 @@ function open_properties_dialog(test) {
     );
 
     // Wait for the Properties dialog.
-    function windowObserver(aSubject, aTopic, aData) {
+    function windowObserver(observerWindow, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
       Services.ww.unregisterNotification(windowObserver);
-      let observerWindow = aSubject.QueryInterface(Ci.nsIDOMWindow);
       waitForFocus(async () => {
         // Ensure overlay is loaded
         await BrowserTestUtils.waitForCondition(

@@ -42,7 +42,7 @@ function trackScratchpadWindows() {
   return new Promise(resolve => {
     Services.ww.registerNotification(function observer(subject, topic) {
       if (topic == "domwindowopened") {
-        const win = subject.QueryInterface(Ci.nsIDOMWindow);
+        const win = subject;
         win.addEventListener(
           "load",
           function() {

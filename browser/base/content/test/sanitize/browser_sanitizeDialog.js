@@ -717,7 +717,7 @@ WindowHelper.prototype = {
   open() {
     let wh = this;
 
-    function windowObserver(aSubject, aTopic, aData) {
+    function windowObserver(win, aTopic, aData) {
       if (aTopic != "domwindowopened") {
         return;
       }
@@ -725,7 +725,6 @@ WindowHelper.prototype = {
       Services.ww.unregisterNotification(windowObserver);
 
       var loaded = false;
-      let win = aSubject.QueryInterface(Ci.nsIDOMWindow);
 
       win.addEventListener(
         "load",

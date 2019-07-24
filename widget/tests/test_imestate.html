@@ -1279,7 +1279,7 @@ function runTestPasswordFieldOnDialog() {
     observe(subject, topic, data) {
       if (topic === "domwindowopened") {
         ok(true, "dialog window is created");
-        dialog = subject.QueryInterface(Ci.nsIDOMWindow);
+        dialog = subject;
         dialog.addEventListener("load", onPasswordDialogLoad);
       }
     },
