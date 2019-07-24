@@ -158,6 +158,7 @@ def android_platform(target, android_version, ndk):
 
 
 add_old_configure_assignment('android_platform', android_platform)
+set_config('ANDROID_PLATFORM', android_platform)
 
 
 @depends(android_platform, ndk, target)
