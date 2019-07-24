@@ -347,9 +347,11 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishEagerFunction(
   // already has correct `nargs_`.
   if (!lazyScript_ ||
       lazyScript_->functionNonDelazifying() != funbox->function()) {
-    funbox->function()->setArgCount(nargs);
+    funbox->setArgCount(nargs);
+    funbox->synchronizeArgCount();
   } else {
     MOZ_ASSERT(funbox->function()->nargs() == nargs);
+    funbox->setArgCount(nargs);
   }
 
   const bool canSkipLazyClosedOverBindings = false;
@@ -384,7 +386,8 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
     FunctionBox* funbox, uint32_t nargs, size_t start, size_t end) {
   RootedFunction fun(cx_, funbox->function());
 
-  fun->setArgCount(nargs);
+  funbox->setArgCount(nargs);
+  funbox->synchronizeArgCount();
 
   BINJS_TRY_DECL(
       lazy, LazyScript::Create(cx_, fun, sourceObject_,
@@ -396,7 +399,7 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
     lazy->setStrict();
   }
   MOZ_ASSERT(lazy->isBinAST());
-  fun->initLazyScript(lazy);
+  funbox->initLazyScript(lazy);
 
   return Ok();
 }

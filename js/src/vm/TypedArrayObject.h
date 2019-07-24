@@ -313,19 +313,6 @@ static inline unsigned TypedArrayElemSize(Scalar::Type viewType) {
   return 1u << TypedArrayShift(viewType);
 }
 
-// Assign
-//
-//   target[targetOffset] = unsafeSrcCrossCompartment[0]
-//   ...
-//   target[targetOffset + unsafeSrcCrossCompartment.length - 1] =
-//       unsafeSrcCrossCompartment[unsafeSrcCrossCompartment.length - 1]
-//
-// where the source element range doesn't overlap the target element range in
-// memory.
-extern void SetDisjointTypedElements(
-    TypedArrayObject* target, uint32_t targetOffset,
-    TypedArrayObject* unsafeSrcCrossCompartment);
-
 }  // namespace js
 
 template <>

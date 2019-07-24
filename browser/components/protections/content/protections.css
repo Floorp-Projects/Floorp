@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 :root {
-  --card-box-shadow: 0 1px 4px 0 rgba(12,12,13,0.1), 0 1px 0 0 rgba(0,0,0,0.05);
-  --card-background:  #FFF;
-  --clickable-text-hover: hsla(0,0%,70%,.2);
-  --clickable-text-active: hsla(0,0%,70%,.3);
-  --card-divider: rgba(12,12,13,0.1) 1px solid;
-  --report-background: #FAFAFC;
   --card-padding: 24px;
   --social-color: #9059FF;
   --social-color-darker: #7F40FF;
@@ -20,28 +14,10 @@
   --grey: #8F8F9D;
   --dark-grey: #818191;
   --tab-highlight: var(--social-color); /* start with social selected */
-  --blue-60: #0060DF;
-  --blue-70: #003eaa;
-  --blue-80: #002275;
   --column-width: 16px;
 }
 
- a {
-  color: var(--blue-60);
-  text-decoration: none;
- }
-
- a:active {
-  color: var(--blue-70);
- }
-
- a:hover, a:active {
-  text-decoration: underline;
- }
-
 body {
-  background-color: var(--report-background);
-  font: message-box;
   margin-top: 82px;
 }
 
@@ -76,12 +52,8 @@ body[focuseddatatype=cryptominer] {
   margin: 0 auto;
 }
 
-.card-header button {
-  font-size: 0.95rem;
-  background-color: var(--blue-60);
-  border-radius: 2px;
-  border: none;
-  color: #FFFFFF;
+.card-header > button {
+  font-size: 0.95em;
   cursor: pointer;
   margin-inline-end: 15px;
   margin-inline-start: 15px;
@@ -89,16 +61,8 @@ body[focuseddatatype=cryptominer] {
   align-self: center;
 }
 
-.card-header button:hover {
-  background-color: var(--blue-70);
-}
-
-.card-header button:active {
-  background-color: var(--blue-80);
-}
-
-.report-card.lockwise-card .card-header,
-.report-card.monitor-card.no-logins .card-header {
+.card.lockwise-card .card-header,
+.card.monitor-card.no-logins .card-header {
   grid-template-columns: 2fr 6fr 7fr;
 }
 
@@ -136,60 +100,60 @@ a.hidden,
   background: url("chrome://browser/content/logos/monitor.svg") no-repeat center/cover;
 }
 
-.report-card {
+.card {
   display: grid;
   grid-template-columns: 100%;
   grid-template-rows: 20% auto;
-  border-radius: 3px;
-  background-color: var(--card-background);
-  box-shadow: var(--card-box-shadow);
+  padding: 0;
   margin-bottom: 25px;
 }
 
-.report-card .card-header,
-.report-card .card-body {
+.card-header,
+.card-body {
   display: grid;
   grid-template-columns: 1fr 7fr;
   padding: var(--card-padding);
   grid-gap: var(--card-padding);
 }
 
-.report-card .card-title {
-  font-size: 1rem;
-  line-height: 22px;
+.card .card-title {
+  font-size: inherit;
+  line-height: 1.25;
   margin: 0;
   cursor: default;
 }
 
-.report-card .content {
+.card .content {
   margin-bottom: 24px;
   margin-top: 5px;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   cursor: default;
 }
 
 #protection-details {
+  -moz-context-properties: fill;
+  fill: currentColor;
   background: url("chrome://browser/skin/settings.svg") no-repeat 3px 3px;
   padding: 4px 4px 4px 24px;
-  font-size: 0.75rem;
+  font-size: 0.75em;
   display: inline;
   cursor: default;
 }
 
 #protection-details:hover {
-  background-color: var(--clickable-text-hover);
+  background-color: var(--in-content-button-background);
 }
 
 #protection-details:hover:active {
-  background-color: var(--clickable-text-active);
+  background-color: var(--in-content-button-background-hover);
 }
 
 #protection-details span {
   font-weight: bold;
 }
 
-.report-card .card-body {
-  border-top: var(--card-divider);
+.card .card-body {
+  border-top: 1px solid var(--in-content-border-color);
   grid-column: span 2;
   grid-row: 2;
 }
@@ -200,7 +164,7 @@ a.hidden,
 
 #graph-week-summary,
 #graph-total-summary {
-  font-size: 0.8rem;
+  font-size: 0.8em;
 }
 
 #graph-week-summary {
@@ -291,15 +255,14 @@ a.hidden,
 .column-label {
   justify-self: center;
   margin-top: 5px;
-  font-size: 0.9rem;
+  font-size: 0.9em;
   width: var(--column-width);
 }
 
 .bar-count {
   position: absolute;
   top: -25px;
-	color: #0C0C0D;
-  font-size: .8rem;
+  font-size: .8em;
 }
 
 /* Legend */
@@ -309,10 +272,11 @@ input {
 
 #legend label {
   display: inline-block;
-  margin: 0 0 -1px;
+  margin-bottom: -1px;
   padding: 15px 23px;
   border: 3px solid transparent;
   -moz-context-properties: fill;
+  fill: currentColor;
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 16px;
@@ -320,32 +284,26 @@ input {
 
 label[data-type="social"] {
   background-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
-  fill: var(--social-color);
   color: var(--social-color);
 }
 
 label[data-type="cookie"] {
-  color: var(--cookie-color);
   background-image: url(chrome://browser/skin/controlcenter/3rdpartycookies.svg);
-  fill: var(--cookie-color);
   color: var(--cookie-color);
 }
 
 label[data-type="tracker"] {
   background-image: url(chrome://browser/skin/controlcenter/tracker-image.svg);
-  fill: var(--tracker-color);
   color: var(--tracker-color);
 }
 
 label[data-type="fingerprinter"] {
   background-image: url(chrome://browser/skin/controlcenter/fingerprinters.svg);
-  fill: var(--orange);
   color: var(--orange);
 }
 
 label[data-type="cryptominer"] {
   background-image: url(chrome://browser/skin/controlcenter/cryptominers.svg);
-  fill: var(--grey);
   color: var(--grey);
 }
 
@@ -355,7 +313,7 @@ label[data-type="cryptominer"] {
 .hover-fingerprinter label[for="tab-fingerprinter"],
 .hover-cryptominer label[for="tab-cryptominer"],
 label:hover {
-  background-color: var(--clickable-text-hover);
+  background-color: var(--in-content-box-background-hover);
   cursor: pointer;
 }
 
@@ -367,10 +325,10 @@ label:hover {
   display: none;
   padding: 22px 20px 20px;
   border-top: 1px solid var(--tab-highlight);
-  background-color: #F9F9FB;
-  color: #737373;
-  font-size: 0.8rem;
-  line-height: 20px;
+  background-color: var(--in-content-box-background-odd);
+  color: var(--in-content-deemphasized-text);
+  font-size: 0.8em;
+  line-height: 1.75;
   min-height: 130px;
 }
 
@@ -395,7 +353,7 @@ label:hover {
 #lockwise-body-content > .no-logins,
 #lockwise-body-content > .has-logins {
   display: grid;
-  font-size: 0.875rem;
+  font-size: 0.875em;
   align-items: center;
 }
 
@@ -418,6 +376,8 @@ label:hover {
 }
 
 .inline-text-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
   background-size: 16px 16px;
   background-repeat: no-repeat;
   background-position-x: 3px;
@@ -427,6 +387,8 @@ label:hover {
 }
 
 .lockwise-mobile-app-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
   background: url("chrome://browser/content/logos/lockwise-mobile-app.svg") no-repeat center/cover;
   width: 38px;
   height: 35px;
@@ -443,8 +405,8 @@ label:hover {
 .block {
   border-radius: 4px;
   text-align: center;
-  font-size: 1.125rem;
-  color: var(--card-background);
+  font-size: 1.125em;
+  color: #fff;
   padding: 7px;
   line-height: 18px;
 }

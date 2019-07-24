@@ -9,8 +9,8 @@
     <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:">
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="browser/protections.ftl">
-    <link rel="stylesheet" type="text/css"
-          href="chrome://browser/content/protections.css">
+    <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+    <link rel="stylesheet" href="chrome://browser/content/protections.css">
     <link rel="icon" href="chrome://browser/skin/controlcenter/dashboard.svg">
     <script type="module" src="chrome://browser/content/protections.js"></script>
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
@@ -21,7 +21,7 @@
   <body>
     <div id="report-content">
       <h2 id="report-title">Privacy Protections</h2>
-      <div class="report-card etp-card">
+      <div class="card card-no-hover etp-card">
         <div class="card-header">
           <div class="icon"></div>
           <div class="wrapper">
@@ -82,7 +82,7 @@
         </div>
       </div>
      <!-- Markup for Monitor card. -->
-      <section class="report-card monitor-card hidden">
+      <section class="card card-no-hover monitor-card hidden">
           <div class="card-header">
             <div class="icon"></div>
             <div class="wrapper">
@@ -99,7 +99,7 @@
                 Automatically scanned today
               </span>
             </div>
-            <button id="sign-up-for-monitor-button">
+            <button id="sign-up-for-monitor-button" class="primary">
               <!-- Insert Monitor button content here. -->
             </button>
           </div>
@@ -138,12 +138,12 @@
                   <a href="">Firefox Monitor</a>
                 </div>
                 <div class="monitor-breached-passwords">
-                  <span class="number-of-breaches block">
+                  <span data-type="breached-lockwise-passwords" class="number-of-breaches block">
                     <!-- Display number of exposed stored passwords here. -->
                   </span>
-                  <span class="">
-                    Saved passwords have appeared in known data breaches. Change these passwords to protect your accounts.
-                    <a href="">Open Lockwise</a>
+                  <span>
+                    Passwords saved in Firefox may have been exposed in a data breach. Change these passwords to protect your accounts.
+                    <a href="">View Saved Logins</a>
                   </span>
                 </div>
               </div>
@@ -151,7 +151,7 @@
           </div>
       </section>
       <!-- Markup for Lockwise card. -->
-      <section class="report-card lockwise-card hidden">
+      <section class="card card-no-hover lockwise-card hidden">
         <div class="card-header">
           <div class="icon"></div>
           <div class="wrapper">
@@ -162,7 +162,7 @@
               <!-- Insert Lockwise header content here. -->
             </p>
           </div>
-          <button id="open-about-logins-button">Open in Firefox</button>
+          <button id="open-about-logins-button" class="primary">Open in Firefox</button>
         </div>
         <div class="card-body">
           <div id="lockwise-body-content" class="body-wrapper">

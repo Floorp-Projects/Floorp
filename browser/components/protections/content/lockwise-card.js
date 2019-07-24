@@ -31,9 +31,7 @@ export default class LockwiseCard {
       this.buildContent(data);
 
       // Show the Lockwise card.
-      const lockwiseCard = this.doc.querySelector(
-        ".report-card.lockwise-card.hidden"
-      );
+      const lockwiseCard = this.doc.querySelector(".lockwise-card.hidden");
       lockwiseCard.classList.remove("hidden");
     });
   }

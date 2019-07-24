@@ -394,8 +394,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isSetter_ : 1;
   bool isMethod_ : 1;
 
+  bool isInterpreted_ : 1;
+  bool isInterpretedLazy_ : 1;
+
   JSFunction::FunctionKind kind_;
   JSAtom* explicitName_;
+
+  uint16_t nargs_;
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
@@ -431,14 +436,20 @@ class FunctionBox : public ObjectBox, public SharedContext {
                             HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
-    return function()->isInterpretedLazy() &&
+    return isInterpretedLazy() &&
            !function()->lazyScript()->hasEnclosingScope();
   }
   void setEnclosingScopeForInnerLazyFunction(Scope* enclosingScope);
   void finish();
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
-  void clobberFunction(JSFunction* function) { gcThing = function; }
+  
+  void clobberFunction(JSFunction* function) {
+    gcThing = function;
+    // After clobbering, these flags need to be updated
+    setIsInterpreted(function->isInterpreted());
+    setIsInterpretedLazy(function->isInterpretedLazy());
+  }
 
   Scope* compilationEnclosingScope() const override {
     // This method is used to distinguish the outermost SharedContext. If
@@ -450,7 +461,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // from the lazy function at the beginning of delazification and should
     // keep pointing the same scope.
     MOZ_ASSERT_IF(
-        function()->isInterpretedLazy() &&
+        isInterpretedLazy() &&
             function()->lazyScript()->hasEnclosingScope(),
         enclosingScope_ == function()->lazyScript()->enclosingScope());
 
@@ -524,9 +535,19 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isSetter() const { return isSetter_; }
   bool isMethod() const { return isMethod_; }
 
+  bool isInterpreted() const { return isInterpreted_; }
+  void setIsInterpreted(bool interpreted) { isInterpreted_ = interpreted; }
+  bool isInterpretedLazy() const { return isInterpretedLazy_; }
+  void setIsInterpretedLazy(bool interpretedLazy) { isInterpretedLazy_ = interpretedLazy; }
+
+  void initLazyScript(LazyScript* script) { 
+    function()->initLazyScript(script);
+    setIsInterpretedLazy(function()->isInterpretedLazy());
+  }
+
   JSFunction::FunctionKind kind() { return kind_; }
 
-  JSAtom* explicitName() const { return function()->explicitName(); }
+  JSAtom* explicitName() const { return explicitName_; }
 
   void setHasExtensibleScope() { hasExtensibleScope_ = true; }
   void setHasThisBinding() { hasThisBinding_ = true; }
@@ -581,6 +602,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
     // the toString ending position with the end of the class definition.
     bufEnd = toStringEnd = end;
   }
+
+  void setArgCount(uint16_t args) { nargs_ = args; }
+
+  size_t nargs() { return nargs_; }
+
+  // Flush the acquired argCount to the associated function.
+  void synchronizeArgCount() { function()->setArgCount(nargs_); }
 
   void trace(JSTracer* trc) override;
 };

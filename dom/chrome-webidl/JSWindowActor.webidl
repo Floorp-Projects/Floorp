@@ -155,10 +155,10 @@ dictionary WindowActorChildOptions : WindowActorSidedOptions {
   * An array of observer topics to listen to. An observer will be added for each
   * topic in the list.
   *
-  * Observer notifications in the list use nsGlobalWindowInner object as their
-  * subject, and the events will only be dispatched to the corresponding window
-  * actor. If additional observer notification's subjects are needed, please
-  * file a bug for that.
+  * Observer notifications in the list use nsGlobalWindowInner or
+  * nsGlobalWindowOuter object as their subject, and the events will only be
+  * dispatched to the corresponding window actor. If additional observer
+  * notification's subjects are needed, please file a bug for that.
   **/
   sequence<ByteString> observers;
 };
