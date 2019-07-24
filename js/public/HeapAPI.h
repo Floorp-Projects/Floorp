@@ -643,12 +643,6 @@ static MOZ_ALWAYS_INLINE void ExposeObjectToActiveJS(JSObject* obj) {
   js::gc::ExposeGCThingToActiveJS(GCCellPtr(obj));
 }
 
-static MOZ_ALWAYS_INLINE void ExposeScriptToActiveJS(JSScript* script) {
-  MOZ_ASSERT(script);
-  MOZ_ASSERT(!js::gc::EdgeNeedsSweepUnbarrieredSlow(&script));
-  js::gc::ExposeGCThingToActiveJS(GCCellPtr(script));
-}
-
 } /* namespace JS */
 
 #endif /* js_HeapAPI_h */
