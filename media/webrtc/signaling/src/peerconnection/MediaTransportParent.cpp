@@ -152,8 +152,10 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvEnsureProvisionalTransport(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvStartIceGathering(
-    const bool& defaultRouteOnly, const net::NrIceStunAddrArray& stunAddrs) {
-  mImpl->mHandler->StartIceGathering(defaultRouteOnly, stunAddrs);
+    const bool& defaultRouteOnly, const std::string& remoteIp,
+    uint16_t remotePort, const net::NrIceStunAddrArray& stunAddrs) {
+  mImpl->mHandler->StartIceGathering(defaultRouteOnly, remoteIp, remotePort,
+                                     stunAddrs);
   return ipc::IPCResult::Ok();
 }
 

@@ -83,6 +83,8 @@ class MediaTransportHandler {
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
   virtual void StartIceGathering(bool aDefaultRouteOnly,
+                                 const std::string& aRemoteIp,
+                                 uint16_t aRemotePort,
                                  // TODO: It probably makes sense to look
                                  // this up internally
                                  const nsTArray<NrIceStunAddr>& aStunAddrs) = 0;

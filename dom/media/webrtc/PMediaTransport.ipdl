@@ -55,6 +55,8 @@ parent:
                                    int componentCount);
 
   async StartIceGathering(bool defaultRouteOnly,
+                          string remoteIp,
+                          uint16_t remotePort,
                           NrIceStunAddrArray stunAddrs);
 
   async ActivateTransport(string transportId,
