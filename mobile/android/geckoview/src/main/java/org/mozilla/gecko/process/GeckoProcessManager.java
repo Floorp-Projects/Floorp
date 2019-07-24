@@ -11,6 +11,8 @@ import org.mozilla.gecko.IGeckoEditableParent;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import org.mozilla.geckoview.GeckoResult;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -207,11 +209,18 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
     }
 
     @WrapForJNI
-    private static int start(final String type, final String[] args,
+    private static GeckoResult<Integer> start(final String type, final String[] args,
                              final int prefsFd, final int prefMapFd,
                              final int ipcFd,
                              final int crashFd, final int crashAnnotationFd) {
-        return INSTANCE.start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+        int pid = INSTANCE.start(type, args, prefsFd, prefMapFd, ipcFd, crashFd, crashAnnotationFd, /* retry */ false);
+        GeckoResult<Integer> result = new GeckoResult<>();
+        if (pid == 0) {
+            result.completeExceptionally(new RuntimeException("Failed to start process"));
+        } else {
+            result.complete(pid);
+        }
+        return result;
     }
 
     private int filterFlagsForChild(final int flags) {

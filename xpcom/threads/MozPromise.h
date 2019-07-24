@@ -20,6 +20,10 @@
 #  include "nsTArray.h"
 #  include "nsThreadUtils.h"
 
+#  ifdef MOZ_WIDGET_ANDROID
+#    include "mozilla/jni/GeckoResultUtils.h"
+#  endif
+
 #  if MOZ_DIAGNOSTIC_ASSERT_ENABLED
 #    define PROMISE_DEBUG
 #  endif
@@ -933,6 +937,21 @@ class MozPromise : public MozPromiseBase {
       mChainedPromises.AppendElement(chainedPromise);
     }
   }
+
+#  ifdef MOZ_WIDGET_ANDROID
+  // Creates a C++ MozPromise from its Java counterpart, GeckoResult.
+  static RefPtr<MozPromise> FromGeckoResult(
+      java::GeckoResult::Param aGeckoResult) {
+    using jni::GeckoResultCallback;
+    RefPtr<Private> p = new Private("GeckoResult Glue", false);
+    auto resolve = GeckoResultCallback::CreateAndAttach<ResolveValueType>(
+        [p](ResolveValueType aArg) { p->Resolve(aArg, __func__); });
+    auto reject = GeckoResultCallback::CreateAndAttach<RejectValueType>(
+        [p](RejectValueType aArg) { p->Reject(aArg, __func__); });
+    aGeckoResult->NativeThen(resolve, reject);
+    return p;
+  }
+#  endif
 
   // Note we expose the function AssertIsDead() instead of IsDead() since
   // checking IsDead() is a data race in the situation where the request is not
