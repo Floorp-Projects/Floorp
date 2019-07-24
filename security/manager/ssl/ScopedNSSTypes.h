@@ -229,11 +229,6 @@ inline void SECOID_DestroyAlgorithmID_true(SECAlgorithmID* a) {
   return SECOID_DestroyAlgorithmID(a, true);
 }
 
-inline void SECKEYEncryptedPrivateKeyInfo_true(
-    SECKEYEncryptedPrivateKeyInfo* epki) {
-  return SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE);
-}
-
 inline void VFY_DestroyContext_true(VFYContext* ctx) {
   VFY_DestroyContext(ctx, true);
 }
