@@ -36,12 +36,14 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
                                   const std::string& aLocalPwd,
                                   size_t aComponentCount) override;
 
+  void SetTargetForDefaultLocalAddressLookup(const std::string& aTargetIp,
+                                             uint16_t aTargetPort) override;
+
   // We set default-route-only as late as possible because it depends on what
   // capture permissions have been granted on the window, which could easily
   // change between Init (ie; when the PC is created) and StartIceGathering
   // (ie; when we set the local description).
-  void StartIceGathering(bool aDefaultRouteOnly, const std::string& aRemoteIp,
-                         uint16_t aRemotePort,
+  void StartIceGathering(bool aDefaultRouteOnly,
                          // TODO: It probably makes sense to look
                          // this up internally
                          const nsTArray<NrIceStunAddr>& aStunAddrs) override;
