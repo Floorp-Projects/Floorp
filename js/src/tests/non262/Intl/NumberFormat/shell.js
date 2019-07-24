@@ -18,6 +18,7 @@ const NumberFormatParts = {
     ExponentMinusSign: GenericPartCreator("exponentMinusSign"),
     ExponentInteger: GenericPartCreator("exponentInteger"),
     Compact: GenericPartCreator("compact"),
+    Unit: GenericPartCreator("unit"),
 };
 
 function assertParts(nf, x, expected) {
