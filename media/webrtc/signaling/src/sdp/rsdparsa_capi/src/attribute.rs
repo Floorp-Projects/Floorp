@@ -1,5 +1,5 @@
 use std::slice;
-use libc::{size_t, uint8_t, uint16_t, uint32_t, int64_t, uint64_t, c_float};
+use libc::{size_t, c_float};
 use std::ptr;
 
 use rsdparsa::SdpSession;
@@ -65,7 +65,7 @@ pub enum RustSdpAttributeDtlsMessageType {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeDtlsMessage {
-    pub role: uint8_t,
+    pub role: u8,
     pub value: StringView,
 }
 
@@ -73,11 +73,11 @@ impl<'a> From<&'a SdpAttributeDtlsMessage > for RustSdpAttributeDtlsMessage {
     fn from(other: &SdpAttributeDtlsMessage ) -> Self {
         match other {
             &SdpAttributeDtlsMessage::Client(ref x) => RustSdpAttributeDtlsMessage {
-                role: RustSdpAttributeDtlsMessageType::Client as uint8_t,
+                role: RustSdpAttributeDtlsMessageType::Client as u8,
                 value: StringView::from(x.as_str()),
             },
             &SdpAttributeDtlsMessage::Server(ref x) => RustSdpAttributeDtlsMessage {
-                role: RustSdpAttributeDtlsMessageType::Server as uint8_t,
+                role: RustSdpAttributeDtlsMessageType::Server as u8,
                 value: StringView::from(x.as_str())
             }
         }
@@ -136,7 +136,7 @@ pub unsafe extern "C" fn sdp_get_iceoptions(attributes: *const Vec<SdpAttribute>
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_maxptime(attributes: *const Vec<SdpAttribute>, ret: *mut uint64_t) -> nsresult {
+pub unsafe extern "C" fn sdp_get_maxptime(attributes: *const Vec<SdpAttribute>, ret: *mut u64) -> nsresult {
     let attr = get_attribute((*attributes).as_slice(), SdpAttributeType::MaxPtime);
     if let Some(&SdpAttribute::MaxPtime(ref max_ptime)) = attr {
         *ret = *max_ptime;
@@ -148,14 +148,14 @@ pub unsafe extern "C" fn sdp_get_maxptime(attributes: *const Vec<SdpAttribute>, 
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeFingerprint {
-    hash_algorithm: uint16_t,
+    hash_algorithm: u16,
     fingerprint: *const Vec<u8>
 }
 
 impl<'a> From<&'a SdpAttributeFingerprint> for RustSdpAttributeFingerprint {
     fn from(other: &SdpAttributeFingerprint) -> Self {
         RustSdpAttributeFingerprint {
-            hash_algorithm: other.hash_algorithm as uint16_t,
+            hash_algorithm: other.hash_algorithm as u16,
             fingerprint: &other.fingerprint,
         }
     }
@@ -210,7 +210,7 @@ pub unsafe extern "C" fn sdp_get_setup(attributes: *const Vec<SdpAttribute>, ret
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeSsrc {
-    pub id: uint32_t,
+    pub id: u32,
     pub attribute: StringView,
     pub value: StringView,
 }
@@ -244,18 +244,18 @@ pub unsafe extern "C" fn sdp_get_ssrcs(attributes: *const Vec<SdpAttribute>, ret
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeRtpmap {
-    pub payload_type: uint8_t,
+    pub payload_type: u8,
     pub codec_name: StringView,
-    pub frequency: uint32_t,
-    pub channels: uint32_t,
+    pub frequency: u32,
+    pub channels: u32,
 }
 
 impl<'a> From<&'a SdpAttributeRtpmap> for RustSdpAttributeRtpmap {
     fn from(other: &SdpAttributeRtpmap) -> Self {
         RustSdpAttributeRtpmap {
-            payload_type: other.payload_type as uint8_t,
+            payload_type: other.payload_type as u8,
             codec_name: StringView::from(other.codec_name.as_str()),
-            frequency: other.frequency as uint32_t,
+            frequency: other.frequency as u32,
             channels: other.channels.unwrap_or(1)
         }
     }
@@ -282,21 +282,21 @@ pub unsafe extern "C" fn sdp_get_rtpmaps(attributes: *const Vec<SdpAttribute>, r
 pub struct RustSdpAttributeFmtpParameters {
 
     // H264
-    pub packetization_mode: uint32_t,
+    pub packetization_mode: u32,
     pub level_asymmetry_allowed: bool,
-    pub profile_level_id: uint32_t,
-    pub max_fs: uint32_t,
-    pub max_cpb: uint32_t,
-    pub max_dpb: uint32_t,
-    pub max_br: uint32_t,
-    pub max_mbps: uint32_t,
+    pub profile_level_id: u32,
+    pub max_fs: u32,
+    pub max_cpb: u32,
+    pub max_dpb: u32,
+    pub max_br: u32,
+    pub max_mbps: u32,
 
     // VP8 and VP9
     // max_fs, already defined in H264
-    pub max_fr: uint32_t,
+    pub max_fr: u32,
 
     // Opus
-    pub maxplaybackrate: uint32_t,
+    pub maxplaybackrate: u32,
     pub usedtx: bool,
     pub stereo: bool,
     pub useinbandfec: bool,
@@ -306,7 +306,7 @@ pub struct RustSdpAttributeFmtpParameters {
     pub dtmf_tones: StringView,
 
     // Red
-    pub encodings: *const Vec<uint8_t>,
+    pub encodings: *const Vec<u8>,
 
     // Unknown
     pub unknown_tokens: *const Vec<String>,
@@ -339,7 +339,7 @@ impl<'a> From<&'a SdpAttributeFmtpParameters> for RustSdpAttributeFmtpParameters
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeFmtp {
-    pub payload_type: uint8_t,
+    pub payload_type: u8,
     pub codec_name: StringView,
     pub parameters: RustSdpAttributeFmtpParameters,
 }
@@ -390,30 +390,30 @@ pub unsafe extern "C" fn sdp_get_fmtp(attributes: *const Vec<SdpAttribute>, ret_
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_ptime(attributes: *const Vec<SdpAttribute>) -> int64_t {
+pub unsafe extern "C" fn sdp_get_ptime(attributes: *const Vec<SdpAttribute>) -> i64 {
     for attribute in (*attributes).iter() {
         if let SdpAttribute::Ptime(time) = *attribute {
-            return time as int64_t;
+            return time as i64;
         }
     }
     -1
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_max_msg_size(attributes: *const Vec<SdpAttribute>) -> int64_t {
+pub unsafe extern "C" fn sdp_get_max_msg_size(attributes: *const Vec<SdpAttribute>) -> i64 {
     for attribute in (*attributes).iter() {
         if let SdpAttribute::MaxMessageSize(max_msg_size) = *attribute {
-            return max_msg_size as int64_t;
+            return max_msg_size as i64;
         }
     }
     -1
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn sdp_get_sctp_port(attributes: *const Vec<SdpAttribute>) -> int64_t {
+pub unsafe extern "C" fn sdp_get_sctp_port(attributes: *const Vec<SdpAttribute>) -> i64 {
     for attribute in (*attributes).iter() {
         if let SdpAttribute::SctpPort(port) = *attribute {
-            return port as int64_t;
+            return port as i64;
         }
     }
     -1
@@ -592,7 +592,7 @@ pub unsafe extern "C" fn sdp_get_groups(attributes: *const Vec<SdpAttribute>, re
 
 #[repr(C)]
 pub struct RustSdpAttributeRtcp {
-    pub port: uint32_t,
+    pub port: u32,
     pub unicast_addr: RustExplicitlyTypedAddress,
     pub has_address: bool,
 }
@@ -672,9 +672,9 @@ pub unsafe extern "C" fn sdp_get_rtcpfbs(attributes: *const Vec<SdpAttribute>, r
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeImageAttrXYRange {
     // range
-    pub min: uint32_t,
-    pub max: uint32_t,
-    pub step: uint32_t,
+    pub min: u32,
+    pub max: u32,
+    pub step: u32,
 
     // discrete values
     pub discrete_values: *const Vec<u32>,
@@ -875,8 +875,8 @@ pub unsafe extern "C" fn sdp_get_imageattrs(attributes: *const Vec<SdpAttribute>
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeSctpmap {
-    pub port: uint32_t,
-    pub channels: uint32_t,
+    pub port: u32,
+    pub channels: u32,
 }
 
 impl<'a> From<&'a SdpAttributeSctpmap> for RustSdpAttributeSctpmap {
@@ -1044,9 +1044,9 @@ pub unsafe extern "C" fn sdp_get_direction(attributes: *const Vec<SdpAttribute>)
 
 #[repr(C)]
 pub struct RustSdpAttributeRemoteCandidate {
-    pub component: uint32_t,
+    pub component: u32,
     pub address: RustAddress,
-    pub port: uint32_t,
+    pub port: u32,
 }
 
 
@@ -1101,12 +1101,12 @@ pub unsafe extern "C" fn sdp_get_candidates(attributes: *const Vec<SdpAttribute>
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeRidParameters {
-    pub max_width: uint32_t,
-    pub max_height: uint32_t,
-    pub max_fps: uint32_t,
-    pub max_fs: uint32_t,
-    pub max_br: uint32_t,
-    pub max_pps: uint32_t,
+    pub max_width: u32,
+    pub max_height: u32,
+    pub max_fps: u32,
+    pub max_fs: u32,
+    pub max_br: u32,
+    pub max_pps: u32,
     pub unknown:*const Vec<String>
 }
 
@@ -1129,8 +1129,8 @@ impl<'a> From<&'a SdpAttributeRidParameters> for RustSdpAttributeRidParameters {
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeRid {
     pub id: StringView,
-    pub direction: uint32_t,
-    pub formats: *const Vec<uint16_t>,
+    pub direction: u32,
+    pub formats: *const Vec<u16>,
     pub params: RustSdpAttributeRidParameters,
     pub depends: *const Vec<String>,
 }
@@ -1139,7 +1139,7 @@ impl<'a> From<&'a SdpAttributeRid> for RustSdpAttributeRid {
     fn from(other: &SdpAttributeRid) -> Self {
         RustSdpAttributeRid {
             id: StringView::from(other.id.as_str()),
-            direction: other.direction.clone() as uint32_t,
+            direction: other.direction.clone() as u32,
             formats: &other.formats,
             params: RustSdpAttributeRidParameters::from(&other.params),
             depends: &other.depends,
@@ -1166,7 +1166,7 @@ pub unsafe extern "C" fn sdp_get_rids(attributes: *const Vec<SdpAttribute>, ret_
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct RustSdpAttributeExtmap {
-    pub id: uint16_t,
+    pub id: u16,
     pub direction_specified: bool,
     pub direction: RustDirection,
     pub url: StringView,
@@ -1176,7 +1176,7 @@ pub struct RustSdpAttributeExtmap {
 impl<'a> From<&'a SdpAttributeExtmap> for RustSdpAttributeExtmap {
     fn from(other: &SdpAttributeExtmap) -> Self {
         RustSdpAttributeExtmap {
-            id : other.id as uint16_t,
+            id : other.id as u16,
             direction_specified: other.direction.is_some(),
             direction: RustDirection::from(&other.direction),
             url: StringView::from(other.url.as_str()),
