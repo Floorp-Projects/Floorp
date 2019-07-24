@@ -78,7 +78,7 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
 
 # Run tests
 
-1. During initial build dir setup or `meson configure` specify `-Dbuild_tests=true`
+1. During initial build dir setup or `meson configure` specify `-Denable_tests=true`
 2. In the build directory run `meson test` optionally with `-v` for more verbose output, especially useful
    for checkasm
 
@@ -89,10 +89,10 @@ The [VideoLAN Code of Conduct](https://wiki.videolan.org/CoC) applies to this pr
    ```
    git clone https://code.videolan.org/videolan/dav1d-test-data.git tests/dav1d-test-data
    ```
-2. During initial build dir setup or `meson configure` specify `-Dbuild_tests=true` and `-Dtestdata_tests=true`
+2. During initial build dir setup or `meson configure` specify `-Denable_tests=true` and `-Dtestdata_tests=true`
 
    ```
-   meson .test -Dbuild_tests=true -Dtestdata_tests=true
+   meson .test -Denable_tests=true -Dtestdata_tests=true
    ```
 3. In the build directory run `meson test` optionally with `-v` for more verbose output
 

@@ -122,7 +122,7 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
         const int w = f->bw << 2;
         const int row_h = imin((sby + 1) << (6 + f->seq_hdr->sb128), h - 1);
         const int y_stripe = (sby << (6 + f->seq_hdr->sb128)) - offset;
-        backup_lpf(f, f->lf.lr_lpf_line_ptr[0], lr_stride,
+        backup_lpf(f, f->lf.lr_lpf_line[0], lr_stride,
                    src[0] - offset * PXSTRIDE(src_stride[0]), src_stride[0],
                    0, f->seq_hdr->sb128, y_stripe, row_h, w, h, 0);
     }
@@ -137,12 +137,12 @@ void bytefn(dav1d_lr_copy_lpf)(Dav1dFrameContext *const f,
             (sby << ((6 - ss_ver) + f->seq_hdr->sb128)) - offset_uv;
 
         if (restore_planes & LR_RESTORE_U) {
-            backup_lpf(f, f->lf.lr_lpf_line_ptr[1], lr_stride,
+            backup_lpf(f, f->lf.lr_lpf_line[1], lr_stride,
                        src[1] - offset_uv * PXSTRIDE(src_stride[1]), src_stride[1],
                        ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, h, ss_hor);
         }
         if (restore_planes & LR_RESTORE_V) {
-            backup_lpf(f, f->lf.lr_lpf_line_ptr[2], lr_stride,
+            backup_lpf(f, f->lf.lr_lpf_line[2], lr_stride,
                        src[2] - offset_uv * PXSTRIDE(src_stride[1]), src_stride[1],
                        ss_ver, f->seq_hdr->sb128, y_stripe, row_h, w, h, ss_hor);
         }
@@ -158,7 +158,7 @@ static void lr_stripe(const Dav1dFrameContext *const f, pixel *p,
     const int chroma = !!plane;
     const int ss_ver = chroma & (f->sr_cur.p.p.layout == DAV1D_PIXEL_LAYOUT_I420);
     const int sbrow_has_bottom = (edges & LR_HAVE_BOTTOM);
-    const pixel *lpf = f->lf.lr_lpf_line_ptr[plane] + x;
+    const pixel *lpf = f->lf.lr_lpf_line[plane] + x;
     const ptrdiff_t p_stride = f->sr_cur.p.stride[chroma];
     const ptrdiff_t lpf_stride = sizeof(pixel) * ((f->sr_cur.p.p.w + 31) & ~31);
 

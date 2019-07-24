@@ -260,7 +260,12 @@ COLD void bitfn(dav1d_itx_dsp_init)(Dav1dInvTxfmDSPContext *const c) {
     assign_itx_all_fn64(64, 32, R);
     assign_itx_all_fn64(64, 64, );
 
-#if HAVE_ASM && ARCH_X86
+#if HAVE_ASM
+#if ARCH_AARCH64 || ARCH_ARM
+    bitfn(dav1d_itx_dsp_init_arm)(c);
+#endif
+#if ARCH_X86
     bitfn(dav1d_itx_dsp_init_x86)(c);
+#endif
 #endif
 }

@@ -1297,13 +1297,6 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
                 c->frame_hdr = NULL;
                 return DAV1D_ERR(EINVAL);
             }
-
-            break;
-        }
-        // OBU_FRAMEs shouldn't be signalled with show_existing_frame
-        if (c->frame_hdr->show_existing_frame) {
-            c->frame_hdr = NULL;
-            goto error;
         }
 
         if (c->frame_size_limit && (int64_t)c->frame_hdr->width[1] *
@@ -1313,6 +1306,14 @@ int dav1d_parse_obus(Dav1dContext *const c, Dav1dData *const in, int global) {
                       c->frame_hdr->height, c->frame_size_limit);
             c->frame_hdr = NULL;
             return DAV1D_ERR(ERANGE);
+        }
+
+        if (type != OBU_FRAME)
+            break;
+        // OBU_FRAMEs shouldn't be signaled with show_existing_frame
+        if (c->frame_hdr->show_existing_frame) {
+            c->frame_hdr = NULL;
+            goto error;
         }
 
         // This is the frame header at the start of a frame OBU.

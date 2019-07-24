@@ -1988,7 +1988,10 @@ int dav1d_init_ref_mv_common(AV1_COMMON *cm, const int w8, const int h8,
         const int align_h = (h8 + 15) & ~15;
         if (cm->tpl_mvs) free(cm->tpl_mvs);
         cm->tpl_mvs = malloc(sizeof(*cm->tpl_mvs) * (stride >> 1) * align_h);
-        if (!cm->tpl_mvs) return DAV1D_ERR(ENOMEM);
+        if (!cm->tpl_mvs) {
+            cm->mi_cols = cm->mi_rows = 0;
+            return DAV1D_ERR(ENOMEM);
+        }
         for (int i = 0; i < 7; i++)
             cm->frame_refs[i].idx = i;
         cm->mi_cols = w8 << 1;

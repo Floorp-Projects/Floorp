@@ -27,7 +27,7 @@
 #
 
 # Leave subdir if tests are disabled
-if not get_option('build_tests')
+if not get_option('enable_tests')
     subdir_done()
 endif
 

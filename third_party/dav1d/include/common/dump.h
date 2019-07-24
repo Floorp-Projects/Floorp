@@ -45,17 +45,23 @@ static inline void append_plane_to_file(const pixel *buf, ptrdiff_t stride,
     fclose(f);
 }
 
-static inline void hex_dump(const pixel *buf, ptrdiff_t stride,
-                            int w, int h, const char *what)
+static inline void hex_fdump(FILE *out, const pixel *buf, ptrdiff_t stride,
+                             int w, int h, const char *what)
 {
-    printf("%s\n", what);
+    fprintf(out, "%s\n", what);
     while (h--) {
         int x;
         for (x = 0; x < w; x++)
-            printf(" " PIX_HEX_FMT, buf[x]);
+            fprintf(out, " " PIX_HEX_FMT, buf[x]);
         buf += PXSTRIDE(stride);
-        printf("\n");
+        fprintf(out, "\n");
     }
+}
+
+static inline void hex_dump(const pixel *buf, ptrdiff_t stride,
+                            int w, int h, const char *what)
+{
+    hex_fdump(stdout, buf, stride, w, h, what);
 }
 
 static inline void coef_dump(const coef *buf, const int w, const int h,

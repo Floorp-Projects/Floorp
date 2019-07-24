@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018, VideoLAN and dav1d authors
- * Copyright © 2018, Two Orioles, LLC
+ * Copyright © 2019, VideoLAN and dav1d authors
+ * Copyright © 2019, Janne Grunau
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,26 +25,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_SRC_ITX_H
-#define DAV1D_SRC_ITX_H
+#include "config.h"
 
-#include <stddef.h>
+#include "common/attributes.h"
 
-#include "common/bitdepth.h"
+#include "src/ppc/cpu.h"
 
-#include "src/levels.h"
+#if (defined(HAVE_GETAUXVAL) || defined(HAVE_ELF_AUX_INFO)) && ARCH_PPC64LE
+#include <sys/auxv.h>
+#define HAVE_AUX
+#endif
 
-#define decl_itx_fn(name) \
-void (name)(pixel *dst, ptrdiff_t dst_stride, coef *coeff, int eob \
-            HIGHBD_DECL_SUFFIX)
-typedef decl_itx_fn(*itxfm_fn);
-
-typedef struct Dav1dInvTxfmDSPContext {
-    itxfm_fn itxfm_add[N_RECT_TX_SIZES][N_TX_TYPES_PLUS_LL];
-} Dav1dInvTxfmDSPContext;
-
-bitfn_decls(void dav1d_itx_dsp_init, Dav1dInvTxfmDSPContext *c);
-bitfn_decls(void dav1d_itx_dsp_init_arm, Dav1dInvTxfmDSPContext *c);
-bitfn_decls(void dav1d_itx_dsp_init_x86, Dav1dInvTxfmDSPContext *c);
-
-#endif /* DAV1D_SRC_ITX_H */
+COLD unsigned dav1d_get_cpu_flags_ppc(void) {
+    unsigned flags = 0;
+#if defined(HAVE_GETAUXVAL) && ARCH_PPC64LE
+    unsigned long hw_cap = getauxval(AT_HWCAP);
+#elif defined(HAVE_ELF_AUX_INFO) && ARCH_PPC64LE
+    unsigned long hw_cap = 0;
+    elf_aux_info(AT_HWCAP, &hw_cap, sizeof(hw_cap));
+#endif
+#ifdef HAVE_AUX
+    flags |= (hw_cap & PPC_FEATURE_HAS_VSX) ? DAV1D_PPC_CPU_FLAG_VSX : 0;
+#endif
+    return flags;
+}

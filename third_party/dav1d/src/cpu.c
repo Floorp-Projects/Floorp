@@ -39,6 +39,8 @@ COLD unsigned dav1d_get_cpu_flags(void) {
     if (!checked) {
 #if (ARCH_AARCH64 || ARCH_ARM) && HAVE_ASM
         flags = dav1d_get_cpu_flags_arm();
+#elif ARCH_PPC64LE && HAVE_ASM
+        flags = dav1d_get_cpu_flags_ppc();
 #elif ARCH_X86 && HAVE_ASM
         flags = dav1d_get_cpu_flags_x86();
 #else

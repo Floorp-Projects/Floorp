@@ -5,17 +5,17 @@ option('bitdepths',
     choices: ['8', '16'],
     description: 'Enable only specified bitdepths')
 
-option('build_asm',
+option('enable_asm',
     type: 'boolean',
     value: true,
     description: 'Build asm files, if available')
 
-option('build_tools',
+option('enable_tools',
     type: 'boolean',
     value: true,
     description: 'Build dav1d cli tools')
 
-option('build_tests',
+option('enable_tests',
     type: 'boolean',
     value: true,
     description: 'Build dav1d tests')

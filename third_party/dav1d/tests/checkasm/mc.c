@@ -92,8 +92,9 @@ static void check_mc(Dav1dMCDSPContext *const c) {
                                  mx, my HIGHBD_TAIL_SUFFIX);
                         call_new(a_dst, dst_stride, src, src_stride, w, h,
                                  mx, my HIGHBD_TAIL_SUFFIX);
-                        if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                            fail();
+                        checkasm_check_pixel(c_dst, dst_stride,
+                                             a_dst, dst_stride,
+                                             w, h, "dst");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
                             filter == FILTER_2D_BILINEAR)
@@ -148,8 +149,9 @@ static void check_mct(Dav1dMCDSPContext *const c) {
                                  mx, my HIGHBD_TAIL_SUFFIX);
                         call_new(a_tmp, src, src_stride, w, h,
                                  mx, my HIGHBD_TAIL_SUFFIX);
-                        if (memcmp(c_tmp, a_tmp, w * h * sizeof(*c_tmp)))
-                            fail();
+                        checkasm_check(int16_t, c_tmp, w * sizeof(*c_tmp),
+                                                a_tmp, w * sizeof(*a_tmp),
+                                                w, h, "tmp");
 
                         if (filter == FILTER_2D_8TAP_REGULAR ||
                             filter == FILTER_2D_BILINEAR)
@@ -194,8 +196,8 @@ static void check_avg(Dav1dMCDSPContext *const c) {
                 init_tmp(c, c_dst, tmp, bitdepth_max);
                 call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
                 call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h HIGHBD_TAIL_SUFFIX);
             }
@@ -226,8 +228,8 @@ static void check_w_avg(Dav1dMCDSPContext *const c) {
 
                 call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
                 call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, weight HIGHBD_TAIL_SUFFIX);
             }
@@ -261,8 +263,8 @@ static void check_mask(Dav1dMCDSPContext *const c) {
                 init_tmp(c, c_dst, tmp, bitdepth_max);
                 call_ref(c_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
                 call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h, mask HIGHBD_TAIL_SUFFIX);
             }
@@ -282,6 +284,8 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
                  HIGHBD_DECL_SUFFIX);
 
     static const uint16_t ss[] = { 444, 422, 420 };
+    static const uint8_t ss_hor[] = { 0, 1, 1 };
+    static const uint8_t ss_ver[] = { 0, 0, 1 };
 
     for (int i = 0; i < 3; i++)
         for (int w = 4; w <= 128; w <<= 1)
@@ -303,11 +307,13 @@ static void check_w_mask(Dav1dMCDSPContext *const c) {
                              c_mask, sign HIGHBD_TAIL_SUFFIX);
                     call_new(a_dst, dst_stride, tmp[0], tmp[1], w, h,
                              a_mask, sign HIGHBD_TAIL_SUFFIX);
-                    if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)) ||
-                        memcmp(c_mask, a_mask, (w * h * sizeof(*c_mask)) >> i))
-                    {
-                        fail();
-                    }
+                    checkasm_check_pixel(c_dst, dst_stride,
+                                         a_dst, dst_stride,
+                                         w, h, "dst");
+                    checkasm_check(uint8_t, c_mask, w >> ss_hor[i],
+                                            a_mask, w >> ss_hor[i],
+                                            w >> ss_hor[i], h >> ss_ver[i],
+                                            "mask");
 
                     bench_new(a_dst, dst_stride, tmp[0], tmp[1], w, h,
                               a_mask, sign HIGHBD_TAIL_SUFFIX);
@@ -343,8 +349,8 @@ static void check_blend(Dav1dMCDSPContext *const c) {
 
                 call_ref(c_dst, dst_stride, tmp, w, h, mask);
                 call_new(a_dst, dst_stride, tmp, w, h, mask);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp, w, h, mask);
             }
@@ -377,8 +383,8 @@ static void check_blend_v(Dav1dMCDSPContext *const c) {
 
                 call_ref(c_dst, dst_stride, tmp, w, h);
                 call_new(a_dst, dst_stride, tmp, w, h);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp, w, h);
             }
@@ -410,8 +416,8 @@ static void check_blend_h(Dav1dMCDSPContext *const c) {
 
                 call_ref(c_dst, dst_stride, tmp, w, h);
                 call_new(a_dst, dst_stride, tmp, w, h);
-                if (memcmp(c_dst, a_dst, w * h * sizeof(*c_dst)))
-                    fail();
+                checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                                     w, h, "dst");
 
                 bench_new(a_dst, dst_stride, tmp, w, h);
             }
@@ -449,8 +455,8 @@ static void check_warp8x8(Dav1dMCDSPContext *const c) {
 
         call_ref(c_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
         call_new(a_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
-        if (memcmp(c_dst, a_dst, 8 * 8 * sizeof(*c_dst)))
-            fail();
+        checkasm_check_pixel(c_dst, dst_stride, a_dst, dst_stride,
+                             8, 8, "dst");
 
         bench_new(a_dst, dst_stride, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
     }
@@ -486,24 +492,13 @@ static void check_warp8x8t(Dav1dMCDSPContext *const c) {
 
         call_ref(c_tmp, 8, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
         call_new(a_tmp, 8, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
-        if (memcmp(c_tmp, a_tmp, 8 * 8 * sizeof(*c_tmp)))
-            fail();
+        checkasm_check(int16_t, c_tmp, 8 * sizeof(*c_tmp),
+                                a_tmp, 8 * sizeof(*a_tmp),
+                                8, 8, "tmp");
 
         bench_new(a_tmp, 8, src, src_stride, abcd, mx, my HIGHBD_TAIL_SUFFIX);
     }
     report("warp8x8t");
-}
-
-static int cmp2d(const pixel *a, const pixel *b, const ptrdiff_t stride,
-                 const int w, const int h)
-{
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++)
-            if (a[x] != b[x]) return (y << 16) | x;
-        a += PXSTRIDE(stride);
-        b += PXSTRIDE(stride);
-    }
-    return -1;
 }
 
 enum EdgeFlags {
@@ -566,8 +561,9 @@ static void check_emuedge(Dav1dMCDSPContext *const c) {
                              c_dst, 192 * sizeof(pixel), src, 160 * sizeof(pixel));
                     call_new(bw, bh, iw, ih, x, y,
                              a_dst, 192 * sizeof(pixel), src, 160 * sizeof(pixel));
-                    const int res = cmp2d(c_dst, a_dst, 192 * sizeof(pixel), bw, bh);
-                    if (res != -1) fail();
+                    checkasm_check_pixel(c_dst, 192 * sizeof(pixel),
+                                         a_dst, 192 * sizeof(pixel),
+                                         bw, bh, "dst");
                 }
             }
             for (enum EdgeFlags edge = 1; edge < 0xf; edge <<= 1) {

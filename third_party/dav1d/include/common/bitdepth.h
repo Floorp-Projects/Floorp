@@ -40,6 +40,8 @@ typedef void coef;
 #elif BITDEPTH == 8
 typedef uint8_t pixel;
 typedef int16_t coef;
+#define PIXEL_TYPE uint8_t
+#define COEF_TYPE int16_t
 #define pixel_copy memcpy
 #define pixel_set memset
 #define iclip_pixel iclip_u8
@@ -54,6 +56,8 @@ typedef int16_t coef;
 #elif BITDEPTH == 16
 typedef uint16_t pixel;
 typedef int32_t coef;
+#define PIXEL_TYPE uint16_t
+#define COEF_TYPE int32_t
 #define pixel_copy(a, b, c) memcpy(a, b, (c) << 1)
 static inline void pixel_set(pixel *const dst, const int val, const int num) {
     for (int n = 0; n < num; n++)
