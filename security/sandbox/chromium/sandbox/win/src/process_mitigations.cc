@@ -77,16 +77,7 @@ bool ApplyProcessMitigationsToCurrentProcess(MitigationFlags flags) {
 
     // Check for SetDefaultDllDirectories since it requires KB2533623.
     if (set_default_dll_directories) {
-#if defined(COMPONENT_BUILD)
-      const DWORD directory_flags = LOAD_LIBRARY_SEARCH_DEFAULT_DIRS;
-#else
-      // In a non-component build, all DLLs will be loaded manually, or via
-      // manifest definition, so these flags can be stronger. This prevents DLL
-      // planting in the application directory.
-      const DWORD directory_flags =
-          LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS;
-#endif
-      if (!set_default_dll_directories(directory_flags) &&
+      if (!set_default_dll_directories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) &&
           ERROR_ACCESS_DENIED != ::GetLastError()) {
         return false;
       }
