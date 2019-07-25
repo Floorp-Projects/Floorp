@@ -31,8 +31,7 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     override fun warmup(flags: Long): Boolean {
         // We need to run this on the main thread since that's where GeckoRuntime expects to get initialized (if needed)
         return runBlocking(Dispatchers.Main) {
-            // Just accessing the engine here will make sure that it is created and initialized.
-            logger.debug("Warm up for engine: ${engine.name()}")
+            engine.warmUp()
             true
         }
     }

@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import android.content.Context
 import android.util.AttributeSet
+import androidx.annotation.MainThread
 import mozilla.components.concept.engine.utils.EngineVersion
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
@@ -50,6 +51,16 @@ interface Engine {
 
         override fun hashCode() = types
     }
+
+    /**
+     * Makes sure all required engine initialization logic is executed. The
+     * details are specific to individual implementations, but the following must be true:
+     *
+     * - The engine must be operational after this method was called successfully
+     * - Calling this method on an engine that is already initialized has no effect
+     */
+    @MainThread
+    fun warmUp() = Unit
 
     /**
      * Creates a new view for rendering web content.

@@ -9,6 +9,7 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.facts.processor.LogFactProcessor
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
+import mozilla.components.support.ktx.android.content.isMainProcess
 
 class SampleApplication : Application() {
     val components by lazy { Components(this) }
@@ -18,7 +19,12 @@ class SampleApplication : Application() {
 
         Log.addSink(AndroidLogSink())
 
-        Facts.registerProcessor(
-            LogFactProcessor())
+        if (!isMainProcess()) {
+            return
+        }
+
+        Facts.registerProcessor(LogFactProcessor())
+
+        components.engine.warmUp()
     }
 }
