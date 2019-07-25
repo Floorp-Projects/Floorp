@@ -702,7 +702,7 @@ describe("selectLayoutRender", () => {
             type: "foo3",
             properties: { items: 3 },
             feed: { url: "foo3.com" },
-            spocs: { positions: [{ index: 0 }], probability: 1 },
+            spocs: { positions: [{ index: 0, probability: 1 }] },
           },
           { type: "foo4", properties: { items: 3 }, feed: { url: "foo4.com" } },
           { type: "foo5" },
@@ -751,7 +751,7 @@ describe("selectLayoutRender", () => {
             type: "foo3",
             properties: { items: 3 },
             feed: { url: "foo3.com" },
-            spocs: { positions: [{ index: 0 }], probability: 1 },
+            spocs: { positions: [{ index: 0, probability: 1 }] },
           },
           { type: "foo4", properties: { items: 3 }, feed: { url: "foo4.com" } },
           { type: "foo5" },
@@ -839,68 +839,5 @@ describe("selectLayoutRender", () => {
 
     assert.equal(layoutRender[0].components[0].type, "TopSites");
     assert.equal(layoutRender[0].components[1], undefined);
-  });
-  it("should skip rendering a spoc in position if that spoc is blocked for that session", () => {
-    const fakeLayout = [
-      {
-        width: 3,
-        components: [
-          {
-            type: "foo1",
-            properties: { items: 3 },
-            feed: { url: "foo1.com" },
-            spocs: { positions: [{ index: 0 }], probability: 1 },
-          },
-        ],
-      },
-    ];
-    const fakeSpocsData = {
-      lastUpdated: 0,
-      spocs: {
-        spocs: [{ name: "spoc", url: "https://foo.com" }],
-      },
-    };
-    store.dispatch({
-      type: at.DISCOVERY_STREAM_LAYOUT_UPDATE,
-      data: { layout: fakeLayout },
-    });
-    store.dispatch({
-      type: at.DISCOVERY_STREAM_FEED_UPDATE,
-      data: {
-        feed: { data: { recommendations: [{ name: "rec" }] } },
-        url: "foo1.com",
-      },
-    });
-    store.dispatch({
-      type: at.DISCOVERY_STREAM_SPOCS_UPDATE,
-      data: fakeSpocsData,
-    });
-
-    const { layoutRender: layout1 } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
-
-    store.dispatch({
-      type: at.DISCOVERY_STREAM_SPOC_BLOCKED,
-      data: { url: "https://foo.com" },
-    });
-
-    const { layoutRender: layout2 } = selectLayoutRender(
-      store.getState().DiscoveryStream,
-      {},
-      []
-    );
-
-    assert.deepEqual(layout1[0].components[0].data.recommendations[0], {
-      name: "spoc",
-      url: "https://foo.com",
-      pos: 0,
-    });
-    assert.deepEqual(layout2[0].components[0].data.recommendations[0], {
-      name: "rec",
-      pos: 0,
-    });
   });
 });
