@@ -219,7 +219,8 @@ class IDRefsIterator : public AccIterable {
   /**
    * Return the element with the given ID.
    */
-  nsIContent* GetElem(const nsDependentSubstring& aID);
+  static dom::Element* GetElem(nsIContent* aContent, const nsAString& aID);
+  dom::Element* GetElem(const nsDependentSubstring& aID);
 
   // AccIterable
   virtual Accessible* Next() override;
