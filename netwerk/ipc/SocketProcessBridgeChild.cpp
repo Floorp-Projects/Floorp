@@ -71,13 +71,16 @@ SocketProcessBridgeChild::GetSocketProcessBridge() {
     return GetPromise::CreateAndReject(nsCString("No NeckoChild!"), __func__);
   }
 
-  if (sSocketProcessBridgeChild) {
-    return GetPromise::CreateAndResolve(sSocketProcessBridgeChild, __func__);
-  }
-
+  // ContentChild is shutting down, we should not try to create
+  // SocketProcessBridgeChild.
   ContentChild* content = ContentChild::GetSingleton();
   if (!content || content->IsShuttingDown()) {
-    return nullptr;
+    return GetPromise::CreateAndReject(
+        nsCString("ContentChild is shutting down."), __func__);
+  }
+
+  if (sSocketProcessBridgeChild) {
+    return GetPromise::CreateAndResolve(sSocketProcessBridgeChild, __func__);
   }
 
   return gNeckoChild->SendInitSocketProcessBridge()->Then(

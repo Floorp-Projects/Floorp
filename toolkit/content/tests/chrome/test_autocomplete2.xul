@@ -9,8 +9,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <textbox id="autocomplete" type="autocomplete"
-         autocompletesearch="simple"
-         onsearchcomplete="checkResult();"/>
+         autocompletesearch="simple"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -79,6 +78,15 @@ var componentManager = Components.manager
 componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
                                  autoCompleteSimpleName, autoCompleteSimple);
 
+var element = document.getElementById("autocomplete");
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkResult();
+  };
+}(element.onSearchComplete);
 
 // Test Bug 441530 - correctly setting "nomatch"
 // Test Bug 441526 - correctly setting style with "highlightnonmatches"

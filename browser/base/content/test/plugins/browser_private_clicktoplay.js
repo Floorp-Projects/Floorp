@@ -65,8 +65,7 @@ add_task(async function test1b() {
 
   await ContentTask.spawn(gPrivateBrowser, null, function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    ok(!objLoadingContent.activated, "Test 1b, Plugin should not be activated");
+    ok(!plugin.activated, "Test 1b, Plugin should not be activated");
   });
 
   // Check the button status
@@ -107,8 +106,7 @@ add_task(async function test2a() {
 
   await ContentTask.spawn(gTestBrowser, null, function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    ok(!objLoadingContent.activated, "Test 2a, Plugin should not be activated");
+    ok(!plugin.activated, "Test 2a, Plugin should not be activated");
   });
 
   // Simulate clicking the "Allow Now" button.
@@ -123,8 +121,7 @@ add_task(async function test2a() {
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    let condition = () => objLoadingContent.activated;
+    let condition = () => plugin.activated;
     await ContentTaskUtils.waitForCondition(
       condition,
       "Test 2a, Waited too long for plugin to activate"
@@ -149,8 +146,7 @@ add_task(async function test2c() {
 
   await ContentTask.spawn(gPrivateBrowser, null, function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    ok(objLoadingContent.activated, "Test 2c, Plugin should be activated");
+    ok(plugin.activated, "Test 2c, Plugin should be activated");
   });
 
   // Check the button status
@@ -198,8 +194,7 @@ add_task(async function test3a() {
 
   await ContentTask.spawn(gTestBrowser, null, function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    ok(!objLoadingContent.activated, "Test 3a, Plugin should not be activated");
+    ok(!plugin.activated, "Test 3a, Plugin should not be activated");
   });
 
   // Simulate clicking the "Allow" button.
@@ -213,8 +208,7 @@ add_task(async function test3a() {
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    let condition = () => objLoadingContent.activated;
+    let condition = () => plugin.activated;
     await ContentTaskUtils.waitForCondition(
       condition,
       "Test 3a, Waited too long for plugin to activate"

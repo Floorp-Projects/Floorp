@@ -130,15 +130,12 @@ add_task(async function test_CTP_plugins() {
   await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part5: should have a plugin element in the page");
-    let objLoadingContent = testPlugin.QueryInterface(
-      Ci.nsIObjectLoadingContent
-    );
-    let condition = () => objLoadingContent.activated;
+    let condition = () => testPlugin.activated;
     await ContentTaskUtils.waitForCondition(
       condition,
       "part5: waited too long for plugin to activate"
     );
-    ok(objLoadingContent.activated, "part6: plugin should be activated");
+    ok(testPlugin.activated, "part6: plugin should be activated");
   });
 
   BrowserTestUtils.removeTab(pluginTab);
@@ -158,10 +155,7 @@ add_task(async function test_CTP_plugins() {
   await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part7: should have a plugin element in the page");
-    let objLoadingContent = testPlugin.QueryInterface(
-      Ci.nsIObjectLoadingContent
-    );
-    ok(!objLoadingContent.activated, "part7: plugin should not be activated");
+    ok(!testPlugin.activated, "part7: plugin should not be activated");
   });
 
   BrowserTestUtils.removeTab(pluginTab);
@@ -193,15 +187,12 @@ add_task(async function test_CTP_plugins() {
   await ContentTask.spawn(pluginTab.linkedBrowser, null, async function() {
     let testPlugin = content.document.getElementById("test");
     ok(testPlugin, "part9: should have a plugin element in the page");
-    let objLoadingContent = testPlugin.QueryInterface(
-      Ci.nsIObjectLoadingContent
-    );
-    let condition = () => objLoadingContent.activated;
+    let condition = () => testPlugin.activated;
     await ContentTaskUtils.waitForCondition(
       condition,
       "part9: waited too long for plugin to activate"
     );
-    ok(objLoadingContent.activated, "part10: plugin should be activated");
+    ok(testPlugin.activated, "part10: plugin should be activated");
   });
 
   BrowserTestUtils.removeTab(pluginTab);

@@ -20,7 +20,6 @@ nsresult GetInstallHash(const char16_t* installPath, const char* vendor,
 
 #ifdef XP_WIN
 enum class SetPermissionsOf {
-  BaseDir,
   BaseDirIfNotExists,
   AllFilesAndDirs,
 };

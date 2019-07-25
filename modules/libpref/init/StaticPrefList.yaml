@@ -1287,7 +1287,7 @@
 
 - name: dom.ipc.cancel_content_js_when_navigating
   type: bool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 - name: dom.ipc.plugins.asyncdrawing.enabled

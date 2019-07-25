@@ -1515,6 +1515,8 @@ async function hoverAtPos(dbg, { line, ch }) {
       view: dbg.win
     })
   );
+
+  InspectorUtils.addPseudoClassLock(tokenEl, ":hover");
 }
 
 // tryHovering will hover at a position every second until we
@@ -1605,6 +1607,8 @@ async function assertPreviews(dbg, previews) {
       });
     }
 
+    const { target } = dbg.selectors.getPreview(getContext(dbg));
+    InspectorUtils.removePseudoClassLock(target, ':hover')
     dbg.actions.clearPreview(getContext(dbg));
   }
 }

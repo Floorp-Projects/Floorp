@@ -1,0 +1,74 @@
+# HG changeset patch
+# User Bob Owen <bobowencode@gmail.com>
+# Date 1564062993 -3600
+#      Thu Jul 25 14:56:33 2019 +0100
+# Node ID aa8f8da7b00f1f751bf4a7c8a2cc58b290a328e0
+# Parent  69ac304560c98a733d44a0245fe9782dc6a465e2
+Bug 1565848: Revert latest change to MITIGATION_DLL_SEARCH_ORDER. r=handyman!
+
+This is until any regressions can be fixed, see bug 1568850.
+
+diff --git a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+--- a/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
++++ b/security/sandbox/chromium/sandbox/win/src/process_mitigations.cc
+@@ -72,26 +72,17 @@ bool ApplyProcessMitigationsToCurrentPro
+ 
+   if (flags & MITIGATION_DLL_SEARCH_ORDER) {
+     SetDefaultDllDirectoriesFunction set_default_dll_directories =
+         reinterpret_cast<SetDefaultDllDirectoriesFunction>(
+             ::GetProcAddress(module, "SetDefaultDllDirectories"));
+ 
+     // Check for SetDefaultDllDirectories since it requires KB2533623.
+     if (set_default_dll_directories) {
+-#if defined(COMPONENT_BUILD)
+-      const DWORD directory_flags = LOAD_LIBRARY_SEARCH_DEFAULT_DIRS;
+-#else
+-      // In a non-component build, all DLLs will be loaded manually, or via
+-      // manifest definition, so these flags can be stronger. This prevents DLL
+-      // planting in the application directory.
+-      const DWORD directory_flags =
+-          LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_USER_DIRS;
+-#endif
+-      if (!set_default_dll_directories(directory_flags) &&
++      if (!set_default_dll_directories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS) &&
+           ERROR_ACCESS_DENIED != ::GetLastError()) {
+         return false;
+       }
+     }
+   }
+ 
+   // Set the heap to terminate on corruption
+   if (flags & MITIGATION_HEAP_TERMINATE) {
+diff --git a/security/sandbox/chromium/sandbox/win/src/security_level.h b/security/sandbox/chromium/sandbox/win/src/security_level.h
+--- a/security/sandbox/chromium/sandbox/win/src/security_level.h
++++ b/security/sandbox/chromium/sandbox/win/src/security_level.h
+@@ -192,25 +192,20 @@ const MitigationFlags MITIGATION_BOTTOM_
+ // PROCESS_CREATION_MITIGATION_POLICY_HIGH_ENTROPY_ASLR_ALWAYS_ON
+ const MitigationFlags MITIGATION_HIGH_ENTROPY_ASLR = 0x00000080;
+ 
+ // Immediately raises an exception on a bad handle reference. Must be
+ // enabled after startup. Corresponds to
+ // PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON.
+ const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS = 0x00000100;
+ 
+-// Strengthens the DLL search order. See
+-// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515. In a
+-// component build - sets this to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS allowing
+-// additional directories to be added via Windows AddDllDirectory() function,
+-// but preserving current load order. In a non-component build, all DLLs should
+-// be loaded manually, so strenthen to LOAD_LIBRARY_SEARCH_SYSTEM32 |
+-// LOAD_LIBRARY_SEARCH_USER_DIRS, removing LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
+-// preventing DLLs being implicitly loaded from the application path. Must be
+-// enabled after startup.
++// Sets the DLL search order to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS. Additional
++// directories can be added via the Windows AddDllDirectory() function.
++// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
++// Must be enabled after startup.
+ const MitigationFlags MITIGATION_DLL_SEARCH_ORDER = 0x00000200;
+ 
+ // Changes the mandatory integrity level policy on the current process' token
+ // to enable no-read and no-execute up. This prevents a lower IL process from
+ // opening the process token for impersonate/duplicate/assignment.
+ const MitigationFlags MITIGATION_HARDEN_TOKEN_IL_POLICY = 0x00000400;
+ 
+ // Prevents the process from making Win32k calls. Corresponds to

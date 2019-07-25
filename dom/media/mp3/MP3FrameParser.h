@@ -41,6 +41,9 @@ class ID3Parser {
     // The derived size based on the provided size fields.
     uint32_t Size() const;
 
+    // To see whether we have parsed the value of the size from header.
+    bool HasSizeBeenSet() const;
+
     // Returns the size of an ID3v2.4 footer if present and zero otherwise.
     uint8_t FooterSize() const;
 
@@ -70,7 +73,7 @@ class ID3Parser {
     // The derived size as provided by the size fields.
     // The header size fields holds a 4 byte sequence with each MSB set to 0,
     // this bits need to be ignored when deriving the actual size.
-    uint32_t mSize;
+    Maybe<uint32_t> mSize;
 
     // The current byte position in the parsed sequence. Reset via Reset and
     // incremented via Update.
