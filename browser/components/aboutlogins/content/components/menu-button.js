@@ -35,10 +35,7 @@ export default class MenuButton extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "blur": {
-        if (
-          event.relatedTarget &&
-          event.relatedTarget.closest(".menu") == this._menu
-        ) {
+        if (event.target == this) {
           // Only hide the menu if focus has left the menu-button.
           return;
         }
@@ -55,24 +52,25 @@ export default class MenuButton extends HTMLElement {
         ) {
           return;
         }
+
+        if (event.originalTarget == this._menuButton) {
+          this._toggleMenu();
+          if (!this._menu.hidden) {
+            this._focusSuccessor(true);
+          }
+          return;
+        }
+
         let classList = event.originalTarget.classList;
-        if (
-          classList.contains("menuitem-import") ||
-          classList.contains("menuitem-faq") ||
-          classList.contains("menuitem-feedback") ||
-          classList.contains("menuitem-preferences") ||
-          classList.contains("menuitem-mobile")
-        ) {
+        if (classList.contains("menuitem-button")) {
           let eventName = event.originalTarget.dataset.eventName;
           document.dispatchEvent(
             new CustomEvent(eventName, {
               bubbles: true,
             })
           );
-          this._hideMenu();
-          break;
         }
-        this._toggleMenu();
+        this._hideMenu();
         break;
       }
       case "keydown": {
@@ -82,32 +80,45 @@ export default class MenuButton extends HTMLElement {
   }
 
   _handleKeyDown(event) {
-    if (event.key == "Enter") {
+    if (event.key == "Enter" && event.originalTarget == this._menuButton) {
       event.preventDefault();
       this._toggleMenu();
+      this._focusSuccessor(true);
     } else if (event.key == "Escape") {
       this._hideMenu();
       this._menuButton.focus();
+    } else if (event.key.startsWith("Arrow")) {
+      event.preventDefault();
+      this._focusSuccessor(event.key == "ArrowDown");
+    }
+  }
+
+  _focusSuccessor(next = true) {
+    let items = this._menu.querySelectorAll(".menuitem-button:not([hidden])");
+    let firstItem = items[0];
+    let lastItem = items[items.length - 1];
+
+    let activeItem = this.shadowRoot.activeElement;
+    let activeItemIndex = [...items].indexOf(activeItem);
+
+    let successor = null;
+
+    if (next) {
+      if (!activeItem || activeItem === lastItem) {
+        successor = firstItem;
+      } else {
+        successor = items[activeItemIndex + 1];
+      }
+    } else if (activeItem === this._menuButton || activeItem === firstItem) {
+      successor = lastItem;
+    } else {
+      successor = items[activeItemIndex - 1];
     }
 
-    if (!event.key.startsWith("Arrow")) {
-      return;
+    if (this._menu.hidden) {
+      this._showMenu();
     }
-
-    let activeMenuitem =
-      this.shadowRoot.activeElement ||
-      this._menu.querySelector(".menuitem-button:not([hidden])");
-
-    let newlyFocusedItem = null;
-    if (event.key == "ArrowDown") {
-      newlyFocusedItem = activeMenuitem.nextElementSibling;
-    } else if (event.key == "ArrowUp") {
-      newlyFocusedItem = activeMenuitem.previousElementSibling;
-    }
-    if (!newlyFocusedItem) {
-      return;
-    }
-    newlyFocusedItem.focus();
+    successor.focus();
   }
 
   _hideMenu() {
