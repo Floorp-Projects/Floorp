@@ -65,6 +65,8 @@ class UrlbarController {
 
     this._listeners = new Set();
     this._userSelectionBehavior = "none";
+
+    this.engagementEvent = new TelemetryEvent(options.eventTelemetryCategory);
   }
 
   /**
@@ -339,6 +341,7 @@ class UrlbarController {
           }
           if (executeAction) {
             this.userSelectionBehavior = "arrow";
+            this.engagementEvent.start(event);
             this.input.startQuery({ searchString: this.input.textValue });
           }
         }
@@ -579,5 +582,198 @@ class UrlbarController {
         }
       }
     }
+  }
+}
+
+/**
+ * Tracks and records telemetry events for the given category, if provided,
+ * otherwise it's a no-op.
+ * It is currently designed around the "urlbar" category, even if it can
+ * potentially be extended to other categories.
+ * To record an event, invoke start() with a starting event, then either
+ * invoke record() with a final event, or discard() to drop the recording.
+ * @see Events.yaml
+ */
+class TelemetryEvent {
+  constructor(category) {
+    this._category = category;
+  }
+
+  /**
+   * Start measuring the elapsed time from an input event.
+   * After this has been invoked, any subsequent calls to start() are ignored,
+   * until either record() or discard() are invoked. Thus, it is safe to keep
+   * invoking this on every input event.
+   * @param {event} event A DOM input event.
+   * @note This should never throw, or it may break the urlbar.
+   */
+  start(event) {
+    // Start is invoked at any input, but we only count the first one.
+    // Once an engagement or abandoment happens, we clear the _startEventInfo.
+    if (!this._category || this._startEventInfo) {
+      return;
+    }
+    if (!event) {
+      Cu.reportError("Must always provide an event");
+      return;
+    }
+    if (!["input", "drop", "mousedown", "keydown"].includes(event.type)) {
+      Cu.reportError("Can't start recording from event type: " + event.type);
+      return;
+    }
+
+    // "typed" is used when the user types something, while "pasted" and
+    // "dropped" are used when the text is inserted at once, by a paste or drop
+    // operation. "topsites" is a bit special, it is used when the user opens
+    // the empty search dropdown, that is supposed to show top sites. That
+    // happens by clicking on the urlbar dropmarker, or pressing DOWN with an
+    // empty input field. Even if the user later types something, we still
+    // report "topsites", with a positive numChars.
+    let interactionType = "topsites";
+    if (event.type == "input") {
+      interactionType = UrlbarUtils.isPasteEvent(event) ? "pasted" : "typed";
+    } else if (event.type == "drop") {
+      interactionType = "dropped";
+    }
+
+    this._startEventInfo = {
+      timeStamp: event.timeStamp || Cu.now(),
+      interactionType,
+    };
+  }
+
+  /**
+   * Record an engagement telemetry event.
+   * When the user picks a result from a search through the mouse or keyboard,
+   * an engagement event is recorded. If instead the user abandons a search, by
+   * blurring the input field, an abandonment event is recorded.
+   * @param {event} [event] A DOM event.
+   * @param {object} details An object describing action details.
+   * @param {string} details.numChars Number of input characters.
+   * @param {string} details.selIndex Index of the selected result, undefined
+   *        for "blur".
+   * @param {string} details.selType type of the selected element, undefined
+   *        for "blur". One of "none", "autofill", "visit", "bookmark",
+   *        "history", "keyword", "search", "searchsuggestion", "switchtab",
+   *         "remotetab", "extension", "oneoff".
+   * @note event can be null, that usually happens for paste&go or drop&go.
+   *       If there's no _startEventInfo this is a no-op.
+   */
+  record(event, details) {
+    // This should never throw, or it may break the urlbar.
+    try {
+      this._internalRecord(event, details);
+    } catch (ex) {
+      Cu.reportError("Could not record event: " + ex);
+    } finally {
+      this._startEventInfo = null;
+    }
+  }
+
+  _internalRecord(event, details) {
+    if (!this._category || !this._startEventInfo) {
+      return;
+    }
+    if (
+      !event &&
+      this._startEventInfo.interactionType != "pasted" &&
+      this._startEventInfo.interactionType != "dropped"
+    ) {
+      // If no event is passed, we must be executing either paste&go or drop&go.
+      throw new Error("Event must be defined, unless input was pasted/dropped");
+    }
+    if (!details) {
+      throw new Error("Invalid event details: " + details);
+    }
+
+    let endTime = (event && event.timeStamp) || Cu.now();
+    let startTime = this._startEventInfo.timeStamp || endTime;
+    // Synthesized events in tests may have a bogus timeStamp, causing a
+    // subtraction between monotonic and non-monotonic timestamps; that's why
+    // abs is necessary here. It should only happen in tests, anyway.
+    let elapsed = Math.abs(Math.round(endTime - startTime));
+
+    let action;
+    if (!event) {
+      action =
+        this._startEventInfo.interactionType == "dropped"
+          ? "drop_go"
+          : "paste_go";
+    } else if (event.type == "blur") {
+      action = "blur";
+    } else {
+      action = event instanceof MouseEvent ? "click" : "enter";
+    }
+    let method = action == "blur" ? "abandonment" : "engagement";
+    let value = this._startEventInfo.interactionType;
+
+    // Rather than listening to the pref, just update status when we record an
+    // event, if the pref changed from the last time.
+    let recordingEnabled = UrlbarPrefs.get("eventTelemetry.enabled");
+    if (this._eventRecordingEnabled != recordingEnabled) {
+      this._eventRecordingEnabled = recordingEnabled;
+      Services.telemetry.setEventRecordingEnabled("urlbar", recordingEnabled);
+    }
+
+    let extra = {
+      elapsed: elapsed.toString(),
+      numChars: details.numChars.toString(),
+    };
+    if (method == "engagement") {
+      extra.selIndex = details.selIndex.toString();
+      extra.selType = details.selType;
+    }
+
+    // We invoke recordEvent regardless, if recording is disabled this won't
+    // report the events remotely, but will count it in the event_counts scalar.
+    Services.telemetry.recordEvent(
+      this._category,
+      method,
+      action,
+      value,
+      extra
+    );
+  }
+
+  /**
+   * Resets the currently tracked input event, that was registered via start(),
+   * so it won't be recorded.
+   * If there's no tracked input event, this is a no-op.
+   */
+  discard() {
+    this._startEventInfo = null;
+  }
+
+  /**
+   * Extracts a type from a result, to be used in the telemetry event.
+   * @param {UrlbarResult} result The result to analyze.
+   * @returns {string} a string type for the telemetry event.
+   */
+  typeFromResult(result) {
+    if (result) {
+      switch (result.type) {
+        case UrlbarUtils.RESULT_TYPE.TAB_SWITCH:
+          return "switchtab";
+        case UrlbarUtils.RESULT_TYPE.SEARCH:
+          return result.payload.suggestion ? "searchsuggestion" : "search";
+        case UrlbarUtils.RESULT_TYPE.URL:
+          if (result.autofill) {
+            return "autofill";
+          }
+          if (result.heuristic) {
+            return "visit";
+          }
+          return result.source == UrlbarUtils.RESULT_SOURCE.BOOKMARKS
+            ? "bookmark"
+            : "history";
+        case UrlbarUtils.RESULT_TYPE.KEYWORD:
+          return "keyword";
+        case UrlbarUtils.RESULT_TYPE.OMNIBOX:
+          return "extension";
+        case UrlbarUtils.RESULT_TYPE.REMOTE_TAB:
+          return "remotetab";
+      }
+    }
+    return "none";
   }
 }
