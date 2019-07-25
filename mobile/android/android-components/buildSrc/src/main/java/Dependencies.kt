@@ -24,6 +24,7 @@ object Versions {
     const val zxing = "3.3.0"
     const val jna = "5.2.0"
     const val disklrucache = "2.0.2"
+    const val leakcanary = "1.6.3"
 
     const val mozilla_appservices = "0.34.0"
     const val servo = "0.0.1.20181017.aa95911"
@@ -71,6 +72,7 @@ object Dependencies {
     const val testing_mockwebserver = "com.squareup.okhttp3:mockwebserver:${Versions.mockwebserver}"
     const val testing_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-test:${Versions.coroutines}"
     const val testing_maven_ant_tasks = "org.apache.maven:maven-ant-tasks:${Versions.maven_ant_tasks}"
+    const val testing_leakcanary = "com.squareup.leakcanary:leakcanary-android-instrumentation:${Versions.leakcanary}"
 
     const val androidx_annotation = "androidx.annotation:annotation:${Versions.AndroidX.annotation}"
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.AndroidX.appcompat}"
