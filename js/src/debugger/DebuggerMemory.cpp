@@ -145,6 +145,10 @@ bool DebuggerMemory::setTrackingAllocationSites(JSContext* cx, unsigned argc,
 
   dbg->trackingAllocationSites = enabling;
 
+  if (!dbg->enabled) {
+    return undefined(args);
+  }
+
   if (enabling) {
     if (!dbg->addAllocationsTrackingForAllDebuggees(cx)) {
       dbg->trackingAllocationSites = false;
@@ -333,7 +337,7 @@ bool DebuggerMemory::setAllocationSamplingProbability(JSContext* cx,
 
     // If this is a change any debuggees would observe, have all debuggee
     // realms recompute their sampling probabilities.
-    if (dbg->trackingAllocationSites) {
+    if (dbg->enabled && dbg->trackingAllocationSites) {
       for (auto r = dbg->debuggees.all(); !r.empty(); r.popFront()) {
         r.front()->realm()->chooseAllocationSamplingProbability();
       }
