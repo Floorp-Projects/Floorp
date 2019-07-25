@@ -576,8 +576,6 @@ class UrlbarAbstraction {
         let restrictTokens = Object.values(UrlbarTokenizer.RESTRICT);
         if (restrictTokens.includes(query[0])) {
           query = query.substring(1).trim();
-        } else if (restrictTokens.includes(query[query.length - 1])) {
-          query = query.substring(0, query.length - 1).trim();
         }
         details.searchParams = {
           engine: action.params.engineName,
