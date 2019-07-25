@@ -14,7 +14,7 @@ export class CardGrid extends React.PureComponent {
           <PlaceholderDSCard key={`dscard-${index}`} />
         ) : (
           <DSCard
-            key={`dscard-${rec.id}`}
+            key={`dscard-${index}`}
             pos={rec.pos}
             campaignId={rec.campaign_id}
             image_src={rec.image_src}

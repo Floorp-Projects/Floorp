@@ -7497,7 +7497,7 @@ class CardGrid_CardGrid extends external_React_default.a.PureComponent {
       cards.push(!rec || rec.placeholder ? external_React_default.a.createElement(PlaceholderDSCard, {
         key: `dscard-${index}`
       }) : external_React_default.a.createElement(DSCard_DSCard, {
-        key: `dscard-${rec.id}`,
+        key: `dscard-${index}`,
         pos: rec.pos,
         campaignId: rec.campaign_id,
         image_src: rec.image_src,
@@ -7693,7 +7693,7 @@ function _List(props) {
       recMarkup.push(!rec || rec.placeholder ? external_React_default.a.createElement(PlaceholderListItem, {
         key: `ds-list-item-${index}`
       }) : external_React_default.a.createElement(List_ListItem, {
-        key: `ds-list-item-${rec.id}`,
+        key: `ds-list-item-${index}`,
         dispatch: props.dispatch,
         campaignId: rec.campaign_id,
         domain: rec.domain,
@@ -7803,7 +7803,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
         key: `dscard-${index}`
       }) : external_React_default.a.createElement(DSCard_DSCard, {
         campaignId: rec.campaign_id,
-        key: `dscard-${rec.id}`,
+        key: `dscard-${index}`,
         image_src: rec.image_src,
         raw_image_src: rec.raw_image_src,
         title: rec.title,
@@ -7826,8 +7826,7 @@ class Hero_Hero extends external_React_default.a.PureComponent {
       heroCard = external_React_default.a.createElement(PlaceholderDSCard, null);
     } else {
       heroCard = external_React_default.a.createElement("div", {
-        className: "ds-hero-item",
-        key: `dscard-${heroRec.id}`
+        className: "ds-hero-item"
       }, external_React_default.a.createElement(SafeAnchor_SafeAnchor, {
         className: "wrapper",
         dispatch: this.props.dispatch,
