@@ -137,6 +137,8 @@ add_task(async function test_reveal_password_change_selected_login() {
   is(passwordInput.type, "password", "Password should be masked by default");
   revealCheckbox.click();
   ok(revealCheckbox.checked, "reveal-checkbox should be checked after clicking");
+  await SimpleTest.promiseWaitForCondition(() => passwordInput.type == "text",
+    "waiting for password input type to change after checking for master password");
   is(passwordInput.type, "text", "Password should be unmasked when checkbox is clicked");
 
   gLoginItem.setLogin(TEST_LOGIN_2);
