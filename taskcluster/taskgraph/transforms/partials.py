@@ -122,7 +122,7 @@ def make_task_description(config, jobs):
             'implementation': 'docker-worker',
             'docker-image': {'in-tree': 'funsize-update-generator'},
             'os': 'linux',
-            'max-run-time': 3600 if 'asan' in dep_job.label else 600,
+            'max-run-time': 3600 if 'asan' in dep_job.label else 900,
             'chain-of-trust': True,
             'taskcluster-proxy': True,
             'env': {
