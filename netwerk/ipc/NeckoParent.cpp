@@ -30,6 +30,7 @@
 #include "mozilla/net/SocketProcessParent.h"
 #include "mozilla/net/PSocketProcessBridgeParent.h"
 #ifdef MOZ_WEBRTC
+#  include "mozilla/net/ProxyConfigLookupParent.h"
 #  include "mozilla/net/StunAddrsRequestParent.h"
 #  include "mozilla/net/WebrtcProxyChannelParent.h"
 #endif
@@ -984,6 +985,27 @@ mozilla::ipc::IPCResult NeckoParent::RecvEnsureHSTSData(
       new HSTSDataCallbackWrapper(std::move(callback));
   gHttpHandler->EnsureHSTSDataReadyNative(wrapper.forget());
   return IPC_OK();
+}
+
+PProxyConfigLookupParent* NeckoParent::AllocPProxyConfigLookupParent() {
+  RefPtr<ProxyConfigLookupParent> actor = new ProxyConfigLookupParent();
+  return actor.forget().take();
+}
+
+mozilla::ipc::IPCResult NeckoParent::RecvPProxyConfigLookupConstructor(
+    PProxyConfigLookupParent* aActor) {
+  ProxyConfigLookupParent* actor =
+      static_cast<ProxyConfigLookupParent*>(aActor);
+  actor->DoProxyLookup();
+  return IPC_OK();
+}
+
+bool NeckoParent::DeallocPProxyConfigLookupParent(
+    PProxyConfigLookupParent* aActor) {
+  RefPtr<ProxyConfigLookupParent> actor =
+      dont_AddRef(static_cast<ProxyConfigLookupParent*>(aActor));
+  MOZ_ASSERT(actor);
+  return true;
 }
 
 }  // namespace net

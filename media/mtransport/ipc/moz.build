@@ -4,6 +4,9 @@
 
 EXPORTS.mozilla.net += [
     'NrIceStunAddrMessageUtils.h',
+    'ProxyConfigLookup.h',
+    'ProxyConfigLookupChild.h',
+    'ProxyConfigLookupParent.h',
     'PStunAddrsParams.h',
     'StunAddrsRequestChild.h',
     'StunAddrsRequestParent.h',
@@ -14,6 +17,9 @@ EXPORTS.mozilla.net += [
 ]
 
 UNIFIED_SOURCES += [
+    'ProxyConfigLookup.cpp',
+    'ProxyConfigLookupChild.cpp',
+    'ProxyConfigLookupParent.cpp',
     'StunAddrsRequestChild.cpp',
     'StunAddrsRequestParent.cpp',
     'WebrtcProxyChannel.cpp',
@@ -23,6 +29,7 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'PProxyConfigLookup.ipdl',
     'PStunAddrsRequest.ipdl',
     'PWebrtcProxyChannel.ipdl',
 ]
@@ -32,6 +39,8 @@ include("/ipc/chromium/chromium-config.mozbuild")
 FINAL_LIBRARY = 'xul'
 
 LOCAL_INCLUDES += [
+    '/media/webrtc',
+    '/media/webrtc/signaling/src/peerconnection',
     '/netwerk/base',
     '/netwerk/protocol/http',
 ]
