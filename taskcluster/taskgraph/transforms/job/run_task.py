@@ -169,6 +169,10 @@ def generic_worker_run_task(config, job, taskdesc):
             run_command = '"{}"'.format(run_command)
         run_command = ['bash', '-cx', run_command]
 
+    if run['comm-checkout']:
+        command.append('--comm-checkout={}/comm'.format(
+            taskdesc['worker']['env']['GECKO_PATH']))
+
     if run['run-as-root']:
         command.extend(('--user', 'root', '--group', 'root'))
     command.append('--')
