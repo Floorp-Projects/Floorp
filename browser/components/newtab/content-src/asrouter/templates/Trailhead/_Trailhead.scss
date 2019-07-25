@@ -264,6 +264,7 @@
 
 .trailheadCards {
   background: var(--trailhead-cards-background-color);
+  max-height: 1000px;
   overflow: hidden;
   text-align: center;
   transition: max-height 0.5s $photon-easing;
