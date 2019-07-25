@@ -145,6 +145,20 @@
 #endif
 
 #---------------------------------------------------------------------------
+# Prefs starting with "accessibility."
+#---------------------------------------------------------------------------
+
+- name: accessibility.monoaudio.enable
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: accessibility.browsewithcaret
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+#---------------------------------------------------------------------------
 # Prefs starting with "apz."
 # The apz prefs are explained in AsyncPanZoomController.cpp
 #---------------------------------------------------------------------------
