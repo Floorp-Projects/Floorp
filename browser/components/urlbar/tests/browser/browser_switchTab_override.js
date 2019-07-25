@@ -77,7 +77,7 @@ add_task(async function test_switchtab_override() {
 
   let attribute = "actionoverride";
   Assert.ok(
-    UrlbarTestUtils.getPanel(window).hasAttribute(attribute),
+    gURLBar.view.panel.hasAttribute(attribute),
     "We should be overriding"
   );
 
@@ -87,7 +87,7 @@ add_task(async function test_switchtab_override() {
 
   // Blurring the urlbar should have cleared the override.
   Assert.ok(
-    !UrlbarTestUtils.getPanel(window).hasAttribute(attribute),
+    !gURLBar.view.panel.hasAttribute(attribute),
     "We should not be overriding anymore"
   );
 
