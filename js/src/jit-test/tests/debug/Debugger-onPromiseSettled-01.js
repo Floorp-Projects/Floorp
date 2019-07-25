@@ -16,3 +16,10 @@ g.settlePromiseNow(p);
 
 assertEq(log, "s");
 assertEq(pw, gw.makeDebuggeeValue(p));
+
+log = "";
+dbg.enabled = false;
+p = new g.Promise(function (){});
+g.settlePromiseNow(p);
+
+assertEq(log, "");
