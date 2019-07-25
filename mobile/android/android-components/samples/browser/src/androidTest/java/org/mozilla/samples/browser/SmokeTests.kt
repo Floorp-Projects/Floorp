@@ -10,6 +10,7 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.pressImeActionButton
 import androidx.test.espresso.action.ViewActions.replaceText
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -18,6 +19,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
+import mozilla.components.support.android.test.leaks.LeakDetectionRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -40,28 +42,81 @@ class SmokeTests {
     @get:Rule
     val webserverRule: WebserverRule = WebserverRule()
 
+    @get:Rule
+    val leakDetectionRule: LeakDetectionRule = LeakDetectionRule()
+
     /**
      * This test loads a website from a local webserver by typing into the URL bar. After that it verifies that the
      * web content is visible.
      */
     @Test
     fun loadWebsiteTest() {
-        // Meh! We need a better idle strategy here. Because of bug 1441059 our load request gets lost if it happens
-        // to fast and then only "about:blank" gets loaded. So a "quick" fix here is to just wait a bit.
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=1441059
-        SystemClock.sleep(TimeUnit.SECONDS.toMillis(INITIAL_WAIT_SECONDS))
+        waitForIdle()
 
-        onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_url_view))
-            .perform(click())
-
-        onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_edit_url_view))
-            .perform(replaceText(webserverRule.url()), pressImeActionButton())
+        enterUrl(webserverRule.url())
 
         verifyWebsiteContent("Hello World!")
-
-        onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_url_view))
-            .check(matches(withText(webserverRule.url())))
+        verifyUrlInToolbar(webserverRule.url())
     }
+
+    @Test
+    fun loadWebsitesInMultipleTabsTest() {
+        waitForIdle()
+
+        enterUrl(webserverRule.url())
+
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
+
+        navigateToTabsTray()
+        openNewTabInTabsTray()
+
+        enterUrl(webserverRule.url())
+
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
+
+        navigateToTabsTray()
+        openNewTabInTabsTray()
+
+        enterUrl(webserverRule.url())
+
+        verifyWebsiteContent("Hello World!")
+        verifyUrlInToolbar(webserverRule.url())
+
+        navigateToTabsTray()
+        openNewTabInTabsTray()
+    }
+}
+
+private fun waitForIdle() {
+    // Meh! We need a better idle strategy here. Because of bug 1441059 our load request gets lost if it happens
+    // to fast and then only "about:blank" gets loaded. So a "quick" fix here is to just wait a bit.
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1441059
+    SystemClock.sleep(TimeUnit.SECONDS.toMillis(INITIAL_WAIT_SECONDS))
+}
+
+private fun navigateToTabsTray() {
+    onView(withContentDescription(mozilla.components.feature.tabs.R.string.mozac_feature_tabs_toolbar_tabs_button))
+        .perform(click())
+}
+
+private fun openNewTabInTabsTray() {
+    onView(withId(R.id.newTab))
+        .perform(click())
+}
+
+private fun enterUrl(url: String) {
+    onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_url_view))
+        .perform(click())
+
+    onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_edit_url_view))
+        .perform(replaceText(url), pressImeActionButton())
+}
+
+private fun verifyUrlInToolbar(url: String) {
+    onView(withId(mozilla.components.browser.toolbar.R.id.mozac_browser_toolbar_url_view))
+        .check(matches(withText(url)))
 }
 
 private fun verifyWebsiteContent(text: String) {

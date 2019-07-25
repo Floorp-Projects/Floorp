@@ -31,13 +31,11 @@ permalink: /changelog/
   * Deprecated `ViewGroup.forEach` in favour of Android Core KTX.
   * Deprecated `Map.toBundle()` in favour of Android Core KTX `bundleOf`.
 
-<<<<<<< HEAD
 * **lib-state**
   * Migrated `Store.broadcastChannel()` to `Store.channel()`returning a `ReceiveChannel` that can be read by only one receiver. Broadcast channels have a more complicated lifetime that is not needed in most use cases. For multiple receivers multiple channels can be created from the `Store` or Kotlin's `ReceiveChannel.broadcast()` extension method can be used.
-=======
+
 * **support-android-test**
   * Added `LeakDetectionRule` to install LeakCanary when running instrumented tests. If a leak is found the test will fail and the test report will contain the leak trace.
->>>>>>> Issue #3888: Add LeakDetectionRule for detecting memory leaks while running instrumented tests.
 
 * **lib-push-amazon**
   * 🆕 Added a new component for Amazon Device Messaging push support.
