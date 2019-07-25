@@ -477,13 +477,13 @@ DEFINE_GLOBAL(size_t) gPageSizeMask = gPageSize - 1;
 // Number of pages in a chunk.
 DEFINE_GLOBAL(size_t) gChunkNumPages = kChunkSize >> gPageSize2Pow;
 
-// Number of pages necessary for a chunk header.
+// Number of pages necessary for a chunk header plus a guard page.
 DEFINE_GLOBAL(size_t)
 gChunkHeaderNumPages =
-    ((sizeof(arena_chunk_t) + sizeof(arena_chunk_map_t) * (gChunkNumPages - 1) +
-      gPageSizeMask) &
-     ~gPageSizeMask) >>
-    gPageSize2Pow;
+    1 + (((sizeof(arena_chunk_t) +
+           sizeof(arena_chunk_map_t) * (gChunkNumPages - 1) + gPageSizeMask) &
+          ~gPageSizeMask) >>
+         gPageSize2Pow);
 
 // One chunk, minus the header, minus a guard page
 DEFINE_GLOBAL(size_t)
@@ -2300,31 +2300,40 @@ void arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed) {
   aChunk->ndirty = 0;
 
   // Initialize the map to contain one maximal free untouched run.
-#ifdef MALLOC_DECOMMIT
   arena_run_t* run = (arena_run_t*)(uintptr_t(aChunk) +
                                     (gChunkHeaderNumPages << gPageSize2Pow));
-#endif
 
-  for (i = 0; i < gChunkHeaderNumPages; i++) {
+  // Clear the bits for the real header pages.
+  for (i = 0; i < gChunkHeaderNumPages - 1; i++) {
     aChunk->map[i].bits = 0;
   }
-  aChunk->map[i].bits = gMaxLargeClass | flags;
-  for (i++; i < gChunkNumPages - 2; i++) {
+  // Mark the leading guard page (last header page) as decommitted.
+  aChunk->map[i++].bits = CHUNK_MAP_DECOMMITTED;
+
+  // Mark the area usable for runs as available, note size at start and end
+  aChunk->map[i++].bits = gMaxLargeClass | flags;
+  for (; i < gChunkNumPages - 2; i++) {
     aChunk->map[i].bits = flags;
   }
   aChunk->map[gChunkNumPages - 2].bits = gMaxLargeClass | flags;
-  // Mark the guard page as decommited.
+
+  // Mark the trailing guard page as decommitted.
   aChunk->map[gChunkNumPages - 1].bits = CHUNK_MAP_DECOMMITTED;
 
 #ifdef MALLOC_DECOMMIT
   // Start out decommitted, in order to force a closer correspondence
-  // between dirty pages and committed untouched pages.
-  pages_decommit(run, gMaxLargeClass + gPageSize);
+  // between dirty pages and committed untouched pages. This includes
+  // leading and trailing guard pages.
+  pages_decommit((void*)(uintptr_t(run) - gPageSize),
+                 gMaxLargeClass + 2 * gPageSize);
 #else
-  // Only decommit the last page as a guard.
+  // Decommit the last header page (=leading page) as a guard.
+  pages_decommit((void*)(uintptr_t(run) - gPageSize), gPageSize);
+  // Decommit the last page as a guard.
   pages_decommit((void*)(uintptr_t(aChunk) + kChunkSize - gPageSize),
                  gPageSize);
 #endif
+
   mStats.committed += gChunkHeaderNumPages;
 
   // Insert the run into the tree of available runs.
