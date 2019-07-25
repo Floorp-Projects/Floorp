@@ -10,10 +10,7 @@
 
 <textbox id="autocomplete" type="autocomplete"
          autocompletesearch="simple"
-         ontextentered="checkTextEntered();"
-         ontextreverted="checkTextReverted();"
-         onsearchbegin="checkSearchBegin();"
-         onsearchcomplete="checkSearchCompleted();"/>
+         notifylegacyevents="true"/>
 
 <script class="testbody" type="application/javascript">
 <![CDATA[
@@ -71,6 +68,28 @@ var autoCompleteSimple = {
 
   stopSearch: function() {}
 };
+
+
+let element = document.getElementById("autocomplete");
+
+// Create stub to intercept `onSearchBegin` event.
+element.onSearchBegin = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkSearchBegin();
+  };
+}(element.onSearchBegin);
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkSearchCompleted();
+  };
+}(element.onSearchComplete);
+
+element.addEventListener("textEntered", checkTextEntered);
+element.addEventListener("textReverted", checkTextReverted);
 
 var componentManager = Components.manager
                                  .QueryInterface(Ci.nsIComponentRegistrar);
