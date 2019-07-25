@@ -141,6 +141,10 @@ class DebugAPI {
     virtual bool shouldMarkAsDebuggee(FrameIter& iter) const = 0;
   };
 
+  // This enum is converted to and compare with bool values; NotObserving
+  // must be 0 and Observing must be 1.
+  enum IsObserving { NotObserving = 0, Observing = 1 };
+
   // Checks if the current compartment is allowed to execute code.
   static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx,
                                                  HandleScript script);
