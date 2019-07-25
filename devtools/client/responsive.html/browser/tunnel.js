@@ -112,6 +112,7 @@ function tunnelToInnerBrowser(outer, inner) {
         inner._imageDocument = outer._imageDocument;
         inner._isSyntheticDocument = outer._isSyntheticDocument;
         inner._innerWindowID = outer._innerWindowID;
+        inner._remoteWebNavigationImpl._currentURI = outer._remoteWebNavigationImpl._currentURI;
       }
     },
 
