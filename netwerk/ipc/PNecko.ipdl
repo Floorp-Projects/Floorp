@@ -28,7 +28,6 @@ include protocol PFileChannel;
 include protocol PClassifierDummyChannel;
 include protocol PWebrtcProxyChannel;
 include protocol PSocketProcessBridge;
-include protocol PProxyConfigLookup;
 
 include IPCStream;
 include URIParams;
@@ -68,7 +67,6 @@ nested(upto inside_cpow) sync protocol PNecko
   manages PStunAddrsRequest;
   manages PClassifierDummyChannel;
   manages PWebrtcProxyChannel;
-  manages PProxyConfigLookup;
 
 parent:
   async __delete__();
@@ -137,8 +135,6 @@ parent:
   async PStunAddrsRequest();
 
   async PWebrtcProxyChannel(TabId tabId);
-
-  async PProxyConfigLookup();
 
   /**
    * WebExtension-specific remote resource loading
