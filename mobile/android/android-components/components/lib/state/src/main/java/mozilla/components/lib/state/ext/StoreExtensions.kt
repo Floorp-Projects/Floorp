@@ -12,8 +12,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ProcessLifecycleOwner
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.BroadcastChannel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.Observer
@@ -89,12 +89,10 @@ fun <S : State, A : Action> Store<S, A>.observeForever(
 }
 
 /**
- * Creates a conflated [BroadcastChannel] for observing [State] changes in the [Store].
- *
- * Multiple receivers can subscribe to the channel and read from it.
+ * Creates a conflated [Channel] for observing [State] changes in the [Store].
  *
  * The advantage of a [Channel] is that [State] changes can be processed sequentially in order from
- * a single coroutine.
+ * a single coroutine (e.g. on the main thread).
  *
  * @param owner A [LifecycleOwner] that will be used to determine when to pause and resume the store
  * subscription. When the [Lifecycle] is in STOPPED state then no [State] will be received. Once the
@@ -103,15 +101,15 @@ fun <S : State, A : Action> Store<S, A>.observeForever(
  */
 @ExperimentalCoroutinesApi
 @MainThread
-fun <S : State, A : Action> Store<S, A>.broadcastChannel(
+fun <S : State, A : Action> Store<S, A>.channel(
     owner: LifecycleOwner = ProcessLifecycleOwner.get()
-): BroadcastChannel<S> {
+): ReceiveChannel<S> {
     if (owner.lifecycle.currentState == Lifecycle.State.DESTROYED) {
         // This owner is already destroyed. No need to register.
         throw IllegalArgumentException("Lifecycle is already DESTROYED")
     }
 
-    val channel = BroadcastChannel<S>(Channel.CONFLATED)
+    val channel = Channel<S>(Channel.CONFLATED)
 
     val subscription = observeManually { state ->
         runBlocking { channel.send(state) }

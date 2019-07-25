@@ -31,6 +31,9 @@ permalink: /changelog/
   * Deprecated `ViewGroup.forEach` in favour of Android Core KTX.
   * Deprecated `Map.toBundle()` in favour of Android Core KTX `bundleOf`.
 
+* **lib-state**
+  * Migrated `Store.broadcastChannel()` to `Store.channel()`returning a `ReceiveChannel` that can be read by only one receiver. Broadcast channels have a more complicated lifetime that is not needed in most use cases. For multiple receivers multiple channels can be created from the `Store` or Kotlin's `ReceiveChannel.broadcast()` extension method can be used.
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)

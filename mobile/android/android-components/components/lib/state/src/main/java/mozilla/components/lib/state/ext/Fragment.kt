@@ -31,7 +31,7 @@ fun <S : State, A : Action> Fragment.consumeFrom(store: Store<S, A>, block: (S) 
     val view = checkNotNull(view) { "Fragment has no view yet. Call from onViewCreated()." }
 
     val scope = view.toScope()
-    val channel = store.broadcastChannel(owner = this)
+    val channel = store.channel(owner = this)
 
     scope.launch {
         channel.consumeEach { state -> block(state) }

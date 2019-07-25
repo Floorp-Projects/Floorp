@@ -14,8 +14,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import mozilla.components.lib.state.Store
 import mozilla.components.lib.state.TestAction
 import mozilla.components.lib.state.TestState
@@ -136,10 +138,10 @@ class StoreExtensionsKtTest {
         var receivedValue = 0
         var latch = CountDownLatch(1)
 
-        val channel = store.broadcastChannel(owner)
+        val channel = store.channel(owner)
 
-        GlobalScope.launch {
-            channel.openSubscription().consumeEach { state ->
+        val job = GlobalScope.launch {
+            channel.consumeEach { state ->
                 receivedValue = state.counter
                 latch.countDown()
             }
@@ -170,8 +172,8 @@ class StoreExtensionsKtTest {
         assertEquals(26, receivedValue)
         latch = CountDownLatch(1)
 
-        // Closing channel nothing is received anymore
-        channel.close()
+        runBlocking { job.cancelAndJoin() }
+        assertTrue(channel.isClosedForReceive)
 
         store.dispatch(TestAction.IncrementAction).joinBlocking()
         assertFalse(latch.await(1, TimeUnit.SECONDS))
@@ -188,7 +190,7 @@ class StoreExtensionsKtTest {
             ::reducer
         )
 
-        store.broadcastChannel(owner)
+        store.channel(owner)
     }
 
     @Test

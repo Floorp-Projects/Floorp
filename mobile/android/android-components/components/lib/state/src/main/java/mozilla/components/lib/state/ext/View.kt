@@ -33,7 +33,7 @@ fun <S : State, A : Action> View.consumeFrom(
     block: (S) -> Unit
 ) {
     val scope = toScope()
-    val channel = store.broadcastChannel(owner)
+    val channel = store.channel(owner)
 
     scope.launch {
         channel.consumeEach { state -> block(state) }
