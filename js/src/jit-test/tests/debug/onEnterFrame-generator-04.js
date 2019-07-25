@@ -34,7 +34,7 @@ function test(mode, expected) {
             log += x;
     `);
     assertEq(g.log, expected);
-    dbg.enabled = false;
+    dbg.removeDebuggee(g);
 }
 
 // We fire onEnterFrame for the initial activation when a generator is first
