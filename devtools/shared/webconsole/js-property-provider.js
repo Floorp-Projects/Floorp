@@ -9,7 +9,12 @@
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 if (!isWorker) {
-  loader.lazyImporter(this, "Parser", "resource://devtools/shared/Parser.jsm");
+  loader.lazyRequireGetter(
+    this,
+    "Parser",
+    "devtools/shared/webconsole/parser",
+    true
+  );
 }
 loader.lazyRequireGetter(
   this,
