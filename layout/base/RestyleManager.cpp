@@ -1833,9 +1833,8 @@ void RestyleManager::IncrementAnimationGeneration() {
 
 /* static */
 void RestyleManager::AddLayerChangesForAnimation(
-    nsIFrame* aStyleFrame, nsIFrame* aPrimaryFrame,
-    Element* aElement, nsChangeHint aHintForThisFrame,
-    nsStyleChangeList& aChangeListToProcess) {
+    nsIFrame* aStyleFrame, nsIFrame* aPrimaryFrame, Element* aElement,
+    nsChangeHint aHintForThisFrame, nsStyleChangeList& aChangeListToProcess) {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(!!aStyleFrame == !!aPrimaryFrame);
   if (!aStyleFrame) {

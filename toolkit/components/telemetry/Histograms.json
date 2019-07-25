@@ -16353,5 +16353,18 @@
     "n_buckets": 100,
     "keyed": true,
     "description": "How many milliseconds it took before 100 wakeups for the thread was done because of new Runnables."
+  },
+  "REFRESH_DRIVER_TICK_PHASE_WEIGHT": {
+      "record_in_processes": ["main", "content"],
+      "products": ["firefox", "fennec", "geckoview"],
+      "alert_emails": ["dglastonbury@mozilla.com"],
+      "bug_numbers": [1568107],
+      "expires_in_version": "76",
+      "keyed": true,
+      "keys": ["Event", "Style", "Reflow", "Display", "Paint", "Other"],
+      "kind": "linear",
+      "high": 100,
+      "n_buckets": 12,
+      "description": "Percentages of times for phases in an expensive refresh tick relative to the time spent in the entire tick (REFRESH_DRIVER_TICK)."
   }
 }
