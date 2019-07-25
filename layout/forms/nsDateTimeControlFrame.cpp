@@ -233,7 +233,8 @@ nsresult nsDateTimeControlFrame::AttributeChanged(int32_t aNameSpaceID,
   // nsGkAtoms::disabled is handled by SyncDisabledState
   if (aNameSpaceID == kNameSpaceID_None) {
     if (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::readonly ||
-        aAttribute == nsGkAtoms::tabindex) {
+        aAttribute == nsGkAtoms::tabindex ||
+        aAttribute == nsGkAtoms::required) {
       MOZ_ASSERT(mContent->IsHTMLElement(nsGkAtoms::input), "bad cast");
       auto contentAsInputElem =
           static_cast<dom::HTMLInputElement*>(GetContent());
