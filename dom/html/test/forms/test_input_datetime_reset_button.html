@@ -1,0 +1,82 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1479708
+-->
+<head>
+<title>Test required date/time input can't be reset</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1479708">Mozilla Bug 1479708</a>
+<p id="display"></p>
+<div id="content">
+<input type="date" id="id_date" value="2017-06-08">
+<input type="time" id="id_time" value="10:30">
+<input type="date" id="id_date_required" value="2017-06-08" required>
+<input type="time" id="id_time_required" value="10:30" required>
+</div>
+<pre id="test">
+<script class="testbody">
+
+const isDesktop = !/Mobile|Tablet/.test(navigator.userAgent);
+
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  if (isDesktop) {
+    // Initial load.
+    assert_reset_visible("id_date");
+    assert_reset_visible("id_time");
+    assert_reset_hidden("id_date_required");
+    assert_reset_hidden("id_time_required");
+
+    // Dynamic toggling.
+    test_make_required("id_date");
+    test_make_required("id_time");
+    test_make_optional("id_date_required");
+    test_make_optional("id_time_required");
+  } else {
+    ok(true, "Mobile and tablet don’t show reset button");
+  }
+  SimpleTest.finish();
+});
+
+function test_make_required(id) {
+  const input = document.getElementById(id);
+  is(input.required, false, `Precondition: input #${id} is optional`);
+
+  input.required = true;
+  assert_reset_hidden(id);
+}
+
+function test_make_optional(id) {
+  const input = document.getElementById(id);
+  is(input.required, true, `Precondition: input #${id} is required`);
+
+  input.required = false;
+  assert_reset_visible(id);
+}
+
+function assert_reset_visible(id) {
+  const resetButton = get_reset_button(id);
+  is(resetButton.style.visibility, "", `Reset button is visible on #${id}`);
+}
+
+function assert_reset_hidden(id) {
+  const resetButton = get_reset_button(id);
+  is(resetButton.style.visibility, "hidden", `Reset button is hidden on #${id}`);
+}
+
+function get_reset_button(id) {
+  const input = document.getElementById(id);
+  const shadowRoot = SpecialPowers.wrap(input).openOrClosedShadowRoot;
+  return shadowRoot.getElementById("reset-button");
+}
+
+</script>
+</pre>
+</body>
+</html>
