@@ -202,7 +202,8 @@ function TargetMixin(parentClass) {
       this._inspector = await getFront(
         this.client,
         "inspector",
-        this.targetForm
+        this.targetForm,
+        this
       );
       this.emit("inspector", this._inspector);
       return this._inspector;
@@ -229,7 +230,7 @@ function TargetMixin(parentClass) {
       ) {
         return front;
       }
-      front = getFront(this.client, typeName, this.targetForm);
+      front = getFront(this.client, typeName, this.targetForm, this);
       this.fronts.set(typeName, front);
       // replace the placeholder with the instance of the front once it has loaded
       front = await front;
