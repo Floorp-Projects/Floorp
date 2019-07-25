@@ -8,7 +8,7 @@ job-defaults:
     target:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
-            android-hw-.*-qr/.*: geckoview-androidTest.apk
+            android-hw-.*: geckoview-androidTest.apk
             default: null
     variants:
         by-test-platform:
