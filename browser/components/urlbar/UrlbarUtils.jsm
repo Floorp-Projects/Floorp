@@ -419,6 +419,19 @@ var UrlbarUtils = {
       );
     });
   },
+
+  /**
+   * Whether the passed-in input event is paste event.
+   * @param {DOMEvent} event an input DOM event.
+   * @returns {boolean} Whether the event is a paste event.
+   */
+  isPasteEvent(event) {
+    return (
+      event.inputType &&
+      (event.inputType.startsWith("insertFromPaste") ||
+        event.inputType == "insertFromYank")
+    );
+  },
 };
 
 XPCOMUtils.defineLazyGetter(UrlbarUtils.ICON, "DEFAULT", () => {

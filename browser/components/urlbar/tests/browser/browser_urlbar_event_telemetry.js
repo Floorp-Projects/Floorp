@@ -1,0 +1,594 @@
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
+
+"use strict";
+
+function copyToClipboard(str) {
+  return new Promise((resolve, reject) => {
+    waitForClipboard(
+      str,
+      () => {
+        Cc["@mozilla.org/widget/clipboardhelper;1"]
+          .getService(Ci.nsIClipboardHelper)
+          .copyString(str);
+      },
+      resolve,
+      reject
+    );
+  });
+}
+
+// Each test is a function that executes an urlbar action and returns the
+// expected event object, or null if no event is expected.
+const tests = [
+  /*
+   * Engagement tests.
+   */
+  async function() {
+    info("Type something, press Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("x", window, true);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
+  async function() {
+    info("Paste something, press Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await copyToClipboard("test");
+    document.commandDispatcher
+      .getControllerForCommand("cmd_paste")
+      .doCommand("cmd_paste");
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "pasted",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "4",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something, click one-off.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("moz", window, true);
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+    UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton.click();
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "click",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: "0",
+        selType: "oneoff",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something, select one-off, Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("moz", window, true);
+    EventUtils.synthesizeKey("KEY_ArrowDown", { altKey: true });
+    Assert.ok(UrlbarTestUtils.getOneOffSearchButtons(window).selectedButton);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: "0",
+        selType: "oneoff",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something, ESC, type something else, press Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    EventUtils.synthesizeKey("x");
+    EventUtils.synthesizeKey("VK_ESCAPE");
+    EventUtils.synthesizeKey("y");
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selIndex: "0",
+        selType: "search",
+      },
+    };
+  },
+
+  async function() {
+    info("Type a keyword, Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("kw test", window, true);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "7",
+        selIndex: "0",
+        selType: "keyword",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something and canonize");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("example", window, true);
+    EventUtils.synthesizeKey("VK_RETURN", { ctrlKey: true });
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "7",
+        selIndex: "0",
+        selType: "canonized",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something, click on bookmark entry.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("exa", window, true);
+    while (gURLBar.value != "http://example.com/?q=%s") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    let element = UrlbarTestUtils.getSelectedElement(window);
+    EventUtils.synthesizeMouseAtCenter(element, {});
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "click",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: val => parseInt(val) > 0,
+        selType: "bookmark",
+      },
+    };
+  },
+
+  async function() {
+    info("Type an autofilled string, Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("exa", window, true);
+    // Check it's autofilled.
+    Assert.equal(gURLBar.selectionStart, 3);
+    Assert.equal(gURLBar.selectionEnd, 12);
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: "0",
+        selType: "autofill",
+      },
+    };
+  },
+
+  async function() {
+    info("Type something, select bookmark entry, Enter.");
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await promiseAutocompleteResultPopup("exa", window, true);
+    while (gURLBar.value != "http://example.com/?q=%s") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "3",
+        selIndex: val => parseInt(val) > 0,
+        selType: "bookmark",
+      },
+    };
+  },
+
+  async function() {
+    info("Type @, Enter on a keywordoffer");
+    gURLBar.select();
+    await promiseAutocompleteResultPopup("@", window, true);
+    while (gURLBar.value != "@test ") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    EventUtils.synthesizeKey("VK_RETURN");
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selIndex: val => parseInt(val) > 0,
+        selType: "keywordoffer",
+      },
+    };
+  },
+
+  async function() {
+    info("Drop something.");
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    EventUtils.synthesizeDrop(
+      document.getElementById("home-button"),
+      gURLBar.inputField,
+      [[{ type: "text/plain", data: "www.example.com" }]],
+      "copy",
+      window
+    );
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "drop_go",
+      value: "dropped",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "15",
+        selIndex: "-1",
+        selType: "none",
+      },
+    };
+  },
+
+  async function() {
+    info("Paste & Go something.");
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await copyToClipboard("www.example.com");
+    let inputBox = document.getAnonymousElementByAttribute(
+      gURLBar.textbox,
+      "anonid",
+      "moz-input-box"
+    );
+    let cxmenu = inputBox.menupopup;
+    let cxmenuPromise = BrowserTestUtils.waitForEvent(cxmenu, "popupshown");
+    gURLBar.focus();
+    EventUtils.synthesizeMouseAtCenter(gURLBar.inputField, {
+      type: "contextmenu",
+      button: 2,
+    });
+    await cxmenuPromise;
+    let menuitem = inputBox.getMenuItem("paste-and-go");
+    EventUtils.synthesizeMouseAtCenter(menuitem, {});
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "paste_go",
+      value: "pasted",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "15",
+        selIndex: "-1",
+        selType: "none",
+      },
+    };
+  },
+
+  async function() {
+    info("Open the panel with DOWN, select with DOWN, Enter.");
+    gURLBar.value = "";
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    });
+    await UrlbarTestUtils.promiseSearchComplete(window);
+    while (gURLBar.value != "http://mochi.test:8888/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    EventUtils.synthesizeKey("VK_RETURN");
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+        selType: "history",
+        selIndex: val => parseInt(val) >= 0,
+      },
+    };
+  },
+
+  async function() {
+    info("Open the panel with DOWN, click on entry.");
+    gURLBar.value = "";
+    gURLBar.select();
+    let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    });
+    while (gURLBar.value != "http://mochi.test:8888/") {
+      EventUtils.synthesizeKey("KEY_ArrowDown");
+    }
+    let element = UrlbarTestUtils.getSelectedElement(window);
+    EventUtils.synthesizeMouseAtCenter(element, {});
+    await promise;
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "click",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+        selType: "history",
+        selIndex: "0",
+      },
+    };
+  },
+
+  async function() {
+    info("Open the panel with dropmarker, type something, Enter.");
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "about:blank" },
+      async browser => {
+        gURLBar.select();
+        let promise = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+        await UrlbarTestUtils.promisePopupOpen(window, () => {
+          let dropmarker = document.getAnonymousElementByAttribute(
+            gURLBar.textbox,
+            "anonid",
+            "historydropmarker"
+          );
+          EventUtils.synthesizeMouseAtCenter(dropmarker, {}, window);
+        });
+        await promiseAutocompleteResultPopup("x", window, true);
+        EventUtils.synthesizeKey("VK_RETURN");
+        await promise;
+      }
+    );
+    return {
+      category: "urlbar",
+      method: "engagement",
+      object: "enter",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+        selType: "search",
+        selIndex: "0",
+      },
+    };
+  },
+
+  /*
+   * Abandonment tests.
+   */
+
+  async function() {
+    info("Type something, blur.");
+    gURLBar.select();
+    EventUtils.synthesizeKey("x");
+    gURLBar.blur();
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "typed",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+      },
+    };
+  },
+
+  async function() {
+    info("Open the panel with DOWN, don't type, blur it.");
+    gURLBar.value = "";
+    gURLBar.select();
+    await UrlbarTestUtils.promisePopupOpen(window, () => {
+      EventUtils.synthesizeKey("KEY_ArrowDown", {});
+    });
+    gURLBar.blur();
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "0",
+      },
+    };
+  },
+
+  async function() {
+    info("Open the panel with dropmarker, type something, blur it.");
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "about:blank" },
+      async browser => {
+        gURLBar.select();
+        await UrlbarTestUtils.promisePopupOpen(window, () => {
+          let dropmarker = document.getAnonymousElementByAttribute(
+            gURLBar.textbox,
+            "anonid",
+            "historydropmarker"
+          );
+          EventUtils.synthesizeMouseAtCenter(dropmarker, {}, window);
+        });
+        EventUtils.synthesizeKey("x");
+        gURLBar.blur();
+      }
+    );
+    return {
+      category: "urlbar",
+      method: "abandonment",
+      object: "blur",
+      value: "topsites",
+      extra: {
+        elapsed: val => parseInt(val) > 0,
+        numChars: "1",
+      },
+    };
+  },
+
+  /*
+   * No event tests.
+   */
+
+  async function() {
+    info("Type something, click on search settings.");
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "about:blank" },
+      async browser => {
+        gURLBar.select();
+        let promise = BrowserTestUtils.browserLoaded(browser);
+        await promiseAutocompleteResultPopup("x", window, true);
+        UrlbarTestUtils.getOneOffSearchButtons(window).settingsButton.click();
+        await promise;
+      }
+    );
+    return null;
+  },
+
+  async function() {
+    info("Type something, Up, Enter on search settings.");
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: "about:blank" },
+      async browser => {
+        gURLBar.select();
+        let promise = BrowserTestUtils.browserLoaded(browser);
+        await promiseAutocompleteResultPopup("x", window, true);
+        EventUtils.synthesizeKey("KEY_ArrowUp");
+        Assert.ok(
+          UrlbarTestUtils.getOneOffSearchButtons(
+            window
+          ).selectedButton.classList.contains("search-setting-button-compact"),
+          "Should have selected the settings button"
+        );
+        EventUtils.synthesizeKey("VK_RETURN");
+        await promise;
+      }
+    );
+    return null;
+  },
+];
+
+add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.urlbar.eventTelemetry.enabled", true],
+      ["browser.urlbar.suggest.searches", true],
+    ],
+  });
+  // Create a new search engine and mark it as default
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    getRootDirectory(gTestPath) + "searchSuggestionEngine.xml"
+  );
+  let oldDefaultEngine = await Services.search.getDefault();
+  await Services.search.setDefault(engine);
+  await Services.search.moveEngine(engine, 0);
+
+  let aliasEngine = await Services.search.addEngineWithDetails("Test", {
+    alias: "@test",
+    template: "http://example.com/?search={searchTerms}",
+  });
+
+  // Add a bookmark and a keyword.
+  let bm = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+    url: "http://example.com/?q=%s",
+    title: "test",
+  });
+  await PlacesUtils.keywords.insert({
+    keyword: "kw",
+    url: "http://example.com/?q=%s",
+  });
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://mochi.test:8888/",
+      transition: PlacesUtils.history.TRANSITIONS.TYPED,
+    },
+  ]);
+
+  registerCleanupFunction(async function() {
+    await Services.search.setDefault(oldDefaultEngine);
+    await Services.search.removeEngine(aliasEngine);
+    await PlacesUtils.keywords.remove("kw");
+    await PlacesUtils.bookmarks.remove(bm);
+    await PlacesUtils.history.clear();
+  });
+
+  // This is not necessary after each loop, because assertEvents does it.
+  Services.telemetry.clearEvents();
+
+  for (let testFn of tests) {
+    let expectedEvents = [await testFn()].filter(e => !!e);
+    // Always blur to ensure it's not accounted as an additional abandonment.
+    gURLBar.blur();
+    TelemetryTestUtils.assertEvents(expectedEvents, { category: "urlbar" });
+  }
+});
