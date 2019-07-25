@@ -3476,7 +3476,7 @@ void Debugger::traceCrossCompartmentEdges(JSTracer* trc) {
  * pointers into zones that are being compacted.
  */
 /* static */
-void DebugAPI::traceIncomingCrossCompartmentEdges(JSTracer* trc) {
+void DebugAPI::traceCrossCompartmentEdges(JSTracer* trc) {
   JSRuntime* rt = trc->runtime();
   gc::State state = rt->gc.state();
   MOZ_ASSERT(state == gc::State::MarkRoots || state == gc::State::Compact);
