@@ -134,6 +134,10 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
 
 void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
+  if (oldDoc && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                            nsGkAtoms::viewport, eIgnoreCase)) {
+    oldDoc->RemoveMetaViewportElement(this);
+  }
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
 }

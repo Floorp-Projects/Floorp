@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>remove a meta viewport node from multiple ones</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta id="willBeRemoved" name="viewport" content="width=980">
+  <script src="viewport_helpers.js"></script>
+</head>
+<body>
+  <script type="application/javascript">
+    "use strict";
+
+    add_task(async function remove_a_viewport_node() {
+      await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
+
+      let info = getViewportInfo(800, 480);
+
+      // We use "width=980" for viewport stuff.
+      fuzzeq(info.defaultZoom, 800/980, "initial scale is calculated based on width");
+      is(info.minZoom,     0.25,     "minimum scale defaults to the absolute minimum");
+      is(info.maxZoom,     10,       "maximum scale defaults to the absolute maximum");
+      is(info.width,       980,      "width is the default width");
+      is(info.height,      588,      "height is proportional to displayHeight");
+      is(info.autoSize,    false,    "autoSize is disabled by default");
+      is(info.allowZoom,   true,     "zooming is enabled by default");
+
+      willBeRemoved.remove();
+      info = getViewportInfo(800, 480);
+
+      // Now there is only "width=device-width,initial-scale=1".
+      is(info.defaultZoom, 1, "initial zoom is 1");
+      is(info.width, 800, "width should be 800");
+      is(info.height, 480, "height should be 480");
+    });
+  </script>
+</body>
+</html>
