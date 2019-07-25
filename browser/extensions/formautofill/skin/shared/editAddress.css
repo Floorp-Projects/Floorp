@@ -123,3 +123,9 @@
 :root:not([subdialog]) #country-warning-message {
   display: none;
 }
+
+/* Reset margins for inputs and textareas, overriding in-content styles */
+#form textarea,
+#form input {
+  margin: 0;
+}
