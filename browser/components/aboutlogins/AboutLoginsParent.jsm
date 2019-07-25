@@ -180,6 +180,50 @@ var AboutLoginsParent = {
         });
         break;
       }
+      case "AboutLogins:MasterPasswordRequest": {
+        // This doesn't harm if passwords are not encrypted
+        let tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].createInstance(
+          Ci.nsIPK11TokenDB
+        );
+        let token = tokendb.getInternalKeyToken();
+
+        let messageManager = message.target.messageManager;
+
+        // If there is no master password, return as-if authentication succeeded.
+        if (token.checkPassword("")) {
+          messageManager.sendAsyncMessage(
+            "AboutLogins:MasterPasswordResponse",
+            true
+          );
+          return;
+        }
+
+        // If a master password prompt is already open, just exit early and return false.
+        // The user can re-trigger it after responding to the already open dialog.
+        if (Services.logins.uiBusy) {
+          messageManager.sendAsyncMessage(
+            "AboutLogins:MasterPasswordResponse",
+            false
+          );
+          return;
+        }
+
+        // So there's a master password. But since checkPassword didn't succeed, we're logged out (per nsIPK11Token.idl).
+        try {
+          // Relogin and ask for the master password.
+          token.login(true); // 'true' means always prompt for token password. User will be prompted until
+          // clicking 'Cancel' or entering the correct password.
+        } catch (e) {
+          // An exception will be thrown if the user cancels the login prompt dialog.
+          // User is also logged out of Software Security Device.
+        }
+
+        messageManager.sendAsyncMessage(
+          "AboutLogins:MasterPasswordResponse",
+          token.isLoggedIn()
+        );
+        break;
+      }
       case "AboutLogins:Subscribe": {
         if (
           !ChromeUtils.nondeterministicGetWeakSetKeys(this._subscribers).length
