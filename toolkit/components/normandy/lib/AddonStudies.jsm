@@ -351,7 +351,7 @@ var AddonStudies = {
     });
     TelemetryEnvironment.setExperimentInactive(study.slug);
 
-    await this.onUnenroll(study.addonId, reason);
+    await this.callUnenrollListeners(study.addonId, reason);
   },
 
   // Maps extension id -> Set(callbacks)
@@ -394,15 +394,25 @@ var AddonStudies = {
    * @returns {Promise} A Promise resolved after the unenroll listener
    *                    (if any) has finished its unenroll tasks.
    */
-  onUnenroll(id, reason) {
-    let callbacks = this._unenrollListeners.get(id);
-    let promises = [];
-    if (callbacks) {
-      for (let callback of callbacks) {
-        promises.push(callback(reason));
+  async callUnenrollListeners(id, reason) {
+    let callbacks = this._unenrollListeners.get(id) || [];
+
+    async function callCallback(cb, reason) {
+      try {
+        await cb(reason);
+      } catch (err) {
+        Cu.reportError(err);
       }
     }
-    return Promise.all(promises);
+
+    let promises = [];
+    for (let callback of callbacks) {
+      promises.push(callCallback(callback, reason));
+    }
+
+    // Wait for all the promises to be settled. This won't throw even if some of
+    // the listeners fail.
+    await Promise.all(promises);
   },
 };
 
