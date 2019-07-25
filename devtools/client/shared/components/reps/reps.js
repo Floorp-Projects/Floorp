@@ -2334,7 +2334,7 @@ function reducer(state = initialState(), action = {}) {
     return cloneState({
       actors: data.actor ? new Set(state.actors || []).add(data.result.from) : state.actors,
       evaluations: new Map(state.evaluations).set(data.node.path, {
-        getterValue: data.result && data.result.value && (data.result.value.return || data.result.value.throw)
+        getterValue: data.result && data.result.value && (data.result.value.throw || data.result.value.return)
       })
     });
   }
