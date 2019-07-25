@@ -58,7 +58,7 @@ export class Hero extends React.PureComponent {
         ) : (
           <DSCard
             campaignId={rec.campaign_id}
-            key={`dscard-${rec.id}`}
+            key={`dscard-${index}`}
             image_src={rec.image_src}
             raw_image_src={rec.raw_image_src}
             title={rec.title}
@@ -83,7 +83,7 @@ export class Hero extends React.PureComponent {
       heroCard = <PlaceholderDSCard />;
     } else {
       heroCard = (
-        <div className="ds-hero-item" key={`dscard-${heroRec.id}`}>
+        <div className="ds-hero-item">
           <SafeAnchor
             className="wrapper"
             dispatch={this.props.dispatch}
