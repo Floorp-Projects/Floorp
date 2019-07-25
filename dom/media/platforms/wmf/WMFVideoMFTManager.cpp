@@ -753,7 +753,8 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
   RefPtr<IMFSample> inputSample;
   HRESULT hr = mDecoder->CreateInputSample(
       aSample->Data(), uint32_t(aSample->Size()),
-      aSample->mTime.ToMicroseconds(), &inputSample);
+      aSample->mTime.ToMicroseconds(), aSample->mDuration.ToMicroseconds(),
+      &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
   if (!mColorSpace && aSample->mTrackInfo) {
