@@ -21,17 +21,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
   <script type="application/javascript">
     // gA11yEventDumpToConsole = true; // debugging
 
-    function changeARIAActiveDescendant(aID, aItemID) {
+    function changeARIAActiveDescendant(aContainer, aItem) {
+      let itemID = aItem instanceof Node ? aItem.id : aItem;
       this.eventSeq = [
-        new focusChecker(aItemID),
+        new focusChecker(aItem),
       ];
 
       this.invoke = function changeARIAActiveDescendant_invoke() {
-        getNode(aID).setAttribute("aria-activedescendant", aItemID);
+        getNode(aContainer).setAttribute("aria-activedescendant", itemID);
       };
 
       this.getID = function changeARIAActiveDescendant_getID() {
-        return "change aria-activedescendant on " + aItemID;
+        return "change aria-activedescendant on " + itemID;
       };
     }
 
@@ -148,6 +149,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new synthFocus("activedesc_nondesc_input",
         new focusChecker("activedesc_nondesc_option")));
 
+      let shadowRoot = document.getElementById("shadow").shadowRoot;
+      let shadowListbox = shadowRoot.getElementById("shadowListbox");
+      let shadowItem1 = shadowRoot.getElementById("shadowItem1");
+      let shadowItem2 = shadowRoot.getElementById("shadowItem2");
+      gQueue.push(new synthFocus(shadowListbox, new focusChecker(shadowItem1)));
+      gQueue.push(new changeARIAActiveDescendant(shadowListbox, shadowItem2));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -194,5 +202,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
   <div role="listbox">
     <div role="option" id="activedesc_nondesc_option">option</div>
   </div>
+
+  <div id="shadow"></div>
+  <script>
+    let host = document.getElementById("shadow");
+    let shadow = host.attachShadow({mode: "open"});
+    let listbox = document.createElement("div");
+    listbox.id = "shadowListbox";
+    listbox.setAttribute("role", "listbox");
+    listbox.setAttribute("tabindex", "0");
+    shadow.appendChild(listbox);
+    let item = document.createElement("div");
+    item.id = "shadowItem1";
+    item.setAttribute("role", "option");
+    listbox.appendChild(item);
+    listbox.setAttribute("aria-activedescendant", "shadowItem1");
+    item = document.createElement("div");
+    item.id = "shadowItem2";
+    item.setAttribute("role", "option");
+    listbox.appendChild(item);
+  </script>
 </body>
 </html>
