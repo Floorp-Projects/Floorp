@@ -5,6 +5,7 @@ extern crate clap;
 #[macro_use]
 extern crate lazy_static;
 extern crate hyper;
+extern crate marionette as marionette_rs;
 extern crate mozprofile;
 extern crate mozrunner;
 extern crate mozversion;
