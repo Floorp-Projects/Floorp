@@ -34,6 +34,16 @@ XPCOMUtils.defineLazyPreferenceGetter(
 );
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "TERMS_URL",
+  "services.sync.fxa.termsURL"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PRIVACY_URL",
+  "services.sync.fxa.privacyURL"
+);
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "CONTEXT_PARAM",
   "identity.fxaccounts.contextParam"
 );
@@ -130,6 +140,24 @@ var FxAccountsConfig = {
     });
   },
 
+  async promiseMetricsFlowURI(entrypoint, extraParams = {}) {
+    return this._buildURL("metrics-flow", {
+      extraParams: { entrypoint, ...extraParams },
+      includeDefaultParams: false,
+    });
+  },
+
+  // Terms and Privacy URLs are special:
+  // For Reasons, we want them to always point
+  // to our servers even if a custom server is used.
+  async promiseLegalTermsURI(extraParams = {}) {
+    return this._buildURLFromString(TERMS_URL, extraParams);
+  },
+
+  async promiseLegalPrivacyURI(extraParams = {}) {
+    return this._buildURLFromString(PRIVACY_URL, extraParams);
+  },
+
   get defaultParams() {
     return { service: "sync", context: CONTEXT_PARAM };
   },
@@ -167,6 +195,14 @@ var FxAccountsConfig = {
       }
       url.searchParams.append("uid", accountData.uid);
       url.searchParams.append("email", accountData.email);
+    }
+    return url.href;
+  },
+
+  async _buildURLFromString(href, extraParams = {}) {
+    const url = new URL(href);
+    for (let [k, v] of Object.entries(extraParams)) {
+      url.searchParams.append(k, v);
     }
     return url.href;
   },
