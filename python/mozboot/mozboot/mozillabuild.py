@@ -70,7 +70,30 @@ class MozillaBuildBootstrapper(BaseBootstrapper):
         pass
 
     def install_mobile_android_artifact_mode_packages(self):
-        pass
+        self.ensure_mobile_android_packages(artifact_mode=True)
+
+    def ensure_mobile_android_packages(self, artifact_mode=False):
+        # Get java path from registry key
+        import _winreg
+
+        key = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
+                              r'SOFTWARE\JavaSoft\Java Development Kit\1.8')
+        java_path, regtype = _winreg.QueryValueEx(key, 'JavaHome')
+        _winreg.CloseKey(key)
+        os.environ['PATH'] = \
+            '{}{}{}'.format(os.path.join(java_path, 'bin'), os.pathsep, os.environ['PATH'])
+        self.ensure_java()
+
+        from mozboot import android
+        android.ensure_android('windows', artifact_mode=artifact_mode,
+                               no_interactive=self.no_interactive)
+
+    def suggest_mobile_android_mozconfig(self, artifact_mode=False):
+        from mozboot import android
+        android.suggest_mozconfig('windows', artifact_mode=artifact_mode)
+
+    def suggest_mobile_android_artifact_mode_mozconfig(self):
+        self.suggest_mobile_android_mozconfig(artifact_mode=True)
 
     def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
         from mozboot import static_analysis
