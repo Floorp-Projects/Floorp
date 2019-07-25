@@ -39,15 +39,15 @@ function xr_session_promise_test(
 
   xr_promise_test(
       name,
-      (t) =>
-          XRTest.simulateDeviceConnection(fakeDeviceInit)
+      (t) =>{
+          return navigator.xr.test.simulateDeviceConnection(fakeDeviceInit)
               .then((controller) => {
                 testDeviceController = controller;
                 return gl.makeXRCompatible();
               })
               .then(() => new Promise((resolve, reject) => {
                       // Perform the session request in a user gesture.
-                      XRTest.simulateUserActivation(() => {
+                      navigator.xr.test.simulateUserActivation(() => {
                         navigator.xr.requestSession(sessionMode)
                             .then((session) => {
                               testSession = session;
@@ -75,8 +75,9 @@ function xr_session_promise_test(
               .then(() => {
                 // Cleanup system state.
                 testSession.end().catch(() => {});
-                XRTest.simulateDeviceDisconnection();
-              }),
+                return navigator.xr.test.disconnectAllDevices();
+              })
+            },
       properties);
 }
 
@@ -120,7 +121,7 @@ let loadChromiumResources = Promise.resolve().then(() => {
    '/gen/mojo/public/mojom/base/time.mojom.js',
    '/gen/gpu/ipc/common/mailbox_holder.mojom.js',
    '/gen/gpu/ipc/common/sync_token.mojom.js',
-   '/gen/ui/display/mojo/display.mojom.js',
+   '/gen/ui/display/mojom/display.mojom.js',
    '/gen/ui/gfx/geometry/mojo/geometry.mojom.js',
    '/gen/ui/gfx/mojo/gpu_fence_handle.mojom.js',
    '/gen/ui/gfx/mojo/transform.mojom.js',

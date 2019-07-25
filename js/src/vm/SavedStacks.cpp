@@ -19,7 +19,6 @@
 #include "jsmath.h"
 #include "jsnum.h"
 
-#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/HashUtil.h"
 #include "gc/Marking.h"
@@ -37,6 +36,7 @@
 #include "vm/Time.h"
 #include "vm/WrapperObject.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "vm/GeckoProfiler-inl.h"
 #include "vm/JSContext-inl.h"
 #include "vm/NativeObject-inl.h"
@@ -1815,31 +1815,12 @@ void SavedStacks::chooseSamplingProbability(Realm* realm) {
     return;
   }
 
-  GlobalObject::DebuggerVector* dbgs = global->getDebuggers();
-  if (!dbgs || dbgs->empty()) {
+  Maybe<double> probability = DebugAPI::allocationSamplingProbability(global);
+  if (probability.isNothing()) {
     return;
   }
 
-  mozilla::DebugOnly<WeakHeapPtr<Debugger*>*> begin = dbgs->begin();
-  mozilla::DebugOnly<bool> foundAnyDebuggers = false;
-
-  double probability = 0;
-  for (auto p = dbgs->begin(); p < dbgs->end(); p++) {
-    // The set of debuggers had better not change while we're iterating,
-    // such that the vector gets reallocated.
-    MOZ_ASSERT(dbgs->begin() == begin);
-    // Use unbarrieredGet() to prevent triggering read barrier while collecting,
-    // this is safe as long as dbgp does not escape.
-    Debugger* dbgp = p->unbarrieredGet();
-
-    if (dbgp->trackingAllocationSites && dbgp->enabled) {
-      foundAnyDebuggers = true;
-      probability = std::max(dbgp->allocationSamplingProbability, probability);
-    }
-  }
-  MOZ_ASSERT(foundAnyDebuggers);
-
-  this->setSamplingProbability(probability);
+  this->setSamplingProbability(*probability);
 }
 
 void SavedStacks::setSamplingProbability(double probability) {
@@ -1868,7 +1849,7 @@ JSObject* SavedStacks::MetadataBuilder::build(
     oomUnsafe.crash("SavedStacksMetadataBuilder");
   }
 
-  if (!Debugger::onLogAllocationSite(cx, obj, frame,
+  if (!DebugAPI::onLogAllocationSite(cx, obj, frame,
                                      mozilla::TimeStamp::Now())) {
     oomUnsafe.crash("SavedStacksMetadataBuilder");
   }

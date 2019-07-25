@@ -60,6 +60,7 @@ class GitHasher(object):
     def _local_changes(self):
         # type: () -> Set[bytes]
         """get a set of files which have changed between HEAD and working copy"""
+        assert self.git is not None
         # note that git runs the command with tests_root as the cwd, which may
         # not be the root of the git repo (e.g., within a browser repo)
         cmd = [b"diff-index", b"--relative", b"--no-renames", b"--name-only", b"-z", b"HEAD"]
@@ -76,8 +77,9 @@ class GitHasher(object):
         if self.git is None:
             return hash_cache
 
-        cmd = [b"ls-tree", b"-r", b"-z", b"HEAD"]
-        
+        # note that git runs the command with tests_root as the cwd, which may
+        # not be the root of the git repo (e.g., within a browser repo)
+        cmd = ["ls-tree", "-r", "-z", "HEAD"]
         local_changes = self._local_changes()
         for result in self.git(*cmd).split(b"\0")[:-1]:  # type: bytes
             data, rel_path = result.rsplit(b"\t", 1)
@@ -103,7 +105,7 @@ class FileSystem(object):
                                                 extras=[".git/"],
                                                 cache=self.ignore_cache)
         git = GitHasher(root)
-        if git.git is not None:
+        if git is not None:
             self.hash_cache = git.hash_cache()
         else:
             self.hash_cache = {}

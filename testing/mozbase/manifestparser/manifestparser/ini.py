@@ -67,11 +67,11 @@ def read_ini(fp, variables=None, default='DEFAULT', defaults_only=False,
         while comment_start == sys.maxsize and inline_prefixes:
             next_prefixes = {}
             for prefix, index in inline_prefixes.items():
-                index = line.find(prefix, index+1)
+                index = stripped.find(prefix, index+1)
                 if index == -1:
                     continue
                 next_prefixes[prefix] = index
-                if index == 0 or (index > 0 and line[index-1].isspace()):
+                if index == 0 or (index > 0 and stripped[index-1].isspace()):
                     comment_start = min(comment_start, index)
             inline_prefixes = next_prefixes
 

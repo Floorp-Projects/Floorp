@@ -550,8 +550,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x00000, 0x10000, 0x00);
 }
 
-// Zero len with offset out-of-bounds is OK if it's at the edge of the
-// memory, but not if it is one past that.
+// Zero len with offset out-of-bounds is OK
 {
     let inst = wasmEvalText(
     `(module
@@ -573,8 +572,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    assertErrorMessage(() => inst.exports.testfn(),
-                       WebAssembly.RuntimeError, /index out of bounds/);
+    inst.exports.testfn();
 }
 
 // Very large range
@@ -731,7 +729,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     checkRange(b, 0x08000, 0x10000, 0xAA);
 }
 
-// Zero len with dest offset out-of-bounds but at the edge of memory is OK
+// Zero len with dest offset out-of-bounds at the edge of memory
 {
     let inst = wasmEvalText(
     `(module
@@ -744,7 +742,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     inst.exports.testfn();
 }
 
-// Ditto, but one further out is not OK.
+// Ditto, but one element further out
 {
     let inst = wasmEvalText(
     `(module
@@ -754,11 +752,10 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    assertErrorMessage(() => inst.exports.testfn(),
-                       WebAssembly.RuntimeError, /index out of bounds/);
+    inst.exports.testfn();
 }
 
-// Zero len with src offset out-of-bounds but at the edge of memory is OK
+// Zero len with src offset out-of-bounds at the edge of memory
 {
     let inst = wasmEvalText(
     `(module
@@ -771,7 +768,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
     inst.exports.testfn();
 }
 
-// Ditto, but one element further out is not OK.
+// Ditto, but one element further out
 {
     let inst = wasmEvalText(
     `(module
@@ -781,8 +778,7 @@ function checkRange(arr, minIx, maxIxPlusOne, expectedValue)
        )
      )`
     );
-    assertErrorMessage(() => inst.exports.testfn(),
-                       WebAssembly.RuntimeError, /index out of bounds/);
+    inst.exports.testfn();
 }
 
 // 100 random fills followed by 100 random copies, in a single-page buffer,

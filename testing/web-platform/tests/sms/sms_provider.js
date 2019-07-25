@@ -5,7 +5,7 @@ let interceptor = (async function() {
     '/gen/mojo/public/mojom/base/big_buffer.mojom-lite.js',
     '/gen/mojo/public/mojom/base/string16.mojom-lite.js',
     '/gen/mojo/public/mojom/base/time.mojom-lite.js',
-    '/gen/third_party/blink/public/mojom/sms/sms_manager.mojom-lite.js',
+    '/gen/third_party/blink/public/mojom/sms/sms_receiver.mojom-lite.js',
   ].forEach(path => {
     let script = document.createElement('script');
     script.src = path;
@@ -19,39 +19,41 @@ let interceptor = (async function() {
   return load.then(intercept);
 })();
 
-class SmsProvider {
-  getNextMessage(timeout) {
-    return this.handler.getNextMessage(timeout);
+// Fake implementation of blink.mojom.SmsReceiver.
+class FakeSmsReceiverImpl {
+  constructor() {
+    this.returnValues = {}
   }
-  setHandler(handler) {
-    this.handler = handler;
+
+  bindHandleToMojoReceiver(handle) {
+    this.mojoReceiver_ = new blink.mojom.SmsReceiverReceiver(this);
+    this.mojoReceiver_.$.bindHandle(handle);
+  }
+
+  pushReturnValuesForTesting(callName, returnValues) {
+    this.returnValues[callName] = this.returnValues[callName] || [];
+    this.returnValues[callName].push(returnValues);
     return this;
   }
-  setBinding(binding) {
-    this.binding = binding;
-    return this;
-  }
-  close() {
-    this.binding.close();
+
+  receive(timeout) {
+    let call = this.returnValues.receive.shift();
+    if (!call) {
+      throw new Error("Unexpected call.");
+    }
+    return call(timeout);
   }
 }
 
-function getNextMessage(timeout, callback) {
+function receive(timeout, callback) {
   throw new Error("expected to be overriden by tests");
-}
-
-async function close() {
-  let provider = await interceptor;
-  provider.close();
 }
 
 function expect(call) {
   return {
     async andReturn(callback) {
-      let handler = {};
-      handler[call.name] = callback;
-      let provider = await interceptor;
-      provider.setHandler(handler);
+      let smsReceiverImpl = await interceptor;
+      smsReceiverImpl.pushReturnValuesForTesting(call.name, callback);
     }
   }
 }
@@ -59,12 +61,12 @@ function expect(call) {
 const Status = {};
 
 function intercept() {
-  let provider = new SmsProvider();
+  let smsReceiverImpl = new FakeSmsReceiverImpl();
 
-  let interceptor = new MojoInterfaceInterceptor(blink.mojom.SmsManager.$interfaceName);
+  let interceptor = new MojoInterfaceInterceptor(
+      blink.mojom.SmsReceiver.$interfaceName);
   interceptor.oninterfacerequest = (e) => {
-    let impl = new blink.mojom.SmsManager(provider);
-    impl.bindHandle(e.handle);
+    smsReceiverImpl.bindHandleToMojoReceiver(e.handle);
   }
 
   interceptor.start();
@@ -72,5 +74,5 @@ function intercept() {
   Status.kSuccess = blink.mojom.SmsStatus.kSuccess;
   Status.kTimeout = blink.mojom.SmsStatus.kTimeout;
 
-  return provider;
+  return smsReceiverImpl;
 }
