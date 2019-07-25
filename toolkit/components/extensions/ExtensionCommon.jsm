@@ -2122,27 +2122,18 @@ class EventManager {
    *        The name of this event.
    */
   constructor(params) {
-    // Maintain compatibility with the old EventManager API in which
-    // the constructor took parameters (contest, name, register).
-    // Remove this in bug 1451212.
-    if (arguments.length > 1) {
-      [this.context, this.name, this.register] = arguments;
-      this.inputHandling = false;
-      this.persistent = null;
-    } else {
-      let {
-        context,
-        name,
-        register,
-        inputHandling = false,
-        persistent = null,
-      } = params;
-      this.context = context;
-      this.name = name;
-      this.register = register;
-      this.inputHandling = inputHandling;
-      this.persistent = persistent;
-    }
+    let {
+      context,
+      name,
+      register,
+      inputHandling = false,
+      persistent = null,
+    } = params;
+    this.context = context;
+    this.name = name;
+    this.register = register;
+    this.inputHandling = inputHandling;
+    this.persistent = persistent;
 
     // Don't bother with persistent event handling if delayed background
     // startup is not enabled.
