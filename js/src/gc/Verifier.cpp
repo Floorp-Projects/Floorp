@@ -218,6 +218,7 @@ void gc::GCRuntime::startVerifyPreBarriers() {
   /* Create the root node. */
   trc->curnode = MakeNode(trc, nullptr, JS::TraceKind(0));
 
+  MOZ_ASSERT(incrementalState == State::NotActive);
   incrementalState = State::MarkRoots;
 
   /* Make all the roots be edges emanating from the root node. */
@@ -359,6 +360,7 @@ void gc::GCRuntime::endVerifyPreBarriers() {
   number++;
 
   verifyPreData = nullptr;
+  MOZ_ASSERT(incrementalState == State::Mark);
   incrementalState = State::NotActive;
 
   if (!compartmentCreated && IsIncrementalGCUnsafe(rt) == AbortReason::None &&
