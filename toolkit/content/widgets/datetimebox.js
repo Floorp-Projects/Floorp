@@ -337,7 +337,7 @@ this.DateTimeInputBaseImplWidget = class {
   }
 
   updateResetButtonVisibility() {
-    if (this.isAnyFieldAvailable(false) && !this.isRequired()) {
+    if (this.isAnyFieldAvailable(false)) {
       this.mResetButton.style.visibility = "";
     } else {
       this.mResetButton.style.visibility = "hidden";
@@ -438,7 +438,6 @@ this.DateTimeInputBaseImplWidget = class {
     }
 
     this.mResetButton.disabled = this.mInputElement.disabled;
-    this.updateResetButtonVisibility();
   }
 
   isEmpty(aValue) {
@@ -512,10 +511,6 @@ this.DateTimeInputBaseImplWidget = class {
 
   isReadonly() {
     return this.mInputElement.hasAttribute("readonly");
-  }
-
-  isRequired() {
-    return this.mInputElement.hasAttribute("required");
   }
 
   handleEvent(aEvent) {
