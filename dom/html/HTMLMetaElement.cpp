@@ -155,7 +155,11 @@ JSObject* HTMLMetaElement::WrapNode(JSContext* aCx,
 void HTMLMetaElement::ProcessViewportContent(Document* aDocument) {
   nsAutoString content;
   GetContent(content);
-  ViewportMetaData::ProcessViewportInfo(aDocument, content);
+
+  aDocument->SetHeaderData(nsGkAtoms::viewport, content);
+
+  ViewportMetaData data(content);
+  aDocument->AddMetaViewportElement(this, std::move(data));
 }
 
 }  // namespace dom
