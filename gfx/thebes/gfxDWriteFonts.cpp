@@ -665,16 +665,19 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
                             : gfxWindowsPlatform::TEXT_RENDERING_NORMAL)
                 : gfxWindowsPlatform::TEXT_RENDERING_NO_CLEARTYPE);
 
-    DWRITE_RENDERING_MODE renderingMode =
-      forceGDI ? DWRITE_RENDERING_MODE_GDI_CLASSIC : params->GetRenderingMode();
-
-    FLOAT gamma = forceGDI ? GetSystemGDIGamma() : params->GetGamma();
+    DWRITE_RENDERING_MODE renderingMode = params->GetRenderingMode();
+    FLOAT gamma = params->GetGamma();
+    FLOAT contrast = params->GetEnhancedContrast();
+    if (forceGDI) {
+      renderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
+      gamma = GetSystemGDIGamma();
+      contrast = 0.0f;
+    }
 
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
         mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, (int)renderingMode, params, gamma,
-        params->GetEnhancedContrast());
+        useEmbeddedBitmap, (int)renderingMode, params, gamma, contrast);
     if (!mAzureScaledFont) {
       return nullptr;
     }
