@@ -296,6 +296,7 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
       mShm(nullptr),
       mPrimarySelectionDeviceManager(nullptr),
       mRegistry(nullptr),
+      mDmabuf(nullptr),
       mGbmDevice(nullptr),
       mGbmFd(-1),
       mXRGBFormat({false, false, -1, nullptr, 0}),
