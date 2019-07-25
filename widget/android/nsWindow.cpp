@@ -13,20 +13,23 @@
 
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/RWLock.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
 
-#include "mozilla/a11y/SessionAccessibility.h"
-#include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/layers/RenderTrace.h"
-#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/Unused.h"
+#include "mozilla/a11y/SessionAccessibility.h"
+#include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/DataSurfaceHelpers.h"
+#include "mozilla/layers/RenderTrace.h"
 #include <algorithm>
 
 using mozilla::Unused;
@@ -53,27 +56,27 @@ using mozilla::dom::ContentParent;
 #include "nsLayoutUtils.h"
 #include "nsViewManager.h"
 
-#include "nsContentUtils.h"
 #include "WidgetUtils.h"
+#include "nsContentUtils.h"
 
+#include "nsGfxCIID.h"
 #include "nsGkAtoms.h"
 #include "nsWidgetsCID.h"
-#include "nsGfxCIID.h"
 
 #include "gfxContext.h"
 
+#include "AndroidContentController.h"
+#include "GLContext.h"
+#include "GLContextProvider.h"
 #include "Layers.h"
-#include "mozilla/layers/LayerManagerComposite.h"
-#include "mozilla/layers/AsyncCompositionManager.h"
+#include "ScopedGLHelpers.h"
 #include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZInputBridge.h"
 #include "mozilla/layers/APZThreadUtils.h"
-#include "mozilla/layers/IAPZCTreeManager.h"
-#include "GLContext.h"
-#include "GLContextProvider.h"
-#include "ScopedGLHelpers.h"
+#include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/CompositorOGL.h"
-#include "AndroidContentController.h"
+#include "mozilla/layers/IAPZCTreeManager.h"
+#include "mozilla/layers/LayerManagerComposite.h"
 
 #include "nsTArray.h"
 
@@ -81,18 +84,18 @@ using mozilla::dom::ContentParent;
 #include "AndroidBridgeUtilities.h"
 #include "AndroidUiThread.h"
 #include "FennecJNINatives.h"
-#include "GeneratedJNINatives.h"
 #include "GeckoEditableSupport.h"
+#include "GeneratedJNINatives.h"
 #include "KeyEvent.h"
 #include "MotionEvent.h"
 #include "ScreenHelperAndroid.h"
 
 #include "imgIEncoder.h"
 
-#include "nsString.h"
 #include "GeckoProfiler.h"  // For AUTO_PROFILER_LABEL
 #include "nsIXULRuntime.h"
 #include "nsPrintfCString.h"
+#include "nsString.h"
 
 #include "mozilla/ipc/Shmem.h"
 
@@ -862,20 +865,27 @@ class nsWindow::LayerViewSupport final
         return;
       }
 
-      uiThread->Dispatch(NS_NewRunnableFunction(
-          "LayerViewSupport::OnDetach",
-          [compositor, disposer = RefPtr<Runnable>(aDisposer),
-           result = &mCapturePixelsResults] {
-            while (!result->empty()) {
-              result->front()->CompleteExceptionally(
-                  java::sdk::IllegalStateException::New(
-                      "The compositor has detached from the session")
-                      .Cast<jni::Throwable>());
-              result->pop();
-            }
-            compositor->OnCompositorDetached();
-            disposer->Run();
-          }));
+      if (LockedWindowPtr window{mWindow}) {
+        uiThread->Dispatch(NS_NewRunnableFunction(
+            "LayerViewSupport::OnDetach",
+            [compositor, disposer = RefPtr<Runnable>(aDisposer),
+             results = &mCapturePixelsResults, lock = &window] {
+              if (lock) {
+                while (!results->empty()) {
+                  auto aResult = java::GeckoResult::LocalRef(results->front());
+                  if (aResult) {
+                    aResult->CompleteExceptionally(
+                        java::sdk::IllegalStateException::New(
+                            "The compositor has detached from the session")
+                            .Cast<jni::Throwable>());
+                    results->pop();
+                  }
+                }
+                compositor->OnCompositorDetached();
+                disposer->Run();
+              }
+            }));
+      }
     }
   }
 
@@ -1125,9 +1135,15 @@ class nsWindow::LayerViewSupport final
 
   void RequestScreenPixels(jni::Object::Param aResult) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    mCapturePixelsResults.push(
-        java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
-    if (mCapturePixelsResults.size() == 1) {
+
+    int size = 0;
+    if (LockedWindowPtr window{mWindow}) {
+      mCapturePixelsResults.push(
+          java::GeckoResult::GlobalRef(java::GeckoResult::LocalRef(aResult)));
+      size = mCapturePixelsResults.size();
+    }
+
+    if (size == 1) {
       if (RefPtr<UiCompositorControllerChild> child =
               GetUiCompositorControllerChild()) {
         child->RequestScreenPixels();
@@ -1137,7 +1153,10 @@ class nsWindow::LayerViewSupport final
 
   void RecvScreenPixels(Shmem&& aMem, const ScreenIntSize& aSize) {
     MOZ_ASSERT(AndroidBridge::IsJavaUiThread());
-    auto aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+    java::GeckoResult::LocalRef aResult = nullptr;
+    if (LockedWindowPtr window{mWindow}) {
+      aResult = java::GeckoResult::LocalRef(mCapturePixelsResults.front());
+    }
     if (aResult) {
       auto pixels = mozilla::jni::ByteBuffer::New(FlipScreenPixels(aMem, aSize),
                                                   aMem.Size<int8_t>());
@@ -1145,7 +1164,10 @@ class nsWindow::LayerViewSupport final
           aSize.width, aSize.height, java::sdk::Config::ARGB_8888());
       bitmap->CopyPixelsFromBuffer(pixels);
       aResult->Complete(bitmap);
-      mCapturePixelsResults.pop();
+
+      if (LockedWindowPtr window{mWindow}) {
+        mCapturePixelsResults.pop();
+      }
     }
 
     // Pixels have been copied, so Dealloc Shmem
@@ -1153,8 +1175,10 @@ class nsWindow::LayerViewSupport final
             GetUiCompositorControllerChild()) {
       child->DeallocPixelBuffer(aMem);
 
-      if (!mCapturePixelsResults.empty()) {
-        child->RequestScreenPixels();
+      if (LockedWindowPtr window{mWindow}) {
+        if (!mCapturePixelsResults.empty()) {
+          child->RequestScreenPixels();
+        }
       }
     }
   }

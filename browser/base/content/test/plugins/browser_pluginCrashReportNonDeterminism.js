@@ -61,7 +61,6 @@ function preparePlugin(browser, pluginFallbackState) {
     contentPluginFallbackState
   ) {
     let plugin = content.document.getElementById("plugin");
-    plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     // CRASH_URL will load a plugin that crashes immediately. We
     // wait until the plugin has finished being put into the crash
     // state.
@@ -164,7 +163,6 @@ add_task(async function testChromeHearsPluginCrashFirst() {
     // plugin crash message from the parent, and we are OK to emit
     // the PluginCrashed event.
     let plugin = content.document.getElementById("plugin");
-    plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let statusDiv = plugin.openOrClosedShadowRoot.getElementById(
       "submitStatus"
     );
@@ -251,7 +249,6 @@ add_task(async function testContentHearsCrashFirst() {
     // parent about the crash report. Let's ensure that by making sure
     // we're not showing the plugin crash report UI.
     let plugin = content.document.getElementById("plugin");
-    plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let statusDiv = plugin.openOrClosedShadowRoot.getElementById(
       "submitStatus"
     );
@@ -276,7 +273,6 @@ add_task(async function testContentHearsCrashFirst() {
 
   await ContentTask.spawn(browser, null, function() {
     let plugin = content.document.getElementById("plugin");
-    plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let statusDiv = plugin.openOrClosedShadowRoot.getElementById(
       "submitStatus"
     );
@@ -295,7 +291,6 @@ add_task(async function testContentHearsCrashFirst() {
     // from the parent and reacted to it. We should be showing the plugin
     // crash report UI now.
     let plugin = content.document.getElementById("plugin");
-    plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     let statusDiv = plugin.openOrClosedShadowRoot.getElementById(
       "submitStatus"
     );

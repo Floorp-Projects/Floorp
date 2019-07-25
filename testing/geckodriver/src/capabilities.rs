@@ -1,6 +1,6 @@
-use base64;
 use crate::command::LogOptions;
 use crate::logging::Level;
+use base64;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
@@ -194,8 +194,9 @@ impl<'a> BrowserCapabilities for FirefoxCapabilities<'a> {
                                 value.as_array(),
                                 ErrorStatus::InvalidArgument,
                                 "args is not an array"
-                            ).iter()
-                                .all(|value| value.is_string())
+                            )
+                            .iter()
+                            .all(|value| value.is_string())
                             {
                                 return Err(WebDriverError::new(
                                     ErrorStatus::InvalidArgument,
@@ -327,7 +328,7 @@ impl FirefoxOptions {
             let options = json.as_object().ok_or(WebDriverError::new(
                 ErrorStatus::InvalidArgument,
                 "'moz:firefoxOptions' \
-                 capability is not an object"
+                 capability is not an object",
             ))?;
 
             rv.profile = FirefoxOptions::load_profile(&options)?;
@@ -343,7 +344,7 @@ impl FirefoxOptions {
         if let Some(profile_json) = options.get("profile") {
             let profile_base64 = profile_json.as_str().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                "Profile is not a string"
+                "Profile is not a string",
             ))?;
             let profile_zip = &*base64::decode(profile_base64)?;
 
@@ -355,7 +356,7 @@ impl FirefoxOptions {
                     .temp_dir
                     .as_ref()
                     .expect("Profile doesn't have a path")
-                    .path()
+                    .path(),
             )?;
 
             Ok(Some(profile))
@@ -369,7 +370,7 @@ impl FirefoxOptions {
             let args_array = args_json.as_array().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 "Arguments were not an \
-                 array"
+                 array",
             ))?;
             let args = args_array
                 .iter()
@@ -378,7 +379,7 @@ impl FirefoxOptions {
                 .ok_or(WebDriverError::new(
                     ErrorStatus::UnknownError,
                     "Arguments entries were not all \
-                     strings"
+                     strings",
                 ))?;
             Ok(Some(args))
         } else {
@@ -417,7 +418,7 @@ impl FirefoxOptions {
         if let Some(prefs_data) = options.get("prefs") {
             let prefs = prefs_data.as_object().ok_or(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                "Prefs were not an object"
+                "Prefs were not an object",
             ))?;
             let mut rv = Vec::with_capacity(prefs.len());
             for (key, value) in prefs.iter() {

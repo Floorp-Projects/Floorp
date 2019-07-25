@@ -27,5 +27,6 @@ ReservedWordsGenerated.inputs = ['/js/src/frontend/ReservedWords.h']
 DevToolsModules(
     'js-property-provider.js',
     'network-helper.js',
+    'parser-helper.js',
     'throttle.js',
 )

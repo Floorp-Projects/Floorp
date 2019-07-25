@@ -44,12 +44,6 @@ static nsLiteralCString evalWhitelist[] = {
     NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
     // Test-only utility
     NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
-
-    // The following files are NOT supposed to stay on this whitelist.
-    // Bug numbers indicate planned removal of each file.
-
-    // Bug 1498560
-    NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
 };
 
 /* static */

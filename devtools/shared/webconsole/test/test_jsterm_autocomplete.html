@@ -114,7 +114,7 @@
     if (!isWorker) {
       // `Cu` is not defined in workers, then we can't test `Cu.Sandbox`
       tests.push(doAutocompleteSandbox);
-      // Some cases are handled in worker context because we can't use Parser.jsm.
+      // Some cases are handled in worker context because we can't use parser.js.
       // See Bug 1507181.
       tests.push(
         doAutocompleteArray,

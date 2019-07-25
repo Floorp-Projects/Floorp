@@ -477,7 +477,7 @@ bool TabListener::UpdateSessionStore(uint32_t aFlushId, bool aIsFinal) {
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
-  MOZ_ALWAYS_TRUE(funcs);
+  NS_ENSURE_TRUE(funcs, false);
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
   AutoJSAPI jsapi;
   MOZ_ALWAYS_TRUE(jsapi.Init(wrapped->GetJSObjectGlobal()));

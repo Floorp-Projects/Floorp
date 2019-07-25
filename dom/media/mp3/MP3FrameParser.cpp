@@ -78,7 +78,7 @@ Result<bool, nsresult> FrameParser::Parse(BufferReader* aReader,
   MOZ_ASSERT(aReader && aBytesToSkip);
   *aBytesToSkip = 0;
 
-  if (!mID3Parser.Header().Size() && !mFirstFrame.Length()) {
+  if (!mID3Parser.Header().HasSizeBeenSet() && !mFirstFrame.Length()) {
     // No MP3 frames have been parsed yet, look for ID3v2 headers at file begin.
     // ID3v1 tags may only be at file end.
     // TODO: should we try to read ID3 tags at end of file/mid-stream, too?
@@ -524,7 +524,7 @@ const ID3Parser::ID3Header& ID3Parser::Header() const { return mHeader; }
 ID3Parser::ID3Header::ID3Header() { Reset(); }
 
 void ID3Parser::ID3Header::Reset() {
-  mSize = 0;
+  mSize.reset();
   mPos = 0;
 }
 
@@ -541,11 +541,13 @@ uint8_t ID3Parser::ID3Header::Flags() const {
 }
 
 uint32_t ID3Parser::ID3Header::Size() const {
-  if (!IsValid()) {
+  if (!IsValid() || !mSize) {
     return 0;
   }
-  return mSize;
+  return *mSize;
 }
+
+bool ID3Parser::ID3Header::HasSizeBeenSet() const { return !!mSize; }
 
 uint8_t ID3Parser::ID3Header::FooterSize() const {
   if (Flags() & (1 << 4)) {
@@ -605,8 +607,8 @@ bool ID3Parser::ID3Header::IsValid() const { return mPos >= SIZE; }
 bool ID3Parser::ID3Header::Update(uint8_t c) {
   if (mPos >= id3_header::SIZE_END - id3_header::SIZE_LEN &&
       mPos < id3_header::SIZE_END) {
-    mSize <<= 7;
-    mSize |= c;
+    uint32_t tmp = mSize.valueOr(0) << 7;
+    mSize = Some(tmp | c);
   }
   if (mPos < SIZE) {
     mRaw[mPos] = c;
