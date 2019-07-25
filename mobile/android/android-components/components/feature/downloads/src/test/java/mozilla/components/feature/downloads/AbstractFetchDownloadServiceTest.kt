@@ -18,6 +18,7 @@ import mozilla.components.feature.downloads.ext.putDownloadExtra
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,9 +39,11 @@ class AbstractFetchDownloadServiceTest {
     @Before
     fun setup() {
         initMocks(this)
-        service = spy(object : AbstractFetchDownloadService(broadcastManager) {
+        service = spy(object : AbstractFetchDownloadService() {
             override val httpClient = client
         })
+        doReturn(broadcastManager).`when`(service).broadcastManager
+        doReturn(testContext).`when`(service).context
     }
 
     @Test

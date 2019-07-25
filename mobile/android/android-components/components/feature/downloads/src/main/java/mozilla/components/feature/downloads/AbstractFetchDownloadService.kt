@@ -7,9 +7,6 @@ package mozilla.components.feature.downloads
 import android.annotation.TargetApi
 import android.app.DownloadManager.ACTION_DOWNLOAD_COMPLETE
 import android.app.DownloadManager.EXTRA_DOWNLOAD_ID
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -19,8 +16,8 @@ import android.os.Environment
 import android.os.IBinder
 import android.os.ParcelFileDescriptor
 import android.provider.MediaStore
-import androidx.core.app.NotificationCompat
-import androidx.core.content.getSystemService
+import androidx.annotation.VisibleForTesting
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import kotlinx.coroutines.Dispatchers.IO
@@ -37,8 +34,10 @@ import mozilla.components.feature.downloads.ext.addCompletedDownload
 import mozilla.components.feature.downloads.ext.getDownloadExtra
 import mozilla.components.feature.downloads.ext.withResponse
 import mozilla.components.support.base.ids.NotificationIds
+import mozilla.components.support.base.ids.notify
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.OutputStream
 
 /**
@@ -46,20 +45,19 @@ import java.io.OutputStream
  * Android download manager.
  *
  * To use this service, you must create a subclass in your application and it to the manifest.
- *
- * @param broadcastManager Override the [LocalBroadcastManager] instance.
  */
-abstract class AbstractFetchDownloadService(
-    broadcastManager: LocalBroadcastManager? = null
-) : CoroutineService() {
+abstract class AbstractFetchDownloadService : CoroutineService() {
 
     protected abstract val httpClient: Client
-    private val broadcastManager = broadcastManager ?: LocalBroadcastManager.getInstance(this)
+    @VisibleForTesting
+    internal val broadcastManager by lazy { LocalBroadcastManager.getInstance(this) }
+    @VisibleForTesting
+    internal val context: Context get() = this
 
     override fun onCreate() {
         startForeground(
-            NotificationIds.getIdForTag(this, ONGOING_DOWNLOAD_NOTIFICATION_TAG),
-            buildNotification()
+            NotificationIds.getIdForTag(context, ONGOING_DOWNLOAD_NOTIFICATION_TAG),
+            DownloadNotification.createOngoingDownloadNotification(context)
         )
         super.onCreate()
     }
@@ -68,7 +66,18 @@ abstract class AbstractFetchDownloadService(
 
     override suspend fun onStartCommand(intent: Intent?, flags: Int) {
         val download = intent?.getDownloadExtra() ?: return
-        performDownload(download)
+
+        val notification = try {
+            performDownload(download)
+            DownloadNotification.createDownloadCompletedNotification(context, download.fileName)
+        } catch (e: IOException) {
+            DownloadNotification.createDownloadFailedNotification(context, download.fileName)
+        }
+        NotificationManagerCompat.from(context).notify(
+            context,
+            COMPLETED_DOWNLOAD_NOTIFICATION_TAG,
+            notification
+        )
 
         val downloadID = intent.getLongExtra(EXTRA_DOWNLOAD_ID, -1)
         sendDownloadCompleteBroadcast(downloadID)
@@ -156,51 +165,15 @@ abstract class AbstractFetchDownloadService(
             mimeType = download.contentType ?: "*/*",
             path = file.absolutePath,
             length = download.contentLength ?: file.length(),
-            showNotification = true,
+            // Only show notifications if our channel is blocked
+            showNotification = !DownloadNotification.isChannelEnabled(context),
             uri = download.url.toUri(),
             referer = download.referrerUrl?.toUri()
         )
     }
 
-    /**
-     * Build the notification to be displayed while the service is active.
-     */
-    private fun buildNotification(): Notification {
-        val channelId = ensureChannelExists(this)
-
-        return NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.mozac_feature_download_ic_download)
-            .setContentTitle(getString(R.string.mozac_feature_downloads_ongoing_notification_title))
-            .setContentText(getString(R.string.mozac_feature_downloads_ongoing_notification_text))
-            .setCategory(NotificationCompat.CATEGORY_PROGRESS)
-            .setProgress(1, 0, true)
-            .setOngoing(true)
-            .build()
-    }
-
-    /**
-     * Make sure a notification channel for download notification exists.
-     *
-     * Returns the channel id to be used for download notifications.
-     */
-    private fun ensureChannelExists(context: Context): String {
-        if (SDK_INT >= Build.VERSION_CODES.O) {
-            val notificationManager: NotificationManager = context.getSystemService()!!
-
-            val channel = NotificationChannel(
-                NOTIFICATION_CHANNEL_ID,
-                context.getString(R.string.mozac_feature_downloads_notification_channel),
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
-
-            notificationManager.createNotificationChannel(channel)
-        }
-
-        return NOTIFICATION_CHANNEL_ID
-    }
-
     companion object {
-        private const val NOTIFICATION_CHANNEL_ID = "Downloads"
         private const val ONGOING_DOWNLOAD_NOTIFICATION_TAG = "OngoingDownload"
+        private const val COMPLETED_DOWNLOAD_NOTIFICATION_TAG = "CompletedDownload"
     }
 }
