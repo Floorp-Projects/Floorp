@@ -307,10 +307,10 @@ pub struct PrimitiveSceneData {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Copy, Debug, Clone, MallocSizeOf, PartialEq)]
 pub struct RectangleKey {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
+    x: f32,
+    y: f32,
+    w: f32,
+    h: f32,
 }
 
 impl Eq for RectangleKey {}
