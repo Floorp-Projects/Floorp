@@ -1971,7 +1971,9 @@ class StaticAnalysis(MachCommandBase):
                 try:
                     output = check_output(args + l)
                     if output and output_format == 'json':
-                        patches[original_path] = self._parse_xml_output(original_path, output)
+                        # Output a relative path in json patch list
+                        relative_path = os.path.relpath(original_path, self.topsrcdir)
+                        patches[relative_path] = self._parse_xml_output(original_path, output)
                 except CalledProcessError as e:
                     # Something wrong happend
                     print("clang-format: An error occured while running clang-format.")
