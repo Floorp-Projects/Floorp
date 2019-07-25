@@ -3006,8 +3006,9 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
 .modalOverlayInner {
   width: 960px;
   position: fixed;
-  top: 15%;
+  top: 20%;
   left: calc(50% - 480px);
+  max-height: calc(100% - 100px);
   background: #FFF;
   box-shadow: 0 1px 15px 0 rgba(0, 0, 0, 0.3);
   border-radius: 4px;
@@ -3021,9 +3022,12 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       left: 0;
       box-shadow: none;
       border-radius: 0; } }
-  @media (max-height: 730px) {
+  @media (max-width: 850px) and (max-height: 730px) {
     .modalOverlayInner {
-      top: 5%; } }
+      overflow-y: scroll; } }
+  @media (max-width: 650px) and (max-height: 600px) {
+    .modalOverlayInner {
+      overflow-y: scroll; } }
   .modalOverlayInner.active {
     display: block; }
   .modalOverlayInner h2 {
@@ -3849,7 +3853,8 @@ a.firstrun-link {
 .trailhead {
   background: url("../data/content/assets/trailhead/accounts-form-bg.jpg") bottom/cover;
   color: #FFF;
-  height: auto; }
+  height: auto;
+  top: 100px; }
   .trailhead a {
     color: #FFF;
     text-decoration: underline; }

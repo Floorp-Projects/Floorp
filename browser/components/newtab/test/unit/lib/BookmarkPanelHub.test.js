@@ -20,10 +20,7 @@ describe("BookmarkPanelHub", () => {
     sandbox = sinon.createSandbox();
     globals = new GlobalOverrider();
 
-    fakeL10n = {
-      setAttributes: sandbox.stub(),
-      translateElements: sandbox.stub().resolves(),
-    };
+    fakeL10n = { setAttributes: sandbox.stub() };
     globals.set("DOMLocalization", function() {
       return fakeL10n;
     }); // eslint-disable-line prefer-arrow-callback
@@ -51,12 +48,6 @@ describe("BookmarkPanelHub", () => {
       querySelector: sandbox.stub(),
       children: [],
       style: {},
-      getBoundingClientRect: sandbox.stub(),
-    };
-    const document = {
-      createElementNS: sandbox.stub().returns(fakeContainer),
-      getElementById: sandbox.stub().returns(fakeContainer),
-      l10n: fakeL10n,
     };
     fakeWindow = {
       ownerGlobal: {
@@ -64,8 +55,10 @@ describe("BookmarkPanelHub", () => {
         gBrowser: { selectedBrowser: "browser" },
       },
       MozXULElement: { insertFTLIfNeeded: sandbox.stub() },
-      document,
-      requestAnimationFrame: x => x(),
+    };
+    const document = {
+      createElementNS: sandbox.stub().returns(fakeContainer),
+      getElementById: sandbox.stub().returns(fakeContainer),
     };
     fakeTarget = {
       document,
@@ -256,19 +249,6 @@ describe("BookmarkPanelHub", () => {
 
       assert.equal(fakeL10n.setAttributes.callCount, 4);
     });
-    it("call adjust panel height when height is > 150px", async () => {
-      fakeTarget.container.querySelector.returns(false);
-      fakeContainer.getBoundingClientRect.returns({ height: 160 });
-
-      await instance._adjustPanelHeight(fakeWindow, fakeContainer);
-
-      assert.calledOnce(fakeWindow.document.l10n.translateElements);
-      assert.calledTwice(fakeContainer.getBoundingClientRect);
-      assert.calledWithExactly(
-        fakeContainer.classList.add,
-        "longMessagePadding"
-      );
-    });
     it("should reuse the container", () => {
       fakeTarget.container.querySelector.returns(true);
 
@@ -378,7 +358,6 @@ describe("BookmarkPanelHub", () => {
           querySelector: sandbox.stub().returns({ remove: removeStub }),
         },
       };
-      instance._response = { win: fakeWindow };
     });
     it("should remove the message", () => {
       instance.hideMessage(fakeTarget);
