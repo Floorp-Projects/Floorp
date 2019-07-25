@@ -10,6 +10,7 @@ from __future__ import absolute_import, unicode_literals
 from mozbuild.shellutil import quote as shell_quote
 
 import os
+import re
 
 from voluptuous import (
     Any,
@@ -89,6 +90,13 @@ FETCH_SCHEMA = Schema({
 
             # The name to give to the generated artifact.
             Required('artifact-name'): basestring
+        },
+        {
+            'type': 'git',
+            Required('repo'): basestring,
+            Required('revision'): basestring,
+            Optional('artifact-name'): basestring,
+            Optional('path-prefix'): basestring,
         }
     ),
 })
@@ -110,6 +118,8 @@ def process_fetch_job(config, jobs):
             yield create_fetch_url_task(config, job)
         elif typ == 'chromium-fetch':
             yield create_chromium_fetch_task(config, job)
+        elif typ == 'git':
+            yield create_git_fetch_task(config, job)
         else:
             # validate() should have caught this.
             assert False
@@ -185,7 +195,7 @@ def create_fetch_url_task(config, job):
     ])
 
     task = make_base_task(config, name, job['description'], args)
-    task['treeherder']['symbol'] = join_symbol('Fetch-URL', name)
+    task['treeherder']['symbol'] = join_symbol('Fetch', name)
     task['worker']['artifacts'] = [{
         'type': 'directory',
         'name': 'public',
@@ -207,6 +217,54 @@ def create_fetch_url_task(config, job):
             # materially important for caching: GPG signatures are supplemental
             # trust checking beyond what the shasum already provides.
             digest_data=[fetch['sha256'], '%d' % fetch['size'], artifact_name],
+        )
+
+    return task
+
+
+def create_git_fetch_task(config, job):
+    name = job['name']
+    fetch = job['fetch']
+    path_prefix = fetch.get('path-prefix')
+    if not path_prefix:
+        path_prefix = fetch['repo'].rstrip('/').rsplit('/', 1)[-1]
+    artifact_name = fetch.get('artifact-name')
+    if not artifact_name:
+        artifact_name = '{}.tar.zst'.format(path_prefix)
+
+    if not re.match(r'[0-9a-fA-F]{40}', fetch['revision']):
+        raise Exception(
+            'Revision is not a sha1 in fetch task "{}"'.format(name))
+
+    args = [
+        '/builds/worker/bin/fetch-content',
+        'git-checkout-archive',
+        '--path-prefix',
+        path_prefix,
+        fetch['repo'],
+        fetch['revision'],
+        '/builds/worker/artifacts/%s' % artifact_name,
+    ]
+
+    task = make_base_task(config, name, job['description'], args)
+    task['treeherder']['symbol'] = join_symbol('Fetch', name)
+    task['worker']['artifacts'] = [{
+        'type': 'directory',
+        'name': 'public',
+        'path': '/builds/worker/artifacts',
+    }]
+    task['attributes']['fetch-artifact'] = 'public/%s' % artifact_name
+
+    if not taskgraph.fast:
+        cache_name = task['label'].replace('{}-'.format(config.kind), '', 1)
+
+        # This adds the level to the index path automatically.
+        add_optimization(
+            config,
+            task,
+            cache_type=CACHE_TYPE,
+            cache_name=cache_name,
+            digest_data=[fetch['revision'], path_prefix, artifact_name],
         )
 
     return task
@@ -240,7 +298,7 @@ def create_chromium_fetch_task(config, job):
     }
 
     task = make_base_task(config, name, job['description'], cmd)
-    task['treeherder']['symbol'] = join_symbol('Fetch-URL', name)
+    task['treeherder']['symbol'] = join_symbol('Fetch', name)
     task['worker']['artifacts'] = [{
         'type': 'directory',
         'name': 'public',
