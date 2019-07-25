@@ -271,7 +271,7 @@ MarkupView.prototype = {
    * destroyed while still initializing (and making protocol requests).
    */
   _handleRejectionIfNotDestroyed: function(e) {
-    if (!this._destroyer) {
+    if (!this._destroyed) {
       console.error(e);
     }
   },
@@ -798,7 +798,7 @@ MarkupView.prototype = {
     const onShow = this.showNode(selection.nodeFront, { slotted, smoothScroll })
       .then(() => {
         // We could be destroyed by now.
-        if (this._destroyer) {
+        if (this._destroyed) {
           return promise.reject("markupview destroyed");
         }
 
@@ -1408,7 +1408,7 @@ MarkupView.prototype = {
     }
 
     this._waitForChildren().then(() => {
-      if (this._destroyer) {
+      if (this._destroyed) {
         // Could not fully update after markup mutations, the markup-view was destroyed
         // while waiting for children. Bail out silently.
         return;
@@ -1508,7 +1508,7 @@ MarkupView.prototype = {
 
     return this._waitForChildren()
       .then(() => {
-        if (this._destroyer) {
+        if (this._destroyed) {
           return promise.reject("markupview destroyed");
         }
         return this._ensureVisible(node);
@@ -1535,7 +1535,7 @@ MarkupView.prototype = {
    */
   _expandContainer: function(container) {
     return this._updateChildren(container, { expand: true }).then(() => {
-      if (this._destroyer) {
+      if (this._destroyed) {
         // Could not expand the node, the markup-view was destroyed in the meantime. Just
         // silently give up.
         return;
@@ -2200,11 +2200,11 @@ MarkupView.prototype = {
    * Tear down the markup panel.
    */
   destroy: function() {
-    if (this._destroyer) {
-      return this._destroyer;
+    if (this._destroyed) {
+      return;
     }
 
-    this._destroyer = promise.resolve();
+    this._destroyed = true;
 
     this._clearBriefBoxModelTimer();
 
@@ -2280,8 +2280,6 @@ MarkupView.prototype = {
 
     this._lastDropTarget = null;
     this._lastDragTarget = null;
-
-    return this._destroyer;
   },
 
   /**
