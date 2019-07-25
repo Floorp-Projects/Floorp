@@ -671,6 +671,9 @@ class IonBuilder : public MIRGenerator,
   AbortReasonOr<Ok> jsop_implicitthis(PropertyName* name);
   AbortReasonOr<Ok> jsop_importmeta();
   AbortReasonOr<Ok> jsop_dynamic_import();
+  AbortReasonOr<Ok> jsop_instrumentation_active();
+  AbortReasonOr<Ok> jsop_instrumentation_callback();
+  AbortReasonOr<Ok> jsop_instrumentation_scriptid();
 
   /* Inlining. */
 

@@ -106,6 +106,7 @@ class GlobalObject : public NativeObject {
     FOR_OF_PIC_CHAIN,
     WINDOW_PROXY,
     GLOBAL_THIS_RESOLVED,
+    INSTRUMENTATION,
 
     /* Total reserved-slot count for global objects. */
     RESERVED_SLOTS
@@ -890,6 +891,15 @@ class GlobalObject : public NativeObject {
   }
   void setWindowProxy(JSObject* windowProxy) {
     setReservedSlot(WINDOW_PROXY, ObjectValue(*windowProxy));
+  }
+
+  JSObject* getInstrumentationHolder() const {
+    Value v = getReservedSlot(INSTRUMENTATION);
+    MOZ_ASSERT(v.isObject() || v.isUndefined());
+    return v.isObject() ? &v.toObject() : nullptr;
+  }
+  void setInstrumentationHolder(JSObject* instrumentation) {
+    setReservedSlot(INSTRUMENTATION, ObjectValue(*instrumentation));
   }
 
   // A class used in place of a prototype during off-thread parsing.

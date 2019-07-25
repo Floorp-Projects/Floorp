@@ -292,6 +292,7 @@ UNIFIED_SOURCES += [
     'vm/HelperThreads.cpp',
     'vm/Id.cpp',
     'vm/Initialization.cpp',
+    'vm/Instrumentation.cpp',
     'vm/Iteration.cpp',
     'vm/JSAtom.cpp',
     'vm/JSContext.cpp',

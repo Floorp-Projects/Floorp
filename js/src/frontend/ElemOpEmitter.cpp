@@ -70,17 +70,7 @@ bool ElemOpEmitter::emitGet() {
   }
   if (isIncDec() || isCompoundAssignment()) {
     if (isSuper()) {
-      // There's no such thing as JSOP_DUP3, so we have to be creative.
-      // Note that pushing things again is no fewer JSOps.
-      if (!bce_->emitDupAt(2)) {
-        //          [stack] THIS KEY SUPERBASE THIS
-        return false;
-      }
-      if (!bce_->emitDupAt(2)) {
-        //          [stack] THIS KEY SUPERBASE THIS KEY
-        return false;
-      }
-      if (!bce_->emitDupAt(2)) {
+      if (!bce_->emitDupAt(2, 3)) {
         //          [stack] THIS KEY SUPERBASE THIS KEY SUPERBASE
         return false;
       }
@@ -100,7 +90,7 @@ bool ElemOpEmitter::emitGet() {
   } else {
     op = JSOP_GETELEM;
   }
-  if (!bce_->emitElemOpBase(op)) {
+  if (!bce_->emitElemOpBase(op, ShouldInstrument::Yes)) {
     //              [stack] # if Get
     //              [stack] ELEM
     //              [stack] # if Call
@@ -221,7 +211,7 @@ bool ElemOpEmitter::emitAssignment(EmitSetFunctionName emitSetFunName) {
           : isSuper() ? bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER
                                            : JSOP_SETELEM_SUPER
                       : bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
-  if (!bce_->emitElemOpBase(setOp)) {
+  if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] ELEM
     return false;
   }
@@ -300,7 +290,7 @@ bool ElemOpEmitter::emitIncDec() {
       isSuper()
           ? (bce_->sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER)
           : (bce_->sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM);
-  if (!bce_->emitElemOpBase(setOp)) {
+  if (!bce_->emitElemOpBase(setOp, ShouldInstrument::Yes)) {
     //              [stack] N? N+1
     return false;
   }

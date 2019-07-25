@@ -41,14 +41,10 @@ bool ForOfLoopControl::emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce) {
 
 bool ForOfLoopControl::emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce) {
   if (!tryCatch_->emitCatch()) {
-    //              [stack] ITER ...
-    return false;
-  }
-
-  if (!bce->emit1(JSOP_EXCEPTION)) {
     //              [stack] ITER ... EXCEPTION
     return false;
   }
+
   unsigned slotFromTop = bce->bytecodeSection().stackDepth() - iterDepth_;
   if (!bce->emitDupAt(slotFromTop)) {
     //              [stack] ITER ... EXCEPTION ITER
