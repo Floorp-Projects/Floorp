@@ -197,15 +197,10 @@ const MitigationFlags MITIGATION_HIGH_ENTROPY_ASLR = 0x00000080;
 // PROCESS_CREATION_MITIGATION_POLICY_STRICT_HANDLE_CHECKS_ALWAYS_ON.
 const MitigationFlags MITIGATION_STRICT_HANDLE_CHECKS = 0x00000100;
 
-// Strengthens the DLL search order. See
-// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515. In a
-// component build - sets this to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS allowing
-// additional directories to be added via Windows AddDllDirectory() function,
-// but preserving current load order. In a non-component build, all DLLs should
-// be loaded manually, so strenthen to LOAD_LIBRARY_SEARCH_SYSTEM32 |
-// LOAD_LIBRARY_SEARCH_USER_DIRS, removing LOAD_LIBRARY_SEARCH_APPLICATION_DIR,
-// preventing DLLs being implicitly loaded from the application path. Must be
-// enabled after startup.
+// Sets the DLL search order to LOAD_LIBRARY_SEARCH_DEFAULT_DIRS. Additional
+// directories can be added via the Windows AddDllDirectory() function.
+// http://msdn.microsoft.com/en-us/library/windows/desktop/hh310515
+// Must be enabled after startup.
 const MitigationFlags MITIGATION_DLL_SEARCH_ORDER = 0x00000200;
 
 // Changes the mandatory integrity level policy on the current process' token

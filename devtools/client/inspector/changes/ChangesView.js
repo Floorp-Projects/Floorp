@@ -228,13 +228,8 @@ class ChangesView {
   /**
    * Destruction function called when the inspector is destroyed.
    */
-  async destroy() {
+  destroy() {
     this.store.dispatch(resetChanges());
-
-    // ensure we finish waiting for the front before destroying.
-    const changesFront = await this.changesFrontPromise;
-    changesFront.off("add-change", this.onAddChange);
-    changesFront.off("clear-changes", this.onClearChanges);
 
     this.document = null;
     this.inspector = null;

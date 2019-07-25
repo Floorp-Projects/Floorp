@@ -68,11 +68,7 @@ add_task(async function() {
 add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementsByTagName("embed")[0];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      !objLoadingContent.activated,
-      "Test 1b, Plugin should not be activated"
-    );
+    Assert.ok(!plugin.activated, "Test 1b, Plugin should not be activated");
   });
 
   // Click the activate button on doorhanger to make sure it works
@@ -87,11 +83,7 @@ add_task(async function() {
 
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementsByTagName("embed")[0];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      objLoadingContent.activated,
-      "Test 1b, Plugin should be activated"
-    );
+    Assert.ok(plugin.activated, "Test 1b, Plugin should be activated");
   });
 });
 
@@ -105,9 +97,8 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
     let plugin = content.document.getElementsByTagName("embed")[1];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     Assert.ok(
-      objLoadingContent.activated,
+      plugin.activated,
       "Test 1c, Newly inserted plugin in activated page should be activated"
     );
   });
@@ -116,11 +107,7 @@ add_task(async function() {
 add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementsByTagName("embed")[1];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      objLoadingContent.activated,
-      "Test 1d, Plugin should be activated"
-    );
+    Assert.ok(plugin.activated, "Test 1d, Plugin should be activated");
 
     let promise = ContentTaskUtils.waitForEvent(content, "hashchange");
     content.location += "#anchorNavigation";
@@ -132,30 +119,18 @@ add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
     let plugin = content.document.getElementsByTagName("embed")[2];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      objLoadingContent.activated,
-      "Test 1e, Plugin should be activated"
-    );
+    Assert.ok(plugin.activated, "Test 1e, Plugin should be activated");
   });
 });
 
 add_task(async function() {
   await ContentTask.spawn(gTestBrowser, {}, async function() {
     let plugin = content.document.getElementsByTagName("embed")[2];
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      objLoadingContent.activated,
-      "Test 1f, Plugin should be activated"
-    );
+    Assert.ok(plugin.activated, "Test 1f, Plugin should be activated");
 
     content.history.replaceState({}, "", "replacedState");
     new XPCNativeWrapper(XPCNativeWrapper.unwrap(content).addPlugin());
     plugin = content.document.getElementsByTagName("embed")[3];
-    objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(
-      objLoadingContent.activated,
-      "Test 1g, Plugin should be activated"
-    );
+    Assert.ok(plugin.activated, "Test 1g, Plugin should be activated");
   });
 });

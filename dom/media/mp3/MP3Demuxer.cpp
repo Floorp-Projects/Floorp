@@ -488,7 +488,7 @@ MediaByteRange MP3TrackDemuxer::FindNextFrame() {
   bool foundFrame = false;
   int64_t frameHeaderOffset = 0;
   int64_t startOffset = mOffset;
-  const bool searchingForID3 = !mParser.ID3Header().Size();
+  const bool searchingForID3 = !mParser.ID3Header().HasSizeBeenSet();
 
   // Check whether we've found a valid MPEG frame.
   while (!foundFrame) {

@@ -1548,10 +1548,16 @@ js_option('--enable-lto',
           choices=('full', 'thin', 'cross'),
           help='Enable LTO')
 
+js_option(env='MOZ_LD64_KNOWN_GOOD',
+          nargs=1,
+          help='Indicate that ld64 is free of symbol aliasing bugs.')
 
-@depends('--enable-lto', 'MOZ_PGO', '--enable-profile-generate', c_compiler)
+imply_option('MOZ_LD64_KNOWN_GOOD', depends_if('MOZ_AUTOMATION')(lambda _: True))
+
+@depends('--enable-lto', 'MOZ_PGO', '--enable-profile-generate', c_compiler,
+         'MOZ_LD64_KNOWN_GOOD', target)
 @imports('multiprocessing')
-def lto(value, pgo, profile_generate, c_compiler):
+def lto(value, pgo, profile_generate, c_compiler, ld64_known_good, target):
     cflags = []
     ldflags = []
     enabled = None
@@ -1571,6 +1577,13 @@ def lto(value, pgo, profile_generate, c_compiler):
 
             rust_lto = True
             value = ['thin']
+
+        if target.kernel == 'Darwin' and target.os == 'OSX' \
+           and value[0].lower() == 'cross' and not ld64_known_good:
+            die('The Mac linker is known to have a bug that affects cross-language '
+                'LTO.  If you know that your linker is free from this bug, please '
+                'set the environment variable `MOZ_LD64_KNOWN_GOOD=1` and re-run '
+                'configure.')
 
         if c_compiler.type == 'clang':
             if len(value) and value[0].lower() == 'full':

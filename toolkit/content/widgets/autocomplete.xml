@@ -27,19 +27,9 @@
       <field name="mIgnoreInput">false</field>
       <field name="noRollupOnEmptySearch">false</field>
 
-      <field name="_searchBeginHandler">null</field>
-      <field name="_searchCompleteHandler">null</field>
-      <field name="_textEnteredHandler">null</field>
-      <field name="_textRevertedHandler">null</field>
-
       <constructor><![CDATA[
         this.mController = Cc["@mozilla.org/autocomplete/controller;1"].
           getService(Ci.nsIAutoCompleteController);
-
-        this._searchBeginHandler = this.initEventHandler("searchbegin");
-        this._searchCompleteHandler = this.initEventHandler("searchcomplete");
-        this._textEnteredHandler = this.initEventHandler("textentered");
-        this._textRevertedHandler = this.initEventHandler("textreverted");
       ]]></constructor>
 
       <!-- =================== nsIAutoCompleteInput =================== -->
@@ -192,8 +182,6 @@
         <body><![CDATA[
           if (this.popup && typeof this.popup.onSearchBegin == "function")
             this.popup.onSearchBegin();
-          if (this._searchBeginHandler)
-            this._searchBeginHandler();
         ]]></body>
       </method>
 
@@ -208,28 +196,32 @@
             this.handleEnter();
             this.detachController();
           }
-
-          if (this._searchCompleteHandler)
-            this._searchCompleteHandler();
         ]]></body>
       </method>
 
       <method name="onTextEntered">
         <parameter name="event"/>
         <body><![CDATA[
-          let rv = false;
-          if (this._textEnteredHandler) {
-            rv = this._textEnteredHandler(event);
+          if (this.getAttribute("notifylegacyevents") === "true") {
+            let e = new CustomEvent("textEntered", {
+              bubbles: false,
+              cancelable: true,
+              detail: { rootEvent: event }
+            });
+            return !this.dispatchEvent(e);
           }
-          return rv;
         ]]></body>
       </method>
 
       <method name="onTextReverted">
         <body><![CDATA[
-          if (this._textRevertedHandler)
-            return this._textRevertedHandler();
-          return false;
+          if (this.getAttribute("notifylegacyevents") === "true") {
+            let e = new CustomEvent("textReverted", {
+              bubbles: false,
+              cancelable: true
+            });
+            return !this.dispatchEvent(e);
+          }
         ]]></body>
       </method>
 
@@ -350,19 +342,6 @@
             this.showHistoryPopup();
           else
             this.closePopup();
-        ]]></body>
-      </method>
-
-      <!-- ::::::::::::: event dispatching ::::::::::::: -->
-
-      <method name="initEventHandler">
-        <parameter name="aEventType"/>
-        <body><![CDATA[
-          let handlerString = this.getAttribute("on" + aEventType);
-          if (handlerString) {
-            return (new Function("eventType", "param", handlerString)).bind(this, aEventType);
-          }
-          return null;
         ]]></body>
       </method>
 

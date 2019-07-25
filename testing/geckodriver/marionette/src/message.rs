@@ -11,7 +11,7 @@ use crate::webdriver;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
-enum Command {
+pub enum Command {
     WebDriver(webdriver::Command),
     Marionette(marionette::Command),
 }
@@ -47,10 +47,10 @@ enum MessageDirection {
     Outgoing = 1,
 }
 
-type MessageId = u32;
+pub type MessageId = u32;
 
 #[derive(Debug, Clone, PartialEq)]
-struct Request(MessageId, Command);
+pub struct Request(pub MessageId, pub Command);
 
 impl Request {
     pub fn id(&self) -> MessageId {
@@ -82,7 +82,7 @@ impl Serialize for Request {
 }
 
 #[derive(Debug, PartialEq)]
-enum Response {
+pub enum Response {
     Result {
         id: MessageId,
         result: MarionetteResult,
@@ -111,7 +111,7 @@ impl Serialize for Response {
 
 #[derive(Debug, PartialEq, Serialize)]
 #[serde(untagged)]
-enum Message {
+pub enum Message {
     Incoming(Request),
     Outgoing(Response),
 }

@@ -389,7 +389,7 @@ class WebConsole {
       this.hudService.consoles.delete(this.hudId);
 
       if (this.ui) {
-        await this.ui.destroy();
+        this.ui.destroy();
       }
 
       if (!this._browserConsole) {

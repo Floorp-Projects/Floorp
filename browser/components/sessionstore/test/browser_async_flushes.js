@@ -74,7 +74,7 @@ add_task(async function test_crash() {
   // the content process. The "crash" message makes it first so that we don't
   // get a chance to process the flush. The TabStateFlusher however should be
   // notified so that the flush still completes.
-  let promise1 = BrowserTestUtils.crashFrame(browser);
+  let promise1 = BrowserTestUtils.crashBrowser(browser);
   let promise2 = TabStateFlusher.flush(browser);
   await Promise.all([promise1, promise2]);
 

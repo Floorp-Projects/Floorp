@@ -153,7 +153,6 @@
   "packets.js": ["RawPacket", "Packet", "JSONPacket", "BulkPacket"],
   "PageMenu.jsm": ["PageMenuParent", "PageMenuChild"],
   "PageThumbs.jsm": ["PageThumbs", "PageThumbsStorage"],
-  "Parser.jsm": ["Parser", "ParserHelpers", "SyntaxTreeVisitor"],
   "passwords.js": ["PasswordEngine", "LoginRec", "PasswordValidator"],
   "passwords.jsm": ["Password", "DumpPasswords"],
   "PdfJsNetwork.jsm": ["NetworkManager"],

@@ -2669,7 +2669,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
-  MOZ_ALWAYS_TRUE(funcs);
+  NS_ENSURE_TRUE(funcs, IPC_OK());
   nsCOMPtr<nsIXPConnectWrappedJS> wrapped = do_QueryInterface(funcs);
   AutoJSAPI jsapi;
   MOZ_ALWAYS_TRUE(jsapi.Init(wrapped->GetJSObjectGlobal()));

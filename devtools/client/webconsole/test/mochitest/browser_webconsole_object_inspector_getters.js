@@ -35,6 +35,18 @@ add_task(async function() {
           get myNullGetter() {
             return null;
           },
+          get myZeroGetter() {
+            return 0;
+          },
+          get myEmptyStringGetter() {
+            return "";
+          },
+          get myFalseGetter() {
+            return false;
+          },
+          get myTrueGetter() {
+            return true;
+          },
           get myObjectGetter() {
             return { foo: "bar" };
           },
@@ -73,6 +85,10 @@ add_task(async function() {
   await testNumberGetter(oi);
   await testUndefinedGetter(oi);
   await testNullGetter(oi);
+  await testZeroGetter(oi);
+  await testEmptyStringGetter(oi);
+  await testFalseGetter(oi);
+  await testTrueGetter(oi);
   await testObjectGetter(oi);
   await testArrayGetter(oi);
   await testMapGetter(oi);
@@ -193,6 +209,126 @@ async function testNullGetter(oi) {
   ok(
     node.textContent.includes(`myNullGetter: null`),
     "null getter now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+}
+
+async function testZeroGetter(oi) {
+  let node = findObjectInspectorNode(oi, "myZeroGetter");
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () =>
+      !getObjectInspectorInvokeGetterButton(
+        findObjectInspectorNode(oi, "myZeroGetter")
+      )
+  );
+
+  node = findObjectInspectorNode(oi, "myZeroGetter");
+  ok(
+    node.textContent.includes(`myZeroGetter: 0`),
+    "0 getter now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+}
+
+async function testEmptyStringGetter(oi) {
+  let node = findObjectInspectorNode(oi, "myEmptyStringGetter");
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () =>
+      !getObjectInspectorInvokeGetterButton(
+        findObjectInspectorNode(oi, "myEmptyStringGetter")
+      )
+  );
+
+  node = findObjectInspectorNode(oi, "myEmptyStringGetter");
+  ok(
+    node.textContent.includes(`myEmptyStringGetter: ""`),
+    "empty string getter now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+}
+
+async function testFalseGetter(oi) {
+  let node = findObjectInspectorNode(oi, "myFalseGetter");
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () =>
+      !getObjectInspectorInvokeGetterButton(
+        findObjectInspectorNode(oi, "myFalseGetter")
+      )
+  );
+
+  node = findObjectInspectorNode(oi, "myFalseGetter");
+  ok(
+    node.textContent.includes(`myFalseGetter: false`),
+    "false getter now has the expected text content"
+  );
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+}
+
+async function testTrueGetter(oi) {
+  let node = findObjectInspectorNode(oi, "myTrueGetter");
+  is(
+    isObjectInspectorNodeExpandable(node),
+    false,
+    "The node can't be expanded"
+  );
+  const invokeButton = getObjectInspectorInvokeGetterButton(node);
+  ok(invokeButton, "There is an invoke button as expected");
+
+  invokeButton.click();
+  await waitFor(
+    () =>
+      !getObjectInspectorInvokeGetterButton(
+        findObjectInspectorNode(oi, "myTrueGetter")
+      )
+  );
+
+  node = findObjectInspectorNode(oi, "myTrueGetter");
+  ok(
+    node.textContent.includes(`myTrueGetter: true`),
+    "false getter now has the expected text content"
   );
   is(
     isObjectInspectorNodeExpandable(node),

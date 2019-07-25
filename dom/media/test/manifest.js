@@ -647,7 +647,8 @@ var gAudioTests = [
   { name:"sound.ogg", type:"audio/ogg" },
   { name:"owl.mp3", type:"audio/mpeg", duration:3.343 },
   { name:"small-shot.m4a", type:"audio/mp4", duration:0.29 },
-  { name:"bogus.duh", type:"bogus/duh", duration:123 }
+  { name:"bogus.duh", type:"bogus/duh", duration:123 },
+  { name:"empty_size.mp3", type:"audio/mpeg", duration: 2.235 }
 ];
 
 // These files ensure our handling of 404 errors is consistent across the

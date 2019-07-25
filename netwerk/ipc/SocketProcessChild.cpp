@@ -115,6 +115,12 @@ void SocketProcessChild::ActorDestroy(ActorDestroyReason aWhy) {
 void SocketProcessChild::CleanUp() {
   LOG(("SocketProcessChild::CleanUp\n"));
 
+  for (auto iter = mSocketProcessBridgeParentMap.Iter(); !iter.Done();
+       iter.Next()) {
+    if (!iter.Data()->Closed()) {
+      iter.Data()->Close();
+    }
+  }
   NS_ShutdownXPCOM(nullptr);
 }
 

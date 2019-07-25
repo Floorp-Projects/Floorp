@@ -14,7 +14,7 @@ namespace net {
 
 SocketProcessBridgeParent::SocketProcessBridgeParent(
     ProcessId aId, Endpoint<PSocketProcessBridgeParent>&& aEndpoint)
-    : mId(aId) {
+    : mId(aId), mClosed(false) {
   LOG((
       "CONSTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent mId=%d\n",
       mId));
@@ -24,7 +24,8 @@ SocketProcessBridgeParent::SocketProcessBridgeParent(
 }
 
 SocketProcessBridgeParent::~SocketProcessBridgeParent() {
-  LOG(("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent\n"));
+  LOG(("DESTRUCT SocketProcessBridgeParent::SocketProcessBridgeParent mId=%d\n",
+       mId));
   MOZ_COUNT_DTOR(SocketProcessBridgeParent);
 }
 
@@ -47,13 +48,16 @@ mozilla::ipc::IPCResult SocketProcessBridgeParent::RecvInitBackground(
 void SocketProcessBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   LOG(("SocketProcessBridgeParent::ActorDestroy mId=%d\n", mId));
 
+  mClosed = true;
   MessageLoop::current()->PostTask(
       NewRunnableMethod("net::SocketProcessBridgeParent::DeferredDestroy", this,
                         &SocketProcessBridgeParent::DeferredDestroy));
 }
 
 void SocketProcessBridgeParent::DeferredDestroy() {
-  SocketProcessChild::GetSingleton()->DestroySocketProcessBridgeParent(mId);
+  if (SocketProcessChild* child = SocketProcessChild::GetSingleton()) {
+    child->DestroySocketProcessBridgeParent(mId);
+  }
 }
 
 }  // namespace net

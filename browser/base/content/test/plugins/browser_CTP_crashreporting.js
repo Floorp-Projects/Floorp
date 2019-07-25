@@ -90,7 +90,6 @@ add_task(async function() {
 
     await ContentTask.spawn(browser, null, async function() {
       let plugin = content.document.getElementById("test");
-      plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
       await ContentTaskUtils.waitForCondition(() => {
         return plugin.activated;
@@ -207,7 +206,6 @@ add_task(async function() {
 
       await ContentTask.spawn(browser, null, async function() {
         let plugin = content.document.getElementById("test");
-        plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
         await ContentTaskUtils.waitForCondition(() => {
           return plugin.activated;
