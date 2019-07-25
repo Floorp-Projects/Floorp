@@ -1611,10 +1611,10 @@ Inspector.prototype = {
       this._search = null;
     }
 
-    const sidebarDestroyer = this.sidebar.destroy();
-    const ruleViewSideBarDestroyer = this.ruleViewSideBar
-      ? this.ruleViewSideBar.destroy()
-      : null;
+    this.sidebar.destroy();
+    if (this.ruleViewSideBar) {
+      this.ruleViewSideBar.destroy();
+    }
     this._destroyMarkup();
 
     this.teardownToolbar();
@@ -1642,10 +1642,7 @@ Inspector.prototype = {
     this.store = null;
     this.telemetry = null;
 
-    this._panelDestroyer = promise.all([
-      sidebarDestroyer,
-      ruleViewSideBarDestroyer,
-    ]);
+    this._panelDestroyer = Promise.resolve();
 
     return this._panelDestroyer;
   },
