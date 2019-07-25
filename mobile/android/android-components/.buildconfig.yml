@@ -60,6 +60,10 @@ projects:
     path: components/feature/media
     description: 'Feature component for website media related features.'
     publish: true
+  feature-webnotifications:
+    path: components/feature/webnotifications
+    description: 'Feature component for Web Notifications.'
+    publish: true
   feature-readerview:
     path: components/feature/readerview
     description: 'Feature implementation providing a Reader View WebExtension.'

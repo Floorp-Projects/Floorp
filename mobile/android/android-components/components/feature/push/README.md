@@ -1,6 +1,6 @@
 # [Android Components](../../../README.md) > Feature > Push
 
-A compoennt that implements push notifications with a supported push service.
+A component that implements push notifications with a supported push service.
 
 ## Usage
 

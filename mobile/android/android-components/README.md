@@ -148,6 +148,8 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
 
+* 🔴 [**Web Notifications**](components/feature/webnotifications/README.md) - A component for displaying web notifications.
+
 ## UI
 
 _Generic low-level UI components for building apps._
