@@ -1228,6 +1228,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       freeLists_(this, nullptr),
       atomsZoneFreeLists_(this),
       defaultFreeOp_(this, runtime, true),
+      freeUnusedMemory(false),
       jitActivation(this, nullptr),
       regexpStack(this),
       activation_(this, nullptr),
