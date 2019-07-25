@@ -56,6 +56,7 @@
 #include "mozilla/dom/ContentBlockingLog.h"
 #include "mozilla/dom/DispatcherTrait.h"
 #include "mozilla/dom/DocumentOrShadowRoot.h"
+#include "mozilla/dom/ViewportMetaData.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/NotNull.h"
@@ -187,6 +188,7 @@ class FrameRequestCallback;
 class ImageTracker;
 class HTMLAllCollection;
 class HTMLBodyElement;
+class HTMLMetaElement;
 class HTMLSharedElement;
 class HTMLImageElement;
 struct LifecycleCallbackArgs;
@@ -1512,6 +1514,10 @@ class Document : public nsINode,
    * will return viewport information that specifies default information.
    */
   nsViewportInfo GetViewportInfo(const ScreenIntSize& aDisplaySize);
+
+  void AddMetaViewportElement(HTMLMetaElement* aElement,
+                              ViewportMetaData&& aData);
+  void RemoveMetaViewportElement(HTMLMetaElement* aElement);
 
   void UpdateForScrollAnchorAdjustment(nscoord aLength);
 
@@ -3987,10 +3993,13 @@ class Document : public nsINode,
   // represents the scale property and returns the scale value if it's valid.
   Maybe<LayoutDeviceToScreenScale> ParseScaleInHeader(nsAtom* aHeaderField);
 
-  // Parse scale values in viewport meta tag and set the values in
+  // Parse scale values in |aViewportMetaData| and set the values in
   // mScaleMinFloat, mScaleMaxFloat and mScaleFloat respectively.
-  // Returns true if there is any valid scale value in the viewport meta tag.
-  bool ParseScalesInMetaViewport();
+  // Returns true if there is any valid scale value in the |aViewportMetaData|.
+  bool ParseScalesInViewportMetaData(const ViewportMetaData& aViewportMetaData);
+
+  // Returns a ViewportMetaData for this document.
+  ViewportMetaData GetViewportMetaData() const;
 
   FlashClassification DocumentFlashClassificationInternal();
 
@@ -5166,6 +5175,17 @@ class Document : public nsINode,
   // 1)  We have no script global object.
   // 2)  We haven't had Destroy() called on us yet.
   nsCOMPtr<nsILayoutHistoryState> mLayoutHistoryState;
+
+  struct MetaViewportElementAndData {
+    RefPtr<HTMLMetaElement> mElement;
+    ViewportMetaData mData;
+
+    bool operator==(const MetaViewportElementAndData& aOther) const {
+      return mElement == aOther.mElement && mData == aOther.mData;
+    }
+  };
+  // An array of <meta name="viewport"> elements and their data.
+  nsTArray<MetaViewportElementAndData> mMetaViewports;
 
   // These member variables cache information about the viewport so we don't
   // have to recalculate it each time.

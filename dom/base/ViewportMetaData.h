@@ -12,17 +12,34 @@
 namespace mozilla {
 
 namespace dom {
-class Document;
-
 struct ViewportMetaData {
+  // https://drafts.csswg.org/css-device-adapt/#meta-properties
+  nsString mWidth;
+  nsString mHeight;
+  nsString mInitialScale;
+  nsString mMinimumScale;
+  nsString mMaximumScale;
+  nsString mUserScalable;
+
+  bool operator==(const ViewportMetaData& aOther) const {
+    return mWidth == aOther.mWidth && mHeight == aOther.mHeight &&
+           mInitialScale == aOther.mInitialScale &&
+           mMinimumScale == aOther.mMinimumScale &&
+           mMaximumScale == aOther.mMaximumScale &&
+           mUserScalable == aOther.mUserScalable;
+  }
+  bool operator!=(const ViewportMetaData& aOther) const {
+    return !(*this == aOther);
+  }
+
+  ViewportMetaData() = default;
   /* Process viewport META data. This gives us information for the scale
    * and zoom of a page on mobile devices. We stick the information in
    * the document header and use it later on after rendering.
    *
    * See Bug #436083
    */
-  static void ProcessViewportInfo(Document* aDocument,
-                                  const nsAString& viewportInfo);
+  explicit ViewportMetaData(const nsAString& aViewportInfo);
 };
 
 }  // namespace dom

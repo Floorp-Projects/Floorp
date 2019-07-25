@@ -39,3 +39,7 @@ function getViewportInfo(aDisplayWidth, aDisplayHeight) {
     allowZoom: allowZoom.value,
   };
 }
+
+function fuzzeq(a, b, msg) {
+  ok(Math.abs(a - b) < 1e-6, msg);
+}
