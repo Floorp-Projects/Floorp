@@ -19,15 +19,12 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenStarted
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
-import kotlinx.coroutines.launch
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.qr.QrFeature
-import mozilla.components.lib.state.ext.observe
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.content.hasCamera
@@ -166,16 +163,12 @@ class SearchFragment : Fragment(), BackHandler {
             }
         }
 
-        searchStore.observe(view) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                whenStarted {
-                    awesomeBarView.update(it)
-                    toolbarView.update(it)
-                    updateSearchEngineIcon(it)
-                    updateSearchShortuctsIcon(it)
-                    updateSearchWithLabel(it)
-                }
-            }
+        consumeFrom(searchStore) {
+            awesomeBarView.update(it)
+            toolbarView.update(it)
+            updateSearchEngineIcon(it)
+            updateSearchShortuctsIcon(it)
+            updateSearchWithLabel(it)
         }
 
         startPostponedEnterTransition()

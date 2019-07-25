@@ -19,7 +19,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.whenStarted
 import androidx.navigation.NavController
 import androidx.navigation.fragment.findNavController
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
@@ -33,7 +32,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.lib.state.ext.observe
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
@@ -98,12 +97,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        bookmarkStore.observe(view) {
-            viewLifecycleOwner.lifecycleScope.launch {
-                whenStarted {
-                    bookmarkView.update(it)
-                }
-            }
+        consumeFrom(bookmarkStore) {
+            bookmarkView.update(it)
         }
         sharedViewModel.apply {
             signedIn.observe(this@BookmarkFragment, Observer<Boolean> {
