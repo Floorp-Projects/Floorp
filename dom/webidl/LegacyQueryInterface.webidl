@@ -17,4 +17,3 @@ interface LegacyQueryInterface {
 };
 
 Element implements LegacyQueryInterface;
-Window implements LegacyQueryInterface;
