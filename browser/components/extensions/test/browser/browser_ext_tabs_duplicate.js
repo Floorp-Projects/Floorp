@@ -182,7 +182,8 @@ add_task(async function testDuplicateResolvePromiseRightAway() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      permissions: ["tabs"],
+      // The host permission matches the above URL. No :8888 due to bug 1468162.
+      permissions: ["tabs", "http://mochi.test/"],
     },
 
     background: async function() {
@@ -207,6 +208,12 @@ add_task(async function testDuplicateResolvePromiseRightAway() {
             if (resolvedRightAway === null) {
               resolvedRightAway = true;
             }
+
+            // Regression test for bug 1559216: APIs such as tabs.executeScript
+            // should be queued until tabs.duplicate has restored the tab.
+            let code = "document.URL";
+            let [result] = await browser.tabs.executeScript(tab.id, { code });
+            browser.test.assertEq(tab.url, result, "executeScript result");
 
             await browser.tabs.remove([tabs[1].id, tab.id]);
             if (resolvedRightAway) {
