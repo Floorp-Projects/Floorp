@@ -46,7 +46,7 @@
            "Expected the right browsing context id on the oop-browser-crashed event.");
       })
 
-      BrowserTestUtils.crashFrame(browser, true, false);
+      BrowserTestUtils.crashBrowser(browser, true, false);
 
       Promise.all([observerPromise, eventPromise]).then(done);
     });

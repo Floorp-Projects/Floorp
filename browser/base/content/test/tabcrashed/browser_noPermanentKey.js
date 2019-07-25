@@ -20,7 +20,7 @@ add_task(async function test_without_dump() {
     async function(browser) {
       delete browser.permanentKey;
 
-      await BrowserTestUtils.crashFrame(browser);
+      await BrowserTestUtils.crashBrowser(browser);
       let crashReport = promiseCrashReport();
 
       await ContentTask.spawn(browser, null, async function() {
