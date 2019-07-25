@@ -73,6 +73,7 @@ body {
 .devtools-button,
 .toggle-button {
   cursor: pointer;
+  border: 1px solid transparent;
 }
 
 .mainFrame .devtools-button.devtools-throbber::before,
@@ -105,7 +106,6 @@ body {
 .devtools-button:focus,
 .devtools-button > .btn-content:focus,
 .devtools-button::-moz-focus-inner {
-  border: 1px solid transparent;
   outline: none;
 }
 
@@ -131,7 +131,6 @@ body {
 
 .devtools-toolbar .help {
   cursor: pointer;
-  width: 18px;
   margin-inline-start: auto;
   margin-inline-end: 3px;
   background: transparent;
@@ -369,7 +368,6 @@ body {
   display: inline-block;
   font: message-box;
   font-size: var(--theme-body-font-size);
-  line-height: calc(14 / 11);
   border-radius: 3px;
   padding: 0px 3px;
   margin-inline-start: 5px;
