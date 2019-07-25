@@ -155,17 +155,20 @@ export default class LoginItem extends HTMLElement {
         ) {
           let copyButton = event.currentTarget;
           copyButton.disabled = true;
-          let propertyToCopy = copyButton.dataset.copyLoginProperty;
-          navigator.clipboard.writeText(this._login[propertyToCopy]).then(
-            () => {
-              copyButton.dataset.copied = true;
-              setTimeout(() => {
-                copyButton.disabled = false;
-                delete copyButton.dataset.copied;
-              }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
-            },
-            () => (copyButton.disabled = false)
+          copyButton.dataset.copied = true;
+          let propertyToCopy = this._login[
+            copyButton.dataset.copyLoginProperty
+          ];
+          document.dispatchEvent(
+            new CustomEvent("AboutLoginsCopyLoginDetail", {
+              bubbles: true,
+              detail: propertyToCopy,
+            })
           );
+          setTimeout(() => {
+            copyButton.disabled = false;
+            delete copyButton.dataset.copied;
+          }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
 
           recordTelemetryEvent({
             object: copyButton.dataset.telemetryObject,

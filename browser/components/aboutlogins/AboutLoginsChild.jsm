@@ -12,6 +12,9 @@ const { ActorChild } = ChromeUtils.import(
 const { LoginHelper } = ChromeUtils.import(
   "resource://gre/modules/LoginHelper.jsm"
 );
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -19,6 +22,14 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
+
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ClipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1",
+  "nsIClipboardHelper"
+);
+
 const TELEMETRY_EVENT_CATEGORY = "pwmgr";
 
 class AboutLoginsChild extends ActorChild {
@@ -46,6 +57,10 @@ class AboutLoginsChild extends ActorChild {
             cloneFunctions: true,
           }
         );
+        break;
+      }
+      case "AboutLoginsCopyLoginDetail": {
+        ClipboardHelper.copyString(event.detail);
         break;
       }
       case "AboutLoginsCreateLogin": {
