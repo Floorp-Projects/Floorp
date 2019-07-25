@@ -184,16 +184,22 @@ struct MOZ_STACK_CLASS BidiParagraphData {
    * The TraverseFrames iterator is only used in some edge cases.
    */
   struct FastLineIterator {
-    FastLineIterator() : mPrevFrame(nullptr) {}
+    FastLineIterator() : mPrevFrame(nullptr), mNextLineStart(nullptr) {}
 
     // These iterators *and* mPrevFrame track the line list that we're
     // iterating over.
     //
-    // mPrevFrame, if non-null, is guaranteed to be either the frame we're
-    // currently handling in Resolve or a frame before it, and is also
-    // guaranteed to be in mCurrentLine.
+    // mPrevFrame, if non-null, should be either the frame we're currently
+    // handling (in ResolveParagraph or TraverseFrames, depending on the
+    // iterator) or a frame before it, and is also guaranteed to either be in
+    // mCurrentLine or have been in mCurrentLine until recently.
+    //
+    // In case the splitting causes block frames to break lines, however, we
+    // also track the first frame of the next line.  If that changes, it means
+    // we've broken lines and we have to invalidate mPrevFrame.
     nsBlockInFlowLineIterator mLineIterator;
     nsIFrame* mPrevFrame;
+    nsIFrame* mNextLineStart;
 
     nsLineList::iterator GetLine() { return mLineIterator.GetLine(); }
 
@@ -213,10 +219,27 @@ struct MOZ_STACK_CLASS BidiParagraphData {
       return false;
     }
 
+    static nsIFrame* FirstChildOfNextLine(
+        nsBlockInFlowLineIterator& aIterator) {
+      const nsLineList::iterator line = aIterator.GetLine();
+      const nsLineList::iterator lineEnd = aIterator.End();
+      MOZ_ASSERT(line != lineEnd, "iterator should start off valid");
+      const nsLineList::iterator nextLine = line.next();
+
+      return nextLine != lineEnd ? nextLine->mFirstChild : nullptr;
+    }
+
     // Advance line iterator to the line containing aFrame, assuming
     // that aFrame is already in the line list our iterator is iterating
     // over.
     void AdvanceToFrame(nsIFrame* aFrame) {
+      if (mPrevFrame && FirstChildOfNextLine(mLineIterator) != mNextLineStart) {
+        // Something has caused a line to split.  We need to invalidate
+        // mPrevFrame since it may now be in a *later* line, though it may
+        // still be in this line, so we need to start searching for it from
+        // the start of this line.
+        mPrevFrame = nullptr;
+      }
       nsIFrame* child = aFrame;
       nsIFrame* parent = nsLayoutUtils::GetParentOrPlaceholderFor(child);
       while (parent && !parent->IsBlockFrameOrSubclass()) {
@@ -233,6 +256,7 @@ struct MOZ_STACK_CLASS BidiParagraphData {
         mPrevFrame = nullptr;
       }
       mPrevFrame = child;
+      mNextLineStart = FirstChildOfNextLine(mLineIterator);
     }
 
     // Advance line iterator to the line containing aFrame, which may
@@ -1018,20 +1042,6 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
           frameInfo.mFrame = frame;
           contentOffset = runEnd;
 
-          // Calling EnsureBidiContinuation above may have caused a line to
-          // split when we added a continuation (since nsBlockFrame, by
-          // default, creates new lines for frame insertions).  This means
-          // that our work here resolving the sub-paragraph might have split a
-          // line in a way that the current mPrevFrame is in the second half
-          // of the split.  This means we need to null out mPrevFrame so that
-          // the next call to AdvanceLineIteratorToFrame won't start from an
-          // mPrevFrame that is *ahead* of the line iterator.  If that
-          // happens, we'll never advance the line again until something nulls
-          // out mPrevFrame.
-          // FIXME: Are these both (or either) still needed?
-          aBpd->mCurrentResolveLine.mPrevFrame = nullptr;
-          aBpd->mCurrentTraverseLine.mPrevFrame = nullptr;
-
           aBpd->mCurrentResolveLine.AdvanceToFrame(frame);
         }  // if (runLength < fragmentLength)
         else {
@@ -1121,13 +1131,6 @@ nsresult nsBidiPresUtils::ResolveParagraph(BidiParagraphData* aBpd) {
             aBpd->mCurrentResolveLine.AdvanceToLinesAndFrame(lastRealFrame);
             SplitInlineAncestors(parent, aBpd->mCurrentResolveLine.GetLine(),
                                  child);
-
-            // See above comment about the call to EnsureBidiContinuation.
-            // The SplitInlineAncestors call here might do the same thing, so
-            // again we need to set aBpd->mPrevFrame to null.
-            // FIXME: Are these both (or either) still needed?
-            aBpd->mCurrentResolveLine.mPrevFrame = nullptr;
-            aBpd->mCurrentTraverseLine.mPrevFrame = nullptr;
 
             aBpd->mCurrentResolveLine.AdvanceToLinesAndFrame(lastRealFrame);
           }
