@@ -99,8 +99,8 @@ nsresult nsIconLoaderService::LoadIcon(nsIURI* aIconURI) {
   }
 
   nsresult rv = loader->LoadImage(
-      aIconURI, nullptr, nullptr, mozilla::net::RP_Unset, mContent->NodePrincipal(), 0, loadGroup,
-      this, mContent, document, nsIRequest::LOAD_NORMAL, nullptr, mContentType, EmptyString(),
+      aIconURI, nullptr, nullptr, mContent->NodePrincipal(), 0, loadGroup, this, mContent, document,
+      nsIRequest::LOAD_NORMAL, nullptr, mContentType, EmptyString(),
       /* aUseUrgentStartForChannel */ false, getter_AddRefs(mIconRequest));
   if (NS_FAILED(rv)) {
     return rv;
