@@ -10,7 +10,6 @@
 
 <textbox id="richautocomplete" type="autocomplete"
          autocompletesearch="simple"
-         onsearchcomplete="checkSearchCompleted();"
          autocompletepopup="richpopup"/>
 <panel is="autocomplete-richlistbox-popup"
        id="richpopup"
@@ -79,6 +78,16 @@ var componentManager = Components.manager
                                  .QueryInterface(Ci.nsIComponentRegistrar);
 componentManager.registerFactory(autoCompleteSimpleID, "Test Simple Autocomplete",
                                  autoCompleteSimpleName, autoCompleteSimple);
+
+var element = document.getElementById("richautocomplete");
+
+// Create stub to intercept `onSearchComplete` event.
+element.onSearchComplete = function(original) {
+  return function() {
+    original.apply(this, arguments);
+    checkSearchCompleted();
+  };
+}(element.onSearchComplete);
 
 SimpleTest.waitForExplicitFinish();
 setTimeout(nextTest, 0);
