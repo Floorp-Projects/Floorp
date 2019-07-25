@@ -429,7 +429,6 @@ add_task(async function() {
 
   await ContentTask.spawn(gTestBrowser, null, async function() {
     let plugin = content.document.getElementById("test");
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-    Assert.ok(!objLoadingContent.activated, "Plugin should not be activated.");
+    Assert.ok(!plugin.activated, "Plugin should not be activated.");
   });
 });
