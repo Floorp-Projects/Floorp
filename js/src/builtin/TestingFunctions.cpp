@@ -37,7 +37,6 @@
 #  include "irregexp/RegExpEngine.h"
 #  include "irregexp/RegExpParser.h"
 #endif
-#include "debugger/Debugger.h"
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
 #include "jit/InlinableNatives.h"
@@ -84,7 +83,7 @@
 #include "wasm/WasmTextToBinary.h"
 #include "wasm/WasmTypes.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/Compartment-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/JSContext-inl.h"
@@ -2324,7 +2323,7 @@ static bool SettlePromiseNow(JSContext* cx, unsigned argc, Value* vp) {
       Int32Value(flags | PROMISE_FLAG_RESOLVED | PROMISE_FLAG_FULFILLED));
   promise->setFixedSlot(PromiseSlot_ReactionsOrResult, UndefinedValue());
 
-  Debugger::onPromiseSettled(cx, promise);
+  DebugAPI::onPromiseSettled(cx, promise);
   return true;
 }
 

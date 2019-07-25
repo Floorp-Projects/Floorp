@@ -17,7 +17,7 @@
 
 #include "jsutil.h"
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/GC.h"
 #include "gc/Memory.h"
 #include "util/Text.h"

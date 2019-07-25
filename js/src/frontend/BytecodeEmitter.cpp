@@ -25,7 +25,6 @@
 #include "jstypes.h"  // JS_BIT
 #include "jsutil.h"   // Min
 
-#include "debugger/Debugger.h"                   // Debugger
 #include "ds/Nestable.h"                         // Nestable
 #include "frontend/BytecodeControlStructures.h"  // NestableControl, BreakableControl, LabelControl, LoopControl, TryFinallyControl
 #include "frontend/CallOrNewEmitter.h"           // CallOrNewEmitter
@@ -64,6 +63,7 @@
 #include "vm/Opcodes.h"   // JSOP_*
 #include "wasm/AsmJS.h"   // IsAsmJSModule
 
+#include "debugger/DebugAPI-inl.h" // DebugAPI
 #include "vm/JSObject-inl.h"  // JSObject
 
 using namespace js;
@@ -1597,7 +1597,7 @@ void BytecodeEmitter::tellDebuggerAboutCompiledScript(JSContext* cx) {
   // Lazy scripts are never top level (despite always being invoked with a
   // nullptr parent), and so the hook should never be fired.
   if (emitterMode != LazyFunction && !parent) {
-    Debugger::onNewScript(cx, script);
+    DebugAPI::onNewScript(cx, script);
   }
 }
 

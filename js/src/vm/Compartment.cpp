@@ -12,7 +12,7 @@
 
 #include "jsfriendapi.h"
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
 #include "js/Date.h"
@@ -447,7 +447,7 @@ void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
       c->traceOutgoingCrossCompartmentWrappers(trc);
     }
   }
-  Debugger::traceIncomingCrossCompartmentEdges(trc);
+  DebugAPI::traceIncomingCrossCompartmentEdges(trc);
 }
 
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {

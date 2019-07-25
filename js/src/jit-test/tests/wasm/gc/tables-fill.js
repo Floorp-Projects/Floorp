@@ -115,9 +115,8 @@ function testTableFill(type, obj) {
 
   // Boundary tests on table 1: beyond the edge of the table:
 
-  // Length-zero fill1 beyond the edge of the table fails
-  assertErrorMessage(() => ins.exports.fill1(11, null, 0),
-                     RangeError, /table index out of bounds/);
+  // Length-zero fill1 beyond the edge of the table must succeed
+  assertEq(ins.exports.fill1(11, null, 0), undefined);
 
   // Length-one fill1 beyond the edge of the table fails
   assertErrorMessage(() => ins.exports.fill1(11, null, 1),

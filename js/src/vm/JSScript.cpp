@@ -29,7 +29,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/SharedContext.h"
@@ -65,6 +64,7 @@
 #include "vm/Xdr.h"
 #include "vtune/VTuneWrapper.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/Marking-inl.h"
 #include "vm/BytecodeIterator-inl.h"
 #include "vm/BytecodeLocation-inl.h"
@@ -1191,7 +1191,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
   if (mode == XDR_DECODE) {
     /* see BytecodeEmitter::tellDebuggerAboutCompiledScript */
     if (!fun && !cx->isHelperThreadContext()) {
-      Debugger::onNewScript(cx, script);
+      DebugAPI::onNewScript(cx, script);
     }
   }
 
@@ -4248,7 +4248,7 @@ void JSScript::finalize(FreeOp* fop) {
   jit::DestroyJitScripts(fop, this);
 
   destroyScriptCounts();
-  destroyDebugScript(fop);
+  DebugAPI::destroyDebugScript(fop, this);
 
 #ifdef MOZ_VTUNE
   if (realm()->scriptVTuneIdMap) {
@@ -4792,234 +4792,6 @@ JSScript* js::CloneScriptIntoFunction(
   }
 
   return dst;
-}
-
-DebugScript* JSScript::debugScript() {
-  MOZ_ASSERT(hasDebugScript());
-  DebugScriptMap* map = realm()->debugScriptMap.get();
-  MOZ_ASSERT(map);
-  DebugScriptMap::Ptr p = map->lookup(this);
-  MOZ_ASSERT(p);
-  return p->value().get();
-}
-
-DebugScript* JSScript::releaseDebugScript() {
-  MOZ_ASSERT(hasDebugScript());
-  DebugScriptMap* map = realm()->debugScriptMap.get();
-  MOZ_ASSERT(map);
-  DebugScriptMap::Ptr p = map->lookup(this);
-  MOZ_ASSERT(p);
-  DebugScript* debug = p->value().release();
-  map->remove(p);
-  clearFlag(MutableFlags::HasDebugScript);
-  return debug;
-}
-
-void JSScript::destroyDebugScript(FreeOp* fop) {
-  if (hasDebugScript()) {
-#ifdef DEBUG
-    for (jsbytecode* pc = code(); pc < codeEnd(); pc++) {
-      MOZ_ASSERT(!getBreakpointSite(pc));
-    }
-#endif
-    freeDebugScript(fop);
-  }
-}
-
-void JSScript::freeDebugScript(FreeOp* fop) {
-  MOZ_ASSERT(hasDebugScript());
-  fop->free_(this, releaseDebugScript(), DebugScript::allocSize(length()),
-             MemoryUse::ScriptDebugScript);
-}
-
-DebugScript* JSScript::getOrCreateDebugScript(JSContext* cx) {
-  if (hasDebugScript()) {
-    return debugScript();
-  }
-
-  size_t nbytes = DebugScript::allocSize(length());
-  UniqueDebugScript debug(
-      reinterpret_cast<DebugScript*>(cx->pod_calloc<uint8_t>(nbytes)));
-  if (!debug) {
-    return nullptr;
-  }
-
-  /* Create realm's debugScriptMap if necessary. */
-  if (!realm()->debugScriptMap) {
-    auto map = cx->make_unique<DebugScriptMap>();
-    if (!map) {
-      return nullptr;
-    }
-
-    realm()->debugScriptMap = std::move(map);
-  }
-
-  DebugScript* borrowed = debug.get();
-  if (!realm()->debugScriptMap->putNew(this, std::move(debug))) {
-    ReportOutOfMemory(cx);
-    return nullptr;
-  }
-
-  setFlag(MutableFlags::HasDebugScript);  // safe to set this;  we can't fail
-                                          // after this point
-  AddCellMemory(this, nbytes, MemoryUse::ScriptDebugScript);
-
-  /*
-   * Ensure that any Interpret() instances running on this script have
-   * interrupts enabled. The interrupts must stay enabled until the
-   * debug state is destroyed.
-   */
-  for (ActivationIterator iter(cx); !iter.done(); ++iter) {
-    if (iter->isInterpreter()) {
-      iter->asInterpreter()->enableInterruptsIfRunning(this);
-    }
-  }
-
-  return borrowed;
-}
-
-bool JSScript::incrementGeneratorObserverCount(JSContext* cx) {
-  cx->check(this);
-  MOZ_ASSERT(cx->realm()->isDebuggee());
-
-  AutoRealm ar(cx, this);
-
-  DebugScript* debug = getOrCreateDebugScript(cx);
-  if (!debug) {
-    return false;
-  }
-
-  debug->generatorObserverCount++;
-
-  // It is our caller's responsibility, before bumping the generator observer
-  // count, to make sure that the baseline code includes the necessary
-  // JS_AFTERYIELD instrumentation by calling
-  // {ensure,update}ExecutionObservabilityOfScript.
-  MOZ_ASSERT_IF(hasBaselineScript(), baseline->hasDebugInstrumentation());
-
-  return true;
-}
-
-void JSScript::decrementGeneratorObserverCount(js::FreeOp* fop) {
-  DebugScript* debug = debugScript();
-  MOZ_ASSERT(debug);
-  MOZ_ASSERT(debug->generatorObserverCount > 0);
-
-  debug->generatorObserverCount--;
-
-  if (!debug->needed()) {
-    destroyDebugScript(fop);
-  }
-}
-
-bool JSScript::incrementStepperCount(JSContext* cx) {
-  cx->check(this);
-  MOZ_ASSERT(cx->realm()->isDebuggee());
-
-  AutoRealm ar(cx, this);
-
-  DebugScript* debug = getOrCreateDebugScript(cx);
-  if (!debug) {
-    return false;
-  }
-
-  debug->stepperCount++;
-
-  if (debug->stepperCount == 1) {
-    if (hasBaselineScript()) {
-      baseline->toggleDebugTraps(this, nullptr);
-    }
-  }
-
-  return true;
-}
-
-void JSScript::decrementStepperCount(FreeOp* fop) {
-  DebugScript* debug = debugScript();
-  MOZ_ASSERT(debug);
-  MOZ_ASSERT(debug->stepperCount > 0);
-
-  debug->stepperCount--;
-
-  if (debug->stepperCount == 0) {
-    if (hasBaselineScript()) {
-      baseline->toggleDebugTraps(this, nullptr);
-    }
-
-    if (!debug->needed()) {
-      freeDebugScript(fop);
-    }
-  }
-}
-
-BreakpointSite* JSScript::getOrCreateBreakpointSite(JSContext* cx,
-                                                    jsbytecode* pc) {
-  AutoRealm ar(cx, this);
-
-  DebugScript* debug = getOrCreateDebugScript(cx);
-  if (!debug) {
-    return nullptr;
-  }
-
-  BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
-
-  if (!site) {
-    site = cx->new_<JSBreakpointSite>(this, pc);
-    if (!site) {
-      return nullptr;
-    }
-    debug->numSites++;
-    AddCellMemory(this, sizeof(JSBreakpointSite), MemoryUse::BreakpointSite);
-  }
-
-  return site;
-}
-
-void JSScript::destroyBreakpointSite(FreeOp* fop, jsbytecode* pc) {
-  DebugScript* debug = debugScript();
-  BreakpointSite*& site = debug->breakpoints[pcToOffset(pc)];
-  MOZ_ASSERT(site);
-
-  size_t size = site->type() == BreakpointSite::Type::JS
-                    ? sizeof(JSBreakpointSite)
-                    : sizeof(WasmBreakpointSite);
-  fop->delete_(this, site, size, MemoryUse::BreakpointSite);
-  site = nullptr;
-
-  debug->numSites--;
-  if (!debug->needed()) {
-    freeDebugScript(fop);
-  }
-}
-
-void JSScript::clearBreakpointsIn(FreeOp* fop, js::Debugger* dbg,
-                                  JSObject* handler) {
-  if (!hasAnyBreakpointsOrStepMode()) {
-    return;
-  }
-
-  for (jsbytecode* pc = code(); pc < codeEnd(); pc++) {
-    BreakpointSite* site = getBreakpointSite(pc);
-    if (site) {
-      Breakpoint* nextbp;
-      for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
-        nextbp = bp->nextInSite();
-        if ((!dbg || bp->debugger == dbg) &&
-            (!handler || bp->getHandler() == handler)) {
-          bp->destroy(fop);
-        }
-      }
-    }
-  }
-}
-
-bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
-  BreakpointSite* site = getBreakpointSite(pc);
-  if (!site) {
-    return false;
-  }
-
-  return site->enabledCount > 0;
 }
 
 /* static */ bool ImmutableScriptData::InitFromEmitter(

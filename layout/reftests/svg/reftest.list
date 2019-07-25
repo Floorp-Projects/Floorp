@@ -360,6 +360,7 @@ fuzzy-if(webrender,72-73,96-1804) == paint-order-03.svg paint-order-03-ref.svg
 fuzzy-if(skiaContent,0-1,0-400) == path-06.svg path-06-ref.svg
 == path-07.svg path-07-ref.svg
 == path-08.svg pass.svg
+== path-transform-box.svg pass.svg
 
 == pathLength-01.svg pass.svg
 == pathLength-02.svg pass.svg

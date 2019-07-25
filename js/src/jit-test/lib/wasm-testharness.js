@@ -16,8 +16,6 @@ if (!wasmIsSupported())
 let harnessdir = libdir + "../tests/wasm/spec/harness/";
 
 load(harnessdir + 'sync_index.js');
-load(harnessdir + 'wasm-constants.js');
-load(harnessdir + 'wasm-module-builder.js');
 
 function test(func, description) {
     let maybeErr;

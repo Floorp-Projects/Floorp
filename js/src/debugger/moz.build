@@ -24,6 +24,7 @@ include('../js-cxxflags.mozbuild')
 UNIFIED_SOURCES = [
     'Debugger.cpp',
     'DebuggerMemory.cpp',
+    'DebugScript.cpp',
     'Environment.cpp',
     'Frame.cpp',
     'NoExecute.cpp',

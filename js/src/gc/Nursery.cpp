@@ -15,7 +15,7 @@
 #include "jsutil.h"
 
 #include "builtin/MapObject.h"
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
 #include "gc/Memory.h"
@@ -1048,7 +1048,7 @@ void js::Nursery::doCollection(JS::GCReason reason,
   startProfile(ProfileKey::MarkDebugger);
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::MARK_ROOTS);
-    Debugger::traceAllForMovingGC(&mover);
+    DebugAPI::traceAllForMovingGC(&mover);
   }
   endProfile(ProfileKey::MarkDebugger);
 

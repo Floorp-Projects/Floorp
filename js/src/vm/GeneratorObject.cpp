@@ -11,7 +11,7 @@
 #include "vm/AsyncIteration.h"
 #include "vm/JSObject.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayObject-inl.h"
 #include "vm/JSAtom-inl.h"
 #include "vm/JSScript-inl.h"
@@ -47,7 +47,7 @@ JSObject* AbstractGeneratorObject::create(JSContext* cx,
   }
   genObj->clearExpressionStack();
 
-  if (!Debugger::onNewGenerator(cx, frame, genObj)) {
+  if (!DebugAPI::onNewGenerator(cx, frame, genObj)) {
     return nullptr;
   }
 

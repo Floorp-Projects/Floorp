@@ -4,9 +4,11 @@
     <title>math-script-level</title>
     <meta charset="utf-8">
     <link rel="help" href="https://github.com/w3c/csswg-drafts/issues/3746">
+    <link rel="help" href="https://mathml-refresh.github.io/mathml-core/#the-math-script-level-property">
     <meta name="assert" content="Check the resolved value of math-script-level">
     <script src="/resources/testharness.js"></script>
     <script src="/resources/testharnessreport.js"></script>
+    <link rel="stylesheet" type="text/css" href="/fonts/ahem.css" />
     <style>
       @font-face {
         font-family: scriptpercentscaledown80-scriptscriptpercentscaledown40;
@@ -44,7 +46,7 @@
       .level5 { math-script-level: 5; }
     </style>
     <script>
-      const big = 2000;
+      const big = 3000;
       const small = 150;
       setup({ explicit_done: true });
       window.addEventListener("load", function() {
@@ -93,11 +95,12 @@
           }, "scriptPercentScaleDown=80, scriptScriptPercentScaleDown=40");
 
           test(function() {
+              var scriptPercentScaleDown = .71;
               CheckFontSizes("scale0-40-scaledown", {
                   "-3": big,
                   "-1": big * .71 * .71,
                   "0": big * .71 * .71 * .71,
-                  "1": big * .71 * .71 * .71 * .71,
+                  "1": big * .71 * .71 * .71 * scriptPercentScaleDown,
                   "2": big * .71 * .71 * .71 * .4,
                   "3": big * .71 * .71 * .71 * .4 * .71,
                   "5": big * .71 * .71 * .71 * .4 * .71 * .71 * .71
@@ -106,7 +109,7 @@
                   "5": small,
                   "3": small / (.71 * .71),
                   "2": small / (.71 * .71 * .71),
-                  "1": small / (.71 * .71 * .71 * (.4 / .71)),
+                  "1": small / (.71 * .71 * .71 * (.4 / scriptPercentScaleDown)),
                   "0": small  / (.71 * .71 * .71 * .4),
                   "-1": small / (.71 * .71 * .71 * .4 * .71),
                   "-3": small / (.71 * .71 * .71 * .4 * .71 * .71 * .71)
@@ -114,23 +117,24 @@
           }, "scriptPercentScaleDown=0, scriptScriptPercentScaleDown=40");
 
           test(function() {
+              var scriptScriptPercentScaleDown = 0.5041;
               CheckFontSizes("scale80-0-scaledown", {
                   "-3": big,
                   "-1": big * .71 * .71,
                   "0": big * .71 * .71 * .71,
                   "1": big * .71 * .71 * .71 * .8,
-                  "2": big * .71 * .71 * .71 * .71 * .71,
-                  "3": big * .71 * .71 * .71 * .71 * .71 * .71,
-                  "5": big * .71 * .71 * .71 * .71 * .71 * .71 * .71 * .71
+                  "2": big * .71 * .71 * .71 * scriptScriptPercentScaleDown,
+                  "3": big * .71 * .71 * .71 * scriptScriptPercentScaleDown * .71,
+                  "5": big * .71 * .71 * .71 * scriptScriptPercentScaleDown * .71 * .71 * .71
               });
               CheckFontSizes("scale80-0-scaleup", {
                   "5": small,
                   "3": small / (.71 * .71),
                   "2": small / (.71 * .71 * .71),
-                  "1": small / (.71 * .71 * .71 * (.71 / .8)),
-                  "0": small  / (.71 * .71 * .71 * .71),
-                  "-1": small / (.71 * .71 * .71 * .71 * .71),
-                  "-3": small / (.71 * .71 * .71 * .71 * .71 * .71 * .71)
+                  "1": small / (.71 * .71 * .71 * (scriptScriptPercentScaleDown / .8)),
+                  "0": small  / (.71 * .71 * .71 * scriptScriptPercentScaleDown),
+                  "-1": small / (.71 * .71 * .71 * scriptScriptPercentScaleDown * .71),
+                  "-3": small / (.71 * .71 * .71 * scriptScriptPercentScaleDown * .71 * .71 * .71)
               });
           }, "scriptPercentScaleDown=80, scriptScriptPercentScaleDown=0");
 

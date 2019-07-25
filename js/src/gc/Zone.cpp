@@ -8,7 +8,6 @@
 
 #include "jsutil.h"
 
-#include "debugger/Debugger.h"
 #include "gc/FreeOp.h"
 #include "gc/Policy.h"
 #include "gc/PublicIterators.h"
@@ -19,6 +18,7 @@
 #include "vm/Runtime.h"
 #include "wasm/WasmInstance.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "gc/GC-inl.h"
 #include "gc/Marking-inl.h"
 #include "gc/Nursery-inl.h"
@@ -191,39 +191,7 @@ void Zone::sweepBreakpoints(FreeOp* fop) {
   MOZ_ASSERT(isGCSweepingOrCompacting());
   for (auto iter = cellIterUnsafe<JSScript>(); !iter.done(); iter.next()) {
     JSScript* script = iter;
-    if (!script->hasAnyBreakpointsOrStepMode()) {
-      continue;
-    }
-
-    bool scriptGone = IsAboutToBeFinalizedUnbarriered(&script);
-    MOZ_ASSERT(script == iter);
-    for (unsigned i = 0; i < script->length(); i++) {
-      BreakpointSite* site = script->getBreakpointSite(script->offsetToPC(i));
-      if (!site) {
-        continue;
-      }
-
-      Breakpoint* nextbp;
-      for (Breakpoint* bp = site->firstBreakpoint(); bp; bp = nextbp) {
-        nextbp = bp->nextInSite();
-        GCPtrNativeObject& dbgobj = bp->debugger->toJSObjectRef();
-
-        // If we are sweeping, then we expect the script and the
-        // debugger object to be swept in the same sweep group, except
-        // if the breakpoint was added after we computed the sweep
-        // groups. In this case both script and debugger object must be
-        // live.
-        MOZ_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),
-                      dbgobj->zone()->isGCSweeping() ||
-                          (!scriptGone && dbgobj->asTenured().isMarkedAny()));
-
-        bool dying = scriptGone || IsAboutToBeFinalized(&dbgobj);
-        MOZ_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
-        if (dying) {
-          bp->destroy(fop);
-        }
-      }
-    }
+    DebugAPI::sweepBreakpoints(fop, script);
   }
 
   for (RealmsInZoneIter realms(this); !realms.done(); realms.next()) {
@@ -475,24 +443,7 @@ void Zone::notifyObservingDebuggers() {
       continue;
     }
 
-    GlobalObject::DebuggerVector* dbgs = global->getDebuggers();
-    if (!dbgs) {
-      continue;
-    }
-
-    for (GlobalObject::DebuggerVector::Range r = dbgs->all(); !r.empty();
-         r.popFront()) {
-      if (!r.front().unbarrieredGet()->debuggeeIsBeingCollected(
-              rt->gc.majorGCCount())) {
-#ifdef DEBUG
-        fprintf(stderr,
-                "OOM while notifying observing Debuggers of a GC: The "
-                "onGarbageCollection\n"
-                "hook will not be fired for this GC for some Debuggers!\n");
-#endif
-        return;
-      }
-    }
+    DebugAPI::notifyParticipatesInGC(global, rt->gc.majorGCCount());
   }
 }
 

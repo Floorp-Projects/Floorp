@@ -7,7 +7,7 @@
 #ifndef jit_BaselineDebugModeOSR_h
 #define jit_BaselineDebugModeOSR_h
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineIC.h"
 #include "jit/BaselineJIT.h"
@@ -48,8 +48,8 @@ class DebugModeOSRVolatileJitFrameIter : public JitFrameIter {
 };
 
 MOZ_MUST_USE bool RecompileOnStackBaselineScriptsForDebugMode(
-    JSContext* cx, const Debugger::ExecutionObservableSet& obs,
-    Debugger::IsObserving observing);
+    JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
+    bool observing);
 
 }  // namespace jit
 }  // namespace js
