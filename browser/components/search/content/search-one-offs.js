@@ -192,29 +192,21 @@ class SearchOneOffs {
    */
   set view(val) {
     this._view = val;
-    this.popup = val && val.panel;
     return val;
   }
 
   /**
-   * The popup that contains the one-offs.  This is required, so it should
-   * never be null or undefined, except possibly before the one-offs are
-   * used.
+   * The popup that contains the one-offs.
    *
    * @param {DOMElement} val
    *        The new value to set.
    */
   set popup(val) {
-    let events = ["popupshowing", "popuphidden"];
     if (this._popup) {
-      for (let event of events) {
-        this._popup.removeEventListener(event, this);
-      }
+      this._popup.removeEventListener("popupshowing", this);
     }
     if (val) {
-      for (let event of events) {
-        val.addEventListener(event, this);
-      }
+      val.addEventListener("popupshowing", this);
     }
     this._popup = val;
 
@@ -450,6 +442,9 @@ class SearchOneOffs {
    * Builds all the UI.
    */
   async __rebuild() {
+    this.selectedButton = null;
+    this._contextEngine = null;
+
     // Update the 'Search for <keywords> with:" header.
     this._updateAfterQueryChanged();
 
@@ -500,7 +495,7 @@ class SearchOneOffs {
       return;
     }
 
-    let panelWidth = parseInt(this.popup.clientWidth);
+    let panelWidth = parseInt((this.popup || this._view.panel).clientWidth);
 
     // There's one weird thing to guard against: when layout pixels
     // aren't an integral multiple of device pixels, the last button
@@ -711,7 +706,7 @@ class SearchOneOffs {
 
   _buttonForEngine(engine) {
     let id = this._buttonIDForEngine(engine);
-    return this._popup && document.getElementById(id);
+    return document.getElementById(id);
   }
 
   /**
@@ -905,7 +900,7 @@ class SearchOneOffs {
    * @returns {boolean} True if the one-offs handled the key press.
    */
   handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {
-    if (!this.popup) {
+    if (!this.popup && !this._view) {
       return false;
     }
     let handled = this._handleKeyPress(
@@ -1259,7 +1254,11 @@ class SearchOneOffs {
 
       // If the preference tab was already selected, the panel doesn't
       // close itself automatically.
-      this.popup.hidePopup();
+      if (this._view) {
+        this._view.close();
+      } else {
+        this.popup.hidePopup();
+      }
       return;
     }
 
@@ -1364,13 +1363,6 @@ class SearchOneOffs {
 
   _on_popupshowing() {
     this._rebuild();
-  }
-
-  _on_popuphidden() {
-    Services.tm.dispatchToMainThread(() => {
-      this.selectedButton = null;
-      this._contextEngine = null;
-    });
   }
 }
 

@@ -96,10 +96,12 @@ async function withNewWindow(callback) {
   // Clone the elements into the new window, so we get exact copies without having
   // to replicate the xul.
   let doc = win.document;
-  let textbox = doc.importNode(document.getElementById("urlbar"), true);
-  doc.documentElement.appendChild(textbox);
-  let popupset = doc.importNode(document.getElementById("mainPopupSet"), true);
-  doc.documentElement.appendChild(popupset);
+  let urlbarContainer = doc.importNode(
+    document.getElementById("urlbar-container"),
+    true
+  );
+  doc.documentElement.appendChild(urlbarContainer);
+  let textbox = doc.getElementById("urlbar");
 
   let inputOptions = {
     textbox,
@@ -107,10 +109,6 @@ async function withNewWindow(callback) {
   };
 
   let input = new UrlbarInput(inputOptions);
-
-  // Flush pending styles explicitely to make sure the added textbox and
-  // popupset are styled before proceeding test.  See bug 1488871 comment 26.
-  doc.documentElement.getBoundingClientRect();
 
   await callback(input);
 

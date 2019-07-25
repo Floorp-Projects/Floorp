@@ -32,29 +32,10 @@ const EXPECTED_REFLOWS_FIRST_OPEN = [
       */
     ],
   },
-  // This is the this.panel.openPopup() call in UrlbarView._openPanel.  See bug
-  // 1359989, which was filed against the legacy awesomebar but applies here too
-  // because it seems to be caused by platform code.
-  {
-    stack: [
-      "_openPanel@resource:///modules/UrlbarView.jsm",
-      "onQueryResults@resource:///modules/UrlbarView.jsm",
-    ],
-  },
 ];
 
 /* These reflows happen every time the panel opens. */
-const EXPECTED_REFLOWS_SECOND_OPEN = [
-  // This is the this.panel.openPopup() call in UrlbarView._openPanel.  See bug
-  // 1359989, which was filed against the legacy awesomebar but applies here too
-  // because it seems to be caused by platform code.
-  {
-    stack: [
-      "_openPanel@resource:///modules/UrlbarView.jsm",
-      "onQueryResults@resource:///modules/UrlbarView.jsm",
-    ],
-  },
-];
+const EXPECTED_REFLOWS_SECOND_OPEN = [];
 
 add_task(async function quantumbar() {
   await runUrlbarTest(

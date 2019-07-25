@@ -61,18 +61,12 @@ class UrlbarInput {
     let MozXULElement = this.window.MozXULElement;
     // TODO Bug 1567377: urlbarView-body-inner possibly doesn't need the
     // role="combobox" once bug 1551598 is fixed.
-    this.document.getElementById("mainPopupSet").appendChild(
+    this.textbox.after(
       MozXULElement.parseXULToFragment(`
-        <panel id="urlbar-results"
-               role="group"
-               tooltip="aHTMLTooltip"
-               noautofocus="true"
-               hidden="true"
-               flip="none"
-               consumeoutsideclicks="never"
-               norolluponanchor="true"
-               rolluponmousewheel="true"
-               level="parent">
+        <vbox id="urlbar-results"
+              role="group"
+              tooltip="aHTMLTooltip"
+              hidden="true">
           <html:div class="urlbarView-body-outer">
             <html:div class="urlbarView-body-inner"
                       role="combobox">
@@ -84,7 +78,7 @@ class UrlbarInput {
                 compact="true"
                 includecurrentengine="true"
                 disabletab="true"/>
-        </panel>
+        </vbox>
       `)
     );
     this.panel = this.document.getElementById("urlbar-results");
@@ -204,9 +198,6 @@ class UrlbarInput {
     }
 
     this.dropmarker.addEventListener("mousedown", this);
-
-    this.view.panel.addEventListener("popupshowing", this);
-    this.view.panel.addEventListener("popuphidden", this);
 
     // This is used to detect commands launched from the panel, to avoid
     // recording abandonment events when the command causes a blur event.
@@ -774,7 +765,7 @@ class UrlbarInput {
   }
 
   /**
-   * Sets the input's value, starts a search, and opens the popup.
+   * Sets the input's value, starts a search, and opens the view.
    *
    * @param {string} value
    *   The input's value will be set to this value, and the search will
@@ -1761,14 +1752,6 @@ class UrlbarInput {
     this._compositionState = event.data
       ? UrlbarUtils.COMPOSITION.COMMIT
       : UrlbarUtils.COMPOSITION.CANCELED;
-  }
-
-  _on_popupshowing() {
-    this.dropmarker.setAttribute("open", "true");
-  }
-
-  _on_popuphidden() {
-    this.dropmarker.removeAttribute("open");
   }
 
   _on_dragstart(event) {

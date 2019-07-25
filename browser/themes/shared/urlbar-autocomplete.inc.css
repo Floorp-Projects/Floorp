@@ -27,12 +27,13 @@
 }
 
 #urlbar-results {
-  -moz-appearance: none;
+  position: fixed;
+  left: 0;
+  right: 0;
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
-  border: 1px solid var(--chrome-content-separator-color);
-  border-left-style: none;
-  border-right-style: none;
+  text-shadow: none;
+  border-block: 1px solid var(--chrome-content-separator-color);
 }
 
 .urlbarView-body-inner {
