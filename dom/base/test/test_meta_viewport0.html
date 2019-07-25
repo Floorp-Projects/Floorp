@@ -12,10 +12,6 @@
   <script type="application/javascript">
     "use strict";
 
-    function fuzzeq(a, b, msg) {
-      ok(Math.abs(a - b) < 1e-6, msg);
-    }
-
     add_task(async function test1() {
       await SpecialPowers.pushPrefEnv(scaleRatio(1.0));
 

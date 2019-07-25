@@ -6,8 +6,6 @@
 
 #include "ViewportMetaData.h"
 
-#include "mozilla/dom/Document.h"
-
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -18,7 +16,8 @@ using namespace mozilla::dom;
  * attribute, add it to the document header data. No validation is done on the
  * value itself (this is done at display time).
  */
-static void ProcessViewportToken(Document* aDocument, const nsAString& token) {
+static void ProcessViewportToken(ViewportMetaData& aData,
+                                 const nsAString& token) {
   /* Iterators. */
   nsAString::const_iterator tip, tail, end;
   token.BeginReading(tip);
@@ -45,17 +44,17 @@ static void ProcessViewportToken(Document* aDocument, const nsAString& token) {
    * information into the document header. */
   RefPtr<nsAtom> key_atom = NS_Atomize(key);
   if (key_atom == nsGkAtoms::height) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_height, value);
+    aData.mHeight.Assign(value);
   } else if (key_atom == nsGkAtoms::width) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_width, value);
+    aData.mWidth.Assign(value);
   } else if (key_atom == nsGkAtoms::initial_scale) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_initial_scale, value);
+    aData.mInitialScale.Assign(value);
   } else if (key_atom == nsGkAtoms::minimum_scale) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_minimum_scale, value);
+    aData.mMinimumScale.Assign(value);
   } else if (key_atom == nsGkAtoms::maximum_scale) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_maximum_scale, value);
+    aData.mMaximumScale.Assign(value);
   } else if (key_atom == nsGkAtoms::user_scalable) {
-    aDocument->SetHeaderData(nsGkAtoms::viewport_user_scalable, value);
+    aData.mUserScalable.Assign(value);
   }
 }
 
@@ -63,16 +62,12 @@ static void ProcessViewportToken(Document* aDocument, const nsAString& token) {
   (((c) == '=') || ((c) == ',') || ((c) == ';') || ((c) == '\t') || \
    ((c) == '\n') || ((c) == '\r'))
 
-/* static */
-void ViewportMetaData::ProcessViewportInfo(Document* aDocument,
-                                           const nsAString& viewportInfo) {
-  aDocument->SetHeaderData(nsGkAtoms::viewport, viewportInfo);
-
+ViewportMetaData::ViewportMetaData(const nsAString& aViewportInfo) {
   /* Iterators. */
   nsAString::const_iterator tip, tail, end;
-  viewportInfo.BeginReading(tip);
+  aViewportInfo.BeginReading(tip);
   tail = tip;
-  viewportInfo.EndReading(end);
+  aViewportInfo.EndReading(end);
 
   /* Read the tip to the first non-separator character. */
   while ((tip != end) && (IS_SEPARATOR(*tip) || nsCRT::IsAsciiSpace(*tip))) {
@@ -104,7 +99,7 @@ void ViewportMetaData::ProcessViewportInfo(Document* aDocument,
     }
 
     /* Our token consists of the characters between tail and tip. */
-    ProcessViewportToken(aDocument, Substring(tail, tip));
+    ProcessViewportToken(*this, Substring(tail, tip));
 
     /* Skip separators. */
     while ((tip != end) && (IS_SEPARATOR(*tip) || nsCRT::IsAsciiSpace(*tip))) {
