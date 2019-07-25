@@ -1598,15 +1598,6 @@ pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
 pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp");
 
-// Enable the Report Breakage UI on Nightly and Beta but not on Release yet.
-#ifdef EARLY_BETA_OR_EARLIER
-pref("browser.contentblocking.reportBreakage.enabled", true);
-#else
-pref("browser.contentblocking.reportBreakage.enabled", false);
-#endif
-// Show report breakage for tracking cookies in all channels.
-pref("browser.contentblocking.rejecttrackers.reportBreakage.enabled", true);
-
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
 
 // Enable Protections report's Lockwise card by default.

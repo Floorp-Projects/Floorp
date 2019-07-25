@@ -59,7 +59,6 @@ imgRequest::imgRequest(imgLoader* aLoader, const ImageCacheKey& aCacheKey)
       mValidator(nullptr),
       mInnerWindowId(0),
       mCORSMode(imgIRequest::CORS_NONE),
-      mReferrerPolicy(mozilla::net::RP_Unset),
       mImageErrorCode(NS_OK),
       mImageAvailable(false),
       mMutex("imgRequest"),
@@ -86,7 +85,7 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
                           bool aHadInsecureRedirect, nsIRequest* aRequest,
                           nsIChannel* aChannel, imgCacheEntry* aCacheEntry,
                           nsISupports* aCX, nsIPrincipal* aTriggeringPrincipal,
-                          int32_t aCORSMode, ReferrerPolicy aReferrerPolicy) {
+                          int32_t aCORSMode, nsIReferrerInfo* aReferrerInfo) {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 
   LOG_FUNC(gImgLog, "imgRequest::Init");
@@ -105,7 +104,7 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
   mTimedChannel = do_QueryInterface(mChannel);
   mTriggeringPrincipal = aTriggeringPrincipal;
   mCORSMode = aCORSMode;
-  mReferrerPolicy = aReferrerPolicy;
+  mReferrerInfo = aReferrerInfo;
 
   // If the original URI and the final URI are different, check whether the
   // original URI is secure. We deliberately don't take the final URI into

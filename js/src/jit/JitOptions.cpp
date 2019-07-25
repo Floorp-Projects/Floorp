@@ -160,7 +160,7 @@ DefaultJitOptions::DefaultJitOptions() {
   // How many invocations or loop iterations are needed before functions
   // are compiled with the baseline compiler.
   // Duplicated in all.js - ensure both match.
-  SET_DEFAULT(baselineJitWarmUpThreshold, 50);
+  SET_DEFAULT(baselineJitWarmUpThreshold, 100);
 
   // How many invocations or loop iterations are needed before functions
   // are compiled with the Ion compiler at OptimizationLevel::Normal.

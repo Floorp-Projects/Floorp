@@ -66,6 +66,9 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // clipboard on systems that support it.
   ["doubleClickSelectsAll", false],
 
+  // Whether telemetry events should be recorded.
+  ["eventTelemetry.enabled", false],
+
   // When true, `javascript:` URLs are not included in search results.
   ["filter.javascript", true],
 
@@ -102,6 +105,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // should be opened in new tabs by default.
   ["openintab", false],
 
+  // Whether to open the urlbar view when the input field is focused by the user.
   ["openViewOnFocus", false],
 
   // Whether the quantum bar is enabled.

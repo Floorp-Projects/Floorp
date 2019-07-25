@@ -716,12 +716,26 @@ static bool ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
                                  nsIPrincipal* triggeringPrincipal,
                                  nsISupports* aCX,
                                  nsContentPolicyType aPolicyType,
-                                 ReferrerPolicy referrerPolicy) {
-  // If the entry's Referrer Policy doesn't match, we can't use this request.
+                                 nsIReferrerInfo* aReferrerInfo) {
+  // If the referrer policy doesn't match, we can't use this request.
+  // XXX: Note that we only validate referrer policy, not referrerInfo object.
+  // We should do with referrerInfo object, but it will cause us to use more
+  // resources in the common case (the same policies but diferrent original
+  // referrers).
   // XXX: this will return false if an image has different referrer attributes,
   // i.e. we currently don't use the cached image but reload the image with
   // the new referrer policy bug 1174921
-  if (referrerPolicy != request->GetReferrerPolicy()) {
+  uint32_t referrerPolicy = RP_Unset;
+  if (aReferrerInfo) {
+    referrerPolicy = aReferrerInfo->GetReferrerPolicy();
+  }
+
+  uint32_t requestReferrerPolicy = RP_Unset;
+  if (request->GetReferrerInfo()) {
+    requestReferrerPolicy = request->GetReferrerInfo()->GetReferrerPolicy();
+  }
+
+  if (referrerPolicy != requestReferrerPolicy) {
     return false;
   }
 
@@ -762,8 +776,8 @@ static nsresult NewImageChannel(
     // be set to true if this channel ends up depending on
     // aTriggeringPrincipal and false otherwise.
     bool* aForcePrincipalCheckForCacheEntry, nsIURI* aURI,
-    nsIURI* aInitialDocumentURI, int32_t aCORSMode, nsIURI* aReferringURI,
-    ReferrerPolicy aReferrerPolicy, nsILoadGroup* aLoadGroup,
+    nsIURI* aInitialDocumentURI, int32_t aCORSMode,
+    nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
     const nsCString& aAcceptHeader, nsLoadFlags aLoadFlags,
     nsContentPolicyType aPolicyType, nsIPrincipal* aTriggeringPrincipal,
     nsISupports* aRequestingContext, bool aRespectPrivacy) {
@@ -885,10 +899,10 @@ static nsresult NewImageChannel(
     NS_ENSURE_TRUE(httpChannelInternal, NS_ERROR_UNEXPECTED);
     rv = httpChannelInternal->SetDocumentURI(aInitialDocumentURI);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsCOMPtr<nsIReferrerInfo> referrerInfo =
-        new ReferrerInfo(aReferringURI, aReferrerPolicy);
-    rv = newHttpChannel->SetReferrerInfoWithoutClone(referrerInfo);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    if (aReferrerInfo) {
+      DebugOnly<nsresult> rv = newHttpChannel->SetReferrerInfo(aReferrerInfo);
+      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    }
   }
 
   // Image channels are loaded by default with reduced priority.
@@ -1649,9 +1663,9 @@ void imgLoader::CheckCacheLimits(imgCacheTable& cache, imgCacheQueue& queue) {
 
 bool imgLoader::ValidateRequestWithNewChannel(
     imgRequest* request, nsIURI* aURI, nsIURI* aInitialDocumentURI,
-    nsIURI* aReferrerURI, ReferrerPolicy aReferrerPolicy,
-    nsILoadGroup* aLoadGroup, imgINotificationObserver* aObserver,
-    nsISupports* aCX, Document* aLoadingDocument, nsLoadFlags aLoadFlags,
+    nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
+    imgINotificationObserver* aObserver, nsISupports* aCX,
+    Document* aLoadingDocument, nsLoadFlags aLoadFlags,
     nsContentPolicyType aLoadPolicyType, imgRequestProxy** aProxyRequest,
     nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode,
     bool* aNewChannelCreated) {
@@ -1691,10 +1705,9 @@ bool imgLoader::ValidateRequestWithNewChannel(
   nsCOMPtr<nsIChannel> newChannel;
   bool forcePrincipalCheck;
   rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
-                       aInitialDocumentURI, aCORSMode, aReferrerURI,
-                       aReferrerPolicy, aLoadGroup, mAcceptHeader, aLoadFlags,
-                       aLoadPolicyType, aTriggeringPrincipal, aCX,
-                       mRespectPrivacy);
+                       aInitialDocumentURI, aCORSMode, aReferrerInfo,
+                       aLoadGroup, mAcceptHeader, aLoadFlags, aLoadPolicyType,
+                       aTriggeringPrincipal, aCX, mRespectPrivacy);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -1756,9 +1769,9 @@ bool imgLoader::ValidateRequestWithNewChannel(
 
 bool imgLoader::ValidateEntry(
     imgCacheEntry* aEntry, nsIURI* aURI, nsIURI* aInitialDocumentURI,
-    nsIURI* aReferrerURI, ReferrerPolicy aReferrerPolicy,
-    nsILoadGroup* aLoadGroup, imgINotificationObserver* aObserver,
-    nsISupports* aCX, Document* aLoadingDocument, nsLoadFlags aLoadFlags,
+    nsIReferrerInfo* aReferrerInfo, nsILoadGroup* aLoadGroup,
+    imgINotificationObserver* aObserver, nsISupports* aCX,
+    Document* aLoadingDocument, nsLoadFlags aLoadFlags,
     nsContentPolicyType aLoadPolicyType, bool aCanMakeNewChannel,
     bool* aNewChannelCreated, imgRequestProxy** aProxyRequest,
     nsIPrincipal* aTriggeringPrincipal, int32_t aCORSMode) {
@@ -1799,7 +1812,7 @@ bool imgLoader::ValidateEntry(
 
   if (!ValidateSecurityInfo(request, aEntry->ForcePrincipalCheck(), aCORSMode,
                             aTriggeringPrincipal, aCX, aLoadPolicyType,
-                            aReferrerPolicy))
+                            aReferrerInfo))
     return false;
 
   // data URIs are immutable and by their nature can't leak data, so we can
@@ -1877,10 +1890,9 @@ bool imgLoader::ValidateEntry(
     LOG_SCOPE(gImgLog, "imgLoader::ValidateRequest |cache hit| must validate");
 
     return ValidateRequestWithNewChannel(
-        request, aURI, aInitialDocumentURI, aReferrerURI, aReferrerPolicy,
-        aLoadGroup, aObserver, aCX, aLoadingDocument, aLoadFlags,
-        aLoadPolicyType, aProxyRequest, aTriggeringPrincipal, aCORSMode,
-        aNewChannelCreated);
+        request, aURI, aInitialDocumentURI, aReferrerInfo, aLoadGroup,
+        aObserver, aCX, aLoadingDocument, aLoadFlags, aLoadPolicyType,
+        aProxyRequest, aTriggeringPrincipal, aCORSMode, aNewChannelCreated);
   }
 
   return !validateRequest;
@@ -2030,37 +2042,38 @@ bool imgLoader::PreferLoadFromCache(nsIURI* aURI) const {
    nsIRequest::VALIDATE_ONCE_PER_SESSION)
 
 NS_IMETHODIMP
-imgLoader::LoadImageXPCOM(
-    nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIURI* aReferrerURI,
-    const nsAString& aReferrerPolicy, nsIPrincipal* aTriggeringPrincipal,
-    nsILoadGroup* aLoadGroup, imgINotificationObserver* aObserver,
-    nsISupports* aCX, nsLoadFlags aLoadFlags, nsISupports* aCacheKey,
-    nsContentPolicyType aContentPolicyType, imgIRequest** _retval) {
+imgLoader::LoadImageXPCOM(nsIURI* aURI, nsIURI* aInitialDocumentURI,
+                          nsIReferrerInfo* aReferrerInfo,
+                          nsIPrincipal* aTriggeringPrincipal,
+                          nsILoadGroup* aLoadGroup,
+                          imgINotificationObserver* aObserver, nsISupports* aCX,
+                          nsLoadFlags aLoadFlags, nsISupports* aCacheKey,
+                          nsContentPolicyType aContentPolicyType,
+                          imgIRequest** _retval) {
   // Optional parameter, so defaults to 0 (== TYPE_INVALID)
   if (!aContentPolicyType) {
     aContentPolicyType = nsIContentPolicy::TYPE_INTERNAL_IMAGE;
   }
   imgRequestProxy* proxy;
-  ReferrerPolicy refpol = ReferrerPolicyFromString(aReferrerPolicy);
   nsCOMPtr<nsINode> node = do_QueryInterface(aCX);
   nsCOMPtr<Document> doc = do_QueryInterface(aCX);
   nsresult rv =
-      LoadImage(aURI, aInitialDocumentURI, aReferrerURI, refpol,
-                aTriggeringPrincipal, 0, aLoadGroup, aObserver, node, doc,
-                aLoadFlags, aCacheKey, aContentPolicyType, EmptyString(),
+      LoadImage(aURI, aInitialDocumentURI, aReferrerInfo, aTriggeringPrincipal,
+                0, aLoadGroup, aObserver, node, doc, aLoadFlags, aCacheKey,
+                aContentPolicyType, EmptyString(),
                 /* aUseUrgentStartForChannel */ false, &proxy);
   *_retval = proxy;
   return rv;
 }
 
 nsresult imgLoader::LoadImage(
-    nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIURI* aReferrerURI,
-    ReferrerPolicy aReferrerPolicy, nsIPrincipal* aTriggeringPrincipal,
-    uint64_t aRequestContextID, nsILoadGroup* aLoadGroup,
-    imgINotificationObserver* aObserver, nsINode* aContext,
-    Document* aLoadingDocument, nsLoadFlags aLoadFlags, nsISupports* aCacheKey,
-    nsContentPolicyType aContentPolicyType, const nsAString& initiatorType,
-    bool aUseUrgentStartForChannel, imgRequestProxy** _retval) {
+    nsIURI* aURI, nsIURI* aInitialDocumentURI, nsIReferrerInfo* aReferrerInfo,
+    nsIPrincipal* aTriggeringPrincipal, uint64_t aRequestContextID,
+    nsILoadGroup* aLoadGroup, imgINotificationObserver* aObserver,
+    nsINode* aContext, Document* aLoadingDocument, nsLoadFlags aLoadFlags,
+    nsISupports* aCacheKey, nsContentPolicyType aContentPolicyType,
+    const nsAString& initiatorType, bool aUseUrgentStartForChannel,
+    imgRequestProxy** _retval) {
   VerifyCacheSizes();
 
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
@@ -2154,11 +2167,11 @@ nsresult imgLoader::LoadImage(
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
     bool newChannelCreated = false;
-    if (ValidateEntry(
-            entry, aURI, aInitialDocumentURI, aReferrerURI, aReferrerPolicy,
-            aLoadGroup, aObserver, ToSupports(aLoadingDocument),
-            aLoadingDocument, requestFlags, aContentPolicyType, true,
-            &newChannelCreated, _retval, aTriggeringPrincipal, corsmode)) {
+    if (ValidateEntry(entry, aURI, aInitialDocumentURI, aReferrerInfo,
+                      aLoadGroup, aObserver, ToSupports(aLoadingDocument),
+                      aLoadingDocument, requestFlags, aContentPolicyType, true,
+                      &newChannelCreated, _retval, aTriggeringPrincipal,
+                      corsmode)) {
       request = entry->GetRequest();
 
       // If this entry has no proxies, its request has no reference to the
@@ -2206,10 +2219,10 @@ nsresult imgLoader::LoadImage(
 
     bool forcePrincipalCheck;
     rv = NewImageChannel(getter_AddRefs(newChannel), &forcePrincipalCheck, aURI,
-                         aInitialDocumentURI, corsmode, aReferrerURI,
-                         aReferrerPolicy, aLoadGroup, mAcceptHeader,
-                         requestFlags, aContentPolicyType, aTriggeringPrincipal,
-                         aContext, mRespectPrivacy);
+                         aInitialDocumentURI, corsmode, aReferrerInfo,
+                         aLoadGroup, mAcceptHeader, requestFlags,
+                         aContentPolicyType, aTriggeringPrincipal, aContext,
+                         mRespectPrivacy);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -2246,7 +2259,7 @@ nsresult imgLoader::LoadImage(
     rv = request->Init(aURI, aURI, /* aHadInsecureRedirect = */ false,
                        channelLoadGroup, newChannel, entry,
                        ToSupports(aLoadingDocument), aTriggeringPrincipal,
-                       corsmode, aReferrerPolicy);
+                       corsmode, aReferrerInfo);
     if (NS_FAILED(rv)) {
       return NS_ERROR_FAILURE;
     }
@@ -2414,9 +2427,9 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
       // default to the internal image type
       nsContentPolicyType policyType = loadInfo->InternalContentPolicyType();
 
-      if (ValidateEntry(entry, uri, nullptr, nullptr, RP_Unset, nullptr,
-                        aObserver, aCX, doc, requestFlags, policyType, false,
-                        nullptr, nullptr, nullptr, imgIRequest::CORS_NONE)) {
+      if (ValidateEntry(entry, uri, nullptr, nullptr, nullptr, aObserver, aCX,
+                        doc, requestFlags, policyType, false, nullptr, nullptr,
+                        nullptr, imgIRequest::CORS_NONE)) {
         request = entry->GetRequest();
       } else {
         nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(channel));
@@ -2511,7 +2524,7 @@ nsresult imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // can set aHadInsecureRedirect to false here.
     rv = request->Init(originalURI, uri, /* aHadInsecureRedirect = */ false,
                        channel, channel, entry, aCX, nullptr,
-                       imgIRequest::CORS_NONE, RP_Unset);
+                       imgIRequest::CORS_NONE, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     RefPtr<ProxyListener> pl =
@@ -2886,7 +2899,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest) {
                      "uri", uri);
 
   int32_t corsmode = mRequest->GetCORSMode();
-  ReferrerPolicy refpol = mRequest->GetReferrerPolicy();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo = mRequest->GetReferrerInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal =
       mRequest->GetTriggeringPrincipal();
 
@@ -2898,7 +2911,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest) {
   channel->GetOriginalURI(getter_AddRefs(originalURI));
   nsresult rv = mNewRequest->Init(originalURI, uri, mHadInsecureRedirect,
                                   aRequest, channel, mNewEntry, context,
-                                  triggeringPrincipal, corsmode, refpol);
+                                  triggeringPrincipal, corsmode, referrerInfo);
   if (NS_FAILED(rv)) {
     UpdateProxies(/* aCancelRequest */ true, /* aSyncNotify */ true);
     return rv;

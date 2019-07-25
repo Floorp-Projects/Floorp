@@ -1201,7 +1201,7 @@
 
         this._startMultiSelectChange();
         this._multiSelectChangeSelected = true;
-        this.clearMultiSelectedTabs(true);
+        this.clearMultiSelectedTabs({ isLastMultiSelectChange: true });
 
         if (oldBrowser != newBrowser && oldBrowser.getInPermitUnload) {
           oldBrowser.getInPermitUnload(inPermitUnload => {
@@ -4364,7 +4364,7 @@
       return SessionStore.duplicateTab(window, aTab, 0, aRestoreTabImmediately);
     },
 
-    addToMultiSelectedTabs(aTab, multiSelectMayChangeMore) {
+    addToMultiSelectedTabs(aTab, { isLastMultiSelectChange = false } = {}) {
       if (aTab.multiselected) {
         return;
       }
@@ -4379,10 +4379,12 @@
         this._multiSelectChangeAdditions.add(aTab);
       }
 
-      if (!multiSelectMayChangeMore) {
+      if (isLastMultiSelectChange) {
         let { selectedTab } = this;
         if (!selectedTab.multiselected) {
-          this.addToMultiSelectedTabs(selectedTab, true);
+          this.addToMultiSelectedTabs(selectedTab, {
+            isLastMultiSelectChange: false,
+          });
         }
         this.tabContainer._setPositionalAttributes();
       }
@@ -4406,12 +4408,17 @@
           : [indexOfTab2, indexOfTab1];
 
       for (let i = lowerIndex; i <= higherIndex; i++) {
-        this.addToMultiSelectedTabs(tabs[i], true);
+        this.addToMultiSelectedTabs(tabs[i], {
+          isLastMultiSelectChange: false,
+        });
       }
       this.tabContainer._setPositionalAttributes();
     },
 
-    removeFromMultiSelectedTabs(aTab, isLastMultiSelectChange) {
+    removeFromMultiSelectedTabs(
+      aTab,
+      { isLastMultiSelectChange = false } = {}
+    ) {
       if (!aTab.multiselected) {
         return;
       }
@@ -4433,7 +4440,7 @@
       }
     },
 
-    clearMultiSelectedTabs(isLastMultiSelectChange) {
+    clearMultiSelectedTabs({ isLastMultiSelectChange = false } = {}) {
       if (this._clearMultiSelectionLocked) {
         if (this._clearMultiSelectionLockedOnce) {
           this._clearMultiSelectionLockedOnce = false;
@@ -4447,7 +4454,9 @@
       }
 
       for (let tab of this.selectedTabs) {
-        this.removeFromMultiSelectedTabs(tab, false);
+        this.removeFromMultiSelectedTabs(tab, {
+          isLastMultiSelectChange: false,
+        });
       }
       this._lastMultiSelectedTabRef = null;
       if (isLastMultiSelectChange) {
@@ -4508,7 +4517,7 @@
      */
     avoidSingleSelectedTab() {
       if (this.multiSelectedTabsCount == 1) {
-        this.clearMultiSelectedTabs();
+        this.clearMultiSelectedTabs({ isLastMultiSelectChange: false });
       }
     },
 
@@ -4535,11 +4544,13 @@
     },
 
     set selectedTabs(tabs) {
-      this.clearMultiSelectedTabs(false);
+      this.clearMultiSelectedTabs({ isLastMultiSelectChange: false });
       this.selectedTab = tabs[0];
       if (tabs.length > 1) {
         for (let tab of tabs) {
-          this.addToMultiSelectedTabs(tab, true);
+          this.addToMultiSelectedTabs(tab, {
+            isLastMultiSelectChange: false,
+          });
         }
       }
       this.tabContainer._setPositionalAttributes();
