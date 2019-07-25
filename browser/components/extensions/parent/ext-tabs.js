@@ -100,6 +100,9 @@ function showHiddenTabs(id) {
 
 let tabListener = {
   tabReadyInitialized: false,
+  // Map[tab -> Promise]
+  tabBlockedPromises: new WeakMap(),
+  // Map[tab -> Deferred]
   tabReadyPromises: new WeakMap(),
   initializingTabs: new WeakSet(),
 
@@ -128,6 +131,17 @@ let tabListener = {
     }
   },
 
+  blockTabUntilRestored(nativeTab) {
+    let promise = ExtensionUtils.promiseEvent(nativeTab, "SSTabRestored").then(
+      ({ target }) => {
+        this.tabBlockedPromises.delete(target);
+        return target;
+      }
+    );
+
+    this.tabBlockedPromises.set(nativeTab, promise);
+  },
+
   /**
    * Returns a promise that resolves when the tab is ready.
    * Tabs created via the `tabs.create` method are "ready" once the location
@@ -140,6 +154,10 @@ let tabListener = {
   awaitTabReady(nativeTab) {
     let deferred = this.tabReadyPromises.get(nativeTab);
     if (!deferred) {
+      let promise = this.tabBlockedPromises.get(nativeTab);
+      if (promise) {
+        return promise;
+      }
       deferred = PromiseUtils.defer();
       if (
         !this.initializingTabs.has(nativeTab) &&
@@ -1080,6 +1098,8 @@ this.tabs = class extends ExtensionAPI {
 
           let gBrowser = nativeTab.ownerGlobal.gBrowser;
           let newTab = gBrowser.duplicateTab(nativeTab);
+
+          tabListener.blockTabUntilRestored(newTab);
 
           return new Promise(resolve => {
             // We need to use SSTabRestoring because any attributes set before
