@@ -194,12 +194,13 @@ var gSyncPane = {
           .setAttribute("href", manageURI);
       });
 
-    document
-      .getElementById("tosPP-small-ToS")
-      .setAttribute("href", Weave.Svc.Prefs.get("fxa.termsURL"));
-    document
-      .getElementById("tosPP-small-PP")
-      .setAttribute("href", Weave.Svc.Prefs.get("fxa.privacyURL"));
+    FxAccounts.config.promiseLegalTermsURI().then(uri => {
+      document.getElementById("tosPP-small-ToS").setAttribute("href", uri);
+    });
+
+    FxAccounts.config.promiseLegalPrivacyURI().then(uri => {
+      document.getElementById("tosPP-small-PP").setAttribute("href", uri);
+    });
 
     FxAccounts.config
       .promiseSignUpURI(this._getEntryPoint())
