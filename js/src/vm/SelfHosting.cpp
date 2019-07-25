@@ -2623,10 +2623,7 @@ void js::FillSelfHostingCompileOptions(CompileOptions& options) {
   options.setCanLazilyParse(false);
   options.werrorOption = true;
   options.strictOption = true;
-
-#ifdef DEBUG
   options.extraWarningsOption = true;
-#endif
 }
 
 GlobalObject* JSRuntime::createSelfHostingGlobal(JSContext* cx) {
