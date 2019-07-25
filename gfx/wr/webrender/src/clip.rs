@@ -682,21 +682,6 @@ impl ClipChainStack {
         &mut self,
         viewport: WorldRect,
     ) {
-        // Ensure that sub-surfaces (e.g. filters) of a tile
-        // cache intersect with any parent viewport. This ensures
-        // that we correctly filter out redundant clips on these
-        // child surfaces.
-        let viewport = match self.stack.last() {
-            Some(parent_level) => {
-                parent_level.viewport
-                    .intersection(&viewport)
-                    .unwrap_or(WorldRect::zero())
-            }
-            None => {
-                viewport
-            }
-        };
-
         let level = ClipChainLevel::new(viewport);
         self.stack.push(level);
     }

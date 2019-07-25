@@ -60,29 +60,6 @@ pub enum SubpixelMode {
     Deny,
 }
 
-/// A comparable transform matrix, that compares with epsilon checks.
-#[derive(Debug, Clone)]
-struct MatrixKey {
-    m: [f32; 16],
-}
-
-impl PartialEq for MatrixKey {
-    fn eq(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-
-        // TODO(gw): It's possible that we may need to adjust the epsilon
-        //           to be tighter on most of the matrix, except the
-        //           translation parts?
-        for (i, j) in self.m.iter().zip(other.m.iter()) {
-            if !i.approx_eq_eps(j, &EPSILON) {
-                return false;
-            }
-        }
-
-        true
-    }
-}
-
 /// A comparable / hashable version of a coordinate space mapping. Used to determine
 /// if a transform dependency for a tile has changed.
 #[derive(Debug, PartialEq, Clone)]
@@ -95,7 +72,7 @@ enum TransformKey {
         offset_y: f32,
     },
     Transform {
-        m: MatrixKey,
+        m: [f32; 16],
     }
 }
 
@@ -106,6 +83,8 @@ impl<Src, Dst> From<CoordinateSpaceMapping<Src, Dst>> for TransformKey {
                 TransformKey::Local
             }
             CoordinateSpaceMapping::ScaleOffset(ref scale_offset) => {
+                // TODO(gw): We should consider quantizing / rounding these values
+                //           to avoid invalidations due to floating point inaccuracies.
                 TransformKey::ScaleOffset {
                     scale_x: scale_offset.scale.x,
                     scale_y: scale_offset.scale.y,
@@ -114,10 +93,10 @@ impl<Src, Dst> From<CoordinateSpaceMapping<Src, Dst>> for TransformKey {
                 }
             }
             CoordinateSpaceMapping::Transform(ref m) => {
+                // TODO(gw): We should consider quantizing / rounding these values
+                //           to avoid invalidations due to floating point inaccuracies.
                 TransformKey::Transform {
-                    m: MatrixKey {
-                        m: m.to_row_major_array(),
-                    },
+                    m: m.to_row_major_array(),
                 }
             }
         }
@@ -300,7 +279,7 @@ impl Tile {
 }
 
 /// Defines a key that uniquely identifies a primitive instance.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct PrimitiveDescriptor {
     /// Uniquely identifies the content of the primitive template.
     prim_uid: ItemUid,
@@ -316,73 +295,6 @@ pub struct PrimitiveDescriptor {
     clip_count: u16,
 }
 
-impl PartialEq for PrimitiveDescriptor {
-    fn eq(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-
-        if self.prim_uid != other.prim_uid {
-            return false;
-        }
-        if self.first_clip != other.first_clip {
-            return false;
-        }
-        if self.clip_count != other.clip_count {
-            return false;
-        }
-
-        if !self.origin.x.approx_eq_eps(&other.origin.x, &EPSILON) {
-            return false;
-        }
-        if !self.origin.y.approx_eq_eps(&other.origin.y, &EPSILON) {
-            return false;
-        }
-
-        if !self.prim_clip_rect.x.approx_eq_eps(&other.prim_clip_rect.x, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_rect.y.approx_eq_eps(&other.prim_clip_rect.y, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_rect.w.approx_eq_eps(&other.prim_clip_rect.w, &EPSILON) {
-            return false;
-        }
-        if !self.prim_clip_rect.h.approx_eq_eps(&other.prim_clip_rect.h, &EPSILON) {
-            return false;
-        }
-
-        true
-    }
-}
-
-/// Defines a key that uniquely identifies a clip instance.
-#[derive(Debug, Clone)]
-pub struct ClipDescriptor {
-    /// The uid is guaranteed to uniquely describe the content of the clip node.
-    uid: ItemUid,
-    /// The origin defines the relative position of this clip template.
-    origin: PointKey,
-}
-
-impl PartialEq for ClipDescriptor {
-    fn eq(&self, other: &Self) -> bool {
-        const EPSILON: f32 = 0.001;
-
-        if self.uid != other.uid {
-            return false;
-        }
-
-        if !self.origin.x.approx_eq_eps(&other.origin.x, &EPSILON) {
-            return false;
-        }
-
-        if !self.origin.y.approx_eq_eps(&other.origin.y, &EPSILON) {
-            return false;
-        }
-
-        true
-    }
-}
-
 /// Uniquely describes the content of this tile, in a way that can be
 /// (reasonably) efficiently hashed and compared.
 #[derive(Debug)]
@@ -392,8 +304,14 @@ pub struct TileDescriptor {
     /// the other parameters describe the clip chain and instance params.
     pub prims: ComparableVec<PrimitiveDescriptor>,
 
-    /// List of clip node descriptors.
-    clips: ComparableVec<ClipDescriptor>,
+    /// List of clip node unique identifiers. The uid is guaranteed
+    /// to uniquely describe the content of the clip node.
+    clip_uids: ComparableVec<ItemUid>,
+
+    /// List of local offsets of the clip node origins. This
+    /// ensures that if a clip node is supplied but has a different
+    /// transform between frames that the tile is invalidated.
+    clip_vertices: ComparableVec<PointKey>,
 
     /// List of image keys that this tile depends on.
     image_keys: ComparableVec<ImageKey>,
@@ -411,7 +329,8 @@ impl TileDescriptor {
     fn new() -> Self {
         TileDescriptor {
             prims: ComparableVec::new(),
-            clips: ComparableVec::new(),
+            clip_uids: ComparableVec::new(),
+            clip_vertices: ComparableVec::new(),
             opacity_bindings: ComparableVec::new(),
             image_keys: ComparableVec::new(),
             transforms: ComparableVec::new(),
@@ -422,7 +341,8 @@ impl TileDescriptor {
     /// are being rebuilt.
     fn clear(&mut self) {
         self.prims.reset();
-        self.clips.reset();
+        self.clip_uids.reset();
+        self.clip_vertices.reset();
         self.opacity_bindings.reset();
         self.image_keys.reset();
         self.transforms.reset();
@@ -438,7 +358,10 @@ impl TileDescriptor {
         if !self.opacity_bindings.is_valid() {
             return false;
         }
-        if !self.clips.is_valid() {
+        if !self.clip_uids.is_valid() {
+            return false;
+        }
+        if !self.clip_vertices.is_valid() {
             return false;
         }
         if !self.prims.is_valid() {
@@ -993,7 +916,8 @@ impl TileCacheInstance {
 
         // Build the list of resources that this primitive has dependencies on.
         let mut opacity_bindings: SmallVec<[OpacityBinding; 4]> = SmallVec::new();
-        let mut clips: SmallVec<[ClipDescriptor; 8]> = SmallVec::new();
+        let mut clip_chain_uids: SmallVec<[ItemUid; 8]> = SmallVec::new();
+        let mut clip_vertices: SmallVec<[LayoutPoint; 8]> = SmallVec::new();
         let mut image_keys: SmallVec<[ImageKey; 8]> = SmallVec::new();
         let mut clip_spatial_nodes = FastHashSet::default();
         let mut prim_clip_rect = PictureRect::zero();
@@ -1011,16 +935,15 @@ impl TileCacheInstance {
             let clip_instances = &clip_store
                 .clip_node_instances[prim_clip_chain.clips_range.to_range()];
             for clip_instance in clip_instances {
-                clips.push(ClipDescriptor {
-                    uid: clip_instance.handle.uid(),
-                    origin: clip_instance.local_pos.into(),
-                });
+                clip_chain_uids.push(clip_instance.handle.uid());
 
                 // If the clip has the same spatial node, the relative transform
                 // will always be the same, so there's no need to depend on it.
                 if clip_instance.spatial_node_index != self.spatial_node_index {
                     clip_spatial_nodes.insert(clip_instance.spatial_node_index);
                 }
+
+                clip_vertices.push(clip_instance.local_pos);
             }
         }
 
@@ -1207,12 +1130,15 @@ impl TileCacheInstance {
                 tile.descriptor.prims.push(PrimitiveDescriptor {
                     prim_uid: prim_instance.uid(),
                     origin: prim_origin.into(),
-                    first_clip: tile.descriptor.clips.len() as u16,
-                    clip_count: clips.len() as u16,
+                    first_clip: tile.descriptor.clip_uids.len() as u16,
+                    clip_count: clip_chain_uids.len() as u16,
                     prim_clip_rect: prim_clip_rect.into(),
                 });
 
-                tile.descriptor.clips.extend_from_slice(&clips);
+                tile.descriptor.clip_uids.extend_from_slice(&clip_chain_uids);
+                for clip_vertex in &clip_vertices {
+                    tile.descriptor.clip_vertices.push((*clip_vertex).into());
+                }
 
                 // If the primitive has the same spatial node, the relative transform
                 // will always be the same, so there's no need to depend on it.
