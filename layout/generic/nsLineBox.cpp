@@ -302,6 +302,20 @@ int32_t nsLineBox::IndexOf(nsIFrame* aFrame) const {
   return -1;
 }
 
+int32_t nsLineBox::RIndexOf(nsIFrame* aFrame,
+                            nsIFrame* aLastFrameInLine) const {
+  nsIFrame* frame = aLastFrameInLine;
+  for (int32_t i = GetChildCount() - 1; i >= 0; --i) {
+    MOZ_ASSERT(i != 0 || frame == mFirstChild,
+               "caller provided incorrect last frame");
+    if (frame == aFrame) {
+      return i;
+    }
+    frame = frame->GetPrevSibling();
+  }
+  return -1;
+}
+
 bool nsLineBox::IsEmpty() const {
   if (IsBlock()) return mFirstChild->IsEmpty();
 

@@ -5475,8 +5475,12 @@ void nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling,
         frames = &overflowLines->mFrames;
       }
     }
-    // FIXME: Should this IndexOf search from the end?
-    prevSiblingIndex = prevSibLine->IndexOf(aPrevSibling);
+
+    nsLineList::iterator nextLine = prevSibLine.next();
+    nsIFrame* lastFrameInLine = nextLine == lineList->end()
+                                    ? frames->LastChild()
+                                    : nextLine->mFirstChild->GetPrevSibling();
+    prevSiblingIndex = prevSibLine->RIndexOf(aPrevSibling, lastFrameInLine);
     MOZ_ASSERT(prevSiblingIndex >= 0,
                "aPrevSibling must be in aPrevSiblingLine");
   } else {
