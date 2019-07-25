@@ -77,7 +77,8 @@ a.hidden,
 .monitor-card.no-logins .card-body,
 .monitor-card.no-logins #monitor-header-content a,
 .monitor-card.no-logins .inline-text-icon.monitor-scanned-text,
-.monitor-card.has-logins #sign-up-for-monitor-button {
+.monitor-card.has-logins #sign-up-for-monitor-button,
+#monitor-body-content .monitor-breached-passwords.hidden {
   display: none;
 }
 
