@@ -177,31 +177,6 @@ SyntaxTreesPool.prototype = {
   },
 
   /**
-   * Finds the start and length of the script containing the specified offset
-   * relative to its parent source.
-   *
-   * @param number atOffset
-   *        The offset relative to the parent source.
-   * @return object
-   *         The offset and length relative to the enclosing script.
-   */
-  getScriptInfo(atOffset) {
-    const info = { start: -1, length: -1, index: -1 };
-
-    for (const { offset, length } of this._trees) {
-      info.index++;
-      if (offset <= atOffset && offset + length >= atOffset) {
-        info.start = offset;
-        info.length = length;
-        return info;
-      }
-    }
-
-    info.index = -1;
-    return info;
-  },
-
-  /**
    * Handles a request for a specific or all known syntax trees.
    *
    * @param string functionName
