@@ -48,6 +48,7 @@
 #include "vm/AsyncFunction.h"
 #include "vm/AsyncIteration.h"
 #include "vm/GeckoProfiler.h"
+#include "vm/Instrumentation.h"
 #include "vm/JSContext.h"
 #include "vm/JSObject.h"
 #include "vm/Realm.h"
@@ -6406,6 +6407,19 @@ JSObject* Debugger::wrapWasmSource(JSContext* cx,
                                    Handle<WasmInstanceObject*> wasmInstance) {
   Rooted<DebuggerSourceReferent> referent(cx, wasmInstance.get());
   return wrapVariantReferent(cx, referent);
+}
+
+bool DebugAPI::getScriptInstrumentationId(JSContext* cx,
+                                          HandleObject dbgObject,
+                                          HandleScript script,
+                                          MutableHandleValue rval) {
+  Debugger* dbg = Debugger::fromJSObject(dbgObject);
+  DebuggerScript* dbgScript = dbg->wrapScript(cx, script);
+  if (!dbgScript) {
+    return false;
+  }
+  rval.set(dbgScript->getInstrumentationId());
+  return true;
 }
 
 static bool DebuggerSource_construct(JSContext* cx, unsigned argc, Value* vp) {
