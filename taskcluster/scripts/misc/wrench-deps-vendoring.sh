@@ -16,7 +16,7 @@ export PATH=$PATH:$SRCDIR/rustc/bin
 cargo install --version 0.1.23 cargo-vendor
 cd $SRCDIR/gfx/wr/
 mkdir .cargo
-cargo vendor --relative-path --sync ./Cargo.lock > .cargo/config
+cargo-vendor vendor --relative-path --sync ./Cargo.lock > .cargo/config
 mkdir wrench-deps
 mv vendor .cargo wrench-deps/
 mkdir wrench-deps/cargo-apk
