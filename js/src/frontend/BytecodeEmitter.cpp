@@ -123,6 +123,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
     : BytecodeEmitter(parent, sc, script, lazyScript, lineNum, emitterMode,
                       fieldInitializers) {
   parser = handle;
+  instrumentationKinds = parser->options().instrumentationKinds;
 }
 
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
@@ -135,6 +136,7 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                       fieldInitializers) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
+  instrumentationKinds = this->parser->options().instrumentationKinds;
 }
 
 void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
@@ -177,6 +179,10 @@ bool BytecodeEmitter::markStepBreakpoint() {
     return true;
   }
 
+  if (!emitInstrumentation(InstrumentationKind::Breakpoint)) {
+    return false;
+  }
+
   if (!newSrcNote(SRC_STEP_SEP)) {
     return false;
   }
@@ -203,6 +209,10 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
   // having two breakpoints with the same line/column position.
   // Note: This assumes that the position for the call has already been set.
   if (!bytecodeSection().isDuplicateLocation()) {
+    if (!emitInstrumentation(InstrumentationKind::Breakpoint)) {
+      return false;
+    }
+
     if (!newSrcNote(SRC_BREAKPOINT)) {
       return false;
     }
@@ -445,11 +455,16 @@ bool BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn) {
   return emitCall(op, argc, pn ? Some(pn->pn_pos.begin) : Nothing());
 }
 
-bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
+bool BytecodeEmitter::emitDupAt(unsigned slotFromTop, unsigned count) {
   MOZ_ASSERT(slotFromTop < unsigned(bytecodeSection().stackDepth()));
+  MOZ_ASSERT(slotFromTop + 1 >= count);
 
-  if (slotFromTop == 0) {
+  if (slotFromTop == 0 && count == 1) {
     return emit1(JSOP_DUP);
+  }
+
+  if (slotFromTop == 1 && count == 2) {
+    return emit1(JSOP_DUP2);
   }
 
   if (slotFromTop >= JS_BIT(24)) {
@@ -457,13 +472,16 @@ bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
     return false;
   }
 
-  BytecodeOffset off;
-  if (!emitN(JSOP_DUPAT, 3, &off)) {
-    return false;
+  for (unsigned i = 0; i < count; i++) {
+    BytecodeOffset off;
+    if (!emitN(JSOP_DUPAT, 3, &off)) {
+      return false;
+    }
+
+    jsbytecode* pc = bytecodeSection().code(off);
+    SET_UINT24(pc, slotFromTop);
   }
 
-  jsbytecode* pc = bytecodeSection().code(off);
-  SET_UINT24(pc, slotFromTop);
   return true;
 }
 
@@ -891,7 +909,7 @@ bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
   return true;
 }
 
-bool BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op) {
+bool BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op, ShouldInstrument shouldInstrument) {
   MOZ_ASSERT(atom);
 
   // .generator lookups should be emitted as JSOP_GETALIASEDVAR instead of
@@ -911,11 +929,17 @@ bool BytecodeEmitter::emitAtomOp(JSAtom* atom, JSOp op) {
     return false;
   }
 
-  return emitAtomOp(index, op);
+  return emitAtomOp(index, op, shouldInstrument);
 }
 
-bool BytecodeEmitter::emitAtomOp(uint32_t atomIndex, JSOp op) {
+bool BytecodeEmitter::emitAtomOp(uint32_t atomIndex, JSOp op,
+                                 ShouldInstrument shouldInstrument) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_ATOM);
+
+  if (shouldInstrument != ShouldInstrument::No &&
+      !emitInstrumentationForOpcode(op, atomIndex)) {
+    return false;
+  }
 
   return emitIndexOp(op, atomIndex);
 }
@@ -1822,7 +1846,7 @@ bool BytecodeEmitter::emitPropLHS(PropertyAccess* prop) {
 
   while (true) {
     // Walk back up the list, emitting annotated name ops.
-    if (!emitAtomOp(pndot->key().atom(), JSOP_GETPROP)) {
+    if (!emitAtomOp(pndot->key().atom(), JSOP_GETPROP, ShouldInstrument::Yes)) {
       return false;
     }
 
@@ -1895,7 +1919,13 @@ bool BytecodeEmitter::emitNameIncDec(UnaryNode* incDec) {
   return true;
 }
 
-bool BytecodeEmitter::emitElemOpBase(JSOp op) {
+bool BytecodeEmitter::emitElemOpBase(JSOp op,
+                                     ShouldInstrument shouldInstrument) {
+  if (shouldInstrument != ShouldInstrument::No &&
+      !emitInstrumentationForOpcode(op, 0)) {
+    return false;
+  }
+
   if (!emit1(op)) {
     return false;
   }
@@ -2266,6 +2296,11 @@ bool BytecodeEmitter::allocateResumeIndexRange(
 }
 
 bool BytecodeEmitter::emitYieldOp(JSOp op) {
+  // All yield operations pop or suspend the current frame.
+  if (!emitInstrumentation(InstrumentationKind::Exit)) {
+    return false;
+  }
+
   if (op == JSOP_FINALYIELDRVAL) {
     return emit1(JSOP_FINALYIELDRVAL);
   }
@@ -2287,6 +2322,10 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
   }
 
   SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
+
+  if (!emitInstrumentation(InstrumentationKind::Entry)) {
+    return false;
+  }
 
   BytecodeOffset unusedOffset;
   return emitJumpTargetOp(JSOP_AFTERYIELD, &unusedOffset);
@@ -2419,7 +2458,9 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       return false;
     }
 
-    switchToMain();
+    if (!switchToMain()) {
+      return false;
+    }
 
     ParseNode* scopeBody = scope->scopeBody();
     if (!emitLexicalScopeBody(scopeBody, EMIT_LINENOTE)) {
@@ -2440,7 +2481,9 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
       }
     }
 
-    switchToMain();
+    if (!switchToMain()) {
+      return false;
+    }
 
     if (!emitTree(body)) {
       return false;
@@ -2454,7 +2497,7 @@ bool BytecodeEmitter::emitScript(ParseNode* body) {
     return false;
   }
 
-  if (!emit1(JSOP_RETRVAL)) {
+  if (!emitReturnRval()) {
     return false;
   }
 
@@ -2954,12 +2997,8 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
       //            [stack] ... RET ITER UNDEF
       return false;
     }
-    if (!emitDupAt(2)) {
+    if (!emitDupAt(2, 2)) {
       //            [stack] ... RET ITER UNDEF RET
-      return false;
-    }
-    if (!emitDupAt(2)) {
-      //            [stack] ... RET ITER UNDEF RET ITER
       return false;
     }
   }
@@ -2998,15 +3037,11 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
     }
 
     if (!tryCatch->emitCatch()) {
-      //            [stack] ... RET ITER RESULT
+      //            [stack] ... RET ITER RESULT EXC
       return false;
     }
 
     // Just ignore the exception thrown by call and await.
-    if (!emit1(JSOP_EXCEPTION)) {
-      //            [stack] ... RET ITER RESULT EXC
-      return false;
-    }
     if (!emit1(JSOP_POP)) {
       //            [stack] ... RET ITER RESULT
       return false;
@@ -3378,12 +3413,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
 
       // If iterator is not completed, create a new array with the rest
       // of the iterator.
-      if (!emitDupAt(emitted + 1)) {
+      if (!emitDupAt(emitted + 1, 2)) {
         //          [stack] ... OBJ NEXT ITER LREF* NEXT
-        return false;
-      }
-      if (!emitDupAt(emitted + 1)) {
-        //          [stack] ... OBJ NEXT ITER LREF* NEXT ITER
         return false;
       }
       if (!emitUint32Operand(JSOP_NEWARRAY, 0)) {
@@ -3474,12 +3505,8 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
       }
     }
 
-    if (!emitDupAt(emitted + 1)) {
+    if (!emitDupAt(emitted + 1, 2)) {
       //            [stack] ... OBJ NEXT ITER LREF* NEXT
-      return false;
-    }
-    if (!emitDupAt(emitted + 1)) {
-      //            [stack] ... OBJ NEXT ITER LREF* NEXT ITER
       return false;
     }
     if (!emitIteratorNext(Some(pattern->pn_pos.begin))) {
@@ -3735,7 +3762,8 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
         }
       } else if (key->isKind(ParseNodeKind::ObjectPropertyName) ||
                  key->isKind(ParseNodeKind::StringExpr)) {
-        if (!emitAtomOp(key->as<NameNode>().atom(), JSOP_GETPROP)) {
+        if (!emitAtomOp(key->as<NameNode>().atom(), JSOP_GETPROP,
+                        ShouldInstrument::Yes)) {
           //        [stack] ... SET? RHS LREF* PROP
           return false;
         }
@@ -4593,11 +4621,6 @@ bool BytecodeEmitter::emitCatch(BinaryNode* catchClause) {
   // We must be nested under a try-finally statement.
   MOZ_ASSERT(innermostNestableControl->is<TryFinallyControl>());
 
-  /* Pick up the pending exception and bind it to the catch variable. */
-  if (!emit1(JSOP_EXCEPTION)) {
-    return false;
-  }
-
   ParseNode* param = catchClause->left();
   if (!param) {
     // Catch parameter was omitted; just discard the exception.
@@ -5215,12 +5238,8 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    if (!emitDupAt(3)) {
+    if (!emitDupAt(3, 2)) {
       //            [stack] NEXT ITER ARR I NEXT
-      return false;
-    }
-    if (!emitDupAt(3)) {
-      //            [stack] NEXT ITER ARR I NEXT ITER
       return false;
     }
     if (!emitIteratorNext(Nothing(), IteratorKind::Sync, allowSelfHosted)) {
@@ -6073,13 +6092,16 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
     }
   } else if (isDerivedClassConstructor) {
     MOZ_ASSERT(bytecodeSection().code()[top.value()] == JSOP_SETRVAL);
-    if (!emit1(JSOP_RETRVAL)) {
+    if (!emitReturnRval()) {
       return false;
     }
   } else if (top + BytecodeOffsetDiff(JSOP_RETURN_LENGTH) !=
-             bytecodeSection().offset()) {
+             bytecodeSection().offset() ||
+             // If we are instrumenting, make sure we use RETRVAL and add any
+             // instrumentation for the frame exit.
+             instrumentationKinds) {
     bytecodeSection().code()[top.value()] = JSOP_SETRVAL;
-    if (!emit1(JSOP_RETRVAL)) {
+    if (!emitReturnRval()) {
       return false;
     }
   }
@@ -6319,16 +6341,13 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   }
 
   if (!tryCatch.emitCatch()) {
-    //              [stack] NEXT ITER RESULT
-    return false;
-  }
-
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
-
-  if (!emit1(JSOP_EXCEPTION)) {
     //              [stack] NEXT ITER RESULT EXCEPTION
     return false;
   }
+
+  // The exception was already pushed by emitCatch().
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth + 1);
+
   if (!emitDupAt(2)) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER
     return false;
@@ -8862,6 +8881,140 @@ bool BytecodeEmitter::emitExportDefault(BinaryNode* exportNode) {
   }
 
   return true;
+}
+
+MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationSlow(
+    InstrumentationKind kind,
+    const std::function<bool(uint32_t)>& pushOperandsCallback) {
+  MOZ_ASSERT(instrumentationKinds);
+
+  if (!(instrumentationKinds & (uint32_t) kind)) {
+    return true;
+  }
+
+  // Instrumentation is emitted in the form of a call to the realm's
+  // instrumentation callback, guarded by a test of whether instrumentation is
+  // currently active in the realm. The callback is invoked with the kind of
+  // operation which is executing, the current script's instrumentation ID, and
+  // the offset of the bytecode location after the instrumentation. Some
+  // operation kinds have more arguments, which will be pushed by
+  // pushOperandsCallback.
+
+  unsigned initialDepth = bytecodeSection().stackDepth();
+  InternalIfEmitter ifEmitter(this);
+
+  if (!emit1(JSOP_INSTRUMENTATION_ACTIVE)) {
+    return false;
+  }
+  //                [stack] ACTIVE
+
+  if (!ifEmitter.emitThen()) {
+    return false;
+  }
+  //                [stack]
+
+  // Push the instrumentation callback for the current realm as the callee.
+  if (!emit1(JSOP_INSTRUMENTATION_CALLBACK)) {
+    return false;
+  }
+  //                [stack] CALLBACK
+
+  // Push undefined for the call's |this| value.
+  if (!emit1(JSOP_UNDEFINED)) {
+    return false;
+  }
+  //                [stack] CALLBACK UNDEFINED
+
+  JSAtom* atom = RealmInstrumentation::getInstrumentationKindName(cx, kind);
+  if (!atom) {
+    return false;
+  }
+
+  uint32_t index;
+  if (!makeAtomIndex(atom, &index)) {
+    return false;
+  }
+
+  if (!emitAtomOp(index, JSOP_STRING)) {
+    return false;
+  }
+  //                [stack] CALLBACK UNDEFINED KIND
+
+  if (!emit1(JSOP_INSTRUMENTATION_SCRIPT_ID)) {
+    return false;
+  }
+  //                [stack] CALLBACK UNDEFINED KIND SCRIPT
+
+  // Push the offset of the bytecode location following the instrumentation.
+  BytecodeOffset updateOffset;
+  if (!emitN(JSOP_INT32, 4, &updateOffset)) {
+    return false;
+  }
+  //                [stack] CALLBACK UNDEFINED KIND SCRIPT OFFSET
+
+  unsigned numPushed = bytecodeSection().stackDepth() - initialDepth;
+
+  if (pushOperandsCallback && !pushOperandsCallback(numPushed)) {
+    return false;
+  }
+  //                [stack] CALLBACK UNDEFINED KIND SCRIPT OFFSET ...EXTRA_ARGS
+
+  unsigned argc = bytecodeSection().stackDepth() - initialDepth - 2;
+  if (!emitCall(JSOP_CALL_IGNORES_RV, argc)) {
+    return false;
+  }
+  //                [stack] RV
+
+  if (!emit1(JSOP_POP)) {
+    return false;
+  }
+  //                [stack]
+
+  if (!ifEmitter.emitEnd()) {
+    return false;
+  }
+
+  SET_INT32(bytecodeSection().code(updateOffset),
+            bytecodeSection().code().length());
+
+  return true;
+}
+
+MOZ_NEVER_INLINE bool BytecodeEmitter::emitInstrumentationForOpcodeSlow(
+    JSOp op, uint32_t atomIndex) {
+  MOZ_ASSERT(instrumentationKinds);
+
+  switch (op) {
+    case JSOP_GETPROP:
+    case JSOP_CALLPROP:
+    case JSOP_LENGTH:
+      return emitInstrumentationSlow(InstrumentationKind::GetProperty,
+                                     [=](uint32_t pushed) {
+          return emitDupAt(pushed) && emitAtomOp(atomIndex, JSOP_STRING);
+        });
+    case JSOP_SETPROP:
+    case JSOP_STRICTSETPROP:
+      return emitInstrumentationSlow(InstrumentationKind::SetProperty,
+                                     [=](uint32_t pushed) {
+          return emitDupAt(pushed + 1) &&
+                 emitAtomOp(atomIndex, JSOP_STRING) &&
+                 emitDupAt(pushed + 2);
+        });
+    case JSOP_GETELEM:
+    case JSOP_CALLELEM:
+      return emitInstrumentationSlow(InstrumentationKind::GetElement,
+                                     [=](uint32_t pushed) {
+          return emitDupAt(pushed + 1, 2);
+        });
+    case JSOP_SETELEM:
+    case JSOP_STRICTSETELEM:
+      return emitInstrumentationSlow(InstrumentationKind::SetElement,
+                                     [=](uint32_t pushed) {
+          return emitDupAt(pushed + 2, 3);
+        });
+    default:
+      return true;
+  }
 }
 
 bool BytecodeEmitter::emitTree(

@@ -23,6 +23,7 @@
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
 #include "vm/RegExpStatics.h"
 #include "vm/SelfHosting.h"
@@ -2484,6 +2485,15 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
 
     case JSOP_LOOPENTRY:
       return jsop_loopentry();
+
+    case JSOP_INSTRUMENTATION_ACTIVE:
+      return jsop_instrumentation_active();
+
+    case JSOP_INSTRUMENTATION_CALLBACK:
+      return jsop_instrumentation_callback();
+
+    case JSOP_INSTRUMENTATION_SCRIPT_ID:
+      return jsop_instrumentation_scriptid();
 
     // ===== NOT Yet Implemented =====
     // Read below!
@@ -13477,6 +13487,35 @@ AbortReasonOr<Ok> IonBuilder::jsop_dynamic_import() {
   current->add(ins);
   current->push(ins);
   return resumeAfter(ins);
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_instrumentation_active() {
+  // All IonScripts in the realm are discarded when instrumentation activity
+  // changes, so we can treat the value we get as a constant.
+  bool active = RealmInstrumentation::isActive(&script()->global());
+  pushConstant(BooleanValue(active));
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_instrumentation_callback() {
+  JSObject* obj = RealmInstrumentation::getCallback(&script()->global());
+  MOZ_ASSERT(obj);
+  pushConstant(ObjectValue(*obj));
+  return Ok();
+}
+
+AbortReasonOr<Ok> IonBuilder::jsop_instrumentation_scriptid() {
+  // Getting the script ID requires interacting with the Debugger used for
+  // instrumentation, but cannot run script.
+  JSContext* cx = TlsContext.get();
+
+  int32_t scriptId;
+  RootedScript script(cx, this->script());
+  if (!RealmInstrumentation::getScriptId(cx, cx->global(), script, &scriptId)) {
+    return abort(AbortReason::Error);
+  }
+  pushConstant(Int32Value(scriptId));
+  return Ok();
 }
 
 MInstruction* IonBuilder::addConvertElementsToDoubles(MDefinition* elements) {

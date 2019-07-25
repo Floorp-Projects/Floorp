@@ -31,7 +31,7 @@ struct BytecodeEmitter;
 //     tryCatch.emitTry();
 //     emit(try_block);
 //     tryCatch.emitCatch();
-//     emit(ex and catch_block); // use JSOP_EXCEPTION to get exception
+//     emit(catch_block); // Pending exception is on stack
 //     tryCatch.emitEnd();
 //
 //   `try { try_block } finally { finally_block }`
@@ -50,7 +50,7 @@ struct BytecodeEmitter;
 //     tryCatch.emitTry();
 //     emit(try_block);
 //     tryCatch.emitCatch();
-//     emit(ex and catch_block);
+//     emit(catch_block);
 //     tryCatch.emitFinally(Some(finally_pos));
 //     emit(finally_block);
 //     tryCatch.emitEnd();
@@ -211,6 +211,7 @@ class MOZ_STACK_CLASS TryEmitter {
   MOZ_MUST_USE bool emitTryEnd();
   MOZ_MUST_USE bool emitCatchEnd();
   MOZ_MUST_USE bool emitFinallyEnd();
+  MOZ_MUST_USE bool instrumentEntryPoint();
 };
 
 } /* namespace frontend */
