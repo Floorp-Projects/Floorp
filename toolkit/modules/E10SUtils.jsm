@@ -331,7 +331,8 @@ var E10SUtils = {
         if (flags & Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD) {
           if (
             flags & Ci.nsIAboutModule.URI_CAN_LOAD_IN_PRIVILEGEDABOUT_PROCESS &&
-            useSeparatePrivilegedAboutContentProcess
+            (useSeparatePrivilegedAboutContentProcess ||
+              aURI.filePath == "logins")
           ) {
             return PRIVILEGEDABOUT_REMOTE_TYPE;
           }

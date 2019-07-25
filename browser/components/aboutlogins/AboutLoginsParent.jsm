@@ -43,18 +43,9 @@ XPCOMUtils.defineLazyPreferenceGetter(
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
 
-const PRIVILEGEDABOUT_PROCESS_PREF =
-  "browser.tabs.remote.separatePrivilegedContentProcess";
-const PRIVILEGEDABOUT_PROCESS_ENABLED = Services.prefs.getBoolPref(
-  PRIVILEGEDABOUT_PROCESS_PREF,
-  false
-);
-
-// When the privileged content process is enabled, we expect about:logins
-// to load in it. Otherwise, it's in a normal web content process.
-const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = PRIVILEGEDABOUT_PROCESS_ENABLED
-  ? E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE
-  : E10SUtils.DEFAULT_REMOTE_TYPE;
+// about:logins will always use the privileged content process,
+// even if it is disabled for other consumers such as about:newtab.
+const EXPECTED_ABOUTLOGINS_REMOTE_TYPE = E10SUtils.PRIVILEGEDABOUT_REMOTE_TYPE;
 
 const convertSubjectToLogin = subject => {
   subject.QueryInterface(Ci.nsILoginMetaInfo).QueryInterface(Ci.nsILoginInfo);
