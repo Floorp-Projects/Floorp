@@ -233,7 +233,7 @@ add_task(async function test_keyword_with_question_mark() {
     UrlbarUtils.RESULT_TYPE.SEARCH,
     "Result should be a search"
   );
-  Assert.equal(result.searchParams.query, "question", "Check search query");
+  Assert.equal(result.searchParams.query, "question?", "Check search query");
 
   result = await promise_first_result("question? something");
   Assert.equal(
