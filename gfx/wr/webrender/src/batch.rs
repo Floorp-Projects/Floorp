@@ -1119,10 +1119,6 @@ impl BatchBuilder {
                                 gpu_cache,
                             );
 
-                            // Need a new z-id for each child preserve-3d context added
-                            // by this inner loop.
-                            let z_id = z_generator.next();
-
                             let prim_header_index = prim_headers.push(&prim_header, z_id, [
                                 uv_rect_address.as_int(),
                                 if raster_config.establishes_raster_root { 1 } else { 0 },
@@ -1138,11 +1134,11 @@ impl BatchBuilder {
 
                             self.add_split_composite_instance_to_batches(
                                 key,
-                                &child_prim_info.clip_chain.pic_clip_rect,
+                                &prim_info.clip_chain.pic_clip_rect,
                                 z_id,
                                 prim_header_index,
                                 child.gpu_address,
-                                child_prim_info.visibility_mask,
+                                prim_info.visibility_mask,
                             );
                         }
                     }
