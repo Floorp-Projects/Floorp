@@ -525,7 +525,13 @@ class nsLineBox final : public nsLineLink {
 
   void AddSizeOfExcludingThis(nsWindowSizes& aSizes) const;
 
+  // Find the index of aFrame within the line, starting search at the start.
   int32_t IndexOf(nsIFrame* aFrame) const;
+
+  // Find the index of aFrame within the line, starting search at the end.
+  // (Produces the same result as IndexOf, but with different performance
+  // characteristics.)  The caller must provide the last frame in the line.
+  int32_t RIndexOf(nsIFrame* aFrame, nsIFrame* aLastFrameInLine) const;
 
   bool Contains(nsIFrame* aFrame) const {
     return MOZ_UNLIKELY(mFlags.mHasHashedFrames) ? mFrames->Contains(aFrame)
