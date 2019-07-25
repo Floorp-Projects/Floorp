@@ -11,8 +11,8 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 if (!isWorker) {
   loader.lazyRequireGetter(
     this,
-    "Parser",
-    "devtools/shared/webconsole/parser",
+    "getSyntaxTrees",
+    "devtools/shared/webconsole/parser-helper",
     true
   );
 }
@@ -399,13 +399,10 @@ function JSPropertyProvider({
   // Don't run this is a worker, migrating to acorn should allow this
   // to run in a worker - Bug 1217198.
   if (!isWorker && lastCompletionCharIndex > 0) {
-    const parser = new Parser();
-    parser.logExceptions = false;
     const parsedExpression = completionPart.slice(0, lastCompletionCharIndex);
-    const syntaxTree = parser.get(parsedExpression);
-    const lastTree = syntaxTree.getLastSyntaxTree();
-    const lastBody =
-      lastTree && lastTree.AST.body[lastTree.AST.body.length - 1];
+    const syntaxTrees = getSyntaxTrees(parsedExpression);
+    const lastTree = syntaxTrees[syntaxTrees.length - 1];
+    const lastBody = lastTree && lastTree.body[lastTree.body.length - 1];
 
     // Finding the last expression since we've sliced up until the dot.
     // If there were parse errors this won't exist.
