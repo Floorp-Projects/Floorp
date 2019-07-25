@@ -13,7 +13,13 @@ var EXPORTED_SYMBOLS = ["NormandyTestUtils"];
 let _addonStudyFactoryId = 0;
 let _preferenceStudyFactoryId = 0;
 
+let testGlobals = {};
+
 const NormandyTestUtils = {
+  init({ add_task } = {}) {
+    testGlobals.add_task = add_task;
+  },
+
   factories: {
     addonStudyFactory(attrs) {
       for (const key of ["name", "description"]) {
@@ -88,5 +94,50 @@ const NormandyTestUtils = {
         }
       );
     },
+  },
+
+  /**
+   * Combine a list of functions right to left. The rightmost function is passed
+   * to the preceding function as the argument; the result of this is passed to
+   * the next function until all are exhausted. For example, this:
+   *
+   * decorate(func1, func2, func3);
+   *
+   * is equivalent to this:
+   *
+   * func1(func2(func3));
+   */
+  decorate(...args) {
+    const funcs = Array.from(args);
+    let decorated = funcs.pop();
+    const origName = decorated.name;
+    funcs.reverse();
+    for (const func of funcs) {
+      decorated = func(decorated);
+    }
+    Object.defineProperty(decorated, "name", { value: origName });
+    return decorated;
+  },
+
+  /**
+   * Wrapper around add_task for declaring tests that use several with-style
+   * wrappers. The last argument should be your test function; all other arguments
+   * should be functions that accept a single test function argument.
+   *
+   * The arguments are combined using decorate and passed to add_task as a single
+   * test function.
+   *
+   * @param {[Function]} args
+   * @example
+   *   decorate_task(
+   *     withMockPreferences,
+   *     withMockNormandyApi,
+   *     async function myTest(mockPreferences, mockApi) {
+   *       // Do a test
+   *     }
+   *   );
+   */
+  decorate_task(...args) {
+    return testGlobals.add_task(NormandyTestUtils.decorate(...args));
   },
 };
