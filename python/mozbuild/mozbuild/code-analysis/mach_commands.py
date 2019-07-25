@@ -79,6 +79,10 @@ class StaticAnalysisMonitor(object):
         self._warnings_database = WarningsDatabase()
 
         def on_warning(warning):
+
+            # Output paths relative to repository root
+            warning['filename'] = os.path.relpath(warning['filename'], srcdir)
+
             self._warnings_database.insert(warning)
 
         self._warnings_collector = WarningsCollector(on_warning, objdir=objdir)
