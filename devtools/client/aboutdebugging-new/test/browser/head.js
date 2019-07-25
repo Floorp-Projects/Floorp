@@ -24,6 +24,10 @@ Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-mocks.js", this);
 
 // Make sure the ADB addon is removed and ADB is stopped when the test ends.
 registerCleanupFunction(async function() {
+  // Reset the selected tool in case we opened about:devtools-toolbox to
+  // avoid side effects between tests.
+  Services.prefs.clearUserPref("devtools.toolbox.selectedTool");
+
   try {
     const { adbAddon } = require("devtools/shared/adb/adb-addon");
     await adbAddon.uninstall();
@@ -118,6 +122,12 @@ async function closeAboutDevtoolsToolbox(
   devtoolsTab,
   win
 ) {
+  // Wait for all requests to settle on the opened about:devtools toolbox.
+  const devtoolsBrowser = devtoolsTab.linkedBrowser;
+  const devtoolsWindow = devtoolsBrowser.contentWindow;
+  const toolbox = getToolbox(devtoolsWindow);
+  await toolbox.target.client.waitForRequestsToSettle();
+
   info("Close about:devtools-toolbox page");
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
 
