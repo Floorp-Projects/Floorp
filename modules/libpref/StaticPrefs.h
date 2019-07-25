@@ -18,7 +18,7 @@
 #include <cmath>  // for M_PI
 
 #include "mozilla/StaticPrefListBegin.h"
-#include "mozilla/StaticPrefList.h"
+#include "mozilla/StaticPrefListAll.h"
 #include "mozilla/StaticPrefListEnd.h"
 
 #endif  // mozilla_StaticPrefs_h
