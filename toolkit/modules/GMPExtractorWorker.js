@@ -60,6 +60,20 @@ onmessage = async function(msg) {
       // Ensure files are writable and executable. Otherwise, we may be
       // unable to execute or uninstall them.
       await OS.File.setPermissions(destPath, { unixMode: 0o700 });
+      if (OS.Constants.Sys.Name == "Darwin") {
+        // If we're on MacOS Firefox will add the quarantine xattr to files it
+        // downloads. In this case we want to clear that xattr so we can load
+        // the CDM.
+        try {
+          await OS.File.macRemoveXAttr(destPath, "com.apple.quarantine");
+        } catch (e) {
+          // Failed to remove the attribute. This could be because the profile
+          // exists on a file system without xattr support.
+          //
+          // Don't fail the extraction here, as in this case it's likely we
+          // didn't set quarantine on these files in the first place.
+        }
+      }
       extractedPaths.push(destPath);
     }
     postMessage({
