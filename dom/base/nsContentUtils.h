@@ -2047,15 +2047,6 @@ class nsContentUtils {
    */
   static bool IsInStableOrMetaStableState();
 
-  /* Process viewport META data. This gives us information for the scale
-   * and zoom of a page on mobile devices. We stick the information in
-   * the document header and use it later on after rendering.
-   *
-   * See Bug #436083
-   */
-  static nsresult ProcessViewportInfo(Document* aDocument,
-                                      const nsAString& viewportInfo);
-
   static JSContext* GetCurrentJSContext();
 
   /**
