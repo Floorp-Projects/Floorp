@@ -3187,8 +3187,7 @@ bool DebugAPI::ensureExecutionObservabilityOfOsrFrame(
     return true;
   }
   ExecutionObservableFrame obs(osrSourceFrame);
-  return Debugger::updateExecutionObservabilityOfFrames(cx, obs,
-                                                        Debugger::Observing);
+  return Debugger::updateExecutionObservabilityOfFrames(cx, obs, Observing);
 }
 
 /* static */
