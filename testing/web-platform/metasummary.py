@@ -259,6 +259,7 @@ def add_metadata(target, key, metadata):
             target[prop] = get_condition_value_list(metadata, prop)
 
     if metadata.has_key("expected"):
+        intermittent = []
         values = metadata.get("expected")
         by_status = defaultdict(list)
         for item in values:
@@ -268,12 +269,18 @@ def add_metadata(target, key, metadata):
                 condition = None
                 status = item
             if isinstance(status, list):
-                status = status[0]
-            by_status[status].append(condition)
+                intermittent.append((condition, status))
+                expected_status = status[0]
+            else:
+                expected_status = status
+            by_status[expected_status].append(condition)
         for status in statuses:
             if status in by_status:
                 target["expected_%s" % status] = [serialize(item) if item else None
                                                   for item in by_status[status]]
+        if intermittent:
+            target["intermittent"] = [[serialize(cond) if cond else None, intermittent_statuses]
+                                      for cond, intermittent_statuses in intermittent]
 
 
 def get_condition_value_list(metadata, key):
@@ -292,14 +299,13 @@ def is_interesting(metadata):
         return True
 
     if metadata.has_key("expected"):
-        for expected_statuses in metadata.get("expected"):
+        for expected_value in metadata.get("expected"):
             # Include both expected and known intermittent values
-            if isinstance(expected_statuses, tuple):
-                expected_statuses = expected_statuses[1]
-            if not isinstance(expected_statuses, list):
-                expected_statuses = [expected_statuses]
-            for expected_status in expected_statuses:
-                if expected_status in statuses:
-                    return True
+            if isinstance(expected_value, tuple):
+                expected_value = expected_value[1]
+            if isinstance(expected_value, list):
+                return True
+            if expected_value in statuses:
+                return True
             return True
     return False
