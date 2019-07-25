@@ -1215,7 +1215,7 @@ pref("javascript.options.blinterp",         true);
 pref("javascript.options.blinterp.threshold", 10);
 pref("javascript.options.baselinejit",      true);
 // Duplicated in JitOptions - ensure both match.
-pref("javascript.options.baselinejit.threshold", 50);
+pref("javascript.options.baselinejit.threshold", 100);
 pref("javascript.options.ion",              true);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1000);

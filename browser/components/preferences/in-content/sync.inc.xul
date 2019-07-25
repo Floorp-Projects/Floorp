@@ -156,23 +156,23 @@
             <vbox flex="1">
               <!-- by design, no tooltip for bookmarks or history -->
               <checkbox data-l10n-id="sync-engine-bookmarks"
-                        preference="engine.bookmarks"/>
+                        preference="services.sync.engine.bookmarks"/>
               <checkbox data-l10n-id="sync-engine-history"
-                        preference="engine.history"/>
+                        preference="services.sync.engine.history"/>
               <checkbox data-l10n-id="sync-engine-tabs"
-                        preference="engine.tabs"/>
+                        preference="services.sync.engine.tabs"/>
               <checkbox data-l10n-id="sync-engine-logins"
-                        preference="engine.passwords"/>
+                        preference="services.sync.engine.passwords"/>
             </vbox>
             <vbox flex="1">
               <checkbox data-l10n-id="sync-engine-addresses"
-                        preference="engine.addresses"/>
+                        preference="services.sync.engine.addresses"/>
               <checkbox data-l10n-id="sync-engine-creditcards"
-                        preference="engine.creditcards"/>
+                        preference="services.sync.engine.creditcards"/>
               <checkbox data-l10n-id="sync-engine-addons"
-                        preference="engine.addons"/>
+                        preference="services.sync.engine.addons"/>
               <checkbox data-l10n-id="sync-engine-prefs"
-                        preference="engine.prefs"/>
+                        preference="services.sync.engine.prefs"/>
             </vbox>
             <spacer/>
           </hbox>
