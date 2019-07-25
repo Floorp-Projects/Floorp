@@ -76,7 +76,7 @@ export default class LoginItem extends HTMLElement {
     window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
-  render() {
+  async render() {
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
     });
@@ -97,10 +97,10 @@ export default class LoginItem extends HTMLElement {
         ? "login-item-save-new-button"
         : "login-item-save-changes-button"
     );
-    this._updatePasswordRevealState();
+    await this._updatePasswordRevealState();
   }
 
-  handleEvent(event) {
+  async handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsCreateLogin": {
         this.setLogin({});
@@ -128,7 +128,7 @@ export default class LoginItem extends HTMLElement {
       case "click": {
         let classList = event.currentTarget.classList;
         if (classList.contains("reveal-password-checkbox")) {
-          this._updatePasswordRevealState();
+          await this._updatePasswordRevealState();
 
           let method = this._revealCheckbox.checked ? "show" : "hide";
           recordTelemetryEvent({ object: "password", method });
@@ -154,6 +154,15 @@ export default class LoginItem extends HTMLElement {
           classList.contains("copy-username-button")
         ) {
           let copyButton = event.currentTarget;
+          if (copyButton.dataset.copyLoginProperty == "password") {
+            let masterPasswordAuth = await new Promise(resolve => {
+              window.AboutLoginsUtils.promptForMasterPassword(resolve);
+            });
+            if (!masterPasswordAuth) {
+              return;
+            }
+          }
+
           copyButton.disabled = true;
           copyButton.dataset.copied = true;
           let propertyToCopy = this._login[
@@ -408,7 +417,17 @@ export default class LoginItem extends HTMLElement {
     }
   }
 
-  _updatePasswordRevealState() {
+  async _updatePasswordRevealState() {
+    if (this._revealCheckbox.checked) {
+      let masterPasswordAuth = await new Promise(resolve => {
+        window.AboutLoginsUtils.promptForMasterPassword(resolve);
+      });
+      if (!masterPasswordAuth) {
+        this._revealCheckbox.checked = false;
+        return;
+      }
+    }
+
     let titleId = this._revealCheckbox.checked
       ? "login-item-password-reveal-checkbox-hide"
       : "login-item-password-reveal-checkbox-show";
