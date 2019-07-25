@@ -1615,7 +1615,7 @@ Inspector.prototype = {
     const ruleViewSideBarDestroyer = this.ruleViewSideBar
       ? this.ruleViewSideBar.destroy()
       : null;
-    const markupDestroyer = this._destroyMarkup();
+    this._destroyMarkup();
 
     this.teardownToolbar();
 
@@ -1643,7 +1643,6 @@ Inspector.prototype = {
     this.telemetry = null;
 
     this._panelDestroyer = promise.all([
-      markupDestroyer,
       sidebarDestroyer,
       ruleViewSideBarDestroyer,
     ]);
