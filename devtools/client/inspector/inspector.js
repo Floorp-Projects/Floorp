@@ -322,7 +322,7 @@ Inspector.prototype = {
    * while still initializing (and making protocol requests).
    */
   _handleRejectionIfNotDestroyed: function(e) {
-    if (!this._panelDestroyer) {
+    if (!this._destroyed) {
       console.error(e);
     }
   },
@@ -1378,7 +1378,7 @@ Inspector.prototype = {
    * reload
    */
   set selectionCssSelector(cssSelector = null) {
-    if (this._panelDestroyer) {
+    if (this._destroyed) {
       return;
     }
 
@@ -1563,9 +1563,10 @@ Inspector.prototype = {
    * Destroy the inspector.
    */
   destroy: function() {
-    if (this._panelDestroyer) {
-      return this._panelDestroyer;
+    if (this._destroyed) {
+      return;
     }
+    this._destroyed = true;
 
     this._target.threadFront.off("paused", this.handleThreadPaused);
     this._target.threadFront.off("resumed", this.handleThreadResumed);
@@ -1641,10 +1642,6 @@ Inspector.prototype = {
     this.sidebar = null;
     this.store = null;
     this.telemetry = null;
-
-    this._panelDestroyer = Promise.resolve();
-
-    return this._panelDestroyer;
   },
 
   _initMarkup: function() {
