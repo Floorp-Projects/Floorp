@@ -997,7 +997,7 @@ void DocAccessible::ARIAActiveDescendantChanged(Accessible* aAccessible) {
     nsAutoString id;
     if (elm->AsElement()->GetAttr(kNameSpaceID_None,
                                   nsGkAtoms::aria_activedescendant, id)) {
-      dom::Element* activeDescendantElm = elm->OwnerDoc()->GetElementById(id);
+      dom::Element* activeDescendantElm = IDRefsIterator::GetElem(elm, id);
       if (activeDescendantElm) {
         Accessible* activeDescendant = GetAccessible(activeDescendantElm);
         if (activeDescendant) {

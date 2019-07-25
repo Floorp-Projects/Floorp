@@ -2449,8 +2449,7 @@ Accessible* Accessible::CurrentItem() const {
   if (HasOwnContent() && mContent->IsElement() &&
       mContent->AsElement()->GetAttr(kNameSpaceID_None,
                                      nsGkAtoms::aria_activedescendant, id)) {
-    dom::Document* DOMDoc = mContent->OwnerDoc();
-    dom::Element* activeDescendantElm = DOMDoc->GetElementById(id);
+    dom::Element* activeDescendantElm = IDRefsIterator::GetElem(mContent, id);
     if (activeDescendantElm) {
       if (mContent->IsInclusiveDescendantOf(activeDescendantElm)) {
         // Don't want a cyclical descendant relationship. That would be bad.
