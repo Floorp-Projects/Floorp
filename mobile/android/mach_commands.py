@@ -126,9 +126,11 @@ class MachCommands(MachCommandBase):
 
             print('SUITE-START | android-api-lint')
             for r in result['compat_failures'] + result['failures']:
-                print ('TEST-UNEXPECTED-FAIL | {} | {}'.format(r['detail'], r['msg']))
+                print ('TEST-UNEXPECTED-FAIL | {}:{}:{} | {}'.format(
+                    r['file'], r['line'], r['column'], r['msg']))
             for r in result['api_changes']:
-                print ('TEST-UNEXPECTED-FAIL | {} | Unexpected api change'.format(r))
+                print ('TEST-UNEXPECTED-FAIL | {}:{}:{} | Unexpected api change'.format(
+                    r['file'], r['line'], r['column']))
             print('SUITE-END | android-api-lint')
 
         return ret
