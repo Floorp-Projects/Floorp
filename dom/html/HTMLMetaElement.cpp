@@ -58,9 +58,7 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
     if (aName == nsGkAtoms::content) {
       if (document && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                                   nsGkAtoms::viewport, eIgnoreCase)) {
-        nsAutoString content;
-        GetContent(content);
-        ViewportMetaData::ProcessViewportInfo(document, content);
+        ProcessViewportContent(document);
       }
       CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
     }
@@ -81,9 +79,7 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
   Document& doc = aContext.OwnerDoc();
   if (AttrValueIs(kNameSpaceID_None, nsGkAtoms::name, nsGkAtoms::viewport,
                   eIgnoreCase)) {
-    nsAutoString content;
-    GetContent(content);
-    ViewportMetaData::ProcessViewportInfo(&doc, content);
+    ProcessViewportContent(&doc);
   }
 
   if (StaticPrefs::security_csp_enable() && !doc.IsLoadedAsData() &&
@@ -154,6 +150,12 @@ void HTMLMetaElement::CreateAndDispatchEvent(Document* aDoc,
 JSObject* HTMLMetaElement::WrapNode(JSContext* aCx,
                                     JS::Handle<JSObject*> aGivenProto) {
   return HTMLMetaElement_Binding::Wrap(aCx, this, aGivenProto);
+}
+
+void HTMLMetaElement::ProcessViewportContent(Document* aDocument) {
+  nsAutoString content;
+  GetContent(content);
+  ViewportMetaData::ProcessViewportInfo(aDocument, content);
 }
 
 }  // namespace dom
