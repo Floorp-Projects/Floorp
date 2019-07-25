@@ -5,10 +5,10 @@
 # This file defines static prefs, i.e. those that are defined at startup and
 # used entirely or mostly from C++ code.
 #
-# The file is separated into sections, where the sections are determined by
-# the first segment of the prefnames within (e.g. "network.predictor.enabled"
-# is within the `Prefs starting with "network."` section). Sections must be
-# kept in alphabetical order, but prefs within sections need not be.
+# The file is separated into sections, where each section contains a group of
+# prefs that all share the same first segment of their name -- all the "gfx.*"
+# prefs are together, all the "network.*" prefs are together, etc. Sections
+# must be kept in alphabetical order, but prefs within sections need not be.
 #
 # Basics
 # ------
@@ -21,8 +21,9 @@
 # here.)
 #
 # Please follow the existing prefs naming convention when considering adding a
-# new pref, and don't invent a new first segment unless it's appropriate and
-# there are likely to be multiple prefs with that same first segment.
+# new pref, and don't create a new pref group unless it's appropriate and there
+# are likely to be multiple prefs within that group. (If you do, you'll need to
+# update the `groups` variable in modules/libpref/moz.build.)
 #
 # Definitions
 # -----------
@@ -33,6 +34,7 @@
 #     value: <default-value>               # mandatory
 #     mirror: <never | once | always>      # mandatory
 #     do_not_use_directly: <True | False>  # optional
+#     include: <header-file>               # optional
 #
 # - `name` is the name of the pref, without double-quotes, as it appears
 #   in about:config. It is used in most libpref API functions (from both C++
@@ -98,6 +100,10 @@
 # - If the `do_not_use_directly` value is true, `_DoNotUseDirectly` is
 #   appended.
 #
+# - `include` names a header file that must be included for the pref value to
+#   compile correctly, e.g. because it refers to a code constant. System
+#   headers should be surrounded with angle brackets, e.g. `<cmath>`.
+#
 # Preprocessor
 # ------------
 # Note finally that this file is preprocessed by preprocessor.py, not the C++
@@ -112,7 +118,6 @@
 #
 # - Spaces aren't permitted between the leading '#' and the name of a
 #   directive, e.g. `#ifdef XYZ` works but `# ifdef XYZ` does not.
-
 
 #ifdef RELEASE_OR_BETA
 #define IS_NOT_RELEASE_OR_BETA false
@@ -207,6 +212,7 @@
   type: AtomicFloat
   value: float(M_PI / 8.0)    # 22.5 degrees
   mirror: always
+  include: <cmath>
 
 - name: apz.axis_lock.breakout_threshold
   type: AtomicFloat
@@ -217,11 +223,13 @@
   type: AtomicFloat
   value: float(M_PI / 3.0)    # 60 degrees
   mirror: always
+  include: <cmath>
 
 - name: apz.axis_lock.lock_angle
   type: AtomicFloat
   value: float(M_PI / 6.0)    # 30 degrees
   mirror: always
+  include: <cmath>
 
 - name: apz.axis_lock.mode
   type: RelaxedAtomicInt32
@@ -2584,6 +2592,7 @@
   type: RelaxedAtomicInt32
   value: mozilla::gfx::LOG_DEFAULT
   mirror: always
+  include: mozilla/gfx/LoggingConstants.h
 
 - name: gfx.logging.crash.length
   type: uint32_t

@@ -24,9 +24,78 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'pref'
 
+pref_groups = [
+    'accessibility',
+    'apz',
+    'beacon',
+    'browser',
+    'canvas',
+    'channelclassifier',
+    'clipboard',
+    'device',
+    'devtools',
+    'dom',
+    'editor',
+    'extensions',
+    'fission',
+    'full_screen_api',
+    'general',
+    'geo',
+    'gfx',
+    'gl',
+    'html5',
+    'idle_period',
+    'image',
+    'intl',
+    'javascript',
+    'keyword',
+    'layers',
+    'layout',
+    'media',
+    'mousewheel',
+    'network',
+    'nglayout',
+    'plain_text',
+    'plugins',
+    'preferences',
+    'print',
+    'privacy',
+    'security',
+    'slider',
+    'svg',
+    'telemetry',
+    'test',
+    'threads',
+    'toolkit',
+    'ui',
+    'view_source',
+    'webgl',
+    'widget',
+    'xul',
+]
+if CONFIG['OS_TARGET'] == 'Android':
+    pref_groups += [
+        'consoleservice'
+    ]
+if CONFIG['FUZZING']:
+    pref_groups += [
+        'fuzzing'
+    ]
+pref_groups = tuple(sorted(pref_groups))
+
+UNIFIED_SOURCES += [
+    'Preferences.cpp',
+    'SharedPrefMap.cpp',
+]
+
+# Note: generate_static_pref_list relies on StaticPrefListAll.h being first.
+genfiles = ['init/StaticPrefListAll.h']
+genfiles += ['init/StaticPrefList_{}.h'.format(pg) for pg in pref_groups]
+genfiles += ['StaticPrefsAll.h']
+genfiles += ['StaticPrefs_{}.h'.format(pg) for pg in pref_groups]
+genfiles_tuple = tuple(genfiles)
+
 EXPORTS.mozilla += [
-    '!init/StaticPrefList.h',
-    'init/StaticPrefListAll.h',
     'init/StaticPrefListBegin.h',
     'init/StaticPrefListEnd.h',
     'nsRelativeFilePref.h',
@@ -34,21 +103,13 @@ EXPORTS.mozilla += [
     'StaticPrefs.h',
     'StaticPrefsBase.h',
 ]
+EXPORTS.mozilla += sorted(['!' + gf for gf in genfiles])
 
-GENERATED_FILES += [
-    'init/StaticPrefList.h',
-]
+GENERATED_FILES += [genfiles_tuple]
 
-UNIFIED_SOURCES += [
-    'Preferences.cpp',
-    'SharedPrefMap.cpp',
-]
-
-static_pref_list = GENERATED_FILES['init/StaticPrefList.h']
+static_pref_list = GENERATED_FILES[genfiles_tuple]
 static_pref_list.script = 'init/generate_static_pref_list.py:emit_header'
-static_pref_list.inputs = [
-    'init/StaticPrefList.yaml',
-]
+static_pref_list.inputs = ['init/StaticPrefList.yaml']
 
 PYTHON_UNITTEST_MANIFESTS += [
     'test/python.ini',
