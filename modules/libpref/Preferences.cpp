@@ -5327,6 +5327,10 @@ static void SetPref_int32_t(const char* aName, int32_t aDefaultValue) {
                /* fromInit */ true);
 }
 
+static void SetPref_uint32_t(const char* aName, uint32_t aDefaultValue) {
+  SetPref_int32_t(aName, int32_t(aDefaultValue));
+}
+
 static void SetPref_float(const char* aName, float aDefaultValue) {
   PrefValue value;
   // Convert the value in a locale-independent way.
@@ -5357,7 +5361,7 @@ static void SetPref(const char* aName, int32_t aDefaultValue) {
   SetPref_int32_t(aName, aDefaultValue);
 }
 static void SetPref(const char* aName, uint32_t aDefaultValue) {
-  SetPref_int32_t(aName, int32_t(aDefaultValue));
+  SetPref_uint32_t(aName, aDefaultValue);
 }
 static void SetPref(const char* aName, float aDefaultValue) {
   SetPref_float(aName, aDefaultValue);
