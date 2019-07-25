@@ -124,6 +124,14 @@ bool TryEmitter::emitCatch() {
     }
   }
 
+  if (!bce_->emit1(JSOP_EXCEPTION)) {
+    return false;
+  }
+
+  if (!instrumentEntryPoint()) {
+    return false;
+  }
+
 #ifdef DEBUG
   state_ = State::Catch;
 #endif
@@ -221,6 +229,10 @@ bool TryEmitter::emitFinally(
     }
   }
 
+  if (!instrumentEntryPoint()) {
+    return false;
+  }
+
 #ifdef DEBUG
   state_ = State::Finally;
 #endif
@@ -291,5 +303,17 @@ bool TryEmitter::emitEnd() {
 #ifdef DEBUG
   state_ = State::End;
 #endif
+  return true;
+}
+
+bool TryEmitter::instrumentEntryPoint() {
+  // Frames for async functions can resume execution at catch or finally blocks
+  // if an await operation threw an exception. While the frame might already be
+  // on the stack, the Entry instrumentation kind only indicates that a new
+  // frame *might* have been pushed.
+  if (bce_->sc->isFunctionBox() &&
+      bce_->sc->asFunctionBox()->isAsync()) {
+    return bce_->emitInstrumentation(InstrumentationKind::Entry);
+  }
   return true;
 }
