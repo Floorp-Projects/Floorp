@@ -12,13 +12,3 @@ dbg.onNewGlobalObject = function (global) {
 log = '';
 newGlobal();
 assertEq(log, 'n');
-
-log = '';
-dbg.enabled = false;
-newGlobal();
-assertEq(log, '');
-
-log = '';
-dbg.enabled = true;
-newGlobal();
-assertEq(log, 'n');
