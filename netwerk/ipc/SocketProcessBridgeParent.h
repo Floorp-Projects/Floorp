@@ -29,10 +29,13 @@ class SocketProcessBridgeParent final : public PSocketProcessBridgeParent {
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeferredDestroy();
 
+  bool Closed() const { return mClosed; }
+
  private:
   ~SocketProcessBridgeParent();
 
   ProcessId mId;
+  bool mClosed;
 };
 
 }  // namespace net
