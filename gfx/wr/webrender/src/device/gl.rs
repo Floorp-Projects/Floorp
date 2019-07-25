@@ -30,6 +30,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread;
 use std::time::Duration;
+use crate::util::round_up_to_multiple;
 use webrender_build::shader::ProgramSourceDigest;
 use webrender_build::shader::{parse_shader_source, shader_source_from_file};
 
@@ -1407,6 +1408,10 @@ impl Device {
 
     pub fn get_capabilities(&self) -> &Capabilities {
         &self.capabilities
+    }
+
+    pub fn get_optimal_pbo_stride(&self) -> NonZeroUsize {
+        self.optimal_pbo_stride
     }
 
     pub fn reset_state(&mut self) {
@@ -3333,13 +3338,6 @@ impl<'a, T> Drop for TextureUploader<'a, T> {
             }
             self.target.gl.bind_buffer(gl::PIXEL_UNPACK_BUFFER, 0);
         }
-    }
-}
-
-fn round_up_to_multiple(val: usize, mul: NonZeroUsize) -> usize {
-    match val % mul.get() {
-        rem if rem > 0 => val - rem + mul.get(),
-        _ => val,
     }
 }
 

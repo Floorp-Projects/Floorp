@@ -10,6 +10,7 @@ use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
 use std::{i32, f32, fmt, ptr};
 use std::borrow::Cow;
+use std::num::NonZeroUsize;
 use std::os::raw::c_void;
 use std::sync::Arc;
 use std::mem::replace;
@@ -1191,5 +1192,13 @@ pub fn clamp_to_scale_factor(val: f32, round_down: bool) -> f32 {
         1.0 / scale
     } else {
         scale
+    }
+}
+
+/// Rounds a value up to the nearest multiple of mul
+pub fn round_up_to_multiple(val: usize, mul: NonZeroUsize) -> usize {
+    match val % mul.get() {
+        0 => val,
+        rem => val - rem + mul.get(),
     }
 }
