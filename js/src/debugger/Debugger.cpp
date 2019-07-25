@@ -4946,7 +4946,6 @@ class MOZ_STACK_CLASS Debugger::ScriptQuery : public Debugger::QueryBase {
     if (innermost) {
       for (RealmToScriptMap::Range r = innermostForRealm.all(); !r.empty();
            r.popFront()) {
-        JS::ExposeScriptToActiveJS(r.front().value());
         if (!scriptVector.append(r.front().value())) {
           ReportOutOfMemory(cx);
           return false;
