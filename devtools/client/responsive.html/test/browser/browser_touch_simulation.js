@@ -147,8 +147,8 @@ async function testWithMetaViewportEnabled(ui) {
 
     info("testWithMetaViewportEnabled: " +
          "click the div element with " +
-         "<meta name='viewport' content='minimum-scale=maximum-scale'>");
-    meta.content = "minimum-scale=maximum-scale";
+         "<meta name='viewport' content='minimum-scale=1,maximum-scale=1'>");
+    meta.content = "minimum-scale=1,maximum-scale=1";
     await synthesizeClick(div);
     is(div.dataset.isDelay, "false",
       "300ms delay between touch events and mouse events should not work");
