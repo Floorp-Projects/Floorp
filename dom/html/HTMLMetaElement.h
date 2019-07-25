@@ -64,6 +64,7 @@ class HTMLMetaElement final : public nsGenericHTMLElement {
  private:
   void SetMetaReferrer(Document* aDocument);
   void ProcessViewportContent(Document* aDocument);
+  void DiscardViewportContent(Document* aDocument);
 };
 
 }  // namespace dom
