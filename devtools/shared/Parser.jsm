@@ -6,7 +6,6 @@
 "use strict";
 
 const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
-const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 ChromeUtils.defineModuleGetter(
@@ -153,5 +152,3 @@ function SyntaxTree(nodes, url, length, offset = 0) {
   this.length = length;
   this.offset = offset;
 }
-
-XPCOMUtils.defineLazyGetter(Parser, "reflectionAPI", () => Reflect);
