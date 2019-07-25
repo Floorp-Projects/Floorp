@@ -40,8 +40,7 @@ EnterDebuggeeNoExecute* EnterDebuggeeNoExecute::findInStack(JSContext* cx) {
   for (EnterDebuggeeNoExecute* it = cx->noExecuteDebuggerTop; it;
        it = it->prev_) {
     Debugger& dbg = it->debugger();
-    if (!it->unlocked_ && dbg.isEnabled() &&
-        dbg.observesGlobal(debuggee->maybeGlobal())) {
+    if (!it->unlocked_ && dbg.observesGlobal(debuggee->maybeGlobal())) {
       return it;
     }
   }
