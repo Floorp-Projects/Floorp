@@ -30,7 +30,7 @@
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;
@@ -248,7 +248,7 @@ static bool WasmHandleDebugTrap() {
     }
     debugFrame->setIsDebuggee();
     debugFrame->observe(cx);
-    ResumeMode mode = Debugger::onEnterFrame(cx, debugFrame);
+    ResumeMode mode = DebugAPI::onEnterFrame(cx, debugFrame);
     if (mode == ResumeMode::Return) {
       // Ignoring forced return (ResumeMode::Return) -- changing code execution
       // order is not yet implemented in the wasm baseline.
@@ -260,7 +260,7 @@ static bool WasmHandleDebugTrap() {
   }
   if (site->kind() == CallSite::LeaveFrame) {
     debugFrame->updateReturnJSValue();
-    bool ok = Debugger::onLeaveFrame(cx, debugFrame, nullptr, true);
+    bool ok = DebugAPI::onLeaveFrame(cx, debugFrame, nullptr, true);
     debugFrame->leave(cx);
     return ok;
   }
@@ -269,7 +269,7 @@ static bool WasmHandleDebugTrap() {
   MOZ_ASSERT(debug.hasBreakpointTrapAtOffset(site->lineOrBytecode()));
   if (debug.stepModeEnabled(debugFrame->funcIndex())) {
     RootedValue result(cx, UndefinedValue());
-    ResumeMode mode = Debugger::onSingleStep(cx, &result);
+    ResumeMode mode = DebugAPI::onSingleStep(cx, &result);
     if (mode == ResumeMode::Return) {
       // TODO properly handle ResumeMode::Return.
       JS_ReportErrorASCII(cx, "Unexpected resumption value from onSingleStep");
@@ -281,7 +281,7 @@ static bool WasmHandleDebugTrap() {
   }
   if (debug.hasBreakpointSite(site->lineOrBytecode())) {
     RootedValue result(cx, UndefinedValue());
-    ResumeMode mode = Debugger::onTrap(cx, &result);
+    ResumeMode mode = DebugAPI::onTrap(cx, &result);
     if (mode == ResumeMode::Return) {
       // TODO properly handle ResumeMode::Return.
       JS_ReportErrorASCII(
@@ -338,7 +338,7 @@ void* wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter) {
     // Assume ResumeMode::Terminate if no exception is pending --
     // no onExceptionUnwind handlers must be fired.
     if (cx->isExceptionPending()) {
-      ResumeMode mode = Debugger::onExceptionUnwind(cx, frame);
+      ResumeMode mode = DebugAPI::onExceptionUnwind(cx, frame);
       if (mode == ResumeMode::Return) {
         // Unexpected trap return -- raising error since throw recovery
         // is not yet implemented in the wasm baseline.
@@ -348,7 +348,7 @@ void* wasm::HandleThrow(JSContext* cx, WasmFrameIter& iter) {
       }
     }
 
-    bool ok = Debugger::onLeaveFrame(cx, frame, nullptr, false);
+    bool ok = DebugAPI::onLeaveFrame(cx, frame, nullptr, false);
     if (ok) {
       // Unexpected success from the handler onLeaveFrame -- raising error
       // since throw recovery is not yet implemented in the wasm baseline.

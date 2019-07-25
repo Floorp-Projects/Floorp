@@ -11,7 +11,6 @@ interface SpeechRecognition : EventTarget {
     attribute boolean continuous;
     attribute boolean interimResults;
     attribute unsigned long maxAlternatives;
-    attribute DOMString serviceURI;
 
     // methods to drive the speech interaction
     void start();
@@ -83,15 +82,11 @@ interface SpeechRecognitionResultList {
 interface SpeechRecognitionEvent : Event {
     readonly attribute unsigned long resultIndex;
     readonly attribute SpeechRecognitionResultList results;
-    readonly attribute any interpretation;
-    readonly attribute Document? emma;
 };
 
 dictionary SpeechRecognitionEventInit : EventInit {
     unsigned long resultIndex = 0;
     required SpeechRecognitionResultList results;
-    any interpretation = null;
-    Document? emma = null;
 };
 
 // The object representing a speech grammar

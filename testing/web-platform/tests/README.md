@@ -2,7 +2,7 @@ The web-platform-tests Project [![IRC chat](https://goo.gl/6nCIks)](http://irc.w
 ==============================
 
 The web-platform-tests Project is a W3C-coordinated attempt to build a
-cross-browser testsuite for the Web-platform stack. Writing tests in a way
+cross-browser test suite for the Web-platform stack. Writing tests in a way
 that allows them to be run in all browsers gives browser projects
 confidence that they are shipping software that is compatible with other
 implementations, and that later implementations will be compatible with
@@ -46,7 +46,7 @@ For example, on most UNIX-like systems, you can setup the hosts file with:
 
 And on Windows (this must be run in a PowerShell session with Administrator privileges):
 
-```bash
+```powershell
 python wpt make-hosts-file | Out-File $env:systemroot\System32\drivers\etc\hosts -Encoding ascii -Append
 ```
 

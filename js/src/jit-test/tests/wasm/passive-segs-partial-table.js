@@ -88,7 +88,7 @@ tbl_init(tbl_init_len, tbl_init_len, tbl_init_len, 0xFFFFFFFC, Math.floor(tbl_in
 
 const tbl_copy_len = 16;
 
-function tbl_copy(min, max, srcOffs, targetOffs, len, copyDown=false) {
+function tbl_copy(min, max, srcOffs, targetOffs, len) {
     let ins = wasmEvalText(
         `(module
            (table (export "tbl") ${min} ${max} funcref)
@@ -113,6 +113,7 @@ function tbl_copy(min, max, srcOffs, targetOffs, len, copyDown=false) {
 
     let tbl = ins.exports.tbl;
 
+    let copyDown = srcOffs < targetOffs;
     let targetAvail = tbl.length - targetOffs;
     let srcAvail = tbl.length - srcOffs;
     let targetLim = targetOffs + Math.min(len, targetAvail, srcAvail);
@@ -170,13 +171,13 @@ tbl_copy(tbl_copy_len*2, tbl_copy_len*4, Math.floor(1.5*tbl_copy_len), 0, tbl_co
 tbl_copy(tbl_copy_len*2, tbl_copy_len*4, Math.floor(1.5*tbl_copy_len)-1, 0, tbl_copy_len-1);
 
 // OOB target address, overlapping, src < target
-tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len-5, Math.floor(1.5*tbl_copy_len), tbl_copy_len, true);
+tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len-5, Math.floor(1.5*tbl_copy_len), tbl_copy_len);
 
 // OOB source address, overlapping, target < src
 tbl_copy(tbl_copy_len*2, tbl_copy_len*4, Math.floor(1.5*tbl_copy_len), tbl_copy_len-5, tbl_copy_len);
 
 // OOB both, overlapping, including src == target
-tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len+5, Math.floor(1.5*tbl_copy_len), tbl_copy_len, true);
+tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len+5, Math.floor(1.5*tbl_copy_len), tbl_copy_len);
 tbl_copy(tbl_copy_len*2, tbl_copy_len*4, Math.floor(1.5*tbl_copy_len), tbl_copy_len+5, tbl_copy_len);
 tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len+5, tbl_copy_len+5, tbl_copy_len);
 
@@ -184,4 +185,4 @@ tbl_copy(tbl_copy_len*2, tbl_copy_len*4, tbl_copy_len+5, tbl_copy_len+5, tbl_cop
 tbl_copy(tbl_copy_len*8, tbl_copy_len*8, tbl_copy_len*7, 0, 0xFFFFFFE0);
 
 // Arithmetic overflow on target adddress is an overlapping case.
-tbl_copy(tbl_copy_len*8, tbl_copy_len*8, 0, tbl_copy_len*7, 0xFFFFFFE0, true);
+tbl_copy(tbl_copy_len*8, tbl_copy_len*8, 0, tbl_copy_len*7, 0xFFFFFFE0);

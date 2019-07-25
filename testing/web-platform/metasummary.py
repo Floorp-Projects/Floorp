@@ -267,6 +267,8 @@ def add_metadata(target, key, metadata):
             else:
                 condition = None
                 status = item
+            if isinstance(status, list):
+                status = status[0]
             by_status[status].append(condition)
         for status in statuses:
             if status in by_status:
@@ -290,10 +292,14 @@ def is_interesting(metadata):
         return True
 
     if metadata.has_key("expected"):
-        for item in metadata.get("expected"):
-            if isinstance(item, tuple):
-                if item[1] in statuses:
+        for expected_statuses in metadata.get("expected"):
+            # Include both expected and known intermittent values
+            if isinstance(expected_statuses, tuple):
+                expected_statuses = expected_statuses[1]
+            if not isinstance(expected_statuses, list):
+                expected_statuses = [expected_statuses]
+            for expected_status in expected_statuses:
+                if expected_status in statuses:
                     return True
-            elif item in statuses:
-                return True
+            return True
     return False

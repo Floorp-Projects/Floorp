@@ -79,7 +79,7 @@ function reinitializeRegistry() {
       table: new WebAssembly.Table({
         initial: 10,
         maximum: 20,
-        element: "funcref"
+        element: "anyfunc"
       }),
       memory: new WebAssembly.Memory({ initial: 1, maximum: 2 })
     };

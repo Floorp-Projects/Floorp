@@ -26,7 +26,6 @@
 #include "builtin/ModuleObject.h"
 #include "builtin/Promise.h"
 #include "builtin/String.h"
-#include "debugger/Debugger.h"
 #include "jit/AtomicOperations.h"
 #include "jit/BaselineJIT.h"
 #include "jit/Ion.h"
@@ -54,7 +53,7 @@
 #include "vm/TraceLogging.h"
 
 #include "builtin/Boolean-inl.h"
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "vm/EnvironmentObject-inl.h"
 #include "vm/GeckoProfiler-inl.h"
@@ -320,7 +319,7 @@ JSFunction* js::MakeDefaultConstructor(JSContext* cx, HandleScript script,
   ctorScript->setDefaultClassConstructorSpan(
       script->sourceObject(), classStartOffset, classEndOffset, line, column);
 
-  Debugger::onNewScript(cx, ctorScript);
+  DebugAPI::onNewScript(cx, ctorScript);
 
   return ctor;
 }
@@ -399,7 +398,7 @@ bool js::RunScript(JSContext* cx, RunState& state) {
 
   MOZ_ASSERT(!cx->enableAccessValidation || cx->realm()->isAccessValid());
 
-  if (!Debugger::checkNoExecute(cx, state.script())) {
+  if (!DebugAPI::checkNoExecute(cx, state.script())) {
     return false;
   }
 
@@ -1085,7 +1084,7 @@ jsbytecode* js::UnwindEnvironmentToTryPc(JSScript* script,
 }
 
 static bool ForcedReturn(JSContext* cx, InterpreterRegs& regs) {
-  bool ok = Debugger::onLeaveFrame(cx, regs.fp(), regs.pc, true);
+  bool ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, true);
   // Point the frame to the end of the script, regardless of error. The
   // caller must jump to the correct continuation depending on 'ok'.
   regs.setToEndOfScript();
@@ -1242,7 +1241,7 @@ again:
   if (cx->isExceptionPending()) {
     /* Call debugger throw hooks. */
     if (!cx->isClosingGenerator()) {
-      ResumeMode mode = Debugger::onExceptionUnwind(cx, regs.fp());
+      ResumeMode mode = DebugAPI::onExceptionUnwind(cx, regs.fp());
       switch (mode) {
         case ResumeMode::Terminate:
           goto again;
@@ -1259,7 +1258,7 @@ again:
           return SuccessfulReturnContinuation;
 
         default:
-          MOZ_CRASH("bad Debugger::onExceptionUnwind resume mode");
+          MOZ_CRASH("bad DebugAPI::onExceptionUnwind resume mode");
       }
     }
 
@@ -1279,7 +1278,7 @@ again:
     }
 
     ok = HandleClosingGeneratorReturn(cx, regs.fp(), ok);
-    ok = Debugger::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
+    ok = DebugAPI::onLeaveFrame(cx, regs.fp(), regs.pc, ok);
   } else {
     // We may be propagating a forced return from the interrupt
     // callback, which cannot easily force a return.
@@ -1798,7 +1797,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
   JS_BEGIN_MACRO                                                            \
     script = (s);                                                           \
     MOZ_ASSERT(cx->realm() == script->realm());                             \
-    if (script->hasAnyBreakpointsOrStepMode() || script->hasScriptCounts()) \
+    if (DebugAPI::hasAnyBreakpointsOrStepMode(script) || script->hasScriptCounts()) \
       activation.enableInterruptsUnconditionally();                         \
   JS_END_MACRO
 
@@ -1854,7 +1853,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     goto prologue_error;
   }
 
-  switch (Debugger::onEnterFrame(cx, activation.entryFrame())) {
+  switch (DebugAPI::onEnterFrame(cx, activation.entryFrame())) {
     case ResumeMode::Continue:
       break;
     case ResumeMode::Return:
@@ -1866,7 +1865,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     case ResumeMode::Terminate:
       goto error;
     default:
-      MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
+      MOZ_CRASH("bad DebugAPI::onEnterFrame resume mode");
   }
 
   // Increment the coverage for the main entry point.
@@ -1889,9 +1888,9 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       if (script->isDebuggee()) {
-        if (script->stepModeEnabled()) {
+        if (DebugAPI::stepModeEnabled(script)) {
           RootedValue rval(cx);
-          ResumeMode mode = Debugger::onSingleStep(cx, &rval);
+          ResumeMode mode = DebugAPI::onSingleStep(cx, &rval);
           switch (mode) {
             case ResumeMode::Terminate:
               goto error;
@@ -1911,13 +1910,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
           moreInterrupts = true;
         }
 
-        if (script->hasAnyBreakpointsOrStepMode()) {
+        if (DebugAPI::hasAnyBreakpointsOrStepMode(script)) {
           moreInterrupts = true;
         }
 
-        if (script->hasBreakpointsAt(REGS.pc)) {
+        if (DebugAPI::hasBreakpointsAt(script, REGS.pc)) {
           RootedValue rval(cx);
-          ResumeMode mode = Debugger::onTrap(cx, &rval);
+          ResumeMode mode = DebugAPI::onTrap(cx, &rval);
           switch (mode) {
             case ResumeMode::Terminate:
               goto error;
@@ -2095,7 +2094,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
         if (MOZ_LIKELY(!frameHalfInitialized)) {
           interpReturnOK =
-              Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
+              DebugAPI::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
           REGS.fp()->epilogue(cx, REGS.pc);
         }
@@ -3163,7 +3162,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         goto prologue_error;
       }
 
-      switch (Debugger::onEnterFrame(cx, REGS.fp())) {
+      switch (DebugAPI::onEnterFrame(cx, REGS.fp())) {
         case ResumeMode::Continue:
           break;
         case ResumeMode::Return:
@@ -3175,7 +3174,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         case ResumeMode::Terminate:
           goto error;
         default:
-          MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
+          MOZ_CRASH("bad DebugAPI::onEnterFrame resume mode");
       }
 
       // Increment the coverage for the main entry point.
@@ -3929,7 +3928,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_DEBUGGER) {
       RootedValue rval(cx);
-      switch (Debugger::onDebuggerStatement(cx, REGS.fp())) {
+      switch (DebugAPI::onDebuggerStatement(cx, REGS.fp())) {
         case ResumeMode::Terminate:
           goto error;
         case ResumeMode::Continue:
@@ -4101,7 +4100,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         TraceLogStartEvent(logger, scriptEvent);
         TraceLogStartEvent(logger, TraceLogger_Interpreter);
 
-        switch (Debugger::onResumeFrame(cx, REGS.fp())) {
+        switch (DebugAPI::onResumeFrame(cx, REGS.fp())) {
           case ResumeMode::Continue:
             break;
           case ResumeMode::Throw:
@@ -4397,7 +4396,7 @@ error:
 exit:
   if (MOZ_LIKELY(!frameHalfInitialized)) {
     interpReturnOK =
-        Debugger::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
+        DebugAPI::onLeaveFrame(cx, REGS.fp(), REGS.pc, interpReturnOK);
 
     REGS.fp()->epilogue(cx, REGS.pc);
   }

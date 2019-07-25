@@ -9,7 +9,6 @@
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Range.h"
 
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompilation.h"
 #include "gc/HashUtil.h"
 #include "js/SourceText.h"
@@ -18,6 +17,7 @@
 #include "vm/JSContext.h"
 #include "vm/JSONParser.h"
 
+#include "debugger/DebugAPI-inl.h"
 #include "vm/Interpreter-inl.h"
 
 using namespace js;
@@ -468,7 +468,7 @@ static bool ExecuteInExtensibleLexicalEnvironment(JSContext* cx,
       return false;
     }
 
-    Debugger::onNewScript(cx, script);
+    DebugAPI::onNewScript(cx, script);
   }
 
   RootedValue rval(cx);

@@ -10,7 +10,7 @@ partial interface Navigator {
 [SecureContext, Exposed=Window] interface XR : EventTarget {
   // Methods
   Promise<void> supportsSession(XRSessionMode mode);
-  Promise<XRSession> requestSession(XRSessionMode mode);
+  Promise<XRSession> requestSession(XRSessionMode mode, optional XRSessionInit options);
 
   // Events
   attribute EventHandler ondevicechange;
@@ -22,15 +22,27 @@ enum XRSessionMode {
   "immersive-ar"
 };
 
+dictionary XRSessionInit {
+  sequence<DOMString> requiredFeatures;
+  sequence<DOMString> optionalFeatures;
+};
+
 enum XREnvironmentBlendMode {
   "opaque",
   "additive",
   "alpha-blend",
 };
 
+enum XRVisibilityState {
+  "visible",
+  "visible-blurred",
+  "hidden",
+};
+
 [SecureContext, Exposed=Window] interface XRSession : EventTarget {
   // Attributes
   readonly attribute XREnvironmentBlendMode environmentBlendMode;
+  readonly attribute XRVisibilityState visibilityState;
   [SameObject] readonly attribute XRRenderState renderState;
   [SameObject] readonly attribute XRInputSourceArray inputSources;
 
@@ -44,29 +56,26 @@ enum XREnvironmentBlendMode {
   Promise<void> end();
 
   // Events
-  attribute EventHandler onblur;
-  attribute EventHandler onfocus;
   attribute EventHandler onend;
   attribute EventHandler onselect;
   attribute EventHandler oninputsourceschange;
   attribute EventHandler onselectstart;
   attribute EventHandler onselectend;
+  attribute EventHandler onvisibilitychange;
 };
 
 dictionary XRRenderStateInit {
   double depthNear;
   double depthFar;
   double inlineVerticalFieldOfView;
-  XRLayer? baseLayer;
-  XRPresentationContext? outputContext;
+  XRWebGLLayer? baseLayer;
 };
 
 [SecureContext, Exposed=Window] interface XRRenderState {
   readonly attribute double depthNear;
   readonly attribute double depthFar;
   readonly attribute double? inlineVerticalFieldOfView;
-  readonly attribute XRLayer? baseLayer;
-  readonly attribute XRPresentationContext? outputContext;
+  readonly attribute XRWebGLLayer? baseLayer;
 };
 
 callback XRFrameRequestCallback = void (DOMHighResTimeStamp time, XRFrame frame);
@@ -167,6 +176,7 @@ interface XRInputSource {
   [SameObject] readonly attribute XRSpace targetRaySpace;
   [SameObject] readonly attribute XRSpace? gripSpace;
   [SameObject] readonly attribute Gamepad? gamepad;
+  [SameObject] readonly attribute FrozenArray<DOMString> profiles;
 };
 
 [SecureContext, Exposed=Window]
@@ -181,8 +191,6 @@ enum GamepadMappingType {
   "standard",    // Defined in the Gamepad API
   "xr-standard",
 };
-
-[SecureContext, Exposed=Window] interface XRLayer {};
 
 typedef (WebGLRenderingContext or
          WebGL2RenderingContext) XRWebGLRenderingContext;
@@ -199,10 +207,8 @@ dictionary XRWebGLLayerInit {
 [SecureContext, Exposed=Window, Constructor(XRSession session,
              XRWebGLRenderingContext context,
              optional XRWebGLLayerInit layerInit)]
-interface XRWebGLLayer : XRLayer {
+interface XRWebGLLayer {
   // Attributes
-  [SameObject] readonly attribute XRWebGLRenderingContext context;
-
   readonly attribute boolean antialias;
   readonly attribute boolean ignoreDepthValues;
 
@@ -225,10 +231,6 @@ partial interface mixin WebGLRenderingContextBase {
     Promise<void> makeXRCompatible();
 };
 
-[SecureContext, Exposed=Window] interface XRPresentationContext {
-  [SameObject] readonly attribute HTMLCanvasElement canvas;
-};
-
 [SecureContext, Exposed=Window, Constructor(DOMString type, XRSessionEventInit eventInitDict)]
 interface XRSessionEvent : Event {
   [SameObject] readonly attribute XRSession session;
@@ -242,13 +244,11 @@ dictionary XRSessionEventInit : EventInit {
 interface XRInputSourceEvent : Event {
   [SameObject] readonly attribute XRFrame frame;
   [SameObject] readonly attribute XRInputSource inputSource;
-  [SameObject] readonly attribute long? buttonIndex;
 };
 
 dictionary XRInputSourceEventInit : EventInit {
   required XRFrame frame;
   required XRInputSource inputSource;
-  long? buttonIndex = null;
 };
 
 [SecureContext, Exposed=Window, Constructor(DOMString type, XRInputSourcesChangeEventInit eventInitDict)]

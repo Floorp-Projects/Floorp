@@ -1661,7 +1661,7 @@ static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
                              bool gcTypesEnabled, ValType* type,
                              bool* isMutable) {
   if (!d.readValType(types, gcTypesEnabled, type)) {
-    return false;
+    return d.fail("expected global type");
   }
 
   uint8_t flags;

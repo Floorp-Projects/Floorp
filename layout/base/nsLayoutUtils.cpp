@@ -9796,10 +9796,10 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
   switch (aGeometryBox) {
     case StyleGeometryBox::StrokeBox: {
       // XXX Bug 1299876
-      // The size of srtoke-box is not correct if this graphic element has
+      // The size of stroke-box is not correct if this graphic element has
       // specific stroke-linejoin or stroke-linecap.
       gfxRect bbox =
-          nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFill |
+          nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFillGeometry |
                                           nsSVGUtils::eBBoxIncludeStroke);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox, AppUnitsPerCSSPixel());
       break;
@@ -9839,13 +9839,15 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
     case StyleGeometryBox::PaddingBox:
     case StyleGeometryBox::MarginBox:
     case StyleGeometryBox::FillBox: {
-      gfxRect bbox = nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFill);
+      gfxRect bbox =
+          nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFillGeometry);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox, AppUnitsPerCSSPixel());
       break;
     }
     default: {
       MOZ_ASSERT_UNREACHABLE("unknown StyleGeometryBox type");
-      gfxRect bbox = nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFill);
+      gfxRect bbox =
+          nsSVGUtils::GetBBox(aFrame, nsSVGUtils::eBBoxIncludeFillGeometry);
       r = nsLayoutUtils::RoundGfxRectToAppRect(bbox, AppUnitsPerCSSPixel());
       break;
     }
