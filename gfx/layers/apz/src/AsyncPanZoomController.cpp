@@ -132,7 +132,7 @@ typedef PlatformSpecificStateBase
  * \page APZCPrefs APZ preferences
  *
  * The following prefs are used to control the behaviour of the APZC.
- * The default values are provided in StaticPrefs.h.
+ * The default values are provided in StaticPrefs.yaml.
  *
  * \li\b apz.allow_double_tap_zooming
  * Pref that allows or disallows double tap to zoom

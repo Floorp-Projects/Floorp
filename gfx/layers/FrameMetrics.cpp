@@ -86,10 +86,6 @@ void FrameMetrics::KeepLayoutViewportEnclosingVisualViewport(
   aLayoutViewport = aLayoutViewport.MoveInsideAndClamp(aScrollableRect);
 }
 
-void ScrollMetadata::SetUsesContainerScrolling(bool aValue) {
-  mUsesContainerScrolling = aValue;
-}
-
 void ScrollSnapInfo::InitializeScrollSnapStrictness(
     WritingMode aWritingMode, const nsStyleDisplay* aDisplay) {
   if (aDisplay->mScrollSnapType.strictness == StyleScrollSnapStrictness::None) {
