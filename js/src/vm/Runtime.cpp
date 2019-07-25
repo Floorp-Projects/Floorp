@@ -444,7 +444,7 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
           case ResumeMode::Continue:
             return true;
           case ResumeMode::Return:
-            // See note in Debugger::propagateForcedReturn.
+            // See note in DebugAPI::propagateForcedReturn.
             DebugAPI::propagateForcedReturn(cx, iter.abstractFramePtr(), rval);
             mozilla::recordreplay::InvalidateRecording(
                 "Debugger single-step forced return");
