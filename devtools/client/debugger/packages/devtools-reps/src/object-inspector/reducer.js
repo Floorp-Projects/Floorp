@@ -58,7 +58,7 @@ function reducer(
         getterValue:
           data.result &&
           data.result.value &&
-          (data.result.value.return || data.result.value.throw),
+          (data.result.value.throw || data.result.value.return),
       }),
     });
   }
