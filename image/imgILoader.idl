@@ -14,6 +14,7 @@ interface nsILoadGroup;
 interface nsIPrincipal;
 interface nsIStreamListener;
 interface nsIURI;
+interface nsIReferrerInfo;
 
 interface nsISimpleEnumerator;
 
@@ -40,10 +41,7 @@ interface imgILoader : nsISupports
    * @param aURI the URI to load
    * @param aInitialDocumentURI the URI that 'initiated' the load -- used for
    *           3rd party cookie blocking
-   * @param aReferrerURI the 'referring' URI
-   * @param aReferrerPolicy the policy to apply to sending referrers.
-   *           examples: "default", "never", "always", "origin"
-   *           (see W3C referrer-policy spec for valid policy strings)
+   * @param aReferrerInfo the referrer info to compute sending referrer.
    * @param aLoadingPrincipal the principal of the loading document
    * @param aLoadGroup Loadgroup to put the image load into
    * @param aObserver the observer (may be null)
@@ -63,8 +61,7 @@ interface imgILoader : nsISupports
    */
   imgIRequest loadImageXPCOM(in nsIURI aURI,
                              in nsIURI aInitialDocumentURL,
-                             in nsIURI aReferrerURI,
-                             in AString aReferrerPolicy,
+                             in nsIReferrerInfo aReferrerInfo,
                              in nsIPrincipal aLoadingPrincipal,
                              in nsILoadGroup aLoadGroup,
                              in imgINotificationObserver aObserver,

@@ -3366,13 +3366,9 @@ nsresult nsContentUtils::LoadImage(
 
   // XXXbz using "documentURI" for the initialDocumentURI is not quite
   // right, but the best we can do here...
-  nsCOMPtr<nsIURI> referrer = aReferrerInfo->GetOriginalReferrer();
-  auto referrerPolicy = static_cast<mozilla::net::ReferrerPolicy>(
-      aReferrerInfo->GetReferrerPolicy());
   return imgLoader->LoadImage(aURI,               /* uri to load */
                               documentURI,        /* initialDocumentURI */
-                              referrer,           /* referrerInfo */
-                              referrerPolicy,     /* referrer policy */
+                              aReferrerInfo,      /* referrerInfo */
                               aLoadingPrincipal,  /* loading principal */
                               aRequestContextID,  /* request context ID */
                               loadGroup,          /* loadgroup */
