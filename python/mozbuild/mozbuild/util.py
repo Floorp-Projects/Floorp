@@ -217,6 +217,9 @@ class FileAvoidWrite(BytesIO):
     def __init__(self, filename, capture_diff=False, dry_run=False, mode='rU'):
         BytesIO.__init__(self)
         self.name = filename
+        assert type(capture_diff) == bool
+        assert type(dry_run) == bool
+        assert 'r' in mode
         self._capture_diff = capture_diff
         self._write_to_file = not dry_run
         self.diff = None
