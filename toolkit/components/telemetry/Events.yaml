@@ -249,9 +249,9 @@ addonsManager:
       An abuse report submitted by a user for a given extension. The object of the event
       represent the report entry point, the value is the id of the addon being reported.
     objects:
-    - menu
-    - toolbar_context_menu
-    - uninstall
+      - menu
+      - toolbar_context_menu
+      - uninstall
     extra_keys:
       addon_type: The type of the add-on being reported (missing on ERROR_ADDON_NOT_FOUND).
       error_type: >
@@ -505,7 +505,6 @@ pwmgr:
     ]
     bug_numbers:
       - 1548463
-    description: An action was taken on the about:logins page
     expiry_version: "74"
     notification_emails: ["loines@mozilla.com", "passwords-dev@mozilla.org", "jaws@mozilla.com"]
     release_channel_collection: opt-out
@@ -554,7 +553,7 @@ fxa_avatar_menu:
       "sync_tabs_sidebar",
       "toolbar_icon",
       "unver_sync_settings"
-      ]
+    ]
     methods: ["click"]
     release_channel_collection: opt-out
     products:
@@ -583,7 +582,7 @@ fxa_app_menu:
       "sync_tabs",
       "sync_tabs_sidebar",
       "toolbar_icon"
-      ]
+    ]
     methods: ["click"]
     release_channel_collection: opt-out
     products:
@@ -707,10 +706,6 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test desktop-only main recording.
     expiry_version: never
@@ -719,10 +714,6 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test multiproduct main recording.
     expiry_version: never
@@ -731,10 +722,6 @@ telemetry.test:
     objects: ["object1"]
     bug_numbers: [1452552]
     notification_emails: ["telemetry-client-dev@mozilla.com"]
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["main"]
     description: This event is used to test mobile-only main recording.
     expiry_version: never
@@ -1379,10 +1366,6 @@ security.ui.certerror:
       - rtestard@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["main", "content"]
     products:
       - firefox
@@ -1413,10 +1396,6 @@ security.ui.certerror:
       - rtestard@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["content"]
     products:
       - firefox
@@ -1442,10 +1421,6 @@ security.ui.identitypopup:
       - pdol@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-in
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes:
       - main
     products:
@@ -1468,10 +1443,6 @@ security.ui.identitypopup:
       - pdol@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-in
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes:
       - main
     products:
@@ -1541,10 +1512,6 @@ intl.ui.browserLanguage:
       - flod@mozilla.com
       - mstriemer@mozilla.com
     release_channel_collection: opt-out
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes: ["main"]
     bug_numbers: [1486507, 1553311]
 
@@ -1567,10 +1534,6 @@ security.ui.permissionprompt:
       - ehsan@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes:
       - main
     extra_keys:
@@ -1607,10 +1570,6 @@ security.ui.permissionprompt:
       - ehsan@mozilla.com
       - seceng-telemetry@mozilla.com
     release_channel_collection: opt-out
-    products:
-      - "firefox"
-      - "fennec"
-      - "geckoview"
     record_in_processes:
       - main
     extra_keys:
