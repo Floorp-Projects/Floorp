@@ -3064,7 +3064,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_ROOTS);
     DebugAPI::traceAllForMovingGC(&trc);
-    DebugAPI::traceIncomingCrossCompartmentEdges(&trc);
+    DebugAPI::traceCrossCompartmentEdges(&trc);
 
     // Mark all gray roots, making sure we call the trace callback to get the
     // current set.
