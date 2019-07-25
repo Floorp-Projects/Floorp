@@ -105,6 +105,8 @@ js::AutoCycleDetector::~AutoCycleDetector() {
 bool JSContext::init(ContextKind kind) {
   // Skip most of the initialization if this thread will not be running JS.
   if (kind == ContextKind::MainThread) {
+    TlsContext.set(this);
+    currentThread_ = ThisThread::GetId();
     if (!regexpStack.ref().init()) {
       return false;
     }
@@ -156,14 +158,14 @@ JSContext* js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes,
     return nullptr;
   }
 
-  if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
+  if (!cx->init(ContextKind::MainThread)) {
     runtime->destroyRuntime();
     js_delete(cx);
     js_delete(runtime);
     return nullptr;
   }
 
-  if (!cx->init(ContextKind::MainThread)) {
+  if (!runtime->init(cx, maxBytes, maxNurseryBytes)) {
     runtime->destroyRuntime();
     js_delete(cx);
     js_delete(runtime);
@@ -1305,9 +1307,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 {
   MOZ_ASSERT(static_cast<JS::RootingContext*>(this) ==
              JS::RootingContext::get(this));
-
-  MOZ_ASSERT(!TlsContext.get());
-  TlsContext.set(this);
 }
 
 JSContext::~JSContext() {
@@ -1337,7 +1336,17 @@ JSContext::~JSContext() {
 
   js_delete(atomsZoneFreeLists_.ref());
 
-  MOZ_ASSERT(TlsContext.get() == this);
+  TlsContext.set(nullptr);
+}
+
+void JSContext::setHelperThread(AutoLockHelperThreadState& locked) {
+  MOZ_ASSERT_IF(!JSRuntime::hasLiveRuntimes(), !TlsContext.get());
+  TlsContext.set(this);
+  currentThread_ = ThisThread::GetId();
+}
+
+void JSContext::clearHelperThread(AutoLockHelperThreadState& locked) {
+  currentThread_ = Thread::Id();
   TlsContext.set(nullptr);
 }
 
