@@ -17,7 +17,6 @@
 #include "jsfriendapi.h"  // js::GetErrorMessage
 #include "jstypes.h"      // JS_PUBLIC_API
 
-#include "debugger/Debugger.h"             // js::Debugger
 #include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScript
 #include "frontend/FullParseHandler.h"     // frontend::FullParseHandler
 #include "frontend/ParseContext.h"         // frontend::UsedNameTracker
@@ -34,6 +33,7 @@
 #include "vm/Interpreter.h"        // js::Execute
 #include "vm/JSContext.h"          // JSContext
 
+#include "debugger/DebugAPI-inl.h"  // js::DebugAPI
 #include "vm/JSContext-inl.h"  // JSContext::check
 
 using mozilla::Utf8Unit;
@@ -434,7 +434,7 @@ JS_PUBLIC_API void JS::ExposeScriptToDebugger(JSContext* cx,
 
   MOZ_ASSERT(script->hideScriptFromDebugger());
   script->clearHideScriptFromDebugger();
-  Debugger::onNewScript(cx, script);
+  DebugAPI::onNewScript(cx, script);
 }
 
 MOZ_NEVER_INLINE static bool ExecuteScript(JSContext* cx, HandleObject scope,
@@ -462,7 +462,7 @@ static bool ExecuteScript(JSContext* cx, HandleObjectVector envChain,
     if (!script) {
       return false;
     }
-    js::Debugger::onNewScript(cx, script);
+    js::DebugAPI::onNewScript(cx, script);
   }
 
   return ExecuteScript(cx, env, script, rval);
@@ -504,7 +504,7 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
       return false;
     }
 
-    js::Debugger::onNewScript(cx, script);
+    js::DebugAPI::onNewScript(cx, script);
   }
   return ExecuteScript(cx, globalLexical, script, rval.address());
 }
@@ -521,7 +521,7 @@ JS_PUBLIC_API bool JS::CloneAndExecuteScript(JSContext* cx,
       return false;
     }
 
-    js::Debugger::onNewScript(cx, script);
+    js::DebugAPI::onNewScript(cx, script);
   }
   return ExecuteScript(cx, envChain, script, rval.address());
 }

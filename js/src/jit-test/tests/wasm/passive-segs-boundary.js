@@ -215,25 +215,25 @@ mem_test("",
          "(memory.init 1 (i32.const 0xFFFE) (i32.const 1) (i32.const 3))",
          WebAssembly.RuntimeError, /index out of bounds/);
 
-// init: seg ix is valid passive, zero len, but src offset out of bounds.
-// At edge of segment is OK
+// init: seg ix is valid passive, zero len, but src offset out of bounds at the
+// edge
 mem_test("",
          "(memory.init 1 (i32.const 1234) (i32.const 4) (i32.const 0))");
 
-// One past end of segment is not OK
+// init: seg ix is valid passive, zero len, but src offset out of bounds one
+// past the edge
 mem_test("",
-         "(memory.init 1 (i32.const 1234) (i32.const 5) (i32.const 0))",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "(memory.init 1 (i32.const 1234) (i32.const 5) (i32.const 0))");
 
-// init: seg ix is valid passive, zero len, but dst offset out of bounds.
-// At edge of memory is OK.
+// init: seg ix is valid passive, zero len, but dst offset out of bounds at the
+// edge
 mem_test("",
          "(memory.init 1 (i32.const 0x10000) (i32.const 2) (i32.const 0))");
 
-// One past end of memory is not OK.
+// init: seg ix is valid passive, zero len, but dst offset out of bounds one
+// past the edge
 mem_test("",
-         "(memory.init 1 (i32.const 0x10001) (i32.const 2) (i32.const 0))",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "(memory.init 1 (i32.const 0x10001) (i32.const 2) (i32.const 0))");
 
 // drop: too many args
 mem_test("data.drop 1 (i32.const 42)", "",
@@ -342,25 +342,24 @@ tab_test("",
          "(table.init 1 (i32.const 28) (i32.const 1) (i32.const 3))",
          WebAssembly.RuntimeError, /index out of bounds/);
 
-// init: seg ix is valid passive, zero len, but src offset out of bounds.
-// At edge of segment is OK.
+// init: seg ix is valid passive, zero len, but src offset out of bounds at the
+// edge
 tab_test("",
          "(table.init 1 (i32.const 12) (i32.const 4) (i32.const 0))");
 
-// One past edge of segment is not OK.
+// init: seg ix is valid passive, zero len, but src offset out of bounds one
+// past the edge
 tab_test("",
-         "(table.init 1 (i32.const 12) (i32.const 5) (i32.const 0))",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "(table.init 1 (i32.const 12) (i32.const 5) (i32.const 0))");
 
-// init: seg ix is valid passive, zero len, but dst offset out of bounds.
-// At edge of table is OK.
+// init: seg ix is valid passive, zero len, but dst offset out of bounds
 tab_test("",
          "(table.init 1 (i32.const 30) (i32.const 2) (i32.const 0))");
 
-// One past edge of table is not OK.
+// init: seg ix is valid passive, zero len, but dst offset out of bounds one
+// past the edge
 tab_test("",
-         "(table.init 1 (i32.const 31) (i32.const 2) (i32.const 0))",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "(table.init 1 (i32.const 31) (i32.const 2) (i32.const 0))");
 
 // drop: too many args
 tab_test("elem.drop 1 (i32.const 42)", "",
@@ -428,22 +427,18 @@ tab_test_nofail(
     "(table.copy (i32.const 15) (i32.const 25) (i32.const 0))",
     "");
 
-// copy: zero length with dst offset out of bounds.
-// At edge of table is OK.
+// copy: zero length with dst offset out of bounds at the edge
 tab_test("(table.copy (i32.const 30) (i32.const 15) (i32.const 0))",
          "");
 
-// One past edge of table is not OK.
+// copy: zero length with dst offset out of bounds one past the edge
 tab_test("(table.copy (i32.const 31) (i32.const 15) (i32.const 0))",
-         "",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "");
 
-// copy: zero length with src offset out of bounds
-// At edge of table is OK.
+// copy: zero length with src offset out of bounds at the edge
 tab_test("(table.copy (i32.const 15) (i32.const 30) (i32.const 0))",
          "");
 
-// One past edge of table is not OK.
+// copy: zero length with src offset out of bounds one past the edge
 tab_test("(table.copy (i32.const 15) (i32.const 31) (i32.const 0))",
-         "",
-         WebAssembly.RuntimeError, /index out of bounds/);
+         "");

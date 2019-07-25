@@ -213,7 +213,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "debugger/Debugger.h"
+#include "debugger/DebugAPI.h"
 #include "gc/FindSCCs.h"
 #include "gc/FreeOp.h"
 #include "gc/GCInternals.h"
@@ -3051,8 +3051,8 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   // Mark roots to update them.
   {
     gcstats::AutoPhase ap2(stats(), gcstats::PhaseKind::MARK_ROOTS);
-    Debugger::traceAllForMovingGC(&trc);
-    Debugger::traceIncomingCrossCompartmentEdges(&trc);
+    DebugAPI::traceAllForMovingGC(&trc);
+    DebugAPI::traceIncomingCrossCompartmentEdges(&trc);
 
     // Mark all gray roots, making sure we call the trace callback to get the
     // current set.
@@ -3062,7 +3062,7 @@ void GCRuntime::updateRuntimePointersToRelocatedCells(AutoGCSession& session) {
   }
 
   // Sweep everything to fix up weak pointers.
-  Debugger::sweepAll(rt->defaultFreeOp());
+  DebugAPI::sweepAll(rt->defaultFreeOp());
   jit::JitRuntime::SweepJitcodeGlobalTable(rt);
   for (JS::detail::WeakCacheBase* cache : rt->weakCaches()) {
     cache->sweep();
@@ -4701,7 +4701,7 @@ void GCRuntime::markWeakReferences(gcstats::PhaseKind phase) {
         markedAny |= WeakMapBase::markZoneIteratively(zone, &marker);
       }
     }
-    markedAny |= Debugger::markIteratively(&marker);
+    markedAny |= DebugAPI::markIteratively(&marker);
     markedAny |= jit::JitRuntime::MarkJitcodeGlobalTableIteratively(&marker);
 
     if (!markedAny) {
@@ -5091,7 +5091,7 @@ bool Compartment::findSweepGroupEdges() {
 
     // Ensure that debuggers and their debuggees are finalized in the same group
     // by adding edges in both directions if we find a debugger wrapper.
-    // (Additional edges are added by Debugger::findSweepGroupEdges.)
+    // (Additional edges are added by DebugAPI::findSweepGroupEdges.)
     if (key.isDebuggerKey()) {
       if (!source->addSweepGroupEdgeTo(target) ||
           !target->addSweepGroupEdgeTo(source)) {
@@ -5178,7 +5178,7 @@ bool GCRuntime::findSweepGroupEdges() {
     return false;
   }
 
-  return Debugger::findSweepGroupEdges(rt);
+  return DebugAPI::findSweepGroupEdges(rt);
 }
 
 void GCRuntime::groupZonesForSweeping(JS::GCReason reason) {
@@ -5732,7 +5732,7 @@ void GCRuntime::joinTask(GCParallelTask& task, gcstats::PhaseKind phase,
 void GCRuntime::sweepDebuggerOnMainThread(FreeOp* fop) {
   // Detach unreachable debuggers and global objects from each other.
   // This can modify weakmaps and so must happen before weakmap sweeping.
-  Debugger::sweepAll(fop);
+  DebugAPI::sweepAll(fop);
 
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::SWEEP_COMPARTMENTS);
 
