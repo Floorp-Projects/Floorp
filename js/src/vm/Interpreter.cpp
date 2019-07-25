@@ -39,6 +39,7 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/EqualityOperations.h"  // js::StrictlyEqual
 #include "vm/GeneratorObject.h"
+#include "vm/Instrumentation.h"
 #include "vm/Iteration.h"
 #include "vm/JSAtom.h"
 #include "vm/JSContext.h"
@@ -4349,6 +4350,31 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(JSOP_BIGINT) { PUSH_BIGINT(script->getBigInt(REGS.pc)); }
     END_CASE(JSOP_BIGINT)
+
+    CASE(JSOP_INSTRUMENTATION_ACTIVE) {
+      ReservedRooted<Value> rval(&rootValue0);
+      if (!InstrumentationActiveOperation(cx, &rval)) {
+        goto error;
+      }
+      PUSH_COPY(rval);
+    }
+    END_CASE(JSOP_INSTRUMENTATION_ACTIVE)
+
+    CASE(JSOP_INSTRUMENTATION_CALLBACK) {
+      JSObject* obj = InstrumentationCallbackOperation(cx);
+      MOZ_ASSERT(obj);
+      PUSH_OBJECT(*obj);
+    }
+    END_CASE(JSOP_INSTRUMENTATION_CALLBACK)
+
+    CASE(JSOP_INSTRUMENTATION_SCRIPT_ID) {
+      ReservedRooted<Value> rval(&rootValue0);
+      if (!InstrumentationScriptIdOperation(cx, script, &rval)) {
+        goto error;
+      }
+      PUSH_COPY(rval);
+    }
+    END_CASE(JSOP_INSTRUMENTATION_SCRIPT_ID)
 
     DEFAULT() {
       char numBuf[12];

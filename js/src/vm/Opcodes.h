@@ -2547,7 +2547,28 @@
      *   Operands: uint32_t constIndex
      *   Stack: => val
      */ \
-    MACRO(JSOP_BIGINT, 237, "bigint", NULL, 5, 0, 1, JOF_BIGINT)
+    MACRO(JSOP_BIGINT, 237, "bigint", NULL, 5, 0, 1, JOF_BIGINT) \
+    /*
+     * Pushes a boolean indicating if instrumentation is active.
+     *   Category: Other
+     *   Operands:
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_INSTRUMENTATION_ACTIVE, 238, "instrumentationActive", NULL, 1, 0, 1, JOF_BYTE) \
+    /*
+     * Pushes the instrumentation callback for the current realm.
+     *   Category: Other
+     *   Operands:
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_INSTRUMENTATION_CALLBACK, 239, "instrumentationCallback", NULL, 1, 0, 1, JOF_BYTE) \
+    /*
+     * Pushes the current script's instrumentation ID.
+     *   Category: Other
+     *   Operands:
+     *   Stack: => val
+     */ \
+    MACRO(JSOP_INSTRUMENTATION_SCRIPT_ID, 240, "instrumentationScriptId", NULL, 1, 0, 1, JOF_BYTE)
 // clang-format on
 
 /*
@@ -2555,9 +2576,6 @@
  * a power of two.  Use this macro to do so.
  */
 #define FOR_EACH_TRAILING_UNUSED_OPCODE(MACRO) \
-  MACRO(238)                                   \
-  MACRO(239)                                   \
-  MACRO(240)                                   \
   MACRO(241)                                   \
   MACRO(242)                                   \
   MACRO(243)                                   \

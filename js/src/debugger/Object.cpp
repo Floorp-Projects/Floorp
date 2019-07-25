@@ -10,6 +10,7 @@
 #include "debugger/Script.h"
 #include "proxy/ScriptedProxyHandler.h"
 #include "vm/EnvironmentObject.h"
+#include "vm/Instrumentation.h"
 #include "vm/WrapperObject.h"
 
 #include "debugger/Debugger-inl.h"
@@ -1239,6 +1240,101 @@ bool DebuggerObject::unwrapMethod(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+/* static */
+bool DebuggerObject::setInstrumentationMethod(JSContext* cx, unsigned argc,
+                                              Value* vp) {
+  THIS_DEBUGOBJECT(cx, argc, vp, "setInstrumentation", args, object);
+
+  if (!args.requireAtLeast(
+           cx, "Debugger.Object.prototype.setInstrumentation", 2)) {
+    return false;
+  }
+
+  if (!DebuggerObject::requireGlobal(cx, object)) {
+    return false;
+  }
+  RootedGlobalObject global(cx, &object->referent()->as<GlobalObject>());
+
+  RootedValue v(cx, args[0]);
+  if (!object->owner()->unwrapDebuggeeValue(cx, &v)) {
+    return false;
+  }
+  if (!v.isObject()) {
+    JS_ReportErrorASCII(cx, "Instrumentation callback must be an object");
+    return false;
+  }
+  RootedObject callback(cx, &v.toObject());
+
+  if (!args[1].isObject()) {
+    JS_ReportErrorASCII(cx, "Instrumentation kinds must be an object");
+    return false;
+  }
+  RootedObject kindsObj(cx, &args[1].toObject());
+
+  unsigned length = 0;
+  if (!GetLengthProperty(cx, kindsObj, &length)) {
+    return false;
+  }
+
+  Rooted<ValueVector> values(cx, ValueVector(cx));
+  if (!values.growBy(length) ||
+      !GetElements(cx, kindsObj, length, values.begin())) {
+    return false;
+  }
+
+  Rooted<StringVector> kinds(cx, StringVector(cx));
+  for (size_t i = 0; i < values.length(); i++) {
+    if (!values[i].isString()) {
+      JS_ReportErrorASCII(cx, "Instrumentation kind must be a string");
+      return false;
+    }
+    if (!kinds.append(values[i].toString())) {
+      return false;
+    }
+  }
+
+  {
+    AutoRealm ar(cx, global);
+    RootedObject dbgObject(cx, object->owner()->toJSObject());
+    if (!RealmInstrumentation::install(cx, global, callback, dbgObject,
+                                       kinds)) {
+      return false;
+    }
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
+/* static */
+bool DebuggerObject::setInstrumentationActiveMethod(JSContext* cx,
+                                                    unsigned argc,
+                                                    Value* vp) {
+  THIS_DEBUGOBJECT(cx, argc, vp, "setInstrumentationActive", args, object);
+
+  if (!DebuggerObject::requireGlobal(cx, object)) {
+    return false;
+  }
+
+  if (!args.requireAtLeast(
+      cx, "Debugger.Object.prototype.setInstrumentationActive", 1)) {
+    return false;
+  }
+
+  RootedGlobalObject global(cx, &object->referent()->as<GlobalObject>());
+  bool active = ToBoolean(args[0]);
+
+  {
+    AutoRealm ar(cx, global);
+    if (!RealmInstrumentation::setActive(cx, global, object->owner(), active)) {
+      return false;
+    }
+  }
+
+  args.rval().setUndefined();
+  return true;
+}
+
 const JSPropertySpec DebuggerObject::properties_[] = {
     JS_PSG("callable", DebuggerObject::callableGetter, 0),
     JS_PSG("isBoundFunction", DebuggerObject::isBoundFunctionGetter, 0),
@@ -1311,6 +1407,9 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("makeDebuggeeValue", DebuggerObject::makeDebuggeeValueMethod, 1, 0),
     JS_FN("unsafeDereference", DebuggerObject::unsafeDereferenceMethod, 0, 0),
     JS_FN("unwrap", DebuggerObject::unwrapMethod, 0, 0),
+    JS_FN("setInstrumentation", DebuggerObject::setInstrumentationMethod, 2, 0),
+    JS_FN("setInstrumentationActive",
+          DebuggerObject::setInstrumentationActiveMethod, 1, 0),
     JS_FS_END};
 
 /* static */
