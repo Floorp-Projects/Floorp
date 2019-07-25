@@ -32,7 +32,6 @@
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPrefs.h"
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/Telemetry.h"

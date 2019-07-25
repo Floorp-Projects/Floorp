@@ -38,7 +38,6 @@
 #include "mozilla/mozalloc.h"     // for operator new
 #include "mozilla/Preferences.h"  // for Preferences
 #include "mozilla/StaticPrefs.h"  // for StaticPrefs
-#include "mozilla/StaticPrefs_accessibility.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/EventStateManager.h"  // for WheelPrefs
 #include "mozilla/webrender/WebRenderAPI.h"
