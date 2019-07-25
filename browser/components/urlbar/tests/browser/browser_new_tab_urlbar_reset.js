@@ -29,5 +29,5 @@ add_task(async function() {
 });
 
 function assertOpen() {
-  Assert.equal(gURLBar.view.panel.state, "open", "Should be showing the popup");
+  Assert.equal(gURLBar.view.isOpen, true, "Should be showing the popup");
 }

@@ -313,12 +313,6 @@
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 }
 
-/* Remove our custom border since we already get a native one that we can't
- * seem to override. */
-#urlbar-results {
-  border-style: none;
-}
-
 #PopupAutoComplete > richlistbox > richlistitem[originaltype~="datalist-first"] {
   border-top: 1px solid #C7C7C7;
 }

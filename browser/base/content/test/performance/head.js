@@ -817,9 +817,15 @@ async function runUrlbarTest(
   };
 
   let dropmarkerRect = URLBar.dropmarker.getBoundingClientRect();
-  let textBoxRect = gURLBar
-    .querySelector("moz-input-box")
-    .getBoundingClientRect();
+  let textBoxRect = URLBar.querySelector(
+    "moz-input-box"
+  ).getBoundingClientRect();
+  let resultsRect = {
+    top: URLBar.textbox.closest("toolbar").getBoundingClientRect().bottom,
+    right: win.innerWidth,
+    bottom: win.innerHeight,
+    left: 0,
+  };
   let expectedRects = {
     filter: rects =>
       rects.filter(
@@ -835,10 +841,13 @@ async function runUrlbarTest(
             (r.x1 >= dropmarkerRect.left - 1 &&
               r.x2 <= dropmarkerRect.right + 1 &&
               r.y1 >= dropmarkerRect.top &&
-              r.y2 <= dropmarkerRect.bottom)
+              r.y2 <= dropmarkerRect.bottom) ||
+            // We expect many changes in the results view.
+            (r.x1 >= resultsRect.left &&
+              r.x2 <= resultsRect.right &&
+              r.y1 >= resultsRect.top &&
+              r.y2 <= resultsRect.bottom)
           )
-        // XXX For some reason the awesomebar panel isn't in our screenshots,
-        // but that's where we actually expect many changes.
       ),
   };
 

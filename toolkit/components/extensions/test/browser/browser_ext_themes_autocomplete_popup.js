@@ -101,7 +101,7 @@ add_task(async function test_popup_url() {
     "Should get maxResults=" + maxResults + " results"
   );
 
-  let popup = UrlbarTestUtils.getPanel(window);
+  let popup = gURLBar.view.panel;
   let popupCS = window.getComputedStyle(popup);
 
   Assert.equal(
