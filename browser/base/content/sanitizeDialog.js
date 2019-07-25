@@ -204,7 +204,7 @@ var gSanitizePromptDialog = {
     var prefs = this._getItemPrefs();
     for (let i = 0; i < prefs.length; ++i) {
       var p = prefs[i];
-      Services.prefs.setBoolPref(p.name, p.value);
+      Services.prefs.setBoolPref(p.id, p.value);
     }
   },
 

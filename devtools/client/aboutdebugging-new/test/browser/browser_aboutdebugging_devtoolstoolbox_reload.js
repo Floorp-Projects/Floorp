@@ -49,6 +49,9 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   const toolbox = getToolbox(devtoolsWindow);
   await toolbox.selectTool(toolId);
 
+  info("Wait for requests to settle before reloading");
+  await toolbox.target.client.waitForRequestsToSettle();
+
   info("Reload about:devtools-toolbox page");
   devtoolsBrowser.reload();
   await gDevTools.once("toolbox-ready");

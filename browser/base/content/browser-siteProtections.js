@@ -535,8 +535,6 @@ var TrackingProtection = {
 
 var ThirdPartyCookies = {
   PREF_ENABLED: "network.cookie.cookieBehavior",
-  PREF_REPORT_BREAKAGE_ENABLED:
-    "browser.contentblocking.rejecttrackers.reportBreakage.enabled",
   PREF_ENABLED_VALUES: [
     // These values match the ones exposed under the Content Blocking section
     // of the Preferences UI.
@@ -649,12 +647,6 @@ var ThirdPartyCookies = {
       this.PREF_ENABLED,
       Ci.nsICookieService.BEHAVIOR_ACCEPT,
       this.updateCategoryLabel.bind(this)
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED,
-      false
     );
     this.updateCategoryLabel();
   },
@@ -907,8 +899,6 @@ var ThirdPartyCookies = {
  */
 var gProtectionsHandler = {
   PREF_ANIMATIONS_ENABLED: "toolkit.cosmeticAnimations.enabled",
-  PREF_REPORT_BREAKAGE_ENABLED:
-    "browser.contentblocking.reportBreakage.enabled",
   PREF_REPORT_BREAKAGE_URL: "browser.contentblocking.reportBreakage.url",
   PREF_CB_CATEGORY: "browser.contentblocking.category",
   PREF_SHOW_ALLOWED_LABELS:
@@ -969,16 +959,16 @@ var gProtectionsHandler = {
       "protections-popup-tp-switch-breakage-link"
     ));
   },
+  get _protectionsPopupTPSwitchSection() {
+    delete this._protectionsPopupTPSwitchSection;
+    return (this._protectionsPopupTPSwitchSection = document.getElementById(
+      "protections-popup-tp-switch-section"
+    ));
+  },
   get _protectionsPopupTPSwitch() {
     delete this._protectionsPopupTPSwitch;
     return (this._protectionsPopupTPSwitch = document.getElementById(
       "protections-popup-tp-switch"
-    ));
-  },
-  get _breakageLink() {
-    delete this._breakageLink;
-    return (this._breakageLink = document.getElementById(
-      "protections-popup-tp-switch-breakage-link"
     ));
   },
   get _protectionPopupSettingsButton() {
@@ -1109,12 +1099,6 @@ var gProtectionsHandler = {
           blocker.updateCategoryLabel();
         }
       }
-    );
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "reportBreakageEnabled",
-      this.PREF_REPORT_BREAKAGE_ENABLED,
-      false
     );
 
     for (let blocker of this.blockers) {
@@ -1453,10 +1437,19 @@ var gProtectionsHandler = {
       tpSwitch.toggleAttribute("enabled", currentlyEnabled);
     }
 
-    // Display the breakage link according to the current enable state.
-    // The display state of the breakage link will be fixed once the protections
-    // panel opened no matter how the TP switch state is.
-    this._protectionsPopupTPSwitchBreakageLink.hidden = !currentlyEnabled;
+    // Toggle the breakage link according to the current enable state.
+    this.toggleBreakageLink();
+
+    // Display a short TP switch section depending on the enable state. We need
+    // to use a separate attribute here since the 'hasException' attribute will
+    // be toggled as well as the TP switch, we cannot rely on that to decide the
+    // height of TP switch section, or it will change when toggling the switch,
+    // which is not desirable for us. So, we need to use a different attribute
+    // here.
+    this._protectionsPopupTPSwitchSection.toggleAttribute(
+      "short",
+      !currentlyEnabled
+    );
 
     // Set the counter of the 'Trackers blocked This Week'.
     // We need to get the statistics of trackers. So far, we haven't implemented
@@ -1499,6 +1492,9 @@ var gProtectionsHandler = {
     ]) {
       tpSwitch.toggleAttribute("enabled", !newExceptionState);
     }
+
+    // Toggle the breakage link if needed.
+    this.toggleBreakageLink();
 
     // Indicating that we need to show a toast after refreshing the page.
     // And caching the current URI and window ID in order to only show the mini
@@ -1570,10 +1566,6 @@ var gProtectionsHandler = {
       );
     }
 
-    // Adjust "site not working?" visibility based on whether we're
-    // blocking something or not.
-    gProtectionsHandler.toggleBreakageLink();
-
     // Check the panel state of the identity panel. Hide it if needed.
     if (gIdentityHandler._identityPopup.state != "closed") {
       PanelMultiView.hidePopup(gIdentityHandler._identityPopup);
@@ -1611,18 +1603,18 @@ var gProtectionsHandler = {
   },
 
   toggleBreakageLink() {
-    // For release (due to the large volume) we only want to receive reports
-    // for breakage that is directly related to third party cookie blocking.
-    if (
-      this.reportBreakageEnabled ||
-      (ThirdPartyCookies.reportBreakageEnabled &&
-        ThirdPartyCookies.activated &&
-        !TrackingProtection.activated)
-    ) {
-      this._breakageLink.removeAttribute("hidden");
-    } else {
-      this._breakageLink.setAttribute("hidden", "true");
-    }
+    // The breakage link will only be shown if tracking protection is enabled
+    // for the site and the TP toggle state is on. And we won't show the
+    // link as toggling TP switch to On from Off. In order to do so, we need to
+    // know the previous TP state. We check the ContentBlockingAllowList instead
+    // of 'hasException' attribute of the protection popup for the previous
+    // since the 'hasException' will also be toggled as well as toggling the TP
+    // switch. We won't be able to know the previous TP state through the
+    // 'hasException' attribute. So we fallback to check the
+    // ContentBlockingAllowList here.
+    this._protectionsPopupTPSwitchBreakageLink.hidden =
+      ContentBlockingAllowList.includes(gBrowser.selectedBrowser) ||
+      !this._protectionsPopupTPSwitch.hasAttribute("enabled");
   },
 
   submitBreakageReport(uri) {

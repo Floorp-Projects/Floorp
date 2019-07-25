@@ -620,13 +620,6 @@ description#identity-popup-content-verifier,
   box-shadow: var(--focus-ring-box-shadow);
 }
 
-/* Hide the "report breakage" button if we have not detected any trackers
- * (except if the user added an exception, in which case they might still
- * (especially!) want to report the breakage). */
-#protections-popup:not([blocking]):not([hasException]) #protections-popup-tp-switch-breakage-link {
-  display: none;
-}
-
 /* PERMISSIONS */
 
 #identity-popup-permissions-content {
@@ -801,6 +794,13 @@ description#identity-popup-content-verifier,
   /* This is needed in order to make 'position' working for the badge alongside
      the TP switch toggle.*/
   position: relative;
+}
+
+/* This is needed in order to show a correct height if the 'Site not working?'
+   link is not displaying. */
+#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-label-box,
+#protections-popup-tp-switch-section[short] > .protections-popup-tp-switch-box {
+  min-height: 30px;
 }
 
 .protections-popup-tp-switch-on-header,

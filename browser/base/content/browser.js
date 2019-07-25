@@ -309,7 +309,10 @@ var gURLBarHandler = {
   get urlbar() {
     if (!this._urlbar) {
       let textbox = document.getElementById("urlbar");
-      this._urlbar = new UrlbarInput({ textbox });
+      this._urlbar = new UrlbarInput({
+        textbox,
+        eventTelemetryCategory: "urlbar",
+      });
       if (this._lastValue) {
         this._urlbar.value = this._lastValue;
         delete this._lastValue;

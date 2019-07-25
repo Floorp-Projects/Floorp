@@ -15,8 +15,6 @@ const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const CB_PREF = "network.cookie.cookieBehavior";
 
-const PREF_REPORT_BREAKAGE_ENABLED =
-  "browser.contentblocking.reportBreakage.enabled";
 const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
 
 let { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
@@ -34,7 +32,6 @@ add_task(async function setup() {
     Services.prefs.clearUserPref(CB_PREF);
     Services.prefs.clearUserPref(FP_PREF);
     Services.prefs.clearUserPref(CM_PREF);
-    Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
     Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_URL);
 
     UrlClassifierTestUtils.cleanupTestTrackers();
@@ -64,93 +61,8 @@ add_task(async function setup() {
   });
 });
 
-add_task(async function testReportBreakageVisibility() {
-  let scenarios = [
-    {
-      url: TRACKING_PAGE,
-      prefs: {
-        "privacy.trackingprotection.enabled": true,
-        "browser.contentblocking.reportBreakage.enabled": true,
-      },
-      buttonVisible: true,
-    },
-    {
-      url: TRACKING_PAGE,
-      hasException: true,
-      prefs: {
-        "privacy.trackingprotection.enabled": true,
-        "browser.contentblocking.reportBreakage.enabled": true,
-      },
-      buttonVisible: true,
-    },
-    {
-      url: TRACKING_PAGE,
-      prefs: {
-        "privacy.trackingprotection.enabled": true,
-        "browser.contentblocking.reportBreakage.enabled": false,
-      },
-      buttonVisible: false,
-    },
-    {
-      url: BENIGN_PAGE,
-      prefs: {
-        "privacy.trackingprotection.enabled": true,
-        "browser.contentblocking.reportBreakage.enabled": true,
-      },
-      buttonVisible: false,
-    },
-    {
-      url: COOKIE_PAGE,
-      prefs: {
-        "privacy.trackingprotection.enabled": false,
-        "network.cookie.cookieBehavior":
-          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
-        "browser.contentblocking.reportBreakage.enabled": false,
-        "browser.contentblocking.rejecttrackers.reportBreakage.enabled": true,
-      },
-      buttonVisible: true,
-    },
-  ];
-
-  for (let scenario of scenarios) {
-    for (let pref in scenario.prefs) {
-      Preferences.set(pref, scenario.prefs[pref]);
-    }
-
-    let uri = Services.io.newURI(scenario.url);
-    if (scenario.hasException) {
-      Services.perms.add(
-        uri,
-        "trackingprotection",
-        Services.perms.ALLOW_ACTION
-      );
-    }
-
-    await BrowserTestUtils.withNewTab(scenario.url, async function() {
-      await openProtectionsPopup();
-
-      let reportBreakageButton = document.getElementById(
-        "protections-popup-tp-switch-breakage-link"
-      );
-      await TestUtils.waitForCondition(
-        () =>
-          BrowserTestUtils.is_visible(reportBreakageButton) ==
-          scenario.buttonVisible,
-        "waiting for correct visibility"
-      );
-      ok(true, "report breakage button has the correct visibility");
-    });
-
-    Services.perms.remove(uri, "trackingprotection");
-    for (let pref in scenario.prefs) {
-      Services.prefs.clearUserPref(pref);
-    }
-  }
-});
-
 add_task(async function testReportBreakageCancel() {
   Services.prefs.setBoolPref(TP_PREF, true);
-  Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
 
   await BrowserTestUtils.withNewTab(TRACKING_PAGE, async function() {
     await openProtectionsPopup();
@@ -195,7 +107,6 @@ add_task(async function testReportBreakageCancel() {
   });
 
   Services.prefs.clearUserPref(TP_PREF);
-  Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
 });
 
 add_task(async function testTP() {
@@ -265,7 +176,6 @@ async function testReportBreakage(url, tags) {
   let path =
     i.primaryScheme + "://" + i.primaryHost + ":" + i.primaryPort + "/";
 
-  Services.prefs.setBoolPref(PREF_REPORT_BREAKAGE_ENABLED, true);
   Services.prefs.setStringPref(PREF_REPORT_BREAKAGE_URL, path);
 
   await openProtectionsPopup();
@@ -384,6 +294,5 @@ async function testReportBreakage(url, tags) {
   // Stop the server.
   await new Promise(r => server.stop(r));
 
-  Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
   Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_URL);
 }

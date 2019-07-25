@@ -111,15 +111,20 @@ add_task(async function basicGetAndPost() {
     // be recognized.  It should be treated as part of the search string.  Try
     // all the restriction tokens to test that.  We should get a single "search
     // with" heuristic result without an alias.
-    for (let restrictToken in UrlbarTokenizer.RESTRICT) {
-      let search = `${restrictToken} ${alias} query string`;
+    for (let token of Object.values(UrlbarTokenizer.RESTRICT)) {
+      let search = `${token} ${alias} query string`;
+      let searchQuery =
+        token == UrlbarTokenizer.RESTRICT.SEARCH &&
+        search.startsWith(UrlbarTokenizer.RESTRICT.SEARCH)
+          ? search.substring(2)
+          : search;
       await check_autocomplete({
         search,
         searchParam: "enable-actions",
         matches: [
           makeSearchMatch(search, {
             engineName: "MozSearch",
-            searchQuery: search,
+            searchQuery,
             heuristic: true,
           }),
         ],

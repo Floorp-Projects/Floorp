@@ -430,7 +430,7 @@ browser.usage:
       - 1381591
     description: >-
       The number of plugin instances that were created.
-    expires: never # Jan-2021 but we don't have a version number for that
+    expires: never  # Jan-2021 but we don't have a version number for that
     kind: uint
     notification_emails:
       - bsmedberg@mozilla.com
@@ -2225,83 +2225,83 @@ devtools.toolbox:
 devtools.webreplay:
   new_recording:
     bug_numbers:
-     - 1495910
+      - 1495910
     description: >
       Number of times a blank recording tab was created.
     expires: never
     kind: uint
     notification_emails:
-     - bhackett@mozilla.com
+      - bhackett@mozilla.com
     products:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
     record_in_processes:
-     - 'main'
+      - 'main'
 
   reload_recording:
     bug_numbers:
-     - 1495910
+      - 1495910
     description: >
       Number of times a non-recording tab was reloaded to create a recording tab.
     expires: never
     kind: uint
     notification_emails:
-     - bhackett@mozilla.com
+      - bhackett@mozilla.com
     products:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
     record_in_processes:
-     - 'main'
+      - 'main'
 
   stop_recording:
     bug_numbers:
-     - 1495910
+      - 1495910
     description: >
       Number of times a recording tab was reloaded to create a non-recording tab.
     expires: never
     kind: uint
     notification_emails:
-     - bhackett@mozilla.com
+      - bhackett@mozilla.com
     products:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
     record_in_processes:
-     - 'main'
+      - 'main'
 
   save_recording:
     bug_numbers:
-     - 1495910
+      - 1495910
     description: >
       Number of times a recording was saved.
     expires: never
     kind: uint
     notification_emails:
-     - bhackett@mozilla.com
+      - bhackett@mozilla.com
     products:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
     record_in_processes:
-     - 'main'
+      - 'main'
 
   load_recording:
     bug_numbers:
-     - 1495910
+      - 1495910
     description: >
       Number of times a recording was loaded.
     expires: never
     kind: uint
     notification_emails:
-     - bhackett@mozilla.com
+      - bhackett@mozilla.com
     products:
       - 'firefox'
       - 'fennec'
       - 'geckoview'
     record_in_processes:
-     - 'main'
+      - 'main'
 
 devtools.changesview:
   opened_count:
@@ -4853,10 +4853,6 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
@@ -4871,10 +4867,6 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
@@ -4888,10 +4880,6 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
@@ -4907,10 +4895,6 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
@@ -4925,10 +4909,6 @@ telemetry.test:
     kind: uint
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
@@ -4943,10 +4923,6 @@ telemetry.test:
     keyed: true
     notification_emails:
       - telemetry-client-dev@mozilla.com
-    products:
-      - 'firefox'
-      - 'fennec'
-      - 'geckoview'
     record_in_processes:
       - 'all'
     products:
