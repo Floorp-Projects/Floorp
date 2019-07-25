@@ -255,15 +255,18 @@ nsIContent* IDRefsIterator::NextElem() {
   return nullptr;
 }
 
-nsIContent* IDRefsIterator::GetElem(const nsDependentSubstring& aID) {
+dom::Element* IDRefsIterator::GetElem(nsIContent* aContent,
+                                      const nsAString& aID) {
   // Get elements in DOM tree by ID attribute if this is an explicit content.
   // In case of bound element check its anonymous subtree.
-  if (!mContent->IsInAnonymousSubtree()) {
+  if (!aContent->IsInAnonymousSubtree()) {
     dom::DocumentOrShadowRoot* docOrShadowRoot =
-        mContent->GetUncomposedDocOrConnectedShadowRoot();
+        aContent->GetUncomposedDocOrConnectedShadowRoot();
     if (docOrShadowRoot) {
       dom::Element* refElm = docOrShadowRoot->GetElementById(aID);
-      if (refElm || !mContent->GetXBLBinding()) return refElm;
+      if (refElm || !aContent->GetXBLBinding()) {
+        return refElm;
+      }
     }
   }
 
@@ -271,9 +274,9 @@ nsIContent* IDRefsIterator::GetElem(const nsDependentSubstring& aID) {
   // then use "anonid" attribute to get elements in anonymous subtree.
 
   // Check inside the binding the element is contained in.
-  nsIContent* bindingParent = mContent->GetBindingParent();
+  nsIContent* bindingParent = aContent->GetBindingParent();
   if (bindingParent) {
-    nsIContent* refElm =
+    dom::Element* refElm =
         bindingParent->OwnerDoc()->GetAnonymousElementByAttribute(
             bindingParent, nsGkAtoms::anonid, aID);
 
@@ -281,12 +284,16 @@ nsIContent* IDRefsIterator::GetElem(const nsDependentSubstring& aID) {
   }
 
   // Check inside the binding of the element.
-  if (mContent->GetXBLBinding()) {
-    return mContent->OwnerDoc()->GetAnonymousElementByAttribute(
-        mContent, nsGkAtoms::anonid, aID);
+  if (aContent->GetXBLBinding()) {
+    return aContent->OwnerDoc()->GetAnonymousElementByAttribute(
+        aContent, nsGkAtoms::anonid, aID);
   }
 
   return nullptr;
+}
+
+dom::Element* IDRefsIterator::GetElem(const nsDependentSubstring& aID) {
+  return GetElem(mContent, aID);
 }
 
 Accessible* IDRefsIterator::Next() {
