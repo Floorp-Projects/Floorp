@@ -8,6 +8,11 @@
 
 const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 const { NetUtil } = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
+const ReferrerInfo = Components.Constructor(
+  "@mozilla.org/referrer-info;1",
+  "nsIReferrerInfo",
+  "init"
+);
 
 var server = new HttpServer();
 server.registerDirectory("/", do_get_file(""));
@@ -94,12 +99,16 @@ function checkSecondLoad() {
   var outer = Cc["@mozilla.org/image/tools;1"]
     .getService(Ci.imgITools)
     .createScriptedObserver(listener);
+  var referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+    true,
+    null
+  );
   requests.push({
     request: gCurrentLoader.loadImageXPCOM(
       uri,
       null,
-      null,
-      "default",
+      referrerInfo,
       null,
       null,
       outer,
@@ -207,12 +216,16 @@ function startImageCallback(otherCb) {
     var outer = Cc["@mozilla.org/image/tools;1"]
       .getService(Ci.imgITools)
       .createScriptedObserver(listener2);
+    var referrerInfo = new ReferrerInfo(
+      Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+      true,
+      null
+    );
     requests.push({
       request: gCurrentLoader.loadImageXPCOM(
         uri,
         null,
-        null,
-        "default",
+        referrerInfo,
         null,
         null,
         outer,
@@ -257,11 +270,15 @@ function run_test() {
   var outer = Cc["@mozilla.org/image/tools;1"]
     .getService(Ci.imgITools)
     .createScriptedObserver(listener);
+  var referrerInfo = new ReferrerInfo(
+    Ci.nsIHttpChannel.REFERRER_POLICY_NO_REFERRER_WHEN_DOWNGRADE,
+    true,
+    null
+  );
   var req = gCurrentLoader.loadImageXPCOM(
     uri,
     null,
-    null,
-    "default",
+    referrerInfo,
     null,
     null,
     outer,
