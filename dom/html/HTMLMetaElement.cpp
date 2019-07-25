@@ -61,6 +61,14 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
         ProcessViewportContent(document);
       }
       CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
+    } else if (document && aName == nsGkAtoms::name) {
+      if (aValue && aValue->Equals(nsGkAtoms::viewport, eIgnoreCase)) {
+        ProcessViewportContent(document);
+      } else if (aOldValue &&
+                 aOldValue->Equals(nsGkAtoms::viewport, eIgnoreCase)) {
+        DiscardViewportContent(document);
+      }
+      CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
     }
     // Update referrer policy when it got changed from JS
     SetMetaReferrer(document);
@@ -136,7 +144,7 @@ void HTMLMetaElement::UnbindFromTree(bool aNullParent) {
   nsCOMPtr<Document> oldDoc = GetUncomposedDoc();
   if (oldDoc && AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
                             nsGkAtoms::viewport, eIgnoreCase)) {
-    oldDoc->RemoveMetaViewportElement(this);
+    DiscardViewportContent(oldDoc);
   }
   CreateAndDispatchEvent(oldDoc, NS_LITERAL_STRING("DOMMetaRemoved"));
   nsGenericHTMLElement::UnbindFromTree(aNullParent);
@@ -164,6 +172,10 @@ void HTMLMetaElement::ProcessViewportContent(Document* aDocument) {
 
   ViewportMetaData data(content);
   aDocument->AddMetaViewportElement(this, std::move(data));
+}
+
+void HTMLMetaElement::DiscardViewportContent(Document* aDocument) {
+  aDocument->RemoveMetaViewportElement(this);
 }
 
 }  // namespace dom
