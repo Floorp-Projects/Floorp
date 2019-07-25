@@ -40,6 +40,7 @@
 #include "js/TypeDecls.h"            // jsbytecode
 #include "vm/BigIntType.h"           // BigInt
 #include "vm/BytecodeUtil.h"         // JSOp
+#include "vm/Instrumentation.h"      // InstrumentationKind
 #include "vm/Interpreter.h"          // CheckIsObjectKind, CheckIsCallableKind
 #include "vm/Iteration.h"            // IteratorKind
 #include "vm/JSFunction.h"           // JSFunction, FunctionPrefixKind
@@ -159,6 +160,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   // The end location of a function body that is being emitted.
   mozilla::Maybe<uint32_t> functionBodyEndPos = {};
+
+  // Mask of operation kinds which need instrumentation. This is obtained from
+  // the compile options and copied here for efficiency.
+  uint32_t instrumentationKinds = 0;
 
   /*
    * Note that BytecodeEmitters are magic: they own the arena "top-of-stack"
@@ -320,9 +325,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   bool inPrologue() const { return mainOffset_.isNothing(); }
 
-  void switchToMain() {
+  MOZ_MUST_USE bool switchToMain() {
     MOZ_ASSERT(inPrologue());
     mainOffset_.emplace(bytecodeSection().code().length());
+
+    return emitInstrumentation(InstrumentationKind::Main);
   }
 
   void setFunctionBodyEndPos(uint32_t pos) {
@@ -411,9 +418,10 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit three bytecodes, an opcode with two bytes of immediate operands.
   MOZ_MUST_USE bool emit3(JSOp op, jsbytecode op1, jsbytecode op2);
 
-  // Helper to emit JSOP_DUPAT. The argument is the value's depth on the
-  // JS stack, as measured from the top.
-  MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop);
+  // Helper to duplicate one or more stack values. |slotFromTop| is the value's
+  // depth on the JS stack, as measured from the top. |count| is the number of
+  // values to duplicate, in theiro original order.
+  MOZ_MUST_USE bool emitDupAt(unsigned slotFromTop, unsigned count = 1);
 
   // Helper to emit JSOP_POP or JSOP_POPN.
   MOZ_MUST_USE bool emitPopN(unsigned n);
@@ -473,8 +481,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitIndex32(JSOp op, uint32_t index);
   MOZ_MUST_USE bool emitIndexOp(JSOp op, uint32_t index);
 
-  MOZ_MUST_USE bool emitAtomOp(JSAtom* atom, JSOp op);
-  MOZ_MUST_USE bool emitAtomOp(uint32_t atomIndex, JSOp op);
+  MOZ_MUST_USE bool emitAtomOp(
+      JSAtom* atom, JSOp op,
+      ShouldInstrument shouldInstrument = ShouldInstrument::No);
+  MOZ_MUST_USE bool emitAtomOp(
+      uint32_t atomIndex, JSOp op,
+      ShouldInstrument shouldInstrument = ShouldInstrument::No);
 
   MOZ_MUST_USE bool emitArrayLiteral(ListNode* array);
   MOZ_MUST_USE bool emitArray(ParseNode* arrayHead, uint32_t count);
@@ -579,7 +591,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   MOZ_MUST_USE bool emitElemObjAndKey(PropertyByValue* elem, bool isSuper,
                                       ElemOpEmitter& eoe);
-  MOZ_MUST_USE bool emitElemOpBase(JSOp op);
+  MOZ_MUST_USE bool emitElemOpBase(
+      JSOp op, ShouldInstrument shouldInstrument = ShouldInstrument::No);
   MOZ_MUST_USE bool emitElemOp(PropertyByValue* elem, JSOp op);
   MOZ_MUST_USE bool emitElemIncDec(UnaryNode* incDec);
 
@@ -779,6 +792,29 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitPipeline(ListNode* node);
 
   MOZ_MUST_USE bool emitExportDefault(BinaryNode* exportNode);
+
+  MOZ_MUST_USE bool emitReturnRval() {
+    return emitInstrumentation(InstrumentationKind::Exit) &&
+           emit1(JSOP_RETRVAL);
+  }
+
+  MOZ_MUST_USE bool emitInstrumentation(InstrumentationKind kind,
+                                        uint32_t npopped = 0) {
+    return MOZ_LIKELY(!instrumentationKinds) ||
+           emitInstrumentationSlow(kind, std::function<bool(uint32_t)>());
+  }
+
+  MOZ_MUST_USE bool emitInstrumentationForOpcode(JSOp op, uint32_t atomIndex) {
+    return MOZ_LIKELY(!instrumentationKinds) ||
+           emitInstrumentationForOpcodeSlow(op, atomIndex);
+  }
+
+ private:
+  MOZ_MUST_USE bool emitInstrumentationSlow(
+      InstrumentationKind kind,
+      const std::function<bool(uint32_t)>& pushOperandsCallback);
+  MOZ_MUST_USE bool emitInstrumentationForOpcodeSlow(JSOp op,
+                                                     uint32_t atomIndex);
 };
 
 class MOZ_RAII AutoCheckUnstableEmitterScope {

@@ -33,6 +33,10 @@ class DebuggerScript : public NativeObject {
 
   enum {
     OWNER_SLOT,
+
+    // Holds any instrumentation ID that has been assigned to the script.
+    INSTRUMENTATION_ID_SLOT,
+
     RESERVED_SLOTS,
   };
 
@@ -84,6 +88,7 @@ class DebuggerScript : public NativeObject {
   static bool clearAllBreakpoints(JSContext* cx, unsigned argc, Value* vp);
   static bool isInCatchScope(JSContext* cx, unsigned argc, Value* vp);
   static bool getOffsetsCoverage(JSContext* cx, unsigned argc, Value* vp);
+  static bool setInstrumentationId(JSContext* cx, unsigned argc, Value* vp);
   static bool construct(JSContext* cx, unsigned argc, Value* vp);
 
   template <typename T>
@@ -92,6 +97,10 @@ class DebuggerScript : public NativeObject {
   static bool getSuccessorOrPredecessorOffsets(JSContext* cx, unsigned argc,
                                                Value* vp, const char* name,
                                                bool successor);
+
+  Value getInstrumentationId() const {
+    return getSlot(INSTRUMENTATION_ID_SLOT);
+  }
 
  private:
   static const ClassOps classOps_;
