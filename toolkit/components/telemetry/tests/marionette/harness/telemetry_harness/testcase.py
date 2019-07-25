@@ -168,6 +168,14 @@ class TelemetryTestCase(WindowManagerMixin, MarionetteTestCase):
         else:
             self.addon_ids.append(addon_id)
 
+    def set_persistent_profile_preferences(self, preferences):
+        """Wrapper for setting persistent preferences on a user profile"""
+        return self.marionette.instance.profile.set_persistent_preferences(preferences)
+
+    def set_preferences(self, preferences):
+        """Wrapper for setting persistent preferences on a user profile"""
+        return self.marionette.set_prefs(preferences)
+
     @property
     def client_id(self):
         """Return the ID of the current client."""
