@@ -126,31 +126,6 @@ ToolSidebar.prototype = {
   },
 
   /**
-   * Helper API for adding side-panels that use existing <iframe> nodes
-   * (defined within inspector.xhtml) as the content.
-   * The document must have a title, which will be used as the name of the tab.
-   *
-   * @param {String} tab uniq id
-   * @param {String} title tab title
-   * @param {String} url
-   * @param {Boolean} selected true if the panel should be selected
-   * @param {Number} index the position where the tab should be inserted
-   */
-  addFrameTab: function(id, title, url, selected, index) {
-    const panel = this.InspectorTabPanel({
-      id: id,
-      idPrefix: this.TABPANEL_ID_PREFIX,
-      key: id,
-      title: title,
-      url: url,
-      onMount: this.onSidePanelMounted.bind(this),
-      onUnmount: this.onSidePanelUnmounted.bind(this),
-    });
-
-    this.addTab(id, title, panel, selected, index);
-  },
-
-  /**
    * Queues a side-panel tab to be added..
    *
    * @param {String} tab uniq id
@@ -185,66 +160,6 @@ ToolSidebar.prototype = {
   },
 
   /**
-   * Helper API for queuing side-panels that use existing <iframe> nodes
-   * (defined within inspector.xhtml) as the content.
-   * The document must have a title, which will be used as the name of the tab.
-   *
-   * @param {String} tab uniq id
-   * @param {String} title tab title
-   * @param {String} url
-   * @param {Boolean} selected true if the panel should be selected
-   * @param {Number} index the position where the tab should be inserted
-   */
-  queueFrameTab: function(id, title, url, selected, index) {
-    const panel = this.InspectorTabPanel({
-      id: id,
-      idPrefix: this.TABPANEL_ID_PREFIX,
-      key: id,
-      title: title,
-      url: url,
-      onMount: this.onSidePanelMounted.bind(this),
-      onUnmount: this.onSidePanelUnmounted.bind(this),
-    });
-
-    this.queueTab(id, title, panel, selected, index);
-  },
-
-  onSidePanelMounted: function(content, props) {
-    const iframe = content.querySelector("iframe");
-    if (!iframe || iframe.getAttribute("src")) {
-      return;
-    }
-
-    const onIFrameLoaded = event => {
-      iframe.removeEventListener("load", onIFrameLoaded, true);
-
-      const doc = event.target;
-      const win = doc.defaultView;
-      if ("setPanel" in win) {
-        win.setPanel(this._toolPanel, iframe);
-      }
-      this.emit(props.id + "-ready");
-    };
-
-    iframe.addEventListener("load", onIFrameLoaded, true);
-    iframe.setAttribute("src", props.url);
-  },
-
-  onSidePanelUnmounted: function(content, props) {
-    const iframe = content.querySelector("iframe");
-    if (!iframe || !iframe.hasAttribute("src")) {
-      return;
-    }
-
-    const win = iframe.contentWindow;
-    if ("destroy" in win) {
-      win.destroy(this._toolPanel, iframe);
-    }
-
-    iframe.removeAttribute("src");
-  },
-
-  /**
    * Remove an existing tab.
    * @param {String} tabId The ID of the tab that was used to register it, or
    * the tab id attribute value if the tab existed before the sidebar
@@ -254,11 +169,6 @@ ToolSidebar.prototype = {
    */
   async removeTab(tabId, tabPanelId) {
     this._tabbar.removeTab(tabId);
-
-    const win = this.getWindowForTab(tabId);
-    if (win && "destroy" in win) {
-      await win.destroy();
-    }
 
     this.emit("tab-unregistered", tabId);
   },
@@ -405,48 +315,15 @@ ToolSidebar.prototype = {
   },
 
   /**
-   * Return the window containing the tab content.
-   */
-  getWindowForTab: function(id) {
-    // Get the tabpanel and make sure it contains an iframe
-    const panel = this.getTabPanel(id);
-    if (
-      !panel ||
-      !panel.firstElementChild ||
-      !panel.firstElementChild.contentWindow
-    ) {
-      return null;
-    }
-
-    return panel.firstElementChild.contentWindow;
-  },
-
-  /**
    * Clean-up.
    */
-  async destroy() {
+  destroy() {
     if (this._destroyed) {
       return;
     }
     this._destroyed = true;
 
     this.emit("destroy");
-
-    // Note that we check for the existence of this._tabbox.tabpanels at each
-    // step as the container window may have been closed by the time one of the
-    // panel's destroy promise resolves.
-    const tabpanels = [...this._tabbox.querySelectorAll(".tab-panel-box")];
-    for (const panel of tabpanels) {
-      const iframe = panel.querySelector("iframe");
-      if (!iframe) {
-        continue;
-      }
-      const win = iframe.contentWindow;
-      if (win && "destroy" in win) {
-        await win.destroy();
-      }
-      panel.remove();
-    }
 
     if (this._currentTool && this._telemetry) {
       const sessionId = this._toolPanel._toolbox.sessionId;
