@@ -131,7 +131,8 @@ add_task(async function test_tab_matches() {
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
     searchParam: "enable-actions",
     matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
-                               { heuristic: true, searchQuery: "abc" }),
+                               { heuristic: true,
+                                 searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc" }),
                makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }) ],
   });
 
@@ -148,7 +149,8 @@ add_task(async function test_tab_matches() {
     search: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
     searchParam: "enable-actions",
     matches: [ makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
-                               { heuristic: true, searchQuery: "mozilla" }),
+                               { heuristic: true,
+                                 searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla" }),
                makeSwitchToTabMatch("about:mozilla") ],
   });
 
