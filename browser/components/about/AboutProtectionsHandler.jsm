@@ -182,7 +182,7 @@ var AboutProtectionsHandler = {
    */
   async getMonitorData() {
     let monitorData = {};
-    let potentiallyBreachedLogins = 0;
+    let potentiallyBreachedLogins = null;
     const hasFxa = await fxAccounts.accountStatus();
 
     if (hasFxa) {
@@ -214,11 +214,14 @@ var AboutProtectionsHandler = {
         }
       }
 
-      // Get the stats for number of potentially breached Lockwise passwords
-      const logins = await LoginHelper.getAllUserFacingLogins();
-      potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
-        logins
-      );
+      // Get the stats for number of potentially breached Lockwise passwords if no master
+      // password is set.
+      if (!LoginHelper.isMasterPasswordSet()) {
+        const logins = await LoginHelper.getAllUserFacingLogins();
+        potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
+          logins
+        );
+      }
     } else {
       // If no account exists, then the user is not logged in with an fxAccount.
       monitorData = {
@@ -228,7 +231,9 @@ var AboutProtectionsHandler = {
 
     return {
       ...monitorData,
-      potentiallyBreachedLogins: potentiallyBreachedLogins.size,
+      potentiallyBreachedLogins: potentiallyBreachedLogins
+        ? potentiallyBreachedLogins.size
+        : 0,
       error: !!monitorData.errorMessage,
     };
   },

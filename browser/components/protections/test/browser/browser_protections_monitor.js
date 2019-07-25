@@ -7,7 +7,6 @@
 const { AboutProtectionsHandler } = ChromeUtils.import(
   "resource:///modules/aboutpages/AboutProtectionsHandler.jsm"
 );
-
 const nsLoginInfo = new Components.Constructor(
   "@mozilla.org/login-manager/loginInfo;1",
   Ci.nsILoginInfo,
@@ -40,8 +39,8 @@ let fakeDataWithError = {
   error: true,
 };
 
-// Modify AboutProtectionsHandler's getMonitorData method to fake returning a specified
-// number of devices.
+// Modify AboutProtectionsHandler's getMonitorData method to fake returning data from the
+// Monitor endpoint.
 const mockGetMonitorData = data => async () => data;
 
 // Modify AboutProtectionsHandler's getLoginData method to fake being logged in with Fxa.
@@ -122,6 +121,35 @@ add_task(async function() {
     );
   });
 
+  info("Make sure Lockwise section is hidden if no passwords are returned.");
+  const noBreachedLoginsData = {
+    ...fakeDataWithNoError,
+    potentiallyBreachedLogins: 0,
+  };
+  AboutProtectionsHandler.getMonitorData = mockGetMonitorData(
+    noBreachedLoginsData
+  );
+
+  await reloadTab(tab);
+
+  await ContentTask.spawn(tab.linkedBrowser, {}, async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      const noLogins = content.document.querySelector(
+        ".monitor-card.has-logins"
+      );
+      return ContentTaskUtils.is_visible(noLogins);
+    }, "Monitor card for user with stored logins is shown.");
+
+    const lockwiseSection = content.document.querySelector(
+      ".monitor-breached-passwords"
+    );
+
+    ok(
+      ContentTaskUtils.is_hidden(lockwiseSection),
+      "Lockwise section is hidden."
+    );
+  });
+
   info(
     "Check that correct content is displayed when monitor data contains an error message."
   );
@@ -146,7 +174,7 @@ add_task(async function() {
     }, "Monitor card is not enabled.");
 
     const monitorCard = content.document.querySelector(".monitor-card");
-    ok(ContentTaskUtils.is_hidden(monitorCard), "Lockwise card is hidden.");
+    ok(ContentTaskUtils.is_hidden(monitorCard), "Monitor card is hidden.");
   });
 
   // set the pref back to displaying the card.
