@@ -116,8 +116,8 @@ void WebSocketFrameData::WriteIPCParams(IPC::Message* aMessage) const {
   WriteParam(aMessage, mRsvBit1);
   WriteParam(aMessage, mRsvBit2);
   WriteParam(aMessage, mRsvBit3);
-  WriteParam(aMessage, mOpCode);
   WriteParam(aMessage, mMaskBit);
+  WriteParam(aMessage, mOpCode);
   WriteParam(aMessage, mMask);
   WriteParam(aMessage, mPayload);
 }
