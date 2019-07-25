@@ -112,8 +112,8 @@ impl BuildInfo for Git {
         self.exec(&["rev-parse", "HEAD"])
             .and_then(|sha| self.to_hg_sha(sha))
             .map(|mut s| {
-              s.truncate(12);
-              s
+                s.truncate(12);
+                s
             })
     }
 

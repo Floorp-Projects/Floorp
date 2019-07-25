@@ -1,5 +1,5 @@
-use base64;
 use crate::logging;
+use base64;
 use hyper::Method;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
@@ -7,11 +7,11 @@ use std::env;
 use std::fs::File;
 use std::io::prelude::*;
 use uuid::Uuid;
-use webdriver::Parameters;
 use webdriver::command::{WebDriverCommand, WebDriverExtensionCommand};
 use webdriver::common::WebElement;
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::httpapi::WebDriverExtensionRoute;
+use webdriver::Parameters;
 
 pub const CHROME_ELEMENT_KEY: &'static str = "chromeelement-9fc5-4b51-a3c8-01716eedeb04";
 
