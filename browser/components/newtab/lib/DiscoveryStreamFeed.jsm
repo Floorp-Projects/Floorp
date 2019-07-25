@@ -1182,21 +1182,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           const filtered = spocsList.filter(s => s.url === action.data.url);
           if (filtered.length) {
             this._sendSpocsFill({ blocked_by_user: filtered }, false);
-
-            // If we're blocking a spoc, we want a slightly different treatment for open tabs.
-            this.store.dispatch(
-              ac.AlsoToPreloaded({
-                type: at.DISCOVERY_STREAM_LINK_BLOCKED,
-                data: action.data,
-              })
-            );
-            this.store.dispatch(
-              ac.BroadcastToContent({
-                type: at.DISCOVERY_STREAM_SPOC_BLOCKED,
-                data: action.data,
-              })
-            );
-            return;
           }
         }
         this.store.dispatch(
