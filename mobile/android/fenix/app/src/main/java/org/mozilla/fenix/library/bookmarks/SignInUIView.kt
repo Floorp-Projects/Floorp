@@ -7,7 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
+import com.google.android.material.button.MaterialButton
 import io.reactivex.Observable
 import io.reactivex.Observer
 import io.reactivex.functions.Consumer
@@ -20,7 +20,7 @@ class SignInUIView(
     changesObservable: Observable<SignInChange>
 ) : UIView<SignInState, SignInAction, SignInChange>(container, actionEmitter, changesObservable) {
 
-    override val view: Button = LayoutInflater.from(container.context)
+    override val view: MaterialButton = LayoutInflater.from(container.context)
         .inflate(R.layout.component_sign_in, container, true)
         .findViewById(R.id.bookmark_folders_sign_in)
 
