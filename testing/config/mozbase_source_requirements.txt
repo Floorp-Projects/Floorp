@@ -1,20 +1,20 @@
-../../python/mozterm
+--editable ../../python/mozterm
 
-../mozbase/manifestparser
-../mozbase/mozcrash
-../mozbase/mozdebug
-../mozbase/mozdevice
-../mozbase/mozfile
-../mozbase/mozhttpd
-../mozbase/mozinfo
-../mozbase/mozinstall
-../mozbase/mozleak
-../mozbase/mozlog
-../mozbase/moznetwork
-../mozbase/mozprocess
-../mozbase/mozprofile
-../mozbase/mozproxy
-../mozbase/mozrunner
-../mozbase/mozscreenshot
-../mozbase/moztest
-../mozbase/mozversion
+--editable ../mozbase/manifestparser
+--editable ../mozbase/mozcrash
+--editable ../mozbase/mozdebug
+--editable ../mozbase/mozdevice
+--editable ../mozbase/mozfile
+--editable ../mozbase/mozhttpd
+--editable ../mozbase/mozinfo
+--editable ../mozbase/mozinstall
+--editable ../mozbase/mozleak
+--editable ../mozbase/mozlog
+--editable ../mozbase/moznetwork
+--editable ../mozbase/mozprocess
+--editable ../mozbase/mozprofile
+--editable ../mozbase/mozproxy
+--editable ../mozbase/mozrunner
+--editable ../mozbase/mozscreenshot
+--editable ../mozbase/moztest
+--editable ../mozbase/mozversion
