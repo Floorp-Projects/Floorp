@@ -2,7 +2,7 @@
 
 # display
 
-`val display: `[`DisplayMode`](-display-mode/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L50)
+`val display: `[`DisplayMode`](-display-mode/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifest.kt#L53)
 
 Defines the developers’ preferred display mode for the website.
 
