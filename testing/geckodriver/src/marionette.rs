@@ -19,34 +19,30 @@ use std::sync::Mutex;
 use std::thread;
 use std::time;
 use webdriver::capabilities::CapabilitiesMatching;
-use webdriver::command::WebDriverCommand::{AcceptAlert, AddCookie, NewWindow, CloseWindow,
-                                           DeleteCookie, DeleteCookies, DeleteSession,
-                                           DismissAlert, ElementClear, ElementClick,
-                                           ElementSendKeys, ExecuteAsyncScript, ExecuteScript,
-                                           Extension, FindElement, FindElementElement,
-                                           FindElementElements, FindElements, FullscreenWindow,
-                                           Get, GetActiveElement, GetAlertText, GetCSSValue,
-                                           GetCookies, GetCurrentUrl, GetElementAttribute,
-                                           GetElementProperty, GetElementRect, GetElementTagName,
-                                           GetElementText, GetNamedCookie, GetPageSource,
-                                           GetTimeouts, GetTitle, GetWindowHandle,
-                                           GetWindowHandles, GetWindowRect, GoBack, GoForward,
-                                           IsDisplayed, IsEnabled, IsSelected, MaximizeWindow,
-                                           MinimizeWindow, NewSession, PerformActions, Refresh,
-                                           ReleaseActions, SendAlertText, SetTimeouts,
-                                           SetWindowRect, Status, SwitchToFrame,
-                                           SwitchToParentFrame, SwitchToWindow,
-                                           TakeElementScreenshot, TakeScreenshot};
-use webdriver::command::{ActionsParameters, AddCookieParameters, GetNamedCookieParameters,
-                         GetParameters, JavascriptCommandParameters, LocatorParameters,
-                         NewSessionParameters, SwitchToFrameParameters, SwitchToWindowParameters,
-                         TimeoutsParameters, WindowRectParameters, NewWindowParameters};
+use webdriver::command::WebDriverCommand::{
+    AcceptAlert, AddCookie, CloseWindow, DeleteCookie, DeleteCookies, DeleteSession, DismissAlert,
+    ElementClear, ElementClick, ElementSendKeys, ExecuteAsyncScript, ExecuteScript, Extension,
+    FindElement, FindElementElement, FindElementElements, FindElements, FullscreenWindow, Get,
+    GetActiveElement, GetAlertText, GetCSSValue, GetCookies, GetCurrentUrl, GetElementAttribute,
+    GetElementProperty, GetElementRect, GetElementTagName, GetElementText, GetNamedCookie,
+    GetPageSource, GetTimeouts, GetTitle, GetWindowHandle, GetWindowHandles, GetWindowRect, GoBack,
+    GoForward, IsDisplayed, IsEnabled, IsSelected, MaximizeWindow, MinimizeWindow, NewSession,
+    NewWindow, PerformActions, Refresh, ReleaseActions, SendAlertText, SetTimeouts, SetWindowRect,
+    Status, SwitchToFrame, SwitchToParentFrame, SwitchToWindow, TakeElementScreenshot,
+    TakeScreenshot,
+};
+use webdriver::command::{
+    ActionsParameters, AddCookieParameters, GetNamedCookieParameters, GetParameters,
+    JavascriptCommandParameters, LocatorParameters, NewSessionParameters, NewWindowParameters,
+    SwitchToFrameParameters, SwitchToWindowParameters, TimeoutsParameters, WindowRectParameters,
+};
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{Cookie, FrameId, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY};
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use webdriver::response::{NewWindowResponse, CloseWindowResponse, CookieResponse, CookiesResponse,
-                          ElementRectResponse, NewSessionResponse, TimeoutsResponse,
-                          ValueResponse, WebDriverResponse, WindowRectResponse};
+use webdriver::response::{
+    CloseWindowResponse, CookieResponse, CookiesResponse, ElementRectResponse, NewSessionResponse,
+    NewWindowResponse, TimeoutsResponse, ValueResponse, WebDriverResponse, WindowRectResponse,
+};
 use webdriver::server::{Session, WebDriverHandler};
 
 use crate::build::BuildInfo;
@@ -238,7 +234,8 @@ impl WebDriverHandler<GeckoExtensionRoute> for MarionetteHandler {
             // First handle the status message which doesn't actually require a marionette
             // connection or message
             if msg.command == Status {
-                let (ready, message) = self.connection
+                let (ready, message) = self
+                    .connection
                     .lock()
                     .map(|ref connection| {
                         connection
@@ -367,7 +364,8 @@ impl MarionetteSession {
                         resp.result.get("sessionId"),
                         ErrorStatus::SessionNotCreated,
                         "Unable to get session id"
-                    ).as_str(),
+                    )
+                    .as_str(),
                     ErrorStatus::SessionNotCreated,
                     "Unable to convert session id to string"
                 );
@@ -395,10 +393,7 @@ impl MarionetteSession {
         let window = data.get(WINDOW_KEY);
 
         let value = try_opt!(
-            element
-                .or(chrome_element)
-                .or(frame)
-                .or(window),
+            element.or(chrome_element).or(frame).or(window),
             ErrorStatus::UnknownError,
             "Failed to extract web element from Marionette response"
         );
@@ -406,7 +401,8 @@ impl MarionetteSession {
             value.as_str(),
             ErrorStatus::UnknownError,
             "Failed to convert web element reference value to string"
-        ).to_string();
+        )
+        .to_string();
         Ok(WebElement(id))
     }
 
@@ -479,16 +475,16 @@ impl MarionetteSession {
             | TakeElementScreenshot(_) => WebDriverResponse::Generic(resp.to_value_response(true)?),
             GetTimeouts => {
                 let script = match try_opt!(
-                        resp.result.get("script"),
+                    resp.result.get("script"),
+                    ErrorStatus::UnknownError,
+                    "Missing field: script"
+                ) {
+                    Value::Null => None,
+                    n => try_opt!(
+                        Some(n.as_u64()),
                         ErrorStatus::UnknownError,
-                        "Missing field: script"
-                    ) {
-                        Value::Null => None,
-                        n => try_opt!(
-                            Some(n.as_u64()),
-                            ErrorStatus::UnknownError,
-                            "Failed to interpret script timeout duration as u64"
-                        ),
+                        "Failed to interpret script timeout duration as u64"
+                    ),
                 };
                 // Check for the spec-compliant "pageLoad", but also for "page load",
                 // which was sent by Firefox 52 and earlier.
@@ -497,7 +493,8 @@ impl MarionetteSession {
                         resp.result.get("pageLoad").or(resp.result.get("page load")),
                         ErrorStatus::UnknownError,
                         "Missing field: pageLoad"
-                    ).as_u64(),
+                    )
+                    .as_u64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret page load duration as u64"
                 );
@@ -506,7 +503,8 @@ impl MarionetteSession {
                         resp.result.get("implicit"),
                         ErrorStatus::UnknownError,
                         "Missing field: implicit"
-                    ).as_u64(),
+                    )
+                    .as_u64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret implicit search duration as u64"
                 );
@@ -525,19 +523,23 @@ impl MarionetteSession {
                         resp.result.get("handle"),
                         ErrorStatus::UnknownError,
                         "Failed to find handle field"
-                    ).as_str(),
+                    )
+                    .as_str(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret handle as string"
-                ).into();
+                )
+                .into();
                 let typ: String = try_opt!(
                     try_opt!(
                         resp.result.get("type"),
                         ErrorStatus::UnknownError,
                         "Failed to find type field"
-                    ).as_str(),
+                    )
+                    .as_str(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret type as string"
-                ).into();
+                )
+                .into();
 
                 WebDriverResponse::NewWindow(NewWindowResponse { handle, typ })
             }
@@ -554,8 +556,10 @@ impl MarionetteSession {
                             x.as_str(),
                             ErrorStatus::UnknownError,
                             "Failed to interpret window handle as string"
-                        ).to_owned())
-                    }).collect::<Result<Vec<_>, _>>()?;
+                        )
+                        .to_owned())
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
                 WebDriverResponse::CloseWindow(CloseWindowResponse(handles))
             }
             GetElementRect(_) => {
@@ -564,7 +568,8 @@ impl MarionetteSession {
                         resp.result.get("x"),
                         ErrorStatus::UnknownError,
                         "Failed to find x field"
-                    ).as_f64(),
+                    )
+                    .as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret x as float"
                 );
@@ -574,7 +579,8 @@ impl MarionetteSession {
                         resp.result.get("y"),
                         ErrorStatus::UnknownError,
                         "Failed to find y field"
-                    ).as_f64(),
+                    )
+                    .as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as float"
                 );
@@ -584,7 +590,8 @@ impl MarionetteSession {
                         resp.result.get("width"),
                         ErrorStatus::UnknownError,
                         "Failed to find width field"
-                    ).as_f64(),
+                    )
+                    .as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float"
                 );
@@ -594,7 +601,8 @@ impl MarionetteSession {
                         resp.result.get("height"),
                         ErrorStatus::UnknownError,
                         "Failed to find height field"
-                    ).as_f64(),
+                    )
+                    .as_f64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as float"
                 );
@@ -614,7 +622,8 @@ impl MarionetteSession {
                         resp.result.get("width"),
                         ErrorStatus::UnknownError,
                         "Failed to find width field"
-                    ).as_u64(),
+                    )
+                    .as_u64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret width as positive integer"
                 );
@@ -624,7 +633,8 @@ impl MarionetteSession {
                         resp.result.get("height"),
                         ErrorStatus::UnknownError,
                         "Failed to find heigenht field"
-                    ).as_u64(),
+                    )
+                    .as_u64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret height as positive integer"
                 );
@@ -634,7 +644,8 @@ impl MarionetteSession {
                         resp.result.get("x"),
                         ErrorStatus::UnknownError,
                         "Failed to find x field"
-                    ).as_i64(),
+                    )
+                    .as_i64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret x as integer"
                 );
@@ -644,7 +655,8 @@ impl MarionetteSession {
                         resp.result.get("y"),
                         ErrorStatus::UnknownError,
                         "Failed to find y field"
-                    ).as_i64(),
+                    )
+                    .as_i64(),
                     ErrorStatus::UnknownError,
                     "Failed to interpret y as integer"
                 );
@@ -712,7 +724,8 @@ impl MarionetteSession {
                         resp.result.get("sessionId"),
                         ErrorStatus::InvalidSessionId,
                         "Failed to find sessionId field"
-                    ).as_str(),
+                    )
+                    .as_str(),
                     ErrorStatus::InvalidSessionId,
                     "sessionId is not a string"
                 );
@@ -722,10 +735,12 @@ impl MarionetteSession {
                         resp.result.get("capabilities"),
                         ErrorStatus::UnknownError,
                         "Failed to find capabilities field"
-                    ).as_object(),
+                    )
+                    .as_object(),
                     ErrorStatus::UnknownError,
                     "capabilities field is not an object"
-                ).clone();
+                )
+                .clone();
 
                 capabilities.insert("moz:geckodriverVersion".into(), BuildInfo.into());
 
@@ -952,15 +967,9 @@ impl MarionetteCommand {
             }
             Extension(ref extension) => match extension {
                 GetContext => (Some("Marionette:GetContext"), None),
-                InstallAddon(x) => {
-                    (Some("Addon:Install"), Some(x.to_marionette()))
-                }
-                SetContext(x) => {
-                    (Some("Marionette:SetContext"), Some(x.to_marionette()))
-                }
-                UninstallAddon(x) => {
-                    (Some("Addon:Uninstall"), Some(x.to_marionette()))
-                }
+                InstallAddon(x) => (Some("Addon:Install"), Some(x.to_marionette())),
+                SetContext(x) => (Some("Marionette:SetContext"), Some(x.to_marionette())),
+                UninstallAddon(x) => (Some("Addon:Uninstall"), Some(x.to_marionette())),
                 XblAnonymousByAttribute(e, x) => {
                     let mut data = x.to_marionette()?;
                     data.insert("element".to_string(), Value::String(e.to_string()));
@@ -1169,7 +1178,8 @@ impl MarionetteConnection {
                 data
             }
             _ => self.read_resp(),
-        }).or_else(|e| {
+        })
+        .or_else(|e| {
             Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
                 format!("Socket timeout reading Marionette handshake data: {}", e),
@@ -1181,10 +1191,7 @@ impl MarionetteConnection {
         if data.application_type != "gecko" {
             return Err(WebDriverError::new(
                 ErrorStatus::UnknownError,
-                format!(
-                    "Unrecognized application type {}",
-                    data.application_type
-                ),
+                format!("Unrecognized application type {}", data.application_type),
             ));
         }
 
@@ -1318,7 +1325,10 @@ impl ToMarionette for AddonInstallParameters {
         let mut data = Map::new();
         data.insert("path".to_string(), serde_json::to_value(&self.path)?);
         if self.temporary.is_some() {
-            data.insert("temporary".to_string(), serde_json::to_value(&self.temporary)?);
+            data.insert(
+                "temporary".to_string(),
+                serde_json::to_value(&self.temporary)?,
+            );
         }
         Ok(data)
     }
@@ -1364,7 +1374,8 @@ impl ToMarionette for ActionsParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1396,10 +1407,9 @@ impl ToMarionette for FrameId {
         let mut data = Map::new();
         match *self {
             FrameId::Short(x) => data.insert("id".to_string(), serde_json::to_value(x)?),
-            FrameId::Element(ref x) => data.insert(
-                "element".to_string(),
-                Value::Object(x.to_marionette()?),
-            ),
+            FrameId::Element(ref x) => {
+                data.insert("element".to_string(), Value::Object(x.to_marionette()?))
+            }
         };
         Ok(data)
     }
@@ -1411,7 +1421,8 @@ impl ToMarionette for GetNamedCookieParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1421,7 +1432,8 @@ impl ToMarionette for GetParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1431,7 +1443,8 @@ impl ToMarionette for JavascriptCommandParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1441,7 +1454,8 @@ impl ToMarionette for LocatorParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1460,10 +1474,13 @@ impl ToMarionette for SwitchToFrameParameters {
         let mut data = Map::new();
         match self.id {
             None => None,
-            Some(FrameId::Short(_)) => data.insert("id".to_string(),
-                                            serde_json::to_value(&self.id)?),
-            Some(FrameId::Element(ref web_element)) => data.insert("element".to_string(),
-                                            serde_json::to_value(web_element.to_string())?),
+            Some(FrameId::Short(_)) => {
+                data.insert("id".to_string(), serde_json::to_value(&self.id)?)
+            }
+            Some(FrameId::Element(ref web_element)) => data.insert(
+                "element".to_string(),
+                serde_json::to_value(web_element.to_string())?,
+            ),
         };
         Ok(data)
     }
@@ -1490,7 +1507,8 @@ impl ToMarionette for TimeoutsParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
@@ -1508,7 +1526,8 @@ impl ToMarionette for WindowRectParameters {
             serde_json::to_value(self)?.as_object(),
             ErrorStatus::UnknownError,
             "Expected an object"
-        ).clone())
+        )
+        .clone())
     }
 }
 
