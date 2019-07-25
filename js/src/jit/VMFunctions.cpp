@@ -8,7 +8,6 @@
 
 #include "builtin/Promise.h"
 #include "builtin/TypedObject.h"
-#include "debugger/Debugger.h"
 #include "frontend/BytecodeCompiler.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/BaselineIC.h"
@@ -22,7 +21,7 @@
 #include "vm/SelfHosting.h"
 #include "vm/TraceLogging.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "jit/BaselineFrame-inl.h"
 #include "jit/JitFrames-inl.h"
 #include "jit/VMFunctionList-inl.h"
@@ -875,13 +874,13 @@ static bool HandlePrologueResumeMode(JSContext* cx, BaselineFrame* frame,
       return false;
 
     default:
-      MOZ_CRASH("bad Debugger::onEnterFrame resume mode");
+      MOZ_CRASH("bad DebugAPI::onEnterFrame resume mode");
   }
 }
 
 bool DebugPrologue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
                    bool* mustReturn) {
-  ResumeMode resumeMode = Debugger::onEnterFrame(cx, frame);
+  ResumeMode resumeMode = DebugAPI::onEnterFrame(cx, frame);
   return HandlePrologueResumeMode(cx, frame, pc, mustReturn, resumeMode);
 }
 
@@ -901,10 +900,10 @@ bool DebugEpilogueOnBaselineReturn(JSContext* cx, BaselineFrame* frame,
 
 bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
                    bool ok) {
-  // If Debugger::onLeaveFrame returns |true| we have to return the frame's
+  // If DebugAPI::onLeaveFrame returns |true| we have to return the frame's
   // return value. If it returns |false|, the debugger threw an exception.
   // In both cases we have to pop debug scopes.
-  ok = Debugger::onLeaveFrame(cx, frame, pc, ok);
+  ok = DebugAPI::onLeaveFrame(cx, frame, pc, ok);
 
   // Unwind to the outermost environment and set pc to the end of the
   // script, regardless of error.
@@ -997,7 +996,7 @@ bool DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
   // we may already have done this work. Don't fire onEnterFrame again.
   if (frame->script()->isDebuggee() && !frame->isDebuggee()) {
     frame->setIsDebuggee();
-    ResumeMode resumeMode = Debugger::onResumeFrame(cx, frame);
+    ResumeMode resumeMode = DebugAPI::onResumeFrame(cx, frame);
     return HandlePrologueResumeMode(cx, frame, pc, mustReturn, resumeMode);
   }
 
@@ -1127,9 +1126,10 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
   // is in step mode or has breakpoints. The Baseline Compiler can toggle
   // breakpoints more granularly for specific bytecode PCs.
   if (frame->runningInInterpreter()) {
-    MOZ_ASSERT(script->hasAnyBreakpointsOrStepMode());
+    MOZ_ASSERT(DebugAPI::hasAnyBreakpointsOrStepMode(script));
   } else {
-    MOZ_ASSERT(script->stepModeEnabled() || script->hasBreakpointsAt(pc));
+    MOZ_ASSERT(DebugAPI::stepModeEnabled(script) ||
+               DebugAPI::hasBreakpointsAt(script, pc));
   }
 
   if (*pc == JSOP_AFTERYIELD) {
@@ -1157,12 +1157,13 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
   RootedValue rval(cx);
   ResumeMode resumeMode = ResumeMode::Continue;
 
-  if (script->stepModeEnabled()) {
-    resumeMode = Debugger::onSingleStep(cx, &rval);
+  if (DebugAPI::stepModeEnabled(script)) {
+    resumeMode = DebugAPI::onSingleStep(cx, &rval);
   }
 
-  if (resumeMode == ResumeMode::Continue && script->hasBreakpointsAt(pc)) {
-    resumeMode = Debugger::onTrap(cx, &rval);
+  if (resumeMode == ResumeMode::Continue &&
+      DebugAPI::hasBreakpointsAt(script, pc)) {
+    resumeMode = DebugAPI::onTrap(cx, &rval);
   }
 
   switch (resumeMode) {
@@ -1192,7 +1193,7 @@ bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
                          bool* mustReturn) {
   *mustReturn = false;
 
-  switch (Debugger::onDebuggerStatement(cx, frame)) {
+  switch (DebugAPI::onDebuggerStatement(cx, frame)) {
     case ResumeMode::Continue:
       return true;
 
@@ -1212,7 +1213,7 @@ bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
 bool GlobalHasLiveOnDebuggerStatement(JSContext* cx) {
   AutoUnsafeCallWithABI unsafe;
   return cx->realm()->isDebuggee() &&
-         Debugger::hasLiveHook(cx->global(), Debugger::OnDebuggerStatement);
+         DebugAPI::hasDebuggerStatementHook(cx->global());
 }
 
 bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,

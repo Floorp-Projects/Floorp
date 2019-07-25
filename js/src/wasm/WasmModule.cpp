@@ -32,7 +32,7 @@
 #include "wasm/WasmJS.h"
 #include "wasm/WasmSerialize.h"
 
-#include "debugger/Debugger-inl.h"
+#include "debugger/DebugAPI-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/JSAtom-inl.h"
 
@@ -560,7 +560,6 @@ static bool AllSegmentsArePassive(const DataSegmentVector& vec) {
 #endif
 
 bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
-                          const JSFunctionVector& funcImports,
                           HandleWasmMemoryObject memoryObj,
                           const ValVector& globalImportValues) const {
   MOZ_ASSERT_IF(!memoryObj, AllSegmentsArePassive(dataSegments_));
@@ -622,6 +621,15 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
     if (seg->active()) {
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->length();
+
+      // Allow zero-sized initializations even if they are out-of-bounds. This
+      // behavior technically only applies when bulk-memory-operations are
+      // enabled, but we will fail with an error during eager bounds checking
+      // above in that case.
+      if (count == 0) {
+        continue;
+      }
+
       bool fail = false;
       if (!eagerBoundsCheck) {
         uint32_t tableLength = tables[seg->tableIndex]->length();
@@ -656,6 +664,15 @@ bool Module::initSegments(JSContext* cx, HandleWasmInstanceObject instanceObj,
 
       uint32_t offset = EvaluateInitExpr(globalImportValues, seg->offset());
       uint32_t count = seg->bytes.length();
+
+      // Allow zero-sized initializations even if they are out-of-bounds. This
+      // behavior technically only applies when bulk-memory-operations are
+      // enabled, but we will fail with an error during eager bounds checking
+      // above in that case.
+      if (count == 0) {
+        continue;
+      }
+
       bool fail = false;
       if (!eagerBoundsCheck) {
         if (offset > memoryLength) {
@@ -1409,8 +1426,7 @@ bool Module::instantiate(JSContext* cx, ImportValues& imports,
   // constructed since this can make the instance live to content (even if the
   // start function fails).
 
-  if (!initSegments(cx, instance, imports.funcs, memory,
-                    imports.globalValues)) {
+  if (!initSegments(cx, instance, memory, imports.globalValues)) {
     return false;
   }
 
