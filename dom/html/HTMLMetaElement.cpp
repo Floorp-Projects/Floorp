@@ -9,6 +9,7 @@
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLMetaElementBinding.h"
 #include "mozilla/dom/nsCSPService.h"
+#include "mozilla/dom/ViewportMetaData.h"
 #include "mozilla/Logging.h"
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
@@ -59,7 +60,7 @@ nsresult HTMLMetaElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
                                   nsGkAtoms::viewport, eIgnoreCase)) {
         nsAutoString content;
         GetContent(content);
-        nsContentUtils::ProcessViewportInfo(document, content);
+        ViewportMetaData::ProcessViewportInfo(document, content);
       }
       CreateAndDispatchEvent(document, NS_LITERAL_STRING("DOMMetaChanged"));
     }
@@ -82,7 +83,7 @@ nsresult HTMLMetaElement::BindToTree(BindContext& aContext, nsINode& aParent) {
                   eIgnoreCase)) {
     nsAutoString content;
     GetContent(content);
-    nsContentUtils::ProcessViewportInfo(&doc, content);
+    ViewportMetaData::ProcessViewportInfo(&doc, content);
   }
 
   if (StaticPrefs::security_csp_enable() && !doc.IsLoadedAsData() &&
