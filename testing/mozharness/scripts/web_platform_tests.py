@@ -99,6 +99,12 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "default": [],
             "help": "Defines an extra user preference."}
          ],
+        [["--include"], {
+            "action": "store",
+            "dest": "include",
+            "default": None,
+            "help": "URL prefix to include."}
+         ],
     ] + copy.deepcopy(testing_config_options) + \
         copy.deepcopy(code_coverage_config_options)
 
@@ -295,6 +301,8 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
                                           str_format_values=str_format_values))
             cmd.extend(self.query_tests_args(try_tests,
                                              str_format_values=str_format_values))
+        if "include" in c and c["include"]:
+            cmd.append("--include=%s" % c["include"])
 
         return cmd
 
