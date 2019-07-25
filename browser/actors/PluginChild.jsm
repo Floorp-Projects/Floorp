@@ -137,7 +137,6 @@ class PluginChild extends JSWindowActorChild {
   }
 
   _getPluginInfo(pluginElement) {
-    pluginElement.QueryInterface(Ci.nsIObjectLoadingContent);
     if (this.isKnownPlugin(pluginElement)) {
       let pluginTag = gPluginHost.getPluginTagForType(pluginElement.actualType);
       let pluginName = BrowserUtils.makeNicePluginName(pluginTag.name);
@@ -675,14 +674,13 @@ class PluginChild extends JSWindowActorChild {
   // Event listener for click-to-play plugins.
   _handleClickToPlayEvent(plugin) {
     let doc = plugin.ownerDocument;
-    let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
     // guard against giving pluginHost.getPermissionStringForType a type
     // not associated with any known plugin
-    if (!this.isKnownPlugin(objLoadingContent)) {
+    if (!this.isKnownPlugin(plugin)) {
       return;
     }
     let permissionString = gPluginHost.getPermissionStringForType(
-      objLoadingContent.actualType
+      plugin.actualType
     );
     let principal = doc.defaultView.top.document.nodePrincipal;
     let pluginPermission = Services.perms.testPermissionFromPrincipal(
@@ -736,8 +734,7 @@ class PluginChild extends JSWindowActorChild {
       if (overlay) {
         overlay.removeEventListener("click", this, true);
       }
-      let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-      if (this.canActivatePlugin(objLoadingContent)) {
+      if (this.canActivatePlugin(plugin)) {
         this._handleClickToPlayEvent(plugin);
       }
     }
@@ -752,7 +749,6 @@ class PluginChild extends JSWindowActorChild {
 
     let pluginFound = false;
     for (let plugin of plugins) {
-      plugin.QueryInterface(Ci.nsIObjectLoadingContent);
       if (!this.isKnownPlugin(plugin)) {
         continue;
       }
