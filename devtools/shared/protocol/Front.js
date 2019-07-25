@@ -40,6 +40,9 @@ class Front extends Pool {
   constructor(conn = null) {
     super(conn);
     this.actorID = null;
+    // The targetFront attribute represents the debuggable context. Only target-scoped
+    // fronts and their children fronts will have the targetFront attribute set.
+    this.targetFront = null;
     this._requests = [];
 
     // Front listener functions registered via `onFront` get notified
