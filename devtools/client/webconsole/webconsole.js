@@ -84,17 +84,6 @@ class WebConsole {
   }
 
   /**
-   * Getter for a function to to listen for every request that completes. Used
-   * by unit tests. The callback takes one argument: the HTTP activity object as
-   * received from the remote Web Console.
-   *
-   * @type function
-   */
-  get lastFinishedRequestCallback() {
-    return this.hudService.lastFinishedRequest.callback;
-  }
-
-  /**
    * Getter for the window that can provide various utilities that the web
    * console makes use of, like opening links, managing popups, etc.  In
    * most cases, this will be |this.browserWindow|, but in some uses (such as
