@@ -273,6 +273,52 @@ navigation:
     extra_keys:
       engine: The id of the search engine used.
 
+urlbar:
+  engagement:
+    objects: ["click", "enter", "paste_go", "drop_go"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar engagement, that is when the user picks a
+      search result.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136]
+    notification_emails:
+      - "rharter@mozilla.com"
+      - "fx-search@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: engagement time in milliseconds.
+      numChars: number of input characters.
+      selIndex: index of the selected result in the urlbar panel, or -1.
+      selType: >
+        type of the selected result in the urlbar panel. One of:
+          "autofill", "visit", "bookmark", "history", "keyword", "search",
+          "searchsuggestion", "switchtab", "remotetab", "extension", "oneoff",
+          "keywordoffer", "canonized", "none"
+  abandonment:
+    objects: ["blur"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded on urlbar search abandon, that is when the user starts
+      an interaction but then blurs the urlbar.
+      The value field records the initial interaction type. One of:
+        "typed", "dropped", "pasted", "topsites"
+    bug_numbers: [1559136]
+    notification_emails:
+      - "rharter@mozilla.com"
+      - "fx-search@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      elapsed: abandonement time in milliseconds.
+      numChars: number of input characters.
+
 normandy:
   enroll:
     objects: ["preference_study", "addon_study", "preference_rollout"]

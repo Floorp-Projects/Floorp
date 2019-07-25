@@ -314,7 +314,10 @@ var gURLBarHandler = {
   get urlbar() {
     if (!this._urlbar) {
       if (this.quantumbar) {
-        this._urlbar = new UrlbarInput({ textbox: this.textbox });
+        this._urlbar = new UrlbarInput({
+          textbox: this.textbox,
+          eventTelemetryCategory: "urlbar",
+        });
         if (this._lastValue) {
           this._urlbar.value = this._lastValue;
           delete this._lastValue;
