@@ -8,6 +8,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -34,11 +35,9 @@ LazyLogModule gTimeoutLog("Timeout");
 static int32_t gRunningTimeoutDepth = 0;
 
 // The default shortest interval/timeout we permit
-#define DEFAULT_MIN_CLAMP_TIMEOUT_VALUE 4                   // 4ms
 #define DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE 1000           // 1000ms
 #define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4                // 4ms
 #define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000  // 1000ms
-static int32_t gMinClampTimeoutValue = 0;
 static int32_t gMinBackgroundTimeoutValue = 0;
 static int32_t gMinTrackingTimeoutValue = 0;
 static int32_t gMinTrackingBackgroundTimeoutValue = 0;
@@ -326,8 +325,9 @@ TimeDuration TimeoutManager::CalculateDelay(Timeout* aTimeout) const {
   TimeDuration result = aTimeout->mInterval;
 
   if (aTimeout->mNestingLevel >= DOM_CLAMP_TIMEOUT_NESTING_LEVEL) {
-    result = TimeDuration::Max(
-        result, TimeDuration::FromMilliseconds(gMinClampTimeoutValue));
+    uint32_t minTimeoutValue = StaticPrefs::dom_min_timeout_value();
+    result = TimeDuration::Max(result,
+                               TimeDuration::FromMilliseconds(minTimeoutValue));
   }
 
   return result;
@@ -479,8 +479,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gMinClampTimeoutValue, "dom.min_timeout_value",
-                              DEFAULT_MIN_CLAMP_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gMinBackgroundTimeoutValue,
                               "dom.min_background_timeout_value",
                               DEFAULT_MIN_BACKGROUND_TIMEOUT_VALUE);
