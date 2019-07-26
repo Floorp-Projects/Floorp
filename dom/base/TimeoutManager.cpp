@@ -414,11 +414,6 @@ uint32_t TimeoutManager::sNestingLevel = 0;
 
 namespace {
 
-// The maximum number of milliseconds to allow consecutive timer callbacks
-// to run in a single event loop runnable.
-#define DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS 4
-uint32_t gMaxConsecutiveCallbacksMilliseconds;
-
 // Only propagate the open window click permission if the setTimeout() is equal
 // to or less than this value.
 #define DEFAULT_DISABLE_OPEN_CLICK_DELAY 0
@@ -467,10 +462,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
-                               "dom.timeout.max_consecutive_callbacks_ms",
-                               DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS);
-
   Preferences::AddIntVarCache(&gDisableOpenClickDelay,
                               "dom.disable_open_click_delay",
                               DEFAULT_DISABLE_OPEN_CLICK_DELAY);
@@ -682,7 +673,7 @@ void TimeoutManager::RunTimeout(const TimeStamp& aNow,
 
   // Limit the overall time spent in RunTimeout() to reduce jank.
   uint32_t totalTimeLimitMS =
-      std::max(1u, gMaxConsecutiveCallbacksMilliseconds);
+      std::max(1u, StaticPrefs::dom_timeout_max_consecutive_callbacks_ms());
   const TimeDuration totalTimeLimit =
       TimeDuration::Min(TimeDuration::FromMilliseconds(totalTimeLimitMS),
                         TimeDuration::Max(TimeDuration(), mExecutionBudget));

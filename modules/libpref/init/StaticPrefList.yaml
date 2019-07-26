@@ -1819,6 +1819,13 @@
   value: true
   mirror: always
 
+# Maximum amount of time in milliseconds consecutive setTimeout()/setInterval()
+# callback are allowed to run before yielding the event loop.
+- name: dom.timeout.max_consecutive_callbacks_ms
+  type: uint32_t
+  value: 4
+  mirror: always
+
 # Maximum deferral time for setTimeout/Interval in milliseconds
 - name: dom.timeout.max_idle_defer_ms
   type: uint32_t
