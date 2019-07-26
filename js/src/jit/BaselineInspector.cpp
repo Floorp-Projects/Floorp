@@ -805,11 +805,7 @@ JSObject* BaselineInspector::getTemplateObjectForClassHook(jsbytecode* pc,
 }
 
 LexicalEnvironmentObject* BaselineInspector::templateNamedLambdaObject() {
-  if (!script->hasBaselineScript()) {
-    return nullptr;
-  }
-
-  JSObject* res = script->baselineScript()->templateEnvironment();
+  JSObject* res = script->jitScript()->templateEnvironment();
   if (script->bodyScope()->hasEnvironment()) {
     res = res->enclosingEnvironment();
   }
@@ -819,11 +815,7 @@ LexicalEnvironmentObject* BaselineInspector::templateNamedLambdaObject() {
 }
 
 CallObject* BaselineInspector::templateCallObject() {
-  if (!script->hasBaselineScript()) {
-    return nullptr;
-  }
-
-  JSObject* res = script->baselineScript()->templateEnvironment();
+  JSObject* res = script->jitScript()->templateEnvironment();
   MOZ_ASSERT(res);
 
   return &res->as<CallObject>();

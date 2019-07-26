@@ -505,7 +505,6 @@ BaselineScript* BaselineScript::New(
 
 void BaselineScript::trace(JSTracer* trc) {
   TraceEdge(trc, &method_, "baseline-method");
-  TraceNullableEdge(trc, &templateEnv_, "baseline-template-environment");
 }
 
 /* static */

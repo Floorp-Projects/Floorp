@@ -23,7 +23,6 @@ namespace jit {
 
 class ICEntry;
 class ICStub;
-class ControlFlowGraph;
 class ReturnAddressEntry;
 
 class PCMappingSlotInfo {
@@ -202,11 +201,6 @@ struct BaselineScript final {
   // Code pointer containing the actual method.
   HeapPtr<JitCode*> method_ = nullptr;
 
-  // For functions with a call object, template objects to use for the call
-  // object and decl env object (linked via the call object's enclosing
-  // scope).
-  HeapPtr<EnvironmentObject*> templateEnv_ = nullptr;
-
   // Early Ion bailouts will enter at this address. This is after frame
   // construction and before environment chain is initialized.
   uint32_t bailoutPrologueOffset_;
@@ -252,35 +246,14 @@ struct BaselineScript final {
   // Total size of the allocation including BaselineScript and trailing data.
   uint32_t allocBytes_ = 0;
 
-  // The total bytecode length of all scripts we inlined when we Ion-compiled
-  // this script. 0 if Ion did not compile this script or if we didn't inline
-  // anything.
-  uint16_t inlinedBytecodeLength_ = 0;
-
-  // The max inlining depth where we can still inline all functions we inlined
-  // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
-  // no data yet, and won't affect inlining heuristics in that case. The value
-  // is updated when we Ion-compile this script. See makeInliningDecision for
-  // more info.
-  uint8_t maxInliningDepth_ = UINT8_MAX;
-
  public:
   enum Flag {
-    // Flag set when the script contains any writes to its on-stack
-    // (rather than call object stored) arguments.
-    MODIFIES_ARGUMENTS = 1 << 0,
-
     // Flag set when compiled for use with Debugger. Handles various
     // Debugger hooks and compiles toggled calls for traps.
-    HAS_DEBUG_INSTRUMENTATION = 1 << 1,
+    HAS_DEBUG_INSTRUMENTATION = 1 << 0,
 
     // Flag is set if this script has profiling instrumentation turned on.
-    PROFILER_INSTRUMENTATION_ON = 1 << 2,
-
-    // Whether this script uses its environment chain. This is currently
-    // determined by the BytecodeAnalysis and cached on the BaselineScript
-    // for IonBuilder.
-    USES_ENVIRONMENT_CHAIN = 1 << 3,
+    PROFILER_INSTRUMENTATION_ON = 1 << 1,
   };
 
  private:
@@ -288,8 +261,6 @@ struct BaselineScript final {
 
   // An ion compilation that is ready, but isn't linked yet.
   IonBuilder* pendingBuilder_ = nullptr;
-
-  ControlFlowGraph* controlFlowGraph_ = nullptr;
 
   // Use BaselineScript::New to create new instances. It will properly
   // allocate trailing objects.
@@ -324,16 +295,10 @@ struct BaselineScript final {
     *data += mallocSizeOf(this);
   }
 
-  void setModifiesArguments() { flags_ |= MODIFIES_ARGUMENTS; }
-  bool modifiesArguments() { return flags_ & MODIFIES_ARGUMENTS; }
-
   void setHasDebugInstrumentation() { flags_ |= HAS_DEBUG_INSTRUMENTATION; }
   bool hasDebugInstrumentation() const {
     return flags_ & HAS_DEBUG_INSTRUMENTATION;
   }
-
-  void setUsesEnvironmentChain() { flags_ |= USES_ENVIRONMENT_CHAIN; }
-  bool usesEnvironmentChain() const { return flags_ & USES_ENVIRONMENT_CHAIN; }
 
   uint8_t* bailoutPrologueEntryAddr() const {
     return method_->raw() + bailoutPrologueOffset_;
@@ -361,12 +326,6 @@ struct BaselineScript final {
   void setMethod(JitCode* code) {
     MOZ_ASSERT(!method_);
     method_ = code;
-  }
-
-  EnvironmentObject* templateEnvironment() const { return templateEnv_; }
-  void setTemplateEnvironment(EnvironmentObject* templateEnv) {
-    MOZ_ASSERT(!templateEnv_);
-    templateEnv_ = templateEnv;
   }
 
   bool containsCodeAddress(uint8_t* addr) const {
@@ -448,21 +407,6 @@ struct BaselineScript final {
 
   static void writeBarrierPre(Zone* zone, BaselineScript* script);
 
-  uint8_t maxInliningDepth() const { return maxInliningDepth_; }
-  void setMaxInliningDepth(uint32_t depth) {
-    MOZ_ASSERT(depth <= UINT8_MAX);
-    maxInliningDepth_ = depth;
-  }
-  void resetMaxInliningDepth() { maxInliningDepth_ = UINT8_MAX; }
-
-  uint16_t inlinedBytecodeLength() const { return inlinedBytecodeLength_; }
-  void setInlinedBytecodeLength(uint32_t len) {
-    if (len > UINT16_MAX) {
-      len = UINT16_MAX;
-    }
-    inlinedBytecodeLength_ = len;
-  }
-
   bool hasPendingIonBuilder() const { return !!pendingBuilder_; }
 
   js::jit::IonBuilder* pendingIonBuilder() {
@@ -487,12 +431,6 @@ struct BaselineScript final {
     if (script->maybeIonScript() == ION_PENDING_SCRIPT) {
       script->setIonScript(rt, nullptr);
     }
-  }
-
-  const ControlFlowGraph* controlFlowGraph() const { return controlFlowGraph_; }
-
-  void setControlFlowGraph(ControlFlowGraph* controlFlowGraph) {
-    controlFlowGraph_ = controlFlowGraph;
   }
 
   size_t allocBytes() const { return allocBytes_; }
