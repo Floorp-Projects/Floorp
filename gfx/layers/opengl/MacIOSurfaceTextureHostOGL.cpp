@@ -122,14 +122,6 @@ gfx::YUVColorSpace MacIOSurfaceTextureHostOGL::GetYUVColorSpace() const {
   return mSurface->GetYUVColorSpace();
 }
 
-gfx::ColorRange MacIOSurfaceTextureHostOGL::GetColorRange() const {
-  if (!mSurface) {
-    return gfx::ColorRange::LIMITED;
-  }
-  return mSurface->IsFullRange() ? gfx::ColorRange::FULL
-                                 : gfx::ColorRange::LIMITED;
-}
-
 void MacIOSurfaceTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   RefPtr<wr::RenderTextureHost> texture =
@@ -237,8 +229,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
       // which only supports 8 bits color depth.
       aBuilder.PushYCbCrInterleavedImage(
           aBounds, aClip, true, aImageKeys[0], wr::ColorDepth::Color8,
-          wr::ToWrYuvColorSpace(GetYUVColorSpace()),
-          wr::ToWrColorRange(GetColorRange()), aFilter);
+          wr::ToWrYuvColorSpace(GetYUVColorSpace()), aFilter);
       break;
     }
     case gfx::SurfaceFormat::NV12: {
@@ -249,7 +240,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
       aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
                              wr::ColorDepth::Color8,
                              wr::ToWrYuvColorSpace(GetYUVColorSpace()),
-                             wr::ToWrColorRange(GetColorRange()), aFilter);
+                             aFilter);
       break;
     }
     default: {

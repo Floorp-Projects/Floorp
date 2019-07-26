@@ -140,26 +140,21 @@ struct EffectRGB : public TexturedEffect {
 
 struct EffectYCbCr : public TexturedEffect {
   EffectYCbCr(TextureSource* aSource, gfx::YUVColorSpace aYUVColorSpace,
-              gfx::ColorRange aColorRange, gfx::ColorDepth aColorDepth,
-              gfx::SamplingFilter aSamplingFilter)
+              gfx::ColorDepth aColorDepth, gfx::SamplingFilter aSamplingFilter)
       : TexturedEffect(EffectTypes::YCBCR, aSource, false, aSamplingFilter),
         mYUVColorSpace(aYUVColorSpace),
-        mColorRange(aColorRange),
         mColorDepth(aColorDepth) {}
 
   const char* Name() override { return "EffectYCbCr"; }
 
   gfx::YUVColorSpace mYUVColorSpace;
-  gfx::ColorRange mColorRange;
   gfx::ColorDepth mColorDepth;
 };
 
 struct EffectNV12 : public EffectYCbCr {
   EffectNV12(TextureSource* aSource, gfx::YUVColorSpace aYUVColorSpace,
-             gfx::ColorRange aColorRange, gfx::ColorDepth aColorDepth,
-             gfx::SamplingFilter aSamplingFilter)
-      : EffectYCbCr(aSource, aYUVColorSpace, aColorRange, aColorDepth,
-                    aSamplingFilter) {
+             gfx::ColorDepth aColorDepth, gfx::SamplingFilter aSamplingFilter)
+      : EffectYCbCr(aSource, aYUVColorSpace, aColorDepth, aSamplingFilter) {
     mType = EffectTypes::NV12;
   }
 
@@ -248,15 +243,13 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
     case gfx::SurfaceFormat::YUV:
       MOZ_ASSERT(aHost->GetYUVColorSpace() != gfx::YUVColorSpace::UNKNOWN);
       result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
-                               aHost->GetColorRange(), aHost->GetColorDepth(),
-                               aSamplingFilter);
+                               aHost->GetColorDepth(), aSamplingFilter);
       break;
     case gfx::SurfaceFormat::NV12:
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
       result = new EffectNV12(aSource, aHost->GetYUVColorSpace(),
-                              aHost->GetColorRange(), aHost->GetColorDepth(),
-                              aSamplingFilter);
+                              aHost->GetColorDepth(), aSamplingFilter);
       break;
     default:
       result = CreateTexturedEffect(aHost->GetReadFormat(), aSource,

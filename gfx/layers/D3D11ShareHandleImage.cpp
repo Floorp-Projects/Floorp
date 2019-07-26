@@ -25,19 +25,16 @@ using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect,
-                                             gfx::YUVColorSpace aColorSpace,
-                                             gfx::ColorRange aColorRange)
+                                             gfx::YUVColorSpace aColorSpace)
     : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
       mSize(aSize),
       mPictureRect(aRect),
-      mYUVColorSpace(aColorSpace),
-      mColorRange(aColorRange) {}
+      mYUVColorSpace(aColorSpace) {}
 
 bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
                                             ID3D11Device* aDevice) {
   if (aAllocator) {
-    mTextureClient =
-        aAllocator->CreateOrRecycleClient(mYUVColorSpace, mColorRange, mSize);
+    mTextureClient = aAllocator->CreateOrRecycleClient(mYUVColorSpace, mSize);
     if (mTextureClient) {
       D3D11TextureData* textureData = GetData();
       MOZ_DIAGNOSTIC_ASSERT(textureData, "Wrong TextureDataType");
@@ -180,7 +177,6 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
  public:
   D3D11TextureClientAllocationHelper(gfx::SurfaceFormat aFormat,
                                      gfx::YUVColorSpace aColorSpace,
-                                     gfx::ColorRange aColorRange,
                                      const gfx::IntSize& aSize,
                                      TextureAllocationFlags aAllocFlags,
                                      ID3D11Device* aDevice,
@@ -188,7 +184,6 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
       : ITextureClientAllocationHelper(aFormat, aSize, BackendSelector::Content,
                                        aTextureFlags, aAllocFlags),
         mYUVColorSpace(aColorSpace),
-        mColorRange(aColorRange),
         mDevice(aDevice) {}
 
   bool IsCompatible(TextureClient* aTextureClient) override {
@@ -203,7 +198,6 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
             aTextureClient->GetFormat() != gfx::SurfaceFormat::P010 &&
             aTextureClient->GetFormat() != gfx::SurfaceFormat::P016) ||
            (textureData->GetYUVColorSpace() == mYUVColorSpace &&
-            textureData->GetColorRange() == mColorRange &&
             textureData->GetTextureAllocationFlags() == mAllocationFlags);
   }
 
@@ -215,14 +209,12 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
       return nullptr;
     }
     data->SetYUVColorSpace(mYUVColorSpace);
-    data->SetColorRange(mColorRange);
     return MakeAndAddRef<TextureClient>(data, mTextureFlags,
                                         aAllocator->GetTextureForwarder());
   }
 
  private:
-  const gfx::YUVColorSpace mYUVColorSpace;
-  const gfx::ColorRange mColorRange;
+  gfx::YUVColorSpace mYUVColorSpace;
   const RefPtr<ID3D11Device> mDevice;
 };
 
@@ -254,8 +246,7 @@ void D3D11RecycleAllocator::SetPreferredSurfaceFormat(
 }
 
 already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
-    gfx::YUVColorSpace aColorSpace, gfx::ColorRange aColorRange,
-    const gfx::IntSize& aSize) {
+    gfx::YUVColorSpace aColorSpace, const gfx::IntSize& aSize) {
   // When CompositorDevice or ContentDevice is updated,
   // we could not reuse old D3D11Textures. It could cause video flickering.
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
@@ -272,9 +263,9 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
     allocFlags = TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION;
   }
 
-  D3D11TextureClientAllocationHelper helper(
-      mUsableSurfaceFormat, aColorSpace, aColorRange, aSize, allocFlags,
-      mDevice, layers::TextureFlags::DEFAULT);
+  D3D11TextureClientAllocationHelper helper(mUsableSurfaceFormat, aColorSpace,
+                                            aSize, allocFlags, mDevice,
+                                            layers::TextureFlags::DEFAULT);
 
   RefPtr<TextureClient> textureClient = CreateOrRecycle(helper);
   return textureClient.forget();

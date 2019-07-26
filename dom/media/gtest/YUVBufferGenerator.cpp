@@ -6,8 +6,6 @@
 
 #include "YUVBufferGenerator.h"
 
-#include "VideoUtils.h"
-
 using namespace mozilla::layers;
 using namespace mozilla;
 
@@ -75,8 +73,6 @@ Image* YUVBufferGenerator::CreateI420Image() {
   data.mCbCrStride = halfWidth;
   data.mCbCrSize.width = halfWidth;
   data.mCbCrSize.height = halfHeight;
-
-  data.mYUVColorSpace = DefaultColorSpace(data.mYSize);
 
   image->CopyData(data);
   return image;
@@ -149,8 +145,6 @@ Image* YUVBufferGenerator::CreateNV21Image() {
   data.mCbCrStride = mImageSize.width;
   data.mCbCrSize.width = halfWidth;
   data.mCbCrSize.height = halfHeight;
-
-  data.mYUVColorSpace = DefaultColorSpace(data.mYSize);
 
   image->SetData(data);
   return image;
