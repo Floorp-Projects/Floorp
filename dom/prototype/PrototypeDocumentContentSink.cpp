@@ -1063,7 +1063,7 @@ nsresult PrototypeDocumentContentSink::AddAttributes(
     nsXULPrototypeElement* aPrototype, Element* aElement) {
   nsresult rv;
 
-  for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
+  for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
     nsXULPrototypeAttribute* protoattr = &(aPrototype->mAttributes[i]);
     nsAutoString valueStr;
     protoattr->mValue.ToString(valueStr);
