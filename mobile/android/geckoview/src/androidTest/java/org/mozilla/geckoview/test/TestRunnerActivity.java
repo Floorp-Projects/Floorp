@@ -195,6 +195,11 @@ public class TestRunnerActivity extends Activity {
                 public GeckoResult<GeckoSession> onNewTab(WebExtension source, String uri) {
                     return GeckoResult.fromValue(createSession());
                 }
+                @Override
+                public GeckoResult<AllowOrDeny> onCloseTab(WebExtension source, GeckoSession session) {
+                   closeSession(session);
+                   return GeckoResult.ALLOW;
+                }
             });
             sRuntime.setDelegate(() -> {
                 mKillProcessOnDestroy = true;

@@ -163,6 +163,12 @@ public class GeckoViewActivity extends AppCompatActivity {
                     mToolbarView.updateTabCount();
                     return GeckoResult.fromValue(newSession);
                 }
+                @Override
+                public GeckoResult<AllowOrDeny> onCloseTab(WebExtension source, GeckoSession session) {
+                    TabSession tabSession = mTabSessionManager.getSession(session);
+                    closeTab(tabSession);
+                    return GeckoResult.ALLOW;
+                }
             });
         }
 

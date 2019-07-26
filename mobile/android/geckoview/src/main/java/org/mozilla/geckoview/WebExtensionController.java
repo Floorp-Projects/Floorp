@@ -1,5 +1,6 @@
 package org.mozilla.geckoview;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 
@@ -26,6 +27,20 @@ public class WebExtensionController {
         @Nullable
         default GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension source, @Nullable String uri) {
             return null;
+        }
+        /**
+         * Called when tabs.remove is invoked, this method decides if WebExtension can close the
+         * tab. In case WebExtension can close the tab, it should close passed GeckoSession and
+         * return GeckoResult.ALLOW or GeckoResult.DENY in case tab cannot be closed.
+         *
+         * @param source An instance of {@link WebExtension} or null if extension was not registered
+         *               with GeckoRuntime.registerWebextension
+         * @param session An instance of {@link GeckoSession} to be closed.
+         */
+        @UiThread
+        @NonNull
+        default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source, @NonNull GeckoSession session)  {
+            return GeckoResult.DENY;
         }
     }
 
@@ -104,6 +119,25 @@ public class WebExtensionController {
             session.open(mRuntime);
 
             callback.sendSuccess(session.getId());
+        });
+    }
+
+    /* package */ void closeTab(final GeckoBundle message, final EventCallback callback, final GeckoSession session) {
+        if (mTabDelegate == null) {
+            callback.sendError(null);
+            return;
+        }
+
+        WebExtension extension = mRuntime.getWebExtensionDispatcher().getWebExtension(message.getString("extensionId"));
+
+        GeckoResult<AllowOrDeny> result = mTabDelegate.onCloseTab(extension, session);
+
+        result.accept(value -> {
+            if (value == AllowOrDeny.ALLOW) {
+                callback.sendSuccess(null);
+            } else {
+                callback.sendError(null);
+            }
         });
     }
 }
