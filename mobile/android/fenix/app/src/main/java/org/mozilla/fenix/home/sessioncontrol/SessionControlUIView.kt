@@ -79,17 +79,17 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
 
     // Customize FxA items based on where we are with the account state:
     items.addAll(when (onboardingState) {
-        OnboardingState.SignedOut -> {
+        OnboardingState.SignedOutNoAutoSignIn -> {
             listOf(
-                AdapterItem.OnboardingFirefoxAccount(onboardingState)
+                AdapterItem.OnboardingManualSignIn(onboardingState)
             )
         }
-        OnboardingState.AutoSignedIn -> {
+        is OnboardingState.SignedOutCanAutoSignIn -> {
             listOf(
-                AdapterItem.OnboardingFirefoxAccount(onboardingState)
+                AdapterItem.OnboardingAutomaticSignIn(onboardingState)
             )
         }
-        else -> listOf()
+        OnboardingState.SignedIn -> listOf()
     })
 
     items.addAll(listOf(

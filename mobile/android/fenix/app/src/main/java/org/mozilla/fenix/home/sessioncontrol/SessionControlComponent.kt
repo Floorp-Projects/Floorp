@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
 import mozilla.components.browser.session.Session
+import mozilla.components.service.fxa.sharing.ShareableAccount
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.mvi.Change
@@ -69,13 +70,13 @@ fun List<Tab>.toSessionBundle(context: Context): MutableList<Session> {
 /**
  * Describes various onboarding states.
  */
-enum class OnboardingState {
-    // Signed out, no account carried over from Fennec.
-    SignedOut,
-    // Auto-signed in, via a Fennec account.
-    AutoSignedIn,
-    // Manually signed in while in onboarding.
-    ManuallySignedIn
+sealed class OnboardingState {
+    // Signed out, without an option to auto-login using a shared FxA account.
+    object SignedOutNoAutoSignIn : OnboardingState()
+    // Signed out, with an option to auto-login into a shared FxA account.
+    data class SignedOutCanAutoSignIn(val withAccount: ShareableAccount) : OnboardingState()
+    // Signed in.
+    object SignedIn : OnboardingState()
 }
 
 sealed class Mode {

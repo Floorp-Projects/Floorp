@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home
 
 import android.animation.Animator
+import android.content.Context
 import android.content.DialogInterface
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
@@ -158,7 +159,7 @@ class HomeFragment : Fragment(), AccountObserver {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
 
-        val mode = currentMode()
+        val mode = currentMode(view.context)
 
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
@@ -300,7 +301,7 @@ class HomeFragment : Fragment(), AccountObserver {
         getManagedEmitter<SessionControlChange>().onNext(
             SessionControlChange.Change(
                 tabs = getListOfSessions().toTabs(),
-                mode = currentMode(),
+                mode = currentMode(context!!),
                 collections = requireComponents.core.tabCollectionStorage.cachedTabCollections
             )
         )
@@ -325,7 +326,7 @@ class HomeFragment : Fragment(), AccountObserver {
             is OnboardingAction.Finish -> {
                 onboarding.finish()
 
-                val mode = currentMode()
+                val mode = currentMode(context!!)
                 getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
             }
         }
@@ -705,12 +706,18 @@ class HomeFragment : Fragment(), AccountObserver {
         nav(R.id.homeFragment, directions)
     }
 
-    private fun currentMode(): Mode = if (!onboarding.userHasBeenOnboarded()) {
-        val account = requireComponents.backgroundServices.accountManager.authenticatedAccount()
-        if (account == null) {
-            Mode.Onboarding(OnboardingState.SignedOut)
+    private fun currentMode(context: Context): Mode = if (!onboarding.userHasBeenOnboarded()) {
+        val accountManager = requireComponents.backgroundServices.accountManager
+        val account = accountManager.authenticatedAccount()
+        if (account != null) {
+            Mode.Onboarding(OnboardingState.SignedIn)
         } else {
-            Mode.Onboarding(OnboardingState.ManuallySignedIn)
+            val availableAccounts = accountManager.shareableAccounts(context)
+            if (availableAccounts.isEmpty()) {
+                Mode.Onboarding(OnboardingState.SignedOutNoAutoSignIn)
+            } else {
+                Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(availableAccounts[0]))
+            }
         }
     } else if ((activity as HomeActivity).browsingModeManager.isPrivate) {
         Mode.Private
@@ -719,12 +726,22 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun emitAccountChanges() {
-        val mode = currentMode()
-        getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+        context?.let {
+            val mode = currentMode(it)
+            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+        }
+    }
+
+    override fun onAuthenticated(account: OAuthAccount) {
+        view?.let {
+            FenixSnackbar.make(it, Snackbar.LENGTH_SHORT).setText(
+                it.context.getString(R.string.onboarding_firefox_account_sync_is_on)
+            ).show()
+        }
+        emitAccountChanges()
     }
 
     override fun onAuthenticationProblems() = emitAccountChanges()
-    override fun onAuthenticated(account: OAuthAccount) = emitAccountChanges()
     override fun onLoggedOut() = emitAccountChanges()
     override fun onProfileUpdated(profile: Profile) = emitAccountChanges()
 
