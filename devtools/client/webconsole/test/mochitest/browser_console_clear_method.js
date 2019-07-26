@@ -31,7 +31,7 @@ add_task(async function() {
   info(
     "Check that the messages logged after the first clear are still displayed"
   );
-  isnot(hud.outputNode.textContent.indexOf("msg"), -1, "msg is in the output");
+  ok(hud.ui.outputNode.textContent.includes("msg"), "msg is in the output");
 });
 
 function waitForMessage(message, webconsole) {

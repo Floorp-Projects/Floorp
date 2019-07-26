@@ -32,7 +32,7 @@ add_task(async function() {
   await loadDocument(SHA1_URL);
   await Promise.all([onContentLog, onSha1Warning]);
 
-  let { textContent } = hud.outputNode;
+  let { textContent } = hud.ui.outputNode;
   ok(
     !textContent.includes("SSL 3.0"),
     "There is no warning message for SSL 3.0"
@@ -44,7 +44,7 @@ add_task(async function() {
   await loadDocument(SHA256_URL);
   await onContentLog;
 
-  textContent = hud.outputNode.textContent;
+  textContent = hud.ui.outputNode.textContent;
   ok(!textContent.includes("SHA-1"), "There is no warning message for SHA-1");
   ok(
     !textContent.includes("SSL 3.0"),
@@ -61,7 +61,7 @@ add_task(async function() {
   await loadDocument(TLS_1_0_URL);
   await onContentLog;
 
-  textContent = hud.outputNode.textContent;
+  textContent = hud.ui.outputNode.textContent;
   ok(textContent.includes(TLS_expected_message), "TLS warning message found");
 
   Services.cache2.clear();
