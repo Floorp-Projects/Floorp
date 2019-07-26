@@ -1,12 +1,14 @@
 use {io, Ready, Poll, PollOpt, Token};
 use event::Evented;
 use unix::EventedFd;
+use sys::unix::uio::VecIo;
 use std::fmt;
 use std::net::{self, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::os::unix::io::{RawFd, IntoRawFd, AsRawFd, FromRawFd};
 
 #[allow(unused_imports)] // only here for Rust 1.8
 use net2::UdpSocketExt;
+use iovec::IoVec;
 
 pub struct UdpSocket {
     io: net::UdpSocket,
@@ -27,7 +29,7 @@ impl UdpSocket {
     pub fn try_clone(&self) -> io::Result<UdpSocket> {
         self.io.try_clone().map(|io| {
             UdpSocket {
-                io: io,
+                io,
             }
         })
     }
@@ -127,6 +129,14 @@ impl UdpSocket {
 
     pub fn take_error(&self) -> io::Result<Option<io::Error>> {
         self.io.take_error()
+    }
+
+    pub fn readv(&self, bufs: &mut [&mut IoVec]) -> io::Result<usize> {
+        self.io.readv(bufs)
+    }
+
+    pub fn writev(&self, bufs: &[&IoVec]) -> io::Result<usize> {
+        self.io.writev(bufs)
     }
 }
 

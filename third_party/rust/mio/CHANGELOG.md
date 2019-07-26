@@ -1,3 +1,24 @@
+# 0.6.19 (May 28, 2018)
+
+### Fixed
+- Do not trigger HUP events on kqueue platforms (#958).
+
+# 0.6.18 (May 24, 2018)
+
+### Fixed
+- Fix compilation on kqueue platforms with 32bit C long (#948).
+
+# 0.6.17 (May 15, 2018)
+
+### Fixed
+- Don't report `RDHUP` as `HUP` (#939)
+- Fix lazycell related compilation issues.
+- Fix EPOLLPRI conflicting with READABLE
+- Abort process on ref count overflows
+
+### Added
+- Define PRI on all targets
+
 # 0.6.16 (September 5, 2018)
 
 * Add EPOLLPRI readiness to UnixReady on supported platforms (#867)

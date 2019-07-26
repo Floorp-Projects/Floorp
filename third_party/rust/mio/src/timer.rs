@@ -154,13 +154,13 @@ impl<T> Timer<T> {
             .take(num_slots).collect();
 
         Timer {
-            tick_ms: tick_ms,
+            tick_ms,
             entries: Slab::with_capacity(capacity),
-            wheel: wheel,
-            start: start,
+            wheel,
+            start,
             tick: 0,
             next: EMPTY,
-            mask: mask,
+            mask,
             inner: LazyCell::new(),
         }
     }
@@ -209,8 +209,8 @@ impl<T> Timer<T> {
 
         // Return the new timeout
         Ok(Timeout {
-            token: token,
-            tick: tick
+            token,
+            tick
         })
     }
 
@@ -387,11 +387,11 @@ impl<T> Evented for Timer<T> {
             self.start, self.tick_ms);
 
         self.inner.fill(Inner {
-            registration: registration,
-            set_readiness: set_readiness,
-            wakeup_state: wakeup_state,
+            registration,
+            set_readiness,
+            wakeup_state,
             wakeup_thread: thread_handle,
-        }).ok().expect("timer already registered");
+        }).expect("timer already registered");
 
         if let Some(next_tick) = self.next_tick() {
             self.schedule_readiness(next_tick);
@@ -483,11 +483,11 @@ fn current_tick(start: Instant, tick_ms: u64) -> Tick {
 impl<T> Entry<T> {
     fn new(state: T, tick: u64, next: Token) -> Entry<T> {
         Entry {
-            state: state,
+            state,
             links: EntryLinks {
-                tick: tick,
+                tick,
                 prev: EMPTY,
-                next: next,
+                next,
             },
         }
     }
