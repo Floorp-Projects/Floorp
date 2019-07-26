@@ -1398,6 +1398,157 @@ class BaseScript : public gc::TenuredCell {
   }
 
  public:
+  // Immutable flags should not be modified after this script has been
+  // initialized. These flags should likely be preserved when serializing
+  // (XDR) or copying (CopyScript) this script. This is only public for the
+  // JITs.
+  enum class ImmutableFlags : uint32_t {
+    // No need for result value of last expression statement.
+    NoScriptRval = 1 << 0,
+
+    // Code is in strict mode.
+    Strict = 1 << 1,
+
+    // (1 << 2) is unused.
+
+    // True if the script has a non-syntactic scope on its dynamic scope chain.
+    // That is, there are objects about which we know nothing between the
+    // outermost syntactic scope and the global.
+    HasNonSyntacticScope = 1 << 3,
+
+    // See Parser::selfHostingMode.
+    SelfHosted = 1 << 4,
+
+    // See FunctionBox.
+    BindingsAccessedDynamically = 1 << 5,
+    FunHasExtensibleScope = 1 << 6,
+
+    // Bytecode contains JSOP_CALLSITEOBJ
+    // (We don't relazify functions with template strings, due to observability)
+    HasCallSiteObj = 1 << 7,
+
+    // (1 << 8) is unused.
+
+    FunctionHasThisBinding = 1 << 9,
+    FunctionHasExtraBodyVarScope = 1 << 10,
+
+    // Whether the arguments object for this script, if it needs one, should be
+    // mapped (alias formal parameters).
+    HasMappedArgsObj = 1 << 11,
+
+    // Script contains inner functions. Used to check if we can relazify the
+    // script.
+    HasInnerFunctions = 1 << 12,
+
+    NeedsHomeObject = 1 << 13,
+
+    IsDerivedClassConstructor = 1 << 14,
+    IsDefaultClassConstructor = 1 << 15,
+
+    // Script is a lambda to treat as running once or a global or eval script
+    // that will only run once.  Which one it is can be disambiguated by
+    // checking whether function() is null.
+    TreatAsRunOnce = 1 << 16,
+
+    // 'this', 'arguments' and f.apply() are used. This is likely to be a
+    // wrapper.
+    IsLikelyConstructorWrapper = 1 << 17,
+
+    // Set if this function is a generator function or async generator.
+    IsGenerator = 1 << 18,
+
+    // Set if this function is an async function or async generator.
+    IsAsync = 1 << 19,
+
+    // Set if this function has a rest parameter.
+    HasRest = 1 << 20,
+
+    // See comments below.
+    ArgsHasVarBinding = 1 << 21,
+
+    // Script came from eval().
+    IsForEval = 1 << 22,
+
+    // Whether this is a top-level module script.
+    IsModule = 1 << 23,
+
+    // Whether this function needs a call object or named lambda environment.
+    NeedsFunctionEnvironmentObjects = 1 << 24,
+
+    // Whether the Parser declared 'arguments'.
+    ShouldDeclareArguments = 1 << 25,
+
+    // (1 << 26) is unused.
+
+    // Whether this script contains a direct eval statement.
+    HasDirectEval = 1 << 27,
+  };
+
+  // Mutable flags typically store information about runtime or deoptimization
+  // behavior of this script. This is only public for the JITs.
+  enum class MutableFlags : uint32_t {
+    // Number of times the |warmUpCount| was forcibly discarded. The counter is
+    // reset when a script is successfully jit-compiled.
+    WarmupResets_MASK = 0xFF,
+
+    // Have warned about uses of undefined properties in this script.
+    WarnedAboutUndefinedProp = 1 << 8,
+
+    // If treatAsRunOnce, whether script has executed.
+    HasRunOnce = 1 << 9,
+
+    // Script has been reused for a clone.
+    HasBeenCloned = 1 << 10,
+
+    // Whether the record/replay execution progress counter (see RecordReplay.h)
+    // should be updated as this script runs.
+    TrackRecordReplayProgress = 1 << 11,
+
+    // Script has an entry in Realm::scriptCountsMap.
+    HasScriptCounts = 1 << 12,
+
+    // Script has an entry in Realm::debugScriptMap.
+    HasDebugScript = 1 << 13,
+
+    // Do not relazify this script. This is used by the relazify() testing
+    // function for scripts that are on the stack and also by the AutoDelazify
+    // RAII class. Usually we don't relazify functions in compartments with
+    // scripts on the stack, but the relazify() testing function overrides that,
+    // and sometimes we're working with a cross-compartment function and need to
+    // keep it from relazifying.
+    DoNotRelazify = 1 << 14,
+
+    // IonMonkey compilation hints.
+
+    // Script has had hoisted bounds checks fail.
+    FailedBoundsCheck = 1 << 15,
+
+    // Script has had hoisted shape guard fail.
+    FailedShapeGuard = 1 << 16,
+
+    HadFrequentBailouts = 1 << 17,
+    HadOverflowBailout = 1 << 18,
+
+    // Explicitly marked as uninlineable.
+    Uninlineable = 1 << 19,
+
+    // Idempotent cache has triggered invalidation.
+    InvalidatedIdempotentCache = 1 << 20,
+
+    // Lexical check did fail and bail out.
+    FailedLexicalCheck = 1 << 21,
+
+    // See comments below.
+    NeedsArgsAnalysis = 1 << 22,
+    NeedsArgsObj = 1 << 23,
+
+    // Set if the debugger's onNewScript hook has not yet been called.
+    HideScriptFromDebugger = 1 << 24,
+
+    // Set if the script has opted into spew
+    SpewEnabled = 1 << 25,
+  };
+
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
 
   ScriptSourceObject* sourceObject() const { return sourceObject_; }
@@ -1983,167 +2134,9 @@ class JSScript : public js::BaseScript {
                   mozilla::recordreplay::Behavior::DontPreserve>
       warmUpCount = {};
 
-  // Immutable flags should not be modified after this script has been
-  // initialized. These flags should likely be preserved when serializing
-  // (XDR) or copying (CopyScript) this script. This is only public for the
-  // JITs.
- public:
-  enum class ImmutableFlags : uint32_t {
-    // No need for result value of last expression statement.
-    NoScriptRval = 1 << 0,
-
-    // Code is in strict mode.
-    Strict = 1 << 1,
-
-    // (1 << 2) is unused.
-
-    // True if the script has a non-syntactic scope on its dynamic scope chain.
-    // That is, there are objects about which we know nothing between the
-    // outermost syntactic scope and the global.
-    HasNonSyntacticScope = 1 << 3,
-
-    // See Parser::selfHostingMode.
-    SelfHosted = 1 << 4,
-
-    // See FunctionBox.
-    BindingsAccessedDynamically = 1 << 5,
-    FunHasExtensibleScope = 1 << 6,
-
-    // Bytecode contains JSOP_CALLSITEOBJ
-    // (We don't relazify functions with template strings, due to observability)
-    HasCallSiteObj = 1 << 7,
-
-    // (1 << 8) is unused.
-
-    FunctionHasThisBinding = 1 << 9,
-    FunctionHasExtraBodyVarScope = 1 << 10,
-
-    // Whether the arguments object for this script, if it needs one, should be
-    // mapped (alias formal parameters).
-    HasMappedArgsObj = 1 << 11,
-
-    // Script contains inner functions. Used to check if we can relazify the
-    // script.
-    HasInnerFunctions = 1 << 12,
-
-    NeedsHomeObject = 1 << 13,
-
-    IsDerivedClassConstructor = 1 << 14,
-    IsDefaultClassConstructor = 1 << 15,
-
-    // Script is a lambda to treat as running once or a global or eval script
-    // that will only run once.  Which one it is can be disambiguated by
-    // checking whether function() is null.
-    TreatAsRunOnce = 1 << 16,
-
-    // 'this', 'arguments' and f.apply() are used. This is likely to be a
-    // wrapper.
-    IsLikelyConstructorWrapper = 1 << 17,
-
-    // Set if this function is a generator function or async generator.
-    IsGenerator = 1 << 18,
-
-    // Set if this function is an async function or async generator.
-    IsAsync = 1 << 19,
-
-    // Set if this function has a rest parameter.
-    HasRest = 1 << 20,
-
-    // See comments below.
-    ArgsHasVarBinding = 1 << 21,
-
-    // Script came from eval().
-    IsForEval = 1 << 22,
-
-    // Whether this is a top-level module script.
-    IsModule = 1 << 23,
-
-    // Whether this function needs a call object or named lambda environment.
-    NeedsFunctionEnvironmentObjects = 1 << 24,
-
-    // Whether the Parser declared 'arguments'.
-    ShouldDeclareArguments = 1 << 25,
-
-    // (1 << 26) is unused.
-
-    // Whether this script contains a direct eval statement.
-    HasDirectEval = 1 << 27,
-  };
-
- private:
   // Note: don't make this a bitfield! It makes it hard to read these flags
   // from JIT code.
   uint32_t immutableFlags_ = 0;
-
-  // Mutable flags typically store information about runtime or deoptimization
-  // behavior of this script. This is only public for the JITs.
- public:
-  enum class MutableFlags : uint32_t {
-    // Number of times the |warmUpCount| was forcibly discarded. The counter is
-    // reset when a script is successfully jit-compiled.
-    WarmupResets_MASK = 0xFF,
-
-    // Have warned about uses of undefined properties in this script.
-    WarnedAboutUndefinedProp = 1 << 8,
-
-    // If treatAsRunOnce, whether script has executed.
-    HasRunOnce = 1 << 9,
-
-    // Script has been reused for a clone.
-    HasBeenCloned = 1 << 10,
-
-    // Whether the record/replay execution progress counter (see RecordReplay.h)
-    // should be updated as this script runs.
-    TrackRecordReplayProgress = 1 << 11,
-
-    // Script has an entry in Realm::scriptCountsMap.
-    HasScriptCounts = 1 << 12,
-
-    // Script has an entry in Realm::debugScriptMap.
-    HasDebugScript = 1 << 13,
-
-    // Do not relazify this script. This is used by the relazify() testing
-    // function for scripts that are on the stack and also by the AutoDelazify
-    // RAII class. Usually we don't relazify functions in compartments with
-    // scripts on the stack, but the relazify() testing function overrides that,
-    // and sometimes we're working with a cross-compartment function and need to
-    // keep it from relazifying.
-    DoNotRelazify = 1 << 14,
-
-    // IonMonkey compilation hints.
-
-    // Script has had hoisted bounds checks fail.
-    FailedBoundsCheck = 1 << 15,
-
-    // Script has had hoisted shape guard fail.
-    FailedShapeGuard = 1 << 16,
-
-    HadFrequentBailouts = 1 << 17,
-    HadOverflowBailout = 1 << 18,
-
-    // Explicitly marked as uninlineable.
-    Uninlineable = 1 << 19,
-
-    // Idempotent cache has triggered invalidation.
-    InvalidatedIdempotentCache = 1 << 20,
-
-    // Lexical check did fail and bail out.
-    FailedLexicalCheck = 1 << 21,
-
-    // See comments below.
-    NeedsArgsAnalysis = 1 << 22,
-    NeedsArgsObj = 1 << 23,
-
-    // Set if the debugger's onNewScript hook has not yet been called.
-    HideScriptFromDebugger = 1 << 24,
-
-    // Set if the script has opted into spew
-    SpewEnabled = 1 << 25,
-  };
-
- private:
-  // Note: don't make this a bitfield! It makes it hard to read these flags
-  // from JIT code.
   uint32_t mutableFlags_ = 0;
 
   //
@@ -3250,8 +3243,6 @@ class LazyScript : public BaseScript {
 
   // See: JSScript::ImmutableFlags / MutableFlags.
   // NOTE: Lazy script only defines and uses a subset of these flags.
-  using ImmutableFlags = JSScript::ImmutableFlags;
-  using MutableFlags = JSScript::MutableFlags;
 
   uint32_t immutableFlags_;
   uint32_t mutableFlags_;
