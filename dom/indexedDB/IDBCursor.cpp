@@ -505,8 +505,6 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
     key = tmp;
   }
 
-  const Key& sortKey = IsLocaleAware() ? mSortKey : mKey;
-
   if (key.IsUnset()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
     return;
@@ -525,6 +523,8 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
     return;
   }
+
+  const Key& sortKey = IsLocaleAware() ? mSortKey : mKey;
 
   switch (mDirection) {
     case NEXT:
