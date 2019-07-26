@@ -1,6 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
 
+// TODO(nupur): Bug 1567165 - Make WebElement in Marionette a unit struct
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct WebElement {
     #[serde(rename = "element-6066-11e4-a52e-4f735466cecf")]
@@ -23,6 +24,7 @@ pub enum MarionetteResult {
     Timeouts(Timeouts),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     WebElement(WebElement),
+    WebElements(Vec<WebElement>),
     #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
     Null,
 }
@@ -78,7 +80,7 @@ mod tests {
         let data = WebElement {
             element: "foo".into(),
         };
-        assert_ser_de(&data, json!({"element-6066-11e4-a52e-4f735466cecf": "foo"}));
+        assert_ser_de(&data, json!({ELEMENT_KEY: "foo"}));
     }
 
     #[test]
@@ -106,6 +108,21 @@ mod tests {
         assert_ser_de(
             &MarionetteResult::WebElement(data),
             json!({"value": {ELEMENT_KEY: "foo"}}),
+        );
+    }
+
+    #[test]
+    fn test_web_elements_response() {
+        let mut data = Vec::new();
+        data.push(WebElement {
+            element: "foo".into(),
+        });
+        data.push(WebElement {
+            element: "bar".into(),
+        });
+        assert_ser_de(
+            &MarionetteResult::WebElements(data),
+            json!([{ELEMENT_KEY: "foo"}, {ELEMENT_KEY: "bar"}]),
         );
     }
 
