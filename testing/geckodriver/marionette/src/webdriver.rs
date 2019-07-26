@@ -24,6 +24,8 @@ pub enum Selector {
 pub enum Command {
     #[serde(rename = "WebDriver:FindElement")]
     FindElement(Locator),
+    #[serde(rename = "WebDriver:FindElements")]
+    FindElements(Locator),
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
 }
