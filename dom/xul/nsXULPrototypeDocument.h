@@ -14,7 +14,6 @@
 #include "nsISerializable.h"
 #include "nsCycleCollectionParticipant.h"
 #include <functional>
-#include "mozilla/dom/Element.h"
 
 class nsAtom;
 class nsIPrincipal;
@@ -94,15 +93,6 @@ class nsXULPrototypeDocument final : public nsISerializable {
 
   void TraceProtos(JSTracer* aTrc);
 
-  bool WasL10nCached() {
-    return mWasL10nCached;
-  };
-
-  void SetIsL10nCached();
-  void RebuildPrototypeFromElement(nsXULPrototypeElement* aPrototype,
-                                   mozilla::dom::Element* aElement, bool aDeep);
-  void RebuildL10nPrototype(mozilla::dom::Element* aElement, bool aDeep);
-
  protected:
   nsCOMPtr<nsIURI> mURI;
   RefPtr<nsXULPrototypeElement> mRoot;
@@ -124,7 +114,6 @@ class nsXULPrototypeDocument final : public nsISerializable {
       nsXULPrototypeDocument** aResult);
 
   static uint32_t gRefCnt;
-  bool mWasL10nCached;
 };
 
 #endif  // nsXULPrototypeDocument_h__
