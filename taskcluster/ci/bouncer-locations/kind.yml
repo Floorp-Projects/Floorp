@@ -31,8 +31,6 @@ job-defaults:
             default:
                 - project:releng:bouncer:action:locations
                 - project:releng:bouncer:server:staging
-    run-on-projects: ['maple', 'mozilla-central']
-    run-on-releases: ['nightly']
     shipping-phase: ship
     treeherder:
         symbol: BncLoc
@@ -41,6 +39,8 @@ job-defaults:
 
 jobs:
     firefox:
+        run-on-releases: ['nightly']
+        run-on-projects: ['mozilla-central']
         shipping-product: firefox
         bouncer-products:
             - firefox-nightly-latest
@@ -51,3 +51,24 @@ jobs:
             - firefox-nightly-msi-latest-l10n-ssl
         treeherder:
             platform: firefox-release/opt
+    fennec:
+        run-on-projects: ['mozilla-esr68']
+        attributes:
+            release-type: nightly
+        shipping-product: fennec
+        bouncer-products:
+            - fennec-nightly-latest
+        treeherder:
+            platform: fennec-release/opt
+        worker-type:
+            by-project:
+                mozilla-esr68: scriptworker-prov-v1/bouncer-v1
+                default: scriptworker-prov-v1/bouncer-dev
+        scopes:
+            by-project:
+                mozilla-esr68:
+                    - project:releng:bouncer:action:locations
+                    - project:releng:bouncer:server:production
+                default:
+                    - project:releng:bouncer:action:locations
+                    - project:releng:bouncer:server:staging
