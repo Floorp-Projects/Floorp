@@ -11,7 +11,17 @@ job-defaults:
         script: build-minidump-stackwalk.sh
         sparse-profile: null
         resources:
+            - 'build/moz.configure'
+            - 'config/external/zlib'
+            - 'mfbt'
+            - 'moz.configure'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+            - 'testing/tools/fileid'
+            - 'toolkit/crashreporter'
+            - 'toolkit/crashreporter/google-breakpad/src/common'
+            - 'toolkit/crashreporter/google-breakpad/src/processor'
+            - 'toolkit/crashreporter/rust'
+            - 'tools/crashreporter/'
         toolchain-artifact: public/build/minidump_stackwalk.tar.xz
     run-on-projects:
         - trunk

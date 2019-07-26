@@ -82,10 +82,14 @@ linux64-mar-tools:
         sparse-profile: null
         toolchain-artifact: public/build/mar-tools.tar.xz
         resources:
+            - build/moz.configure
+            - mfbt
             - modules/libmar/
-            - other-licenses/nsis/Contrib/CityHash/cityhash/
+            - moz.configure
             - other-licenses/bsdiff/
+            - other-licenses/nsis/Contrib/CityHash/cityhash/
             - toolkit/mozapps/update/updater/bspatch/
+            - tools/update-packaging/
 
 linux64-tup:
     description: "tup toolchain build"
