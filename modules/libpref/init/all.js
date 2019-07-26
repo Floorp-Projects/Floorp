@@ -1085,9 +1085,6 @@ pref("dom.send_after_paint_to_content", false);
 
 // Maximum value (in ms) for the background budget. Only valid for
 // values greater than 0.
-pref("dom.timeout.background_throttling_max_budget", 50);
-// Maximum value (in ms) for the background budget. Only valid for
-// values greater than 0.
 pref("dom.timeout.foreground_throttling_max_budget", -1);
 // The maximum amount a timeout can be delayed by budget throttling
 pref("dom.timeout.budget_throttling_max_delay", 15000);
