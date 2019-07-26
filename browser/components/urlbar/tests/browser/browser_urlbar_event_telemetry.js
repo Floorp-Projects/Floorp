@@ -574,6 +574,6 @@ add_task(async function test() {
     let expectedEvents = [await testFn()].filter(e => !!e);
     // Always blur to ensure it's not accounted as an additional abandonment.
     gURLBar.blur();
-    TelemetryTestUtils.assertEvents(expectedEvents);
+    TelemetryTestUtils.assertEvents(expectedEvents, { category: "urlbar" });
   }
 });
