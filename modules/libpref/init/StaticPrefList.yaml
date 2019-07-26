@@ -1429,6 +1429,12 @@
   value: 4
   mirror: always
 
+# Timeout clamp in ms for background windows.
+- name: dom.min_background_timeout_value
+  type: int32_t
+  value: 1000
+  mirror: always
+
 # Is support for module scripts (<script type="module">) enabled for content?
 - name: dom.moduleScripts.enabled
   type: bool
