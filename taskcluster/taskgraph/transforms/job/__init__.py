@@ -16,6 +16,8 @@ import logging
 import json
 import os
 
+import mozpack.path as mozpath
+
 from taskgraph.transforms.base import TransformSequence
 from taskgraph.util.schema import (
     validate_schema,
@@ -174,6 +176,7 @@ def use_fetches(config, jobs):
         job_fetches = []
         name = job.get('name', job.get('label'))
         dependencies = job.setdefault('dependencies', {})
+        worker = job.setdefault('worker', {})
         prefix = get_artifact_prefix(job)
         for kind, artifacts in fetches.items():
             if kind in ('fetch', 'toolchain'):
@@ -185,9 +188,13 @@ def use_fetches(config, jobs):
 
                     path = artifact_names[label]
                     if not path.startswith('public/'):
-                        raise Exception(
-                            'Non-public artifacts not supported for {kind}-{name}: '
-                            '{fetch}'.format(kind=config.kind, name=name, fetch=fetch_name))
+                        # Use taskcluster-proxy and request appropriate scope.  For example, add
+                        # 'scopes: [queue:get-artifact:path/to/*]' for 'path/to/artifact.tar.xz'.
+                        worker['taskcluster-proxy'] = True
+                        dirname = mozpath.dirname(path)
+                        scope = 'queue:get-artifact:{}/*'.format(dirname)
+                        if scope not in job['scopes']:
+                            job['scopes'].append(scope)
 
                     dependencies[label] = label
                     job_fetches.append({
@@ -219,10 +226,10 @@ def use_fetches(config, jobs):
                         fetch['dest'] = dest
                     job_fetches.append(fetch)
 
-        env = job.setdefault('worker', {}).setdefault('env', {})
+        env = worker.setdefault('env', {})
         env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
 
-        if job['worker']['os'] in ('windows', 'macosx'):
+        if worker['os'] in ('windows', 'macosx'):
             env.setdefault('MOZ_FETCHES_DIR', 'fetches')
         else:
             workdir = job['run'].get('workdir', '/builds/worker')
