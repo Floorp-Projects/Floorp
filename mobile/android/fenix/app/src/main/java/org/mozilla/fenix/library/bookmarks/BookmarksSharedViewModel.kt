@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.library.bookmarks
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import mozilla.components.concept.storage.BookmarkNode
 
 class BookmarksSharedViewModel : ViewModel() {
+    var signedIn = MutableLiveData<Boolean>().apply { postValue(true) }
     var selectedFolder: BookmarkNode? = null
 }

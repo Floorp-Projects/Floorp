@@ -137,3 +137,18 @@ private class FenixSnackbarCallback(
         private const val animateOutDuration = 150L
     }
 }
+
+class FenixSnackbarPresenter(
+    private val view: View
+) {
+    fun present(
+        text: String,
+        length: Int = FenixSnackbar.LENGTH_LONG,
+        action: (() -> Unit)? = null,
+        actionName: String? = null
+    ) {
+        FenixSnackbar.make(view, length).setText(text).let {
+            if (action != null && actionName != null) it.setAction(actionName, action) else it
+        }.show()
+    }
+}

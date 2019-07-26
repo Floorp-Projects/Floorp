@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.library
 
+import android.content.Context
 import android.graphics.ColorFilter
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -15,27 +16,14 @@ import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.forEach
-import io.reactivex.Observable
-import io.reactivex.Observer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
-import org.mozilla.fenix.mvi.Action
-import org.mozilla.fenix.mvi.Change
-import org.mozilla.fenix.mvi.UIView
-import org.mozilla.fenix.mvi.ViewState
 
-/**
- * Shared base class for [org.mozilla.fenix.library.bookmarks.BookmarkUIView] and
- * [org.mozilla.fenix.library.history.HistoryUIView].
- */
-abstract class LibraryPageUIView<S : ViewState, A : Action, C : Change>(
-    container: ViewGroup,
-    actionEmitter: Observer<A>,
-    changesObservable: Observable<C>
-) : UIView<S, A, C>(container, actionEmitter, changesObservable) {
-
-    protected val context = container.context
-    protected val activity = context?.asActivity()
+open class LibraryPageView(
+    container: ViewGroup
+) {
+    protected val context: Context = container.context
+    protected val activity = context.asActivity()
 
     /**
      * Adjust the colors of the [Toolbar] on the top of the screen.

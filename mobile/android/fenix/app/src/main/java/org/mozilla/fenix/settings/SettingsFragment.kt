@@ -17,6 +17,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.Preference.OnPreferenceClickListener
 import androidx.preference.PreferenceCategory
@@ -25,10 +26,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -56,7 +55,6 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.isInExperiment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
@@ -225,21 +223,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
 
     private fun getClickListenerForSignIn(): OnPreferenceClickListener {
         return OnPreferenceClickListener {
-            // Do not navigate to pairing UI if camera not available or pairing is disabled
-            if (context?.hasCamera() == true &&
-                context?.isInExperiment(Experiments.asFeatureFxAPairingDisabled) == false
-            ) {
-                val directions = SettingsFragmentDirections.actionSettingsFragmentToTurnOnSyncFragment()
-                Navigation.findNavController(view!!).navigate(directions)
-            } else {
-                requireComponents.services.accountsAuthFeature.beginAuthentication(requireContext())
-                // TODO The sign-in web content populates session history,
-                // so pressing "back" after signing in won't take us back into the settings screen, but rather up the
-                // session history stack.
-                // We could auto-close this tab once we get to the end of the authentication process?
-                // Via an interceptor, perhaps.
-                requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
-            }
+            context!!.components.services.launchPairingSignIn(context!!, findNavController())
             true
         }
     }

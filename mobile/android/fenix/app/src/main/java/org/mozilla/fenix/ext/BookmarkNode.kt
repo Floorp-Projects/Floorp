@@ -4,7 +4,10 @@
 
 package org.mozilla.fenix.ext
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
+import androidx.core.content.getSystemService
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.storage.sync.PlacesBookmarksStorage
 import mozilla.components.concept.storage.BookmarkNode
@@ -131,4 +134,14 @@ operator fun BookmarkNode?.minus(child: String): BookmarkNode {
 
 operator fun BookmarkNode?.minus(children: Set<BookmarkNode>): BookmarkNode {
     return this!!.copy(children = this.children?.filter { it !in children })
+}
+
+/**
+ * Copies the URL of the given bookmarkNode into the copy and paste buffer.
+ * @param context the current Context
+ */
+fun BookmarkNode.copyUrl(context: Context) {
+    context.getSystemService<ClipboardManager>()?.apply {
+        primaryClip = ClipData.newPlainText(url, url)
+    }
 }

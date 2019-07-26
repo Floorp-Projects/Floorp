@@ -412,6 +412,7 @@ dependencies {
     testImplementation Deps.mockito_core
     androidTestImplementation Deps.mockito_android
     testImplementation Deps.mockk
+    testImplementation Deps.assertk
 
     debugImplementation Deps.flipper
     debugImplementation Deps.soLoader

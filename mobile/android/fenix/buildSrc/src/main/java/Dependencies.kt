@@ -48,6 +48,7 @@ object Versions {
     const val junit = "4.12"
     const val mockito = "2.24.5"
     const val mockk = "1.9.kotlin12"
+    const val assertk = "0.19"
     const val flipper = "0.21.0"
     const val soLoader = "0.5.1"
 
@@ -182,6 +183,7 @@ object Deps {
     const val mockito_core = "org.mockito:mockito-core:${Versions.mockito}"
     const val mockito_android = "org.mockito:mockito-android:${Versions.mockito}"
     const val mockk = "io.mockk:mockk:${Versions.mockk}"
+    const val assertk = "com.willowtreeapps.assertk:assertk-jvm:${Versions.assertk}"
 
     const val flipper = "com.facebook.flipper:flipper:${Versions.flipper}"
     const val flipper_noop = "com.facebook.flipper:flipper-noop:${Versions.flipper}"

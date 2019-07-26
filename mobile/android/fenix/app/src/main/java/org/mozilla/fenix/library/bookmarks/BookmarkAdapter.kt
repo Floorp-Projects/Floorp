@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.Observer
 import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.bookmark_row.*
 import kotlinx.coroutines.CoroutineScope
@@ -30,7 +29,7 @@ import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.utils.AdapterWithJob
 import kotlin.coroutines.CoroutineContext
 
-class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkAction>) :
+class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteractor) :
     AdapterWithJob<BookmarkAdapter.BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
@@ -87,13 +86,13 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
         return when (viewType) {
             BookmarkItemViewHolder.viewType.ordinal -> BookmarkItemViewHolder(
-                view, actionEmitter, adapterJob
+                view, interactor, adapterJob
             )
             BookmarkFolderViewHolder.viewType.ordinal -> BookmarkFolderViewHolder(
-                view, actionEmitter, adapterJob
+                view, interactor, adapterJob
             )
             BookmarkSeparatorViewHolder.viewType.ordinal -> BookmarkSeparatorViewHolder(
-                view, actionEmitter, adapterJob
+                view, interactor, adapterJob
             )
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
@@ -120,7 +119,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     open class BookmarkNodeViewHolder(
         view: View,
-        val actionEmitter: Observer<BookmarkAction>,
+        val interactor: BookmarkViewInteractor,
         private val job: Job,
         override val containerView: View? = view
     ) :
@@ -134,11 +133,11 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     class BookmarkItemViewHolder(
         view: View,
-        actionEmitter: Observer<BookmarkAction>,
+        interactor: BookmarkViewInteractor,
         job: Job,
         override val containerView: View? = view
     ) :
-        BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
+        BookmarkNodeViewHolder(view, interactor, job, containerView) {
 
         @Suppress("ComplexMethod")
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
@@ -160,25 +159,25 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
                 when (it) {
                     is BookmarkItemMenu.Item.Edit -> {
-                        actionEmitter.onNext(BookmarkAction.Edit(item))
+                        interactor.edit(item)
                     }
                     is BookmarkItemMenu.Item.Select -> {
-                        actionEmitter.onNext(BookmarkAction.Select(item))
+                        interactor.select(item)
                     }
                     is BookmarkItemMenu.Item.Copy -> {
-                        actionEmitter.onNext(BookmarkAction.Copy(item))
+                        interactor.copy(item)
                     }
                     is BookmarkItemMenu.Item.Share -> {
-                        actionEmitter.onNext(BookmarkAction.Share(item))
+                        interactor.share(item)
                     }
                     is BookmarkItemMenu.Item.OpenInNewTab -> {
-                        actionEmitter.onNext(BookmarkAction.OpenInNewTab(item))
+                        interactor.openInNewTab(item)
                     }
                     is BookmarkItemMenu.Item.OpenInPrivateTab -> {
-                        actionEmitter.onNext(BookmarkAction.OpenInPrivateTab(item))
+                        interactor.openInPrivateTab(item)
                     }
                     is BookmarkItemMenu.Item.Delete -> {
-                        actionEmitter.onNext(BookmarkAction.Delete(item))
+                        interactor.delete(item)
                     }
                 }
             }
@@ -228,19 +227,15 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         ) {
             bookmark_layout.setOnClickListener {
                 if (mode == BookmarkState.Mode.Normal) {
-                    actionEmitter.onNext(BookmarkAction.Open(item))
+                    interactor.open(item)
                 } else {
-                    if (selected) actionEmitter.onNext(BookmarkAction.Deselect(item)) else actionEmitter.onNext(
-                        BookmarkAction.Select(item)
-                    )
+                    if (selected) interactor.deselect(item) else interactor.select(item)
                 }
             }
 
             bookmark_layout.setOnLongClickListener {
                 if (mode == BookmarkState.Mode.Normal) {
-                    if (selected) actionEmitter.onNext(BookmarkAction.Deselect(item)) else actionEmitter.onNext(
-                        BookmarkAction.Select(item)
-                    )
+                    if (selected) interactor.deselect(item) else interactor.select(item)
                     true
                 } else false
             }
@@ -255,11 +250,11 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     class BookmarkFolderViewHolder(
         view: View,
-        actionEmitter: Observer<BookmarkAction>,
+        interactor: BookmarkViewInteractor,
         job: Job,
         override val containerView: View? = view
     ) :
-        BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
+        BookmarkNodeViewHolder(view, interactor, job, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
             containerView?.context?.let {
@@ -304,13 +299,13 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
                 when (it) {
                     is BookmarkItemMenu.Item.Edit -> {
-                        actionEmitter.onNext(BookmarkAction.Edit(item))
+                        interactor.edit(item)
                     }
                     is BookmarkItemMenu.Item.Select -> {
-                        actionEmitter.onNext(BookmarkAction.Select(item))
+                        interactor.select(item)
                     }
                     is BookmarkItemMenu.Item.Delete -> {
-                        actionEmitter.onNext(BookmarkAction.Delete(item))
+                        interactor.delete(item)
                     }
                 }
             }
@@ -336,19 +331,15 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
         ) {
             bookmark_layout.setOnClickListener {
                 if (mode == BookmarkState.Mode.Normal) {
-                    actionEmitter.onNext(BookmarkAction.Expand(item))
+                    interactor.expand(item)
                 } else {
-                    if (selected) actionEmitter.onNext(BookmarkAction.Deselect(item)) else actionEmitter.onNext(
-                        BookmarkAction.Select(item)
-                    )
+                    if (selected) interactor.deselect(item) else interactor.select(item)
                 }
             }
 
             bookmark_layout.setOnLongClickListener {
                 if (mode == BookmarkState.Mode.Normal && !item.inRoots()) {
-                    if (selected) actionEmitter.onNext(BookmarkAction.Deselect(item)) else actionEmitter.onNext(
-                        BookmarkAction.Select(item)
-                    )
+                    if (selected) interactor.deselect(item) else interactor.select(item)
                     true
                 } else false
             }
@@ -361,10 +352,10 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
     class BookmarkSeparatorViewHolder(
         view: View,
-        actionEmitter: Observer<BookmarkAction>,
+        interactor: BookmarkViewInteractor,
         job: Job,
         override val containerView: View? = view
-    ) : BookmarkNodeViewHolder(view, actionEmitter, job, containerView) {
+    ) : BookmarkNodeViewHolder(view, interactor, job, containerView) {
 
         override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
 
@@ -379,7 +370,7 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
             val bookmarkItemMenu = BookmarkItemMenu(containerView!!.context, item) {
                 when (it) {
                     is BookmarkItemMenu.Item.Delete -> {
-                        actionEmitter.onNext(BookmarkAction.Delete(item))
+                        interactor.delete(item)
                     }
                 }
             }

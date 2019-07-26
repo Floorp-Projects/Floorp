@@ -15,6 +15,10 @@
         android:id="@+id/action_global_crash_reporter"
         app:destination="@id/crashReporterFragment" />
 
+    <action
+        android:id="@+id/action_global_turn_on_sync"
+        app:destination="@id/turnOnSyncFragment" />
+
     <fragment
         android:id="@+id/homeFragment"
         android:name="org.mozilla.fenix.home.HomeFragment"
