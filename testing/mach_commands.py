@@ -80,6 +80,8 @@ def get_test_parser():
                         help="Extra arguments to pass to the underlying test command(s). "
                              "If an underlying command doesn't recognize the argument, it "
                              "will fail.")
+    parser.add_argument('--debugger', default=None, action='store',
+                        nargs='?', help="Specify a debugger to use.")
     add_logging_group(parser)
     return parser
 
@@ -320,6 +322,11 @@ class Test(MachCommandBase):
         if not run_suites and not run_tests:
             print(UNKNOWN_TEST)
             return 1
+
+        if log_args.get('debugger', None):
+            import mozdebug
+            if not mozdebug.get_debugger_info(log_args.get('debugger')):
+                sys.exit(1)
 
         # Create shared logger
         format_args = {'level': self._mach_context.settings['test']['level']}
