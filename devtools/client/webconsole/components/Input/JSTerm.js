@@ -182,14 +182,11 @@ class JSTerm extends Component {
             return null;
           }
 
-          if (this.canCaretGoPrevious()) {
+          if (this.props.editorMode === false && this.canCaretGoPrevious()) {
             inputUpdated = this.historyPeruse(HISTORY_BACK);
           }
 
-          if (!inputUpdated) {
-            return "CodeMirror.Pass";
-          }
-          return null;
+          return inputUpdated ? null : "CodeMirror.Pass";
         };
 
         const onArrowDown = () => {
@@ -199,14 +196,11 @@ class JSTerm extends Component {
             return null;
           }
 
-          if (this.canCaretGoNext()) {
+          if (this.props.editorMode === false && this.canCaretGoNext()) {
             inputUpdated = this.historyPeruse(HISTORY_FORWARD);
           }
 
-          if (!inputUpdated) {
-            return "CodeMirror.Pass";
-          }
-          return null;
+          return inputUpdated ? null : "CodeMirror.Pass";
         };
 
         const onArrowLeft = () => {
@@ -348,6 +342,7 @@ class JSTerm extends Component {
               // multiline text.
               if (
                 Services.appinfo.OS === "Darwin" &&
+                this.props.editorMode === false &&
                 this.canCaretGoNext() &&
                 this.historyPeruse(HISTORY_FORWARD)
               ) {
@@ -364,6 +359,7 @@ class JSTerm extends Component {
               // multiline text.
               if (
                 Services.appinfo.OS === "Darwin" &&
+                this.props.editorMode === false &&
                 this.canCaretGoPrevious() &&
                 this.historyPeruse(HISTORY_BACK)
               ) {
@@ -975,6 +971,7 @@ class JSTerm extends Component {
           // multiline text.
           if (
             Services.appinfo.OS == "Darwin" &&
+            this.props.editorMode === false &&
             this.canCaretGoNext() &&
             this.historyPeruse(HISTORY_FORWARD)
           ) {
@@ -993,6 +990,7 @@ class JSTerm extends Component {
           // multiline text.
           if (
             Services.appinfo.OS == "Darwin" &&
+            this.props.editorMode === false &&
             this.canCaretGoPrevious() &&
             this.historyPeruse(HISTORY_BACK)
           ) {
@@ -1096,7 +1094,10 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectPreviousItem();
           event.preventDefault();
-        } else if (this.canCaretGoPrevious()) {
+        } else if (
+          this.props.editorMode === false &&
+          this.canCaretGoPrevious()
+        ) {
           inputUpdated = this.historyPeruse(HISTORY_BACK);
         }
         if (inputUpdated) {
@@ -1108,7 +1109,7 @@ class JSTerm extends Component {
         if (this.autocompletePopup.isOpen) {
           this.autocompletePopup.selectNextItem();
           event.preventDefault();
-        } else if (this.canCaretGoNext()) {
+        } else if (this.props.editorMode === false && this.canCaretGoNext()) {
           inputUpdated = this.historyPeruse(HISTORY_FORWARD);
         }
         if (inputUpdated) {
