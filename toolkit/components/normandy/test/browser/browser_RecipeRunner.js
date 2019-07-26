@@ -12,6 +12,10 @@ ChromeUtils.import("resource://normandy/lib/NormandyApi.jsm", this);
 ChromeUtils.import("resource://normandy/lib/ActionsManager.jsm", this);
 ChromeUtils.import("resource://normandy/lib/AddonStudies.jsm", this);
 ChromeUtils.import("resource://normandy/lib/Uptake.jsm", this);
+ChromeUtils.import(
+  "resource://gre/modules/components-utils/FilterExpressions.jsm",
+  this
+);
 
 const { RemoteSettings } = ChromeUtils.import(
   "resource://services-settings/remote-settings.js"
@@ -74,9 +78,9 @@ add_task(async function getFilterContext() {
   is(context.env.userId, "some id", "userId was cached");
 });
 
-add_task(async function checkFilter() {
+add_task(async function test_shouldRunRecipe_filterExpressions() {
   const check = filter =>
-    RecipeRunner.checkFilter({ filter_expression: filter });
+    RecipeRunner.shouldRunRecipe({ filter_expression: filter });
 
   // Errors must result in a false return value.
   ok(
@@ -90,12 +94,12 @@ add_task(async function checkFilter() {
   // The given recipe must be available to the filter context.
   const recipe = { filter_expression: "normandy.recipe.id == 7", id: 7 };
   ok(
-    await RecipeRunner.checkFilter(recipe),
+    await RecipeRunner.shouldRunRecipe(recipe),
     "The recipe is available in the filter context"
   );
   recipe.id = 4;
   ok(
-    !(await RecipeRunner.checkFilter(recipe)),
+    !(await RecipeRunner.shouldRunRecipe(recipe)),
     "The recipe is available in the filter context"
   );
 });
@@ -103,19 +107,63 @@ add_task(async function checkFilter() {
 decorate_task(
   withStub(FilterExpressions, "eval"),
   withStub(Uptake, "reportRecipe"),
-  async function checkFilterCanHandleExceptions(evalStub, reportRecipeStub) {
+  async function test_shouldRunRecipe_canHandleExceptions(
+    evalStub,
+    reportRecipeStub
+  ) {
     evalStub.throws("this filter was broken somehow");
     const someRecipe = {
       id: "1",
       action: "action",
       filter_expression: "broken",
     };
-    const result = await RecipeRunner.checkFilter(someRecipe);
+    const result = await RecipeRunner.shouldRunRecipe(someRecipe);
 
     Assert.deepEqual(result, false, "broken filters are treated as false");
     Assert.deepEqual(reportRecipeStub.args, [
       [someRecipe, Uptake.RECIPE_FILTER_BROKEN],
     ]);
+  }
+);
+
+decorate_task(
+  withSpy(FilterExpressions, "eval"),
+  withStub(RecipeRunner, "getCapabilities"),
+  async function test_shouldRunRecipe_checksCapabilities(
+    evalSpy,
+    getCapabilitiesStub
+  ) {
+    getCapabilitiesStub.returns(new Set(["test-capability"]));
+
+    let result = await RecipeRunner.shouldRunRecipe({
+      filter_expression: "true",
+    });
+    ok(result, "Recipes with no capabilities should pass");
+    ok(evalSpy.called, "Filter should be evaluated");
+
+    evalSpy.resetHistory();
+    result = await RecipeRunner.shouldRunRecipe({
+      capabilities: [],
+      filter_expression: "true",
+    });
+    ok(result, "Recipes with empty capabilities should pass");
+    ok(evalSpy.called, "Filter should be evaluated");
+
+    evalSpy.resetHistory();
+    result = await RecipeRunner.shouldRunRecipe({
+      capabilities: ["test-capability"],
+      filter_expression: "true",
+    });
+    ok(result, "Recipes with a matching capability should pass");
+    ok(evalSpy.called, "Filter should be evaluated");
+
+    evalSpy.resetHistory();
+    result = await RecipeRunner.shouldRunRecipe({
+      capabilities: ["impossible-capability"],
+      filter_expression: "true",
+    });
+    ok(!result, "Recipes with non-matching capabilities should not pass");
+    ok(!evalSpy.called, "Filter should not be evaluated");
   }
 );
 
@@ -240,12 +288,37 @@ decorate_task(
   withPrefEnv({
     set: [["features.normandy-remote-settings.enabled", true]],
   }),
+  withStub(RecipeRunner, "getCapabilities"),
+  async function test_run_includesCapabilities(getCapabilitiesStub) {
+    const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
+    await rsCollection.clear();
+    const fakeSig = { signature: "abc" };
+    await rsCollection.create(
+      { id: "match", recipe: { id: 1 }, signature: fakeSig },
+      { synced: true }
+    );
+    await rsCollection.db.saveLastModified(42);
+    rsCollection.db.close();
+
+    let capabilities = new Set(["test-capability"]);
+    getCapabilitiesStub.returns(capabilities);
+    await RecipeRunner.run();
+    ok(getCapabilitiesStub.called, "getCapabilities should be called");
+  }
+);
+
+decorate_task(
+  withPrefEnv({
+    set: [["features.normandy-remote-settings.enabled", true]],
+  }),
   withStub(NormandyApi, "verifyObjectSignature"),
+  withSpy(NormandyApi, "fetchRecipes"),
   withStub(ActionsManager.prototype, "runRecipe"),
   withStub(ActionsManager.prototype, "finalize"),
   withStub(Uptake, "reportRecipe"),
   async function testReadFromRemoteSettings(
     verifyObjectSignatureStub,
+    fetchRecipesSpy,
     runRecipeStub,
     finalizeStub,
     reportRecipeStub
@@ -289,7 +362,7 @@ decorate_task(
     Assert.deepEqual(
       verifyObjectSignatureStub.args,
       [[matchRecipe, fakeSig, "recipe"], [missingRecipe, fakeSig, "recipe"]],
-      "recipes with matching filters should have their signature verified"
+      "recipes with matching should have their signature verified"
     );
     Assert.deepEqual(
       runRecipeStub.args,
@@ -300,6 +373,56 @@ decorate_task(
       reportRecipeStub.args,
       [[noMatchRecipe, Uptake.RECIPE_DIDNT_MATCH_FILTER]],
       "Filtered-out recipes should be reported"
+    );
+
+    ok(fetchRecipesSpy.notCalled, "fetchRecipes should not be called");
+  }
+);
+
+decorate_task(
+  withPrefEnv({
+    set: [["features.normandy-remote-settings.enabled", true]],
+  }),
+  withStub(NormandyApi, "verifyObjectSignature"),
+  withStub(ActionsManager.prototype, "runRecipe"),
+  withStub(RecipeRunner, "getCapabilities"),
+  async function testReadFromRemoteSettings(
+    verifyObjectSignatureStub,
+    runRecipeStub,
+    getCapabilitiesStub
+  ) {
+    getCapabilitiesStub.returns(new Set(["compatible"]));
+    const compatibleRecipe = {
+      name: "match",
+      filter_expression: "true",
+      capabilities: ["compatible"],
+    };
+    const incompatibleRecipe = {
+      name: "noMatch",
+      filter_expression: "true",
+      capabilities: ["incompatible"],
+    };
+
+    const rsCollection = await RecipeRunner._remoteSettingsClientForTesting.openCollection();
+    await rsCollection.clear();
+    const fakeSig = { signature: "abc" };
+    await rsCollection.create(
+      { id: "match", recipe: compatibleRecipe, signature: fakeSig },
+      { synced: true }
+    );
+    await rsCollection.create(
+      { id: "noMatch", recipe: incompatibleRecipe, signature: fakeSig },
+      { synced: true }
+    );
+    await rsCollection.db.saveLastModified(42);
+    rsCollection.db.close();
+
+    await RecipeRunner.run();
+
+    Assert.deepEqual(
+      runRecipeStub.args,
+      [[compatibleRecipe]],
+      "only recipes with compatible capabilities should be executed"
     );
   }
 );
