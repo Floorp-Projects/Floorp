@@ -14,10 +14,11 @@
   %uctDTD;
   <!ENTITY % scDTD SYSTEM "chrome://mozapps/locale/downloads/settingsChange.dtd" >
   %scDTD;
-]>            
+]>
 
 <dialog id="unknownContentType"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
         onload="dialog.initDialog();" onunload="if (dialog) dialog.onCancel();"
 #ifdef XP_WIN
         style="width: 36em;"
@@ -28,10 +29,12 @@
         persist="screenX screenY"
         aria-describedby="intro location whichIs type from source unknownPrompt">
 
-
   <stringbundle id="strings" src="chrome://mozapps/locale/downloads/unknownContentType.properties"/>
 
-  <vbox flex="1" id="container">  
+  <script src="chrome://global/content/globalOverlay.js"/>
+  <script src="chrome://global/content/editMenuOverlay.js"/>
+
+  <vbox flex="1" id="container">
     <description id="intro">&intro2.label;</description>
     <separator class="thin"/>
     <hbox align="start" class="small-indent">
@@ -41,7 +44,7 @@
         <separator class="thin"/>
         <hbox align="center">
           <label id="whichIs" value="&whichIs.label;"/>
-          <textbox id="type" class="plain" readonly="true" flex="1" noinitialfocus="true"/>
+          <html:input id="type" class="plain" readonly="readonly" noinitialfocus="true"/>
         </hbox>
         <hbox align="center">
           <label value="&from.label;" id="from"/>
@@ -49,7 +52,7 @@
         </hbox>
       </vbox>
     </hbox>
-    
+
     <separator class="thin"/>
 
     <hbox align="center" id="basicBox" collapsed="true">
@@ -74,16 +77,16 @@
             </hbox>
           </deck>
         </hbox>
-        
+
         <radio id="save" label="&saveFile.label;" accesskey="&saveFile.accesskey;"/>
-      </radiogroup> 
+      </radiogroup>
       <separator class="thin"/>
       <hbox class="small-indent">
         <checkbox id="rememberChoice" label="&rememberChoice.label;"
                   accesskey="&rememberChoice.accesskey;"
                   oncommand="dialog.toggleRememberChoice(event.target);"/>
       </hbox>
-      
+
       <separator/>
 #ifdef XP_UNIX
       <description id="settingsChange" hidden="true">&settingsChangePreferences.label;</description>
@@ -93,7 +96,7 @@
       <separator class="thin"/>
     </vbox>
   </vbox>
-  
+
   <menulist id="openHandler" flex="1">
     <menupopup id="openHandlerPopup" oncommand="dialog.openHandlerCommand();">
       <menuitem id="defaultHandler" default="true" crop="right"/>
