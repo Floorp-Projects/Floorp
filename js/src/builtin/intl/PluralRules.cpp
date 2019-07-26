@@ -173,15 +173,10 @@ bool js::intl_PluralRules_availableLocales(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  RootedValue result(cx);
   // We're going to use ULocale availableLocales as per ICU recommendation:
   // https://ssl.icu-project.org/trac/ticket/12756
-  if (!GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable,
-                           &result)) {
-    return false;
-  }
-  args.rval().set(result);
-  return true;
+  return GetAvailableLocales(cx, uloc_countAvailable, uloc_getAvailable,
+                             args.rval());
 }
 
 /**
