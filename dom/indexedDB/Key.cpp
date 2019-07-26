@@ -59,7 +59,7 @@ namespace indexedDB {
  Chars (3FFF+80) - FFFF         are encoded as 11xxxxxx xxxxxxxx xx000000
 
  This ensures that the first byte is never encoded as 0, which means that the
- string terminator (per basic-stategy table) sorts before any character.
+ string terminator (per basic-strategy table) sorts before any character.
  The reason that (3FFF+80) - FFFF is encoded "shifted up" 6 bits is to maximize
  the chance that the last character is 0. See below for why.
 
