@@ -1788,7 +1788,7 @@ var PlacesUtils = {
          FROM moz_bookmarks b2
          JOIN descendants ON b2.parent = descendants.id AND b2.id <> :tags_folder)
        SELECT d.level, d.id, d.guid, d.parent, d.parentGuid, d.type,
-              d.position AS [index], IFNULL(d.title, "") AS title, d.dateAdded,
+              d.position AS [index], IFNULL(d.title, '') AS title, d.dateAdded,
               d.lastModified, h.url, (SELECT icon_url FROM moz_icons i
                       JOIN moz_icons_to_pages ON icon_id = i.id
                       JOIN moz_pages_w_icons pi ON page_id = pi.id

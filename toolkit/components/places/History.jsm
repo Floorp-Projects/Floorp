@@ -1607,7 +1607,7 @@ var update = async function(db, pageInfo) {
       SET ${updateFragments.map(v => `${v} = :${v}`).join(", ")}
       WHERE id = :id
         AND (${updateFragments
-          .map(v => `IFNULL(${v}, "") <> IFNULL(:${v}, "")`)
+          .map(v => `IFNULL(${v}, '') <> IFNULL(:${v}, '')`)
           .join(" OR ")})
     `,
       { id, ...params }

@@ -359,7 +359,7 @@ const HistorySyncUtils = (PlacesSyncUtils.history = Object.freeze({
     let db = await PlacesUtils.promiseDBConnection();
     let rows = await db.executeCached(
       `
-      SELECT url, IFNULL(title, "") AS title, frecency
+      SELECT url, IFNULL(title, '') AS title, frecency
       FROM moz_places
       WHERE guid = :guid`,
       { guid }

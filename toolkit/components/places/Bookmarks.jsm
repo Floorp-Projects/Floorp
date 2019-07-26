@@ -1865,7 +1865,7 @@ async function updateBookmark(
   if (info.hasOwnProperty("title")) {
     tuples.set("title", {
       value: info.title,
-      fragment: `title = NULLIF(:title, "")`,
+      fragment: `title = NULLIF(:title, '')`,
     });
   }
   if (info.hasOwnProperty("dateAdded")) {
@@ -2113,7 +2113,7 @@ function insertBookmark(item, parent) {
                                     dateAdded, lastModified, guid,
                                     syncChangeCounter, syncStatus)
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END,
-                 :type, :parent, :index, NULLIF(:title, ""), :date_added,
+                 :type, :parent, :index, NULLIF(:title, ''), :date_added,
                  :last_modified, :guid, :syncChangeCounter, :syncStatus)
         `,
           {
@@ -2211,7 +2211,7 @@ function insertBookmarkTree(items, source, parent, urls, lastAddedForParent) {
          VALUES (CASE WHEN :url ISNULL THEN NULL ELSE (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url) END, :type,
          (SELECT id FROM moz_bookmarks WHERE guid = :parentGuid),
          IFNULL(:index, (SELECT count(*) FROM moz_bookmarks WHERE parent = :rootId)),
-         NULLIF(:title, ""), :date_added, :last_modified, :guid,
+         NULLIF(:title, ''), :date_added, :last_modified, :guid,
          :syncChangeCounter, :syncStatus)`,
           items
         );
@@ -2336,9 +2336,9 @@ async function queryBookmarks(info) {
       // are required to be in the result by the converting function
       // hence setting them to NULL
       let rows = await db.executeCached(
-        `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+        `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
                 b.dateAdded, b.lastModified, b.type,
-                IFNULL(b.title, "") AS title, h.url AS url, b.parent, p.parent,
+                IFNULL(b.title, '') AS title, h.url AS url, b.parent, p.parent,
                 NULL AS _id,
                 NULL AS _childCount,
                 NULL AS _grandParentId,
@@ -2374,8 +2374,8 @@ async function queryBookmarks(info) {
 async function fetchBookmark(info, options = {}) {
   let query = async function(db) {
     let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+      `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -2408,8 +2408,8 @@ async function fetchBookmarkByPosition(info, options = {}) {
   let query = async function(db) {
     let index = info.index == Bookmarks.DEFAULT_INDEX ? null : info.index;
     let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+      `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -2439,8 +2439,8 @@ async function fetchBookmarkByPosition(info, options = {}) {
 async function fetchBookmarksByTags(info, options = {}) {
   let query = async function(db) {
     let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+      `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -2481,8 +2481,8 @@ async function fetchBookmarksByTags(info, options = {}) {
 async function fetchBookmarksByGUIDPrefix(info, options = {}) {
   let query = async function(db) {
     let rows = await db.executeCached(
-      `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+      `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount,
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -2513,8 +2513,8 @@ async function fetchBookmarksByURL(info, options = {}) {
     let tagsFolderId = await promiseTagsFolderId();
     let rows = await db.executeCached(
       `/* do not warn (bug no): not worth to add an index */
-      SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+      SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+              b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
               h.url AS url, b.id AS _id, b.parent AS _parentId,
               NULL AS _childCount, /* Unused for now */
               p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -2547,9 +2547,9 @@ function fetchRecentBookmarks(numberOfItems) {
     async function(db) {
       let tagsFolderId = await promiseTagsFolderId();
       let rows = await db.executeCached(
-        `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
+        `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
                 b.dateAdded, b.lastModified, b.type,
-                IFNULL(b.title, "") AS title, h.url AS url, NULL AS _id,
+                IFNULL(b.title, '') AS title, h.url AS url, NULL AS _id,
                 NULL AS _parentId, NULL AS _childCount, NULL AS _grandParentId,
                 NULL AS _syncStatus
         FROM moz_bookmarks b
@@ -2576,8 +2576,8 @@ function fetchRecentBookmarks(numberOfItems) {
 
 async function fetchBookmarksByParent(db, info) {
   let rows = await db.executeCached(
-    `SELECT b.guid, IFNULL(p.guid, "") AS parentGuid, b.position AS 'index',
-            b.dateAdded, b.lastModified, b.type, IFNULL(b.title, "") AS title,
+    `SELECT b.guid, IFNULL(p.guid, '') AS parentGuid, b.position AS 'index',
+            b.dateAdded, b.lastModified, b.type, IFNULL(b.title, '') AS title,
             h.url AS url, b.id AS _id, b.parent AS _parentId,
             (SELECT count(*) FROM moz_bookmarks WHERE parent = b.id) AS _childCount,
             p.parent AS _grandParentId, b.syncStatus AS _syncStatus
@@ -3170,7 +3170,7 @@ var removeFoldersContents = async function(db, folderGuids, options) {
        )
        SELECT b.id AS _id, b.parent AS _parentId, b.position AS 'index',
               b.type, url, b.guid, p.guid AS parentGuid, b.dateAdded,
-              b.lastModified, IFNULL(b.title, "") AS title,
+              b.lastModified, IFNULL(b.title, '') AS title,
               p.parent AS _grandParentId, NULL AS _childCount,
               b.syncStatus AS _syncStatus
        FROM descendants

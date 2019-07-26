@@ -184,7 +184,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         let mut contents = HashMap::new();
 
         let mut statement = self.db.prepare(
-            r#"SELECT b.guid, b.type, IFNULL(b.title, "") AS title, h.url,
+            r#"SELECT b.guid, b.type, IFNULL(b.title, '') AS title, h.url,
                       b.position
                FROM moz_bookmarks b
                JOIN moz_bookmarks p ON p.id = b.parent
@@ -301,7 +301,7 @@ impl<'s> dogear::Store<Error> for Store<'s> {
         let mut contents = HashMap::new();
 
         let mut statement = self.db.prepare(
-            r#"SELECT v.guid, v.kind, IFNULL(v.title, "") AS title, u.url,
+            r#"SELECT v.guid, v.kind, IFNULL(v.title, '') AS title, u.url,
                       IFNULL(s.position, -1) AS position
                FROM items v
                LEFT JOIN urls u ON u.id = v.urlId

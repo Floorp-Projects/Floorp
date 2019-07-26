@@ -341,7 +341,7 @@ this.PersonalityProvider = class PersonalityProvider {
     WHERE last_visit_date >= ${beginTimeSecs * 1000000}
     AND last_visit_date < ${endTimeSecs * 1000000}`;
     columns.forEach(requiredColumn => {
-      sql += ` AND IFNULL(${requiredColumn}, "") <> ""`;
+      sql += ` AND IFNULL(${requiredColumn}, '') <> ''`;
     });
     sql += " LIMIT 30000";
 

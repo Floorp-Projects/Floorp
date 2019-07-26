@@ -857,7 +857,7 @@ class SyncedBookmarksMirror {
                          dateAdded, title, keyword, validity,
                          urlId)
       VALUES(:guid, :parentGuid, :serverModified, :needsMerge, :kind,
-             :dateAdded, NULLIF(:title, ""), :keyword, :validity,
+             :dateAdded, NULLIF(:title, ''), :keyword, :validity,
              (SELECT id FROM urls
               WHERE hash = hash(:url) AND
                     url = :url))`,
@@ -955,7 +955,7 @@ class SyncedBookmarksMirror {
                          urlId,
                          validity)
       VALUES(:guid, :parentGuid, :serverModified, :needsMerge, :kind,
-             :dateAdded, NULLIF(:title, ""),
+             :dateAdded, NULLIF(:title, ''),
              (SELECT id FROM urls
               WHERE hash = hash(:url) AND
                     url = :url),
@@ -986,7 +986,7 @@ class SyncedBookmarksMirror {
       REPLACE INTO items(guid, parentGuid, serverModified, needsMerge, kind,
                          dateAdded, title)
       VALUES(:guid, :parentGuid, :serverModified, :needsMerge, :kind,
-             :dateAdded, NULLIF(:title, ""))`,
+             :dateAdded, NULLIF(:title, ''))`,
       {
         guid,
         parentGuid,
@@ -1041,7 +1041,7 @@ class SyncedBookmarksMirror {
       REPLACE INTO items(guid, parentGuid, serverModified, needsMerge, kind,
                          dateAdded, title, feedURL, siteURL, validity)
       VALUES(:guid, :parentGuid, :serverModified, :needsMerge, :kind,
-             :dateAdded, NULLIF(:title, ""), :feedURL, :siteURL, :validity)`,
+             :dateAdded, NULLIF(:title, ''), :feedURL, :siteURL, :validity)`,
       {
         guid,
         parentGuid,
@@ -1215,9 +1215,9 @@ class SyncedBookmarksMirror {
 
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
-             tagFolderName, keyword, url, IFNULL(title, "") AS title,
+             tagFolderName, keyword, url, IFNULL(title, '') AS title,
              position, parentGuid,
-             IFNULL(parentTitle, "") AS parentTitle, dateAdded
+             IFNULL(parentTitle, '') AS parentTitle, dateAdded
       FROM itemsToUpload`);
 
     await Async.yieldingForEach(
@@ -2324,7 +2324,7 @@ class BookmarkObserverRecorder {
     MirrorLog.trace("Recording observer notifications for new items");
     let newItemRows = await this.db.execute(`
       SELECT b.id, p.id AS parentId, b.position, b.type, h.url,
-             IFNULL(b.title, "") AS title, b.dateAdded, b.guid,
+             IFNULL(b.title, '') AS title, b.dateAdded, b.guid,
              p.guid AS parentGuid, n.isTagging
       FROM itemsAdded n
       JOIN moz_bookmarks b ON b.guid = n.guid
@@ -2384,8 +2384,8 @@ class BookmarkObserverRecorder {
     MirrorLog.trace("Recording observer notifications for changed items");
     let changedItemRows = await this.db.execute(`
       SELECT b.id, b.guid, b.lastModified, b.type,
-             IFNULL(b.title, "") AS newTitle,
-             IFNULL(c.oldTitle, "") AS oldTitle,
+             IFNULL(b.title, '') AS newTitle,
+             IFNULL(c.oldTitle, '') AS oldTitle,
              h.url AS newURL, i.url AS oldURL,
              p.id AS parentId, p.guid AS parentGuid
       FROM itemsChanged c
