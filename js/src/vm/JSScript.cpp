@@ -4243,7 +4243,7 @@ void JSScript::finalize(FreeOp* fop) {
   // NOTE: this JSScript may be partially initialized at this point.  E.g. we
   // may have created it and partially initialized it with
   // JSScript::Create(), but not yet finished initializing it with
-  // fullyInitFromEmitter() or fullyInitTrivial().
+  // fullyInitFromEmitter().
 
   // Collect code coverage information for this script and all its inner
   // scripts, and store the aggregated information on the realm.
@@ -4894,7 +4894,7 @@ void JSScript::traceChildren(JSTracer* trc) {
   // NOTE: this JSScript may be partially initialized at this point.  E.g. we
   // may have created it and partially initialized it with
   // JSScript::Create(), but not yet finished initializing it with
-  // fullyInitFromEmitter() or fullyInitTrivial().
+  // fullyInitFromEmitter().
 
   // Trace base class fields.
   BaseScript::traceChildren(trc);
