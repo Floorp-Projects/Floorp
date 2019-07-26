@@ -85,8 +85,7 @@ bool DXGID3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
                mFormat == SurfaceFormat::P010 || mFormat == SurfaceFormat::P016;
   aOutDescriptor = SurfaceDescriptorD3D10(
       (WindowsHandle)(mHandle), mFormat, GetSize(),
-      isYUV ? gfx::YUVColorSpace::BT601 : gfx::YUVColorSpace::UNKNOWN,
-      gfx::ColorRange::LIMITED);
+      isYUV ? gfx::YUVColorSpace::BT601 : gfx::YUVColorSpace::UNKNOWN);
   return true;
 }
 

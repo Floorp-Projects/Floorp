@@ -653,12 +653,6 @@ struct ParamTraits<mozilla::gfx::ColorDepth>
                                       mozilla::gfx::ColorDepth::UNKNOWN> {};
 
 template <>
-struct ParamTraits<mozilla::gfx::ColorRange>
-    : public ContiguousEnumSerializer<mozilla::gfx::ColorRange,
-                                      mozilla::gfx::ColorRange::LIMITED,
-                                      mozilla::gfx::ColorRange::UNKNOWN> {};
-
-template <>
 struct ParamTraits<mozilla::gfx::YUVColorSpace>
     : public ContiguousEnumSerializer<
           mozilla::gfx::YUVColorSpace, mozilla::gfx::YUVColorSpace::BT601,

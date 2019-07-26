@@ -453,7 +453,7 @@ nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
   aSdBuffer.desc() = YCbCrDescriptor(
       pdata->mYSize, pdata->mYStride, pdata->mCbCrSize, pdata->mCbCrStride,
       yOffset, cbOffset, crOffset, pdata->mStereoMode, pdata->mColorDepth,
-      pdata->mYUVColorSpace, pdata->mColorRange,
+      pdata->mYUVColorSpace,
       /*hasIntermediateBuffer*/ false);
 
   uint8_t* buffer = nullptr;

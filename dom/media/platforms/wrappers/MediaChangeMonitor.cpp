@@ -141,9 +141,7 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
           gfx::IntRect(0, 0, spsdata.pic_width, spsdata.pic_height));
       mCurrentConfig.mColorDepth = spsdata.ColorDepth();
       mCurrentConfig.mColorSpace = spsdata.ColorSpace();
-      mCurrentConfig.mColorRange = spsdata.video_full_range_flag
-                                       ? gfx::ColorRange::FULL
-                                       : gfx::ColorRange::LIMITED;
+      mCurrentConfig.mFullRange = spsdata.video_full_range_flag;
     }
     mCurrentConfig.mExtraData = aExtraData;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
@@ -204,7 +202,7 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     // The AR data isn't found in the VP8/VP9 bytestream.
     mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
     mCurrentConfig.mColorSpace = info.ColorSpace();
-    mCurrentConfig.mColorRange = info.ColorRange();
+    mCurrentConfig.mFullRange = info.mFullRange;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
 
     return rv;
