@@ -821,6 +821,49 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY identity.permissionsReloadHint "You may need to reload the page for changes to apply.">
 <!ENTITY identity.permissionsPreferences.tooltip "Open Permissions Preferences">
 
+<!ENTITY protections.etpON.header "Enhanced Tracking Protection is ON for this site">
+<!ENTITY protections.etpOFF.header "Enhanced Tracking Protection is OFF for this site">
+<!ENTITY protections.settings.label "Protection Settings">
+<!ENTITY protections.report.label "Show Full Report">
+<!-- LOCALIZATION NOTE:
+     protections.siteNotWorking.label: The link to be clicked to open the sub-panel view
+     protections.siteNotWorkingView.title: The heading/title of the sub-panel view -->
+<!ENTITY protections.siteNotWorking.label "Site not working?">
+<!ENTITY protections.siteNotWorkingView.title "Site Not Working?">
+<!-- LOCALIZATION NOTE:
+     In the Site Not Working? view, we suggest turning off protections if
+     the user is experiencing issues with any of a variety of functionality.
+     protections.siteNotWorkingView.header: The header of the list
+     protections.siteNotWorkingView.issueList.*: The list items, shown in a <ul> -->
+<!ENTITY protections.siteNotWorkingView.header "Turn off protections if you’re having issues with:">
+<!ENTITY protections.siteNotWorkingView.issueList.logInFields "Login fields">
+<!ENTITY protections.siteNotWorkingView.issueList.forms "Forms">
+<!ENTITY protections.siteNotWorkingView.issueList.payments "Payments">
+<!ENTITY protections.siteNotWorkingView.issueList.comments "Comments">
+<!ENTITY protections.siteNotWorkingView.issueList.videos "Videos">
+<!ENTITY protections.siteNotWorkingView.siteStillBroken.label "Site still broken after turning off protections?">
+<!ENTITY protections.siteNotWorkingView.sendReport.label "Send a report">
+
+<!ENTITY protections.blocking.label "Blocking">
+<!ENTITY protections.notBlocking.label "Not Blocking">
+<!ENTITY protections.notBlocking.why.label "Why?">
+<!ENTITY protections.notBlocking.why.etpOn.tooltip "Blocking these could break elements of some websites. Without trackers, some buttons, forms, and login fields might not work.">
+<!ENTITY protections.notBlocking.why.etpOff.tooltip "Turning off protections will allow all trackers on this site. It may also improve some website functionality.">
+<!ENTITY protections.socialMediaTrackers.label "Social Media Trackers">
+<!ENTITY protections.crossSiteTrackingCookies.label "Cross-Site Tracking Cookies">
+<!ENTITY protections.trackingContent.label "Tracking Content">
+<!ENTITY protections.fingerprinters.label "Fingerprinters">
+<!ENTITY protections.cryptominers.label "Cryptominers">
+<!ENTITY protections.noTrackersFound.description "No trackers known to &brandShortName; were detected on this page.">
+
+<!ENTITY protections.crossSiteTrackingCookies.description "These cookies follow you from site to site to gather data about what you do online. They are set by third parties such as advertisers and analytics companies.">
+<!ENTITY protections.cryptominers.description "Cryptominers use your system’s computing power to mine digital money. Cryptomining scripts drain your battery, slow down your computer, and can increase your energy bill.">
+<!ENTITY protections.fingerprinters.description "Fingerprinters collect settings from your browser and computer to create a profile of you. Using this digital fingerprint, they can track you across different websites.">
+<!ENTITY protections.trackingContent.description "Websites may load external ads, videos, and other content that contain tracking code. Blocking tracking content can help sites load faster, but some buttons, forms, and login fields might not work.">
+<!ENTITY protections.socialMediaTrackers.description "Social networks place trackers on other websites to follow what you do, see, and watch online. This allows social media companies to learn more about you beyond what you share on your social media profiles.">
+
+<!ENTITY protections.manageProtectionSettings.label "Manage Protection Settings">
+
 <!-- Name for the tabs toolbar as spoken by screen readers.
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
@@ -869,10 +912,12 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY contentBlocking.openBreakageReportView2.label "Report a problem">
 <!ENTITY contentBlocking.breakageReportView.label "Report Problems">
-<!ENTITY contentBlocking.breakageReportView2.description "Content blocking can cause problems with some websites. When you report problems, you’ll help make &brandShortName; better for everyone. (This will send a URL as well as information about your browser settings to Mozilla.)">
-<!ENTITY contentBlocking.breakageReportView.learnMore "Learn More">
+<!ENTITY contentBlocking.breakageReportView.title "Report a Broken Site">
+<!ENTITY contentBlocking.breakageReportView3.description "Blocking certain trackers can cause problems with some websites. Reporting these problems helps make &brandShortName; better for everyone. Sending this report will send a URL and information about your browser settings to Mozilla.">
+<!ENTITY contentBlocking.breakageReportView2.learnMore "Learn more">
 <!ENTITY contentBlocking.breakageReportView.collection.url.label "URL">
 <!ENTITY contentBlocking.breakageReportView.collection.comments.label "What problems did you have? (Optional)">
+<!ENTITY contentBlocking.breakageReportView2.collection.comments.label "Optional: Describe the problem">
 <!ENTITY contentBlocking.breakageReportView.sendReport.label "Send Report">
 <!ENTITY contentBlocking.breakageReportView.cancel.label "Cancel">
 
