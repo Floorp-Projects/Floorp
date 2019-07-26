@@ -30,6 +30,7 @@ function* testSteps() {
 
   // Create test stores
   let store = db.createObjectStore("store");
+  let enc = new TextEncoder();
 
   // Test simple inserts
   // Note: the keys must be in order
@@ -121,6 +122,20 @@ function* testSteps() {
     "\uFFFF",
     "\uFFFF\x00",
     "\uFFFFZZZ",
+    // Note: enc.encode returns an Uint8Array, which is a valid key, but when
+    // converting it back and forth, the result will be a plain ArrayBuffer,
+    // which is expected in comparisons below
+    // TODO is it ok that the information that the original key was an
+    // Uint8Array is lost?
+    new ArrayBuffer(0),
+    Uint8Array.from([0]).buffer,
+    Uint8Array.from([0, 0]).buffer,
+    Uint8Array.from([0, 1]).buffer,
+    Uint8Array.from([0, 1, 0]).buffer,
+    enc.encode("abc").buffer,
+    enc.encode("abcd").buffer,
+    enc.encode("xyz").buffer,
+    Uint8Array.from([0x80]).buffer,
     [],
     [-1 / 0],
     [-1],
@@ -150,6 +165,15 @@ function* testSteps() {
     ["abc\x00\x00def"],
     ["x", [[]]],
     ["x", [[[]]]],
+    // see comment on scalar ArrayBuffers above
+    [new ArrayBuffer(0)],
+    [new ArrayBuffer(0), "abc"],
+    [new ArrayBuffer(0), new ArrayBuffer(0)],
+    [new ArrayBuffer(0), enc.encode("abc").buffer],
+    [enc.encode("abc").buffer],
+    [enc.encode("abc").buffer, new ArrayBuffer(0)],
+    [enc.encode("abc").buffer, enc.encode("xyz").buffer],
+    [enc.encode("xyz").buffer],
     [[]],
     [[], "foo"],
     [[], []],
