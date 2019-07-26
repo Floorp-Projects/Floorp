@@ -1894,6 +1894,7 @@ void Element::UnbindFromTree(bool aNullParent) {
 
   ClearInDocument();
   SetIsConnected(false);
+  ClearElementCreatedFromPrototypeAndHasUnmodifiedL10n();
 
   if (aNullParent || !mParent->IsInShadowTree()) {
     UnsetFlags(NODE_IS_IN_SHADOW_TREE);
@@ -2466,6 +2467,12 @@ nsresult Element::SetAttrAndNotify(
     if (binding) {
       binding->AttributeChanged(aName, aNamespaceID, false, aNotify);
     }
+  }
+
+  if (HasElementCreatedFromPrototypeAndHasUnmodifiedL10n() &&
+      aNamespaceID == kNameSpaceID_None &&
+      (aName == nsGkAtoms::datal10nid || aName == nsGkAtoms::datal10nargs)) {
+    ClearElementCreatedFromPrototypeAndHasUnmodifiedL10n();
   }
 
   CustomElementDefinition* definition = GetCustomElementDefinition();
