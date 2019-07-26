@@ -1053,6 +1053,7 @@ pub struct YuvImageDisplayItem {
     pub yuv_data: YuvData,
     pub color_depth: ColorDepth,
     pub color_space: YuvColorSpace,
+    pub color_range: ColorRange,
     pub image_rendering: ImageRendering,
 }
 
@@ -1062,6 +1063,13 @@ pub enum YuvColorSpace {
     Rec601 = 0,
     Rec709 = 1,
     Rec2020 = 2,
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, MallocSizeOf, PartialEq, Serialize, PeekPoke)]
+pub enum ColorRange {
+    Limited = 0,
+    Full = 1,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize, PeekPoke)]
@@ -1395,6 +1403,7 @@ impl_default_for_enums! {
     ImageRendering => Auto,
     AlphaType => Alpha,
     YuvColorSpace => Rec601,
+    ColorRange => Limited,
     YuvData => NV12(ImageKey::default(), ImageKey::default()),
     YuvFormat => NV12,
     FilterPrimitiveInput => Original,
