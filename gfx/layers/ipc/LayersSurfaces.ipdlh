@@ -36,6 +36,7 @@ struct SurfaceDescriptorD3D10 {
   SurfaceFormat format;
   IntSize size;
   YUVColorSpace yUVColorSpace;
+  ColorRange colorRange;
 };
 
 struct SurfaceDescriptorDXGIYCbCr {
@@ -47,6 +48,7 @@ struct SurfaceDescriptorDXGIYCbCr {
   IntSize sizeCbCr;
   ColorDepth colorDepth;
   YUVColorSpace yUVColorSpace;
+  ColorRange colorRange;
 };
 
 struct SurfaceDescriptorMacIOSurface {
