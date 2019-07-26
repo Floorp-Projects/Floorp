@@ -137,6 +137,14 @@
   box-shadow: none;
 }
 
+.copied-button-text {
+  background-image: url(chrome://global/skin/icons/check.svg);
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  padding-inline-start: 22px;
+}
+
 .meta-info {
   font-size: smaller;
   color: var(--in-content-deemphasized-text);
