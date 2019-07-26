@@ -4398,15 +4398,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETARG() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_SETARG() {
-  // Ionmonkey can't inline functions with SETARG with magic arguments.
-  if (JSScript* script = handler.maybeScript()) {
-    if (!script->argsObjAliasesFormals() && script->argumentsAliasesFormals()) {
-      script->setUninlineable();
-    }
-  }
-
   modifiesArguments_ = true;
-
   return emitFormalArgAccess(JSOP_SETARG);
 }
 
@@ -4837,11 +4829,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_THROW() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_TRY() {
-  // Ionmonkey can't inline function with JSOP_TRY.
-  if (JSScript* script = handler.maybeScript()) {
-    script->setUninlineable();
-  }
-
   return true;
 }
 
@@ -6779,8 +6766,7 @@ template <>
 bool BaselineCompilerCodeGen::emit_JSOP_INSTRUMENTATION_SCRIPT_ID() {
   int32_t scriptId;
   RootedScript script(cx, handler.script());
-  if (!RealmInstrumentation::getScriptId(cx, cx->global(), script,
-                                         &scriptId)) {
+  if (!RealmInstrumentation::getScriptId(cx, cx->global(), script, &scriptId)) {
     return false;
   }
   frame.push(Int32Value(scriptId));
