@@ -80,9 +80,6 @@ class TimeoutManager final {
   // to the background or foreground.
   void UpdateBackgroundState();
 
-  // Initialize TimeoutManager before the first time it is accessed.
-  static void Initialize();
-
   // The document finished loading
   void OnDocumentLoaded();
   void StartThrottlingTimeouts();

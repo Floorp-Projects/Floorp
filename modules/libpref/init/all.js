@@ -1083,9 +1083,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// Turn on budget throttling by default
-pref("dom.timeout.enable_budget_timer_throttling", true);
-
 // Don't use new input types
 pref("dom.experimental_forms", false);
 

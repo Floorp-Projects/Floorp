@@ -34,9 +34,6 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-#define DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING false
-static bool gEnableBudgetTimeoutThrottling = false;
-
 // static
 const uint32_t TimeoutManager::InvalidFiringId = 0;
 
@@ -445,13 +442,6 @@ TimeoutManager::~TimeoutManager() {
 
   MOZ_LOG(gTimeoutLog, LogLevel::Debug,
           ("TimeoutManager %p destroyed\n", this));
-}
-
-/* static */
-void TimeoutManager::Initialize() {
-  Preferences::AddBoolVarCache(&gEnableBudgetTimeoutThrottling,
-                               "dom.timeout.enable_budget_timer_throttling",
-                               DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING);
 }
 
 uint32_t TimeoutManager::GetTimeoutId(Timeout::Reason aReason) {
@@ -1307,7 +1297,8 @@ void TimeoutManager::StartThrottlingTimeouts() {
   MOZ_DIAGNOSTIC_ASSERT(!mThrottleTimeouts);
   mThrottleTimeouts = true;
   mThrottleTrackingTimeouts = true;
-  mBudgetThrottleTimeouts = gEnableBudgetTimeoutThrottling;
+  mBudgetThrottleTimeouts =
+      StaticPrefs::dom_timeout_enable_budget_timer_throttling();
   mThrottleTimeoutsTimer = nullptr;
 }
 
