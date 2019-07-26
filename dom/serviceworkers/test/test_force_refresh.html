@@ -14,11 +14,42 @@
 <div id="content" style="display: none"></div>
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
-  var registration;
+  /**
+   * 
+   */
+  let iframe;
+  let registration;
+
   function start() {
-    return navigator.serviceWorker.register("force_refresh_worker.js",
-                                            { scope: "./sw_clients/" })
-      .then((swr) => registration = swr);
+    return new Promise(resolve => {
+      const content = document.getElementById("content");
+      ok(content, "Parent exists.");
+
+      iframe = document.createElement("iframe");
+      iframe.setAttribute("src", "sw_clients/refresher_compressed.html");
+
+      /*
+       * The initial iframe must be the _uncached_ version, which means its
+       * load must happen before the Service Worker's `activate` event.
+       * Rather than `waitUntil`-ing the Service Worker's `install` event
+       * until the load finishes (more concurrency, but involves coordinating
+       * `postMessage`s), just ensure the load finishes before registering
+       * the Service Worker (which is simpler).
+       */
+      iframe.onload = resolve;
+
+      content.appendChild(iframe);
+    }).then(async () => {
+      /*
+       * There's no need _here_ to explicitly wait for this Service Worker to be
+       * "activated"; this test will progress when the "READY"/"READY_CACHED"
+       * messages are received from the iframe, and the iframe will only send
+       * those messages once the Service Worker is "activated" (by chaining on
+       * its `navigator.serviceWorker.ready` promise).
+       */
+      registration = await navigator.serviceWorker.register(
+        "force_refresh_worker.js", { scope: "./sw_clients/" });
+    });
   }
 
   function unregister() {
@@ -29,9 +60,8 @@
     });
   }
 
-
   function testForceRefresh(swr) {
-    var p = new Promise(function(res, rej) {
+    return new Promise(function(res, rej) {
       var count = 0;
       var cachedCount = 0;
       window.onmessage = function(e) {
@@ -50,16 +80,7 @@
           iframe.contentWindow.postMessage("FORCE_REFRESH", "*");
         }
       }
-    });
-
-    var content = document.getElementById("content");
-    ok(content, "Parent exists.");
-
-    iframe = document.createElement("iframe");
-    iframe.setAttribute('src', "sw_clients/refresher_compressed.html");
-    content.appendChild(iframe);
-
-    return p.then(() => content.removeChild(iframe));
+    }).then(() => document.getElementById("content").removeChild(iframe));
   }
 
   function runTest() {
