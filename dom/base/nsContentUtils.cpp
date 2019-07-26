@@ -2184,7 +2184,7 @@ nsINode* nsContentUtils::GetCrossDocParentNode(nsINode* aChild) {
   }
 
   Document* doc = aChild->AsDocument();
-  Document* parentDoc = doc->GetParentDocument();
+  Document* parentDoc = doc->GetInProcessParentDocument();
   return parentDoc ? parentDoc->FindContentForSubDocument(doc) : nullptr;
 }
 
@@ -3767,7 +3767,7 @@ bool nsContentUtils::IsChildOfSameType(Document* aDoc) {
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(aDoc->GetDocShell());
   nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
   if (docShellAsItem) {
-    docShellAsItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    docShellAsItem->GetInProcessSameTypeParent(getter_AddRefs(sameTypeParent));
   }
   return sameTypeParent != nullptr;
 }
@@ -5420,7 +5420,7 @@ bool nsContentUtils::CheckForSubFrameDrop(nsIDragSession* aDragSession,
     // Get each successive parent of the source document and compare it to
     // the drop document. If they match, then this is a drag from a child frame.
     do {
-      doc = doc->GetParentDocument();
+      doc = doc->GetInProcessParentDocument();
       if (doc == targetDoc) {
         // The drag is from a child frame.
         return true;
@@ -6052,10 +6052,11 @@ void nsContentUtils::FlushLayoutForTree(nsPIDOMWindowOuter* aWindow) {
 
   if (nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell()) {
     int32_t i = 0, i_end;
-    docShell->GetChildCount(&i_end);
+    docShell->GetInProcessChildCount(&i_end);
     for (; i < i_end; ++i) {
       nsCOMPtr<nsIDocShellTreeItem> item;
-      if (docShell->GetChildAt(i, getter_AddRefs(item)) == NS_OK && item) {
+      if (docShell->GetInProcessChildAt(i, getter_AddRefs(item)) == NS_OK &&
+          item) {
         if (nsCOMPtr<nsPIDOMWindowOuter> win = item->GetWindow()) {
           FlushLayoutForTree(win);
         }
@@ -6131,7 +6132,7 @@ PresShell* nsContentUtils::FindPresShellForDocument(const Document* aDocument) {
       return presShell;
     }
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    docShellTreeItem->GetParent(getter_AddRefs(parent));
+    docShellTreeItem->GetInProcessParent(getter_AddRefs(parent));
     docShellTreeItem = parent;
   }
 
@@ -6517,8 +6518,8 @@ Document* nsContentUtils::GetRootDocument(Document* aDoc) {
     return nullptr;
   }
   Document* doc = aDoc;
-  while (doc->GetParentDocument()) {
-    doc = doc->GetParentDocument();
+  while (doc->GetInProcessParentDocument()) {
+    doc = doc->GetInProcessParentDocument();
   }
   return doc;
 }
@@ -6536,8 +6537,8 @@ bool nsContentUtils::IsInPointerLockContext(nsPIDOMWindowOuter* aWin) {
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> lockTop =
-      pointerLockedDoc->GetWindow()->GetScriptableTop();
-  nsCOMPtr<nsPIDOMWindowOuter> top = aWin->GetScriptableTop();
+      pointerLockedDoc->GetWindow()->GetInProcessScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top = aWin->GetInProcessScriptableTop();
 
   return top == lockTop;
 }
@@ -6933,7 +6934,7 @@ bool nsContentUtils::PrefetchPreloadEnabled(nsIDocShell* aDocShell) {
       return false;  // do not prefetch, preload, preconnect from mailnews
     }
 
-    docshell->GetParent(getter_AddRefs(parentItem));
+    docshell->GetInProcessParent(getter_AddRefs(parentItem));
     if (parentItem) {
       docshell = do_QueryInterface(parentItem);
       if (!docshell) {
@@ -7814,11 +7815,11 @@ void nsContentUtils::FirePageHideEvent(nsIDocShellTreeItem* aItem,
   doc->OnPageHide(true, aChromeEventHandler, aOnlySystemGroup);
 
   int32_t childCount = 0;
-  aItem->GetChildCount(&childCount);
+  aItem->GetInProcessChildCount(&childCount);
   AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
   kids.AppendElements(childCount);
   for (int32_t i = 0; i < childCount; ++i) {
-    aItem->GetChildAt(i, getter_AddRefs(kids[i]));
+    aItem->GetInProcessChildAt(i, getter_AddRefs(kids[i]));
   }
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
@@ -7838,11 +7839,11 @@ void nsContentUtils::FirePageShowEvent(nsIDocShellTreeItem* aItem,
                                        bool aFireIfShowing,
                                        bool aOnlySystemGroup) {
   int32_t childCount = 0;
-  aItem->GetChildCount(&childCount);
+  aItem->GetInProcessChildCount(&childCount);
   AutoTArray<nsCOMPtr<nsIDocShellTreeItem>, 8> kids;
   kids.AppendElements(childCount);
   for (int32_t i = 0; i < childCount; ++i) {
-    aItem->GetChildAt(i, getter_AddRefs(kids[i]));
+    aItem->GetInProcessChildAt(i, getter_AddRefs(kids[i]));
   }
 
   for (uint32_t i = 0; i < kids.Length(); ++i) {
@@ -8754,7 +8755,7 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
 
   if (XRE_IsContentProcess()) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    aDocShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     nsCOMPtr<nsIDocShellTreeItem> root;
     aDocShell->GetRootTreeItem(getter_AddRefs(root));
     if (sameTypeRoot.get() == root.get()) {
@@ -9595,7 +9596,7 @@ bool nsContentUtils::ShouldBlockReservedKeys(WidgetKeyboardEvent* aKeyEvent) {
         if (docShell &&
             docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
           nsCOMPtr<nsIDocShellTreeItem> rootItem;
-          docShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+          docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(rootItem));
           if (rootItem && rootItem->GetDocument()) {
             principal = rootItem->GetDocument()->NodePrincipal();
           }

@@ -347,7 +347,7 @@ bool CheckContentBlockingAllowList(nsPIDOMWindowInner* aWindow) {
     return entry.Data().mResult;
   }
 
-  nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
+  nsPIDOMWindowOuter* top = aWindow->GetInProcessScriptableTop();
   if (top) {
     nsIURI* topWinURI = top->GetDocumentURI();
     Document* doc = top->GetExtantDoc();
@@ -605,7 +605,7 @@ already_AddRefed<nsPIDOMWindowOuter> GetTopWindow(nsPIDOMWindowInner* aWindow) {
   nsCOMPtr<nsPIDOMWindowOuter> pwin;
   auto* outer = nsGlobalWindowOuter::Cast(aWindow->GetOuterWindow());
   if (outer) {
-    pwin = outer->GetScriptableTop();
+    pwin = outer->GetInProcessScriptableTop();
   }
 
   if (!pwin) {
@@ -872,7 +872,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     }
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerParentWindow->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
+      outerParentWindow->GetInProcessTop();
   nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window."));
@@ -1163,7 +1164,7 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetInProcessTop();
   nsGlobalWindowOuter* topWindow = nsGlobalWindowOuter::Cast(topOuterWindow);
   if (NS_WARN_IF(!topWindow)) {
     LOG(("No top outer window"));

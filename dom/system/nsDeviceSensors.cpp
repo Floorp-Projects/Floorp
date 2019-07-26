@@ -212,7 +212,7 @@ static bool WindowCannotReceiveSensorEvent(nsPIDOMWindowInner* aWindow) {
   }
 
   // Check to see if this window is a cross-origin iframe
-  nsCOMPtr<nsPIDOMWindowOuter> top = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top = aWindow->GetInProcessScriptableTop();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(aWindow);
   nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
   if (!sop || !topSop) {

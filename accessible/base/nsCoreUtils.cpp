@@ -342,7 +342,7 @@ bool nsCoreUtils::IsRootDocument(Document* aDocument) {
   NS_ASSERTION(docShellTreeItem, "No document shell for document!");
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  docShellTreeItem->GetParent(getter_AddRefs(parentTreeItem));
+  docShellTreeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
 
   return !parentTreeItem;
 }
@@ -358,7 +358,7 @@ bool nsCoreUtils::IsTabDocument(Document* aDocumentNode) {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocumentNode->GetDocShell());
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
 
   // Tab document running in own process doesn't have parent.
   if (XRE_IsContentProcess()) return !parentTreeItem;

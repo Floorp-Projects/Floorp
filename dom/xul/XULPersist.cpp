@@ -19,7 +19,7 @@ static bool ShouldPersistAttribute(Element* aElement, nsAtom* aAttribute) {
   if (aElement->IsXULElement(nsGkAtoms::window)) {
     // This is not an element of the top document, its owner is
     // not an nsXULWindow. Persist it.
-    if (aElement->OwnerDoc()->GetParentDocument()) {
+    if (aElement->OwnerDoc()->GetInProcessParentDocument()) {
       return true;
     }
     // The following attributes of xul:window should be handled in

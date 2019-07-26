@@ -973,7 +973,7 @@ nsFocusManager::WindowHidden(mozIDOMWindowProxy* aWindow) {
         mFocusedWindow ? mFocusedWindow->GetDocShell() : nullptr;
     if (dsti) {
       nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-      dsti->GetParent(getter_AddRefs(parentDsti));
+      dsti->GetInProcessParent(getter_AddRefs(parentDsti));
       if (parentDsti) {
         if (nsCOMPtr<nsPIDOMWindowOuter> parentWindow = parentDsti->GetWindow())
           parentWindow->SetFocusedElement(nullptr);
@@ -1188,7 +1188,7 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     if (beingDestroyed) return;
 
     nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-    docShell->GetParent(getter_AddRefs(parentDsti));
+    docShell->GetInProcessParent(getter_AddRefs(parentDsti));
     docShell = do_QueryInterface(parentDsti);
   }
 
@@ -1358,7 +1358,7 @@ bool nsFocusManager::IsSameOrAncestor(nsPIDOMWindowOuter* aPossibleAncestor,
   while (dsti) {
     if (dsti == ancestordsti) return true;
     nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-    dsti->GetParent(getter_AddRefs(parentDsti));
+    dsti->GetInProcessParent(getter_AddRefs(parentDsti));
     dsti.swap(parentDsti);
   }
 
@@ -1379,13 +1379,13 @@ already_AddRefed<nsPIDOMWindowOuter> nsFocusManager::GetCommonAncestor(
   do {
     parents1.AppendElement(dsti1);
     nsCOMPtr<nsIDocShellTreeItem> parentDsti1;
-    dsti1->GetParent(getter_AddRefs(parentDsti1));
+    dsti1->GetInProcessParent(getter_AddRefs(parentDsti1));
     dsti1.swap(parentDsti1);
   } while (dsti1);
   do {
     parents2.AppendElement(dsti2);
     nsCOMPtr<nsIDocShellTreeItem> parentDsti2;
-    dsti2->GetParent(getter_AddRefs(parentDsti2));
+    dsti2->GetInProcessParent(getter_AddRefs(parentDsti2));
     dsti2.swap(parentDsti2);
   } while (dsti2);
 
@@ -1419,7 +1419,7 @@ void nsFocusManager::AdjustWindowFocus(nsPIDOMWindowOuter* aWindow,
     nsCOMPtr<nsIDocShellTreeItem> dsti = window->GetDocShell();
     if (!dsti) return;
     nsCOMPtr<nsIDocShellTreeItem> parentDsti;
-    dsti->GetParent(getter_AddRefs(parentDsti));
+    dsti->GetInProcessParent(getter_AddRefs(parentDsti));
     if (!parentDsti) {
       return;
     }
@@ -4020,7 +4020,7 @@ void nsFocusManager::SetFocusedWindowInternal(nsPIDOMWindowOuter* aWindow) {
   if (aWindow && aWindow != mFocusedWindow) {
     const TimeStamp now(TimeStamp::Now());
     for (Document* doc = aWindow->GetExtantDoc(); doc;
-         doc = doc->GetParentDocument()) {
+         doc = doc->GetInProcessParentDocument()) {
       doc->SetLastFocusTime(now);
     }
   }

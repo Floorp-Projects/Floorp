@@ -537,7 +537,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   // and parentContentViewer
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
   if (docShell) {
-    docShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
+    docShell->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));

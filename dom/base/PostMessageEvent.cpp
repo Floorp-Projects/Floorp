@@ -78,7 +78,7 @@ PostMessageEvent::Run() {
   // be delivered in the same order they were posted, regardless of which window
   // they were posted to.
   if (nsCOMPtr<nsPIDOMWindowOuter> topWindow =
-          targetWindow->GetOuterWindow()->GetTop()) {
+          targetWindow->GetOuterWindow()->GetInProcessTop()) {
     if (nsCOMPtr<nsPIDOMWindowInner> topInner =
             topWindow->GetCurrentInnerWindow()) {
       if (topInner->GetExtantDoc() &&

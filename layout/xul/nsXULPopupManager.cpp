@@ -1180,7 +1180,7 @@ bool nsXULPopupManager::IsChildOfDocShell(Document* aDoc,
     if (docShellItem == aExpected) return true;
 
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    docShellItem->GetParent(getter_AddRefs(parent));
+    docShellItem->GetInProcessParent(getter_AddRefs(parent));
     docShellItem = parent;
   }
 

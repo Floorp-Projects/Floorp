@@ -345,13 +345,13 @@ nsWebBrowser::GetItemType(int32_t* aItemType) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetParent(nsIDocShellTreeItem** aParent) {
+nsWebBrowser::GetInProcessParent(nsIDocShellTreeItem** aParent) {
   *aParent = nullptr;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetSameTypeParent(nsIDocShellTreeItem** aParent) {
+nsWebBrowser::GetInProcessSameTypeParent(nsIDocShellTreeItem** aParent) {
   *aParent = nullptr;
 
   return NS_OK;
@@ -363,28 +363,31 @@ nsWebBrowser::GetRootTreeItem(nsIDocShellTreeItem** aRootTreeItem) {
   *aRootTreeItem = static_cast<nsIDocShellTreeItem*>(this);
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  NS_ENSURE_SUCCESS(GetParent(getter_AddRefs(parent)), NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(GetInProcessParent(getter_AddRefs(parent)),
+                    NS_ERROR_FAILURE);
   while (parent) {
     *aRootTreeItem = parent;
-    NS_ENSURE_SUCCESS((*aRootTreeItem)->GetParent(getter_AddRefs(parent)),
-                      NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(
+        (*aRootTreeItem)->GetInProcessParent(getter_AddRefs(parent)),
+        NS_ERROR_FAILURE);
   }
   NS_ADDREF(*aRootTreeItem);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetSameTypeRootTreeItem(nsIDocShellTreeItem** aRootTreeItem) {
+nsWebBrowser::GetInProcessSameTypeRootTreeItem(
+    nsIDocShellTreeItem** aRootTreeItem) {
   NS_ENSURE_ARG_POINTER(aRootTreeItem);
   *aRootTreeItem = static_cast<nsIDocShellTreeItem*>(this);
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parent)),
+  NS_ENSURE_SUCCESS(GetInProcessSameTypeParent(getter_AddRefs(parent)),
                     NS_ERROR_FAILURE);
   while (parent) {
     *aRootTreeItem = parent;
     NS_ENSURE_SUCCESS(
-        (*aRootTreeItem)->GetSameTypeParent(getter_AddRefs(parent)),
+        (*aRootTreeItem)->GetInProcessSameTypeParent(getter_AddRefs(parent)),
         NS_ERROR_FAILURE);
   }
   NS_ADDREF(*aRootTreeItem);
@@ -445,7 +448,7 @@ nsWebBrowser::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
 //*****************************************************************************
 
 NS_IMETHODIMP
-nsWebBrowser::GetChildCount(int32_t* aChildCount) {
+nsWebBrowser::GetInProcessChildCount(int32_t* aChildCount) {
   NS_ENSURE_ARG_POINTER(aChildCount);
   *aChildCount = 0;
   return NS_OK;
@@ -462,7 +465,8 @@ nsWebBrowser::RemoveChild(nsIDocShellTreeItem* aChild) {
 }
 
 NS_IMETHODIMP
-nsWebBrowser::GetChildAt(int32_t aIndex, nsIDocShellTreeItem** aChild) {
+nsWebBrowser::GetInProcessChildAt(int32_t aIndex,
+                                  nsIDocShellTreeItem** aChild) {
   return NS_ERROR_UNEXPECTED;
 }
 

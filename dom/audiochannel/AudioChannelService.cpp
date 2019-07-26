@@ -346,7 +346,8 @@ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
       config.mSuspend = window->GetMediaSuspend();
     }
 
-    nsCOMPtr<nsPIDOMWindowOuter> win = window->GetScriptableParentOrNull();
+    nsCOMPtr<nsPIDOMWindowOuter> win =
+        window->GetInProcessScriptableParentOrNull();
     if (!win) {
       break;
     }
@@ -419,7 +420,7 @@ void AudioChannelService::RefreshAgents(
     const std::function<void(AudioChannelAgent*)>& aFunc) {
   MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetInProcessScriptableTop();
   if (!topWindow) {
     return;
   }
@@ -458,7 +459,7 @@ void AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindowOuter* aWindow,
            "aCapture = %d\n",
            aWindow, aCapture));
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetInProcessScriptableTop();
   if (!topWindow) {
     return;
   }
@@ -515,7 +516,7 @@ AudioChannelService::AudioChannelWindow* AudioChannelService::GetWindowData(
 bool AudioChannelService::IsWindowActive(nsPIDOMWindowOuter* aWindow) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetScriptableTop();
+  auto* window = nsPIDOMWindowOuter::From(aWindow)->GetInProcessScriptableTop();
   if (!window) {
     return false;
   }
@@ -546,7 +547,7 @@ void AudioChannelService::NotifyMediaResumedFromBlock(
     nsPIDOMWindowOuter* aWindow) {
   MOZ_ASSERT(aWindow);
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow = aWindow->GetInProcessScriptableTop();
   if (!topWindow) {
     return;
   }

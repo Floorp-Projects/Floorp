@@ -774,7 +774,7 @@ bool WindowShouldMatchActiveTab(nsPIDOMWindowOuter* aWin) {
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> parent = aWin->GetParent();
+  nsCOMPtr<nsPIDOMWindowOuter> parent = aWin->GetInProcessParent();
   MOZ_ASSERT(parent != nullptr);
   return WindowShouldMatchActiveTab(parent);
 }

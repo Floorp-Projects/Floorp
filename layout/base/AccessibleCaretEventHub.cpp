@@ -357,7 +357,7 @@ void AccessibleCaretEventHub::Init() {
     curDocShell->AddWeakScrollObserver(this);
 
     nsCOMPtr<nsIDocShellTreeItem> tmp;
-    curDocShell->GetSameTypeParent(getter_AddRefs(tmp));
+    curDocShell->GetInProcessSameTypeParent(getter_AddRefs(tmp));
     curDocShell = do_QueryInterface(tmp);
   } while (curDocShell);
 
@@ -383,7 +383,7 @@ void AccessibleCaretEventHub::Terminate() {
     curDocShell->RemoveWeakScrollObserver(this);
 
     nsCOMPtr<nsIDocShellTreeItem> tmp;
-    curDocShell->GetSameTypeParent(getter_AddRefs(tmp));
+    curDocShell->GetInProcessSameTypeParent(getter_AddRefs(tmp));
     curDocShell = do_QueryInterface(tmp);
   }
 

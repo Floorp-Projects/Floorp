@@ -348,8 +348,8 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   virtual mozilla::dom::CustomElementRegistry* CustomElements() = 0;
 
   // XXX: This is called on inner windows
-  virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
-  virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
+  virtual nsPIDOMWindowOuter* GetInProcessScriptableTop() = 0;
+  virtual nsPIDOMWindowOuter* GetInProcessScriptableParent() = 0;
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
   mozilla::dom::EventTarget* GetChromeEventHandler() const {
@@ -778,24 +778,25 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    * This function does not cross chrome-content boundaries, so if this
    * window's parent is of a different type, |top| will return this window.
    *
-   * When script reads the top property, we run GetScriptableTop, which
-   * will not cross an <iframe mozbrowser> boundary.
+   * When script reads the top property, we run GetInProcessScriptableTop,
+   * which will not cross an <iframe mozbrowser> boundary.
    *
    * In contrast, C++ calls to GetTop are forwarded to GetRealTop, which
    * ignores <iframe mozbrowser> boundaries.
    */
 
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetTop() = 0;  // Outer only
-  virtual already_AddRefed<nsPIDOMWindowOuter> GetParent() = 0;
-  virtual nsPIDOMWindowOuter* GetScriptableTop() = 0;
-  virtual nsPIDOMWindowOuter* GetScriptableParent() = 0;
+  virtual already_AddRefed<nsPIDOMWindowOuter>
+  GetInProcessTop() = 0;  // Outer only
+  virtual already_AddRefed<nsPIDOMWindowOuter> GetInProcessParent() = 0;
+  virtual nsPIDOMWindowOuter* GetInProcessScriptableTop() = 0;
+  virtual nsPIDOMWindowOuter* GetInProcessScriptableParent() = 0;
   virtual already_AddRefed<nsPIWindowRoot> GetTopWindowRoot() = 0;
 
   /**
-   * Behaves identically to GetScriptableParent except that it returns null
-   * if GetScriptableParent would return this window.
+   * Behaves identically to GetInProcessScriptableParent except that it
+   * returns null if GetInProcessScriptableParent would return this window.
    */
-  virtual nsPIDOMWindowOuter* GetScriptableParentOrNull() = 0;
+  virtual nsPIDOMWindowOuter* GetInProcessScriptableParentOrNull() = 0;
 
   virtual bool IsTopLevelWindowActive() = 0;
 

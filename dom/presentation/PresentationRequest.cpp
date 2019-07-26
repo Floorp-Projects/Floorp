@@ -469,7 +469,7 @@ bool PresentationRequest::IsProhibitMixedSecurityContexts(Document* aDocument) {
       return true;
     }
 
-    doc = doc->GetParentDocument();
+    doc = doc->GetInProcessParentDocument();
   }
 
   return false;

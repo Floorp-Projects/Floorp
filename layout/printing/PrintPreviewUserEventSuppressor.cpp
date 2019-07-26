@@ -142,7 +142,7 @@ PrintPreviewUserEventSuppressor::HandleEvent(Event* aEvent) {
           Document* doc = content->GetUncomposedDoc();
           NS_ASSERTION(doc, "no document");
 
-          Document* parentDoc = doc->GetParentDocument();
+          Document* parentDoc = doc->GetInProcessParentDocument();
           NS_ASSERTION(parentDoc, "no parent document");
 
           nsCOMPtr<nsPIDOMWindowOuter> win = parentDoc->GetWindow();

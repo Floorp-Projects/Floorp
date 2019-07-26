@@ -45,7 +45,7 @@ namespace net {
 static uint64_t FindTopOuterWindowID(nsPIDOMWindowOuter* aOuter) {
   nsCOMPtr<nsPIDOMWindowOuter> outer = aOuter;
   while (nsCOMPtr<nsPIDOMWindowOuter> parent =
-             outer->GetScriptableParentOrNull()) {
+             outer->GetInProcessScriptableParentOrNull()) {
     outer = parent;
   }
   return outer->WindowID();
@@ -165,7 +165,8 @@ LoadInfo::LoadInfo(
     if (contextOuter) {
       ComputeIsThirdPartyContext(contextOuter);
       mOuterWindowID = contextOuter->WindowID();
-      nsCOMPtr<nsPIDOMWindowOuter> parent = contextOuter->GetScriptableParent();
+      nsCOMPtr<nsPIDOMWindowOuter> parent =
+          contextOuter->GetInProcessScriptableParent();
       mParentOuterWindowID = parent ? parent->WindowID() : mOuterWindowID;
       mTopOuterWindowID = FindTopOuterWindowID(contextOuter);
       RefPtr<dom::BrowsingContext> bc = contextOuter->GetBrowsingContext();
@@ -205,7 +206,7 @@ LoadInfo::LoadInfo(
           // top-level document's flag, not the iframe document's.
           mDocumentHasLoaded = false;
           nsGlobalWindowOuter* topOuter =
-              innerWindow->GetScriptableTopInternal();
+              innerWindow->GetInProcessScriptableTopInternal();
           if (topOuter) {
             nsGlobalWindowInner* topInner =
                 nsGlobalWindowInner::Cast(topOuter->GetCurrentInnerWindow());
@@ -377,7 +378,8 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
 
   // TODO We can have a parent without a frame element in some cases dealing
   // with the hidden window.
-  nsCOMPtr<nsPIDOMWindowOuter> parent = aOuterWindow->GetScriptableParent();
+  nsCOMPtr<nsPIDOMWindowOuter> parent =
+      aOuterWindow->GetInProcessScriptableParent();
   mParentOuterWindowID = parent ? parent->WindowID() : 0;
   mTopOuterWindowID = FindTopOuterWindowID(aOuterWindow);
 
