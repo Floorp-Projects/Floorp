@@ -457,6 +457,31 @@ this.LoginTestUtils.masterPassword = {
   },
 };
 
+/**
+ * Utilities related to interacting with login fields in content.
+ */
+this.LoginTestUtils.loginField = {
+  checkPasswordMasked(field, expected, msg) {
+    let { editor } = field;
+    let valueLength = field.value.length;
+    Assert.equal(
+      editor.autoMaskingEnabled,
+      expected,
+      `Check autoMaskingEnabled: ${msg}`
+    );
+    Assert.equal(editor.unmaskedStart, 0, `unmaskedStart is 0: ${msg}`);
+    if (expected) {
+      Assert.equal(editor.unmaskedEnd, 0, `Password is masked: ${msg}`);
+    } else {
+      Assert.equal(
+        editor.unmaskedEnd,
+        valueLength,
+        `Unmasked to the end: ${msg}`
+      );
+    }
+  },
+};
+
 this.LoginTestUtils.generation = {
   LENGTH: 15,
   REGEX: /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/,
