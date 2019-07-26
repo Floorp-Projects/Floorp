@@ -2034,8 +2034,6 @@ bool RunIterativeFailureTest(JSContext* cx,
 
       failureWasSimulated = simulator.stopSimulating();
 
-      MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
-
       if (ok) {
         MOZ_ASSERT(!cx->isExceptionPending(),
                    "Thunk execution succeeded but an exception was raised - "
