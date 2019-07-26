@@ -3638,8 +3638,8 @@ bool PresShell::ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,
 RectVisibility PresShell::GetRectVisibility(nsIFrame* aFrame,
                                             const nsRect& aRect,
                                             nscoord aMinTwips) const {
-  MOZ_DIAGNOSTIC_ASSERT(aFrame->PresContext() == GetPresContext(),
-                        "prescontext mismatch?");
+  NS_ASSERTION(aFrame->PresContext() == GetPresContext(),
+               "prescontext mismatch?");
   nsIFrame* rootFrame = mFrameConstructor->GetRootFrame();
   NS_ASSERTION(
       rootFrame,
