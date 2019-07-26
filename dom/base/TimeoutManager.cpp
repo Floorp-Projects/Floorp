@@ -34,8 +34,6 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-static int32_t gTimeoutThrottlingDelay = 0;
-
 #define DEFAULT_BACKGROUND_BUDGET_REGENERATION_FACTOR 100  // 1ms per 100ms
 #define DEFAULT_FOREGROUND_BUDGET_REGENERATION_FACTOR 1    // 1ms per 1ms
 #define DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET 50        // 50ms
@@ -407,10 +405,6 @@ void TimeoutManager::UpdateBudget(const TimeStamp& aNow,
   mLastBudgetUpdate = aNow;
 }
 
-#define DEFAULT_TIMEOUT_THROTTLING_DELAY \
-  -1  // Only positive integers cause us to introduce a delay for
-      // timeout throttling.
-
 // The longest interval (as PRIntervalTime) we permit, or that our
 // timer code can handle, really. See DELAY_INTERVAL_LIMIT in
 // nsTimerImpl.h for details.
@@ -473,10 +467,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gTimeoutThrottlingDelay,
-                              "dom.timeout.throttling_delay",
-                              DEFAULT_TIMEOUT_THROTTLING_DELAY);
-
   Preferences::AddUintVarCache(&gMaxConsecutiveCallbacksMilliseconds,
                                "dom.timeout.max_consecutive_callbacks_ms",
                                DEFAULT_MAX_CONSECUTIVE_CALLBACKS_MILLISECONDS);
@@ -1370,7 +1360,7 @@ void TimeoutManager::OnDocumentLoaded() {
 }
 
 void TimeoutManager::MaybeStartThrottleTimeout() {
-  if (gTimeoutThrottlingDelay <= 0 || mWindow.IsDying() ||
+  if (StaticPrefs::dom_timeout_throttling_delay() <= 0 || mWindow.IsDying() ||
       mWindow.IsSuspended()) {
     return;
   }
@@ -1379,13 +1369,13 @@ void TimeoutManager::MaybeStartThrottleTimeout() {
 
   MOZ_LOG(gTimeoutLog, LogLevel::Debug,
           ("TimeoutManager %p delaying tracking timeout throttling by %dms\n",
-           this, gTimeoutThrottlingDelay));
+           this, StaticPrefs::dom_timeout_throttling_delay()));
 
   nsCOMPtr<nsITimerCallback> callback = new ThrottleTimeoutsCallback(&mWindow);
 
   NS_NewTimerWithCallback(getter_AddRefs(mThrottleTimeoutsTimer), callback,
-                          gTimeoutThrottlingDelay, nsITimer::TYPE_ONE_SHOT,
-                          EventTarget());
+                          StaticPrefs::dom_timeout_throttling_delay(),
+                          nsITimer::TYPE_ONE_SHOT, EventTarget());
 }
 
 void TimeoutManager::BeginSyncOperation() {
