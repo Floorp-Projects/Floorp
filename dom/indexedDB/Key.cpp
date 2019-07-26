@@ -506,7 +506,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeAsString(
     return Exception;
   }
 
-  // The +2 is for initial 3 and trailing 0. We'll compensate for multi-byte
+  // The +2 is for initial aType and trailing 0. We'll compensate for multi-byte
   // chars below.
   uint32_t checkedSize = aEnd - aStart;
   CheckedUint32 size = checkedSize;
