@@ -149,8 +149,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleBasedKey(
 
   aTarget.mBuffer.Truncate();
 
-  auto* it = reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
-  auto* end = reinterpret_cast<const unsigned char*>(mBuffer.EndReading());
+  auto* it = BufferStart();
+  auto* end = BufferEnd();
 
   // First we do a pass and see if there are any strings in this key. We only
   // want to copy/decode when necessary.
@@ -183,7 +183,7 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleBasedKey(
   aTarget.mBuffer.SetCapacity(mBuffer.Length());
 
   // A string was found, so we need to copy the data we've read so far
-  auto* start = reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
+  auto* start = BufferStart();
   if (it > start) {
     char* buffer;
     if (!aTarget.mBuffer.GetMutableData(&buffer, it - start)) {
@@ -386,8 +386,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeJSValInternal(
 }
 
 // static
-nsresult Key::DecodeJSValInternal(const unsigned char*& aPos,
-                                  const unsigned char* aEnd, JSContext* aCx,
+nsresult Key::DecodeJSValInternal(const EncodedDataType*& aPos,
+                                  const EncodedDataType* aEnd, JSContext* aCx,
                                   uint8_t aTypeOffset,
                                   JS::MutableHandle<JS::Value> aVal,
                                   uint16_t aRecursionDepth) {
@@ -609,16 +609,17 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeLocaleString(
 }
 
 // static
-nsresult Key::DecodeJSVal(const unsigned char*& aPos, const unsigned char* aEnd,
-                          JSContext* aCx, JS::MutableHandle<JS::Value> aVal) {
+nsresult Key::DecodeJSVal(const EncodedDataType*& aPos,
+                          const EncodedDataType* aEnd, JSContext* aCx,
+                          JS::MutableHandle<JS::Value> aVal) {
   return DecodeJSValInternal(aPos, aEnd, aCx, 0, aVal, 0);
 }
 
 // static
 template <typename T>
 uint32_t Key::CalcDecodedStringySize(
-    const unsigned char* const aBegin, const unsigned char* const aEnd,
-    const unsigned char** aOutEncodedSectionEnd) {
+    const EncodedDataType* const aBegin, const EncodedDataType* const aEnd,
+    const EncodedDataType** aOutEncodedSectionEnd) {
   static_assert(sizeof(T) <= 2,
                 "Only implemented for 1 and 2 byte decoded types");
   uint32_t decodedSize = 0;
@@ -635,13 +636,13 @@ uint32_t Key::CalcDecodedStringySize(
 
 // static
 template <typename T>
-void Key::DecodeAsStringy(const unsigned char* const aEncodedSectionBegin,
-                          const unsigned char* const aEncodedSectionEnd,
+void Key::DecodeAsStringy(const EncodedDataType* const aEncodedSectionBegin,
+                          const EncodedDataType* const aEncodedSectionEnd,
                           const uint32_t aDecodedLength, T* const aOut) {
   static_assert(sizeof(T) <= 2,
                 "Only implemented for 1 and 2 byte decoded types");
   T* decodedPos = aOut;
-  for (const unsigned char* iter = aEncodedSectionBegin;
+  for (const EncodedDataType* iter = aEncodedSectionBegin;
        iter < aEncodedSectionEnd;) {
     if (!(*iter & 0x80)) {
       *decodedPos = *(iter++) - ONE_BYTE_ADJUST;
@@ -669,16 +670,17 @@ void Key::DecodeAsStringy(const unsigned char* const aEncodedSectionBegin,
 }
 
 // static
-template <unsigned char TypeMask, typename T, typename AcquireBuffer,
+template <Key::EncodedDataType TypeMask, typename T, typename AcquireBuffer,
           typename AcquireEmpty>
-void Key::DecodeStringy(const unsigned char*& aPos, const unsigned char* aEnd,
+void Key::DecodeStringy(const EncodedDataType*& aPos,
+                        const EncodedDataType* aEnd,
                         const AcquireBuffer& acquireBuffer,
                         const AcquireEmpty& acquireEmpty) {
   NS_ASSERTION(*aPos % eMaxType == TypeMask, "Don't call me!");
 
   // First measure how big the decoded stringy data will be.
-  const unsigned char* const encodedSectionBegin = aPos + 1;
-  const unsigned char* encodedSectionEnd;
+  const EncodedDataType* const encodedSectionBegin = aPos + 1;
+  const EncodedDataType* encodedSectionEnd;
   // decodedLength does not include the terminating 0 (in case of a string)
   const uint32_t decodedLength =
       CalcDecodedStringySize<T>(encodedSectionBegin, aEnd, &encodedSectionEnd);
@@ -698,8 +700,8 @@ void Key::DecodeStringy(const unsigned char*& aPos, const unsigned char* aEnd,
 }
 
 // static
-void Key::DecodeString(const unsigned char*& aPos,
-                       const unsigned char* const aEnd, nsString& aString) {
+void Key::DecodeString(const EncodedDataType*& aPos,
+                       const EncodedDataType* const aEnd, nsString& aString) {
   MOZ_ASSERT(aString.IsEmpty(), "aString should be empty on call!");
 
   DecodeStringy<eString, char16_t>(
@@ -731,8 +733,8 @@ void Key::EncodeNumber(double aFloat, uint8_t aType) {
 }
 
 // static
-double Key::DecodeNumber(const unsigned char*& aPos,
-                         const unsigned char* aEnd) {
+double Key::DecodeNumber(const EncodedDataType*& aPos,
+                         const EncodedDataType* aEnd) {
   NS_ASSERTION(*aPos % eMaxType == eFloat || *aPos % eMaxType == eDate,
                "Don't call me!");
 
@@ -777,8 +779,8 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::EncodeBinary(JSObject* aObject,
 }
 
 // static
-JSObject* Key::DecodeBinary(const unsigned char*& aPos,
-                            const unsigned char* aEnd, JSContext* aCx) {
+JSObject* Key::DecodeBinary(const EncodedDataType*& aPos,
+                            const EncodedDataType* aEnd, JSContext* aCx) {
   JSObject* rv;
   DecodeStringy<eBinary, uint8_t>(
       aPos, aEnd,
@@ -843,7 +845,7 @@ nsresult Key::ToJSVal(JSContext* aCx, JS::MutableHandle<JS::Value> aVal) const {
     return NS_OK;
   }
 
-  const unsigned char* pos = BufferStart();
+  const EncodedDataType* pos = BufferStart();
   nsresult rv = DecodeJSVal(pos, BufferEnd(), aCx, aVal);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
