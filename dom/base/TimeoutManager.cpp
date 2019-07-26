@@ -34,11 +34,6 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-// The default shortest interval/timeout we permit
-#define DEFAULT_MIN_TRACKING_TIMEOUT_VALUE 4                // 4ms
-#define DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE 1000  // 1000ms
-static int32_t gMinTrackingTimeoutValue = 0;
-static int32_t gMinTrackingBackgroundTimeoutValue = 0;
 static int32_t gTimeoutThrottlingDelay = 0;
 
 #define DEFAULT_BACKGROUND_BUDGET_REGENERATION_FACTOR 100  // 1ms per 100ms
@@ -478,12 +473,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gMinTrackingTimeoutValue,
-                              "dom.min_tracking_timeout_value",
-                              DEFAULT_MIN_TRACKING_TIMEOUT_VALUE);
-  Preferences::AddIntVarCache(&gMinTrackingBackgroundTimeoutValue,
-                              "dom.min_tracking_background_timeout_value",
-                              DEFAULT_MIN_TRACKING_BACKGROUND_TIMEOUT_VALUE);
   Preferences::AddIntVarCache(&gTimeoutThrottlingDelay,
                               "dom.timeout.throttling_delay",
                               DEFAULT_TIMEOUT_THROTTLING_DELAY);
