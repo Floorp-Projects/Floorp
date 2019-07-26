@@ -30,7 +30,6 @@
 // is included in mozAutoDocUpdate.h.
 #include "nsNPAPIPluginInstance.h"
 #include "gfxDrawable.h"
-#include "mozilla/StaticPrefs.h"
 #include "ImageOps.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AntiTrackingCommon.h"
@@ -97,7 +96,14 @@
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_full_screen_api.h"
+#ifdef FUZZING
+#  include "mozilla/StaticPrefs_fuzzing.h"
+#endif
+#include "mozilla/StaticPrefs_privacy.h"
+#include "mozilla/StaticPrefs_test.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/TextEvents.h"
 #include "nsArrayUtils.h"

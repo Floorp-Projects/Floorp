@@ -25,7 +25,7 @@
 #include "mozilla/ProcessHangMonitorIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/Unused.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TelemetryIPC.h"
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperChild.h"

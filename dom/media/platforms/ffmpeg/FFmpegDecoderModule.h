@@ -12,7 +12,7 @@
 #include "FFmpegVideoDecoder.h"
 #include "PlatformDecoderModule.h"
 #include "VPXDecoder.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

@@ -9,7 +9,7 @@
 #include "mozilla/RemoteDecoderManagerChild.h"
 #include "mozilla/RemoteDecoderManagerParent.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/layers/VideoBridgeParent.h"
 #include "mozilla/layers/CompositorThread.h"

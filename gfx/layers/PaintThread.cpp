@@ -16,7 +16,7 @@
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/SyncRunnable.h"
 #include "nsIPropertyBag2.h"

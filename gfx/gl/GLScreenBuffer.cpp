@@ -7,7 +7,7 @@
 
 #include <cstring>
 #include "CompositorTypes.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "GLContext.h"
 #include "GLBlitHelper.h"
 #include "GLReadTexImageHelper.h"

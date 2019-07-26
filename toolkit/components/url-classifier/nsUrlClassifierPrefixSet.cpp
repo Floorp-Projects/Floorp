@@ -17,7 +17,7 @@
 #include "nsISeekableStream.h"
 #include "nsIBufferedStreams.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Unused.h"

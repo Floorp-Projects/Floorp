@@ -9,7 +9,7 @@
 
 #include "FPSCounter.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/TimeStamp.h"
 #include <deque>
 #include <string>

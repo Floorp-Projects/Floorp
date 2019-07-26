@@ -11,7 +11,7 @@
 #  include "mozilla/Maybe.h"
 #  include "mozilla/Mutex.h"
 #  include "mozilla/StateMirroring.h"
-#  include "mozilla/StaticPrefs.h"
+#  include "mozilla/StaticPrefs_media.h"
 #  include "mozilla/TaskQueue.h"
 #  include "mozilla/dom/MediaDebugInfoBinding.h"
 

@@ -9,7 +9,7 @@
 
 #include "mozilla/dom/nsCSPUtils.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
 #include "nsIClassInfo.h"

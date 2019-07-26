@@ -14,7 +14,8 @@
 
 #include "AnimationCommon.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
 #include "mozilla/dom/BindContext.h"

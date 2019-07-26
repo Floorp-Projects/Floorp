@@ -11,7 +11,7 @@
 #include <math.h>
 #include <d3d11.h>
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/GamepadEventTypes.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/gfx/DeviceManagerDx.h"

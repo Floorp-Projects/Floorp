@@ -6,7 +6,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_html5.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5ElementName.h"
 #include "nsHtml5HtmlAttributes.h"

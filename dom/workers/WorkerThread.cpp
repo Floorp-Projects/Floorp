@@ -11,7 +11,6 @@
 #include "EventQueue.h"
 #include "mozilla/ThreadEventQueue.h"
 #include "mozilla/PerformanceCounter.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsIThreadInternal.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"

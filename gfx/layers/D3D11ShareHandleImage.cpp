@@ -11,7 +11,7 @@
 #include "d3d11.h"
 #include "gfxImageSurface.h"
 #include "gfxWindowsPlatform.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"

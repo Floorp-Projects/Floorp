@@ -8,7 +8,7 @@
 
 #include "GLContext.h"
 #include "GLContextProvider.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/widget/CompositorWidget.h"
 
 namespace mozilla {

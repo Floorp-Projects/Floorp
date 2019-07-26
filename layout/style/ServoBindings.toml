@@ -24,7 +24,7 @@ headers = [
     "mozilla/dom/ChildIterator.h",
     "mozilla/dom/NameSpaceConstants.h",
     "mozilla/LookAndFeel.h",
-    "mozilla/StaticPrefs.h",
+    "mozilla/StaticPrefsAll.h",
     "mozilla/GeckoBindings.h",
     "mozilla/ServoBindings.h",
     "mozilla/ComputedStyle.h",

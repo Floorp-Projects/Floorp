@@ -23,6 +23,7 @@
 #include "GPUVideoImage.h"
 #include "MediaInfo.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {

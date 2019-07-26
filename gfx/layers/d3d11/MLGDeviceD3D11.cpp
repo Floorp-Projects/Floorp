@@ -22,7 +22,7 @@
 #include "LayersLogging.h"
 #include "TextureD3D11.h"
 #include "gfxConfig.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 
 namespace mozilla {
 namespace layers {

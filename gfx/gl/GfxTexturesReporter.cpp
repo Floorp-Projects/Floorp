@@ -8,7 +8,7 @@
 #include <sstream>
 #include "nsExceptionHandler.h"
 #include "GfxTexturesReporter.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
 using namespace mozilla;
 using namespace mozilla::gl;

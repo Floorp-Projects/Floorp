@@ -24,7 +24,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #include "nsCOMPtr.h"
 #include "nsFlexContainerFrame.h"

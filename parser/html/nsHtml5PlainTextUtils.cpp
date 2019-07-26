@@ -3,11 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsHtml5PlainTextUtils.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsHtml5AttributeName.h"
 #include "nsHtml5Portability.h"
 #include "nsHtml5String.h"
 #include "nsGkAtoms.h"
+#include "mozilla/StaticPrefs_plain_text.h"
 
 // static
 nsHtml5HtmlAttributes* nsHtml5PlainTextUtils::NewLinkAttributes() {

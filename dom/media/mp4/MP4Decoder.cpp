@@ -10,7 +10,7 @@
 #include "MediaContainerType.h"
 #include "PDMFactory.h"
 #include "VideoUtils.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/gfx/Tools.h"
 #include "nsMimeTypes.h"
 

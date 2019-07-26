@@ -11,6 +11,7 @@
 #include "WGLLibrary.h"
 #include "nsPrintfCString.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
+#include "mozilla/StaticPrefs_webgl.h"
 
 namespace mozilla {
 namespace gl {

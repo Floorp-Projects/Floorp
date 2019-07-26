@@ -8,7 +8,7 @@
 
 #include "ServoCSSParser.h"
 #include "MainThreadUtils.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Document.h"

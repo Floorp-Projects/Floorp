@@ -6,6 +6,7 @@
 
 #include "KeyboardScrollAnimation.h"
 #include "ScrollAnimationBezierPhysics.h"
+#include "mozilla/StaticPrefs_general.h"
 
 namespace mozilla {
 namespace layers {

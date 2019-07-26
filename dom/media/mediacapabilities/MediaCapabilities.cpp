@@ -15,7 +15,7 @@
 #include "VPXDecoder.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/dom/DOMMozPromiseRequestHolder.h"
 #include "mozilla/dom/MediaCapabilitiesBinding.h"

@@ -6,7 +6,7 @@
 
 #include "PerformanceWorker.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 namespace dom {

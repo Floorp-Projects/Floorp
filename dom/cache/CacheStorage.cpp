@@ -26,7 +26,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"

@@ -24,7 +24,7 @@
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 
 namespace mozilla {
 namespace image {

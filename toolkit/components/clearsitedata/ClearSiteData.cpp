@@ -9,7 +9,6 @@
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Unused.h"
 #include "nsASCIIMask.h"
 #include "nsCharSeparatedTokenizer.h"

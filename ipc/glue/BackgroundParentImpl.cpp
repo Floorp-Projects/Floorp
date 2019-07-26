@@ -59,7 +59,7 @@
 #include "mozilla/dom/network/UDPSocketParent.h"
 #include "mozilla/dom/WebAuthnTransactionParent.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsNetUtil.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsProxyRelease.h"

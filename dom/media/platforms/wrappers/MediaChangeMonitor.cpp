@@ -14,7 +14,7 @@
 #include "MediaInfo.h"
 #include "PDMFactory.h"
 #include "VPXDecoder.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 
 namespace mozilla {

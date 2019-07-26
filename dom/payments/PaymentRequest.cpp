@@ -14,7 +14,7 @@
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsIURLParser.h"

@@ -18,7 +18,7 @@
 #include "mozilla/MediaManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #include "AudioSegment.h"
 #include "MediaEnginePrefs.h"

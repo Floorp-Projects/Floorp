@@ -6,7 +6,7 @@
 
 #include "StorageAccessPermissionRequest.h"
 #include "nsGlobalWindowInner.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include <cstdlib>
 
 namespace mozilla {

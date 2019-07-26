@@ -22,7 +22,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StorageAccess.h"
 
 #ifdef XP_WIN

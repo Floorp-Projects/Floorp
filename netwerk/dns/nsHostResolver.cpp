@@ -44,7 +44,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_network.h"
 
 using namespace mozilla;
 using namespace mozilla::net;

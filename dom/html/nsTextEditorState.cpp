@@ -41,7 +41,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/Text.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsNumberControlFrame.h"
 #include "nsFrameSelection.h"
 #include "mozilla/ErrorResult.h"

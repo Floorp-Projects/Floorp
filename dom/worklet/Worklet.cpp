@@ -16,7 +16,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/WorkletImpl.h"
-#include "mozilla/StaticPrefs.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/SourceText.h"
 #include "nsIInputStreamPump.h"

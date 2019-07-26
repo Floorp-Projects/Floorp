@@ -31,7 +31,9 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#ifdef FUZZING
+#  include "mozilla/StaticPrefs_fuzzing.h"
+#endif
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsContentUtils.h"

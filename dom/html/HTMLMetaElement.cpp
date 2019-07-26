@@ -11,6 +11,7 @@
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/ViewportMetaData.h"
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
 #include "nsIContentSecurityPolicy.h"

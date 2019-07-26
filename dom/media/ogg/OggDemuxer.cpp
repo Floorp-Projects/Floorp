@@ -12,7 +12,6 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/SharedThreadPool.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoRef.h"

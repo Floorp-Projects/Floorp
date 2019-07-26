@@ -15,7 +15,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticMutex.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"

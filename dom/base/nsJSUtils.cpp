@@ -32,7 +32,7 @@
 #include "nsGlobalWindow.h"
 #include "nsXBLPrototypeBinding.h"
 #include "mozilla/CycleCollectedJSContext.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/Date.h"
 #include "mozilla/dom/Element.h"

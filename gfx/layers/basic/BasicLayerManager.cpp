@@ -29,6 +29,7 @@
 #include "gfxUtils.h"               // for gfxUtils
 #include "gfx2DGlue.h"              // for thebes --> moz2d transition
 #include "mozilla/Assertions.h"     // for MOZ_ASSERT, etc
+#include "mozilla/StaticPrefs_nglayout.h"
 #include "mozilla/WidgetUtils.h"    // for ScreenRotation
 #include "mozilla/gfx/2D.h"         // for DrawTarget
 #include "mozilla/gfx/BasePoint.h"  // for BasePoint

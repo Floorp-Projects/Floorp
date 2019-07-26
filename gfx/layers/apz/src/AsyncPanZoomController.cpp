@@ -33,7 +33,6 @@
 #include "UnitTransforms.h"             // for TransformTo
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/task.h"                  // for NewRunnableMethod, etc
-#include "mozilla/StaticPrefs.h"        // for StaticPrefs
 #include "gfxTypes.h"                   // for gfxFloat
 #include "LayersLogging.h"              // for print_stderr
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
@@ -46,8 +45,15 @@
 #include "mozilla/Preferences.h"             // for Preferences
 #include "mozilla/RecursiveMutex.h"          // for RecursiveMutexAutoLock, etc
 #include "mozilla/RefPtr.h"                  // for RefPtr
-#include "mozilla/StaticPrefs.h"             // for StaticPrefs
-#include "mozilla/StaticPtr.h"               // for StaticAutoPtr
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_general.h"
+#include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_slider.h"
+#include "mozilla/StaticPrefs_test.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "mozilla/Telemetry.h"               // for Telemetry
 #include "mozilla/TimeStamp.h"               // for TimeDuration, TimeStamp
 #include "mozilla/dom/CheckerboardReportService.h"  // for CheckerboardEventStorage

@@ -17,7 +17,7 @@
 #include "mozilla/dom/GetFilesHelper.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsAttrValueInlines.h"
 #include "nsCRTGlue.h"
 #include "nsQueryObject.h"

@@ -6,7 +6,7 @@
 
 #include "WebRenderAPI.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "LayersLogging.h"
 #include "mozilla/ipc/ByteBuf.h"
 #include "mozilla/webrender/RendererOGL.h"

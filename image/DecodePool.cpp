@@ -10,7 +10,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TimeStamp.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"

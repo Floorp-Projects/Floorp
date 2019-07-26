@@ -10,7 +10,7 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Maybe.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIWebProgressListener.h"
