@@ -52,7 +52,6 @@ FEATURE_CHECK_NEEDED = {
     "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set([
-    "numeric-separator-literal",
     "Intl.NumberFormat-unified",
 ])
 
