@@ -7,8 +7,8 @@
 #ifndef MacIOSurface_h__
 #define MacIOSurface_h__
 #ifdef XP_DARWIN
-#  include <QuartzCore/QuartzCore.h>
 #  include <CoreVideo/CoreVideo.h>
+#  include <QuartzCore/QuartzCore.h>
 #  include <dlfcn.h>
 
 #  include "mozilla/gfx/Types.h"
@@ -70,8 +70,8 @@ typedef OSType (*IOSurfacePixelFormatFunc)(IOSurfacePtr io_surface);
 #  endif
 
 #  include "2D.h"
-#  include "mozilla/RefPtr.h"
 #  include "mozilla/RefCounted.h"
+#  include "mozilla/RefPtr.h"
 
 enum CGContextType {
   CG_CONTEXT_TYPE_UNKNOWN = 0,
@@ -108,28 +108,28 @@ class MacIOSurface final
                         mozilla::gfx::YUVColorSpace aColorSpace =
                             mozilla::gfx::YUVColorSpace::UNKNOWN);
   ~MacIOSurface();
-  IOSurfaceID GetIOSurfaceID();
-  void* GetBaseAddress();
-  void* GetBaseAddressOfPlane(size_t planeIndex);
-  size_t GetPlaneCount();
-  OSType GetPixelFormat();
+  IOSurfaceID GetIOSurfaceID() const;
+  void* GetBaseAddress() const;
+  void* GetBaseAddressOfPlane(size_t planeIndex) const;
+  size_t GetPlaneCount() const;
+  OSType GetPixelFormat() const;
   // GetWidth() and GetHeight() return values in "display pixels".  A
   // "display pixel" is the smallest fully addressable part of a display.
   // But in HiDPI modes each "display pixel" corresponds to more than one
   // device pixel.  Use GetDevicePixel**() to get device pixels.
-  size_t GetWidth(size_t plane = 0);
-  size_t GetHeight(size_t plane = 0);
-  double GetContentsScaleFactor() { return mContentsScaleFactor; }
-  size_t GetDevicePixelWidth(size_t plane = 0);
-  size_t GetDevicePixelHeight(size_t plane = 0);
-  size_t GetBytesPerRow(size_t plane = 0);
+  size_t GetWidth(size_t plane = 0) const;
+  size_t GetHeight(size_t plane = 0) const;
+  double GetContentsScaleFactor() const { return mContentsScaleFactor; }
+  size_t GetDevicePixelWidth(size_t plane = 0) const;
+  size_t GetDevicePixelHeight(size_t plane = 0) const;
+  size_t GetBytesPerRow(size_t plane = 0) const;
   void Lock(bool aReadOnly = true);
   void Unlock(bool aReadOnly = true);
   void IncrementUseCount();
   void DecrementUseCount();
-  bool HasAlpha() { return mHasAlpha; }
-  mozilla::gfx::SurfaceFormat GetFormat();
-  mozilla::gfx::SurfaceFormat GetReadFormat();
+  bool HasAlpha() const { return mHasAlpha; }
+  mozilla::gfx::SurfaceFormat GetFormat() const;
+  mozilla::gfx::SurfaceFormat GetReadFormat() const;
   // This would be better suited on MacIOSurfaceImage type, however due to the
   // current data structure, this is not possible as only the IOSurfacePtr is
   // being used across.
