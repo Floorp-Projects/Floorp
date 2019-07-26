@@ -3898,11 +3898,6 @@
   value: true
   mirror: always
 
-- name: layout.css.paint-order.enabled
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
 # Is parallel CSS parsing enabled?
 - name: layout.css.parsing.parallel
   type: bool
