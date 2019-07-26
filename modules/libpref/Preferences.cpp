@@ -5198,111 +5198,108 @@ static void CacheDataAppendElement(CacheData* aData) {
 }
 
 template <typename T>
-static nsresult AddVarCache(T* aCache, const nsACString& aPref,
-                            StripAtomic<T> aDefault, bool aSkipAssignment) {
-  if (!aSkipAssignment) {
-    *aCache = PreferencesInternalMethods::GetPref(
-        PromiseFlatCString(aPref).get(), aDefault);
-  }
+static nsresult AddVarCacheNoAssignment(T* aCache, const nsACString& aPref,
+                                        StripAtomic<T> aDefault) {
   CacheData* data = new CacheData(aCache, aDefault);
   CacheDataAppendElement(data);
   PreferencesInternalMethods::RegisterCallback<T>(data, aPref);
   return NS_OK;
 }
 
+template <typename T>
+static nsresult AddVarCache(T* aCache, const nsACString& aPref,
+                            StripAtomic<T> aDefault) {
+  *aCache = PreferencesInternalMethods::GetPref(PromiseFlatCString(aPref).get(),
+                                                aDefault);
+  return AddVarCacheNoAssignment(aCache, aPref, aDefault);
+}
+
 /* static */
 nsresult Preferences::AddBoolVarCache(bool* aCache, const nsACString& aPref,
-                                      bool aDefault, bool aSkipAssignment) {
+                                      bool aDefault) {
   AssertNotAlreadyCached("bool", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
 /* static */
 nsresult Preferences::AddAtomicBoolVarCache(Atomic<bool, Order>* aCache,
                                             const nsACString& aPref,
-                                            bool aDefault,
-                                            bool aSkipAssignment) {
+                                            bool aDefault) {
   AssertNotAlreadyCached("bool", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 /* static */
 nsresult Preferences::AddIntVarCache(int32_t* aCache, const nsACString& aPref,
-                                     int32_t aDefault, bool aSkipAssignment) {
+                                     int32_t aDefault) {
   AssertNotAlreadyCached("int", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
 /* static */
 nsresult Preferences::AddAtomicIntVarCache(Atomic<int32_t, Order>* aCache,
                                            const nsACString& aPref,
-                                           int32_t aDefault,
-                                           bool aSkipAssignment) {
+                                           int32_t aDefault) {
   AssertNotAlreadyCached("int", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 /* static */
 nsresult Preferences::AddUintVarCache(uint32_t* aCache, const nsACString& aPref,
-                                      uint32_t aDefault, bool aSkipAssignment) {
+                                      uint32_t aDefault) {
   AssertNotAlreadyCached("uint", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 template <MemoryOrdering Order>
 /* static */
 nsresult Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Order>* aCache,
                                             const nsACString& aPref,
-                                            uint32_t aDefault,
-                                            bool aSkipAssignment) {
+                                            uint32_t aDefault) {
   AssertNotAlreadyCached("uint", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 // Since the definition of template functions is not in a header file, we
 // need to explicitly specify the instantiations that are required. Currently
 // limited orders are needed and therefore implemented.
 template nsresult Preferences::AddAtomicBoolVarCache(Atomic<bool, Relaxed>*,
-                                                     const nsACString&, bool,
-                                                     bool);
+                                                     const nsACString&, bool);
 
 template nsresult Preferences::AddAtomicBoolVarCache(
-    Atomic<bool, ReleaseAcquire>*, const nsACString&, bool, bool);
+    Atomic<bool, ReleaseAcquire>*, const nsACString&, bool);
 
 template nsresult Preferences::AddAtomicBoolVarCache(
-    Atomic<bool, SequentiallyConsistent>*, const nsACString&, bool, bool);
+    Atomic<bool, SequentiallyConsistent>*, const nsACString&, bool);
 
 template nsresult Preferences::AddAtomicIntVarCache(Atomic<int32_t, Relaxed>*,
-                                                    const nsACString&, int32_t,
-                                                    bool);
+                                                    const nsACString&, int32_t);
 
 template nsresult Preferences::AddAtomicUintVarCache(Atomic<uint32_t, Relaxed>*,
                                                      const nsACString&,
-                                                     uint32_t, bool);
+                                                     uint32_t);
 
 template nsresult Preferences::AddAtomicUintVarCache(
-    Atomic<uint32_t, ReleaseAcquire>*, const nsACString&, uint32_t, bool);
+    Atomic<uint32_t, ReleaseAcquire>*, const nsACString&, uint32_t);
 
 template nsresult Preferences::AddAtomicUintVarCache(
-    Atomic<uint32_t, SequentiallyConsistent>*, const nsACString&, uint32_t,
-    bool);
+    Atomic<uint32_t, SequentiallyConsistent>*, const nsACString&, uint32_t);
 
 /* static */
 nsresult Preferences::AddFloatVarCache(float* aCache, const nsACString& aPref,
-                                       float aDefault, bool aSkipAssignment) {
+                                       float aDefault) {
   AssertNotAlreadyCached("float", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 /* static */
 nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
                                              const nsACString& aPref,
-                                             float aDefault,
-                                             bool aSkipAssignment) {
+                                             float aDefault) {
   AssertNotAlreadyCached("float", aPref, aCache);
-  return AddVarCache(aCache, aPref, aDefault, aSkipAssignment);
+  return AddVarCache(aCache, aPref, aDefault);
 }
 
 // The SetPref_*() functions below end in a `_<type>` suffix because they are
@@ -5401,7 +5398,7 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
 
   if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live) &&
       MOZ_LIKELY(aIsStartup)) {
-    AddVarCache(aCache, aName, aDefaultValue, true);
+    AddVarCacheNoAssignment(aCache, aName, aDefaultValue);
   }
 }
 
