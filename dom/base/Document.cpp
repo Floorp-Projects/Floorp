@@ -3747,6 +3747,11 @@ void Document::InitialDocumentTranslationCompleted() {
   mPendingInitialTranslation = false;
 
   mL10nProtoElements.Clear();
+
+  nsXULPrototypeDocument* proto = GetPrototype();
+  if (proto) {
+    proto->SetIsL10nCached();
+  }
 }
 
 bool Document::IsWebAnimationsEnabled(JSContext* aCx, JSObject* /*unused*/) {
