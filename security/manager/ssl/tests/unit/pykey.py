@@ -31,7 +31,7 @@ secp521r1: an ECC key on the curve secp521r1
 """
 
 from pyasn1.codec.der import encoder
-from pyasn1.type import univ, namedtype
+from pyasn1.type import univ, namedtype, tag
 from pyasn1_modules import rfc2459
 from ecc import encoding
 from ecc import Key
@@ -115,6 +115,23 @@ class RSAPrivateKey(univ.Sequence):
         namedtype.NamedType('exponent1', univ.Integer()),
         namedtype.NamedType('exponent2', univ.Integer()),
         namedtype.NamedType('coefficient', univ.Integer()),
+    )
+
+
+class ECPrivateKey(univ.Sequence):
+    """Helper type for encoding an EC private key
+        ECPrivateKey ::= SEQUENCE {
+            version        INTEGER { ecPrivkeyVer1(1) } (ecPrivkeyVer1),
+            privateKey     OCTET STRING,
+            parameters [0] ECParameters {{ NamedCurve }} OPTIONAL,
+                            (NOTE: parameters field is not supported)
+            publicKey  [1] BIT STRING OPTIONAL
+        }"""
+    componentType = namedtype.NamedTypes(
+        namedtype.NamedType('version', univ.Integer()),
+        namedtype.NamedType('privateKey', univ.OctetString()),
+        namedtype.OptionalNamedType('publicKey', univ.BitString().subtype(
+            explicitTag=tag.Tag(tag.tagClassContext, tag.tagFormatSimple, 1)))
     )
 
 
@@ -691,14 +708,10 @@ class ECCKey(object):
         else:
             raise UnknownKeySpecificationError(specification)
 
-    def asSubjectPublicKeyInfo(self):
-        """Returns a subject public key info representing
-        this key for use by pyasn1."""
-        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
-        algorithmIdentifier['algorithm'] = ecPublicKey
-        algorithmIdentifier['parameters'] = self.keyOID
-        spki = rfc2459.SubjectPublicKeyInfo()
-        spki['algorithm'] = algorithmIdentifier
+    def getPublicKeyHexifiedString(self):
+        """Returns the EC public key as a hex string using the uncompressed
+        point representation. This is intended to be used in the encoder
+        functions, as it surrounds the value with ''H to indicate its type."""
         # We need to extract the point that represents this key.
         # The library encoding of the key is an 8-byte id, followed by 2
         # bytes for the key length in bits, followed by the point on the
@@ -708,10 +721,52 @@ class ECCKey(object):
         encoded = self.key.encode()
         _, _, points = encoding.Decoder(encoded).int(8).int(2).point(2).out()
         # '04' indicates that the points are in uncompressed form.
-        hexifiedBitString = "'%s%s%s'H" % ('04', longToEvenLengthHexString(points[0]),
-                                           longToEvenLengthHexString(points[1]))
-        subjectPublicKey = univ.BitString(hexifiedBitString)
-        spki['subjectPublicKey'] = subjectPublicKey
+        return "'%s%s%s'H" % ('04', longToEvenLengthHexString(points[0]),
+                              longToEvenLengthHexString(points[1]))
+
+    def toPEM(self):
+        """Return the EC private key in PEM-encoded form."""
+        output = '-----BEGIN EC PRIVATE KEY-----'
+        der = self.toDER()
+        b64 = base64.b64encode(der)
+        while b64:
+            output += '\n' + b64[:64]
+            b64 = b64[64:]
+        output += '\n-----END EC PRIVATE KEY-----\n'
+        return output
+
+    def toDER(self):
+        """Return the EC private key in DER-encoded form, encoded per SEC 1
+        section C.4 format."""
+        privateKeyInfo = PrivateKeyInfo()
+        privateKeyInfo['version'] = 0
+        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
+        algorithmIdentifier['algorithm'] = ecPublicKey
+        algorithmIdentifier['parameters'] = self.keyOID
+        privateKeyInfo['privateKeyAlgorithm'] = algorithmIdentifier
+        ecPrivateKey = ECPrivateKey()
+        ecPrivateKey['version'] = 1
+        ecPrivateKey['privateKey'] = binascii.unhexlify(longToEvenLengthHexString(
+                                                        self.key._priv[1]))
+        ecPrivateKey['publicKey'] = univ.BitString(
+                                        self.getPublicKeyHexifiedString()
+                                                  ).subtype(
+                                        explicitTag=tag.Tag(tag.tagClassContext,
+                                                            tag.tagFormatSimple, 1)
+                                                           )
+        ecPrivateKeyEncoded = encoder.encode(ecPrivateKey)
+        privateKeyInfo['privateKey'] = univ.OctetString(ecPrivateKeyEncoded)
+        return encoder.encode(privateKeyInfo)
+
+    def asSubjectPublicKeyInfo(self):
+        """Returns a subject public key info representing
+        this key for use by pyasn1."""
+        algorithmIdentifier = rfc2459.AlgorithmIdentifier()
+        algorithmIdentifier['algorithm'] = ecPublicKey
+        algorithmIdentifier['parameters'] = self.keyOID
+        spki = rfc2459.SubjectPublicKeyInfo()
+        spki['algorithm'] = algorithmIdentifier
+        spki['subjectPublicKey'] = univ.BitString(self.getPublicKeyHexifiedString())
         return spki
 
     def signRaw(self, data, hashAlgorithm):
