@@ -89,6 +89,7 @@ class BackgroundServices(
     val pushService by lazy { FirebasePush() }
 
     val push by lazy {
+        val logger = Logger("AutoPushFeature")
         AutoPushFeature(context = context, service = pushService, config = pushConfig!!).also {
             // Notify observers for Services' messages.
             it.registerForPushMessages(PushType.Services, object : Bus.Observer<PushType, String> {
@@ -103,6 +104,7 @@ class BackgroundServices(
                 override fun onSubscriptionAvailable(subscription: AutoPushSubscription) {
                     // Update for only the services subscription.
                     if (subscription.type == PushType.Services) {
+                        logger.info("New push subscription received for FxA")
                         accountManager.authenticatedAccount()?.deviceConstellation()
                             ?.setDevicePushSubscriptionAsync(
                                 DevicePushSubscription(
@@ -122,8 +124,9 @@ class BackgroundServices(
 
             val preferences = PreferenceManager.getDefaultSharedPreferences(context)
             val prefResetSubKey = "reset_broken_push_subscription"
-            if (preferences.getBoolean(prefResetSubKey, true)) {
-                preferences.edit().putBoolean(prefResetSubKey, false).apply()
+            if (!preferences.getBoolean(prefResetSubKey, false)) {
+                preferences.edit().putBoolean(prefResetSubKey, true).apply()
+                logger.info("Forcing push registration renewal")
                 it.forceRegistrationRenewal()
             }
         }
