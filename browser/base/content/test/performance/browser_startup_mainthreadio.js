@@ -470,18 +470,6 @@ const startupPhases = {
       condition: MAC,
       write: 3,
     },
-    {
-      // bug 1543090
-      path: "GreD:omni.ja",
-      condition: WIN,
-      stat: 1,
-    },
-    {
-      // bug 1543090
-      path: "XCurProcD:omni.ja",
-      condition: WIN,
-      stat: 2,
-    },
   ],
 
   // We are at this phase once we are ready to handle user events.
@@ -687,12 +675,6 @@ const startupPhases = {
       condition: WIN,
       ignoreIfUnused: true,
       stat: 3,
-    },
-    {
-      // bug 1543090
-      path: "XCurProcD:omni.ja",
-      condition: WIN,
-      stat: 7,
     },
     {
       // bug 1003968

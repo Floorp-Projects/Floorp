@@ -453,7 +453,6 @@ function migrateAddonLoader(addon) {
  * as stored in the addonStartup.json file.
  */
 const JSON_FIELDS = Object.freeze([
-  "changed",
   "dependencies",
   "enabled",
   "file",
@@ -498,10 +497,8 @@ class XPIState {
       saved.currentModifiedTime != this.lastModifiedTime
     ) {
       this.lastModifiedTime = saved.currentModifiedTime;
-      this.changed = true;
     } else if (saved.currentModifiedTime === null) {
       this.missing = true;
-      this.changed = true;
     }
   }
 
@@ -590,9 +587,9 @@ class XPIState {
       logger.warn("Can't get modified time of ${path}", aFile, e);
     }
 
-    this.changed = mtime != this.lastModifiedTime;
+    let changed = mtime != this.lastModifiedTime;
     this.lastModifiedTime = mtime;
-    return this.changed;
+    return changed;
   }
 
   /**
@@ -647,29 +644,12 @@ class XPIState {
     this.file = aDBAddon._sourceBundle;
     this.rootURI = aDBAddon.rootURI;
 
-    if (aUpdated || mustGetMod) {
-      let file = this.file;
-
-      // Built-in addons should have jar: rootURIs, use the mod time
-      // for the containing jar file for those.
-      if (!file) {
-        let fileUrl = this.resolvedRootURI;
-
-        if (fileUrl instanceof Ci.nsIJARURI) {
-          fileUrl = fileUrl.JARFile;
-        }
-        if (fileUrl instanceof Ci.nsIFileURL) {
-          file = fileUrl.file;
-        }
-      }
-
-      if (file) {
-        this.getModTime(file);
-        if (this.lastModifiedTime != aDBAddon.updateDate) {
-          aDBAddon.updateDate = this.lastModifiedTime;
-          if (XPIDatabase.initialized) {
-            XPIDatabase.saveChanges();
-          }
+    if ((aUpdated || mustGetMod) && this.file) {
+      this.getModTime(this.file);
+      if (this.lastModifiedTime != aDBAddon.updateDate) {
+        aDBAddon.updateDate = this.lastModifiedTime;
+        if (XPIDatabase.initialized) {
+          XPIDatabase.saveChanges();
         }
       }
     }
