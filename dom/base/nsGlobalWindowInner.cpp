@@ -907,16 +907,6 @@ nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
     }
   }
 
-  // We could have failed the first time through trying
-  // to create the entropy collector, so we should
-  // try to get one until we succeed.
-
-  static bool sFirstTime = true;
-  if (sFirstTime) {
-    sFirstTime = false;
-    TimeoutManager::Initialize();
-  }
-
   if (gDumpFile == nullptr) {
     nsAutoCString fname;
     Preferences::GetCString("browser.dom.window.dump.file", fname);
