@@ -456,3 +456,8 @@ this.LoginTestUtils.masterPassword = {
     this._set(false);
   },
 };
+
+this.LoginTestUtils.generation = {
+  LENGTH: 15,
+  REGEX: /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/,
+};

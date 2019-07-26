@@ -25,8 +25,11 @@ const { Services } = SpecialPowers.Cu.import(
   {}
 );
 
-const GENERATED_PASSWORD_LENGTH = 15;
-const GENERATED_PASSWORD_REGEX = /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/;
+const {
+  LENGTH: GENERATED_PASSWORD_LENGTH,
+  REGEX: GENERATED_PASSWORD_REGEX,
+} = LoginTestUtils.generation;
+const LOGIN_FIELD_UTILS = LoginTestUtils.loginField;
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
 /**
