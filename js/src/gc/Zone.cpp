@@ -321,14 +321,9 @@ void Zone::discardJitCode(FreeOp* fop,
     jit::FinishInvalidation(fop, script);
 
     // Discard baseline script if it's not marked as active.
-    if (discardBaselineCode && script->hasBaselineScript()) {
-      if (script->jitScript()->active()) {
-        // ICs will be purged so the script will need to warm back up before it
-        // can be inlined during Ion compilation.
-        script->baselineScript()->clearIonCompiledOrInlined();
-      } else {
-        jit::FinishDiscardBaselineScript(fop, script);
-      }
+    if (discardBaselineCode && script->hasBaselineScript() &&
+        !script->jitScript()->active()) {
+      jit::FinishDiscardBaselineScript(fop, script);
     }
 
     // Warm-up counter for scripts are reset on GC. After discarding code we
@@ -354,6 +349,10 @@ void Zone::discardJitCode(FreeOp* fop,
       // stubs because the optimizedStubSpace will be purged below.
       if (discardBaselineCode) {
         jitScript->purgeOptimizedStubs(script);
+
+        // ICs were purged so the script will need to warm back up before it can
+        // be inlined during Ion compilation.
+        jitScript->clearIonCompiledOrInlined();
       }
 
       // Finally, reset the active flag.

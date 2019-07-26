@@ -132,6 +132,11 @@ class alignas(uintptr_t) JitScript final {
 
     // Whether freeze constraints for stack type sets have been generated.
     bool hasFreezeConstraints : 1;
+
+    // Flag set if this script has ever been Ion compiled, either directly or
+    // inlined into another script. This is cleared when the script's type
+    // information or caches are cleared.
+    bool ionCompiledOrInlined : 1;
   };
   Flags flags_ = {};  // Zero-initialize flags.
 
@@ -178,6 +183,10 @@ class alignas(uintptr_t) JitScript final {
 
   inline bool typesNeedsSweep(Zone* zone) const;
   void sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone);
+
+  void setIonCompiledOrInlined() { flags_.ionCompiledOrInlined = true; }
+  void clearIonCompiledOrInlined() { flags_.ionCompiledOrInlined = false; }
+  bool ionCompiledOrInlined() const { return flags_.ionCompiledOrInlined; }
 
   RecompileInfoVector& inlinedCompilations(
       const js::AutoSweepJitScript& sweep) {

@@ -182,7 +182,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
   MOZ_ASSERT(script_->numBytecodeTypeSets() < JSScript::MaxBytecodeTypeSets);
 
   if (!info->isAnalysis()) {
-    script()->baselineScript()->setIonCompiledOrInlined();
+    script()->jitScript()->setIonCompiledOrInlined();
   }
 }
 
@@ -4352,7 +4352,7 @@ IonBuilder::InliningDecision IonBuilder::makeInliningDecision(
   // as the caller has not run yet.
   if (targetScript->getWarmUpCount() <
           optimizationInfo().inliningWarmUpThreshold() &&
-      !targetScript->baselineScript()->ionCompiledOrInlined() &&
+      !targetScript->jitScript()->ionCompiledOrInlined() &&
       info().analysisMode() != Analysis_DefiniteProperties) {
     trackOptimizationOutcome(TrackedOutcome::CantInlineNotHot);
     JitSpew(JitSpew_Inlining,
