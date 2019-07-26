@@ -67,11 +67,13 @@ public class ActivityUtils {
         context.startActivity(intent);
     }
 
-    public static Activity getActivityFromContext(final Context context) {
+    public static Activity getActivityFromContext(final Context outerContext) {
+        Context context = outerContext;
         while (context instanceof ContextWrapper) {
             if (context instanceof Activity) {
                 return (Activity) context;
             }
+            context = ((ContextWrapper) context).getBaseContext();
         }
         return null;
     }

@@ -8,6 +8,7 @@ package org.mozilla.geckoview.test;
 import org.mozilla.geckoview.GeckoView;
 
 import android.app.Activity;
+import android.content.ContextWrapper;
 import android.os.Bundle;
 
 public class GeckoViewTestActivity extends Activity {
@@ -17,7 +18,7 @@ public class GeckoViewTestActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        view = new GeckoView(this);
+        view = new GeckoView(new ContextWrapper(this));
         setContentView(view);
     }
 }
