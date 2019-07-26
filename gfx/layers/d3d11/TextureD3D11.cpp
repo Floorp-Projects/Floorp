@@ -1076,7 +1076,8 @@ void DXGITextureHostD3D11::PushDisplayItems(
                              GetFormat() == gfx::SurfaceFormat::NV12
                                  ? wr::ColorDepth::Color8
                                  : wr::ColorDepth::Color16,
-                             wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
+                             wr::ToWrYuvColorSpace(mYUVColorSpace),
+                             wr::WrColorRange::Limited, aFilter);
       break;
     }
     default: {
@@ -1285,10 +1286,10 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     const Range<wr::ImageKey>& aImageKeys) {
   MOZ_ASSERT(aImageKeys.length() == 3);
 
-  aBuilder.PushYCbCrPlanarImage(aBounds, aClip, true, aImageKeys[0],
-                                aImageKeys[1], aImageKeys[2],
-                                wr::ToWrColorDepth(mColorDepth),
-                                wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
+  aBuilder.PushYCbCrPlanarImage(
+      aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
+      wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
+      wr::WrColorRange::Limited, aFilter);
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(

@@ -96,10 +96,10 @@ bool YCbCrTextureClientAllocationHelper::IsCompatible(
 
 already_AddRefed<TextureClient> YCbCrTextureClientAllocationHelper::Allocate(
     KnowsCompositor* aAllocator) {
-  return TextureClient::CreateForYCbCr(aAllocator, mData.mYSize, mData.mYStride,
-                                       mData.mCbCrSize, mData.mCbCrStride,
-                                       mData.mStereoMode, mData.mColorDepth,
-                                       mData.mYUVColorSpace, mTextureFlags);
+  return TextureClient::CreateForYCbCr(
+      aAllocator, mData.mYSize, mData.mYStride, mData.mCbCrSize,
+      mData.mCbCrStride, mData.mStereoMode, mData.mColorDepth,
+      mData.mYUVColorSpace, mData.mColorRange, mTextureFlags);
 }
 
 TextureClientRecycleAllocator::TextureClientRecycleAllocator(

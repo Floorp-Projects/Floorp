@@ -64,7 +64,8 @@ static already_AddRefed<TextureClient> CreateYCbCrTextureClientWithBackend(
     return TextureClient::CreateForYCbCr(
         nullptr, clientData.mYSize, clientData.mYStride, clientData.mCbCrSize,
         clientData.mCbCrStride, StereoMode::MONO, gfx::ColorDepth::COLOR_8,
-        YUVColorSpace::BT601, TextureFlags::DEALLOCATE_CLIENT);
+        gfx::YUVColorSpace::BT601, gfx::ColorRange::LIMITED,
+        TextureFlags::DEALLOCATE_CLIENT);
   }
 
 #ifdef XP_WIN
