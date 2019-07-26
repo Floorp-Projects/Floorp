@@ -72,7 +72,7 @@ class ServiceWorkerRegistration final : public DOMEventTargetHelper {
 
   void DisconnectFromOwner() override;
 
-  void RegistrationRemoved();
+  void RegistrationCleared();
 
   already_AddRefed<ServiceWorker> GetInstalling() const;
 

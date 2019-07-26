@@ -105,6 +105,7 @@ ServiceWorkerPrivate::~ServiceWorkerPrivate() {
   MOZ_ASSERT(!mTokenCount);
   MOZ_ASSERT(!mInfo);
   MOZ_ASSERT(mSupportsArray.IsEmpty());
+  MOZ_ASSERT(mIdlePromiseHolder.IsEmpty());
 
   mIdleWorkerTimer->Cancel();
 }
@@ -1538,8 +1539,23 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
     return NS_ERROR_FAILURE;
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> registration =
-      swm->GetRegistration(mInfo->Principal(), mInfo->Scope());
+  nsCOMPtr<nsIChannel> channel;
+  nsresult rv = aChannel->GetChannel(getter_AddRefs(channel));
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool isNonSubresourceRequest =
+      nsContentUtils::IsNonSubresourceRequest(channel);
+
+  RefPtr<ServiceWorkerRegistrationInfo> registration;
+  if (isNonSubresourceRequest) {
+    registration = swm->GetRegistration(mInfo->Principal(), mInfo->Scope());
+  } else {
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    channel->GetLoadInfo(getter_AddRefs(loadInfo));
+
+    // We'll check for a null registration below rather than an error code here.
+    Unused << swm->GetClientRegistration(loadInfo->GetClientInfo().ref(),
+                                         getter_AddRefs(registration));
+  }
 
   // Its possible the registration is removed between starting the interception
   // and actually dispatching the fetch event.  In these cases we simply
@@ -1575,7 +1591,7 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
   aChannel->SetDispatchFetchEventStart(TimeStamp::Now());
 
   bool newWorkerCreated = false;
-  nsresult rv = SpawnWorkerIfNeeded(FetchEvent, &newWorkerCreated, aLoadGroup);
+  rv = SpawnWorkerIfNeeded(FetchEvent, &newWorkerCreated, aLoadGroup);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!newWorkerCreated) {
@@ -1591,12 +1607,6 @@ nsresult ServiceWorkerPrivate::SendFetchEvent(
           "ServiceWorkerRegistrationInfoProxy", registration, false));
 
   RefPtr<KeepAliveToken> token = CreateEventKeepAliveToken();
-
-  nsCOMPtr<nsIChannel> channel;
-  rv = aChannel->GetChannel(getter_AddRefs(channel));
-  NS_ENSURE_SUCCESS(rv, rv);
-  bool isNonSubresourceRequest =
-      nsContentUtils::IsNonSubresourceRequest(channel);
 
   RefPtr<FetchEventRunnable> r = new FetchEventRunnable(
       mWorkerPrivate, token, handle, mInfo->ScriptSpec(), regInfo, aClientId,
@@ -1919,6 +1929,17 @@ bool ServiceWorkerPrivate::IsIdle() const {
   return mTokenCount == 0 || (mTokenCount == 1 && mIdleKeepAliveToken);
 }
 
+RefPtr<GenericPromise> ServiceWorkerPrivate::GetIdlePromise() {
+#ifdef DEBUG
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!IsIdle());
+  MOZ_ASSERT(!mIdlePromiseObtained, "Idle promise may only be obtained once!");
+  mIdlePromiseObtained = true;
+#endif
+
+  return mIdlePromiseHolder.Ensure(__func__);
+}
+
 namespace {
 
 class ServiceWorkerPrivateTimerCallback final : public nsITimerCallback,
@@ -2029,16 +2050,21 @@ void ServiceWorkerPrivate::ReleaseToken() {
 
   MOZ_ASSERT(mTokenCount > 0);
   --mTokenCount;
-  if (!mTokenCount) {
-    TerminateWorker();
-  }
 
-  // mInfo can be nullptr here if NoteDeadServiceWorkerInfo() is called while
-  // the KeepAliveToken is being proxy released as a runnable.
-  else if (mInfo && IsIdle()) {
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (swm) {
-      swm->WorkerIsIdle(mInfo);
+  if (IsIdle()) {
+    mIdlePromiseHolder.ResolveIfExists(true, __func__);
+
+    if (!mTokenCount) {
+      TerminateWorker();
+    }
+
+    // mInfo can be nullptr here if NoteDeadServiceWorkerInfo() is called while
+    // the KeepAliveToken is being proxy released as a runnable.
+    else if (mInfo) {
+      RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+      if (swm) {
+        swm->WorkerIsIdle(mInfo);
+      }
     }
   }
 }
