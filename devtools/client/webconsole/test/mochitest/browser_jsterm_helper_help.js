@@ -32,7 +32,7 @@ async function performTests() {
   await jsterm.execute("help");
   await jsterm.execute("?");
 
-  const messages = Array.from(jsterm.outputNode.querySelectorAll(".message"));
+  const messages = Array.from(hud.ui.outputNode.querySelectorAll(".message"));
   ok(
     messages.every(msg => msg.classList.contains("command")),
     "There is no results shown for the help commands"

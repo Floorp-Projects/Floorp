@@ -567,14 +567,6 @@ class JSTerm extends Component {
     }
   }
 
-  /**
-   * Getter for the element that holds the messages we display.
-   * @type Element
-   */
-  get outputNode() {
-    return this.webConsoleUI.outputNode;
-  }
-
   focus() {
     if (this.editor) {
       this.editor.focus();
