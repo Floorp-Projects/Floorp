@@ -1083,8 +1083,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// Time (in ms) that it takes to regenerate 1ms.
-pref("dom.timeout.background_budget_regeneration_rate", 100);
 // Maximum value (in ms) for the background budget. Only valid for
 // values greater than 0.
 pref("dom.timeout.background_throttling_max_budget", 50);
