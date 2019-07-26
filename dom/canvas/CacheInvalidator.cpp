@@ -20,15 +20,13 @@ void CacheInvalidator::InvalidateCaches() const {
 
 // -
 
-AbstractCache::InvalidatorListT AbstractCache::ResetInvalidators(
-    InvalidatorListT&& newList) {
+void AbstractCache::ResetInvalidators(InvalidatorListT&& newList) {
   for (const auto& cur : mInvalidators) {
     if (cur) {
       (void)cur->mCaches.erase(this);
     }
   }
 
-  auto ret = std::move(mInvalidators);
   mInvalidators = std::move(newList);
 
   for (const auto& cur : mInvalidators) {
@@ -38,8 +36,6 @@ AbstractCache::InvalidatorListT AbstractCache::ResetInvalidators(
       (void)cur->mCaches.insert(this);
     }
   }
-
-  return ret;
 }
 
 void AbstractCache::AddInvalidator(const CacheInvalidator& x) {
