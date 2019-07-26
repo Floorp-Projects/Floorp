@@ -501,7 +501,7 @@ MARKUPMAP(
     0)
 
 MARKUPMAP(
-    tfoot,
+    thead,
     [](Element* aElement, Accessible* aContext) -> Accessible* {
       // Expose this as a grouping if its frame type is non-standard.
       if (aElement->GetPrimaryFrame() &&
