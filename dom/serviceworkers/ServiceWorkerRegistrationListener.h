@@ -23,7 +23,7 @@ class ServiceWorkerRegistrationListener {
 
   virtual void FireUpdateFound() = 0;
 
-  virtual void RegistrationRemoved() = 0;
+  virtual void RegistrationCleared() = 0;
 
   virtual void GetScope(nsAString& aScope) const = 0;
 

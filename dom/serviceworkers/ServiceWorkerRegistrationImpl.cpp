@@ -84,13 +84,13 @@ void ServiceWorkerRegistrationMainThread::StopListeningForEvents() {
   mListeningForEvents = false;
 }
 
-void ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal() {
+void ServiceWorkerRegistrationMainThread::RegistrationClearedInternal() {
   MOZ_ASSERT(NS_IsMainThread());
   // Its possible for the binding object to be collected while we the
   // runnable to call this method is in the event queue.  Double check
   // whether there is still anything to do here.
   if (mOuter) {
-    mOuter->RegistrationRemoved();
+    mOuter->RegistrationCleared();
   }
   StopListeningForEvents();
 }
@@ -134,7 +134,7 @@ void ServiceWorkerRegistrationMainThread::FireUpdateFound() {
                 ->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
 }
 
-void ServiceWorkerRegistrationMainThread::RegistrationRemoved() {
+void ServiceWorkerRegistrationMainThread::RegistrationCleared() {
   NS_ENSURE_TRUE_VOID(mOuter);
 
   nsIGlobalObject* global = mOuter->GetParentObject();
@@ -145,8 +145,8 @@ void ServiceWorkerRegistrationMainThread::RegistrationRemoved() {
   // update the registration state.  We want to let those run
   // if possible before clearing our mOuter reference.
   nsCOMPtr<nsIRunnable> r = NewRunnableMethod(
-      "ServiceWorkerRegistrationMainThread::RegistrationRemoved", this,
-      &ServiceWorkerRegistrationMainThread::RegistrationRemovedInternal);
+      "ServiceWorkerRegistrationMainThread::RegistrationCleared", this,
+      &ServiceWorkerRegistrationMainThread::RegistrationClearedInternal);
 
   Unused << global->EventTargetFor(TaskCategory::Other)
                 ->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
@@ -669,7 +669,7 @@ class WorkerListener final : public ServiceWorkerRegistrationListener {
     }
   }
 
-  void RegistrationRemoved() override;
+  void RegistrationCleared() override;
 
   void GetScope(nsAString& aScope) const override {
     CopyUTF8toUTF16(mDescriptor.Scope(), aScope);
@@ -703,12 +703,12 @@ ServiceWorkerRegistrationWorkerThread::
   MOZ_DIAGNOSTIC_ASSERT(!mOuter);
 }
 
-void ServiceWorkerRegistrationWorkerThread::RegistrationRemoved() {
+void ServiceWorkerRegistrationWorkerThread::RegistrationCleared() {
   // The SWM notifying us that the registration was removed on the MT may
   // race with ClearServiceWorkerRegistration() on the worker thread.  So
   // double-check that mOuter is still valid.
   if (mOuter) {
-    mOuter->RegistrationRemoved();
+    mOuter->RegistrationCleared();
   }
 }
 
@@ -913,11 +913,11 @@ void ServiceWorkerRegistrationWorkerThread::FireUpdateFound() {
   }
 }
 
-class RegistrationRemovedWorkerRunnable final : public WorkerRunnable {
+class RegistrationClearedWorkerRunnable final : public WorkerRunnable {
   RefPtr<WorkerListener> mListener;
 
  public:
-  RegistrationRemovedWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+  RegistrationClearedWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                                     WorkerListener* aListener)
       : WorkerRunnable(aWorkerPrivate), mListener(aListener) {
     // Need this assertion for now since runnables which modify busy count can
@@ -929,19 +929,19 @@ class RegistrationRemovedWorkerRunnable final : public WorkerRunnable {
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();
-    mListener->RegistrationRemoved();
+    mListener->RegistrationCleared();
     return true;
   }
 };
 
-void WorkerListener::RegistrationRemoved() {
+void WorkerListener::RegistrationCleared() {
   MutexAutoLock lock(mMutex);
   if (!mRegistration) {
     return;
   }
 
   if (NS_IsMainThread()) {
-    RefPtr<WorkerRunnable> r = new RegistrationRemovedWorkerRunnable(
+    RefPtr<WorkerRunnable> r = new RegistrationClearedWorkerRunnable(
         mRegistration->GetWorkerPrivate(lock), this);
     Unused << r->Dispatch();
 
@@ -949,7 +949,7 @@ void WorkerListener::RegistrationRemoved() {
     return;
   }
 
-  mRegistration->RegistrationRemoved();
+  mRegistration->RegistrationCleared();
 }
 
 WorkerPrivate* ServiceWorkerRegistrationWorkerThread::GetWorkerPrivate(

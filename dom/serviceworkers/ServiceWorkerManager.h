@@ -280,6 +280,10 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void NoteInheritedController(const ClientInfo& aClientInfo,
                                const ServiceWorkerDescriptor& aController);
 
+  nsresult GetClientRegistration(
+      const ClientInfo& aClientInfo,
+      ServiceWorkerRegistrationInfo** aRegistrationInfo);
+
  private:
   ServiceWorkerManager();
   ~ServiceWorkerManager();
@@ -306,10 +310,6 @@ class ServiceWorkerManager final : public nsIServiceWorkerManager,
   void AbortCurrentUpdate(ServiceWorkerRegistrationInfo* aRegistration);
 
   nsresult Update(ServiceWorkerRegistrationInfo* aRegistration);
-
-  nsresult GetClientRegistration(
-      const ClientInfo& aClientInfo,
-      ServiceWorkerRegistrationInfo** aRegistrationInfo);
 
   ServiceWorkerInfo* GetActiveWorkerInfoForScope(
       const OriginAttributes& aOriginAttributes, const nsACString& aScope);

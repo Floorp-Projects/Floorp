@@ -34,14 +34,6 @@ void ServiceWorkerRegisterJob::AsyncExecute() {
     bool sameUVC = GetUpdateViaCache() == registration->GetUpdateViaCache();
     registration->SetUpdateViaCache(GetUpdateViaCache());
 
-    if (registration->IsPendingUninstall()) {
-      registration->ClearPendingUninstall();
-      // Its possible that a ready promise is created between when the
-      // uninstalling flag is set and when we resurrect the registration
-      // here.  In that case we might need to fire the ready promise
-      // now.
-      swm->CheckPendingReadyPromises();
-    }
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
     if (newest && mScriptSpec.Equals(newest->ScriptSpec()) && sameUVC) {
       SetRegistration(registration);

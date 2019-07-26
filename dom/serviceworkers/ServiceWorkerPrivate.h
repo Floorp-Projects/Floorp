@@ -9,6 +9,7 @@
 
 #include "nsCOMPtr.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/MozPromise.h"
 
 #define NOTIFICATION_CLICK_EVENT_NAME "notificationclick"
 #define NOTIFICATION_CLOSE_EVENT_NAME "notificationclose"
@@ -141,6 +142,8 @@ class ServiceWorkerPrivate final {
 
   bool IsIdle() const;
 
+  RefPtr<GenericPromise> GetIdlePromise();
+
   void SetHandlesFetch(bool aValue);
 
  private:
@@ -205,6 +208,18 @@ class ServiceWorkerPrivate final {
   // Array of function event worker runnables that are pending due to
   // the worker activating.  Main thread only.
   nsTArray<RefPtr<WorkerRunnable>> mPendingFunctionalEvents;
+
+  // Used by the owning `ServiceWorkerRegistrationInfo` when it wants to call
+  // `Clear` after being unregistered and isn't controlling any clients but this
+  // worker (i.e. the registration's active worker) isn't idle yet. Note that
+  // such an event should happen at most once in a
+  // `ServiceWorkerRegistrationInfo`s lifetime, so this promise should also only
+  // be obtained at most once.
+  MozPromiseHolder<GenericPromise> mIdlePromiseHolder;
+
+#ifdef DEBUG
+  bool mIdlePromiseObtained = false;
+#endif
 };
 
 }  // namespace dom

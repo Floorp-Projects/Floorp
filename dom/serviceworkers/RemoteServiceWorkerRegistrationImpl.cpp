@@ -144,7 +144,7 @@ void RemoteServiceWorkerRegistrationImpl::RevokeActor(
   mShutdown = true;
 
   if (mOuter) {
-    mOuter->RegistrationRemoved();
+    mOuter->RegistrationCleared();
   }
 }
 

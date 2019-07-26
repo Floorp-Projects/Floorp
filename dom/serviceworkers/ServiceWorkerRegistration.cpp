@@ -112,7 +112,7 @@ void ServiceWorkerRegistration::DisconnectFromOwner() {
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-void ServiceWorkerRegistration::RegistrationRemoved() {
+void ServiceWorkerRegistration::RegistrationCleared() {
   // Its possible that the registration will fail to install and be
   // immediately removed.  In that case we may never receive the
   // UpdateState() call if the actor was too slow to connect, etc.

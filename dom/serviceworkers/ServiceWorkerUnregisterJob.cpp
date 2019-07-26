@@ -107,27 +107,28 @@ void ServiceWorkerUnregisterJob::Unregister() {
     return;
   }
 
-  // Note, we send the message to remove the registration from disk now even
-  // though we may only set the pending uninstall flag below.  This is
+  // Note, we send the message to remove the registration from disk now. This is
   // necessary to ensure the registration is removed if the controlled
-  // clients are closed by shutting down the browser.  If the registration
-  // is resurrected by clearing pending uninstall then it should be saved
-  // to disk again.
-  if (mSendToParent && !registration->IsPendingUninstall()) {
+  // clients are closed by shutting down the browser.
+  if (mSendToParent) {
     swm->MaybeSendUnregister(mPrincipal, mScope);
   }
 
-  // "Set registration's uninstalling flag."
-  registration->SetPendingUninstall();
+  // "Remove scope to registration map[job's scope url]."
+  swm->RemoveRegistration(registration);
+  MOZ_ASSERT(registration->IsUnregistered());
 
   // "Resolve promise with true"
   mResult = true;
   InvokeResultCallbacks(NS_OK);
 
-  // "If no service worker client is using registration..."
-  if (!registration->IsControllingClients() && registration->IsIdle()) {
-    // "Invoke [[Clear Registration]]..."
-    swm->RemoveRegistration(registration);
+  // "Invoke Try Clear Registration with registration"
+  if (!registration->IsControllingClients()) {
+    if (registration->IsIdle()) {
+      registration->Clear();
+    } else {
+      registration->ClearWhenIdle();
+    }
   }
 
   Finish(NS_OK);
