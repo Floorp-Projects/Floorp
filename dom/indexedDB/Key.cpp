@@ -123,16 +123,12 @@ IDBResult<void, IDBSpecialValue::Invalid> Key::SetFromString(
 // |aPos| should point to the type indicator.
 // The returned length doesn't include the type indicator
 // or the terminator.
-static size_t LengthOfEncodedBinary(const unsigned char* aPos,
-                                    const unsigned char* aEnd) {
+// static
+uint32_t Key::LengthOfEncodedBinary(const EncodedDataType* aPos,
+                                    const EncodedDataType* aEnd) {
   MOZ_ASSERT(*aPos % Key::eMaxType == Key::eBinary, "Don't call me!");
-  auto iter = ++aPos;
-  for (; iter < aEnd && *iter != Key::eTerminator; ++iter) {
-    if (*iter & 0x80) {
-      iter++;
-    }
-  }
-  return iter - aPos;
+  const EncodedDataType* encodedSectionEnd;
+  return CalcDecodedStringySize<uint8_t>(aPos + 1, aEnd, &encodedSectionEnd);
 }
 
 IDBResult<void, IDBSpecialValue::Invalid> Key::ToLocaleBasedKey(

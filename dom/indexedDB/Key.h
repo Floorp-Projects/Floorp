@@ -330,6 +330,9 @@ class Key {
       const EncodedDataType* aBegin, const EncodedDataType* aEnd,
       const EncodedDataType** aOutEncodedSectionEnd);
 
+  static uint32_t LengthOfEncodedBinary(const EncodedDataType* aPos,
+                                        const EncodedDataType* aEnd);
+
   template <typename T>
   static void DecodeAsStringy(const EncodedDataType* aEncodedSectionBegin,
                               const EncodedDataType* aEncodedSectionEnd,
