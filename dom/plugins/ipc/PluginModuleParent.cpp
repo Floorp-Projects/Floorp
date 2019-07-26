@@ -2047,7 +2047,8 @@ static void ForceDirect(InfallibleTArray<nsCString>& names,
   NS_NAMED_LITERAL_CSTRING(directAttributeValue, "direct");
   auto wmodeAttributeIndex = names.IndexOf(wmodeAttributeName, 0, comparator);
   if (wmodeAttributeIndex != names.NoIndex) {
-    if (values[wmodeAttributeIndex].EqualsLiteral("window")) {
+    if (values[wmodeAttributeIndex].EqualsLiteral("window") ||
+        values[wmodeAttributeIndex].EqualsLiteral("gpu")) {
       values[wmodeAttributeIndex].Assign(directAttributeValue);
     }
   } else {
