@@ -588,11 +588,7 @@ static bool ShouldStretchSurface(DrawTarget* aDT, SourceSurface* aSurface) {
   // because if cairo is using pixman it won't render anything for large
   // stretch factors because pixman's internal fixed point precision is not
   // high enough to handle those scale factors.
-  // Calling FillRect on a D2D backend with a repeating pattern is much slower
-  // than DrawSurface, so special case the D2D backend here.
-  return (!aDT->GetTransform().IsRectilinear() &&
-          aDT->GetBackendType() != BackendType::CAIRO) ||
-         (aDT->GetBackendType() == BackendType::DIRECT2D1_1);
+  return aDT->GetBackendType() != BackendType::CAIRO;
 }
 
 static void RepeatOrStretchSurface(DrawTarget* aDT, SourceSurface* aSurface,
