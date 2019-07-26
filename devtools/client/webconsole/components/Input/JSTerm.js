@@ -1730,12 +1730,6 @@ class JSTerm extends Component {
   }
 
   destroy() {
-    if (this.webConsoleUI.outputNode) {
-      // We do this because it's much faster than letting React handle the ConsoleOutput
-      // unmounting.
-      this.webConsoleUI.outputNode.innerHTML = "";
-    }
-
     if (this.autocompletePopup) {
       this.autocompletePopup.destroy();
       this.autocompletePopup = null;
