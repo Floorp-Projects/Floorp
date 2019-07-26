@@ -98,6 +98,14 @@ class AccountSettingsFragment : PreferenceFragmentCompat() {
         preferenceSyncNow?.let {
             it.onPreferenceClickListener = getClickListenerForSyncNow()
             updateLastSyncedTimePref(context!!, it)
+
+            // Current sync state
+            if (requireComponents.backgroundServices.accountManager.isSyncActive()) {
+                it.title = getString(R.string.sync_syncing_in_progress)
+                it.isEnabled = false
+            } else {
+                it.isEnabled = true
+            }
         }
 
         // Device Name
