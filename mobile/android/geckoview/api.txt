@@ -1115,6 +1115,7 @@ package org.mozilla.geckoview {
   }
 
   public static interface WebExtensionController.TabDelegate {
+    method @UiThread @NonNull default public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension, @NonNull GeckoSession);
     method @UiThread @Nullable default public GeckoResult<GeckoSession> onNewTab(@Nullable WebExtension, @Nullable String);
   }
 
