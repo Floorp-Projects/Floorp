@@ -1054,10 +1054,6 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     }
   }
 
-  if (result->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
-    mDocument->mL10nProtoElements.Put(result, aPrototype);
-    result->SetElementCreatedFromPrototypeAndHasUnmodifiedL10n();
-  }
   result.forget(aResult);
 
   return NS_OK;
@@ -1067,7 +1063,7 @@ nsresult PrototypeDocumentContentSink::AddAttributes(
     nsXULPrototypeElement* aPrototype, Element* aElement) {
   nsresult rv;
 
-  for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+  for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
     nsXULPrototypeAttribute* protoattr = &(aPrototype->mAttributes[i]);
     nsAutoString valueStr;
     protoattr->mValue.ToString(valueStr);

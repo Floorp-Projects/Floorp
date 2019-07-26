@@ -136,9 +136,11 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
   explicit nsXULPrototypeElement(mozilla::dom::NodeInfo* aNodeInfo = nullptr)
       : nsXULPrototypeNode(eType_Element),
         mNodeInfo(aNodeInfo),
+        mNumAttributes(0),
         mHasIdAttribute(false),
         mHasClassAttribute(false),
         mHasStyleAttribute(false),
+        mAttributes(nullptr),
         mIsAtom(nullptr) {}
 
  private:
@@ -173,12 +175,19 @@ class nsXULPrototypeElement : public nsXULPrototypeNode {
 
   RefPtr<mozilla::dom::NodeInfo> mNodeInfo;
 
+  uint32_t mNumAttributes : 29;
   uint32_t mHasIdAttribute : 1;
   uint32_t mHasClassAttribute : 1;
   uint32_t mHasStyleAttribute : 1;
-  nsTArray<nsXULPrototypeAttribute> mAttributes;  // [OWNER]
+  nsXULPrototypeAttribute* mAttributes;  // [OWNER]
   RefPtr<nsAtom> mIsAtom;
 };
+
+namespace mozilla {
+namespace dom {
+class XULDocument;
+}  // namespace dom
+}  // namespace mozilla
 
 class nsXULPrototypeScript : public nsXULPrototypeNode {
  public:

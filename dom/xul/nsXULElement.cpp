@@ -198,13 +198,13 @@ already_AddRefed<nsXULElement> nsXULElement::CreateFromPrototype(
       // Check each attribute on the prototype to see if we need to do
       // any additional processing and hookup that would otherwise be
       // done 'automagically' by SetAttr().
-      for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+      for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
         element->AddListenerFor(aPrototype->mAttributes[i].mName);
       }
     }
 
     if (aIsRoot && aPrototype->mNodeInfo->Equals(nsGkAtoms::window)) {
-      for (size_t i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+      for (uint32_t i = 0; i < aPrototype->mNumAttributes; ++i) {
         if (aPrototype->mAttributes[i].mName.Equals(nsGkAtoms::windowtype)) {
           element->MaybeUpdatePrivateLifetime();
         }
@@ -1240,9 +1240,9 @@ nsresult nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype) {
     return NS_OK;
   }
 
-  size_t i;
+  uint32_t i;
   nsresult rv;
-  for (i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+  for (i = 0; i < aPrototype->mNumAttributes; ++i) {
     nsXULPrototypeAttribute* protoattr = &aPrototype->mAttributes[i];
     nsAttrValue attrValue;
 
@@ -1473,8 +1473,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsXULPrototypeNode)
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mNodeInfo");
     cb.NoteNativeChild(elem->mNodeInfo,
                        NS_CYCLE_COLLECTION_PARTICIPANT(NodeInfo));
-    size_t i;
-    for (i = 0; i < elem->mAttributes.Length(); ++i) {
+    uint32_t i;
+    for (i = 0; i < elem->mNumAttributes; ++i) {
       const nsAttrName& name = elem->mAttributes[i].mName;
       if (!name.IsAtom()) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
@@ -1527,14 +1527,14 @@ nsresult nsXULPrototypeElement::Serialize(
   }
 
   // Write Attributes
-  tmp = aStream->Write32(mAttributes.Length());
+  tmp = aStream->Write32(mNumAttributes);
   if (NS_FAILED(tmp)) {
     rv = tmp;
   }
 
   nsAutoString attributeValue;
-  size_t i;
-  for (i = 0; i < mAttributes.Length(); ++i) {
+  uint32_t i;
+  for (i = 0; i < mNumAttributes; ++i) {
     RefPtr<mozilla::dom::NodeInfo> ni;
     if (mAttributes[i].mName.IsAtom()) {
       ni = mNodeInfo->NodeInfoManager()->GetNodeInfo(
@@ -1636,13 +1636,16 @@ nsresult nsXULPrototypeElement::Deserialize(
   // Read Attributes
   rv = aStream->Read32(&number);
   if (NS_WARN_IF(NS_FAILED(rv))) return rv;
-  int32_t attributes = int32_t(number);
+  mNumAttributes = int32_t(number);
 
-  if (attributes > 0) {
-    mAttributes.AppendElements(attributes);
+  if (mNumAttributes > 0) {
+    mAttributes = new (fallible) nsXULPrototypeAttribute[mNumAttributes];
+    if (!mAttributes) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     nsAutoString attributeValue;
-    for (size_t i = 0; i < mAttributes.Length(); ++i) {
+    for (uint32_t i = 0; i < mNumAttributes; ++i) {
       rv = aStream->Read32(&number);
       if (NS_WARN_IF(NS_FAILED(rv))) return rv;
       mozilla::dom::NodeInfo* ni = aNodeInfos->SafeElementAt(number, nullptr);
@@ -1741,7 +1744,7 @@ nsresult nsXULPrototypeElement::Deserialize(
 nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
                                           const nsAString& aValue,
                                           nsIURI* aDocumentURI) {
-  MOZ_ASSERT(aPos < mAttributes.Length(), "out-of-bounds");
+  MOZ_ASSERT(aPos < mNumAttributes, "out-of-bounds");
 
   // WARNING!!
   // This code is largely duplicated in nsXULElement::SetAttr.
@@ -1818,7 +1821,9 @@ nsresult nsXULPrototypeElement::SetAttrAt(uint32_t aPos,
 }
 
 void nsXULPrototypeElement::Unlink() {
-  mAttributes.Clear();
+  mNumAttributes = 0;
+  delete[] mAttributes;
+  mAttributes = nullptr;
   mChildren.Clear();
 }
 

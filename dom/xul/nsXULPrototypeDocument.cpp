@@ -27,13 +27,7 @@
 #include "nsCCUncollectableMarker.h"
 #include "xpcpublic.h"
 #include "mozilla/dom/BindingUtils.h"
-#include "nsXULPrototypeCache.h"
-#include "mozilla/DeclarationBlock.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/Text.h"
 
-using namespace mozilla;
-using namespace mozilla::dom;
 using mozilla::dom::DestroyProtoAndIfaceCache;
 using mozilla::dom::XULDocument;
 
@@ -45,11 +39,7 @@ uint32_t nsXULPrototypeDocument::gRefCnt;
 //
 
 nsXULPrototypeDocument::nsXULPrototypeDocument()
-    : mRoot(nullptr),
-      mLoaded(false),
-      mCCGeneration(0),
-      mGCNumber(0),
-      mWasL10nCached(false) {
+    : mRoot(nullptr), mLoaded(false), mCCGeneration(0), mGCNumber(0) {
   ++gRefCnt;
 }
 
@@ -121,11 +111,6 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream) {
 
   // Better safe than sorry....
   mNodeInfoManager->SetDocumentPrincipal(principal);
-
-  rv = aStream->ReadBoolean(&mWasL10nCached);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
 
   mRoot = new nsXULPrototypeElement();
 
@@ -218,8 +203,8 @@ static nsresult GetNodeInfos(nsXULPrototypeElement* aPrototype,
   }
 
   // Search attributes
-  size_t i;
-  for (i = 0; i < aPrototype->mAttributes.Length(); ++i) {
+  uint32_t i;
+  for (i = 0; i < aPrototype->mNumAttributes; ++i) {
     RefPtr<mozilla::dom::NodeInfo> ni;
     nsAttrName* name = &aPrototype->mAttributes[i].mName;
     if (name->IsAtom()) {
@@ -269,11 +254,6 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream) {
     NS_WARNING("Serializing document without system principal");
   }
 #endif
-
-  tmp = aStream->WriteBoolean(mWasL10nCached);
-  if (NS_FAILED(tmp)) {
-    rv = tmp;
-  }
 
   // mozilla::dom::NodeInfo table
   nsTArray<RefPtr<mozilla::dom::NodeInfo>> nodeInfos;
@@ -444,94 +424,4 @@ void nsXULPrototypeDocument::TraceProtos(JSTracer* aTrc) {
   if (mRoot) {
     mRoot->TraceAllScripts(aTrc);
   }
-}
-
-void nsXULPrototypeDocument::SetIsL10nCached() {
-  mWasL10nCached = true;
-}
-
-void nsXULPrototypeDocument::RebuildPrototypeFromElement(
-    nsXULPrototypeElement* aPrototype, Element* aElement, bool aDeep) {
-  aPrototype->mHasIdAttribute = aElement->HasID();
-  aPrototype->mHasClassAttribute = aElement->MayHaveClass();
-  aPrototype->mHasStyleAttribute = aElement->MayHaveStyle();
-  NodeInfo* oldNodeInfo = aElement->NodeInfo();
-  RefPtr<NodeInfo> newNodeInfo = mNodeInfoManager->GetNodeInfo(
-      oldNodeInfo->NameAtom(), oldNodeInfo->GetPrefixAtom(),
-      oldNodeInfo->NamespaceID(), nsINode::ELEMENT_NODE);
-  aPrototype->mNodeInfo = newNodeInfo;
-
-  // First replace the prototype attributes with the new ones from this element.
-  aPrototype->mAttributes.Clear();
-
-  uint32_t count = aElement->GetAttrCount();
-  nsXULPrototypeAttribute* protoAttr =
-      aPrototype->mAttributes.AppendElements(count);
-  for (uint32_t index = 0; index < count; index++) {
-    BorrowedAttrInfo attr = aElement->GetAttrInfoAt(index);
-
-    if (attr.mName->IsAtom()) {
-      protoAttr->mName.SetTo(attr.mName->Atom());
-    } else {
-      NodeInfo* oldNodeInfo = attr.mName->NodeInfo();
-      RefPtr<NodeInfo> newNodeInfo = mNodeInfoManager->GetNodeInfo(
-          oldNodeInfo->NameAtom(), oldNodeInfo->GetPrefixAtom(),
-          oldNodeInfo->NamespaceID(), nsINode::ATTRIBUTE_NODE);
-      protoAttr->mName.SetTo(newNodeInfo);
-    }
-    protoAttr->mValue.SetTo(*attr.mValue);
-
-    if (protoAttr->mName.Equals(nsGkAtoms::is)) {
-      aPrototype->mIsAtom = protoAttr->mValue.GetAtomValue();
-    }
-
-    protoAttr++;
-  }
-
-  if (aDeep) {
-    // We have to rebuild the prototype children from this element.
-    // First release the tree under this element.
-    aPrototype->ReleaseSubtree();
-
-    RefPtr<nsXULPrototypeNode>* children =
-        aPrototype->mChildren.AppendElements(aElement->GetChildCount());
-    for (nsIContent* child = aElement->GetFirstChild(); child;
-         child = child->GetNextSibling()) {
-      if (child->IsElement()) {
-        Element* element = child->AsElement();
-        RefPtr<nsXULPrototypeElement> elemProto = new nsXULPrototypeElement;
-        RebuildPrototypeFromElement(elemProto, element, true);
-        *children = elemProto;
-      } else if (child->IsText()) {
-        Text* text = child->AsText();
-        RefPtr<nsXULPrototypeText> textProto = new nsXULPrototypeText();
-        text->AppendTextTo(textProto->mValue);
-        *children = textProto;
-      } else {
-        MOZ_ASSERT(false, "We handle only elements and text nodes here.");
-      }
-
-      children++;
-    }
-  }
-}
-
-void nsXULPrototypeDocument::RebuildL10nPrototype(Element* aElement,
-                                                  bool aDeep) {
-  if (mWasL10nCached) {
-    return;
-  }
-
-  Document* doc = aElement->OwnerDoc();
-
-  nsAutoString id;
-  MOZ_RELEASE_ASSERT(aElement->GetAttr(nsGkAtoms::datal10nid, id));
-
-  if (!doc) {
-    return;
-  }
-
-  RefPtr<nsXULPrototypeElement> proto = doc->mL10nProtoElements.Get(aElement);
-  MOZ_RELEASE_ASSERT(proto);
-  RebuildPrototypeFromElement(proto, aElement, aDeep);
 }
