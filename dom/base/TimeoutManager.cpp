@@ -34,11 +34,9 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-#define DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET 50  // 50ms
 #define DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET -1  // infinite
 #define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000    // 15s
 #define DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING false
-static int32_t gBackgroundThrottlingMaxBudget = 0;
 static int32_t gForegroundThrottlingMaxBudget = 0;
 static int32_t gBudgetThrottlingMaxDelay = 0;
 static bool gEnableBudgetTimeoutThrottling = false;
@@ -71,8 +69,10 @@ TimeDuration GetMaxBudget(bool aIsBackground) {
   // Returns how high a budget can be regenerated before being
   // clamped. If this value is less or equal to zero,
   // TimeDuration::Forever() is implied.
-  int32_t maxBudget = aIsBackground ? gBackgroundThrottlingMaxBudget
-                                    : gForegroundThrottlingMaxBudget;
+  int32_t maxBudget =
+      aIsBackground
+          ? StaticPrefs::dom_timeout_background_throttling_max_budget()
+          : gForegroundThrottlingMaxBudget;
   return maxBudget > 0 ? TimeDuration::FromMilliseconds(maxBudget)
                        : TimeDuration::Forever();
 }
@@ -452,9 +452,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gBackgroundThrottlingMaxBudget,
-                              "dom.timeout.background_throttling_max_budget",
-                              DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET);
   Preferences::AddIntVarCache(&gForegroundThrottlingMaxBudget,
                               "dom.timeout.foreground_throttling_max_budget",
                               DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET);
@@ -1282,8 +1279,9 @@ bool TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const {
   // Note that we allow both foreground and background to be
   // considered for budget throttling. What determines if they are if
   // budget throttling is enabled is the max budget.
-  if ((aIsBackground ? gBackgroundThrottlingMaxBudget
-                     : gForegroundThrottlingMaxBudget) < 0) {
+  if ((aIsBackground
+           ? StaticPrefs::dom_timeout_background_throttling_max_budget()
+           : gForegroundThrottlingMaxBudget) < 0) {
     return false;
   }
 
