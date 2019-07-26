@@ -1819,6 +1819,12 @@
   value: false
   mirror: always
 
+# Time (in ms) that it takes to regenerate 1ms.
+- name: dom.timeout.background_budget_regeneration_rate
+  type: int32_t
+  value: 100
+  mirror: always
+
 # Should we defer timeouts and intervals while loading a page.  Released
 # on Idle or when the page is loaded.
 - name: dom.timeout.defer_during_load
