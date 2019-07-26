@@ -7,6 +7,7 @@
 
 #include "mozilla/MiscEvents.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "KeyboardLayout.h"
 #include "WinUtils.h"
 #include "npapi.h"

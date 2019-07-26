@@ -100,7 +100,6 @@ EXPORTS.mozilla += [
     'init/StaticPrefListEnd.h',
     'nsRelativeFilePref.h',
     'Preferences.h',
-    'StaticPrefs.h',
     'StaticPrefsBase.h',
 ]
 EXPORTS.mozilla += sorted(['!' + gf for gf in genfiles])

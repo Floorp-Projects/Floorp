@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRService.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "../gfxVRMutex.h"
 #include "base/thread.h"  // for Thread
 #include <cstring>        // for memcmp

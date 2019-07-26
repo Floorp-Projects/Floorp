@@ -11,7 +11,7 @@
 #include "VorbisDecoder.h"
 #include "WAVDecoder.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #ifdef MOZ_AV1
 #  include "AOMDecoder.h"

@@ -9,7 +9,7 @@
 #include "base/task.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/ContentParent.h"
 #include "GMPParent.h"
 #include "GMPVideoDecoderParent.h"

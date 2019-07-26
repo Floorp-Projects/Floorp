@@ -4,7 +4,7 @@
 
 #include "CSFLog.h"
 #include "nspr.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #include "WebrtcMediaCodecVP8VideoCodec.h"
 #include "MediaCodecVideoCodec.h"

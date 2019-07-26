@@ -23,7 +23,7 @@
 #include "mozilla/layers/UiCompositorControllerParent.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 
 namespace {

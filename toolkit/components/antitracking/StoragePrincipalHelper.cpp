@@ -10,7 +10,6 @@
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StorageAccess.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsIHttpChannel.h"
 

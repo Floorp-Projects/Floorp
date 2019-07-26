@@ -18,6 +18,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/TimeStamp.h"
 #include "nsThreadUtils.h"
 

@@ -7,7 +7,7 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "nsXULPopupManager.h"

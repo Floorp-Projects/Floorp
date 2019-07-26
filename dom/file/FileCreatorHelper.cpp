@@ -13,7 +13,6 @@
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/StaticPrefs.h"
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsProxyRelease.h"

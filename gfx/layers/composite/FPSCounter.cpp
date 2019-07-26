@@ -13,7 +13,7 @@
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/Effects.h"  // for Effect, EffectChain, etc
-#include "mozilla/StaticPrefs.h"     // for StaticPrefs
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/TimeStamp.h"       // for TimeStamp, TimeDuration
 #include "nsPoint.h"                 // for nsIntPoint
 #include "nsRect.h"                  // for mozilla::gfx::IntRect

@@ -12,7 +12,8 @@
 #include "gfxEnv.h"                          // for gfxEnv
 #include "mozilla/Assertions.h"              // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"                  // for RefPtr
-#include "mozilla/StaticPrefs.h"             // for StaticPrefs
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/UniquePtr.h"               // for UniquePtr
 #include "mozilla/gfx/BaseRect.h"            // for BaseRect
 #include "mozilla/gfx/Matrix.h"              // for Matrix4x4

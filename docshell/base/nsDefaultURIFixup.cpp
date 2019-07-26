@@ -25,6 +25,8 @@
 #include "mozilla/Unused.h"
 #include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_keyword.h"
 
 // Used to check if external protocol schemes are usable
 #include "nsCExternalHandlerService.h"

@@ -11,7 +11,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsWeakReference.h"

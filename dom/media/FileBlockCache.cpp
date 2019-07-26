@@ -12,7 +12,6 @@
 #include "nsAnonymousTemporaryFile.h"
 #include "nsIThreadManager.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 #include "nsXULAppAPI.h"
 

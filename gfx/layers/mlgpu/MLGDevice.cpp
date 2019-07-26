@@ -9,7 +9,7 @@
 #include "BufferCache.h"
 #include "ClearRegionHelper.h"
 #include "gfxConfig.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "gfxUtils.h"
 #include "LayersLogging.h"
 #include "ShaderDefinitionsMLGPU.h"

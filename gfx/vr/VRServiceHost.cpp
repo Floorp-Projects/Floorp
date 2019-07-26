@@ -9,7 +9,6 @@
 #include "VRManager.h"
 #include "VRPuppetCommandBuffer.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "service/VRService.h"
 

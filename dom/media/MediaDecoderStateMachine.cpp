@@ -18,7 +18,7 @@
 #include "mozilla/NotNull.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Tuple.h"

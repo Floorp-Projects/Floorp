@@ -9,6 +9,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "WebVTTListener.h"
 #include "mozilla/LoadInfo.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/dom/HTMLTrackElementBinding.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "nsAttrValueInlines.h"

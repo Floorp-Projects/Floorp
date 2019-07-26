@@ -6,7 +6,7 @@
 
 #include "AndroidVelocityTracker.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_apz.h"
 
 namespace mozilla {
 namespace layers {

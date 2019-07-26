@@ -9,7 +9,8 @@
 #include "nsIFile.h"
 #include "nsCOMPtr.h"
 #include "nsWeakReference.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include <algorithm>
 
 namespace mozilla {

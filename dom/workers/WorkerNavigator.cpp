@@ -12,7 +12,7 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/WorkerNavigatorBinding.h"
 #include "mozilla/dom/network/Connection.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_privacy.h"
 
 #include "nsProxyRelease.h"
 #include "nsRFPService.h"

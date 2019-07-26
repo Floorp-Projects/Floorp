@@ -8,7 +8,7 @@
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
 

@@ -22,6 +22,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsIPermissionManager.h"
 
 mozilla::LazyLogModule gAutoplayPermissionLog("Autoplay");

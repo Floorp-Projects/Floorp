@@ -14,7 +14,7 @@
 #include "SpeechRecognitionResultList.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

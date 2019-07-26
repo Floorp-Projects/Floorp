@@ -7,7 +7,7 @@
 
 #include "chrome/common/process_watcher.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 #include "ProcessUtils.h"
 #include "RDDChild.h"

@@ -7,7 +7,7 @@
 
 #include "mozilla/Move.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "imgIContainer.h"
 #include "LookupResult.h"
 #include "RasterImage.h"

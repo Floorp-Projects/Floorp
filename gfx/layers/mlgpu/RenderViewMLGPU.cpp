@@ -7,7 +7,7 @@
 #include "RenderViewMLGPU.h"
 #include "ContainerLayerMLGPU.h"
 #include "FrameBuilder.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "LayersHelpers.h"
 #include "LayersLogging.h"
 #include "MLGDevice.h"

@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScrollAnimationBezierPhysics.h"
+#include "mozilla/StaticPrefs_general.h"
 
 using namespace mozilla;
 

@@ -5,7 +5,7 @@
 
 #include "AnimationSurfaceProvider.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsProxyRelease.h"
 

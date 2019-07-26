@@ -8,7 +8,7 @@
 #include "ScrollAnimationBezierPhysics.h"
 
 #include "AsyncPanZoomController.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_general.h"
 #include "nsPoint.h"
 
 namespace mozilla {

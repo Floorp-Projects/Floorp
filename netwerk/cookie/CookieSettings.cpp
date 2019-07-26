@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/CookieSettings.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Unused.h"
 #include "nsGlobalWindowInner.h"
 #if defined(MOZ_THUNDERBIRD) || defined(MOZ_SUITE)

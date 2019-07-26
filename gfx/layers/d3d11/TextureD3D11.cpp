@@ -11,7 +11,7 @@
 #include "ReadbackManagerD3D11.h"
 #include "gfx2DGlue.h"
 #include "gfxContext.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "gfxWindowsPlatform.h"
 #include "MainThreadUtils.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"

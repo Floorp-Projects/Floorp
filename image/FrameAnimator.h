@@ -8,7 +8,7 @@
 #define mozilla_image_FrameAnimator_h
 
 #include "mozilla/Maybe.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "mozilla/TimeStamp.h"
 #include "gfxTypes.h"
 #include "imgFrame.h"
