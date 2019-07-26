@@ -34,10 +34,8 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-#define DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET -1  // infinite
-#define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000    // 15s
+#define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000  // 15s
 #define DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING false
-static int32_t gForegroundThrottlingMaxBudget = 0;
 static int32_t gBudgetThrottlingMaxDelay = 0;
 static bool gEnableBudgetTimeoutThrottling = false;
 
@@ -72,7 +70,7 @@ TimeDuration GetMaxBudget(bool aIsBackground) {
   int32_t maxBudget =
       aIsBackground
           ? StaticPrefs::dom_timeout_background_throttling_max_budget()
-          : gForegroundThrottlingMaxBudget;
+          : StaticPrefs::dom_timeout_foreground_throttling_max_budget();
   return maxBudget > 0 ? TimeDuration::FromMilliseconds(maxBudget)
                        : TimeDuration::Forever();
 }
@@ -452,9 +450,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gForegroundThrottlingMaxBudget,
-                              "dom.timeout.foreground_throttling_max_budget",
-                              DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET);
   Preferences::AddIntVarCache(&gBudgetThrottlingMaxDelay,
                               "dom.timeout.budget_throttling_max_delay",
                               DEFAULT_BUDGET_THROTTLING_MAX_DELAY);
@@ -1281,7 +1276,7 @@ bool TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const {
   // budget throttling is enabled is the max budget.
   if ((aIsBackground
            ? StaticPrefs::dom_timeout_background_throttling_max_budget()
-           : gForegroundThrottlingMaxBudget) < 0) {
+           : StaticPrefs::dom_timeout_foreground_throttling_max_budget()) < 0) {
     return false;
   }
 
