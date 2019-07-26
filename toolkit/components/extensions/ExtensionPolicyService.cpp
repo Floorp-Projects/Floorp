@@ -426,7 +426,7 @@ static bool CheckParentFrames(nsPIDOMWindowOuter* aWindow,
   }
 
   auto* piWin = aWindow;
-  while ((piWin = piWin->GetScriptableParentOrNull())) {
+  while ((piWin = piWin->GetInProcessScriptableParentOrNull())) {
     auto* win = nsGlobalWindowOuter::Cast(piWin);
 
     auto* principal = BasePrincipal::Cast(win->GetPrincipal());

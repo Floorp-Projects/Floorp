@@ -166,7 +166,7 @@ float Gecko_MediaFeatures_GetResolution(const Document* aDocument) {
 
 static const Document* TopDocument(const Document* aDocument) {
   const Document* current = aDocument;
-  while (const Document* parent = current->GetParentDocument()) {
+  while (const Document* parent = current->GetInProcessParentDocument()) {
     current = parent;
   }
   return current;

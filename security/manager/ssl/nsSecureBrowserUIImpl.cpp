@@ -113,7 +113,7 @@ nsSecureBrowserUIImpl::PrepareForContentChecks() {
   if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
     nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(docShell);
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    Unused << docShellTreeItem->GetSameTypeRootTreeItem(
+    Unused << docShellTreeItem->GetInProcessSameTypeRootTreeItem(
         getter_AddRefs(sameTypeRoot));
     MOZ_ASSERT(
         sameTypeRoot,

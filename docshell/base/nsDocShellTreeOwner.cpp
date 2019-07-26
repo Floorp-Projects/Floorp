@@ -1223,7 +1223,7 @@ bool ChromeTooltipListener::WebProgressShowedTooltip(
     // alive here. So we use the document hierarchy instead:
     Document* document = lastUsed->GetDocument();
     if (document) {
-      document = document->GetParentDocument();
+      document = document->GetInProcessParentDocument();
     }
     if (!document) {
       break;

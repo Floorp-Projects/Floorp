@@ -204,7 +204,7 @@ static void UpdateDocShellOrientationLock(nsPIDOMWindowInner* aWindow,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIDocShell> rootShell(do_QueryInterface(root));
   if (!rootShell) {
     return;

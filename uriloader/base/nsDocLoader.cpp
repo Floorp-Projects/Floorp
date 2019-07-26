@@ -981,7 +981,7 @@ nsDocLoader::GetIsTopLevel(bool* aResult) {
     nsCOMPtr<nsPIDOMWindowOuter> piwindow = nsPIDOMWindowOuter::From(window);
     NS_ENSURE_STATE(piwindow);
 
-    nsCOMPtr<nsPIDOMWindowOuter> topWindow = piwindow->GetTop();
+    nsCOMPtr<nsPIDOMWindowOuter> topWindow = piwindow->GetInProcessTop();
     *aResult = piwindow == topWindow;
   }
 

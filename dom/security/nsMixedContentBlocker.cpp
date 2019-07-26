@@ -90,7 +90,7 @@ class nsMixedContentEvent : public Runnable {
       return NS_OK;
     }
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+    docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
     NS_ASSERTION(
         sameTypeRoot,
         "No document shell root tree item from document shell tree item!");
@@ -852,7 +852,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
   // Get the sameTypeRoot tree item from the docshell
   nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-  docShell->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
+  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
   NS_ASSERTION(sameTypeRoot, "No root tree item from docshell!");
 
   // When navigating an iframe, the iframe may be https
@@ -899,7 +899,8 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
       // update the parent to the grandparent.
       nsCOMPtr<nsIDocShellTreeItem> newParentTreeItem;
-      parentTreeItem->GetSameTypeParent(getter_AddRefs(newParentTreeItem));
+      parentTreeItem->GetInProcessSameTypeParent(
+          getter_AddRefs(newParentTreeItem));
       parentTreeItem = newParentTreeItem;
     }  // end while loop.
 

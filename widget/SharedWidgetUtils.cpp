@@ -40,7 +40,7 @@ already_AddRefed<nsIWidget> WidgetUtils::DOMWindowToWidget(
         if (!docShellAsItem) return nullptr;
 
         nsCOMPtr<nsIDocShellTreeItem> parent;
-        docShellAsItem->GetParent(getter_AddRefs(parent));
+        docShellAsItem->GetInProcessParent(getter_AddRefs(parent));
 
         window = do_GetInterface(parent);
         if (!window) return nullptr;

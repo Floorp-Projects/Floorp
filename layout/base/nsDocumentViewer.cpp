@@ -672,7 +672,7 @@ nsresult nsDocumentViewer::SyncParentSubDocMap() {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  docShell->GetParent(getter_AddRefs(parent));
+  docShell->GetInProcessParent(getter_AddRefs(parent));
 
   nsCOMPtr<nsPIDOMWindowOuter> parent_win =
       parent ? parent->GetWindow() : nullptr;
@@ -1104,14 +1104,14 @@ nsDocumentViewer::LoadComplete(nsresult aStatus) {
         nsCOMPtr<nsIDocShell> container(mContainer);
         if (container) {
           int32_t count;
-          container->GetChildCount(&count);
+          container->GetInProcessChildCount(&count);
           // We first find all background loading iframes that need to
           // fire artificial load events, and instead of firing them as
           // soon as we find them, we store them in an array, to prevent
           // us from skipping some events.
           for (int32_t i = 0; i < count; ++i) {
             nsCOMPtr<nsIDocShellTreeItem> child;
-            container->GetChildAt(i, getter_AddRefs(child));
+            container->GetInProcessChildAt(i, getter_AddRefs(child));
             nsCOMPtr<nsIDocShell> childIDocShell = do_QueryInterface(child);
             RefPtr<nsDocShell> docShell = nsDocShell::Cast(childIDocShell);
             if (docShell && docShell->TreatAsBackgroundLoad() &&
@@ -1421,11 +1421,11 @@ nsresult nsDocumentViewer::PermitUnloadInternal(uint32_t* aPermitUnloadFlags,
 
   if (docShell) {
     int32_t childCount;
-    docShell->GetChildCount(&childCount);
+    docShell->GetInProcessChildCount(&childCount);
 
     for (int32_t i = 0; i < childCount && *aPermitUnload; ++i) {
       nsCOMPtr<nsIDocShellTreeItem> item;
-      docShell->GetChildAt(i, getter_AddRefs(item));
+      docShell->GetInProcessChildAt(i, getter_AddRefs(item));
 
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(item));
 
@@ -1538,10 +1538,10 @@ static void AttachContainerRecurse(nsIDocShell* aShell) {
 
   // Now recurse through the children
   int32_t childCount;
-  aShell->GetChildCount(&childCount);
+  aShell->GetInProcessChildCount(&childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> childItem;
-    aShell->GetChildAt(i, getter_AddRefs(childItem));
+    aShell->GetInProcessChildAt(i, getter_AddRefs(childItem));
     nsCOMPtr<nsIDocShell> shell = do_QueryInterface(childItem);
     AttachContainerRecurse(shell);
   }
@@ -1694,10 +1694,10 @@ static void DetachContainerRecurse(nsIDocShell* aShell) {
 
   // Now recurse through the children
   int32_t childCount;
-  aShell->GetChildCount(&childCount);
+  aShell->GetInProcessChildCount(&childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> childItem;
-    aShell->GetChildAt(i, getter_AddRefs(childItem));
+    aShell->GetInProcessChildAt(i, getter_AddRefs(childItem));
     nsCOMPtr<nsIDocShell> shell = do_QueryInterface(childItem);
     DetachContainerRecurse(shell);
   }
@@ -1971,10 +1971,10 @@ nsDocumentViewer::SetDocumentInternal(Document* aDocument,
       nsCOMPtr<nsIDocShell> node(mContainer);
       if (node) {
         int32_t count;
-        node->GetChildCount(&count);
+        node->GetInProcessChildCount(&count);
         for (int32_t i = 0; i < count; ++i) {
           nsCOMPtr<nsIDocShellTreeItem> child;
-          node->GetChildAt(0, getter_AddRefs(child));
+          node->GetInProcessChildAt(0, getter_AddRefs(child));
           node->RemoveChild(child);
         }
       }
@@ -2167,7 +2167,7 @@ nsDocumentViewer::Show(void) {
       // We need to find the root DocShell since only that object has an
       // SHistory and we need the SHistory to evict content viewers
       nsCOMPtr<nsIDocShellTreeItem> root;
-      treeItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+      treeItem->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
       nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(root);
       RefPtr<ChildSHistory> history = webNav->GetSessionHistory();
       if (history) {
@@ -2669,10 +2669,10 @@ void nsDocumentViewer::CallChildren(CallChildFunc aFunc, void* aClosure) {
   if (docShell) {
     int32_t i;
     int32_t n;
-    docShell->GetChildCount(&n);
+    docShell->GetInProcessChildCount(&n);
     for (i = 0; i < n; i++) {
       nsCOMPtr<nsIDocShellTreeItem> child;
-      docShell->GetChildAt(i, getter_AddRefs(child));
+      docShell->GetInProcessChildAt(i, getter_AddRefs(child));
       nsCOMPtr<nsIDocShell> childAsShell(do_QueryInterface(child));
       NS_ASSERTION(childAsShell, "null child in docshell");
       if (childAsShell) {
@@ -3216,7 +3216,7 @@ nsDocumentViewer::GetContentSize(int32_t* aWidth, int32_t* aHeight) {
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_NOT_AVAILABLE);
 
   nsCOMPtr<nsIDocShellTreeItem> docShellParent;
-  docShellAsItem->GetSameTypeParent(getter_AddRefs(docShellParent));
+  docShellAsItem->GetInProcessSameTypeParent(getter_AddRefs(docShellParent));
 
   // It's only valid to access this from a top frame.  Doesn't work from
   // sub-frames.
@@ -3904,7 +3904,7 @@ void nsDocumentViewer::SetIsPrintingInDocShellTree(
     if (aIsPrintingOrPP) {
       while (parentItem) {
         nsCOMPtr<nsIDocShellTreeItem> parent;
-        parentItem->GetSameTypeParent(getter_AddRefs(parent));
+        parentItem->GetInProcessSameTypeParent(getter_AddRefs(parent));
         if (!parent) {
           break;
         }
@@ -3928,10 +3928,10 @@ void nsDocumentViewer::SetIsPrintingInDocShellTree(
 
   // Traverse children to see if any of them are printing.
   int32_t n;
-  aParentNode->GetChildCount(&n);
+  aParentNode->GetInProcessChildCount(&n);
   for (int32_t i = 0; i < n; i++) {
     nsCOMPtr<nsIDocShellTreeItem> child;
-    aParentNode->GetChildAt(i, getter_AddRefs(child));
+    aParentNode->GetInProcessChildAt(i, getter_AddRefs(child));
     NS_ASSERTION(child, "child isn't nsIDocShell");
     if (child) {
       SetIsPrintingInDocShellTree(child, aIsPrintingOrPP, false);

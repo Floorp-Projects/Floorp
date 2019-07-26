@@ -2249,7 +2249,7 @@ bool Document::IsVisibleConsideringAncestors() const {
     if (!parent->IsVisible()) {
       return false;
     }
-  } while ((parent = parent->GetParentDocument()));
+  } while ((parent = parent->GetInProcessParentDocument()));
 
   return true;
 }
@@ -2478,11 +2478,12 @@ already_AddRefed<nsIPrincipal> Document::MaybeDowngradePrincipal(
 
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     // We basically want the parent document here, but because this is very
-    // early in the load, GetParentDocument() returns null, so we use the
-    // docshell hierarchy to get this information instead.
+    // early in the load, GetInProcessParentDocument() returns null, so we use
+    // the docshell hierarchy to get this information instead.
     if (mDocumentContainer) {
       nsCOMPtr<nsIDocShellTreeItem> parentDocShellItem;
-      mDocumentContainer->GetParent(getter_AddRefs(parentDocShellItem));
+      mDocumentContainer->GetInProcessParent(
+          getter_AddRefs(parentDocShellItem));
       nsCOMPtr<nsIDocShell> parentDocShell =
           do_QueryInterface(parentDocShellItem);
       if (parentDocShell) {
@@ -2822,7 +2823,7 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
       !(aSandboxFlags & SANDBOXED_SCRIPTS) &&
       !(aSandboxFlags & SANDBOXED_ORIGIN)) {
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-    aDocShell->GetSameTypeParent(getter_AddRefs(parentAsItem));
+    aDocShell->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
     nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentAsItem);
     if (!parentDocShell) {
       return;
@@ -2830,7 +2831,8 @@ static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
 
     // Don't warn if our parent is not the top-level document.
     nsCOMPtr<nsIDocShellTreeItem> grandParentAsItem;
-    parentDocShell->GetSameTypeParent(getter_AddRefs(grandParentAsItem));
+    parentDocShell->GetInProcessSameTypeParent(
+        getter_AddRefs(grandParentAsItem));
     if (grandParentAsItem) {
       return;
     }
@@ -2966,7 +2968,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
   nsCOMPtr<nsIDocShellTreeItem> treeItem = this->GetDocShell();
   if (treeItem) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-    treeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    treeItem->GetInProcessSameTypeParent(getter_AddRefs(sameTypeParent));
     if (sameTypeParent) {
       Document* doc = sameTypeParent->GetDocument();
       mBlockAllMixedContent = doc->GetBlockAllMixedContent(false);
@@ -3009,7 +3011,7 @@ nsresult Document::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     rv = loadInfo->GetCookieSettings(getter_AddRefs(mCookieSettings));
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
-    nsCOMPtr<Document> parentDocument = GetParentDocument();
+    nsCOMPtr<Document> parentDocument = GetInProcessParentDocument();
     if (parentDocument) {
       mCookieSettings = parentDocument->CookieSettings();
     }
@@ -3826,7 +3828,7 @@ bool Document::HasFocus(ErrorResult& rv) const {
 
   // Are we an ancestor of the focused DOMWindow?
   for (Document* currentDoc = piWindow->GetDoc(); currentDoc;
-       currentDoc = currentDoc->GetParentDocument()) {
+       currentDoc = currentDoc->GetInProcessParentDocument()) {
     if (currentDoc == this) {
       // Yes, we are an ancestor
       return true;
@@ -4939,7 +4941,7 @@ void Document::QueryCommandValue(const nsAString& aHTMLCommandName,
 }
 
 bool Document::IsEditingOnAfterFlush() {
-  RefPtr<Document> doc = GetParentDocument();
+  RefPtr<Document> doc = GetInProcessParentDocument();
   if (doc) {
     // Make sure frames are up to date, since that can affect whether
     // we're editable.
@@ -7101,7 +7103,7 @@ void Document::DispatchContentLoadedEvents() {
         }
       }
 
-      parent = parent->GetParentDocument();
+      parent = parent->GetInProcessParentDocument();
     } while (parent);
   }
 
@@ -9337,7 +9339,7 @@ nsINode* Document::AdoptNode(nsINode& aAdoptedNode, ErrorResult& rv) {
             return nullptr;
           }
         }
-      } while ((doc = doc->GetParentDocument()));
+      } while ((doc = doc->GetInProcessParentDocument()));
 
       // Remove from parent.
       nsCOMPtr<nsINode> parent = adoptedNode->GetParentNode();
@@ -11728,7 +11730,7 @@ static already_AddRefed<nsPIDOMWindowOuter> FindTopWindowForElement(
   }
 
   // Trying to find the top window (equivalent to window.top).
-  if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetTop()) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> top = window->GetInProcessTop()) {
     window = top.forget();
   }
   return window.forget();
@@ -12921,7 +12923,7 @@ class PendingFullscreenChangeList {
           }
           while (docShell && docShell != mRootShellForIteration) {
             nsCOMPtr<nsIDocShellTreeItem> parent;
-            docShell->GetParent(getter_AddRefs(parent));
+            docShell->GetInProcessParent(getter_AddRefs(parent));
             docShell = parent.forget();
           }
           if (docShell) {
@@ -13165,7 +13167,7 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
 
   Document* doc = fullScreenDoc;
   // Collect all subdocuments.
-  for (; doc != this; doc = doc->GetParentDocument()) {
+  for (; doc != this; doc = doc->GetInProcessParentDocument()) {
     Element* fsElement = doc->FullscreenStackTop();
     MOZ_ASSERT(fsElement,
                "Parent document of "
@@ -13174,7 +13176,7 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
   }
   MOZ_ASSERT(doc == this, "Must have reached this doc");
   // Collect all ancestor documents which we are going to change.
-  for (; doc; doc = doc->GetParentDocument()) {
+  for (; doc; doc = doc->GetInProcessParentDocument()) {
     MOZ_ASSERT(!doc->mFullscreenStack.IsEmpty(),
                "Ancestor of fullscreen document must also be in fullscreen");
     Element* fsElement = doc->FullscreenStackTop();
@@ -13194,7 +13196,7 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
   }
 
   Document* lastDoc = exitElements.LastElement()->OwnerDoc();
-  if (!lastDoc->GetParentDocument() &&
+  if (!lastDoc->GetInProcessParentDocument() &&
       lastDoc->mFullscreenStack.Length() == 1) {
     // If we are fully exiting fullscreen, don't touch anything here,
     // just wait for the window to get out from fullscreen first.
@@ -13218,7 +13220,7 @@ void Document::RestorePreviousFullscreenState(UniquePtr<FullscreenExit> aExit) {
     newFullscreenDoc = lastDoc;
   } else {
     lastDoc->CleanupFullscreenState();
-    newFullscreenDoc = lastDoc->GetParentDocument();
+    newFullscreenDoc = lastDoc->GetInProcessParentDocument();
   }
   // Dispatch the fullscreenchange event to all document listed. Note
   // that the loop order is reversed so that events are dispatched in
@@ -13707,7 +13709,7 @@ bool Document::ApplyFullscreen(UniquePtr<FullscreenRequest> aRequest) {
     if (child == fullScreenRootDoc) {
       break;
     }
-    Document* parent = child->GetParentDocument();
+    Document* parent = child->GetInProcessParentDocument();
     Element* element = parent->FindContentForSubDocument(child);
     if (parent->FullscreenStackPush(element)) {
       changed.AppendElement(parent);
@@ -13841,7 +13843,7 @@ static const char* GetPointerLockError(Element* aElement, Element* aCurrentLock,
     return "PointerLockDeniedHidden";
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> top = ownerWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top = ownerWindow->GetInProcessScriptableTop();
   if (!top || !top->GetExtantDoc() || top->GetExtantDoc()->Hidden()) {
     return "PointerLockDeniedHidden";
   }
@@ -14322,7 +14324,7 @@ Document* Document::GetTopLevelContentDocument() {
       return nullptr;
     }
 
-    parent = parent->GetParentDocument();
+    parent = parent->GetInProcessParentDocument();
   } while (parent);
 
   return parent;
@@ -14356,7 +14358,7 @@ const Document* Document::GetTopLevelContentDocument() const {
       return nullptr;
     }
 
-    parent = parent->GetParentDocument();
+    parent = parent->GetInProcessParentDocument();
   } while (parent);
 
   return parent;
@@ -14750,7 +14752,7 @@ nsAutoSyncOperation::nsAutoSyncOperation(Document* aDoc) {
   }
   if (aDoc) {
     if (nsPIDOMWindowOuter* win = aDoc->GetWindow()) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> top = win->GetTop()) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> top = win->GetInProcessTop()) {
         nsCOMPtr<Document> doc = top->GetExtantDoc();
         MarkDocumentTreeToBeInSyncOperation(doc, &mDocuments);
       }
@@ -15175,7 +15177,7 @@ Document* Document::GetSameTypeParentDocument() {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  current->GetSameTypeParent(getter_AddRefs(parent));
+  current->GetInProcessSameTypeParent(getter_AddRefs(parent));
   if (!parent) {
     return nullptr;
   }
@@ -15282,9 +15284,10 @@ bool Document::IsThirdPartyForFlashClassifier() {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  nsresult rv = docshell->GetSameTypeParent(getter_AddRefs(parent));
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "nsIDocShellTreeItem::GetSameTypeParent should never fail");
+  nsresult rv = docshell->GetInProcessSameTypeParent(getter_AddRefs(parent));
+  MOZ_ASSERT(
+      NS_SUCCEEDED(rv),
+      "nsIDocShellTreeItem::GetInProcessSameTypeParent should never fail");
   bool isTopLevel = !parent;
 
   if (isTopLevel) {
@@ -15292,7 +15295,7 @@ bool Document::IsThirdPartyForFlashClassifier() {
     return mIsThirdPartyForFlashClassifier.value();
   }
 
-  nsCOMPtr<Document> parentDocument = GetParentDocument();
+  nsCOMPtr<Document> parentDocument = GetInProcessParentDocument();
   if (!parentDocument) {
     // Failure
     mIsThirdPartyForFlashClassifier.emplace(true);
@@ -15355,7 +15358,7 @@ FlashClassification Document::DocumentFlashClassificationInternal() {
     return classification;
   }
 
-  Document* parentDocument = GetParentDocument();
+  Document* parentDocument = GetInProcessParentDocument();
   if (!parentDocument) {
     return FlashClassification::Denied;
   }
@@ -15503,7 +15506,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
   }
 
   // Step 7. If the sub frame's parent frame is not the top frame, reject.
-  Document* parent = GetParentDocument();
+  Document* parent = GetInProcessParentDocument();
   if (parent && !parent->IsTopLevelContentDocument()) {
     promise->MaybeRejectWithUndefined();
     return promise.forget();

@@ -29,7 +29,7 @@ DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocument->GetDocShell());
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
 
   if (treeItem->ItemType() == nsIDocShellTreeItem::typeContent &&
       (!parentTreeItem ||
