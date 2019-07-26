@@ -793,15 +793,16 @@ fn try_convert_to_marionette_message(
     msg: &WebDriverMessage<GeckoExtensionRoute>,
 ) -> WebDriverResult<Option<Command>> {
     use self::WebDriverCommand::*;
-    match msg.command {
-        FindElement(ref x) => Ok(Some(Command::WebDriver(
-            MarionetteWebDriverCommand::FindElement(x.to_marionette()?),
+    Ok(match msg.command {
+        FindElement(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::FindElement(
+            x.to_marionette()?,
         ))),
-        GetTimeouts => Ok(Some(Command::WebDriver(
-            MarionetteWebDriverCommand::GetTimeouts,
-        ))),
-        _ => Ok(None),
-    }
+        FindElements(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
+        )),
+        GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        _ => None,
+    })
 }
 
 #[derive(Debug, PartialEq)]
@@ -905,15 +906,6 @@ impl MarionetteCommand {
                     .clone();
                     data.insert("element".to_string(), Value::String(e.to_string()));
                     (Some("WebDriver:FindElement"), Some(Ok(data)))
-                }
-                FindElements(ref x) => {
-                    let data = try_opt!(
-                        serde_json::to_value(x)?.as_object(),
-                        ErrorStatus::UnknownError,
-                        "Expected an object"
-                    )
-                    .clone();
-                    (Some("WebDriver:FindElements"), Some(Ok(data)))
                 }
                 FindElementElements(ref e, ref x) => {
                     let mut data = try_opt!(
