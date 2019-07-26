@@ -20,7 +20,7 @@ add_task(async function() {
 
   await waitFor(() => findMessage(hud, "fooDuplicateError1", ".message.error"));
 
-  const errorMessages = hud.outputNode.querySelectorAll(".message.error");
+  const errorMessages = hud.ui.outputNode.querySelectorAll(".message.error");
   is(
     errorMessages.length,
     1,
