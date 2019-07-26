@@ -1432,11 +1432,12 @@ LoginManagerPrompter.prototype = {
     dismissed = false,
     notifySaved = false
   ) {
-    aOldLogin.origin = aNewLogin.origin;
-    aOldLogin.formActionOrigin = aNewLogin.formActionOrigin;
-    aOldLogin.password = aNewLogin.password;
-    aOldLogin.username = aNewLogin.username;
-    this._showLoginCaptureDoorhanger(aOldLogin, "password-change", {
+    let login = aOldLogin.clone();
+    login.origin = aNewLogin.origin;
+    login.formActionOrigin = aNewLogin.formActionOrigin;
+    login.password = aNewLogin.password;
+    login.username = aNewLogin.username;
+    this._showLoginCaptureDoorhanger(login, "password-change", {
       dismissed,
       notifySaved,
       extraAttr: notifySaved ? "attention" : "",
