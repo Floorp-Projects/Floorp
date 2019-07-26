@@ -81,6 +81,9 @@ class ARIARowAccessible : public HyperTextAccessibleWrap {
 
  protected:
   virtual ~ARIARowAccessible() {}
+
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 /**

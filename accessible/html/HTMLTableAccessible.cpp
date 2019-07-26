@@ -328,6 +328,17 @@ GroupPos HTMLTableRowAccessible::GroupPosition() {
   return AccessibleWrap::GroupPosition();
 }
 
+// Accessible protected
+ENameValueFlag HTMLTableRowAccessible::NativeName(nsString& aName) const {
+  // For table row accessibles, we only want to calculate the name from the
+  // sub tree if an ARIA role is present.
+  if (HasStrongARIARole()) {
+    return AccessibleWrap::NativeName(aName);
+  }
+
+  return eNameOK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // HTMLTableAccessible
 ////////////////////////////////////////////////////////////////////////////////

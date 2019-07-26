@@ -472,6 +472,19 @@ GroupPos ARIARowAccessible::GroupPosition() {
   return AccessibleWrap::GroupPosition();
 }
 
+// Accessible protected
+ENameValueFlag ARIARowAccessible::NativeName(nsString& aName) const {
+  // We want to calculate the name from content only if an ARIA role is
+  // present. ARIARowAccessible might also be used by tables with
+  // display:block; styling, in which case we do not want the name from
+  // content.
+  if (HasStrongARIARole()) {
+    return AccessibleWrap::NativeName(aName);
+  }
+
+  return eNameOK;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // ARIAGridCellAccessible
 ////////////////////////////////////////////////////////////////////////////////
