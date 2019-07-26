@@ -216,29 +216,26 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             # which are passed in from mach inside 'raptor_cmd_line_args'
             # cmd line args can be in two formats depending on how user entered them
             # i.e. "--app=geckoview" or separate as "--app", "geckoview" so we have to
-            # check each cmd line arg individually
+            # parse carefully.  It's simplest to use `argparse` to parse partially.
             self.app = "firefox"
             if 'raptor_cmd_line_args' in self.config:
-                for app in ['chrome', 'geckoview', 'fennec', 'refbrow', 'fenix']:
-                    for next_arg in self.config['raptor_cmd_line_args']:
-                        if app in next_arg:
-                            self.app = app
-                            break
-                # repeat and get 'activity' argument
-                for activity in ['GeckoViewActivity',
-                                 'BrowserTestActivity',
-                                 'browser.BrowserPerformanceTestActivity']:
-                    for next_arg in self.config['raptor_cmd_line_args']:
-                        if activity in next_arg:
-                            self.activity = activity
-                            break
-                # repeat and get 'intent' argument
-                for intent in ['android.intent.action.MAIN',
-                               'android.intent.action.VIEW']:
-                    for next_arg in self.config['raptor_cmd_line_args']:
-                        if intent in next_arg:
-                            self.intent = intent
-                            break
+                sub_parser = argparse.ArgumentParser()
+                # It's not necessary to limit the allowed values: each value
+                # will be parsed and verifed by raptor/raptor.py.
+                sub_parser.add_argument('--app', default=None, dest='app')
+                sub_parser.add_argument('-i', '--intent', default=None, dest='intent')
+                sub_parser.add_argument('-a', '--activity', default=None, dest='activity')
+
+                # We'd prefer to use `parse_known_intermixed_args`, but that's
+                # new in Python 3.7.
+                known, unknown = sub_parser.parse_known_args(self.config['raptor_cmd_line_args'])
+
+                if known.app:
+                    self.app = known.app
+                if known.intent:
+                    self.intent = known.intent
+                if known.activity:
+                    self.activity = known.activity
         else:
             # raptor initiated in production via mozharness
             self.test = self.config['test']
