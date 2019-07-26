@@ -165,7 +165,6 @@ impl Example for App {
             YuvData::NV12(yuv_chanel1, yuv_chanel2),
             ColorDepth::Color8,
             YuvColorSpace::Rec601,
-            ColorRange::Limited,
             ImageRendering::Auto,
         );
 
@@ -179,7 +178,6 @@ impl Example for App {
             YuvData::PlanarYCbCr(yuv_chanel1, yuv_chanel2_1, yuv_chanel3),
             ColorDepth::Color8,
             YuvColorSpace::Rec601,
-            ColorRange::Limited,
             ImageRendering::Auto,
         );
 
