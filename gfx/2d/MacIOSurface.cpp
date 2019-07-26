@@ -8,10 +8,10 @@
 #include <OpenGL/gl.h>
 #include <QuartzCore/QuartzCore.h>
 #include <dlfcn.h>
-#include "mozilla/RefPtr.h"
-#include "mozilla/Assertions.h"
 #include "GLConsts.h"
 #include "GLContextCGL.h"
+#include "mozilla/Assertions.h"
+#include "mozilla/RefPtr.h"
 
 using namespace mozilla;
 // IOSurface signatures
@@ -295,6 +295,7 @@ MacIOSurface::~MacIOSurface() {
   CFRelease(mIOSurfacePtr);
 }
 
+/* static */
 already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
     int aWidth, int aHeight, double aContentsScaleFactor, bool aHasAlpha) {
   if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0) return nullptr;
@@ -339,6 +340,7 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   return ioSurface.forget();
 }
 
+/* static */
 already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
     IOSurfaceID aIOSurfaceID, double aContentsScaleFactor, bool aHasAlpha,
     gfx::YUVColorSpace aColorSpace) {
@@ -356,30 +358,30 @@ already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
   return ioSurface.forget();
 }
 
-IOSurfaceID MacIOSurface::GetIOSurfaceID() {
+IOSurfaceID MacIOSurface::GetIOSurfaceID() const {
   return MacIOSurfaceLib::IOSurfaceGetID(mIOSurfacePtr);
 }
 
-void* MacIOSurface::GetBaseAddress() {
+void* MacIOSurface::GetBaseAddress() const {
   return MacIOSurfaceLib::IOSurfaceGetBaseAddress(mIOSurfacePtr);
 }
 
-void* MacIOSurface::GetBaseAddressOfPlane(size_t aPlaneIndex) {
+void* MacIOSurface::GetBaseAddressOfPlane(size_t aPlaneIndex) const {
   return MacIOSurfaceLib::IOSurfaceGetBaseAddressOfPlane(mIOSurfacePtr,
                                                          aPlaneIndex);
 }
 
-size_t MacIOSurface::GetWidth(size_t plane) {
+size_t MacIOSurface::GetWidth(size_t plane) const {
   size_t intScaleFactor = ceil(mContentsScaleFactor);
   return GetDevicePixelWidth(plane) / intScaleFactor;
 }
 
-size_t MacIOSurface::GetHeight(size_t plane) {
+size_t MacIOSurface::GetHeight(size_t plane) const {
   size_t intScaleFactor = ceil(mContentsScaleFactor);
   return GetDevicePixelHeight(plane) / intScaleFactor;
 }
 
-size_t MacIOSurface::GetPlaneCount() {
+size_t MacIOSurface::GetPlaneCount() const {
   return MacIOSurfaceLib::IOSurfaceGetPlaneCount(mIOSurfacePtr);
 }
 
@@ -397,19 +399,19 @@ size_t MacIOSurface::GetMaxHeight() {
       MacIOSurfaceLib::kPropHeight);
 }
 
-size_t MacIOSurface::GetDevicePixelWidth(size_t plane) {
+size_t MacIOSurface::GetDevicePixelWidth(size_t plane) const {
   return MacIOSurfaceLib::IOSurfaceGetWidth(mIOSurfacePtr, plane);
 }
 
-size_t MacIOSurface::GetDevicePixelHeight(size_t plane) {
+size_t MacIOSurface::GetDevicePixelHeight(size_t plane) const {
   return MacIOSurfaceLib::IOSurfaceGetHeight(mIOSurfacePtr, plane);
 }
 
-size_t MacIOSurface::GetBytesPerRow(size_t plane) {
+size_t MacIOSurface::GetBytesPerRow(size_t plane) const {
   return MacIOSurfaceLib::IOSurfaceGetBytesPerRow(mIOSurfacePtr, plane);
 }
 
-OSType MacIOSurface::GetPixelFormat() {
+OSType MacIOSurface::GetPixelFormat() const {
   return MacIOSurfaceLib::IOSurfaceGetPixelFormat(mIOSurfacePtr);
 }
 
@@ -468,7 +470,7 @@ already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
   return surf.forget();
 }
 
-SurfaceFormat MacIOSurface::GetFormat() {
+SurfaceFormat MacIOSurface::GetFormat() const {
   OSType pixelFormat = GetPixelFormat();
   if (pixelFormat == '420v') {
     return SurfaceFormat::NV12;
@@ -479,7 +481,7 @@ SurfaceFormat MacIOSurface::GetFormat() {
   }
 }
 
-SurfaceFormat MacIOSurface::GetReadFormat() {
+SurfaceFormat MacIOSurface::GetReadFormat() const {
   OSType pixelFormat = GetPixelFormat();
   if (pixelFormat == '420v') {
     return SurfaceFormat::NV12;
