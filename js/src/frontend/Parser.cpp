@@ -6994,6 +6994,9 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
     }
     LexicalScopeNodeType scope =
         finishLexicalScope(dotInitializersScope, method);
+    if (!scope) {
+      return false;
+    }
     if (!handler_.addClassMemberDefinition(classMembers, scope)) {
       return false;
     }
