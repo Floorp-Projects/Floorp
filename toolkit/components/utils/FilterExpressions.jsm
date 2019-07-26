@@ -47,10 +47,6 @@ XPCOMUtils.defineLazyGetter(this, "jexl", () => {
 });
 
 var FilterExpressions = {
-  getAvailableTransforms() {
-    return Object.keys(jexl._transforms);
-  },
-
   eval(expr, context = {}) {
     const onelineExpr = expr.replace(/[\t\n\r]/g, " ");
     return jexl.eval(onelineExpr, context);

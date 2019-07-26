@@ -27,4 +27,3 @@ and then executes them.
    :maxdepth: 1
 
    data-collection
-   execution-model
