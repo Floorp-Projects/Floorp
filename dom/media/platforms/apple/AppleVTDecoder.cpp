@@ -36,6 +36,7 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
       mDisplayWidth(aConfig.mDisplay.width),
       mDisplayHeight(aConfig.mDisplay.height),
       mColorSpace(aConfig.mColorSpace),
+      mColorRange(aConfig.mColorRange),
       mTaskQueue(aTaskQueue),
       mMaxRefFrames(aOptions.contains(CreateDecoderParams::Option::LowLatency)
                         ? 0
@@ -375,6 +376,7 @@ void AppleVTDecoder::OutputFrame(CVPixelBufferRef aImage,
     buffer.mPlanes[2].mSkip = 0;
 
     buffer.mYUVColorSpace = mColorSpace;
+    buffer.mColorRange = mColorRange;
 
     gfx::IntRect visible = gfx::IntRect(0, 0, mPictureWidth, mPictureHeight);
 
@@ -546,7 +548,10 @@ CFDictionaryRef AppleVTDecoder::CreateOutputConfiguration() {
 
 #ifndef MOZ_WIDGET_UIKIT
   // Output format type:
-  SInt32 PixelFormatTypeValue = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+  SInt32 PixelFormatTypeValue =
+      mColorRange == gfx::ColorRange::FULL
+          ? kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+          : kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
   AutoCFRelease<CFNumberRef> PixelFormatTypeNumber = CFNumberCreate(
       kCFAllocatorDefault, kCFNumberSInt32Type, &PixelFormatTypeValue);
   // Construct IOSurface Properties
