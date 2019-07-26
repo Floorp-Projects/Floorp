@@ -588,6 +588,7 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
   data.mPicX = 0;
   data.mPicY = 0;
   data.mPicSize = IntSize(buffer->width(), buffer->height());
+  data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
 
   RefPtr<layers::PlanarYCbCrImage> image =
       mImageContainer->CreatePlanarYCbCrImage();
