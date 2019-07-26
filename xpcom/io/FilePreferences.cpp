@@ -8,6 +8,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/Tokenizer.h"
 #include "nsAppDirectoryServiceDefs.h"
@@ -18,10 +19,14 @@
 namespace mozilla {
 namespace FilePreferences {
 
+static StaticMutex sMutex;
+
 static bool sBlockUNCPaths = false;
 typedef nsTArray<nsString> WinPaths;
 
 static WinPaths& PathWhitelist() {
+  sMutex.AssertCurrentThreadOwns();
+
   static WinPaths sPaths;
   return sPaths;
 }
@@ -32,10 +37,14 @@ typedef char16_t char_path_t;
 typedef char char_path_t;
 #endif
 
+// Initially false to make concurrent consumers acquire the lock and sync
+static bool sBlacklistEmpty = false;
+
 typedef nsTArray<nsTString<char_path_t>> Paths;
 static StaticAutoPtr<Paths> sBlacklist;
 
 static Paths& PathBlacklist() {
+  sMutex.AssertCurrentThreadOwns();
   if (!sBlacklist) {
     sBlacklist = new nsTArray<nsTString<char_path_t>>();
     ClearOnShutdown(&sBlacklist);
@@ -62,6 +71,8 @@ static void AllowUNCDirectory(char const* directory) {
     return;
   }
 
+  StaticMutexAutoLock lock(sMutex);
+
   if (!PathWhitelist().Contains(path)) {
     PathWhitelist().AppendElement(path);
   }
@@ -71,7 +82,6 @@ void InitPrefs() {
   sBlockUNCPaths =
       Preferences::GetBool("network.file.disable_unc_paths", false);
 
-  PathBlacklist().Clear();
   nsTAutoString<char_path_t> blacklist;
 #ifdef XP_WIN
   Preferences::GetString("network.file.path_blacklist", blacklist);
@@ -79,6 +89,14 @@ void InitPrefs() {
   Preferences::GetCString("network.file.path_blacklist", blacklist);
 #endif
 
+  StaticMutexAutoLock lock(sMutex);
+
+  if (blacklist.IsEmpty()) {
+    sBlacklistEmpty = true;
+    return;
+  }
+
+  PathBlacklist().Clear();
   TTokenizer<char_path_t> p(blacklist);
   while (!p.CheckEOF()) {
     nsTString<char_path_t> path;
@@ -89,6 +107,8 @@ void InitPrefs() {
     }
     Unused << p.CheckChar(',');
   }
+
+  sBlacklistEmpty = PathBlacklist().Length() == 0;
 }
 
 void InitDirectoriesWhitelist() {
@@ -165,7 +185,7 @@ class TNormalizer : public TTokenizer<TChar> {
     nsTDependentSubstring<TChar> name;
     if (base::ReadUntil(mSeparator, name, base::INCLUDE_LAST) &&
         name.Length() == 1) {
-      // this means and empty name (a lone slash), which is illegal
+      // this means an empty name (a lone slash), which is illegal
       return false;
     }
     mStack.AppendElement(name);
@@ -217,6 +237,8 @@ bool IsBlockedUNCPath(const nsAString& aFilePath) {
     return true;
   }
 
+  StaticMutexAutoLock lock(sMutex);
+
   for (const auto& allowedPrefix : PathWhitelist()) {
     if (StringBeginsWith(normalized, allowedPrefix)) {
       if (normalized.Length() == allowedPrefix.Length()) {
@@ -245,13 +267,22 @@ const char kPathSeparator = '/';
 
 bool IsAllowedPath(const nsTSubstring<char_path_t>& aFilePath) {
   typedef TNormalizer<char_path_t> Normalizer;
-  // If sBlacklist has been cleared at shutdown, we must avoid calling
-  // PathBlacklist() again, as that will recreate the array and we will leak.
-  if (!sBlacklist) {
+
+  // A quick check out of the lock.
+  if (sBlacklistEmpty) {
     return true;
   }
 
-  if (PathBlacklist().Length() == 0) {
+  StaticMutexAutoLock lock(sMutex);
+
+  // Recheck the flag under the lock to reload it.
+  if (sBlacklistEmpty) {
+    return true;
+  }
+
+  // If sBlacklist has been cleared at shutdown, we must avoid calling
+  // PathBlacklist() again, as that will recreate the array and we will leak.
+  if (!sBlacklist) {
     return true;
   }
 
@@ -278,6 +309,7 @@ bool IsAllowedPath(const nsTSubstring<char_path_t>& aFilePath) {
 void testing::SetBlockUNCPaths(bool aBlock) { sBlockUNCPaths = aBlock; }
 
 void testing::AddDirectoryToWhitelist(nsAString const& aPath) {
+  StaticMutexAutoLock lock(sMutex);
   PathWhitelist().AppendElement(aPath);
 }
 
