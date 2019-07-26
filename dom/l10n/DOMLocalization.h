@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_l10n_DOMLocalization_h
 #define mozilla_dom_l10n_DOMLocalization_h
 
+#include "nsXULPrototypeDocument.h"
 #include "mozilla/intl/Localization.h"
 #include "mozilla/dom/DOMLocalizationBinding.h"
 #include "mozilla/dom/Element.h"
@@ -55,6 +56,9 @@ class DOMLocalization : public intl::Localization {
 
   already_AddRefed<Promise> TranslateElements(
       const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv);
+  already_AddRefed<Promise> TranslateElements(
+      const Sequence<OwningNonNull<Element>>& aElements,
+      nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
   already_AddRefed<Promise> TranslateRoots(ErrorResult& aRv);
 
@@ -78,10 +82,13 @@ class DOMLocalization : public intl::Localization {
 
   /**
    * Applies l10n translations on translatable elements.
+   *
+   * If `aProto` gets passed, it'll be used to cache
+   * the localized elements.
    */
   void ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
                          nsTArray<L10nMessage>& aTranslations,
-                         ErrorResult& aRv);
+                         nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
  protected:
   virtual ~DOMLocalization();
