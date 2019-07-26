@@ -124,7 +124,6 @@ class JSTerm extends Component {
 
     this._keyPress = this._keyPress.bind(this);
     this._inputEventHandler = this._inputEventHandler.bind(this);
-    this._blurEventHandler = this._blurEventHandler.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
 
@@ -507,7 +506,6 @@ class JSTerm extends Component {
       ? null
       : this._getInputPaddingInlineStart();
 
-    this.webConsoleUI.window.addEventListener("blur", this._blurEventHandler);
     this.lastInputValue && this._setValue(this.lastInputValue);
   }
 
@@ -948,16 +946,6 @@ class JSTerm extends Component {
         this.autocompleteUpdate();
       }
       this.lastInputValue = value;
-    }
-  }
-
-  /**
-   * The window "blur" event handler.
-   * @private
-   */
-  _blurEventHandler() {
-    if (this.autocompletePopup) {
-      this.clearCompletion();
     }
   }
 
@@ -1739,10 +1727,6 @@ class JSTerm extends Component {
       this.inputNode.removeEventListener("keypress", this._keyPress);
       this.inputNode.removeEventListener("input", this._inputEventHandler);
       this.inputNode.removeEventListener("keyup", this._inputEventHandler);
-      this.webConsoleUI.window.removeEventListener(
-        "blur",
-        this._blurEventHandler
-      );
     }
 
     if (this.editor) {
