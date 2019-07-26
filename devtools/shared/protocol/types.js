@@ -317,7 +317,6 @@ types.addActorType = function(name) {
       let front = ctx.conn.getActor(actorID);
       if (!front) {
         // If front isn't instantiated yet, create one.
-
         // Try lazy loading front if not already loaded.
         // The front module will synchronously call `FrontClassWithSpec` and
         // augment `type` with the `frontClass` attribute.
@@ -330,7 +329,11 @@ types.addActorType = function(name) {
         const Class = type.frontClass;
         front = new Class(ctx.conn);
         front.actorID = actorID;
-        ctx.marshallPool().manage(front);
+        const parentFront = ctx.marshallPool();
+        // If this is a child of a target-scoped front, propagate the target front to the
+        // child front that it manages.
+        front.targetFront = parentFront.targetFront;
+        parentFront.manage(front);
       }
 
       // When the type `${name}#actorid` is used, `v` is a string refering to the
@@ -490,8 +493,11 @@ exports.registerFront = function(cls) {
  * @param json form
  *    If we want to instantiate a global actor's front, this is the root front's form,
  *    otherwise we are instantiating a target-scoped front from the target front's form.
+ * @param [Target|null] target
+ *    If we are instantiating a target-scoped front, this is a reference to the front's
+ *    Target instance, otherwise this is null.
  */
-function getFront(client, typeName, form) {
+function getFront(client, typeName, form, target = null) {
   const type = types.getType(typeName);
   if (!type) {
     throw new Error(`No spec for front type '${typeName}'.`);
@@ -503,6 +509,8 @@ function getFront(client, typeName, form) {
   // a capital letter for all constructors.
   const Class = type.frontClass;
   const instance = new Class(client);
+  // Set the targetFront for target-scoped fronts.
+  instance.targetFront = target;
   const { formAttributeName } = instance;
   if (!formAttributeName) {
     throw new Error(`Can't find the form attribute name for ${typeName}`);
