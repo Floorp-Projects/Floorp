@@ -137,6 +137,9 @@ class MacIOSurface final
     mColorSpace = aColorSpace;
   }
   mozilla::gfx::YUVColorSpace GetYUVColorSpace() const { return mColorSpace; }
+  bool IsFullRange() const {
+    return GetPixelFormat() == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+  }
 
   // We would like to forward declare NSOpenGLContext, but it is an @interface
   // and this file is also used from c++, so we use a void *.
