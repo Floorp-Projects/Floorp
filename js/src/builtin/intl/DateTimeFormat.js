@@ -409,6 +409,10 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
     formatOpt.timeZoneName = GetOption(options, "timeZoneName", "string", ["short", "long"],
                                        undefined);
 
+#ifdef NIGHTLY_BUILD
+    formatOpt.fractionalSecondDigits = GetNumberOption(options, "fractionalSecondDigits", 0, 3, 0);
+#endif
+
     // Steps 23-24 provided by ICU - see comment after this function.
 
     // Step 25.
@@ -520,6 +524,7 @@ function InitializeDateTimeFormat(dateTimeFormat, thisValue, locales, options, m
 // documentation at this point is in UTR 35:
 // http://unicode.org/reports/tr35/tr35-dates.html#Date_Format_Patterns
 
+/* eslint-disable complexity */
 /**
  * Returns an ICU pattern string for the given locale and representing the
  * specified options as closely as possible given available locale data.
@@ -625,6 +630,19 @@ function toBestICUPattern(locale, options) {
         skeleton += "s";
         break;
     }
+#ifdef NIGHTLY_BUILD
+    switch (options.fractionalSecondDigits) {
+    case 1:
+        skeleton += "S";
+        break;
+    case 2:
+        skeleton += "SS";
+        break;
+    case 3:
+        skeleton += "SSS";
+        break;
+    }
+#endif
     switch (options.timeZoneName) {
     case "short":
         skeleton += "z";
@@ -637,6 +655,7 @@ function toBestICUPattern(locale, options) {
     // Let ICU convert the ICU skeleton to an ICU pattern for the given locale.
     return intl_patternForSkeleton(locale, skeleton);
 }
+/* eslint-enable complexity */
 
 /**
  * Returns a new options object that includes the provided options (if any)
@@ -680,6 +699,10 @@ function ToDateTimeOptions(options, required, defaults) {
             needDefaults = false;
         if (options.second !== undefined)
             needDefaults = false;
+#ifdef NIGHTLY_BUILD
+        if (options.fractionalSecondDigits !== undefined)
+            needDefaults = false;
+#endif
     }
 
     // Step 6.
@@ -893,7 +916,7 @@ function Intl_DateTimeFormat_resolvedOptions() {
 function resolveICUPattern(pattern, result) {
     assert(IsObject(result), "resolveICUPattern");
 
-    var hourCycle, weekday, era, year, month, day, hour, minute, second, timeZoneName;
+    var hourCycle, weekday, era, year, month, day, hour, minute, second, fractionalSecondDigits, timeZoneName;
     var i = 0;
     while (i < pattern.length) {
         var c = pattern[i++];
@@ -952,6 +975,9 @@ function resolveICUPattern(pattern, result) {
                 else
                     value = "narrow";
                 break;
+            case "S":
+                value = count;
+                break;
             default:
                 // skip other pattern characters and literal text
             }
@@ -999,6 +1025,9 @@ function resolveICUPattern(pattern, result) {
             case "s":
                 second = value;
                 break;
+            case "S":
+                fractionalSecondDigits = value;
+                break;
             case "z":
             case "v":
             case "V":
@@ -1036,6 +1065,11 @@ function resolveICUPattern(pattern, result) {
     if (second) {
         _DefineDataProperty(result, "second", second);
     }
+#ifdef NIGHTLY_BUILD
+    if (fractionalSecondDigits) {
+        _DefineDataProperty(result, "fractionalSecondDigits", fractionalSecondDigits);
+    }
+#endif
     if (timeZoneName) {
         _DefineDataProperty(result, "timeZoneName", timeZoneName);
     }
