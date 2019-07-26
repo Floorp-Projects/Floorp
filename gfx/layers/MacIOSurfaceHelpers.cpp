@@ -150,6 +150,9 @@ CreateSourceSurfaceFromLockedMacIOSurface(MacIOSurface* aSurface) {
       data.mCbCrStride = cbCrStride;
       data.mCbCrSize = IntSize::Truncate(cbCrWidth, cbCrHeight);
       data.mPicSize = data.mYSize;
+      data.mYUVColorSpace = aSurface->GetYUVColorSpace();
+      data.mColorRange = aSurface->IsFullRange() ? gfx::ColorRange::FULL
+                                                 : gfx::ColorRange::LIMITED;
 
       ConvertYCbCrToRGB(data, SurfaceFormat::B8G8R8X8,
                         IntSize::Truncate(ioWidth, ioHeight),
