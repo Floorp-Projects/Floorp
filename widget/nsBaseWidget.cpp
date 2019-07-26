@@ -1307,6 +1307,16 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
         gfx::GPUProcessManager::Get()->DisableWebRender(
             wr::WebRenderError::INITIALIZE);
       }
+    } else if (lm->AsClientLayerManager() && mCompositorSession) {
+      bool shouldAccelerate = ComputeShouldAccelerate();
+      TextureFactoryIdentifier textureFactoryIdentifier;
+      lm->AsClientLayerManager()->Initialize(
+          mCompositorSession->GetCompositorBridgeChild(), shouldAccelerate,
+          &textureFactoryIdentifier);
+      if (textureFactoryIdentifier.mParentBackend ==
+          LayersBackend::LAYERS_NONE) {
+        DestroyCompositor();
+      }
     }
 
     // We need to retry in a loop because the act of failing to create the
@@ -1374,39 +1384,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight) {
                LayersBackend::LAYERS_WR);
     ImageBridgeChild::IdentifyCompositorTextureHost(textureFactoryIdentifier);
     gfx::VRManagerChild::IdentifyTextureHost(textureFactoryIdentifier);
-  }
-
-  ShadowLayerForwarder* lf = lm->AsShadowForwarder();
-  if (lf) {
-    // lf is non-null if we are creating a ClientLayerManager above
-    TextureFactoryIdentifier textureFactoryIdentifier;
-    PLayerTransactionChild* shadowManager = nullptr;
-
-    nsTArray<LayersBackend> backendHints;
-    gfxPlatform::GetPlatform()->GetCompositorBackends(ComputeShouldAccelerate(),
-                                                      backendHints);
-
-    bool success = false;
-    if (!backendHints.IsEmpty()) {
-      shadowManager = mCompositorBridgeChild->SendPLayerTransactionConstructor(
-          backendHints, LayersId{0});
-      if (shadowManager->SendGetTextureFactoryIdentifier(
-              &textureFactoryIdentifier) &&
-          textureFactoryIdentifier.mParentBackend !=
-              LayersBackend::LAYERS_NONE) {
-        success = true;
-      }
-    }
-
-    if (!success) {
-      NS_WARNING("Failed to create an OMT compositor.");
-      DestroyCompositor();
-      mLayerManager = nullptr;
-      return;
-    }
-
-    lf->SetShadowManager(shadowManager);
-    lm->UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
+  } else if (lm->AsClientLayerManager()) {
+    TextureFactoryIdentifier textureFactoryIdentifier =
+        lm->GetTextureFactoryIdentifier();
     // Some popup or transparent widgets may use a different backend than the
     // compositors used with ImageBridge and VR (and more generally web
     // content).

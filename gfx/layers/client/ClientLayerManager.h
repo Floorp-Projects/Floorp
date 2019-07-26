@@ -53,7 +53,8 @@ class ClientLayerManager final : public LayerManager,
 
  public:
   explicit ClientLayerManager(nsIWidget* aWidget);
-
+  bool Initialize(PCompositorBridgeChild* aCBChild, bool aShouldAccelerate,
+                  TextureFactoryIdentifier* aTextureFactoryIdentifier);
   void Destroy() override;
 
  protected:
