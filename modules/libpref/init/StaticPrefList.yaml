@@ -1845,6 +1845,12 @@
   value: -1
   mirror: always
 
+# The maximum amount a timeout can be delayed by budget throttling.
+- name: dom.timeout.budget_throttling_max_delay
+  type: int32_t
+  value: 15000
+  mirror: always
+
 # Should we defer timeouts and intervals while loading a page.  Released
 # on Idle or when the page is loaded.
 - name: dom.timeout.defer_during_load
