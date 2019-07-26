@@ -9,6 +9,6 @@ core-foundation-sys = { version = "0.6" }
 
 [dependencies.coreaudio-sys]
 default-features = false
-features = ["audio_unit", "core_audio"]
+features = ["audio_unit", "core_audio", "nobindgen"]
 git = "https://github.com/ChunMinChang/coreaudio-sys"
 branch = "gecko-build"
