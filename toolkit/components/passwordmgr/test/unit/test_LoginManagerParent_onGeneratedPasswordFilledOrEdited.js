@@ -82,7 +82,11 @@ function stubGeneratedPasswordForBrowsingContextId(id) {
 
   let generatedPassword = LMP.getGeneratedPassword(id);
   notEqual(generatedPassword, null, "Check password was returned");
-  equal(generatedPassword.length, 15, "Check password length");
+  equal(
+    generatedPassword.length,
+    LoginTestUtils.generation.LENGTH,
+    "Check password length"
+  );
   equal(LMP._generatedPasswordsByPrincipalOrigin.size, 1, "1 added to cache");
   equal(
     LMP._generatedPasswordsByPrincipalOrigin.get(

@@ -101,10 +101,13 @@ async function verifyGeneratedPasswordWasFilled(
     browser,
     [passwordInputSelector],
     function checkFinalFieldValue(inputSelector) {
+      let { LoginTestUtils: LTU } = ChromeUtils.import(
+        "resource://testing-common/LoginTestUtils.jsm"
+      );
       let passwordInput = content.document.querySelector(inputSelector);
       is(
         passwordInput.value.length,
-        15,
+        LTU.generation.LENGTH,
         "Password field was filled with generated password"
       );
     }
@@ -231,7 +234,7 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
   );
   is(
     passwordValue.length,
-    15,
+    LoginTestUtils.generation.LENGTH,
     "Doorhanger password field has generated 15-char value"
   );
   is(
@@ -338,13 +341,17 @@ add_task(async function autocomplete_generated_password_auto_saved() {
 
       // Check properties of the newly auto-saved login
       is(username, "", "Saved login should have no username");
-      is(password.length, 15, "Saved login should have generated password");
+      is(
+        password.length,
+        LoginTestUtils.generation.LENGTH,
+        "Saved login should have generated password"
+      );
 
       let notif = await openAndVerifyDoorhanger(browser, "password-change", {
         dismissed: true,
         anchorExtraAttr: "attention",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
       await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
       // confirm the extraAttr attribute is removed after opening & dismissing the doorhanger
@@ -403,7 +410,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         dismissed: true,
         anchorExtraAttr: "",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
       await hideDoorhangerPopup(browser);
       info("Waiting to verifyGeneratedPasswordWasFilled");
@@ -415,7 +422,7 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
         dismissed: false,
         anchorExtraAttr: "",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -466,7 +473,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         dismissed: true,
         anchorExtraAttr: "",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
       await hideDoorhangerPopup(browser);
       info("Waiting to verifyGeneratedPasswordWasFilled");
@@ -478,7 +485,7 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
         dismissed: false,
         anchorExtraAttr: "",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
       await clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -561,7 +568,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
           {
             timesUsed: 1,
             username: "",
-            passwordLength: 15,
+            passwordLength: LoginTestUtils.generation.LENGTH,
           },
         ],
       });
@@ -571,7 +578,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         dismissed: true,
         anchorExtraAttr: "attention",
         usernameValue: "differentuser",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
       await hideDoorhangerPopup(browser);
       info("Waiting to verifyGeneratedPasswordWasFilled");
@@ -583,7 +590,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
         dismissed: false,
         anchorExtraAttr: "",
         usernameValue: "differentuser",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
 
       storageChangedPromise = TestUtils.topicObserved(
@@ -599,7 +606,7 @@ add_task(async function contextmenu_fill_generated_password_and_set_username() {
           null,
           {
             username: "differentuser",
-            passwordLength: 15,
+            passwordLength: LoginTestUtils.generation.LENGTH,
             timesUsed: 1,
           },
         ],
@@ -662,7 +669,7 @@ add_task(async function contextmenu_password_change_form_without_username() {
           {
             timesUsed: 1,
             username: "",
-            passwordLength: 15,
+            passwordLength: LoginTestUtils.generation.LENGTH,
           },
         ],
       });
@@ -672,7 +679,7 @@ add_task(async function contextmenu_password_change_form_without_username() {
         dismissed: true,
         anchorExtraAttr: "attention",
         usernameValue: "",
-        passwordLength: 15,
+        passwordLength: LoginTestUtils.generation.LENGTH,
       });
       await hideDoorhangerPopup(browser);
       // remove notification so we can unambiguously check no new notification gets created later
