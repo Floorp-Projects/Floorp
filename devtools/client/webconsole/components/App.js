@@ -101,6 +101,15 @@ class App extends Component {
     this.onClick = this.onClick.bind(this);
     this.onPaste = this.onPaste.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
+    this.onBlur = this.onBlur.bind(this);
+  }
+
+  componentDidMount() {
+    window.addEventListener("blur", this.onBlur);
+  }
+
+  onBlur() {
+    this.props.dispatch(actions.autocompleteClear());
   }
 
   onKeyDown(event) {
