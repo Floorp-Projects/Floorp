@@ -662,7 +662,8 @@ MediaResult WMFVideoMFTManager::InitInternal() {
   if (mUseHwAccel) {
     hr = mDXVA2Manager->ConfigureForSize(
         outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601),
-        mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+        gfx::ColorRange::LIMITED, mVideoInfo.ImageRect().width,
+        mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr),
                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                RESULT_DETAIL("Fail to configure image size for "
@@ -1043,7 +1044,8 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
       if (mUseHwAccel) {
         hr = mDXVA2Manager->ConfigureForSize(
             outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601),
-            mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+            gfx::ColorRange::LIMITED, mVideoInfo.ImageRect().width,
+            mVideoInfo.ImageRect().height);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       } else {
         // The stride may have changed, recheck for it.
