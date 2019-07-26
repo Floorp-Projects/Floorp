@@ -28,7 +28,7 @@ use crate::prim_store::{get_raster_rects, PrimitiveScratchBuffer, RectangleKey};
 use crate::prim_store::{OpacityBindingStorage, ImageInstanceStorage, OpacityBindingIndex};
 use crate::print_tree::PrintTreePrinter;
 use crate::render_backend::DataStores;
-use crate::render_task::{ClearMode, RenderTask};
+use crate::render_task::{ClearMode, RenderTargetKind, RenderTask};
 use crate::render_task::{RenderTaskId, RenderTaskLocation, BlurTaskCache};
 use crate::resource_cache::ResourceCache;
 use crate::scene::SceneProperties;
@@ -38,7 +38,6 @@ use smallvec::SmallVec;
 use std::{mem, u16};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use crate::texture_cache::TextureCacheHandle;
-use crate::tiling::RenderTargetKind;
 use crate::util::{ComparableVec, TransformedRectKind, MatrixHelpers, MaxRect, scale_factors};
 use crate::filterdata::{FilterDataHandle};
 
