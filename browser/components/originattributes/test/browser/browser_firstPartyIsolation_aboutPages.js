@@ -194,7 +194,10 @@ add_task(async function test_aboutURL() {
         !(flags & Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT) &&
         !networkURLs.includes(aboutType) &&
         // handle about:newtab in browser_firstPartyIsolation_about_newtab.js
-        aboutType !== "newtab"
+        aboutType !== "newtab" &&
+        // protections kicks of async messaging as soon as it loads,
+        // this test closes the tab too soon causing errors
+        aboutType !== "protections"
       ) {
         aboutURLs.push(aboutType);
       }
