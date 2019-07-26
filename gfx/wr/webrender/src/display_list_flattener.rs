@@ -10,7 +10,7 @@ use api::{IframeDisplayItem, ImageKey, ImageRendering, ItemRange, ColorDepth};
 use api::{LineOrientation, LineStyle, NinePatchBorderSource, PipelineId};
 use api::{PropertyBinding, ReferenceFrame, ReferenceFrameKind, ScrollFrameDisplayItem, ScrollSensitivity};
 use api::{Shadow, SpaceAndClipInfo, SpatialId, StackingContext, StickyFrameDisplayItem};
-use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, YuvData, TempFilterData};
+use api::{ClipMode, PrimitiveKeyKind, TransformStyle, YuvColorSpace, ColorRange, YuvData, TempFilterData};
 use api::units::*;
 use crate::clip::{ClipChainId, ClipRegion, ClipItemKey, ClipStore};
 use crate::clip_scroll_tree::{ROOT_SPATIAL_NODE_INDEX, ClipScrollTree, SpatialNodeIndex};
@@ -1017,6 +1017,7 @@ impl<'a> DisplayListFlattener<'a> {
                     info.yuv_data,
                     info.color_depth,
                     info.color_space,
+                    info.color_range,
                     info.image_rendering,
                 );
             }
@@ -3019,6 +3020,7 @@ impl<'a> DisplayListFlattener<'a> {
         yuv_data: YuvData,
         color_depth: ColorDepth,
         color_space: YuvColorSpace,
+        color_range: ColorRange,
         image_rendering: ImageRendering,
     ) {
         let format = yuv_data.get_format();
@@ -3037,6 +3039,7 @@ impl<'a> DisplayListFlattener<'a> {
                 yuv_key,
                 format,
                 color_space,
+                color_range,
                 image_rendering,
             },
         );

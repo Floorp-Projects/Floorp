@@ -365,7 +365,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
       gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
       gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-      TextureFlags aTextureFlags);
+      gfx::ColorRange aColorRange, TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient (can be accessed through raw
   // pointers).
