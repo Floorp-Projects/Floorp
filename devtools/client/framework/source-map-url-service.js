@@ -57,18 +57,21 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
       if (this._target.isWorkerTarget) {
         return;
       }
-      this._stylesheetsFront = await this._target.getFront("stylesheets");
-      this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
-      const styleSheetsLoadingPromise = this._stylesheetsFront
-        .getStyleSheets()
-        .then(
-          sheets => {
-            sheets.forEach(this._registerNewStyleSheet, this);
-          },
-          () => {
-            // Ignore any protocol-based errors.
-          }
-        );
+      let styleSheetsLoadingPromise;
+      if (this._target.hasActor("styleSheets")) {
+        this._stylesheetsFront = await this._target.getFront("stylesheets");
+        this._stylesheetsFront.on("stylesheet-added", this._onNewStyleSheet);
+        styleSheetsLoadingPromise = this._stylesheetsFront
+          .getStyleSheets()
+          .then(
+            sheets => {
+              sheets.forEach(this._registerNewStyleSheet, this);
+            },
+            () => {
+              // Ignore any protocol-based errors.
+            }
+          );
+      }
 
       // Start fetching the sources now.
       const loadingPromise = this._toolbox.threadFront.getSources().then(
@@ -84,7 +87,9 @@ SourceMapURLService.prototype._getLoadingPromise = function() {
         }
       );
 
-      await styleSheetsLoadingPromise;
+      if (styleSheetsLoadingPromise) {
+        await styleSheetsLoadingPromise;
+      }
       await loadingPromise;
     })();
   }
