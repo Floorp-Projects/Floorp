@@ -142,6 +142,13 @@ gfx::YUVColorSpace WebRenderTextureHost::GetYUVColorSpace() const {
   return gfx::YUVColorSpace::UNKNOWN;
 }
 
+gfx::ColorRange WebRenderTextureHost::GetColorRange() const {
+  if (mWrappedTextureHost) {
+    return mWrappedTextureHost->GetColorRange();
+  }
+  return TextureHost::GetColorRange();
+}
+
 gfx::IntSize WebRenderTextureHost::GetSize() const {
   if (!mWrappedTextureHost) {
     return gfx::IntSize();
