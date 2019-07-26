@@ -24,7 +24,7 @@ async function performTests() {
   await onMessage;
 
   const onCleared = waitFor(
-    () => hud.jsterm.outputNode.querySelector(".message") === null
+    () => hud.ui.outputNode.querySelector(".message") === null
   );
   hud.jsterm.execute("clear()");
   await onCleared;

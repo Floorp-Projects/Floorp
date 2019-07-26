@@ -674,7 +674,7 @@ function getInputCompletionValue(hud) {
  */
 function isInputFocused(hud) {
   const { jsterm } = hud;
-  const document = jsterm.outputNode.ownerDocument;
+  const document = hud.ui.outputNode.ownerDocument;
   const documentIsFocused = document.hasFocus();
 
   if (jsterm.inputNode) {
