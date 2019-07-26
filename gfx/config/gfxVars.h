@@ -51,7 +51,8 @@ class gfxVarReceiver;
   _(AllowD3D11KeyedMutex, bool, false)                             \
   _(SystemTextQuality, int32_t, 5 /* CLEARTYPE_QUALITY */)         \
   _(LayersWindowRecordingPath, nsCString, nsCString())             \
-  _(RemoteCanvasEnabled, bool, false)
+  _(RemoteCanvasEnabled, bool, false)                              \
+  _(UseDoubleBufferingWithCompositor, bool, false)
 
 /* Add new entries above this line. */
 

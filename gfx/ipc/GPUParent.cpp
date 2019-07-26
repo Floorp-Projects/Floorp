@@ -264,8 +264,7 @@ mozilla::ipc::IPCResult GPUParent::RecvInit(
   }
 #ifdef XP_WIN
   else {
-    if (StaticPrefs::gfx_direct3d11_use_double_buffering() &&
-        IsWin10OrLater()) {
+    if (gfxVars::UseDoubleBufferingWithCompositor()) {
       // This is needed to avoid freezing the window on a device crash on double
       // buffering, see bug 1549674.
       widget::WinCompositorWindowThread::Start();
