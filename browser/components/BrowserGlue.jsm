@@ -124,7 +124,6 @@ let LEGACY_ACTORS = {
       matches: ["about:logins", "about:logins?*"],
       module: "resource:///actors/AboutLoginsChild.jsm",
       events: {
-        AboutLoginsCopyLoginDetail: { wantUntrusted: true },
         AboutLoginsCreateLogin: { wantUntrusted: true },
         AboutLoginsDeleteLogin: { wantUntrusted: true },
         AboutLoginsImport: { wantUntrusted: true },
@@ -144,7 +143,6 @@ let LEGACY_ACTORS = {
         "AboutLogins:LoginAdded",
         "AboutLogins:LoginModified",
         "AboutLogins:LoginRemoved",
-        "AboutLogins:MasterPasswordResponse",
       ],
     },
   },
@@ -623,7 +621,6 @@ const listeners = {
     "AboutLogins:CreateLogin": ["AboutLoginsParent"],
     "AboutLogins:DeleteLogin": ["AboutLoginsParent"],
     "AboutLogins:Import": ["AboutLoginsParent"],
-    "AboutLogins:MasterPasswordRequest": ["AboutLoginsParent"],
     "AboutLogins:OpenFAQ": ["AboutLoginsParent"],
     "AboutLogins:OpenFeedback": ["AboutLoginsParent"],
     "AboutLogins:OpenPreferences": ["AboutLoginsParent"],
