@@ -221,6 +221,19 @@
 
       testName("test_note", null);
 
+      // //////////////////////////////////////////////////////////////////////
+      // Tests for name from sub tree of tr element.
+
+      // By default, we want no name.
+      testName("NoNameForTR", null);
+      testName("NoNameForNonStandardTR", null);
+
+      // But we want it if the tr has an ARIA role.
+      testName("NameForTRBecauseStrongARIA", "a b");
+
+      // But not if it is a weak (landmark) ARIA role
+      testName("NoNameForTRBecauseWeakARIA", null);
+
       SimpleTest.finish();
     }
 
@@ -630,6 +643,20 @@
 
   <!-- duplicate announcement -->
   <div id="test_note" role="note">subtree</div>
+
+  <!-- No name for tr from its sub tree -->
+  <table><tr id="NoNameForTR"><th>a</th><td>b</td></tr></table>
+  <table style="display: block;">
+    <tr id="NoNameForNonStandardTR" style="display:block;">
+      <th>a</th><td>b</td>
+    </tr>
+  </table>
+
+  <!-- Name from sub tree of tr, because it has a strong ARIA role -->
+  <table><tr id="NameForTRBecauseStrongARIA" role="row"><th>a</th><td>b</td></tr></table>
+
+  <!-- No name for tr because of weak (landmark) role -->
+  <table><tr id="NoNameForTRBecauseWeakARIA" role="main"><th>a</th><td>b</td></tr></table>
 
 </body>
 </html>
