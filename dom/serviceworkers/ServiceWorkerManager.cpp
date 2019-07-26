@@ -843,9 +843,6 @@ class GetRegistrationsRunnable final : public Runnable {
     for (uint32_t i = 0; i < data->mOrderedScopes.Length(); ++i) {
       RefPtr<ServiceWorkerRegistrationInfo> info =
           data->mInfos.GetWeak(data->mOrderedScopes[i]);
-      if (info->IsPendingUninstall()) {
-        continue;
-      }
 
       NS_ConvertUTF8toUTF16 scope(data->mOrderedScopes[i]);
 
@@ -1287,11 +1284,6 @@ void ServiceWorkerManager::WorkerIsIdle(ServiceWorkerInfo* aWorker) {
     return;
   }
 
-  if (!reg->IsControllingClients() && reg->IsPendingUninstall()) {
-    RemoveRegistration(reg);
-    return;
-  }
-
   reg->TryToActivateAsync();
 }
 
@@ -1549,9 +1541,6 @@ ServiceWorkerManager::GetServiceWorkerRegistrationInfo(
   MOZ_ASSERT(origin.Equals(aScopeKey));
 #endif
 
-  if (registration->IsPendingUninstall()) {
-    return nullptr;
-  }
   return registration.forget();
 }
 
@@ -1595,6 +1584,7 @@ void ServiceWorkerManager::AddScopeAndRegistration(
     const nsACString& aScope, ServiceWorkerRegistrationInfo* aInfo) {
   MOZ_ASSERT(aInfo);
   MOZ_ASSERT(aInfo->Principal());
+  MOZ_ASSERT(!aInfo->IsUnregistered());
 
   RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (!swm) {
@@ -1713,22 +1703,19 @@ void ServiceWorkerManager::RemoveScopeAndRegistration(
   for (auto iter = swm->mControlledClients.Iter(); !iter.Done(); iter.Next()) {
     auto& reg = iter.UserData()->mRegistrationInfo;
     if (reg->Scope().Equals(aRegistration->Scope()) &&
-        reg->Principal()->Equals(aRegistration->Principal())) {
-      MOZ_DIAGNOSTIC_ASSERT(
-          aRegistration->IsCorrupt(),
-          "controlled client when removing non-corrupt registration");
+        reg->Principal()->Equals(aRegistration->Principal()) &&
+        reg->IsCorrupt()) {
       iter.Remove();
-      break;
     }
   }
 
   RefPtr<ServiceWorkerRegistrationInfo> info;
   data->mInfos.Remove(aRegistration->Scope(), getter_AddRefs(info));
+  aRegistration->SetUnregistered();
   data->mOrderedScopes.RemoveElement(aRegistration->Scope());
   swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
-  aRegistration->NotifyRemoved();
 }
 
 void ServiceWorkerManager::MaybeRemoveRegistrationInfo(
@@ -1785,12 +1772,16 @@ void ServiceWorkerManager::MaybeCheckNavigationUpdate(
 void ServiceWorkerManager::StopControllingRegistration(
     ServiceWorkerRegistrationInfo* aRegistration) {
   aRegistration->StopControllingClient();
-  if (aRegistration->IsControllingClients() || !aRegistration->IsIdle()) {
+  if (aRegistration->IsControllingClients()) {
     return;
   }
 
-  if (aRegistration->IsPendingUninstall()) {
-    RemoveRegistration(aRegistration);
+  if (aRegistration->IsUnregistered()) {
+    if (aRegistration->IsIdle()) {
+      aRegistration->Clear();
+    } else {
+      aRegistration->ClearWhenIdle();
+    }
     return;
   }
 
@@ -1949,10 +1940,11 @@ void ServiceWorkerManager::DispatchFetchEvent(nsIInterceptedChannel* aChannel,
       return;
     }
 
-    RefPtr<ServiceWorkerRegistrationInfo> registration = GetRegistration(
-        controller.ref().PrincipalInfo(), controller.ref().Scope());
-    if (NS_WARN_IF(!registration)) {
-      aRv.Throw(NS_ERROR_FAILURE);
+    RefPtr<ServiceWorkerRegistrationInfo> registration;
+    nsresult rv = GetClientRegistration(loadInfo->GetClientInfo().ref(),
+                                        getter_AddRefs(registration));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
       return;
     }
 
@@ -2223,11 +2215,6 @@ void ServiceWorkerManager::SoftUpdateInternal(
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       GetRegistration(scopeKey, aScope);
   if (NS_WARN_IF(!registration)) {
-    return;
-  }
-
-  // "If registration's uninstalling flag is set, abort these steps."
-  if (registration->IsPendingUninstall()) {
     return;
   }
 
@@ -2569,18 +2556,7 @@ void ServiceWorkerManager::RemoveRegistration(
   // 3) Through the failure to install a new service worker.  Since we don't
   //    store the registration until install succeeds, we do not need to call
   //    SendUnregister here.
-  // Assert these conditions by testing for pending uninstall (cases 1 and 2) or
-  // null workers (case 3).
-#ifdef DEBUG
-  RefPtr<ServiceWorkerInfo> newest = aRegistration->Newest();
-  MOZ_ASSERT(aRegistration->IsPendingUninstall() || !newest);
-#endif
-
   MOZ_ASSERT(HasScope(aRegistration->Principal(), aRegistration->Scope()));
-
-  // When a registration is removed, we must clear its contents since the DOM
-  // object may be held by content script.
-  aRegistration->Clear();
 
   RemoveScopeAndRegistration(aRegistration);
 }
@@ -2598,10 +2574,6 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult) {
     for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
       ServiceWorkerRegistrationInfo* reg = it2.UserData();
       MOZ_ASSERT(reg);
-
-      if (reg->IsPendingUninstall()) {
-        continue;
-      }
 
       array->AppendElement(reg);
     }

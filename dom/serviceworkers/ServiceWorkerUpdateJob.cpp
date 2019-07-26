@@ -229,7 +229,7 @@ void ServiceWorkerUpdateJob::AsyncExecute() {
   RefPtr<ServiceWorkerRegistrationInfo> registration =
       swm->GetRegistration(mPrincipal, mScope);
 
-  if (!registration || registration->IsPendingUninstall()) {
+  if (!registration) {
     ErrorResult rv;
     rv.ThrowTypeError<MSG_SW_UPDATE_BAD_REGISTRATION>(
         NS_ConvertUTF8toUTF16(mScope), NS_LITERAL_STRING("uninstalled"));
