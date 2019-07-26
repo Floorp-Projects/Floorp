@@ -5741,11 +5741,11 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     JS::CompileOptions options(cx, transitiveOptions);
 
     Rooted<ScriptSourceObject*> sourceObject(cx, script->sourceObject());
-    Rooted<JSScript*> script(
+    Rooted<JSScript*> innerScript(
         cx, JSScript::Create(cx, options, sourceObject, funbox->bufStart,
                              funbox->bufEnd, funbox->toStringStart,
                              funbox->toStringEnd));
-    if (!script) {
+    if (!innerScript) {
       return false;
     }
 
@@ -5760,7 +5760,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       fieldInitializers = setupFieldInitializers(classContentsIfConstructor);
     }
 
-    BytecodeEmitter bce2(this, parser, funbox, script,
+    BytecodeEmitter bce2(this, parser, funbox, innerScript,
                          /* lazyScript = */ nullptr, funNode->pn_pos,
                          nestedMode, fieldInitializers);
     if (!bce2.init()) {
@@ -5775,7 +5775,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
     // fieldInitializers are copied to the JSScript inside BytecodeEmitter
 
     if (funbox->isLikelyConstructorWrapper()) {
-      script->setLikelyConstructorWrapper();
+      innerScript->setLikelyConstructorWrapper();
     }
 
     if (!fe.emitNonLazyEnd()) {
