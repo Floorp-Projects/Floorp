@@ -233,13 +233,14 @@ def android_toolchain(target, host, ndk, toolchain):
             die('Target cpu is not supported.')
 
         toolchain_format = '%s/toolchains/%s-4.9/prebuilt/%s-%s'
+        host_kernel = 'windows' if host.kernel == 'WINNT' else host.kernel.lower()
 
         toolchain = toolchain_format % (ndk, target_base,
-                                        host.kernel.lower(), host.cpu)
+                                        host_kernel, host.cpu)
         log.debug('Trying %s' % quote(toolchain))
         if not isdir(toolchain) and host.cpu == 'x86_64':
             toolchain = toolchain_format % (ndk, target_base,
-                                            host.kernel.lower(), 'x86')
+                                            host_kernel, 'x86')
             log.debug('Trying %s' % quote(toolchain))
         if isdir(toolchain):
             return toolchain
