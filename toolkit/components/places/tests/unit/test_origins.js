@@ -1088,9 +1088,9 @@ async function promiseStats() {
   let db = await PlacesUtils.promiseDBConnection();
   let rows = await db.execute(`
     SELECT
-      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_count"), 0),
-      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum"), 0),
-      IFNULL((SELECT value FROM moz_meta WHERE key = "origin_frecency_sum_of_squares"), 0)
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_count'), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum'), 0),
+      IFNULL((SELECT value FROM moz_meta WHERE key = 'origin_frecency_sum_of_squares'), 0)
   `);
   return {
     count: rows[0].getResultByIndex(0),
