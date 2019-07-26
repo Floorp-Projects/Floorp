@@ -63,6 +63,15 @@ function $_(formNum, name) {
 }
 
 /**
+ * Recreate a DOM tree using the outerHTML to ensure that any event listeners
+ * and internal state for the elements are removed.
+ */
+function recreateTree(element) {
+  // eslint-disable-next-line no-unsanitized/property, no-self-assign
+  element.outerHTML = element.outerHTML;
+}
+
+/**
  * Check autocomplete popup results to ensure that expected
  * *labels* are being shown correctly as items in the popup.
  */
