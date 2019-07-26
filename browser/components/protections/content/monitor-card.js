@@ -4,19 +4,14 @@
 
 /* eslint-env mozilla/frame-script */
 
+const MONITOR_SIGN_IN_URL = "https://monitor.firefox.com";
+
 export default class MonitorClass {
   constructor(document) {
     this.doc = document;
   }
 
   init() {
-    const signUpForMonitorButton = this.doc.getElementById(
-      "sign-up-for-monitor-button"
-    );
-    signUpForMonitorButton.addEventListener("click", () => {
-      console.log("TODO: Where is this link supposed to go.");
-    });
-
     RPMAddMessageListener("SendUserLoginsData", ({ data }) => {
       // Wait for monitor data and display the card.
       this.getMonitorData(data);
@@ -56,15 +51,39 @@ export default class MonitorClass {
       this.renderContentForUserWithLogins(monitorData);
     } else {
       monitorCard.classList.add("no-logins");
-      const signUpForMonitorButton = this.doc.getElementById(
-        "sign-up-for-monitor-button"
+      const signUpForMonitorLink = this.doc.getElementById(
+        "sign-up-for-monitor-link"
       );
-      signUpForMonitorButton.textContent = hasFxa
+      signUpForMonitorLink.textContent = hasFxa
         ? "Turn on Monitor"
         : "Sign up for Monitor";
+      signUpForMonitorLink.href = this.buildMonitorUrl(monitorData.userEmail);
       headerContent.textContent =
         "Check Firefox Monitor to see if you've been part of a data breach and get alerts about new breaches.";
     }
+  }
+
+  /**
+   * Builds the appropriate URL that takes the user to the Monitor website's
+   * sign-up/sign-in page.
+   *
+   * @param {String|null} email
+   *        Optional. The email used to direct the user to the Monitor website's OAuth
+   *        sign-in flow. If null, then direct user to just the Monitor website.
+   *
+   * @return URL to Monitor website.
+   */
+  buildMonitorUrl(email = null) {
+    let url = MONITOR_SIGN_IN_URL;
+
+    if (email) {
+      url += `/oauth/init?email=${email}&entrypoint=protection_report_monitor&utm_source=about-protections`;
+    } else {
+      url +=
+        "/?entrypoint=protection_report_monitor&utm_source=about-protections";
+    }
+
+    return url;
   }
 
   renderContentForUserWithLogins(monitorData) {
