@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 """
 Debugging JIT Compilations can be obscure without large context. This python
 script provide commands to let GDB open an image viewer to display the graph of
