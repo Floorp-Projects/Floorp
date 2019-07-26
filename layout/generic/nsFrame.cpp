@@ -3535,6 +3535,14 @@ void nsIFrame::BuildDisplayListForStackingContext(
         aBuilder, this, &resultList, stickyASR,
         aBuilder->CurrentActiveScrolledRoot());
     ct.TrackContainer(resultList.GetTop());
+
+    // If the sticky element is inside a filter, annotate the scroll frame that
+    // scrolls the filter as having out-of-flow content inside a filter (this
+    // inhibits paint skipping).
+    if (aBuilder->GetFilterASR() && aBuilder->GetFilterASR() == stickyASR) {
+      aBuilder->GetFilterASR()
+          ->mScrollableFrame->SetHasOutOfFlowContentInsideFilter();
+    }
   }
 
   /* If there's blending, wrap up the list in a blend-mode item. Note
