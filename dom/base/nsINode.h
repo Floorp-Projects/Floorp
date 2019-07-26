@@ -1474,6 +1474,9 @@ class nsINode : public mozilla::dom::EventTarget {
     ElementMayHaveAnonymousChildren,
     // Set if element has CustomElementData.
     ElementHasCustomElementData,
+    // Set if the element was created from prototype cache and
+    // its l10n attributes haven't been changed.
+    ElementCreatedFromPrototypeAndHasUnmodifiedL10n,
     // Guard value
     BooleanFlagCount
   };
@@ -1609,6 +1612,16 @@ class nsINode : public mozilla::dom::EventTarget {
   void SetHasCustomElementData() { SetBoolFlag(ElementHasCustomElementData); }
   bool HasCustomElementData() const {
     return GetBoolFlag(ElementHasCustomElementData);
+  }
+
+  void SetElementCreatedFromPrototypeAndHasUnmodifiedL10n() {
+    SetBoolFlag(ElementCreatedFromPrototypeAndHasUnmodifiedL10n);
+  }
+  bool HasElementCreatedFromPrototypeAndHasUnmodifiedL10n() {
+    return GetBoolFlag(ElementCreatedFromPrototypeAndHasUnmodifiedL10n);
+  }
+  void ClearElementCreatedFromPrototypeAndHasUnmodifiedL10n() {
+    ClearBoolFlag(ElementCreatedFromPrototypeAndHasUnmodifiedL10n);
   }
 
  protected:
