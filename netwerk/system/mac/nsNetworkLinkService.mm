@@ -115,19 +115,18 @@ nsNetworkLinkService::GetNetworkID(nsACString& aNetworkID) {
          : 1 + ((((struct sockaddr*)(sa))->sa_len - 1) | (sizeof(uint32_t) - 1)))
 #endif
 
-static char* getMac(struct sockaddr_dl* sdl, char* buf, size_t bufsize) {
-  char* cp;
-  int n, p = 0;
+static bool getMac(struct sockaddr_dl* sdl, char* buf, size_t bufsize) {
+  unsigned char* mac;
+  mac = (unsigned char*)LLADDR(sdl);
 
-  buf[0] = 0;
-  cp = (char*)LLADDR(sdl);
-  n = sdl->sdl_alen;
-  if (n > 0) {
-    while (--n >= 0) {
-      p += snprintf(&buf[p], bufsize - p, "%02x%s", *cp++ & 0xff, n > 0 ? ":" : "");
-    }
+  if (sdl->sdl_alen != 6) {
+    LOG(("networkid: unexpected MAC size %u", sdl->sdl_alen));
+    return false;
   }
-  return buf;
+
+  snprintf(buf, bufsize, "%02x:%02x:%02x:%02x:%02x:%02x", mac[0], mac[1], mac[2], mac[3], mac[4],
+           mac[5]);
+  return true;
 }
 
 /* If the IP matches, get the MAC and return true */
@@ -135,8 +134,9 @@ static bool matchIp(struct sockaddr_dl* sdl, struct sockaddr_inarp* addr, char* 
                     size_t bufsize) {
   if (sdl->sdl_alen) {
     if (!strcmp(inet_ntoa(addr->sin_addr), ip)) {
-      getMac(sdl, buf, bufsize);
-      return true; /* done! */
+      if (getMac(sdl, buf, bufsize)) {
+        return true; /* done! */
+      }
     }
   }
   return false; /* continue */
@@ -240,13 +240,12 @@ static int routingTable(char* gw, size_t aGwLen) {
 // information leakage).
 //
 static bool ipv4NetworkId(SHA1Sum* sha1) {
-  char hw[MAXHOSTNAMELEN];
-  if (!routingTable(hw, sizeof(hw))) {
-    char mac[256];  // big enough for a printable MAC address
-    if (scanArp(hw, mac, sizeof(mac))) {
-      LOG(("networkid: MAC %s\n", hw));
-      nsAutoCString mac(hw);
-      sha1->update(mac.get(), mac.Length());
+  char gw[INET_ADDRSTRLEN];
+  if (!routingTable(gw, sizeof(gw))) {
+    char mac[18];  // big enough for a printable MAC address
+    if (scanArp(gw, mac, sizeof(mac))) {
+      LOG(("networkid: MAC %s\n", mac));
+      sha1->update(mac, strlen(mac));
       return true;
     }
   }
