@@ -266,28 +266,21 @@ struct BaselineScript final {
 
  public:
   enum Flag {
-    // (1 << 0) and (1 << 1) are unused.
-
     // Flag set when the script contains any writes to its on-stack
     // (rather than call object stored) arguments.
-    MODIFIES_ARGUMENTS = 1 << 2,
+    MODIFIES_ARGUMENTS = 1 << 0,
 
     // Flag set when compiled for use with Debugger. Handles various
     // Debugger hooks and compiles toggled calls for traps.
-    HAS_DEBUG_INSTRUMENTATION = 1 << 3,
-
-    // Flag set if this script has ever been Ion compiled, either directly
-    // or inlined into another script. This is cleared when the script's
-    // type information or caches are cleared.
-    ION_COMPILED_OR_INLINED = 1 << 4,
+    HAS_DEBUG_INSTRUMENTATION = 1 << 1,
 
     // Flag is set if this script has profiling instrumentation turned on.
-    PROFILER_INSTRUMENTATION_ON = 1 << 5,
+    PROFILER_INSTRUMENTATION_ON = 1 << 2,
 
     // Whether this script uses its environment chain. This is currently
     // determined by the BytecodeAnalysis and cached on the BaselineScript
     // for IonBuilder.
-    USES_ENVIRONMENT_CHAIN = 1 << 6,
+    USES_ENVIRONMENT_CHAIN = 1 << 3,
   };
 
  private:
@@ -338,10 +331,6 @@ struct BaselineScript final {
   bool hasDebugInstrumentation() const {
     return flags_ & HAS_DEBUG_INSTRUMENTATION;
   }
-
-  void setIonCompiledOrInlined() { flags_ |= ION_COMPILED_OR_INLINED; }
-  void clearIonCompiledOrInlined() { flags_ &= ~ION_COMPILED_OR_INLINED; }
-  bool ionCompiledOrInlined() const { return flags_ & ION_COMPILED_OR_INLINED; }
 
   void setUsesEnvironmentChain() { flags_ |= USES_ENVIRONMENT_CHAIN; }
   bool usesEnvironmentChain() const { return flags_ & USES_ENVIRONMENT_CHAIN; }
