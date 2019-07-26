@@ -448,14 +448,6 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
   }
 
   /**
-   * Return true if using full range values (0-255 if 8 bits YUV). Used with YUV
-   * textures.
-   */
-  virtual gfx::ColorRange GetColorRange() const {
-    return gfx::ColorRange::LIMITED;
-  }
-
-  /**
    * Called during the transaction. The TextureSource may or may not be
    * composited.
    *
@@ -771,8 +763,6 @@ class BufferTextureHost : public TextureHost {
   gfx::YUVColorSpace GetYUVColorSpace() const override;
 
   gfx::ColorDepth GetColorDepth() const override;
-
-  gfx::ColorRange GetColorRange() const override;
 
   gfx::IntSize GetSize() const override { return mSize; }
 

@@ -716,29 +716,46 @@ class AutoLockImage {
 
 struct PlanarYCbCrData {
   // Luminance buffer
-  uint8_t* mYChannel = nullptr;
-  int32_t mYStride = 0;
-  gfx::IntSize mYSize = gfx::IntSize(0, 0);
-  int32_t mYSkip = 0;
+  uint8_t* mYChannel;
+  int32_t mYStride;
+  gfx::IntSize mYSize;
+  int32_t mYSkip;
   // Chroma buffers
-  uint8_t* mCbChannel = nullptr;
-  uint8_t* mCrChannel = nullptr;
-  int32_t mCbCrStride = 0;
-  gfx::IntSize mCbCrSize = gfx::IntSize(0, 0);
-  int32_t mCbSkip = 0;
-  int32_t mCrSkip = 0;
+  uint8_t* mCbChannel;
+  uint8_t* mCrChannel;
+  int32_t mCbCrStride;
+  gfx::IntSize mCbCrSize;
+  int32_t mCbSkip;
+  int32_t mCrSkip;
   // Picture region
-  uint32_t mPicX = 0;
-  uint32_t mPicY = 0;
-  gfx::IntSize mPicSize = gfx::IntSize(0, 0);
-  StereoMode mStereoMode = StereoMode::MONO;
-  gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
-  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-  gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
+  uint32_t mPicX;
+  uint32_t mPicY;
+  gfx::IntSize mPicSize;
+  StereoMode mStereoMode;
+  gfx::YUVColorSpace mYUVColorSpace;
+  gfx::ColorDepth mColorDepth;
 
   gfx::IntRect GetPictureRect() const {
     return gfx::IntRect(mPicX, mPicY, mPicSize.width, mPicSize.height);
   }
+
+  PlanarYCbCrData()
+      : mYChannel(nullptr),
+        mYStride(0),
+        mYSize(0, 0),
+        mYSkip(0),
+        mCbChannel(nullptr),
+        mCrChannel(nullptr),
+        mCbCrStride(0),
+        mCbCrSize(0, 0),
+        mCbSkip(0),
+        mCrSkip(0),
+        mPicX(0),
+        mPicY(0),
+        mPicSize(0, 0),
+        mStereoMode(StereoMode::MONO),
+        mYUVColorSpace(gfx::YUVColorSpace::BT601),
+        mColorDepth(gfx::ColorDepth::COLOR_8) {}
 };
 
 /****** Image subtypes for the different formats ******/

@@ -51,8 +51,7 @@ class DXVA2Manager {
 
   virtual HRESULT ConfigureForSize(IMFMediaType* aInputType,
                                    gfx::YUVColorSpace aColorSpace,
-                                   gfx::ColorRange aColorRange, uint32_t aWidth,
-                                   uint32_t aHeight) {
+                                   uint32_t aWidth, uint32_t aHeight) {
     return S_OK;
   }
 

@@ -177,22 +177,6 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
                       RESULT_DETAIL("VPX Unknown image format")),
           __func__);
     }
-    b.mYUVColorSpace = [&]() {
-      switch (img->cs) {
-        case VPX_CS_BT_601:
-        case VPX_CS_SMPTE_170:
-        case VPX_CS_SMPTE_240:
-          return gfx::YUVColorSpace::BT601;
-        case VPX_CS_BT_709:
-          return gfx::YUVColorSpace::BT709;
-        case VPX_CS_BT_2020:
-          return gfx::YUVColorSpace::BT2020;
-        default:
-          return DefaultColorSpace({img->d_w, img->d_h});
-      }
-    }();
-    b.mColorRange = img->range == VPX_CR_FULL_RANGE ? gfx::ColorRange::FULL
-                                                    : gfx::ColorRange::LIMITED;
 
     RefPtr<VideoData> v;
     if (!img_alpha) {

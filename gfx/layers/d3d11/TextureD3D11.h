@@ -87,8 +87,6 @@ class D3D11TextureData final : public TextureData {
   void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
     mYUVColorSpace = aColorSpace;
   }
-  gfx::ColorRange GetColorRange() const { return mColorRange; }
-  void SetColorRange(gfx::ColorRange aColorRange) { mColorRange = aColorRange; }
 
   gfx::IntSize GetSize() const { return mSize; }
   gfx::SurfaceFormat GetSurfaceFormat() const { return mFormat; }
@@ -119,7 +117,6 @@ class D3D11TextureData final : public TextureData {
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-  gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
   bool mNeedsClear;
   bool mNeedsClearWhite;
   bool mHasSynchronization;
@@ -138,14 +135,13 @@ class DXGIYCbCrTextureData : public TextureData {
       IDirect3DTexture9* aTextureCr, HANDLE aHandleY, HANDLE aHandleCb,
       HANDLE aHandleCr, const gfx::IntSize& aSize, const gfx::IntSize& aSizeY,
       const gfx::IntSize& aSizeCbCr, gfx::ColorDepth aColorDepth,
-      gfx::YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange);
+      gfx::YUVColorSpace aYUVColorSpace);
 
   static DXGIYCbCrTextureData* Create(
       ID3D11Texture2D* aTextureCb, ID3D11Texture2D* aTextureY,
       ID3D11Texture2D* aTextureCr, const gfx::IntSize& aSize,
       const gfx::IntSize& aSizeY, const gfx::IntSize& aSizeCbCr,
-      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
-      gfx::ColorRange aColorRange);
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace);
 
   bool Lock(OpenMode) override { return true; }
 
@@ -174,8 +170,8 @@ class DXGIYCbCrTextureData : public TextureData {
   gfx::IntSize GetCbCrSize() const { return mSizeCbCr; }
 
   gfx::ColorDepth GetColorDepth() const { return mColorDepth; }
+
   gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
-  gfx::ColorRange GetColorRange() const { return mColorRange; }
 
   ID3D11Texture2D* GetD3D11Texture(size_t index) {
     return mD3D11Textures[index];
@@ -190,7 +186,6 @@ class DXGIYCbCrTextureData : public TextureData {
   gfx::IntSize mSizeCbCr;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mYUVColorSpace;
-  gfx::ColorRange mColorRange;
 };
 
 /**
@@ -341,7 +336,6 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::YUVColorSpace GetYUVColorSpace() const override {
     return mYUVColorSpace;
   }
-  gfx::ColorRange GetColorRange() const override { return mColorRange; }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
@@ -377,7 +371,6 @@ class DXGITextureHostD3D11 : public TextureHost {
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
   const gfx::YUVColorSpace mYUVColorSpace;
-  const gfx::ColorRange mColorRange;
   bool mIsLocked;
 };
 
@@ -398,10 +391,10 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
   }
 
   gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
+
   gfx::YUVColorSpace GetYUVColorSpace() const override {
     return mYUVColorSpace;
   }
-  gfx::ColorRange GetColorRange() const override { return mColorRange; }
 
   bool Lock() override;
 
@@ -445,7 +438,6 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
   bool mIsLocked;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mYUVColorSpace;
-  gfx::ColorRange mColorRange;
 };
 
 class CompositingRenderTargetD3D11 : public CompositingRenderTarget,

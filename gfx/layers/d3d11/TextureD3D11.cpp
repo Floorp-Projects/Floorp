@@ -384,7 +384,7 @@ bool D3D11TextureData::SerializeSpecific(
   }
 
   *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat,
-                                     mSize, mYUVColorSpace, mColorRange);
+                                     mSize, mYUVColorSpace);
   return true;
 }
 
@@ -572,7 +572,7 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
     IDirect3DTexture9* aTextureCr, HANDLE aHandleY, HANDLE aHandleCb,
     HANDLE aHandleCr, const gfx::IntSize& aSize, const gfx::IntSize& aSizeY,
     const gfx::IntSize& aSizeCbCr, gfx::ColorDepth aColorDepth,
-    YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange) {
+    YUVColorSpace aYUVColorSpace) {
   if (!aHandleY || !aHandleCb || !aHandleCr || !aTextureY || !aTextureCb ||
       !aTextureCr) {
     return nullptr;
@@ -590,7 +590,6 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
   texture->mSizeCbCr = aSizeCbCr;
   texture->mColorDepth = aColorDepth;
   texture->mYUVColorSpace = aYUVColorSpace;
-  texture->mColorRange = aColorRange;
 
   return texture;
 }
@@ -599,8 +598,7 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
     ID3D11Texture2D* aTextureY, ID3D11Texture2D* aTextureCb,
     ID3D11Texture2D* aTextureCr, const gfx::IntSize& aSize,
     const gfx::IntSize& aSizeY, const gfx::IntSize& aSizeCbCr,
-    gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
-    gfx::ColorRange aColorRange) {
+    gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace) {
   if (!aTextureY || !aTextureCb || !aTextureCr) {
     return nullptr;
   }
@@ -652,7 +650,6 @@ DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
   texture->mSizeCbCr = aSizeCbCr;
   texture->mColorDepth = aColorDepth;
   texture->mYUVColorSpace = aYUVColorSpace;
-  texture->mColorRange = aColorRange;
 
   return texture;
 }
@@ -670,7 +667,7 @@ void DXGIYCbCrTextureData::SerializeSpecific(
   *aOutDesc = SurfaceDescriptorDXGIYCbCr(
       (WindowsHandle)mHandles[0], (WindowsHandle)mHandles[1],
       (WindowsHandle)mHandles[2], mSize, mSizeY, mSizeCbCr, mColorDepth,
-      mYUVColorSpace, mColorRange);
+      mYUVColorSpace);
 }
 
 bool DXGIYCbCrTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
@@ -765,7 +762,6 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
       mYUVColorSpace(aDescriptor.yUVColorSpace()),
-      mColorRange(aDescriptor.colorRange()),
       mIsLocked(false) {}
 
 bool DXGITextureHostD3D11::EnsureTexture() {
@@ -1080,8 +1076,7 @@ void DXGITextureHostD3D11::PushDisplayItems(
                              GetFormat() == gfx::SurfaceFormat::NV12
                                  ? wr::ColorDepth::Color8
                                  : wr::ColorDepth::Color16,
-                             wr::ToWrYuvColorSpace(mYUVColorSpace),
-                             wr::ToWrColorRange(mColorRange), aFilter);
+                             wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
       break;
     }
     default: {
@@ -1097,8 +1092,7 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
       mSizeCbCr(aDescriptor.sizeCbCr()),
       mIsLocked(false),
       mColorDepth(aDescriptor.colorDepth()),
-      mYUVColorSpace(aDescriptor.yUVColorSpace()),
-      mColorRange(aDescriptor.colorRange()) {
+      mYUVColorSpace(aDescriptor.yUVColorSpace()) {
   mHandles[0] = aDescriptor.handleY();
   mHandles[1] = aDescriptor.handleCb();
   mHandles[2] = aDescriptor.handleCr();
@@ -1291,10 +1285,10 @@ void DXGIYCbCrTextureHostD3D11::PushDisplayItems(
     const Range<wr::ImageKey>& aImageKeys) {
   MOZ_ASSERT(aImageKeys.length() == 3);
 
-  aBuilder.PushYCbCrPlanarImage(
-      aBounds, aClip, true, aImageKeys[0], aImageKeys[1], aImageKeys[2],
-      wr::ToWrColorDepth(mColorDepth), wr::ToWrYuvColorSpace(mYUVColorSpace),
-      wr::ToWrColorRange(mColorRange), aFilter);
+  aBuilder.PushYCbCrPlanarImage(aBounds, aClip, true, aImageKeys[0],
+                                aImageKeys[1], aImageKeys[2],
+                                wr::ToWrColorDepth(mColorDepth),
+                                wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
 }
 
 bool DXGIYCbCrTextureHostD3D11::AcquireTextureSource(

@@ -151,8 +151,7 @@ bool SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor(
   gfx::SurfaceFormat format =
       mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8 : gfx::SurfaceFormat::B8G8R8X8;
   *out_descriptor = layers::SurfaceDescriptorD3D10(
-      (WindowsHandle)mShareHandle, format, mSize, gfx::YUVColorSpace::UNKNOWN,
-      gfx::ColorRange::FULL);
+      (WindowsHandle)mShareHandle, format, mSize, gfx::YUVColorSpace::UNKNOWN);
   return true;
 }
 

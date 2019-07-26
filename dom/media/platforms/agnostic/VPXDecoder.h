@@ -111,10 +111,6 @@ class VPXDecoder : public MediaDataDecoder,
     */
     bool mFullRange = false;
 
-    gfx::ColorRange ColorRange() const {
-      return mFullRange ? gfx::ColorRange::FULL : gfx::ColorRange::LIMITED;
-    }
-
     /*
       Sub-sampling, used only for non sRGB colorspace.
       subsampling_x subsampling_y Description
