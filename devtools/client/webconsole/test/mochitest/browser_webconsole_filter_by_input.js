@@ -249,7 +249,7 @@ function clickClearButton(hud) {
 }
 
 function getVisibleLogs(hud) {
-  const outputNode = hud.outputNode;
+  const outputNode = hud.ui.outputNode;
   return outputNode.querySelectorAll(".message");
 }
 

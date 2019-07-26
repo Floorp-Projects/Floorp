@@ -23,7 +23,7 @@ async function performTests() {
 
   const { jsterm } = hud;
   ok(jsterm, "we have a jsterm");
-  ok(hud.outputNode, "we have an output node");
+  ok(hud.ui.outputNode, "we have an output node");
 
   // Test typing 'docu'.
   await setInputValueForAutocompletion(hud, "docu");
