@@ -166,6 +166,9 @@ RefPtr<MediaDataDecoder::DecodePromise> TheoraDecoder::ProcessDecode(
     b.mPlanes[2].mWidth = mTheoraInfo.frame_width >> hdec;
     b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
 
+    b.mYUVColorSpace =
+        DefaultColorSpace({mTheoraInfo.frame_width, mTheoraInfo.frame_height});
+
     IntRect pictureArea(mTheoraInfo.pic_x, mTheoraInfo.pic_y,
                         mTheoraInfo.pic_width, mTheoraInfo.pic_height);
 

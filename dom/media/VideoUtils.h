@@ -12,6 +12,7 @@
 #include "TimeUnits.h"
 #include "VideoLimits.h"
 #include "mozilla/gfx/Point.h"  // for gfx::IntSize
+#include "mozilla/gfx/Types.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
@@ -549,6 +550,11 @@ inline void AppendStringIfNotEmpty(nsACString& aDest, nsACString&& aSrc) {
 // Returns true if we're running on a cellular connection; 2G, 3G, etc.
 // Main thread only.
 bool OnCellularConnection();
+
+inline gfx::YUVColorSpace DefaultColorSpace(const gfx::IntSize& aSize) {
+  return aSize.height < 720 ? gfx::YUVColorSpace::BT601
+                            : gfx::YUVColorSpace::BT709;
+}
 
 }  // end namespace mozilla
 
