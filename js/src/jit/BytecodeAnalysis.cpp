@@ -16,10 +16,7 @@ using namespace js;
 using namespace js::jit;
 
 BytecodeAnalysis::BytecodeAnalysis(TempAllocator& alloc, JSScript* script)
-    : script_(script),
-      infos_(alloc),
-      usesEnvironmentChain_(false),
-      hasTryFinally_(false) {}
+    : script_(script), infos_(alloc), hasTryFinally_(false) {}
 
 // Bytecode range containing only catch or finally code.
 struct CatchFinallyRange {
@@ -39,14 +36,6 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
   if (!infos_.growByUninitialized(script_->length())) {
     return false;
   }
-
-  // Initialize the env chain slot if either the function needs some
-  // EnvironmentObject (like a CallObject) or the script uses the env
-  // chain. The latter case is handled below.
-  usesEnvironmentChain_ =
-      script_->module() || script_->initialEnvironmentShape() ||
-      (script_->functionDelazifying() &&
-       script_->functionDelazifying()->needsSomeEnvironmentObject());
 
   jsbytecode* end = script_->codeEnd();
 
@@ -164,35 +153,6 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
         }
         break;
 
-      case JSOP_GETNAME:
-      case JSOP_BINDNAME:
-      case JSOP_BINDVAR:
-      case JSOP_SETNAME:
-      case JSOP_STRICTSETNAME:
-      case JSOP_DELNAME:
-      case JSOP_GETALIASEDVAR:
-      case JSOP_SETALIASEDVAR:
-      case JSOP_LAMBDA:
-      case JSOP_LAMBDA_ARROW:
-      case JSOP_DEFFUN:
-      case JSOP_DEFVAR:
-      case JSOP_DEFLET:
-      case JSOP_DEFCONST:
-      case JSOP_PUSHLEXICALENV:
-      case JSOP_POPLEXICALENV:
-      case JSOP_IMPLICITTHIS:
-        usesEnvironmentChain_ = true;
-        break;
-
-      case JSOP_GETGNAME:
-      case JSOP_SETGNAME:
-      case JSOP_STRICTSETGNAME:
-      case JSOP_GIMPLICITTHIS:
-        if (script_->hasNonSyntacticScope()) {
-          usesEnvironmentChain_ = true;
-        }
-        break;
-
       default:
         break;
     }
@@ -235,4 +195,59 @@ bool BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn) {
   }
 
   return true;
+}
+
+IonBytecodeInfo js::jit::AnalyzeBytecodeForIon(JSContext* cx,
+                                               JSScript* script) {
+  IonBytecodeInfo result;
+
+  if (script->module() || script->initialEnvironmentShape() ||
+      (script->functionDelazifying() &&
+       script->functionDelazifying()->needsSomeEnvironmentObject())) {
+    result.usesEnvironmentChain = true;
+  }
+
+  jsbytecode const* pcEnd = script->codeEnd();
+  for (jsbytecode* pc = script->code(); pc < pcEnd; pc = GetNextPc(pc)) {
+    JSOp op = JSOp(*pc);
+    switch (op) {
+      case JSOP_SETARG:
+        result.modifiesArguments = true;
+        break;
+
+      case JSOP_GETNAME:
+      case JSOP_BINDNAME:
+      case JSOP_BINDVAR:
+      case JSOP_SETNAME:
+      case JSOP_STRICTSETNAME:
+      case JSOP_DELNAME:
+      case JSOP_GETALIASEDVAR:
+      case JSOP_SETALIASEDVAR:
+      case JSOP_LAMBDA:
+      case JSOP_LAMBDA_ARROW:
+      case JSOP_DEFFUN:
+      case JSOP_DEFVAR:
+      case JSOP_DEFLET:
+      case JSOP_DEFCONST:
+      case JSOP_PUSHLEXICALENV:
+      case JSOP_POPLEXICALENV:
+      case JSOP_IMPLICITTHIS:
+        result.usesEnvironmentChain = true;
+        break;
+
+      case JSOP_GETGNAME:
+      case JSOP_SETGNAME:
+      case JSOP_STRICTSETGNAME:
+      case JSOP_GIMPLICITTHIS:
+        if (script->hasNonSyntacticScope()) {
+          result.usesEnvironmentChain = true;
+        }
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return result;
 }

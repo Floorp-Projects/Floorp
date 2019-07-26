@@ -77,15 +77,7 @@ BaselineCodeGen<Handler>::BaselineCodeGen(JSContext* cx, HandlerArgs&&... args)
     : handler(cx, masm, std::forward<HandlerArgs>(args)...),
       cx(cx),
       frame(handler.frame()),
-      traceLoggerToggleOffsets_(cx),
-      profilerEnterFrameToggleOffset_(),
-      profilerExitFrameToggleOffset_(),
-      pushedBeforeCall_(0),
-#ifdef DEBUG
-      inCall_(false),
-#endif
-      modifiesArguments_(false) {
-}
+      traceLoggerToggleOffsets_(cx) {}
 
 BaselineCompiler::BaselineCompiler(JSContext* cx, TempAllocator& alloc,
                                    JSScript* script)
@@ -257,28 +249,6 @@ MethodStatus BaselineCompiler::compile() {
     return Method_Error;
   }
 
-  Rooted<EnvironmentObject*> templateEnv(cx);
-  if (script->functionNonDelazifying()) {
-    RootedFunction fun(cx, script->functionNonDelazifying());
-
-    if (fun->needsNamedLambdaEnvironment()) {
-      templateEnv =
-          NamedLambdaObject::createTemplateObject(cx, fun, gc::TenuredHeap);
-      if (!templateEnv) {
-        return Method_Error;
-      }
-    }
-
-    if (fun->needsCallObject()) {
-      RootedScript scriptRoot(cx, script);
-      templateEnv = CallObject::createTemplateObject(
-          cx, scriptRoot, templateEnv, gc::TenuredHeap);
-      if (!templateEnv) {
-        return Method_Error;
-      }
-    }
-  }
-
   // Encode the pc mapping table. See PCMappingIndexEntry for
   // more information.
   Vector<PCMappingIndexEntry> pcMappingIndexEntries(cx);
@@ -337,7 +307,6 @@ MethodStatus BaselineCompiler::compile() {
   }
 
   baselineScript->setMethod(code);
-  baselineScript->setTemplateEnvironment(templateEnv);
 
   JitSpew(JitSpew_BaselineScripts,
           "Created BaselineScript %p (raw %p) for %s:%u:%u",
@@ -360,13 +329,6 @@ MethodStatus BaselineCompiler::compile() {
   if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(
           cx->runtime())) {
     baselineScript->toggleProfilerInstrumentation(true);
-  }
-
-  if (modifiesArguments_) {
-    baselineScript->setModifiesArguments();
-  }
-  if (handler.analysis().usesEnvironmentChain()) {
-    baselineScript->setUsesEnvironmentChain();
   }
 
 #ifdef JS_TRACE_LOGGING
@@ -1578,9 +1540,8 @@ bool BaselineCompiler::emitDebugTrap() {
   MOZ_ASSERT(frame.numUnsyncedSlots() == 0);
 
   JSScript* script = handler.script();
-  bool enabled =
-      DebugAPI::stepModeEnabled(script) ||
-      DebugAPI::hasBreakpointsAt(script, handler.pc());
+  bool enabled = DebugAPI::stepModeEnabled(script) ||
+                 DebugAPI::hasBreakpointsAt(script, handler.pc());
 
 #if defined(JS_CODEGEN_ARM64)
   // Flush any pending constant pools to prevent incorrect
@@ -4398,7 +4359,6 @@ bool BaselineCodeGen<Handler>::emit_JSOP_GETARG() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_SETARG() {
-  modifiesArguments_ = true;
   return emitFormalArgAccess(JSOP_SETARG);
 }
 

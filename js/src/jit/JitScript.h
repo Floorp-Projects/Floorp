@@ -16,14 +16,23 @@ class JSScript;
 namespace js {
 namespace jit {
 
+class ControlFlowGraph;
+
 // Describes a single wasm::ImportExit which jumps (via an import with
-// the given index) directly to a BaselineScript or IonScript.
+// the given index) directly to a JitScript.
 struct DependentWasmImport {
   wasm::Instance* instance;
   size_t importIndex;
 
   DependentWasmImport(wasm::Instance& instance, size_t importIndex)
       : instance(&instance), importIndex(importIndex) {}
+};
+
+// Information about a script's bytecode, used by IonBuilder. This is cached
+// in JitScript.
+struct IonBytecodeInfo {
+  bool usesEnvironmentChain = false;
+  bool modifiesArguments = false;
 };
 
 // [SMDOC] JitScript
@@ -108,6 +117,43 @@ class alignas(uintptr_t) JitScript final {
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
 
+  // Data allocated lazily the first time this script is compiled, inlined, or
+  // analyzed by IonBuilder. This is done lazily to improve performance and
+  // memory usage as most scripts are never Ion-compiled.
+  struct CachedIonData {
+    // For functions with a call object, template objects to use for the call
+    // object and decl env object (linked via the call object's enclosing
+    // scope).
+    HeapPtr<EnvironmentObject*> templateEnv = nullptr;
+
+    // Cached control flow graph for IonBuilder. Owned by JitZone::cfgSpace and
+    // can be purged by Zone::discardJitCode.
+    ControlFlowGraph* controlFlowGraph = nullptr;
+
+    // The total bytecode length of all scripts we inlined when we Ion-compiled
+    // this script. 0 if Ion did not compile this script or if we didn't inline
+    // anything.
+    uint16_t inlinedBytecodeLength = 0;
+
+    // The max inlining depth where we can still inline all functions we inlined
+    // when we Ion-compiled this script. This starts as UINT8_MAX, since we have
+    // no data yet, and won't affect inlining heuristics in that case. The value
+    // is updated when we Ion-compile this script. See makeInliningDecision for
+    // more info.
+    uint8_t maxInliningDepth = UINT8_MAX;
+
+    // Analysis information based on the script and its bytecode.
+    IonBytecodeInfo bytecodeInfo = {};
+
+    CachedIonData(EnvironmentObject* templateEnv, IonBytecodeInfo bytecodeInfo);
+
+    CachedIonData(const CachedIonData&) = delete;
+    void operator=(const CachedIonData&) = delete;
+
+    void trace(JSTracer* trc);
+  };
+  js::UniquePtr<CachedIonData> cachedIonData_;
+
   // Offset of the StackTypeSet array.
   uint32_t typeSetOffset_ = 0;
 
@@ -156,6 +202,17 @@ class alignas(uintptr_t) JitScript final {
     flags_.typesGeneration = generation;
   }
 
+  bool hasCachedIonData() const { return !!cachedIonData_; }
+
+  CachedIonData& cachedIonData() {
+    MOZ_ASSERT(hasCachedIonData());
+    return *cachedIonData_.get();
+  }
+  const CachedIonData& cachedIonData() const {
+    MOZ_ASSERT(hasCachedIonData());
+    return *cachedIonData_.get();
+  }
+
  public:
   JitScript(JSScript* script, uint32_t typeSetOffset,
             uint32_t bytecodeTypeMapOffset, uint32_t allocBytes,
@@ -171,6 +228,8 @@ class alignas(uintptr_t) JitScript final {
 
   MOZ_MUST_USE bool initICEntriesAndBytecodeTypeMap(JSContext* cx,
                                                     JSScript* script);
+
+  MOZ_MUST_USE bool ensureHasCachedIonData(JSContext* cx, HandleScript script);
 
   bool hasFreezeConstraints(const js::AutoSweepJitScript& sweep) const {
     MOZ_ASSERT(sweep.jitScript() == this);
@@ -354,6 +413,50 @@ class alignas(uintptr_t) JitScript final {
   void unlinkDependentWasmImports();
 
   size_t allocBytes() const { return allocBytes_; }
+
+  EnvironmentObject* templateEnvironment() const {
+    return cachedIonData().templateEnv;
+  }
+
+  const ControlFlowGraph* controlFlowGraph() const {
+    return cachedIonData().controlFlowGraph;
+  }
+  void setControlFlowGraph(ControlFlowGraph* controlFlowGraph) {
+    MOZ_ASSERT(controlFlowGraph);
+    cachedIonData().controlFlowGraph = controlFlowGraph;
+  }
+  void clearControlFlowGraph() {
+    if (hasCachedIonData()) {
+      cachedIonData().controlFlowGraph = nullptr;
+    }
+  }
+
+  bool modifiesArguments() const {
+    return cachedIonData().bytecodeInfo.modifiesArguments;
+  }
+  bool usesEnvironmentChain() const {
+    return cachedIonData().bytecodeInfo.usesEnvironmentChain;
+  }
+
+  uint8_t maxInliningDepth() const {
+    return hasCachedIonData() ? cachedIonData().maxInliningDepth : UINT8_MAX;
+  }
+  void resetMaxInliningDepth() { cachedIonData().maxInliningDepth = UINT8_MAX; }
+
+  void setMaxInliningDepth(uint32_t depth) {
+    MOZ_ASSERT(depth <= UINT8_MAX);
+    cachedIonData().maxInliningDepth = depth;
+  }
+
+  uint16_t inlinedBytecodeLength() const {
+    return hasCachedIonData() ? cachedIonData().inlinedBytecodeLength : 0;
+  }
+  void setInlinedBytecodeLength(uint32_t len) {
+    if (len > UINT16_MAX) {
+      len = UINT16_MAX;
+    }
+    cachedIonData().inlinedBytecodeLength = len;
+  }
 };
 
 // Ensures no JitScripts are purged in the current zone.
