@@ -100,12 +100,6 @@ class alignas(uintptr_t) JitScript final {
   // Allocated space for fallback IC stubs.
   FallbackICStubSpace fallbackStubSpace_ = {};
 
-  // The freeze constraints added to stack type sets will only directly
-  // invalidate the script containing those stack type sets. This Vector
-  // contains compilations that inlined this script, so we can invalidate
-  // them as well.
-  RecompileInfoVector inlinedCompilations_;
-
   // Like JSScript::jitCodeRaw_ but when the script has an IonScript this can
   // point to a separate entry point that skips the argument type checks.
   uint8_t* jitCodeSkipArgCheck_ = nullptr;
@@ -121,6 +115,12 @@ class alignas(uintptr_t) JitScript final {
   // analyzed by IonBuilder. This is done lazily to improve performance and
   // memory usage as most scripts are never Ion-compiled.
   struct CachedIonData {
+    // The freeze constraints added to stack type sets will only directly
+    // invalidate the script containing those stack type sets. This Vector
+    // contains compilations that inlined this script, so we can invalidate
+    // them as well.
+    RecompileInfoVector inlinedCompilations_;
+
     // For functions with a call object, template objects to use for the call
     // object and decl env object (linked via the call object's enclosing
     // scope).
@@ -247,18 +247,22 @@ class alignas(uintptr_t) JitScript final {
   void clearIonCompiledOrInlined() { flags_.ionCompiledOrInlined = false; }
   bool ionCompiledOrInlined() const { return flags_.ionCompiledOrInlined; }
 
-  RecompileInfoVector& inlinedCompilations(
+  RecompileInfoVector* maybeInlinedCompilations(
       const js::AutoSweepJitScript& sweep) {
     MOZ_ASSERT(sweep.jitScript() == this);
-    return inlinedCompilations_;
+    if (!hasCachedIonData()) {
+      return nullptr;
+    }
+    return &cachedIonData().inlinedCompilations_;
   }
   MOZ_MUST_USE bool addInlinedCompilation(const js::AutoSweepJitScript& sweep,
                                           RecompileInfo info) {
     MOZ_ASSERT(sweep.jitScript() == this);
-    if (!inlinedCompilations_.empty() && inlinedCompilations_.back() == info) {
+    auto& inlinedCompilations = cachedIonData().inlinedCompilations_;
+    if (!inlinedCompilations.empty() && inlinedCompilations.back() == info) {
       return true;
     }
-    return inlinedCompilations_.append(info);
+    return inlinedCompilations.append(info);
   }
 
   uint32_t numICEntries() const {
