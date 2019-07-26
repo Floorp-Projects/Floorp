@@ -15,6 +15,8 @@ DEFAULT_EXPIRES_IN = '1 year'
 DEFAULT_APK_ARTIFACT_LOCATION = 'public/target.apk'
 _OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
 _DEFAULT_TASK_URL = 'https://queue.taskcluster.net/v1/task'
+GOOGLE_PROJECT = "moz-fenix"
+GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
 
 
 class TaskBuilder(object):
@@ -161,6 +163,48 @@ class TaskBuilder(object):
             },
         )
 
+   
+    def craft_ui_tests_task(self):
+        artifacts = {
+            "public": {
+                "type": "directory",
+                "path": "/build/fenix/results",
+                "expires": taskcluster.stringDate(taskcluster.fromNow(DEFAULT_EXPIRES_IN))
+            }
+        }
+
+        env_vars = {
+            "GOOGLE_PROJECT": "moz-fenix",
+            "GOOGLE_APPLICATION_CREDENTIALS": ".firebase_token.json"
+        }
+
+        gradle_commands = (
+            './gradlew --no-daemon clean assembleArmDebug assembleArmDebugAndroidTest',
+        )
+
+        test_commands = (
+            'automation/taskcluster/androidTest/ui-test.sh arm -1',
+        )
+
+        command = ' && '.join(
+            cmd
+            for commands in (gradle_commands, test_commands)
+            for cmd in commands
+            if cmd
+        )
+
+        return self._craft_build_ish_task(
+            name='Fenix - UI test',
+            description='Execute Gradle tasks for UI tests',
+            command=command,
+            scopes=[
+                'secrets:get:project/mobile/fenix/firebase'
+            ],
+            artifacts=artifacts,
+            env_vars=env_vars,
+        )
+ 
+
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(
             name='detekt',
@@ -268,12 +312,13 @@ class TaskBuilder(object):
 
     def _craft_build_ish_task(
         self, name, description, command, dependencies=None, artifacts=None, scopes=None,
-        routes=None, treeherder=None
+        routes=None, treeherder=None, env_vars=None,
     ):
         dependencies = [] if dependencies is None else dependencies
         artifacts = {} if artifacts is None else artifacts
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
+        env_vars = {} if env_vars is None else env_vars
 
         checkout_command = ' && '.join([
             "export TERM=dumb",
@@ -289,11 +334,11 @@ class TaskBuilder(object):
             features['chainOfTrust'] = True
         if any(scope.startswith('secrets:') for scope in scopes):
             features['taskclusterProxy'] = True
-
         payload = {
             "features": features,
+            "env": env_vars,
             "maxRunTime": 7200,
-            "image": "mozillamobile/fenix:1.3",
+            "image": "mozillamobile/fenix:1.4",
             "command": [
                 "/bin/bash",
                 "--login",

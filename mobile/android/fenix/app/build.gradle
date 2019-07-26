@@ -405,7 +405,11 @@ dependencies {
     androidTestImplementation Deps.mockwebserver
     testImplementation Deps.mozilla_support_test
     testImplementation Deps.androidx_junit
-    testImplementation Deps.robolectric
+    testImplementation (Deps.robolectric) {
+        exclude group: 'org.apache.maven'
+    }
+
+    testImplementation 'org.apache.maven:maven-ant-tasks:2.1.3'
     implementation Deps.fragment_testing
     testImplementation Deps.places_forUnitTests
 

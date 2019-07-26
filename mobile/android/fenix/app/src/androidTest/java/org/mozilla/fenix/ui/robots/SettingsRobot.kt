@@ -42,12 +42,12 @@ class SettingsRobot {
 private fun assertSettingsView() {
     // verify that we are in the correct library view
     assertBasicsHeading()
-    assertAdvancedHeading()
+    assertPrivacyHeading()
 }
 
 private fun assertBasicsHeading() = onView(ViewMatchers.withText("Basics"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-private fun assertAdvancedHeading() = onView(ViewMatchers.withText("Advanced"))
+private fun assertPrivacyHeading() = onView(ViewMatchers.withText("Privacy"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun goBackButton() = onView(CoreMatchers.allOf(withContentDescription("Navigate up")))

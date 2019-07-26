@@ -42,6 +42,10 @@ captures/
 *.iml
 .idea/
 
+# Vim swap files
+*.sw[op]
+
+
 # Keystore files
 # Uncomment the following lines if you do not want to check your keystore files in.
 #*.jks
@@ -82,3 +86,13 @@ gen-external-apklibs
 # Python Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+venv/
+
+
+# UI test artifacts 
+.firebase_token*
+results/
+test_artifacts/
+/build/test-tools/google-cloud-sdk/
+/build/test-tools/*.jar
+/build/test-tools/*.gz
