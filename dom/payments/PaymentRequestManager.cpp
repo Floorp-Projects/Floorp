@@ -500,7 +500,8 @@ nsresult PaymentRequestManager::CreatePayment(
 
   nsCOMPtr<nsPIDOMWindowOuter> outerWindow = aWindow->GetOuterWindow();
   MOZ_ASSERT(outerWindow);
-  if (nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow = outerWindow->GetTop()) {
+  if (nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
+          outerWindow->GetInProcessTop()) {
     outerWindow = topOuterWindow;
   }
   uint64_t topOuterWindowId = outerWindow->WindowID();

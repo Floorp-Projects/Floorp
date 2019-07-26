@@ -122,14 +122,14 @@ nsresult nsDocShellForwardsEnumerator::BuildArrayRecursive(
   }
 
   int32_t numChildren;
-  rv = aItem->GetChildCount(&numChildren);
+  rv = aItem->GetInProcessChildCount(&numChildren);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   for (int32_t i = 0; i < numChildren; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> curChild;
-    rv = aItem->GetChildAt(i, getter_AddRefs(curChild));
+    rv = aItem->GetInProcessChildAt(i, getter_AddRefs(curChild));
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -148,14 +148,14 @@ nsresult nsDocShellBackwardsEnumerator::BuildArrayRecursive(
   nsresult rv;
 
   int32_t numChildren;
-  rv = aItem->GetChildCount(&numChildren);
+  rv = aItem->GetInProcessChildCount(&numChildren);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
   for (int32_t i = numChildren - 1; i >= 0; --i) {
     nsCOMPtr<nsIDocShellTreeItem> curChild;
-    rv = aItem->GetChildAt(i, getter_AddRefs(curChild));
+    rv = aItem->GetInProcessChildAt(i, getter_AddRefs(curChild));
     if (NS_FAILED(rv)) {
       return rv;
     }

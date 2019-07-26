@@ -1207,8 +1207,8 @@ nsresult HTMLCanvasElement::RegisterFrameCaptureListener(
       return NS_ERROR_FAILURE;
     }
 
-    while (doc->GetParentDocument()) {
-      doc = doc->GetParentDocument();
+    while (doc->GetInProcessParentDocument()) {
+      doc = doc->GetInProcessParentDocument();
     }
 
     nsPresContext* context = doc->GetPresContext();

@@ -227,11 +227,11 @@ BrowserElementParent::OpenWindowInProcess(BrowsingContext* aOpenerWindow,
   // called window.open.  (Indeed, in the OOP case, the inner <iframe> lives
   // out-of-process, so we couldn't touch it if we tried.)
   //
-  // GetScriptableTop gets us the <iframe mozbrowser>'s window; we'll use its
-  // frame element, rather than aOpenerWindow's frame element, as our "opener
-  // frame element" below.
+  // GetInProcessScriptableTop gets us the <iframe mozbrowser>'s window; we'll
+  // use its frame element, rather than aOpenerWindow's frame element, as our
+  // "opener frame element" below.
   nsCOMPtr<nsPIDOMWindowOuter> win =
-      aOpenerWindow->GetDOMWindow()->GetScriptableTop();
+      aOpenerWindow->GetDOMWindow()->GetInProcessScriptableTop();
 
   nsCOMPtr<Element> openerFrameElement = win->GetFrameElementInternal();
   NS_ENSURE_TRUE(openerFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);

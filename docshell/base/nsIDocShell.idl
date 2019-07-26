@@ -779,12 +779,16 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Like nsIDocShellTreeItem::GetSameTypeParent, except this ignores <iframe
    * mozbrowser> boundaries.
+   *
+   * @deprecated: Use `BrowsingContext::GetParent()` in the future.
    */
   nsIDocShell getSameTypeParentIgnoreBrowserBoundaries();
 
   /**
    * Like nsIDocShellTreeItem::GetSameTypeRootTreeItem, except this ignores
    * <iframe mozbrowser> boundaries.
+   *
+   * @deprecated: Use `BrowsingContext::Top()` in the future.
    */
   nsIDocShell getSameTypeRootTreeItemIgnoreBrowserBoundaries();
 

@@ -535,7 +535,8 @@ bool nsDOMNavigationTiming::IsTopLevelContentDocumentInContentProcess() const {
     return false;
   }
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
-  Unused << mDocShell->GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
+  Unused << mDocShell->GetInProcessSameTypeRootTreeItem(
+      getter_AddRefs(rootItem));
   if (rootItem.get() != static_cast<nsIDocShellTreeItem*>(mDocShell.get())) {
     return false;
   }

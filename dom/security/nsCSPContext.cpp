@@ -1473,7 +1473,8 @@ nsCSPContext::PermitsAncestry(nsIDocShell* aDocShell,
   nsCOMPtr<nsIURI> uriClone;
 
   // iterate through each docShell parent item
-  while (NS_SUCCEEDED(treeItem->GetParent(getter_AddRefs(parentTreeItem))) &&
+  while (NS_SUCCEEDED(
+             treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem))) &&
          parentTreeItem != nullptr) {
     // stop when reaching chrome
     if (parentTreeItem->ItemType() == nsIDocShellTreeItem::typeChrome) {

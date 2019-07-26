@@ -359,17 +359,17 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> IndexedGetterOuter(
       uint32_t aIndex);
 
-  already_AddRefed<nsPIDOMWindowOuter> GetTop() override;
-  // Similar to GetTop() except that it stops at content frames that an
-  // extension has permission to access.  This is used by the third-party util
-  // service in order to determine the top window for a channel which is used
-  // in third-partiness checks.
+  already_AddRefed<nsPIDOMWindowOuter> GetInProcessTop() override;
+  // Similar to GetInProcessTop() except that it stops at content frames that
+  // an extension has permission to access.  This is used by the third-party
+  // util service in order to determine the top window for a channel which is
+  // used in third-partiness checks.
   already_AddRefed<nsPIDOMWindowOuter>
   GetTopExcludingExtensionAccessibleContentFrames(nsIURI* aURIBeingLoaded);
-  nsPIDOMWindowOuter* GetScriptableTop() override;
-  inline nsGlobalWindowOuter* GetTopInternal();
+  nsPIDOMWindowOuter* GetInProcessScriptableTop() override;
+  inline nsGlobalWindowOuter* GetInProcessTopInternal();
 
-  inline nsGlobalWindowOuter* GetScriptableTopInternal();
+  inline nsGlobalWindowOuter* GetInProcessScriptableTopInternal();
 
   already_AddRefed<mozilla::dom::BrowsingContext> GetChildWindow(
       const nsAString& aName);
@@ -555,9 +555,9 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   already_AddRefed<nsPIDOMWindowOuter> GetOpener() override;
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> GetParentOuter();
-  already_AddRefed<nsPIDOMWindowOuter> GetParent() override;
-  nsPIDOMWindowOuter* GetScriptableParent() override;
-  nsPIDOMWindowOuter* GetScriptableParentOrNull() override;
+  already_AddRefed<nsPIDOMWindowOuter> GetInProcessParent() override;
+  nsPIDOMWindowOuter* GetInProcessScriptableParent() override;
+  nsPIDOMWindowOuter* GetInProcessScriptableParentOrNull() override;
   mozilla::dom::Element* GetFrameElementOuter(nsIPrincipal& aSubjectPrincipal);
   mozilla::dom::Element* GetFrameElement() override;
   mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> OpenOuter(
@@ -747,7 +747,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   static nsGlobalWindowInner* CallerInnerWindow(JSContext* aCx);
 
   // Get the parent, returns null if this is a toplevel window
-  nsPIDOMWindowOuter* GetParentInternal();
+  nsPIDOMWindowOuter* GetInProcessParentInternal();
 
  public:
   // popup tracking
@@ -1176,16 +1176,17 @@ inline nsIGlobalObject* nsGlobalWindowOuter::GetOwnerGlobal() const {
   return GetCurrentInnerWindowInternal();
 }
 
-inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetTopInternal() {
-  nsCOMPtr<nsPIDOMWindowOuter> top = GetTop();
+inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetInProcessTopInternal() {
+  nsCOMPtr<nsPIDOMWindowOuter> top = GetInProcessTop();
   if (top) {
     return nsGlobalWindowOuter::Cast(top);
   }
   return nullptr;
 }
 
-inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetScriptableTopInternal() {
-  nsPIDOMWindowOuter* top = GetScriptableTop();
+inline nsGlobalWindowOuter*
+nsGlobalWindowOuter::GetInProcessScriptableTopInternal() {
+  nsPIDOMWindowOuter* top = GetInProcessScriptableTop();
   return nsGlobalWindowOuter::Cast(top);
 }
 
@@ -1203,14 +1204,14 @@ inline nsGlobalWindowInner* nsGlobalWindowOuter::EnsureInnerWindowInternal() {
 }
 
 inline bool nsGlobalWindowOuter::IsTopLevelWindow() {
-  nsPIDOMWindowOuter* parentWindow = GetScriptableTop();
+  nsPIDOMWindowOuter* parentWindow = GetInProcessScriptableTop();
   return parentWindow == this;
 }
 
 inline bool nsGlobalWindowOuter::IsPopupSpamWindow() { return mIsPopupSpam; }
 
 inline bool nsGlobalWindowOuter::IsFrame() {
-  return GetParentInternal() != nullptr;
+  return GetInProcessParentInternal() != nullptr;
 }
 
 inline void nsGlobalWindowOuter::MaybeClearInnerWindow(

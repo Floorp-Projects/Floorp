@@ -779,7 +779,7 @@ bool nsComputedDOMStyle::NeedsToFlush() const {
   // If parent document is there, also needs to check if there is some change
   // that needs to flush this document (e.g. size change for iframe).
   while (doc->StyleOrLayoutObservablyDependsOnParentDocumentLayout()) {
-    Document* parentDocument = doc->GetParentDocument();
+    Document* parentDocument = doc->GetInProcessParentDocument();
     Element* element = parentDocument->FindContentForSubDocument(doc);
     if (ElementNeedsRestyle(element, nullptr)) {
       return true;

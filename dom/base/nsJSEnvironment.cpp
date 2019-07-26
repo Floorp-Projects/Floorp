@@ -1954,7 +1954,7 @@ void nsJSContext::MaybeRunNextCollectorSlice(nsIDocShell* aDocShell,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  aDocShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  aDocShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
   if (root == aDocShell) {
     // We don't want to run collectors when loading the top level page.
     return;

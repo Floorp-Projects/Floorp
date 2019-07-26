@@ -594,7 +594,8 @@ nsJSChannel::AsyncOpen(nsIStreamListener* aListener) {
     nsLoadFlags loadFlags;
     mStreamChannel->GetLoadFlags(&loadFlags);
     if (loadFlags & LOAD_DOCUMENT_URI) {
-      mDocumentOnloadBlockedOn = mDocumentOnloadBlockedOn->GetParentDocument();
+      mDocumentOnloadBlockedOn =
+          mDocumentOnloadBlockedOn->GetInProcessParentDocument();
     }
   }
   if (mDocumentOnloadBlockedOn) {

@@ -328,7 +328,7 @@ class nsDocShell final : public nsDocLoader,
   // background loading, it triggers the parent docshell to see if the parent
   // document can fire load event earlier.
   void TriggerParentCheckDocShellIsEmpty() {
-    RefPtr<nsDocShell> parent = GetParentDocshell();
+    RefPtr<nsDocShell> parent = GetInProcessParentDocshell();
     if (parent) {
       parent->DocLoaderIsEmpty(true);
     }
@@ -934,7 +934,7 @@ class nsDocShell final : public nsDocLoader,
                               nsIDocShellTreeItem** aResult);
 
   // Convenience method for getting our parent docshell. Can return null
-  already_AddRefed<nsDocShell> GetParentDocshell();
+  already_AddRefed<nsDocShell> GetInProcessParentDocshell();
 
   // Helper assertion to enforce that mInPrivateBrowsing is in sync with
   // OriginAttributes.mPrivateBrowsingId

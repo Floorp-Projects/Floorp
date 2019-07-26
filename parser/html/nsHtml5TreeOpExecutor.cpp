@@ -800,7 +800,7 @@ void nsHtml5TreeOpExecutor::MaybeComplainAboutCharset(const char* aMsgId,
   // if alerted about them.
   if (!strcmp(aMsgId, "EncNoDeclaration") && mDocShell) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    mDocShell->GetSameTypeParent(getter_AddRefs(parent));
+    mDocShell->GetInProcessSameTypeParent(getter_AddRefs(parent));
     if (parent) {
       return;
     }

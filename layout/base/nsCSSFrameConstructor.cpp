@@ -4159,7 +4159,7 @@ nsCSSFrameConstructor::FindXULMenubarData(const Element& aElement,
   nsCOMPtr<nsIDocShell> treeItem = aElement.OwnerDoc()->GetDocShell();
   if (treeItem && nsIDocShellTreeItem::typeChrome == treeItem->ItemType()) {
     nsCOMPtr<nsIDocShellTreeItem> parent;
-    treeItem->GetParent(getter_AddRefs(parent));
+    treeItem->GetInProcessParent(getter_AddRefs(parent));
     if (!parent) {
       // This is the root.  Suppress the menubar, since on Mac
       // window menus are not attached to the window.

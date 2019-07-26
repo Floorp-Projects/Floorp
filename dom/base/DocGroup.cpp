@@ -106,7 +106,7 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
     if (!win) {
       continue;
     }
-    top = win->GetTop();
+    top = win->GetInProcessTop();
     if (!top) {
       continue;
     }

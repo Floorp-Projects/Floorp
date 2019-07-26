@@ -118,7 +118,7 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   if (!aPolicy.LowerCaseEqualsLiteral("deny") &&
       !aPolicy.LowerCaseEqualsLiteral("sameorigin")) {
     nsCOMPtr<nsIDocShellTreeItem> root;
-    curDocShellItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    curDocShellItem->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
     ReportError("XFOInvalid", root, uri, aPolicy);
     return true;
   }
@@ -138,9 +138,10 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
     return true;
   }
 
-  // GetScriptableTop, not GetTop, because we want this to respect
+  // GetInProcessScriptableTop, not GetTop, because we want this to respect
   // <iframe mozbrowser> boundaries.
-  nsCOMPtr<nsPIDOMWindowOuter> topWindow = thisWindow->GetScriptableTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWindow =
+      thisWindow->GetInProcessScriptableTop();
 
   // if the document is in the top window, it's not in a frame.
   if (thisWindow == topWindow) {
@@ -155,8 +156,8 @@ bool FramingChecker::CheckOneFrameOptionsPolicy(nsIHttpChannel* aHttpChannel,
   // Traverse up the parent chain and stop when we see a docshell whose
   // parent has a system principal, or a docshell corresponding to
   // <iframe mozbrowser>.
-  while (NS_SUCCEEDED(
-             curDocShellItem->GetParent(getter_AddRefs(parentDocShellItem))) &&
+  while (NS_SUCCEEDED(curDocShellItem->GetInProcessParent(
+             getter_AddRefs(parentDocShellItem))) &&
          parentDocShellItem) {
     nsCOMPtr<nsIDocShell> curDocShell = do_QueryInterface(curDocShellItem);
     if (curDocShell && curDocShell->GetIsMozBrowser()) {

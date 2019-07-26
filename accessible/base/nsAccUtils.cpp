@@ -511,12 +511,13 @@ bool nsAccUtils::IsARIALive(const Accessible* aAccessible) {
     }
 
     nsCOMPtr<nsIDocShellTreeItem> sameTypeParent;
-    docShellTreeItem->GetSameTypeParent(getter_AddRefs(sameTypeParent));
+    docShellTreeItem->GetInProcessSameTypeParent(
+        getter_AddRefs(sameTypeParent));
     if (!sameTypeParent || sameTypeParent == docShellTreeItem) {
       break;
     }
 
-    dom::Document* parentDoc = doc->GetParentDocument();
+    dom::Document* parentDoc = doc->GetInProcessParentDocument();
     if (!parentDoc) {
       break;
     }

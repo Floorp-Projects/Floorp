@@ -224,14 +224,15 @@ static void CollectWindowReports(nsGlobalWindowInner* aWindow,
                                  nsISupports* aData, bool aAnonymize) {
   nsAutoCString windowPath("explicit/");
 
-  // Avoid calling aWindow->GetTop() if there's no outer window.  It will work
-  // just fine, but will spew a lot of warnings.
+  // Avoid calling aWindow->GetInProcessTop() if there's no outer window.  It
+  // will work just fine, but will spew a lot of warnings.
   nsGlobalWindowOuter* top = nullptr;
   nsCOMPtr<nsIURI> location;
   if (aWindow->GetOuterWindow()) {
     // Our window should have a null top iff it has a null docshell.
-    MOZ_ASSERT(!!aWindow->GetTopInternal() == !!aWindow->GetDocShell());
-    top = aWindow->GetTopInternal();
+    MOZ_ASSERT(!!aWindow->GetInProcessTopInternal() ==
+               !!aWindow->GetDocShell());
+    top = aWindow->GetInProcessTopInternal();
     if (top) {
       location = GetWindowURI(top);
     }
@@ -816,10 +817,10 @@ void nsWindowMemoryReporter::CheckForGhostWindows(
 
   // Populate nonDetachedTabGroups.
   for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
-    // Null outer window implies null top, but calling GetTop() when there's no
-    // outer window causes us to spew debug warnings.
+    // Null outer window implies null top, but calling GetInProcessTop() when
+    // there's no outer window causes us to spew debug warnings.
     nsGlobalWindowInner* window = iter.UserData();
-    if (!window->GetOuterWindow() || !window->GetTopInternal()) {
+    if (!window->GetOuterWindow() || !window->GetInProcessTopInternal()) {
       // This window is detached, so we don't care about its tab group.
       continue;
     }
@@ -844,12 +845,12 @@ void nsWindowMemoryReporter::CheckForGhostWindows(
 
     nsPIDOMWindowInner* window = nsPIDOMWindowInner::From(iwindow);
 
-    // Avoid calling GetTop() if we have no outer window.  Nothing will break if
-    // we do, but it will spew debug output, which can cause our test logs to
-    // overflow.
+    // Avoid calling GetInProcessTop() if we have no outer window.  Nothing
+    // will break if we do, but it will spew debug output, which can cause our
+    // test logs to overflow.
     nsCOMPtr<nsPIDOMWindowOuter> top;
     if (window->GetOuterWindow()) {
-      top = window->GetOuterWindow()->GetTop();
+      top = window->GetOuterWindow()->GetInProcessTop();
     }
 
     if (top) {

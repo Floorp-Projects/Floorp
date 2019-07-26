@@ -142,7 +142,7 @@ BackgroundVideoDecodingPermissionObserver::GetOwnerWindow() const {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> topWin = outerWin->GetInProcessTop();
   return topWin.forget();
 }
 
@@ -166,7 +166,7 @@ bool BackgroundVideoDecodingPermissionObserver::IsValidEventSender(
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> senderTop = senderOuter->GetInProcessTop();
   if (!senderTop) {
     return false;
   }

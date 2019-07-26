@@ -6357,7 +6357,7 @@ already_AddRefed<PresShell> PresShell::GetParentPresShellForEventHandling() {
   NS_ENSURE_TRUE(treeItem, nullptr);
 
   nsCOMPtr<nsIDocShellTreeItem> parentTreeItem;
-  treeItem->GetParent(getter_AddRefs(parentTreeItem));
+  treeItem->GetInProcessParent(getter_AddRefs(parentTreeItem));
   nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentTreeItem);
   NS_ENSURE_TRUE(parentDocShell && treeItem != parentTreeItem, nullptr);
 
@@ -7157,7 +7157,7 @@ nsIFrame* PresShell::EventHandler::GetFrameForHandlingEventWith(
     }
     Document* retargetEventDoc = aRetargetDocument;
     while (!retargetPresShell) {
-      retargetEventDoc = retargetEventDoc->GetParentDocument();
+      retargetEventDoc = retargetEventDoc->GetInProcessParentDocument();
       if (!retargetEventDoc) {
         return nullptr;
       }
@@ -8244,7 +8244,7 @@ PresShell::EventHandler::GetDocumentURIToCompareWithBlacklist(
   // get URI of the parent document.
   for (Document* document = presContext->Document();
        document && document->IsContentDocument();
-       document = document->GetParentDocument()) {
+       document = document->GetInProcessParentDocument()) {
     // The document URI may be about:blank even if it comes from actual web
     // site.  Therefore, we need to check the URI of its principal.
     nsIPrincipal* principal = document->NodePrincipal();

@@ -635,7 +635,7 @@ EditorSpellCheck::UpdateCurrentDictionary(
   mEditor->GetFlags(&flags);
   if (flags & nsIPlaintextEditor::eEditorMailMask) {
     RefPtr<Document> ownerDoc = rootContent->OwnerDoc();
-    Document* parentDoc = ownerDoc->GetParentDocument();
+    Document* parentDoc = ownerDoc->GetInProcessParentDocument();
     if (parentDoc) {
       rootContent = parentDoc->GetDocumentElement();
       if (!rootContent) {

@@ -64,7 +64,7 @@ AudioChannelAgent::InitWithWeakCallback(
 }
 
 nsresult AudioChannelAgent::FindCorrectWindow(nsPIDOMWindowInner* aWindow) {
-  mWindow = aWindow->GetScriptableTop();
+  mWindow = aWindow->GetInProcessScriptableTop();
   if (NS_WARN_IF(!mWindow)) {
     return NS_OK;
   }
@@ -76,7 +76,7 @@ nsresult AudioChannelAgent::FindCorrectWindow(nsPIDOMWindowInner* aWindow) {
   // iframe (what is controlled by the system app).
   // For doing this we go recursively back into the chain of windows until we
   // find apps that are not the system one.
-  nsCOMPtr<nsPIDOMWindowOuter> outerParent = mWindow->GetParent();
+  nsCOMPtr<nsPIDOMWindowOuter> outerParent = mWindow->GetInProcessParent();
   if (!outerParent || outerParent == mWindow) {
     return NS_OK;
   }

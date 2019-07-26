@@ -7442,7 +7442,7 @@ nsDeviceContext* nsLayoutUtils::GetDeviceContextForScreenInfo(
     }
 
     nsCOMPtr<nsIDocShellTreeItem> parentItem;
-    docShell->GetParent(getter_AddRefs(parentItem));
+    docShell->GetInProcessParent(getter_AddRefs(parentItem));
     docShell = do_QueryInterface(parentItem);
   }
 

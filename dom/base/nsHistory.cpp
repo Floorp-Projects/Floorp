@@ -296,7 +296,7 @@ already_AddRefed<ChildSHistory> nsHistory::GetSessionHistory() const {
 
   // Get the root DocShell from it
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(root));
   NS_ENSURE_TRUE(webNav, nullptr);
 

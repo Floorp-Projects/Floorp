@@ -372,7 +372,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
   nsCOMPtr<nsIDocShellTreeItem> rootContentTreeItem;
   nsCOMPtr<nsIDocShell> currentDocShell;
 
-  startingDocShell->GetSameTypeRootTreeItem(
+  startingDocShell->GetInProcessSameTypeRootTreeItem(
       getter_AddRefs(rootContentTreeItem));
   nsCOMPtr<nsIDocShell> rootContentDocShell =
       do_QueryInterface(rootContentTreeItem);
@@ -533,7 +533,7 @@ nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
             nsCOMPtr<nsIDocShellTreeItem> fwTreeItem(fwPI->GetDocShell());
             if (NS_SUCCEEDED(rv)) {
               nsCOMPtr<nsIDocShellTreeItem> fwRootTreeItem;
-              rv = fwTreeItem->GetSameTypeRootTreeItem(
+              rv = fwTreeItem->GetInProcessSameTypeRootTreeItem(
                   getter_AddRefs(fwRootTreeItem));
               if (NS_SUCCEEDED(rv) && fwRootTreeItem == rootContentTreeItem)
                 shouldFocusEditableElement = true;

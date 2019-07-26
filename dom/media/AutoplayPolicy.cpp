@@ -40,7 +40,7 @@ static Document* ApproverDocOf(const Document& aDocument) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> rootTreeItem;
-  ds->GetSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
+  ds->GetInProcessSameTypeRootTreeItem(getter_AddRefs(rootTreeItem));
   if (!rootTreeItem) {
     return nullptr;
   }

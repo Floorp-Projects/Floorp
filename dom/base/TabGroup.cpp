@@ -215,7 +215,7 @@ nsresult TabGroup::FindItemWithName(const nsAString& aName,
 
   for (nsPIDOMWindowOuter* outerWindow : mWindows) {
     // Ignore non-toplevel windows
-    if (outerWindow->GetScriptableParentOrNull()) {
+    if (outerWindow->GetInProcessScriptableParentOrNull()) {
       continue;
     }
 
@@ -230,7 +230,7 @@ nsresult TabGroup::FindItemWithName(const nsAString& aName,
     }
 
     nsCOMPtr<nsIDocShellTreeItem> root;
-    docshell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+    docshell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
     MOZ_RELEASE_ASSERT(docshell == root);
     if (root && aRequestor != root) {
       root->FindItemWithName(aName, aRequestor, aOriginalRequestor,
@@ -250,7 +250,7 @@ nsTArray<nsPIDOMWindowOuter*> TabGroup::GetTopLevelWindows() const {
 
   for (nsPIDOMWindowOuter* outerWindow : mWindows) {
     if (outerWindow->GetDocShell() &&
-        !outerWindow->GetScriptableParentOrNull()) {
+        !outerWindow->GetInProcessScriptableParentOrNull()) {
       array.AppendElement(outerWindow);
     }
   }

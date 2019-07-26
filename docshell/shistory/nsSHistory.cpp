@@ -385,10 +385,10 @@ nsresult nsSHistory::WalkHistoryEntries(nsISHEntry* aRootEntry,
       // Walk the children of aRootShell and see if one of them
       // has srcChild as a SHEntry.
       int32_t length;
-      aRootShell->GetChildCount(&length);
+      aRootShell->GetInProcessChildCount(&length);
       for (int32_t i = 0; i < length; i++) {
         nsCOMPtr<nsIDocShellTreeItem> item;
-        nsresult rv = aRootShell->GetChildAt(i, getter_AddRefs(item));
+        nsresult rv = aRootShell->GetInProcessChildAt(i, getter_AddRefs(item));
         NS_ENSURE_SUCCESS(rv, rv);
         nsDocShell* child = static_cast<nsDocShell*>(item.get());
         if (child->HasHistoryEntry(childEntry)) {
@@ -1391,13 +1391,13 @@ nsresult nsSHistory::LoadDifferingEntries(nsISHEntry* aPrevEntry,
   int32_t pcnt = aPrevEntry->GetChildCount();
   int32_t ncnt = aNextEntry->GetChildCount();
   int32_t dsCount = 0;
-  aParent->GetChildCount(&dsCount);
+  aParent->GetInProcessChildCount(&dsCount);
 
   // Create an array for child docshells.
   nsCOMArray<nsIDocShell> docshells;
   for (int32_t i = 0; i < dsCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem;
-    aParent->GetChildAt(i, getter_AddRefs(treeItem));
+    aParent->GetInProcessChildAt(i, getter_AddRefs(treeItem));
     nsCOMPtr<nsIDocShell> shell = do_QueryInterface(treeItem);
     if (shell) {
       docshells.AppendElement(shell.forget());

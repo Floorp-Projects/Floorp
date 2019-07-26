@@ -732,10 +732,10 @@ static void SetTreeOwnerAndChromeEventHandlerOnDocshellTree(
   aItem->SetTreeOwner(aOwner);
 
   int32_t childCount = 0;
-  aItem->GetChildCount(&childCount);
+  aItem->GetInProcessChildCount(&childCount);
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> item;
-    aItem->GetChildAt(i, getter_AddRefs(item));
+    aItem->GetInProcessChildAt(i, getter_AddRefs(item));
     if (aHandler) {
       nsCOMPtr<nsIDocShell> shell(do_QueryInterface(item));
       shell->SetChromeEventHandler(aHandler);
@@ -763,7 +763,7 @@ static bool CheckDocShellType(mozilla::dom::Element* aOwnerContent,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parent;
-  aDocShell->GetParent(getter_AddRefs(parent));
+  aDocShell->GetInProcessParent(getter_AddRefs(parent));
 
   return parent && parent->ItemType() == aDocShell->ItemType();
 }
@@ -798,11 +798,11 @@ void nsFrameLoader::AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
 static bool AllDescendantsOfType(nsIDocShellTreeItem* aParentItem,
                                  int32_t aType) {
   int32_t childCount = 0;
-  aParentItem->GetChildCount(&childCount);
+  aParentItem->GetInProcessChildCount(&childCount);
 
   for (int32_t i = 0; i < childCount; ++i) {
     nsCOMPtr<nsIDocShellTreeItem> kid;
-    aParentItem->GetChildAt(i, getter_AddRefs(kid));
+    aParentItem->GetInProcessChildAt(i, getter_AddRefs(kid));
 
     if (kid->ItemType() != aType || !AllDescendantsOfType(kid, aType)) {
       return false;
@@ -1441,8 +1441,10 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // frameloaders that don't correspond to root same-type docshells,
   // unless both roots have session history disabled.
   nsCOMPtr<nsIDocShellTreeItem> ourRootTreeItem, otherRootTreeItem;
-  ourDocshell->GetSameTypeRootTreeItem(getter_AddRefs(ourRootTreeItem));
-  otherDocshell->GetSameTypeRootTreeItem(getter_AddRefs(otherRootTreeItem));
+  ourDocshell->GetInProcessSameTypeRootTreeItem(
+      getter_AddRefs(ourRootTreeItem));
+  otherDocshell->GetInProcessSameTypeRootTreeItem(
+      getter_AddRefs(otherRootTreeItem));
   nsCOMPtr<nsIWebNavigation> ourRootWebnav = do_QueryInterface(ourRootTreeItem);
   nsCOMPtr<nsIWebNavigation> otherRootWebnav =
       do_QueryInterface(otherRootTreeItem);
@@ -1486,8 +1488,8 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   // Note: it's OK to have null treeowners.
 
   nsCOMPtr<nsIDocShellTreeItem> ourParentItem, otherParentItem;
-  ourDocshell->GetParent(getter_AddRefs(ourParentItem));
-  otherDocshell->GetParent(getter_AddRefs(otherParentItem));
+  ourDocshell->GetInProcessParent(getter_AddRefs(ourParentItem));
+  otherDocshell->GetInProcessParent(getter_AddRefs(otherParentItem));
   if (!ourParentItem || !otherParentItem) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -1526,9 +1528,10 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  nsCOMPtr<Document> ourParentDocument = ourChildDocument->GetParentDocument();
+  nsCOMPtr<Document> ourParentDocument =
+      ourChildDocument->GetInProcessParentDocument();
   nsCOMPtr<Document> otherParentDocument =
-      otherChildDocument->GetParentDocument();
+      otherChildDocument->GetInProcessParentDocument();
 
   // Make sure to swap docshells between the two frames.
   Document* ourDoc = ourContent->GetComposedDoc();
@@ -1791,7 +1794,7 @@ void nsFrameLoader::StartDestroy() {
   if (mIsTopLevelContent) {
     if (GetDocShell()) {
       nsCOMPtr<nsIDocShellTreeItem> parentItem;
-      GetDocShell()->GetParent(getter_AddRefs(parentItem));
+      GetDocShell()->GetInProcessParent(getter_AddRefs(parentItem));
       nsCOMPtr<nsIDocShellTreeOwner> owner = do_GetInterface(parentItem);
       if (owner) {
         owner->ContentShellRemoved(GetDocShell());
@@ -2183,7 +2186,7 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
   } else {
     nsCOMPtr<nsIDocShellTreeItem> parentCheck;
-    docShell->GetSameTypeParent(getter_AddRefs(parentCheck));
+    docShell->GetInProcessSameTypeParent(getter_AddRefs(parentCheck));
     if (!!parentCheck) {
       docShell->SetIsFrame();
     }
@@ -2339,7 +2342,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
   // Bug 8065: Don't exceed some maximum depth in content frames
   // (MAX_DEPTH_CONTENT_FRAMES)
   nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
-  GetDocShell()->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  GetDocShell()->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   int32_t depth = 0;
   while (parentAsItem) {
     ++depth;
@@ -2353,7 +2356,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
 
     nsCOMPtr<nsIDocShellTreeItem> temp;
     temp.swap(parentAsItem);
-    temp->GetSameTypeParent(getter_AddRefs(parentAsItem));
+    temp->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   // Bug 136580: Check for recursive frame loading excluding about:srcdoc URIs.
@@ -2371,7 +2374,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
     }
   }
   int32_t matchCount = 0;
-  GetDocShell()->GetSameTypeParent(getter_AddRefs(parentAsItem));
+  GetDocShell()->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   while (parentAsItem) {
     // Check the parent URI with the URI we're loading
     nsCOMPtr<nsIWebNavigation> parentAsNav(do_QueryInterface(parentAsItem));
@@ -2398,7 +2401,7 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
     }
     nsCOMPtr<nsIDocShellTreeItem> temp;
     temp.swap(parentAsItem);
-    temp->GetSameTypeParent(getter_AddRefs(parentAsItem));
+    temp->GetInProcessSameTypeParent(getter_AddRefs(parentAsItem));
   }
 
   return NS_OK;
@@ -3101,7 +3104,7 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
   }
 
   nsCOMPtr<nsIDocShellTreeItem> parentItem;
-  GetDocShell()->GetParent(getter_AddRefs(parentItem));
+  GetDocShell()->GetInProcessParent(getter_AddRefs(parentItem));
   if (!parentItem) {
     return;
   }

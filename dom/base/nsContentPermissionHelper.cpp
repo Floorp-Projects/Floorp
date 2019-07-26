@@ -515,7 +515,7 @@ nsContentPermissionRequester::GetOnVisibilityChange(
 static nsIPrincipal* GetTopLevelPrincipal(nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(aWindow);
 
-  nsPIDOMWindowOuter* top = aWindow->GetScriptableTop();
+  nsPIDOMWindowOuter* top = aWindow->GetInProcessScriptableTop();
   if (!top) {
     return nullptr;
   }

@@ -741,7 +741,7 @@ mozilla::LayoutDeviceIntPoint nsPluginFrame::GetRemoteTabChromeOffset() {
   LayoutDeviceIntPoint offset;
   if (XRE_IsContentProcess()) {
     if (nsPIDOMWindowOuter* window = GetContent()->OwnerDoc()->GetWindow()) {
-      if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop()) {
+      if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetInProcessTop()) {
         dom::BrowserChild* tc = dom::BrowserChild::GetFrom(topWindow);
         if (tc) {
           offset += tc->GetChromeOffset();

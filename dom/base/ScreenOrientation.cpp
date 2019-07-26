@@ -260,10 +260,11 @@ static inline void AbortOrientationPromises(nsIDocShell* aDocShell) {
   }
 
   int32_t childCount;
-  aDocShell->GetChildCount(&childCount);
+  aDocShell->GetInProcessChildCount(&childCount);
   for (int32_t i = 0; i < childCount; i++) {
     nsCOMPtr<nsIDocShellTreeItem> child;
-    if (NS_SUCCEEDED(aDocShell->GetChildAt(i, getter_AddRefs(child)))) {
+    if (NS_SUCCEEDED(
+            aDocShell->GetInProcessChildAt(i, getter_AddRefs(child)))) {
       nsCOMPtr<nsIDocShell> childShell(do_QueryInterface(child));
       if (childShell) {
         AbortOrientationPromises(childShell);
@@ -313,7 +314,7 @@ already_AddRefed<Promise> ScreenOrientation::LockInternal(
   }
 
   nsCOMPtr<nsIDocShellTreeItem> root;
-  docShell->GetSameTypeRootTreeItem(getter_AddRefs(root));
+  docShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(root));
   nsCOMPtr<nsIDocShell> rootShell(do_QueryInterface(root));
   if (!rootShell) {
     aRv.Throw(NS_ERROR_UNEXPECTED);

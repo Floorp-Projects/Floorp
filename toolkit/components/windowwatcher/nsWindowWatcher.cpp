@@ -852,7 +852,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
       nsCOMPtr<nsPIDOMWindowInner> parentTopInnerWindow;
       if (parentWindow) {
-        nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow = parentWindow->GetTop();
+        nsCOMPtr<nsPIDOMWindowOuter> parentTopWindow =
+            parentWindow->GetInProcessTop();
         if (parentTopWindow) {
           parentTopInnerWindow = parentTopWindow->GetCurrentInnerWindow();
         }

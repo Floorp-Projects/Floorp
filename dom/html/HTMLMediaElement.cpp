@@ -6691,7 +6691,8 @@ already_AddRefed<nsIPrincipal> HTMLMediaElement::GetTopLevelPrincipal() {
     return nullptr;
   }
   // XXXkhuey better hope we always have an outer ...
-  nsCOMPtr<nsPIDOMWindowOuter> top = window->GetOuterWindow()->GetTop();
+  nsCOMPtr<nsPIDOMWindowOuter> top =
+      window->GetOuterWindow()->GetInProcessTop();
   if (!top) {
     return nullptr;
   }
