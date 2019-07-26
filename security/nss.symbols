@@ -646,6 +646,7 @@ SSL_CipherPrefSetDefault
 SSL_ClearSessionCache
 SSL_ConfigSecureServer
 SSL_ConfigSecureServerWithCertChain
+SSL_ConfigServerCert
 SSL_ConfigServerSessionIDCache
 SSL_ExportKeyingMaterial
 SSL_ForceHandshake
