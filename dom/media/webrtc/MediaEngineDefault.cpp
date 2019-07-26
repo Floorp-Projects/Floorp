@@ -230,6 +230,7 @@ static void AllocateSolidColorFrame(layers::PlanarYCbCrData& aData, int aWidth,
   aData.mPicY = 0;
   aData.mPicSize = IntSize(aWidth, aHeight);
   aData.mStereoMode = StereoMode::MONO;
+  aData.mYUVColorSpace = gfx::YUVColorSpace::BT601;
 }
 
 static void ReleaseFrame(layers::PlanarYCbCrData& aData) {

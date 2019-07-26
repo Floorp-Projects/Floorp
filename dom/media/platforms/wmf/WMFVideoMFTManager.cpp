@@ -662,8 +662,11 @@ MediaResult WMFVideoMFTManager::InitInternal() {
 
   if (mUseHwAccel) {
     hr = mDXVA2Manager->ConfigureForSize(
-        outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601), mColorRange,
-        mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
+        outputType,
+        mColorSpace.refOr(
+            DefaultColorSpace({mImageSize.width, mImageSize.height})),
+        mColorRange, mVideoInfo.ImageRect().width,
+        mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr),
                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                RESULT_DETAIL("Fail to configure image size for "
@@ -931,7 +934,8 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   }
 
   // YuvColorSpace
-  b.mYUVColorSpace = mColorSpace.refOr(gfx::YUVColorSpace::BT601);
+  b.mYUVColorSpace =
+      mColorSpace.refOr(DefaultColorSpace({videoWidth, videoHeight}));
   b.mColorDepth = colorDepth;
   b.mColorRange = mColorRange;
 
@@ -1045,7 +1049,9 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 
       if (mUseHwAccel) {
         hr = mDXVA2Manager->ConfigureForSize(
-            outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601),
+            outputType,
+            mColorSpace.refOr(
+                DefaultColorSpace({mImageSize.width, mImageSize.height})),
             mColorRange, mVideoInfo.ImageRect().width,
             mVideoInfo.ImageRect().height);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);

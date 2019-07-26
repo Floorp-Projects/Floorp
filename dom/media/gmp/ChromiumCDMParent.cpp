@@ -769,6 +769,11 @@ already_AddRefed<VideoData> ChromiumCDMParent::CreateVideoFrame(
   b.mPlanes[2].mOffset = aFrame.mVPlane().mPlaneOffset();
   b.mPlanes[2].mSkip = 0;
 
+  // We unfortunately can't know which colorspace the video is using at this
+  // stage.
+  b.mYUVColorSpace =
+      DefaultColorSpace({aFrame.mImageWidth(), aFrame.mImageHeight()});
+
   gfx::IntRect pictureRegion(0, 0, aFrame.mImageWidth(), aFrame.mImageHeight());
   RefPtr<VideoData> v = VideoData::CreateAndCopyData(
       mVideoInfo, mImageContainer, mLastStreamOffset,
