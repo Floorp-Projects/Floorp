@@ -1054,6 +1054,7 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     }
   }
 
+  result->SetElementCreatedFromPrototypeAndHasUnmodifiedL10n();
   result.forget(aResult);
 
   return NS_OK;
