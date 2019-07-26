@@ -1054,7 +1054,10 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
     }
   }
 
-  result->SetElementCreatedFromPrototypeAndHasUnmodifiedL10n();
+  if (result->HasAttr(kNameSpaceID_None, nsGkAtoms::datal10nid)) {
+    mDocument->mL10nProtoElements.Put(result, aPrototype);
+    result->SetElementCreatedFromPrototypeAndHasUnmodifiedL10n();
+  }
   result.forget(aResult);
 
   return NS_OK;
