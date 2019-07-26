@@ -12,9 +12,6 @@ const { ActorChild } = ChromeUtils.import(
 const { LoginHelper } = ChromeUtils.import(
   "resource://gre/modules/LoginHelper.jsm"
 );
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 ChromeUtils.defineModuleGetter(
@@ -22,24 +19,13 @@ ChromeUtils.defineModuleGetter(
   "AppConstants",
   "resource://gre/modules/AppConstants.jsm"
 );
-
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "ClipboardHelper",
-  "@mozilla.org/widget/clipboardhelper;1",
-  "nsIClipboardHelper"
-);
-
 const TELEMETRY_EVENT_CATEGORY = "pwmgr";
-
-let masterPasswordPromise;
 
 class AboutLoginsChild extends ActorChild {
   handleEvent(event) {
     switch (event.type) {
       case "AboutLoginsInit": {
-        let messageManager = this.mm;
-        messageManager.sendAsyncMessage("AboutLogins:Subscribe");
+        this.mm.sendAsyncMessage("AboutLogins:Subscribe");
 
         let documentElement = this.content.document.documentElement;
         documentElement.classList.toggle(
@@ -52,15 +38,6 @@ class AboutLoginsChild extends ActorChild {
           doLoginsMatch(loginA, loginB) {
             return LoginHelper.doLoginsMatch(loginA, loginB, {});
           },
-          promptForMasterPassword(resolve) {
-            masterPasswordPromise = {
-              resolve,
-            };
-
-            messageManager.sendAsyncMessage(
-              "AboutLogins:MasterPasswordRequest"
-            );
-          },
         };
         waivedContent.AboutLoginsUtils = Cu.cloneInto(
           AboutLoginsUtils,
@@ -69,10 +46,6 @@ class AboutLoginsChild extends ActorChild {
             cloneFunctions: true,
           }
         );
-        break;
-      }
-      case "AboutLoginsCopyLoginDetail": {
-        ClipboardHelper.copyString(event.detail);
         break;
       }
       case "AboutLoginsCreateLogin": {
@@ -157,11 +130,6 @@ class AboutLoginsChild extends ActorChild {
         break;
       case "AboutLogins:LoginRemoved":
         this.sendToContent("LoginRemoved", message.data);
-        break;
-      case "AboutLogins:MasterPasswordResponse":
-        if (masterPasswordPromise) {
-          masterPasswordPromise.resolve(message.data);
-        }
         break;
     }
   }
