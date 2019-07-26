@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ImageDescriptor, ImageFormat, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
+use api::{ImageDescriptor, FilterPrimitive, FilterPrimitiveInput, FilterPrimitiveKind};
 use api::{LineStyle, LineOrientation, ClipMode, DirtyRect, MixBlendMode, ColorF, ColorSpace};
 use api::units::*;
 use crate::border::BorderSegmentCacheKey;
@@ -27,7 +27,6 @@ use crate::resource_cache::{CacheItem, ResourceCache};
 use std::{ops, mem, usize, f32, i32, u32};
 use crate::texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use crate::tiling::{RenderPass, RenderTargetIndex};
-use crate::tiling::{RenderTargetKind};
 use std::io;
 
 
@@ -42,6 +41,15 @@ fn render_task_sanity_check(size: &DeviceIntSize) {
         error!("Attempting to create a render task of size {}x{}", size.width, size.height);
         panic!();
     }
+}
+
+/// A tag used to identify the output format of a `RenderTarget`.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub enum RenderTargetKind {
+    Color, // RGBA8
+    Alpha, // R8
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -449,6 +457,7 @@ pub enum RenderTaskLocation {
         layer: LayerIndex,
         /// The target region within the above layer.
         rect: DeviceIntRect,
+
     },
     /// This render task will be drawn to a picture cache texture that is
     /// persisted between both frames and scenes, if the content remains valid.
@@ -477,6 +486,16 @@ impl RenderTaskLocation {
             RenderTaskLocation::Dynamic(_, size) => *size,
             RenderTaskLocation::TextureCache { rect, .. } => rect.size,
             RenderTaskLocation::PictureCache { size, .. } => *size,
+        }
+    }
+
+    pub fn to_source_rect(&self) -> (DeviceIntRect, LayerIndex) {
+        match *self {
+            RenderTaskLocation::Fixed(rect) => (rect, 0),
+            RenderTaskLocation::Dynamic(None, _) => panic!("Expected position to be set for the task!"),
+            RenderTaskLocation::Dynamic(Some((origin, layer)), size) => (DeviceIntRect::new(origin, size), layer.0 as LayerIndex),
+            RenderTaskLocation::TextureCache { rect, layer, .. } => (rect, layer),
+            RenderTaskLocation::PictureCache { layer, size, .. } => (size.into(), layer as LayerIndex),
         }
     }
 }
@@ -539,7 +558,9 @@ impl BlurTask {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingTask {
     pub target_kind: RenderTargetKind,
+    pub image: Option<ImageCacheKey>,
     uv_rect_kind: UvRectKind,
+    pub padding: DeviceIntSideOffsets,
 }
 
 // Where the source data for a blit task can be found.
@@ -821,34 +842,30 @@ impl RenderTask {
         size: DeviceIntSize,
         source: BlitSource,
     ) -> Self {
-        RenderTask::new_blit_with_padding(size, &DeviceIntSideOffsets::zero(), source)
+        RenderTask::new_blit_with_padding(size, DeviceIntSideOffsets::zero(), source)
     }
 
     pub fn new_blit_with_padding(
-        mut size: DeviceIntSize,
-        padding: &DeviceIntSideOffsets,
+        padded_size: DeviceIntSize,
+        padding: DeviceIntSideOffsets,
         source: BlitSource,
     ) -> Self {
-        let mut children = Vec::new();
-
         // If this blit uses a render task as a source,
         // ensure it's added as a child task. This will
         // ensure it gets allocated in the correct pass
         // and made available as an input when this task
         // executes.
-        if let BlitSource::RenderTask { task_id } = source {
-            children.push(task_id);
-        }
-
-        size.width += padding.horizontal();
-        size.height += padding.vertical();
+        let children = match source {
+            BlitSource::RenderTask { task_id } => vec![task_id],
+            BlitSource::Image { .. } => vec![],
+        };
 
         RenderTask::with_dynamic_location(
-            size,
+            padded_size,
             children,
             RenderTaskKind::Blit(BlitTask {
                 source,
-                padding: *padding,
+                padding,
             }),
             ClearMode::Transparent,
         )
@@ -1158,16 +1175,37 @@ impl RenderTask {
         src_task_id: RenderTaskId,
         render_tasks: &mut RenderTaskGraph,
         target_kind: RenderTargetKind,
-        target_size: DeviceIntSize,
+        size: DeviceIntSize,
     ) -> Self {
-        let uv_rect_kind = render_tasks[src_task_id].uv_rect_kind();
+        Self::new_scaling_with_padding(
+            BlitSource::RenderTask { task_id: src_task_id },
+            render_tasks,
+            target_kind,
+            size,
+            DeviceIntSideOffsets::zero(),
+        )
+    }
+
+    pub fn new_scaling_with_padding(
+        source: BlitSource,
+        render_tasks: &mut RenderTaskGraph,
+        target_kind: RenderTargetKind,
+        padded_size: DeviceIntSize,
+        padding: DeviceIntSideOffsets,
+    ) -> Self {
+        let (uv_rect_kind, children, image) = match source {
+            BlitSource::RenderTask { task_id } => (render_tasks[task_id].uv_rect_kind(), vec![task_id], None),
+            BlitSource::Image { key } => (UvRectKind::Rect, vec![], Some(key)),
+        };
 
         RenderTask::with_dynamic_location(
-            target_size,
-            vec![src_task_id],
+            padded_size,
+            children,
             RenderTaskKind::Scaling(ScalingTask {
                 target_kind,
+                image,
                 uv_rect_kind,
+                padding,
             }),
             ClearMode::DontCare,
         )
@@ -1932,15 +1970,11 @@ impl RenderTaskCache {
     }
 
     fn alloc_render_task(
+        render_task: &mut RenderTask,
         entry: &mut RenderTaskCacheEntry,
-        render_task_id: RenderTaskId,
         gpu_cache: &mut GpuCache,
         texture_cache: &mut TextureCache,
-        render_tasks: &mut RenderTaskGraph,
     ) {
-        let render_task = &mut render_tasks[render_task_id];
-        let target_kind = render_task.target_kind();
-
         // Find out what size to alloc in the texture cache.
         let size = match render_task.location {
             RenderTaskLocation::Fixed(..) |
@@ -1952,9 +1986,9 @@ impl RenderTaskCache {
         };
 
         // Select the right texture page to allocate from.
-        let image_format = match target_kind {
-            RenderTargetKind::Color => ImageFormat::BGRA8,
-            RenderTargetKind::Alpha => ImageFormat::R8,
+        let image_format = match render_task.target_kind() {
+            RenderTargetKind::Color => texture_cache.shared_color_expected_format(),
+            RenderTargetKind::Alpha => texture_cache.shared_alpha_expected_format(),
         };
 
         let descriptor = ImageDescriptor::new(
@@ -1992,7 +2026,7 @@ impl RenderTaskCache {
         // this in the render task. The renderer will draw this
         // task into the appropriate layer and rect of the texture
         // cache on this frame.
-        let (texture_id, texture_layer, uv_rect, _) =
+        let (texture_id, texture_layer, uv_rect, _, _) =
             texture_cache.get_cache_location(&entry.handle);
 
         render_task.location = RenderTaskLocation::TextureCache {
@@ -2039,11 +2073,10 @@ impl RenderTaskCache {
             cache_entry.is_opaque = is_opaque;
 
             RenderTaskCache::alloc_render_task(
+                &mut render_tasks[render_task_id],
                 cache_entry,
-                render_task_id,
                 gpu_cache,
                 texture_cache,
-                render_tasks,
             );
         }
 
