@@ -1273,7 +1273,12 @@ def make_job_description(config, tests):
     taskgraph.transforms.job)"""
 
     for test in tests:
-        label = '{}-{}-{}'.format(config.kind, test['test-platform'], test['test-name'])
+        mobile = get_mobile_project(test)
+        if mobile and (mobile not in test['test-name']):
+            label = '{}-{}-{}-{}'.format(config.kind, test['test-platform'], mobile,
+                                         test['test-name'])
+        else:
+            label = '{}-{}-{}'.format(config.kind, test['test-platform'], test['test-name'])
         if test['chunks'] > 1:
             label += '-{}'.format(test['this-chunk'])
 
