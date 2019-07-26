@@ -2699,10 +2699,14 @@ void TypeZone::addPendingRecompile(JSContext* cx, JSScript* script) {
   // Trigger recompilation of any callers inlining this script.
   if (JitScript* jitScript = script->jitScript()) {
     AutoSweepJitScript sweep(script);
-    for (const RecompileInfo& info : jitScript->inlinedCompilations(sweep)) {
-      addPendingRecompile(cx, info);
+    RecompileInfoVector* inlinedCompilations =
+        jitScript->maybeInlinedCompilations(sweep);
+    if (inlinedCompilations) {
+      for (const RecompileInfo& info : *inlinedCompilations) {
+        addPendingRecompile(cx, info);
+      }
+      inlinedCompilations->clearAndFree();
     }
-    jitScript->inlinedCompilations(sweep).clearAndFree();
   }
 }
 
@@ -4410,8 +4414,8 @@ void JitScript::sweepTypes(const js::AutoSweepJitScript& sweep, Zone* zone) {
   TypeZone& types = zone->types;
 
   // Sweep the inlinedCompilations Vector.
-  {
-    RecompileInfoVector& inlinedCompilations = this->inlinedCompilations(sweep);
+  if (maybeInlinedCompilations(sweep)) {
+    RecompileInfoVector& inlinedCompilations = *maybeInlinedCompilations(sweep);
     size_t dest = 0;
     for (size_t i = 0; i < inlinedCompilations.length(); i++) {
       if (inlinedCompilations[i].shouldSweep(types)) {
