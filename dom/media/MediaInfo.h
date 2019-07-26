@@ -251,7 +251,7 @@ class VideoInfo : public TrackInfo {
 
   // True indicates no restriction on Y, U, V values (otherwise 16-235 for 8
   // bits etc)
-  bool mFullRange = false;
+  gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
 
  private:
   // mImage may be cropped; currently only used with the WebM container.

@@ -31,7 +31,7 @@ struct ParamTraits<mozilla::VideoInfo> {
     WriteParam(aMsg, aParam.mRotation);
     WriteParam(aMsg, aParam.mColorDepth);
     WriteParam(aMsg, aParam.mColorSpace);
-    WriteParam(aMsg, aParam.mFullRange);
+    WriteParam(aMsg, aParam.mColorRange);
     WriteParam(aMsg, aParam.HasAlpha());
   }
 
@@ -49,7 +49,7 @@ struct ParamTraits<mozilla::VideoInfo> {
         ReadParam(aMsg, aIter, &aResult->mRotation) &&
         ReadParam(aMsg, aIter, &aResult->mColorDepth) &&
         ReadParam(aMsg, aIter, &aResult->mColorSpace) &&
-        ReadParam(aMsg, aIter, &aResult->mFullRange) &&
+        ReadParam(aMsg, aIter, &aResult->mColorRange) &&
         ReadParam(aMsg, aIter, &alphaPresent)) {
       aResult->SetImageRect(imageRect);
       aResult->SetAlpha(alphaPresent);
