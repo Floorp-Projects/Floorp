@@ -267,7 +267,6 @@ class CollectionCreationUIView(
             }
             is SaveCollectionStep.RenameCollection -> {
                 view.tab_list.isClickable = false
-                name_collection_edittext.isClickable = true
 
                 it.selectedTabCollection?.let { tabCollection ->
                     tabCollection.tabs.map { tab ->
@@ -281,7 +280,13 @@ class CollectionCreationUIView(
                         collectionCreationTabListAdapter.updateData(tabs, tabs.toSet(), true)
                     }
                 }
+                val constraint = nameCollectionConstraints
+                constraint.applyTo(view.collection_constraint_layout)
+                name_collection_edittext.setText(it.selectedTabCollection?.title)
+                name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
 
+                back_button.text =
+                    view.context.getString(R.string.collection_rename)
                 back_button.setOnClickListener {
                     name_collection_edittext.hideKeyboard()
                     val handler = Handler()
@@ -306,19 +311,14 @@ class CollectionCreationUIView(
                     view.collection_constraint_layout,
                     transition
                 )
-                val constraint = nameCollectionConstraints
-                constraint.applyTo(view.collection_constraint_layout)
-                name_collection_edittext.setText(it.selectedTabCollection?.title)
-                name_collection_edittext.setSelection(0, name_collection_edittext.text.length)
-                back_button.text =
-                    view.context.getString(R.string.create_collection_name_collection)
+
             }
         }
         collectionSaveListAdapter.updateData(it.tabCollections, it.selectedTabs)
     }
 
     fun onResumed() {
-        if (step == SaveCollectionStep.NameCollection) {
+        if (step == SaveCollectionStep.NameCollection || step == SaveCollectionStep.RenameCollection) {
             view.name_collection_edittext.showKeyboard()
         }
     }
