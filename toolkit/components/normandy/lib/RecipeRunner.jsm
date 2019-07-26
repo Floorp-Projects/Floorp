@@ -63,7 +63,7 @@ const PREFS_TO_WATCH = [
 XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
     filterFunc: async entry =>
-      (await RecipeRunner.shouldRunRecipe(entry.recipe)) ? entry : null,
+      (await RecipeRunner.checkFilter(entry.recipe)) ? entry : null,
   });
 });
 
@@ -285,7 +285,9 @@ var RecipeRunner = {
     timerManager.registerTimer(TIMER_NAME, () => this.run(), runInterval);
   },
 
-  async run({ trigger = "timer" } = {}) {
+  async run(options = {}) {
+    const { trigger = "timer" } = options;
+
     if (this.running) {
       // Do nothing if already running.
       return;
@@ -322,18 +324,18 @@ var RecipeRunner = {
         return;
       }
 
-      const actionsManager = new ActionsManager();
+      const actions = new ActionsManager();
 
       // Execute recipes, if we have any.
       if (recipesToRun.length === 0) {
         log.debug("No recipes to execute");
       } else {
         for (const recipe of recipesToRun) {
-          await actionsManager.runRecipe(recipe);
+          await actions.runRecipe(recipe);
         }
       }
 
-      await actionsManager.finalize();
+      await actions.finalize();
 
       await Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
       Services.obs.notifyObservers(null, "recipe-runner:end");
@@ -353,9 +355,9 @@ var RecipeRunner = {
    */
   async loadRecipes() {
     // If RemoteSettings is enabled, we read the list of recipes from there.
-    // The recipe filtering is done via the provided callback (see `gRemoteSettingsClient`).
+    // The JEXL filtering is done via the provided callback (see `gRemoteSettingsClient`).
     if (this.loadFromRemoteSettings) {
-      // First, fetch recipes that should run on this client.
+      // First, fetch recipes whose JEXL filters match.
       const entries = await gRemoteSettingsClient.get();
       // Then, verify the signature of each recipe. It will throw if invalid.
       return Promise.all(
@@ -379,13 +381,10 @@ var RecipeRunner = {
       log.error(`Could not fetch recipes from ${apiUrl}: "${e}"`);
       throw e;
     }
-
-    // Check if each recipe should be run, according to `shouldRunRecipe`. This
-    // can't be a simple call to `Array.filter` because checking if a recipe
-    // should run is an async operation.
+    // Evaluate recipe filters
     const recipesToRun = [];
     for (const recipe of recipes) {
-      if (await this.shouldRunRecipe(recipe)) {
+      if (await this.checkFilter(recipe)) {
         recipesToRun.push(recipe);
       }
     }
@@ -406,72 +405,13 @@ var RecipeRunner = {
   },
 
   /**
-   * Return the set of capabilities this runner has.
-   *
-   * This is used to pre-filter recipes that aren't compatible with this client.
-   *
-   * @returns {Set<String>} The capabilities supported by this client.
-   */
-  getCapabilities() {
-    let capabilities = new Set([
-      "capabilities-v1", // The initial version of the capabilities system.
-    ]);
-
-    // Get capabilities from ActionsManager.
-    for (const actionCapability of ActionsManager.getCapabilities()) {
-      capabilities.add(actionCapability);
-    }
-
-    // Add a capability for each transform available to JEXL.
-    for (const transform of FilterExpressions.getAvailableTransforms()) {
-      capabilities.add(`jexl.transform.${transform}`);
-    }
-
-    return capabilities;
-  },
-
-  /**
-   * Decide if a recipe should be run.
-   *
-   * This checks two things in order: capabilities, and filter expression.
-   *
-   * Capabilities are a simple set of strings in the recipe. If the Normandy
-   * client has all of the capabilities listed, then execution continues. If not,
-   * `false` is returned.
-   *
-   * If the capabilities check passes, then the filter expression is evaluated
-   * against the current environment. The result of the expression is cast to a
-   * boolean and returned.
-   *
+   * Evaluate a recipe's filter expression against the environment.
    * @param {object} recipe
-   * @param {Array<string>} recipe.capabilities The list of capabilities
-   *                        required to evaluate this recipe.
-   * @param {string} recipe.filter_expression The expression to evaluate against the environment.
-   * @param {Set<String>} runnerCapabilities The capabilities provided by this runner.
+   * @param {string} recipe.filter The expression to evaluate against the environment.
    * @return {boolean} The result of evaluating the filter, cast to a bool, or false
    *                   if an error occurred during evaluation.
    */
-  async shouldRunRecipe(recipe) {
-    const runnerCapabilities = this.getCapabilities();
-    if (Array.isArray(recipe.capabilities)) {
-      for (const recipeCapability of recipe.capabilities) {
-        if (!runnerCapabilities.has(recipeCapability)) {
-          log.debug(
-            `Recipe "${recipe.name}" requires unknown capabilities. ` +
-              `Recipe capabilities: ${JSON.stringify(recipe.capabilities)}. ` +
-              `Local runner capabilities: ${JSON.stringify(
-                Array.from(runnerCapabilities)
-              )}`
-          );
-          await Uptake.reportRecipe(
-            recipe,
-            Uptake.RECIPE_INCOMPATIBLE_COMPATIBILITIES
-          );
-          return false;
-        }
-      }
-    }
-
+  async checkFilter(recipe) {
     const context = this.getFilterContext(recipe);
     let result;
     try {

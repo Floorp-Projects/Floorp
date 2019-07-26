@@ -30,23 +30,6 @@ var EXPORTED_SYMBOLS = ["ActionsManager"];
 
 const log = LogManager.getLogger("recipe-runner");
 
-const actionConstructors = {
-  "addon-study": AddonStudyAction,
-  "branched-addon-study": BranchedAddonStudyAction,
-  "console-log": ConsoleLogAction,
-  "multi-preference-experiment": PreferenceExperimentAction,
-  "preference-rollback": PreferenceRollbackAction,
-  "preference-rollout": PreferenceRolloutAction,
-  "show-heartbeat": ShowHeartbeatAction,
-  "single-preference-experiment": SinglePreferenceExperimentAction,
-};
-
-// Legacy names used by the server and older clients for actions.
-const actionAliases = {
-  "opt-out-study": "addon-study",
-  "preference-experiment": "single-preference-experiment",
-};
-
 /**
  * A class to manage the actions that recipes can use in Normandy.
  */
@@ -54,27 +37,22 @@ class ActionsManager {
   constructor() {
     this.finalized = false;
 
-    // Build a set of local actions, and aliases to them. The aliased names are
-    // used by the server to keep compatibility with older clients.
-    this.localActions = {};
-    for (const [name, Constructor] of Object.entries(actionConstructors)) {
-      this.localActions[name] = new Constructor();
-    }
-    for (const [alias, target] of Object.entries(actionAliases)) {
-      this.localActions[alias] = this.localActions[target];
-    }
-  }
+    const addonStudyAction = new AddonStudyAction();
+    const singlePreferenceExperimentAction = new SinglePreferenceExperimentAction();
 
-  static getCapabilities() {
-    // Prefix each action name with "action." to turn it into a capability name.
-    let capabilities = new Set();
-    for (const actionName of Object.keys(actionConstructors)) {
-      capabilities.add(`action.${actionName}`);
-    }
-    for (const actionAlias of Object.keys(actionAliases)) {
-      capabilities.add(`action.${actionAlias}`);
-    }
-    return capabilities;
+    this.localActions = {
+      "addon-study": addonStudyAction,
+      "branched-addon-study": new BranchedAddonStudyAction(),
+      "console-log": new ConsoleLogAction(),
+      "opt-out-study": addonStudyAction, // Legacy name used for addon-study on Normandy server
+      "multi-preference-experiment": new PreferenceExperimentAction(),
+      // Historically, this name meant SinglePreferenceExperimentAction.
+      "preference-experiment": singlePreferenceExperimentAction,
+      "preference-rollback": new PreferenceRollbackAction(),
+      "preference-rollout": new PreferenceRolloutAction(),
+      "single-preference-experiment": singlePreferenceExperimentAction,
+      "show-heartbeat": new ShowHeartbeatAction(),
+    };
   }
 
   async runRecipe(recipe) {
