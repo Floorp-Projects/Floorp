@@ -1,5 +1,5 @@
 /*
-* Copyright © 2017 Mozilla Foundation
+* Copyright ï¿½ 2017 Mozilla Foundation
 *
 * This program is made available under an ISC-style license.  See the
 * accompanying file LICENSE for details.
@@ -15,6 +15,9 @@
 #include <atomic>
 #include <string>
 #include "cubeb/cubeb.h"
+
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
 #include "common.h"
 
 const uint32_t SAMPLE_FREQUENCY = 48000;
