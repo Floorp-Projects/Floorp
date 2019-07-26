@@ -537,10 +537,30 @@ bool DebuggerScript::getFormat(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static bool PushFunctionScript(JSContext* cx, Debugger* dbg, HandleFunction fun,
+                               HandleObject array) {
+  // Ignore asm.js natives.
+  if (!IsInterpretedNonSelfHostedFunction(fun)) {
+    return true;
+  }
+
+  RootedObject wrapped(cx);
+
+  if (fun->isInterpretedLazy()) {
+    Rooted<LazyScript*> lazy(cx, fun->lazyScript());
+    wrapped = dbg->wrapLazyScript(cx, lazy);
+  } else {
+    RootedScript script(cx, fun->nonLazyScript());
+    wrapped = dbg->wrapScript(cx, script);
+  }
+
+  return wrapped && NewbornArrayPush(cx, array, ObjectValue(*wrapped));
+}
+
 /* static */
 bool DebuggerScript::getChildScripts(JSContext* cx, unsigned argc, Value* vp) {
-  THIS_DEBUGSCRIPT_SCRIPT_DELAZIFY(cx, argc, vp, "getChildScripts", args, obj,
-                                   script);
+  THIS_DEBUGSCRIPT_SCRIPT_MAYBE_LAZY(cx, argc, vp, "getChildScripts", args,
+                                     obj);
   Debugger* dbg = Debugger::fromChildJSObject(obj);
 
   RootedObject result(cx, NewDenseEmptyArray(cx));
@@ -548,32 +568,34 @@ bool DebuggerScript::getChildScripts(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  // Wrap and append scripts for the inner functions in script->gcthings().
   RootedFunction fun(cx);
-  RootedScript funScript(cx);
-  RootedObject s(cx);
-  for (JS::GCCellPtr gcThing : script->gcthings()) {
-    if (!gcThing.is<JSObject>()) {
-      continue;
-    }
-
-    JSObject* obj = &gcThing.as<JSObject>();
-    if (obj->is<JSFunction>()) {
-      fun = &obj->as<JSFunction>();
-      // The inner function could be an asm.js native.
-      if (!IsInterpretedNonSelfHostedFunction(fun)) {
+  if (obj->getReferent().is<JSScript*>()) {
+    RootedScript script(cx, obj->getReferent().as<JSScript*>());
+    for (JS::GCCellPtr gcThing : script->gcthings()) {
+      if (!gcThing.is<JSObject>()) {
         continue;
       }
-      funScript = GetOrCreateFunctionScript(cx, fun);
-      if (!funScript) {
-        return false;
+
+      JSObject* obj = &gcThing.as<JSObject>();
+      if (obj->is<JSFunction>()) {
+        fun = &obj->as<JSFunction>();
+
+        if (!PushFunctionScript(cx, dbg, fun, result)) {
+          return false;
+        }
       }
-      s = dbg->wrapScript(cx, funScript);
-      if (!s || !NewbornArrayPush(cx, result, ObjectValue(*s))) {
+    }
+  } else {
+    Rooted<LazyScript*> lazy(cx, obj->getReferent().as<LazyScript*>());
+
+    for (const GCPtrFunction& innerFun : lazy->innerFunctions()) {
+      fun = innerFun;
+      if (!PushFunctionScript(cx, dbg, fun, result)) {
         return false;
       }
     }
   }
+
   args.rval().setObject(*result);
   return true;
 }
