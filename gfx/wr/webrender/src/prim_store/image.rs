@@ -5,7 +5,7 @@
 use api::{
     AlphaType, ColorDepth, ColorF, ColorU,
     ImageKey as ApiImageKey, ImageRendering,
-    PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
+    PremultipliedColorF, Shadow, YuvColorSpace, YuvFormat,
 };
 use api::units::*;
 use crate::display_list_flattener::{CreateShadow, IsVisible};
@@ -370,7 +370,6 @@ pub struct YuvImage {
     pub yuv_key: [ApiImageKey; 3],
     pub format: YuvFormat,
     pub color_space: YuvColorSpace,
-    pub color_range: ColorRange,
     pub image_rendering: ImageRendering,
 }
 
@@ -403,7 +402,6 @@ pub struct YuvImageData {
     pub yuv_key: [ApiImageKey; 3],
     pub format: YuvFormat,
     pub color_space: YuvColorSpace,
-    pub color_range: ColorRange,
     pub image_rendering: ImageRendering,
 }
 
@@ -414,7 +412,6 @@ impl From<YuvImage> for YuvImageData {
             yuv_key: image.yuv_key,
             format: image.format,
             color_space: image.color_space,
-            color_range: image.color_range,
             image_rendering: image.image_rendering,
         }
     }
@@ -531,7 +528,7 @@ fn test_struct_sizes() {
     assert_eq!(mem::size_of::<Image>(), 52, "Image size changed");
     assert_eq!(mem::size_of::<ImageTemplate>(), 104, "ImageTemplate size changed");
     assert_eq!(mem::size_of::<ImageKey>(), 64, "ImageKey size changed");
-    assert_eq!(mem::size_of::<YuvImage>(), 32, "YuvImage size changed");
+    assert_eq!(mem::size_of::<YuvImage>(), 28, "YuvImage size changed");
     assert_eq!(mem::size_of::<YuvImageTemplate>(), 48, "YuvImageTemplate size changed");
     assert_eq!(mem::size_of::<YuvImageKey>(), 40, "YuvImageKey size changed");
 }
