@@ -193,11 +193,11 @@ add_task(async function() {
   await BrowserTestUtils.removeTab(tab);
 });
 
-async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
+async function checkNoLoginsContentIsDisplayed(tab, expectedButtonContent) {
   await ContentTask.spawn(
     tab.linkedBrowser,
-    { linkText: expectedLinkContent },
-    async function({ linkText }) {
+    { buttonText: expectedButtonContent },
+    async function({ buttonText }) {
       await ContentTaskUtils.waitForCondition(() => {
         const noLogins = content.document.querySelector(
           ".monitor-card.no-logins"
@@ -211,7 +211,9 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
       const cardBody = content.document.querySelector(
         ".monitor-card .card-body"
       );
-      const link = content.document.getElementById("sign-up-for-monitor-link");
+      const button = content.document.getElementById(
+        "sign-up-for-monitor-button"
+      );
 
       ok(
         ContentTaskUtils.is_hidden(cardBody),
@@ -222,7 +224,7 @@ async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
         "Check Firefox Monitor to see if you've been part of a data breach and get alerts about new breaches.",
         "Header content for user with no logins is correct"
       );
-      is(link.textContent, linkText, "Text content for link is correct");
+      is(button.textContent, buttonText, "Text content for button is correct");
     }
   );
 }
