@@ -205,6 +205,8 @@ RefPtr<MediaDataDecoder::DecodePromise> AOMDecoder::ProcessDecode(
         b.mYUVColorSpace = YUVColorSpace::BT709;
         break;
     }
+    b.mColorRange = img->range == AOM_CR_FULL_RANGE ? gfx::ColorRange::FULL
+                                                    : gfx::ColorRange::LIMITED;
 
     RefPtr<VideoData> v;
     v = VideoData::CreateAndCopyData(mInfo, mImageContainer, aSample->mOffset,

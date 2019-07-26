@@ -101,7 +101,7 @@ struct MOZ_ONLY_USED_TO_AVOID_STATIC_CONSTRUCTORS FFmpegLibWrapper {
 
   // libavutil optional
   int (*av_frame_get_colorspace)(const AVFrame* frame);
-
+  int (*av_frame_get_color_range)(const AVFrame* frame);
   PRLibrary* mAVCodecLib;
   PRLibrary* mAVUtilLib;
 

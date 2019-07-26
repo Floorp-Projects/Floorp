@@ -203,6 +203,8 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     // BT709 is the only default that makes sense in a modern video context.
     b.mYUVColorSpace = YUVColorSpace::BT709;
   }
+  b.mColorRange = aPicture.seq_hdr->color_range ? gfx::ColorRange::FULL
+                                                : gfx::ColorRange::LIMITED;
 
   b.mPlanes[0].mData = static_cast<uint8_t*>(aPicture.data[0]);
   b.mPlanes[0].mStride = aPicture.stride[0];
