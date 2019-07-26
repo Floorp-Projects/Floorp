@@ -78,8 +78,7 @@ class AbstractCache {
  public:
   virtual void OnInvalidate() = 0;
 
-  InvalidatorListT ResetInvalidators(
-      InvalidatorListT&&);  // Returns the old list.
+  void ResetInvalidators(InvalidatorListT&&);
   void AddInvalidator(const CacheInvalidator&);
 };
 
