@@ -1383,6 +1383,12 @@ class BaseScript : public gc::TenuredCell {
   uint32_t lineno_ = 0;
   uint32_t column_ = 0;  // Count of Code Points
 
+  // See ImmutableFlags / MutableFlags below for definitions. These are stored
+  // as uint32_t instead of bitfields to make it more predicatable to access
+  // from JIT code.
+  uint32_t immutableFlags_ = 0;
+  uint32_t mutableFlags_ = 0;
+
   BaseScript(uint8_t* stubEntry, ScriptSourceObject* sourceObject,
              uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
              uint32_t toStringEnd)
@@ -1571,11 +1577,49 @@ class BaseScript : public gc::TenuredCell {
   uint32_t lineno() const { return lineno_; }
   uint32_t column() const { return column_; }
 
+  // ImmutableFlags accessors.
+  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
+    return immutableFlags_ & uint32_t(flag);
+  }
+  uint32_t immutableFlags() const { return immutableFlags_; }
+
+ protected:
+  void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
+  void setFlag(ImmutableFlags flag, bool b) {
+    if (b) {
+      setFlag(flag);
+    } else {
+      clearFlag(flag);
+    }
+  }
+  void clearFlag(ImmutableFlags flag) { immutableFlags_ &= ~uint32_t(flag); }
+
+ public:
+  // MutableFlags accessors.
+  MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
+    return mutableFlags_ & uint32_t(flag);
+  }
+  void setFlag(MutableFlags flag) { mutableFlags_ |= uint32_t(flag); }
+  void setFlag(MutableFlags flag, bool b) {
+    if (b) {
+      setFlag(flag);
+    } else {
+      clearFlag(flag);
+    }
+  }
+  void clearFlag(MutableFlags flag) { mutableFlags_ &= ~uint32_t(flag); }
+
   void traceChildren(JSTracer* trc);
 
   // JIT accessors
   static constexpr size_t offsetOfJitCodeRaw() {
     return offsetof(BaseScript, jitCodeRaw_);
+  }
+  static size_t offsetOfImmutableFlags() {
+    return offsetof(BaseScript, immutableFlags_);
+  }
+  static constexpr size_t offsetOfMutableFlags() {
+    return offsetof(BaseScript, mutableFlags_);
   }
 };
 
@@ -2134,11 +2178,6 @@ class JSScript : public js::BaseScript {
                   mozilla::recordreplay::Behavior::DontPreserve>
       warmUpCount = {};
 
-  // Note: don't make this a bitfield! It makes it hard to read these flags
-  // from JIT code.
-  uint32_t immutableFlags_ = 0;
-  uint32_t mutableFlags_ = 0;
-
   //
   // End of fields.  Start methods.
   //
@@ -2230,39 +2269,6 @@ class JSScript : public js::BaseScript {
 
  public:
 #endif
-
-  // MutableFlags accessors.
-
-  MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
-    return mutableFlags_ & uint32_t(flag);
-  }
-  void setFlag(MutableFlags flag) { mutableFlags_ |= uint32_t(flag); }
-  void setFlag(MutableFlags flag, bool b) {
-    if (b) {
-      setFlag(flag);
-    } else {
-      clearFlag(flag);
-    }
-  }
-  void clearFlag(MutableFlags flag) { mutableFlags_ &= ~uint32_t(flag); }
-
-  // ImmutableFlags accessors.
-
- public:
-  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
-    return immutableFlags_ & uint32_t(flag);
-  }
-
- private:
-  void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
-  void setFlag(ImmutableFlags flag, bool b) {
-    if (b) {
-      setFlag(flag);
-    } else {
-      clearFlag(flag);
-    }
-  }
-  void clearFlag(ImmutableFlags flag) { immutableFlags_ &= ~uint32_t(flag); }
 
  public:
   inline JSPrincipals* principals();
@@ -2591,12 +2597,6 @@ class JSScript : public js::BaseScript {
     return hasFlag(ImmutableFlags::HasInnerFunctions);
   }
 
-  static constexpr size_t offsetOfMutableFlags() {
-    return offsetof(JSScript, mutableFlags_);
-  }
-  static size_t offsetOfImmutableFlags() {
-    return offsetof(JSScript, immutableFlags_);
-  }
   static constexpr size_t offsetOfScriptData() {
     return offsetof(JSScript, scriptData_);
   }
@@ -3241,22 +3241,6 @@ class LazyScript : public BaseScript {
   static const uint32_t NumClosedOverBindingsBits = 20;
   static const uint32_t NumInnerFunctionsBits = 20;
 
-  // See: JSScript::ImmutableFlags / MutableFlags.
-  // NOTE: Lazy script only defines and uses a subset of these flags.
-
-  uint32_t immutableFlags_;
-  uint32_t mutableFlags_;
-
-  MOZ_MUST_USE bool hasFlag(MutableFlags flag) const {
-    return mutableFlags_ & uint32_t(flag);
-  }
-  void setFlag(MutableFlags flag) { mutableFlags_ |= uint32_t(flag); }
-
-  MOZ_MUST_USE bool hasFlag(ImmutableFlags flag) const {
-    return immutableFlags_ & uint32_t(flag);
-  }
-  void setFlag(ImmutableFlags flag) { immutableFlags_ |= uint32_t(flag); }
-
   LazyScript(JSFunction* fun, uint8_t* stubEntry,
              ScriptSourceObject& sourceObject, LazyScriptData* data,
              uint32_t immutableFlags, uint32_t sourceStart, uint32_t sourceEnd,
@@ -3489,8 +3473,6 @@ class LazyScript : public BaseScript {
   size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) {
     return mallocSizeOf(lazyData_);
   }
-
-  uint32_t immutableFlags() const { return immutableFlags_; }
 };
 
 /* If this fails, add/remove padding within LazyScript. */
