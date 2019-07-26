@@ -11,7 +11,8 @@
 #include "InputBlockState.h"         // for TouchBlockState
 #include "base/task.h"               // for CancelableTask, etc
 #include "InputBlockState.h"         // for TouchBlockState
-#include "mozilla/StaticPrefs.h"     // for StaticPrefs
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_ui.h"
 #include "nsDebug.h"                 // for NS_WARNING
 #include "nsMathUtils.h"             // for NS_hypot
 

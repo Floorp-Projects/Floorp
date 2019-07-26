@@ -6,7 +6,7 @@
 
 #include "AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "LayersLogging.h"           // for Stringify
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/Point.h"        // for Point4D
 #include "mozilla/layers/APZUtils.h"  // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"  // for ViewTransform::operator Matrix4x4()

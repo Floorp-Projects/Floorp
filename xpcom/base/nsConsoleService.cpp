@@ -27,12 +27,12 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/SystemGroup.h"
 
 #if defined(ANDROID)
 #  include <android/log.h>
 #  include "mozilla/dom/ContentChild.h"
+#  include "mozilla/StaticPrefs_consoleservice.h"
 #endif
 #ifdef XP_WIN
 #  include <windows.h>

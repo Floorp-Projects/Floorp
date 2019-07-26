@@ -17,7 +17,7 @@
 #include "gfxCrashReporterUtils.h"
 #include "gfxWindowsPlatform.h"
 #include "mfapi.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"

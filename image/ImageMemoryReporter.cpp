@@ -7,7 +7,7 @@
 #include "ImageMemoryReporter.h"
 #include "Image.h"
 #include "mozilla/layers/SharedSurfacesParent.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "nsIMemoryReporter.h"
 #include "nsISupportsImpl.h"
 

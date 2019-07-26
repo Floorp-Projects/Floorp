@@ -12,7 +12,8 @@
 #include "gfxPlatform.h"           // for gfxPlatform
 #include "gfxRect.h"               // for gfxRect
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc
-#include "mozilla/StaticPrefs.h"   // for StaticPrefs
+#include "mozilla/StaticPrefs_layers.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Rect.h"  // for Rect, RectTyped

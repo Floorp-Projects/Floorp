@@ -51,7 +51,9 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/Unused.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -85,7 +87,6 @@
 #include "gfxConfig.h"
 #include "nsView.h"
 #include "nsViewManager.h"
-#include "mozilla/StaticPrefs.h"
 
 #ifdef DEBUG
 #  include "nsIObserver.h"

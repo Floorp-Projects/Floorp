@@ -11,7 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/SVGContextPaint.h"
 
 #include "mozilla/Logging.h"

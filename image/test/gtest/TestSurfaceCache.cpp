@@ -11,7 +11,7 @@
 #include "ImageFactory.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
 #include "nsIInputStream.h"
 #include "nsString.h"
 #include "ProgressTracker.h"

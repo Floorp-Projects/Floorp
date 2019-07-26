@@ -7,7 +7,7 @@
 #define mozilla_EditAction_h
 
 #include "mozilla/EventForwards.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 namespace mozilla {
 

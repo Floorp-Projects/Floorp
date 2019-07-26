@@ -8,7 +8,7 @@
 #include "GLContext.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_webgl.h"
 #include "MurmurHash3.h"
 #include "nsPrintfCString.h"
 #include <string>

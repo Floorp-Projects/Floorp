@@ -7,7 +7,6 @@
 #include "nsSocketTransport2.h"
 
 #include "mozilla/Attributes.h"
-#include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIOService.h"
 #include "nsStreamUtils.h"
@@ -46,6 +45,7 @@
 
 #if defined(FUZZING)
 #  include "FuzzyLayer.h"
+#  include "mozilla/StaticPrefs_fuzzing.h"
 #endif
 
 #if defined(XP_WIN)

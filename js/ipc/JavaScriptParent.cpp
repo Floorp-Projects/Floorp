@@ -16,7 +16,7 @@
 #include "js/Wrapper.h"
 #include "xpcprivate.h"
 #include "mozilla/Casting.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 

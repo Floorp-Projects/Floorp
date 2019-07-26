@@ -6,7 +6,7 @@
 #include "BackgroundVideoDecodingPermissionObserver.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "MediaDecoder.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"

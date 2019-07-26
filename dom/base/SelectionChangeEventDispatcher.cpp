@@ -11,7 +11,7 @@
 #include "SelectionChangeEventDispatcher.h"
 
 #include "mozilla/AsyncEventDispatcher.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"

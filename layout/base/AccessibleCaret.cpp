@@ -9,7 +9,7 @@
 #include "AccessibleCaretLogger.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/ToString.h"
 #include "nsCanvasFrame.h"
 #include "nsCaret.h"

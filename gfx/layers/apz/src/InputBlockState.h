@@ -10,6 +10,7 @@
 #include "InputData.h"           // for MultiTouchInput
 #include "mozilla/RefCounted.h"  // for RefCounted
 #include "mozilla/RefPtr.h"      // for RefPtr
+#include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/gfx/Matrix.h"  // for Matrix4x4
 #include "mozilla/layers/APZUtils.h"
 #include "mozilla/layers/LayersTypes.h"  // for TouchBehaviorFlags

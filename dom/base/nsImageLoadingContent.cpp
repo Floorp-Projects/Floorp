@@ -52,6 +52,7 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_image.h"
 
 #ifdef LoadImage
 // Undefine LoadImage to prevent naming conflict with Windows.

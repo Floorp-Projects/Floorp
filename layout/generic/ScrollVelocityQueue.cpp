@@ -6,7 +6,8 @@
 
 #include "ScrollVelocityQueue.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsPresContext.h"
 #include "nsRefreshDriver.h"
 

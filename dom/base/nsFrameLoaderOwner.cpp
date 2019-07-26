@@ -13,6 +13,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
+#include "mozilla/StaticPrefs_fission.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

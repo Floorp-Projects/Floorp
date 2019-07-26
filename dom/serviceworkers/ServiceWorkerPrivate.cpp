@@ -42,7 +42,7 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "nsIReferrerInfo.h"
 

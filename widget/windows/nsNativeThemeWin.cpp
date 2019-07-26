@@ -9,7 +9,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RelativeLuminanceUtils.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/WindowsVersion.h"
 #include "mozilla/gfx/Types.h"  // for Color::FromABGR
 #include "nsColor.h"

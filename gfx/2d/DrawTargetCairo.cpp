@@ -15,7 +15,7 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_print.h"
 
 #include "cairo.h"
 #include "cairo-tee.h"

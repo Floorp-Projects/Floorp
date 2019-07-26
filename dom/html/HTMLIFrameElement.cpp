@@ -9,7 +9,7 @@
 #include "mozilla/dom/FeaturePolicy.h"
 #include "mozilla/MappedDeclarations.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsMappedAttributes.h"
 #include "nsAttrValueInlines.h"
 #include "nsError.h"

@@ -12,6 +12,7 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/jsipc/PJavaScript.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "js/GCHashTable.h"
 #include "nsJSUtils.h"
 

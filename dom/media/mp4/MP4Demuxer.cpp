@@ -20,7 +20,7 @@
 #include "ResourceStream.h"
 #include "VPXDecoder.h"
 #include "mozilla/Span.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"

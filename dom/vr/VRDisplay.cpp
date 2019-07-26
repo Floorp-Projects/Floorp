@@ -14,7 +14,7 @@
 #include "mozilla/dom/VRDisplayBinding.h"
 #include "mozilla/Base64.h"
 #include "mozilla/EventStateManager.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "Navigator.h"
 #include "gfxUtils.h"

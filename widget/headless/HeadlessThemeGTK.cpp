@@ -5,7 +5,7 @@
 
 #include "HeadlessThemeGTK.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "nsStyleConsts.h"
 #include "nsIFrame.h"
 

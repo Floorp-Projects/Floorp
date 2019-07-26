@@ -6,7 +6,7 @@
 
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIURI.h"

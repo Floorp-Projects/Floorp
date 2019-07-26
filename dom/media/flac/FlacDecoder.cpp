@@ -6,7 +6,7 @@
 
 #include "FlacDecoder.h"
 #include "MediaContainerType.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

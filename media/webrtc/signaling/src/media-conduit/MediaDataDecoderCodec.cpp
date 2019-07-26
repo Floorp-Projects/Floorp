@@ -4,7 +4,7 @@
 
 #include "MediaDataDecoderCodec.h"
 #include "WebrtcMediaDataDecoderCodec.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

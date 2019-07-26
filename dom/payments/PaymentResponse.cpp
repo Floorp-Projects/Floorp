@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/PaymentResponse.h"
 #include "mozilla/dom/BasicCardPaymentBinding.h"
 #include "mozilla/dom/PaymentRequestUpdateEvent.h"

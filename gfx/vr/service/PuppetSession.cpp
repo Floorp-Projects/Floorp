@@ -8,7 +8,7 @@
 
 #include "nsString.h"
 #include "VRPuppetCommandBuffer.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 #if defined(XP_WIN)
 #  include <d3d11.h>

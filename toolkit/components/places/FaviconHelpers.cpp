@@ -16,7 +16,7 @@
 #include "nsFaviconService.h"
 #include "mozilla/storage.h"
 #include "mozilla/Telemetry.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
 #include "nsStreamUtils.h"

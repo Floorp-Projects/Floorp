@@ -14765,7 +14765,10 @@ class CGBindingRoot(CGThing):
             iface = desc.interface
             return iface.getExtendedAttribute("Pref") is not None
 
-        bindingHeaders["mozilla/StaticPrefs.h"] = (
+        # Bug 1568729: ideally we'd be smarter about this, and only include the
+        # required StaticPrefs_*.h file, rather than StaticPrefsAll.h, which
+        # includes all StaticPrefs_*.h files.
+        bindingHeaders["mozilla/StaticPrefsAll.h"] = (
             any(descriptorRequiresPreferences(d) for d in descriptors) or
             any(dictionaryHasPrefControlledMember(d) for d in dictionaries))
         bindingHeaders["mozilla/dom/WebIDLPrefs.h"] = any(
@@ -18074,7 +18077,10 @@ class GlobalGenRoots():
     @staticmethod
     def WebIDLPrefs(config):
         prefs = set()
-        headers = set(["mozilla/dom/WebIDLPrefs.h", "mozilla/StaticPrefs.h"])
+        # Bug 1568729: ideally we'd be smarter about this, and only include the
+        # required StaticPrefs_*.h file, rather than StaticPrefsAll.h, which
+        # includes all StaticPrefs_*.h files.
+        headers = set(["mozilla/dom/WebIDLPrefs.h", "mozilla/StaticPrefsAll.h"])
         for d in config.getDescriptors(hasInterfaceOrInterfacePrototypeObject=True):
             for m in d.interface.members:
                 pref = PropertyDefiner.getStringAttr(m, "Pref")

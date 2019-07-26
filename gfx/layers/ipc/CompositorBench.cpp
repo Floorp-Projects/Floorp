@@ -10,7 +10,7 @@
 #  include "mozilla/gfx/2D.h"
 #  include "mozilla/layers/Compositor.h"
 #  include "mozilla/layers/Effects.h"
-#  include "mozilla/StaticPrefs.h"
+#  include "mozilla/StaticPrefs_layers.h"
 #  include "mozilla/TimeStamp.h"
 #  include <math.h>
 #  include "GeckoProfiler.h"

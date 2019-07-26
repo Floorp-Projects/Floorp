@@ -14,7 +14,7 @@
 #include "WebMDemuxer.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsMimeTypes.h"
 
 #ifdef MOZ_FMP4

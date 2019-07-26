@@ -37,7 +37,7 @@
 #include "mozilla/Components.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

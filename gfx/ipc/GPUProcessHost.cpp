@@ -9,7 +9,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "nsITimer.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "VRGPUChild.h"
 #include "ProcessUtils.h"
 

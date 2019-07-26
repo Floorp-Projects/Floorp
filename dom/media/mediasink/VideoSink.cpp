@@ -20,7 +20,8 @@
 #include "VideoUtils.h"
 
 #include "mozilla/IntegerPrintfMacros.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
+#include "mozilla/StaticPrefs_media.h"
 
 namespace mozilla {
 

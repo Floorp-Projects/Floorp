@@ -6,7 +6,7 @@
 
 #include "ScaledFontBase.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
 #ifdef USE_SKIA
 #  include "PathSkia.h"

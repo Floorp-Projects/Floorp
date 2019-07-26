@@ -7,7 +7,7 @@
 #include "OggDecoder.h"
 #include "MediaContainerType.h"
 #include "MediaDecoder.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "nsMimeTypes.h"
 
 namespace mozilla {

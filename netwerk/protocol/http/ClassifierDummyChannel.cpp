@@ -11,6 +11,7 @@
 #include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentSecurityManager.h"
 #include "nsIChannel.h"
 #include "nsIURI.h"

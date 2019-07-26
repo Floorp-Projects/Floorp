@@ -6,7 +6,7 @@
 
 #include "PerformanceTiming.h"
 #include "mozilla/dom/PerformanceTimingBinding.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"

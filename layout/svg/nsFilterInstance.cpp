@@ -23,6 +23,7 @@
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PatternHelpers.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "nsCSSFilterInstance.h"
 #include "nsSVGDisplayableFrame.h"
 #include "nsSVGFilterInstance.h"

@@ -13,7 +13,8 @@
 #include "mozilla/layers/APZThreadUtils.h"
 #include "OverscrollHandoffState.h"
 #include "QueuedInput.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #define INPQ_LOG(...)
 // #define INPQ_LOG(...) printf_stderr("INPQ: " __VA_ARGS__)

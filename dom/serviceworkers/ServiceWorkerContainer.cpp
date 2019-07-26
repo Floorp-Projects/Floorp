@@ -17,7 +17,7 @@
 #include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 #include "nsCycleCollectionParticipant.h"
 #include "nsServiceManagerUtils.h"

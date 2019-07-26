@@ -11,7 +11,10 @@
 #include "ScrollAnimationPhysics.h"  // for kScrollSeriesTimeoutMs
 
 #include "mozilla/MouseEvents.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/StaticPrefs_test.h"
 #include "mozilla/Telemetry.h"                // for Telemetry
 #include "mozilla/layers/IAPZCTreeManager.h"  // for AllowedTouchBehavior
 #include "OverscrollHandoffState.h"

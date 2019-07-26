@@ -5,6 +5,7 @@
 
 #include "WinCompositorWidget.h"
 
+#include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/layers/Compositor.h"

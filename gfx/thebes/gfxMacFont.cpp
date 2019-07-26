@@ -7,7 +7,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
 #include "gfxCoreTextShaper.h"
 #include <algorithm>

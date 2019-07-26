@@ -22,7 +22,7 @@
 #include "VsyncSource.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layers.h"
 #include "base/task.h"
 #include "base/thread.h"
 #include "base/message_loop.h"

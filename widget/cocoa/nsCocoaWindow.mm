@@ -42,7 +42,8 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/PresShell.h"
 #include <algorithm>
 

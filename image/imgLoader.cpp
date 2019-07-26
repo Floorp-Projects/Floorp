@@ -15,10 +15,10 @@
 #include "mozilla/Move.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_image.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/ChaosMode.h"
 #include "mozilla/LoadInfo.h"
-#include "mozilla/StaticPrefs.h"
 
 #include "nsImageModule.h"
 #include "imgRequestProxy.h"

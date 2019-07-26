@@ -7,7 +7,7 @@
 
 #include "base/thread.h"
 #include "mozilla/layers/SynchronousTask.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "RemoteVideoDecoder.h"
 #include "RemoteDecoderManagerChild.h"
 

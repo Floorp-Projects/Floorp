@@ -8,7 +8,8 @@
 #include "APZTestCommon.h"
 
 #include "InputUtils.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_mousewheel.h"
 
 class APZCSnappingTester : public APZCTreeManagerTester {};
 

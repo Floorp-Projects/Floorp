@@ -10,7 +10,7 @@
 #include "mozilla/AbstractThread.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/ThrottledEventQueue.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsDOMMutationObserver.h"

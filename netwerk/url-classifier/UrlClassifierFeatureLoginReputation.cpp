@@ -6,7 +6,7 @@
 
 #include "UrlClassifierFeatureLoginReputation.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_browser.h"
 
 namespace mozilla {
 namespace net {

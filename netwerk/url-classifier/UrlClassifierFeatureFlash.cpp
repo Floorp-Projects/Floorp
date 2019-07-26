@@ -6,6 +6,7 @@
 
 #include "UrlClassifierFeatureFlash.h"
 #include "mozilla/net/HttpBaseChannel.h"
+#include "mozilla/StaticPrefs_plugins.h"
 #include "nsScriptSecurityManager.h"
 #include "nsQueryObject.h"
 

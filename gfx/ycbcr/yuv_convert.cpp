@@ -18,7 +18,7 @@
 
 #include "yuv_convert.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "libyuv.h"
 #include "scale_yuv_argb.h"
 // Header for low level row functions.

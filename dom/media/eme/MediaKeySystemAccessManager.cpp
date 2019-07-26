@@ -9,7 +9,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/DetailedPromise.h"
 #ifdef XP_WIN
 #  include "mozilla/WindowsVersion.h"

@@ -12,7 +12,6 @@
 #include "AccessibleCaret.h"
 #include "AccessibleCaretManager.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/StaticPrefs.h"
 
 using ::testing::_;
 using ::testing::DefaultValue;

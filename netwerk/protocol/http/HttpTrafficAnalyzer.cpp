@@ -6,7 +6,7 @@
 #include "HttpTrafficAnalyzer.h"
 #include "HttpLog.h"
 
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 

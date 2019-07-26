@@ -9,7 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_clipboard.h"
 #include "nsIClipboard.h"
 
 namespace mozilla {

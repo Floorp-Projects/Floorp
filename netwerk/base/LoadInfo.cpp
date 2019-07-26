@@ -16,7 +16,7 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/net/CookieSettings.h"
 #include "mozilla/NullPrincipal.h"
-#include "mozilla/StaticPrefs.h"
+#include "mozilla/StaticPrefs_network.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
 #include "nsFrameLoaderOwner.h"
