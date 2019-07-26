@@ -176,7 +176,6 @@ var AboutProtectionsHandler = {
    * @return {{ monitoredEmails: Number,
    *            numBreaches: Number,
    *            passwords: Number,
-   *            userEmail: String|null,
    *            potentiallyBreachedLogins: Number,
    *            error: Boolean }}
    *         Monitor data.
@@ -184,7 +183,6 @@ var AboutProtectionsHandler = {
   async getMonitorData() {
     let monitorData = {};
     let potentiallyBreachedLogins = null;
-    let userEmail = null;
     const hasFxa = await fxAccounts.accountStatus();
 
     if (hasFxa) {
@@ -223,13 +221,6 @@ var AboutProtectionsHandler = {
         potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
           logins
         );
-
-        // If the user isn't subscribed to Monitor, then send back their email so the
-        // protections report can direct them to the proper OAuth flow on Monitor.
-        if (monitorData.errorMessage) {
-          const { email } = await fxAccounts.getSignedInUser();
-          userEmail = email;
-        }
       }
     } else {
       // If no account exists, then the user is not logged in with an fxAccount.
@@ -240,7 +231,6 @@ var AboutProtectionsHandler = {
 
     return {
       ...monitorData,
-      userEmail,
       potentiallyBreachedLogins: potentiallyBreachedLogins
         ? potentiallyBreachedLogins.size
         : 0,
