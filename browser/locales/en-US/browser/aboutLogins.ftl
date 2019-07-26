@@ -2,10 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-### This file is not in a locales directory to prevent it from
-### being translated as the feature is still in heavy development
-### and strings are likely to change often.
-
 about-logins-page-title = Logins & Passwords
 
 login-filter =
@@ -16,16 +12,17 @@ create-login-button = Create New Login
 ## The ⋯ menu that is in the top corner of the page
 menu =
   .title = Open menu
-menu-menuitem-faq = Frequently Asked Questions
-menu-menuitem-feedback = Leave Feedback
+# This menuitem is only visible on Windows
 menu-menuitem-import = Import Passwords…
-menu-menuitem-download-android = Lockwise for Android
-menu-menuitem-download-iphone = Lockwise for iPhone and iPad
 menu-menuitem-preferences =
   { PLATFORM() ->
       [windows] Options
      *[other] Preferences
   }
+menu-menuitem-feedback = Send Feedback
+menu-menuitem-faq = Frequently Asked Questions
+menu-menuitem-download-android = Lockwise for Android
+menu-menuitem-download-iphone = Lockwise for iPhone and iPad
 
 ## Login List
 login-list =
@@ -35,10 +32,10 @@ login-list-count =
       [one] { $count } login
      *[other] { $count } logins
   }
-login-list-last-changed-option = Last Changed
-login-list-last-used-option = Last Used
-login-list-name-option = Name
 login-list-sort-label-text = Sort by:
+login-list-name-option = Name (A-Z)
+login-list-last-changed-option = Last Modified
+login-list-last-used-option = Last Used
 login-list-item-title-new-login = New Login
 login-list-item-subtitle-new-login = Enter your login credentials
 login-list-item-subtitle-missing-username = (no username)
@@ -54,15 +51,15 @@ login-item-open-site-button = Launch
 login-item-username-label = Username
 login-item-username =
   .placeholder = name@example.com
-login-item-copied-username-button-text = ✔ Copied!
 login-item-copy-username-button-text = Copy
+login-item-copied-username-button-text = Copied!
 login-item-password-label = Password
 login-item-password-reveal-checkbox-show =
   .title = Show password
 login-item-password-reveal-checkbox-hide =
   .title = Hide password
-login-item-copied-password-button-text = ✔ Copied!
 login-item-copy-password-button-text = Copy
+login-item-copied-password-button-text = Copied!
 login-item-save-changes-button = Save Changes
 login-item-save-new-button = Save
 login-item-cancel-button = Cancel

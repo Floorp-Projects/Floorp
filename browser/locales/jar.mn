@@ -9,7 +9,6 @@
 
 [localization] @AB_CD@.jar:
   browser/protections.ftl                          (../components/protections/content/protections.ftl)
-  browser/aboutLogins.ftl                          (../components/aboutlogins/content/aboutLogins.ftl)
   toolkit/certviewer.ftl                           (../../toolkit/components/certviewer/content/certviewer.ftl)
   browser                                          (%browser/**/*.ftl)
 
