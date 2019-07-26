@@ -54,13 +54,15 @@ class MacIOSurfaceTextureHostBasic : public TextureHost {
   MacIOSurfaceTextureHostBasic(
       TextureFlags aFlags, const SurfaceDescriptorMacIOSurface& aDescriptor);
 
-  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
+  virtual void SetTextureSourceProvider(
+      TextureSourceProvider* aProvider) override;
 
   bool Lock() override;
 
   gfx::SurfaceFormat GetFormat() const override;
 
-  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override {
+  virtual bool BindTextureSource(
+      CompositableTextureSourceRef& aTexture) override {
     aTexture = mTextureSource;
     return !!aTexture;
   }
