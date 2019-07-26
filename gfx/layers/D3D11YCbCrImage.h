@@ -80,6 +80,7 @@ class D3D11YCbCrImage : public Image {
   gfx::IntRect mPictureRect;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mColorSpace;
+  gfx::ColorRange mColorRange;
   RefPtr<TextureClient> mTextureClient;
 };
 
