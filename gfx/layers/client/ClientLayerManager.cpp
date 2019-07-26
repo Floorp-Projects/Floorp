@@ -83,6 +83,36 @@ ClientLayerManager::~ClientLayerManager() {
   MOZ_COUNT_DTOR(ClientLayerManager);
 }
 
+bool ClientLayerManager::Initialize(
+    PCompositorBridgeChild* aCBChild, bool aShouldAccelerate,
+    TextureFactoryIdentifier* aTextureFactoryIdentifier) {
+  MOZ_ASSERT(mForwarder);
+  MOZ_ASSERT(aTextureFactoryIdentifier);
+
+  nsTArray<LayersBackend> backendHints;
+  gfxPlatform::GetPlatform()->GetCompositorBackends(aShouldAccelerate,
+                                                    backendHints);
+  if (backendHints.IsEmpty()) {
+    gfxCriticalNote << "Failed to get backend hints.";
+    return false;
+  }
+
+  PLayerTransactionChild* shadowManager =
+      aCBChild->SendPLayerTransactionConstructor(backendHints, LayersId{0});
+
+  TextureFactoryIdentifier textureFactoryIdentifier;
+  shadowManager->SendGetTextureFactoryIdentifier(&textureFactoryIdentifier);
+  if (textureFactoryIdentifier.mParentBackend == LayersBackend::LAYERS_NONE) {
+    gfxCriticalNote << "Failed to create an OMT compositor.";
+    return false;
+  }
+
+  mForwarder->SetShadowManager(shadowManager);
+  UpdateTextureFactoryIdentifier(textureFactoryIdentifier);
+  *aTextureFactoryIdentifier = textureFactoryIdentifier;
+  return true;
+}
+
 void ClientLayerManager::Destroy() {
   MOZ_DIAGNOSTIC_ASSERT(!mNotifyingWidgetListener,
                         "Try to avoid destroying widgets and layer managers "
