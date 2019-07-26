@@ -1083,8 +1083,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// The maximum amount a timeout can be delayed by budget throttling
-pref("dom.timeout.budget_throttling_max_delay", 15000);
 // Turn on budget throttling by default
 pref("dom.timeout.enable_budget_timer_throttling", true);
 

@@ -34,9 +34,7 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-#define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000  // 15s
 #define DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING false
-static int32_t gBudgetThrottlingMaxDelay = 0;
 static bool gEnableBudgetTimeoutThrottling = false;
 
 // static
@@ -81,7 +79,7 @@ TimeDuration GetMinBudget(bool aIsBackground) {
   // that budget using the regeneration factor. This number is
   // expected to be negative.
   return TimeDuration::FromMilliseconds(
-      -gBudgetThrottlingMaxDelay /
+      -StaticPrefs::dom_timeout_budget_throttling_max_delay() /
       std::max(
           aIsBackground
               ? StaticPrefs::dom_timeout_background_budget_regeneration_rate()
@@ -223,7 +221,8 @@ TimeDuration TimeoutManager::MinSchedulingDelay() const {
   // factor used is the rate of budget regeneration.
   //
   // We clamp the delay to be less than or equal to
-  // gBudgetThrottlingMaxDelay to not entirely starve the timeouts.
+  // "dom.timeout.budget_throttling_max_delay" to not entirely starve
+  // the timeouts.
   //
   // Consider these examples assuming we should throttle using
   // budgets:
@@ -450,9 +449,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gBudgetThrottlingMaxDelay,
-                              "dom.timeout.budget_throttling_max_delay",
-                              DEFAULT_BUDGET_THROTTLING_MAX_DELAY);
   Preferences::AddBoolVarCache(&gEnableBudgetTimeoutThrottling,
                                "dom.timeout.enable_budget_timer_throttling",
                                DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING);
