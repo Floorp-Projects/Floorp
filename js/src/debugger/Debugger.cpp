@@ -1246,14 +1246,6 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
                                   MutableHandleDebuggerObject result) {
   MOZ_ASSERT(obj);
 
-  if (obj->is<JSFunction>()) {
-    MOZ_ASSERT(!IsInternalFunctionObject(*obj));
-    RootedFunction fun(cx, &obj->as<JSFunction>());
-    if (!EnsureFunctionHasScript(cx, fun)) {
-      return false;
-    }
-  }
-
   DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
   if (p) {
     result.set(&p->value()->as<DebuggerObject>());
