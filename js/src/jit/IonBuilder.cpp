@@ -3212,7 +3212,9 @@ AbortReasonOr<Ok> IonBuilder::visitTry(CFGTry* try_) {
   // aborted compilation in this case.
 
   // Try-catch within inline frames is not yet supported.
-  MOZ_ASSERT(!isInlineBuilder());
+  if (isInlineBuilder()) {
+    return abort(AbortReason::Disable, "Try-catch during inlining");
+  }
 
   // Try-catch during analyses is not yet supported. Code within the 'catch'
   // block is not accounted for.
@@ -12733,7 +12735,9 @@ AbortReasonOr<Ok> IonBuilder::jsop_setarg(uint32_t arg) {
   if (info().argumentsAliasesFormals()) {
     // JSOP_SETARG with magic arguments within inline frames is not yet
     // supported.
-    MOZ_ASSERT(script()->uninlineable() && !isInlineBuilder());
+    if (isInlineBuilder()) {
+      return abort(AbortReason::Disable, "setarg with magic args and inlining");
+    }
 
     MSetFrameArgument* store = MSetFrameArgument::New(alloc(), arg, val);
     modifiesFrameArguments_ = true;
