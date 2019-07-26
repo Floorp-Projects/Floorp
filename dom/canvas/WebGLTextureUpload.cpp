@@ -753,31 +753,21 @@ static bool EnsureImageDataInitializedForUpload(
     WebGLTexture* tex, TexImageTarget target, GLint level, GLint xOffset,
     GLint yOffset, GLint zOffset, uint32_t width, uint32_t height,
     uint32_t depth, webgl::ImageInfo* imageInfo) {
-  if (!imageInfo->mUninitializedSlices) return true;
-
-  if (width == imageInfo->mWidth && height == imageInfo->mHeight) {
-    for (const auto& z :
-         IntegerRange(uint32_t(zOffset), uint32_t(zOffset) + depth)) {
-      (*imageInfo->mUninitializedSlices)[z] = false;
+  if (!imageInfo->mHasData) {
+    const bool isFullUpload =
+        (!xOffset && !yOffset && !zOffset && width == imageInfo->mWidth &&
+         height == imageInfo->mHeight && depth == imageInfo->mDepth);
+    if (!isFullUpload) {
+      WebGLContext* webgl = tex->mContext;
+      webgl->GenerateWarning(
+          "Texture has not been initialized prior to a"
+          " partial upload, forcing the browser to clear it."
+          " This may be slow.");
+      if (!tex->EnsureImageDataInitialized(target, level)) {
+        MOZ_ASSERT(false, "Unexpected failure to init image data.");
+        return false;
+      }
     }
-    bool hasUninitialized = false;
-    for (const auto& z : IntegerRange(imageInfo->mDepth)) {
-      hasUninitialized |= (*imageInfo->mUninitializedSlices)[z];
-    }
-    if (!hasUninitialized) {
-      imageInfo->mUninitializedSlices = {};
-    }
-    return true;
-  }
-
-  WebGLContext* webgl = tex->mContext;
-  webgl->GenerateWarning(
-      "Texture has not been initialized prior to a"
-      " partial upload, forcing the browser to clear it."
-      " This may be slow.");
-  if (!tex->EnsureImageDataInitialized(target, level)) {
-    MOZ_ASSERT(false, "Unexpected failure to init image data.");
-    return false;
   }
 
   return true;
@@ -1121,10 +1111,9 @@ void WebGLTexture::TexStorage(TexTarget target, GLsizei levels,
   ////////////////////////////////////
   // Update our specification data.
 
-  auto uninitializedSlices = Some(std::vector<bool>(depth, true));
+  const bool isDataInitialized = false;
   const webgl::ImageInfo newInfo{dstUsage, uint32_t(width), uint32_t(height),
-                                 uint32_t(depth),
-                                 std::move(uninitializedSlices)};
+                                 uint32_t(depth), isDataInitialized};
 
   {
     const auto base_level = mBaseMipmapLevel;
@@ -1220,11 +1209,9 @@ void WebGLTexture::TexImage(TexImageTarget target, GLint level,
 
   // It's tempting to do allocation first, and TexSubImage second, but this is
   // generally slower.
-  auto uninitializedSlices =
-      blob->HasData() ? Nothing() : Some(std::vector<bool>(blob->mDepth, true));
+
   const webgl::ImageInfo newImageInfo{dstUsage, blob->mWidth, blob->mHeight,
-                                      blob->mDepth,
-                                      std::move(uninitializedSlices)};
+                                      blob->mDepth, blob->HasData()};
 
   const bool isSubImage = false;
   const bool needsRespec = (imageInfo->mWidth != newImageInfo.mWidth ||
@@ -1344,6 +1331,8 @@ void WebGLTexture::TexSubImage(TexImageTarget target, GLint level,
 
   ////////////////////////////////////
   // Update our specification data?
+
+  imageInfo->mHasData = true;
 }
 
 ////////////////////////////////////////
@@ -1449,9 +1438,9 @@ void WebGLTexture::CompressedTexImage(TexImageTarget target, GLint level,
   ////////////////////////////////////
   // Update our specification data.
 
-  const auto uninitializedSlices = Nothing();
+  const bool isDataInitialized = true;
   const webgl::ImageInfo newImageInfo{usage, blob->mWidth, blob->mHeight,
-                                      blob->mDepth, uninitializedSlices};
+                                      blob->mDepth, isDataInitialized};
   *imageInfo = newImageInfo;
   InvalidateCaches();
 }
@@ -1597,6 +1586,8 @@ void WebGLTexture::CompressedTexSubImage(
 
   ////////////////////////////////////
   // Update our specification data?
+
+  imageInfo->mHasData = true;
 }
 
 ////////////////////////////////////////
@@ -2109,9 +2100,9 @@ void WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level,
   ////////////////////////////////////
   // Update our specification data.
 
-  const auto uninitializedSlices = Nothing();
+  const bool isDataInitialized = true;
   const webgl::ImageInfo newImageInfo{dstUsage, width, height, depth,
-                                      uninitializedSlices};
+                                      isDataInitialized};
   *imageInfo = newImageInfo;
   InvalidateCaches();
 }
@@ -2188,6 +2179,8 @@ void WebGLTexture::CopyTexSubImage(TexImageTarget target, GLint level,
 
   ////////////////////////////////////
   // Update our specification data?
+
+  imageInfo->mHasData = true;
 }
 
 }  // namespace mozilla
