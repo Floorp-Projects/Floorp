@@ -77,7 +77,7 @@ void BackgroundSdrDecryptStrings(const nsTArray<nsCString>& encryptedStrings,
       break;
     }
 
-    plainTexts.AppendElement(NS_ConvertASCIItoUTF16(plainText));
+    plainTexts.AppendElement(NS_ConvertUTF8toUTF16(plainText));
   }
 
   nsCOMPtr<nsIRunnable> runnable(
