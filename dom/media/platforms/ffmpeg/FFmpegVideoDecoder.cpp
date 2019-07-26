@@ -381,16 +381,16 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
         b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
         break;
       case AVCOL_SPC_UNSPECIFIED:
-#if LIBAVCODEC_VERSION_MAJOR >= 55
-        if (mCodecContext->codec_id == AV_CODEC_ID_VP9) {
-          b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-        }
-#endif
+        b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
         break;
       default:
         break;
     }
   }
+  if (b.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
+    b.mYUVColorSpace = DefaultColorSpace({mFrame->width, mFrame->height});
+  }
+
   if (mLib->av_frame_get_color_range) {
     auto range = mLib->av_frame_get_color_range(mFrame);
     b.mColorRange = range == AVCOL_RANGE_JPEG ? gfx::ColorRange::FULL
