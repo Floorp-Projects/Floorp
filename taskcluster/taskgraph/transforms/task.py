@@ -1125,6 +1125,7 @@ def build_bouncer_locations_payload(config, task, task_def):
     task_def['payload'] = {
         'bouncer_products': worker['bouncer-products'],
         'version': release_config['version'],
+        'product': task['shipping-product'],
     }
 
 
