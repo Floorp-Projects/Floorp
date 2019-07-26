@@ -7,6 +7,8 @@
 
     <!-- DisplayToolbar -->
     <dimen name="mozac_browser_toolbar_progress_bar_height">3dp</dimen>
+    <dimen name="mozac_browser_toolbar_icons_separator_height">24dp</dimen>
+    <dimen name="mozac_browser_toolbar_icons_separator_width">1dp</dimen>
     <dimen name="mozac_browser_toolbar_url_fading_edge_size">24dp</dimen>
     <dimen name="mozac_browser_toolbar_icon_padding">16dp</dimen>
     <dimen name="mozac_browser_toolbar_menu_padding">16dp</dimen>

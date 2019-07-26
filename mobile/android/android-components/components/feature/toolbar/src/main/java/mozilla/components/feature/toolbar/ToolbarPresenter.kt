@@ -8,8 +8,10 @@ import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.session.SelectionAwareSessionObserver
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 
 /**
  * Presenter implementation for a toolbar implementation in order to update the toolbar whenever
@@ -69,10 +71,17 @@ class ToolbarPresenter(
         toolbar.setSearchTerms(session?.searchTerms ?: "")
         toolbar.displayProgress(session?.progress ?: 0)
         updateToolbarSecurity(session?.securityInfo ?: Session.SecurityInfo())
+
+        if (session != null) {
+            updateToolbarTrackingProtection(session)
+        } else {
+            toolbar.siteTrackingProtection = SiteTrackingProtection.OFF_GLOBALLY
+        }
     }
 
     override fun onUrlChanged(session: Session, url: String) {
         renderer.post(url)
+        updateToolbarTrackingProtection(session)
     }
 
     override fun onProgress(session: Session, progress: Int) {
@@ -86,9 +95,32 @@ class ToolbarPresenter(
     override fun onSecurityChanged(session: Session, securityInfo: Session.SecurityInfo) =
         updateToolbarSecurity(securityInfo)
 
+    override fun onTrackerBlockingEnabledChanged(session: Session, blockingEnabled: Boolean) {
+        updateToolbarTrackingProtection(session)
+    }
+
+    override fun onTrackerBlocked(session: Session, tracker: Tracker, all: List<Tracker>) {
+        updateToolbarTrackingProtection(session)
+    }
+
     private fun updateToolbarSecurity(securityInfo: Session.SecurityInfo) =
         when (securityInfo.secure) {
             true -> toolbar.siteSecure = Toolbar.SiteSecurity.SECURE
             false -> toolbar.siteSecure = Toolbar.SiteSecurity.INSECURE
         }
+
+    private fun updateToolbarTrackingProtection(session: Session) {
+        val areTrackersBlocked = session.trackersBlocked.isNotEmpty()
+        val siteTrackingProtection = when (session.trackerBlockingEnabled) {
+            true -> {
+                if (areTrackersBlocked) {
+                    SiteTrackingProtection.ON_TRACKERS_BLOCKED
+                } else {
+                    SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+                }
+            }
+            false -> SiteTrackingProtection.OFF_GLOBALLY
+        }
+        toolbar.siteTrackingProtection = siteTrackingProtection
+    }
 }

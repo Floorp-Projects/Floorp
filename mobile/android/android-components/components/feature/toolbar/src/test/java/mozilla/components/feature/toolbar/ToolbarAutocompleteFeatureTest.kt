@@ -30,6 +30,8 @@ import org.mockito.Mockito.verify
 class ToolbarAutocompleteFeatureTest {
 
     class TestToolbar : Toolbar {
+        override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
+            Toolbar.SiteTrackingProtection.OFF_GLOBALLY
         override var title: String = ""
         override var url: CharSequence = ""
         override var siteSecure: Toolbar.SiteSecurity = Toolbar.SiteSecurity.INSECURE

@@ -26,6 +26,9 @@ class ToolbarInteractorTest {
         override var private: Boolean = false
         override var title: String = ""
 
+        override var siteTrackingProtection: Toolbar.SiteTrackingProtection =
+            Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+
         override fun setSearchTerms(searchTerms: String) {
             fail()
         }

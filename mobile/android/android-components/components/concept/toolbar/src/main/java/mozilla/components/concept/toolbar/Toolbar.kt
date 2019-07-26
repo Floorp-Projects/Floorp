@@ -45,6 +45,11 @@ interface Toolbar {
     var siteSecure: SiteSecurity
 
     /**
+     * Sets/Gets the site tracking protection state to be displayed on the toolbar.
+     */
+    var siteTrackingProtection: SiteTrackingProtection
+
+    /**
      * Displays the currently used search terms as part of this Toolbar.
      *
      * @param searchTerms the search terms used by the current session
@@ -355,5 +360,27 @@ interface Toolbar {
     enum class SiteSecurity {
         INSECURE,
         SECURE,
+    }
+
+    /**
+     * Indicates which tracking protection status a site has.
+     */
+    enum class SiteTrackingProtection {
+        /**
+         * The site has tracking protection enabled, but none trackers have been blocked or detected.
+         */
+        ON_NO_TRACKERS_BLOCKED,
+        /**
+         * The site has tracking protection enabled, and trackers have been blocked or detected.
+         */
+        ON_TRACKERS_BLOCKED,
+        /**
+         * Tracking protection has been disabled for a specific site.
+         */
+        OFF_FOR_A_SITE,
+        /**
+         * Tracking protection has been disabled for all sites.
+         */
+        OFF_GLOBALLY,
     }
 }

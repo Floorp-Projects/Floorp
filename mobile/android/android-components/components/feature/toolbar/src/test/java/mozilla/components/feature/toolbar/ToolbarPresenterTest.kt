@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.feature.toolbar.internal.URLRenderer
 import mozilla.components.support.test.mock
@@ -98,6 +99,30 @@ class ToolbarPresenterTest {
         toolbarPresenter.onSecurityChanged(session, Session.SecurityInfo(false))
 
         verify(toolbar).siteSecure = Toolbar.SiteSecurity.INSECURE
+    }
+
+    @Test
+    fun `onTrackerBlockingEnabledChanged,onTrackerBlocked and onUrlChanged updates toolbar`() {
+        val toolbar: Toolbar = mock()
+        val sessionManager: SessionManager = mock()
+        val session = Session("https://mozilla.org")
+        val toolbarPresenter = spy(ToolbarPresenter(toolbar, sessionManager, "123"))
+
+        session.trackerBlockingEnabled = true
+        toolbarPresenter.onUrlChanged(session, "https://mozilla.org")
+
+        verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_NO_TRACKERS_BLOCKED
+
+        session.trackerBlockingEnabled = false
+        toolbarPresenter.onTrackerBlockingEnabledChanged(session, false)
+
+        verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.OFF_GLOBALLY
+
+        session.trackerBlockingEnabled = true
+        session.trackersBlocked = listOf(Tracker("tracker_url"))
+        toolbarPresenter.onTrackerBlocked(session, Tracker("tracker_url"), session.trackersBlocked)
+
+        verify(toolbar).siteTrackingProtection = Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
     }
 
     @Test
