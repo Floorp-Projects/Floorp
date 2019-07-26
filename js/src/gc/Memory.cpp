@@ -801,6 +801,10 @@ void MarkPagesInUseSoft(void* region, size_t length) {
 }
 
 bool MarkPagesInUseHard(void* region, size_t length) {
+  if (js::oom::ShouldFailWithOOM()) {
+    return false;
+  }
+
   CheckDecommit(region, length);
 
   MOZ_MAKE_MEM_UNDEFINED(region, length);
