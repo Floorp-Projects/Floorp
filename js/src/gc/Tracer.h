@@ -92,7 +92,7 @@ typename PtrBaseGCType<T>::type* ConvertToBase(T* thingp) {
 
 // Internal methods to trace edges.
 template <typename T>
-void TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name);
+bool TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name);
 template <typename T>
 void TraceRangeInternal(JSTracer* trc, size_t len, T* vec, const char* name);
 
