@@ -12,7 +12,7 @@ struct TestHandler {
 impl TestHandler {
     fn new(sender: Sender<String>) -> TestHandler {
         TestHandler {
-            sender: sender,
+            sender,
             notify: 0
         }
     }

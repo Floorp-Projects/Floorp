@@ -16,15 +16,22 @@
 #include <math.h>
 #include <memory>
 #include "cubeb/cubeb.h"
-#include "common.h"
 #include <atomic>
+
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
+#include "common.h"
 
 #define SAMPLE_FREQUENCY 48000
 #define STREAM_FORMAT CUBEB_SAMPLE_FLOAT32LE
+#define INPUT_CHANNELS 1
+#define INPUT_LAYOUT CUBEB_LAYOUT_MONO
+#define OUTPUT_CHANNELS 2
+#define OUTPUT_LAYOUT CUBEB_LAYOUT_STEREO
 
 struct user_state_duplex
 {
-  std::atomic<int> seen_audio{ 0 };
+  std::atomic<int> invalid_audio_value{ 0 };
 };
 
 long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer, void * outputbuffer, long nframes)
@@ -32,7 +39,6 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   user_state_duplex * u = reinterpret_cast<user_state_duplex*>(user);
   float *ib = (float *)inputbuffer;
   float *ob = (float *)outputbuffer;
-  bool seen_audio = 1;
 
   if (stream == NULL || inputbuffer == NULL || outputbuffer == NULL) {
     return CUBEB_ERROR;
@@ -42,15 +48,13 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   // checking if there is noise in the process.
   long output_index = 0;
   for (long i = 0; i < nframes; i++) {
-    if (ib[i] <= -1.0 && ib[i] >= 1.0) {
-      seen_audio = 0;
+    if (ib[i] <= -1.0 || ib[i] >= 1.0) {
+      u->invalid_audio_value = 1;
       break;
     }
     ob[output_index] = ob[output_index + 1] = ib[i];
     output_index += 2;
   }
-
-  u->seen_audio |= seen_audio;
 
   return nframes;
 }
@@ -98,14 +102,14 @@ TEST(cubeb, duplex)
 
   /* typical user-case: mono input, stereo output, low latency. */
   input_params.format = STREAM_FORMAT;
-  input_params.rate = 48000;
-  input_params.channels = 1;
-  input_params.layout = CUBEB_LAYOUT_MONO;
+  input_params.rate = SAMPLE_FREQUENCY;
+  input_params.channels = INPUT_CHANNELS;
+  input_params.layout = INPUT_LAYOUT;
   input_params.prefs = CUBEB_STREAM_PREF_NONE;
   output_params.format = STREAM_FORMAT;
-  output_params.rate = 48000;
-  output_params.channels = 2;
-  output_params.layout = CUBEB_LAYOUT_STEREO;
+  output_params.rate = SAMPLE_FREQUENCY;
+  output_params.channels = OUTPUT_CHANNELS;
+  output_params.layout = OUTPUT_LAYOUT;
   output_params.prefs = CUBEB_STREAM_PREF_NONE;
 
   r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
@@ -123,7 +127,7 @@ TEST(cubeb, duplex)
   delay(500);
   cubeb_stream_stop(stream);
 
-  ASSERT_TRUE(stream_state.seen_audio.load());
+  ASSERT_FALSE(stream_state.invalid_audio_value.load());
 }
 
 void device_collection_changed_callback(cubeb * context, void * user)
@@ -156,13 +160,15 @@ TEST(cubeb, duplex_collection_change)
 
   /* typical user-case: mono input, stereo output, low latency. */
   input_params.format = STREAM_FORMAT;
-  input_params.rate = 48000;
-  input_params.channels = 1;
-  input_params.layout = CUBEB_LAYOUT_MONO;
+  input_params.rate = SAMPLE_FREQUENCY;
+  input_params.channels = INPUT_CHANNELS;
+  input_params.layout = INPUT_LAYOUT;
+  input_params.prefs = CUBEB_STREAM_PREF_NONE;
   output_params.format = STREAM_FORMAT;
-  output_params.rate = 48000;
-  output_params.channels = 2;
-  output_params.layout = CUBEB_LAYOUT_STEREO;
+  output_params.rate = SAMPLE_FREQUENCY;
+  output_params.channels = OUTPUT_CHANNELS;
+  output_params.layout = OUTPUT_LAYOUT;
+  output_params.prefs = CUBEB_STREAM_PREF_NONE;
 
   r = cubeb_get_min_latency(ctx, &output_params, &latency_frames);
   ASSERT_EQ(r, CUBEB_OK) << "Could not get minimal latency";

@@ -43,6 +43,8 @@
  */
 
 #include "gtest/gtest.h"
+//#define ENABLE_NORMAL_LOG
+//#define ENABLE_VERBOSE_LOG
 #include "common.h"       // for layout_infos
 #include "cubeb/cubeb.h"  // for cubeb utils
 #include "cubeb_utils.h"  // for owned_critical_section, auto_lock

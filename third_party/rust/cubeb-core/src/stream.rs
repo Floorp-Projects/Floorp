@@ -50,6 +50,8 @@ bitflags! {
     pub struct StreamPrefs: ffi::cubeb_stream_prefs {
         const NONE = ffi::CUBEB_STREAM_PREF_NONE;
         const LOOPBACK = ffi::CUBEB_STREAM_PREF_LOOPBACK;
+        const DISABLE_DEVICE_SWITCHING = ffi::CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING;
+        const VOICE = ffi::CUBEB_STREAM_PREF_VOICE;
     }
 }
 

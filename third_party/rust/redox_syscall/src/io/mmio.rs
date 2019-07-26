@@ -1,4 +1,4 @@
-use core::intrinsics::{volatile_load, volatile_store};
+use core::ptr::{read_volatile, write_volatile};
 use core::mem::uninitialized;
 use core::ops::{BitAnd, BitOr, Not};
 
@@ -22,10 +22,10 @@ impl<T> Io for Mmio<T> where T: Copy + PartialEq + BitAnd<Output = T> + BitOr<Ou
     type Value = T;
 
     fn read(&self) -> T {
-        unsafe { volatile_load(&self.value) }
+        unsafe { read_volatile(&self.value) }
     }
 
     fn write(&mut self, value: T) {
-        unsafe { volatile_store(&mut self.value, value) };
+        unsafe { write_volatile(&mut self.value, value) };
     }
 }

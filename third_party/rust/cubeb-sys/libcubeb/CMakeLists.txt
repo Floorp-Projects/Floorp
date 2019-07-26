@@ -7,6 +7,8 @@ project(cubeb
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 option(BUILD_TESTS "Build tests" ON)
+option(BUILD_RUST_LIBS "Build rust backends" OFF)
+option(BUILD_TOOLS "Build tools" ON)
 
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
@@ -36,6 +38,15 @@ if(BUILD_TESTS)
     add_definitions(-DGTEST_HAS_TR1_TUPLE=0)
     set(gtest_force_shared_crt ON CACHE BOOL "")
     add_subdirectory(googletest)
+  endif()
+endif()
+
+if (BUILD_RUST_LIBS)
+  if(EXISTS "${PROJECT_SOURCE_DIR}/src/cubeb-pulse-rs")
+    set(USE_PULSE_RUST 1)
+  endif()
+  if(EXISTS "${PROJECT_SOURCE_DIR}/src/cubeb-coreaudio-rs")
+    set(USE_AUDIOUNIT_RUST 1)
   endif()
 endif()
 
@@ -78,8 +89,18 @@ target_include_directories(cubeb
   PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/exports>
 )
 
-install(DIRECTORY ${CMAKE_SOURCE_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
-install(DIRECTORY ${CMAKE_BINARY_DIR}/exports/ DESTINATION ${CMAKE_INSTALL_PREFIX}/include/cubeb)
+if(UNIX)
+  include(GNUInstallDirs)
+else()
+  set(CMAKE_INSTALL_LIBDIR "lib")
+  set(CMAKE_INSTALL_BINDIR "bin")
+  set(CMAKE_INSTALL_DATADIR "share")
+  set(CMAKE_INSTALL_DOCDIR "${CMAKE_INSTALL_DATADIR}/doc")
+  set(CMAKE_INSTALL_INCLUDEDIR "include")
+endif()
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY ${CMAKE_BINARY_DIR}/exports/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME})
 
 include(CMakePackageConfigHelpers)
 write_basic_package_version_file(
@@ -90,25 +111,25 @@ write_basic_package_version_file(
 configure_package_config_file(
   "Config.cmake.in"
   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-  INSTALL_DESTINATION "lib/cmake/${PROJECT_NAME}"
+  INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 
 install(TARGETS cubeb
   EXPORT "${PROJECT_NAME}Targets"
   DESTINATION ${CMAKE_INSTALL_PREFIX}
-  LIBRARY DESTINATION "lib"
-  ARCHIVE DESTINATION "lib"
-  RUNTIME DESTINATION "bin"
-  INCLUDES DESTINATION "include"
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
 install(
   FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake" "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-  DESTINATION "lib/cmake/${PROJECT_NAME}"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 install(
   EXPORT "${PROJECT_NAME}Targets"
   NAMESPACE "${PROJECT_NAME}::"
-  DESTINATION "lib/cmake/${PROJECT_NAME}"
+  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
 
 add_library(speex OBJECT
@@ -168,7 +189,7 @@ if(USE_WASAPI)
   target_sources(cubeb PRIVATE
     src/cubeb_wasapi.cpp)
   target_compile_definitions(cubeb PRIVATE USE_WASAPI)
-  target_link_libraries(cubeb PRIVATE avrt)
+  target_link_libraries(cubeb PRIVATE avrt ole32)
 endif()
 
 check_include_files("windows.h;mmsystem.h" USE_WINMM)
@@ -204,12 +225,56 @@ if(USE_SNDIO)
   target_link_libraries(cubeb PRIVATE sndio)
 endif()
 
+check_include_files(sys/audioio.h USE_SUN)
+if(USE_SUN)
+  target_sources(cubeb PRIVATE
+    src/cubeb_sun.c)
+  target_compile_definitions(cubeb PRIVATE USE_SUN)
+  target_link_libraries(cubeb PRIVATE pthread)
+endif()
+
 check_include_files(kai.h USE_KAI)
 if(USE_KAI)
   target_sources(cubeb PRIVATE
     src/cubeb_kai.c)
   target_compile_definitions(cubeb PRIVATE USE_KAI)
   target_link_libraries(cubeb PRIVATE kai)
+endif()
+
+if(USE_PULSE_RUST)
+  include(ExternalProject)
+  set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/rust)
+  ExternalProject_Add(
+    cubeb_pulse_rs
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND cargo build COMMAND cargo build --release
+    BINARY_DIR "${CMAKE_SOURCE_DIR}/src/cubeb-pulse-rs"
+    INSTALL_COMMAND ""
+    LOG_BUILD ON)
+  add_dependencies(cubeb cubeb_pulse_rs)
+  target_compile_definitions(cubeb PRIVATE USE_PULSE_RUST)
+  target_link_libraries(cubeb PRIVATE
+    debug "${CMAKE_SOURCE_DIR}/src/cubeb-pulse-rs/target/debug/libcubeb_pulse.a"
+    optimized "${CMAKE_SOURCE_DIR}/src/cubeb-pulse-rs/target/release/libcubeb_pulse.a")
+endif()
+
+if(USE_AUDIOUNIT_RUST)
+  include(ExternalProject)
+  set_directory_properties(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/rust)
+  ExternalProject_Add(
+    cubeb_coreaudio_rs
+    DOWNLOAD_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND cargo build COMMAND cargo build --release
+    BINARY_DIR "${CMAKE_SOURCE_DIR}/src/cubeb-coreaudio-rs"
+    INSTALL_COMMAND ""
+    LOG_BUILD ON)
+  add_dependencies(cubeb cubeb_coreaudio_rs)
+  target_compile_definitions(cubeb PRIVATE USE_AUDIOUNIT_RUST)
+  target_link_libraries(cubeb PRIVATE
+    debug "${CMAKE_SOURCE_DIR}/src/cubeb-coreaudio-rs/target/debug/libcubeb_coreaudio.a"
+    optimized "${CMAKE_SOURCE_DIR}/src/cubeb-coreaudio-rs/target/release/libcubeb_coreaudio.a")
 endif()
 
 find_package(Doxygen)
@@ -231,7 +296,7 @@ if(BUILD_TESTS)
     target_link_libraries(test_${NAME} PRIVATE cubeb gtest_main)
     add_test(${NAME} test_${NAME})
     add_sanitizers(test_${NAME})
-    install(TARGETS test_${NAME} DESTINATION ${CMAKE_INSTALL_PREFIX})
+    install(TARGETS test_${NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
   endmacro(cubeb_add_test)
 
   cubeb_add_test(sanity)
@@ -251,7 +316,7 @@ if(BUILD_TESTS)
   target_link_libraries(test_resampler PRIVATE cubeb gtest_main)
   add_test(resampler test_resampler)
   add_sanitizers(test_resampler)
-  install(TARGETS test_resampler DESTINATION ${CMAKE_INSTALL_PREFIX})
+  install(TARGETS test_resampler DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 
   cubeb_add_test(duplex)
 
@@ -265,4 +330,13 @@ if(BUILD_TESTS)
 
   cubeb_add_test(utils)
   cubeb_add_test(ring_buffer)
+  cubeb_add_test(device_changed_callback)
+endif()
+
+if(BUILD_TOOLS)
+  add_executable(cubeb-test tools/cubeb-test.cpp)
+  target_include_directories(cubeb-test PRIVATE src)
+  target_link_libraries(cubeb-test PRIVATE cubeb)
+  add_sanitizers(cubeb-test)
+  install(TARGETS cubeb-test DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR})
 endif()

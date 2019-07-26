@@ -53,7 +53,8 @@ macro_rules! capi_new(
             stream_set_panning: Some($crate::capi::capi_stream_set_panning::<$stm>),
             stream_get_current_device: Some($crate::capi::capi_stream_get_current_device::<$stm>),
             stream_device_destroy: Some($crate::capi::capi_stream_device_destroy::<$stm>),
-            stream_register_device_changed_callback: None,
+            stream_register_device_changed_callback:
+                Some($crate::capi::capi_stream_register_device_changed_callback::<$stm>),
             register_device_collection_changed:
                 Some($crate::capi::capi_register_device_collection_changed::<$ctx>)
         }));
@@ -125,7 +126,7 @@ pub unsafe extern "C" fn capi_device_collection_destroy<CTX: ContextOps>(
 ) -> c_int {
     let ctx = &mut *(c as *mut CTX);
     let collection = DeviceCollectionRef::from_ptr_mut(collection);
-    let _ = ctx.device_collection_destroy(collection);
+    _try!(ctx.device_collection_destroy(collection));
     ffi::CUBEB_OK
 }
 
@@ -253,6 +254,16 @@ pub unsafe extern "C" fn capi_stream_device_destroy<STM: StreamOps>(
     let stm = &mut *(s as *mut STM);
     let device = DeviceRef::from_ptr(device);
     let _ = stm.device_destroy(device);
+    ffi::CUBEB_OK
+}
+
+pub unsafe extern "C" fn capi_stream_register_device_changed_callback<STM: StreamOps>(
+    s: *mut ffi::cubeb_stream,
+    device_changed_callback: ffi::cubeb_device_changed_callback,
+) -> c_int {
+    let stm = &mut *(s as *mut STM);
+
+    _try!(stm.register_device_changed_callback(device_changed_callback));
     ffi::CUBEB_OK
 }
 

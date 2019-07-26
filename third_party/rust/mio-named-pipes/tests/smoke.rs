@@ -14,9 +14,10 @@ use std::os::windows::fs::*;
 use std::os::windows::io::*;
 use std::time::Duration;
 
-use mio_named_pipes::NamedPipe;
 use mio::{Poll, Ready, Token, PollOpt, Events};
+use mio_named_pipes::NamedPipe;
 use rand::Rng;
+use winapi::um::winbase::*;
 
 macro_rules! t {
     ($e:expr) => (match $e {
@@ -36,7 +37,7 @@ fn client(name: &str) -> NamedPipe {
     let mut opts = OpenOptions::new();
     opts.read(true)
         .write(true)
-        .custom_flags(winapi::FILE_FLAG_OVERLAPPED);
+        .custom_flags(FILE_FLAG_OVERLAPPED);
     let file = t!(opts.open(name));
     unsafe {
         NamedPipe::from_raw_handle(file.into_raw_handle())

@@ -6,7 +6,7 @@ use std::time::Duration;
 use std::{cmp, i32};
 
 use libc::{self, c_int};
-use libc::{EPOLLERR, EPOLLHUP, EPOLLRDHUP, EPOLLONESHOT};
+use libc::{EPOLLERR, EPOLLHUP, EPOLLONESHOT};
 use libc::{EPOLLET, EPOLLOUT, EPOLLIN, EPOLLPRI};
 
 use {io, Ready, PollOpt, Token};
@@ -141,11 +141,6 @@ fn ioevent_to_epoll(interest: Ready, opts: PollOpt) -> u32 {
         kind |= EPOLLOUT;
     }
 
-    if UnixReady::from(interest).is_hup() {
-        kind |= EPOLLRDHUP;
-    }
-
-
     if UnixReady::from(interest).is_priority() {
         kind |= EPOLLPRI;
     }
@@ -228,7 +223,7 @@ impl Events {
                 kind = kind | UnixReady::error();
             }
 
-            if (epoll & EPOLLRDHUP) != 0 || (epoll & EPOLLHUP) != 0 {
+            if (epoll & EPOLLHUP) != 0 {
                 kind = kind | UnixReady::hup();
             }
 

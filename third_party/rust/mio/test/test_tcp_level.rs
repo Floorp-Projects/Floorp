@@ -21,7 +21,7 @@ pub fn test_tcp_listener_level_triggered() {
     let s1 = TcpStream::connect(&l.local_addr().unwrap()).unwrap();
     poll.register(&s1, Token(1), Ready::readable(), PollOpt::edge()).unwrap();
 
-    while filter(&pevents, Token(0)).len() == 0 {
+    while filter(&pevents, Token(0)).is_empty() {
         poll.poll(&mut pevents, Some(Duration::from_millis(MS))).unwrap();
     }
     let events = filter(&pevents, Token(0));
@@ -44,7 +44,7 @@ pub fn test_tcp_listener_level_triggered() {
     let s3 = TcpStream::connect(&l.local_addr().unwrap()).unwrap();
     poll.register(&s3, Token(2), Ready::readable(), PollOpt::edge()).unwrap();
 
-    while filter(&pevents, Token(0)).len() == 0 {
+    while filter(&pevents, Token(0)).is_empty() {
         poll.poll(&mut pevents, Some(Duration::from_millis(MS))).unwrap();
     }
     let events = filter(&pevents, Token(0));
