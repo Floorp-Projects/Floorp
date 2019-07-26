@@ -1008,7 +1008,7 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
       return false;
   }
 
-  if (pixelFormat == '2vuy') {
+  if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     fragBody = kFragBody_CrYCb;
     // APPLE_rgb_422 adds RGB_RAW_422_APPLE for `internalFormat`, but only RGB
     // seems to work?
