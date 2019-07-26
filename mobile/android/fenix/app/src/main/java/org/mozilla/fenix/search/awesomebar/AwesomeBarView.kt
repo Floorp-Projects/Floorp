@@ -13,14 +13,16 @@ import androidx.core.graphics.drawable.toBitmap
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.browser.awesomebar.BrowserAwesomeBar
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineSession
-import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.ClipboardSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.HistoryStorageSuggestionProvider
-import mozilla.components.feature.awesomebar.provider.BookmarksStorageSuggestionProvider
+import mozilla.components.feature.awesomebar.provider.SearchSuggestionProvider
 import mozilla.components.feature.awesomebar.provider.SessionSuggestionProvider
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
+import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.ext.components
@@ -55,6 +57,11 @@ interface AwesomeBarInteractor {
      * Called whenever the "Search Engine Settings" item is tapped
      */
     fun onClickSearchEngineSettings()
+
+    /**
+     * Called whenever an existing session is selected from the sessionSuggestionProvider
+     */
+    fun onExistingSessionSelected(session: Session)
 }
 
 /**
@@ -96,6 +103,12 @@ class AwesomeBarView(
         }
     }
 
+    private val selectTabUseCase = object : TabsUseCases.SelectTabUseCase {
+        override fun invoke(session: Session) {
+            interactor.onExistingSessionSelected(session)
+        }
+    }
+
     init {
         with(container.context) {
             val primaryTextColor = ContextCompat.getColor(
@@ -116,8 +129,9 @@ class AwesomeBarView(
             sessionProvider =
                 SessionSuggestionProvider(
                     components.core.sessionManager,
-                    components.useCases.tabsUseCases.selectTab,
-                    components.core.icons
+                    selectTabUseCase,
+                    components.core.icons,
+                    excludeSelectedSession = true
                 )
 
             historyStorageProvider =

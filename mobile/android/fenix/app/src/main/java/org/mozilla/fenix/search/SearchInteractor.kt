@@ -7,11 +7,15 @@ package org.mozilla.fenix.search
 import android.content.Context
 import androidx.navigation.NavController
 import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.session.Session
 import mozilla.components.support.ktx.kotlin.isUrl
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.searchEngineManager
 import org.mozilla.fenix.search.awesomebar.AwesomeBarInteractor
 import org.mozilla.fenix.search.toolbar.ToolbarInteractor
@@ -25,6 +29,7 @@ class SearchInteractor(
     private val navController: NavController,
     private val store: SearchStore
 ) : AwesomeBarInteractor, ToolbarInteractor {
+
     override fun onUrlCommitted(url: String) {
         if (url.isNotBlank()) {
             (context as HomeActivity).openToBrowserAndLoad(
@@ -83,6 +88,12 @@ class SearchInteractor(
     override fun onClickSearchEngineSettings() {
         val directions = SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment()
         navController.navigate(directions)
+    }
+
+    override fun onExistingSessionSelected(session: Session) {
+        val directions = SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null)
+        navController.nav(R.id.searchFragment, directions)
+        context.components.core.sessionManager.select(session)
     }
 
     private fun createSearchEvent(engine: SearchEngine, isSuggestion: Boolean): Event.PerformedSearch {

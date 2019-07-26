@@ -4,7 +4,9 @@
 
 package org.mozilla.fenix.search
 
+import android.content.Context
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
 import io.mockk.Runs
 import io.mockk.every
@@ -13,9 +15,12 @@ import io.mockk.mockk
 import io.mockk.verify
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.SearchEngineManager
+import mozilla.components.browser.session.Session
 import org.junit.Test
 import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.FenixApplication
 import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.searchEngineManager
 
@@ -151,6 +156,23 @@ class SearchInteractorTest {
 
         verify {
             navController.navigate(SearchFragmentDirections.actionSearchFragmentToSearchEngineFragment())
+        }
+    }
+
+    @Test
+    fun onExistingSessionSelected() {
+        val navController: NavController = mockk(relaxed = true)
+        every { navController.currentDestination } returns NavDestination("").apply { id = R.id.searchFragment }
+        val context: Context = mockk(relaxed = true)
+        val applicationContext: FenixApplication = mockk(relaxed = true)
+        every { context.applicationContext } returns applicationContext
+        val interactor = SearchInteractor(context, navController, mockk())
+        val session = Session("http://mozilla.org", false)
+
+        interactor.onExistingSessionSelected(session)
+
+        verify {
+            navController.navigate(SearchFragmentDirections.actionSearchFragmentToBrowserFragment(null))
         }
     }
 }

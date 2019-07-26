@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- #3695 - Made search suggestions for other tabs clickable
+
+## [1.1.0 and earlier] - 2019-07-23
+### Added
 - #2770 - Added ability to receive tabs from other FxA devices
 - #919 - Enabled bookmark synchronization
 - #916 - Added the ability to save and delete bookmarks
