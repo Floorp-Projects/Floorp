@@ -1084,12 +1084,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// Timeout clamp in ms for tracking timeouts we clamp
-// Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_timeout_value", 4);
-// And for background windows
-// Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
-pref("dom.min_tracking_background_timeout_value", 4);
 // Delay in ms from document load until we start throttling background timeouts.
 pref("dom.timeout.throttling_delay", 30000);
 
