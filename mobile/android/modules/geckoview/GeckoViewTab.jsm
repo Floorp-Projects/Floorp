@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewTab"];
+var EXPORTED_SYMBOLS = ["GeckoViewTab", "GeckoViewTabBridge"];
 
 const { GeckoViewModule } = ChromeUtils.import(
   "resource://gre/modules/GeckoViewModule.jsm"
@@ -33,16 +33,12 @@ class Tab {
 // Stub BrowserApp implementation for WebExtensions support.
 class BrowserAppShim {
   constructor(window) {
-    // Because of bug 1410749, we can't use 0, though, and just to be safe
-    // we choose a value that is unlikely to overlap with Fennec's tab IDs.
-    const tabId = 10000 + window.windowUtils.outerWindowID;
+    const tabId = GeckoViewTabBridge.windowIdToTabId(
+      window.windowUtils.outerWindowID
+    );
     this.selectedBrowser = window.browser;
     this.selectedTab = new Tab(tabId, this.selectedBrowser);
     this.tabs = [this.selectedTab];
-  }
-
-  closeTab(aTab) {
-    // not implemented
   }
 
   getTabForId(aId) {
@@ -69,11 +65,61 @@ class BrowserAppShim {
     return this.selectedBrowser;
   }
 
+  // ext-tabs calls tabListener.initTabReady(); which rely on deck when initializing ProgressListeners.
+  // Deck will be removed by https://phabricator.services.mozilla.com/D36575.
+  get deck() {
+    return {
+      addEventListener() {},
+      removeEventListener() {},
+    };
+  }
+
+  static getBrowserApp(window) {
+    let { BrowserApp } = window;
+
+    if (!BrowserApp) {
+      BrowserApp = window.gBrowser = window.BrowserApp = new BrowserAppShim(
+        window
+      );
+    }
+
+    return BrowserApp;
+  }
+}
+
+// Because of bug 1410749, we can't use 0, though, and just to be safe
+// we choose a value that is unlikely to overlap with Fennec's tab IDs.
+const TAB_ID_BASE = 10000;
+
+const GeckoViewTabBridge = {
+  /**
+   * Converts windowId to tabId as in GeckoView every browser window has exactly one tab.
+   *
+   * @param {windowId} number outerWindowId
+   *
+   * @returns {number} tabId
+   */
+  windowIdToTabId(windowId) {
+    return TAB_ID_BASE + windowId;
+  },
+
+  /**
+   * Converts tabId to windowId.
+   *
+   * @param {windowId} number
+   *
+   * @returns {number}
+   *          outerWindowId of browser window to which the tab belongs.
+   */
+  tabIdToWindowId(tabId) {
+    return tabId - TAB_ID_BASE;
+  },
+
   /**
    * Request the GeckoView App to create a new tab (GeckoSession).
    *
-   * @param {string} url The url to load in the newly created tab
    * @param {object} options
+   * @param {string} options.url The url to load in the newly created tab
    * @param {nsIPrincipal} options.triggeringPrincipal
    * @param {boolean} [options.disallowInheritPrincipal]
    * @param {string} options.extensionId
@@ -83,8 +129,8 @@ class BrowserAppShim {
    * @throws {Error}
    *         Throws an error if the GeckoView app doesn't support tabs.create or fails to handle the request.
    */
-  async createNewTab(url, options) {
-    url = url || "about:blank";
+  async createNewTab(options = {}) {
+    const url = options.url || "about:blank";
 
     if (!options.extensionId) {
       throw new Error("options.extensionId missing");
@@ -133,29 +179,36 @@ class BrowserAppShim {
     });
 
     return BrowserAppShim.getBrowserApp(window).selectedTab;
-  }
+  },
 
-  // ext-tabs calls tabListener.initTabReady(); which rely on deck when initializing ProgressListeners.
-  // Deck will be removed by https://phabricator.services.mozilla.com/D36575.
-  get deck() {
-    return {
-      addEventListener() {},
-      removeEventListener() {},
-    };
-  }
-
-  static getBrowserApp(window) {
-    let { BrowserApp } = window;
-
-    if (!BrowserApp) {
-      BrowserApp = window.gBrowser = window.BrowserApp = new BrowserAppShim(
-        window
-      );
+  /**
+   * Request the GeckoView App to close a tab (GeckoSession).
+   *
+   *
+   * @param {object} options
+   * @param {Window} options.window The window owning the tab to close
+   * @param {string} options.extensionId
+   *
+   * @returns {Promise<Tab>}
+   *          A promise resolved after GeckoSession is closed.
+   * @throws {Error}
+   *         Throws an error if the GeckoView app doesn't allow extension to close tab.
+   */
+  async closeTab({ window, extensionId } = {}) {
+    if (!extensionId) {
+      throw new Error("extensionId is required");
     }
 
-    return BrowserApp;
-  }
-}
+    if (!window) {
+      throw new Error("window is required");
+    }
+
+    await window.WindowEventDispatcher.sendRequestForResult({
+      type: "GeckoView:WebExtension:CloseTab",
+      extensionId: extensionId,
+    });
+  },
+};
 
 class GeckoViewTab extends GeckoViewModule {
   onInit() {

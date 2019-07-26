@@ -358,6 +358,7 @@ public class GeckoSession implements Parcelable {
                     "GeckoView:WebExtension:Message",
                     "GeckoView:WebExtension:PortMessage",
                     "GeckoView:WebExtension:Connect",
+                    "GeckoView:WebExtension:CloseTab",
                     null);
         }
 
@@ -375,7 +376,7 @@ public class GeckoSession implements Parcelable {
         @Override
         public void handleMessage(final String event, final GeckoBundle message,
                                   final EventCallback callback) {
-            if (mWindow == null || mWindow.runtime.getWebExtensionDispatcher() == null) {
+            if (mWindow == null) {
                 return;
             }
 
@@ -384,6 +385,8 @@ public class GeckoSession implements Parcelable {
                     || "GeckoView:WebExtension:Connect".equals(event)) {
                 mWindow.runtime.getWebExtensionDispatcher()
                         .handleMessage(event, message, callback, GeckoSession.this);
+            } else if ("GeckoView:WebExtension:CloseTab".equals(event)) {
+                mWindow.runtime.getWebExtensionController().closeTab(message, callback, GeckoSession.this);
             }
         }
     }

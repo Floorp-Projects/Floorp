@@ -52,6 +52,11 @@ exclude: true
 
 - Created `onKill` to `ContentDelegate` to differentiate from crashes.
 
+- Added `onCloseTab` to `WebExtensionController.TabDelegate` to handle
+  [`browser.tabs.remove`][69.8] calls by WebExtensions.
+
+[69.8]: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/remove
+
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
   configuration has changed.
@@ -363,4 +368,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: d770e67f7e5b87640574810468c76208ce4c1a43
+[api-version]: b51a187d4c36d7d0f4091d9d1227a553a4e08edb

@@ -159,9 +159,9 @@ public final class GeckoRuntime implements Parcelable {
     private GeckoRuntimeSettings mSettings;
     private Delegate mDelegate;
     private RuntimeTelemetry mTelemetry;
-    private WebExtensionEventDispatcher mWebExtensionDispatcher;
+    private final WebExtensionEventDispatcher mWebExtensionDispatcher;
     private StorageController mStorageController;
-    private WebExtensionController mWebExtensionController;
+    private final WebExtensionController mWebExtensionController;
 
     public GeckoRuntime() {
         mWebExtensionDispatcher = new WebExtensionEventDispatcher();
@@ -427,7 +427,7 @@ public final class GeckoRuntime implements Parcelable {
         return result;
     }
 
-    /* protected */ WebExtensionEventDispatcher getWebExtensionDispatcher() {
+    /* protected */ @NonNull WebExtensionEventDispatcher getWebExtensionDispatcher() {
         return mWebExtensionDispatcher;
     }
 
