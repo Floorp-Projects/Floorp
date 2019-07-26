@@ -1084,8 +1084,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// And for background windows
-pref("dom.min_background_timeout_value", 1000);
 // Timeout clamp in ms for tracking timeouts we clamp
 // Note that this requires the privacy.trackingprotection.annotate_channels pref to be on in order to have any effect.
 pref("dom.min_tracking_timeout_value", 4);
