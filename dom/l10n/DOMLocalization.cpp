@@ -174,9 +174,9 @@ already_AddRefed<Promise> DOMLocalization::TranslateFragment(nsINode& aNode,
  */
 class ElementTranslationHandler : public PromiseNativeHandler {
  public:
-  explicit ElementTranslationHandler(DOMLocalization* aDOMLocalization) {
-    mDOMLocalization = aDOMLocalization;
-  };
+  explicit ElementTranslationHandler(DOMLocalization* aDOMLocalization,
+                                     nsXULPrototypeDocument* aProto)
+      : mDOMLocalization(aDOMLocalization), mProto(aProto){};
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ElementTranslationHandler)
@@ -228,7 +228,7 @@ class ElementTranslationHandler : public PromiseNativeHandler {
       }
     }
 
-    mDOMLocalization->ApplyTranslations(mElements, l10nData, rv);
+    mDOMLocalization->ApplyTranslations(mElements, l10nData, mProto, rv);
     if (NS_WARN_IF(rv.Failed())) {
       mReturnValuePromise->MaybeRejectWithUndefined();
       return;
@@ -248,6 +248,7 @@ class ElementTranslationHandler : public PromiseNativeHandler {
   nsTArray<nsCOMPtr<Element>> mElements;
   RefPtr<DOMLocalization> mDOMLocalization;
   RefPtr<Promise> mReturnValuePromise;
+  RefPtr<nsXULPrototypeDocument> mProto;
 };
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementTranslationHandler)
@@ -263,21 +264,29 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ElementTranslationHandler)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mElements)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMLocalization)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReturnValuePromise)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mProto)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ElementTranslationHandler)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mElements)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMLocalization)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mReturnValuePromise)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mProto)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 already_AddRefed<Promise> DOMLocalization::TranslateElements(
     const Sequence<OwningNonNull<Element>>& aElements, ErrorResult& aRv) {
+  return TranslateElements(aElements, nullptr, aRv);
+}
+
+already_AddRefed<Promise> DOMLocalization::TranslateElements(
+    const Sequence<OwningNonNull<Element>>& aElements,
+    nsXULPrototypeDocument* aProto, ErrorResult& aRv) {
   JS::RootingContext* rcx = RootingCx();
   Sequence<L10nKey> l10nKeys;
   SequenceRooter<L10nKey> rooter(rcx, &l10nKeys);
   RefPtr<ElementTranslationHandler> nativeHandler =
-      new ElementTranslationHandler(this);
+      new ElementTranslationHandler(this, aProto);
   nsTArray<nsCOMPtr<Element>>& domElements = nativeHandler->Elements();
   domElements.SetCapacity(aElements.Length());
 
@@ -348,7 +357,7 @@ already_AddRefed<Promise> DOMLocalization::TranslateElements(
       }
     }
 
-    ApplyTranslations(domElements, l10nData, aRv);
+    ApplyTranslations(domElements, l10nData, aProto, aRv);
     if (NS_WARN_IF(aRv.Failed())) {
       promise->MaybeRejectWithUndefined();
       return MaybeWrapPromise(promise);
@@ -474,6 +483,7 @@ void DOMLocalization::SetRootInfo(Element* aElement) {
 
 void DOMLocalization::ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
                                         nsTArray<L10nMessage>& aTranslations,
+                                        nsXULPrototypeDocument* aProto,
                                         ErrorResult& aRv) {
   if (aElements.Length() != aTranslations.Length()) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -493,6 +503,11 @@ void DOMLocalization::ApplyTranslations(nsTArray<nsCOMPtr<Element>>& aElements,
     if (NS_WARN_IF(aRv.Failed())) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
+    }
+    if (aProto) {
+      // We only need to rebuild deep if the translation has a value.
+      // Otherwise we'll only rebuild the attributes.
+      aProto->RebuildL10nPrototype(elem, !aTranslations[i].mValue.IsVoid());
     }
   }
 
