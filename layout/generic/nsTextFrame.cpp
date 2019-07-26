@@ -6830,28 +6830,28 @@ static void DrawTextRun(const gfxTextRun* aTextRun,
         return;
       }
       params.drawMode |= DrawMode::GLYPH_STROKE;
-      if (StaticPrefs::layout_css_paint_order_enabled()) {
-        // Check the paint-order property; if we find stroke before fill,
-        // then change mode to GLYPH_STROKE_UNDERNEATH.
-        uint32_t paintOrder = aFrame->StyleSVG()->mPaintOrder;
-        if (paintOrder != NS_STYLE_PAINT_ORDER_NORMAL) {
-          while (paintOrder) {
-            uint32_t component =
-                paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
-            switch (component) {
-              case NS_STYLE_PAINT_ORDER_FILL:
-                // Just break the loop, no need to check further
-                paintOrder = 0;
-                break;
-              case NS_STYLE_PAINT_ORDER_STROKE:
-                params.drawMode |= DrawMode::GLYPH_STROKE_UNDERNEATH;
-                paintOrder = 0;
-                break;
-            }
-            paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
+
+      // Check the paint-order property; if we find stroke before fill,
+      // then change mode to GLYPH_STROKE_UNDERNEATH.
+      uint32_t paintOrder = aFrame->StyleSVG()->mPaintOrder;
+      if (paintOrder != NS_STYLE_PAINT_ORDER_NORMAL) {
+        while (paintOrder) {
+          uint32_t component =
+              paintOrder & ((1 << NS_STYLE_PAINT_ORDER_BITWIDTH) - 1);
+          switch (component) {
+            case NS_STYLE_PAINT_ORDER_FILL:
+              // Just break the loop, no need to check further
+              paintOrder = 0;
+              break;
+            case NS_STYLE_PAINT_ORDER_STROKE:
+              params.drawMode |= DrawMode::GLYPH_STROKE_UNDERNEATH;
+              paintOrder = 0;
+              break;
           }
+          paintOrder >>= NS_STYLE_PAINT_ORDER_BITWIDTH;
         }
       }
+
       // Use ROUND joins as they are less likely to produce ugly artifacts
       // when stroking glyphs with sharp angles (see bug 1546985).
       StrokeOptions strokeOpts(aParams.textStrokeWidth, JoinStyle::ROUND);
