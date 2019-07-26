@@ -296,13 +296,10 @@ class BaselineCodeGen {
   // is right after the warm-up counter check in the prologue.
   CodeOffset warmUpCheckPrologueOffset_;
 
-  uint32_t pushedBeforeCall_;
+  uint32_t pushedBeforeCall_ = 0;
 #ifdef DEBUG
-  bool inCall_;
+  bool inCall_ = false;
 #endif
-
-  // Whether any on stack arguments are modified.
-  bool modifiesArguments_;
 
   template <typename... HandlerArgs>
   explicit BaselineCodeGen(JSContext* cx, HandlerArgs&&... args);
