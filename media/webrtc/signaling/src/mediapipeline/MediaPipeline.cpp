@@ -1505,6 +1505,8 @@ class MediaPipelineReceiveVideo::PipelineListener
       yuvData.mPicY = 0;
       yuvData.mPicSize = IntSize(i420->width(), i420->height());
       yuvData.mStereoMode = StereoMode::MONO;
+      // This isn't the best default.
+      yuvData.mYUVColorSpace = gfx::YUVColorSpace::BT601;
 
       if (!yuvImage->CopyData(yuvData)) {
         MOZ_ASSERT(false);

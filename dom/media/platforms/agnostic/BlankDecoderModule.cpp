@@ -70,6 +70,8 @@ already_AddRefed<MediaData> BlankVideoDataCreator::Create(
   buffer.mPlanes[2].mOffset = 0;
   buffer.mPlanes[2].mSkip = 0;
 
+  buffer.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+
   return VideoData::CreateAndCopyData(
       mInfo, mImageContainer, aSample->mOffset, aSample->mTime,
       aSample->mDuration, buffer, aSample->mKeyframe, aSample->mTime, mPicture);

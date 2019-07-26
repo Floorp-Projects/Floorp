@@ -188,7 +188,7 @@ RefPtr<MediaDataDecoder::DecodePromise> VPXDecoder::ProcessDecode(
         case VPX_CS_BT_2020:
           return gfx::YUVColorSpace::BT2020;
         default:
-          return gfx::YUVColorSpace::UNKNOWN;
+          return DefaultColorSpace({img->d_w, img->d_h});
       }
     }();
     b.mColorRange = img->range == VPX_CR_FULL_RANGE ? gfx::ColorRange::FULL
