@@ -1423,6 +1423,12 @@
   value: false
   mirror: always
 
+# Timeout clamp in ms for timeouts we clamp.
+- name: dom.min_timeout_value
+  type: int32_t
+  value: 4
+  mirror: always
+
 # Is support for module scripts (<script type="module">) enabled for content?
 - name: dom.moduleScripts.enabled
   type: bool
