@@ -157,6 +157,18 @@ class RaptorRunner(MozbuildObject):
             'is_release_build': self.is_release_build,
         }
 
+        sys.path.insert(0, os.path.join(self.topsrcdir, 'tools', 'browsertime'))
+        try:
+            import mach_commands as browsertime
+            # We don't set `browsertime_{chromedriver,geckodriver} -- those will be found by
+            # browsertime in its `node_modules` directory, which is appropriate for local builds.
+            self.config.update({
+                'browsertime_node': browsertime.node_path(),
+                'browsertime_browsertimejs': browsertime.browsertime_path(),
+            })
+        finally:
+            sys.path = sys.path[1:]
+
     def make_args(self):
         self.args = {
             'config': {},
@@ -193,7 +205,7 @@ class MachRaptor(MachCommandBase):
              description='Run raptor performance tests.',
              parser=create_parser)
     def run_raptor_test(self, **kwargs):
-        build_obj = MozbuildObject.from_environment(cwd=HERE)
+        build_obj = self
 
         is_android = Conditions.is_android(build_obj) or \
             kwargs['app'] in FIREFOX_ANDROID_BROWSERS

@@ -144,6 +144,16 @@ def create_parser(mach_interface=False):
     add_arg('--noinstall', dest="noinstall", default=False, action="store_true",
             help="Flag which indicates if Raptor should not offer to install Android APK.")
 
+    # Arguments for invoking browsertime.
+    add_arg('--browsertime-node', dest='browsertime_node',
+            help="path to Node.js executable")
+    add_arg('--browsertime-browsertimejs', dest='browsertime_browsertimejs',
+            help="path to browsertime.js script")
+    add_arg('--browsertime-chromedriver', dest='browsertime_chromedriver',
+            help="path to chromedriver executable")
+    add_arg('--browsertime-geckodriver', dest='browsertime_geckodriver',
+            help="path to geckodriver executable")
+
     add_logging_group(parser)
     return parser
 
