@@ -1109,6 +1109,8 @@ class nsDisplayListBuilder {
     return mActiveScrolledRootForRootScrollframe;
   }
 
+  const ActiveScrolledRoot* GetFilterASR() const { return mFilterASR; }
+
   /**
    * Transfer off main thread animations to the layer.  May be called
    * with aBuilder and aItem both null, but only if the caller has
