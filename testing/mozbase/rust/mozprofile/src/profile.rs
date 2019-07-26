@@ -28,7 +28,7 @@ impl Profile {
         })
     }
 
-     pub fn new_from_path(p: &Path) -> IoResult<Profile> {
+    pub fn new_from_path(p: &Path) -> IoResult<Profile> {
         let path = p.to_path_buf();
         let temp_dir = None;
         Ok(Profile {
