@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 // Per-frame time sampling infra. Also GC'd: hopefully will not perturb things too badly.
 var numSamples = 500;
 var delays = new Array(numSamples);

@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # Apparently, there's simply no way to ask GDB to exit with a non-zero
 # status when the script run with the --eval-command option fails. Thus, if
 # we have --eval-command run prologue.py directly, syntax errors there will
