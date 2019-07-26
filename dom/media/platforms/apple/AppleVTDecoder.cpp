@@ -35,7 +35,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig, TaskQueue* aTaskQueue,
       mPictureHeight(aConfig.mImage.height),
       mDisplayWidth(aConfig.mDisplay.width),
       mDisplayHeight(aConfig.mDisplay.height),
-      mColorSpace(aConfig.mColorSpace),
+      mColorSpace(aConfig.mColorSpace == gfx::YUVColorSpace::UNKNOWN
+                      ? DefaultColorSpace({mPictureWidth, mPictureHeight})
+                      : aConfig.mColorSpace),
       mColorRange(aConfig.mColorRange),
       mTaskQueue(aTaskQueue),
       mMaxRefFrames(aOptions.contains(CreateDecoderParams::Option::LowLatency)

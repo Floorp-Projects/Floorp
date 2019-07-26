@@ -8,6 +8,7 @@
 #include "gfx2DGlue.h"
 #include "ImageContainer.h"
 #include "Layers.h"
+#include "VideoUtils.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
@@ -76,6 +77,10 @@ already_AddRefed<Image> VideoFrame::CreateBlackImage(
   data.mPicY = 0;
   data.mPicSize = gfx::IntSize(aSize.width, aSize.height);
   data.mStereoMode = StereoMode::MONO;
+  data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+  // This could be made FULL once bug 1568745 is complete. A black pixel being
+  // 0x00, 0x80, 0x80
+  data.mColorRange = gfx::ColorRange::LIMITED;
 
   // Copies data, so we can free data.
   if (!image->CopyData(data)) {

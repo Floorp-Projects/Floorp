@@ -56,6 +56,9 @@ void GMPVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame) {
     b.mPlanes[i].mSkip = 0;
   }
 
+  b.mYUVColorSpace =
+      DefaultColorSpace({decodedFrame->Width(), decodedFrame->Height()});
+
   gfx::IntRect pictureRegion(0, 0, decodedFrame->Width(),
                              decodedFrame->Height());
   RefPtr<VideoData> v = VideoData::CreateAndCopyData(
