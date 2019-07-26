@@ -1064,7 +1064,7 @@ XDRResult js::XDRScript(XDRState<mode>* xdr, HandleScope scriptEnclosingScope,
     toStringStart = script->toStringStart();
     toStringEnd = script->toStringEnd();
 
-    immutableFlags = script->immutableFlags_;
+    immutableFlags = script->immutableFlags();
   }
 
   MOZ_TRY(xdr->codeUint32(&lineno));
@@ -4705,7 +4705,7 @@ JSScript* js::detail::CopyScript(JSContext* cx, HandleScript src,
   // Copy POD fields
   dst->lineno_ = src->lineno();
   dst->column_ = src->column();
-  dst->immutableFlags_ = src->immutableFlags_;
+  dst->immutableFlags_ = src->immutableFlags();
 
   dst->setFlag(JSScript::ImmutableFlags::HasNonSyntacticScope,
                scopes[0]->hasOnChain(ScopeKind::NonSyntactic));
@@ -5248,15 +5248,15 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                  toStringStart, sourceEnd),
       script_(nullptr),
       function_(fun),
-      lazyData_(data),
-      immutableFlags_(immutableFlags),
-      mutableFlags_(0) {
+      lazyData_(data) {
   MOZ_ASSERT(function_);
   MOZ_ASSERT(sourceObject_);
   MOZ_ASSERT(function_->compartment() == sourceObject_->compartment());
 
   lineno_ = lineno;
   column_ = column;
+
+  immutableFlags_ = immutableFlags;
 
   if (data) {
     AddCellMemory(this, data->allocationSize(), MemoryUse::LazyScriptData);
