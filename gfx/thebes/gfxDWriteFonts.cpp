@@ -668,7 +668,7 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     DWRITE_RENDERING_MODE renderingMode = params->GetRenderingMode();
     FLOAT gamma = params->GetGamma();
     FLOAT contrast = params->GetEnhancedContrast();
-    if (forceGDI) {
+    if (forceGDI || renderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) {
       renderingMode = DWRITE_RENDERING_MODE_GDI_CLASSIC;
       gamma = GetSystemGDIGamma();
       contrast = 0.0f;
