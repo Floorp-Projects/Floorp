@@ -536,3 +536,6 @@ skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
 
 # https://github.com/tc39/test262/pull/2240
 skip script test262/intl402/NumberFormat/currencyDisplay-unit.js
+
+# "fractionalSecondDigits" should only be present in the resolved options when part of the pattern
+skip script test262/intl402/DateTimeFormat/constructor-options-fractionalSecondDigits-valid.js

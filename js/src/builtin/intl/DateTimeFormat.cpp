@@ -781,6 +781,13 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
       return &JSAtomState::timeZoneName;
 
     case UDAT_FRACTIONAL_SECOND_FIELD:
+#ifdef NIGHTLY_BUILD
+      return &JSAtomState::fractionalSecondDigits;
+#else
+      // Currently restricted to Nightly.
+      return &JSAtomState::unknown;
+#endif
+
     case UDAT_DAY_OF_YEAR_FIELD:
     case UDAT_WEEK_OF_YEAR_FIELD:
     case UDAT_WEEK_OF_MONTH_FIELD:
@@ -802,7 +809,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
     case UDAT_TIME_SEPARATOR_FIELD:
 #endif
       // These fields are all unsupported.
-      return nullptr;
+      return &JSAtomState::unknown;
 
 #ifndef U_HIDE_DEPRECATED_API
     case UDAT_FIELD_COUNT:
