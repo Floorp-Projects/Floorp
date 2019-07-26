@@ -33,6 +33,7 @@ bool D3D11YCbCrImage::SetData(KnowsCompositor* aAllocator,
   mCbCrSize = aData.mCbCrSize;
   mColorDepth = aData.mColorDepth;
   mColorSpace = aData.mYUVColorSpace;
+  mColorRange = aData.mColorRange;
 
   D3D11YCbCrRecycleAllocator* allocator =
       aContainer->GetD3D11YCbCrRecycleAllocator(aAllocator);
@@ -232,6 +233,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = mColorDepth;
   data.mYUVColorSpace = mColorSpace;
+  data.mColorRange = mColorRange;
   data.mYSkip = data.mCbSkip = data.mCrSkip = 0;
   data.mYSize = mYSize;
   data.mCbCrSize = mCbCrSize;
@@ -404,7 +406,8 @@ already_AddRefed<TextureClient> DXGIYCbCrTextureAllocationHelper::Allocate(
   return TextureClient::CreateWithData(
       DXGIYCbCrTextureData::Create(textureY, textureCb, textureCr, mData.mYSize,
                                    mData.mYSize, mData.mCbCrSize,
-                                   mData.mColorDepth, mData.mYUVColorSpace),
+                                   mData.mColorDepth, mData.mYUVColorSpace,
+                                   mData.mColorRange),
       mTextureFlags, forwarder);
 }
 
