@@ -2,7 +2,7 @@
 
 # AndroidIconDecoder
 
-`class AndroidIconDecoder : `[`IconDecoder`](../-icon-decoder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/AndroidIconDecoder.kt#L19)
+`class AndroidIconDecoder : `[`IconDecoder`](../-icon-decoder/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/decoder/AndroidIconDecoder.kt#L21)
 
 [IconDecoder](../-icon-decoder/index.md) that will use Android's [BitmapFactory](#) in order to decode the byte data.
 
@@ -10,7 +10,7 @@
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `AndroidIconDecoder(ignoreSize: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`<br>[IconDecoder](../-icon-decoder/index.md) that will use Android's [BitmapFactory](#) in order to decode the byte data. |
+| [&lt;init&gt;](-init-.md) | `AndroidIconDecoder()`<br>[IconDecoder](../-icon-decoder/index.md) that will use Android's [BitmapFactory](#) in order to decode the byte data. |
 
 ### Functions
 

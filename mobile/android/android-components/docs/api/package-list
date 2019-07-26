@@ -169,6 +169,7 @@ mozilla.components.lib.jexl.lexer
 mozilla.components.lib.jexl.parser
 mozilla.components.lib.jexl.value
 mozilla.components.lib.publicsuffixlist
+mozilla.components.lib.push.amazon
 mozilla.components.lib.push.firebase
 mozilla.components.lib.state
 mozilla.components.lib.state.ext
@@ -199,6 +200,7 @@ mozilla.components.service.sync.logins
 mozilla.components.support.android.test
 mozilla.components.support.android.test.espresso
 mozilla.components.support.android.test.espresso.matcher
+mozilla.components.support.android.test.leaks
 mozilla.components.support.base.android
 mozilla.components.support.base.android.view
 mozilla.components.support.base.facts

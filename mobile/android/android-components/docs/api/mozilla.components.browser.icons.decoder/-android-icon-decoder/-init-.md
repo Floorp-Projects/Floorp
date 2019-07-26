@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`AndroidIconDecoder(ignoreSize: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false)`
+`AndroidIconDecoder()`
 
 [IconDecoder](../-icon-decoder/index.md) that will use Android's [BitmapFactory](#) in order to decode the byte data.
 
