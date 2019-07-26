@@ -416,8 +416,9 @@ void js::gc::GCRuntime::traceRuntimeCommon(JSTracer* trc,
 
 #ifdef DEBUG
 class AssertNoRootsTracer final : public JS::CallbackTracer {
-  void onChild(const JS::GCCellPtr& thing) override {
+  bool onChild(const JS::GCCellPtr& thing) override {
     MOZ_CRASH("There should not be any roots after finishRoots");
+    return true;
   }
 
  public:
@@ -464,18 +465,25 @@ class BufferGrayRootsTracer final : public JS::CallbackTracer {
   // Set to false if we OOM while buffering gray roots.
   bool bufferingGrayRootsFailed;
 
-  void onObjectEdge(JSObject** objp) override { bufferRoot(*objp); }
-  void onStringEdge(JSString** stringp) override { bufferRoot(*stringp); }
-  void onScriptEdge(JSScript** scriptp) override { bufferRoot(*scriptp); }
-  void onSymbolEdge(JS::Symbol** symbolp) override { bufferRoot(*symbolp); }
-  void onBigIntEdge(JS::BigInt** bip) override { bufferRoot(*bip); }
+  bool onObjectEdge(JSObject** objp) override { return bufferRoot(*objp); }
+  bool onStringEdge(JSString** stringp) override {
+    return bufferRoot(*stringp);
+  }
+  bool onScriptEdge(JSScript** scriptp) override {
+    return bufferRoot(*scriptp);
+  }
+  bool onSymbolEdge(JS::Symbol** symbolp) override {
+    return bufferRoot(*symbolp);
+  }
+  bool onBigIntEdge(JS::BigInt** bip) override { return bufferRoot(*bip); }
 
-  void onChild(const JS::GCCellPtr& thing) override {
+  bool onChild(const JS::GCCellPtr& thing) override {
     MOZ_CRASH("Unexpected gray root kind");
+    return true;
   }
 
   template <typename T>
-  inline void bufferRoot(T* thing);
+  inline bool bufferRoot(T* thing);
 
  public:
   explicit BufferGrayRootsTracer(JSRuntime* rt)
@@ -514,7 +522,7 @@ void js::gc::GCRuntime::bufferGrayRoots() {
 }
 
 template <typename T>
-inline void BufferGrayRootsTracer::bufferRoot(T* thing) {
+inline bool BufferGrayRootsTracer::bufferRoot(T* thing) {
   MOZ_ASSERT(JS::RuntimeHeapIsBusy());
   MOZ_ASSERT(thing);
   // Check if |thing| is corrupt by calling a method that touches the heap.
@@ -536,6 +544,8 @@ inline void BufferGrayRootsTracer::bufferRoot(T* thing) {
       bufferingGrayRootsFailed = true;
     }
   }
+
+  return true;
 }
 
 void GCRuntime::markBufferedGrayRoots(JS::Zone* zone) {

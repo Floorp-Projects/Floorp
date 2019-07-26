@@ -2611,24 +2611,34 @@ bool GCRuntime::relocateArenas(Zone* zone, JS::GCReason reason,
 }
 
 template <typename T>
-inline void MovingTracer::updateEdge(T** thingp) {
+inline bool MovingTracer::updateEdge(T** thingp) {
   auto thing = *thingp;
   if (thing->runtimeFromAnyThread() == runtime() && IsForwarded(thing)) {
     *thingp = Forwarded(thing);
   }
+
+  return true;
 }
 
-void MovingTracer::onObjectEdge(JSObject** objp) { updateEdge(objp); }
-void MovingTracer::onShapeEdge(Shape** shapep) { updateEdge(shapep); }
-void MovingTracer::onStringEdge(JSString** stringp) { updateEdge(stringp); }
-void MovingTracer::onScriptEdge(JSScript** scriptp) { updateEdge(scriptp); }
-void MovingTracer::onLazyScriptEdge(LazyScript** lazyp) { updateEdge(lazyp); }
-void MovingTracer::onBaseShapeEdge(BaseShape** basep) { updateEdge(basep); }
-void MovingTracer::onScopeEdge(Scope** scopep) { updateEdge(scopep); }
-void MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
-  updateEdge(sharedp);
+bool MovingTracer::onObjectEdge(JSObject** objp) { return updateEdge(objp); }
+bool MovingTracer::onShapeEdge(Shape** shapep) { return updateEdge(shapep); }
+bool MovingTracer::onStringEdge(JSString** stringp) {
+  return updateEdge(stringp);
 }
-void MovingTracer::onBigIntEdge(BigInt** bip) { updateEdge(bip); }
+bool MovingTracer::onScriptEdge(JSScript** scriptp) {
+  return updateEdge(scriptp);
+}
+bool MovingTracer::onLazyScriptEdge(LazyScript** lazyp) {
+  return updateEdge(lazyp);
+}
+bool MovingTracer::onBaseShapeEdge(BaseShape** basep) {
+  return updateEdge(basep);
+}
+bool MovingTracer::onScopeEdge(Scope** scopep) { return updateEdge(scopep); }
+bool MovingTracer::onRegExpSharedEdge(RegExpShared** sharedp) {
+  return updateEdge(sharedp);
+}
+bool MovingTracer::onBigIntEdge(BigInt** bip) { return updateEdge(bip); }
 
 void Zone::prepareForCompacting() {
   FreeOp* fop = runtimeFromMainThread()->defaultFreeOp();
@@ -4237,7 +4247,7 @@ bool GCRuntime::shouldPreserveJITCode(Realm* realm,
 
 #ifdef DEBUG
 class CompartmentCheckTracer final : public JS::CallbackTracer {
-  void onChild(const JS::GCCellPtr& thing) override;
+  bool onChild(const JS::GCCellPtr& thing) override;
 
  public:
   explicit CompartmentCheckTracer(JSRuntime* rt)
@@ -4280,7 +4290,7 @@ static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
   return false;
 }
 
-void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
+bool CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
@@ -4292,6 +4302,7 @@ void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
     Zone* thingZone = tenured->zoneFromAnyThread();
     MOZ_ASSERT(thingZone == zone || thingZone->isAtomsZone());
   }
+  return true;
 }
 
 void GCRuntime::checkForCompartmentMismatches() {
@@ -9296,48 +9307,50 @@ js::gc::ClearEdgesTracer::ClearEdgesTracer()
     : CallbackTracer(TlsContext.get(), TraceWeakMapKeysValues) {}
 
 template <typename S>
-inline void js::gc::ClearEdgesTracer::clearEdge(S** thingp) {
+inline bool js::gc::ClearEdgesTracer::clearEdge(S** thingp) {
   InternalBarrierMethods<S*>::preBarrier(*thingp);
   InternalBarrierMethods<S*>::postBarrier(thingp, *thingp, nullptr);
   *thingp = nullptr;
+  return false;
 }
 
-void js::gc::ClearEdgesTracer::onObjectEdge(JSObject** objp) {
-  clearEdge(objp);
+bool js::gc::ClearEdgesTracer::onObjectEdge(JSObject** objp) {
+  return clearEdge(objp);
 }
-void js::gc::ClearEdgesTracer::onStringEdge(JSString** strp) {
-  clearEdge(strp);
+bool js::gc::ClearEdgesTracer::onStringEdge(JSString** strp) {
+  return clearEdge(strp);
 }
-void js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
-  clearEdge(symp);
+bool js::gc::ClearEdgesTracer::onSymbolEdge(JS::Symbol** symp) {
+  return clearEdge(symp);
 }
-void js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
-  clearEdge(bip);
+bool js::gc::ClearEdgesTracer::onBigIntEdge(JS::BigInt** bip) {
+  return clearEdge(bip);
 }
-void js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) {
-  clearEdge(scriptp);
+bool js::gc::ClearEdgesTracer::onScriptEdge(JSScript** scriptp) {
+  return clearEdge(scriptp);
 }
-void js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) {
-  clearEdge(shapep);
+bool js::gc::ClearEdgesTracer::onShapeEdge(js::Shape** shapep) {
+  return clearEdge(shapep);
 }
-void js::gc::ClearEdgesTracer::onObjectGroupEdge(js::ObjectGroup** groupp) {
-  clearEdge(groupp);
+bool js::gc::ClearEdgesTracer::onObjectGroupEdge(js::ObjectGroup** groupp) {
+  return clearEdge(groupp);
 }
-void js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) {
-  clearEdge(basep);
+bool js::gc::ClearEdgesTracer::onBaseShapeEdge(js::BaseShape** basep) {
+  return clearEdge(basep);
 }
-void js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) {
-  clearEdge(codep);
+bool js::gc::ClearEdgesTracer::onJitCodeEdge(js::jit::JitCode** codep) {
+  return clearEdge(codep);
 }
-void js::gc::ClearEdgesTracer::onLazyScriptEdge(js::LazyScript** lazyp) {
-  clearEdge(lazyp);
+bool js::gc::ClearEdgesTracer::onLazyScriptEdge(js::LazyScript** lazyp) {
+  return clearEdge(lazyp);
 }
-void js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
-  clearEdge(scopep);
+bool js::gc::ClearEdgesTracer::onScopeEdge(js::Scope** scopep) {
+  return clearEdge(scopep);
 }
-void js::gc::ClearEdgesTracer::onRegExpSharedEdge(js::RegExpShared** sharedp) {
-  clearEdge(sharedp);
+bool js::gc::ClearEdgesTracer::onRegExpSharedEdge(js::RegExpShared** sharedp) {
+  return clearEdge(sharedp);
 }
-void js::gc::ClearEdgesTracer::onChild(const JS::GCCellPtr& thing) {
+bool js::gc::ClearEdgesTracer::onChild(const JS::GCCellPtr& thing) {
   MOZ_CRASH();
+  return true;
 }

@@ -20,21 +20,21 @@ struct ClearEdgesTracer final : public JS::CallbackTracer {
 #endif
 
   template <typename T>
-  inline void clearEdge(T** thingp);
+  inline bool clearEdge(T** thingp);
 
-  void onObjectEdge(JSObject** objp) override;
-  void onStringEdge(JSString** strp) override;
-  void onSymbolEdge(JS::Symbol** symp) override;
-  void onBigIntEdge(JS::BigInt** bip) override;
-  void onScriptEdge(JSScript** scriptp) override;
-  void onShapeEdge(js::Shape** shapep) override;
-  void onObjectGroupEdge(js::ObjectGroup** groupp) override;
-  void onBaseShapeEdge(js::BaseShape** basep) override;
-  void onJitCodeEdge(js::jit::JitCode** codep) override;
-  void onLazyScriptEdge(js::LazyScript** lazyp) override;
-  void onScopeEdge(js::Scope** scopep) override;
-  void onRegExpSharedEdge(js::RegExpShared** sharedp) override;
-  void onChild(const JS::GCCellPtr& thing) override;
+  bool onObjectEdge(JSObject** objp) override;
+  bool onStringEdge(JSString** strp) override;
+  bool onSymbolEdge(JS::Symbol** symp) override;
+  bool onBigIntEdge(JS::BigInt** bip) override;
+  bool onScriptEdge(JSScript** scriptp) override;
+  bool onShapeEdge(js::Shape** shapep) override;
+  bool onObjectGroupEdge(js::ObjectGroup** groupp) override;
+  bool onBaseShapeEdge(js::BaseShape** basep) override;
+  bool onJitCodeEdge(js::jit::JitCode** codep) override;
+  bool onLazyScriptEdge(js::LazyScript** lazyp) override;
+  bool onScopeEdge(js::Scope** scopep) override;
+  bool onRegExpSharedEdge(js::RegExpShared** sharedp) override;
+  bool onChild(const JS::GCCellPtr& thing) override;
 };
 
 }  // namespace gc

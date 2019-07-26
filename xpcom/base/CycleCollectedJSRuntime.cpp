@@ -152,7 +152,7 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer {
         mKeyDelegate(nullptr) {
     setCanSkipJsids(true);
   }
-  void onChild(const JS::GCCellPtr& aThing) override;
+  bool onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionNoteRootCallback& mCb;
   bool mTracedAny;
   JSObject* mMap;
@@ -160,13 +160,13 @@ struct NoteWeakMapChildrenTracer : public JS::CallbackTracer {
   JSObject* mKeyDelegate;
 };
 
-void NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing) {
+bool NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing) {
   if (aThing.is<JSString>()) {
-    return;
+    return true;
   }
 
   if (!JS::GCThingIsMarkedGray(aThing) && !mCb.WantAllTraces()) {
-    return;
+    return true;
   }
 
   if (JS::IsCCTraceKind(aThing.kind())) {
@@ -175,6 +175,7 @@ void NoteWeakMapChildrenTracer::onChild(const JS::GCCellPtr& aThing) {
   } else {
     JS::TraceChildren(this, aThing);
   }
+  return true;
 }
 
 struct NoteWeakMapsTracer : public js::WeakMapTracer {
@@ -388,20 +389,20 @@ struct TraversalTracer : public JS::CallbackTracer {
       : JS::CallbackTracer(aRt, DoNotTraceWeakMaps), mCb(aCb) {
     setCanSkipJsids(true);
   }
-  void onChild(const JS::GCCellPtr& aThing) override;
+  bool onChild(const JS::GCCellPtr& aThing) override;
   nsCycleCollectionTraversalCallback& mCb;
 };
 
-void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
+bool TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
   // Checking strings and symbols for being gray is rather slow, and we don't
   // need either of them for the cycle collector.
   if (aThing.is<JSString>() || aThing.is<JS::Symbol>()) {
-    return;
+    return true;
   }
 
   // Don't traverse non-gray objects, unless we want all traces.
   if (!JS::GCThingIsMarkedGray(aThing) && !mCb.WantAllTraces()) {
-    return;
+    return true;
   }
 
   /*
@@ -430,6 +431,7 @@ void TraversalTracer::onChild(const JS::GCCellPtr& aThing) {
   } else {
     JS::TraceChildren(this, aThing);
   }
+  return true;
 }
 
 static void NoteJSChildGrayWrapperShim(void* aData, JS::GCCellPtr aThing) {

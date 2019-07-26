@@ -154,40 +154,48 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   // dispatches to the fully-generic onChild implementation, so for cases that
   // do not care about boxing overhead and do not need the actual edges,
   // just override the generic onChild.
-  virtual void onObjectEdge(JSObject** objp) { onChild(JS::GCCellPtr(*objp)); }
-  virtual void onStringEdge(JSString** strp) { onChild(JS::GCCellPtr(*strp)); }
-  virtual void onSymbolEdge(JS::Symbol** symp) {
-    onChild(JS::GCCellPtr(*symp));
+  virtual bool onObjectEdge(JSObject** objp) {
+    return onChild(JS::GCCellPtr(*objp));
   }
-  virtual void onBigIntEdge(JS::BigInt** bip) { onChild(JS::GCCellPtr(*bip)); }
-  virtual void onScriptEdge(JSScript** scriptp) {
-    onChild(JS::GCCellPtr(*scriptp));
+  virtual bool onStringEdge(JSString** strp) {
+    return onChild(JS::GCCellPtr(*strp));
   }
-  virtual void onShapeEdge(js::Shape** shapep) {
-    onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
+  virtual bool onSymbolEdge(JS::Symbol** symp) {
+    return onChild(JS::GCCellPtr(*symp));
   }
-  virtual void onObjectGroupEdge(js::ObjectGroup** groupp) {
-    onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
+  virtual bool onBigIntEdge(JS::BigInt** bip) {
+    return onChild(JS::GCCellPtr(*bip));
   }
-  virtual void onBaseShapeEdge(js::BaseShape** basep) {
-    onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
+  virtual bool onScriptEdge(JSScript** scriptp) {
+    return onChild(JS::GCCellPtr(*scriptp));
   }
-  virtual void onJitCodeEdge(js::jit::JitCode** codep) {
-    onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
+  virtual bool onShapeEdge(js::Shape** shapep) {
+    return onChild(JS::GCCellPtr(*shapep, JS::TraceKind::Shape));
   }
-  virtual void onLazyScriptEdge(js::LazyScript** lazyp) {
-    onChild(JS::GCCellPtr(*lazyp, JS::TraceKind::LazyScript));
+  virtual bool onObjectGroupEdge(js::ObjectGroup** groupp) {
+    return onChild(JS::GCCellPtr(*groupp, JS::TraceKind::ObjectGroup));
   }
-  virtual void onScopeEdge(js::Scope** scopep) {
-    onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
+  virtual bool onBaseShapeEdge(js::BaseShape** basep) {
+    return onChild(JS::GCCellPtr(*basep, JS::TraceKind::BaseShape));
   }
-  virtual void onRegExpSharedEdge(js::RegExpShared** sharedp) {
-    onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
+  virtual bool onJitCodeEdge(js::jit::JitCode** codep) {
+    return onChild(JS::GCCellPtr(*codep, JS::TraceKind::JitCode));
+  }
+  virtual bool onLazyScriptEdge(js::LazyScript** lazyp) {
+    return onChild(JS::GCCellPtr(*lazyp, JS::TraceKind::LazyScript));
+  }
+  virtual bool onScopeEdge(js::Scope** scopep) {
+    return onChild(JS::GCCellPtr(*scopep, JS::TraceKind::Scope));
+  }
+  virtual bool onRegExpSharedEdge(js::RegExpShared** sharedp) {
+    return onChild(JS::GCCellPtr(*sharedp, JS::TraceKind::RegExpShared));
   }
 
   // Override this method to receive notification when a node in the GC
   // heap graph is visited.
-  virtual void onChild(const JS::GCCellPtr& thing) = 0;
+  // This method should return whether the edge still exists, i.e. return false
+  // if 'thing' is cleared by the CallbackTracer, return true otherwise.
+  virtual bool onChild(const JS::GCCellPtr& thing) = 0;
 
   // Access to the tracing context:
   // When tracing with a JS::CallbackTracer, we invoke the callback with the
@@ -254,19 +262,27 @@ class JS_PUBLIC_API CallbackTracer : public JSTracer {
   // methods have to have distinct names to allow us to override them
   // individually, which is freqently useful if, for example, we only want to
   // process only one type of edge.
-  void dispatchToOnEdge(JSObject** objp) { onObjectEdge(objp); }
-  void dispatchToOnEdge(JSString** strp) { onStringEdge(strp); }
-  void dispatchToOnEdge(JS::Symbol** symp) { onSymbolEdge(symp); }
-  void dispatchToOnEdge(JS::BigInt** bip) { onBigIntEdge(bip); }
-  void dispatchToOnEdge(JSScript** scriptp) { onScriptEdge(scriptp); }
-  void dispatchToOnEdge(js::Shape** shapep) { onShapeEdge(shapep); }
-  void dispatchToOnEdge(js::ObjectGroup** groupp) { onObjectGroupEdge(groupp); }
-  void dispatchToOnEdge(js::BaseShape** basep) { onBaseShapeEdge(basep); }
-  void dispatchToOnEdge(js::jit::JitCode** codep) { onJitCodeEdge(codep); }
-  void dispatchToOnEdge(js::LazyScript** lazyp) { onLazyScriptEdge(lazyp); }
-  void dispatchToOnEdge(js::Scope** scopep) { onScopeEdge(scopep); }
-  void dispatchToOnEdge(js::RegExpShared** sharedp) {
-    onRegExpSharedEdge(sharedp);
+  bool dispatchToOnEdge(JSObject** objp) { return onObjectEdge(objp); }
+  bool dispatchToOnEdge(JSString** strp) { return onStringEdge(strp); }
+  bool dispatchToOnEdge(JS::Symbol** symp) { return onSymbolEdge(symp); }
+  bool dispatchToOnEdge(JS::BigInt** bip) { return onBigIntEdge(bip); }
+  bool dispatchToOnEdge(JSScript** scriptp) { return onScriptEdge(scriptp); }
+  bool dispatchToOnEdge(js::Shape** shapep) { return onShapeEdge(shapep); }
+  bool dispatchToOnEdge(js::ObjectGroup** groupp) {
+    return onObjectGroupEdge(groupp);
+  }
+  bool dispatchToOnEdge(js::BaseShape** basep) {
+    return onBaseShapeEdge(basep);
+  }
+  bool dispatchToOnEdge(js::jit::JitCode** codep) {
+    return onJitCodeEdge(codep);
+  }
+  bool dispatchToOnEdge(js::LazyScript** lazyp) {
+    return onLazyScriptEdge(lazyp);
+  }
+  bool dispatchToOnEdge(js::Scope** scopep) { return onScopeEdge(scopep); }
+  bool dispatchToOnEdge(js::RegExpShared** sharedp) {
+    return onRegExpSharedEdge(sharedp);
   }
 
  protected:
