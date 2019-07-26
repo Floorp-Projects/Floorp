@@ -910,6 +910,18 @@ static inline wr::WrColorDepth ToWrColorDepth(gfx::ColorDepth aColorDepth) {
   return wr::WrColorDepth::Color8;
 }
 
+static inline wr::WrColorRange ToWrColorRange(gfx::ColorRange aColorRange) {
+  switch (aColorRange) {
+    case gfx::ColorRange::LIMITED:
+      return wr::WrColorRange::Limited;
+    case gfx::ColorRange::FULL:
+      return wr::WrColorRange::Full;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Tried to convert invalid color range value.");
+      return wr ::WrColorRange::Limited;
+  }
+}
+
 static inline wr::SyntheticItalics DegreesToSyntheticItalics(float aDegrees) {
   wr::SyntheticItalics synthetic_italics;
   synthetic_italics.angle =

@@ -182,6 +182,18 @@ Maybe<gfx::ColorDepth> ColorDepthFromBufferDescriptor(
   }
 }
 
+Maybe<gfx::ColorRange> ColorRangeFromBufferDescriptor(
+    const BufferDescriptor& aDescriptor) {
+  switch (aDescriptor.type()) {
+    case BufferDescriptor::TRGBDescriptor:
+      return Nothing();
+    case BufferDescriptor::TYCbCrDescriptor:
+      return Some(aDescriptor.get_YCbCrDescriptor().colorRange());
+    default:
+      MOZ_CRASH("GFX: YUVFullRangeFromBufferDescriptor");
+  }
+}
+
 Maybe<StereoMode> StereoModeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor) {
   switch (aDescriptor.type()) {

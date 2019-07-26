@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{AlphaType, ClipMode, ExternalImageType, ImageRendering};
-use api::{YuvColorSpace, YuvFormat, ColorDepth, PremultipliedColorF, RasterSpace};
+use api::{YuvColorSpace, YuvFormat, ColorDepth, ColorRange, PremultipliedColorF, RasterSpace};
 use api::units::*;
 use crate::clip::{ClipDataStore, ClipNodeFlags, ClipNodeRange, ClipItem, ClipStore, ClipNodeInstance};
 use crate::clip_scroll_tree::{ClipScrollTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex, CoordinateSystemId};
@@ -55,7 +55,7 @@ pub enum BrushBatchKind {
         source_id: RenderTaskId,
         backdrop_id: RenderTaskId,
     },
-    YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace),
+    YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
     RadialGradient,
     LinearGradient,
 }
@@ -1897,6 +1897,7 @@ impl BatchBuilder {
                     yuv_image_data.format,
                     yuv_image_data.color_depth,
                     yuv_image_data.color_space,
+                    yuv_image_data.color_range,
                 );
 
                 let batch_params = BrushBatchParameters::shared(
