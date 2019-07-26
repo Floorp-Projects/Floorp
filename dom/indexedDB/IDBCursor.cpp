@@ -381,21 +381,15 @@ void IDBCursor::Continue(JSContext* aCx, JS::Handle<JS::Value> aKey,
   }
 
   Key key;
-  auto result = key.SetFromJSVal(aCx, aKey, aRv);
-  if (!result.Is(Ok, aRv)) {
-    if (result.Is(Invalid, aRv)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    }
+  key.SetFromJSVal(aCx, aKey, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
   if (IsLocaleAware() && !key.IsUnset()) {
     Key tmp;
-    result = key.ToLocaleBasedKey(tmp, mSourceIndex->Locale(), aRv);
-    if (!result.Is(Ok, aRv)) {
-      if (result.Is(Invalid, aRv)) {
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-      }
+    aRv = key.ToLocaleBasedKey(tmp, mSourceIndex->Locale());
+    if (aRv.Failed()) {
       return;
     }
     key = tmp;
@@ -485,25 +479,21 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
   }
 
   Key key;
-  auto result = key.SetFromJSVal(aCx, aKey, aRv);
-  if (!result.Is(Ok, aRv)) {
-    if (result.Is(Invalid, aRv)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    }
+  key.SetFromJSVal(aCx, aKey, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
   if (IsLocaleAware() && !key.IsUnset()) {
     Key tmp;
-    result = key.ToLocaleBasedKey(tmp, mSourceIndex->Locale(), aRv);
-    if (!result.Is(Ok, aRv)) {
-      if (result.Is(Invalid, aRv)) {
-        aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-      }
+    aRv = key.ToLocaleBasedKey(tmp, mSourceIndex->Locale());
+    if (aRv.Failed()) {
       return;
     }
     key = tmp;
   }
+
+  const Key& sortKey = IsLocaleAware() ? mSortKey : mKey;
 
   if (key.IsUnset()) {
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
@@ -511,11 +501,8 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
   }
 
   Key primaryKey;
-  result = primaryKey.SetFromJSVal(aCx, aPrimaryKey, aRv);
-  if (!result.Is(Ok, aRv)) {
-    if (result.Is(Invalid, aRv)) {
-      aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
-    }
+  primaryKey.SetFromJSVal(aCx, aPrimaryKey, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -523,8 +510,6 @@ void IDBCursor::ContinuePrimaryKey(JSContext* aCx, JS::Handle<JS::Value> aKey,
     aRv.Throw(NS_ERROR_DOM_INDEXEDDB_DATA_ERR);
     return;
   }
-
-  const Key& sortKey = IsLocaleAware() ? mSortKey : mKey;
 
   switch (mDirection) {
     case NEXT:

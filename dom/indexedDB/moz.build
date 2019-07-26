@@ -21,8 +21,6 @@ XPCSHELL_TESTS_MANIFESTS += [
     'test/unit/xpcshell-parent-process.ini'
 ]
 
-TEST_DIRS += ['test/gtest']
-
 EXPORTS.mozilla.dom += [
     'IDBCursor.h',
     'IDBDatabase.h',
@@ -43,7 +41,6 @@ EXPORTS.mozilla.dom += [
 EXPORTS.mozilla.dom.indexedDB += [
     'ActorsParent.h',
     'FileSnapshot.h',
-    'IDBResult.h',
     'Key.h',
     'KeyPath.h',
     'PermissionRequestBase.h',
