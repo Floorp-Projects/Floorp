@@ -114,10 +114,7 @@ add_task(async function test_integrity_serviceWorker() {
 
   let registration = await navigator.serviceWorker.register("fetch.js",
                                                             { scope: "./" });
-  let worker = registration.installing || registration.active;
-  await waitForState(worker, 'activated');
-  worker.postMessage('claim');
-  await waitForControlled(window);
+  await waitForState(registration.installing, "activated");
 
   info("Test for mNavigationInterceptions.")
   // The client_win will reload to another URL after opening filename2.

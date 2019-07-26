@@ -41,11 +41,7 @@ add_task(async function grace_timeout_termination_with_interrupted_intercept() {
 
   let registration = await navigator.serviceWorker.register(
     "unresolved_fetch_worker.js", { scope: "./"} );
-
-  let worker = registration.installing || registration.active;
-  await waitForState(worker, 'activated');
-  worker.postMessage('claim');
-  await waitForControlled(window);
+  await waitForState(registration.installing, "activated");
   ok(navigator.serviceWorker.controller, "Controlled"); // double check!
 
   // We want to make sure the SW is active and processing the fetch before we

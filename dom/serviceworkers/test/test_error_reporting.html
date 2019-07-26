@@ -196,18 +196,14 @@ add_task(async function get_client_storage_error() {
     ["dom.securecontext.whitelist", "mochi.test"]
   ]});
 
-  let registration, sw;
+  let registration;
   // consume the expected rejection so it doesn't get thrown at us.
   await navigator.serviceWorker.register("sw_storage_not_allow.js",
                                          { scope: "test_error_reporting.html" })
-    .then(reg => { registration = reg; })
-    .then(() => registration.installing ||
-                registration.waiting ||
-                registration.active)
-    .then(worker => { sw = worker; })
-    .then(() => waitForState(sw, 'activated'))
-    .then(() => sw.postMessage('claim'))
-    .then(() => waitForControlled(window))
+    .then(reg => {
+      registration = reg;
+      return waitForState(registration.installing, "activated");
+    })
     // Get the client's ID in the stage 1
     .then(() => fetch("getClient-stage1"))
     .then(() => notAllowStorageAccess())
@@ -229,18 +225,14 @@ add_task(async function get_clients_storage_error() {
   let expectedMessage =
     expect_console_message("ServiceWorkerGetClientStorageError", []);
 
-  let registration, sw;
+  let registration;
   // consume the expected rejection so it doesn't get thrown at us.
   await navigator.serviceWorker.register("sw_storage_not_allow.js",
                                          { scope: "test_error_reporting.html" })
-    .then(reg => { registration = reg; })
-    .then(() => registration.installing ||
-                registration.waiting ||
-                registration.active)
-    .then(worker => { sw = worker; })
-    .then(() => waitForState(sw, 'activated'))
-    .then(() => sw.postMessage('claim'))
-    .then(() => waitForControlled(window))
+    .then(reg => {
+      registration = reg;
+      return waitForState(registration.installing, "activated");
+    })
     .then(() => notAllowStorageAccess())
     .then(() => fetch("getClients"))
     .catch(e => ok(false, "fail due to:" + e));

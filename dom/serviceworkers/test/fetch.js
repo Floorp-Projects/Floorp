@@ -33,3 +33,7 @@ addEventListener("message", function(event) {
     event.waitUntil(clients.claim());
   }
 });
+
+addEventListener("activate", function(event) {
+  event.waitUntil(clients.claim());
+});

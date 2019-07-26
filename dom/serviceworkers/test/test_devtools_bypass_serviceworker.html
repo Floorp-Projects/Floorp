@@ -91,13 +91,7 @@ add_task(function setupPrefs() {
 add_task(async function test_bypassServiceWorker() {
   const swURL = "fetch.js";
   let registration = await navigator.serviceWorker.register(swURL);
-
-  let sw =
-    registration.active || registration.waiting || registration.installing;
-
-  await waitForState(sw, 'activated');
-  sw.postMessage("claim");
-  await waitForControlled(window);
+  await waitForState(registration.installing, 'activated');
 
   try {
     await testBypassSW();
