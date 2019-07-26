@@ -311,7 +311,6 @@ class CollectionCreationUIView(
                     view.collection_constraint_layout,
                     transition
                 )
-
             }
         }
         collectionSaveListAdapter.updateData(it.tabCollections, it.selectedTabs)
