@@ -34,12 +34,10 @@ LazyLogModule gTimeoutLog("Timeout");
 
 static int32_t gRunningTimeoutDepth = 0;
 
-#define DEFAULT_FOREGROUND_BUDGET_REGENERATION_FACTOR 1  // 1ms per 1ms
-#define DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET 50      // 50ms
-#define DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET -1      // infinite
-#define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000        // 15s
+#define DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET 50  // 50ms
+#define DEFAULT_FOREGROUND_THROTTLING_MAX_BUDGET -1  // infinite
+#define DEFAULT_BUDGET_THROTTLING_MAX_DELAY 15000    // 15s
 #define DEFAULT_ENABLE_BUDGET_TIMEOUT_THROTTLING false
-static int32_t gForegroundBudgetRegenerationFactor = 0;
 static int32_t gBackgroundThrottlingMaxBudget = 0;
 static int32_t gForegroundThrottlingMaxBudget = 0;
 static int32_t gBudgetThrottlingMaxDelay = 0;
@@ -61,7 +59,7 @@ double GetRegenerationFactor(bool aIsBackground) {
   double denominator = std::max(
       aIsBackground
           ? StaticPrefs::dom_timeout_background_budget_regeneration_rate()
-          : gForegroundBudgetRegenerationFactor,
+          : StaticPrefs::dom_timeout_foreground_budget_regeneration_rate(),
       1);
   return 1.0 / denominator;
 }
@@ -89,7 +87,7 @@ TimeDuration GetMinBudget(bool aIsBackground) {
       std::max(
           aIsBackground
               ? StaticPrefs::dom_timeout_background_budget_regeneration_rate()
-              : gForegroundBudgetRegenerationFactor,
+              : StaticPrefs::dom_timeout_foreground_budget_regeneration_rate(),
           1));
 }
 }  // namespace
@@ -454,9 +452,6 @@ TimeoutManager::~TimeoutManager() {
 
 /* static */
 void TimeoutManager::Initialize() {
-  Preferences::AddIntVarCache(&gForegroundBudgetRegenerationFactor,
-                              "dom.timeout.foreground_budget_regeneration_rate",
-                              DEFAULT_FOREGROUND_BUDGET_REGENERATION_FACTOR);
   Preferences::AddIntVarCache(&gBackgroundThrottlingMaxBudget,
                               "dom.timeout.background_throttling_max_budget",
                               DEFAULT_BACKGROUND_THROTTLING_MAX_BUDGET);
