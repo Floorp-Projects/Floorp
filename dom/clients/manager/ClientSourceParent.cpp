@@ -141,7 +141,7 @@ IPCResult ClientSourceParent::RecvInheritController(
   // In parent-side intercept mode we must tell the parent-side SWM about
   // this controller inheritence.  In legacy client-side mode this is done
   // from the ClientSource instead.
-  if (!ServiceWorkerParentInterceptEnabled()) {
+  if (ServiceWorkerParentInterceptEnabled()) {
     nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
         "ClientSourceParent::RecvInheritController",
         [clientInfo = mClientInfo, controller = mController.ref()]() {
