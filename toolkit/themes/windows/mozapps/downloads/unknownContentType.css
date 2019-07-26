@@ -2,9 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#type {
+  -moz-box-flex: 1;
+}
 
 #from {
-  margin-top: 1px; 
+  margin-top: 1px;
 }
 
 #location {
@@ -14,18 +17,15 @@
 #contentTypeImage {
   height: 16px;
   width: 16px;
-  margin-top: 0px;
-  margin-bottom: 0px;
-  margin-inline-start: 0px;
+  margin-block: 0;
+  margin-inline-start: 0;
   margin-inline-end: 5px;
 }
 
 .small-indent {
-  margin-inline-start: 15px; 
-  margin-inline-end: 15px;
+  margin-inline: 15px;
 }
 
 .small-indent label {
-  margin-inline-start: 0px; 
+  margin-inline-start: 0;
 }
-
