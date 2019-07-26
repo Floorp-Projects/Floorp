@@ -17,6 +17,7 @@ if CONFIG['MOZ_XUL']:
     EXPORTS += [
         'nsXULCommandDispatcher.h',
         'nsXULElement.h',
+        'nsXULPrototypeDocument.h',
         'nsXULSortService.h',
     ]
 

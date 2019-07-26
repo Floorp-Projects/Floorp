@@ -203,8 +203,8 @@ static nsresult GetNodeInfos(nsXULPrototypeElement* aPrototype,
   }
 
   // Search attributes
-  uint32_t i;
-  for (i = 0; i < aPrototype->mNumAttributes; ++i) {
+  size_t i;
+  for (i = 0; i < aPrototype->mAttributes.Length(); ++i) {
     RefPtr<mozilla::dom::NodeInfo> ni;
     nsAttrName* name = &aPrototype->mAttributes[i].mName;
     if (name->IsAtom()) {
