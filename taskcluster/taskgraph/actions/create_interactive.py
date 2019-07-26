@@ -76,6 +76,9 @@ def context(params):
         return [{'worker-implementation': 'docker-worker'}]
     else:
         return [{'worker-implementation': 'docker-worker', 'kind': 'test'}]
+    # Windows is not supported by one-click loaners yet. See
+    # https://wiki.mozilla.org/ReleaseEngineering/How_To/Self_Provision_a_TaskCluster_Windows_Instance
+    # for instructions for using them.
 
 
 @register_callback_action(
