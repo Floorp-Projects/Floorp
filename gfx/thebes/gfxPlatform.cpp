@@ -2415,6 +2415,10 @@ void gfxPlatform::InitAcceleration() {
       gfxCriticalNote << "Cannot evaluate keyed mutex feature status";
       gfxVars::SetAllowD3D11KeyedMutex(true);
     }
+    if (StaticPrefs::gfx_direct3d11_use_double_buffering() &&
+        IsWin10OrLater()) {
+      gfxVars::SetUseDoubleBufferingWithCompositor(true);
+    }
 #endif
   }
 
