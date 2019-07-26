@@ -52,13 +52,15 @@ body[focuseddatatype=cryptominer] {
   margin: 0 auto;
 }
 
-.card-header > button {
+.card-header > button,
+#sign-up-for-monitor-link {
   font-size: 0.95em;
   cursor: pointer;
   margin-inline-end: 15px;
   margin-inline-start: 15px;
   padding: 10px;
   align-self: center;
+  text-align: center;
 }
 
 .card.lockwise-card .card-header,
@@ -77,7 +79,7 @@ a.hidden,
 .monitor-card.no-logins .card-body,
 .monitor-card.no-logins #monitor-header-content a,
 .monitor-card.no-logins .inline-text-icon.monitor-scanned-text,
-.monitor-card.has-logins #sign-up-for-monitor-button,
+.monitor-card.has-logins #sign-up-for-monitor-link,
 #monitor-body-content .monitor-breached-passwords.hidden {
   display: none;
 }
@@ -519,4 +521,24 @@ label:hover {
 .number-of-breaches.block {
   background-color: var(--orange);
   padding: 15px;
+}
+
+#sign-up-for-monitor-link {
+  -moz-appearance: button;
+  background-color: var(--blue-60);
+  border-radius: 2px;
+  text-decoration: none;
+  color: #fff;
+}
+
+#sign-up-for-monitor-link:active {
+  background-color: var(--blue-80) !important;
+}
+
+#sign-up-for-monitor-link:hover {
+  background-color: var(--blue-70);
+}
+
+#sign-up-for-monitor-link:focus-visible {
+  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
 }
