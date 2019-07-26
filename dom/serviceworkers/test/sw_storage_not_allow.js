@@ -28,8 +28,6 @@ addEventListener("fetch", function(event) {
   );
 });
 
-addEventListener("message", function(event) {
-  if (event.data === "claim") {
-    event.waitUntil(clients.claim());
-  }
+addEventListener("activate", function(event) {
+  event.waitUntil(clients.claim());
 });
