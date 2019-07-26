@@ -403,9 +403,9 @@ void js::gc::AssertRootMarkingPhase(JSTracer* trc) {
 /*** Tracing Interface ******************************************************/
 
 template <typename T>
-T* DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name);
+bool DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name);
 template <typename T>
-T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
+bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name);
 template <typename T>
 void DoMarking(GCMarker* gcmarker, T* thing);
 template <typename T>

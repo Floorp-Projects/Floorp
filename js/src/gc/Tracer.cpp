@@ -37,23 +37,25 @@ void CheckTracedThing(JSTracer* trc, T thing);
 }  // namespace js
 
 /*** Callback Tracer Dispatch ***********************************************/
-
 template <typename T>
-T* DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name) {
+bool DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name) {
   CheckTracedThing(trc, *thingp);
   JS::AutoTracingName ctx(trc, name);
-  trc->dispatchToOnEdge(thingp);
-  return *thingp;
+
+  return trc->dispatchToOnEdge(thingp);
 }
 #define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
-  template type* DoCallback<type>(JS::CallbackTracer*, type**, const char*);
+  template bool DoCallback<type>(JS::CallbackTracer*, type**, const char*);
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
 template <typename T>
-T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
-  auto thing = MapGCThingTyped(*thingp, [trc, name](auto t) {
-    return TaggedPtr<T>::wrap(DoCallback(trc, &t, name));
+bool DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
+  // return true as default. For some types the lambda below won't be called.
+  bool ret = true;
+  auto thing = MapGCThingTyped(*thingp, [trc, name, &ret](auto t) {
+    ret = DoCallback(trc, &t, name);
+    return TaggedPtr<T>::wrap(t);
   });
   // Only update *thingp if the value changed, to avoid TSan false positives for
   // template objects when using DumpHeapTracer or UbiNode tracers while Ion
@@ -61,15 +63,14 @@ T DoCallback(JS::CallbackTracer* trc, T* thingp, const char* name) {
   if (thing.isSome() && thing.value() != *thingp) {
     *thingp = thing.value();
   }
-  return *thingp;
+  return ret;
 }
-template JS::Value DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*,
-                                         const char*);
-template JS::PropertyKey DoCallback<JS::PropertyKey>(JS::CallbackTracer*,
-                                                     JS::PropertyKey*,
-                                                     const char*);
-template TaggedProto DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*,
-                                             const char*);
+template bool DoCallback<JS::Value>(JS::CallbackTracer*, JS::Value*,
+                                    const char*);
+template bool DoCallback<JS::PropertyKey>(JS::CallbackTracer*, JS::PropertyKey*,
+                                          const char*);
+template bool DoCallback<TaggedProto>(JS::CallbackTracer*, TaggedProto*,
+                                      const char*);
 
 void JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize) {
   MOZ_ASSERT(bufferSize > 0);
