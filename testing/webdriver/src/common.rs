@@ -32,7 +32,8 @@ pub struct Date(pub u64);
 pub enum FrameId {
     Short(u16),
     #[serde(
-        rename = "element-6066-11e4-a52e-4f735466cecf", serialize_with = "serialize_webelement_id"
+        rename = "element-6066-11e4-a52e-4f735466cecf",
+        serialize_with = "serialize_webelement_id"
     )]
     Element(WebElement),
 }

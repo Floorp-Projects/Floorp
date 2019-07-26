@@ -1,4 +1,3 @@
-use crate::Parameters;
 use crate::actions::ActionSequence;
 use crate::capabilities::{
     BrowserCapabilities, Capabilities, CapabilitiesMatching, LegacyNewSessionParameters,
@@ -7,6 +6,7 @@ use crate::capabilities::{
 use crate::common::{Date, FrameId, LocatorStrategy, WebElement, MAX_SAFE_INTEGER};
 use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use crate::httpapi::{Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
+use crate::Parameters;
 use serde::de::{self, Deserialize, Deserializer};
 use serde_json::{self, Value};
 
@@ -191,7 +191,8 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                     params.get("name"),
                     ErrorStatus::InvalidArgument,
                     "Missing name parameter"
-                ).as_str();
+                )
+                .as_str();
                 WebDriverCommand::GetElementAttribute(element, attr.into())
             }
             Route::GetElementProperty => {
@@ -205,7 +206,8 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                     params.get("name"),
                     ErrorStatus::InvalidArgument,
                     "Missing name parameter"
-                ).as_str();
+                )
+                .as_str();
                 WebDriverCommand::GetElementProperty(element, property.into())
             }
             Route::GetCSSValue => {
@@ -219,7 +221,8 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                     params.get("propertyName"),
                     ErrorStatus::InvalidArgument,
                     "Missing propertyName parameter"
-                ).as_str();
+                )
+                .as_str();
                 WebDriverCommand::GetCSSValue(element, property.into())
             }
             Route::GetElementText => {
@@ -297,8 +300,9 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                     params.get("name"),
                     ErrorStatus::InvalidArgument,
                     "Missing 'name' parameter"
-                ).as_str()
-                    .into();
+                )
+                .as_str()
+                .into();
                 WebDriverCommand::GetNamedCookie(name)
             }
             Route::AddCookie => WebDriverCommand::AddCookie(serde_json::from_str(raw_body)?),
@@ -308,8 +312,9 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                     params.get("name"),
                     ErrorStatus::InvalidArgument,
                     "Missing name parameter"
-                ).as_str()
-                    .into();
+                )
+                .as_str()
+                .into();
                 WebDriverCommand::DeleteCookie(name)
             }
             Route::PerformActions => {
@@ -503,7 +508,9 @@ pub struct TakeScreenshotParameters {
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct TimeoutsParameters {
     #[serde(
-        default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_to_u64"
+        default,
+        skip_serializing_if = "Option::is_none",
+        deserialize_with = "deserialize_to_u64"
     )]
     pub implicit: Option<u64>,
     #[serde(
@@ -1056,7 +1063,9 @@ mod tests {
     #[test]
     fn test_json_new_window_parameters_with_supported_type() {
         let json = r#"{"type":"tab"}"#;
-        let data = NewWindowParameters { type_hint: Some("tab".into()) };
+        let data = NewWindowParameters {
+            type_hint: Some("tab".into()),
+        };
 
         check_deserialize(&json, &data);
     }
@@ -1064,7 +1073,9 @@ mod tests {
     #[test]
     fn test_json_new_window_parameters_with_unknown_type() {
         let json = r#"{"type":"foo"}"#;
-        let data = NewWindowParameters { type_hint: Some("foo".into()) };
+        let data = NewWindowParameters {
+            type_hint: Some("foo".into()),
+        };
 
         check_deserialize(&json, &data);
     }
@@ -1080,7 +1091,7 @@ mod tests {
     fn test_json_new_window_parameters_with_unknown_field() {
         let json = r#"{"type":"tab","foo":"bar"}"#;
         let data = NewWindowParameters {
-            type_hint: Some("tab".into())
+            type_hint: Some("tab".into()),
         };
 
         check_deserialize(&json, &data);

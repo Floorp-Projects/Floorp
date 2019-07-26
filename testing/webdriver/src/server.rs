@@ -10,11 +10,13 @@ use tokio::net::TcpListener;
 use tokio::reactor::Handle;
 use warp::{self, Buf, Filter, Rejection};
 
-use crate::Parameters;
 use crate::command::{WebDriverCommand, WebDriverMessage};
 use crate::error::{ErrorStatus, WebDriverError, WebDriverResult};
-use crate::httpapi::{standard_routes, Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute};
+use crate::httpapi::{
+    standard_routes, Route, VoidWebDriverExtensionRoute, WebDriverExtensionRoute,
+};
 use crate::response::{CloseWindowResponse, WebDriverResponse};
+use crate::Parameters;
 
 // Silence warning about Quit being unused for now.
 #[allow(dead_code)]
@@ -187,53 +189,78 @@ where
         dispatcher.run(&msg_recv);
     })?;
 
-    Ok(Listener { guard: Some(handle), socket: addr })
+    Ok(Listener {
+        guard: Some(handle),
+        socket: addr,
+    })
 }
 
-fn build_warp_routes<U: 'static + WebDriverExtensionRoute + Send + Sync>(ext_routes: &[(Method, &'static str, U)], chan: Sender<DispatchMessage<U>>)
-    -> impl Filter<Extract=impl warp::Reply, Error=Rejection>
-{
+fn build_warp_routes<U: 'static + WebDriverExtensionRoute + Send + Sync>(
+    ext_routes: &[(Method, &'static str, U)],
+    chan: Sender<DispatchMessage<U>>,
+) -> impl Filter<Extract = impl warp::Reply, Error = Rejection> {
     let chan = Arc::new(Mutex::new(chan));
     let mut std_routes = standard_routes::<U>();
     let (method, path, res) = std_routes.pop().unwrap();
     let mut wroutes = build_route(method, path, res, chan.clone());
     for (method, path, res) in std_routes {
-        wroutes = wroutes.or(build_route(method, path, res.clone(), chan.clone())).unify().boxed()
+        wroutes = wroutes
+            .or(build_route(method, path, res.clone(), chan.clone()))
+            .unify()
+            .boxed()
     }
     for (method, path, res) in ext_routes {
-        wroutes = wroutes.or(build_route(method.clone(), path, Route::Extension(res.clone()), chan.clone())).unify().boxed()
+        wroutes = wroutes
+            .or(build_route(
+                method.clone(),
+                path,
+                Route::Extension(res.clone()),
+                chan.clone(),
+            ))
+            .unify()
+            .boxed()
     }
     wroutes
 }
 
-fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(method: Method, path: &'static str, route: Route<U>, chan: Arc<Mutex<Sender<DispatchMessage<U>>>>) -> warp::filters::BoxedFilter<(impl warp::Reply,)> {
+fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(
+    method: Method,
+    path: &'static str,
+    route: Route<U>,
+    chan: Arc<Mutex<Sender<DispatchMessage<U>>>>,
+) -> warp::filters::BoxedFilter<(impl warp::Reply,)> {
     // Create an empty filter based on the provided method and append an empty hashmap to it. The
     // hashmap will be used to store path parameters.
     let mut subroute = match method {
-        Method::GET => { warp::get2().boxed() }
-        Method::POST => { warp::post2().boxed() }
-        Method::DELETE => { warp::delete2().boxed() }
-        Method::OPTIONS => { warp::options().boxed() }
-        Method::PUT => { warp::put2().boxed() }
-        _ => panic!("Unsupported method")
-    }.or(warp::head()).unify().map(|| Parameters::new()).boxed();
+        Method::GET => warp::get2().boxed(),
+        Method::POST => warp::post2().boxed(),
+        Method::DELETE => warp::delete2().boxed(),
+        Method::OPTIONS => warp::options().boxed(),
+        Method::PUT => warp::put2().boxed(),
+        _ => panic!("Unsupported method"),
+    }
+    .or(warp::head())
+    .unify()
+    .map(|| Parameters::new())
+    .boxed();
 
     // For each part of the path, if it's a normal part, just append it to the current filter,
     // otherwise if it's a parameter (a named enclosed in { }), we take that parameter and insert
     // it into the hashmap created earlier.
     for part in path.split('/') {
         if part.is_empty() {
-            continue
+            continue;
         } else if part.starts_with('{') {
             assert!(part.ends_with('}'));
 
             subroute = subroute
                 .and(warp::path::param())
                 .map(move |mut params: Parameters, param: String| {
-                    let name = &part[1..part.len()-1];
+                    let name = &part[1..part.len() - 1];
                     params.insert(name.to_string(), param);
                     params
-                }).boxed();
+                })
+                .boxed();
         } else {
             subroute = subroute.and(warp::path(part)).boxed();
         }
@@ -245,55 +272,67 @@ fn build_route<U: 'static + WebDriverExtensionRoute + Send + Sync>(method: Metho
         .and(warp::path::full())
         .and(warp::method())
         .and(warp::body::concat())
-        .map(move |params, full_path: warp::path::FullPath, method, body: warp::body::FullBody| {
-            if method == Method::HEAD {
-                return warp::reply::with_status("".into(), StatusCode::OK)
-            }
-            let body = String::from_utf8(body.collect::<Vec<u8>>());
-            if body.is_err() {
-                return warp::reply::with_status("The body wasn't valid UTF-8".to_string(), StatusCode::BAD_REQUEST)
-            }
-            let body = body.unwrap();
-
-            debug!("-> {} {} {}", method, full_path.as_str(), body);
-            let msg_result = WebDriverMessage::from_http(
-                route.clone(),
-                &params,
-                &body,
-                method == Method::POST,
-            );
-
-            let (status, resp_body) = match msg_result {
-                Ok(message) => {
-                    let (send_res, recv_res) = channel();
-                    match chan.lock() {
-                        Ok(ref c) => {
-                            let res = c.send(DispatchMessage::HandleWebDriver(message, send_res));
-                            match res {
-                                Ok(x) => x,
-                                Err(e) => panic!("Error: {:?}", e),
-                            }
-                        }
-                        Err(e) => panic!("Error reading response: {:?}", e),
-                    }
-
-                    match recv_res.recv() {
-                        Ok(data) => match data {
-                            Ok(response) => {
-                                (StatusCode::OK, serde_json::to_string(&response).unwrap())
-                            }
-                            Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
-                        },
-                        Err(e) => panic!("Error reading response: {:?}", e),
-                    }
+        .map(
+            move |params, full_path: warp::path::FullPath, method, body: warp::body::FullBody| {
+                if method == Method::HEAD {
+                    return warp::reply::with_status("".into(), StatusCode::OK);
                 }
-                Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
-            };
+                let body = String::from_utf8(body.collect::<Vec<u8>>());
+                if body.is_err() {
+                    return warp::reply::with_status(
+                        "The body wasn't valid UTF-8".to_string(),
+                        StatusCode::BAD_REQUEST,
+                    );
+                }
+                let body = body.unwrap();
 
-            debug!("<- {} {}", status, resp_body);
-            warp::reply::with_status(resp_body, status)
-        })
-        .with(warp::reply::with::header(http::header::CONTENT_TYPE, "application/json; charset=utf-8"))
-        .with(warp::reply::with::header(http::header::CACHE_CONTROL, "no-cache"))
+                debug!("-> {} {} {}", method, full_path.as_str(), body);
+                let msg_result = WebDriverMessage::from_http(
+                    route.clone(),
+                    &params,
+                    &body,
+                    method == Method::POST,
+                );
+
+                let (status, resp_body) = match msg_result {
+                    Ok(message) => {
+                        let (send_res, recv_res) = channel();
+                        match chan.lock() {
+                            Ok(ref c) => {
+                                let res =
+                                    c.send(DispatchMessage::HandleWebDriver(message, send_res));
+                                match res {
+                                    Ok(x) => x,
+                                    Err(e) => panic!("Error: {:?}", e),
+                                }
+                            }
+                            Err(e) => panic!("Error reading response: {:?}", e),
+                        }
+
+                        match recv_res.recv() {
+                            Ok(data) => match data {
+                                Ok(response) => {
+                                    (StatusCode::OK, serde_json::to_string(&response).unwrap())
+                                }
+                                Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
+                            },
+                            Err(e) => panic!("Error reading response: {:?}", e),
+                        }
+                    }
+                    Err(e) => (e.http_status(), serde_json::to_string(&e).unwrap()),
+                };
+
+                debug!("<- {} {}", status, resp_body);
+                warp::reply::with_status(resp_body, status)
+            },
+        )
+        .with(warp::reply::with::header(
+            http::header::CONTENT_TYPE,
+            "application/json; charset=utf-8",
+        ))
+        .with(warp::reply::with::header(
+            http::header::CACHE_CONTROL,
+            "no-cache",
+        ))
         .boxed()
 }
