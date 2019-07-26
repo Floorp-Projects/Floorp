@@ -34,7 +34,6 @@ UNSUPPORTED_FEATURES = set([
     "global",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
-    "Intl.DateTimeFormat-fractionalSecondDigits",
     "Intl.DateTimeFormat-datetimestyle",
     "Intl.DateTimeFormat-dayPeriod",
     "Intl.DateTimeFormat-formatRange",
@@ -53,6 +52,7 @@ FEATURE_CHECK_NEEDED = {
 }
 RELEASE_OR_BETA = set([
     "Intl.NumberFormat-unified",
+    "Intl.DateTimeFormat-fractionalSecondDigits",
 ])
 
 
