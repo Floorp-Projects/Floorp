@@ -168,6 +168,12 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "default": False,
             "help": "Run Raptor in debug mode (open browser console, limited page-cycles, etc.)",
         }],
+        [["--noinstall"], {
+            "dest": "noinstall",
+            "action": "store_true",
+            "default": False,
+            "help": "Do not offer to install Android APK",
+        }],
         [["--disable-e10s"], {
             "dest": "e10s",
             "action": "store_false",
