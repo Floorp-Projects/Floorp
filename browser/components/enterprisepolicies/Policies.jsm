@@ -752,7 +752,11 @@ var Policies = {
       }
       if (blockAllExtensions) {
         for (let addon of addons) {
-          if (addon.isSystem || addon.isBuiltin) {
+          if (
+            addon.isSystem ||
+            addon.isBuiltin ||
+            !(addon.scope & AddonManager.SCOPE_PROFILE)
+          ) {
             continue;
           }
           if (!allowedExtensions.includes(addon.id)) {
