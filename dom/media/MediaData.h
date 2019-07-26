@@ -446,7 +446,7 @@ class VideoData : public MediaData {
     };
 
     Plane mPlanes[3];
-    YUVColorSpace mYUVColorSpace = YUVColorSpace::BT601;
+    YUVColorSpace mYUVColorSpace = YUVColorSpace::UNKNOWN;
     ColorDepth mColorDepth = ColorDepth::COLOR_8;
     ColorRange mColorRange = ColorRange::LIMITED;
   };
