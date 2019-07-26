@@ -231,13 +231,8 @@ bool js::intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  RootedValue result(cx);
-  if (!GetAvailableLocales(cx, udat_countAvailable, udat_getAvailable,
-                           &result)) {
-    return false;
-  }
-  args.rval().set(result);
-  return true;
+  return GetAvailableLocales(cx, udat_countAvailable, udat_getAvailable,
+                             args.rval());
 }
 
 static bool DefaultCalendar(JSContext* cx, const UniqueChars& locale,

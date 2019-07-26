@@ -214,13 +214,8 @@ bool js::intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
   MOZ_ASSERT(args.length() == 0);
 
-  RootedValue result(cx);
-  if (!GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable,
-                           &result)) {
-    return false;
-  }
-  args.rval().set(result);
-  return true;
+  return GetAvailableLocales(cx, unum_countAvailable, unum_getAvailable,
+                             args.rval());
 }
 
 bool js::intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp) {
