@@ -99,6 +99,9 @@ class HTMLTableRowAccessible : public HyperTextAccessibleWrap {
 
  protected:
   virtual ~HTMLTableRowAccessible() {}
+
+  // Accessible
+  virtual ENameValueFlag NativeName(nsString& aName) const override;
 };
 
 /**
