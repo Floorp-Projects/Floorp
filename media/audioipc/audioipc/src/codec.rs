@@ -31,7 +31,7 @@ pub trait Codec {
     /// A default method available to be called when there are no more bytes
     /// available to be read from the I/O.
     fn decode_eof(&mut self, buf: &mut BytesMut) -> io::Result<Self::Out> {
-        match try!(self.decode(buf)) {
+        match self.decode(buf)? {
             Some(frame) => Ok(frame),
             None => Err(io::Error::new(
                 io::ErrorKind::Other,
@@ -101,10 +101,10 @@ impl<In, Out> LengthDelimitedCodec<In, Out> {
         let buf = buf.split_to(n).freeze();
 
         trace!("Attempting to decode");
-        let msg = try!(deserialize::<Out>(buf.as_ref()).map_err(|e| match *e {
+        let msg = deserialize::<Out>(buf.as_ref()).map_err(|e| match *e {
             bincode::ErrorKind::Io(e) => e,
             _ => io::Error::new(io::ErrorKind::Other, *e),
-        }));
+        })?;
 
         trace!("... Decoded {:?}", msg);
         Ok(Some(msg))
@@ -122,7 +122,7 @@ where
     fn decode(&mut self, buf: &mut BytesMut) -> io::Result<Option<Self::Out>> {
         let n = match self.state {
             State::Length => {
-                match try!(self.decode_length(buf)) {
+                match self.decode_length(buf)? {
                     Some(n) => {
                         self.state = State::Data(n);
 
@@ -138,7 +138,7 @@ where
             State::Data(n) => n,
         };
 
-        match try!(self.decode_data(buf, n)) {
+        match self.decode_data(buf, n)? {
             Some(data) => {
                 // Update the decode state
                 self.state = State::Length;

@@ -3,12 +3,12 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use async::{AsyncRecvMsg, AsyncSendMsg};
+use crate::async_msg::{AsyncRecvMsg, AsyncSendMsg};
+use crate::cmsg;
+use crate::codec::Codec;
+use crate::messages::AssocRawPlatformHandle;
 use bytes::{Bytes, BytesMut, IntoBuf};
-use cmsg;
-use codec::Codec;
 use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
-use messages::AssocRawPlatformHandle;
 use std::collections::VecDeque;
 use std::os::unix::io::RawFd;
 use std::{fmt, io, mem};
@@ -103,7 +103,8 @@ where
                     let fds = match frame.fds {
                         Some(ref fds) => fds.clone(),
                         None => Bytes::new(),
-                    }.into_buf();
+                    }
+                    .into_buf();
                     try_ready!(self.io.send_msg_buf(&mut msgs, &fds))
                 }
                 _ => {
@@ -179,14 +180,14 @@ where
             // readable again, at which point the stream is terminated.
             if self.is_readable {
                 if self.eof {
-                    let mut item = try!(self.codec.decode_eof(&mut self.read_buf));
+                    let mut item = self.codec.decode_eof(&mut self.read_buf)?;
                     item.take_platform_handles(|| self.incoming_fds.take_fds());
                     return Ok(Some(item).into());
                 }
 
                 trace!("attempting to decode a frame");
 
-                if let Some(mut item) = try!(self.codec.decode(&mut self.read_buf)) {
+                if let Some(mut item) = self.codec.decode(&mut self.read_buf)? {
                     trace!("frame decoded from buffer");
                     item.take_platform_handles(|| self.incoming_fds.take_fds());
                     return Ok(Some(item).into());
@@ -200,10 +201,9 @@ where
             // Otherwise, try to read more data and try again. Make sure we've
             // got room for at least one byte to read to ensure that we don't
             // get a spurious 0 that looks like EOF
-            let (n, _) = try_ready!(
-                self.io
-                    .recv_msg_buf(&mut self.read_buf, self.incoming_fds.cmsg())
-            );
+            let (n, _) = try_ready!(self
+                .io
+                .recv_msg_buf(&mut self.read_buf, self.incoming_fds.cmsg()));
 
             if n == 0 {
                 self.eof = true;
@@ -230,14 +230,14 @@ where
         // then attempt to flush it. If after flush it's *still*
         // over BACKPRESSURE_THRESHOLD, then reject the send.
         if self.write_buf.len() > BACKPRESSURE_THRESHOLD {
-            try!(self.poll_complete());
+            self.poll_complete()?;
             if self.write_buf.len() > BACKPRESSURE_THRESHOLD {
                 return Ok(AsyncSink::NotReady(item));
             }
         }
 
         let fds = item.platform_handles();
-        try!(self.codec.encode(item, &mut self.write_buf));
+        self.codec.encode(item, &mut self.write_buf)?;
         let fds = fds.and_then(|fds| {
             cmsg::builder(&mut self.outgoing_fds)
                 .rights(&fds.0[..])
@@ -275,8 +275,8 @@ where
 
 pub fn framed_with_platformhandles<A, C>(io: A, codec: C) -> FramedWithPlatformHandles<A, C> {
     FramedWithPlatformHandles {
-        io: io,
-        codec: codec,
+        io,
+        codec,
         read_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
         incoming_fds: IncomingFds::new(FDS_CAPACITY),
         is_readable: false,
@@ -313,8 +313,8 @@ mod tests {
     use libc;
     use std;
 
-    extern {
-        fn cmsghdr_bytes(size: *mut libc::size_t) -> *const libc::uint8_t;
+    extern "C" {
+        fn cmsghdr_bytes(size: *mut libc::size_t) -> *const u8;
     }
 
     fn cmsg_bytes() -> &'static [u8] {

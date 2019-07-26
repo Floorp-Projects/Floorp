@@ -3,13 +3,13 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use tokio_io::{AsyncRead, AsyncWrite};
+use crate::codec::Codec;
+use crate::messages::AssocRawPlatformHandle;
 use bytes::{Bytes, BytesMut, IntoBuf};
-use codec::Codec;
 use futures::{AsyncSink, Poll, Sink, StartSend, Stream};
-use messages::AssocRawPlatformHandle;
 use std::collections::VecDeque;
 use std::{fmt, io};
+use tokio_io::{AsyncRead, AsyncWrite};
 
 const INITIAL_CAPACITY: usize = 1024;
 const BACKPRESSURE_THRESHOLD: usize = 4 * INITIAL_CAPACITY;
@@ -117,13 +117,13 @@ where
             // readable again, at which point the stream is terminated.
             if self.is_readable {
                 if self.eof {
-                    let item = try!(self.codec.decode_eof(&mut self.read_buf));
+                    let item = self.codec.decode_eof(&mut self.read_buf)?;
                     return Ok(Some(item).into());
                 }
 
                 trace!("attempting to decode a frame");
 
-                if let Some(item) = try!(self.codec.decode(&mut self.read_buf)) {
+                if let Some(item) = self.codec.decode(&mut self.read_buf)? {
                     trace!("frame decoded from buffer");
                     return Ok(Some(item).into());
                 }
@@ -136,10 +136,7 @@ where
             // Otherwise, try to read more data and try again. Make sure we've
             // got room for at least one byte to read to ensure that we don't
             // get a spurious 0 that looks like EOF
-            let n = try_ready!(
-                self.io
-                    .read_buf(&mut self.read_buf)
-            );
+            let n = try_ready!(self.io.read_buf(&mut self.read_buf));
 
             if n == 0 {
                 self.eof = true;
@@ -159,14 +156,17 @@ where
     type SinkItem = C::In;
     type SinkError = io::Error;
 
-    fn start_send(&mut self, mut item: Self::SinkItem) -> StartSend<Self::SinkItem, Self::SinkError> {
+    fn start_send(
+        &mut self,
+        mut item: Self::SinkItem,
+    ) -> StartSend<Self::SinkItem, Self::SinkError> {
         trace!("start_send: item={:?}", item);
 
         // If the buffer is already over BACKPRESSURE_THRESHOLD,
         // then attempt to flush it. If after flush it's *still*
         // over BACKPRESSURE_THRESHOLD, then reject the send.
         if self.write_buf.len() > BACKPRESSURE_THRESHOLD {
-            try!(self.poll_complete());
+            self.poll_complete()?;
             if self.write_buf.len() > BACKPRESSURE_THRESHOLD {
                 return Ok(AsyncSink::NotReady(item));
             }
@@ -176,15 +176,21 @@ where
         if let Some((handles, target_pid)) = item.platform_handles() {
             got_handles = true;
             let remote_handles = unsafe {
-                [duplicate_platformhandle(handles[0], target_pid)?,
-                 duplicate_platformhandle(handles[1], target_pid)?,
-                 duplicate_platformhandle(handles[2], target_pid)?]
+                [
+                    duplicate_platformhandle(handles[0], target_pid)?,
+                    duplicate_platformhandle(handles[1], target_pid)?,
+                    duplicate_platformhandle(handles[2], target_pid)?,
+                ]
             };
-            trace!("item handles: {:?} remote_handles: {:?}", handles, remote_handles);
+            trace!(
+                "item handles: {:?} remote_handles: {:?}",
+                handles,
+                remote_handles
+            );
             item.take_platform_handles(|| Some(remote_handles));
         }
 
-        try!(self.codec.encode(item, &mut self.write_buf));
+        self.codec.encode(item, &mut self.write_buf)?;
 
         if got_handles {
             // Enforce splitting sends on messages that contain file
@@ -214,8 +220,8 @@ where
 
 pub fn framed_with_platformhandles<A, C>(io: A, codec: C) -> FramedWithPlatformHandles<A, C> {
     FramedWithPlatformHandles {
-        io: io,
-        codec: codec,
+        io,
+        codec,
         read_buf: BytesMut::with_capacity(INITIAL_CAPACITY),
         is_readable: false,
         eof: false,
@@ -224,33 +230,41 @@ pub fn framed_with_platformhandles<A, C>(io: A, codec: C) -> FramedWithPlatformH
     }
 }
 
-use winapi::um::{processthreadsapi, winnt, handleapi};
-use winapi::shared::minwindef::{DWORD, FALSE};
 use super::PlatformHandleType;
+use winapi::shared::minwindef::{DWORD, FALSE};
+use winapi::um::{handleapi, processthreadsapi, winnt};
 
 // source_handle is effectively taken ownership of (consumed) and
 // closed when duplicate_platformhandle is called.
 // TODO: Make this transfer more explicit via the type system.
-unsafe fn duplicate_platformhandle(source_handle: PlatformHandleType,
-                                   target_pid: DWORD) -> Result<PlatformHandleType, std::io::Error> {
+unsafe fn duplicate_platformhandle(
+    source_handle: PlatformHandleType,
+    target_pid: DWORD,
+) -> Result<PlatformHandleType, std::io::Error> {
     let source = processthreadsapi::GetCurrentProcess();
-    let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE,
-                                                FALSE,
-                                                target_pid);
+    let target = processthreadsapi::OpenProcess(winnt::PROCESS_DUP_HANDLE, FALSE, target_pid);
     if !super::valid_handle(target) {
-        return Err(std::io::Error::new(std::io::ErrorKind::Other, "invalid target process"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "invalid target process",
+        ));
     }
 
     let mut target_handle = std::ptr::null_mut();
-    let ok = handleapi::DuplicateHandle(source,
-                                        source_handle,
-                                        target,
-                                        &mut target_handle,
-                                        0,
-                                        FALSE,
-                                        winnt::DUPLICATE_CLOSE_SOURCE | winnt::DUPLICATE_SAME_ACCESS);
+    let ok = handleapi::DuplicateHandle(
+        source,
+        source_handle,
+        target,
+        &mut target_handle,
+        0,
+        FALSE,
+        winnt::DUPLICATE_CLOSE_SOURCE | winnt::DUPLICATE_SAME_ACCESS,
+    );
     if ok == FALSE {
-        return Err(std::io::Error::new(std::io::ErrorKind::Other, "DuplicateHandle failed"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "DuplicateHandle failed",
+        ));
     }
     Ok(target_handle)
 }
