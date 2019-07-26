@@ -210,16 +210,28 @@
 }
 
 #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
-  fill: rgb(100, 70, 228);
+  fill: #8758FB;
 }
 
-#protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow:-moz-locale-dir(rtl) {
-  fill: rgb(18, 90, 223);
+:root[lwt-popup-brighttext] #protections-popup > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
+  fill: #B98CFE;
 }
 
 #protections-popup-mainView-panel-header {
   color: white;
-  background: linear-gradient(45deg, rgb(117, 67, 229), rgb(3, 96, 223));
+  background: radial-gradient(circle at top left, #9059FF, #0250BB);
+}
+
+#protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
+  background: radial-gradient(circle at top right, #9059FF, #0250BB);
+}
+
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header {
+  background: radial-gradient(circle at top left, #C689FF, #00B3F4);
+}
+
+:root[lwt-popup-brighttext] #protections-popup-mainView-panel-header:-moz-locale-dir(rtl) {
+  background: radial-gradient(circle at top right, #C689FF, #00B3F4);
 }
 
 #identity-popup-mainView-panel-header-span,
