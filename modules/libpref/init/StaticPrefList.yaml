@@ -1838,6 +1838,13 @@
   value: 50
   mirror: always
 
+# Maximum value (in ms) for the foreground budget. Only valid for
+# values greater than 0.
+- name: dom.timeout.foreground_throttling_max_budget
+  type: int32_t
+  value: -1
+  mirror: always
+
 # Should we defer timeouts and intervals while loading a page.  Released
 # on Idle or when the page is loaded.
 - name: dom.timeout.defer_during_load
