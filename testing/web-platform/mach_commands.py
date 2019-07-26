@@ -284,6 +284,10 @@ class MachCommands(MachCommandBase):
             for item in params["test_objects"]:
                 params["include"].append(item["name"])
             del params["test_objects"]
+        if params.get('debugger', None):
+            import mozdebug
+            if not mozdebug.get_debugger_info(params.get('debugger')):
+                sys.exit(1)
 
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         wpt_setup._mach_context = self._mach_context

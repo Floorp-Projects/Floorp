@@ -356,6 +356,11 @@ class MachCommands(MachCommandBase):
         test_paths = kwargs['test_paths']
         kwargs['test_paths'] = []
 
+        if kwargs.get('debugger', None):
+            import mozdebug
+            if not mozdebug.get_debugger_info(kwargs.get('debugger')):
+                sys.exit(1)
+
         mochitest = self._spawn(MochitestRunner)
         tests = []
         if resolve_tests:
