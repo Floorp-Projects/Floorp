@@ -1018,8 +1018,11 @@ nsresult nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
 
     nsXULPrototypeAttribute* attrs = nullptr;
     if (attrCount > 0) {
-      attrs = prototype->mAttributes.AppendElements(attrCount);
+      attrs = new nsXULPrototypeAttribute[attrCount];
     }
+
+    prototype->mAttributes = attrs;
+    prototype->mNumAttributes = attrCount;
 
     for (uint32_t i = 0; i < attrCount; i++) {
       rv = ReadNamespace(aStream, namespaceID);
