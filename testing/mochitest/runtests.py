@@ -184,11 +184,6 @@ class MessageLogger(object):
                 'action'] in MessageLogger.VALID_ACTIONS):
             raise ValueError
 
-    def _fix_subtest_name(self, message):
-        """Make sure subtest name is a string"""
-        if 'subtest' in message:
-            message['subtest'] = str(message['subtest'])
-
     def _fix_test_name(self, message):
         """Normalize a logged test path to match the relative path from the sourcedir.
         """
@@ -237,7 +232,6 @@ class MessageLogger(object):
                         message=fragment,
                     )
 
-            self._fix_subtest_name(message)
             self._fix_test_name(message)
             self._fix_message_format(message)
             messages.append(message)
