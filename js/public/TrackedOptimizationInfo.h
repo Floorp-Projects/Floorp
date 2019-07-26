@@ -131,6 +131,7 @@ namespace JS {
   _(CantInlineNoTarget)                       \
   _(CantInlineNotInterpreted)                 \
   _(CantInlineNoBaseline)                     \
+  _(CantInlineNoJitScript)                    \
   _(CantInlineLazy)                           \
   _(CantInlineNotConstructor)                 \
   _(CantInlineClassConstructor)               \
