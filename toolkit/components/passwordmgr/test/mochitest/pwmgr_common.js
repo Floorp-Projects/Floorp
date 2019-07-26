@@ -4,10 +4,29 @@
 
 /* import-globals-from ../../../../../toolkit/components/satchel/test/satchel_common.js */
 
+const { LoginTestUtils } = SpecialPowers.Cu.import(
+  "resource://testing-common/LoginTestUtils.jsm",
+  {}
+);
+
+// Setup LoginTestUtils to report assertions to the mochitest harness.
+LoginTestUtils.setAssertReporter(
+  SpecialPowers.wrapCallback((err, message, stack) => {
+    SimpleTest.record(!err, err ? err.message : message, null, stack);
+  })
+);
+
+const { LoginHelper } = SpecialPowers.Cu.import(
+  "resource://gre/modules/LoginHelper.jsm",
+  {}
+);
+const { Services } = SpecialPowers.Cu.import(
+  "resource://gre/modules/Services.jsm",
+  {}
+);
+
 const GENERATED_PASSWORD_LENGTH = 15;
 const GENERATED_PASSWORD_REGEX = /^[a-km-np-zA-HJ-NP-Z2-9]{15}$/;
-// Copied from LoginTestUtils.masterPassword.masterPassword to use from the content process.
-const MASTER_PASSWORD = "omgsecret!";
 const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
 
 /**
@@ -459,14 +478,6 @@ SimpleTest.registerCleanupFunction(() => {
   });
 });
 
-let { LoginHelper } = SpecialPowers.Cu.import(
-  "resource://gre/modules/LoginHelper.jsm",
-  {}
-);
-let { Services } = SpecialPowers.Cu.import(
-  "resource://gre/modules/Services.jsm",
-  {}
-);
 /**
  * Proxy for Services.logins (nsILoginManager).
  * Only supports arguments which support structured clone plus {nsILoginInfo}
