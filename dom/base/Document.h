@@ -132,6 +132,7 @@ class nsViewportInfo;
 class nsIGlobalObject;
 class nsIXULWindow;
 class nsXULPrototypeDocument;
+class nsXULPrototypeElement;
 struct nsFont;
 
 namespace mozilla {
@@ -5293,6 +5294,9 @@ class Document : public nsINode,
   js::ExpandoAndGeneration mExpandoAndGeneration;
 
   bool HasPendingInitialTranslation() { return mPendingInitialTranslation; }
+
+  nsRefPtrHashtable<nsRefPtrHashKey<Element>, nsXULPrototypeElement>
+      mL10nProtoElements;
 
   void TraceProtos(JSTracer* aTrc);
 };
