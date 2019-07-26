@@ -734,7 +734,8 @@ this.LoginManagerParent = {
       password
     );
 
-    let shouldSaveLogin = true;
+    let autoSaveLogin = true;
+    let loginToChange = null;
 
     // This will throw if we can't look up the entry in the password/origin map
     if (!generatedPW.filled) {
@@ -753,7 +754,7 @@ this.LoginManagerParent = {
         "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
         formOrigin
       );
-      shouldSaveLogin = false;
+      autoSaveLogin = false;
     }
 
     // Check if we already have a login saved for this site since we don't want to overwrite it in
@@ -765,46 +766,50 @@ this.LoginManagerParent = {
       ignoreActionAndRealm: false,
     });
 
-    if (logins.length > 0) {
-      log(
-        "_onGeneratedPasswordFilledOrEdited: Login already saved for this site"
-      );
-      shouldSaveLogin = false;
-      for (let login of logins) {
-        if (formLoginWithoutUsername.matches(login, false)) {
-          // This login is already saved so show no new UI.
-          log(
-            "_onGeneratedPasswordFilledOrEdited: Matching login already saved"
-          );
-          return;
-        }
+    let matchedLogin = logins.find(login =>
+      formLoginWithoutUsername.matches(login, true)
+    );
+    if (matchedLogin) {
+      autoSaveLogin = false;
+      if (matchedLogin.password == formLoginWithoutUsername.password) {
+        // This login is already saved so show no new UI.
+        log("_onGeneratedPasswordFilledOrEdited: Matching login already saved");
+        return;
       }
+      // We're updating a previously-saved login
+      loginToChange = matchedLogin;
+      log(
+        "_onGeneratedPasswordFilledOrEdited: Login with empty username already saved for this site"
+      );
     }
 
-    if (shouldSaveLogin) {
-      Services.logins.addLogin(formLoginWithoutUsername);
+    if (autoSaveLogin) {
+      log(
+        "_onGeneratedPasswordFilledOrEdited: auto-saving new login with empty username"
+      );
+      loginToChange = Services.logins.addLogin(formLoginWithoutUsername);
+    } else {
+      log("_onGeneratedPasswordFilledOrEdited: not auto-saving this login");
     }
-    log(
-      "_onGeneratedPasswordFilledOrEdited: show dismissed save-password notification"
-    );
     let browser = browsingContext.top.embedderElement;
     let prompter = this._getPrompter(browser, openerTopWindowID);
 
-    if (shouldSaveLogin) {
-      // If we auto-saved the login then show a change doorhanger to allow
-      // modifying it e.g. adding a username.
+    if (loginToChange) {
+      // Show a change doorhanger to allow modifying an already-saved login
+      // e.g. to add a username or update the password.
       prompter.promptToChangePassword(
-        formLoginWithoutUsername,
+        loginToChange,
         formLogin,
         true, // dimissed prompt
-        shouldSaveLogin // notifySaved
+        autoSaveLogin // notifySaved
       );
       return;
     }
+    log("_onGeneratedPasswordFilledOrEdited: no matching login to save/update");
     prompter.promptToSavePassword(
       formLogin,
       true, // dimissed prompt
-      shouldSaveLogin // notifySaved
+      autoSaveLogin // notifySaved
     );
   },
 

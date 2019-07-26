@@ -45,10 +45,15 @@ this.LoginTestUtils = {
   /**
    * Add a new login to the store
    */
-  async addLogin({ username, password, origin = "https://example.com" }) {
+  async addLogin({
+    username,
+    password,
+    origin = "https://example.com",
+    formActionOrigin,
+  }) {
     const login = LoginTestUtils.testData.formLogin({
       origin,
-      formActionOrigin: origin,
+      formActionOrigin: formActionOrigin || origin,
       username,
       password,
     });

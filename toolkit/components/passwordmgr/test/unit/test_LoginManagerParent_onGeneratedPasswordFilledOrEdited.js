@@ -11,6 +11,10 @@ const { LoginManagerParent: LMP } = ChromeUtils.import(
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
+const loginTemplate = Object.freeze({
+  origin: "https://www.example.com",
+  formActionOrigin: "https://www.mozilla.org",
+});
 
 function stubPrompter() {
   let fakePromptToSavePassword = sinon.stub();
@@ -117,6 +121,21 @@ function startTestConditions(contextId) {
   );
 }
 
+/*
+ * Compare login details excluding usernameField and passwordField
+ */
+function assertLoginProperties(actualLogin, expected) {
+  equal(actualLogin.origin, expected.origin, "Compare origin");
+  equal(
+    actualLogin.formActionOrigin,
+    expected.formActionOrigin,
+    "Compare formActionOrigin"
+  );
+  equal(actualLogin.httpRealm, expected.httpRealm, "Compare httpRealm");
+  equal(actualLogin.username, expected.username, "Compare username");
+  equal(actualLogin.password, expected.password, "Compare password");
+}
+
 add_task(async function setup() {
   // Get a profile for storage.
   do_get_profile();
@@ -146,6 +165,7 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
     password: generatedPassword,
+    username: "someusername",
   });
 
   let [login] = await storageChangedPromised;
@@ -153,7 +173,7 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     "https://www.example.com",
     "https://www.mozilla.org",
     null,
-    "",
+    "", // verify we don't include the username when auto-saving a login
     generatedPassword
   );
 
@@ -270,6 +290,173 @@ add_task(
     restorePrompter();
     LMP._generatedPasswordsByPrincipalOrigin.clear();
     Services.logins.setLoginSavingEnabled("https://www.example.com", true);
+    Services.logins.removeAllLogins();
+  }
+);
+
+add_task(
+  async function test_onGeneratedPasswordFilledOrEdited_withSavedEmptyUsername() {
+    startTestConditions();
+    let login0Props = Object.assign({}, loginTemplate, {
+      username: "",
+      password: "qweqweq",
+    });
+    info("Adding initial login: " + JSON.stringify(login0Props));
+    await LoginTestUtils.addLogin(login0Props);
+
+    info(
+      "Saved initial login: " +
+        JSON.stringify(Services.logins.getAllLogins()[0])
+    );
+
+    let {
+      generatedPassword: password1,
+    } = stubGeneratedPasswordForBrowsingContextId(99);
+    let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
+
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      password: password1,
+    });
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should just have the previously-saved login with empty username"
+    );
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+
+    ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+    ok(
+      fakePromptToChangePassword.calledOnce,
+      "Checking promptToChangePassword was called"
+    );
+    ok(
+      fakePromptToChangePassword.getCall(0).args[2],
+      "promptToChangePassword had a truthy 'dismissed' argument"
+    );
+    ok(
+      !fakePromptToChangePassword.getCall(0).args[3],
+      "promptToChangePassword had a falsey 'notifySaved' argument"
+    );
+
+    LMP._browsingContextGlobal.get.restore();
+    restorePrompter();
+    LMP._generatedPasswordsByPrincipalOrigin.clear();
+    Services.logins.removeAllLogins();
+  }
+);
+
+add_task(
+  async function test_onGeneratedPasswordFilledOrEdited_withEmptyUsernameDifferentFormActionOrigin() {
+    startTestConditions();
+    let login0Props = Object.assign({}, loginTemplate, {
+      username: "",
+      password: "qweqweq",
+    });
+    await LoginTestUtils.addLogin(login0Props);
+
+    let {
+      generatedPassword: password1,
+    } = stubGeneratedPasswordForBrowsingContextId(99);
+    let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
+
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.elsewhere.com",
+      password: password1,
+    });
+
+    let savedLogins = Services.logins.getAllLogins();
+    equal(
+      savedLogins.length,
+      2,
+      "Should have saved the generated-password login"
+    );
+
+    assertLoginProperties(savedLogins[0], login0Props);
+    assertLoginProperties(
+      savedLogins[1],
+      Object.assign({}, loginTemplate, {
+        formActionOrigin: "https://www.elsewhere.com",
+        username: "",
+        password: password1,
+      })
+    );
+
+    ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+    ok(
+      fakePromptToChangePassword.calledOnce,
+      "Checking promptToChangePassword was called"
+    );
+    ok(
+      fakePromptToChangePassword.getCall(0).args[1],
+      "promptToChangePassword had a truthy 'dismissed' argument"
+    );
+    ok(
+      fakePromptToChangePassword.getCall(0).args[2],
+      "promptToChangePassword had a truthy 'notifySaved' argument"
+    );
+
+    LMP._browsingContextGlobal.get.restore();
+    restorePrompter();
+    LMP._generatedPasswordsByPrincipalOrigin.clear();
+    Services.logins.removeAllLogins();
+  }
+);
+
+add_task(
+  async function test_onGeneratedPasswordFilledOrEdited_withSavedUsername() {
+    startTestConditions();
+    let login0Props = Object.assign({}, loginTemplate, {
+      username: "previoususer",
+      password: "qweqweq",
+    });
+    await LoginTestUtils.addLogin(login0Props);
+
+    let {
+      generatedPassword: password1,
+    } = stubGeneratedPasswordForBrowsingContextId(99);
+    let { restorePrompter, fakePromptToChangePassword } = stubPrompter();
+
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      password: password1,
+    });
+
+    let savedLogins = Services.logins.getAllLogins();
+    equal(
+      savedLogins.length,
+      2,
+      "Should have saved the generated-password login"
+    );
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+    assertLoginProperties(
+      savedLogins[1],
+      Object.assign({}, loginTemplate, {
+        username: "",
+        password: password1,
+      })
+    );
+
+    ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+    ok(
+      fakePromptToChangePassword.calledOnce,
+      "Checking promptToChangePassword was called"
+    );
+    ok(
+      fakePromptToChangePassword.getCall(0).args[1],
+      "promptToChangePassword had a truthy 'dismissed' argument"
+    );
+    ok(
+      fakePromptToChangePassword.getCall(0).args[2],
+      "promptToChangePassword had a truthy 'notifySaved' argument"
+    );
+
+    LMP._browsingContextGlobal.get.restore();
+    restorePrompter();
+    LMP._generatedPasswordsByPrincipalOrigin.clear();
     Services.logins.removeAllLogins();
   }
 );
