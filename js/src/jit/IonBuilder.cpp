@@ -175,8 +175,11 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileRealm* realm,
   scriptHasIonScript_ = script_->hasIonScript();
   pc = info->startPC();
 
-  MOZ_ASSERT(script()->hasBaselineScript() ==
-             (info->analysisMode() != Analysis_ArgumentsUsage));
+  // The script must have a JitScript. Compilation requires a BaselineScript
+  // too.
+  MOZ_ASSERT(script_->hasJitScript());
+  MOZ_ASSERT_IF(!info->isAnalysis(), script_->hasBaselineScript());
+
   MOZ_ASSERT(!!analysisContext ==
              (info->analysisMode() == Analysis_DefiniteProperties));
   MOZ_ASSERT(script_->numBytecodeTypeSets() < JSScript::MaxBytecodeTypeSets);
@@ -446,14 +449,10 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
       return InliningDecision_Error;
     }
 
-    if (!script->hasBaselineScript() && script->canBaselineCompile()) {
-      MethodStatus status = BaselineCompile(analysisContext, script);
-      if (status == Method_Error) {
+    if (CanBaselineInterpretScript(script)) {
+      AutoKeepJitScripts keepJitScript(analysisContext);
+      if (!script->ensureHasJitScript(analysisContext, keepJitScript)) {
         return InliningDecision_Error;
-      }
-      if (status != Method_Compiled) {
-        trackOptimizationOutcome(TrackedOutcome::CantInlineNoBaseline);
-        return InliningDecision_DontInline;
       }
     }
   }
@@ -479,10 +478,18 @@ IonBuilder::InliningDecision IonBuilder::canInlineTarget(JSFunction* target,
     return DontInline(inlineScript, "Disabled Ion compilation");
   }
 
-  // Don't inline functions which don't have baseline scripts.
-  if (!inlineScript->hasBaselineScript()) {
-    trackOptimizationOutcome(TrackedOutcome::CantInlineNoBaseline);
-    return DontInline(inlineScript, "No baseline jitcode");
+  if (info().isAnalysis()) {
+    // Analysis requires only a JitScript.
+    if (!inlineScript->hasJitScript()) {
+      trackOptimizationOutcome(TrackedOutcome::CantInlineNoJitScript);
+      return DontInline(inlineScript, "No JitScript");
+    }
+  } else {
+    // Compilation requires a BaselineScript.
+    if (!inlineScript->hasBaselineScript()) {
+      trackOptimizationOutcome(TrackedOutcome::CantInlineNoBaseline);
+      return DontInline(inlineScript, "No baseline jitcode");
+    }
   }
 
   // Don't inline functions with a higher optimization level.

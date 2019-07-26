@@ -4520,7 +4520,7 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
   }
 
   if (!jit::IsIonEnabled() || !jit::IsBaselineJitEnabled() ||
-      !script->canBaselineCompile()) {
+      !CanBaselineInterpretScript(script)) {
     return true;
   }
 
@@ -4548,14 +4548,9 @@ bool jit::AnalyzeNewScriptDefiniteProperties(
     return false;
   }
 
-  if (!script->hasBaselineScript()) {
-    MethodStatus status = BaselineCompile(cx, script);
-    if (status == Method_Error) {
-      return false;
-    }
-    if (status != Method_Compiled) {
-      return true;
-    }
+  AutoKeepJitScripts keepJitScript(cx);
+  if (!script->ensureHasJitScript(cx, keepJitScript)) {
+    return false;
   }
 
   JitScript::MonitorThisType(cx, script, TypeSet::ObjectType(group));
