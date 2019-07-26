@@ -174,16 +174,15 @@ add_task(async function testAsyncDecryptStrings() {
   let decrypteds = await sdr.asyncDecryptStrings(encryptedStrings);
   for (let i = 0; i < encryptedStrings.length; i++) {
     let decrypted = decrypteds[i];
-    let expectedDecryptedString = convertedTestCases[i];
 
     equal(
       decrypted,
-      expectedDecryptedString,
+      testCases[i],
       "decrypted string should match expected value"
     );
     equal(
       sdr.decryptString(encryptedStrings[i]),
-      decrypted,
+      convertedTestCases[i],
       "decryptString(encryptString(input)) should return the initial decrypted string value"
     );
   }
