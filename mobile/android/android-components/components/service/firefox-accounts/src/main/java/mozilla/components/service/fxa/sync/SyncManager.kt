@@ -107,6 +107,11 @@ abstract class SyncManager(
     // Currently the interfaces are the same, hence the name "pass-through".
     private val dispatcherStatusObserver = PassThroughSyncStatusObserver(syncStatusObserverRegistry)
 
+    /**
+     * Indicates if sync is currently running.
+     */
+    internal fun isSyncActive() = syncDispatcher?.isSyncActive() ?: false
+
     internal fun registerSyncStatusObserver(observer: SyncStatusObserver) {
         syncStatusObserverRegistry.register(observer)
     }

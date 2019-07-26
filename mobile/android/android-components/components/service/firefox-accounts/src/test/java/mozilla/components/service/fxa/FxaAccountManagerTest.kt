@@ -275,6 +275,9 @@ class FxaAccountManagerTest {
 
         manager.initAsync().await()
 
+        // Can check if sync is running (it's not!), even if we don't have sync configured.
+        assertFalse(manager.isSyncActive())
+
         val syncStatusObserver = TestSyncStatusObserver()
         val lifecycleOwner: LifecycleOwner = mock()
         val lifecycle: Lifecycle = mock()
@@ -312,6 +315,7 @@ class FxaAccountManagerTest {
         verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean())
 
         // Make sure sync status listeners are working.
+        // TODO fix these tests.
 //        // Test dispatcher -> sync manager -> account manager -> our test observer.
 //        latestSyncManager!!.dispatcherRegistry.notifyObservers { onStarted() }
 //        assertEquals(1, syncStatusObserver.onStartedCount)
@@ -401,6 +405,7 @@ class FxaAccountManagerTest {
         manager.syncNowAsync(startup = true).await()
         verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
 
+        // TODO fix these tests
 //        assertEquals(0, syncStatusObserver.onStartedCount)
 //        assertEquals(0, syncStatusObserver.onIdleCount)
 //        assertEquals(0, syncStatusObserver.onErrorCount)
@@ -426,6 +431,14 @@ class FxaAccountManagerTest {
         verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(anyBoolean())
         manager.syncNowAsync(startup = true).await()
         verify(latestSyncManager!!.dispatcher.inner, times(3)).syncNow(anyBoolean())
+
+        // Pretend sync is running.
+        `when`(latestSyncManager!!.dispatcher.inner.isSyncActive()).thenReturn(true)
+        assertTrue(manager.isSyncActive())
+
+        // Pretend sync is not running.
+        `when`(latestSyncManager!!.dispatcher.inner.isSyncActive()).thenReturn(false)
+        assertFalse(manager.isSyncActive())
     }
 
     @Test

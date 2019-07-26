@@ -43,6 +43,9 @@ permalink: /changelog/
 * **browser-icons**
   * Changed the maximum size for decoded icons. Icons are now scaled to the target size to save memory.
 
+* **service-firefox-account**
+ * Added `isSyncActive(): Boolean` method to `FxaAccountManager`
+
 # 5.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v4.0.0...v5.0.0)

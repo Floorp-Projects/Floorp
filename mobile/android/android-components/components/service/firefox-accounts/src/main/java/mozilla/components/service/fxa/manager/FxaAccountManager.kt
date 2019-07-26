@@ -340,6 +340,11 @@ open class FxaAccountManager(
     }
 
     /**
+     * Indicates if sync is currently running.
+     */
+    fun isSyncActive() = syncManager?.isSyncActive() ?: false
+
+    /**
      * Call this after registering your observers, and before interacting with this class.
      */
     fun initAsync(): Deferred<Unit> {
