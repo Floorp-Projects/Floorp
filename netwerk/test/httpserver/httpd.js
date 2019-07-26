@@ -3024,7 +3024,7 @@ ServerHandler.prototype = {
           return this._mimeMappings[ext];
         }
       }
-      return Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+      return Cc["@mozilla.org/mime;1"]
         .getService(Ci.nsIMIMEService)
         .getTypeFromFile(file);
     } catch (e) {
