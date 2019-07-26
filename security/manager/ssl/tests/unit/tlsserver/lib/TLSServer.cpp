@@ -8,6 +8,8 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <fstream>
+#include <iostream>
 #ifdef XP_WIN
 #  include <windows.h>
 #else
@@ -34,6 +36,8 @@ static const uint16_t LISTEN_PORT = 8443;
 DebugLevel gDebugLevel = DEBUG_ERRORS;
 uint16_t gCallbackPort = 0;
 
+const std::string kPEMBegin = "-----BEGIN ";
+const std::string kPEMEnd = "-----END ";
 const char DEFAULT_CERT_NICKNAME[] = "default-ee";
 
 struct Connection {
@@ -65,141 +69,118 @@ void PrintPRError(const char* aPrefix) {
   }
 }
 
-template <size_t N>
-SECStatus ReadFileToBuffer(const char* basePath, const char* filename,
-                           char (&buf)[N]) {
-  static_assert(N > 0, "input buffer too small for ReadFileToBuffer");
-  if (snprintf(buf, N - 1, "%s/%s", basePath, filename) == 0) {
-    PrintPRError("snprintf failed");
-    return SECFailure;
+// This decodes a PEM file into `item`. The line endings need to be
+// UNIX-style, or there will be cross-platform issues.
+static bool DecodePEMFile(const std::string& filename, SECItem* item) {
+  std::ifstream in(filename);
+  if (in.bad()) {
+    return false;
   }
-  UniquePRFileDesc fd(PR_OpenFile(buf, PR_RDONLY, 0));
-  if (!fd) {
-    PrintPRError("PR_Open failed");
-    return SECFailure;
-  }
-  int32_t fileSize = PR_Available(fd.get());
-  if (fileSize < 0) {
-    PrintPRError("PR_Available failed");
-    return SECFailure;
-  }
-  if (static_cast<size_t>(fileSize) > N - 1) {
-    PR_fprintf(PR_STDERR, "file too large - not reading\n");
-    return SECFailure;
-  }
-  int32_t bytesRead = PR_Read(fd.get(), buf, fileSize);
-  if (bytesRead != fileSize) {
-    PrintPRError("PR_Read failed");
-    return SECFailure;
-  }
-  buf[bytesRead] = 0;
-  return SECSuccess;
-}
 
-SECStatus AddKeyFromFile(const char* basePath, const char* filename) {
-  const char* PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----";
-  const char* PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----";
+  char buf[1024];
+  in.getline(buf, sizeof(buf));
+  if (in.bad()) {
+    return false;
+  }
 
-  char buf[16384] = {0};
-  SECStatus rv = ReadFileToBuffer(basePath, filename, buf);
-  if (rv != SECSuccess) {
-    return rv;
+  if (strncmp(buf, kPEMBegin.c_str(), kPEMBegin.size()) != 0) {
+    return false;
   }
-  if (strncmp(buf, PRIVATE_KEY_HEADER, strlen(PRIVATE_KEY_HEADER)) != 0) {
-    PR_fprintf(PR_STDERR, "invalid key - not importing\n");
-    return SECFailure;
-  }
-  const char* bufPtr = buf + strlen(PRIVATE_KEY_HEADER);
-  size_t bufLen = strlen(buf);
-  char base64[16384] = {0};
-  char* base64Ptr = base64;
-  while (bufPtr < buf + bufLen) {
-    if (strncmp(bufPtr, PRIVATE_KEY_FOOTER, strlen(PRIVATE_KEY_FOOTER)) == 0) {
+
+  std::string value;
+  for (;;) {
+    in.getline(buf, sizeof(buf));
+    if (in.bad()) {
+      return false;
+    }
+
+    if (strncmp(buf, kPEMEnd.c_str(), kPEMEnd.size()) == 0) {
       break;
     }
-    if (*bufPtr != '\r' && *bufPtr != '\n') {
-      *base64Ptr = *bufPtr;
-      base64Ptr++;
-    }
-    bufPtr++;
+
+    value += buf;
   }
 
   unsigned int binLength;
-  UniquePORTString bin(
-      BitwiseCast<char*, unsigned char*>(ATOB_AsciiToData(base64, &binLength)));
+  UniquePORTString bin(BitwiseCast<char*, unsigned char*>(
+      ATOB_AsciiToData(value.c_str(), &binLength)));
   if (!bin || binLength == 0) {
     PrintPRError("ATOB_AsciiToData failed");
+    return false;
+  }
+
+  if (SECITEM_AllocItem(nullptr, item, binLength) == nullptr) {
+    return false;
+  }
+
+  PORT_Memcpy(item->data, bin.get(), binLength);
+  return true;
+}
+
+static SECStatus AddKeyFromFile(const std::string& path,
+                                const std::string& filename) {
+  ScopedAutoSECItem item;
+
+  std::string file = path + "/" + filename;
+  if (!DecodePEMFile(file, &item)) {
     return SECFailure;
   }
-  UniqueSECItem secitem(::SECITEM_AllocItem(nullptr, nullptr, binLength));
-  if (!secitem) {
-    PrintPRError("SECITEM_AllocItem failed");
-    return SECFailure;
-  }
-  PORT_Memcpy(secitem->data, bin.get(), binLength);
+
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     PrintPRError("PK11_GetInternalKeySlot failed");
     return SECFailure;
   }
+
   if (PK11_NeedUserInit(slot.get())) {
     if (PK11_InitPin(slot.get(), nullptr, nullptr) != SECSuccess) {
       PrintPRError("PK11_InitPin failed");
       return SECFailure;
     }
   }
-  SECKEYPrivateKey* privateKey;
+
+  SECKEYPrivateKey* privateKey = nullptr;
   if (PK11_ImportDERPrivateKeyInfoAndReturnKey(
-          slot.get(), secitem.get(), nullptr, nullptr, true, false, KU_ALL,
+          slot.get(), &item, nullptr, nullptr, true, false, KU_ALL,
           &privateKey, nullptr) != SECSuccess) {
     PrintPRError("PK11_ImportDERPrivateKeyInfoAndReturnKey failed");
     return SECFailure;
   }
+
   SECKEY_DestroyPrivateKey(privateKey);
   return SECSuccess;
 }
 
-SECStatus DecodeCertCallback(void* arg, SECItem** certs, int numcerts) {
-  if (numcerts != 1) {
-    PR_SetError(SEC_ERROR_LIBRARY_FAILURE, 0);
+static SECStatus AddCertificateFromFile(const std::string& path,
+                                        const std::string& filename) {
+  ScopedAutoSECItem item;
+
+  std::string file = path + "/" + filename;
+  if (!DecodePEMFile(file, &item)) {
     return SECFailure;
   }
 
-  SECItem* certDEROut = static_cast<SECItem*>(arg);
-  return SECITEM_CopyItem(nullptr, certDEROut, *certs);
-}
-
-SECStatus AddCertificateFromFile(const char* basePath, const char* filename) {
-  char buf[16384] = {0};
-  SECStatus rv = ReadFileToBuffer(basePath, filename, buf);
-  if (rv != SECSuccess) {
-    return rv;
-  }
-  ScopedAutoSECItem certDER;
-  rv = CERT_DecodeCertPackage(buf, strlen(buf), DecodeCertCallback, &certDER);
-  if (rv != SECSuccess) {
-    PrintPRError("CERT_DecodeCertPackage failed");
-    return rv;
-  }
   UniqueCERTCertificate cert(CERT_NewTempCertificate(
-      CERT_GetDefaultCertDB(), &certDER, nullptr, false, true));
+      CERT_GetDefaultCertDB(), &item, nullptr, false, true));
   if (!cert) {
     PrintPRError("CERT_NewTempCertificate failed");
     return SECFailure;
   }
+
   UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
   if (!slot) {
     PrintPRError("PK11_GetInternalKeySlot failed");
     return SECFailure;
   }
   // The nickname is the filename without '.pem'.
-  std::string nickname(filename, strlen(filename) - 4);
-  rv = PK11_ImportCert(slot.get(), cert.get(), CK_INVALID_HANDLE,
-                       nickname.c_str(), false);
+  std::string nickname = filename.substr(0, filename.length() - 4);
+  SECStatus rv = PK11_ImportCert(slot.get(), cert.get(), CK_INVALID_HANDLE,
+                                 nickname.c_str(), false);
   if (rv != SECSuccess) {
     PrintPRError("PK11_ImportCert failed");
     return rv;
   }
+
   return SECSuccess;
 }
 
