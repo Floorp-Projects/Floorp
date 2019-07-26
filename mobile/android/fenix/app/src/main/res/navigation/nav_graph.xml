@@ -329,7 +329,7 @@
         android:label="@string/preferences_accessibility" />
     <fragment
         android:id="@+id/accountSettingsFragment"
-        android:name="org.mozilla.fenix.settings.AccountSettingsFragment"
+        android:name="org.mozilla.fenix.settings.account.AccountSettingsFragment"
         android:label="@string/preferences_account_settings">
         <action
             android:id="@+id/action_accountSettingsFragment_to_signOutFragment"
