@@ -1424,9 +1424,10 @@ var gProtectionsHandler = {
     let host = gIdentityHandler.getHostForDisplay();
 
     // Push the appropriate strings out to the UI.
-    this._protectionsPopupMainViewHeaderLabel.textContent =
-      // gNavigatorBundle.getFormattedString("protections.header", [host]);
-      `Tracking Protections for ${host}`;
+    this._protectionsPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
+      "protections.header",
+      [host]
+    );
 
     let currentlyEnabled = !this._protectionsPopup.hasAttribute("hasException");
 
