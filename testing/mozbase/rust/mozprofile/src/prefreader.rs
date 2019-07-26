@@ -1025,7 +1025,8 @@ pub fn serialize<W: Write>(prefs: &Preferences, output: &mut W) -> io::Result<()
             "sticky_pref("
         } else {
             "user_pref("
-        }.as_bytes();
+        }
+        .as_bytes();
         output.write_all(func)?;
         output.write_all(b"\"")?;
         output.write_all(escape_quote(key).as_bytes())?;
