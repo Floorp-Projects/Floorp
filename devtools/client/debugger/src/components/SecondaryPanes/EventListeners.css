@@ -52,6 +52,7 @@
   align-items: center;
   padding-inline-start: 2px;
   padding-inline-end: 10px;
+  width: 100%;
 }
 
 .event-listener-category {
