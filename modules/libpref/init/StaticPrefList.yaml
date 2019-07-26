@@ -1129,6 +1129,13 @@
   value: false
   mirror: always
 
+# Only propagate the open window click permission if the setTimeout() is equal
+# to or less than this value.
+- name: dom.disable_open_click_delay
+  type: int32_t
+  value: 1000
+  mirror: always
+
 - name: dom.disable_open_during_load
   type: bool
   value: false
