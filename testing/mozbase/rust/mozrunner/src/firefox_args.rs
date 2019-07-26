@@ -97,14 +97,14 @@ impl<'a> From<&'a OsString> for Arg {
                 _ => Arg::Other(basename),
             }
         } else {
-           Arg::None
+            Arg::None
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Arg, parse_arg_name};
+    use super::{parse_arg_name, Arg};
     use std::ffi::OsString;
 
     fn parse(arg: &str, name: Option<&str>) {
@@ -152,14 +152,26 @@ mod tests {
         assert_eq!(Arg::from(&OsString::from("-- profile")), Arg::None);
         assert_eq!(Arg::from(&OsString::from("profile")), Arg::None);
         assert_eq!(Arg::from(&OsString::from("profile -P")), Arg::None);
-        assert_eq!(Arg::from(&OsString::from("-profiled")), Arg::Other("profiled".into()));
-        assert_eq!(Arg::from(&OsString::from("-PROFILEMANAGER")), Arg::Other("PROFILEMANAGER".into()));
+        assert_eq!(
+            Arg::from(&OsString::from("-profiled")),
+            Arg::Other("profiled".into())
+        );
+        assert_eq!(
+            Arg::from(&OsString::from("-PROFILEMANAGER")),
+            Arg::Other("PROFILEMANAGER".into())
+        );
 
         assert_eq!(Arg::from(&OsString::from("--profile")), Arg::Profile);
         assert_eq!(Arg::from(&OsString::from("-profile foo")), Arg::Profile);
 
-        assert_eq!(Arg::from(&OsString::from("--ProfileManager")), Arg::ProfileManager);
-        assert_eq!(Arg::from(&OsString::from("-ProfileManager")), Arg::ProfileManager);
+        assert_eq!(
+            Arg::from(&OsString::from("--ProfileManager")),
+            Arg::ProfileManager
+        );
+        assert_eq!(
+            Arg::from(&OsString::from("-ProfileManager")),
+            Arg::ProfileManager
+        );
 
         // TODO: -Ptest is valid
         //assert_eq!(Arg::from(&OsString::from("-Ptest")), Arg::NamedProfile);

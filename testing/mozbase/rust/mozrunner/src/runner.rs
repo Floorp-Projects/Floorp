@@ -96,12 +96,10 @@ impl fmt::Display for RunnerError {
 impl Error for RunnerError {
     fn description(&self) -> &str {
         match *self {
-            RunnerError::Io(ref err) => {
-                match err.kind() {
-                    ErrorKind::NotFound => "no such file or directory",
-                    _ => err.description(),
-                }
-            }
+            RunnerError::Io(ref err) => match err.kind() {
+                ErrorKind::NotFound => "no such file or directory",
+                _ => err.description(),
+            },
             RunnerError::PrefReader(ref err) => err.description(),
         }
     }
@@ -277,7 +275,7 @@ impl Runner for FirefoxRunner {
                 Arg::Foreground => seen_foreground = true,
                 Arg::NoRemote => seen_no_remote = true,
                 Arg::Profile | Arg::NamedProfile | Arg::ProfileManager => seen_profile = true,
-                Arg::Other(_) | Arg::None => {},
+                Arg::Other(_) | Arg::None => {}
             }
         }
         if !seen_foreground {
@@ -322,8 +320,8 @@ pub mod platform {
 pub mod platform {
     use crate::path::{find_binary, is_binary};
     use dirs;
-    use std::path::PathBuf;
     use plist::Value;
+    use std::path::PathBuf;
 
     /// Searches for the binary file inside the path passed as parameter.
     /// If the binary is not found, the path remains unaltered.
@@ -341,7 +339,7 @@ pub mod platform {
                                 path.push("Contents");
                                 path.push("MacOS");
                                 path.push(s);
-                            },
+                            }
                             _ => {}
                         }
                     }
@@ -362,11 +360,21 @@ pub mod platform {
 
         let home = dirs::home_dir();
         for &(prefix_home, trial_path) in [
-            (false, "/Applications/Firefox.app/Contents/MacOS/firefox-bin"),
+            (
+                false,
+                "/Applications/Firefox.app/Contents/MacOS/firefox-bin",
+            ),
             (true, "Applications/Firefox.app/Contents/MacOS/firefox-bin"),
-            (false, "/Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin"),
-            (true, "Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin"),
-        ].iter()
+            (
+                false,
+                "/Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin",
+            ),
+            (
+                true,
+                "Applications/Firefox Nightly.app/Contents/MacOS/firefox-bin",
+            ),
+        ]
+        .iter()
         {
             let path = match (home.as_ref(), prefix_home) {
                 (Some(ref home_dir), true) => home_dir.join(trial_path),
@@ -391,8 +399,8 @@ pub mod platform {
     use path::{find_binary, is_binary};
     use std::io::Error;
     use std::path::PathBuf;
-    use winreg::RegKey;
     use winreg::enums::*;
+    use winreg::RegKey;
 
     pub fn resolve_binary_path(path: &mut PathBuf) -> &PathBuf {
         path
@@ -414,7 +422,8 @@ pub mod platform {
         let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
         for subtree_key in ["SOFTWARE", "SOFTWARE\\WOW6432Node"].iter() {
             let subtree = hklm.open_subkey_with_flags(subtree_key, KEY_READ)?;
-            let mozilla_org = match subtree.open_subkey_with_flags("mozilla.org\\Mozilla", KEY_READ) {
+            let mozilla_org = match subtree.open_subkey_with_flags("mozilla.org\\Mozilla", KEY_READ)
+            {
                 Ok(val) => val,
                 Err(_) => continue,
             };
