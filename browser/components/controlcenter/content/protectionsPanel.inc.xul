@@ -20,20 +20,20 @@
         <label id="protections-popup-main-header-label">
           <html:span id="protections-popup-mainView-panel-header-span"/>
         </label>
-        <description id="protections-popup-toast-panel-tp-on-desc">Enhanced Tracking Protection is ON for this site</description>
-        <description id="protections-popup-toast-panel-tp-off-desc">Enhanced Tracking Protection is OFF for this site</description>
+        <description id="protections-popup-toast-panel-tp-on-desc">&protections.etpON.header;</description>
+        <description id="protections-popup-toast-panel-tp-off-desc">&protections.etpOFF.header;</description>
       </hbox>
 
       <hbox id="protections-popup-tp-switch-section" class="protections-popup-section">
         <vbox class="protections-popup-tp-switch-label-box" flex="1">
           <label class="protections-popup-tp-switch-on-header"
-                 hidden="true">Tracking protection is ON for this site</label>
+                 hidden="true">&protections.etpON.header;</label>
           <label class="protections-popup-tp-switch-off-header"
-                 hidden="true">Tracking protection is OFF for this site</label>
+                 hidden="true">&protections.etpOFF.header;</label>
           <label id="protections-popup-tp-switch-breakage-link"
                  class="text-link"
                  onclick="gProtectionsHandler.showSiteNotWorkingView();"
-                 hidden="true">Site not working?</label>
+                 hidden="true">&protections.siteNotWorking.label;</label>
         </vbox>
         <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"
@@ -86,7 +86,7 @@
         <toolbarbutton id="protections-popup-settings-button"
                        oncommand="gProtectionsHandler.openPreferences();">
           <image class="protection-settings-icon"/>
-          <label class="protections-popup-settings-label" flex="1">Protection Settings</label>
+          <label class="protections-popup-settings-label" flex="1">&protections.settings.label;</label>
         </toolbarbutton>
       </vbox>
 
@@ -96,21 +96,21 @@
         <label id="protections-popup-show-full-report-link"
                is="text-link"
                useoriginprincipal="true"
-               href="about:protections">Show Full Report</label>
+               href="about:protections">&protections.report.label;</label>
       </hbox>
     </panelview>
 
     <!-- Site Not Working? SubView -->
     <panelview id="protections-popup-siteNotWorkingView"
-               title="Site Not Working?"
+               title="&protections.siteNotWorkingView.title;"
                descriptionheightworkaround="true"
                flex="1">
         <hbox id="protections-popup-siteNotWorkingView-header">
           <vbox class="protections-popup-tp-switch-label-box" flex="1">
             <label class="protections-popup-tp-switch-on-header"
-              hidden="true">Tracking protection is ON for this site</label>
+              hidden="true">&protections.etpON.header;</label>
             <label class="protections-popup-tp-switch-off-header"
-              hidden="true">Tracking protection is OFF for this site</label>
+              hidden="true">&protections.etpOFF.header;</label>
           </vbox>
           <vbox class="protections-popup-tp-switch-box">
             <toolbarbutton id="protections-popup-siteNotWorking-tp-switch"
@@ -120,23 +120,23 @@
           </vbox>
         </hbox>
         <vbox id="protections-popup-siteNotWorkingView-body" flex="1">
-          <label>Turn off Tracking Protection if you're having issues with:</label>
+          <label>&protections.siteNotWorkingView.header;</label>
           <label>
             <html:ul id="protections-popup-siteNotWorkingView-body-issue-list">
-              <html:li>Log in fields</html:li>
-              <html:li>Forms</html:li>
-              <html:li>Payments</html:li>
-              <html:li>Comments</html:li>
-              <html:li>Videos</html:li>
+              <html:li>&protections.siteNotWorkingView.issueList.logInFields;</html:li>
+              <html:li>&protections.siteNotWorkingView.issueList.forms;</html:li>
+              <html:li>&protections.siteNotWorkingView.issueList.payments;</html:li>
+              <html:li>&protections.siteNotWorkingView.issueList.comments;</html:li>
+              <html:li>&protections.siteNotWorkingView.issueList.videos;</html:li>
             </html:ul>
           </label>
         </vbox>
         <hbox id="protections-popup-siteNotWorkingView-footer"
               class="panel-footer">
-          <label id="protections-popup-siteNotWorkingView-siteStillBroken" flex="1">Site Still Broken?</label>
+          <label id="protections-popup-siteNotWorkingView-siteStillBroken" flex="1">&protections.siteNotWorkingView.siteStillBroken.label;</label>
           <label id="protections-popup-siteNotWorkingView-sendReport"
             onclick="gProtectionsHandler.showSendReportView();"
-            class="text-link">Send Report</label>
+            class="text-link">&protections.siteNotWorkingView.sendReport.label;</label>
         </hbox>
     </panelview>
 
@@ -206,12 +206,12 @@
 
     <!-- Send Report SubView -->
     <panelview id="protections-popup-sendReportView"
-               title="Send Report"
+               title="&contentBlocking.breakageReportView.title;"
                descriptionheightworkaround="true">
         <vbox id="protections-popup-sendReportView-heading">
-          <description>&contentBlocking.breakageReportView2.description;</description>
+          <description>&contentBlocking.breakageReportView3.description;</description>
           <label id="protections-popup-sendReportView-learn-more"
-                 is="text-link">&contentBlocking.breakageReportView.learnMore;</label>
+                 is="text-link">&contentBlocking.breakageReportView2.learnMore;</label>
         </vbox>
         <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
           <vbox class="protections-popup-sendReportView-collection-section">
@@ -219,7 +219,7 @@
             <html:input readonly="readonly" id="protections-popup-sendReportView-collection-url"/>
           </vbox>
           <vbox class="protections-popup-sendReportView-collection-section">
-            <label>&contentBlocking.breakageReportView.collection.comments.label;</label>
+            <label>&contentBlocking.breakageReportView2.collection.comments.label;</label>
             <html:textarea id="protections-popup-sendReportView-collection-comments"/>
           </vbox>
         </vbox>
