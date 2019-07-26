@@ -77,12 +77,14 @@ class AppLinksUseCases(
     ) {
         operator fun invoke(url: String): AppLinkRedirect {
             val intents = createBrowsableIntents(url)
-            val appIntent = if (includeHttpAppLinks) {
-                intents.firstOrNull { getNonBrowserActivities(it).isNotEmpty() }
+            val (appIntent, resolveInfos) = if (includeHttpAppLinks) {
+                intents.asSequence()
+                    .map { it to getNonBrowserActivities(it) }
+                    .firstOrNull { it.second.isNotEmpty() }
                     ?.let {
                         // The user may have decided to keep opening this type of link in this browser.
                         if (ignoreDefaultBrowser &&
-                            findDefaultActivity(it)?.activityInfo?.packageName == context.packageName) {
+                            findDefaultActivity(it.first)?.activityInfo?.packageName == context.packageName) {
                             // in which case, this isn't an app intent anymore.
                             null
                         } else {
@@ -90,11 +92,11 @@ class AppLinksUseCases(
                         }
                     }
             } else {
-                intents.filter { it.data?.isHttpOrHttps != true }
-                    .firstOrNull {
-                        getNonBrowserActivities(it).isNotEmpty()
-                    }
-            }
+                intents.asSequence()
+                    .filter { it.data?.isHttpOrHttps != true }
+                    .map { it to getNonBrowserActivities(it) }
+                    .firstOrNull { it.second.isNotEmpty() }
+            } ?: null to null
 
             val webUrls = intents.mapNotNull {
                 if (it.data?.isHttpOrHttps == true) it.dataString else null
@@ -102,7 +104,9 @@ class AppLinksUseCases(
 
             val webUrl = webUrls.firstOrNull { it != url } ?: webUrls.firstOrNull()
 
-            return AppLinkRedirect(appIntent, webUrl, webUrl != url)
+            val appInfo = resolveInfos?.firstOrNull()?.let { it.labelRes to it.iconResource }
+
+            return AppLinkRedirect(appIntent, webUrl, webUrl != url, appInfo?.first, appInfo?.second)
         }
 
         private fun getNonBrowserActivities(intent: Intent): List<ResolveInfo> {

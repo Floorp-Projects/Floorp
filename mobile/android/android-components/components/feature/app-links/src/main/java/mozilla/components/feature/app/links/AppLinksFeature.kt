@@ -51,7 +51,7 @@ class AppLinksFeature(
     private val alwaysDeniedSchemes: Set<String> = setOf("javascript"),
     private val fragmentManager: FragmentManager? = null,
     private var dialog: RedirectDialogFragment = SimpleRedirectDialogFragment.newInstance(),
-    private val useCases: AppLinksUseCases = AppLinksUseCases(context)
+    val useCases: AppLinksUseCases = AppLinksUseCases(context)
 ) : LifecycleAwareFeature {
 
     @VisibleForTesting
