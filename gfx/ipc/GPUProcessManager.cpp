@@ -485,6 +485,11 @@ void GPUProcessManager::OnRemoteProcessDeviceReset(GPUProcessHost* aHost) {
   // indicating that we should give up and use software
   mDeviceResetCount++;
 
+  // Disable double buffering when device reset happens.
+  if (!gfxVars::UseWebRender() && gfxVars::UseDoubleBufferingWithCompositor()) {
+    gfxVars::SetUseDoubleBufferingWithCompositor(false);
+  }
+
   auto newTime = TimeStamp::Now();
   auto delta = (int32_t)(newTime - mDeviceResetLastTime).ToMilliseconds();
   mDeviceResetLastTime = newTime;
