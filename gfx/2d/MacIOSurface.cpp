@@ -472,9 +472,10 @@ already_AddRefed<SourceSurface> MacIOSurface::GetAsSurface() {
 
 SurfaceFormat MacIOSurface::GetFormat() const {
   OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == '420v') {
+  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
+      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
     return SurfaceFormat::NV12;
-  } else if (pixelFormat == '2vuy') {
+  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     return SurfaceFormat::YUV422;
   } else {
     return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
@@ -483,9 +484,10 @@ SurfaceFormat MacIOSurface::GetFormat() const {
 
 SurfaceFormat MacIOSurface::GetReadFormat() const {
   OSType pixelFormat = GetPixelFormat();
-  if (pixelFormat == '420v') {
+  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
+      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
     return SurfaceFormat::NV12;
-  } else if (pixelFormat == '2vuy') {
+  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     return SurfaceFormat::R8G8B8X8;
   } else {
     return HasAlpha() ? SurfaceFormat::R8G8B8A8 : SurfaceFormat::R8G8B8X8;
@@ -512,7 +514,8 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
   GLenum internalFormat;
   GLenum format;
   GLenum type;
-  if (pixelFormat == '420v') {
+  if (pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
+      pixelFormat == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
     MOZ_ASSERT(GetPlaneCount() == 2);
     MOZ_ASSERT(plane < 2);
 
@@ -530,7 +533,7 @@ CGLError MacIOSurface::CGLTexImageIOSurface2D(
     if (aOutReadFormat) {
       *aOutReadFormat = mozilla::gfx::SurfaceFormat::NV12;
     }
-  } else if (pixelFormat == '2vuy') {
+  } else if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
     MOZ_ASSERT(plane == 0);
     // The YCBCR_422_APPLE ext is only available in compatibility profile. So,
     // we should use RGB_422_APPLE for core profile. The difference between
