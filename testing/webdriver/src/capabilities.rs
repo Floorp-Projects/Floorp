@@ -126,12 +126,16 @@ impl SpecNewSessionParameters {
 
         for (key, value) in &capabilities {
             match &**key {
-                x @ "acceptInsecureCerts" | x @ "setWindowRect" | x @ "strictFileInteractability" => if !value.is_boolean() {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("{} is not boolean: {}", x, value),
-                    ));
-                },
+                x @ "acceptInsecureCerts"
+                | x @ "setWindowRect"
+                | x @ "strictFileInteractability" => {
+                    if !value.is_boolean() {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("{} is not boolean: {}", x, value),
+                        ));
+                    }
+                }
                 x @ "browserName" | x @ "browserVersion" | x @ "platformName" => {
                     if !value.is_string() {
                         return Err(WebDriverError::new(
@@ -233,12 +237,14 @@ impl SpecNewSessionParameters {
                 "noProxy" => SpecNewSessionParameters::validate_no_proxy(value)?,
                 "sslProxy" => SpecNewSessionParameters::validate_host(value, "sslProxy")?,
                 "socksProxy" => SpecNewSessionParameters::validate_host(value, "socksProxy")?,
-                "socksVersion" => if !value.is_number() {
-                    return Err(WebDriverError::new(
-                        ErrorStatus::InvalidArgument,
-                        format!("socksVersion is not a number: {}", value),
-                    ));
-                },
+                "socksVersion" => {
+                    if !value.is_number() {
+                        return Err(WebDriverError::new(
+                            ErrorStatus::InvalidArgument,
+                            format!("socksVersion is not a number: {}", value),
+                        ));
+                    }
+                }
 
                 x => {
                     return Err(WebDriverError::new(
@@ -331,7 +337,7 @@ impl SpecNewSessionParameters {
 
         for (key, value) in obj {
             match &**key {
-                _x @ "script" if value.is_null() => { }
+                _x @ "script" if value.is_null() => {}
 
                 x @ "script" | x @ "pageLoad" | x @ "implicit" => {
                     let timeout = try_opt!(

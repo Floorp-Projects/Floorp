@@ -1,31 +1,54 @@
 use http::Method;
 use serde_json::Value;
 
-use crate::Parameters;
-use crate::command::{
-    VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand,
-};
+use crate::command::{VoidWebDriverExtensionCommand, WebDriverCommand, WebDriverExtensionCommand};
 use crate::error::WebDriverResult;
+use crate::Parameters;
 
-pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)> {
+pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'static str, Route<U>)>
+{
     return vec![
         (Method::POST, "/session", Route::NewSession),
         (Method::DELETE, "/session/{sessionId}", Route::DeleteSession),
         (Method::POST, "/session/{sessionId}/url", Route::Get),
-        (Method::GET, "/session/{sessionId}/url", Route::GetCurrentUrl),
+        (
+            Method::GET,
+            "/session/{sessionId}/url",
+            Route::GetCurrentUrl,
+        ),
         (Method::POST, "/session/{sessionId}/back", Route::GoBack),
-        (Method::POST, "/session/{sessionId}/forward", Route::GoForward),
+        (
+            Method::POST,
+            "/session/{sessionId}/forward",
+            Route::GoForward,
+        ),
         (Method::POST, "/session/{sessionId}/refresh", Route::Refresh),
         (Method::GET, "/session/{sessionId}/title", Route::GetTitle),
-        (Method::GET, "/session/{sessionId}/source", Route::GetPageSource),
-        (Method::GET, "/session/{sessionId}/window", Route::GetWindowHandle),
+        (
+            Method::GET,
+            "/session/{sessionId}/source",
+            Route::GetPageSource,
+        ),
+        (
+            Method::GET,
+            "/session/{sessionId}/window",
+            Route::GetWindowHandle,
+        ),
         (
             Method::GET,
             "/session/{sessionId}/window/handles",
             Route::GetWindowHandles,
         ),
-        (Method::POST, "/session/{sessionId}/window/new", Route::NewWindow),
-        (Method::DELETE, "/session/{sessionId}/window", Route::CloseWindow),
+        (
+            Method::POST,
+            "/session/{sessionId}/window/new",
+            Route::NewWindow,
+        ),
+        (
+            Method::DELETE,
+            "/session/{sessionId}/window",
+            Route::CloseWindow,
+        ),
         (
             Method::GET,
             "/session/{sessionId}/window/size",
@@ -71,15 +94,31 @@ pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'st
             "/session/{sessionId}/window/fullscreen",
             Route::FullscreenWindow,
         ),
-        (Method::POST, "/session/{sessionId}/window", Route::SwitchToWindow),
-        (Method::POST, "/session/{sessionId}/frame", Route::SwitchToFrame),
+        (
+            Method::POST,
+            "/session/{sessionId}/window",
+            Route::SwitchToWindow,
+        ),
+        (
+            Method::POST,
+            "/session/{sessionId}/frame",
+            Route::SwitchToFrame,
+        ),
         (
             Method::POST,
             "/session/{sessionId}/frame/parent",
             Route::SwitchToParentFrame,
         ),
-        (Method::POST, "/session/{sessionId}/element", Route::FindElement),
-        (Method::POST, "/session/{sessionId}/elements", Route::FindElements),
+        (
+            Method::POST,
+            "/session/{sessionId}/element",
+            Route::FindElement,
+        ),
+        (
+            Method::POST,
+            "/session/{sessionId}/elements",
+            Route::FindElements,
+        ),
         (
             Method::POST,
             "/session/{sessionId}/element/{elementId}/element",
@@ -150,21 +189,41 @@ pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'st
             "/session/{sessionId}/execute/async",
             Route::ExecuteAsyncScript,
         ),
-        (Method::GET, "/session/{sessionId}/cookie", Route::GetCookies),
+        (
+            Method::GET,
+            "/session/{sessionId}/cookie",
+            Route::GetCookies,
+        ),
         (
             Method::GET,
             "/session/{sessionId}/cookie/{name}",
             Route::GetNamedCookie,
         ),
-        (Method::POST, "/session/{sessionId}/cookie", Route::AddCookie),
-        (Method::DELETE, "/session/{sessionId}/cookie", Route::DeleteCookies),
+        (
+            Method::POST,
+            "/session/{sessionId}/cookie",
+            Route::AddCookie,
+        ),
+        (
+            Method::DELETE,
+            "/session/{sessionId}/cookie",
+            Route::DeleteCookies,
+        ),
         (
             Method::DELETE,
             "/session/{sessionId}/cookie/{name}",
             Route::DeleteCookie,
         ),
-        (Method::GET, "/session/{sessionId}/timeouts", Route::GetTimeouts),
-        (Method::POST, "/session/{sessionId}/timeouts", Route::SetTimeouts),
+        (
+            Method::GET,
+            "/session/{sessionId}/timeouts",
+            Route::GetTimeouts,
+        ),
+        (
+            Method::POST,
+            "/session/{sessionId}/timeouts",
+            Route::SetTimeouts,
+        ),
         (
             Method::POST,
             "/session/{sessionId}/element/{elementId}/click",
@@ -190,7 +249,11 @@ pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'st
             "/session/{sessionId}/alert/accept",
             Route::AcceptAlert,
         ),
-        (Method::GET, "/session/{sessionId}/alert/text", Route::GetAlertText),
+        (
+            Method::GET,
+            "/session/{sessionId}/alert/text",
+            Route::GetAlertText,
+        ),
         (
             Method::POST,
             "/session/{sessionId}/alert/text",
@@ -206,7 +269,11 @@ pub(crate) fn standard_routes<U: WebDriverExtensionRoute>() -> Vec<(Method, &'st
             "/session/{sessionId}/element/{elementId}/screenshot",
             Route::TakeElementScreenshot,
         ),
-        (Method::POST, "/session/{sessionId}/actions", Route::PerformActions),
+        (
+            Method::POST,
+            "/session/{sessionId}/actions",
+            Route::PerformActions,
+        ),
         (
             Method::DELETE,
             "/session/{sessionId}/actions",
@@ -284,7 +351,11 @@ pub enum Route<U: WebDriverExtensionRoute> {
 pub trait WebDriverExtensionRoute: Clone + Send + PartialEq {
     type Command: WebDriverExtensionCommand + 'static;
 
-    fn command(&self, _: &Parameters, _: &Value) -> WebDriverResult<WebDriverCommand<Self::Command>>;
+    fn command(
+        &self,
+        _: &Parameters,
+        _: &Value,
+    ) -> WebDriverResult<WebDriverCommand<Self::Command>>;
 }
 
 #[derive(Clone, Debug, PartialEq)]

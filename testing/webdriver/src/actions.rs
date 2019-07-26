@@ -173,7 +173,8 @@ pub struct PointerUpAction {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub enum PointerOrigin {
     #[serde(
-        rename = "element-6066-11e4-a52e-4f735466cecf", serialize_with = "serialize_webelement_id"
+        rename = "element-6066-11e4-a52e-4f735466cecf",
+        serialize_with = "serialize_webelement_id"
     )]
     Element(WebElement),
     #[serde(rename = "pointer")]
@@ -239,8 +240,8 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::test::{check_deserialize, check_serialize_deserialize};
     use super::*;
+    use crate::test::{check_deserialize, check_serialize_deserialize};
     use serde_json;
 
     #[test]
@@ -653,7 +654,8 @@ mod test {
     #[test]
     fn test_json_pointer_action_item_general() {
         let json = r#"{"type":"pause","duration":1}"#;
-        let data = PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
+        let data =
+            PointerActionItem::General(GeneralAction::Pause(PauseAction { duration: Some(1) }));
 
         check_serialize_deserialize(&json, &data);
     }
