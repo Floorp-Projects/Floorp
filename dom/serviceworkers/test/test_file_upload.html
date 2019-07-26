@@ -21,11 +21,7 @@ async function onOpened(message) {
 
   let registration = await navigator.serviceWorker.register('sw_file_upload.js',
                                                             {scope: "." });
-
-  let worker = registration.installing || registration.active;
-  await waitForState(worker, 'activated');
-  worker.postMessage('claim');
-  await waitForControlled(window);
+  await waitForState(registration.installing, 'activated');
 
   let res = await fetch('server_file_upload.sjs', {
     method: 'POST',

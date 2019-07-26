@@ -28,15 +28,10 @@ add_task(() => {
 // test for bug 1408734
 add_task(async () => {
   // register a service worker
-  let registration = await navigator.serviceWorker.register("fetch.js", {scope: "./"});
-  let sw = registration.installing || registration.active;
-
+  let registration = await navigator.serviceWorker.register("fetch.js",
+                                                            {scope: "./"});
   // wait for service worker be activated
-  await waitForState(sw, 'activated');
-
-  // wait for control changed
-  sw.postMessage('claim');
-  await waitForControlled(window);
+  await waitForState(registration.installing, "activated");
 
   // get the ServiceWorkerRegistration we just register through GetRegistration
   registration = await navigator.serviceWorker.getRegistration("./");
