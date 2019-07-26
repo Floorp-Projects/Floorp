@@ -21,3 +21,6 @@ with Files('msgpack/**'):
 
 with Files('sqlite3/**'):
     BUG_COMPONENT = ('Toolkit', 'Storage')
+
+with Files('rlbox/**'):
+    BUG_COMPONENT = ('Firefox Build System', 'General')
