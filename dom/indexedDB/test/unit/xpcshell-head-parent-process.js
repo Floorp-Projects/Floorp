@@ -181,6 +181,22 @@ function compareKeys(k1, k2) {
     return true;
   }
 
+  if (k1 instanceof ArrayBuffer) {
+    if (!(k2 instanceof ArrayBuffer)) {
+      return false;
+    }
+
+    function arrayBuffersAreEqual(a, b) {
+      if (a.byteLength != b.byteLength) {
+        return false;
+      }
+      let ui8b = new Uint8Array(b);
+      return new Uint8Array(a).every((val, i) => val === ui8b[i]);
+    }
+
+    return arrayBuffersAreEqual(k1, k2);
+  }
+
   return false;
 }
 
