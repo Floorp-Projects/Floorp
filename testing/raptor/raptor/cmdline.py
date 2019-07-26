@@ -141,6 +141,8 @@ def create_parser(mach_interface=False):
                 help="Flag which indicates if Raptor is running locally or in production")
         add_arg('--obj-path', dest="obj_path", default=None,
                 help="Browser-build obj_path (received when running in production)")
+    add_arg('--noinstall', dest="noinstall", default=False, action="store_true",
+            help="Flag which indicates if Raptor should not offer to install Android APK.")
 
     add_logging_group(parser)
     return parser

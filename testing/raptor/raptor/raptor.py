@@ -85,7 +85,8 @@ either Raptor or browsertime."""
 
     __metaclass__ = ABCMeta
 
-    def __init__(self, app, binary, run_local=False, obj_path=None, profile_class=None,
+    def __init__(self, app, binary, run_local=False, noinstall=False,
+                 obj_path=None, profile_class=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, cpu_test=False, memory_test=False,
                  is_release_build=False, debug_mode=False, post_startup_delay=None,
@@ -1206,6 +1207,7 @@ def main(args=sys.argv[1:]):
     raptor = raptor_class(args.app,
                           args.binary,
                           run_local=args.run_local,
+                          noinstall=args.noinstall,
                           obj_path=args.obj_path,
                           gecko_profile=args.gecko_profile,
                           gecko_profile_interval=args.gecko_profile_interval,
