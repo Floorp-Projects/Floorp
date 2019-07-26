@@ -1825,6 +1825,12 @@
   value: 10*1000
   mirror: always
 
+# Delay in ms from document load until we start throttling background timeouts.
+- name: dom.timeout.throttling_delay
+  type: int32_t
+  value: 30000
+  mirror: always
+
 # UDPSocket API
 - name: dom.udpsocket.enabled
   type: bool

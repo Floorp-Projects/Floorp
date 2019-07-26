@@ -1084,9 +1084,6 @@ pref("dom.storage.client_validation", true);
 
 pref("dom.send_after_paint_to_content", false);
 
-// Delay in ms from document load until we start throttling background timeouts.
-pref("dom.timeout.throttling_delay", 30000);
-
 // Time (in ms) that it takes to regenerate 1ms.
 pref("dom.timeout.background_budget_regeneration_rate", 100);
 // Maximum value (in ms) for the background budget. Only valid for
