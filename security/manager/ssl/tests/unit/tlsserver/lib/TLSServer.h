@@ -39,12 +39,16 @@ void PrintPRError(const char* aPrefix);
 // The default certificate is trusted for localhost and *.example.com
 extern const char DEFAULT_CERT_NICKNAME[];
 
+// ConfigSecureServerWithNamedCert sets up the hostname name provided. If the
+// extraData parameter is presented, extraData->certChain will be automatically
+// filled in using database information.
 // Pass DEFAULT_CERT_NICKNAME as certName unless you need a specific
 // certificate.
 SECStatus ConfigSecureServerWithNamedCert(
     PRFileDesc* fd, const char* certName,
     /*optional*/ UniqueCERTCertificate* cert,
-    /*optional*/ SSLKEAType* kea);
+    /*optional*/ SSLKEAType* kea,
+    /*optional*/ SSLExtraServerCertData* extraData);
 
 SECStatus InitializeNSS(const char* nssCertDBDir);
 

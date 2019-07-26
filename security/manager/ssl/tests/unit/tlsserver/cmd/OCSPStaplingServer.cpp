@@ -115,8 +115,8 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
 
   UniqueCERTCertificate cert;
   SSLKEAType certKEA;
-  if (SECSuccess !=
-      ConfigSecureServerWithNamedCert(aFd, certNickname, &cert, &certKEA)) {
+  if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, certNickname, &cert,
+                                                    &certKEA, nullptr)) {
     return SSL_SNI_SEND_ALERT;
   }
 

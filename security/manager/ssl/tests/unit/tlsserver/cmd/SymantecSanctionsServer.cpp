@@ -44,8 +44,8 @@ int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
         static_cast<char*>(PORT_ZAlloc(aSrvNameArr[i].len + 1)));
     if (name) {
       PORT_Memcpy(name.get(), aSrvNameArr[i].data, aSrvNameArr[i].len);
-      if (ConfigSecureServerWithNamedCert(aFd, name.get(), nullptr, nullptr) ==
-          SECSuccess) {
+      if (ConfigSecureServerWithNamedCert(aFd, name.get(), nullptr, nullptr,
+                                          nullptr) == SECSuccess) {
         return 0;
       }
     }
@@ -74,8 +74,8 @@ int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
 
   UniqueCERTCertificate cert;
   SSLKEAType certKEA;
-  if (SECSuccess !=
-      ConfigSecureServerWithNamedCert(aFd, host->mCertName, &cert, &certKEA)) {
+  if (SECSuccess != ConfigSecureServerWithNamedCert(aFd, host->mCertName, &cert,
+                                                    &certKEA, nullptr)) {
     return SSL_SNI_SEND_ALERT;
   }
 
