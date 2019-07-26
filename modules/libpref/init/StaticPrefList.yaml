@@ -1851,6 +1851,12 @@
   value: 15000
   mirror: always
 
+# Turn on budget throttling by default.
+- name: dom.timeout.enable_budget_timer_throttling
+  type: bool
+  value: true
+  mirror: always
+
 # Should we defer timeouts and intervals while loading a page.  Released
 # on Idle or when the page is loaded.
 - name: dom.timeout.defer_during_load
