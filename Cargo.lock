@@ -599,7 +599,7 @@ dependencies = [
 [[package]]
 name = "coreaudio-sys"
 version = "0.2.2"
-source = "git+https://github.com/ChunMinChang/coreaudio-sys?branch=gecko-build#b1fe5ea05def23774027037bd42e53fc6da1a04b"
+source = "git+https://github.com/ChunMinChang/coreaudio-sys?rev=b1fe5ea05def23774027037bd42e53fc6da1a04b#b1fe5ea05def23774027037bd42e53fc6da1a04b"
 dependencies = [
  "bindgen 0.49.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -609,7 +609,7 @@ name = "coreaudio-sys-utils"
 version = "0.1.0"
 dependencies = [
  "core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "coreaudio-sys 0.2.2 (git+https://github.com/ChunMinChang/coreaudio-sys?branch=gecko-build)",
+ "coreaudio-sys 0.2.2 (git+https://github.com/ChunMinChang/coreaudio-sys?rev=b1fe5ea05def23774027037bd42e53fc6da1a04b)",
 ]
 
 [[package]]
@@ -3943,7 +3943,7 @@ dependencies = [
 "checksum core-foundation-sys 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "e7ca8a5221364ef15ce201e8ed2f609fc312682a8f4e0e3d4aa5879764e0fa3b"
 "checksum core-graphics 0.17.1 (registry+https://github.com/rust-lang/crates.io-index)" = "62ceafe1622ffc9a332199096841d0ff9912ec8cf8f9cde01e254a7d5217cd10"
 "checksum core-text 13.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "f3f46450d6f2397261af420b4ccce23807add2e45fa206410a03d66fb7f050ae"
-"checksum coreaudio-sys 0.2.2 (git+https://github.com/ChunMinChang/coreaudio-sys?branch=gecko-build)" = "<none>"
+"checksum coreaudio-sys 0.2.2 (git+https://github.com/ChunMinChang/coreaudio-sys?rev=b1fe5ea05def23774027037bd42e53fc6da1a04b)" = "<none>"
 "checksum cose 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "72fa26cb151d3ae4b70f63d67d0fed57ce04220feafafbae7f503bef7aae590d"
 "checksum cose-c 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)" = "49726015ab0ca765144fcca61e4a7a543a16b795a777fa53f554da2fffff9a94"
 "checksum cranelift-bforest 0.32.0 (git+https://github.com/CraneStation/Cranelift?rev=312516a69da03dc06eace32f61412389a8dcadf3)" = "<none>"
