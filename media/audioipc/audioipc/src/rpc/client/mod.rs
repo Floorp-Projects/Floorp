@@ -39,19 +39,22 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
-use crate::rpc::driver::Driver;
-use crate::rpc::Handler;
 use futures::sync::oneshot;
 use futures::{Async, Future, Poll, Sink, Stream};
+use rpc::driver::Driver;
+use rpc::Handler;
 use std::collections::VecDeque;
 use std::io;
-use tokio::runtime::current_thread;
+use tokio_core::reactor::Handle;
 
 mod proxy;
 
 pub use self::proxy::{ClientProxy, Response};
 
-pub fn bind_client<C>(transport: C::Transport) -> proxy::ClientProxy<C::Request, C::Response>
+pub fn bind_client<C>(
+    transport: C::Transport,
+    handle: &Handle,
+) -> proxy::ClientProxy<C::Request, C::Response>
 where
     C: Client,
 {
@@ -59,7 +62,7 @@ where
 
     let fut = {
         let handler = ClientHandler::<C> {
-            transport,
+            transport: transport,
             requests: rx,
             in_flight: VecDeque::with_capacity(32),
         };
@@ -67,7 +70,7 @@ where
     };
 
     // Spawn the RPC driver into task
-    current_thread::spawn(fut.map_err(|_| ()));
+    handle.spawn(Box::new(fut.map_err(|_| ())));
 
     tx
 }

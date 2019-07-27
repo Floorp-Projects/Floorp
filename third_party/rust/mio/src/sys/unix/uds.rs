@@ -3,7 +3,6 @@ use std::mem;
 use std::net::Shutdown;
 use std::os::unix::prelude::*;
 use std::path::Path;
-use std::ptr;
 
 use libc;
 
@@ -114,8 +113,8 @@ impl UnixSocket {
     pub fn accept(&self) -> io::Result<UnixSocket> {
         unsafe {
             let fd = cvt(libc::accept(self.as_raw_fd(),
-                                           ptr::null_mut(),
-                                           ptr::null_mut()))?;
+                                           0 as *mut _,
+                                           0 as *mut _))?;
             let fd = Io::from_raw_fd(fd);
             set_cloexec(fd.as_raw_fd())?;
             set_nonblock(fd.as_raw_fd())?;
@@ -239,7 +238,7 @@ impl Evented for UnixSocket {
 
 impl From<Io> for UnixSocket {
     fn from(io: Io) -> UnixSocket {
-        UnixSocket { io }
+        UnixSocket { io: io }
     }
 }
 
