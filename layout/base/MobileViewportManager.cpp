@@ -92,7 +92,9 @@ mozilla::CSSToScreenScale MobileViewportManager::ComputeIntrinsicScale(
     const mozilla::ScreenIntSize& aDisplaySize,
     const mozilla::CSSSize& aViewportOrContentSize) const {
   CSSToScreenScale intrinsicScale =
-      MaxScaleRatio(ScreenSize(aDisplaySize), aViewportOrContentSize);
+      aViewportOrContentSize.IsEmpty()
+          ? CSSToScreenScale(1.0)
+          : MaxScaleRatio(ScreenSize(aDisplaySize), aViewportOrContentSize);
   MVM_LOG("%p: Intrinsic computed zoom is %f\n", this, intrinsicScale.scale);
   return ClampZoom(intrinsicScale, aViewportInfo);
 }
