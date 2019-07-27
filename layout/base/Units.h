@@ -784,6 +784,9 @@ gfx::MarginTyped<dst> operator/(const gfx::MarginTyped<src>& aMargin,
 template <class src, class dst>
 gfx::ScaleFactor<src, dst> MaxScaleRatio(const gfx::SizeTyped<dst>& aDestSize,
                                          const gfx::SizeTyped<src>& aSrcSize) {
+  MOZ_ASSERT(aSrcSize.width != 0 && aSrcSize.height != 0,
+             "Caller must verify aSrcSize has nonzero components, "
+             "to avoid division by 0 here");
   return gfx::ScaleFactor<src, dst>(std::max(
       aDestSize.width / aSrcSize.width, aDestSize.height / aSrcSize.height));
 }
@@ -791,6 +794,9 @@ gfx::ScaleFactor<src, dst> MaxScaleRatio(const gfx::SizeTyped<dst>& aDestSize,
 template <class src, class dst>
 gfx::ScaleFactor<src, dst> MinScaleRatio(const gfx::SizeTyped<dst>& aDestSize,
                                          const gfx::SizeTyped<src>& aSrcSize) {
+  MOZ_ASSERT(aSrcSize.width != 0 && aSrcSize.height != 0,
+             "Caller must verify aSrcSize has nonzero components, "
+             "to avoid division by 0 here");
   return gfx::ScaleFactor<src, dst>(std::min(
       aDestSize.width / aSrcSize.width, aDestSize.height / aSrcSize.height));
 }
