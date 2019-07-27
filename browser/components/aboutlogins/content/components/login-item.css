@@ -150,12 +150,12 @@
   color: var(--in-content-deemphasized-text);
 }
 
-.meta-info:first-of-type {
-  padding-top: 1em;
+.meta-info:first-of-type::before {
+  content: "";
+  display: block;
+  margin-bottom: 20px;
   border-top: 1px solid var(--in-content-box-border-color);
   width: 40px;
-  /* Show a non-full length border but constrain the text to this width */
-  white-space: nowrap;
 }
 
 :host(:not([editing])) input[name='password'] {
