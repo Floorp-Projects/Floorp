@@ -12,7 +12,7 @@
 
 [package]
 name = "bindgen"
-version = "0.49.2"
+version = "0.51.0"
 authors = ["Jyun-Yan You <jyyou.tw@gmail.com>", "Emilio Cobos Álvarez <emilio@crisal.io>", "Nick Fitzgerald <fitzgen@gmail.com>", "The Servo project developers"]
 build = "build.rs"
 include = ["LICENSE", "README.md", "Cargo.toml", "build.rs", "src/*.rs", "src/**/*.rs"]
@@ -32,6 +32,7 @@ path = "src/lib.rs"
 name = "bindgen"
 path = "src/main.rs"
 doc = false
+required-features = ["clap"]
 [dependencies.bitflags]
 version = "1.0.3"
 
@@ -47,6 +48,7 @@ features = ["runtime", "clang_6_0"]
 
 [dependencies.clap]
 version = "2"
+optional = true
 
 [dependencies.env_logger]
 version = "0.6"
@@ -91,7 +93,7 @@ version = "0.1"
 version = "0.1"
 
 [features]
-default = ["logging"]
+default = ["logging", "clap"]
 logging = ["env_logger", "log"]
 static = []
 testing_only_docs = []
