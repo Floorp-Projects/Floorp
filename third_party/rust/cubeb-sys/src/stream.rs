@@ -12,8 +12,10 @@ use std::os::raw::{c_float, c_int, c_uint, c_void};
 
 cubeb_enum! {
     pub enum cubeb_stream_prefs {
-        CUBEB_STREAM_PREF_NONE     = 0x00,
+        CUBEB_STREAM_PREF_NONE = 0x00,
         CUBEB_STREAM_PREF_LOOPBACK = 0x01,
+        CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING = 0x02,
+        CUBEB_STREAM_PREF_VOICE = 0x04,
     }
 }
 

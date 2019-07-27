@@ -4,6 +4,7 @@ pub const CLONE_FILES: usize = 0x400;
 pub const CLONE_SIGHAND: usize = 0x800;
 pub const CLONE_VFORK: usize = 0x4000;
 pub const CLONE_THREAD: usize = 0x10000;
+pub const CLONE_STACK: usize = 0x1000_0000;
 
 pub const CLOCK_REALTIME: usize = 1;
 pub const CLOCK_MONOTONIC: usize = 4;
@@ -22,8 +23,8 @@ pub const FUTEX_WAIT: usize = 0;
 pub const FUTEX_WAKE: usize = 1;
 pub const FUTEX_REQUEUE: usize = 2;
 
-pub const MAP_WRITE: usize = 1;
-pub const MAP_WRITE_COMBINE: usize = 2;
+pub const MAP_SHARED: usize = 0x0001;
+pub const MAP_PRIVATE: usize = 0x0002;
 
 pub const MODE_TYPE: u16 = 0xF000;
 pub const MODE_DIR: u16 = 0x4000;
@@ -54,6 +55,22 @@ pub const O_STAT: usize =       0x2000_0000;
 pub const O_SYMLINK: usize =    0x4000_0000;
 pub const O_NOFOLLOW: usize =   0x8000_0000;
 pub const O_ACCMODE: usize =    O_RDONLY | O_WRONLY | O_RDWR;
+
+pub const PHYSMAP_WRITE: usize = 0x0000_0001;
+pub const PHYSMAP_WRITE_COMBINE: usize = 0x0000_0002;
+pub const PHYSMAP_NO_CACHE: usize = 0x0000_0004;
+
+pub const PROT_NONE: usize = 0x0000_0000;
+pub const PROT_EXEC: usize = 0x0001_0000;
+pub const PROT_WRITE: usize = 0x0002_0000;
+pub const PROT_READ: usize = 0x0004_0000;
+
+pub const PTRACE_CONT: u8 = 0b0000_0001;
+pub const PTRACE_SINGLESTEP: u8 = 0b0000_0010;
+pub const PTRACE_SYSCALL: u8 = 0b0000_0011;
+pub const PTRACE_WAIT: u8 = 0b0000_0100;
+pub const PTRACE_OPERATIONMASK: u8 = 0b0000_1111;
+pub const PTRACE_SYSEMU: u8 = 0b0001_0000;
 
 pub const SEEK_SET: usize = 0;
 pub const SEEK_CUR: usize = 1;
@@ -94,6 +111,10 @@ pub const SIGSYS: usize =   31;
 pub const SIG_DFL: usize = 0;
 pub const SIG_IGN: usize = 1;
 
+pub const SIG_BLOCK: usize = 0;
+pub const SIG_UNBLOCK: usize = 1;
+pub const SIG_SETMASK: usize = 2;
+
 pub const SA_NOCLDSTOP: usize = 0x00000001;
 pub const SA_NOCLDWAIT: usize = 0x00000002;
 pub const SA_SIGINFO: usize =   0x00000004;
@@ -103,4 +124,46 @@ pub const SA_RESTART: usize =   0x10000000;
 pub const SA_NODEFER: usize =   0x40000000;
 pub const SA_RESETHAND: usize = 0x80000000;
 
-pub const WNOHANG: usize = 1;
+pub const WNOHANG: usize =    0x01;
+pub const WUNTRACED: usize =  0x02;
+pub const WCONTINUED: usize = 0x08;
+
+/// True if status indicates the child is stopped.
+pub fn wifstopped(status: usize) -> bool {
+    (status & 0xff) == 0x7f
+}
+
+/// If wifstopped(status), the signal that stopped the child.
+pub fn wstopsig(status: usize) -> usize {
+    (status >> 8) & 0xff
+}
+
+/// True if status indicates the child continued after a stop.
+pub fn wifcontinued(status: usize) -> bool {
+    status == 0xffff
+}
+
+/// True if STATUS indicates termination by a signal.
+pub fn wifsignaled(status: usize) -> bool {
+    ((status & 0x7f) + 1) as i8 >= 2
+}
+
+/// If wifsignaled(status), the terminating signal.
+pub fn wtermsig(status: usize) -> usize {
+    status & 0x7f
+}
+
+/// True if status indicates normal termination.
+pub fn wifexited(status: usize) -> bool {
+    wtermsig(status) == 0
+}
+
+/// If wifexited(status), the exit status.
+pub fn wexitstatus(status: usize) -> usize {
+    (status >> 8) & 0xff
+}
+
+/// True if status indicates a core dump was created.
+pub fn wcoredump(status: usize) -> bool {
+    (status & 0x80) != 0
+}

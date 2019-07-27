@@ -14,9 +14,6 @@
 #include <climits>
 #include <cmath>
 #include <cstdlib>
-#ifdef _MSC_VER
-#include <intrin.h>
-#endif
 #include <memory>
 #include <type_traits>
 #include "cubeb-internal.h"
@@ -80,8 +77,6 @@ unsigned int cubeb_channel_layout_nb_channels(cubeb_channel_layout x)
 {
 #if __GNUC__ || __clang__
   return __builtin_popcount (x);
-#elif _MSC_VER
-  return __popcnt(x);
 #else
   x -= (x >> 1) & 0x55555555;
   x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
@@ -90,6 +85,7 @@ unsigned int cubeb_channel_layout_nb_channels(cubeb_channel_layout x)
   return (x + (x >> 16)) & 0x3F;
 #endif
 }
+
 struct MixerContext {
   MixerContext(cubeb_sample_format f,
                uint32_t in_channels,
@@ -240,13 +236,8 @@ int MixerContext::auto_matrix()
       matrix[SIDE_LEFT][BACK_CENTER] += M_SQRT1_2;
       matrix[SIDE_RIGHT][BACK_CENTER] += M_SQRT1_2;
     } else if (out_ch_layout & CHANNEL_FRONT_LEFT) {
-      if (unaccounted & (CHANNEL_BACK_LEFT | CHANNEL_SIDE_LEFT)) {
-        matrix[FRONT_LEFT][BACK_CENTER] -= _surround_mix_level * M_SQRT1_2;
-        matrix[FRONT_RIGHT][BACK_CENTER] += _surround_mix_level * M_SQRT1_2;
-      } else {
-        matrix[FRONT_LEFT][BACK_CENTER] -= _surround_mix_level;
-        matrix[FRONT_RIGHT][BACK_CENTER] += _surround_mix_level;
-      }
+      matrix[FRONT_LEFT][BACK_CENTER] += _surround_mix_level * M_SQRT1_2;
+      matrix[FRONT_RIGHT][BACK_CENTER] += _surround_mix_level * M_SQRT1_2;
     } else if (out_ch_layout & CHANNEL_FRONT_CENTER) {
       matrix[FRONT_CENTER][BACK_CENTER] +=
         _surround_mix_level * M_SQRT1_2;
@@ -265,10 +256,8 @@ int MixerContext::auto_matrix()
         matrix[SIDE_RIGHT][BACK_RIGHT] += 1.0;
       }
     } else if (out_ch_layout & CHANNEL_FRONT_LEFT) {
-      matrix[FRONT_LEFT][BACK_LEFT] -= _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_LEFT][BACK_RIGHT] -= _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_RIGHT][BACK_LEFT] += _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_RIGHT][BACK_RIGHT] += _surround_mix_level * M_SQRT1_2;
+      matrix[FRONT_LEFT][BACK_LEFT] += _surround_mix_level;
+      matrix[FRONT_RIGHT][BACK_RIGHT] += _surround_mix_level;
     } else if (out_ch_layout & CHANNEL_FRONT_CENTER) {
       matrix[FRONT_CENTER][BACK_LEFT] += _surround_mix_level * M_SQRT1_2;
       matrix[FRONT_CENTER][BACK_RIGHT] += _surround_mix_level * M_SQRT1_2;
@@ -290,10 +279,8 @@ int MixerContext::auto_matrix()
       matrix[BACK_CENTER][SIDE_LEFT] += M_SQRT1_2;
       matrix[BACK_CENTER][SIDE_RIGHT] += M_SQRT1_2;
     } else if (out_ch_layout & CHANNEL_FRONT_LEFT) {
-      matrix[FRONT_LEFT][SIDE_LEFT] -= _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_LEFT][SIDE_RIGHT] -= _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_RIGHT][SIDE_LEFT] += _surround_mix_level * M_SQRT1_2;
-      matrix[FRONT_RIGHT][SIDE_RIGHT] += _surround_mix_level * M_SQRT1_2;
+      matrix[FRONT_LEFT][SIDE_LEFT] += _surround_mix_level;
+      matrix[FRONT_RIGHT][SIDE_RIGHT] += _surround_mix_level;
     } else if (out_ch_layout & CHANNEL_FRONT_CENTER) {
       matrix[FRONT_CENTER][SIDE_LEFT] += _surround_mix_level * M_SQRT1_2;
       matrix[FRONT_CENTER][SIDE_RIGHT] += _surround_mix_level * M_SQRT1_2;
@@ -529,6 +516,19 @@ struct cubeb_mixer
   {
     if (_context._in_ch_count <= _context._out_ch_count) {
       // Not enough channels to copy, fill the gaps with silence.
+      if (_context._in_ch_count == 1 && _context._out_ch_count >= 2) {
+        // Special case for upmixing mono input to stereo and more. We will
+        // duplicate the mono channel to the first two channels. On most system,
+        // the first two channels are for left and right. It is commonly
+        // expected that mono will on both left+right channels
+        for (uint32_t i = 0; i < frames; i++) {
+          output_buffer[0] = output_buffer[1] = *input_buffer;
+          PodZero(output_buffer + 2, _context._out_ch_count - 2);
+          output_buffer += _context._out_ch_count;
+          input_buffer++;
+        }
+        return;
+      }
       for (uint32_t i = 0; i < frames; i++) {
         PodCopy(output_buffer, input_buffer, _context._in_ch_count);
         output_buffer += _context._in_ch_count;

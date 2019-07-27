@@ -50,7 +50,6 @@
 #![cfg(windows)]
 #![deny(missing_docs)]
 
-extern crate kernel32;
 #[macro_use]
 extern crate log;
 extern crate mio;
@@ -72,7 +71,9 @@ use mio::windows;
 use mio::{Registration, Poll, Token, PollOpt, Ready, Evented, SetReadiness};
 use miow::iocp::CompletionStatus;
 use miow::pipe;
-use winapi::{ERROR_PIPE_LISTENING, OVERLAPPED_ENTRY, ERROR_BROKEN_PIPE};
+use winapi::shared::winerror::*;
+use winapi::um::ioapiset::*;
+use winapi::um::minwinbase::*;
 
 mod from_raw_arc;
 use from_raw_arc::FromRawArc;
@@ -198,7 +199,7 @@ impl NamedPipe {
         // connection attempt. Afterwards interpret the return value and set
         // internal state accordingly.
         let res = unsafe {
-            let overlapped = self.inner.connect.as_mut_ptr();
+            let overlapped = self.inner.connect.as_mut_ptr() as *mut _;
             self.inner.handle.connect_overlapped(overlapped)
         };
 
@@ -426,10 +427,12 @@ impl FromRawHandle for NamedPipe {
             inner: FromRawArc::new(Inner {
                 handle: pipe::NamedPipe::from_raw_handle(handle),
                 readiness: s,
-                connect: windows::Overlapped::new(connect_done),
                 connecting: AtomicBool::new(false),
-                read: windows::Overlapped::new(read_done),
-                write: windows::Overlapped::new(write_done),
+                // transmutes to straddle winapi versions (mio 0.6 is on an
+                // older winapi)
+                connect: windows::Overlapped::new(mem::transmute(connect_done as fn(_))),
+                read: windows::Overlapped::new(mem::transmute(read_done as fn(_))),
+                write: windows::Overlapped::new(mem::transmute(write_done as fn(_))),
                 io: Mutex::new(Io {
                     read: State::None,
                     write: State::None,
@@ -490,7 +493,7 @@ impl Inner {
         // TODO: need to be smarter about buffer management here
         let mut buf = Vec::with_capacity(8 * 1024);
         let e = unsafe {
-            let overlapped = me.read.as_mut_ptr();
+            let overlapped = me.read.as_mut_ptr() as *mut _;
             let slice = slice::from_raw_parts_mut(buf.as_mut_ptr(),
                                                   buf.capacity());
             me.handle.read_overlapped(slice, overlapped)
@@ -533,7 +536,7 @@ impl Inner {
                     .expect("event loop seems gone");
 
         let e = unsafe {
-            let overlapped = me.write.as_mut_ptr();
+            let overlapped = me.write.as_mut_ptr() as *mut _;
             me.handle.write_overlapped(&buf[pos..], overlapped)
         };
 
@@ -569,8 +572,7 @@ impl Inner {
 
 unsafe fn cancel(handle: &AsRawHandle,
                  overlapped: &windows::Overlapped) -> io::Result<()> {
-    let ret = kernel32::CancelIoEx(handle.as_raw_handle(),
-                                   overlapped.as_mut_ptr());
+    let ret = CancelIoEx(handle.as_raw_handle(), overlapped.as_mut_ptr() as *mut _);
     if ret == 0 {
         Err(io::Error::last_os_error())
     } else {

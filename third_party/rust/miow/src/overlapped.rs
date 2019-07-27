@@ -1,11 +1,24 @@
+use std::fmt;
+use std::io;
 use std::mem;
+use std::ptr;
 
-use winapi::*;
+use winapi::shared::ntdef::{
+    HANDLE,
+    NULL,
+};
+use winapi::um::minwinbase::*;
+use winapi::um::synchapi::*;
 
 /// A wrapper around `OVERLAPPED` to provide "rustic" accessors and
 /// initializers.
-#[derive(Debug)]
 pub struct Overlapped(OVERLAPPED);
+
+impl fmt::Debug for Overlapped {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "OVERLAPPED")
+    }
+}
 
 unsafe impl Send for Overlapped {}
 unsafe impl Sync for Overlapped {}
@@ -17,6 +30,20 @@ impl Overlapped {
     /// notified via an I/O Completion Port.
     pub fn zero() -> Overlapped {
         Overlapped(unsafe { mem::zeroed() })
+    }
+
+    /// Creates a new `Overlapped` with an initialized non-null `hEvent`.  The caller is
+    /// responsible for calling `CloseHandle` on the `hEvent` field of the returned
+    /// `Overlapped`.  The event is created with `bManualReset` set to `FALSE`, meaning after a
+    /// single thread waits on the event, it will be reset.
+    pub fn initialize_with_autoreset_event() -> io::Result<Overlapped> {
+        let event = unsafe {CreateEventW(ptr::null_mut(), 0i32, 0i32, ptr::null())};
+        if event == NULL {
+            return Err(io::Error::last_os_error());
+        }
+        let mut overlapped = Self::zero();
+        overlapped.set_event(event);
+        Ok(overlapped)
     }
 
     /// Creates a new `Overlapped` function pointer from the underlying
@@ -43,13 +70,15 @@ impl Overlapped {
     /// handles that are on a seeking device that supports the concept of an
     /// offset.
     pub fn set_offset(&mut self, offset: u64) {
-        self.0.Offset = offset as u32;
-        self.0.OffsetHigh = (offset >> 32) as u32;
+        let s = unsafe { self.0.u.s_mut() };
+        s.Offset = offset as u32;
+        s.OffsetHigh = (offset >> 32) as u32;
     }
 
     /// Reads the offset inside this overlapped structure.
     pub fn offset(&self) -> u64 {
-        (self.0.Offset as u64) | ((self.0.OffsetHigh as u64) << 32)
+        let s = unsafe { self.0.u.s() };
+        (s.Offset as u64) | ((s.OffsetHigh as u64) << 32)
     }
 
     /// Sets the `hEvent` field of this structure.
