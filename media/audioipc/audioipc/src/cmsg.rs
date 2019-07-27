@@ -111,7 +111,6 @@ impl ControlMsgBuilder {
             // that, just use a pre-zeroed struct to fill out any
             // fields we don't care about.
             let zeroed = unsafe { mem::zeroed() };
-            #[allow(clippy::needless_update)]
             let cmsghdr = cmsghdr {
                 cmsg_len: cmsg_len as _,
                 cmsg_level: level,
@@ -123,7 +122,7 @@ impl ControlMsgBuilder {
                 slice::from_raw_parts(&cmsghdr as *const _ as *const _, mem::size_of::<cmsghdr>())
             };
             cmsg.put_slice(cmsghdr);
-            let mut cmsg = align_buf(cmsg)?;
+            let mut cmsg = try!(align_buf(cmsg));
             cmsg.put_slice(msg);
 
             Ok(cmsg)

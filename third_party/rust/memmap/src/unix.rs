@@ -1,21 +1,15 @@
 extern crate libc;
 
+use std::{io, ptr};
 use std::fs::File;
 use std::os::unix::io::{AsRawFd, RawFd};
-use std::{io, ptr};
 
-#[cfg(any(
-    all(target_os = "linux", not(target_arch = "mips")),
-    target_os = "freebsd",
-    target_os = "android"
-))]
+#[cfg(any(all(target_os = "linux", not(target_arch = "mips")), target_os = "freebsd",
+          target_os = "android"))]
 const MAP_STACK: libc::c_int = libc::MAP_STACK;
 
-#[cfg(not(any(
-    all(target_os = "linux", not(target_arch = "mips")),
-    target_os = "freebsd",
-    target_os = "android"
-)))]
+#[cfg(not(any(all(target_os = "linux", not(target_arch = "mips")), target_os = "freebsd",
+              target_os = "android")))]
 const MAP_STACK: libc::c_int = 0;
 
 pub struct MmapInner {
@@ -32,11 +26,11 @@ impl MmapInner {
         prot: libc::c_int,
         flags: libc::c_int,
         file: RawFd,
-        offset: u64,
+        offset: usize,
     ) -> io::Result<MmapInner> {
-        let alignment = offset % page_size() as u64;
+        let alignment = offset % page_size();
         let aligned_offset = offset - alignment;
-        let aligned_len = len + alignment as usize;
+        let aligned_len = len + alignment;
         if aligned_len == 0 {
             // Normally the OS would catch this, but it segfaults under QEMU.
             return Err(io::Error::new(
@@ -66,7 +60,7 @@ impl MmapInner {
         }
     }
 
-    pub fn map(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         MmapInner::new(
             len,
             libc::PROT_READ,
@@ -76,7 +70,7 @@ impl MmapInner {
         )
     }
 
-    pub fn map_exec(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_exec(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_EXEC,
@@ -86,7 +80,7 @@ impl MmapInner {
         )
     }
 
-    pub fn map_mut(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_mut(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,
@@ -96,7 +90,7 @@ impl MmapInner {
         )
     }
 
-    pub fn map_copy(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_copy(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         MmapInner::new(
             len,
             libc::PROT_READ | libc::PROT_WRITE,

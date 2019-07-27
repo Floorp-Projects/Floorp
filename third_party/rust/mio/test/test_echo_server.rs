@@ -19,7 +19,7 @@ struct EchoConn {
 impl EchoConn {
     fn new(sock: TcpStream) -> EchoConn {
         EchoConn {
-            sock,
+            sock: sock,
             buf: None,
             mut_buf: Some(ByteBuf::mut_with_capacity(2048)),
             token: None,
@@ -100,7 +100,7 @@ impl EchoServer {
         self.conns[tok].token = Some(Token(tok));
         poll.register(&self.conns[tok].sock, Token(tok), Ready::readable(),
                                 PollOpt::edge() | PollOpt::oneshot())
-            .expect("could not register socket with event loop");
+            .ok().expect("could not register socket with event loop");
 
         Ok(())
     }
@@ -117,7 +117,7 @@ impl EchoServer {
         self.conn(tok).writable(poll)
     }
 
-    fn conn(&mut self, tok: Token) -> &mut EchoConn {
+    fn conn<'a>(&'a mut self, tok: Token) -> &'a mut EchoConn {
         &mut self.conns[tok.into()]
     }
 }
@@ -136,16 +136,16 @@ struct EchoClient {
 
 // Sends a message and expects to receive the same exact message, one at a time
 impl EchoClient {
-    fn new(sock: TcpStream, token: Token,  mut msgs: Vec<&'static str>) -> EchoClient {
+    fn new(sock: TcpStream, tok: Token,  mut msgs: Vec<&'static str>) -> EchoClient {
         let curr = msgs.remove(0);
 
         EchoClient {
-            sock,
-            msgs,
+            sock: sock,
+            msgs: msgs,
             tx: SliceBuf::wrap(curr.as_bytes()),
             rx: SliceBuf::wrap(curr.as_bytes()),
             mut_buf: Some(ByteBuf::mut_with_capacity(2048)),
-            token,
+            token: tok,
             interest: Ready::empty(),
             shutdown: false,
         }

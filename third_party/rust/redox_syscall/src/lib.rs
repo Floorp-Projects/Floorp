@@ -1,9 +1,8 @@
+#![deny(warnings)]
 #![feature(asm)]
 #![feature(const_fn)]
-#![cfg_attr(not(test), no_std)]
-
-#[cfg(test)]
-extern crate core;
+#![feature(core_intrinsics)]
+#![no_std]
 
 pub use self::arch::*;
 pub use self::call::*;
@@ -14,24 +13,16 @@ pub use self::io::*;
 pub use self::number::*;
 pub use self::scheme::*;
 
-#[cfg(all(target_os = "redox", target_arch = "arm"))]
+#[cfg(target_arch = "arm")]
 #[path="arch/arm.rs"]
 mod arch;
 
-#[cfg(all(target_os = "redox", target_arch = "aarch64"))]
-#[path="arch/aarch64.rs"]
-mod arch;
-
-#[cfg(all(target_os = "redox", target_arch = "x86"))]
+#[cfg(target_arch = "x86")]
 #[path="arch/x86.rs"]
 mod arch;
 
-#[cfg(all(target_os = "redox", target_arch = "x86_64"))]
+#[cfg(target_arch = "x86_64")]
 #[path="arch/x86_64.rs"]
-mod arch;
-
-#[cfg(not(target_os = "redox"))]
-#[path="arch/nonredox.rs"]
 mod arch;
 
 /// Function definitions
@@ -54,6 +45,3 @@ pub mod number;
 
 /// A trait useful for scheme handlers
 pub mod scheme;
-
-#[cfg(test)]
-mod tests;

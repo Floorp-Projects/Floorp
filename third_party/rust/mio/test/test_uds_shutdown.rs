@@ -105,7 +105,7 @@ impl EchoServer {
         self.conns[tok].token = Some(Token(tok));
         event_loop.register(&self.conns[tok].sock, Token(tok), Ready::readable(),
                                 PollOpt::edge() | PollOpt::oneshot())
-            .expect("could not register socket with event loop");
+            .ok().expect("could not register socket with event loop");
 
         Ok(())
     }

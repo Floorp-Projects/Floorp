@@ -319,9 +319,7 @@ impl TcpStream {
     #[cfg(feature = "with-deprecated")]
     #[doc(hidden)]
     pub fn set_keepalive_ms(&self, keepalive: Option<u32>) -> io::Result<()> {
-        self.set_keepalive(keepalive.map(|v| {
-            Duration::from_millis(u64::from(v))
-        }))
+        self.set_keepalive(keepalive.map(|v| Duration::from_millis(v as u64)))
     }
 
     #[deprecated(since = "0.6.9", note = "use keepalive")]
@@ -484,7 +482,7 @@ impl fmt::Debug for TcpStream {
 /// let mut events = Events::with_capacity(128);
 ///
 /// // Register the socket with `Poll`
-/// poll.register(&listener, Token(0), Ready::readable(),
+/// poll.register(&listener, Token(0), Ready::writable(),
 ///               PollOpt::edge())?;
 ///
 /// poll.poll(&mut events, Some(Duration::from_millis(100)))?;

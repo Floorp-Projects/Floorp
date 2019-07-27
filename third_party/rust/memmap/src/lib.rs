@@ -1,6 +1,6 @@
 //! A cross-platform Rust API for memory mapped buffers.
 
-#![doc(html_root_url = "https://docs.rs/memmap/0.7.0")]
+#![doc(html_root_url = "https://docs.rs/memmap/0.6.2")]
 
 #[cfg(windows)]
 extern crate winapi;
@@ -17,9 +17,9 @@ use unix::MmapInner;
 use std::fmt;
 use std::fs::File;
 use std::io::{Error, ErrorKind, Result};
-use std::ops::{Deref, DerefMut};
 use std::slice;
 use std::usize;
+use std::ops::{Deref, DerefMut};
 
 /// A memory map builder, providing advanced options and flags for specifying memory map behavior.
 ///
@@ -28,7 +28,7 @@ use std::usize;
 /// `MmapOptions::map_exec`, or `MmapOptions::map_copy`.
 #[derive(Clone, Debug, Default)]
 pub struct MmapOptions {
-    offset: u64,
+    offset: usize,
     len: Option<usize>,
     stack: bool,
 }
@@ -42,7 +42,7 @@ impl MmapOptions {
     /// use memmap::{MmapMut, MmapOptions};
     /// # use std::io::Result;
     ///
-    /// # fn main() -> Result<()> {
+    /// # fn try_main() -> Result<()> {
     /// // Create a new memory map builder.
     /// let mut mmap_options = MmapOptions::new();
     ///
@@ -56,6 +56,7 @@ impl MmapOptions {
     /// # let _ = mmap_options;
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn new() -> MmapOptions {
         MmapOptions::default()
@@ -73,7 +74,7 @@ impl MmapOptions {
     /// use memmap::MmapOptions;
     /// use std::fs::File;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let mmap = unsafe {
     ///     MmapOptions::new()
     ///                 .offset(10)
@@ -83,8 +84,9 @@ impl MmapOptions {
     ///            &mmap[..51]);
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
-    pub fn offset(&mut self, offset: u64) -> &mut Self {
+    pub fn offset(&mut self, offset: usize) -> &mut Self {
         self.offset = offset;
         self
     }
@@ -101,7 +103,7 @@ impl MmapOptions {
     /// use memmap::MmapOptions;
     /// use std::fs::File;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let mmap = unsafe {
     ///     MmapOptions::new()
     ///                 .len(8)
@@ -110,6 +112,7 @@ impl MmapOptions {
     /// assert_eq!(&b"# memmap"[..], &mmap[..]);
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn len(&mut self, len: usize) -> &mut Self {
         self.len = Some(len);
@@ -119,14 +122,14 @@ impl MmapOptions {
     /// Returns the configured length, or the length of the provided file.
     fn get_len(&self, file: &File) -> Result<usize> {
         self.len.map(Ok).unwrap_or_else(|| {
-            let len = file.metadata()?.len() - self.offset;
+            let len = file.metadata()?.len();
             if len > (usize::MAX as u64) {
                 return Err(Error::new(
                     ErrorKind::InvalidData,
-                    "memory map length overflows usize",
+                    "file length overflows usize",
                 ));
             }
-            Ok(len as usize)
+            Ok(len as usize - self.offset)
         })
     }
 
@@ -141,10 +144,11 @@ impl MmapOptions {
     /// ```
     /// use memmap::MmapOptions;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let stack = MmapOptions::new().stack().len(4096).map_anon();
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn stack(&mut self) -> &mut Self {
         self.stack = true;
@@ -165,7 +169,7 @@ impl MmapOptions {
     /// use std::fs::File;
     /// use std::io::Read;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let mut file = File::open("README.md")?;
     ///
     /// let mut contents = Vec::new();
@@ -178,6 +182,7 @@ impl MmapOptions {
     /// assert_eq!(&contents[..], &mmap[..]);
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub unsafe fn map(&self, file: &File) -> Result<Mmap> {
         MmapInner::map(self.get_len(file)?, file, self.offset).map(|inner| Mmap { inner: inner })
@@ -212,7 +217,7 @@ impl MmapOptions {
     ///
     /// use memmap::MmapOptions;
     /// #
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// # let tempdir = tempdir::TempDir::new("mmap")?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("map_mut");
@@ -226,6 +231,7 @@ impl MmapOptions {
     /// mmap.copy_from_slice(b"Hello, world!");
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub unsafe fn map_mut(&self, file: &File) -> Result<MmapMut> {
         MmapInner::map_mut(self.get_len(file)?, file, self.offset)
@@ -249,12 +255,13 @@ impl MmapOptions {
     /// use std::fs::File;
     /// use std::io::Write;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let file = File::open("README.md")?;
     /// let mut mmap = unsafe { MmapOptions::new().map_copy(&file)? };
     /// (&mut mmap[..]).write_all(b"Hello, world!")?;
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub unsafe fn map_copy(&self, file: &File) -> Result<MmapMut> {
         MmapInner::map_copy(self.get_len(file)?, file, self.offset)
@@ -289,12 +296,13 @@ impl MmapOptions {
 /// use std::io::Write;
 /// use std::fs::File;
 ///
-/// # fn main() -> std::io::Result<()> {
+/// # fn try_main() -> std::io::Result<()> {
 /// let file = File::open("README.md")?;
 /// let mmap = unsafe { MmapOptions::new().map(&file)? };
 /// assert_eq!(b"# memmap", &mmap[0..8]);
 /// # Ok(())
 /// # }
+/// # fn main() { try_main().unwrap(); }
 /// ```
 ///
 /// See `MmapMut` for the mutable version.
@@ -320,7 +328,7 @@ impl Mmap {
     ///
     /// use memmap::Mmap;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let mut file = File::open("README.md")?;
     ///
     /// let mut contents = Vec::new();
@@ -331,6 +339,7 @@ impl Mmap {
     /// assert_eq!(&contents[..], &mmap[..]);
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub unsafe fn map(file: &File) -> Result<Mmap> {
         MmapOptions::new().map(file)
@@ -356,7 +365,7 @@ impl Mmap {
     /// use std::io::Write;
     /// # use std::fs::OpenOptions;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// # let tempdir = tempdir::TempDir::new("mmap")?;
     /// let file = /* file opened with write permissions */
     /// #          OpenOptions::new()
@@ -372,6 +381,7 @@ impl Mmap {
     /// mut_mmap.deref_mut().write_all(b"hello, world!")?;
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn make_mut(mut self) -> Result<MmapMut> {
         self.inner.make_mut()?;
@@ -436,7 +446,7 @@ impl MmapMut {
     ///
     /// use memmap::MmapMut;
     /// #
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// # let tempdir = tempdir::TempDir::new("mmap")?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("map_mut");
@@ -452,6 +462,7 @@ impl MmapMut {
     /// mmap.copy_from_slice(b"Hello, world!");
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub unsafe fn map_mut(file: &File) -> Result<MmapMut> {
         MmapOptions::new().map_mut(file)
@@ -486,7 +497,7 @@ impl MmapMut {
     ///
     /// use memmap::MmapMut;
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// # let tempdir = tempdir::TempDir::new("mmap")?;
     /// let path: PathBuf = /* path to file */
     /// #   tempdir.path().join("flush");
@@ -499,6 +510,7 @@ impl MmapMut {
     /// mmap.flush()?;
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn flush(&self) -> Result<()> {
         let len = self.len();
@@ -560,7 +572,7 @@ impl MmapMut {
     ///
     /// use memmap::{Mmap, MmapMut};
     ///
-    /// # fn main() -> std::io::Result<()> {
+    /// # fn try_main() -> std::io::Result<()> {
     /// let mut mmap = MmapMut::map_anon(128)?;
     ///
     /// (&mut mmap[..]).write(b"Hello, world!")?;
@@ -568,6 +580,7 @@ impl MmapMut {
     /// let mmap: Mmap = mmap.make_read_only()?;
     /// # Ok(())
     /// # }
+    /// # fn main() { try_main().unwrap(); }
     /// ```
     pub fn make_read_only(mut self) -> Result<Mmap> {
         self.inner.make_read_only()?;
@@ -635,9 +648,9 @@ mod test {
     extern crate winapi;
 
     use std::fs::OpenOptions;
-    use std::io::{Read, Write};
     #[cfg(windows)]
     use std::os::windows::fs::OpenOptionsExt;
+    use std::io::{Read, Write};
     use std::sync::Arc;
     use std::thread;
 
@@ -816,15 +829,11 @@ mod test {
             .open(&path)
             .unwrap();
 
-        let offset = u32::max_value() as u64 + 2;
-        let len = 5432;
-        file.set_len(offset + len as u64).unwrap();
+        file.set_len(500000 as u64).unwrap();
 
-        // Check inferred length mmap.
-        let mmap = unsafe { MmapOptions::new().offset(offset).map_mut(&file).unwrap() };
-        assert_eq!(len, mmap.len());
+        let offset = 5099;
+        let len = 50050;
 
-        // Check explicit length mmap.
         let mut mmap = unsafe {
             MmapOptions::new()
                 .offset(offset)
