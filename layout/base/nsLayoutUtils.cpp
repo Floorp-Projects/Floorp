@@ -10154,13 +10154,25 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
       (rotate.auto_ ? directionAngle : 0.0) + rotate.angle.ToRadians());
 
   // Compute the offset for motion path translate.
-  // We need to resolve transform-origin here to calculate the correct path
-  // translate. (i.e. Center transform-origin on the path.)
+  // Per the spec, the default offset-anchor is `auto`, and in this case,
+  // we should use transform-origin as the anchor point.
   TransformReferenceBox refBox(aFrame);
   auto& transformOrigin = display->mTransformOrigin;
-  CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
+  CSSPoint anchorPoint = nsStyleTransformMatrix::Convert2DPosition(
       transformOrigin.horizontal, transformOrigin.vertical, refBox);
+  // SVG frames (unlike other frames) have a reference box that can be (and
+  // typically is) offset from the TopLeft() of the frame.
+  // In motion path, we have to make sure the object is aligned with offset-path
+  // when using content area, so we should tweak the anchor point by the offset.
+  // Note: This may need to be updated if we support more transform-box.
+  if ((aFrame->GetStateBits() & NS_FRAME_SVG_LAYOUT) &&
+      display->mTransformBox != StyleGeometryBox::ViewBox &&
+      display->mTransformBox != StyleGeometryBox::BorderBox) {
+    anchorPoint.x += CSSPixel::FromAppUnits(aFrame->GetPosition().x);
+    anchorPoint.y += CSSPixel::FromAppUnits(aFrame->GetPosition().y);
+  }
+
   // Bug 1186329: the translate parameters will be adjusted more after we
   // implement offset-position and offset-anchor.
-  return Some(MotionPathData{point - origin.ToUnknownPoint(), angle});
+  return Some(MotionPathData{point - anchorPoint.ToUnknownPoint(), angle});
 }
