@@ -24,8 +24,8 @@ struct TestHandler {
 impl TestHandler {
     fn new(srv: TcpListener, cli: TcpStream) -> TestHandler {
         TestHandler {
-            srv,
-            cli,
+            srv: srv,
+            cli: cli,
             state: Initial,
             shutdown: false,
         }

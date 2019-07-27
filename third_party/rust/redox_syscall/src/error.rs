@@ -28,8 +28,12 @@ impl Error {
         }
     }
 
-    pub fn text(&self) -> &'static str {
-        STR_ERROR.get(self.errno as usize).map(|&x| x).unwrap_or("Unknown Error")
+    pub fn text(&self) -> &str {
+        if let Some(description) = STR_ERROR.get(self.errno as usize) {
+            description
+        } else {
+            "Unknown Error"
+        }
     }
 }
 
