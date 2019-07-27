@@ -70,5 +70,4 @@ git = "https://github.com/CraneStation/Cranelift"
 rev = "312516a69da03dc06eace32f61412389a8dcadf3"
 
 [patch.crates-io.coreaudio-sys]
-git = "https://github.com/ChunMinChang/coreaudio-sys"
-rev = "b1fe5ea05def23774027037bd42e53fc6da1a04b"
+path = "third_party/rust/coreaudio-sys"

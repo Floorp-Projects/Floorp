@@ -31,7 +31,7 @@ where
                 .help("The default style of code used to generate enums.")
                 .value_name("variant")
                 .default_value("consts")
-                .possible_values(&["consts", "moduleconsts", "bitfield", "rust"])
+                .possible_values(&["consts", "moduleconsts", "bitfield", "rust", "rust_non_exhaustive"])
                 .multiple(false),
             Arg::with_name("bitfield-enum")
                 .long("bitfield-enum")
