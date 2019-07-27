@@ -6,20 +6,17 @@ authors = [
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
         ]
 description = "Remote cubeb server"
+edition = "2018"
 
 [dependencies]
+audio_thread_priority = "0.15.0"
 audioipc = { path = "../audioipc" }
-cubeb-core = "0.5.4"
-bytes = "0.4"
-lazycell = "^0.4"
-libc = "0.2"
+cubeb-core = "0.5.5"
+futures = "0.1.18"
+lazy_static = "1.2.0"
 log = "0.4"
 slab = "0.3.0"
-futures = "0.1.18"
-tokio-core = "0.1"
-tokio-uds = "0.1.7"
-audio_thread_priority = "0.15.0"
-lazy_static = "1.2.0"
+tokio = "0.1"
 
 [dependencies.error-chain]
 version = "0.11.0"

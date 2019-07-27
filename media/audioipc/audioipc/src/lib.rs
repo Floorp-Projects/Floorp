@@ -2,36 +2,20 @@
 //
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
-
+#![warn(unused_extern_crates)]
 #![recursion_limit = "1024"]
 #[macro_use]
 extern crate error_chain;
-
 #[macro_use]
 extern crate log;
-
 #[macro_use]
 extern crate serde_derive;
-
-extern crate bincode;
-extern crate bytes;
-extern crate cubeb;
 #[macro_use]
 extern crate futures;
-extern crate iovec;
-extern crate libc;
-extern crate memmap;
-#[macro_use]
-extern crate scoped_tls;
-extern crate serde;
-extern crate tokio_core;
 #[macro_use]
 extern crate tokio_io;
-extern crate tokio_uds;
-#[cfg(windows)]
-extern crate winapi;
 
-mod async;
+mod async_msg;
 #[cfg(unix)]
 mod cmsg;
 pub mod codec;
@@ -41,7 +25,7 @@ pub mod errors;
 #[cfg(unix)]
 pub mod fd_passing;
 #[cfg(unix)]
-pub use fd_passing as platformhandle_passing;
+pub use crate::fd_passing as platformhandle_passing;
 #[cfg(windows)]
 pub mod handle_passing;
 #[cfg(windows)]
@@ -53,14 +37,21 @@ mod msg;
 pub mod rpc;
 pub mod shm;
 
-pub use messages::{ClientMessage, ServerMessage};
+// TODO: Remove local fork when https://github.com/tokio-rs/tokio/pull/1294 is resolved.
+#[cfg(unix)]
+mod tokio_uds_stream;
+
+pub use crate::messages::{ClientMessage, ServerMessage};
 use std::env::temp_dir;
 use std::path::PathBuf;
 
-#[cfg(windows)]
-use std::os::windows::io::{FromRawHandle, IntoRawHandle};
+// TODO: Remove hardcoded size and allow allocation based on cubeb backend requirements.
+pub const SHM_AREA_SIZE: usize = 2 * 1024 * 1024;
+
 #[cfg(unix)]
 use std::os::unix::io::{FromRawFd, IntoRawFd};
+#[cfg(windows)]
+use std::os::windows::io::{FromRawHandle, IntoRawHandle};
 
 // This must match the definition of
 // ipc::FileDescriptor::PlatformHandleType in Gecko.
@@ -93,7 +84,7 @@ struct PlatformHandleVisitor;
 impl<'de> serde::de::Visitor<'de> for PlatformHandleVisitor {
     type Value = PlatformHandle;
 
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str("an integer between -2^63 and 2^63")
     }
 
@@ -158,7 +149,7 @@ impl PlatformHandle {
         std::fs::File::from_raw_fd(self.0)
     }
 
-    pub fn as_raw(&self) -> PlatformHandleType {
+    pub fn as_raw(self) -> PlatformHandleType {
         self.0
     }
 
@@ -187,11 +178,9 @@ pub fn get_shm_path(dir: &str) -> PathBuf {
 #[cfg(unix)]
 pub mod messagestream_unix;
 #[cfg(unix)]
-pub use messagestream_unix::*;
+pub use crate::messagestream_unix::*;
 
 #[cfg(windows)]
 pub mod messagestream_win;
 #[cfg(windows)]
 pub use messagestream_win::*;
-#[cfg(windows)]
-mod tokio_named_pipes;
