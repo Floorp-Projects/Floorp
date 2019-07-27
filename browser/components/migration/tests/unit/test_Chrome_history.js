@@ -78,6 +78,13 @@ async function setVisitTimes(time) {
   await dbConn.close();
 }
 
+function setExpectedVisitTimes(time) {
+  for (let urlInfo of TEST_URLS) {
+    urlInfo.last_visit_time = time;
+    urlInfo.visits[0].visit_time = time;
+  }
+}
+
 function assertEntryMatches(entry, urlInfo, dateWasInFuture = false) {
   info(`Checking url: ${urlInfo.url}`);
   Assert.ok(entry, `Should have stored an entry`);
@@ -146,6 +153,11 @@ add_task(async function setup() {
 add_task(async function test_import() {
   setupHistoryFile();
   await PlacesUtils.history.clear();
+  // Update to ~10 days ago since the date can't be too old or Places may expire it.
+  const pastDate = new Date(new Date().getTime() - 1000 * 60 * 60 * 24 * 10);
+  const pastChromeTime = ChromeMigrationUtils.dateToChromeTime(pastDate);
+  await setVisitTimes(pastChromeTime);
+  setExpectedVisitTimes(pastChromeTime);
 
   let migrator = await MigrationUtils.getMigrator("chrome");
   Assert.ok(
