@@ -410,7 +410,7 @@ impl CodeGenerator for Module {
                     utils::prepend_objc_header(ctx, &mut *result);
                 }
                 if result.saw_bitfield_unit {
-                    utils::prepend_bitfield_unit_type(&mut *result);
+                    utils::prepend_bitfield_unit_type(ctx, &mut *result);
                 }
             }
         };
@@ -2170,7 +2170,10 @@ impl MethodCodegen for Method {
 #[derive(Copy, Clone, PartialEq, Debug)]
 pub enum EnumVariation {
     /// The code for this enum will use a Rust enum
-    Rust,
+    Rust {
+        /// Indicates whether the generated struct should be #[non_exhaustive]
+        non_exhaustive: bool
+    },
     /// The code for this enum will use a bitfield
     Bitfield,
     /// The code for this enum will use consts
@@ -2182,14 +2185,7 @@ pub enum EnumVariation {
 impl EnumVariation {
     fn is_rust(&self) -> bool {
         match *self {
-            EnumVariation::Rust => true,
-            _ => false
-        }
-    }
-
-    fn is_bitfield(&self) -> bool {
-        match *self {
-            EnumVariation::Bitfield {..} => true,
+            EnumVariation::Rust{ .. } => true,
             _ => false
         }
     }
@@ -2216,13 +2212,14 @@ impl std::str::FromStr for EnumVariation {
     /// Create a `EnumVariation` from a string.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "rust" => Ok(EnumVariation::Rust),
+            "rust" => Ok(EnumVariation::Rust{ non_exhaustive: false }),
+            "rust_non_exhaustive" => Ok(EnumVariation::Rust{ non_exhaustive: true }),
             "bitfield" => Ok(EnumVariation::Bitfield),
             "consts" => Ok(EnumVariation::Consts),
             "moduleconsts" => Ok(EnumVariation::ModuleConsts),
             _ => Err(std::io::Error::new(std::io::ErrorKind::InvalidInput,
                                          concat!("Got an invalid EnumVariation. Accepted values ",
-                                                 "are 'rust', 'bitfield', 'consts', and ",
+                                                 "are 'rust', 'rust_non_exhaustive', 'bitfield', 'consts', and ",
                                                  "'moduleconsts'."))),
         }
     }
@@ -2288,7 +2285,7 @@ impl<'a> EnumBuilder<'a> {
                 }
             }
 
-            EnumVariation::Rust => {
+            EnumVariation::Rust { .. } => {
                 let tokens = quote!();
                 EnumBuilder::Rust {
                     codegen_depth: enum_codegen_depth + 1,
@@ -2580,15 +2577,24 @@ impl CodeGenerator for Enum {
         let variation = self.computed_enum_variation(ctx, item);
 
         // TODO(emilio): Delegate this to the builders?
-        if variation.is_rust() {
-            attrs.push(attributes::repr(repr_name));
-        } else if variation.is_bitfield() {
-            if ctx.options().rust_features.repr_transparent {
-                attrs.push(attributes::repr("transparent"));
-            } else {
-                attrs.push(attributes::repr("C"));
-            }
-        }
+        match variation {
+            EnumVariation::Rust { non_exhaustive } => {
+                attrs.push(attributes::repr(repr_name));
+                if non_exhaustive && ctx.options().rust_features().non_exhaustive {
+                    attrs.push(attributes::non_exhaustive());
+                } else if non_exhaustive && !ctx.options().rust_features().non_exhaustive {
+                    panic!("The rust target you're using doesn't seem to support non_exhaustive enums");
+                }
+            },
+            EnumVariation::Bitfield => {
+                if ctx.options().rust_features.repr_transparent {
+                    attrs.push(attributes::repr("transparent"));
+                } else {
+                    attrs.push(attributes::repr("C"));
+                }
+            },
+            _ => {},
+        };
 
         if let Some(comment) = item.comment(ctx) {
             attrs.push(attributes::doc(comment));
@@ -3054,8 +3060,9 @@ impl TryToRustTy for Type {
                     IntKind::ULong => Ok(raw_type(ctx, "c_ulong")),
                     IntKind::LongLong => Ok(raw_type(ctx, "c_longlong")),
                     IntKind::ULongLong => Ok(raw_type(ctx, "c_ulonglong")),
-                    IntKind::WChar { size } => {
-                        let ty = Layout::known_type_for_size(ctx, size)
+                    IntKind::WChar => {
+                        let layout = self.layout(ctx).expect("Couldn't compute wchar_t's layout?");
+                        let ty = Layout::known_type_for_size(ctx, layout.size)
                             .expect("Non-representable wchar_t?");
                         let ident = ctx.rust_ident_raw(ty);
                         Ok(quote! { #ident })
@@ -3591,11 +3598,21 @@ mod utils {
     use ir::item::{Item, ItemCanonicalPath};
     use ir::ty::TypeKind;
     use proc_macro2;
+    use std::borrow::Cow;
     use std::mem;
     use std::str::FromStr;
 
-    pub fn prepend_bitfield_unit_type(result: &mut Vec<proc_macro2::TokenStream>) {
-        let bitfield_unit_type = proc_macro2::TokenStream::from_str(include_str!("./bitfield_unit.rs")).unwrap();
+    pub fn prepend_bitfield_unit_type(
+        ctx: &BindgenContext,
+        result: &mut Vec<proc_macro2::TokenStream>
+    ) {
+        let bitfield_unit_src = include_str!("./bitfield_unit.rs");
+        let bitfield_unit_src = if ctx.options().rust_features().min_const_fn {
+            Cow::Borrowed(bitfield_unit_src)
+        } else {
+            Cow::Owned(bitfield_unit_src.replace("const fn ", "fn "))
+        };
+        let bitfield_unit_type = proc_macro2::TokenStream::from_str(&bitfield_unit_src).unwrap();
         let bitfield_unit_type = quote!(#bitfield_unit_type);
 
         let items = vec![bitfield_unit_type];
@@ -3653,6 +3670,14 @@ mod utils {
     ) {
         let prefix = ctx.trait_prefix();
 
+        // If the target supports `const fn`, declare eligible functions
+        // as `const fn` else just `fn`.
+        let const_fn = if ctx.options().rust_features().min_const_fn {
+            quote!{ const fn }
+        } else {
+            quote!{ fn }
+        };
+
         // TODO(emilio): The fmt::Debug impl could be way nicer with
         // std::intrinsics::type_name, but...
         let union_field_decl = quote! {
@@ -3663,7 +3688,7 @@ mod utils {
         let union_field_impl = quote! {
             impl<T> __BindgenUnionField<T> {
                 #[inline]
-                pub fn new() -> Self {
+                pub #const_fn new() -> Self {
                     __BindgenUnionField(::#prefix::marker::PhantomData)
                 }
 
@@ -3752,6 +3777,14 @@ mod utils {
     ) {
         let prefix = ctx.trait_prefix();
 
+        // If the target supports `const fn`, declare eligible functions
+        // as `const fn` else just `fn`.
+        let const_fn = if ctx.options().rust_features().min_const_fn {
+            quote!{ const fn }
+        } else {
+            quote!{ fn }
+        };
+
         let incomplete_array_decl = quote! {
             #[repr(C)]
             #[derive(Default)]
@@ -3762,7 +3795,7 @@ mod utils {
         let incomplete_array_impl = quote! {
             impl<T> __IncompleteArrayField<T> {
                 #[inline]
-                pub fn new() -> Self {
+                pub #const_fn new() -> Self {
                     __IncompleteArrayField(::#prefix::marker::PhantomData, [])
                 }
 

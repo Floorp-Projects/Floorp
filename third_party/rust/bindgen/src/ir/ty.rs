@@ -249,6 +249,12 @@ impl Type {
         self.layout.or_else(|| {
             match self.kind {
                 TypeKind::Comp(ref ci) => ci.layout(ctx),
+                TypeKind::Array(inner, length) if length == 0 => {
+                    Some(Layout::new(
+                        0,
+                        ctx.resolve_type(inner).layout(ctx)?.align,
+                    ))
+                }
                 // FIXME(emilio): This is a hack for anonymous union templates.
                 // Use the actual pointer size!
                 TypeKind::Pointer(..) => {
@@ -346,13 +352,13 @@ impl Type {
             TypeKind::Void |
             TypeKind::NullPtr |
             TypeKind::Pointer(..) |
+            TypeKind::BlockPointer(..) |
             TypeKind::ObjCId |
             TypeKind::ObjCSel |
             TypeKind::ObjCInterface(..) => Some(self),
 
             TypeKind::ResolvedTypeRef(inner) |
             TypeKind::Alias(inner) |
-            TypeKind::BlockPointer(inner) |
             TypeKind::TemplateAlias(inner, _) => {
                 ctx.resolve_type(inner).safe_canonical_type(ctx)
             }

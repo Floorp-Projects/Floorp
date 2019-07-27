@@ -1875,27 +1875,25 @@ impl EvalResult {
             return None;
         }
 
-        // Clang has an internal assertion we can trigger if we try to evaluate
-        // a cursor containing a variadic template type reference. Triggering
-        // the assertion aborts the process, and we don't want that. Clang
-        // *also* doesn't expose any API for finding variadic vs non-variadic
-        // template type references, let alone whether a type referenced is a
-        // template type, instead they seem to show up as type references to an
-        // unexposed type. Our solution is to just flat out ban all
-        // `CXType_Unexposed` from evaluation.
-        let mut found_cant_eval = false;
-        cursor.visit(|c| if c.kind() == CXCursor_TypeRef &&
-            c.cur_type().kind() == CXType_Unexposed
+        // Work around https://bugs.llvm.org/show_bug.cgi?id=42532, see:
+        //  * https://github.com/rust-lang/rust-bindgen/issues/283
+        //  * https://github.com/rust-lang/rust-bindgen/issues/1590
         {
-            found_cant_eval = true;
-            CXChildVisit_Break
-        } else {
-            CXChildVisit_Recurse
-        });
-        if found_cant_eval {
-            return None;
-        }
+            let mut found_cant_eval = false;
+            cursor.visit(|c| {
+                if c.kind() == CXCursor_TypeRef &&
+                    c.cur_type().canonical_type().kind() == CXType_Unexposed {
+                    found_cant_eval = true;
+                    return CXChildVisit_Break;
+                }
 
+                CXChildVisit_Recurse
+            });
+
+            if found_cant_eval {
+                return None;
+            }
+        }
         Some(EvalResult {
             x: unsafe { clang_Cursor_Evaluate(cursor.x) },
         })
