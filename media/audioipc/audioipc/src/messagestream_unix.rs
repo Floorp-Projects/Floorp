@@ -3,7 +3,10 @@
 // This program is made available under an ISC-style license.  See the
 // accompanying file LICENSE for details
 
-use std::os::unix::io::{IntoRawFd, FromRawFd, AsRawFd, RawFd};
+use super::tokio_uds_stream as tokio_uds;
+use futures::Poll;
+use mio::Ready;
+use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
 use std::os::unix::net;
 use tokio_io::{AsyncRead, AsyncWrite};
 
@@ -16,7 +19,8 @@ impl MessageStream {
         MessageStream(stream)
     }
 
-    pub fn anonymous_ipc_pair() -> std::result::Result<(MessageStream, MessageStream), std::io::Error> {
+    pub fn anonymous_ipc_pair(
+    ) -> std::result::Result<(MessageStream, MessageStream), std::io::Error> {
         let pair = net::UnixStream::pair()?;
         Ok((MessageStream::new(pair.0), MessageStream::new(pair.1)))
     }
@@ -25,8 +29,13 @@ impl MessageStream {
         MessageStream::new(net::UnixStream::from_raw_fd(raw))
     }
 
-    pub fn into_tokio_ipc(self, handle: &tokio_core::reactor::Handle) -> std::result::Result<AsyncMessageStream, std::io::Error> {
-        Ok(AsyncMessageStream::new(tokio_uds::UnixStream::from_stream(self.0, handle)?))
+    pub fn into_tokio_ipc(
+        self,
+        handle: &tokio::reactor::Handle,
+    ) -> std::result::Result<AsyncMessageStream, std::io::Error> {
+        Ok(AsyncMessageStream::new(tokio_uds::UnixStream::from_std(
+            self.0, handle,
+        )?))
     }
 }
 
@@ -35,20 +44,20 @@ impl AsyncMessageStream {
         AsyncMessageStream(stream)
     }
 
-    pub fn poll_read(&self) -> futures::Async<()> {
-        self.0.poll_read()
+    pub fn poll_read_ready(&self, ready: Ready) -> Poll<Ready, std::io::Error> {
+        self.0.poll_read_ready(ready)
     }
 
-    pub fn poll_write(&self) -> futures::Async<()> {
-        self.0.poll_write()
+    pub fn clear_read_ready(&self, ready: Ready) -> Result<(), std::io::Error> {
+        self.0.clear_read_ready(ready)
     }
 
-    pub fn need_read(&self) {
-        self.0.need_read()
+    pub fn poll_write_ready(&self) -> Poll<Ready, std::io::Error> {
+        self.0.poll_write_ready()
     }
 
-    pub fn need_write(&self) {
-        self.0.need_write()
+    pub fn clear_write_ready(&self) -> Result<(), std::io::Error> {
+        self.0.clear_write_ready()
     }
 }
 
