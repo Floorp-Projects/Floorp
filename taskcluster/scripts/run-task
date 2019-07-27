@@ -107,12 +107,15 @@ def print_line(prefix, m):
     sys.stdout.buffer.flush()
 
 
-def run_and_prefix_output(prefix, args, extra_env=None):
+def run_and_prefix_output(prefix, args, *, extra_env=None, cwd=None):
     """Runs a process and prefixes its output with the time.
 
     Returns the process exit code.
     """
-    print_line(prefix, b'executing %r\n' % args)
+    print_line(
+        prefix,
+        b"executing %r%s\n" % (args, b"in %s" % (cwd.encode("utf-8"),) if cwd else b""),
+    )
 
     env = dict(os.environ)
     env.update(extra_env or {})
@@ -136,7 +139,8 @@ def run_and_prefix_output(prefix, args, extra_env=None):
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT,
                          stdin=sys.stdin.fileno(),
-                         env=env)
+                         env=env,
+                         cwd=cwd)
 
     stdout = io.TextIOWrapper(p.stdout, encoding='latin1')
 
@@ -669,6 +673,7 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--user', default='worker', help='user to run as')
     parser.add_argument('--group', default='worker', help='group to run as')
+    parser.add_argument('--task-cwd', help='directory to run the provided command in')
 
     add_vcs_arguments(parser, 'gecko', 'Firefox')
     add_vcs_arguments(parser, 'comm', 'Comm')
@@ -839,7 +844,7 @@ def main(args):
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()
 
-        return run_and_prefix_output(b'task', task_args)
+        return run_and_prefix_output(b'task', task_args, cwd=args.task_cwd)
     finally:
         fetches_dir = os.environ.get('MOZ_FETCHES_DIR')
         if fetches_dir and os.path.isdir(fetches_dir):
