@@ -626,6 +626,7 @@ function Search(
 
   // This allows to handle leading or trailing restriction characters specially.
   this._leadingRestrictionToken = null;
+  this._trailingRestrictionToken = null;
   if (tokens.length > 0) {
     if (
       UrlbarTokenizer.isRestrictionToken(tokens[0]) &&
@@ -633,6 +634,13 @@ function Search(
         tokens[0].type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
     ) {
       this._leadingRestrictionToken = tokens[0].value;
+    }
+    if (
+      UrlbarTokenizer.isRestrictionToken(tokens[tokens.length - 1]) &&
+      (tokens.length > 1 ||
+        tokens[tokens.length - 1].type == UrlbarTokenizer.TYPE.RESTRICT_SEARCH)
+    ) {
+      this._trailingRestrictionToken = tokens[tokens.length - 1].value;
     }
 
     // Check if the first token has a strippable prefix and remove it, but don't
@@ -1710,13 +1718,16 @@ Search.prototype = {
     if (!engine || !this.pending) {
       return false;
     }
-    // Strip a leading search restriction char, because we prepend it to text
-    // when the search shortcut is used and it's not user typed. Don't strip
-    // other restriction chars, so that it's possible to search for things
-    // including one of those (e.g. "c#").
+    // Strip a leading or trailing restriction char.
     let query = this._trimmedOriginalSearchString;
-    if (this._leadingRestrictionToken === UrlbarTokenizer.RESTRICT.SEARCH) {
+    if (this._leadingRestrictionToken) {
       query = substringAfter(query, this._leadingRestrictionToken).trim();
+    }
+    if (this._trailingRestrictionToken) {
+      query = query.substring(
+        0,
+        query.lastIndexOf(this._trailingRestrictionToken)
+      );
     }
     this._addSearchEngineMatch({ engine, query });
     return true;
