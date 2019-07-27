@@ -39,29 +39,29 @@
 // IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
 
+use crate::rpc::driver::Driver;
+use crate::rpc::Handler;
 use futures::{Async, Future, Poll, Sink, Stream};
-use rpc::driver::Driver;
-use rpc::Handler;
 use std::collections::VecDeque;
 use std::io;
-use tokio_core::reactor::Handle;
+use tokio::runtime::current_thread;
 
 /// Bind an async I/O object `io` to the `server`.
-pub fn bind_server<S>(transport: S::Transport, server: S, handle: &Handle)
+pub fn bind_server<S>(transport: S::Transport, server: S)
 where
     S: Server,
 {
     let fut = {
         let handler = ServerHandler {
-            server: server,
-            transport: transport,
+            server,
+            transport,
             in_flight: VecDeque::with_capacity(32),
         };
         Driver::new(handler)
     };
 
     // Spawn the RPC driver into task
-    handle.spawn(Box::new(fut.map_err(|_| ())))
+    current_thread::spawn(fut.map_err(|_| ()))
 }
 
 pub trait Server: 'static {

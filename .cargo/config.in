@@ -32,5 +32,14 @@ git = "https://github.com/ChunMinChang/coreaudio-sys"
 branch = "gecko-build"
 replace-with = "vendored-sources"
 
+[source."https://github.com/alexcrichton/mio-named-pipes"]
+git = "https://github.com/alexcrichton/mio-named-pipes"
+replace-with = "vendored-sources"
+
+[source."https://github.com/NikVolf/tokio-named-pipes"]
+git = "https://github.com/NikVolf/tokio-named-pipes"
+branch = "stable"
+replace-with = "vendored-sources"
+
 [source.vendored-sources]
 directory = '@top_srcdir@/third_party/rust'

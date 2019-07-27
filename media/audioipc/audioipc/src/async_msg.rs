@@ -5,6 +5,8 @@
 
 //! Various async helpers modelled after futures-rs and tokio-io.
 
+#[cfg(unix)]
+use crate::msg::{RecvMsg, SendMsg};
 use bytes::{Buf, BufMut};
 #[cfg(unix)]
 use futures::Async;
@@ -12,7 +14,7 @@ use futures::Poll;
 #[cfg(unix)]
 use iovec::IoVec;
 #[cfg(unix)]
-use msg::{RecvMsg, SendMsg};
+use mio::Ready;
 use std::io;
 use tokio_io::{AsyncRead, AsyncWrite};
 
@@ -63,7 +65,9 @@ impl AsyncRecvMsg for super::AsyncMessageStream {
     where
         B: BufMut,
     {
-        if let Async::NotReady = <super::AsyncMessageStream>::poll_read(self) {
+        if let Async::NotReady =
+            <super::AsyncMessageStream>::poll_read_ready(self, Ready::readable())?
+        {
             return Ok(Async::NotReady);
         }
         let r = unsafe {
@@ -119,7 +123,7 @@ impl AsyncRecvMsg for super::AsyncMessageStream {
                 Ok((n, flags).into())
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                self.need_read();
+                self.clear_read_ready(mio::Ready::readable())?;
                 Ok(Async::NotReady)
             }
             Err(e) => Err(e),
@@ -134,7 +138,7 @@ impl AsyncSendMsg for super::AsyncMessageStream {
         B: Buf,
         C: Buf,
     {
-        if let Async::NotReady = <super::AsyncMessageStream>::poll_write(self) {
+        if let Async::NotReady = <super::AsyncMessageStream>::poll_write_ready(self)? {
             return Ok(Async::NotReady);
         }
         let r = {
@@ -155,7 +159,7 @@ impl AsyncSendMsg for super::AsyncMessageStream {
                 Ok(Async::Ready(n))
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-                self.need_write();
+                self.clear_write_ready()?;
                 Ok(Async::NotReady)
             }
             Err(e) => Err(e),

@@ -6,24 +6,32 @@ authors = [
         "Dan Glastonbury <dan.glastonbury@gmail.com>"
         ]
 description = "Remote Cubeb IPC"
+edition = "2018"
 
 [dependencies]
-cubeb = "0.5.4"
 bincode = "1.0"
 bytes = "0.4"
+cubeb = "0.5.5"
 futures = "0.1.18"
-iovec = "0.1"
-libc = "0.2"
 log = "0.4"
-memmap = "0.5.2"
+memmap = "0.7"
 scoped-tls = "0.1"
 serde = "1.*.*"
 serde_derive = "1.*.*"
-tokio-core = "0.1"
+tokio = "0.1"
 tokio-io = "0.1"
-tokio-uds = "0.1.7"
+
+[target.'cfg(unix)'.dependencies]
+iovec = "0.1"
+libc = "0.2"
+mio = "0.6.19"
+mio-uds = "0.6.7"
+tokio-reactor = "0.1"
+
+[target.'cfg(windows)'.dependencies]
+mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
+tokio-named-pipes = { git = "https://github.com/NikVolf/tokio-named-pipes", branch = "stable" }
 winapi = "0.3.6"
-mio-named-pipes = "=0.1.5"
 
 [dependencies.error-chain]
 version = "0.11.0"
