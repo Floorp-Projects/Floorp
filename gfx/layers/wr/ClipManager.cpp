@@ -283,17 +283,18 @@ Maybe<wr::WrSpaceAndClip> ClipManager::DefineScrollLayers(
 
   LayoutDeviceRect contentRect =
       metrics.GetExpandedScrollableRect() * metrics.GetDevPixelsPerCSSPixel();
-  LayoutDeviceRect clipBounds = LayoutDeviceRect::FromUnknownRect(
-      metrics.GetCompositionBounds().ToUnknownRect());
+  LayoutDeviceRect clipBounds =
+      metrics.GetCompositionBounds() /
+      LayoutDeviceToParentLayerScale(metrics.GetPresShellResolution());
   // The content rect that we hand to PushScrollLayer should be relative to
-  // the same origin as the clipBounds that we hand to PushScrollLayer - that
-  // is, both of them should be relative to the stacking context `aSc`.
-  // However, when we get the scrollable rect from the FrameMetrics, the origin
-  // has nothing to do with the position of the frame but instead represents
-  // the minimum allowed scroll offset of the scrollable content. While APZ
-  // uses this to clamp the scroll position, we don't need to send this to
-  // WebRender at all. Instead, we take the position from the composition
-  // bounds.
+  // the same origin as the clipBounds that we hand to PushScrollLayer -
+  // that is, both of them should be relative to the stacking context `aSc`.
+  // However, when we get the scrollable rect from the FrameMetrics, the
+  // origin has nothing to do with the position of the frame but instead
+  // represents the minimum allowed scroll offset of the scrollable content.
+  // While APZ uses this to clamp the scroll position, we don't need to send
+  // this to WebRender at all. Instead, we take the position from the
+  // composition bounds.
   contentRect.MoveTo(clipBounds.TopLeft());
 
   Maybe<wr::WrSpaceAndClip> parent = ancestorSpaceAndClip;
