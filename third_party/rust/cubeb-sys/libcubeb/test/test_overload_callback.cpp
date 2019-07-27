@@ -15,8 +15,6 @@
 #include <memory>
 #include <atomic>
 #include "cubeb/cubeb.h"
-//#define ENABLE_NORMAL_LOG
-//#define ENABLE_VERBOSE_LOG
 #include "common.h"
 
 #define SAMPLE_FREQUENCY 48000
