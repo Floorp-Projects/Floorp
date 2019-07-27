@@ -194,10 +194,7 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   /* process the input, and present exactly `output_frames_needed` in the
   * callback. */
   input_processor->input(input_buffer, *input_frames_count);
-
-  size_t frames_resampled = 0;
-  resampled_input = input_processor->output(resampled_frame_count, &frames_resampled);
-  *input_frames_count = frames_resampled;
+  resampled_input = input_processor->output(resampled_frame_count, (size_t*)input_frames_count);
 
   long got = data_callback(stream, user_ptr,
                            resampled_input, nullptr, resampled_frame_count);
@@ -248,11 +245,8 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
     /* process the input, and present exactly `output_frames_needed` in the
     * callback. */
     input_processor->input(in_buffer, *input_frames_count);
-
-    size_t frames_resampled = 0;
     resampled_input =
-      input_processor->output(output_frames_before_processing, &frames_resampled);
-    *input_frames_count = frames_resampled;
+      input_processor->output(output_frames_before_processing, (size_t*)input_frames_count);
   } else {
     resampled_input = nullptr;
   }

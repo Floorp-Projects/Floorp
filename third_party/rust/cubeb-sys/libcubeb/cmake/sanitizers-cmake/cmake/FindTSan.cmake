@@ -39,10 +39,9 @@ endif ()
 include(sanitize-helpers)
 
 if (SANITIZE_THREAD)
-  if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND
-      NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+    if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
         message(WARNING "ThreadSanitizer disabled for target ${TARGET} because "
-          "ThreadSanitizer is supported for Linux systems and macOS only.")
+            "ThreadSanitizer is supported for Linux systems only.")
         set(SANITIZE_THREAD Off CACHE BOOL
             "Enable ThreadSanitizer for sanitized targets." FORCE)
     elseif (NOT ${CMAKE_SIZEOF_VOID_P} EQUAL 8)
@@ -61,5 +60,5 @@ function (add_sanitize_thread TARGET)
         return()
     endif ()
 
-    sanitizer_add_flags(${TARGET} "ThreadSanitizer" "TSan")
+    saitizer_add_flags(${TARGET} "ThreadSanitizer" "TSan")
 endfunction ()

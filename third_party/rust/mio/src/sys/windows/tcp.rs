@@ -371,7 +371,7 @@ impl TcpStream {
             return Err(io::ErrorKind::WouldBlock.into())
         }
 
-        if bufs.is_empty() {
+        if bufs.len() == 0 {
             return Ok(0)
         }
 

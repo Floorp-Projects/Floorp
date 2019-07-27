@@ -25,7 +25,6 @@ mod io;
 mod ready;
 mod tcp;
 mod udp;
-mod uio;
 
 #[cfg(feature = "with-deprecated")]
 mod uds;

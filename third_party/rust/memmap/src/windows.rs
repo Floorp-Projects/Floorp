@@ -1,19 +1,34 @@
+use std::{io, mem, ptr};
 use std::fs::File;
 use std::os::raw::c_void;
 use std::os::windows::io::{AsRawHandle, RawHandle};
-use std::{io, mem, ptr};
 
 use winapi::shared::basetsd::SIZE_T;
 use winapi::shared::minwindef::DWORD;
-use winapi::um::handleapi::{CloseHandle, INVALID_HANDLE_VALUE};
 use winapi::um::memoryapi::{
-    CreateFileMappingW, FlushViewOfFile, MapViewOfFile, UnmapViewOfFile, VirtualProtect,
-    FILE_MAP_ALL_ACCESS, FILE_MAP_COPY, FILE_MAP_EXECUTE, FILE_MAP_READ, FILE_MAP_WRITE,
+    FILE_MAP_ALL_ACCESS,
+    FILE_MAP_COPY,
+    FILE_MAP_EXECUTE,
+    FILE_MAP_READ,
+    FILE_MAP_WRITE,
+    CreateFileMappingW,
+    VirtualProtect,
+    MapViewOfFile,
+    UnmapViewOfFile,
+    FlushViewOfFile,
+};
+use winapi::um::handleapi::{
+    CloseHandle,
+    INVALID_HANDLE_VALUE,
 };
 use winapi::um::sysinfoapi::GetSystemInfo;
 use winapi::um::winnt::{
-    PAGE_EXECUTE_READ, PAGE_EXECUTE_READWRITE, PAGE_EXECUTE_WRITECOPY, PAGE_READONLY,
-    PAGE_READWRITE, PAGE_WRITECOPY,
+    PAGE_EXECUTE_READ,
+    PAGE_EXECUTE_READWRITE,
+    PAGE_EXECUTE_WRITECOPY,
+    PAGE_READONLY,
+    PAGE_READWRITE,
+    PAGE_WRITECOPY,
 };
 
 pub struct MmapInner {
@@ -31,13 +46,13 @@ impl MmapInner {
         file: &File,
         protect: DWORD,
         access: DWORD,
-        offset: u64,
+        offset: usize,
         len: usize,
         copy: bool,
     ) -> io::Result<MmapInner> {
-        let alignment = offset % allocation_granularity() as u64;
-        let aligned_offset = offset - alignment as u64;
-        let aligned_len = len + alignment as usize;
+        let alignment = offset % allocation_granularity();
+        let aligned_offset = offset - alignment;
+        let aligned_len = len + alignment;
 
         unsafe {
             let handle = CreateFileMappingW(
@@ -74,7 +89,7 @@ impl MmapInner {
         }
     }
 
-    pub fn map(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         let write = protection_supported(file.as_raw_handle(), PAGE_READWRITE);
         let exec = protection_supported(file.as_raw_handle(), PAGE_EXECUTE_READ);
         let mut access = FILE_MAP_READ;
@@ -101,7 +116,7 @@ impl MmapInner {
         Ok(inner)
     }
 
-    pub fn map_exec(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_exec(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         let write = protection_supported(file.as_raw_handle(), PAGE_READWRITE);
         let mut access = FILE_MAP_READ | FILE_MAP_EXECUTE;
         let protection = if write {
@@ -118,7 +133,7 @@ impl MmapInner {
         Ok(inner)
     }
 
-    pub fn map_mut(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_mut(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         let exec = protection_supported(file.as_raw_handle(), PAGE_EXECUTE_READ);
         let mut access = FILE_MAP_READ | FILE_MAP_WRITE;
         let protection = if exec {
@@ -135,7 +150,7 @@ impl MmapInner {
         Ok(inner)
     }
 
-    pub fn map_copy(len: usize, file: &File, offset: u64) -> io::Result<MmapInner> {
+    pub fn map_copy(len: usize, file: &File, offset: usize) -> io::Result<MmapInner> {
         let exec = protection_supported(file.as_raw_handle(), PAGE_EXECUTE_READWRITE);
         let mut access = FILE_MAP_COPY;
         let protection = if exec {
@@ -179,7 +194,12 @@ impl MmapInner {
             }
 
             let mut old = 0;
-            let result = VirtualProtect(ptr, len as SIZE_T, PAGE_READWRITE, &mut old);
+            let result = VirtualProtect(
+                ptr,
+                len as SIZE_T,
+                PAGE_READWRITE,
+                &mut old,
+            );
             if result != 0 {
                 Ok(MmapInner {
                     file: None,
@@ -268,11 +288,9 @@ impl Drop for MmapInner {
         let alignment = self.ptr as usize % allocation_granularity();
         unsafe {
             let ptr = self.ptr.offset(-(alignment as isize));
-            assert!(
-                UnmapViewOfFile(ptr) != 0,
-                "unable to unmap mmap: {}",
-                io::Error::last_os_error()
-            );
+            assert!(UnmapViewOfFile(ptr) != 0,
+                    "unable to unmap mmap: {}",
+                    io::Error::last_os_error());
         }
     }
 }
