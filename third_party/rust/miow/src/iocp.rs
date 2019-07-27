@@ -1,14 +1,18 @@
 //! Bindings to IOCP, I/O Completion Ports
 
 use std::cmp;
+use std::fmt;
 use std::io;
 use std::mem;
 use std::os::windows::io::*;
 use std::time::Duration;
 
 use handle::Handle;
-use winapi::*;
-use kernel32::*;
+use winapi::shared::basetsd::*;
+use winapi::shared::ntdef::*;
+use winapi::um::minwinbase::*;
+use winapi::um::handleapi::*;
+use winapi::um::ioapiset::*;
 use Overlapped;
 
 /// A handle to an Windows I/O Completion Port.
@@ -22,8 +26,14 @@ pub struct CompletionPort {
 /// These statuses can be created via the `new` or `empty` constructors and then
 /// provided to a completion port, or they are read out of a completion port.
 /// The fields of each status are read through its accessor methods.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct CompletionStatus(OVERLAPPED_ENTRY);
+
+impl fmt::Debug for CompletionStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "CompletionStatus(OVERLAPPED_ENTRY)")
+    }
+}
 
 unsafe impl Send for CompletionStatus {}
 unsafe impl Sync for CompletionStatus {}
@@ -148,7 +158,7 @@ impl CompletionPort {
                                         len,
                                         &mut removed,
                                         timeout,
-                                        FALSE)
+                                        FALSE as i32)
         };
         match ::cvt(ret) {
             Ok(_) => Ok(&mut list[..removed as usize]),
@@ -256,7 +266,8 @@ mod tests {
     use std::mem;
     use std::time::Duration;
 
-    use winapi::*;
+    use winapi::shared::basetsd::*;
+    use winapi::shared::winerror::*;
 
     use iocp::{CompletionPort, CompletionStatus};
 

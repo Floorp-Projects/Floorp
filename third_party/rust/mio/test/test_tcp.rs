@@ -490,7 +490,7 @@ fn multiple_writes_immediate_success() {
     }
 
     for _ in 0..N {
-        s.write(&[1; 1024]).unwrap();
+        s.write_all(&[1; 1024]).unwrap();
     }
 
     t.join().unwrap();

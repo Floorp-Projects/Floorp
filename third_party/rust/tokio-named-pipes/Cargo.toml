@@ -1,0 +1,19 @@
+[package]
+name = "tokio-named-pipes"
+version = "0.2.0"
+authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/alexcrichton/tokio-named-pipes"
+homepage = "https://github.com/alexcrichton/tokio-named-pipes"
+documentation = "http://alexcrichton.com/tokio-named-pipes"
+description = """
+Windows named pipe bindings for tokio.
+"""
+
+[dependencies]
+mio = "0.6"
+tokio = "0.1"
+mio-named-pipes = { git = "https://github.com/alexcrichton/mio-named-pipes" }
+futures = "0.1"
+bytes = "0.4"
