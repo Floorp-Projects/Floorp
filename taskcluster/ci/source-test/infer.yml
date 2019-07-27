@@ -41,9 +41,9 @@ infer:
     treeherder:
         symbol: infer
     run:
+        cwd: '{checkout}'
         command: >-
-            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-infer-setup.sh &&
-            cd $HOME/checkouts/gecko &&
+            source taskcluster/scripts/misc/source-test-infer-setup.sh &&
             ./mach --log-no-times configure &&
             ./mach --log-no-times static-analysis check-java --outgoing --output $HOME/infer.json
 
