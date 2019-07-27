@@ -224,7 +224,7 @@ add_task(async function test_tab_matches() {
     matches: [
       makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " abc", {
         heuristic: true,
-        searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " abc",
+        searchQuery: "abc",
       }),
       makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
     ],
@@ -247,7 +247,7 @@ add_task(async function test_tab_matches() {
     matches: [
       makeSearchMatch(UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla", {
         heuristic: true,
-        searchQuery: UrlbarTokenizer.RESTRICT.OPENPAGE + " mozilla",
+        searchQuery: "mozilla",
       }),
       makeSwitchToTabMatch("about:mozilla"),
     ],
