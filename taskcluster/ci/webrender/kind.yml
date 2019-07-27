@@ -33,8 +33,8 @@ jobs:
             docker-image: {in-tree: webrender}
         run:
             using: run-task
+            cwd: '{checkout}/gfx/wr'
             command: >-
-                cd $HOME/checkouts/gecko/gfx/wr &&
                 servo-tidy
         treeherder:
             platform: linux64-qr/opt
@@ -142,8 +142,8 @@ jobs:
                 - 'wrench-macos-headless.tar.bz2'
         run:
             using: run-task
+            cwd: '{checkout}gfx/wr'
             command: >-
-                cd $GECKO_PATH/gfx/wr &&
                 export WRENCH_HEADLESS_TARGET=$PWD/wrench-macos-headless/ &&
                 export WRENCH_BINARY=$PWD/wrench-macos/bin/wrench &&
                 ci-scripts/macos-release-tests.sh
@@ -201,8 +201,8 @@ jobs:
                 - 'cargo-test-binaries.tar.bz2'
         run:
             using: run-task
+            cwd: '{checkout}/gfx/wr'
             command: >-
-                cd $GECKO_PATH/gfx/wr &&
                 mv cargo-test-binaries target &&
                 cd target &&
                 for i in debug/*; do $i; done
@@ -254,9 +254,10 @@ jobs:
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
         run:
             using: run-task
+            cwd: '{checkout}/gfx/wr/wrench'
             command: >-
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh debug &&
-                cd $GECKO_PATH/gfx/wr/wrench && tar czf reftests.tar.gz reftests/
+                tar czf reftests.tar.gz reftests/
         fetches:
             toolchain:
                 - android-gradle-dependencies
@@ -288,9 +289,10 @@ jobs:
                   path: /builds/worker/checkouts/gecko/gfx/wr/wrench/reftests.tar.gz
         run:
             using: run-task
+            cwd: '{checkout}/gfx/wr/wrench'
             command: >-
                 $GECKO_PATH/taskcluster/scripts/misc/wrench-android-build.sh release &&
-                cd $GECKO_PATH/gfx/wr/wrench && tar czf reftests.tar.gz reftests/
+                tar czf reftests.tar.gz reftests/
         fetches:
             toolchain:
                 - android-gradle-dependencies
