@@ -43,7 +43,7 @@ impl Handler for TestHandler {
 #[test]
 pub fn test_tick() {
     debug!("Starting TEST_TICK");
-    let mut event_loop = EventLoop::new().ok().expect("Couldn't make event loop");
+    let mut event_loop = EventLoop::new().expect("Couldn't make event loop");
 
     let listener = TcpListener::bind(&"127.0.0.1:0".parse().unwrap()).unwrap();
     event_loop.register(&listener, Token(0), Ready::readable(), PollOpt::level()).unwrap();

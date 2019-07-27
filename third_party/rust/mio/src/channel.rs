@@ -18,12 +18,12 @@ pub fn channel<T>() -> (Sender<T>, Receiver<T>) {
     let (tx, rx) = mpsc::channel();
 
     let tx = Sender {
-        tx: tx,
+        tx,
         ctl: tx_ctl,
     };
 
     let rx = Receiver {
-        rx: rx,
+        rx,
         ctl: rx_ctl,
     };
 
@@ -37,12 +37,12 @@ pub fn sync_channel<T>(bound: usize) -> (SyncSender<T>, Receiver<T>) {
     let (tx, rx) = mpsc::sync_channel(bound);
 
     let tx = SyncSender {
-        tx: tx,
+        tx,
         ctl: tx_ctl,
     };
 
     let rx = Receiver {
-        rx: rx,
+        rx,
         ctl: rx_ctl,
     };
 
@@ -62,7 +62,7 @@ pub fn ctl_pair() -> (SenderCtl, ReceiverCtl) {
 
     let rx = ReceiverCtl {
         registration: LazyCell::new(),
-        inner: inner,
+        inner,
     };
 
     (tx, rx)
@@ -263,8 +263,8 @@ impl Evented for ReceiverCtl {
             let _ = set_readiness.set_readiness(Ready::readable());
         }
 
-        self.registration.fill(registration).ok().expect("unexpected state encountered");
-        self.inner.set_readiness.fill(set_readiness).ok().expect("unexpected state encountered");
+        self.registration.fill(registration).expect("unexpected state encountered");
+        self.inner.set_readiness.fill(set_readiness).expect("unexpected state encountered");
 
         Ok(())
     }
@@ -331,19 +331,19 @@ impl<T> From<io::Error> for TrySendError<T> {
 
 impl<T: Any> error::Error for SendError<T> {
     fn description(&self) -> &str {
-        match self {
-            &SendError::Io(ref io_err) => io_err.description(),
-            &SendError::Disconnected(..) => "Disconnected",
+        match *self {
+            SendError::Io(ref io_err) => io_err.description(),
+            SendError::Disconnected(..) => "Disconnected",
         }
     }
 }
 
 impl<T: Any> error::Error for TrySendError<T> {
     fn description(&self) -> &str {
-        match self {
-            &TrySendError::Io(ref io_err) => io_err.description(),
-            &TrySendError::Full(..) => "Full",
-            &TrySendError::Disconnected(..) => "Disconnected",
+        match *self {
+            TrySendError::Io(ref io_err) => io_err.description(),
+            TrySendError::Full(..) => "Full",
+            TrySendError::Disconnected(..) => "Disconnected",
         }
     }
 }
@@ -374,17 +374,17 @@ impl<T> fmt::Display for TrySendError<T> {
 
 #[inline]
 fn format_send_error<T>(e: &SendError<T>, f: &mut fmt::Formatter) -> fmt::Result {
-    match e {
-        &SendError::Io(ref io_err) => write!(f, "{}", io_err),
-        &SendError::Disconnected(..) => write!(f, "Disconnected"),
+    match *e {
+        SendError::Io(ref io_err) => write!(f, "{}", io_err),
+        SendError::Disconnected(..) => write!(f, "Disconnected"),
     }
 }
 
 #[inline]
 fn format_try_send_error<T>(e: &TrySendError<T>, f: &mut fmt::Formatter) -> fmt::Result {
-    match e {
-        &TrySendError::Io(ref io_err) => write!(f, "{}", io_err),
-        &TrySendError::Full(..) => write!(f, "Full"),
-        &TrySendError::Disconnected(..) => write!(f, "Disconnected"),
+    match *e {
+        TrySendError::Io(ref io_err) => write!(f, "{}", io_err),
+        TrySendError::Full(..) => write!(f, "Full"),
+        TrySendError::Disconnected(..) => write!(f, "Disconnected"),
     }
 }

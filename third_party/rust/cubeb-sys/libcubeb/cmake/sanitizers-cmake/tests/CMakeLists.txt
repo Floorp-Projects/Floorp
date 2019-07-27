@@ -31,13 +31,20 @@ function(add_testcase TESTNAME SOURCEFILES)
 
 	# add a new executable
 	add_executable(${TESTNAME} ${ARGV})
-	add_sanitizers(${TESTNAME})
 
 	# add a testcase for executable
 	add_test(${TESTNAME} ${TESTNAME})
 endfunction(add_testcase)
 
+# Function to add testcases with asan enabled.
+function(add_sanitized_testcase TESTNAME SOURCEFILES)
+	add_testcase(${TESTNAME} ${SOURCEFILES})
+	add_sanitizers(${TESTNAME})
+endfunction(add_sanitized_testcase)
 
+
+
+set(SANITIZE_ADDRESS TRUE)
 
 #
 # search for sanitizers
@@ -45,8 +52,16 @@ endfunction(add_testcase)
 find_package(Sanitizers)
 
 
-
 #
 # add testcases
 #
-add_testcase("asan_test_cpp" asan_test.cpp)
+add_sanitized_testcase("asan_test_cpp" asan_test.cpp)
+add_sanitized_testcase("shortest_ext_test_cpp" shortest.ext.test.cpp)
+
+set_tests_properties(
+	"asan_test_cpp"
+	"shortest_ext_test_cpp"
+PROPERTIES
+	WILL_FAIL TRUE
+)
+

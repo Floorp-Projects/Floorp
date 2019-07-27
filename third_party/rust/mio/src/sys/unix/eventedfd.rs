@@ -10,7 +10,7 @@ use std::os::unix::io::RawFd;
 
 #[derive(Debug)]
 
-/// Adapter for `RawFd` providing an [`Evented`] implementation.
+/// Adapter for [`RawFd`] providing an [`Evented`] implementation.
 ///
 /// `EventedFd` enables registering any type with an FD with [`Poll`].
 ///
@@ -53,7 +53,7 @@ use std::os::unix::io::RawFd;
 /// # }
 /// ```
 ///
-/// Implementing `Evented` for a custom type backed by a `RawFd`.
+/// Implementing [`Evented`] for a custom type backed by a [`RawFd`].
 ///
 /// ```
 /// use mio::{Ready, Poll, PollOpt, Token};
@@ -86,6 +86,7 @@ use std::os::unix::io::RawFd;
 /// }
 /// ```
 ///
+/// [`RawFd`]: https://doc.rust-lang.org/std/os/unix/io/type.RawFd.html
 /// [`Evented`]: ../event/trait.Evented.html
 /// [`Poll`]: ../struct.Poll.html
 /// [`Poll::register`]: ../struct.Poll.html#method.register

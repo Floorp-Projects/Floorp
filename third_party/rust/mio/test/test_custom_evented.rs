@@ -195,8 +195,8 @@ mod stress {
             registration.register(&poll, Token(i), Ready::readable(), PollOpt::edge()).unwrap();
 
             entries.push(Entry {
-                registration: registration,
-                set_readiness: set_readiness,
+                registration,
+                set_readiness,
                 num: AtomicUsize::new(0),
             });
         }
@@ -350,7 +350,7 @@ fn drop_registration_from_non_main_thread() {
     const THREADS: usize = 8;
     const ITERS: usize = 50_000;
 
-    let mut poll = Poll::new().unwrap();
+    let poll = Poll::new().unwrap();
     let mut events = Events::with_capacity(1024);
     let mut senders = Vec::with_capacity(THREADS);
     let mut token_index = 0;
@@ -372,7 +372,7 @@ fn drop_registration_from_non_main_thread() {
     let mut index: usize = 0;
     for _ in 0..ITERS {
         let (registration, set_readiness) = Registration::new2();
-        registration.register(&mut poll, Token(token_index), Ready::readable(), PollOpt::edge()).unwrap();
+        registration.register(&poll, Token(token_index), Ready::readable(), PollOpt::edge()).unwrap();
         let _ = senders[index].send((registration, set_readiness));
 
         token_index += 1;
@@ -381,7 +381,7 @@ fn drop_registration_from_non_main_thread() {
             index = 0;
 
             let (registration, set_readiness) = Registration::new2();
-            registration.register(&mut poll, Token(token_index), Ready::readable(), PollOpt::edge()).unwrap();
+            registration.register(&poll, Token(token_index), Ready::readable(), PollOpt::edge()).unwrap();
             let _ = set_readiness.set_readiness(Ready::readable());
             drop(registration);
             drop(set_readiness);

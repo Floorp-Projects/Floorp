@@ -1,5 +1,6 @@
 //! Named pipes
 
+use std::cell::RefCell;
 use std::ffi::OsStr;
 use std::fs::{OpenOptions, File};
 use std::io::prelude::*;
@@ -8,9 +9,17 @@ use std::os::windows::ffi::*;
 use std::os::windows::io::*;
 use std::time::Duration;
 
-use winapi::*;
-use kernel32::*;
+use winapi::shared::ntdef::HANDLE;
+use winapi::shared::minwindef::*;
+use winapi::shared::winerror::*;
+use winapi::um::fileapi::*;
+use winapi::um::handleapi::*;
+use winapi::um::ioapiset::*;
+use winapi::um::minwinbase::*;
+use winapi::um::namedpipeapi::*;
+use winapi::um::winbase::*;
 use handle::Handle;
+use overlapped::Overlapped;
 
 /// Readable half of an anonymous pipe.
 #[derive(Debug)]
@@ -311,21 +320,60 @@ impl NamedPipe {
     }
 }
 
+thread_local! {
+    static NAMED_PIPE_OVERLAPPED: RefCell<Option<Overlapped>> = RefCell::new(None);
+}
+
+/// Call a function with a threadlocal `Overlapped`.  The function `f` should be
+/// sure that the event is reset, either manually or by a thread being released.
+fn with_threadlocal_overlapped<F>(f: F) -> io::Result<usize>
+    where F: FnOnce(&Overlapped) -> io::Result<usize>
+{
+    NAMED_PIPE_OVERLAPPED.with(|overlapped| {
+        let mut mborrow = overlapped.borrow_mut();
+        if let None = *mborrow {
+            let op = Overlapped::initialize_with_autoreset_event()?;
+            *mborrow = Some(op);
+        }
+        f(mborrow.as_ref().unwrap())
+    })
+}
+
 impl Read for NamedPipe {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.0.read(buf) }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
+        with_threadlocal_overlapped(|overlapped| unsafe {
+            self.0.read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+        })
+    }
 }
 impl<'a> Read for &'a NamedPipe {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> { self.0.read(buf) }
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
+        with_threadlocal_overlapped(|overlapped| unsafe {
+            self.0.read_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+        })
+    }
 }
 
 impl Write for NamedPipe {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.write(buf) }
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
+        with_threadlocal_overlapped(|overlapped| unsafe {
+            self.0.write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+        })
+    }
     fn flush(&mut self) -> io::Result<()> {
         <&NamedPipe as Write>::flush(&mut &*self)
     }
 }
 impl<'a> Write for &'a NamedPipe {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> { self.0.write(buf) }
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        // This is necessary because the pipe is opened with `FILE_FLAG_OVERLAPPED`.
+        with_threadlocal_overlapped(|overlapped| unsafe {
+            self.0.write_overlapped_wait(buf, overlapped.raw() as *mut OVERLAPPED)
+        })
+    }
     fn flush(&mut self) -> io::Result<()> {
         ::cvt(unsafe { FlushFileBuffers(self.0.raw()) }).map(|_| ())
     }
@@ -420,13 +468,23 @@ impl NamedPipeBuilder {
     /// This function will call the `CreateNamedPipe` function and return the
     /// result.
     pub fn create(&mut self) -> io::Result<NamedPipe> {
-        let h = unsafe {
-            CreateNamedPipeW(self.name.as_ptr(),
-                             self.dwOpenMode, self.dwPipeMode,
-                             self.nMaxInstances, self.nOutBufferSize,
-                             self.nInBufferSize, self.nDefaultTimeOut,
-                             0 as *mut _)
-        };
+        unsafe { self.with_security_attributes(::std::ptr::null_mut()) }
+    }
+
+    /// Using the options in the builder and the provided security attributes, attempt to create a
+    /// new named pipe. This function has to be called with a valid pointer to a
+    /// `SECURITY_ATTRIBUTES` struct that will stay valid for the lifetime of this function or a
+    /// null pointer.
+    ///
+    /// This function will call the `CreateNamedPipe` function and return the
+    /// result.
+    pub unsafe fn with_security_attributes(&mut self, attrs: *mut SECURITY_ATTRIBUTES) -> io::Result<NamedPipe> {
+        let h = CreateNamedPipeW(self.name.as_ptr(),
+                                 self.dwOpenMode, self.dwPipeMode,
+                                 self.nMaxInstances, self.nOutBufferSize,
+                                 self.nInBufferSize, self.nDefaultTimeOut,
+                                 attrs);
+
         if h == INVALID_HANDLE_VALUE {
             Err(io::Error::last_os_error())
         } else {
@@ -549,6 +607,53 @@ mod tests {
         t!(a.write_all(&[1, 2, 3]));
         t!(a.flush());
         t!(a.disconnect());
+        t!(t.join());
+    }
+
+    #[test]
+    fn named_read_write_multi() {
+        for _ in 0..5 {
+            named_read_write()
+        }
+    }
+
+    #[test]
+    fn named_read_write_multi_same_thread() {
+        let name1 = name();
+        let mut a1 = t!(NamedPipe::new(&name1));
+        let name2 = name();
+        let mut a2 = t!(NamedPipe::new(&name2));
+
+        let t = thread::spawn(move || {
+            let mut f = t!(OpenOptions::new().read(true).write(true).open(name1));
+            t!(f.write_all(&[1, 2, 3]));
+            let mut b = [0; 10];
+            assert_eq!(t!(f.read(&mut b)), 3);
+            assert_eq!(&b[..3], &[1, 2, 3]);
+
+            let mut f = t!(OpenOptions::new().read(true).write(true).open(name2));
+            t!(f.write_all(&[1, 2, 3]));
+            let mut b = [0; 10];
+            assert_eq!(t!(f.read(&mut b)), 3);
+            assert_eq!(&b[..3], &[1, 2, 3]);
+        });
+
+        t!(a1.connect());
+        let mut b = [0; 10];
+        assert_eq!(t!(a1.read(&mut b)), 3);
+        assert_eq!(&b[..3], &[1, 2, 3]);
+        t!(a1.write_all(&[1, 2, 3]));
+        t!(a1.flush());
+        t!(a1.disconnect());
+
+        t!(a2.connect());
+        let mut b = [0; 10];
+        assert_eq!(t!(a2.read(&mut b)), 3);
+        assert_eq!(&b[..3], &[1, 2, 3]);
+        t!(a2.write_all(&[1, 2, 3]));
+        t!(a2.flush());
+        t!(a2.disconnect());
+
         t!(t.join());
     }
 

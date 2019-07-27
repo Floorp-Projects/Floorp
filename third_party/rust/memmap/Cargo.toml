@@ -12,7 +12,7 @@
 
 [package]
 name = "memmap"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Dan Burkert <dan@danburkert.com>"]
 description = "Cross-platform Rust API for memory-mapped file IO"
 documentation = "https://docs.rs/memmap"

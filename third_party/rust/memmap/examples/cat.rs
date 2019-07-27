@@ -1,8 +1,8 @@
 extern crate memmap;
 
 use std::env;
-use std::io::{self, Write};
 use std::fs::File;
+use std::io::{self, Write};
 
 use memmap::Mmap;
 

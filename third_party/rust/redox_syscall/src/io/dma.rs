@@ -32,7 +32,7 @@ pub struct Dma<T> {
 impl<T> Dma<T> {
     pub fn new(value: T) -> Result<Dma<T>> {
         let phys = PhysBox::new(mem::size_of::<T>())?;
-        let virt = unsafe { ::physmap(phys.address, phys.size, ::MAP_WRITE)? } as *mut T;
+        let virt = unsafe { ::physmap(phys.address, phys.size, ::PHYSMAP_WRITE)? } as *mut T;
         unsafe { ptr::write(virt, value); }
         Ok(Dma {
             phys: phys,
@@ -42,7 +42,7 @@ impl<T> Dma<T> {
 
     pub fn zeroed() -> Result<Dma<T>> {
         let phys = PhysBox::new(mem::size_of::<T>())?;
-        let virt = unsafe { ::physmap(phys.address, phys.size, ::MAP_WRITE)? } as *mut T;
+        let virt = unsafe { ::physmap(phys.address, phys.size, ::PHYSMAP_WRITE)? } as *mut T;
         unsafe { ptr::write_bytes(virt as *mut u8, 0, phys.size); }
         Ok(Dma {
             phys: phys,

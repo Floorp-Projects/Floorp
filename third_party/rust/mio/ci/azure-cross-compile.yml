@@ -1,0 +1,56 @@
+parameters:
+  vmImage: ubuntu-16.04
+
+jobs:
+- job: ${{ parameters.name }}
+  displayName: Cross
+  strategy:
+    matrix:
+      iOS:
+        vmImage: macOS-10.13
+        target: x86_64-apple-ios
+
+      Android:
+        vmImage: ubuntu-16.04
+        target: arm-linux-androideabi
+
+      Android_64:
+        vmImage: ubuntu-16.04
+        target: aarch64-linux-android
+
+      NetBSD:
+        vmImage: ubuntu-16.04
+        target: x86_64-unknown-netbsd
+
+      Solaris:
+        vmImage: ubuntu-16.04
+        target: x86_64-sun-solaris
+
+  pool:
+    vmImage: $(vmImage)
+
+  steps:
+    - template: azure-install-rust.yml
+      parameters:
+        rust_version: stable
+
+    - script: rustup target add $(target)
+      displayName: "Add target"
+
+    - script: cargo check --target $(target)
+      displayName: Check source
+
+    - script: cargo check --tests --target $(target)
+      displayName: Check tests
+
+    - script: cargo check --examples --target $(target)
+      displayName: Check examples
+
+    - script: cargo check --target $(target) --no-default-features
+      displayName: Check source (no default features)
+
+    - script: cargo check --tests --target $(target) --no-default-features
+      displayName: Check tests (no default features)
+
+    - script: cargo check --examples --target $(target) --no-default-features
+      displayName: Check examples (no default features)

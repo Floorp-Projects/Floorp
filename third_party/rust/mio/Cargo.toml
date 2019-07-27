@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,12 +12,12 @@
 
 [package]
 name = "mio"
-version = "0.6.16"
+version = "0.6.19"
 authors = ["Carl Lerche <me@carllerche.com>"]
 exclude = [".gitignore", ".travis.yml", "deploy.sh"]
 description = "Lightweight non-blocking IO"
 homepage = "https://github.com/carllerche/mio"
-documentation = "https://docs.rs/mio/0.6.16/mio/"
+documentation = "https://docs.rs/mio/0.6.19/mio/"
 readme = "README.md"
 keywords = ["io", "async", "non-blocking"]
 categories = ["asynchronous"]
@@ -29,9 +29,6 @@ name = "test"
 path = "test/mod.rs"
 [dependencies.iovec]
 version = "0.1.1"
-
-[dependencies.lazycell]
-version = "1"
 
 [dependencies.log]
 version = "0.4"

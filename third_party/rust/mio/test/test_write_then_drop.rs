@@ -24,7 +24,7 @@ fn write_then_drop() {
                PollOpt::edge()).unwrap();
 
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);
@@ -38,13 +38,13 @@ fn write_then_drop() {
                 PollOpt::edge()).unwrap();
 
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);
     assert_eq!(events.get(0).unwrap().token(), Token(2));
 
-    s2.write(&[1, 2, 3, 4]).unwrap();
+    s2.write_all(&[1, 2, 3, 4]).unwrap();
     drop(s2);
 
     s.reregister(&poll,
@@ -52,7 +52,7 @@ fn write_then_drop() {
                  Ready::readable(),
                  PollOpt::edge()).unwrap();
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);
@@ -83,7 +83,7 @@ fn write_then_deregister() {
                PollOpt::edge()).unwrap();
 
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);
@@ -97,13 +97,13 @@ fn write_then_deregister() {
                 PollOpt::edge()).unwrap();
 
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);
     assert_eq!(events.get(0).unwrap().token(), Token(2));
 
-    s2.write(&[1, 2, 3, 4]).unwrap();
+    s2.write_all(&[1, 2, 3, 4]).unwrap();
     s2.deregister(&poll).unwrap();
 
     s.reregister(&poll,
@@ -111,7 +111,7 @@ fn write_then_deregister() {
                  Ready::readable(),
                  PollOpt::edge()).unwrap();
     let mut events = Events::with_capacity(1024);
-    while events.len() == 0 {
+    while events.is_empty() {
         poll.poll(&mut events, None).unwrap();
     }
     assert_eq!(events.len(), 1);

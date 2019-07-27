@@ -7,6 +7,7 @@ use std::{mem, ops, isize};
 use std::os::unix::io::AsRawFd;
 #[cfg(all(unix, not(target_os = "fuchsia")))]
 use std::os::unix::io::RawFd;
+use std::process;
 use std::sync::{Arc, Mutex, Condvar};
 use std::sync::atomic::{AtomicUsize, AtomicPtr, AtomicBool};
 use std::sync::atomic::Ordering::{self, Acquire, Release, AcqRel, Relaxed, SeqCst};
@@ -215,10 +216,11 @@ use std::time::{Duration, Instant};
 /// [`Evented`] handle is not actually ready. Given the same code, this may
 /// happen more on some platforms than others. It is important to never assume
 /// that, just because a readiness notification was received, that the
-/// associated operation will as well.
+/// associated operation will succeed as well.
 ///
 /// If operation fails with [`WouldBlock`], then the caller should not treat
-/// this as an error and wait until another readiness event is received.
+/// this as an error, but instead should wait until another readiness event is
+/// received.
 ///
 /// ### Draining readiness
 ///
@@ -422,7 +424,7 @@ pub struct Poll {
 ///     }
 ///
 ///     fn deregister(&self, poll: &Poll) -> io::Result<()> {
-///         self.registration.deregister(poll)
+///         poll.deregister(&self.registration)
 ///     }
 /// }
 /// ```
@@ -1149,6 +1151,7 @@ impl Poll {
     }
 
     #[inline]
+    #[cfg_attr(feature = "cargo-clippy", allow(clippy::if_same_then_else))]
     fn poll2(&self, events: &mut Events, mut timeout: Option<Duration>, interruptible: bool) -> io::Result<usize> {
         // Compute the timeout value passed to the system selector. If the
         // readiness queue has pending nodes, we still want to poll the system
@@ -1592,13 +1595,13 @@ impl Registration {
 
         let registration = Registration {
             inner: RegistrationInner {
-                node: node,
+                node,
             },
         };
 
         let set_readiness = SetReadiness {
             inner: RegistrationInner {
-                node: node,
+                node,
             },
         };
 
@@ -1636,13 +1639,13 @@ impl Registration {
 
         let registration = Registration {
             inner: RegistrationInner {
-                node: node,
+                node,
             },
         };
 
         let set_readiness = SetReadiness {
             inner: RegistrationInner {
-                node: node,
+                node,
             },
         };
 
@@ -1656,7 +1659,7 @@ impl Registration {
         self.inner.update(poll, token, interest, opts)
     }
 
-    #[deprecated(since = "0.6.5", note = "use `Evented` impl")]
+    #[deprecated(since = "0.6.5", note = "use `Poll::deregister` instead")]
     #[cfg(feature = "with-deprecated")]
     #[doc(hidden)]
     pub fn deregister(&self, poll: &Poll) -> io::Result<()> {
@@ -1879,7 +1882,9 @@ impl RegistrationInner {
         // pointer is being operated on. The actual memory is guaranteed to be
         // visible the `poll: &Poll` ref passed as an argument to the function.
         let mut queue = self.readiness_queue.load(Relaxed);
-        let other: &*mut () = unsafe { mem::transmute(&poll.readiness_queue.inner) };
+        let other: &*mut () = unsafe {
+            &*(&poll.readiness_queue.inner as *const _ as *const *mut ())
+        };
         let other = *other;
 
         debug_assert!(mem::size_of::<Arc<ReadinessQueueInner>>() == mem::size_of::<*mut ()>());
@@ -2063,12 +2068,11 @@ impl Clone for RegistrationInner {
         // We abort because such a program is incredibly degenerate, and we
         // don't care to support it.
         if old_size & !MAX_REFCOUNT != 0 {
-            // TODO: This should really abort the process
-            panic!();
+            process::abort();
         }
 
         RegistrationInner {
-            node: self.node.clone(),
+            node: self.node,
         }
     }
 }
@@ -2104,9 +2108,9 @@ impl ReadinessQueue {
                 awakener: sys::Awakener::new()?,
                 head_readiness: AtomicPtr::new(ptr),
                 tail_readiness: UnsafeCell::new(ptr),
-                end_marker: end_marker,
-                sleep_marker: sleep_marker,
-                closed_marker: closed_marker,
+                end_marker,
+                sleep_marker,
+                closed_marker,
             })
         })
     }
@@ -2509,7 +2513,9 @@ impl ReadinessNode {
 fn enqueue_with_wakeup(queue: *mut (), node: &ReadinessNode) -> io::Result<()> {
     debug_assert!(!queue.is_null());
     // This is ugly... but we don't want to bump the ref count.
-    let queue: &Arc<ReadinessQueueInner> = unsafe { mem::transmute(&queue) };
+    let queue: &Arc<ReadinessQueueInner> = unsafe {
+        &*(&queue as *const *mut () as *const Arc<ReadinessQueueInner>)
+    };
     queue.enqueue_node_with_wakeup(node)
 }
 
@@ -2589,7 +2595,7 @@ impl ReadinessState {
     }
 
     #[inline]
-    fn get(&self, mask: usize, shift: usize) -> usize{
+    fn get(self, mask: usize, shift: usize) -> usize{
         (self.0 >> shift) & mask
     }
 
@@ -2600,13 +2606,13 @@ impl ReadinessState {
 
     /// Get the readiness
     #[inline]
-    fn readiness(&self) -> Ready {
+    fn readiness(self) -> Ready {
         let v = self.get(MASK_4, READINESS_SHIFT);
         event::ready_from_usize(v)
     }
 
     #[inline]
-    fn effective_readiness(&self) -> Ready {
+    fn effective_readiness(self) -> Ready {
         self.readiness() & self.interest()
     }
 
@@ -2618,7 +2624,7 @@ impl ReadinessState {
 
     /// Get the interest
     #[inline]
-    fn interest(&self) -> Ready {
+    fn interest(self) -> Ready {
         let v = self.get(MASK_4, INTEREST_SHIFT);
         event::ready_from_usize(v)
     }
@@ -2636,7 +2642,7 @@ impl ReadinessState {
 
     /// Get the poll options
     #[inline]
-    fn poll_opt(&self) -> PollOpt {
+    fn poll_opt(self) -> PollOpt {
         let v = self.get(MASK_4, POLL_OPT_SHIFT);
         event::opt_from_usize(v)
     }
@@ -2648,7 +2654,7 @@ impl ReadinessState {
     }
 
     #[inline]
-    fn is_queued(&self) -> bool {
+    fn is_queued(self) -> bool {
         self.0 & QUEUED_MASK == QUEUED_MASK
     }
 
@@ -2667,22 +2673,22 @@ impl ReadinessState {
     }
 
     #[inline]
-    fn is_dropped(&self) -> bool {
+    fn is_dropped(self) -> bool {
         self.0 & DROPPED_MASK == DROPPED_MASK
     }
 
     #[inline]
-    fn token_read_pos(&self) -> usize {
+    fn token_read_pos(self) -> usize {
         self.get(MASK_2, TOKEN_RD_SHIFT)
     }
 
     #[inline]
-    fn token_write_pos(&self) -> usize {
+    fn token_write_pos(self) -> usize {
         self.get(MASK_2, TOKEN_WR_SHIFT)
     }
 
     #[inline]
-    fn next_token_pos(&self) -> usize {
+    fn next_token_pos(self) -> usize {
         let rd = self.token_read_pos();
         let wr = self.token_write_pos();
 

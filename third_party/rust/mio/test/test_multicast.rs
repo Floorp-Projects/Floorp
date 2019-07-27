@@ -26,9 +26,9 @@ impl UdpHandler {
     fn new(tx: UdpSocket, rx: UdpSocket, msg: &'static str) -> UdpHandler {
         let sock = UdpSocket::bind(&"127.0.0.1:12345".parse().unwrap()).unwrap();
         UdpHandler {
-            tx: tx,
-            rx: rx,
-            msg: msg,
+            tx,
+            rx,
+            msg,
             buf: SliceBuf::wrap(msg.as_bytes()),
             rx_buf: RingBuf::new(1024),
             localhost: sock.local_addr().unwrap().ip(),
@@ -37,31 +37,25 @@ impl UdpHandler {
     }
 
     fn handle_read(&mut self, _: &mut Poll, token: Token, _: Ready) {
-        match token {
-            LISTENER => {
-                debug!("We are receiving a datagram now...");
-                match unsafe { self.rx.recv_from(self.rx_buf.mut_bytes()) } {
-                    Ok((cnt, addr)) => {
-                        unsafe { MutBuf::advance(&mut self.rx_buf, cnt); }
-                        assert_eq!(addr.ip(), self.localhost);
-                    }
-                    res => panic!("unexpected result: {:?}", res),
+        if let LISTENER = token {
+            debug!("We are receiving a datagram now...");
+            match unsafe { self.rx.recv_from(self.rx_buf.mut_bytes()) } {
+                Ok((cnt, addr)) => {
+                    unsafe { MutBuf::advance(&mut self.rx_buf, cnt); }
+                    assert_eq!(addr.ip(), self.localhost);
                 }
-                assert!(str::from_utf8(self.rx_buf.bytes()).unwrap() == self.msg);
-                self.shutdown = true;
-            },
-            _ => ()
+                res => panic!("unexpected result: {:?}", res),
+            }
+            assert!(str::from_utf8(self.rx_buf.bytes()).unwrap() == self.msg);
+            self.shutdown = true;
         }
     }
 
     fn handle_write(&mut self, _: &mut Poll, token: Token, _: Ready) {
-        match token {
-            SENDER => {
-                let addr = self.rx.local_addr().unwrap();
-                let cnt = self.tx.send_to(self.buf.bytes(), &addr).unwrap();
-                self.buf.advance(cnt);
-            },
-            _ => ()
+        if let SENDER = token {
+            let addr = self.rx.local_addr().unwrap();
+            let cnt = self.tx.send_to(self.buf.bytes(), &addr).unwrap();
+            self.buf.advance(cnt);
         }
     }
 }
