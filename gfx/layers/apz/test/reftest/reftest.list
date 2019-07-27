@@ -30,4 +30,4 @@ skip-if(!asyncPan) == frame-reconstruction-scroll-clamping.html frame-reconstruc
 # Test that position:fixed and position:sticky elements are attached to the
 # layout viewport.
 pref(apz.allow_zooming,true) == pinch-zoom-position-fixed.html pinch-zoom-position-fixed-ref.html
-pref(apz.allow_zooming,true) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html
+pref(apz.allow_zooming,true) fails-if(webrender) == pinch-zoom-position-sticky.html pinch-zoom-position-sticky-ref.html  # bug 1569339 for webrender
