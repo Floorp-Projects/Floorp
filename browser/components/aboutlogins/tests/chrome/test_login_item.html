@@ -98,7 +98,7 @@ add_task(async function test_edit_login() {
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-changed")).args.timeChanged, TEST_LOGIN_1.timePasswordChanged, "time-changed should be populated");
   is(document.l10n.getAttributes(gLoginItem.shadowRoot.querySelector(".time-used")).args.timeUsed, TEST_LOGIN_1.timeLastUsed, "time-used should be populated");
   let copyButtons = [...gLoginItem.shadowRoot.querySelectorAll(".copy-button")];
-  ok(copyButtons.every(button => !isHidden(button)), "The copy buttons should be visible when editing a login");
+  ok(copyButtons.every(button => isHidden(button)), "The copy buttons should be visible when editing a login");
 
   gLoginItem.shadowRoot.querySelector("input[name='username']").value = "newUsername";
   gLoginItem.shadowRoot.querySelector("input[name='password']").value = "newPassword";
