@@ -1891,11 +1891,11 @@ nsresult nsOverflowContinuationTracker::Insert(nsIFrame* aOverflowCont,
       "OverflowContTracker in unexpected state");
 
   if (addToList) {
-    // Convert all non-overflow-container continuations of aOverflowCont
+    // Convert all non-overflow-container next-in-flows of aOverflowCont
     // into overflow containers and move them to our overflow
-    // tracker. This preserves the invariant that the next-continuations
+    // tracker. This preserves the invariant that the next-in-flows
     // of an overflow container are also overflow containers.
-    nsIFrame* f = aOverflowCont->GetNextContinuation();
+    nsIFrame* f = aOverflowCont->GetNextInFlow();
     if (f && (!(f->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER) ||
               (!reparented && f->GetParent() == mParent) ||
               (reparented && f->GetParent() != mParent))) {
