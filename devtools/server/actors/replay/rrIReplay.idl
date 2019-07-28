@@ -14,5 +14,4 @@ interface rrIReplay : nsISupports {
   void BeforeCheckpoint();
   void AfterCheckpoint(in long checkpoint, in bool restoredCheckpoint);
   long NewTimeWarpTarget();
-  void ScriptResumeFrame(in long script);
 };

@@ -42,8 +42,6 @@ const threadSpec = generateActorSpec({
     progress: {
       recording: Option(0, "json"),
       executionPoint: Option(0, "json"),
-      unscannedRegions: Option(0, "json"),
-      cachedPoints: Option(0, "json"),
     },
   },
 
