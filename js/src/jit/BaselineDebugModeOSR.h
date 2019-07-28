@@ -49,7 +49,7 @@ class DebugModeOSRVolatileJitFrameIter : public JitFrameIter {
 
 MOZ_MUST_USE bool RecompileOnStackBaselineScriptsForDebugMode(
     JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
-    bool observing);
+    DebugAPI::IsObserving observing);
 
 }  // namespace jit
 }  // namespace js

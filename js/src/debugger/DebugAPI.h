@@ -85,48 +85,69 @@ class DebugAPI {
    *       - it has a breakpoint set on a live script
    *       - it has a watchpoint set on a live object.
    *
-   * Debugger::markIteratively handles the last case. If it finds any Debugger
+   * DebugAPI::markIteratively handles the last case. If it finds any Debugger
    * objects that are definitely live but not yet marked, it marks them and
    * returns true. If not, it returns false.
    */
-  static void traceIncomingCrossCompartmentEdges(JSTracer* tracer);
   static MOZ_MUST_USE bool markIteratively(GCMarker* marker);
+
+  // Trace cross compartment edges in all debuggers relevant to the current GC.
+  static void traceCrossCompartmentEdges(JSTracer* tracer);
+
+  // Trace all debugger-owned GC things unconditionally, during a moving GC.
   static void traceAllForMovingGC(JSTracer* trc);
+
+  // Sweep dying debuggers, and detach edges to dying debuggees.
   static void sweepAll(FreeOp* fop);
+
+  // Add sweep group edges due to the presence of any debuggers.
   static MOZ_MUST_USE bool findSweepGroupEdges(JSRuntime* rt);
+
+  // Sweep breakpoints in a script associated with any debugger.
   static inline void sweepBreakpoints(FreeOp* fop, JSScript* script);
+
+  // Destroy the debugging information associated with a script.
   static void destroyDebugScript(FreeOp* fop, JSScript* script);
+
+  // Validate the debugging information in a script after a moving GC>
 #ifdef JSGC_HASH_TABLE_CHECKS
   static void checkDebugScriptAfterMovingGC(DebugScript* ds);
 #endif
 
   /*** Methods for querying script breakpoint state. **************************/
 
+  // Query information about whether any debuggers are observing a script.
   static inline bool stepModeEnabled(JSScript* script);
-
   static inline bool hasBreakpointsAt(JSScript* script, jsbytecode* pc);
-
   static inline bool hasAnyBreakpointsOrStepMode(JSScript* script);
 
-  /*** Methods for interacting with the runtime. ******************************/
+  /*** Methods for interacting with the JITs. *********************************/
 
+  // Update Debugger frames when an interpreter frame is replaced with a
+  // baseline frame.
   static MOZ_MUST_USE bool handleBaselineOsr(JSContext* cx,
                                              InterpreterFrame* from,
                                              jit::BaselineFrame* to);
 
+  // Update Debugger frames when an Ion frame bails out and is replaced with a
+  // baseline frame.
   static MOZ_MUST_USE bool handleIonBailout(JSContext* cx,
                                             jit::RematerializedFrame* from,
                                             jit::BaselineFrame* to);
 
+  // Detach any Debugger frames from an Ion frame after an error occurred while
+  // it bailed out.
   static void handleUnrecoverableIonBailoutError(
       JSContext* cx, jit::RematerializedFrame* frame);
 
-  static void propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
-                                    HandleValue rval);
-
+  // When doing on-stack-replacement of a debuggee interpreter frame with a
+  // baseline frame, ensure that the resulting frame can be observed by the
+  // debugger.
   static MOZ_MUST_USE bool ensureExecutionObservabilityOfOsrFrame(
       JSContext* cx, AbstractFramePtr osrSourceFrame);
 
+  // Describes a set of scripts or frames whose execution observability can
+  // change due to debugger activity.
   class ExecutionObservableSet {
    public:
     typedef HashSet<Zone*>::Range ZoneRange;
@@ -141,11 +162,16 @@ class DebugAPI {
     virtual bool shouldMarkAsDebuggee(FrameIter& iter) const = 0;
   };
 
-  // Checks if the current compartment is allowed to execute code.
-  static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx,
-                                                 HandleScript script);
+  // This enum is converted to and compare with bool values; NotObserving
+  // must be 0 and Observing must be 1.
+  enum IsObserving { NotObserving = 0, Observing = 1 };
 
+  /*** Methods for calling installed debugger handlers. ***********************/
+
+  // Called when a new script becomes accessible to debuggers.
   static inline void onNewScript(JSContext* cx, HandleScript script);
+
+  // Called when a new wasm instance becomes accessible to debuggers.
   static inline void onNewWasmInstance(
       JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
 
@@ -210,7 +236,10 @@ class DebugAPI {
                                                AbstractFramePtr frame,
                                                jsbytecode* pc, bool ok);
 
+  // Call any breakpoint handlers for the current scripted location.
   static ResumeMode onTrap(JSContext* cx, MutableHandleValue vp);
+
+  // Call any stepping handlers for the current scripted location.
   static ResumeMode onSingleStep(JSContext* cx, MutableHandleValue vp);
 
   // Notify any Debugger instances observing this promise's global that a new
@@ -229,6 +258,12 @@ class DebugAPI {
   static inline void onPromiseSettled(JSContext* cx,
                                       Handle<PromiseObject*> promise);
 
+  // Notify any Debugger instances that a new global object has been created.
+  static inline void onNewGlobalObject(JSContext* cx,
+                                       Handle<GlobalObject*> global);
+
+  /*** Methods for querying installed debugger handlers. **********************/
+
   // Whether any debugger is observing execution in a global.
   static bool debuggerObservesAllExecution(GlobalObject* global);
 
@@ -237,6 +272,36 @@ class DebugAPI {
 
   // Whether any Debugger is observing asm.js execution in a global.
   static bool debuggerObservesAsmJS(GlobalObject* global);
+
+  /*
+   * Return true if the given global is being observed by at least one
+   * Debugger that is tracking allocations.
+   */
+  static bool isObservedByDebuggerTrackingAllocations(
+      const GlobalObject& debuggee);
+
+  // If any debuggers are tracking allocations for a global, return the
+  // probability that a given allocation should be tracked. Nothing otherwise.
+  static mozilla::Maybe<double> allocationSamplingProbability(
+      GlobalObject* global);
+
+  // Whether any debugger is observing exception unwinds in a realm.
+  static bool hasExceptionUnwindHook(GlobalObject* global);
+
+  // Whether any debugger is observing debugger statements in a realm.
+  static bool hasDebuggerStatementHook(GlobalObject* global);
+
+  /*** Assorted methods for interacting with the runtime. *********************/
+
+  // When a step handler called during the interrupt callback forces the current
+  // frame to return, set state in the frame and context so that the exception
+  // handler will perform the forced return.
+  static void propagateForcedReturn(JSContext* cx, AbstractFramePtr frame,
+                                    HandleValue rval);
+
+  // Checks if the current compartment is allowed to execute code.
+  static inline MOZ_MUST_USE bool checkNoExecute(JSContext* cx,
+                                                 HandleScript script);
 
   /*
    * Announce to the debugger that a generator object has been created,
@@ -248,28 +313,17 @@ class DebugAPI {
       JSContext* cx, AbstractFramePtr frame,
       Handle<AbstractGeneratorObject*> genObj);
 
+  // If necessary, record an object that was just allocated for any observing
+  // debuggers.
   static inline MOZ_MUST_USE bool onLogAllocationSite(JSContext* cx,
                                                       JSObject* obj,
                                                       HandleSavedFrame frame,
                                                       mozilla::TimeStamp when);
 
-  static inline void onNewGlobalObject(JSContext* cx,
-                                       Handle<GlobalObject*> global);
-
-  /*
-   * Return true if the given global is being observed by at least one
-   * Debugger that is tracking allocations.
-   */
-  static bool isObservedByDebuggerTrackingAllocations(
-      const GlobalObject& debuggee);
-
   // Announce to the debugger that a global object is being collected by the
   // specified major GC.
   static inline void notifyParticipatesInGC(GlobalObject* global,
                                             uint64_t majorGCNumber);
-
-  static mozilla::Maybe<double> allocationSamplingProbability(
-      GlobalObject* global);
 
   // Allocate an object which holds a GlobalObject::DebuggerVector.
   static JSObject* newGlobalDebuggersHolder(JSContext* cx);
@@ -277,12 +331,6 @@ class DebugAPI {
   // Get the GlobalObject::DebuggerVector for an object allocated by
   // newGlobalDebuggersObject.
   static GlobalObject::DebuggerVector* getGlobalDebuggers(JSObject* holder);
-
-  // Whether any debugger is observing exception unwinds in a realm.
-  static bool hasExceptionUnwindHook(GlobalObject* global);
-
-  // Whether any debugger is observing debugger statements in a realm.
-  static bool hasDebuggerStatementHook(GlobalObject* global);
 
   /*
    * Get any instrumentation ID which has been associated with a script using
