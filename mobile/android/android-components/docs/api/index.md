@@ -136,6 +136,7 @@
 | [mozilla.components.service.fretboard.storage.flatfile](mozilla.components.service.fretboard.storage.flatfile/index.md) |  |
 | [mozilla.components.service.fxa](mozilla.components.service.fxa/index.md) |  |
 | [mozilla.components.service.fxa.manager](mozilla.components.service.fxa.manager/index.md) |  |
+| [mozilla.components.service.fxa.sharing](mozilla.components.service.fxa.sharing/index.md) |  |
 | [mozilla.components.service.fxa.sync](mozilla.components.service.fxa.sync/index.md) |  |
 | [mozilla.components.service.glean](mozilla.components.service.glean/index.md) |  |
 | [mozilla.components.service.glean.config](mozilla.components.service.glean.config/index.md) |  |

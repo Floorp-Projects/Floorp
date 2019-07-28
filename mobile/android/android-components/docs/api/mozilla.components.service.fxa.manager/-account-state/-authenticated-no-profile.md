@@ -2,4 +2,4 @@
 
 # AuthenticatedNoProfile
 
-`AuthenticatedNoProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/State.kt#L16)
+`AuthenticatedNoProfile` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/manager/State.kt#L17)

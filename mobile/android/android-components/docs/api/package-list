@@ -47,7 +47,10 @@ $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray,
 $dokka.location:mozilla.components.support.ktx.kotlin$toBitmap(kotlin.ByteArray, kotlin.Int, kotlin.Int, )mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-bitmap.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toBundle(kotlin.collections.Map((mozilla.components.support.ktx.kotlin.toBundle.K, mozilla.components.support.ktx.kotlin.toBundle.V)))mozilla.components.support.ktx.kotlin/kotlin.collections.-map/to-bundle.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toDate(kotlin.String, kotlin.String, java.util.Locale)mozilla.components.support.ktx.kotlin/kotlin.-string/to-date.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toHexString(kotlin.ByteArray, kotlin.Int)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-hex-string.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toNormalizedUrl(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-normalized-url.md
+$dokka.location:mozilla.components.support.ktx.kotlin$toSha256Digest(kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/to-sha256-digest.md
 $dokka.location:mozilla.components.support.ktx.kotlin$toUri(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/to-uri.md
 $dokka.location:mozilla.components.support.locale$toLocale(kotlin.String)mozilla.components.support.locale/kotlin.-string/to-locale.md
 $dokka.location:mozilla.components.support.test.ext$joinBlocking(kotlinx.coroutines.Job)mozilla.components.support.test.ext/kotlinx.coroutines.-job/join-blocking.md
@@ -183,6 +186,7 @@ mozilla.components.service.fretboard.source.kinto
 mozilla.components.service.fretboard.storage.flatfile
 mozilla.components.service.fxa
 mozilla.components.service.fxa.manager
+mozilla.components.service.fxa.sharing
 mozilla.components.service.fxa.sync
 mozilla.components.service.glean
 mozilla.components.service.glean.config
