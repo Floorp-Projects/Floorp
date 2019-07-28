@@ -40,7 +40,7 @@ dependencies {
     testImplementation Dependencies.testing_robolectric
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.kotlin_coroutines
-    testImplementation Dependencies.kotlin_coroutines_test
+    testImplementation Dependencies.testing_coroutines
 }
 
 apply from: '../../../publish.gradle'
