@@ -424,9 +424,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     JSSLOT_DEBUG_COUNT
   };
 
-  // This enum is converted to and compare with bool values; NotObserving
-  // must be 0 and Observing must be 1.
-  enum IsObserving { NotObserving = 0, Observing = 1 };
+  // Bring DebugAPI::IsObserving into the Debugger namespace.
+  using IsObserving = DebugAPI::IsObserving;
+  static const IsObserving Observing = DebugAPI::Observing;
+  static const IsObserving NotObserving = DebugAPI::NotObserving;
 
   // Return true if the given realm is a debuggee of this debugger,
   // false otherwise.
