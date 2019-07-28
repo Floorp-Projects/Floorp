@@ -17,11 +17,13 @@
   border-bottom: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   color: var(--in-content-deemphasized-text);
+  font-size: 0.8em;
 }
 
 #login-sort {
+  background-color: transparent;
+  padding-inline-start: 0;
   min-height: initial;
-  line-height: 1.1;
   font: inherit;
   font-weight: 600;
   color: var(--in-content-text-color) !important;
@@ -34,7 +36,6 @@
 .count {
   flex-grow: 1;
   text-align: end;
-  font-size: smaller;
   margin-inline-start: 18px;
 }
 
