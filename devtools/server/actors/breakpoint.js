@@ -46,7 +46,7 @@ function BreakpointActor(threadActor, location) {
 BreakpointActor.prototype = {
   setOptions(options) {
     for (const [script, offsets] of this.scripts) {
-      this._newOffsetsOrOptions(script, offsets, this.options, options);
+      this._updateOptionsForScript(script, offsets, options);
     }
 
     this.options = options;
@@ -71,7 +71,11 @@ BreakpointActor.prototype = {
    */
   addScript: function(script, offsets) {
     this.scripts.set(script, offsets.concat(this.scripts.get(offsets) || []));
-    this._newOffsetsOrOptions(script, offsets, null, this.options);
+    for (const offset of offsets) {
+      script.setBreakpoint(offset, this);
+    }
+
+    this._updateOptionsForScript(script, offsets, this.options);
   },
 
   /**
@@ -84,20 +88,12 @@ BreakpointActor.prototype = {
     this.scripts.clear();
   },
 
-  /**
-   * Called on changes to this breakpoint's script offsets or options.
-   */
-  _newOffsetsOrOptions(script, offsets, oldOptions, options) {
+  // Update any state affected by changing options on a script this breakpoint
+  // is associated with.
+  _updateOptionsForScript(script, offsets, options) {
     // When replaying, logging breakpoints are handled using an API to get logged
     // messages from throughout the recording.
     if (this.threadActor.dbg.replaying && options.logValue) {
-      if (
-        oldOptions &&
-        oldOptions.logValue == options.logValue &&
-        oldOptions.condition == options.condition
-      ) {
-        return;
-      }
       for (const offset of offsets) {
         const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
         script.replayVirtualConsoleLog(
@@ -117,15 +113,6 @@ BreakpointActor.prototype = {
           }
         );
       }
-      return;
-    }
-
-    // In all other cases, this is used as a script breakpoint handler.
-    // Clear any existing handler first in case this is called multiple times
-    // after options change.
-    for (const offset of offsets) {
-      script.clearBreakpoint(this, offset);
-      script.setBreakpoint(offset, this);
     }
   },
 
@@ -215,6 +202,12 @@ BreakpointActor.prototype = {
     const reason = { type: "breakpoint", actors: [this.actorID] };
     const { condition, logValue } = this.options || {};
 
+    // When replaying, breakpoints with log values are handled via
+    // _updateOptionsForScript.
+    if (logValue && this.threadActor.dbg.replaying) {
+      return undefined;
+    }
+
     if (condition) {
       const { result, message } = this.checkCondition(frame, condition);
 
@@ -235,9 +228,6 @@ BreakpointActor.prototype = {
     }
 
     if (logValue) {
-      // When replaying, the breakpoint handler is not installed for logpoints.
-      assert(!isReplaying);
-
       const displayName = formatDisplayName(frame);
       const completion = frame.evalWithBindings(`[${logValue}]`, {
         displayName,

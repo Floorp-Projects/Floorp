@@ -60,11 +60,6 @@ ChromeUtils.defineModuleGetter(
   "pointPrecedes",
   "resource://devtools/shared/execution-point-utils.js"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "pointEquals",
-  "resource://devtools/shared/execution-point-utils.js"
-);
 
 const { UPDATE_REQUEST } = require("devtools/client/netmonitor/src/constants");
 
@@ -192,22 +187,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
 
   if (newMessage.executionPoint) {
     state.hasExecutionPoints = true;
-  }
-
-  // When replaying, we might get two messages with the same execution point and
-  // logpoint ID. In this case the first message is provisional and should be
-  // removed.
-  const removedIds = [];
-  if (newMessage.logpointId) {
-    const existingMessage = [...state.messagesById.values()].find(existing => {
-      return (
-        existing.logpointId == newMessage.logpointId &&
-        pointEquals(existing.executionPoint, newMessage.executionPoint)
-      );
-    });
-    if (existingMessage) {
-      removedIds.push(existingMessage.id);
-    }
   }
 
   // Check if the current message could be placed in a Warning Group.
@@ -352,7 +331,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     state.networkMessagesUpdateById[newMessage.actor] = newMessage;
   }
 
-  return removeMessagesFromState(state, removedIds);
+  return state;
 }
 /* eslint-enable complexity */
 

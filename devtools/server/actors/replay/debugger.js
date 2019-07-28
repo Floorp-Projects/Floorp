@@ -103,7 +103,8 @@ ReplayDebugger.prototype = {
   canRewind: RecordReplayControl.canRewind,
 
   replayCurrentExecutionPoint() {
-    return this._control.lastPausePoint();
+    this._ensurePaused();
+    return this._control.pausePoint();
   },
 
   replayRecordingEndpoint() {
@@ -112,14 +113,6 @@ ReplayDebugger.prototype = {
 
   replayIsRecording() {
     return this._control.childIsRecording();
-  },
-
-  replayUnscannedRegions() {
-    return this._control.unscannedRegions();
-  },
-
-  replayCachedPoints() {
-    return this._control.cachedPoints();
   },
 
   addDebuggee() {},
@@ -163,6 +156,18 @@ ReplayDebugger.prototype = {
   _sendRequestMainChild(request) {
     const response = this._control.sendRequestMainChild(request);
     return this._processResponse(request, response);
+  },
+
+  // Update graphics according to the current state of the child process. This
+  // should be done anytime we pause and allow the user to interact with the
+  // debugger.
+  _repaint() {
+    const rv = this._sendRequestAllowDiverge({ type: "repaint" }, {});
+    if ("width" in rv && "height" in rv) {
+      RecordReplayControl.hadRepaint(rv.width, rv.height);
+    } else {
+      RecordReplayControl.hadRepaintFailure();
+    }
   },
 
   getDebuggees() {
@@ -305,10 +310,10 @@ ReplayDebugger.prototype = {
     }
   },
 
-  // This hook is called whenever control state changes which affects something
-  // the position change handler listens to (more than just position changes,
-  // alas).
-  _callOnPositionChange() {
+  // This hook is called whenever we switch between recording and replaying
+  // child processes.
+  _onSwitchChild() {
+    // The position change handler listens to changes to the current child.
     if (this.replayingOnPositionChange) {
       this.replayingOnPositionChange();
     }
@@ -324,7 +329,7 @@ ReplayDebugger.prototype = {
       this._direction = Direction.NONE;
 
       // Update graphics according to the current state of the child.
-      this._control.repaint();
+      this._repaint();
 
       // If breakpoint handlers for the pause haven't been called yet, don't
       // call them at all.
@@ -357,6 +362,7 @@ ReplayDebugger.prototype = {
 
   _performResume() {
     this._ensurePaused();
+    assert(!this._threadPauseCount);
     if (this._resumeCallback && !this._threadPauseCount) {
       const callback = this._resumeCallback;
       this._invalidateAfterUnpause();
@@ -381,7 +387,7 @@ ReplayDebugger.prototype = {
       return;
     }
 
-    const pauseData = this._control.getPauseData();
+    const pauseData = this._sendRequestAllowDiverge({ type: "pauseData" });
     if (!pauseData.frames) {
       return;
     }
@@ -417,7 +423,6 @@ ReplayDebugger.prototype = {
   },
 
   _virtualConsoleLog(position, text, condition, callback) {
-    dumpv(`AddLogpoint ${JSON.stringify(position)} ${text} ${condition}`);
     this._control.addLogpoint({ position, text, condition, callback });
   },
 
@@ -426,7 +431,7 @@ ReplayDebugger.prototype = {
   /////////////////////////////////////////////////////////
 
   _setBreakpoint(handler, position, data) {
-    dumpv(`AddBreakpoint ${JSON.stringify(position)}`);
+    dumpv("AddBreakpoint " + JSON.stringify(position));
     this._control.addBreakpoint(position);
     this._breakpoints.push({ handler, position, data });
   },
@@ -704,7 +709,6 @@ ReplayDebugger.prototype = {
   },
   set onEnterFrame(handler) {
     this._breakpointKindSetter("EnterFrame", handler, () => {
-      this._capturePauseData();
       handler.call(this, this.getNewestFrame());
     });
   },
@@ -876,7 +880,9 @@ function ReplayDebuggerFrame(dbg, data) {
   this._dbg = dbg;
   this._data = data;
   if (this._data.arguments) {
-    this._arguments = this._data.arguments.map(a => this._dbg._convertValue(a));
+    this._data.arguments = this._data.arguments.map(a =>
+      this._dbg._convertValue(a)
+    );
   }
 }
 
@@ -910,8 +916,7 @@ ReplayDebuggerFrame.prototype = {
     return this._data.offset;
   },
   get arguments() {
-    assert(this._data);
-    return this._arguments;
+    return this._data.arguments;
   },
   get live() {
     return true;
