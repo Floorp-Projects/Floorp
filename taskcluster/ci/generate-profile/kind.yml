@@ -157,7 +157,7 @@ jobs:
         run:
             using: run-task
             sparse-profile: profile-generate
-            command: mv fetches build/src && cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
+            command: cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
 
     win64-shippable/opt:
         description: "Win64 Profile Generation"
@@ -186,4 +186,4 @@ jobs:
         run:
             using: run-task
             sparse-profile: profile-generate
-            command: mv fetches build/src && cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
+            command: cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
