@@ -107,8 +107,6 @@ class WebReplayPlayer extends Component {
       paused: false,
       messages: [],
       highlightedMessage: null,
-      unscannedRegions: [],
-      cachedPoints: [],
       start: 0,
       end: 1,
     };
@@ -202,12 +200,7 @@ class WebReplayPlayer extends Component {
   }
 
   onProgress(packet) {
-    const {
-      recording,
-      executionPoint,
-      unscannedRegions,
-      cachedPoints,
-    } = packet;
+    const { recording, executionPoint } = packet;
     log(`progress: ${recording ? "rec" : "play"} ${executionPoint.progress}`);
 
     if (this.state.seeking) {
@@ -219,12 +212,7 @@ class WebReplayPlayer extends Component {
       return;
     }
 
-    const newState = {
-      recording,
-      executionPoint,
-      unscannedRegions,
-      cachedPoints,
-    };
+    const newState = { recording, executionPoint };
     if (recording) {
       newState.recordingEndpoint = executionPoint;
     }
@@ -465,12 +453,7 @@ class WebReplayPlayer extends Component {
   }
 
   renderMessage(message, index) {
-    const {
-      messages,
-      executionPoint,
-      highlightedMessage,
-      cachedPoints,
-    } = this.state;
+    const { messages, executionPoint, highlightedMessage } = this.state;
 
     const offset = this.getVisibleOffset(message.executionPoint);
     const previousMessage = messages[index - 1];
@@ -494,16 +477,11 @@ class WebReplayPlayer extends Component {
 
     const isHighlighted = highlightedMessage == message.id;
 
-    const uncached =
-      message.executionPoint &&
-      !cachedPoints.includes(message.executionPoint.progress);
-
     return dom.a({
       className: classname("message", {
         overlayed: isOverlayed,
         future: isFuture,
         highlighted: isHighlighted,
-        uncached,
       }),
       style: {
         left: `${Math.max(offset - markerWidth / 2, 0)}px`,
@@ -547,37 +525,6 @@ class WebReplayPlayer extends Component {
     });
   }
 
-  renderUnscannedRegions() {
-    return this.state.unscannedRegions.map(
-      this.renderUnscannedRegion.bind(this)
-    );
-  }
-
-  renderUnscannedRegion({ start, end }) {
-    let startOffset = this.getVisibleOffset({ progress: start });
-    let endOffset = this.getVisibleOffset({ progress: end });
-
-    if (startOffset > this.overlayWidth || endOffset < 0) {
-      return null;
-    }
-
-    if (startOffset < 0) {
-      startOffset = 0;
-    }
-
-    if (endOffset > this.overlayWidth) {
-      endOffset = this.overlayWidth;
-    }
-
-    return dom.span({
-      className: classname("unscanned"),
-      style: {
-        left: `${startOffset}px`,
-        width: `${endOffset - startOffset}px`,
-      },
-    });
-  }
-
   render() {
     const percent = this.getVisiblePercent(this.state.executionPoint);
     const recording = this.isRecording();
@@ -613,8 +560,7 @@ class WebReplayPlayer extends Component {
               style: { left: `${percent}%`, width: `${100 - percent}%` },
             }),
             ...this.renderMessages(),
-            ...this.renderTicks(),
-            ...this.renderUnscannedRegions()
+            ...this.renderTicks()
           )
         )
       )
