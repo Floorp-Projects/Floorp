@@ -39,7 +39,7 @@ This is only necessary if not using ``firefoxtree``.
 Configuring Try with Git Cinnabar
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The recommended way to use try with git is with `git cinnabar`, which can be
+The recommended way to use try with git is with `git cinnabar`_, which can be
 installed by running:
 
 .. code-block:: shell

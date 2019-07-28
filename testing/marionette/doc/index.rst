@@ -2,7 +2,7 @@
 Marionette
 ==========
 
-Marionette is a remote protocol that lets out-of-process programs
+Marionette is a remote `protocol`_ that lets out-of-process programs
 communicate with, instrument, and control Gecko-based browsers.
 
 It provides interfaces for interacting with both the internal JavaScript
