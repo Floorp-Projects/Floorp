@@ -453,7 +453,7 @@ static void SkipInterpreterFrameEntries(
 }
 
 static bool RecompileBaselineScriptForDebugMode(
-    JSContext* cx, JSScript* script, bool observing) {
+    JSContext* cx, JSScript* script, DebugAPI::IsObserving observing) {
   BaselineScript* oldBaselineScript = script->baselineScript();
 
   // If a script is on the stack multiple times, it may have already
@@ -535,7 +535,7 @@ static void UndoRecompileBaselineScriptsForDebugMode(
 
 bool jit::RecompileOnStackBaselineScriptsForDebugMode(
     JSContext* cx, const DebugAPI::ExecutionObservableSet& obs,
-    bool observing) {
+    DebugAPI::IsObserving observing) {
   // First recompile the active scripts on the stack and patch the live
   // frames.
   Vector<DebugModeOSREntry> entries(cx);

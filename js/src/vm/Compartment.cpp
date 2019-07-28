@@ -447,7 +447,7 @@ void Compartment::traceIncomingCrossCompartmentEdgesForZoneGC(JSTracer* trc) {
       c->traceOutgoingCrossCompartmentWrappers(trc);
     }
   }
-  DebugAPI::traceIncomingCrossCompartmentEdges(trc);
+  DebugAPI::traceCrossCompartmentEdges(trc);
 }
 
 void Compartment::sweepAfterMinorGC(JSTracer* trc) {
