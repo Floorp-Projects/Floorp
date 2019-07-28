@@ -40,7 +40,6 @@ These checks and actions are done in several components. Here's how they interac
 
 For more information about the context, please see this `blog post`_.
 
-..  _l10n website: https://l10n.mozilla-community.org/stores_l10n/
 .. _pushapkscript: https://github.com/mozilla-releng/pushapkscript
 .. _MozApkPublisher: https://github.com/mozilla-releng/mozapkpublisher
 .. _blog post: https://johanlorenzo.github.io/blog/2017/06/07/part-2-how-mozilla-publishes-apks-onto-google-play-store-in-a-reasonably-secure-and-automated-way.html
