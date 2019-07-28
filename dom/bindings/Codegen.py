@@ -2013,6 +2013,9 @@ def isChromeOnly(m):
 def prefIdentifier(pref):
     return pref.replace(".", "_").replace("-", "_")
 
+def prefHeader(pref):
+    return "mozilla/StaticPrefs_%s.h" % pref.partition(".")[0]
+
 class MemberCondition:
     """
     An object representing the condition for a member to actually be
@@ -14754,23 +14757,25 @@ class CGBindingRoot(CGThing):
             return any(PropertyDefiner.getControllingCondition(m, desc).hasDisablers()
                        for m in iface.members if (m.isMethod() or m.isAttr() or m.isConst()))
 
-        def dictionaryHasPrefControlledMember(dictionary):
+        def addPrefHeaderForObject(bindingHeaders, obj):
+            """
+            obj might be a dictionary member or an interface.
+            """
+            pref = PropertyDefiner.getStringAttr(obj, "Pref")
+            if pref:
+                bindingHeaders[prefHeader(pref)] = True
+
+        def addPrefHeadersForDictionary(bindingHeaders, dictionary):
             while dictionary:
-                if (any(m.getExtendedAttribute("Pref") for m in dictionary.members)):
-                    return True
+                for m in dictionary.members:
+                    addPrefHeaderForObject(bindingHeaders, m)
                 dictionary = dictionary.parent
-            return False
 
-        def descriptorRequiresPreferences(desc):
-            iface = desc.interface
-            return iface.getExtendedAttribute("Pref") is not None
+        for d in dictionaries:
+            addPrefHeadersForDictionary(bindingHeaders, d)
+        for d in descriptors:
+            addPrefHeaderForObject(bindingHeaders, d.interface)
 
-        # Bug 1568729: ideally we'd be smarter about this, and only include the
-        # required StaticPrefs_*.h file, rather than StaticPrefsAll.h, which
-        # includes all StaticPrefs_*.h files.
-        bindingHeaders["mozilla/StaticPrefsAll.h"] = (
-            any(descriptorRequiresPreferences(d) for d in descriptors) or
-            any(dictionaryHasPrefControlledMember(d) for d in dictionaries))
         bindingHeaders["mozilla/dom/WebIDLPrefs.h"] = any(
             descriptorHasPrefDisabler(d) for d in descriptors)
         bindingHeaders["nsContentUtils.h"] = (
@@ -18077,14 +18082,12 @@ class GlobalGenRoots():
     @staticmethod
     def WebIDLPrefs(config):
         prefs = set()
-        # Bug 1568729: ideally we'd be smarter about this, and only include the
-        # required StaticPrefs_*.h file, rather than StaticPrefsAll.h, which
-        # includes all StaticPrefs_*.h files.
-        headers = set(["mozilla/dom/WebIDLPrefs.h", "mozilla/StaticPrefsAll.h"])
+        headers = set(["mozilla/dom/WebIDLPrefs.h"])
         for d in config.getDescriptors(hasInterfaceOrInterfacePrototypeObject=True):
             for m in d.interface.members:
                 pref = PropertyDefiner.getStringAttr(m, "Pref")
                 if pref:
+                    headers.add(prefHeader(pref))
                     prefs.add((pref, prefIdentifier(pref)))
         prefs = sorted(prefs)
         declare = fill(
