@@ -94,5 +94,10 @@ add_task(async function() {
   await toggleNode(dbg, "0");
   ok(findNodeValue(dbg, "foo"), "foo");
   await toggleNode(dbg, "var_weakset");
+
+  // Close the scopes in order to unmount the reps in order to force spawning
+  // the various `release` RDP requests which, otherwise, would happen in
+  // middle of the toolbox destruction. Then, wait for them to finish.
+  await toggleScopes(dbg);
   await waitForRequestsToSettle(dbg);
 });
