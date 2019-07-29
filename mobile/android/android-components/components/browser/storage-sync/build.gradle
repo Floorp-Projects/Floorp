@@ -63,7 +63,6 @@ dependencies {
 
     testImplementation Dependencies.mozilla_places
     testImplementation Dependencies.testing_mockwebserver
-    testImplementation Dependencies.androidx_work_testing
 
     testImplementation Dependencies.mozilla_full_megazord_forUnitTests
 }

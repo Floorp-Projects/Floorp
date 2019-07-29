@@ -266,6 +266,16 @@ interface AsyncLoginsStorage : AutoCloseable {
      * the database is already unlocked. Never rejects.
      */
     fun ensureLocked(): Deferred<Unit>
+
+    /**
+     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
+     *
+     * Note: handles do not remain valid after locking / unlocking the logins database.
+     *
+     * @return raw internal handle that could be used for referencing underlying logins database.
+     * Use it with SyncManager.
+     */
+    fun getHandle(): Long
 }
 
 /**
@@ -342,6 +352,10 @@ open class AsyncLoginsStorageAdapter<T : LoginsStorage>(private val wrapped: T) 
         return scope.async { wrapped.update(login) }
     }
 
+    override fun getHandle(): Long {
+        return wrapped.getHandle()
+    }
+
     override fun close() {
         job.cancel()
         wrapped.close()
@@ -384,6 +398,10 @@ data class SyncableLoginsStore(
         } catch (e: LoginsStorageException) {
             SyncStatus.Error(e)
         }
+    }
+
+    override fun getHandle(): Long {
+        return store.getHandle()
     }
 
     /**

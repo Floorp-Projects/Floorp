@@ -33,6 +33,7 @@ import mozilla.components.service.fxa.sharing.ShareableAccount
 import mozilla.components.service.fxa.sharing.ShareableAuthInfo
 import mozilla.components.service.fxa.sync.SyncManager
 import mozilla.components.service.fxa.sync.SyncDispatcher
+import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.sync.SyncStatusObserver
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
@@ -58,6 +59,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoMoreInteractions
 import java.lang.Exception
 import java.lang.IllegalArgumentException
 import java.util.concurrent.TimeUnit
@@ -190,8 +192,8 @@ class FxaAccountManagerTest {
             return inner.isSyncActive()
         }
 
-        override fun syncNow(startup: Boolean, debounce: Boolean) {
-            inner.syncNow(startup, debounce)
+        override fun syncNow(reason: SyncReason, debounce: Boolean) {
+            inner.syncNow(reason, debounce)
         }
 
         override fun startPeriodicSync(unit: TimeUnit, period: Long) {
@@ -307,23 +309,23 @@ class FxaAccountManagerTest {
         assertEquals(0, syncStatusObserver.onErrorCount)
 
         // No periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
 
-        assertEquals(setOf(SyncEngine.HISTORY), manager.supportedSyncEngines())
+        assertEquals(setOf(SyncEngine.History), manager.supportedSyncEngines())
         assertNotNull(latestSyncManager)
         assertNotNull(latestSyncManager?.dispatcher)
         assertNotNull(latestSyncManager?.dispatcher?.inner)
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(eq(SyncReason.FirstSync), anyBoolean())
 
         // With periodic sync.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY, SyncEngine.PASSWORDS), 60 * 1000L)).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History, SyncEngine.Passwords), 60 * 1000L)).await()
 
-        assertEquals(setOf(SyncEngine.HISTORY, SyncEngine.PASSWORDS), manager.supportedSyncEngines())
+        assertEquals(setOf(SyncEngine.History, SyncEngine.Passwords), manager.supportedSyncEngines())
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(eq(SyncReason.FirstSync), anyBoolean())
 
         // Make sure sync status listeners are working.
         // TODO fix these tests.
@@ -364,7 +366,7 @@ class FxaAccountManagerTest {
 
         // With a sync config this time.
         var latestSyncManager: TestSyncManager? = null
-        val syncConfig = SyncConfig(setOf(SyncEngine.HISTORY), syncPeriodInMinutes = 120L)
+        val syncConfig = SyncConfig(setOf(SyncEngine.History), syncPeriodInMinutes = 120L)
         val manager = object : TestableFxaAccountManager(
             context = testContext,
             config = ServerConfig.release("dummyId", "http://auth-url/redirect"),
@@ -408,15 +410,15 @@ class FxaAccountManagerTest {
         assertNotNull(latestSyncManager!!.dispatcher.inner)
         verify(latestSyncManager!!.dispatcher.inner, times(1)).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(eq(SyncReason.Startup), anyBoolean())
 
         // Can trigger syncs.
-        manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
-        manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
-        manager.syncNowAsync(startup = true, debounce = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = true)
+        manager.syncNowAsync(SyncReason.User).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(SyncReason.User, debounce = false)
+        manager.syncNowAsync(SyncReason.Startup).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(SyncReason.Startup, debounce = false)
+        manager.syncNowAsync(SyncReason.EngineChange, debounce = true).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(SyncReason.EngineChange, debounce = true)
 
         // TODO fix these tests
 //        assertEquals(0, syncStatusObserver.onStartedCount)
@@ -433,17 +435,17 @@ class FxaAccountManagerTest {
 //        assertEquals(1, syncStatusObserver.onErrorCount)
 
         // Turn off periodic syncing.
-        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.HISTORY))).await()
+        manager.setSyncConfigAsync(SyncConfig(setOf(SyncEngine.History))).await()
 
         verify(latestSyncManager!!.dispatcher.inner, never()).startPeriodicSync(any(), anyLong())
         verify(latestSyncManager!!.dispatcher.inner, never()).stopPeriodicSync()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(anyBoolean(), anyBoolean())
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(SyncReason.FirstSync, debounce = false)
 
         // Can trigger syncs.
-        manager.syncNowAsync().await()
-        verify(latestSyncManager!!.dispatcher.inner, times(2)).syncNow(startup = false, debounce = false)
-        manager.syncNowAsync(startup = true).await()
-        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(startup = true, debounce = false)
+        manager.syncNowAsync(SyncReason.User).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(SyncReason.User, debounce = false)
+        manager.syncNowAsync(SyncReason.Startup).await()
+        verify(latestSyncManager!!.dispatcher.inner, times(1)).syncNow(SyncReason.Startup, debounce = false)
 
         // Pretend sync is running.
         `when`(latestSyncManager!!.dispatcher.inner.isSyncActive()).thenReturn(true)
@@ -779,7 +781,7 @@ class FxaAccountManagerTest {
         }
 
         override fun getCurrentDeviceId(): String? {
-            return null
+            return "testFxaDeviceId"
         }
 
         override fun getSessionToken(): String? {
@@ -914,6 +916,7 @@ class FxaAccountManagerTest {
         `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(profile))
         // We have an account at the start.
         `when`(accountStorage.read()).thenReturn(mockAccount)
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.ensureCapabilitiesAsync(any())).thenReturn(CompletableDeferred(true))
 
@@ -984,6 +987,7 @@ class FxaAccountManagerTest {
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
@@ -1072,6 +1076,7 @@ class FxaAccountManagerTest {
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
@@ -1098,6 +1103,7 @@ class FxaAccountManagerTest {
         val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
         verify(accountObserver, never()).onLoggedOut()
@@ -1142,6 +1148,7 @@ class FxaAccountManagerTest {
         val accountObserver: AccountObserver = mock()
         val manager = prepareUnhappyAuthenticationFlow(mockAccount, profile, accountStorage, accountObserver, this.coroutineContext)
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
 
         // We start off as logged-out, but the event won't be called (initial default state is assumed).
@@ -1197,6 +1204,7 @@ class FxaAccountManagerTest {
         assertNull(manager.accountProfile())
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
         assertTrue(manager.finishAuthenticationAsync(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)).await())
@@ -1250,6 +1258,7 @@ class FxaAccountManagerTest {
         assertNull(manager.authenticatedAccount())
         assertNull(manager.accountProfile())
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
@@ -1281,6 +1290,7 @@ class FxaAccountManagerTest {
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
         `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(CompletableDeferred(value = null))
         `when`(mockAccount.beginOAuthFlowAsync(any())).thenReturn(CompletableDeferred(AuthFlowUrl(EXPECTED_AUTH_STATE, "auth://url")))
@@ -1343,6 +1353,7 @@ class FxaAccountManagerTest {
         val mockAccount: OAuthAccount = mock()
         val constellation: DeviceConstellation = mock()
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
@@ -1400,6 +1411,7 @@ class FxaAccountManagerTest {
         val constellation: DeviceConstellation = mock()
 
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
         `when`(mockAccount.getProfileAsync(anyBoolean())).then {
@@ -1456,6 +1468,7 @@ class FxaAccountManagerTest {
         val constellation: DeviceConstellation = mock()
         val captor = argumentCaptor<AuthType>()
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
 
@@ -1532,6 +1545,7 @@ class FxaAccountManagerTest {
         val fxaException = FxaPanicException("500")
         exceptionalProfile.completeExceptionally(fxaException)
 
+        `when`(mockAccount.getCurrentDeviceId()).thenReturn("testDeviceId")
         `when`(mockAccount.deviceConstellation()).thenReturn(constellation)
         `when`(constellation.initDeviceAsync(any(), any(), any())).thenReturn(CompletableDeferred(true))
         `when`(mockAccount.getProfileAsync(anyBoolean())).thenReturn(exceptionalProfile)
@@ -1565,6 +1579,43 @@ class FxaAccountManagerTest {
         assertNull(manager.accountProfile())
 
         assertTrue(manager.finishAuthenticationAsync(FxaAuthData(AuthType.Signin, "dummyCode", EXPECTED_AUTH_STATE)).await())
+    }
+
+    @Test
+    fun `accounts to sync integration`() {
+        val syncManager: SyncManager = mock()
+        val integration = FxaAccountManager.AccountsToSyncIntegration(syncManager)
+
+        // onAuthenticated - mapping of AuthType to SyncReason
+        integration.onAuthenticated(mock(), AuthType.Signin)
+        verify(syncManager, times(1)).start(SyncReason.FirstSync)
+        integration.onAuthenticated(mock(), AuthType.Signup)
+        verify(syncManager, times(2)).start(SyncReason.FirstSync)
+        integration.onAuthenticated(mock(), AuthType.Pairing)
+        verify(syncManager, times(3)).start(SyncReason.FirstSync)
+        integration.onAuthenticated(mock(), AuthType.Shared)
+        verify(syncManager, times(4)).start(SyncReason.FirstSync)
+        integration.onAuthenticated(mock(), AuthType.OtherExternal("test"))
+        verify(syncManager, times(5)).start(SyncReason.FirstSync)
+        integration.onAuthenticated(mock(), AuthType.Existing)
+        verify(syncManager, times(1)).start(SyncReason.Startup)
+        integration.onAuthenticated(mock(), AuthType.Recovered)
+        verify(syncManager, times(2)).start(SyncReason.Startup)
+        verifyNoMoreInteractions(syncManager)
+
+        // onProfileUpdated - no-op
+        integration.onProfileUpdated(mock())
+        verifyNoMoreInteractions(syncManager)
+
+        // onAuthenticationProblems
+        integration.onAuthenticationProblems()
+        verify(syncManager).stop()
+        verifyNoMoreInteractions(syncManager)
+
+        // onLoggedOut
+        integration.onLoggedOut()
+        verify(syncManager, times(2)).stop()
+        verifyNoMoreInteractions(syncManager)
     }
 
     private fun prepareHappyAuthenticationFlow(

@@ -6,6 +6,7 @@ package mozilla.components.browser.storage.sync
 
 import android.content.Context
 import kotlinx.coroutines.withContext
+import mozilla.appservices.places.PlacesApi
 import mozilla.appservices.places.VisitObservation
 import mozilla.components.concept.storage.HistoryAutocompleteResult
 import mozilla.components.concept.storage.HistoryStorage
@@ -176,5 +177,14 @@ open class PlacesHistoryStorage(context: Context) : PlacesStorage(context), Hist
                 places.syncHistory(authInfo)
             }
         }
+    }
+
+    /**
+     * This should be removed. See: https://github.com/mozilla/application-services/issues/1877
+     *
+     * @return raw internal handle that could be used for referencing underlying [PlacesApi]. Use it with SyncManager.
+     */
+    override fun getHandle(): Long {
+        return places.getHandle()
     }
 }

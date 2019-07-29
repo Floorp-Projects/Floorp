@@ -501,6 +501,11 @@ class PlacesHistoryStorageTest {
                 fail()
             }
 
+            override fun getHandle(): Long {
+                fail()
+                return 0L
+            }
+
             override fun close() {
                 fail()
             }
@@ -533,6 +538,11 @@ class PlacesHistoryStorageTest {
 
             override fun syncBookmarks(syncInfo: SyncAuthInfo) {}
 
+            override fun getHandle(): Long {
+                fail()
+                return 0L
+            }
+
             override fun close() {
                 fail()
             }
@@ -563,6 +573,11 @@ class PlacesHistoryStorageTest {
 
             override fun syncBookmarks(syncInfo: SyncAuthInfo) {
                 fail()
+            }
+
+            override fun getHandle(): Long {
+                fail()
+                return 0L
             }
 
             override fun close() {
@@ -599,6 +614,11 @@ class PlacesHistoryStorageTest {
 
             override fun syncBookmarks(syncInfo: SyncAuthInfo) {
                 fail()
+            }
+
+            override fun getHandle(): Long {
+                fail()
+                return 0L
             }
 
             override fun close() {

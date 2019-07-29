@@ -36,14 +36,14 @@ internal data class BaseGleanSyncPing(
             }
             return BaseGleanSyncPing(
                 uid = uid,
-                startedAt = Date(info.at.toLong() * MILLIS_PER_SEC),
+                startedAt = Date(info.at * MILLIS_PER_SEC),
                 // Glean intentionally doesn't support recording arbitrary
                 // durations in timespans, and we can't use the timespan
                 // measurement API because everything is measured in Rust
                 // code. Instead, we record absolute start and end times.
                 // The Sync ping records both `at` _and_ `took`, so this doesn't
                 // leak additional info.
-                finishedAt = Date(info.at.toLong() * MILLIS_PER_SEC + info.took),
+                finishedAt = Date(info.at * MILLIS_PER_SEC + info.took),
                 applied = info.incoming?.applied ?: 0,
                 failedToApply = failedToApply,
                 reconciled = info.incoming?.reconciled ?: 0,

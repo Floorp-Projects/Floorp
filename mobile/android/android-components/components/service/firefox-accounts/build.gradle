@@ -33,9 +33,11 @@ dependencies {
 
     // Parts of this dependency are typealiase'd or are otherwise part of this module's public API.
     api Dependencies.mozilla_fxa
+    implementation Dependencies.mozilla_sync_manager
 
     // Observable is part of public API of the FxaAccountManager.
     api project(':support-base')
+    implementation project(':support-sync-telemetry')
     implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib

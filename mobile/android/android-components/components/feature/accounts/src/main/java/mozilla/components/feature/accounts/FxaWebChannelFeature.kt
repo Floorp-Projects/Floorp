@@ -17,6 +17,7 @@ import mozilla.components.concept.sync.AuthType
 import mozilla.components.service.fxa.FxaAuthData
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.FxaAccountManager
+import mozilla.components.service.fxa.sync.toSyncEngines
 import mozilla.components.service.fxa.toAuthType
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
@@ -248,6 +249,14 @@ class FxaWebChannelFeature(
             return status
         }
 
+        private fun JSONArray.toStringList(): List<String> {
+            val result = mutableListOf<String>()
+            for (i in 0 until this.length()) {
+                this.optString(i, null)?.let { result.add(it) }
+            }
+            return result
+        }
+
         /**
          * Handles the [COMMAND_OAUTH_LOGIN] event from the web-channel.
          */
@@ -255,12 +264,14 @@ class FxaWebChannelFeature(
             val authType: AuthType
             val code: String
             val state: String
+            val declinedEngines: List<String>?
 
             try {
                 val data = payload.getJSONObject("data")
                 authType = data.getString("action").toAuthType()
                 code = data.getString("code")
                 state = data.getString("state")
+                declinedEngines = data.optJSONArray("declinedSyncEngines")?.toStringList()
             } catch (e: JSONException) {
                 // TODO ideally, this should log to Sentry.
                 logger.error("Error while processing WebChannel oauth-login command", e)
@@ -270,7 +281,8 @@ class FxaWebChannelFeature(
             accountManager.finishAuthenticationAsync(FxaAuthData(
                 authType = authType,
                 code = code,
-                state = state
+                state = state,
+                declinedEngines = declinedEngines?.toSyncEngines()
             ))
 
             return null

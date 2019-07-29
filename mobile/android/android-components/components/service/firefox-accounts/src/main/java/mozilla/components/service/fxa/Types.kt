@@ -39,8 +39,14 @@ fun String?.toAuthType(): AuthType {
  * @property authType Type of authentication which caused this object to be created.
  * @property code OAuth code.
  * @property state OAuth state.
+ * @property declinedEngines An optional list of [SyncEngine]s that user declined to sync.
  */
-data class FxaAuthData(val authType: AuthType, val code: String, val state: String)
+data class FxaAuthData(
+    val authType: AuthType,
+    val code: String,
+    val state: String,
+    val declinedEngines: Set<SyncEngine>? = null
+)
 
 // The rest of this file describes translations between fxaclient's internal type definitions and analogous
 // types defined by concept-sync. It's a little tedious, but ensures decoupling between abstract
@@ -93,7 +99,7 @@ fun Profile.into(): mozilla.components.concept.sync.Profile {
     )
 }
 
-fun Device.Type.into(): mozilla.components.concept.sync.DeviceType {
+fun Device.Type.into(): DeviceType {
     return when (this) {
         Device.Type.DESKTOP -> DeviceType.DESKTOP
         Device.Type.MOBILE -> DeviceType.MOBILE
@@ -112,6 +118,21 @@ fun DeviceType.into(): Device.Type {
         DeviceType.TV -> Device.Type.TV
         DeviceType.VR -> Device.Type.VR
         DeviceType.UNKNOWN -> Device.Type.UNKNOWN
+    }
+}
+
+/**
+ * FxA and Sync libraries both define a "DeviceType", so we get to have even more cruft.
+ */
+fun DeviceType.intoSyncType(): mozilla.appservices.syncmanager.DeviceType {
+    return when (this) {
+        DeviceType.DESKTOP -> mozilla.appservices.syncmanager.DeviceType.DESKTOP
+        DeviceType.MOBILE -> mozilla.appservices.syncmanager.DeviceType.MOBILE
+        DeviceType.TABLET -> mozilla.appservices.syncmanager.DeviceType.TABLET
+        DeviceType.TV -> mozilla.appservices.syncmanager.DeviceType.TV
+        DeviceType.VR -> mozilla.appservices.syncmanager.DeviceType.VR
+        // There's not a corresponding syncmanager type, so we pick a default for simplicity's sake.
+        DeviceType.UNKNOWN -> mozilla.appservices.syncmanager.DeviceType.MOBILE
     }
 }
 

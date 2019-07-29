@@ -4,6 +4,7 @@
 @file:SuppressWarnings("TooManyFunctions")
 package mozilla.components.concept.sync
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.Deferred
 import mozilla.components.support.base.observer.Observable
@@ -51,9 +52,10 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     /**
      * Set name of the current device.
      * @param name New device name.
+     * @param context An application context, used for updating internal caches.
      * @return A [Deferred] that will be resolved with a success flag once operation is complete.
      */
-    fun setDeviceNameAsync(name: String): Deferred<Boolean>
+    fun setDeviceNameAsync(name: String, context: Context): Deferred<Boolean>
 
     /**
      * Set a [DevicePushSubscription] for the current device.

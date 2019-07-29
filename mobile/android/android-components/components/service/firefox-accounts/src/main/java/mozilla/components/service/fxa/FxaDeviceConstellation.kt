@@ -4,6 +4,7 @@
 
 package mozilla.components.service.fxa
 
+import android.content.Context
 import androidx.annotation.GuardedBy
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CoroutineScope
@@ -81,11 +82,12 @@ class FxaDeviceConstellation(
         deviceObserverRegistry.register(observer, owner, autoPause)
     }
 
-    override fun setDeviceNameAsync(name: String): Deferred<Boolean> {
+    override fun setDeviceNameAsync(name: String, context: Context): Deferred<Boolean> {
         return scope.async {
             val rename = handleFxaExceptions(logger, "changing device name") {
                 account.setDeviceDisplayName(name)
             }
+            FxaDeviceSettingsCache(context).updateCachedName(name)
             // See the latest device (name) changes after changing it.
             val refreshDevices = refreshDevicesAsync().await()
 

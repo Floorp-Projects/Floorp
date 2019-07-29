@@ -4,6 +4,7 @@
 
 package mozilla.components.support.sync.telemetry
 
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.appservices.sync15.EngineInfo
 import mozilla.appservices.sync15.FailureName
@@ -18,7 +19,6 @@ import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.sync.telemetry.GleanMetrics.BookmarksSync
 import mozilla.components.support.sync.telemetry.GleanMetrics.HistorySync
 import mozilla.components.support.sync.telemetry.GleanMetrics.Pings
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -34,7 +34,7 @@ private fun Date.asSeconds() = time / BaseGleanSyncPing.MILLIS_PER_SEC
 @RunWith(AndroidJUnit4::class)
 class SyncTelemetryTest {
     @get:Rule
-    val gleanRule = GleanTestRule(testContext)
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     private var now: Long = 0
     private var pingCount = 0
