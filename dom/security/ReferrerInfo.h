@@ -83,6 +83,16 @@ class ReferrerInfo : public nsIReferrerInfo {
       nsIURI* aOriginalReferrer) const;
 
   /*
+   * Helper function to create a new ReferrerInfo object from other. We will not
+   * pass in any computed values and override referrer policy if needed
+   *
+   * @param aOther the other referrerInfo object to init from.
+   * @param aPolicyOverride referrer policy to override if necessary.
+   */
+  static already_AddRefed<nsIReferrerInfo> CreateFromOtherAndPolicyOverride(
+      nsIReferrerInfo* aOther, uint32_t aPolicyOverride);
+
+  /*
    * Helper function to create a new ReferrerInfo object from a given document
    * and override referrer policy if needed (for example, when parsing link
    * header or speculative loading).
@@ -90,7 +100,6 @@ class ReferrerInfo : public nsIReferrerInfo {
    * @param aDocument the document to init referrerInfo object.
    * @param aPolicyOverride referrer policy to override if necessary.
    */
-
   static already_AddRefed<nsIReferrerInfo> CreateFromDocumentAndPolicyOverride(
       Document* aDoc, uint32_t aPolicyOverride);
 
