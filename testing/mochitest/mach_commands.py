@@ -177,7 +177,7 @@ class MochitestRunner(MozbuildObject):
             options.manifestFile = manifest
 
         # Firefox for Android doesn't use e10s
-        if options.app is None or 'geckoview' not in options.app:
+        if options.app is not None and 'geckoview' not in options.app:
             options.e10s = False
             print("using e10s=False for non-geckoview app")
 
