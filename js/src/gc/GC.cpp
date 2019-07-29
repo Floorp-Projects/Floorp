@@ -975,9 +975,6 @@ void GCRuntime::releaseArena(Arena* arena, const AutoLockGC& lock) {
   MOZ_ASSERT(!arena->onDelayedMarkingList());
 
   arena->zone->zoneSize.removeGCArena();
-  if (arena->zone->wasGCStarted()) {
-    stats().recordFreedArena();
-  }
   arena->release(lock);
   arena->chunk()->releaseArena(rt, arena, lock);
 }
@@ -3114,16 +3111,11 @@ void GCRuntime::clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
                  JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
                  MemCheckKind::MakeNoAccess);
 
-    // Don't count arenas as swept if we purposely moved everything to new
-    // arenas.
-    arena->zone->zoneSize.removeBytes(ArenaSize,
-                                      !ShouldRelocateAllArenas(reason));
-
-    // Don't count arenas as freed if we purposely moved everything to new
-    // arenas.
-    if (!ShouldRelocateAllArenas(reason) && arena->zone->wasGCStarted()) {
-      stats().recordFreedArena();
-    }
+    // Don't count arenas as being freed by the GC if we purposely moved
+    // everything to new arenas, as that will already have allocated a similar
+    // number of arenas. This only happens for collections triggered by GC zeal.
+    bool allArenasRelocated = ShouldRelocateAllArenas(reason);
+    arena->zone->zoneSize.removeBytes(ArenaSize, !allArenasRelocated);
 
     // Release the arena but don't return it to the chunk yet.
     arena->release(lock);
@@ -4408,7 +4400,8 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
 
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     /* Set up which zones will be collected. */
-    if (ShouldCollectZone(zone, reason)) {
+    bool shouldCollect = ShouldCollectZone(zone, reason);
+    if (shouldCollect) {
       MOZ_ASSERT(zone->canCollect());
       any = true;
       zone->changeGCState(Zone::NoGC, Zone::MarkBlackOnly);
@@ -4416,6 +4409,7 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
       *isFullOut = false;
     }
 
+    zone->setWasCollected(shouldCollect);
     zone->setPreservingCode(false);
   }
 
@@ -8383,9 +8377,6 @@ void GCRuntime::mergeRealms(Realm* source, Realm* target) {
                                      targetZoneIsCollecting);
   target->zone()->addTenuredAllocsSinceMinorGC(
       source->zone()->getAndResetTenuredAllocsSinceMinorGC());
-  if (targetZoneIsCollecting) {
-    stats().adoptHeapSizeDuringIncrementalGC(source->zone());
-  }
   target->zone()->zoneSize.adopt(source->zone()->zoneSize);
   target->zone()->adoptUniqueIds(source->zone());
   target->zone()->adoptMallocBytes(source->zone());

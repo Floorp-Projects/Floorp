@@ -182,7 +182,6 @@ struct Statistics {
 
   void measureInitialHeapSize();
   void adoptHeapSizeDuringIncrementalGC(Zone* mergedZone);
-  void recordFreedArena() { heapBytesFreed += gc::ArenaSize; }
 
   void nonincremental(gc::AbortReason reason) {
     MOZ_ASSERT(reason != gc::AbortReason::None);
@@ -367,12 +366,6 @@ struct Statistics {
 
   /* GC heap size for collected zones before GC ran. */
   size_t preCollectedHeapBytes;
-
-  /* Total GC heap memory freed during collection. */
-  using AtomicSizeCounter =
-      mozilla::Atomic<size_t, mozilla::Relaxed,
-                      mozilla::recordreplay::Behavior::DontPreserve>;
-  AtomicSizeCounter heapBytesFreed;
 
   /* If the GC was triggered by exceeding some threshold, record the
    * threshold and the value that exceeded it. */
