@@ -372,12 +372,14 @@ def p_ComponentTypes(p):
 
 
 def p_ProtocolDefn(p):
-    """ProtocolDefn : OptionalProtocolSendSemanticsQual PROTOCOL ID '{' ProtocolBody '}' ';'"""
-    protocol = p[5]
-    protocol.loc = locFromTok(p, 2)
-    protocol.name = p[3]
+    """ProtocolDefn : OptionalProtocolSendSemanticsQual MaybeRefcounted \
+                      PROTOCOL ID '{' ProtocolBody '}' ';'"""
+    protocol = p[6]
+    protocol.loc = locFromTok(p, 3)
+    protocol.name = p[4]
     protocol.nested = p[1][0]
     protocol.sendSemantics = p[1][1]
+    protocol.refcounted = p[2]
     p[0] = protocol
 
     if Parser.current.type == 'header':
