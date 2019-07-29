@@ -12,7 +12,7 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
-* **browser-engine-gecko-nightly**  
+* **browser-engine-gecko-nightly**
   * Now supports window requests. A new tab will be opened for `target="_blank"` links and `window.open` calls.
 
 * **feature-app-links**
@@ -20,10 +20,10 @@ permalink: /changelog/
 
 * **feature-session**
   * ⚠️ **This is a breaking change**:
-  * The `WindowFeature` no longer needs and engine can now be created using just: 
+  * The `WindowFeature` no longer needs and engine can now be created using just:
   ```kotlin
      val windowFeature = WindowFeature(components.sessionManager)
-  ```  
+  ```
 
 # 6.0.0
 
@@ -91,6 +91,9 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `Collection.crossProduct` to retrieve the cartesian product of two `Collections`.
+
+* **feature-push**
+  * Added default arguments when registering for subscriptions/messages.
 
 # 5.0.0
 
