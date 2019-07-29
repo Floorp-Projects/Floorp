@@ -366,36 +366,17 @@ nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
     return mCloseReason;
   }
 
-  bool againBeforeWriteSegmentsCall = *again;
-
   mSegmentWriter = aWriter;
-  nsresult rv =
-      mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten, again);
-  if (NS_SUCCEEDED(rv) && !(*outCountWritten)) {
-    if (NS_FAILED(mFilterReadCode)) {
+
+  nsresult rv = mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten,
+                                                 again);
+
+  if (NS_SUCCEEDED(rv) && !(*outCountWritten) && NS_FAILED(mFilterReadCode)) {
       // nsPipe turns failures into silent OK.. undo that!
       rv = mFilterReadCode;
       if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
         Unused << Connection()->ResumeRecv();
       }
-    }
-    if (againBeforeWriteSegmentsCall && !*again) {
-      LOG(
-          ("TLSFilterTransaction %p called trans->WriteSegments which dropped "
-           "the 'again' flag",
-           this));
-      // The transaction (=h2 session) wishes to break the loop.  There is a
-      // pending close of the transaction that is being handled by the current
-      // input stream of the session.  After cancellation of that transaction
-      // the state of the stream will change and move the state machine of the
-      // session forward on the next call of WriteSegmentsAgain. But if there
-      // are no data on the socket to read to call this code again, the session
-      // and the stream will just hang in an intermediate state, blocking. Hence
-      // forcing receive to finish the stream cleanup.
-      if (Connection()) {
-        Unused << Connection()->ForceRecv();
-      }
-    }
   }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%" PRIx32
        " %d\n",
@@ -509,6 +490,17 @@ nsresult TLSFilterTransaction::StartTimerCallback() {
     return cb->OnTunnelNudged(this);
   }
   return NS_OK;
+}
+
+bool TLSFilterTransaction::HasDataToRecv() {
+  MOZ_ASSERT(OnSocketThread(), "not on socket thread");
+  if (!mFD) {
+    return false;
+  }
+  int32_t n = 0;
+  char c;
+  n = PR_Recv(mFD, &c, 1, PR_MSG_PEEK, 0);
+  return n > 0;
 }
 
 PRStatus TLSFilterTransaction::GetPeerName(PRFileDesc* aFD, PRNetAddr* addr) {
