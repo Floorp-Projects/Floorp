@@ -524,6 +524,12 @@ struct JSContext : public JS::RootingContext,
    */
   js::ContextData<int32_t> suppressGC;
 
+  // Whether this thread is currently sweeping GC things.  This thread could
+  // be the main thread or a helper thread while the main thread is running
+  // the mutator.  This is used to assert that destruction of GCPtr only
+  // happens when we are sweeping.
+  js::ContextData<bool> gcSweeping;
+
 #ifdef DEBUG
   // Whether this thread is actively Ion compiling.
   js::ContextData<bool> ionCompiling;
@@ -537,12 +543,6 @@ struct JSContext : public JS::RootingContext,
   // main thread or a helper thread while the main thread is running the
   // collector.
   js::ContextData<bool> performingGC;
-
-  // Whether this thread is currently sweeping GC things.  This thread could
-  // be the main thread or a helper thread while the main thread is running
-  // the mutator.  This is used to assert that destruction of GCPtr only
-  // happens when we are sweeping.
-  js::ContextData<bool> gcSweeping;
 
   // Whether this thread is currently manipulating possibly-gray GC things.
   js::ContextData<size_t> isTouchingGrayThings;

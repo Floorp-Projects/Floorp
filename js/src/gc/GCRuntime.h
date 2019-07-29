@@ -394,7 +394,7 @@ class GCRuntime {
     return true;
   }
 
-  void updateMallocCountersOnGCStart();
+  void updateMemoryCountersOnGCStart();
 
   void setGCCallback(JSGCCallback callback, void* data);
   void callGCCallback(JSGCStatus status) const;

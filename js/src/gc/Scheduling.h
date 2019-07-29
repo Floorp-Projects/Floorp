@@ -640,13 +640,28 @@ class HeapSize {
                   mozilla::recordreplay::Behavior::DontPreserve>
       gcBytes_;
 
+  /*
+   * The number of bytes retained after the last collection. This is updated
+   * dynamically during incremental GC. It does not include allocations that
+   * happen during a GC.
+   */
+  mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
+                  mozilla::recordreplay::Behavior::DontPreserve>
+      retainedBytes_;
+
  public:
   explicit HeapSize(HeapSize* parent) : parent_(parent), gcBytes_(0) {}
 
   size_t gcBytes() const { return gcBytes_; }
+  size_t retainedBytes() const { return retainedBytes_; }
+
+  void updateOnGCStart() { retainedBytes_ = size_t(gcBytes_); }
 
   void addGCArena() { addBytes(ArenaSize); }
-  void removeGCArena() { removeBytes(ArenaSize); }
+  void removeGCArena() {
+    MOZ_ASSERT(retainedBytes_ >= ArenaSize);
+    removeBytes(ArenaSize, true /* only sweeping removes arenas */);
+  }
 
   void addBytes(size_t nbytes) {
     mozilla::DebugOnly<size_t> initialBytes(gcBytes_);
@@ -656,18 +671,26 @@ class HeapSize {
       parent_->addBytes(nbytes);
     }
   }
-  void removeBytes(size_t nbytes) {
+  void removeBytes(size_t nbytes, bool wasSwept) {
+    if (wasSwept) {
+      // TODO: We would like to assert that retainedBytes_ >= nbytes is here but
+      // we can't do that yet, so clamp the result to zero.
+      retainedBytes_ = nbytes <= retainedBytes_ ? retainedBytes_ - nbytes : 0;
+    }
     MOZ_ASSERT(gcBytes_ >= nbytes);
     gcBytes_ -= nbytes;
     if (parent_) {
-      parent_->removeBytes(nbytes);
+      parent_->removeBytes(nbytes, wasSwept);
     }
   }
 
   /* Pair to adoptArenas. Adopts the attendant usage statistics. */
-  void adopt(HeapSize& other) {
-    gcBytes_ += other.gcBytes_;
-    other.gcBytes_ = 0;
+  void adopt(HeapSize& source) {
+    // Skip retainedBytes_: we never adopt zones that are currently being
+    // collected.
+    gcBytes_ += source.gcBytes_;
+    source.retainedBytes_ = 0;
+    source.gcBytes_ = 0;
   }
 };
 
