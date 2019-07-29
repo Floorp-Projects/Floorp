@@ -4,6 +4,7 @@
 
 #type {
   -moz-box-flex: 1;
+  background-color: transparent;
 }
 
 #from {
