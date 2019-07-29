@@ -28,12 +28,11 @@ const actions = require("./src/actions/index");
 
 const { WorkersListener } = require("devtools/client/shared/workers-listener");
 
-// NOTE: this API may change names for these functions. See Bug 1531349.
 const {
-  addMultiE10sListener,
-  isMultiE10s,
-  removeMultiE10sListener,
-} = require("devtools/shared/multi-e10s-helper");
+  addDebugServiceWorkersListener,
+  canDebugServiceWorkers,
+  removeDebugServiceWorkersListener,
+} = require("devtools/shared/service-workers-debug-helper");
 
 const App = createFactory(require("./src/components/App"));
 
@@ -64,7 +63,7 @@ window.Application = {
     this.workersListener = new WorkersListener(this.client.mainRoot);
     this.workersListener.addListener(this.updateWorkers);
     this.toolbox.target.on("navigate", this.updateDomain);
-    addMultiE10sListener(this.updateCanDebugWorkers);
+    addDebugServiceWorkersListener(this.updateCanDebugWorkers);
 
     // start up updates for the initial state
     this.updateDomain();
@@ -92,15 +91,14 @@ window.Application = {
   },
 
   updateCanDebugWorkers() {
-    // NOTE: this API may change names for this function. See Bug 1531349.
-    const canDebugWorkers = !isMultiE10s();
+    const canDebugWorkers = canDebugServiceWorkers();
     this.actions.updateCanDebugWorkers(canDebugWorkers);
   },
 
   destroy() {
     this.workersListener.removeListener();
     this.toolbox.target.off("navigate", this.updateDomain);
-    removeMultiE10sListener(this.updateCanDebugWorkers);
+    removeDebugServiceWorkersListener(this.updateCanDebugWorkers);
 
     unmountComponentAtNode(this.mount);
     this.mount = null;

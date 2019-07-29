@@ -48,7 +48,7 @@ class ServiceWorkerAction extends PureComponent {
     }
 
     return InspectAction({
-      disabled: this.props.runtimeDetails.isMultiE10s,
+      disabled: !this.props.runtimeDetails.canDebugServiceWorkers,
       dispatch: this.props.dispatch,
       target: this.props.target,
     });

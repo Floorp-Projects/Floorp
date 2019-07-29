@@ -26,8 +26,8 @@ add_task(async function test() {
 
   info("Destroy the device front and try calling getDescription again");
   front.destroy();
-  Assert.throws(
-    () => front.getDescription(),
+  await Assert.rejects(
+    front.getDescription(),
     /Can not send request because front 'device' is already destroyed\./,
     "Check device front throws when getDescription() is called after destroy()"
   );

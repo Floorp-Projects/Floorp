@@ -45,9 +45,9 @@ const {
   UPDATE_CONNECTION_PROMPT_SETTING_FAILURE,
   UPDATE_CONNECTION_PROMPT_SETTING_START,
   UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-  UPDATE_RUNTIME_MULTIE10S_FAILURE,
-  UPDATE_RUNTIME_MULTIE10S_START,
-  UPDATE_RUNTIME_MULTIE10S_SUCCESS,
+  UPDATE_RUNTIME_CANDEBUGSW_FAILURE,
+  UPDATE_RUNTIME_CANDEBUGSW_START,
+  UPDATE_RUNTIME_CANDEBUGSW_SUCCESS,
   WATCH_RUNTIME_FAILURE,
   WATCH_RUNTIME_START,
   WATCH_RUNTIME_SUCCESS,
@@ -78,8 +78,8 @@ function onRemoteDebuggerClientClosed() {
   window.AboutDebugging.onUSBRuntimesUpdated();
 }
 
-function onMultiE10sUpdated() {
-  window.AboutDebugging.store.dispatch(updateMultiE10s());
+function onCanDebugServiceWorkersUpdated() {
+  window.AboutDebugging.store.dispatch(updateCanDebugServiceWorkers());
 }
 
 function connectRuntime(id) {
@@ -159,6 +159,7 @@ function connectRuntime(id) {
         : deviceDescription.version;
 
       const runtimeDetails = {
+        canDebugServiceWorkers: deviceDescription.canDebugServiceWorkers,
         clientWrapper,
         compatibilityReport,
         connectionPromptEnabled,
@@ -170,13 +171,12 @@ function connectRuntime(id) {
           type: runtime.type,
           version,
         },
-        isMultiE10s: deviceDescription.isMultiE10s,
         serviceWorkersAvailable,
       };
 
       const deviceFront = await clientWrapper.getFront("device");
       if (deviceFront) {
-        deviceFront.on("multi-e10s-updated", onMultiE10sUpdated);
+        deviceFront.on("can-debug-sw-updated", onCanDebugServiceWorkersUpdated);
       }
 
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
@@ -232,7 +232,10 @@ function disconnectRuntime(id, shouldRedirect = false) {
 
       const deviceFront = await clientWrapper.getFront("device");
       if (deviceFront) {
-        deviceFront.off("multi-e10s-updated", onMultiE10sUpdated);
+        deviceFront.off(
+          "can-debug-sw-updated",
+          onCanDebugServiceWorkersUpdated
+        );
       }
 
       if (runtime.type !== RUNTIMES.THIS_FIREFOX) {
@@ -277,8 +280,8 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
 
       dispatch({
         type: UPDATE_CONNECTION_PROMPT_SETTING_SUCCESS,
-        runtime,
         connectionPromptEnabled,
+        runtime,
       });
     } catch (e) {
       dispatch({ type: UPDATE_CONNECTION_PROMPT_SETTING_FAILURE, error: e });
@@ -286,22 +289,24 @@ function updateConnectionPromptSetting(connectionPromptEnabled) {
   };
 }
 
-function updateMultiE10s() {
+function updateCanDebugServiceWorkers() {
   return async (dispatch, getState) => {
-    dispatch({ type: UPDATE_RUNTIME_MULTIE10S_START });
+    dispatch({ type: UPDATE_RUNTIME_CANDEBUGSW_START });
     try {
       const runtime = getCurrentRuntime(getState().runtimes);
       const { clientWrapper } = runtime.runtimeDetails;
       // Re-get actual value from the runtime.
-      const { isMultiE10s } = await clientWrapper.getDeviceDescription();
+      const {
+        canDebugServiceWorkers,
+      } = await clientWrapper.getDeviceDescription();
 
       dispatch({
-        type: UPDATE_RUNTIME_MULTIE10S_SUCCESS,
+        type: UPDATE_RUNTIME_CANDEBUGSW_SUCCESS,
         runtime,
-        isMultiE10s,
+        canDebugServiceWorkers,
       });
     } catch (e) {
-      dispatch({ type: UPDATE_RUNTIME_MULTIE10S_FAILURE, error: e });
+      dispatch({ type: UPDATE_RUNTIME_CANDEBUGSW_FAILURE, error: e });
     }
   };
 }

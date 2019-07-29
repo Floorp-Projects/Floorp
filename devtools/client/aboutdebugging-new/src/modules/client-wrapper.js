@@ -76,11 +76,12 @@ class ClientWrapper {
   async getDeviceDescription() {
     const deviceFront = await this.getFront("device");
     const description = await deviceFront.getDescription();
+
     // Only expose a specific set of properties.
     return {
+      canDebugServiceWorkers: description.canDebugServiceWorkers,
       channel: description.channel,
       deviceName: description.deviceName,
-      isMultiE10s: description.isMultiE10s,
       name: description.brandName,
       os: description.os,
       version: description.version,

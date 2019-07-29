@@ -53,6 +53,10 @@ const compatibilityReport = {
 exports.compatibilityReport = PropTypes.shape(compatibilityReport);
 
 const runtimeDetails = {
+  // True if this runtime supports debugging service workers.
+  // This might be undefined when connecting to runtimes older than Fx 66
+  canDebugServiceWorkers: PropTypes.bool,
+
   // ClientWrapper built using a DebuggerClient for the runtime
   clientWrapper: PropTypes.instanceOf(ClientWrapper).isRequired,
 
@@ -65,10 +69,6 @@ const runtimeDetails = {
 
   // runtime information
   info: PropTypes.shape(runtimeInfo).isRequired,
-
-  // True if this runtime supports multiple content processes
-  // This might be undefined when connecting to runtimes older than Fx 66
-  isMultiE10s: PropTypes.bool,
 
   // True if service workers should be available in the target runtime. Service workers
   // can be disabled via preferences or if the runtime runs in fully private browsing
