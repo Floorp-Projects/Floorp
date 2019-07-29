@@ -10,8 +10,3 @@ interface HTMLDocument : Document {
   [Throws]
   getter object (DOMString name);
 };
-
-partial interface HTMLDocument {
-  [ChromeOnly]
-  void userInteractionForTesting();
-};
