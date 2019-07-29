@@ -318,6 +318,8 @@ OpKind wasm::Classify(OpBytes op) {
         case ThreadOp::I32Wait:
         case ThreadOp::I64Wait:
           return OpKind::Wait;
+        case ThreadOp::Fence:
+          return OpKind::Fence;
         case ThreadOp::I32AtomicLoad:
         case ThreadOp::I64AtomicLoad:
         case ThreadOp::I32AtomicLoad8U:

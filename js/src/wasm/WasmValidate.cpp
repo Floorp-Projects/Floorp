@@ -994,6 +994,9 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readWait(&addr, ValType::I64, 8, &nothing, &nothing));
           }
+          case uint32_t(ThreadOp::Fence): {
+            CHECK(iter.readFence());
+          }
           case uint32_t(ThreadOp::I32AtomicLoad): {
             LinearMemoryAddress<Nothing> addr;
             CHECK(iter.readAtomicLoad(&addr, ValType::I32, 4));

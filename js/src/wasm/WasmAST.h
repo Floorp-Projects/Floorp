@@ -440,7 +440,8 @@ enum class AstExprKind {
   UnaryOperator,
   Unreachable,
   Wait,
-  Wake
+  Wake,
+  Fence
 };
 
 class AstExpr : public AstNode {
@@ -815,6 +816,11 @@ class AstWake : public AstExpr {
 
   const AstLoadStoreAddress& address() const { return address_; }
   AstExpr& count() const { return *count_; }
+};
+
+struct AstFence : AstExpr {
+  static const AstExprKind Kind = AstExprKind::Fence;
+  AstFence() : AstExpr(AstExprKind::Fence, ExprType::Void) {}
 };
 
 class AstMemOrTableCopy : public AstExpr {

@@ -11436,6 +11436,19 @@ class MAsmJSStoreHeap
   }
 };
 
+class MWasmFence : public MNullaryInstruction {
+ protected:
+  MWasmFence() : MNullaryInstruction(classOpcode) { setGuard(); }
+
+ public:
+  INSTRUCTION_HEADER(WasmFence)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+  ALLOW_CLONE(MWasmFence)
+};
+
 class MWasmCompareExchangeHeap : public MVariadicInstruction,
                                  public NoTypePolicy::Data {
   wasm::MemoryAccessDesc access_;

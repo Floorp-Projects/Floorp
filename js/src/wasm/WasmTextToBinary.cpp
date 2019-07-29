@@ -85,6 +85,7 @@ class WasmToken {
     Error,
     Export,
     ExtraConversionOpcode,
+    Fence,
     Field,
     Float,
     Func,
@@ -230,7 +231,7 @@ class WasmToken {
     MOZ_ASSERT(begin != end);
     MOZ_ASSERT(kind_ == AtomicCmpXchg || kind_ == AtomicLoad ||
                kind_ == AtomicRMW || kind_ == AtomicStore || kind_ == Wait ||
-               kind_ == Wake);
+               kind_ == Wake || kind_ == Fence);
     u.threadOp_ = op;
   }
   explicit WasmToken(const char16_t* begin)
@@ -305,6 +306,7 @@ class WasmToken {
       case DataDrop:
       case Drop:
       case ElemDrop:
+      case Fence:
       case GetGlobal:
       case GetLocal:
       case If:
@@ -940,6 +942,9 @@ WasmToken WasmTokenStream::next() {
       if (consume(u"atomic.")) {
         if (consume(u"wake") || consume(u"notify")) {
           return WasmToken(WasmToken::Wake, ThreadOp::Wake, begin, cur_);
+        }
+        if (consume(u"fence")) {
+          return WasmToken(WasmToken::Fence, ThreadOp::Fence, begin, cur_);
         }
         break;
       }
@@ -3987,6 +3992,8 @@ static AstExpr* ParseExprBody(WasmParseContext& c, WasmToken token,
       return ParseWait(c, token.threadOp(), inParens);
     case WasmToken::Wake:
       return ParseWake(c, inParens);
+    case WasmToken::Fence:
+      return new (c.lifo) AstFence();
     case WasmToken::BinaryOpcode:
       return ParseBinaryOperator(c, token.op(), inParens);
     case WasmToken::Block:
@@ -5819,6 +5826,8 @@ static bool ResolveExpr(Resolver& r, AstExpr& expr) {
       return ResolveWait(r, expr.as<AstWait>());
     case AstExprKind::Wake:
       return ResolveWake(r, expr.as<AstWake>());
+    case AstExprKind::Fence:
+      return true;
     case AstExprKind::MemOrTableCopy:
       return ResolveMemOrTableCopy(r, expr.as<AstMemOrTableCopy>());
     case AstExprKind::DataOrElemDrop:
@@ -6423,6 +6432,10 @@ static bool EncodeWake(Encoder& e, AstWake& s) {
          e.writeOp(ThreadOp::Wake) && EncodeLoadStoreFlags(e, s.address());
 }
 
+static bool EncodeFence(Encoder& e, AstFence& s) {
+  return e.writeOp(ThreadOp::Fence) && e.writeFixedU8(0);
+}
+
 static bool EncodeMemOrTableCopy(Encoder& e, AstMemOrTableCopy& s) {
   return EncodeExpr(e, s.dest()) && EncodeExpr(e, s.src()) &&
          EncodeExpr(e, s.len()) &&
@@ -6622,6 +6635,8 @@ static bool EncodeExpr(Encoder& e, AstExpr& expr) {
       return EncodeWait(e, expr.as<AstWait>());
     case AstExprKind::Wake:
       return EncodeWake(e, expr.as<AstWake>());
+    case AstExprKind::Fence:
+      return EncodeFence(e, expr.as<AstFence>());
     case AstExprKind::MemOrTableCopy:
       return EncodeMemOrTableCopy(e, expr.as<AstMemOrTableCopy>());
     case AstExprKind::DataOrElemDrop:

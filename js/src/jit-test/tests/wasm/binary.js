@@ -256,10 +256,10 @@ function checkIllegalPrefixed(prefix, opcode) {
 //
 // June 2017 threads draft:
 //
-//  0x00 .. 0x02 are wait/wake ops
+//  0x00 .. 0x03 are wait/wake/fence ops
 //  0x10 .. 0x4f are primitive atomic ops
 
-for (let i = 3; i < 0x10; i++)
+for (let i = 0x4; i < 0x10; i++)
     checkIllegalPrefixed(ThreadPrefix, i);
 
 for (let i = 0x4f; i < 0x100; i++)
