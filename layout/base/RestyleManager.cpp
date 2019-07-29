@@ -2489,7 +2489,7 @@ static void UpdateBackdropIfNeeded(nsIFrame* aFrame, ServoStyleSet& aStyleSet,
   MOZ_ASSERT(backdropFrame->GetParent()->IsViewportFrame() ||
              backdropFrame->GetParent()->IsCanvasFrame());
   nsTArray<nsIFrame*> wrappersToRestyle;
-  nsTArray<nsIFrame*> anchorsToSuppress;
+  nsTArray<RefPtr<Element>> anchorsToSuppress;
   ServoRestyleState state(aStyleSet, aChangeList, wrappersToRestyle,
                           anchorsToSuppress);
   nsIFrame::UpdateStyleOfOwnedChildFrame(backdropFrame, newStyle, state);
@@ -2746,23 +2746,25 @@ bool RestyleManager::ProcessPostTraversal(Element* aElement,
   // XXXbholley: We should teach the frame constructor how to clear the dirty
   // descendants bit to avoid the traversal here.
   if (changeHint & nsChangeHint_ReconstructFrame) {
-    if (wasRestyled && styleFrame) {
-      auto* oldDisp = styleFrame->StyleDisplay();
+    if (wasRestyled) {
+      const bool wasAbsPos =
+        styleFrame && styleFrame->StyleDisplay()->IsAbsolutelyPositionedStyle();
       auto* newDisp = upToDateStyleIfRestyled->StyleDisplay();
       // https://drafts.csswg.org/css-scroll-anchoring/#suppression-triggers
       //
       // We need to do the position check here rather than in
       // DidSetComputedStyle because changing position reframes.
       //
-      // Don't suppress adjustments when going back to display: none, regardless
-      // of whether we're abspos changes.
+      // We suppress adjustments whenever we change from being display: none to
+      // be an abspos.
+      //
+      // Similarly, for other changes from abspos to non-abspos styles.
       //
       // TODO(emilio): I _think_ chrome won't suppress adjustments whenever
-      // `display` changes. But ICBW.
-      if (newDisp->mDisplay != StyleDisplay::None &&
-          oldDisp->IsAbsolutelyPositionedStyle() !=
-              newDisp->IsAbsolutelyPositionedStyle()) {
-        aRestyleState.AddPendingScrollAnchorSuppression(styleFrame);
+      // `display` changes. But that causes some infinite loops in cases like
+      // bug 1568778.
+      if (wasAbsPos != newDisp->IsAbsolutelyPositionedStyle()) {
+        aRestyleState.AddPendingScrollAnchorSuppression(aElement);
       }
     }
     ClearRestyleStateFromSubtree(aElement);
@@ -3063,14 +3065,13 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
     nsStyleChangeList currentChanges;
     bool anyStyleChanged = false;
 
-    nsTArray<RefPtr<nsIContent>> anchorContentToSuppress;
-
     // Recreate styles , and queue up change hints (which also handle lazy frame
     // construction).
+    nsTArray<RefPtr<Element>> anchorsToSuppress;
+
     {
       AutoRestyleTimelineMarker marker(presContext->GetDocShell(), false);
       DocumentStyleRootIterator iter(doc->GetServoRestyleRoot());
-      nsTArray<nsIFrame*> anchorsToSuppress;
       while (Element* root = iter.GetNextStyleRoot()) {
         nsTArray<nsIFrame*> wrappersToRestyle;
         ServoRestyleState state(*styleSet, currentChanges, wrappersToRestyle,
@@ -3082,13 +3083,12 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
       // We want to suppress adjustments the current (before-change) scroll
       // anchor container now, and save a reference to the content node so that
       // we can suppress them in the after-change scroll anchor .
-      anchorContentToSuppress.SetCapacity(anchorsToSuppress.Length());
-      for (nsIFrame* frame : anchorsToSuppress) {
-        MOZ_ASSERT(frame->GetContent());
-        if (auto* container = ScrollAnchorContainer::FindFor(frame)) {
-          container->SuppressAdjustments();
+      for (Element* element : anchorsToSuppress) {
+        if (nsIFrame* frame = element->GetPrimaryFrame()) {
+          if (auto* container = ScrollAnchorContainer::FindFor(frame)) {
+            container->SuppressAdjustments();
+          }
         }
-        anchorContentToSuppress.AppendElement(frame->GetContent());
       }
     }
 
@@ -3126,8 +3126,8 @@ void RestyleManager::DoProcessPendingRestyles(ServoTraversalFlags aFlags) {
 
     // Suppress adjustments in the after-change scroll anchors if needed, now
     // that we're done reframing everything.
-    for (nsIContent* content : anchorContentToSuppress) {
-      if (nsIFrame* frame = content->GetPrimaryFrame()) {
+    for (Element* element : anchorsToSuppress) {
+      if (nsIFrame* frame = element->GetPrimaryFrame()) {
         if (auto* container = ScrollAnchorContainer::FindFor(frame)) {
           container->SuppressAdjustments();
         }
