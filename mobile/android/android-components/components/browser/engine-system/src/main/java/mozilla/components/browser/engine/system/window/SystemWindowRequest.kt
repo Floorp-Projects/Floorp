@@ -15,12 +15,14 @@ import mozilla.components.concept.engine.window.WindowRequest
  *
  * @property webView the WebView from which the request originated.
  * @property newWebView the WebView to use for opening a new window, may be null for close requests.
+ * @property newEngineSession the new [EngineSession] to handle this request.
  * @property openAsDialog whether or not the window should be opened as a dialog, defaults to false.
  * @property triggeredByUser whether or not the request was triggered by the user, defaults to false.
  * @property resultMsg the message to send to the new WebView, may be null.
  */
 class SystemWindowRequest(
     private val webView: WebView,
+    private val newEngineSession: EngineSession? = null,
     private val newWebView: WebView? = null,
     val openAsDialog: Boolean = false,
     val triggeredByUser: Boolean = false,
@@ -29,10 +31,13 @@ class SystemWindowRequest(
 
     override val url: String = ""
 
-    override fun prepare(engineSession: EngineSession) {
+    override fun prepare(): EngineSession {
+        requireNotNull(newEngineSession)
+
         newWebView?.let {
-            (engineSession as SystemEngineSession).webView = it
+            (newEngineSession as SystemEngineSession).webView = it
         }
+        return newEngineSession
     }
 
     override fun start() {

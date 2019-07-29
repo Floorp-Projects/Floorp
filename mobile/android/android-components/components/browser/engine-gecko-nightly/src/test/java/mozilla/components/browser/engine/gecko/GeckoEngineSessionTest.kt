@@ -21,6 +21,7 @@ import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.request.RequestInterceptor
+import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.test.any
 import mozilla.components.support.test.eq
@@ -1562,8 +1563,7 @@ class GeckoEngineSessionTest {
                 mockLoadRequest("sample:about", GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW))
 
         assertNotNull(result)
-        assertEquals(result!!.poll(0), AllowOrDeny.DENY)
-        verify(geckoSession).loadUri("sample:about")
+        assertEquals(result!!.poll(0), AllowOrDeny.ALLOW)
     }
 
     @Test
@@ -1816,6 +1816,26 @@ class GeckoEngineSessionTest {
 
         verify(geckoSession).restoreState(mockedState)
         assertTrue(observerNotified)
+    }
+
+    @Test
+    fun `onNewSession creates window request`() {
+        val engineSession = GeckoEngineSession(mock(), geckoSessionProvider = geckoSessionProvider)
+
+        captureDelegates()
+
+        var receivedWindowRequest: WindowRequest? = null
+
+        engineSession.register(object : EngineSession.Observer {
+            override fun onOpenWindowRequest(windowRequest: WindowRequest) {
+                receivedWindowRequest = windowRequest
+            }
+        })
+
+        navigationDelegate.value.onNewSession(mock(), "mozilla.org")
+
+        assertNotNull(receivedWindowRequest)
+        assertEquals("mozilla.org", receivedWindowRequest!!.url)
     }
 
     private fun mockGeckoSession(): GeckoSession {

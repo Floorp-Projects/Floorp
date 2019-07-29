@@ -8,10 +8,13 @@ import android.annotation.SuppressLint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.engine.gecko.media.GeckoMediaDelegate
 import mozilla.components.browser.engine.gecko.permission.GeckoPermissionRequest
 import mozilla.components.browser.engine.gecko.prompt.GeckoPromptDelegate
+import mozilla.components.browser.engine.gecko.window.GeckoWindowRequest
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSessionState
@@ -58,7 +61,8 @@ class GeckoEngineSession(
             .build()
         GeckoSession(settings)
     },
-    private val context: CoroutineContext = Dispatchers.IO
+    private val context: CoroutineContext = Dispatchers.IO,
+    openGeckoSession: Boolean = true
 ) : CoroutineScope, EngineSession() {
 
     internal lateinit var geckoSession: GeckoSession
@@ -90,7 +94,7 @@ class GeckoEngineSession(
         get() = context + job
 
     init {
-        createGeckoSession()
+        createGeckoSession(shouldOpen = openGeckoSession)
     }
 
     /**
@@ -307,11 +311,8 @@ class GeckoEngineSession(
             session: GeckoSession,
             request: NavigationDelegate.LoadRequest
         ): GeckoResult<AllowOrDeny> {
-            // TODO use onNewSession and create window request:
-            // https://github.com/mozilla-mobile/android-components/issues/1503
             if (request.target == GeckoSession.NavigationDelegate.TARGET_WINDOW_NEW) {
-                geckoSession.loadUri(request.uri)
-                return GeckoResult.fromValue(AllowOrDeny.DENY)
+                return GeckoResult.fromValue(AllowOrDeny.ALLOW)
             }
 
             val response = settings.requestInterceptor?.onLoadRequest(
@@ -353,7 +354,15 @@ class GeckoEngineSession(
         override fun onNewSession(
             session: GeckoSession,
             uri: String
-        ): GeckoResult<GeckoSession> = GeckoResult.fromValue(null)
+        ): GeckoResult<GeckoSession> {
+            val newEngineSession = GeckoEngineSession(runtime, privateMode, defaultSettings, openGeckoSession = false)
+            notifyObservers {
+                MainScope().launch {
+                    onOpenWindowRequest(GeckoWindowRequest(uri, newEngineSession))
+                }
+            }
+            return GeckoResult.fromValue(newEngineSession.geckoSession)
+        }
 
         override fun onLoadError(
             session: GeckoSession,
@@ -689,7 +698,8 @@ class GeckoEngineSession(
         }
     }
 
-    private fun createGeckoSession() {
+    @Suppress("LongMethod")
+    private fun createGeckoSession(shouldOpen: Boolean = true) {
         this.geckoSession = geckoSessionProvider()
 
         defaultSettings?.trackingProtectionPolicy?.let { enableTrackingProtection(it) }
@@ -699,7 +709,9 @@ class GeckoEngineSession(
         defaultSettings?.userAgentString?.let { geckoSession.settings.userAgentOverride = it }
         defaultSettings?.suspendMediaWhenInactive?.let { geckoSession.settings.suspendMediaWhenInactive = it }
 
-        geckoSession.open(runtime)
+        if (shouldOpen) {
+            geckoSession.open(runtime)
+        }
 
         geckoSession.navigationDelegate = createNavigationDelegate()
         geckoSession.progressDelegate = createProgressDelegate()

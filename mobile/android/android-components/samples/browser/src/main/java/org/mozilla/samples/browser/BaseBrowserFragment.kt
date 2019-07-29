@@ -139,7 +139,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = layout)
 
-        val windowFeature = WindowFeature(components.engine, components.sessionManager)
+        val windowFeature = WindowFeature(components.sessionManager)
 
         sitePermissionsFeature.set(
             feature = SitePermissionsFeature(

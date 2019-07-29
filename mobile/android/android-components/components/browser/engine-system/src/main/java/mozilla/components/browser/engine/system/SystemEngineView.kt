@@ -567,8 +567,9 @@ class SystemEngineView @JvmOverloads constructor(
             resultMsg: Message?
         ): Boolean {
             session?.internalNotifyObservers {
+                val newEngineSession = SystemEngineSession(context, session?.settings)
                 onOpenWindowRequest(SystemWindowRequest(
-                    view, NestedWebView(context), isDialog, isUserGesture, resultMsg
+                    view, newEngineSession, NestedWebView(context), isDialog, isUserGesture, resultMsg
                 ))
             }
             return true
