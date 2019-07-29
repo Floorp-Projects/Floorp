@@ -655,8 +655,7 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   display: none;
 }
 
-#nav-bar:not([keyNav=true]) #identity-box,
-#nav-bar:not([keyNav=true]) #tracking-protection-icon-container {
+#nav-bar:not([keyNav=true]) #identity-box {
   -moz-user-focus: normal;
 }
 
