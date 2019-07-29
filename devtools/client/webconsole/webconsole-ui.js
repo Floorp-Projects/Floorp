@@ -48,7 +48,8 @@ class WebConsoleUI {
   constructor(hud) {
     this.hud = hud;
     this.hudId = this.hud.hudId;
-    this.isBrowserConsole = this.hud._browserConsole;
+    this.isBrowserConsole = this.hud.isBrowserConsole;
+    this.fissionSupport = this.hud.fissionSupport;
     this.window = this.hud.iframeWindow;
 
     this._onPanelSelected = this._onPanelSelected.bind(this);
@@ -212,7 +213,12 @@ class WebConsoleUI {
     }
 
     this._initDefer = defer();
-    this.proxy = new WebConsoleConnectionProxy(this, this.hud.target);
+    this.proxy = new WebConsoleConnectionProxy(
+      this,
+      this.hud.target,
+      this.isBrowserConsole,
+      this.fissionSupport
+    );
 
     this.proxy.connect().then(
       () => {
