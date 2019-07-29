@@ -16,8 +16,6 @@ CustomTypeAnnotation NonTemporaryClass =
     CustomTypeAnnotation(moz_non_temporary_class, "non-temporary");
 CustomTypeAnnotation TemporaryClass =
     CustomTypeAnnotation(moz_temporary_class, "temporary");
-CustomTypeAnnotation StaticLocalClass =
-    CustomTypeAnnotation(moz_static_local_class, "static-local");
 
 void CustomTypeAnnotation::dumpAnnotationReason(BaseCheck &Check, QualType T,
                                                 SourceLocation Loc) {
