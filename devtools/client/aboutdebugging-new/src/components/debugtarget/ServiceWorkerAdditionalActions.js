@@ -73,7 +73,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
   _renderPushButton() {
     return this._renderButton({
       className: "default-button default-button--micro qa-push-button",
-      disabled: this.props.runtimeDetails.isMultiE10s,
+      disabled: !this.props.runtimeDetails.canDebugServiceWorkers,
       key: "service-worker-push-button",
       labelId: "about-debugging-worker-action-push",
       onClick: this.push.bind(this),
@@ -83,7 +83,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
   _renderStartButton() {
     return this._renderButton({
       className: "default-button default-button--micro qa-start-button",
-      disabled: this.props.runtimeDetails.isMultiE10s,
+      disabled: !this.props.runtimeDetails.canDebugServiceWorkers,
       key: "service-worker-start-button",
       labelId: "about-debugging-worker-action-start",
       onClick: this.start.bind(this),
