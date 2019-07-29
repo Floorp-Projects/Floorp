@@ -308,7 +308,7 @@ nsProfiler::GetProfileDataAsync(double aSinceTime, JSContext* aCx,
                   MOZ_ASSERT(gotException);
 
                   jsapi.ClearException();
-                  promise->MaybeReject(cx, exn);
+                  promise->MaybeReject(exn);
                 }
               } else {
                 promise->MaybeResolve(val);

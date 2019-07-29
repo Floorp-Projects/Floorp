@@ -191,7 +191,7 @@ void AsyncScriptCompiler::Reject(JSContext* aCx) {
   if (JS_GetPendingException(aCx, &value)) {
     JS_ClearPendingException(aCx);
   }
-  mPromise->MaybeReject(aCx, value);
+  mPromise->MaybeReject(value);
 }
 
 void AsyncScriptCompiler::Reject(JSContext* aCx, const char* aMsg) {
