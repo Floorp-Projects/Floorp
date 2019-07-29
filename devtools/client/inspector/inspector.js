@@ -328,6 +328,7 @@ Inspector.prototype = {
   },
 
   _deferredOpen: async function() {
+    const onMarkupLoaded = this.once("markuploaded");
     this._initMarkup();
     this.isReady = false;
 
@@ -349,9 +350,9 @@ Inspector.prototype = {
       "visible";
 
     // Setup the sidebar panels.
-    this.setupSidebar();
+    await this.setupSidebar();
 
-    await this.once("markuploaded");
+    await onMarkupLoaded;
     this.isReady = true;
 
     // All the components are initialized. Take care of the remaining initialization
