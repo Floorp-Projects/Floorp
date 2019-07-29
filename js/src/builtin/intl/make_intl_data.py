@@ -402,7 +402,8 @@ def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file, like
         - complexLanguageMappings: mappings from language subtags with complex rules
         - regionMappings: mappings from region subtags to preferred subtags
         - complexRegionMappings: mappings from region subtags with complex rules
-        Returns these five mappings as dictionaries.
+        - likelySubtags: likely subtags used for generating test data only
+        Returns these mappings as dictionaries.
     """
     import xml.etree.ElementTree as ET
 
@@ -637,6 +638,7 @@ def readSupplementalData(supplemental_dtd_file, supplemental_metadata_file, like
             "complexLanguageMappings": complex_language_mappings,
             "regionMappings": region_mappings,
             "complexRegionMappings": complex_region_mappings_final,
+            "likelySubtags": likely_subtags,
             }
 
 
@@ -670,6 +672,131 @@ def writeCLDRLanguageTagData(println, data, url):
     writeGrandfatheredMappingsFunction(println, grandfathered_mappings,
                                        "Canonicalize grandfathered locale identifiers.",
                                        source, url)
+
+
+def writeCLDRLanguageTagLikelySubtagsTest(println, data, url):
+    """ Writes the likely-subtags test file. """
+
+    source = u"CLDR Supplemental Data, version {}".format(data["version"])
+    language_mappings = data["languageMappings"]
+    complex_language_mappings = data["complexLanguageMappings"]
+    region_mappings = data["regionMappings"]
+    complex_region_mappings = data["complexRegionMappings"]
+    likely_subtags = data["likelySubtags"]
+
+    def bcp47(tag):
+        (language, script, region) = tag
+        return "{}{}{}".format(language,
+                               "-" + script if script else "",
+                               "-" + region if region else "")
+
+    def canonical(tag):
+        (language, script, region) = tag
+
+        # Map deprecated language subtags.
+        if language in language_mappings:
+            language = language_mappings[language]
+        elif language in complex_language_mappings:
+            (language2, script2, region2) = complex_language_mappings[language]
+            (language, script, region) = (language2,
+                                          script if script else script2,
+                                          region if region else region2)
+
+        # Map deprecated region subtags.
+        if region in region_mappings:
+            region = region_mappings[region]
+        else:
+            # Assume no complex region mappings are needed for now.
+            assert region not in complex_region_mappings,\
+                   "unexpected region with complex mappings: {}".format(region)
+
+        return (language, script, region)
+
+    # https://unicode.org/reports/tr35/#Likely_Subtags
+
+    def addLikelySubtags(tag):
+        # Step 1: Canonicalize.
+        (language, script, region) = canonical(tag)
+        if script == "Zzzz":
+            script = None
+        if region == "ZZ":
+            region = None
+
+        # Step 2: Lookup.
+        searches = ((language, script, region),
+                    (language, None, region),
+                    (language, script, None),
+                    (language, None, None),
+                    ("und", script, None))
+        search = next(search for search in searches if search in likely_subtags)
+
+        (language_s, script_s, region_s) = search
+        (language_m, script_m, region_m) = likely_subtags[search]
+
+        # Step 3: Return.
+        return (language if language != language_s else language_m,
+                script if script != script_s else script_m,
+                region if region != region_s else region_m)
+
+    # https://unicode.org/reports/tr35/#Likely_Subtags
+    def removeLikelySubtags(tag):
+        # Step 1: Add likely subtags.
+        max = addLikelySubtags(tag)
+
+        # Step 2: Remove variants (doesn't apply here).
+
+        # Step 3: Find a match.
+        (language, script, region) = max
+        for trial in ((language, None, None), (language, None, region), (language, script, None)):
+            if addLikelySubtags(trial) == max:
+                return trial
+
+        # Step 4: Return maximized if no match found.
+        return max
+
+    def likely_canonical(from_tag, to_tag):
+        # Canonicalize the input tag.
+        from_tag = canonical(from_tag)
+
+        # Update the expected result if necessary.
+        if from_tag in likely_subtags:
+            to_tag = likely_subtags[from_tag]
+
+        # Canonicalize the expected output.
+        to_canonical = canonical(to_tag)
+
+        # Sanity check: This should match the result of |addLikelySubtags|.
+        assert to_canonical == addLikelySubtags(from_tag)
+
+        return to_canonical
+
+    # |likely_subtags| contains non-canonicalized tags, so canonicalize it first.
+    likely_subtags_canonical = {k: likely_canonical(k, v) for (k, v) in likely_subtags.items()}
+
+    # Add test data for |Intl.Locale.prototype.maximize()|.
+    writeMappingsVar(println, {bcp47(k): bcp47(v) for (k, v) in likely_subtags_canonical.items()},
+                     "maxLikelySubtags", "Extracted from likelySubtags.xml.", source, url)
+
+    # Use the maximalized tags as the input for the remove likely-subtags test.
+    minimized = {tag: removeLikelySubtags(tag) for tag in likely_subtags_canonical.values()}
+
+    # Add test data for |Intl.Locale.prototype.minimize()|.
+    writeMappingsVar(println, {bcp47(k): bcp47(v) for (k, v) in minimized.items()},
+                     "minLikelySubtags", "Extracted from likelySubtags.xml.", source, url)
+
+    println(u"""
+for (let [tag, maximal] of Object.entries(maxLikelySubtags)) {
+    assertEq(new Intl.Locale(tag).maximize().toString(), maximal);
+}""")
+
+    println(u"""
+for (let [tag, minimal] of Object.entries(minLikelySubtags)) {
+    assertEq(new Intl.Locale(tag).minimize().toString(), minimal);
+}""")
+
+    println(u"""
+if (typeof reportCompare === "function")
+    reportCompare(0, 0);""")
 
 
 def updateCLDRLangTags(args):
@@ -758,6 +885,17 @@ def updateCLDRLangTags(args):
 
         println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
         writeCLDRLanguageTagData(println, data, url)
+
+    print("Writing Intl test data...")
+    test_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                             "../../tests/non262/Intl/Locale/likely-subtags-generated.js")
+    with io.open(test_file, mode="w", encoding="utf-8", newline="") as f:
+        println = partial(print, file=f)
+
+        println(u"// |reftest| skip-if(!this.hasOwnProperty('Intl')||"
+                u"(!this.Intl.Locale&&!this.hasOwnProperty('addIntlExtras')))")
+        println(u"// Generated by make_intl_data.py. DO NOT EDIT.")
+        writeCLDRLanguageTagLikelySubtagsTest(println, data, url)
 
 
 def flines(filepath, encoding="utf-8"):
