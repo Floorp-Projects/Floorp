@@ -149,9 +149,6 @@ UrlClassifierFeatureSocialTrackingAnnotation::ProcessChannel(
           {NS_LITERAL_CSTRING("social-tracking-protection-twitter-"),
            nsIHttpChannel::ClassificationFlags::
                CLASSIFIED_SOCIALTRACKING_TWITTER},
-          {NS_LITERAL_CSTRING("social-tracking-protection-youtube-"),
-           nsIHttpChannel::ClassificationFlags::
-               CLASSIFIED_SOCIALTRACKING_YOUTUBE},
       };
 
   uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
