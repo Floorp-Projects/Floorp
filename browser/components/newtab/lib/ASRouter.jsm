@@ -732,6 +732,7 @@ class _ASRouter {
     });
     ToolbarPanelHub.init(this.waitForInitialized, {
       getMessages: this.handleMessageRequest,
+      dispatch: this.dispatch,
     });
 
     this._loadLocalProviders();
@@ -899,18 +900,25 @@ class _ASRouter {
     let interrupt;
     let triplet;
 
-    // Use control Trailhead Branch (for cards) if we are showing RTAMO.
-    if (await this._hasAddonAttributionData()) {
-      return { experiment, interrupt: "control", triplet: "" };
-    }
-
-    // If a value is set in TRAILHEAD_OVERRIDE_PREF, it will be returned and no experiment will be set.
     const overrideValue = Services.prefs.getStringPref(
       TRAILHEAD_CONFIG.OVERRIDE_PREF,
       ""
     );
     if (overrideValue) {
       [interrupt, triplet] = overrideValue.split("-");
+    }
+
+    // Use control Trailhead Branch (for cards) if we are showing RTAMO.
+    if (await this._hasAddonAttributionData()) {
+      return {
+        experiment,
+        interrupt: "control",
+        triplet: triplet || "privacy",
+      };
+    }
+
+    // If a value is set in TRAILHEAD_OVERRIDE_PREF, it will be returned and no experiment will be set.
+    if (overrideValue) {
       return { experiment, interrupt, triplet: triplet || "" };
     }
 
@@ -976,6 +984,7 @@ class _ASRouter {
       interrupt,
       triplet,
     } = await this._generateTrailheadBranches();
+
     await this.setState({
       trailheadInitialized: true,
       trailheadInterrupt: interrupt,
@@ -1832,11 +1841,6 @@ class _ASRouter {
           data: { id: action.data.id },
         });
         break;
-      case "DISMISS_BUNDLE":
-        this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
-          type: "CLEAR_BUNDLE",
-        });
-        break;
       case "BLOCK_BUNDLE":
         await this.blockMessageById(action.data.bundle.map(b => b.id));
         this.messageChannel.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
@@ -1891,6 +1895,7 @@ class _ASRouter {
         break;
       case "DOORHANGER_TELEMETRY":
       case "TOOLBAR_BADGE_TELEMETRY":
+      case "TOOLBAR_PANEL_TELEMETRY":
         if (this.dispatchToAS) {
           this.dispatchToAS(ac.ASRouterUserEvent(action.data));
         }
