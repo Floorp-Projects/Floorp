@@ -195,7 +195,6 @@ var AboutLoginsParent = {
         const logins = await this.getAllLogins();
         try {
           messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
-
           if (!BREACH_ALERTS_ENABLED) {
             return;
           }
