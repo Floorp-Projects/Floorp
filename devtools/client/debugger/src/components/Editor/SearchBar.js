@@ -157,6 +157,9 @@ class SearchBar extends Component<Props, State> {
     e.preventDefault();
     const { editor, searchOn, setActiveSearch } = this.props;
 
+    // Set inputFocused to false, so that search query is highlighted whenever search shortcut is used, even if the input already has focus.
+    this.setState({ inputFocused: false });
+
     if (!searchOn) {
       setActiveSearch("file");
     }
