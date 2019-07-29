@@ -4,4 +4,5 @@
 
 DevToolsModules(
     'l10n.js',
+    'services.js',
 )

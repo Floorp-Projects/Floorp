@@ -35,12 +35,6 @@ const UIButton = createFactory(require("../ui/UIButton"));
 
 loader.lazyRequireGetter(
   this,
-  "DebuggerClient",
-  "devtools/shared/client/debugger-client",
-  true
-);
-loader.lazyRequireGetter(
-  this,
   "gDevToolsBrowser",
   "devtools/client/framework/devtools-browser",
   true
@@ -55,7 +49,6 @@ loader.lazyRequireGetter(
 class Worker extends PureComponent {
   static get propTypes() {
     return {
-      client: PropTypes.instanceOf(DebuggerClient).isRequired,
       isDebugEnabled: PropTypes.bool.isRequired,
       worker: PropTypes.shape({
         active: PropTypes.bool,

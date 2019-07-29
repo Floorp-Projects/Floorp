@@ -31,13 +31,12 @@ class WorkerList extends PureComponent {
   static get propTypes() {
     return {
       canDebugWorkers: PropTypes.bool.isRequired,
-      client: PropTypes.object.isRequired,
       workers: PropTypes.array.isRequired,
     };
   }
 
   render() {
-    const { canDebugWorkers, client, workers } = this.props;
+    const { canDebugWorkers, workers } = this.props;
 
     return [
       article(
@@ -53,7 +52,6 @@ class WorkerList extends PureComponent {
           workers.map(worker =>
             Worker({
               key: worker.id,
-              client,
               isDebugEnabled: canDebugWorkers,
               worker,
             })
@@ -76,5 +74,4 @@ class WorkerList extends PureComponent {
 }
 
 // Exports
-
 module.exports = WorkerList;

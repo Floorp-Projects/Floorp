@@ -5,7 +5,7 @@
 
 // Import libs
 const { shallow } = require("enzyme");
-const React = require("react");
+const { createFactory } = require("react");
 
 // Import fixtures
 const {
@@ -22,7 +22,7 @@ const {
 } = require("devtools/client/application/test/components/helpers/helpers");
 
 // Import component
-const WorkersPage = React.createFactory(
+const WorkersPage = createFactory(
   require("devtools/client/application/src/components/service-workers/WorkersPage")
 );
 
@@ -43,52 +43,28 @@ describe("WorkersPage", () => {
 
   it("renders an empty list if there are no workers", () => {
     const store = buildStoreWithWorkers(EMPTY_WORKER_LIST);
-
-    const wrapper = shallow(
-      WorkersPage({ store, client: {}, serviceContainer: {} })
-    ).dive();
+    const wrapper = shallow(WorkersPage({ store })).dive();
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("it renders a list with a single element if there's just 1 worker", () => {
     const store = buildStoreWithWorkers(SINGLE_WORKER_DEFAULT_DOMAIN_LIST);
-
-    const wrapper = shallow(
-      WorkersPage({
-        store,
-        client: {},
-        serviceContainer: {},
-      })
-    ).dive();
+    const wrapper = shallow(WorkersPage({ store })).dive();
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("renders a list with multiple elements when there are multiple workers", () => {
     const store = buildStoreWithWorkers(MULTIPLE_WORKER_LIST);
-
-    const wrapper = shallow(
-      WorkersPage({
-        store,
-        client: {},
-        serviceContainer: {},
-      })
-    ).dive();
+    const wrapper = shallow(WorkersPage({ store })).dive();
 
     expect(wrapper).toMatchSnapshot();
   });
 
   it("filters out workers from diferent domains", () => {
     const store = buildStoreWithWorkers(MULTIPLE_WORKER_MIXED_DOMAINS_LIST);
-
-    const wrapper = shallow(
-      WorkersPage({
-        store,
-        client: {},
-        serviceContainer: {},
-      })
-    ).dive();
+    const wrapper = shallow(WorkersPage({ store })).dive();
 
     expect(wrapper).toMatchSnapshot();
   });
@@ -98,14 +74,7 @@ describe("WorkersPage", () => {
       "there is none left",
     () => {
       const store = buildStoreWithWorkers(SINGLE_WORKER_DIFFERENT_DOMAIN_LIST);
-
-      const wrapper = shallow(
-        WorkersPage({
-          store,
-          client: {},
-          serviceContainer: {},
-        })
-      ).dive();
+      const wrapper = shallow(WorkersPage({ store })).dive();
 
       expect(wrapper).toMatchSnapshot();
     }

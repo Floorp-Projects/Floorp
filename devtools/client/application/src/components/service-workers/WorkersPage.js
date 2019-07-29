@@ -20,8 +20,6 @@ const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
 class WorkersPage extends PureComponent {
   static get propTypes() {
     return {
-      client: PropTypes.object.isRequired,
-      serviceContainer: PropTypes.object.isRequired,
       // mapped from state
       canDebugWorkers: PropTypes.bool.isRequired,
       domain: PropTypes.string.isRequired,
@@ -30,13 +28,7 @@ class WorkersPage extends PureComponent {
   }
 
   render() {
-    const {
-      canDebugWorkers,
-      client,
-      domain,
-      serviceContainer,
-      workers,
-    } = this.props;
+    const { canDebugWorkers, domain, workers } = this.props;
 
     // Filter out workers from other domains
     const domainWorkers = workers.filter(
@@ -51,10 +43,9 @@ class WorkersPage extends PureComponent {
         }`,
       },
       isWorkerListEmpty
-        ? WorkerListEmpty({ serviceContainer })
+        ? WorkerListEmpty({})
         : WorkerList({
             canDebugWorkers,
-            client,
             workers: domainWorkers,
           })
     );
@@ -70,5 +61,4 @@ function mapStateToProps(state) {
 }
 
 // Exports
-
 module.exports = connect(mapStateToProps)(WorkersPage);
