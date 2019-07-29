@@ -97,6 +97,20 @@ export default [
     isActive: true,
   },
   {
+    info: "width is active on an inline input element",
+    property: "width",
+    tagName: "input",
+    rules: ["input { display: inline; width: 500px; }"],
+    isActive: true,
+  },
+  {
+    info: "width is active on an inline select element",
+    property: "width",
+    tagName: "select",
+    rules: ["select { display: inline; width: 500px; }"],
+    isActive: true,
+  },
+  {
     info: "min-width is active on a replaced inline element",
     property: "min-width",
     tagName: "img",
@@ -199,6 +213,20 @@ export default [
     property: "height",
     tagName: "img",
     rules: ["img { height: 500px; }"],
+    isActive: true,
+  },
+  {
+    info: "height is active on an inline input element",
+    property: "height",
+    tagName: "input",
+    rules: ["input { display: inline; height: 500px; }"],
+    isActive: true,
+  },
+  {
+    info: "height is active on an inline select element",
+    property: "height",
+    tagName: "select",
+    rules: ["select { display: inline; height: 500px; }"],
     isActive: true,
   },
   {
