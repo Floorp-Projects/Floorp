@@ -31,7 +31,7 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
-const UIButton = createFactory(require("./ui/UIButton"));
+const UIButton = createFactory(require("../ui/UIButton"));
 
 loader.lazyRequireGetter(
   this,

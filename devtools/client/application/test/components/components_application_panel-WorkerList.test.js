@@ -15,7 +15,7 @@ const {
 } = require("devtools/client/application/test/components/fixtures/data/constants");
 
 const WorkerList = React.createFactory(
-  require("devtools/client/application/src/components/WorkerList")
+  require("devtools/client/application/src/components/service-workers/WorkerList")
 );
 
 /**

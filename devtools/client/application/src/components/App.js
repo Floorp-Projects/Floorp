@@ -15,8 +15,10 @@ const { main } = require("devtools/client/shared/vendor/react-dom-factories");
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const LocalizationProvider = createFactory(FluentReact.LocalizationProvider);
 
-const WorkerList = createFactory(require("./WorkerList"));
-const WorkerListEmpty = createFactory(require("./WorkerListEmpty"));
+const WorkerList = createFactory(require("./service-workers/WorkerList"));
+const WorkerListEmpty = createFactory(
+  require("./service-workers/WorkerListEmpty")
+);
 
 /**
  * This is the main component for the application panel.
