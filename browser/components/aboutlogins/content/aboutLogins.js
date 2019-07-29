@@ -33,6 +33,7 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     }
     case "UpdateBreaches": {
       gElements.loginList.updateBreaches(event.detail.value);
+      gElements.loginItem.updateBreaches(event.detail.value);
       break;
     }
     case "LoginAdded": {

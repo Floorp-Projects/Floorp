@@ -79,10 +79,6 @@ ol {
   background-color: var(--in-content-box-background-hover);
 }
 
-.login-list-item.breached {
-  border-inline-start-color: var(--in-content-border-invalid);
-}
-
 .login-list-item.selected .title {
   font-weight: 600;
 }
@@ -98,4 +94,25 @@ ol {
 .username {
   font-size: 0.85em;
   color: var(--in-content-deemphasized-text);
+}
+
+.login-list-item.breached {
+  padding-inline-end: 48px;
+  background-image: url("chrome://global/skin/icons/warning.svg");
+  background-position: right 24px center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: var(--red-90);
+}
+
+.login-list-item.breached:dir(rtl) {
+  background-position: left 24px center;
+}
+
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+  @media (prefers-color-scheme: dark) {
+    .login-list-item.breached {
+      fill: var(--red-60);
+    }
+  }
 }

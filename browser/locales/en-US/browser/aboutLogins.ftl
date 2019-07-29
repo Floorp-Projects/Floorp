@@ -10,6 +10,7 @@ login-filter =
 create-login-button = Create New Login
 
 ## The ⋯ menu that is in the top corner of the page
+
 menu =
   .title = Open menu
 # This menuitem is only visible on Windows
@@ -25,6 +26,7 @@ menu-menuitem-download-android = Lockwise for Android
 menu-menuitem-download-iphone = Lockwise for iPhone and iPad
 
 ## Login List
+
 login-list =
   .aria-label = Logins matching search query
 login-list-count =
@@ -41,6 +43,7 @@ login-list-item-subtitle-new-login = Enter your login credentials
 login-list-item-subtitle-missing-username = (no username)
 
 ## Login
+
 login-item-new-login-title = Create New Login
 login-item-edit-button = Edit
 login-item-delete-button = Delete
@@ -68,6 +71,7 @@ login-item-time-created = Created: { DATETIME($timeCreated, day: "numeric", mont
 login-item-time-used = Last used: { DATETIME($timeUsed, day: "numeric", month: "long", year: "numeric") }
 
 ## Master Password notification
+
 master-password-notification-message = Please enter your master password to view saved logins & passwords
 master-password-reload-button =
   .label = Log in
@@ -79,3 +83,8 @@ confirm-delete-dialog-dismiss-button =
   .title = Cancel
 confirm-delete-dialog-cancel-button = Cancel
 confirm-delete-dialog-confirm-button = Delete
+
+## Breach Alert notification
+
+breach-alert-text = Passwords were leaked or stolen from this website since you last updated your login details. Change your password to protect your account.
+breach-alert-link = Learn more about this breach.

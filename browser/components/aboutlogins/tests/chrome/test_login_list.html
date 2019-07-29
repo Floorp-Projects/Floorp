@@ -57,6 +57,14 @@ const TEST_LOGIN_3 = {
   timePasswordChanged: 1559361600000,
 };
 
+const TEST_BREACH = {
+  Name: "Test-Breach",
+  breachAlertURL: "https://monitor.firefox.com/breach-details/Test-Breach",
+};
+
+const TEST_BREACHES_MAP = new Map();
+TEST_BREACHES_MAP.set(TEST_LOGIN_1.guid, TEST_BREACH);
+
 add_task(async function setup() {
   let templateFrame = document.getElementById("templateFrame");
   let displayEl = document.getElementById("display");
@@ -147,6 +155,13 @@ add_task(async function test_populated_list() {
   is(loginListItems.length, 2, "After selecting one, only the two stored logins should be displayed");
   ok(loginListItems[0].classList.contains("selected"), "The first item should be selected");
   ok(!loginListItems[1].classList.contains("selected"), "The second item should still not be selected");
+});
+
+add_task(async function test_breach_indicator() {
+  gLoginList.updateBreaches(TEST_BREACHES_MAP);
+  let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
+  ok(loginListItems[0].classList.contains("breached"), "The first login should have the .breached class.");
+  ok(!loginListItems[1].classList.contains("breached"), "The second login should not have the .breached class");
 });
 
 add_task(async function test_filtered_list() {
