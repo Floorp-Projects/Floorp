@@ -346,6 +346,39 @@ function InitializeLocale(locale, tag, options) {
 }
 
 /**
+ * Creates a new Intl.Locale object using the language tag object |tagObj|.
+ * The other internal slots are copied over from |otherLocale|.
+ */
+function CreateLocale(tagObj, otherLocale) {
+    assert(IsObject(tagObj), "CreateLocale called with non-object");
+    assert(GuardToLocale(otherLocale) !== null, "CreateLocale called with non-Locale");
+
+#ifdef DEBUG
+    var localeTag = StringFromLanguageTagObject(tagObj);
+    assert(localeTag === CanonicalizeLanguageTag(localeTag),
+           "CreateLocale called with non-canonical language tag");
+#endif
+
+    var locInternals = getLocaleInternals(otherLocale);
+
+    var internals = new Record();
+    internals.locale = tagObj;
+    internals.calendar = locInternals.calendar;
+    internals.collation = locInternals.collation;
+    internals.hourCycle = locInternals.hourCycle;
+    internals.caseFirst = locInternals.caseFirst;
+    internals.numeric = locInternals.numeric;
+    internals.numberingSystem = locInternals.numberingSystem;
+
+    var locale = intl_CreateUninitializedLocale();
+    assert(UnsafeGetReservedSlot(locale, INTL_INTERNALS_OBJECT_SLOT) === null,
+                                 "Internal slot already initialized?");
+    UnsafeSetReservedSlot(locale, INTL_INTERNALS_OBJECT_SLOT, internals);
+
+    return locale;
+}
+
+/**
  * Unboxes the |this| argument if it is an Intl.Locale object, otherwise
  * returns null.
  */
@@ -393,6 +426,58 @@ function getLocaleInternals(obj) {
     assert(IsObject(internals), "Internal slot not initialized?");
 
     return internals;
+}
+
+/**
+ * Intl.Locale.prototype.maximize ()
+ */
+function Intl_Locale_maximize() {
+    // Step 1.
+    var loc = this;
+
+    // Step 2.
+    if (!IsObject(loc) || (loc = GuardToLocale(loc)) === null)
+        return callFunction(CallLocaleMethodIfWrapped, this, "Intl_Locale_maximize");
+
+    // Step 3.
+    var tagObj = copyLanguageTagObject(getLocaleInternals(loc).locale);
+
+    var maximal = intl_AddLikelySubtags(tagObj.language, tagObj.script, tagObj.region);
+    tagObj.language = maximal[0];
+    tagObj.script = maximal[1];
+    tagObj.region = maximal[2];
+
+    // Update mappings in case ICU returned a non-canonicalized locale.
+    updateLocaleIdMappings(tagObj);
+
+    // Step 4.
+    return CreateLocale(tagObj, loc);
+}
+
+/**
+ * Intl.Locale.prototype.minimize ()
+ */
+function Intl_Locale_minimize() {
+    // Step 1.
+    var loc = this;
+
+    // Step 2.
+    if (!IsObject(loc) || (loc = GuardToLocale(loc)) === null)
+        return callFunction(CallLocaleMethodIfWrapped, this, "Intl_Locale_minimize");
+
+    // Step 3.
+    var tagObj = copyLanguageTagObject(getLocaleInternals(loc).locale);
+
+    var minimal = intl_RemoveLikelySubtags(tagObj.language, tagObj.script, tagObj.region);
+    tagObj.language = minimal[0];
+    tagObj.script = minimal[1];
+    tagObj.region = minimal[2];
+
+    // Update mappings in case ICU returned a non-canonicalized locale.
+    updateLocaleIdMappings(tagObj);
+
+    // Step 4.
+    return CreateLocale(tagObj, loc);
 }
 
 /**
