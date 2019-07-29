@@ -126,6 +126,7 @@ class SummaryHandler(LogHandler):
                 },
                 'unexpected_logs': OrderedDict(),
                 'intermittent_logs': OrderedDict(),
+                'harness_errors': [],
             }
 
     def test_start(self, data):
@@ -184,3 +185,13 @@ class SummaryHandler(LogHandler):
             count['assert']['unexpected']['fail'] += 1
         else:
             count['assert']['unexpected']['pass'] += 1
+
+    def log(self, data):
+        if not self.current_suite:
+            return
+
+        logs = self.current['harness_errors']
+        level = data.get("level").upper()
+
+        if level in ("CRITICAL", "ERROR"):
+            logs.append(data)
