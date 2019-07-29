@@ -23,6 +23,7 @@ const TEST_IMAGE =
   "test/test-image.png";
 
 add_task(async function() {
+  await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
 
   const opened = waitForBrowserConsole();
@@ -46,9 +47,8 @@ add_task(async function() {
 async function testMessages(hud) {
   hud.ui.clearOutput(true);
 
-  expectUncaughtException();
-
   executeSoon(() => {
+    expectUncaughtException();
     // eslint-disable-next-line no-undef
     foobarException();
   });
@@ -72,7 +72,9 @@ async function testMessages(hud) {
   Cu.nukeSandbox(sandbox);
 
   // Add a message from a content window.
-  content.console.log("message from content window");
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    content.console.log("message from content window");
+  });
 
   // Test eval.
   hud.jsterm.execute("document.location.href");
