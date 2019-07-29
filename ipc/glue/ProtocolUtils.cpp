@@ -562,7 +562,11 @@ void IProtocol::SetManagerAndRegister(IProtocol* aManager, int32_t aId) {
 bool IProtocol::ChannelSend(IPC::Message* aMsg) {
   UniquePtr<IPC::Message> msg(aMsg);
   if (CanSend()) {
-    return GetIPCChannel()->Send(msg.release());
+    // NOTE: This send call failing can only occur during toplevel channel
+    // teardown. As this is an async call, this isn't reasonable to predict or
+    // respond to, so just drop the message on the floor silently.
+    GetIPCChannel()->Send(msg.release());
+    return true;
   }
 
   NS_WARNING("IPC message discarded: actor cannot send");

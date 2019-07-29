@@ -2046,10 +2046,13 @@ class _ParamTraits():
                 if (id == 1) {  // kFreedActorId
                     ${var}->FatalError("Actor has been |delete|d");
                 }
-                MOZ_ASSERT(
+                MOZ_RELEASE_ASSERT(
                     ${actor}->GetIPCChannel() == ${var}->GetIPCChannel(),
                     "Actor must be from the same channel as the"
                     " actor it's being sent over");
+                MOZ_RELEASE_ASSERT(
+                    ${var}->CanSend(),
+                    "Actor must still be open when sending");
             }
 
             ${write};
@@ -3961,35 +3964,45 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def genAsyncCtor(self, md):
         actor = md.actorDecl()
         method = MethodDefn(self.makeSendMethodDecl(md))
-        method.addstmts(self.bindManagedActor(actor) + [Whitespace.NL])
 
         msgvar, stmts = self.makeMessage(md, errfnSendCtor)
         sendok, sendstmts = self.sendAsync(md, msgvar)
 
-        warnif = StmtIf(ExprNot(sendok))
-        warnif.addifstmt(_printWarningMessage('Error sending constructor'))
+        method.addcode(
+            '''
+            $*{bind}
 
-        method.addstmts(
-            # Build our constructor message & verify it.
-            stmts
-            + self.genVerifyMessage(md.decl.type.verify, md.params,
-                                    errfnSendCtor, ExprVar('msg__'))
+            // Build our constructor message & verify it.
+            $*{stmts}
+            $*{verify}
 
-            # Notify the other side about the newly created actor.
-            #
-            # If the MessageChannel is closing, and we haven't been told yet,
-            # this send may fail. This error is ignored to treat it like a
-            # message being lost due to the other side shutting down before
-            # processing it.
-            #
-            # NOTE: We don't free the actor here, as our caller may be
-            # depending on it being alive after calling SendConstructor.
-            + sendstmts
+            // Notify the other side about the newly created actor. This can
+            // fail if our manager has already been destroyed.
+            //
+            // NOTE: If the send call fails due to toplevel channel teardown,
+            // the `IProtocol::ChannelSend` wrapper absorbs the error for us,
+            // so we don't tear down actors unexpectedly.
+            $*{sendstmts}
 
-            # Warn if the message failed to send, and return our newly created
-            # actor.
-            + [warnif,
-               StmtReturn(actor.var())])
+            // Warn, destroy the actor, and return null if the message failed to
+            // send. Otherwise, return the successfully created actor reference.
+            if (!${sendok}) {
+                NS_WARNING("Error sending ${actorname} constructor");
+                $*{destroy}
+                return nullptr;
+            }
+            return ${actor};
+            ''',
+            bind=self.bindManagedActor(actor),
+            stmts=stmts,
+            verify=self.genVerifyMessage(md.decl.type.verify, md.params,
+                                         errfnSendCtor, ExprVar('msg__')),
+            sendstmts=sendstmts,
+            sendok=sendok,
+            destroy=self.destroyActor(md, actor.var(),
+                                      why=_DestroyReason.FailedConstructor),
+            actor=actor.var(),
+            actorname=actor.ipdltype.protocol.name() + self.side.capitalize())
 
         lbl = CaseLabel(md.pqReplyId())
         case = StmtBlock()
@@ -4002,45 +4015,53 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def genBlockingCtorMethod(self, md):
         actor = md.actorDecl()
         method = MethodDefn(self.makeSendMethodDecl(md))
-        method.addstmts(self.bindManagedActor(actor) + [Whitespace.NL])
 
         msgvar, stmts = self.makeMessage(md, errfnSendCtor)
+        verify = self.genVerifyMessage(md.decl.type.verify, md.params,
+                                       errfnSendCtor, ExprVar('msg__'))
 
         replyvar = self.replyvar
         sendok, sendstmts = self.sendBlocking(md, msgvar, replyvar)
-
-        failIf = StmtIf(ExprNot(sendok))
-        failIf.addifstmt(_printWarningMessage('Error sending constructor'))
-        failIf.addifstmts(self.destroyActor(md, actor.var(),
-                                            why=_DestroyReason.FailedConstructor))
-        failIf.addifstmt(StmtReturn(ExprLiteral.NULL))
-
-        method.addstmts(
-            # Build our constructor message & verify it.
-            stmts
-            + [Whitespace.NL,
-                StmtDecl(Decl(Type('Message'), replyvar.name))]
-            + self.genVerifyMessage(md.decl.type.verify, md.params,
-                                    errfnSendCtor, ExprVar('msg__'))
-
-            # Synchronously send the constructor message to the other side.
-            #
-            # If the MessageChannel is closing, and we haven't been told yet,
-            # this send may fail. This error is ignored to treat it like a
-            # message being lost due to the other side shutting down before
-            # processing it.
-            #
-            # NOTE: We also free the actor here.
-            + sendstmts
-
-            # Warn, destroy the actor and return null if the message failed to
-            # send.
-            + [failIf])
-
-        stmts = self.deserializeReply(
+        replystmts = self.deserializeReply(
             md, ExprAddrOf(replyvar), self.side,
             errfnSendCtor, errfnSentinel(ExprLiteral.NULL))
-        method.addstmts(stmts + [StmtReturn(actor.var())])
+
+        method.addcode(
+            '''
+            $*{bind}
+
+            // Build our constructor message & verify it.
+            $*{stmts}
+            $*{verify}
+
+            // Synchronously send the constructor message to the other side. If
+            // the send fails, e.g. due to the remote side shutting down, the
+            // actor will be destroyed and potentially freed.
+            Message ${replyvar};
+            $*{sendstmts}
+
+            if (!(${sendok})) {
+                // Warn, destroy the actor and return null if the message
+                // failed to send.
+                NS_WARNING("Error sending constructor");
+                $*{destroy}
+                return nullptr;
+            }
+
+            $*{replystmts}
+            return ${actor};
+            ''',
+            bind=self.bindManagedActor(actor),
+            stmts=stmts,
+            verify=verify,
+            replyvar=replyvar,
+            sendstmts=sendstmts,
+            sendok=sendok,
+            destroy=self.destroyActor(md, actor.var(),
+                                      why=_DestroyReason.FailedConstructor),
+            replystmts=replystmts,
+            actor=actor.var(),
+            actorname=actor.ipdltype.protocol.name() + self.side.capitalize())
 
         return method
 
@@ -4055,7 +4076,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [StmtCode(
             '''
             if (!${actor}) {
-                NS_WARNING("Error constructing actor ${actorname}");
+                NS_WARNING("Cannot bind null ${actorname} actor");
                 return ${errfn};
             }
 
