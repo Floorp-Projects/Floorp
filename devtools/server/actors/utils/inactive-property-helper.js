@@ -466,6 +466,7 @@ class InactivePropertyHelper {
     // These are always treated as replaced elements:
     if (
       this.nodeNameOneOf([
+        "audio",
         "br",
         "button",
         "canvas",
@@ -488,12 +489,6 @@ class InactivePropertyHelper {
         "video",
       ])
     ) {
-      return true;
-    }
-
-    // audio – Treated as a replaced element only when it's "exposing a user
-    // interface element" i.e. has a "controls" attribute.
-    if (this.nodeName === "audio" && this.node.getAttribute("controls")) {
       return true;
     }
 
