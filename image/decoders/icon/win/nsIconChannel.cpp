@@ -170,6 +170,10 @@ nsIconChannel::~nsIconChannel() {
     NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadInfo",
                                       mLoadInfo.forget());
   }
+  if (mLoadGroup) {
+    NS_ReleaseOnMainThreadSystemGroup("nsIconChannel::mLoadGroup",
+                                      mLoadGroup.forget());
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsIconChannel, nsIChannel, nsIRequest, nsIRequestObserver,
