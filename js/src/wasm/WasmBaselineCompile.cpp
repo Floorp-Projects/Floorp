@@ -6852,6 +6852,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   MOZ_MUST_USE bool emitAtomicStore(ValType type, Scalar::Type viewType);
   MOZ_MUST_USE bool emitWait(ValType type, uint32_t byteSize);
   MOZ_MUST_USE bool emitWake();
+  MOZ_MUST_USE bool emitFence();
   MOZ_MUST_USE bool emitAtomicXchg(ValType type, Scalar::Type viewType);
   void emitAtomicXchg64(MemoryAccessDesc* access, ValType type,
                         WantResult wantResult);
@@ -10199,6 +10200,18 @@ bool BaseCompiler::emitWake() {
   return emitInstanceCall(lineOrBytecode, SASigWake);
 }
 
+bool BaseCompiler::emitFence() {
+  if (!iter_.readFence()) {
+    return false;
+  }
+  if (deadCode_) {
+    return true;
+  }
+
+  masm.memoryBarrier(MembarFull);
+  return true;
+}
+
 // Bulk memory must be available if shared memory is enabled.
 bool BaseCompiler::bulkmemOpsEnabled() {
 #ifndef ENABLE_WASM_BULKMEM_OPS
@@ -11602,6 +11615,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitWait(ValType::I32, 4));
           case uint32_t(ThreadOp::I64Wait):
             CHECK_NEXT(emitWait(ValType::I64, 8));
+          case uint32_t(ThreadOp::Fence):
+            CHECK_NEXT(emitFence());
 
           case uint32_t(ThreadOp::I32AtomicLoad):
             CHECK_NEXT(emitAtomicLoad(ValType::I32, Scalar::Int32));

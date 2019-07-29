@@ -6405,6 +6405,12 @@ class LWasmCompareExchangeHeap : public LInstructionHelper<1, 4, 4> {
   }
 };
 
+class LWasmFence : public LInstructionHelper<0, 0, 0> {
+ public:
+  LIR_HEADER(WasmFence);
+  explicit LWasmFence() : LInstructionHelper(classOpcode) {}
+};
+
 class LWasmAtomicExchangeHeap : public LInstructionHelper<1, 3, 4> {
  public:
   LIR_HEADER(WasmAtomicExchangeHeap);
