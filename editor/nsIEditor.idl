@@ -518,9 +518,12 @@ interface nsIEditor  : nsISupports
    * a new character and echo is enabled, unmasked range is expanded to
    * including it.
    *
-   * @param aStart      First index to show the character.  If you specify
-   *                    middle of a surrogate pair, this expands the range
-   *                    to include the prceding high surrogate automatically.
+   * @param aStart      Optional, first index to show the character.  If you
+   *                    specify middle of a surrogate pair, this expands the
+   *                    range to include the prceding high surrogate
+   *                    automatically.
+   *                    If omitted, it means that all characters of the
+   *                    password becomes unmasked.
    * @param aEnd        Optional, next index of last unmasked character.  If
    *                    you specify middle of a surrogate pair, the expands
    *                    the range to include the following low surrogate.
@@ -533,7 +536,7 @@ interface nsIEditor  : nsISupports
    *                    automatically.
    */
   [can_run_script, optional_argc] void unmask(
-      in unsigned long aStart,
+      [optional] in unsigned long aStart,
       [optional] in long long aEnd,
       [optional] in unsigned long aTimeout);
 

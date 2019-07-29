@@ -4948,8 +4948,9 @@ NS_IMETHODIMP EditorBase::Unmask(uint32_t aStart, int64_t aEnd,
   if (NS_WARN_IF(!IsPasswordEditor())) {
     return NS_ERROR_NOT_AVAILABLE;
   }
-  if (NS_WARN_IF(aStart == UINT32_MAX) || NS_WARN_IF(aArgc >= 1 && aEnd == 0) ||
-      NS_WARN_IF(aArgc >= 1 && aEnd > 0 && aStart >= aEnd)) {
+  if (NS_WARN_IF(aArgc >= 1 && aStart == UINT32_MAX) ||
+      NS_WARN_IF(aArgc >= 2 && aEnd == 0) ||
+      NS_WARN_IF(aArgc >= 2 && aEnd > 0 && aStart >= aEnd)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -4958,10 +4959,11 @@ NS_IMETHODIMP EditorBase::Unmask(uint32_t aStart, int64_t aEnd,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  uint32_t length = aArgc < 1 || aEnd < 0 ? UINT32_MAX : aEnd - aStart;
-  uint32_t timeout = aArgc < 2 ? 0 : aTimeout;
+  uint32_t start = aArgc < 1 ? 0 : aStart;
+  uint32_t length = aArgc < 2 || aEnd < 0 ? UINT32_MAX : aEnd - start;
+  uint32_t timeout = aArgc < 3 ? 0 : aTimeout;
   nsresult rv = MOZ_KnownLive(AsTextEditor())
-                    ->SetUnmaskRangeAndNotify(aStart, length, timeout);
+                    ->SetUnmaskRangeAndNotify(start, length, timeout);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return EditorBase::ToGenericNSResult(rv);
   }
