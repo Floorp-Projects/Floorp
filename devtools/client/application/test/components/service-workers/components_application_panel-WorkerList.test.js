@@ -9,8 +9,7 @@ const React = require("react");
 
 // Import constants
 const {
-  CLIENT,
-  SINGLE_WORKER_LIST,
+  SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
   MULTIPLE_WORKER_LIST,
 } = require("devtools/client/application/test/components/fixtures/data/constants");
 
@@ -21,24 +20,24 @@ const WorkerList = React.createFactory(
 /**
  * Test for workerList.js component
  */
-describe("Service Worker List:", () => {
-  it("renders the expected snapshot for a workerList with single worker list", () => {
+describe("WorkerList", () => {
+  it("renders the expected snapshot for a list with a single worker", () => {
     const wrapper = shallow(
       WorkerList({
-        client: CLIENT,
-        workers: SINGLE_WORKER_LIST,
-        isDebugEnabled: true,
+        client: {},
+        workers: SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
+        canDebugWorkers: true,
       })
     );
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("renders the expected snapshot for a workerList with multiple workers list", () => {
+  it("renders the expected snapshot for a multiple workers list", () => {
     const wrapper = shallow(
       WorkerList({
-        client: CLIENT,
+        client: {},
         workers: MULTIPLE_WORKER_LIST,
-        isDebugEnabled: true,
+        canDebugWorkers: true,
       })
     );
     expect(wrapper).toMatchSnapshot();

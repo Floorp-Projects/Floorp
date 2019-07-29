@@ -12,32 +12,3 @@ a.disabled-link:visited {
   opacity: 0.5;
   cursor: not-allowed;
 }
-
-/*
- * The current layout of the application panel is
- *
- *  +---------------------------------------------+
- *  | (header) "Service workers"                  |
- *  +---------------------------------------------+
- *  | Service worker 1                            |
- *  |   (...)                                     |
- *  | Service worker N           (see Worker.css) |
- *  +---------------------------------------------+
- *  |                     Link to about:debugging |
- *  +---------------------------------------------+
- */
-.application {
-  height: 100vh;
-  padding: 0 2rem;
-  display: grid;
-  -moz-user-select: none;
-}
-
-.application--empty {
-  align-items: center;
-  justify-content: center;
-}
-
-.application:not(.application--empty) {
-  grid-template-rows: 1fr auto;
-}

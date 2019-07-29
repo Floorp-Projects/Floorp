@@ -7,12 +7,6 @@
 const { shallow } = require("enzyme");
 const React = require("react");
 
-// Import constants
-const {
-  CLIENT,
-  EMPTY_WORKER_LIST,
-} = require("devtools/client/application/test/components/fixtures/data/constants");
-
 const WorkerListEmpty = React.createFactory(
   require("devtools/client/application/src/components/service-workers/WorkerListEmpty")
 );
@@ -21,13 +15,11 @@ const WorkerListEmpty = React.createFactory(
  * Test for workerListEmpty.js component
  */
 
-describe("Empty Service Worker List:", () => {
-  it("renders the expected snapshot for a workerListEmpty with empty worker list", () => {
+describe("WorkerListEmpty", () => {
+  it("renders the expected snapshot", () => {
     const wrapper = shallow(
       WorkerListEmpty({
-        client: CLIENT,
-        workers: EMPTY_WORKER_LIST,
-        isDebugEnabled: true,
+        serviceContainer: {},
       })
     );
     expect(wrapper).toMatchSnapshot();

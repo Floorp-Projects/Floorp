@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Service Worker List: renders the expected snapshot for a workerList with multiple workers list 1`] = `
+exports[`WorkerList renders the expected snapshot for a list with a single worker 1`] = `
 Array [
   <article
     className="workers-container"
@@ -16,36 +16,14 @@ Array [
     <ul>
       <Worker
         client={Object {}}
+        isDebugEnabled={true}
         worker={
           Object {
             "active": true,
             "name": "worker1",
             "registrationFront": "",
             "scope": "SCOPE 123",
-            "workerTargetFront": "",
-          }
-        }
-      />
-      <Worker
-        client={Object {}}
-        worker={
-          Object {
-            "active": false,
-            "name": "worker2",
-            "registrationFront": "",
-            "scope": "SCOPE 456",
-            "workerTargetFront": "",
-          }
-        }
-      />
-      <Worker
-        client={Object {}}
-        worker={
-          Object {
-            "active": true,
-            "name": "worker3",
-            "registrationFront": "",
-            "scope": "SCOPE 789",
+            "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
         }
@@ -69,7 +47,7 @@ Array [
 ]
 `;
 
-exports[`Service Worker List: renders the expected snapshot for a workerList with single worker list 1`] = `
+exports[`WorkerList renders the expected snapshot for a multiple workers list 1`] = `
 Array [
   <article
     className="workers-container"
@@ -85,12 +63,42 @@ Array [
     <ul>
       <Worker
         client={Object {}}
+        isDebugEnabled={true}
         worker={
           Object {
             "active": true,
             "name": "worker1",
             "registrationFront": "",
             "scope": "SCOPE 123",
+            "url": "http://example.com/worker.js",
+            "workerTargetFront": "",
+          }
+        }
+      />
+      <Worker
+        client={Object {}}
+        isDebugEnabled={true}
+        worker={
+          Object {
+            "active": false,
+            "name": "worker2",
+            "registrationFront": "",
+            "scope": "SCOPE 456",
+            "url": "http://example.com/worker.js",
+            "workerTargetFront": "",
+          }
+        }
+      />
+      <Worker
+        client={Object {}}
+        isDebugEnabled={true}
+        worker={
+          Object {
+            "active": true,
+            "name": "worker3",
+            "registrationFront": "",
+            "scope": "SCOPE 789",
+            "url": "http://example.com/worker.js",
             "workerTargetFront": "",
           }
         }
