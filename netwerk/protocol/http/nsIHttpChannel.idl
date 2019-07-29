@@ -561,6 +561,7 @@ interface nsIHttpChannel : nsIChannel
       CLASSIFIED_SOCIALTRACKING_FACEBOOK = 0x0200,
       CLASSIFIED_SOCIALTRACKING_LINKEDIN = 0x0400,
       CLASSIFIED_SOCIALTRACKING_TWITTER = 0x0800,
+      CLASSIFIED_SOCIALTRACKING_YOUTUBE = 0x1000,
 
       /**
        * This is exposed to help to identify tracking classification using the
@@ -576,14 +577,6 @@ interface nsIHttpChannel : nsIChannel
        */
       CLASSIFIED_ANY_STRICT_TRACKING = CLASSIFIED_ANY_BASIC_TRACKING |
         CLASSIFIED_TRACKING_CONTENT | CLASSIFIED_FINGERPRINTING_CONTENT,
-
-      /**
-       * This is exposed to help to identify social tracking classification
-       * flags.
-       */
-      CLASSIFIED_ANY_SOCIAL_TRACKING = CLASSIFIED_SOCIALTRACKING |
-        CLASSIFIED_SOCIALTRACKING_FACEBOOK |
-        CLASSIFIED_SOCIALTRACKING_LINKEDIN | CLASSIFIED_SOCIALTRACKING_TWITTER,
     };
 
     /**
