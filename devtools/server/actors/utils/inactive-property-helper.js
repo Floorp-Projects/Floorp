@@ -472,9 +472,18 @@ class InactivePropertyHelper {
         "embed",
         "hr",
         "iframe",
+        // Inputs are generally replaced elements. E.g. checkboxes and radios are replaced
+        // unless they have `-moz-appearance: none`. However unconditionally treating them
+        // as replaced is enough for our purpose here, and avoids extra complexity that
+        // will likely not be necessary in most cases.
+        "input",
         "math",
         "object",
         "picture",
+        // Select is a replaced element if it has `size<=1` or no size specified, but
+        // unconditionally treating it as replaced is enough for our purpose here, and
+        // avoids extra complexity that will likely not be necessary in most cases.
+        "select",
         "svg",
         "video",
       ])
