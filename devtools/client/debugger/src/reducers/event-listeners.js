@@ -12,11 +12,11 @@ import type {
   EventListenerExpandedList,
 } from "../actions/types";
 
-export type EventListenersState = {
-  active: EventListenerActiveList,
-  categories: EventListenerCategoryList,
-  expanded: EventListenerExpandedList,
-};
+export type EventListenersState = {|
+  +active: EventListenerActiveList,
+  +categories: EventListenerCategoryList,
+  +expanded: EventListenerExpandedList,
+|};
 
 export function initialEventListenerState(): EventListenersState {
   return {
@@ -46,19 +46,19 @@ function update(
 }
 
 export function getActiveEventListeners(state: State): EventListenerActiveList {
-  return state.eventListenerBreakpoints.active || [];
+  return state.eventListenerBreakpoints.active;
 }
 
 export function getEventListenerBreakpointTypes(
   state: State
 ): EventListenerCategoryList {
-  return state.eventListenerBreakpoints.categories || [];
+  return state.eventListenerBreakpoints.categories;
 }
 
 export function getEventListenerExpanded(
   state: State
 ): EventListenerExpandedList {
-  return state.eventListenerBreakpoints.expanded || [];
+  return state.eventListenerBreakpoints.expanded;
 }
 
 export default update;
