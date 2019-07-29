@@ -306,7 +306,7 @@ bool LaunchApp(const std::wstring& cmdline, const LaunchOptions& options,
   ZeroMemory(&startup_info_ex, sizeof(startup_info_ex));
   STARTUPINFO& startup_info = startup_info_ex.StartupInfo;
   startup_info.cb = sizeof(startup_info);
-  startup_info.dwFlags = STARTF_USESHOWWINDOW;
+  startup_info.dwFlags = STARTF_USESHOWWINDOW | STARTF_FORCEOFFFEEDBACK;
   startup_info.wShowWindow = options.start_hidden ? SW_HIDE : SW_SHOW;
 
   // Per the comment in CreateThreadAttributeList, lpAttributeList will contain
