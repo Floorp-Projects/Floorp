@@ -672,6 +672,12 @@ static nsIFrame* GetFrameForChildrenOnlyTransformHint(nsIFrame* aFrame) {
 // It returns true when that succeeds, otherwise it posts a reflow request
 // and returns false.
 static bool RecomputePosition(nsIFrame* aFrame) {
+  // It's pointless to move around frames that have never been reflowed or
+  // are dirty (i.e. they will be reflowed).
+  if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)) {
+    return true;
+  }
+
   // Don't process position changes on table frames, since we already handle
   // the dynamic position change on the table wrapper frame, and the
   // reflow-based fallback code path also ignores positions on inner table
@@ -690,9 +696,7 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   // have a view somewhere in their descendants, because the corresponding view
   // needs to be repositioned properly as well.
   if (aFrame->HasView() ||
-      (aFrame->GetStateBits() & NS_FRAME_HAS_CHILD_WITH_VIEW)) {
-    StyleChangeReflow(aFrame, nsChangeHint_NeedReflow |
-                                  nsChangeHint_ReflowChangesSizeOrPosition);
+      aFrame->HasAnyStateBits(NS_FRAME_HAS_CHILD_WITH_VIEW)) {
     return false;
   }
 
@@ -701,16 +705,17 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   if (aFrame->HasAnyStateBits(NS_FRAME_OUT_OF_FLOW)) {
     nsIFrame* ph = aFrame->GetPlaceholderFrame();
     if (ph && ph->HasAnyStateBits(PLACEHOLDER_STATICPOS_NEEDS_CSSALIGN)) {
-      StyleChangeReflow(aFrame, nsChangeHint_NeedReflow |
-                                    nsChangeHint_ReflowChangesSizeOrPosition);
       return false;
     }
   }
 
-  // It's pointless to move around frames that have never been reflowed or
-  // are dirty (i.e. they will be reflowed).
-  if (aFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY)) {
-    return true;
+  // If we need to reposition any descendant that depends on our static
+  // position, then we also can't take the optimized path.
+  //
+  // TODO(emilio): It may be worth trying to find them and try to call
+  // RecomputePosition on them too instead of disabling the optimization...
+  if (aFrame->DescendantMayDependOnItsStaticPosition()) {
+    return false;
   }
 
   aFrame->SchedulePaint();
@@ -887,8 +892,6 @@ static bool RecomputePosition(nsIFrame* aFrame) {
   }
 
   // Fall back to a reflow
-  StyleChangeReflow(aFrame, nsChangeHint_NeedReflow |
-                                nsChangeHint_ReflowChangesSizeOrPosition);
   return false;
 }
 
@@ -1689,6 +1692,9 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
         ActiveLayerTracker::NotifyOffsetRestyle(frame);
         // It is possible for this to fall back to a reflow
         if (!RecomputePosition(frame)) {
+          StyleChangeReflow(frame,
+                            nsChangeHint_NeedReflow |
+                                nsChangeHint_ReflowChangesSizeOrPosition);
           didReflowThisFrame = true;
         }
       }

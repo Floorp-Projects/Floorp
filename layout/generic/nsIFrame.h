@@ -601,7 +601,8 @@ class nsIFrame : public nsQueryFrame {
         mMayHaveOpacityAnimation(false),
         mAllDescendantsAreInvisible(false),
         mHasBSizeChange(false),
-        mInScrollAnchorChain(false) {
+        mInScrollAnchorChain(false),
+        mDescendantMayDependOnItsStaticPosition(false) {
     MOZ_ASSERT(mComputedStyle);
     MOZ_ASSERT(mPresContext);
     mozilla::PodZero(&mOverflow);
@@ -4192,6 +4193,14 @@ class nsIFrame : public nsQueryFrame {
     mHasBSizeChange = aHasBSizeChange;
   }
 
+  bool DescendantMayDependOnItsStaticPosition() const {
+    return mDescendantMayDependOnItsStaticPosition;
+  }
+
+  void SetDescendantMayDependOnItsStaticPosition(bool aValue) {
+    mDescendantMayDependOnItsStaticPosition = aValue;
+  }
+
   /**
    * Returns the hit test area of the frame.
    */
@@ -4417,6 +4426,13 @@ class nsIFrame : public nsQueryFrame {
    * True if we are or contain the scroll anchor for a scrollable frame.
    */
   bool mInScrollAnchorChain : 1;
+
+  /**
+   * True if we may have any descendant whose positioning may depend on its
+   * static position (and thus which we need to recompute the position for if we
+   * move).
+   */
+  bool mDescendantMayDependOnItsStaticPosition : 1;
 
  protected:
   // Helpers
