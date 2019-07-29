@@ -3580,12 +3580,9 @@ JS::CompileOptions::CompileOptions(JSContext* cx)
   bigIntEnabledOption = cx->realm()->creationOptions().getBigIntEnabled();
   fieldsEnabledOption = cx->realm()->creationOptions().getFieldsEnabled();
 
-  // Certain modes of operation disallow syntax parsing in general. The replay
-  // debugger requires scripts to be constructed in a consistent order, which
-  // might not happen with lazy parsing.
+  // Certain modes of operation disallow syntax parsing in general.
   forceFullParse_ = cx->realm()->behaviors().disableLazyParsing() ||
-                    coverage::IsLCovEnabled() ||
-                    mozilla::recordreplay::IsRecordingOrReplaying();
+                    coverage::IsLCovEnabled();
 
   // If instrumentation is enabled in the realm, the compiler should insert the
   // requested kinds of instrumentation into all scripts.

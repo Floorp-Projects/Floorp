@@ -71,15 +71,41 @@ static Monitor* gMonitor;
 // Graphics
 ///////////////////////////////////////////////////////////////////////////////
 
+// Painting can happen in two ways:
+//
+// - When the main child runs (the recording child, or a dedicated replaying
+//   child if there is no recording child), it does so on the user's machine and
+//   paints into gGraphicsMemory, a buffer shared with the middleman process.
+//   After the buffer has been updated, a PaintMessage is sent to the middleman.
+//
+// - When the user is within the recording and we want to repaint old graphics,
+//   gGraphicsMemory is not updated (the replaying process could be on a distant
+//   machine and be unable to access the buffer). Instead, the replaying process
+//   does its repaint locally, losslessly compresses it to a PNG image, encodes
+//   it to base64, and sends it to the middleman. The middleman then undoes this
+//   encoding and paints the resulting image.
+//
+// In either case, a canvas in the middleman is filled with the paint data,
+// updating the graphics shown by the UI process. The canvas is managed by
+// devtools/server/actors/replay/graphics.js
 extern void* gGraphicsMemory;
 
 void InitializeGraphicsMemory();
 void SendGraphicsMemoryToChild();
 
-// Update the graphics painted in the UI process, per painting data received
-// from a child process, or null if a repaint was triggered and failed due to
-// an unhandled recording divergence.
-void UpdateGraphicsInUIProcess(const PaintMessage* aMsg);
+// Update the graphics painted in the UI process after a paint happened in the
+// main child.
+void UpdateGraphicsAfterPaint(const PaintMessage& aMsg);
+
+// Update the graphics painted in the UI process after a repaint happened in
+// some replaying child.
+void UpdateGraphicsAfterRepaint(const nsACString& imageData);
+
+// Restore the graphics last painted by the main child.
+void RestoreMainGraphics();
+
+// Clear any graphics painted in the UI process.
+void ClearGraphics();
 
 // ID for the mach message sent from a child process to the middleman to
 // request a port for the graphics shmem.
