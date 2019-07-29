@@ -103,6 +103,7 @@ const startupPhases = {
     {
       // At least the read seems unavoidable for a regular startup.
       path: "UAppData:profiles.ini",
+      ignoreIfUnused: true,
       condition: MAC,
       stat: 1,
       read: 1,

@@ -212,6 +212,12 @@ const startupPhases = {
       ignoreIfUnused: true,
       maxCount: 1,
     },
+    {
+      name: "PCompositorBridge::Msg_FlushRendering",
+      condition: MAC,
+      ignoreIfUnused: true,
+      maxCount: 1,
+    },
   ],
 };
 
