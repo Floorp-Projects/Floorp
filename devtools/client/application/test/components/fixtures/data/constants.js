@@ -4,22 +4,27 @@
 
 "use strict";
 
-const INITSTATE = {
-  domain: "domain",
-  fluentBundles: [],
-  serviceContainer: {},
-  canDebugWorkers: true,
-};
-const CLIENT = {};
 const EMPTY_WORKER_LIST = [];
 
-const SINGLE_WORKER_LIST = [
+const SINGLE_WORKER_DEFAULT_DOMAIN_LIST = [
   {
     active: true,
     name: "worker1",
     scope: "SCOPE 123",
     registrationFront: "",
     workerTargetFront: "",
+    url: "http://example.com/worker.js",
+  },
+];
+
+const SINGLE_WORKER_DIFFERENT_DOMAIN_LIST = [
+  {
+    active: true,
+    name: "worker1",
+    scope: "SCOPE 123",
+    registrationFront: "",
+    workerTargetFront: "",
+    url: "http://different-example.com/worker.js",
   },
 ];
 
@@ -30,6 +35,7 @@ const MULTIPLE_WORKER_LIST = [
     scope: "SCOPE 123",
     registrationFront: "",
     workerTargetFront: "",
+    url: "http://example.com/worker.js",
   },
   {
     active: false,
@@ -37,6 +43,7 @@ const MULTIPLE_WORKER_LIST = [
     scope: "SCOPE 456",
     registrationFront: "",
     workerTargetFront: "",
+    url: "http://example.com/worker.js",
   },
   {
     active: true,
@@ -44,13 +51,41 @@ const MULTIPLE_WORKER_LIST = [
     scope: "SCOPE 789",
     registrationFront: "",
     workerTargetFront: "",
+    url: "http://example.com/worker.js",
+  },
+];
+
+const MULTIPLE_WORKER_MIXED_DOMAINS_LIST = [
+  {
+    active: true,
+    name: "worker1",
+    scope: "SCOPE 123",
+    registrationFront: "",
+    workerTargetFront: "",
+    url: "http://example.com/worker.js",
+  },
+  {
+    active: false,
+    name: "worker2",
+    scope: "SCOPE 456",
+    registrationFront: "",
+    workerTargetFront: "",
+    url: "http://example.com/worker.js",
+  },
+  {
+    active: true,
+    name: "worker3",
+    scope: "SCOPE 789",
+    registrationFront: "",
+    workerTargetFront: "",
+    url: "http://different-example.com/worker.js",
   },
 ];
 
 module.exports = {
-  INITSTATE,
-  CLIENT,
   EMPTY_WORKER_LIST,
-  SINGLE_WORKER_LIST,
+  SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
+  SINGLE_WORKER_DIFFERENT_DOMAIN_LIST,
   MULTIPLE_WORKER_LIST,
+  MULTIPLE_WORKER_MIXED_DOMAINS_LIST,
 };

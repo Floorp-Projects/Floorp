@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. *
+
+/*
+ * The current layout of the workers page is
+ *
+ *  +---------------------------------------------+
+ *  | (header) "Service workers"                  |
+ *  +---------------------------------------------+
+ *  | Service worker 1                            |
+ *  |   (...)                                     |
+ *  | Service worker N           (see Worker.css) |
+ *  +---------------------------------------------+
+ *  |                     Link to about:debugging |
+ *  +---------------------------------------------+
+ */
+.workers-page {
+  height: 100vh;
+  padding: 0 2rem;
+  display: grid;
+  -moz-user-select: none;
+}
+
+.workers-page--empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.workers-page:not(.workers-page--empty) {
+  grid-template-rows: 1fr auto;
+}
