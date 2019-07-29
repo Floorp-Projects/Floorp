@@ -12,32 +12,47 @@
 
     <Button
         android:id="@+id/back_button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:drawableStart="@drawable/mozac_ic_back"
         android:drawablePadding="8dp"
         android:drawableTint="@color/neutral_text"
+        android:gravity="start"
         android:text="@string/create_collection_select_tabs"
         android:textAppearance="@style/HeaderTextStyle"
         android:textColor="@color/neutral_text"
         android:textSize="20sp"
+        app:layout_constraintEnd_toStartOf="@+id/guideline"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_default="wrap"/>
 
     <Button
         android:id="@+id/select_all_button"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:gravity="start"
         android:text="@string/create_collection_select_all"
         android:textAllCaps="false"
         android:textColor="@color/neutral_text"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintHorizontal_bias="1"
+        app:layout_constraintStart_toEndOf="@+id/guideline"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_default="wrap"/>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/collections_list"
