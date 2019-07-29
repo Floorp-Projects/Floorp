@@ -249,6 +249,9 @@ pref("devtools.webconsole.filter.netxhr", false);
 // Webconsole autocomplete preference
 pref("devtools.webconsole.input.autocomplete",true);
 
+// Browser console fission support
+pref("devtools.browserconsole.fission", false);
+
 // Browser console filters
 pref("devtools.browserconsole.filter.error", true);
 pref("devtools.browserconsole.filter.warn", true);
