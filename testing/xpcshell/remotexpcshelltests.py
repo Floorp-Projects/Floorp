@@ -360,8 +360,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["HOME"] = self.profileDir
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         self.env["XPCSHELL_MINIDUMP_DIR"] = self.remoteMinidumpDir
-
         self.env["MOZ_ANDROID_CPU_ABI"] = self.device.get_prop("ro.product.cpu.abi")
+        self.env["MOZ_ANDROID_DATA_DIR"] = self.remoteBinDir
 
         if self.options['setup']:
             self.pushWrapper()
