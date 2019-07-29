@@ -501,11 +501,18 @@ bool UrlClassifierCommon::IsAllowListed(
 
 // static
 bool UrlClassifierCommon::IsTrackingClassificationFlag(uint32_t aFlag) {
-  if (StaticPrefs::privacy_annotate_channels_strict_list_enabled()) {
-    return (
-        aFlag &
-        nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_STRICT_TRACKING);
+  if (StaticPrefs::privacy_annotate_channels_strict_list_enabled() &&
+      (aFlag &
+       nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_STRICT_TRACKING)) {
+    return true;
   }
+
+  if (StaticPrefs::privacy_socialtracking_block_cookies_enabled() &&
+      (aFlag &
+       nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_SOCIAL_TRACKING)) {
+    return true;
+  }
+
   return (aFlag &
           nsIHttpChannel::ClassificationFlags::CLASSIFIED_ANY_BASIC_TRACKING);
 }
