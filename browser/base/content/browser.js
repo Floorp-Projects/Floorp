@@ -487,25 +487,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
-  "gFxaSendLoginUrl",
-  "identity.fxaccounts.service.sendLoginUrl",
-  false,
-  (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gFxaMonitorLoginUrl",
-  "identity.fxaccounts.service.monitorLoginUrl",
-  false,
-  (aPref, aOldVal, aNewVal) => {
-    showFxaToolbarMenu(gFxaToolbarEnabled);
-  }
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
   "gHtmlAboutAddonsEnabled",
   "extensions.htmlaboutaddons.enabled",
   false
@@ -651,18 +632,6 @@ function showFxaToolbarMenu(enable) {
     } else {
       mainWindowEl.removeAttribute("fxa_avatar_badged");
     }
-
-    // When the pref for a FxA service is removed, we remove it from
-    // the FxA toolbar menu as well. This is useful when the service
-    // might not be available that browser.
-    document.getElementById(
-      "PanelUI-fxa-menu-send-button"
-    ).hidden = !gFxaSendLoginUrl;
-    document.getElementById(
-      "PanelUI-fxa-menu-monitor-button"
-    ).hidden = !gFxaMonitorLoginUrl;
-    document.getElementById("fxa-menu-service-separator").hidden =
-      !gFxaSendLoginUrl && !gFxaMonitorLoginUrl;
   } else {
     mainWindowEl.removeAttribute("fxatoolbarmenu");
   }

@@ -24,7 +24,6 @@
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric-16.svg);
 }
 
-#PanelUI-fxa-menu-sync-prefs-button,
 #appMenu-preferences-button {
   list-style-image: url(chrome://browser/skin/settings.svg);
 }
