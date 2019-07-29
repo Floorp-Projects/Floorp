@@ -5,7 +5,6 @@ set -x -e -v
 # including native Mac OS X Compiler-RT libraries and llvm-symbolizer.
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 

@@ -15,7 +15,6 @@ WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/build/src/mingw32
 TOOLTOOL_DIR=$WORKSPACE/build/src
-UPLOAD_DIR=$HOME/artifacts
 
 mkdir -p $INSTALL_DIR
 

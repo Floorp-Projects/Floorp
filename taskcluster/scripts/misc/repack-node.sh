@@ -4,7 +4,6 @@ set -x -e -v
 # This script is for repacking Node (and NPM) from nodejs.org.
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 SUFFIX=tar.xz
 UNARCHIVE="tar xaf"
 REPACK_TAR_COMPRESSION_SWITCH=J

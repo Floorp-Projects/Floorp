@@ -1,9 +1,7 @@
-
 #!/bin/bash
 set -x -e -v
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=bz2
 
 cd $WORKSPACE/build/src

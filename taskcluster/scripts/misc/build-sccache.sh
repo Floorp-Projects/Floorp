@@ -10,7 +10,6 @@ TARGET="$1"
 case "$(uname -s)" in
 Linux)
     WORKSPACE=$HOME/workspace
-    UPLOAD_DIR=$HOME/artifacts
     COMPRESS_EXT=xz
     PATH="$WORKSPACE/build/src/binutils/bin:$PATH"
     ;;

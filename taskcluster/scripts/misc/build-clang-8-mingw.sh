@@ -23,7 +23,6 @@ fi
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 TOOLCHAIN_DIR=$WORKSPACE/moz-toolchain
 INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
