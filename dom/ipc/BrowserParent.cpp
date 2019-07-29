@@ -1266,18 +1266,11 @@ IPCResult BrowserParent::RecvPBrowserBridgeConstructor(
   return IPC_OK();
 }
 
-PBrowserBridgeParent* BrowserParent::AllocPBrowserBridgeParent(
+already_AddRefed<PBrowserBridgeParent> BrowserParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType,
     BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
     const TabId& aTabId) {
-  // Reference freed in DeallocPBrowserBridgeParent.
-  return do_AddRef(new BrowserBridgeParent()).take();
-}
-
-bool BrowserParent::DeallocPBrowserBridgeParent(PBrowserBridgeParent* aActor) {
-  // Free reference from AllocPBrowserBridgeParent.
-  static_cast<BrowserBridgeParent*>(aActor)->Release();
-  return true;
+  return do_AddRef(new BrowserBridgeParent());
 }
 
 void BrowserParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
