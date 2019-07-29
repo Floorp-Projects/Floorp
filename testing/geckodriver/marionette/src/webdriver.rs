@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::Timeouts;
-
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Locator {
     pub using: Selector,
@@ -30,8 +28,6 @@ pub enum Command {
     FindElements(Locator),
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
-    #[serde(rename = "WebDriver:SetTimeouts")]
-    SetTimeouts(Timeouts)
 }
 
 #[cfg(test)]
