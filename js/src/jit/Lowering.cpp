@@ -5052,5 +5052,9 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
   defineReuseInput(lir, ins, LWasmSelect::TrueExprIndex);
 }
 
+void LIRGenerator::visitWasmFence(MWasmFence* ins) {
+  add(new (alloc()) LWasmFence, ins);
+}
+
 static_assert(!std::is_polymorphic<LIRGenerator>::value,
               "LIRGenerator should not have any virtual methods");

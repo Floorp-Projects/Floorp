@@ -13980,6 +13980,11 @@ void CodeGenerator::visitWasmCompareAndSelect(LWasmCompareAndSelect* ins) {
   MOZ_CRASH("in CodeGenerator::visitWasmCompareAndSelect: unexpected types");
 }
 
+void CodeGenerator::visitWasmFence(LWasmFence* lir) {
+  MOZ_ASSERT(gen->compilingWasm());
+  masm.memoryBarrier(MembarFull);
+}
+
 static_assert(!std::is_polymorphic<CodeGenerator>::value,
               "CodeGenerator should not have any virtual methods");
 

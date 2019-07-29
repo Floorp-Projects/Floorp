@@ -279,6 +279,14 @@ class FunctionCompiler {
     return constant;
   }
 
+  void fence() {
+    if (inDeadCode()) {
+      return;
+    }
+    MWasmFence* ins = MWasmFence::New(alloc());
+    curBlock_->add(ins);
+  }
+
   template <class T>
   MDefinition* unary(MDefinition* op) {
     if (inDeadCode()) {
@@ -2800,6 +2808,15 @@ static bool EmitWait(FunctionCompiler& f, ValType type, uint32_t byteSize) {
   return true;
 }
 
+static bool EmitFence(FunctionCompiler& f) {
+  if (!f.iter().readFence()) {
+    return false;
+  }
+
+  f.fence();
+  return true;
+}
+
 static bool EmitWake(FunctionCompiler& f) {
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
@@ -3854,6 +3871,8 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
             CHECK(EmitWait(f, ValType::I32, 4));
           case uint32_t(ThreadOp::I64Wait):
             CHECK(EmitWait(f, ValType::I64, 8));
+          case uint32_t(ThreadOp::Fence):
+            CHECK(EmitFence(f));
 
           case uint32_t(ThreadOp::I32AtomicLoad):
             CHECK(EmitAtomicLoad(f, ValType::I32, Scalar::Int32));
