@@ -7,7 +7,7 @@
 
 [scriptable, uuid(941b2e20-8558-4881-b5ad-dc3a1f2d9678)]
 interface rrIGraphics : nsISupports {
-  void UpdateCanvas(in jsval buffer, in long width, in long height,
-                    in boolean hadFailure);
+  void UpdateCanvas(in jsval buffer, in long width, in long height);
+  void ClearCanvas();
 };
 
