@@ -61,8 +61,8 @@ class TabCollectionDaoTest {
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Two", pagedList[0]!!.collection.title)
-        assertEquals("Collection One", pagedList[1]!!.collection.title)
+        assertEquals("Collection Two", pagedList[1]!!.collection.title)
+        assertEquals("Collection One", pagedList[0]!!.collection.title)
     }
 
     @Test
@@ -114,8 +114,8 @@ class TabCollectionDaoTest {
 
         assertEquals(2, pagedList.size)
 
-        assertEquals("Collection Three", pagedList[0]!!.collection.title)
-        assertEquals("Collection One", pagedList[1]!!.collection.title)
+        assertEquals("Collection Three", pagedList[1]!!.collection.title)
+        assertEquals("Collection One", pagedList[0]!!.collection.title)
     }
 
     @Test
@@ -131,8 +131,8 @@ class TabCollectionDaoTest {
         val collections = data.awaitValue()
         assertNotNull(collections!!)
         assertEquals(2, collections.size)
-        assertEquals("Collection Two", collections[0].collection.title)
-        assertEquals("Collection One", collections[1].collection.title)
+        assertEquals("Collection Two", collections[1].collection.title)
+        assertEquals("Collection One", collections[0].collection.title)
     }
 
     @Test
