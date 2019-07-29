@@ -431,7 +431,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   bool Bug1563538() const { return mBug1563538; }
   bool Bug1563695() const { return mBug1563695; }
-  bool Bug1562315() const { return mBug1562315; }
   bool Bug1556491() const { return mBug1556491; }
 
   uint32_t MaxHttpResponseHeaderSize() const {
@@ -679,7 +678,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // Pref for the whole fix that bug provides
   Atomic<bool, Relaxed> mBug1563538;
   Atomic<bool, Relaxed> mBug1563695;
-  Atomic<bool, Relaxed> mBug1562315;
   Atomic<bool, Relaxed> mBug1556491;
 
   // The max size (in bytes) for received Http response header.
