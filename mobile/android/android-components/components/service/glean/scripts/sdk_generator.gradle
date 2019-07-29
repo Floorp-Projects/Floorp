@@ -21,7 +21,7 @@ import org.gradle.api.internal.artifacts.ArtifactAttributes
 // so that it will be shared between all libraries that use Glean.  This is
 // important because it is approximately 300MB in installed size.
 
-String GLEAN_PARSER_VERSION = "0.30.0"
+String GLEAN_PARSER_VERSION = "1.0.0"
 // The version of Miniconda is explicitly specified.
 // Miniconda3-4.5.12 is known to not work on Windows.
 String MINICONDA_VERSION = "4.5.11"
@@ -206,6 +206,11 @@ ext.gleanGenerateMetricsAPI = {
             commandLine new File(GLEAN_MINICONDA_DIR, "bin/python")
         }
 
+        def gleanNamespace = "mozilla.components.service.glean"
+        if (project.ext.has("gleanNamespace")) {
+            gleanNamespace = project.ext.get("gleanNamespace")
+        }
+
         args "-c"
         args runPythonScript
         args "glean_parser"
@@ -217,6 +222,8 @@ ext.gleanGenerateMetricsAPI = {
         args "$sourceOutputDir"
         args "-s"
         args "namespace=$fullNamespace"
+        args "-s"
+        args "glean_namespace=$gleanNamespace"
         // We intentionally don't let out the local metrics.yaml, even if another one will
         // be extracted from the AAR file. The parser will just ignore this one, if not present.
         args "$projectDir/metrics.yaml"
@@ -225,7 +232,7 @@ ext.gleanGenerateMetricsAPI = {
         // If we're building the Glean library itself (rather than an
         // application using Glean) pass the --allow-reserved flag so we can
         // use metrics in the "glean..." category
-        if (project.name == 'service-glean') {
+        if (project.name == 'service-glean' || project.ext.has("allowGleanInternal")) {
             args "--allow-reserved"
         }
 
