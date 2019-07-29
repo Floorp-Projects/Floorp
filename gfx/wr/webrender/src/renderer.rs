@@ -5199,10 +5199,6 @@ impl Renderer {
             async_screenshots.deinit(&mut self.device);
         }
 
-        if let Some(async_frame_recorder) = self.async_frame_recorder.take() {
-            async_frame_recorder.deinit(&mut self.device);
-        }
-
         #[cfg(feature = "capture")]
         self.device.delete_fbo(self.read_fbo);
         #[cfg(feature = "replay")]
