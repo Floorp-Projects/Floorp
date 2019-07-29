@@ -3541,9 +3541,6 @@ Toolbox.prototype = {
     this.browserRequire = null;
     this._toolNames = null;
 
-    // Destroying the walker and inspector fronts
-    outstanding.push(this.destroyInspector());
-
     // Reset preferences set by the toolbox
     outstanding.push(this.resetPreference());
 
@@ -3587,7 +3584,10 @@ Toolbox.prototype = {
       resolve(
         settleAll(outstanding)
           .catch(console.error)
-          .then(() => {
+          .then(async () => {
+            // Destroying the walker and inspector fronts
+            await this.destroyInspector();
+
             if (this._netMonitorAPI) {
               this._netMonitorAPI.destroy();
               this._netMonitorAPI = null;
