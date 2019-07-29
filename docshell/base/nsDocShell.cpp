@@ -9538,14 +9538,10 @@ nsresult nsDocShell::InternalLoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIWebBrowserChrome3> browserChrome3 = do_GetInterface(mTreeOwner);
   if (browserChrome3) {
     bool shouldLoad;
-    nsCOMPtr<nsIURI> referrer;
-    nsIReferrerInfo* referrerInfo = aLoadState->GetReferrerInfo();
-    if (referrerInfo) {
-      referrerInfo->GetOriginalReferrer(getter_AddRefs(referrer));
-    }
     rv = browserChrome3->ShouldLoadURI(
-        this, aLoadState->URI(), referrer, !!aLoadState->PostDataStream(),
-        aLoadState->TriggeringPrincipal(), aLoadState->Csp(), &shouldLoad);
+        this, aLoadState->URI(), aLoadState->GetReferrerInfo(),
+        !!aLoadState->PostDataStream(), aLoadState->TriggeringPrincipal(),
+        aLoadState->Csp(), &shouldLoad);
     if (NS_SUCCEEDED(rv) && !shouldLoad) {
       return NS_OK;
     }

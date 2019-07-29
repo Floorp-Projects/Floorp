@@ -194,7 +194,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         const {
           uri,
           flags,
-          referrer,
+          referrerInfo,
           triggeringPrincipal,
         } = aMsg.data.loadOptions;
 
@@ -202,7 +202,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
         this.browser.loadURI(uri, {
           flags,
-          referrerInfo: createReferrerInfo(referrer),
+          referrerInfo: E10SUtils.deserializeReferrerInfo(referrerInfo),
           triggeringPrincipal: E10SUtils.deserializePrincipal(
             triggeringPrincipal
           ),

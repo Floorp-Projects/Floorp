@@ -346,7 +346,7 @@ var WebBrowserChrome = {
     );
   },
 
-  shouldLoadURI(docShell, URI, referrer, hasPostData, triggeringPrincipal) {
+  shouldLoadURI(docShell, URI, referrerInfo, hasPostData, triggeringPrincipal) {
     return true;
   },
 
@@ -359,7 +359,7 @@ var WebBrowserChrome = {
   reloadInFreshProcess(
     docShell,
     URI,
-    referrer,
+    referrerInfo,
     triggeringPrincipal,
     loadFlags
   ) {
