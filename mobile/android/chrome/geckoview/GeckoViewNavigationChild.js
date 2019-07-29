@@ -104,18 +104,18 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
   shouldLoadURI(
     aDocShell,
     aURI,
-    aReferrer,
+    aReferrerInfo,
     aHasPostData,
     aTriggeringPrincipal,
     aCsp
   ) {
     debug`shouldLoadURI ${aURI.displaySpec}`;
 
-    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData)) {
+    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
       E10SUtils.redirectLoad(
         aDocShell,
         aURI,
-        aReferrer,
+        aReferrerInfo,
         aTriggeringPrincipal,
         false,
         null,
@@ -139,7 +139,7 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
   reloadInFreshProcess(
     aDocShell,
     aURI,
-    aReferrer,
+    aReferrerInfo,
     aTriggeringPrincipal,
     aLoadFlags,
     aCsp
@@ -148,7 +148,7 @@ class GeckoViewNavigationChild extends GeckoViewChildModule {
     E10SUtils.redirectLoad(
       aDocShell,
       aURI,
-      aReferrer,
+      aReferrerInfo,
       aTriggeringPrincipal,
       true,
       aLoadFlags,
