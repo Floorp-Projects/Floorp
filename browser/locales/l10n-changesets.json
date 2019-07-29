@@ -133,7 +133,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "c6c2bc1dc99d"
+        "revision": "8b3606eea52c"
     },
     "bn": {
         "platforms": [
