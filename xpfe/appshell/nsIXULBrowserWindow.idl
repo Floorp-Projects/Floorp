@@ -15,6 +15,8 @@ interface nsIRemoteTab;
 interface nsIPrincipal;
 interface mozIDOMWindowProxy;
 interface nsIContentSecurityPolicy;
+interface nsIReferrerInfo;
+
 webidl Element;
 webidl Node;
 
@@ -54,8 +56,8 @@ interface nsIXULBrowserWindow : nsISupports
    *        The docshell performing the load.
    * @param aURI
    *        The URI being loaded.
-   * @param aReferrer
-   *        The referrer of the load.
+   * @param aReferrerInfo
+   *        The referrerInfo of the load.
    * @param aHasPostData
    *        True if the load which is being asked about has associated post data
    *        which would be discarded if the load was redirected across process
@@ -66,11 +68,11 @@ interface nsIXULBrowserWindow : nsISupports
    *        The CSP to be used for that load. That is the CSP that e.g. upgrades
    *        the load to HTTPS in case upgrade-insecure-requests is set
    */
-  bool shouldLoadURI(in nsIDocShell    aDocShell,
-                     in nsIURI         aURI,
-                     in nsIURI         aReferrer,
-                     in boolean        aHasPostData,
-                     in nsIPrincipal   aTriggeringPrincipal,
+  bool shouldLoadURI(in nsIDocShell              aDocShell,
+                     in nsIURI                   aURI,
+                     in nsIReferrerInfo          aReferrerInfo,
+                     in boolean                  aHasPostData,
+                     in nsIPrincipal             aTriggeringPrincipal,
                      in nsIContentSecurityPolicy aCsp);
   /**
    * Show/hide a tooltip (when the user mouses over a link, say).

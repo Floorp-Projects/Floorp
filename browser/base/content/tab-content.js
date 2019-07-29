@@ -52,16 +52,16 @@ var WebBrowserChrome = {
   shouldLoadURI(
     aDocShell,
     aURI,
-    aReferrer,
+    aReferrerInfo,
     aHasPostData,
     aTriggeringPrincipal,
     aCsp
   ) {
-    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aReferrer, aHasPostData)) {
+    if (!E10SUtils.shouldLoadURI(aDocShell, aURI, aHasPostData)) {
       E10SUtils.redirectLoad(
         aDocShell,
         aURI,
-        aReferrer,
+        aReferrerInfo,
         aTriggeringPrincipal,
         false,
         null,
@@ -83,7 +83,7 @@ var WebBrowserChrome = {
   reloadInFreshProcess(
     aDocShell,
     aURI,
-    aReferrer,
+    aReferrerInfo,
     aTriggeringPrincipal,
     aLoadFlags,
     aCsp
@@ -91,7 +91,7 @@ var WebBrowserChrome = {
     E10SUtils.redirectLoad(
       aDocShell,
       aURI,
-      aReferrer,
+      aReferrerInfo,
       aTriggeringPrincipal,
       true,
       aLoadFlags,

@@ -9354,13 +9354,9 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
   NS_ENSURE_SUCCESS(rv, false);
   NS_ENSURE_TRUE(uri, false);
 
-  nsCOMPtr<nsIURI> referrer;
   nsCOMPtr<nsIReferrerInfo> referrerInfo;
   rv = aChannel->GetReferrerInfo(getter_AddRefs(referrerInfo));
   NS_ENSURE_SUCCESS(rv, false);
-  if (referrerInfo) {
-    referrer = referrerInfo->GetComputedReferrer();
-  }
 
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   nsCOMPtr<nsIPrincipal> triggeringPrincipal = loadInfo->TriggeringPrincipal();
@@ -9382,8 +9378,9 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
 
   // Actually perform the cross process load
   bool reloadSucceeded = false;
-  rv = wbc3->ReloadInFreshProcess(docShell, uri, referrer, triggeringPrincipal,
-                                  webnavLoadFlags, csp, &reloadSucceeded);
+  rv = wbc3->ReloadInFreshProcess(docShell, uri, referrerInfo,
+                                  triggeringPrincipal, webnavLoadFlags, csp,
+                                  &reloadSucceeded);
   NS_ENSURE_SUCCESS(rv, false);
 
   return reloadSucceeded;
