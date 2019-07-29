@@ -1,5 +1,6 @@
 use base64::DecodeError;
 use http::StatusCode;
+use serde::de::{Deserialize, Deserializer};
 use serde::ser::{Serialize, Serializer};
 use serde_json;
 use std::borrow::Cow;
@@ -146,6 +147,16 @@ impl Serialize for ErrorStatus {
         S: Serializer,
     {
         self.error_code().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for ErrorStatus {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let error_string = String::deserialize(deserializer)?;
+        Ok(ErrorStatus::from(error_string))
     }
 }
 
