@@ -209,9 +209,11 @@
                title="&contentBlocking.breakageReportView.title;"
                descriptionheightworkaround="true">
         <vbox id="protections-popup-sendReportView-heading">
-          <description>&contentBlocking.breakageReportView3.description;</description>
-          <label id="protections-popup-sendReportView-learn-more"
-                 is="text-link">&contentBlocking.breakageReportView2.learnMore;</label>
+          <description>
+            &contentBlocking.breakageReportView3.description;
+            <label id="protections-popup-sendReportView-learn-more"
+                   is="text-link">&contentBlocking.breakageReportView2.learnMore;</label>
+          </description>
         </vbox>
         <vbox id="protections-popup-sendReportView-body" class="panel-view-body-unscrollable">
           <vbox class="protections-popup-sendReportView-collection-section">

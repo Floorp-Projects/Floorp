@@ -412,11 +412,17 @@ description#identity-popup-content-verifier,
 #identity-popup-breakageReportView-collection-url,
 #protections-popup-sendReportView-collection-url {
   font: inherit;
+  -moz-appearance: none;
+  border: none;
 }
 
 #identity-popup-breakageReportView-collection-comments,
 #protections-popup-sendReportView-collection-comments {
   height: 120px;
+}
+
+#protections-popup-sendReportView label {
+  margin-inline-start: 0;
 }
 
 .protections-popup-category {
