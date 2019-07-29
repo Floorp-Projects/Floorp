@@ -5449,6 +5449,13 @@
   value: false
   mirror: always
 
+# Consider socialtracking annotation as trackers (see ETP)
+- name: privacy.socialtracking.block_cookies.enabled
+  type: bool
+  value: false
+  mirror: always
+
+
 # Whether origin telemetry should be enabled
 # NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
 #       won't have any effect.
