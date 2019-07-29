@@ -611,7 +611,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 /* Tracking Protection Button & Toggle */
 
-#appMenu-tp-label {
+#appMenu-protection-report-text {
   -moz-context-properties: fill;
   fill: currentColor;
   -moz-box-flex: 1;
@@ -620,16 +620,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   margin: 0;
 }
 
-#appMenu-tp-icon {
-  list-style-image: url(chrome://browser/skin/tracking-protection.svg);
+#appMenu-protection-report-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
 }
 
-#appMenu-tp-button {
+#appMenu-protection-report-button {
   -moz-box-flex: 1;
-}
-
-#appMenu-tp-category {
-  margin-inline-end: 0;
 }
 
 .addon-banner-item > .toolbarbutton-text,

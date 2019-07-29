@@ -255,12 +255,11 @@
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem>
-          <toolbarbutton id="appMenu-tp-button"
+          <toolbarbutton id="appMenu-protection-report-button"
                class="subviewbutton subviewbutton-iconic"
-               oncommand="gProtectionsHandler.openPreferences('appMenu-trackingprotection');">
-            <image id="appMenu-tp-icon" class="toolbarbutton-icon"/>
-            <label id="appMenu-tp-label" class="toolbarbutton-text"/>
-            <label id="appMenu-tp-category"/>
+               oncommand="gProtectionsHandler.openProtections();">
+            <image id="appMenu-protection-report-icon" class="toolbarbutton-icon"/>
+            <label id="appMenu-protection-report-text" class="toolbarbutton-text">Privacy Protections</label>
           </toolbarbutton>
         </toolbaritem>
         <toolbarseparator id="appMenu-tp-separator"/>
