@@ -43,10 +43,8 @@ SOURCES += [
     'TestRefCountedCopyConstructor.cpp',
     'TestSprintfLiteral.cpp',
     'TestStackClass.cpp',
-    'TestStaticLocalClass.cpp',
     'TestTemporaryClass.cpp',
     'TestTrivialCtorDtor.cpp',
-    'TestTrivialDtor.cpp',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
