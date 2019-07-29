@@ -9,21 +9,23 @@ add_task(async function test_tabs_mediaIndicators() {
     gBrowser,
     "http://example.com/"
   );
-  // setBrowserSharing is called when a request for media icons occurs.  We're
+  // updateBrowserSharing is called when a request for media icons occurs.  We're
   // just testing that extension tabs get the info and are updated when it is
   // called.
-  gBrowser.setBrowserSharing(tab.linkedBrowser, {
-    sharing: "screen",
-    screen: "Window",
-    microphone: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
-    camera: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+  gBrowser.updateBrowserSharing(tab.linkedBrowser, {
+    webRTC: {
+      sharing: "screen",
+      screen: "Window",
+      microphone: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+      camera: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+    },
   });
 
   async function background() {
     let tabs = await browser.tabs.query({ microphone: true });
     let testTab = tabs[0];
 
-    let state = testTab.sharingState;
+    let state = testTab.sharingState.webRTC;
     browser.test.assertTrue(state.camera, "sharing camera was turned on");
     browser.test.assertTrue(state.microphone, "sharing mic was turned on");
     browser.test.assertEq(state.screen, "Window", "sharing screen is window");
@@ -51,7 +53,7 @@ add_task(async function test_tabs_mediaIndicators() {
       if (testTab.id !== tabId) {
         return;
       }
-      let state = tab.sharingState;
+      let state = tab.sharingState.webRTC;
       browser.test.assertFalse(state.camera, "sharing camera was turned off");
       browser.test.assertFalse(state.microphone, "sharing mic was turned off");
       browser.test.assertFalse(state.screen, "sharing screen was turned off");
@@ -71,7 +73,7 @@ add_task(async function test_tabs_mediaIndicators() {
   // Test that onUpdated is called after the sharing state is changed from
   // chrome code.
   await extension.awaitMessage("ready");
-  gBrowser.setBrowserSharing(tab.linkedBrowser, {});
+  gBrowser.resetBrowserSharing(tab.linkedBrowser);
 
   await extension.awaitFinish("done");
   await extension.unload();
