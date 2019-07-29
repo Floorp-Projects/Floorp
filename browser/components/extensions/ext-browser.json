@@ -199,8 +199,8 @@
     ]
   },
   "topSites": {
-    "url": "chrome://extensions/content/parent/ext-topSites.js",
-    "schema": "chrome://extensions/content/schemas/top_sites.json",
+    "url": "chrome://browser/content/parent/ext-topSites.js",
+    "schema": "chrome://browser/content/schemas/top_sites.json",
     "scopes": ["addon_parent"],
     "paths": [
       ["topSites"]
