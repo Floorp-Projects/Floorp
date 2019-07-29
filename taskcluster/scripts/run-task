@@ -834,7 +834,7 @@ def main(args):
     vcs_checkout_from_args(args, 'comm')
 
     try:
-        for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR'):
+        for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR', 'UPLOAD_DIR'):
             if k in os.environ:
                 os.environ[k] = os.path.abspath(os.environ[k])
                 print_line(b'setup', b'%s is %s\n' % (

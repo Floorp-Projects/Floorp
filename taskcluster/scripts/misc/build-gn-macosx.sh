@@ -4,7 +4,6 @@ set -e -v
 # This script is for building GN.
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 
 CROSS_CCTOOLS_PATH=$WORKSPACE/build/src/cctools

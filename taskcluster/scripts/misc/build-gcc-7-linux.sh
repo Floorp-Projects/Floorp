@@ -5,7 +5,6 @@ set -e
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 root_dir=$HOME_DIR
 data_dir=$HOME_DIR/src/build/unix/build-gcc
