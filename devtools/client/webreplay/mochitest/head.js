@@ -166,3 +166,8 @@ PromiseTestUtils.whitelistRejectionsGlobally(/NS_ERROR_NOT_INITIALIZED/);
 PromiseTestUtils.whitelistRejectionsGlobally(
   /Current thread has paused or resumed/
 );
+
+// When running the full test suite, long delays can occur early on in tests,
+// before child processes have even been spawned. Allow a longer timeout to
+// avoid failures from this.
+requestLongerTimeout(120);
