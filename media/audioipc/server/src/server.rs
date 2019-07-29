@@ -50,7 +50,11 @@ impl CubebDeviceCollectionManager {
         }
     }
 
-    fn register(&mut self, context: &cubeb::Context, server: &Rc<RefCell<CubebServerCallbacks>>) {
+    fn register(
+        &mut self,
+        context: &cubeb::Context,
+        server: &Rc<RefCell<CubebServerCallbacks>>,
+    ) -> cubeb::Result<()> {
         if self
             .servers
             .iter()
@@ -59,27 +63,30 @@ impl CubebDeviceCollectionManager {
         {
             self.servers.push(server.clone());
         }
-        self.update(context);
+        self.update(context)
     }
 
-    fn unregister(&mut self, context: &cubeb::Context, server: &Rc<RefCell<CubebServerCallbacks>>) {
+    fn unregister(
+        &mut self,
+        context: &cubeb::Context,
+        server: &Rc<RefCell<CubebServerCallbacks>>,
+    ) -> cubeb::Result<()> {
         self.servers
             .retain(|s| !(Rc::ptr_eq(&s, server) && s.borrow().devtype.is_empty()));
-        self.update(context);
+        self.update(context)
     }
 
-    fn update(&mut self, context: &cubeb::Context) {
+    fn update(&mut self, context: &cubeb::Context) -> cubeb::Result<()> {
         let mut devtype = cubeb::DeviceType::empty();
         for s in &self.servers {
             devtype |= s.borrow().devtype;
         }
         for &dir in &[cubeb::DeviceType::INPUT, cubeb::DeviceType::OUTPUT] {
-            match (devtype.contains(dir), self.devtype.contains(dir)) {
-                (true, false) => self.internal_register(context, dir, true),
-                (false, true) => self.internal_register(context, dir, false),
-                _ => {}
+            if devtype.contains(dir) != self.devtype.contains(dir) {
+                self.internal_register(context, dir, devtype.contains(dir))?;
             }
         }
+        Ok(())
     }
 
     fn internal_register(
@@ -87,7 +94,7 @@ impl CubebDeviceCollectionManager {
         context: &cubeb::Context,
         devtype: cubeb::DeviceType,
         enable: bool,
-    ) {
+    ) -> cubeb::Result<()> {
         let user_ptr = if enable {
             self as *const CubebDeviceCollectionManager as *mut c_void
         } else {
@@ -106,13 +113,11 @@ impl CubebDeviceCollectionManager {
             if devtype.contains(dir) {
                 assert_eq!(self.devtype.contains(dir), !enable);
                 unsafe {
-                    context
-                        .register_device_collection_changed(
-                            dir,
-                            if enable { Some(cb) } else { None },
-                            user_ptr,
-                        )
-                        .expect("devcol register failed");
+                    context.register_device_collection_changed(
+                        dir,
+                        if enable { Some(cb) } else { None },
+                        user_ptr,
+                    )?;
                 }
                 if enable {
                     self.devtype.insert(dir);
@@ -121,6 +126,7 @@ impl CubebDeviceCollectionManager {
                 }
             }
         }
+        Ok(())
     }
 
     // Warning: this is called from an internal cubeb thread, so we must not mutate unprotected shared state.
@@ -540,12 +546,12 @@ impl CubebServer {
 
         if enable {
             cbs.borrow_mut().devtype.insert(devtype);
-            manager.register(context, cbs);
+            manager.register(context, cbs)
         } else {
             cbs.borrow_mut().devtype.remove(devtype);
-            manager.unregister(context, cbs);
+            manager.unregister(context, cbs)
         }
-        Ok(ClientMessage::ContextRegisteredDeviceCollectionChanged)
+        .map(|_| ClientMessage::ContextRegisteredDeviceCollectionChanged)
     }
 
     // Stream init is special, so it's been separated from process_msg.
