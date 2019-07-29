@@ -5,6 +5,19 @@
 
 var testGenerator = testSteps();
 
+// helper function that ensures that ArrayBuffer instances are meaningfully
+// displayed (not just as 'object ArrayBuffer')
+// TODO better move to helpers.js?
+function showKey(key) {
+  if (key instanceof Array) {
+    return key.map(x => showKey(x)).toString();
+  }
+  if (key instanceof ArrayBuffer) {
+    return "ArrayBuffer([" + new Uint8Array(key).toString() + "])";
+  }
+  return key.toString();
+}
+
 function* testSteps() {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
 
@@ -164,11 +177,21 @@ function* testSteps() {
       is(
         indexedDB.cmp(e.target.result, keyI),
         0,
-        "Returned key should cmp as equal"
+        "Returned key should cmp as equal; index = " +
+          i +
+          ", input = " +
+          showKey(keyI) +
+          ", returned = " +
+          showKey(e.target.result)
       );
       ok(
         compareKeys(e.target.result, keyI),
-        "Returned key should actually be equal"
+        "Returned key should actually be equal; index = " +
+          i +
+          ", input = " +
+          showKey(keyI) +
+          ", returned = " +
+          showKey(e.target.result)
       );
     };
 
@@ -195,11 +218,21 @@ function* testSteps() {
     is(
       indexedDB.cmp(cursor.key, keys[i]),
       0,
-      "Read back key should cmp as equal"
+      "Read back key should cmp as equal; index = " +
+        i +
+        ", input = " +
+        showKey(keys[i]) +
+        ", readBack = " +
+        showKey(cursor.key)
     );
     ok(
       compareKeys(cursor.key, keys[i]),
-      "Read back key should actually be equal"
+      "Read back key should actually be equal; index = " +
+        i +
+        ", input = " +
+        showKey(keys[i]) +
+        ", readBack = " +
+        showKey(cursor.key)
     );
     is(cursor.value, i, "Stored with right value");
 
