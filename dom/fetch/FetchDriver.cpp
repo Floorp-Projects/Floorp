@@ -1327,13 +1327,6 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     SetRequestHeaders(httpChannel);
   }
 
-  nsCOMPtr<nsIHttpChannel> oldHttpChannel = do_QueryInterface(aOldChannel);
-  nsAutoCString tRPHeaderCValue;
-  if (oldHttpChannel) {
-    Unused << oldHttpChannel->GetResponseHeader(
-        NS_LITERAL_CSTRING("referrer-policy"), tRPHeaderCValue);
-  }
-
   // "HTTP-redirect fetch": step 14 "Append locationURL to request's URL list."
   // However, ignore internal redirects here.  We don't want to flip
   // Response.redirected to true if an internal redirect occurs.  These
@@ -1365,20 +1358,27 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     mRequest->SetURLForInternalRedirect(aFlags, spec, fragment);
   }
 
-  NS_ConvertUTF8toUTF16 tRPHeaderValue(tRPHeaderCValue);
-  // updates request’s associated referrer policy according to the
-  // Referrer-Policy header (if any).
-  if (!tRPHeaderValue.IsEmpty()) {
-    net::ReferrerPolicy net_referrerPolicy =
-        nsContentUtils::GetReferrerPolicyFromHeader(tRPHeaderValue);
-    if (net_referrerPolicy != net::RP_Unset) {
-      mRequest->SetReferrerPolicy(net_referrerPolicy);
-      // Should update channel's referrer policy
-      if (httpChannel) {
-        nsresult rv = FetchUtil::SetRequestReferrer(mPrincipal, mDocument,
-                                                    httpChannel, mRequest);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
+  // In redirect, httpChannel already took referrer-policy into account, so
+  // updates request’s associated referrer policy from channel.
+  if (httpChannel) {
+    nsCOMPtr<nsIURI> computedReferrer;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo = httpChannel->GetReferrerInfo();
+    if (referrerInfo) {
+      mRequest->SetReferrerPolicy(
+          static_cast<net::ReferrerPolicy>(referrerInfo->GetReferrerPolicy()));
+      computedReferrer = referrerInfo->GetComputedReferrer();
+    }
+
+    // Step 8 https://fetch.spec.whatwg.org/#main-fetch
+    // If request’s referrer is not "no-referrer" (empty), set request’s
+    // referrer to the result of invoking determine request’s referrer.
+    if (computedReferrer) {
+      nsAutoCString spec;
+      rv = computedReferrer->GetSpec(spec);
+      NS_ENSURE_SUCCESS(rv, rv);
+      mRequest->SetReferrer(NS_ConvertUTF8toUTF16(spec));
+    } else {
+      mRequest->SetReferrer(EmptyString());
     }
   }
 

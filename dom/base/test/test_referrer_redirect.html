@@ -14,53 +14,104 @@
   <script type="application/javascript">
 
   const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
-  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY"];
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "RP_HEADER"];
 
   const testCases = [
     {ACTION: ["generate-img-redirect-policy-test", "generate-iframe-redirect-policy-test"],
       TESTS: [
         {
           ATTRIBUTE_POLICY: "no-referrer",
-           NAME: "no-referrer-with-no-meta",
-           DESC: "no-referrer (img/iframe) with no meta",
-           RESULT: "none"
+          NAME: "no-referrer-with-no-meta",
+          DESC: "no-referrer (img/iframe) with no meta",
+          RESULT: "none"
         },
         {
           ATTRIBUTE_POLICY: "origin",
-           NAME: "origin-with-no-meta",
-           DESC: "origin (img/iframe) with no meta",
-           RESULT: "origin"
+          NAME: "origin-with-no-meta",
+          DESC: "origin (img/iframe) with no meta",
+          RESULT: "origin"
         },
         {
           ATTRIBUTE_POLICY: "unsafe-url",
-           NAME: "unsafe-url-with-no-meta",
-           DESC: "unsafe-url (img/iframe) with no meta",
-           RESULT: "full"
+          NAME: "unsafe-url-with-no-meta",
+          DESC: "unsafe-url (img/iframe) with no meta",
+          RESULT: "full"
         },
         {
           META_POLICY: "unsafe-url",
-           NAME: "unsafe-url-in-meta",
-           DESC: "unsafe-url in meta",
-           RESULT: "full"
+          NAME: "unsafe-url-in-meta",
+          DESC: "unsafe-url in meta",
+          RESULT: "full"
         },
         {
           META_POLICY: "origin",
-           NAME: "origin-in-meta",
-           DESC: "origin in meta",
-           RESULT: "origin"
+          NAME: "origin-in-meta",
+          DESC: "origin in meta",
+          RESULT: "origin"
         },
         {
           META_POLICY: "no-referrer",
-           NAME: "no-referrer-in-meta",
-           DESC: "no-referrer in meta",
-           RESULT: "none"
+          NAME: "no-referrer-in-meta",
+          DESC: "no-referrer in meta",
+          RESULT: "none"
         },
         {
           META_POLICY: "origin-when-cross-origin",
-           NAME: "origin-when-cross-origin-in-meta",
-           DESC: "origin-when-cross-origin in meta",
-           RESULT: "origin"
-        }]}
+          NAME: "origin-when-cross-origin-in-meta",
+          DESC: "origin-when-cross-origin in meta",
+          RESULT: "origin"
+        },
+        {
+          ATTRIBUTE_POLICY: "no-referrer",
+          RP_HEADER: "origin",
+          NAME: "no-referrer-with-no-meta-origin-RP-header",
+          DESC: "no-referrer (img/iframe) with no meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          ATTRIBUTE_POLICY: "origin",
+          RP_HEADER: "no-referrer",
+          NAME: "origin-with-no-meta-no-referrer-RP-header",
+          DESC: "origin (img/iframe) with no meta, no-referrer Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          ATTRIBUTE_POLICY: "unsafe-url",
+          RP_HEADER: "origin",
+          NAME: "unsafe-url-with-no-meta-origin-RP-header",
+          DESC: "unsafe-url (img/iframe) with no meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "unsafe-url",
+          RP_HEADER: "origin",
+          NAME: "unsafe-url-in-meta-origin-RP-header",
+          DESC: "unsafe-url in meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "origin",
+          RP_HEADER: "no-referrer",
+          NAME: "origin-in-meta-no-referrer-RP-header",
+          DESC: "origin in meta, no-referrer Referrer-Policy redirect header",
+          RESULT: "none"
+        },
+        {
+          META_POLICY: "no-referrer",
+          RP_HEADER: "origin",
+          NAME: "no-referrer-in-meta-origin-RP-header",
+          DESC: "no-referrer in meta, origin Referrer-Policy redirect header",
+          RESULT: "origin"
+        },
+        {
+          META_POLICY: "origin-when-cross-origin",
+          RP_HEADER: "unsafe-url",
+          NAME: "origin-when-cross-origin-in-meta-unsafe-url-RP-header",
+          DESC: "origin-when-cross-origin in meta, unsafe-url Referrer-Policy redirect header",
+          RESULT: "full"
+        }
+      ]
+    }
   ];
   </script>
   <script type="application/javascript" src="/tests/dom/base/test/referrer_helper.js"></script>
