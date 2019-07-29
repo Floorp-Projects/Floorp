@@ -3,9 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 /* globals Localization */
-const { FxAccountsConfig } = ChromeUtils.import(
-  "resource://gre/modules/FxAccountsConfig.jsm"
-);
 const { AttributionCode } = ChromeUtils.import(
   "resource:///modules/AttributionCode.jsm"
 );
@@ -21,114 +18,7 @@ const L10N = new Localization([
   "browser/newtab/onboarding.ftl",
 ]);
 
-const ONBOARDING_MESSAGES = async () => [
-  {
-    id: "ONBOARDING_1",
-    template: "onboarding",
-    bundled: 3,
-    order: 2,
-    content: {
-      title: { string_id: "onboarding-private-browsing-title" },
-      text: { string_id: "onboarding-private-browsing-text" },
-      icon: "privatebrowsing",
-      primary_button: {
-        label: { string_id: "onboarding-button-label-try-now" },
-        action: { type: "OPEN_PRIVATE_BROWSER_WINDOW" },
-      },
-    },
-    trigger: { id: "showOnboarding" },
-  },
-  {
-    id: "ONBOARDING_2",
-    template: "onboarding",
-    bundled: 3,
-    order: 3,
-    content: {
-      title: { string_id: "onboarding-screenshots-title" },
-      text: { string_id: "onboarding-screenshots-text" },
-      icon: "screenshots",
-      primary_button: {
-        label: { string_id: "onboarding-button-label-try-now" },
-        action: {
-          type: "OPEN_URL",
-          data: {
-            args: "https://screenshots.firefox.com/#tour",
-            where: "tabshifted",
-          },
-        },
-      },
-    },
-    trigger: { id: "showOnboarding" },
-  },
-  {
-    id: "ONBOARDING_3",
-    template: "onboarding",
-    bundled: 3,
-    order: 1,
-    content: {
-      title: { string_id: "onboarding-addons-title" },
-      text: { string_id: "onboarding-addons-text" },
-      icon: "addons",
-      primary_button: {
-        label: { string_id: "onboarding-button-label-try-now" },
-        action: {
-          type: "OPEN_ABOUT_PAGE",
-          data: { args: "addons" },
-        },
-      },
-    },
-    targeting:
-      "trailheadInterrupt == 'control' && attributionData.campaign != 'non-fx-button' && attributionData.source != 'addons.mozilla.org'",
-    trigger: { id: "showOnboarding" },
-  },
-  {
-    id: "ONBOARDING_4",
-    template: "onboarding",
-    bundled: 3,
-    order: 1,
-    content: {
-      title: { string_id: "onboarding-ghostery-title" },
-      text: { string_id: "onboarding-ghostery-text" },
-      icon: "gift",
-      primary_button: {
-        label: { string_id: "onboarding-button-label-try-now" },
-        action: {
-          type: "OPEN_URL",
-          data: {
-            args: "https://addons.mozilla.org/en-US/firefox/addon/ghostery/",
-            where: "tabshifted",
-          },
-        },
-      },
-    },
-    targeting:
-      "trailheadInterrupt == 'control' && providerCohorts.onboarding == 'ghostery'",
-    trigger: { id: "showOnboarding" },
-  },
-  {
-    id: "ONBOARDING_5",
-    template: "onboarding",
-    bundled: 3,
-    order: 4,
-    content: {
-      title: { string_id: "onboarding-fxa-title" },
-      text: { string_id: "onboarding-fxa-text" },
-      icon: "sync",
-      primary_button: {
-        label: { string_id: "onboarding-button-label-get-started" },
-        action: {
-          type: "OPEN_URL",
-          data: {
-            args: await FxAccountsConfig.promiseEmailFirstURI("onboarding"),
-            where: "tabshifted",
-          },
-        },
-      },
-    },
-    targeting:
-      "trailheadInterrupt == 'control' && attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",
-    trigger: { id: "showOnboarding" },
-  },
+const ONBOARDING_MESSAGES = () => [
   {
     id: "TRAILHEAD_1",
     template: "trailhead",
@@ -436,7 +326,13 @@ const ONBOARDING_MESSAGES = async () => [
   {
     id: "FXA_1",
     template: "fxa_overlay",
+    content: {},
     trigger: { id: "firstRun" },
+    includeBundle: {
+      length: 3,
+      template: "onboarding",
+      trigger: { id: "showOnboarding" },
+    },
   },
   {
     id: "RETURN_TO_AMO_1",
@@ -460,6 +356,11 @@ const ONBOARDING_MESSAGES = async () => [
       secondary_button: {
         label: { string_id: "return-to-amo-get-started-button" },
       },
+    },
+    includeBundle: {
+      length: 3,
+      template: "onboarding",
+      trigger: { id: "showOnboarding" },
     },
     targeting:
       "attributionData.campaign == 'non-fx-button' && attributionData.source == 'addons.mozilla.org'",

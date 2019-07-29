@@ -2,14 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { ModalOverlay } from "../../components/ModalOverlay/ModalOverlay";
 import React from "react";
-
-const FLUENT_FILES = [
-  "branding/brand.ftl",
-  "browser/branding/sync-brand.ftl",
-  "browser/newtab/onboarding.ftl",
-];
 
 export class OnboardingCard extends React.PureComponent {
   constructor(props) {
@@ -54,36 +47,6 @@ export class OnboardingCard extends React.PureComponent {
           </span>
         </div>
       </div>
-    );
-  }
-}
-
-export class OnboardingMessage extends React.PureComponent {
-  componentWillMount() {
-    FLUENT_FILES.forEach(file => {
-      const link = document.head.appendChild(document.createElement("link"));
-      link.href = file;
-      link.rel = "localization";
-    });
-  }
-
-  render() {
-    const { props } = this;
-    const { button_label, header } = props.extraTemplateStrings;
-    return (
-      <ModalOverlay {...props} button_label={button_label} title={header}>
-        <div className="onboardingMessageContainer">
-          {props.bundle.map(message => (
-            <OnboardingCard
-              key={message.id}
-              sendUserActionTelemetry={props.sendUserActionTelemetry}
-              onAction={props.onAction}
-              UISurface={props.UISurface}
-              {...message}
-            />
-          ))}
-        </div>
-      </ModalOverlay>
     );
   }
 }
