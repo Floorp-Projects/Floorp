@@ -65,7 +65,8 @@ class WebConsole {
     iframeWindow,
     chromeWindow,
     hudService,
-    isBrowserConsole = false
+    isBrowserConsole = false,
+    fissionSupport = false
   ) {
     this.iframeWindow = iframeWindow;
     this.chromeWindow = chromeWindow;
@@ -73,7 +74,8 @@ class WebConsole {
     this.target = target;
     this.browserWindow = this.chromeWindow.top;
     this.hudService = hudService;
-    this._browserConsole = isBrowserConsole;
+    this.isBrowserConsole = isBrowserConsole;
+    this.fissionSupport = fissionSupport;
 
     const element = this.browserWindow.document.documentElement;
     if (element.getAttribute("windowtype") != gDevTools.chromeWindowType) {
@@ -384,7 +386,7 @@ class WebConsole {
         this.ui.destroy();
       }
 
-      if (!this._browserConsole) {
+      if (!this.isBrowserConsole) {
         try {
           await this.target.focus();
         } catch (ex) {
