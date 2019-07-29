@@ -2494,6 +2494,8 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         PrincipalInfoToPrincipal(aLocationChangeData->contentPrincipal());
     nsCOMPtr<nsIPrincipal> contentStoragePrincipal = PrincipalInfoToPrincipal(
         aLocationChangeData->contentStoragePrincipal());
+    nsCOMPtr<nsIReferrerInfo> referrerInfo =
+        aLocationChangeData->referrerInfo();
 
     Unused << browser->SetIsNavigating(aLocationChangeData->isNavigating());
     Unused << browser->UpdateForLocationChange(
@@ -2501,7 +2503,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvOnLocationChange(
         aLocationChangeData->mayEnableCharacterEncodingMenu(),
         aLocationChangeData->charsetAutodetected(),
         aLocationChangeData->documentURI(), aLocationChangeData->title(),
-        contentPrincipal, contentStoragePrincipal, csp,
+        contentPrincipal, contentStoragePrincipal, csp, referrerInfo,
         aLocationChangeData->isSyntheticDocument(),
         aWebProgressData->innerDOMWindowID(),
         aLocationChangeData->requestContextID().isSome(),
