@@ -256,18 +256,6 @@ var gIdentityHandler = {
     ));
   },
 
-  get _geoSharingIcon() {
-    delete this._geoSharingIcon;
-    return (this._geoSharingIcon = document.getElementById("geo-sharing-icon"));
-  },
-
-  get _webRTCSharingIcon() {
-    delete this._webRTCSharingIcon;
-    return (this._webRTCSharingIcon = document.getElementById(
-      "webrtc-sharing-icon"
-    ));
-  },
-
   get _insecureConnectionIconEnabled() {
     delete this._insecureConnectionIconEnabled;
     XPCOMUtils.defineLazyPreferenceGetter(
@@ -525,27 +513,12 @@ var gIdentityHandler = {
     let tab = gBrowser.selectedTab;
     this._sharingState = tab._sharingState;
 
-    this._webRTCSharingIcon.removeAttribute("paused");
-    this._webRTCSharingIcon.removeAttribute("sharing");
-    this._geoSharingIcon.removeAttribute("sharing");
-
-    if (this._sharingState) {
-      if (
-        this._sharingState &&
-        this._sharingState.webRTC &&
-        this._sharingState.webRTC.sharing
-      ) {
-        this._webRTCSharingIcon.setAttribute(
-          "sharing",
-          this._sharingState.webRTC.sharing
-        );
-
-        if (this._sharingState.webRTC.paused) {
-          this._webRTCSharingIcon.setAttribute("paused", "true");
-        }
-      }
-      if (this._sharingState.geo) {
-        this._geoSharingIcon.setAttribute("sharing", this._sharingState.geo);
+    this._identityBox.removeAttribute("paused");
+    this._identityBox.removeAttribute("sharing");
+    if (this._sharingState && this._sharingState.sharing) {
+      this._identityBox.setAttribute("sharing", this._sharingState.sharing);
+      if (this._sharingState.paused) {
+        this._identityBox.setAttribute("paused", "true");
       }
     }
 
@@ -1210,33 +1183,18 @@ var gIdentityHandler = {
       gBrowser.selectedBrowser
     );
 
-    if (this._sharingState && this._sharingState.geo) {
-      let geoPermission = permissions.find(perm => perm.id === "geo");
-      if (geoPermission) {
-        geoPermission.sharingState = true;
-      } else {
-        permissions.push({
-          id: "geo",
-          state: SitePermissions.ALLOW,
-          scope: SitePermissions.SCOPE_REQUEST,
-          sharingState: true,
-        });
-      }
-    }
-
-    if (this._sharingState && this._sharingState.webRTC) {
-      let webrtcState = this._sharingState.webRTC;
+    if (this._sharingState) {
       // If WebRTC device or screen permissions are in use, we need to find
       // the associated permission item to set the sharingState field.
       for (let id of ["camera", "microphone", "screen"]) {
-        if (webrtcState[id]) {
+        if (this._sharingState[id]) {
           let found = false;
           for (let permission of permissions) {
             if (permission.id != id) {
               continue;
             }
             found = true;
-            permission.sharingState = webrtcState[id];
+            permission.sharingState = this._sharingState[id];
             break;
           }
           if (!found) {
@@ -1247,7 +1205,7 @@ var gIdentityHandler = {
               id,
               state: SitePermissions.ALLOW,
               scope: SitePermissions.SCOPE_REQUEST,
-              sharingState: webrtcState[id],
+              sharingState: this._sharingState[id],
             });
           }
         }
@@ -1274,11 +1232,6 @@ var gIdentityHandler = {
       ) {
         this._createBlockedPopupIndicator();
         hasBlockedPopupIndicator = true;
-      } else if (
-        permission.id == "geo" &&
-        permission.state === SitePermissions.ALLOW
-      ) {
-        this._createGeoLocationLastAccessIndicator();
       }
     }
 
@@ -1335,7 +1288,9 @@ var gIdentityHandler = {
       // Synchronize control center and identity block blinking animations.
       window
         .promiseDocumentFlushed(() => {
-          let sharingIconBlink = this._webRTCSharingIcon.getAnimations()[0];
+          let sharingIconBlink = document
+            .getElementById("sharing-icon")
+            .getAnimations()[0];
           let imgBlink = img.getAnimations()[0];
           return [sharingIconBlink, imgBlink];
         })
@@ -1448,24 +1403,6 @@ var gIdentityHandler = {
       return container;
     }
 
-    if (aPermission.id == "geo") {
-      let block = document.createXULElement("vbox");
-      block.setAttribute("id", "identity-popup-geo-container");
-
-      let button = this._createPermissionClearButton(aPermission, block);
-      container.appendChild(button);
-
-      block.appendChild(container);
-      return block;
-    }
-
-    let button = this._createPermissionClearButton(aPermission, container);
-    container.appendChild(button);
-
-    return container;
-  },
-
-  _createPermissionClearButton(aPermission, container) {
     let button = document.createXULElement("button");
     button.setAttribute("class", "identity-popup-permission-remove-button");
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
@@ -1477,7 +1414,7 @@ var gIdentityHandler = {
         aPermission.sharingState &&
         ["camera", "microphone", "screen"].includes(aPermission.id)
       ) {
-        let windowId = this._sharingState.webRTC.windowId;
+        let windowId = this._sharingState.windowId;
         if (aPermission.id == "screen") {
           windowId = "screen:" + windowId;
         } else {
@@ -1489,7 +1426,7 @@ var gIdentityHandler = {
             // It's not possible to stop sharing one of camera/microphone
             // without the other.
             for (let id of ["camera", "microphone"]) {
-              if (this._sharingState.webRTC[id]) {
+              if (this._sharingState[id]) {
                 let perm = SitePermissions.getForPrincipal(principal, id);
                 if (
                   perm.state == SitePermissions.ALLOW &&
@@ -1514,71 +1451,11 @@ var gIdentityHandler = {
       PanelView.forNode(
         this._identityPopupMainView
       ).descriptionHeightWorkaround();
-
-      if (aPermission.id === "geo") {
-        gBrowser.updateBrowserSharing(browser, { geo: false });
-      }
     });
 
-    return button;
-  },
+    container.appendChild(button);
 
-  _getGeoLocationLastAccess() {
-    return new Promise(resolve => {
-      let lastAccess = null;
-      ContentPrefService2.getByDomainAndName(
-        gBrowser.currentURI.spec,
-        "permissions.geoLocation.lastAccess",
-        gBrowser.selectedBrowser.loadContext,
-        {
-          handleResult(pref) {
-            lastAccess = pref.value;
-          },
-          handleCompletion() {
-            resolve(lastAccess);
-          },
-        }
-      );
-    });
-  },
-
-  async _createGeoLocationLastAccessIndicator() {
-    let lastAccessStr = await this._getGeoLocationLastAccess();
-
-    if (lastAccessStr == null) {
-      return;
-    }
-    let lastAccess = new Date(lastAccessStr);
-    if (isNaN(lastAccess)) {
-      Cu.reportError("Invalid timestamp for last geolocation access");
-      return;
-    }
-
-    let icon = document.createXULElement("image");
-    icon.setAttribute("class", "popup-subitem");
-
-    let indicator = document.createXULElement("hbox");
-    indicator.setAttribute("class", "identity-popup-permission-item");
-    indicator.setAttribute("align", "center");
-    indicator.setAttribute("id", "geo-access-indicator-item");
-
-    let timeFormat = new Services.intl.RelativeTimeFormat(undefined, {});
-
-    let text = document.createXULElement("label");
-    text.setAttribute("flex", "1");
-    text.setAttribute("class", "identity-popup-permission-label");
-
-    text.textContent = gNavigatorBundle.getFormattedString(
-      "geolocationLastAccessIndicatorText",
-      [timeFormat.formatBestUnit(lastAccess)]
-    );
-
-    indicator.appendChild(icon);
-    indicator.appendChild(text);
-
-    document
-      .getElementById("identity-popup-geo-container")
-      .appendChild(indicator);
+    return container;
   },
 
   _createBlockedPopupIndicator() {

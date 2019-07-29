@@ -567,9 +567,8 @@ async function checkSharingUI(
   let doc = aWin.document;
   // First check the icon above the control center (i) icon.
   let identityBox = doc.getElementById("identity-box");
-  let webrtcSharingIcon = doc.getElementById("webrtc-sharing-icon");
-  ok(webrtcSharingIcon.hasAttribute("sharing"), "sharing attribute is set");
-  let sharing = webrtcSharingIcon.getAttribute("sharing");
+  ok(identityBox.hasAttribute("sharing"), "sharing attribute is set");
+  let sharing = identityBox.getAttribute("sharing");
   if (aExpected.screen) {
     is(sharing, "screen", "showing screen icon in the identity block");
   } else if (aExpected.video == STATE_CAPTURE_ENABLED) {
@@ -584,7 +583,7 @@ async function checkSharingUI(
 
   let allStreamsPaused = Object.values(aExpected).every(isPaused);
   is(
-    webrtcSharingIcon.hasAttribute("paused"),
+    identityBox.hasAttribute("paused"),
     allStreamsPaused,
     "sharing icon(s) should be in paused state when paused"
   );
@@ -604,7 +603,7 @@ async function checkSharingUI(
     };
     let expected = aExpected[convertId(id)];
     is(
-      !!aWin.gIdentityHandler._sharingState.webRTC[id],
+      !!aWin.gIdentityHandler._sharingState[id],
       !!expected,
       "sharing state for " + id + " as expected"
     );
@@ -643,7 +642,7 @@ async function checkNotSharing() {
   );
 
   ok(
-    !document.getElementById("webrtc-sharing-icon").hasAttribute("sharing"),
+    !document.getElementById("identity-box").hasAttribute("sharing"),
     "no sharing indicator on the control center icon"
   );
 

@@ -336,9 +336,7 @@ var webrtcUI = {
         }
         let tabbrowser = aMessage.target.ownerGlobal.gBrowser;
         if (tabbrowser) {
-          tabbrowser.updateBrowserSharing(aMessage.target, {
-            webRTC: aMessage.data,
-          });
+          tabbrowser.setBrowserSharing(aMessage.target, aMessage.data);
         }
         break;
       case "child-process-shutdown":
