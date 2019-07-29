@@ -1246,11 +1246,11 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       autoFlushICache_(this, nullptr),
       dtoaState(this, nullptr),
       suppressGC(this, 0),
+      gcSweeping(this, false),
 #ifdef DEBUG
       ionCompiling(this, false),
       ionCompilingSafeForMinorGC(this, false),
       performingGC(this, false),
-      gcSweeping(this, false),
       isTouchingGrayThings(this, false),
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),
