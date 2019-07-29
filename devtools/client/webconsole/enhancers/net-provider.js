@@ -39,7 +39,7 @@ function enableNetProvider(webConsoleUI) {
 
       const actions = {
         updateRequest: (id, data, batch) => {
-          proxy.dispatchRequestUpdate(id, data);
+          return proxy.dispatchRequestUpdate(id, data);
         },
       };
 

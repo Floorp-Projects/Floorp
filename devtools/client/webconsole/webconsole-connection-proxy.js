@@ -245,10 +245,10 @@ WebConsoleConnectionProxy.prototype = {
   dispatchRequestUpdate: function(id, data) {
     // Some request might try to update while we are closing the toolbox.
     if (!this.webConsoleUI) {
-      return;
+      return Promise.resolve();
     }
 
-    this.webConsoleUI.wrapper.dispatchRequestUpdate(id, data);
+    return this.webConsoleUI.wrapper.dispatchRequestUpdate(id, data);
   },
 
   /**
