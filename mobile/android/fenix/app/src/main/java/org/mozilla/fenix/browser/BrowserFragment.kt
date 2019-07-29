@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
@@ -49,8 +48,8 @@ import mozilla.components.feature.session.ThumbnailsFeature
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.feature.tab.collections.TabCollection
+import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
@@ -151,7 +150,7 @@ class BrowserFragment : Fragment(), BackHandler {
                 BrowserState(
                     quickActionSheetState = QuickActionSheetState(
                         readable = getSessionById()?.readerable ?: false,
-                        bookmarked = findBookmarkedURL(getSessionById()),
+                        bookmarked = false,
                         readerActive = getSessionById()?.readerMode ?: false,
                         bounceNeeded = false,
                         isAppLink = getSessionById()?.let { appLink.invoke(it.url).hasExternalApp() } ?: false
@@ -684,9 +683,9 @@ class BrowserFragment : Fragment(), BackHandler {
         }.also { requireComponents.core.sessionManager.register(it, this) }
     }
 
-    private fun findBookmarkedURL(session: Session?): Boolean {
-        session?.let {
-            return runBlocking {
+    private suspend fun findBookmarkedURL(session: Session?): Boolean {
+        return withContext(IO) {
+            session?.let {
                 try {
                     val url = URL(it.url).toString()
                     val list = requireComponents.core.bookmarksStorage.getBookmarksWithUrl(url)
@@ -694,9 +693,8 @@ class BrowserFragment : Fragment(), BackHandler {
                 } catch (e: MalformedURLException) {
                     false
                 }
-            }
+            } ?: false
         }
-        return false
     }
 
     private fun updateBookmarkState(session: Session) {
