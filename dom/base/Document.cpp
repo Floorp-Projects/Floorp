@@ -12469,13 +12469,13 @@ class UnblockParsingPromiseHandler final : public PromiseNativeHandler {
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MaybeUnblockParser();
 
-    mPromise->MaybeResolve(aCx, aValue);
+    mPromise->MaybeResolve(aValue);
   }
 
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override {
     MaybeUnblockParser();
 
-    mPromise->MaybeReject(aCx, aValue);
+    mPromise->MaybeReject(aValue);
   }
 
  protected:
