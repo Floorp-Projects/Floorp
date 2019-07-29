@@ -111,6 +111,12 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY toggleReaderMode.key "R">
 <!ENTITY toggleReaderMode.win.keycode "VK_F9">
 
+<!ENTITY fxaSignIn.label "Sign in to &syncBrand.shortName.label;">
+<!ENTITY fxaSignedIn.tooltip "Open &syncBrand.shortName.label; preferences">
+<!ENTITY fxaSignInError.label "Reconnect to &syncBrand.shortName.label;">
+<!ENTITY fxaUnverified.label "Verify Your Account">
+
+
 <!ENTITY fullScreenMinimize.tooltip "Minimize">
 <!ENTITY fullScreenRestore.tooltip "Restore">
 <!ENTITY fullScreenClose.tooltip "Close">
@@ -119,24 +125,26 @@ These should match what Safari and other Apple applications use on OS X Lion. --
 <!ENTITY fullScreenExit.label "Exit Full Screen Mode">
 <!ENTITY fullScreenExit.accesskey "F">
 
+ <!-- LOCALIZATION NOTE (fxa.signin) Used to define the different labels
+     for the Firefox Account toolbar signin menu screen. -->
+<!ENTITY fxa.signin.callout.label "Take Firefox with You">
+<!ENTITY fxa.signin.description.label "Get your bookmarks, history, passwords and other settings on all your devices.">
+<!ENTITY fxa.signin.button.label "Turn on &syncBrand.shortName.label;…">
+
+<!-- LOCALIZATION NOTE (fxa.unverified) Used to define the different labels
+     for the Firefox Account toolbar unverified menu screen. -->
+<!ENTITY fxa.unverified.callout.label "Check Your Email">
+<!ENTITY fxa.unverified.description.label "You’ll need to verify your account before you can sync.">
+<!ENTITY fxa.unverified.button.label "Open &syncBrand.shortName.label; Settings…">
+
 <!-- LOCALIZATION NOTE (fxa.menu) Used to define the different labels
-     for the Firefox Account toolbar menu screen. The `Signed in as` text is
+     for the Firefox Account toolbart menu screen. The `Signed in as` text is
      followed by the user's email. -->
 <!ENTITY fxa.menu.signedInAs.label "Signed in as">
 <!ENTITY fxa.menu.manageAccount.label "Manage Account…">
 <!ENTITY fxa.menu.syncSettings.label "&syncBrand.shortName.label; Settings…">
 <!ENTITY fxa.menu.connectAnotherDevice2.label "Connect Another Device…">
 <!ENTITY fxa.menu.firefoxAccount "&syncBrand.fxAccount.label;">
-<!ENTITY fxa.menu.signin.label "Sign in to &brandProductName;">
-<!ENTITY fxa.menu.turnOnSync.label "Turn on &syncBrand.shortName.label;">
-<!ENTITY fxa.menu.account.label "Account">
-
-<!-- LOCALIZATION NOTE (fxa.service) Used to define the different FxA services
-     for the Firefox Account toolbar menu screen.  -->
-<!ENTITY fxa.service.send.description "Upload and share files with end-to-end encryption plus a link that automatically expires.">
-<!ENTITY fxa.service.send.launch "Launch &sendShortName;">
-<!ENTITY fxa.service.monitor.description "Check if your email has appeared in a data breach and get alerted if it appears in a new breach.">
-<!ENTITY fxa.service.monitor.launch "Launch &monitorShortName;">
 
 <!-- LOCALIZATION NOTE (fullscreenWarning.beforeDomain.label,
      fullscreenWarning.afterDomain.label): these two strings are used
