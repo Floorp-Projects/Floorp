@@ -1537,7 +1537,7 @@ public class GeckoSession implements Parcelable {
      */
     @AnyThread
     public void loadUri(final @NonNull String uri) {
-        loadUri(uri, null, LOAD_FLAGS_NONE);
+        loadUri(uri, (GeckoSession)null, LOAD_FLAGS_NONE);
     }
 
     /**
@@ -1548,7 +1548,7 @@ public class GeckoSession implements Parcelable {
      */
     @AnyThread
     public void loadUri(final @NonNull String uri, final @LoadFlags int flags) {
-        loadUri(uri, null, flags);
+        loadUri(uri, (GeckoSession)null, flags);
     }
 
     /**
@@ -1566,7 +1566,29 @@ public class GeckoSession implements Parcelable {
         msg.putInt("flags", flags);
 
         if (referrer != null) {
-            msg.putString("referrer", referrer);
+            msg.putString("referrerUri", referrer);
+        }
+        mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
+    }
+
+    /**
+     * Load the given URI with the specified referrer and load type. This method will also do any
+     * applicable checks to ensure that the specified URI is both safe and allowable
+     * according to the referring GeckoSession.
+     *
+     * @param uri the URI to load
+     * @param referrer the referring GeckoSession, may be null
+     * @param flags the load flags to use, an OR-ed value of {@link #LOAD_FLAGS_NONE LOAD_FLAGS_*}
+     */
+    @AnyThread
+    public void loadUri(final @NonNull String uri, final @Nullable GeckoSession referrer,
+                        final @LoadFlags int flags) {
+        final GeckoBundle msg = new GeckoBundle();
+        msg.putString("uri", uri);
+        msg.putInt("flags", flags);
+
+        if (referrer != null) {
+            msg.putString("referrerSessionId", referrer.mId);
         }
         mEventDispatcher.dispatch("GeckoView:LoadUri", msg);
     }
@@ -1587,7 +1609,7 @@ public class GeckoSession implements Parcelable {
      */
     @AnyThread
     public void loadUri(final @NonNull Uri uri, final @LoadFlags int flags) {
-        loadUri(uri.toString(), null, flags);
+        loadUri(uri.toString(), (GeckoSession)null, flags);
     }
 
     /**
@@ -1616,7 +1638,7 @@ public class GeckoSession implements Parcelable {
             throw new IllegalArgumentException("data cannot be null");
         }
 
-        loadUri(createDataUri(data, mimeType), null, LOAD_FLAGS_NONE);
+        loadUri(createDataUri(data, mimeType), (GeckoSession)null, LOAD_FLAGS_NONE);
     }
 
     /**
@@ -1632,7 +1654,7 @@ public class GeckoSession implements Parcelable {
             throw new IllegalArgumentException("data cannot be null");
         }
 
-        loadUri(createDataUri(bytes, mimeType), null, LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
+        loadUri(createDataUri(bytes, mimeType), (GeckoSession)null, LOAD_FLAGS_FORCE_ALLOW_DATA_URI);
     }
 
     /**
