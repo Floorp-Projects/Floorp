@@ -11,6 +11,7 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Unused.h"
+#include "mozilla/MathAlgorithms.h"
 #include "CubebDeviceEnumerator.h"
 #include "Tracing.h"
 
@@ -550,9 +551,6 @@ bool IsMacbookOrMacbookAir() {
         return true;
       }
     }
-    // Bug 1477200, we're temporarily capping the latency to 512 here to help
-    // with audio quality.
-    return true;
   }
 #endif
   return false;
@@ -627,6 +625,19 @@ bool AudioCallbackDriver::Init() {
   if (IsMacbookOrMacbookAir()) {
     latency_frames = std::max((uint32_t)512, latency_frames);
   }
+
+  // On OSX, having a latency that is lower than 10ms is very common. It's
+  // not very useful when doing voice, because all the WebRTC code deal in 10ms
+  // chunks of audio.  Take the first power of two above 10ms at the current
+  // rate in this case. It's probably 512, for common rates.
+#if defined(XP_MACOSX)
+  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+    if (latency_frames < mSampleRate / 100) {
+      latency_frames = mozilla::RoundUpPow2(mSampleRate / 100);
+    }
+  }
+#endif
+  LOG(LogLevel::Debug, ("Effective latency in frames: %d", latency_frames));
 
   input = output;
   input.channels = mInputChannelCount;
