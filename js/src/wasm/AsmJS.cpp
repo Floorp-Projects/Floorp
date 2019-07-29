@@ -2636,9 +2636,12 @@ class MOZ_STACK_CLASS FunctionValidator : public FunctionValidatorShared {
  private:
   MOZ_MUST_USE bool appendCallSiteLineNumber(ParseNode* node) {
     const TokenStreamAnyChars& anyChars = m().tokenStream().anyCharsAccess();
-
     auto lineToken = anyChars.lineToken(node->pn_pos.begin);
-    return callSiteLineNums_.append(anyChars.lineNumber(lineToken));
+    uint32_t lineNumber = anyChars.lineNumber(lineToken);
+    if (lineNumber > CallSiteDesc::MAX_LINE_OR_BYTECODE_VALUE) {
+      return fail(node, "line number exceeding implementation limits");
+    }
+    return callSiteLineNums_.append(lineNumber);
   }
 };
 

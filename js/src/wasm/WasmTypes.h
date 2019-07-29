@@ -1721,10 +1721,14 @@ extern const CodeRange* LookupInSorted(const CodeRangeVector& codeRanges,
 // adds the function index of the callee.
 
 class CallSiteDesc {
-  uint32_t lineOrBytecode_ : 29;
+  static constexpr size_t LINE_OR_BYTECODE_BITS_SIZE = 29;
+  uint32_t lineOrBytecode_ : LINE_OR_BYTECODE_BITS_SIZE;
   uint32_t kind_ : 3;
 
  public:
+  static constexpr uint32_t MAX_LINE_OR_BYTECODE_VALUE =
+      (1 << LINE_OR_BYTECODE_BITS_SIZE) - 1;
+
   enum Kind {
     Func,        // pc-relative call to a specific function
     Dynamic,     // dynamic callee called via register
