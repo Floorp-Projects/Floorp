@@ -5,8 +5,8 @@
 %endif
 
 #identity-box {
-  padding-inline-start: 4px;
-  padding-inline-end: 4px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
   margin-inline-end: 4px;
   /* Set default fill for icons in the identity block.
      Individual icons can override this. */
@@ -116,6 +116,10 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
+#tracking-protection-icon {
+  margin-inline-start: 0;
+}
+
 /* MAIN IDENTITY ICON */
 #identity-icon {
   margin-inline-start: 0;
@@ -200,10 +204,27 @@
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon-container {
-  margin-inline-start: 3px;
-  padding-inline-end: 4px;
+  padding-inline-start: 6px;
+  padding-inline-end: 6px;
   fill-opacity: .3;
   fill: currentColor;
+  position: relative;
+}
+
+/* Separator */
+#tracking-protection-icon-container::after {
+  content: "";
+  border-right: 1px solid var(--lwt-background-tab-separator-color, currentColor);
+  position: absolute;
+  right: 0;
+  top: 4px;
+  height: 21px;
+  opacity: .3;
+}
+
+#tracking-protection-icon-container:-moz-locale-dir(rtl)::after {
+  right: unset;
+  left: 0;
 }
 
 #urlbar[pageproxystate="valid"] > #tracking-protection-icon-container.chromeUI {
@@ -212,10 +233,9 @@
 
 #tracking-protection-icon-box {
   overflow: hidden;
-  width: 20px;
+  width: 16px;
   height: 16px;
 }
-
 #tracking-protection-icon-box:not([hasException])[active][animationsenabled] > #tracking-protection-icon,
 #tracking-protection-icon-box:not([animationsenabled])[active] > #tracking-protection-icon,
 #tracking-protection-icon-box:not([animationsenabled]):not([active]) > #tracking-protection-icon-animatable-box,
@@ -226,7 +246,6 @@
 #tracking-protection-icon-box > #tracking-protection-icon-animatable-box {
   position: absolute;
   overflow: hidden;
-  margin-inline-start: 4px;
   width: 16px;
   height: 16px;
 }
