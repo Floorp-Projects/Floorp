@@ -1214,6 +1214,20 @@ bool DebuggerObject::makeDebuggeeValueMethod(JSContext* cx, unsigned argc,
 }
 
 /* static */
+bool DebuggerObject::makeDebuggeeNativeFunctionMethod(JSContext* cx,
+                                                      unsigned argc,
+                                                      Value* vp) {
+  THIS_DEBUGOBJECT(cx, argc, vp, "makeDebuggeeNativeFunction", args, object);
+  if (!args.requireAtLeast(
+           cx, "Debugger.Object.prototype.makeDebuggeeNativeFunction", 1)) {
+    return false;
+  }
+
+  return DebuggerObject::makeDebuggeeNativeFunction(cx, object, args[0],
+                                                    args.rval());
+}
+
+/* static */
 bool DebuggerObject::unsafeDereferenceMethod(JSContext* cx, unsigned argc,
                                              Value* vp) {
   THIS_DEBUGOBJECT(cx, argc, vp, "unsafeDereference", args, object);
@@ -1405,6 +1419,8 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("executeInGlobalWithBindings",
           DebuggerObject::executeInGlobalWithBindingsMethod, 2, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject::makeDebuggeeValueMethod, 1, 0),
+    JS_FN("makeDebuggeeNativeFunction",
+          DebuggerObject::makeDebuggeeNativeFunctionMethod, 1, 0),
     JS_FN("unsafeDereference", DebuggerObject::unsafeDereferenceMethod, 0, 0),
     JS_FN("unwrap", DebuggerObject::unwrapMethod, 0, 0),
     JS_FN("setInstrumentation", DebuggerObject::setInstrumentationMethod, 2, 0),
@@ -2300,6 +2316,56 @@ bool DebuggerObject::makeDebuggeeValue(JSContext* cx,
   }
 
   result.set(value);
+  return true;
+}
+
+/* static */
+bool DebuggerObject::makeDebuggeeNativeFunction(JSContext* cx,
+                                                HandleDebuggerObject object,
+                                                HandleValue value,
+                                                MutableHandleValue result) {
+  RootedObject referent(cx, object->referent());
+  Debugger* dbg = object->owner();
+
+  if (!value.isObject()) {
+    JS_ReportErrorASCII(cx, "Need object");
+    return false;
+  }
+
+  RootedObject obj(cx, &value.toObject());
+  if (!obj->is<JSFunction>()) {
+    JS_ReportErrorASCII(cx, "Need function");
+    return false;
+  }
+
+  RootedFunction fun(cx, &obj->as<JSFunction>());
+  if (!fun->isNative() || fun->isExtended()) {
+    JS_ReportErrorASCII(cx, "Need native function");
+    return false;
+  }
+
+  RootedValue newValue(cx);
+  {
+    Maybe<AutoRealm> ar;
+    EnterDebuggeeObjectRealm(cx, ar, referent);
+
+    unsigned nargs = fun->nargs();
+    RootedAtom name(cx, fun->displayAtom());
+    JSFunction* newFun = NewNativeFunction(cx, fun->native(), nargs, name);
+    if (!newFun) {
+      return false;
+    }
+
+    newValue.setObject(*newFun);
+  }
+
+  // Back in the debugger's compartment, produce a new Debugger.Object
+  // instance referring to the wrapped argument.
+  if (!dbg->wrapDebuggeeValue(cx, &newValue)) {
+    return false;
+  }
+
+  result.set(newValue);
   return true;
 }
 

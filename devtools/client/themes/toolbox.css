@@ -503,6 +503,10 @@
   transition-duration: 100ms;
 }
 
+.webreplay-player .message.uncached {
+  opacity: 0.5;
+}
+
 .webreplay-player .recording .message.highlighted {
   background-color: var(--recording-marker-background-hover);
 }
@@ -647,4 +651,11 @@
 
 .webreplay-player #overlay .tick:hover ~ .tick {
   opacity: 0.5;
+}
+
+.webreplay-player .unscanned {
+  position: absolute;
+  height: 100%;
+  background: #000000;
+  opacity: 0.1;
 }
