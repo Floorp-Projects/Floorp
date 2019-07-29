@@ -2625,7 +2625,8 @@ class JSScript : public js::BaseScript {
   js::jit::IonScript* maybeIonScript() const { return ion; }
   js::jit::IonScript* const* addressOfIonScript() const { return &ion; }
   void setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript);
-  inline void clearIonScript();
+  void setIonScript(js::FreeOp* fop, js::jit::IonScript* ionScript);
+  inline void clearIonScript(js::FreeOp* fop);
 
   bool hasBaselineScript() const {
     bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -2641,7 +2642,9 @@ class JSScript : public js::BaseScript {
   }
   inline void setBaselineScript(JSRuntime* rt,
                                 js::jit::BaselineScript* baselineScript);
-  inline void clearBaselineScript();
+  inline void setBaselineScript(js::FreeOp* fop,
+                                js::jit::BaselineScript* baselineScript);
+  inline void clearBaselineScript(js::FreeOp* fop);
 
   void updateJitCodeRaw(JSRuntime* rt);
 
@@ -2757,8 +2760,8 @@ class JSScript : public js::BaseScript {
   bool hasJitScript() const { return jitScript_ != nullptr; }
   js::jit::JitScript* jitScript() { return jitScript_; }
 
-  void maybeReleaseJitScript();
-  void releaseJitScript();
+  void maybeReleaseJitScript(js::FreeOp* fop);
+  void releaseJitScript(js::FreeOp* fop);
 
   inline js::GlobalObject& global() const;
   inline bool hasGlobal(const js::GlobalObject* global) const;

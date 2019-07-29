@@ -3050,7 +3050,7 @@ void ObjectGroup::markUnknown(const AutoSweepObjectGroup& sweep,
   clearProperties(sweep);
 }
 
-void ObjectGroup::detachNewScript(bool writeBarrier, ObjectGroup* replacement) {
+void ObjectGroup::detachNewScript(bool isSweeping, ObjectGroup* replacement) {
   // Clear the TypeNewScript from this ObjectGroup and, if it has been
   // analyzed, remove it from the newObjectGroups table so that it will not be
   // produced by calling 'new' on the associated function anymore.
@@ -3079,7 +3079,7 @@ void ObjectGroup::detachNewScript(bool writeBarrier, ObjectGroup* replacement) {
     MOZ_ASSERT(!replacement);
   }
 
-  setAddendum(Addendum_None, nullptr, writeBarrier);
+  setAddendum(Addendum_None, nullptr, isSweeping);
 }
 
 void ObjectGroup::maybeClearNewScriptOnOOM() {
@@ -3098,7 +3098,7 @@ void ObjectGroup::maybeClearNewScriptOnOOM() {
   addFlags(sweep, OBJECT_FLAG_NEW_SCRIPT_CLEARED);
 
   // This method is called during GC sweeping, so don't trigger pre barriers.
-  detachNewScript(/* writeBarrier = */ false, nullptr);
+  detachNewScript(/* isSweeping = */ true, nullptr);
 
   js_delete(newScript);
 }
@@ -3122,7 +3122,7 @@ void ObjectGroup::clearNewScript(JSContext* cx,
     newScript->function()->setNewScriptCleared();
   }
 
-  detachNewScript(/* writeBarrier = */ true, replacement);
+  detachNewScript(/* isSweeping = */ false, replacement);
 
   if (!cx->isHelperThreadContext()) {
     bool found = newScript->rollbackPartiallyInitializedObjects(cx, this);
@@ -4511,10 +4511,12 @@ AutoClearTypeInferenceStateOnOOM::AutoClearTypeInferenceStateOnOOM(Zone* zone)
 
 AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM() {
   if (zone->types.hadOOMSweepingTypes()) {
+    gc::AutoSetThreadIsSweeping threadIsSweeping;
     JSRuntime* rt = zone->runtimeFromMainThread();
+    FreeOp fop(rt);
     js::CancelOffThreadIonCompile(rt);
     zone->setPreservingCode(false);
-    zone->discardJitCode(rt->defaultFreeOp(), Zone::KeepBaselineCode);
+    zone->discardJitCode(&fop, Zone::KeepBaselineCode);
     zone->types.clearAllNewScriptsOnOOM();
   }
 

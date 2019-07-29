@@ -17,7 +17,7 @@ namespace js {
 inline void FreeOp::free_(gc::Cell* cell, void* p, size_t nbytes,
                           MemoryUse use) {
   if (p) {
-    RemoveCellMemory(cell, nbytes, use);
+    removeCellMemory(cell, nbytes, use);
     js_free(p);
   }
 }
@@ -25,7 +25,7 @@ inline void FreeOp::free_(gc::Cell* cell, void* p, size_t nbytes,
 inline void FreeOp::freeLater(gc::Cell* cell, void* p, size_t nbytes,
                               MemoryUse use) {
   if (p) {
-    RemoveCellMemory(cell, nbytes, use);
+    removeCellMemory(cell, nbytes, use);
     queueForFreeLater(p);
   }
 }
@@ -47,9 +47,14 @@ template <class T>
 inline void FreeOp::release(gc::Cell* cell, T* p, size_t nbytes,
                             MemoryUse use) {
   if (p) {
-    RemoveCellMemory(cell, nbytes, use);
+    removeCellMemory(cell, nbytes, use);
     p->Release();
   }
+}
+
+inline void FreeOp::removeCellMemory(gc::Cell* cell, size_t nbytes,
+                                     MemoryUse use) {
+  RemoveCellMemory(cell, nbytes, use, isCollecting());
 }
 
 }  // namespace js

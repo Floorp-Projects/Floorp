@@ -568,7 +568,7 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
 }
 
 FreeOp::FreeOp(JSRuntime* maybeRuntime, bool isDefault)
-    : JSFreeOp(maybeRuntime), isDefault(isDefault) {
+    : JSFreeOp(maybeRuntime), isDefault(isDefault), isCollecting_(!isDefault) {
   MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
 }
 
@@ -836,7 +836,8 @@ bool js::CurrentThreadCanAccessZone(Zone* zone) {
 
 #ifdef DEBUG
 bool js::CurrentThreadIsPerformingGC() {
-  return TlsContext.get()->performingGC;
+  JSContext* cx = TlsContext.get();
+  return cx->defaultFreeOp()->isCollecting();
 }
 #endif
 

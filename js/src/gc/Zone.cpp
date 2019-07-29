@@ -86,6 +86,14 @@ js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
                   jitCodeCounter.shouldTriggerGC(gc.tunables));
 }
 
+void ZoneAllocPolicy::decMemory(size_t nbytes) {
+  // Unfortunately we don't have enough context here to know whether we're being
+  // called on behalf of the collector so we have to do a TLS lookup to find
+  // out.
+  JSContext* cx = TlsContext.get();
+  zone_->decPolicyMemory(this, nbytes, cx->defaultFreeOp()->isCollecting());
+}
+
 JS::Zone::Zone(JSRuntime* rt)
     : ZoneAllocator(rt),
       // Note: don't use |this| before initializing helperThreadUse_!
@@ -338,7 +346,7 @@ void Zone::discardJitCode(FreeOp* fop,
     // releasing JIT code because we can't do this when the script still has
     // JIT code.
     if (discardJitScripts) {
-      script->maybeReleaseJitScript();
+      script->maybeReleaseJitScript(fop);
     }
 
     if (jit::JitScript* jitScript = script->jitScript()) {
