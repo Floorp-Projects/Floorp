@@ -5,7 +5,7 @@
 
 // Import libs
 const { shallow } = require("enzyme");
-const React = require("react");
+const { createFactory } = require("react");
 
 // Import constants
 const {
@@ -13,7 +13,7 @@ const {
   MULTIPLE_WORKER_LIST,
 } = require("devtools/client/application/test/components/fixtures/data/constants");
 
-const WorkerList = React.createFactory(
+const WorkerList = createFactory(
   require("devtools/client/application/src/components/service-workers/WorkerList")
 );
 
@@ -24,7 +24,6 @@ describe("WorkerList", () => {
   it("renders the expected snapshot for a list with a single worker", () => {
     const wrapper = shallow(
       WorkerList({
-        client: {},
         workers: SINGLE_WORKER_DEFAULT_DOMAIN_LIST,
         canDebugWorkers: true,
       })
@@ -35,7 +34,6 @@ describe("WorkerList", () => {
   it("renders the expected snapshot for a multiple workers list", () => {
     const wrapper = shallow(
       WorkerList({
-        client: {},
         workers: MULTIPLE_WORKER_LIST,
         canDebugWorkers: true,
       })

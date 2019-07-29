@@ -22,24 +22,16 @@ const WorkersPage = createFactory(require("./service-workers/WorkersPage"));
 class App extends PureComponent {
   static get propTypes() {
     return {
-      client: PropTypes.object.isRequired,
       fluentBundles: PropTypes.array.isRequired,
-      serviceContainer: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { client, fluentBundles, serviceContainer } = this.props;
+    const { fluentBundles } = this.props;
 
     return LocalizationProvider(
       { messages: fluentBundles },
-      main(
-        { className: `application` },
-        WorkersPage({
-          client,
-          serviceContainer,
-        })
-      )
+      main({ className: `application` }, WorkersPage({}))
     );
   }
 }
