@@ -13,6 +13,11 @@ ChromeUtils.defineModuleGetter(
   "EveryWindow",
   "resource:///modules/EveryWindow.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "PrivateBrowsingUtils",
+  "resource://gre/modules/PrivateBrowsingUtils.jsm"
+);
 
 const WHATSNEW_ENABLED_PREF = "browser.messaging-system.whatsNewPanel.enabled";
 
@@ -24,14 +29,16 @@ const BUTTON_STRING_ID = "cfr-whatsnew-button";
 
 class _ToolbarPanelHub {
   constructor() {
+    this.triggerId = "whatsNewPanelOpened";
     this._showAppmenuButton = this._showAppmenuButton.bind(this);
     this._hideAppmenuButton = this._hideAppmenuButton.bind(this);
     this._showToolbarButton = this._showToolbarButton.bind(this);
     this._hideToolbarButton = this._hideToolbarButton.bind(this);
   }
 
-  async init(waitForInitialized, { getMessages }) {
+  async init(waitForInitialized, { getMessages, dispatch }) {
     this._getMessages = getMessages;
+    this._dispatch = dispatch;
     // Wait for ASRouter messages to become available in order to know
     // if we can show the What's New panel
     await waitForInitialized;
@@ -132,19 +139,36 @@ class _ToolbarPanelHub {
 
     if (messages && !container.querySelector(".whatsNew-message")) {
       let previousDate = 0;
-      for (let { content } of messages) {
+      for (let message of messages) {
         container.appendChild(
-          this._createMessageElements(win, doc, content, previousDate)
+          this._createMessageElements(win, doc, message, previousDate)
         );
-        previousDate = content.published_date;
+        previousDate = message.content.published_date;
       }
     }
 
-    // TODO: TELEMETRY
     this._onPanelHidden(win);
+
+    // Panel impressions are not associated with one particular message
+    // but with a set of messages. We concatenate message ids and send them
+    // back for every impression.
+    const eventId = {
+      id: messages
+        .map(({ id }) => id)
+        .sort()
+        .join(","),
+    };
+    // Check `mainview` attribute to determine if the panel is shown as a
+    // subview (inside the application menu) or as a toolbar dropdown.
+    // https://searchfox.org/mozilla-central/rev/07f7390618692fa4f2a674a96b9b677df3a13450/browser/components/customizableui/PanelMultiView.jsm#1268
+    const mainview = win.PanelUI.whatsNewPanel.hasAttribute("mainview");
+    this.sendUserEventTelemetry(win, "IMPRESSION", eventId, {
+      value: { view: mainview ? "toolbar_dropdown" : "application_menu" },
+    });
   }
 
-  _createMessageElements(win, doc, content, previousDate) {
+  _createMessageElements(win, doc, message, previousDate) {
+    const { content } = message;
     const messageEl = this._createElement(doc, "div");
     messageEl.classList.add("whatsNew-message");
 
@@ -167,7 +191,7 @@ class _ToolbarPanelHub {
         csp: null,
       });
 
-      // TODO: TELEMETRY
+      this.sendUserEventTelemetry(win, "CLICK", message);
     });
 
     if (content.icon_url) {
@@ -260,6 +284,30 @@ class _ToolbarPanelHub {
 
   _hideElement(document, id) {
     document.getElementById(id).setAttribute("hidden", true);
+  }
+
+  _sendTelemetry(ping) {
+    this._dispatch({
+      type: "TOOLBAR_PANEL_TELEMETRY",
+      data: { action: "cfr_user_event", source: "CFR", ...ping },
+    });
+  }
+
+  sendUserEventTelemetry(win, event, message, options = {}) {
+    // Only send pings for non private browsing windows
+    if (
+      win &&
+      !PrivateBrowsingUtils.isBrowserPrivate(
+        win.ownerGlobal.gBrowser.selectedBrowser
+      )
+    ) {
+      this._sendTelemetry({
+        message_id: message.id,
+        bucket_id: message.id,
+        event,
+        value: options.value,
+      });
+    }
   }
 }
 

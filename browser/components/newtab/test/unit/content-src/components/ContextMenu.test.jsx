@@ -128,7 +128,10 @@ describe("<ContextMenu>", () => {
   it("should be tabbable", () => {
     const options = [{ label: "item1", icon: "icon1" }, { type: "separator" }];
     const wrapper = mount(<ContextMenu {...DEFAULT_PROPS} options={options} />);
-    assert.equal(wrapper.find(".context-menu-item").props().role, "menuitem");
+    assert.equal(
+      wrapper.find(".context-menu-item").props().role,
+      "presentation"
+    );
   });
   it("should call onUpdate with false when an option is clicked", () => {
     const onUpdate = sinon.spy();
