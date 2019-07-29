@@ -539,7 +539,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #appMenu-fxa-label {
   -moz-context-properties: fill;
   fill: currentColor;
-  list-style-image: var(--avatar-image-url);
+  list-style-image: url(chrome://browser/skin/sync.svg);
 }
 
 #appMenu-fxa-label {
@@ -592,8 +592,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #appMenu-fxa-status[fxastatus="login-failed"],
-#appMenu-fxa-status[fxastatus="unverified"],
-:root[fxastatus="unverified"] .fxa-menu-header {
+#appMenu-fxa-status[fxastatus="unverified"] {
   background-color: @appmenuWarningBackgroundColor@;
   color: @appmenuWarningColor@;
   border-top: 1px solid @appmenuWarningBorderColor@;
@@ -601,14 +600,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 #appMenu-fxa-status[fxastatus="login-failed"]:hover,
-#appMenu-fxa-status[fxastatus="unverified"]:hover,
-:root[fxastatus="unverified"] .fxa-menu-header:hover {
+#appMenu-fxa-status[fxastatus="unverified"]:hover {
   background-color: @appmenuWarningBackgroundColorHover@;
 }
 
 #appMenu-fxa-status[fxastatus="login-failed"]:hover:active,
-#appMenu-fxa-status[fxastatus="unverified"]:hover:active,
-:root[fxastatus="unverified"] .fxa-menu-header:hover:active {
+#appMenu-fxa-status[fxastatus="unverified"]:hover:active {
   background-color: @appmenuWarningBackgroundColorActive@;
 }
 
@@ -667,21 +664,18 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"],
-:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"],
-:root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header {
+:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"] {
   background-color: @appmenuWarningBackgroundColorBrightText@;
   color: @appmenuWarningColorBrightText@;
 }
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"]:hover,
-:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover,
-:root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header:hover {
+:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover {
   background-color: @appmenuWarningBackgroundColorHoverBrightText@;
 }
 
 :root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="login-failed"]:hover:active,
-:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover:active,
-:root[lwt-popup-brighttext][fxastatus="unverified"] .fxa-menu-header:hover:active {
+:root[lwt-popup-brighttext] #appMenu-fxa-status[fxastatus="unverified"]:hover:active {
   background-color: @appmenuWarningBackgroundColorActiveBrightText@;
 }
 
@@ -723,7 +717,33 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   border-radius: 50%;
 }
 
-.PanelUI-fxa-service-description-label {
+:root[fxastatus="signedin"] #PanelUI-fxa-signin,
+:root[fxastatus="signedin"] #PanelUI-fxa-unverified,
+:root[fxastatus="unverified"] #PanelUI-fxa-signin,
+:root[fxastatus="unverified"] #PanelUI-fxa-menu,
+:root[fxastatus="not_configured"] #PanelUI-fxa-unverified,
+:root[fxastatus="not_configured"] #PanelUI-fxa-menu {
+  display: none;
+}
+
+:root[fxastatus="not_configured"] #PanelUI-fxa > .panel-subview-body,
+:root[fxastatus="unverified"] #PanelUI-fxa > .panel-subview-body {
+  -moz-box-align: center;
+}
+
+#PanelUI-fxa-signin,
+#PanelUI-fxa-unverified {
+  margin-top: 20px;
+  -moz-box-align: center;
+}
+
+.PanelUI-fxa-signin-instruction-callout {
+  font-size: 1.3em;
+  font-weight: normal;
+  padding: .6em 0 .6em;
+}
+
+.PanelUI-fxa-signin-instruction-label {
   /* Use 'lighter' font for this to de-emphasize it compared to the title.
    * We use 300 on Linux because 100 is too light (lacks contrast with
    * the background) for some fonts in combination with anti-aliasing. */
@@ -734,44 +754,22 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 %endif
 }
 
-.fxa-menu-header {
+.fxa-avatar-subpanel {
   padding-top: 8px;
   padding-bottom: 4px;
-  /* Important is here to ensure that the proper header height is fixed
-     regardless if opened from browser icon or under app menu.
-  */
-  max-height: 46px !important;
 }
 
-#fxa-menu-header-title {
-  color: var(--arrowpanel-color);
-}
-
-#fxa-menu-header-description {
+.fxa-avatar-subpanel-description {
   color: var(--panel-disabled-color);
 }
 
 #fxa-menu-avatar {
   height: 32px;
   width: 32px;
+  margin-inline-start: 20px;
+  margin-inline-end: 5px;
   -moz-context-properties: fill, fill-opacity;
   fill: var(--arrowpanel-color);
-}
-
-#PanelUI-fxa-menu-send-button {
-  list-style-image: url(chrome://browser/skin/fxa/send.svg);
-}
-
-#PanelUI-fxa-menu-monitor-button {
-  list-style-image: url(chrome://browser/skin/fxa/monitor.svg);
-}
-
-#PanelUI-fxa-menu-connect-device-button {
-  list-style-image: url(chrome://browser/skin/fxa/add-device.svg);
-}
-
-#PanelUI-fxa-menu-connect-device-button["disabled"] {
-  color: var(--panel-disabled-color);
 }
 
 /* From the FxA menu -> remote tabs, we don't need to clutter the view with
@@ -793,26 +791,24 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   transform: scaleX(-1);
 }
 
-.fxaSendLogo,
-.fxaMonitorLogo {
-  margin-top: 15px;
-  height: 80px;
-  width: 80px;
+.fxaChooseWhatToSyncDevices {
+  height: 102px;
+  width: 201px;
+  list-style-image: url(chrome://browser/skin/fxa/sync-devices.svg);
 }
 
-.fxaSendLogo {
-  list-style-image: url(chrome://browser/content/logos/send.svg);
-}
-
-.fxaMonitorLogo {
-  list-style-image: url(chrome://browser/content/logos/monitor.svg);
+.fxaGraphicMail {
+  height: 71px;
+  width: 143px;
+  list-style-image: url(chrome://browser/skin/fxa/graphic-mail.svg);
 }
 
 #PanelUI-remotetabs {
   --panel-ui-sync-illustration-height: 141px;
 }
 
-.PanelUI-fxa-service-description-label,
+.PanelUI-fxa-signin-instruction-label,
+.PanelUI-fxa-signin-instruction-callout,
 .PanelUI-remotetabs-instruction-label {
   /* If you change the margin here, the min-height of the synced tabs panel
     (e.g. #PanelUI-remotetabs[mainview] #PanelUI-remotetabs-setupsync, etc) may
@@ -821,10 +817,6 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   text-align: center;
   text-shadow: none;
   max-width: 15em;
-}
-
-.PanelUI-fxa-service-description-label {
-  margin-top: 10px;
 }
 
 .PanelUI-remotetabs-instruction-label {
