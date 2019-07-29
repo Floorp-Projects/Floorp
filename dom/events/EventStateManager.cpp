@@ -1801,8 +1801,18 @@ void EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
         // password fields but dragging data was masked text.  So, it doesn't
         // make sense anyway.
         if (eventContent->IsText() && eventContent->HasFlag(NS_MAYBE_MASKED)) {
-          StopTrackingDragGesture();
-          return;
+          // However, it makes sense to allow to drag selected password text
+          // when copying selected password is allowed because users may want
+          // to use drag and drop rather than copy and paste when web apps
+          // request to input password twice for conforming new password but
+          // they used password generator.
+          TextEditor* textEditor =
+              nsContentUtils::GetTextEditorFromAnonymousNodeWithoutCreation(
+                  eventContent);
+          if (!textEditor || !textEditor->IsCopyToClipboardAllowed()) {
+            StopTrackingDragGesture();
+            return;
+          }
         }
         DetermineDragTargetAndDefaultData(
             window, eventContent, dataTransfer, getter_AddRefs(selection),
