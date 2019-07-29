@@ -8075,6 +8075,11 @@ nsresult nsDocShell::RestoreFromHistory() {
   // restart the timers for the window and all of the child frames.
   privWinInner->Resume();
 
+  // Now that we have found the inner window of the page restored
+  // from the history, we have to  make sure that
+  // performance.navigation.type is 2.
+  privWinInner->GetPerformance()->GetDOMTiming()->NotifyRestoreStart();
+
   // Restore the refresh URI list.  The refresh timers will be restarted
   // when EndPageLoad() is called.
   mRefreshURIList = refreshURIList;
