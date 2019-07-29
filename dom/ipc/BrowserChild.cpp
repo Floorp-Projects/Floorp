@@ -3287,14 +3287,6 @@ bool BrowserChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
   return true;
 }
 
-already_AddRefed<PBrowserBridgeChild> BrowserChild::AllocPBrowserBridgeChild(
-    const nsString&, const nsString&, BrowsingContext*, const uint32_t&,
-    const TabId&) {
-  MOZ_CRASH(
-      "We should never be manually allocating PBrowserBridgeChild actors");
-  return nullptr;
-}
-
 ScreenIntSize BrowserChild::GetInnerSize() {
   LayoutDeviceIntSize innerSize =
       RoundedToInt(mUnscaledInnerSize * mPuppetWidget->GetDefaultScale());
