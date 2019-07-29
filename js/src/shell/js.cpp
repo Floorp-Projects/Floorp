@@ -7119,6 +7119,8 @@ struct BufferStreamState {
 static ExclusiveWaitableData<BufferStreamState>* bufferStreamState;
 
 static void BufferStreamMain(BufferStreamJob* job) {
+  auto mutexShutdown = MakeScopeExit([] { Mutex::ShutDown(); });
+
   const uint8_t* bytes;
   size_t byteLength;
   JS::OptimizedEncodingListener* listener;
