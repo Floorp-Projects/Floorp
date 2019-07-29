@@ -15,17 +15,19 @@ XPCOMUtils.defineLazyServiceGetter(
 );
 
 /**
- * This helper provides info on whether we are in multi e10s mode or not.
+ * This helper provides info on whether we can debug service workers or not.
+ * This depends both on the current multiprocess (e10s) configuration and on the
+ * usage of the new service worker implementation
+ * (dom.serviceWorkers.parent_intercept = true).
+ *
  * Since this can be changed on the fly, there are subscribe/unsubscribe functions
  * to get notified of this.
- *
- * The logic to handle this is borrowed from the (old) about:debugging code.
  */
 
 const PROCESS_COUNT_PREF = "dom.ipc.processCount";
 const MULTI_OPTOUT_PREF = "dom.ipc.multiOptOut";
 
-function addMultiE10sListener(listener) {
+function addDebugServiceWorkersListener(listener) {
   // Some notes about these observers:
   // - nsIPrefBranch.addObserver observes prefixes. In reality, watching
   //   PROCESS_COUNT_PREF watches two separate prefs:
@@ -42,15 +44,12 @@ function addMultiE10sListener(listener) {
   Services.prefs.addObserver(MULTI_OPTOUT_PREF, listener);
 }
 
-function removeMultiE10sListener(listener) {
+function removeDebugServiceWorkersListener(listener) {
   Services.prefs.removeObserver(PROCESS_COUNT_PREF, listener);
   Services.prefs.removeObserver(MULTI_OPTOUT_PREF, listener);
 }
 
-// TODO to be refactored as `canDebugServiceWorkers` (and
-// logic in the consumers of the function to be changed)
-// See Bug 1531349
-function isMultiE10s() {
+function canDebugServiceWorkers() {
   const isE10s = Services.appinfo.browserTabsRemoteAutostart;
   const processCount = Services.appinfo.maxWebProcessCount;
   const multiE10s = isE10s && processCount > 1;
@@ -58,12 +57,11 @@ function isMultiE10s() {
 
   // When can we debug Service Workers?
   // If we're running the new implementation, OR if not in multiprocess mode
-  const canDebugSW = isNewSWImplementation || !multiE10s;
-  return !canDebugSW;
+  return isNewSWImplementation || !multiE10s;
 }
 
 module.exports = {
-  addMultiE10sListener,
-  isMultiE10s,
-  removeMultiE10sListener,
+  addDebugServiceWorkersListener,
+  canDebugServiceWorkers,
+  removeDebugServiceWorkersListener,
 };

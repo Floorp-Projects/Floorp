@@ -9,10 +9,10 @@ const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const { LongStringActor } = require("devtools/server/actors/string");
 const {
-  addMultiE10sListener,
-  isMultiE10s,
-  removeMultiE10sListener,
-} = require("devtools/shared/multi-e10s-helper");
+  addDebugServiceWorkersListener,
+  canDebugServiceWorkers,
+  removeDebugServiceWorkersListener,
+} = require("devtools/shared/service-workers-debug-helper");
 
 const { DebuggerServer } = require("devtools/server/main");
 const { getSystemInfo } = require("devtools/shared/system");
@@ -30,8 +30,10 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
     }
     this._acquireWakeLock();
 
-    this._onMultiE10sUpdated = this._onMultiE10sUpdated.bind(this);
-    addMultiE10sListener(this._onMultiE10sUpdated);
+    this._onDebugServiceWorkersUpdated = this._onDebugServiceWorkersUpdated.bind(
+      this
+    );
+    addDebugServiceWorkersListener(this._onDebugServiceWorkersUpdated);
   },
 
   destroy: function() {
@@ -40,15 +42,17 @@ exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
     if (this._window) {
       this._window.removeEventListener("pageshow", this._onPageShow, true);
     }
-    removeMultiE10sListener(this._onMultiE10sUpdated);
+    removeDebugServiceWorkersListener(this._onDebugServiceWorkersUpdated);
   },
 
-  _onMultiE10sUpdated: function() {
-    this.emit("multi-e10s-updated", isMultiE10s());
+  _onDebugServiceWorkersUpdated: function() {
+    this.emit("can-debug-sw-updated", canDebugServiceWorkers());
   },
 
   getDescription: function() {
-    return Object.assign({}, getSystemInfo(), { isMultiE10s: isMultiE10s() });
+    return Object.assign({}, getSystemInfo(), {
+      canDebugServiceWorkers: canDebugServiceWorkers(),
+    });
   },
 
   screenshotToDataURL: function() {
