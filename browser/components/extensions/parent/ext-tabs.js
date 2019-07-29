@@ -645,7 +645,8 @@ this.tabs = class extends ExtensionAPI {
                 "Not allowed to create tabs on the target window"
               );
             }
-            if (!window.gBrowser) {
+            let { gBrowserInit } = window;
+            if (!gBrowserInit || !gBrowserInit.delayedStartupFinished) {
               let obs = (finishedWindow, topic, data) => {
                 if (finishedWindow != window) {
                   return;
