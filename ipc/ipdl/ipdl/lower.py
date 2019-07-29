@@ -3946,7 +3946,16 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if self.sendsMessage(md):
             isasync = decltype.isAsync()
 
-            if isctor:
+            # NOTE: Don't generate helper ctors for refcounted types.
+            #
+            # Safety concerns around providing your own actor to a ctor (namely
+            # that the return value won't be checked, and the argument will be
+            # `delete`-ed) are less critical with refcounted actors, due to the
+            # actor being held alive by the callsite.
+            #
+            # This allows refcounted actors to not implement crashing AllocPFoo
+            # methods on the sending side.
+            if isctor and not md.decl.type.constructedType().isRefcounted():
                 self.cls.addstmts([self.genHelperCtor(md), Whitespace.NL])
 
             if isctor and isasync:
