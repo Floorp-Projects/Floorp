@@ -20,9 +20,15 @@ pub struct WebElement {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Timeouts {
-    pub implicit: u64,
-    #[serde(rename = "pageLoad", alias = "page load")]
-    pub page_load: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub implicit: Option<u64>,
+    #[serde(
+        rename = "pageLoad",
+        alias = "page load",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub page_load: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub script: Option<u64>,
 }
 
@@ -41,10 +47,10 @@ mod tests {
     }
 
     #[test]
-    fn test_timeouts() {
+    fn test_timeouts_with_all_params() {
         let data = Timeouts {
-            implicit: 1000,
-            page_load: 200000,
+            implicit: Some(1000),
+            page_load: Some(200000),
             script: Some(60000),
         };
         assert_ser_de(
@@ -55,5 +61,15 @@ mod tests {
             &data,
             json!({"implicit":1000,"page load":200000,"script":60000}),
         );
+    }
+
+    #[test]
+    fn test_timeouts_with_missing_params() {
+        let data = Timeouts {
+            implicit: Some(1000),
+            page_load: None,
+            script: None,
+        };
+        assert_ser_de(&data, json!({"implicit":1000}));
     }
 }
