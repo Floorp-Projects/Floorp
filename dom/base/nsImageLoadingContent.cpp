@@ -208,7 +208,8 @@ nsImageLoadingContent::Notify(imgIRequest* aRequest, int32_t aType,
     return OnLoadComplete(aRequest, status);
   }
 
-  if (aType == imgINotificationObserver::FRAME_COMPLETE &&
+  if ((aType == imgINotificationObserver::FRAME_COMPLETE ||
+       aType == imgINotificationObserver::FRAME_UPDATE) &&
       mCurrentRequest == aRequest) {
     MaybeResolveDecodePromises();
   }
