@@ -671,3 +671,10 @@ partial interface Document {
   [ChromeOnly, Pure]
   readonly attribute NodeList blockedNodesByClassifier;
 };
+
+// Extension to programmatically simulate a user interaction on a document,
+// used for testing.
+partial interface Document {
+  [ChromeOnly, BinaryName="setUserHasInteracted"]
+  void userInteractionForTesting();
+};

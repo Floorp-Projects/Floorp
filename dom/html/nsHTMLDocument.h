@@ -130,8 +130,6 @@ class nsHTMLDocument : public mozilla::dom::Document {
   void GetFormsAndFormControls(nsContentList** aFormList,
                                nsContentList** aFormControlList);
 
-  void UserInteractionForTesting();
-
  protected:
   ~nsHTMLDocument();
 
