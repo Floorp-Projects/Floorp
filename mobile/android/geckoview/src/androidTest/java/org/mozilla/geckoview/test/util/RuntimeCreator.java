@@ -20,8 +20,11 @@ public class RuntimeCreator {
         runtimeSettingsBuilder.arguments(new String[]{"-purgecaches"})
                 .extras(InstrumentationRegistry.getArguments())
                 .remoteDebuggingEnabled(true)
-                .consoleOutput(true)
-                .crashHandler(TestCrashHandler.class);
+                .consoleOutput(true);
+
+        if (new Environment().isAutomation()) {
+            runtimeSettingsBuilder.crashHandler(TestCrashHandler.class);
+        }
 
         sRuntime = GeckoRuntime.create(
                 InstrumentationRegistry.getTargetContext(),
