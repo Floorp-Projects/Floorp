@@ -6,8 +6,6 @@
 
 import { uniq, remove } from "lodash";
 
-import { asyncStore } from "../utils/prefs";
-
 import {
   getActiveEventListeners,
   getEventListenerExpanded,
@@ -17,13 +15,6 @@ import type { ThunkArgs } from "./types";
 
 async function updateBreakpoints(dispatch, client, newEvents: string[]) {
   dispatch({ type: "UPDATE_EVENT_LISTENERS", active: newEvents });
-
-  const current = await asyncStore.eventListenerBreakpoints;
-  asyncStore.eventListenerBreakpoints = {
-    ...current,
-    active: newEvents,
-  };
-
   await client.setEventListenerBreakpoints(newEvents);
 }
 
@@ -32,12 +23,6 @@ async function updateExpanded(dispatch, newExpanded: string[]) {
     type: "UPDATE_EVENT_LISTENER_EXPANDED",
     expanded: newExpanded,
   });
-
-  const current = await asyncStore.eventListenerBreakpoints;
-  asyncStore.eventListenerBreakpoints = {
-    ...current,
-    expanded: newExpanded,
-  };
 }
 
 export function addEventListenerBreakpoints(eventsToAdd: string[]) {

@@ -12,7 +12,7 @@ import { asyncStoreHelper } from "./asyncStoreHelper";
 // Schema version to bump when the async store format has changed incompatibly
 // and old stores should be cleared. This needs to match the prefs schema
 // version in devtools/client/preferences/debugger.js.
-const prefsSchemaVersion = "1.0.10";
+const prefsSchemaVersion = "1.0.11";
 const pref = Services.pref;
 
 if (isDevelopment()) {
