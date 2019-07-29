@@ -1889,6 +1889,10 @@ class SpecialPowersAPI extends JSWindowActorChild {
     return window.docShell.doCommand(cmd);
   }
 
+  isCommandEnabled(window, cmd) {
+    return window.docShell.isCommandEnabled(cmd);
+  }
+
   setCommandNode(window, node) {
     return window.docShell.contentViewer
       .QueryInterface(Ci.nsIContentViewerEdit)
