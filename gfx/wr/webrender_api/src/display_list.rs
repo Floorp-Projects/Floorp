@@ -740,6 +740,11 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
             data.extend(temp.drain(..));
         }
 
+        // Add `DisplayItem::max_size` zone of zeroes to the end of display list
+        // so there is at least this amount available in the display list during
+        // serialization.
+        ensure_red_zone::<di::DisplayItem>(&mut data);
+
         Ok(BuiltDisplayList {
             data,
             descriptor: BuiltDisplayListDescriptor {
