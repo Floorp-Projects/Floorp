@@ -3412,7 +3412,7 @@ Toolbox.prototype = {
 
       // Temporary fix for bug #1493131 - inspector has a different life cycle
       // than most other fronts because it is closely related to the toolbox.
-      this._inspector.destroy();
+      await this._inspector.destroy();
 
       this._inspector = null;
       this._highlighter = null;
@@ -3541,6 +3541,9 @@ Toolbox.prototype = {
     this.browserRequire = null;
     this._toolNames = null;
 
+    // Destroying the walker and inspector fronts
+    outstanding.push(this.destroyInspector());
+
     // Reset preferences set by the toolbox
     outstanding.push(this.resetPreference());
 
@@ -3584,10 +3587,7 @@ Toolbox.prototype = {
       resolve(
         settleAll(outstanding)
           .catch(console.error)
-          .then(async () => {
-            // Destroying the walker and inspector fronts
-            await this.destroyInspector();
-
+          .then(() => {
             if (this._netMonitorAPI) {
               this._netMonitorAPI.destroy();
               this._netMonitorAPI = null;
