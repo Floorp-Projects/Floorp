@@ -826,8 +826,24 @@ ReferrerInfo::InitWithNode(nsINode* aNode) {
 
 /* static */
 already_AddRefed<nsIReferrerInfo>
+ReferrerInfo::CreateFromOtherAndPolicyOverride(nsIReferrerInfo* aOther,
+                                               uint32_t aPolicyOverride) {
+  MOZ_ASSERT(aOther);
+  uint32_t policy = aPolicyOverride != net::RP_Unset
+                        ? aPolicyOverride
+                        : aOther->GetReferrerPolicy();
+
+  nsCOMPtr<nsIURI> referrer = aOther->GetOriginalReferrer();
+  nsCOMPtr<nsIReferrerInfo> referrerInfo =
+      new ReferrerInfo(referrer, policy, aOther->GetSendReferrer());
+  return referrerInfo.forget();
+}
+
+/* static */
+already_AddRefed<nsIReferrerInfo>
 ReferrerInfo::CreateFromDocumentAndPolicyOverride(Document* aDoc,
                                                   uint32_t aPolicyOverride) {
+  MOZ_ASSERT(aDoc);
   uint32_t policy = aPolicyOverride != net::RP_Unset
                         ? aPolicyOverride
                         : aDoc->GetReferrerPolicy();
