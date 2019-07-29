@@ -3,14 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { updateSelectedItem } from "../certviewer.js";
+import { certArray } from "./dummy-info.js";
 import { InfoGroup } from "./info-group.js";
 import { ErrorSection } from "./error-section.js";
 
 class CertificateSection extends HTMLElement {
-  constructor(certArray, tabName) {
+  constructor() {
     super();
-    this.certArray = certArray;
-    this.tabName = tabName;
   }
 
   connectedCallback() {
@@ -37,7 +36,7 @@ class CertificateSection extends HTMLElement {
 
     // TODO: Render based on certificate error.
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1560513
-    let error = false;
+    let error = true;
 
     this.infoGroupContainer = this.shadowRoot.querySelector(".info-groups");
 
@@ -48,9 +47,9 @@ class CertificateSection extends HTMLElement {
     }
 
     this.createInfoGroupsContainers();
-    for (let i = 0; i < this.certArray.length; i++) {
+    for (let i = 0; i < certArray.length; i++) {
       let tab = document.createElement("button");
-      tab.textContent = this.tabName;
+      tab.textContent = "tab" + i;
       tab.setAttribute("id", "tab" + i);
       tab.setAttribute("aria-controls", "panel" + i);
       tab.setAttribute("idnumber", i);
@@ -117,7 +116,7 @@ class CertificateSection extends HTMLElement {
   }
 
   createInfoGroupsContainers() {
-    for (let i = 0; i < this.certArray.length; i++) {
+    for (let i = 0; i < certArray.length; i++) {
       this.infoGroupsContainers[i] = document.createElement("div");
       this.infoGroupsContainers[i].setAttribute("id", "panel" + i);
       this.infoGroupsContainers[i].setAttribute("role", "tabpanel");
@@ -128,7 +127,7 @@ class CertificateSection extends HTMLElement {
       }
       this.infoGroupsContainers[i].classList.add("info-groups");
       this.shadowRoot.appendChild(this.infoGroupsContainers[i]);
-      let arrayItem = this.certArray[i];
+      let arrayItem = certArray[i];
       for (let j = 0; j < arrayItem.length; j++) {
         this.infoGroupsContainers[i].appendChild(new InfoGroup(arrayItem[j]));
       }
