@@ -11,8 +11,6 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows
 
-private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
-
 @RunWith(AndroidJUnit4::class)
 class DownloadUtilsTest {
 
@@ -57,10 +55,6 @@ class DownloadUtilsTest {
         }
     }
 
-    private fun assertUrl(expected: String, url: String) {
-        assertEquals(expected, DownloadUtils.guessFileName(null, url, null))
-    }
-
     @Test
     fun guessFileName_url() {
         assertUrl("downloadfile.bin", "http://example.com/")
@@ -72,8 +66,26 @@ class DownloadUtilsTest {
     @Test
     fun guessFileName_mimeType() {
         Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("jpg", "image/jpeg")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("zip", "application/zip")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("tar.gz", "application/gzip")
 
         assertEquals("file.jpg", DownloadUtils.guessFileName(null, "http://example.com/file.jpg", "image/jpeg"))
         assertEquals("file.jpg", DownloadUtils.guessFileName(null, "http://example.com/file.bin", "image/jpeg"))
+        assertEquals(
+            "Caesium-wahoo-v3.6-b792615ced1b.zip",
+            DownloadUtils.guessFileName(null, "https://download.msfjarvis.website/caesium/wahoo/beta/Caesium-wahoo-v3.6-b792615ced1b.zip", "application/zip")
+        )
+        assertEquals(
+            "compressed.TAR.GZ",
+            DownloadUtils.guessFileName(null, "http://example.com/compressed.TAR.GZ", "application/gzip")
+        )
+    }
+
+    companion object {
+        private val CONTENT_DISPOSITION_TYPES = listOf("attachment", "inline")
+
+        private fun assertUrl(expected: String, url: String) {
+            assertEquals(expected, DownloadUtils.guessFileName(null, url, null))
+        }
     }
 }
