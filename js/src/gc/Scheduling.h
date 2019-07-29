@@ -390,7 +390,7 @@ class GCSchedulingTunables {
    * Totally disables |highFrequencyGC|, the HeapGrowthFactor, and other
    * tunables that make GC non-deterministic.
    */
-  MainThreadData<bool> dynamicHeapGrowthEnabled_;
+  MainThreadOrGCTaskData<bool> dynamicHeapGrowthEnabled_;
 
   /*
    * JSGC_HIGH_FREQUENCY_TIME_LIMIT
@@ -398,7 +398,7 @@ class GCSchedulingTunables {
    * We enter high-frequency mode if we GC a twice within this many
    * microseconds.
    */
-  MainThreadData<mozilla::TimeDuration> highFrequencyThreshold_;
+  MainThreadOrGCTaskData<mozilla::TimeDuration> highFrequencyThreshold_;
 
   /*
    * JSGC_HIGH_FREQUENCY_LOW_LIMIT
@@ -409,10 +409,10 @@ class GCSchedulingTunables {
    * When in the |highFrequencyGC| mode, these parameterize the per-zone
    * "HeapGrowthFactor" computation.
    */
-  MainThreadData<size_t> highFrequencyLowLimitBytes_;
-  MainThreadData<size_t> highFrequencyHighLimitBytes_;
-  MainThreadData<float> highFrequencyHeapGrowthMax_;
-  MainThreadData<float> highFrequencyHeapGrowthMin_;
+  MainThreadOrGCTaskData<size_t> highFrequencyLowLimitBytes_;
+  MainThreadOrGCTaskData<size_t> highFrequencyHighLimitBytes_;
+  MainThreadOrGCTaskData<float> highFrequencyHeapGrowthMax_;
+  MainThreadOrGCTaskData<float> highFrequencyHeapGrowthMin_;
 
   /*
    * JSGC_LOW_FREQUENCY_HEAP_GROWTH
@@ -420,7 +420,7 @@ class GCSchedulingTunables {
    * When not in |highFrequencyGC| mode, this is the global (stored per-zone)
    * "HeapGrowthFactor".
    */
-  MainThreadData<float> lowFrequencyHeapGrowth_;
+  MainThreadOrGCTaskData<float> lowFrequencyHeapGrowth_;
 
   /*
    * JSGC_DYNAMIC_MARK_SLICE
@@ -548,7 +548,7 @@ class GCSchedulingState {
    * growth factor is a measure of how large (as a percentage of the last GC)
    * the heap is allowed to grow before we try to schedule another GC.
    */
-  MainThreadData<bool> inHighFrequencyGCMode_;
+  MainThreadOrGCTaskData<bool> inHighFrequencyGCMode_;
 
  public:
   GCSchedulingState() : inHighFrequencyGCMode_(false) {}
@@ -710,18 +710,10 @@ class ZoneThreshold {
 // This class encapsulates the data that determines when we need to do a zone GC
 // base on GC heap size.
 class ZoneHeapThreshold : public ZoneThreshold {
-  // The "growth factor" for computing our next thresholds after a GC.
-  GCLockData<float> gcHeapGrowthFactor_;
-
  public:
-  ZoneHeapThreshold() : gcHeapGrowthFactor_(3.0f) {}
-
-  float gcHeapGrowthFactor() const { return gcHeapGrowthFactor_; }
-
   void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
                      const GCSchedulingTunables& tunables,
                      const GCSchedulingState& state, const AutoLockGC& lock);
-  void updateForRemovedArena(const GCSchedulingTunables& tunables);
 
  private:
   static float computeZoneHeapGrowthFactorForHeapSize(
