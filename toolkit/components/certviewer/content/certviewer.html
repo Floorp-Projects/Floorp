@@ -18,6 +18,7 @@
     <script defer="defer" type="module" src="chrome://global/content/certviewer/utils.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certDecoder.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/certviewer.js"></script>
+    <script defer="defer" type="module" src="chrome://global/content/certviewer/components/dummy-info.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-group.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/info-item.js"></script>
     <script defer="defer" type="module" src="chrome://global/content/certviewer/components/certificate-section.js"></script>
@@ -27,6 +28,7 @@
     <title>about:certificate</title>
   </head>
   <body>
+    <certificate-section></certificate-section> 
 
     <template id="certificate-section-template" class="section">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
