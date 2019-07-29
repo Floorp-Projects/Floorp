@@ -1353,9 +1353,9 @@ class Shape : public gc::TenuredCell {
   void dumpSubtree(int level, js::GenericPrinter& out) const;
 #endif
 
-  void sweep();
+  void sweep(FreeOp* fop);
   void finalize(FreeOp* fop);
-  void removeChild(Shape* child);
+  void removeChild(FreeOp* fop, Shape* child);
 
   static const JS::TraceKind TraceKind = JS::TraceKind::Shape;
 

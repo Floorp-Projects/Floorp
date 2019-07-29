@@ -236,7 +236,7 @@ class ObjectGroup : public gc::TenuredCell {
   };
 
  private:
-  void setAddendum(AddendumKind kind, void* addendum, bool writeBarrier = true);
+  void setAddendum(AddendumKind kind, void* addendum, bool isSweeping = false);
 
   AddendumKind addendumKind() const {
     return (AddendumKind)((flags_ & OBJECT_FLAG_ADDENDUM_MASK) >>
@@ -250,7 +250,7 @@ class ObjectGroup : public gc::TenuredCell {
     return nullptr;
   }
 
-  void detachNewScript(bool writeBarrier, ObjectGroup* replacement);
+  void detachNewScript(bool isSweeping, ObjectGroup* replacement);
 
   ObjectGroupFlags flagsDontCheckGeneration() const { return flags_; }
 

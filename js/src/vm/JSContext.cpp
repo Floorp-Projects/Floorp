@@ -1250,7 +1250,6 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #ifdef DEBUG
       ionCompiling(this, false),
       ionCompilingSafeForMinorGC(this, false),
-      performingGC(this, false),
       isTouchingGrayThings(this, false),
       noNurseryAllocationCheck(this, 0),
       disableStrictProxyCheckingCount(this, 0),
@@ -1521,3 +1520,4 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
   MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
 #endif
+

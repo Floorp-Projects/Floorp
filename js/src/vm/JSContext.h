@@ -539,11 +539,6 @@ struct JSContext : public JS::RootingContext,
   // any pointers into the nursery.
   js::ContextData<bool> ionCompilingSafeForMinorGC;
 
-  // Whether this thread is currently performing GC.  This thread could be the
-  // main thread or a helper thread while the main thread is running the
-  // collector.
-  js::ContextData<bool> performingGC;
-
   // Whether this thread is currently manipulating possibly-gray GC things.
   js::ContextData<size_t> isTouchingGrayThings;
 
@@ -1308,29 +1303,26 @@ class MOZ_RAII AutoUnsafeCallWithABI {
 
 namespace gc {
 
-// In debug builds, set/unset the performing GC flag for the current thread.
-struct MOZ_RAII AutoSetThreadIsPerformingGC {
-#ifdef DEBUG
+// Set/unset the performing GC flag for the current thread.
+class MOZ_RAII AutoSetThreadIsPerformingGC {
+  JSContext* cx;
+
+ public:
   AutoSetThreadIsPerformingGC() : cx(TlsContext.get()) {
-    MOZ_ASSERT(!cx->performingGC);
-    cx->performingGC = true;
+    FreeOp* fop = cx->defaultFreeOp();
+    MOZ_ASSERT(!fop->isCollecting());
+    fop->isCollecting_ = true;
   }
 
   ~AutoSetThreadIsPerformingGC() {
-    MOZ_ASSERT(cx->performingGC);
-    cx->performingGC = false;
+    FreeOp* fop = cx->defaultFreeOp();
+    MOZ_ASSERT(fop->isCollecting());
+    fop->isCollecting_ = false;
   }
-
- private:
-  JSContext* cx;
-#else
-  AutoSetThreadIsPerformingGC() {}
-#endif
 };
 
 // In debug builds, set/reset the GC sweeping flag for the current thread.
 struct MOZ_RAII AutoSetThreadIsSweeping {
-#ifdef DEBUG
   AutoSetThreadIsSweeping() : cx(TlsContext.get()), prevState(cx->gcSweeping) {
     cx->gcSweeping = true;
   }
@@ -1340,9 +1332,6 @@ struct MOZ_RAII AutoSetThreadIsSweeping {
  private:
   JSContext* cx;
   bool prevState;
-#else
-  AutoSetThreadIsSweeping() {}
-#endif
 };
 
 }  // namespace gc
