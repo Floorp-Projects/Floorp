@@ -31,6 +31,7 @@ import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
 import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.session.tab.CustomTabConfig
+import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.browser.session.tab.CustomTabMenuItem
 import mozilla.components.support.utils.SafeIntent
 import mozilla.components.support.utils.toSafeBundle
@@ -70,6 +71,7 @@ fun createCustomTabConfigFromIntent(
     return CustomTabConfig(
         id = UUID.randomUUID().toString(),
         toolbarColor = safeIntent.getColorExtra(EXTRA_TOOLBAR_COLOR),
+        navigationBarColor = safeIntent.getColorExtra(EXTRA_NAVIGATION_BAR_COLOR),
         closeButtonIcon = getCloseButtonIcon(safeIntent, resources),
         enableUrlbarHiding = safeIntent.getBooleanExtra(EXTRA_ENABLE_URLBAR_HIDING, false),
         actionButtonConfig = getActionButtonConfig(safeIntent),

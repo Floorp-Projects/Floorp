@@ -7,6 +7,8 @@ package mozilla.components.support.utils
 import android.graphics.Color
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -32,5 +34,11 @@ class ColorUtilsTest {
 
         // Yahnac
         assertEquals(Color.WHITE.toLong(), ColorUtils.getReadableTextColor(-0xa8400).toLong())
+    }
+
+    @Test
+    fun isDark() {
+        assertTrue(ColorUtils.isDark(Color.BLACK))
+        assertFalse(ColorUtils.isDark(Color.WHITE))
     }
 }

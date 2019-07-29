@@ -13,15 +13,19 @@ object ColorUtils {
      * Get text color (white or black) that is readable on top of the provided background color.
      */
     @JvmStatic
-    @SuppressWarnings("MagicNumber")
     fun getReadableTextColor(@ColorInt backgroundColor: Int): Int {
-        val greyValue = grayscaleFromRGB(backgroundColor)
+        return if (isDark(backgroundColor)) Color.WHITE else Color.BLACK
+    }
+
+    /**
+     * Returns true if the color is dark enough that white text should be used on top of it.
+     */
+    @JvmStatic
+    @SuppressWarnings("MagicNumber")
+    fun isDark(@ColorInt color: Int): Boolean {
+        val greyValue = grayscaleFromRGB(color)
         // 186 chosen rather than the seemingly obvious 128 because of gamma.
-        return if (greyValue < 186) {
-            Color.WHITE
-        } else {
-            Color.BLACK
-        }
+        return greyValue < 186
     }
 
     @SuppressWarnings("MagicNumber")

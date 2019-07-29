@@ -12,6 +12,7 @@ import android.graphics.Color
 import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -48,6 +49,16 @@ class CustomTabConfigHelperTest {
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertEquals(Color.BLACK, customTabConfig.toolbarColor)
+    }
+
+    @Test
+    fun createFromIntentWithNavigationBarColor() {
+        val intent = CustomTabsIntent.Builder().build().intent.apply {
+            putExtra(EXTRA_NAVIGATION_BAR_COLOR, Color.WHITE)
+        }
+
+        val customTabConfig = createCustomTabConfigFromIntent(intent, testContext.resources)
+        assertEquals(Color.WHITE, customTabConfig.navigationBarColor)
     }
 
     @Test

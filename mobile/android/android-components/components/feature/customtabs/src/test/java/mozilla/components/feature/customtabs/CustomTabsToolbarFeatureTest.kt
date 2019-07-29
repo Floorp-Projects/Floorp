@@ -13,8 +13,8 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.FrameLayout
 import android.widget.ImageButton
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.core.view.forEach
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.browser.session.Session
@@ -121,7 +121,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature).updateToolbarColor(anyInt())
+        verify(feature).updateToolbarColor(anyInt(), anyInt())
     }
 
     @Test
@@ -132,12 +132,12 @@ class CustomTabsToolbarFeatureTest {
 
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "") {})
 
-        feature.updateToolbarColor(null)
+        feature.updateToolbarColor(null, null)
 
         verify(toolbar, never()).setBackgroundColor(anyInt())
         verify(toolbar, never()).textColor = anyInt()
 
-        feature.updateToolbarColor(123)
+        feature.updateToolbarColor(123, 456)
 
         verify(toolbar).setBackgroundColor(anyInt())
         verify(toolbar).textColor = anyInt()
@@ -153,13 +153,15 @@ class CustomTabsToolbarFeatureTest {
 
         val feature = spy(CustomTabsToolbarFeature(mock(), toolbar, "", window = window) {})
 
-        feature.updateToolbarColor(null)
+        feature.updateToolbarColor(null, null)
 
         verify(window, never()).statusBarColor = anyInt()
+        verify(window, never()).navigationBarColor = anyInt()
 
-        feature.updateToolbarColor(123)
+        feature.updateToolbarColor(123, 456)
 
         verify(window).statusBarColor = 123
+        verify(window).navigationBarColor = 456
     }
 
     @Test

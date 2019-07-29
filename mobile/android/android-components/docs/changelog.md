@@ -70,6 +70,7 @@ permalink: /changelog/
 
 * **feature-customtabs**
   * `CustomTabsToolbarFeature` now optionally takes `Window` as a parameter. It will update the status bar color to match the toolbar color.
+  * Custom tabs can now style the navigation bar using `CustomTabsConfig.navigationBarColor`.
 
 * **feature-sendtab**
   * 🆕 New component for send tab use cases.

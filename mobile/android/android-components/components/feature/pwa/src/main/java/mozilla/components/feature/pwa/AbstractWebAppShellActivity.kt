@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.pwa
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,7 @@ import mozilla.components.feature.pwa.ext.asTaskDescription
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
+import mozilla.components.support.utils.ColorUtils.isDark
 
 /**
  * Activity for "standalone" and "fullscreen" web applications.
@@ -67,7 +69,11 @@ abstract class AbstractWebAppShellActivity : AppCompatActivity(), CoroutineScope
         applyOrientation(manifest)
 
         manifest?.themeColor?.let { window.setStatusBarTheme(it) }
-        manifest?.backgroundColor?.let { window.setNavigationBarTheme(it) }
+        manifest?.backgroundColor?.let {
+            // For a PWA with a light background, use a light navigation bar.
+            val navBarColor = if (isDark(it)) Color.BLACK else Color.WHITE
+            window.setNavigationBarTheme(navBarColor)
+        }
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

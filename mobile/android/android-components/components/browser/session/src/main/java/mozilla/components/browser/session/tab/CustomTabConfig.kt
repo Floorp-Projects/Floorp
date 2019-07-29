@@ -26,6 +26,7 @@ import java.util.UUID
  * @property showShareMenuItem Specifies whether a default share button will be shown in the menu.
  * @property menuItems Custom overflow menu items.
  * @property exitAnimations Bundle containing custom exit animations for the tab.
+ * @property navigationBarColor Background color for the navigation bar.
  * @property titleVisible Whether the title should be shown in the custom tab.
  */
 data class CustomTabConfig(
@@ -37,6 +38,7 @@ data class CustomTabConfig(
     val showShareMenuItem: Boolean,
     val menuItems: List<CustomTabMenuItem> = emptyList(),
     val exitAnimations: Bundle? = null,
+    @ColorInt val navigationBarColor: Int? = null,
     val titleVisible: Boolean = false
 ) {
     inline val disableUrlbarHiding
@@ -75,6 +77,7 @@ data class CustomTabConfig(
         internal const val PAGE_TITLE_OPTION = "hasPageTitle"
         private const val MAX_CLOSE_BUTTON_SIZE_DP = 24
 
+        const val EXTRA_NAVIGATION_BAR_COLOR = "androidx.browser.customtabs.extra.NAVIGATION_BAR_COLOR"
         private val EXTRA_SESSION = StringBuilder("support.customtabs.extra.SESSION").toExtra()
         private val EXTRA_TOOLBAR_COLOR = StringBuilder("support.customtabs.extra.TOOLBAR_COLOR").toExtra()
         private val EXTRA_CLOSE_BUTTON_ICON = StringBuilder("support.customtabs.extra.CLOSE_BUTTON_ICON").toExtra()

@@ -28,6 +28,7 @@ import mozilla.components.concept.toolbar.Toolbar
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.ktx.android.content.share
+import mozilla.components.support.ktx.android.view.setNavigationBarTheme
 import mozilla.components.support.ktx.android.view.setStatusBarTheme
 import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 
@@ -71,7 +72,7 @@ class CustomTabsToolbarFeature(
             }
 
             // Change the toolbar colour
-            updateToolbarColor(config.toolbarColor)
+            updateToolbarColor(config.toolbarColor, config.navigationBarColor)
 
             // Add navigation close action
             addCloseButton(session, config.closeButtonIcon)
@@ -95,7 +96,7 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun updateToolbarColor(@ColorInt toolbarColor: Int?) {
+    internal fun updateToolbarColor(@ColorInt toolbarColor: Int?, @ColorInt navigationBarColor: Int?) {
         toolbarColor?.let { color ->
             toolbar.setBackgroundColor(color)
             toolbar.textColor = readableColor
@@ -103,7 +104,10 @@ class CustomTabsToolbarFeature(
             toolbar.siteSecurityColor = Pair(readableColor, readableColor)
             toolbar.menuViewColor = readableColor
 
-            window?.setStatusBarTheme(toolbarColor)
+            window?.setStatusBarTheme(color)
+        }
+        navigationBarColor?.let { color ->
+            window?.setNavigationBarTheme(color)
         }
     }
 
