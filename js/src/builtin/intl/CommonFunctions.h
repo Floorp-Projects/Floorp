@@ -81,9 +81,9 @@ static_assert(
 // buffer's entire inline capacity before growing it and heap-allocating.
 constexpr size_t INITIAL_CHAR_BUFFER_SIZE = 32;
 
-template <typename ICUStringFunction, size_t InlineCapacity>
+template <typename ICUStringFunction, typename CharT, size_t InlineCapacity>
 static int32_t CallICU(JSContext* cx, const ICUStringFunction& strFn,
-                       Vector<char16_t, InlineCapacity>& chars) {
+                       Vector<CharT, InlineCapacity>& chars) {
   MOZ_ASSERT(chars.length() >= InlineCapacity);
 
   UErrorCode status = U_ZERO_ERROR;
