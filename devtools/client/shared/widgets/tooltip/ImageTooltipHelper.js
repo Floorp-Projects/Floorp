@@ -16,8 +16,10 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
 // Default image tooltip max dimension
 const MAX_DIMENSION = 200;
 const CONTAINER_MIN_WIDTH = 100;
-const LABEL_HEIGHT = 20;
+// Should remain synchronized with tooltips.css --image-tooltip-image-padding
 const IMAGE_PADDING = 4;
+// Should remain synchronized with tooltips.css --image-tooltip-label-height
+const LABEL_HEIGHT = 20;
 
 /**
  * Image preview tooltips should be provided with the naturalHeight and
@@ -80,51 +82,43 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
     imgWidth = Math.ceil(scale * naturalWidth);
   }
 
-  let imageClass = "";
-  if (!hideCheckeredBackground) {
-    imageClass = "devtools-tooltip-tiles";
-  }
-
   // Create tooltip content
-  const div = doc.createElementNS(XHTML_NS, "div");
-  div.style.cssText = `
-    height: 100%;
-    min-width: 100px;
-    display: flex;
-    flex-direction: column;
-    text-align: center;`;
-  let html = `
-    <div style="flex: 1;
-                display: flex;
-                padding: ${IMAGE_PADDING}px;
-                align-items: center;
-                justify-content: center;
-                min-height: 1px;">
-      <img class="${imageClass}"
-           style="height: ${imgHeight}px; max-height: 100%;"
-           src="${encodeURI(imageUrl)}"/>
-    </div>`;
+  const container = doc.createElementNS(XHTML_NS, "div");
+  container.classList.add("devtools-tooltip-image-container");
+
+  const wrapper = doc.createElementNS(XHTML_NS, "div");
+  wrapper.classList.add("devtools-tooltip-image-wrapper");
+  container.appendChild(wrapper);
+
+  const img = doc.createElementNS(XHTML_NS, "img");
+  img.classList.add("devtools-tooltip-image");
+  img.classList.toggle("devtools-tooltip-tiles", !hideCheckeredBackground);
+  img.style.height = imgHeight;
+  img.src = encodeURI(imageUrl);
+  wrapper.appendChild(img);
 
   if (!hideDimensionLabel) {
+    const dimensions = doc.createElementNS(XHTML_NS, "div");
+    dimensions.classList.add("devtools-tooltip-image-dimensions");
+    container.appendChild(dimensions);
+
     const label = naturalWidth + " \u00D7 " + naturalHeight;
-    html += `
-      <div style="height: ${LABEL_HEIGHT}px;
-                  text-align: center;">
-        <span class="theme-comment devtools-tooltip-caption">${label}</span>
-      </div>`;
+    const span = doc.createElementNS(XHTML_NS, "span");
+    span.classList.add("theme-comment", "devtools-tooltip-caption");
+    span.textContent = label;
+    dimensions.appendChild(span);
   }
-  // eslint-disable-next-line no-unsanitized/property
-  div.innerHTML = html;
-
-  // Calculate tooltip dimensions
-  let height = imgHeight + 2 * IMAGE_PADDING;
-  if (!hideDimensionLabel) {
-    height += LABEL_HEIGHT;
-  }
-  const width = Math.max(CONTAINER_MIN_WIDTH, imgWidth + 2 * IMAGE_PADDING);
 
   tooltip.panel.innerHTML = "";
-  tooltip.panel.appendChild(div);
+  tooltip.panel.appendChild(container);
+
+  // Calculate tooltip dimensions
+  const width = Math.max(CONTAINER_MIN_WIDTH, imgWidth + 2 * IMAGE_PADDING);
+  let height = imgHeight + 2 * IMAGE_PADDING;
+  if (!hideDimensionLabel) {
+    height += parseFloat(LABEL_HEIGHT);
+  }
+
   tooltip.setContentSize({ width, height });
 }
 

@@ -640,6 +640,55 @@ strong {
 
 /* Tooltip: Image tooltip */
 
+/*
+ * Overview of the Image Tooltip layout.
+ *
+ * ┌─────────────────────────────────────────┐
+ * │ .devtools-tooltip-image-container       │
+ * │ ┌─────────────────────────────────────┐ │
+ * │ │ .devtools-tooltip-image-wrapper     │ │
+ * │ │ ┌─────────────────────────────────┐ │ │
+ * │ │ │ .devtools-tooltip-image         │ │ │
+ * │ │ │ (the actual image tag)          │ │ │
+ * │ │ └─────────────────────────────────┘ │ │
+ * │ └─────────────────────────────────────┘ │
+ * │ ┌─────────────────────────────────────┐ │
+ * │ │ .devtools-tooltip-image-dimensions  │ │
+ * │ └─────────────────────────────────────┘ │
+ * └─────────────────────────────────────────┘
+ *
+ */
+
+.devtools-tooltip-image-container {
+  /* Saved as variables to be synchronized easily with ImageTooltipHelper.js */
+  --image-tooltip-image-padding: 4px;
+  --image-tooltip-label-height: 20px;
+
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 100px;
+  text-align: center;
+}
+
+.devtools-tooltip-image-wrapper {
+  align-items: center;
+  display: flex;
+  flex: 1;
+  padding: var(--image-tooltip-image-padding);
+  justify-content: center;
+  min-height: 1px
+}
+
+.devtools-tooltip-image {
+  max-height: 100%;
+}
+
+.devtools-tooltip-image-dimensions {
+  height: var(--image-tooltip-label-height);
+  text-align: center;
+}
+
 .devtools-tooltip-image-broken {
   box-sizing: border-box;
   height: 100%;
