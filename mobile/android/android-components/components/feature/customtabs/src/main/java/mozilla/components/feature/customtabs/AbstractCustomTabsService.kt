@@ -10,8 +10,13 @@ import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsService
 import androidx.browser.customtabs.CustomTabsSessionToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.engine.Engine
+import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.customtabs.verify.OriginVerifier
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -25,8 +30,15 @@ private const val MAX_SPECULATIVE_URLS = 50
  */
 abstract class AbstractCustomTabsService : CustomTabsService() {
     private val logger = Logger("CustomTabsService")
+    private val scope = MainScope()
 
     abstract val engine: Engine
+    open val httpClient: Client? = null
+
+    override fun onDestroy() {
+        super.onDestroy()
+        scope.cancel()
+    }
 
     override fun warmup(flags: Long): Boolean {
         // We need to run this on the main thread since that's where GeckoRuntime expects to get initialized (if needed)
@@ -76,10 +88,16 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
     override fun validateRelationship(
         sessionToken: CustomTabsSessionToken?,
         relation: Int,
-        origin: Uri?,
+        origin: Uri,
         extras: Bundle?
     ): Boolean {
-        return false
+        sessionToken ?: return false
+        val client = httpClient ?: return false
+        scope.launch {
+            val verified = OriginVerifier(packageName, relation, packageManager, client).verifyOrigin(origin)
+            sessionToken.callback.onRelationshipValidationResult(relation, origin, verified, extras)
+        }
+        return true
     }
 
     override fun updateVisuals(sessionToken: CustomTabsSessionToken?, bundle: Bundle?): Boolean {

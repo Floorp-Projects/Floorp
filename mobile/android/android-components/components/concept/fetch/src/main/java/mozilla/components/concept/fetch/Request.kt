@@ -5,6 +5,7 @@
 package mozilla.components.concept.fetch
 
 import android.net.Uri
+import mozilla.components.concept.fetch.Request.CookiePolicy
 import java.io.Closeable
 import java.io.File
 import java.io.IOException
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit
  * @property method The request method (GET, POST, ..)
  * @property headers Optional HTTP headers to be send with the request.
  * @property connectTimeout A timeout to be used when connecting to the resource.  If the timeout expires before the
- * connection can be established, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an
+ * connection can be established, a [java.net.SocketTimeoutException] is raised. A timeout of zero is interpreted as an
  * infinite timeout.
  * @property readTimeout A timeout to be used when reading from the resource. If the timeout expires before there is
  * data available for read, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an infinite
