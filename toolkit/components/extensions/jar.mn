@@ -40,9 +40,6 @@ toolkit.jar:
     content/extensions/parent/ext-telemetry.js (parent/ext-telemetry.js)
     content/extensions/parent/ext-theme.js (parent/ext-theme.js)
     content/extensions/parent/ext-toolkit.js (parent/ext-toolkit.js)
-#ifndef ANDROID
-    content/extensions/parent/ext-topSites.js (parent/ext-topSites.js)
-#endif
     content/extensions/parent/ext-userScripts.js (parent/ext-userScripts.js)
     content/extensions/parent/ext-webRequest.js (parent/ext-webRequest.js)
     content/extensions/parent/ext-webNavigation.js (parent/ext-webNavigation.js)
