@@ -1056,7 +1056,7 @@ _uloc_minimizeSubtags(const char* localeID,
         if(U_FAILURE(*err)) {
             goto error;
         }
-        else if (uprv_strnicmp(
+        else if (!tagBuffer.isEmpty() && uprv_strnicmp(
                     maximizedTagBuffer.data(),
                     tagBuffer.data(),
                     tagBuffer.length()) == 0) {
@@ -1101,7 +1101,7 @@ _uloc_minimizeSubtags(const char* localeID,
         if(U_FAILURE(*err)) {
             goto error;
         }
-        else if (uprv_strnicmp(
+        else if (!tagBuffer.isEmpty() && uprv_strnicmp(
                     maximizedTagBuffer.data(),
                     tagBuffer.data(),
                     tagBuffer.length()) == 0) {

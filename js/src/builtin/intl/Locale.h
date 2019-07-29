@@ -33,6 +33,31 @@ extern JSObject* CreateLocalePrototype(JSContext* cx,
                                        JS::Handle<JSObject*> Intl,
                                        JS::Handle<GlobalObject*> global);
 
+/**
+ * Creates an uninitialized Intl.Locale object.
+ */
+extern MOZ_MUST_USE bool intl_CreateUninitializedLocale(JSContext* cx,
+                                                        unsigned argc,
+                                                        Value* vp);
+
+/**
+ * Adds likely subtags to the given canonicalized language BCP47 subtags per
+ * the "Add Likely Subtags" algorithm from UTS #35.
+ *
+ * Usage: subtags = intl_AddLikelySubtags(language, script, region)
+ */
+extern MOZ_MUST_USE bool intl_AddLikelySubtags(JSContext* cx, unsigned argc,
+                                               Value* vp);
+
+/**
+ * Removes likely subtags from the given canonicalized BCP47 subtags per
+ * the "Remove Likely Subtags" algorithm from UTS #35.
+ *
+ * Usage: subtags = intl_RemoveLikelySubtags(language, script, region)
+ */
+extern MOZ_MUST_USE bool intl_RemoveLikelySubtags(JSContext* cx, unsigned argc,
+                                                  Value* vp);
+
 }  // namespace js
 
 #endif /* builtin_intl_Locale_h */

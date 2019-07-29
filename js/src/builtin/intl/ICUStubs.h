@@ -76,6 +76,20 @@ inline UBool uloc_isRightToLeft(const char* locale) {
   MOZ_CRASH("uloc_isRightToLeft: Intl API disabled");
 }
 
+inline int32_t uloc_addLikelySubtags(const char* localeID,
+                                     char* maximizedLocaleID,
+                                     int32_t maximizedLocaleIDCapacity,
+                                     UErrorCode* err) {
+  MOZ_CRASH("uloc_addLikelySubtags: Intl API disabled");
+}
+
+inline int32_t uloc_minimizeSubtags(const char* localeID,
+                                    char* minimizedLocaleID,
+                                    int32_t minimizedLocaleIDCapacity,
+                                    UErrorCode* err) {
+  MOZ_CRASH("uloc_minimizeSubtags: Intl API disabled");
+}
+
 struct UEnumeration;
 
 inline int32_t uenum_count(UEnumeration* en, UErrorCode* status) {

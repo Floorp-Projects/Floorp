@@ -2503,6 +2503,10 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_FormatRelativeTime", intl_FormatRelativeTime, 4, 0),
     JS_FN("intl_toLocaleLowerCase", intl_toLocaleLowerCase, 2, 0),
     JS_FN("intl_toLocaleUpperCase", intl_toLocaleUpperCase, 2, 0),
+    JS_FN("intl_CreateUninitializedLocale", intl_CreateUninitializedLocale, 0,
+          0),
+    JS_FN("intl_AddLikelySubtags", intl_AddLikelySubtags, 3, 0),
+    JS_FN("intl_RemoveLikelySubtags", intl_RemoveLikelySubtags, 3, 0),
 
     JS_INLINABLE_FN("GuardToCollator", intrinsic_GuardToBuiltin<CollatorObject>,
                     1, 0, IntlGuardToCollator),
