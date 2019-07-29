@@ -1238,13 +1238,6 @@ var gProtectionsHandler = {
   onPopupShown(event) {
     if (event.target == this._protectionsPopup) {
       window.addEventListener("focus", this, true);
-
-      // Add the "open" attribute to the tracking protection icon container
-      // for styling.
-      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
-        "open",
-        "true"
-      );
     }
   },
 
@@ -1566,6 +1559,13 @@ var gProtectionsHandler = {
         { once: true }
       );
     }
+
+    // Add the "open" attribute to the tracking protection icon container
+    // for styling.
+    gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+      "open",
+      "true"
+    );
 
     // Check the panel state of the identity panel. Hide it if needed.
     if (gIdentityHandler._identityPopup.state != "closed") {
