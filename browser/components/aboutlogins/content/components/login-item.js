@@ -58,6 +58,7 @@ export default class LoginItem extends HTMLElement {
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
     this._timeUsed = this.shadowRoot.querySelector(".time-used");
+    this._breachAlert = this.shadowRoot.querySelector(".breach-alert");
 
     this.render();
 
@@ -77,6 +78,15 @@ export default class LoginItem extends HTMLElement {
   }
 
   render() {
+    this._breachAlert.hidden = true;
+    if (this._breachesMap && this._breachesMap.has(this._login.guid)) {
+      const breachDetails = this._breachesMap.get(this._login.guid);
+      const breachAlertLink = this._breachAlert.querySelector(
+        ".breach-alert-link"
+      );
+      breachAlertLink.href = breachDetails.breachAlertURL;
+      this._breachAlert.hidden = false;
+    }
     document.l10n.setAttributes(this._timeCreated, "login-item-time-created", {
       timeCreated: this._login.timeCreated || "",
     });
@@ -98,6 +108,11 @@ export default class LoginItem extends HTMLElement {
         : "login-item-save-changes-button"
     );
     this._updatePasswordRevealState();
+  }
+
+  updateBreaches(breachesByLoginGUID) {
+    this._breachesMap = breachesByLoginGUID;
+    this.render();
   }
 
   handleEvent(event) {
