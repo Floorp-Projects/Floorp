@@ -406,6 +406,11 @@ class MochitestArguments(ArgumentContainer):
           "dest": "e10s",
           "help": "Run tests with electrolysis preferences and test filtering disabled.",
           }],
+        [["--enable-fission"],
+         {"action": "store_true",
+          "default": False,
+          "help": "Run tests with fission (site isolation) enabled.",
+          }],
         [["--store-chrome-manifest"],
          {"action": "store",
           "help": "Destination path to write a copy of any chrome manifest "
@@ -823,6 +828,9 @@ class MochitestArguments(ArgumentContainer):
         if options.flavor in ('a11y', 'chrome') and options.e10s:
             parser.error("mochitest-{} does not support e10s, try again with "
                          "--disable-e10s.".format(options.flavor))
+
+        if options.enable_fission:
+            options.extraPrefs.append("fission.autostart=1")
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,

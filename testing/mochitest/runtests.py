@@ -2614,6 +2614,13 @@ toolbar#nav-bar {
 
         tests = self.getActiveTests(options)
         self.logPreamble(tests)
+
+        if mozinfo.info['fission'] and not mozinfo.info['e10s']:
+            # Make sure this is logged *after* suite_start so it gets associated with the
+            # current suite in the summary formatters.
+            self.log.error("Fission is not supported without e10s.")
+            return 1
+
         tests = [t for t in tests if 'disabled' not in t]
 
         # Until we have all green, this does not run on a11y (for perf reasons)
