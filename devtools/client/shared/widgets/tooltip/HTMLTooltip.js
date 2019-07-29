@@ -829,14 +829,19 @@ HTMLTooltip.prototype = {
       container.classList.add(...this.className.split(" "));
     }
 
-    let html = '<div class="tooltip-filler"></div>';
-    html += '<div class="tooltip-panel"></div>';
+    const filler = this.doc.createElementNS(XHTML_NS, "div");
+    filler.classList.add("tooltip-filler");
+    container.appendChild(filler);
+
+    const panel = this.doc.createElementNS(XHTML_NS, "div");
+    panel.classList.add("tooltip-panel");
+    container.appendChild(panel);
 
     if (this.type === TYPE.ARROW || this.type === TYPE.DOORHANGER) {
-      html += '<div class="tooltip-arrow"></div>';
+      const arrow = this.doc.createElementNS(XHTML_NS, "div");
+      arrow.classList.add("tooltip-arrow");
+      container.appendChild(arrow);
     }
-    // eslint-disable-next-line no-unsanitized/property
-    container.innerHTML = html;
     return container;
   },
 
