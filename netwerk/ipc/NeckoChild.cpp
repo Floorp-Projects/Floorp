@@ -27,6 +27,7 @@
 #include "mozilla/net/ClassifierDummyChannelChild.h"
 #include "mozilla/net/SocketProcessBridgeChild.h"
 #ifdef MOZ_WEBRTC
+#  include "mozilla/net/ProxyConfigLookupChild.h"
 #  include "mozilla/net/StunAddrsRequestChild.h"
 #  include "mozilla/net/WebrtcProxyChannelChild.h"
 #endif
@@ -422,6 +423,19 @@ PClassifierDummyChannelChild* NeckoChild::AllocPClassifierDummyChannelChild(
 bool NeckoChild::DeallocPClassifierDummyChannelChild(
     PClassifierDummyChannelChild* aActor) {
   delete static_cast<ClassifierDummyChannelChild*>(aActor);
+  return true;
+}
+
+PProxyConfigLookupChild* NeckoChild::AllocPProxyConfigLookupChild() {
+  MOZ_CRASH("AllocPProxyConfigLookupChild should not be called");
+  return nullptr;
+}
+
+bool NeckoChild::DeallocPProxyConfigLookupChild(
+    PProxyConfigLookupChild* aActor) {
+#ifdef MOZ_WEBRTC
+  delete static_cast<ProxyConfigLookupChild*>(aActor);
+#endif
   return true;
 }
 
