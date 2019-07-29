@@ -1,10 +1,8 @@
 package org.mozilla.geckoview_example;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -28,22 +26,20 @@ public class ToolbarLayout extends LinearLayout {
     }
 
     private void initView() {
-        setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
+        setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1.0f));
         setOrientation(LinearLayout.HORIZONTAL);
         mLocationView = new LocationView(getContext());
+        mLocationView.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT, 1.0f));
         mLocationView.setId(R.id.url_bar);
-        mLocationView.setPadding(11, 27,71, 27);
         addView(mLocationView);
 
         mTabsCountButton = getTabsCountButton();
         addView(mTabsCountButton);
-
-        updateTabCount();
     }
 
     private Button getTabsCountButton() {
         Button button = new Button(getContext());
-        button.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT));
+        button.setLayoutParams(new LayoutParams(150, LayoutParams.MATCH_PARENT));
         button.setId(R.id.tabs_button);
         button.setOnClickListener(this::onTabButtonClicked);
         button.setBackground(ContextCompat.getDrawable(getContext(), R.drawable.tab_number_background));
