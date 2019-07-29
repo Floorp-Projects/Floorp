@@ -222,6 +222,7 @@
   MACRO(InitializeCollator, InitializeCollator, "InitializeCollator")          \
   MACRO(InitializeDateTimeFormat, InitializeDateTimeFormat,                    \
         "InitializeDateTimeFormat")                                            \
+  MACRO(InitializeLocale, InitializeLocale, "InitializeLocale")                \
   MACRO(InitializeNumberFormat, InitializeNumberFormat,                        \
         "InitializeNumberFormat")                                              \
   MACRO(InitializePluralRules, InitializePluralRules, "InitializePluralRules") \
@@ -262,6 +263,7 @@
   MACRO(lineNumber, lineNumber, "lineNumber")                                  \
   MACRO(literal, literal, "literal")                                           \
   MACRO(loc, loc, "loc")                                                       \
+  MACRO(Locale, Locale, "Locale")                                              \
   MACRO(locale, locale, "locale")                                              \
   MACRO(lookupGetter, lookupGetter, "__lookupGetter__")                        \
   MACRO(lookupSetter, lookupSetter, "__lookupSetter__")                        \
