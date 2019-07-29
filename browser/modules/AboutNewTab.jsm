@@ -110,6 +110,12 @@ var AboutNewTab = {
     this.init(pageListener);
   },
 
+  getTopSites() {
+    return this.activityStream
+      ? this.activityStream.store.getState().TopSites.rows
+      : [];
+  },
+
   // nsIObserver implementation
 
   observe(subject, topic, data) {
