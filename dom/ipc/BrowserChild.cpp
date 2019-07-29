@@ -3287,20 +3287,12 @@ bool BrowserChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
   return true;
 }
 
-PBrowserBridgeChild* BrowserChild::AllocPBrowserBridgeChild(const nsString&,
-                                                            const nsString&,
-                                                            BrowsingContext*,
-                                                            const uint32_t&,
-                                                            const TabId&) {
+already_AddRefed<PBrowserBridgeChild> BrowserChild::AllocPBrowserBridgeChild(
+    const nsString&, const nsString&, BrowsingContext*, const uint32_t&,
+    const TabId&) {
   MOZ_CRASH(
       "We should never be manually allocating PBrowserBridgeChild actors");
   return nullptr;
-}
-
-bool BrowserChild::DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) {
-  // This reference was added in BrowserBridgeChild::Create.
-  static_cast<BrowserBridgeChild*>(aActor)->Release();
-  return true;
 }
 
 ScreenIntSize BrowserChild::GetInnerSize() {

@@ -27,7 +27,7 @@ class BrowserParent;
  */
 class BrowserBridgeParent : public PBrowserBridgeParent {
  public:
-  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeParent);
+  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeParent, final);
 
   BrowserBridgeParent();
 
