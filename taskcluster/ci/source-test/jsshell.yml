@@ -15,10 +15,10 @@ job-defaults:
                     by-shell:
                         sm:
                             SHELL: /bin/bash
-                            JSSHELL: /home/cltbld/fetches/js
+                            JSSHELL: js
                         v8:
                             SHELL: /bin/bash
-                            JSSHELL: /home/cltbld/fetches/d8/release/d8
+                            JSSHELL: d8/release/d8
                 max-run-time: 1800
     treeherder:
         kind: test
@@ -26,7 +26,7 @@ job-defaults:
     run:
         using: mach
         workdir: /home/cltbld
-        mach: jsshell-bench --perfherder={shell} --binary=$JSSHELL {test}
+        mach: jsshell-bench --perfherder={shell} --binary=$MOZ_FETCHES_DIR/$JSSHELL {test}
     run-on-projects:
         by-shell:
             sm: ['mozilla-central', 'try', 'integration']
