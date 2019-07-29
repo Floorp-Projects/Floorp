@@ -15,7 +15,6 @@ Array [
     </Localized>
     <ul>
       <Worker
-        client={Object {}}
         isDebugEnabled={true}
         worker={
           Object {
@@ -62,7 +61,6 @@ Array [
     </Localized>
     <ul>
       <Worker
-        client={Object {}}
         isDebugEnabled={true}
         worker={
           Object {
@@ -76,7 +74,6 @@ Array [
         }
       />
       <Worker
-        client={Object {}}
         isDebugEnabled={true}
         worker={
           Object {
@@ -90,7 +87,6 @@ Array [
         }
       />
       <Worker
-        client={Object {}}
         isDebugEnabled={true}
         worker={
           Object {

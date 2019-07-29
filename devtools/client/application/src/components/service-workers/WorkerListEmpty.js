@@ -5,7 +5,6 @@
 "use strict";
 
 const { openDocLink, openTrustedLink } = require("devtools/client/shared/link");
-const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const {
   createFactory,
   PureComponent,
@@ -21,6 +20,8 @@ const {
 const FluentReact = require("devtools/client/shared/vendor/fluent-react");
 const Localized = createFactory(FluentReact.Localized);
 
+const { services } = require("../../modules/services");
+
 const DOC_URL =
   "https://developer.mozilla.org/docs/Web/API/Service_Worker_API/Using_Service_Workers" +
   "?utm_source=devtools&utm_medium=sw-panel-blank";
@@ -30,18 +31,12 @@ const DOC_URL =
  * current target.
  */
 class WorkerListEmpty extends PureComponent {
-  static get propTypes() {
-    return {
-      serviceContainer: PropTypes.object.isRequired,
-    };
-  }
-
   switchToConsole() {
-    this.props.serviceContainer.selectTool("webconsole");
+    services.selectTool("webconsole");
   }
 
   switchToDebugger() {
-    this.props.serviceContainer.selectTool("jsdebugger");
+    services.selectTool("jsdebugger");
   }
 
   openAboutDebugging() {
@@ -98,5 +93,4 @@ class WorkerListEmpty extends PureComponent {
 }
 
 // Exports
-
 module.exports = WorkerListEmpty;

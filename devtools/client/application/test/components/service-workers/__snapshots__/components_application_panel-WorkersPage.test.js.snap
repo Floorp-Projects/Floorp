@@ -6,7 +6,6 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
 >
   <WorkerList
     canDebugWorkers={true}
-    client={Object {}}
     workers={
       Array [
         Object {
@@ -31,33 +30,42 @@ exports[`WorkersPage filters out workers from diferent domains 1`] = `
 </section>
 `;
 
-exports[`WorkersPage filters out workers from different domains and renders an empty list if there is none left 1`] = `
+exports[`WorkersPage filters out workers from different domains and renders an empty list when there is none left 1`] = `
 <section
   className="workers-page workers-page--empty"
 >
-  <WorkerListEmpty
-    serviceContainer={Object {}}
-  />
+  <WorkerListEmpty />
 </section>
 `;
 
-exports[`WorkersPage renders the expected snapshot for a WorkerPage with empty worker list 1`] = `
-<section
-  className="workers-page workers-page--empty"
->
-  <WorkerListEmpty
-    serviceContainer={Object {}}
-  />
-</section>
-`;
-
-exports[`WorkersPage renders the expected snapshot for an App with multiple workers list 1`] = `
+exports[`WorkersPage it renders a list with a single element if there's just 1 worker 1`] = `
 <section
   className="workers-page "
 >
   <WorkerList
     canDebugWorkers={true}
-    client={Object {}}
+    workers={
+      Array [
+        Object {
+          "active": true,
+          "name": "worker1",
+          "registrationFront": "",
+          "scope": "SCOPE 123",
+          "url": "http://example.com/worker.js",
+          "workerTargetFront": "",
+        },
+      ]
+    }
+  />
+</section>
+`;
+
+exports[`WorkersPage renders a list with multiple elements when there are multiple workers 1`] = `
+<section
+  className="workers-page "
+>
+  <WorkerList
+    canDebugWorkers={true}
     workers={
       Array [
         Object {
@@ -90,25 +98,10 @@ exports[`WorkersPage renders the expected snapshot for an App with multiple work
 </section>
 `;
 
-exports[`WorkersPage renders the expected snapshot for an App with single worker list 1`] = `
+exports[`WorkersPage renders an empty list if there are no workers 1`] = `
 <section
-  className="workers-page "
+  className="workers-page workers-page--empty"
 >
-  <WorkerList
-    canDebugWorkers={true}
-    client={Object {}}
-    workers={
-      Array [
-        Object {
-          "active": true,
-          "name": "worker1",
-          "registrationFront": "",
-          "scope": "SCOPE 123",
-          "url": "http://example.com/worker.js",
-          "workerTargetFront": "",
-        },
-      ]
-    }
-  />
+  <WorkerListEmpty />
 </section>
 `;

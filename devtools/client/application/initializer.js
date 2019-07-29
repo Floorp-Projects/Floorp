@@ -34,6 +34,8 @@ const {
   removeDebugServiceWorkersListener,
 } = require("devtools/shared/service-workers-debug-helper");
 
+const { services } = require("./src/modules/services");
+
 const App = createFactory(require("./src/components/App"));
 
 /**
@@ -54,11 +56,7 @@ window.Application = {
     this.actions = bindActionCreators(actions, this.store.dispatch);
     this.serviceWorkerRegistrationFronts = [];
 
-    const serviceContainer = {
-      selectTool(toolId) {
-        return toolbox.selectTool(toolId);
-      },
-    };
+    services.init(this.toolbox);
 
     this.workersListener = new WorkersListener(this.client.mainRoot);
     this.workersListener.addListener(this.updateWorkers);
@@ -76,7 +74,6 @@ window.Application = {
     const app = App({
       client: this.client,
       fluentBundles: l10n.getBundles(),
-      serviceContainer,
     });
     render(Provider({ store: this.store }, app), this.mount);
   },

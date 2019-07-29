@@ -5,9 +5,9 @@
 
 // Import libs
 const { shallow } = require("enzyme");
-const React = require("react");
+const { createFactory } = require("react");
 
-const WorkerListEmpty = React.createFactory(
+const WorkerListEmpty = createFactory(
   require("devtools/client/application/src/components/service-workers/WorkerListEmpty")
 );
 
@@ -17,11 +17,7 @@ const WorkerListEmpty = React.createFactory(
 
 describe("WorkerListEmpty", () => {
   it("renders the expected snapshot", () => {
-    const wrapper = shallow(
-      WorkerListEmpty({
-        serviceContainer: {},
-      })
-    );
+    const wrapper = shallow(WorkerListEmpty({}));
     expect(wrapper).toMatchSnapshot();
   });
 });
