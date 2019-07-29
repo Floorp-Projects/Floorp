@@ -3412,7 +3412,7 @@ Toolbox.prototype = {
 
       // Temporary fix for bug #1493131 - inspector has a different life cycle
       // than most other fronts because it is closely related to the toolbox.
-      await this._inspector.destroy();
+      this._inspector.destroy();
 
       this._inspector = null;
       this._highlighter = null;
