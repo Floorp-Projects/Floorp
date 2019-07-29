@@ -40,6 +40,7 @@
 
 #identity-box:hover:active:not(.no-hover),
 #identity-box[open=true],
+#tracking-protection-icon-container:hover:active,
 #tracking-protection-icon-container[open=true] {
   background-color: hsla(0,0%,70%,.3);
   fill-opacity: .8;
