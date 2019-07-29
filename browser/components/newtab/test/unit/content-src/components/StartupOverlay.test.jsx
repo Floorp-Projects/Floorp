@@ -1,40 +1,44 @@
 import { actionCreators as ac, actionTypes as at } from "common/Actions.jsm";
 import { mount } from "enzyme";
 import React from "react";
-import { StartupOverlay } from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
+import { _StartupOverlay as StartupOverlay } from "content-src/asrouter/templates/StartupOverlay/StartupOverlay";
 
 describe("<StartupOverlay>", () => {
   let wrapper;
   let dispatch;
+  let onReady;
   let onBlock;
   let sandbox;
   beforeEach(() => {
-    sandbox = sinon.createSandbox();
+    sandbox = sinon.sandbox.create();
     dispatch = sandbox.stub();
+    onReady = sandbox.stub();
     onBlock = sandbox.stub();
 
-    wrapper = mount(<StartupOverlay onBlock={onBlock} dispatch={dispatch} />);
+    wrapper = mount(
+      <StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />
+    );
   });
 
   afterEach(() => {
     sandbox.restore();
   });
 
-  it("should add show class after mount and timeout", async () => {
+  it("should not render if state.show is false", () => {
+    wrapper.setState({ overlayRemoved: true });
+    assert.isTrue(wrapper.isEmptyRender());
+  });
+
+  it("should call prop.onReady after mount + timeout", async () => {
     const clock = sandbox.useFakeTimers();
-    wrapper = mount(<StartupOverlay onBlock={onBlock} dispatch={dispatch} />);
-    assert.isFalse(
-      wrapper.find(".overlay-wrapper").hasClass("show"),
-      ".overlay-wrapper does not have .show class"
+    wrapper = mount(
+      <StartupOverlay onBlock={onBlock} onReady={onReady} dispatch={dispatch} />
     );
+    wrapper.setState({ overlayRemoved: false });
 
     clock.tick(10);
-    wrapper.update();
 
-    assert.isTrue(
-      wrapper.find(".overlay-wrapper").hasClass("show"),
-      ".overlay-wrapper has .show class"
-    );
+    assert.calledOnce(onReady);
   });
 
   it("should emit UserEvent SKIPPED_SIGNIN when you click the skip button", () => {

@@ -15,11 +15,8 @@ export class ReturnToAMO extends React.PureComponent {
     this.onBlockButton = this.onBlockButton.bind(this);
   }
 
-  componentWillMount() {
-    global.document.body.classList.add("amo");
-  }
-
   componentDidMount() {
+    this.props.onReady();
     this.props.sendUserActionTelemetry({
       event: "IMPRESSION",
       id: this.props.UISurface,

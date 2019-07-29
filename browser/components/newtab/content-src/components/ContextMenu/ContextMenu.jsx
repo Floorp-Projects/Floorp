@@ -44,16 +44,16 @@ export class ContextMenu extends React.PureComponent {
     // Disabling focus on the menu span allows the first tab to focus on the first menu item instead of the wrapper.
     return (
       // eslint-disable-next-line jsx-a11y/interactive-supports-focus
-      <span className="context-menu">
-        <ul
-          role="menu"
-          onClick={this.onClick}
-          onKeyDown={this.onClick}
-          className="context-menu-list"
-        >
+      <span
+        role="menu"
+        className="context-menu"
+        onClick={this.onClick}
+        onKeyDown={this.onClick}
+      >
+        <ul className="context-menu-list">
           {this.props.options.map((option, i) =>
             option.type === "separator" ? (
-              <li key={i} className="separator" role="separator" />
+              <li key={i} className="separator" />
             ) : (
               option.type !== "empty" && (
                 <ContextMenuItem
@@ -61,6 +61,7 @@ export class ContextMenu extends React.PureComponent {
                   option={option}
                   hideContext={this.hideContext}
                   keyboardAccess={this.props.keyboardAccess}
+                  tabIndex="0"
                 />
               )
             )
@@ -76,7 +77,6 @@ export class ContextMenuItem extends React.PureComponent {
     super(props);
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
-    this.onKeyUp = this.onKeyUp.bind(this);
     this.focusFirst = this.focusFirst.bind(this);
   }
 
@@ -129,8 +129,6 @@ export class ContextMenuItem extends React.PureComponent {
         this.focusSibling(event.target, event.key);
         break;
       case "Enter":
-      case " ":
-        event.preventDefault();
         this.props.hideContext();
         option.onClick();
         break;
@@ -140,24 +138,15 @@ export class ContextMenuItem extends React.PureComponent {
     }
   }
 
-  // Prevents the default behavior of spacebar
-  // scrolling the page & auto-triggering buttons.
-  onKeyUp(event) {
-    if (event.key === " ") {
-      event.preventDefault();
-    }
-  }
-
   render() {
     const { option } = this.props;
     return (
-      <li role="presentation" className="context-menu-item">
+      <li role="menuitem" className="context-menu-item">
         <button
           className={option.disabled ? "disabled" : ""}
-          role="menuitem"
+          tabIndex="0"
           onClick={this.onClick}
           onKeyDown={this.onKeyDown}
-          onKeyUp={this.onKeyUp}
           ref={option.first ? this.focusFirst : null}
         >
           {option.icon && (

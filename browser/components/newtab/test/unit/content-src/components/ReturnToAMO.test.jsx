@@ -66,6 +66,10 @@ describe("<ReturnToAMO>", () => {
       sendUserActionTelemetryStub.reset();
     });
 
+    it("should call onReady on componentDidMount", () => {
+      assert.calledOnce(onReady);
+    });
+
     it("should send telemetry on block", () => {
       wrapper.instance().onBlockButton();
 
