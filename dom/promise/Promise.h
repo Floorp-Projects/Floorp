@@ -75,9 +75,6 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
   typedef void (Promise::*MaybeFunc)(JSContext* aCx,
                                      JS::Handle<JS::Value> aValue);
 
-  void MaybeResolve(JSContext* aCx, JS::Handle<JS::Value> aValue);
-  void MaybeReject(JSContext* aCx, JS::Handle<JS::Value> aValue);
-
   // Helpers for using Promise from C++.
   // Most DOM objects are handled already.  To add a new type T, add a
   // ToJSValue overload in ToJSValue.h.
@@ -89,6 +86,9 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
 
   void MaybeResolveWithUndefined();
 
+  void MaybeReject(JS::Handle<JS::Value> aValue) {
+    MaybeSomething(aValue, &Promise::MaybeReject);
+  }
   inline void MaybeReject(nsresult aArg) {
     MOZ_ASSERT(NS_FAILED(aArg));
     MaybeSomething(aArg, &Promise::MaybeReject);
@@ -236,6 +236,9 @@ class Promise : public nsISupports, public SupportsWeakPtr<Promise> {
                          eDontPropagateUserInteraction);
 
  private:
+  void MaybeResolve(JSContext* aCx, JS::Handle<JS::Value> aValue);
+  void MaybeReject(JSContext* aCx, JS::Handle<JS::Value> aValue);
+
   template <typename T>
   void MaybeSomething(T&& aArgument, MaybeFunc aFunc) {
     MOZ_ASSERT(PromiseObj());  // It was preserved!
