@@ -95,24 +95,35 @@ class TextEditor : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
 
   /**
-   * CanCut() always returns true if we're in non-chrome HTML/XHTML document.
-   * Otherwise, returns true when:
-   * - `Selection` is not collapsed and we're not a password editor.
-   * - `Selection` is not collapsed and we're a password editor but selection
-   *   range in unmasked range.
+   * IsCutCommandEnabled() returns whether cut command can be enabled or
+   * disabled.  This always returns true if we're in non-chrome HTML/XHTML
+   * document.  Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
    */
-  bool CanCut() const;
+  bool IsCutCommandEnabled() const;
 
   NS_IMETHOD Copy() override;
 
   /**
-   * CanCopy() always returns true if we're in non-chrome HTML/XHTML document.
-   * Otherwise, returns true when:
+   * IsCopyCommandEnabled() returns copy command can be enabled or disabled.
+   * This always returns true if we're in non-chrome HTML/XHTML document.
+   * Otherwise, same as the result of `IsCopyToClipboardAllowed()`.
+   */
+  bool IsCopyCommandEnabled() const;
+
+  /**
+   * IsCopyToClipboardAllowed() returns true if the selected content can
+   * be copied into the clipboard.  This returns true when:
    * - `Selection` is not collapsed and we're not a password editor.
    * - `Selection` is not collapsed and we're a password editor but selection
-   *   range in unmasked range.
+   *   range is in unmasked range.
    */
-  bool CanCopy() const;
+  bool IsCopyToClipboardAllowed() const {
+    AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
+    if (NS_WARN_IF(!editActionData.CanHandle())) {
+      return false;
+    }
+    return IsCopyToClipboardAllowedInternal();
+  }
 
   /**
    * CanDeleteSelection() returns true if `Selection` is not collapsed and
@@ -714,10 +725,9 @@ class TextEditor : public EditorBase,
                               nsAString& aResult);
 
   /**
-   * CanCutOrCopy() returns true if "cut" or "copy" command is available
-   * right now.
+   * See comment of IsCopyToClipboardAllowed() for the detail.
    */
-  bool CanCutOrCopy() const;
+  bool IsCopyToClipboardAllowedInternal() const;
 
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);

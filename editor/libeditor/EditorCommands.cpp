@@ -327,7 +327,8 @@ bool CutCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->IsSelectionEditable() && aTextEditor->CanCut();
+  return aTextEditor->IsSelectionEditable() &&
+         aTextEditor->IsCutCommandEnabled();
 }
 
 nsresult CutCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
@@ -391,7 +392,7 @@ bool CopyCommand::IsCommandEnabled(Command aCommand,
   if (!aTextEditor) {
     return false;
   }
-  return aTextEditor->CanCopy();
+  return aTextEditor->IsCopyCommandEnabled();
 }
 
 nsresult CopyCommand::DoCommand(Command aCommand, TextEditor& aTextEditor,
