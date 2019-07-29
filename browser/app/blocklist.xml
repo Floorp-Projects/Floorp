@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1563810026497" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1564399822770" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -3318,6 +3318,14 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="eeaa940b-b984-43da-88ce-d26891347e3d" id="/^((\{86f185bb-b672-4a24-b3d9-a8751231b687\})|(\{8d98cfc9-3757-4fd9-b017-30ad60fb94ed\})|(\{288a7d51-4627-44c9-8cf0-cf18742a6f67\})|(\{49e5562b-38e2-4292-8080-ca3ffe8cea42\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="eafece33-b993-443e-b944-8bcefb4389ec" id="firefox@browser-addon.xyz">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="21bbd8dd-b79e-41b8-bd18-db1592e743c9" id="{795697ee-695f-45d4-a997-6fe845b473d5}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
