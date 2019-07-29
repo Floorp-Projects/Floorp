@@ -29,7 +29,8 @@ add_task(async function() {
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;
 
-  await testEvaluate(client, contextId);
+  await testEvaluate(client);
+  await testEvaluateWithContextId(client, contextId);
   await testEvaluateInvalidContextId(client, contextId);
 
   await testCallFunctionOn(client, contextId);
@@ -117,7 +118,16 @@ async function testRuntimeEnable({ Runtime }) {
   return context;
 }
 
-async function testEvaluate({ Runtime }, contextId) {
+async function testEvaluate({ Runtime }) {
+  const { result } = await Runtime.evaluate({ expression: "location.href" });
+  is(
+    result.value,
+    TEST_URI,
+    "Runtime.evaluate works against the current document"
+  );
+}
+
+async function testEvaluateWithContextId({ Runtime }, contextId) {
   const { result } = await Runtime.evaluate({
     contextId,
     expression: "location.href",
@@ -125,7 +135,7 @@ async function testEvaluate({ Runtime }, contextId) {
   is(
     result.value,
     TEST_URI,
-    "Runtime.evaluate works and is against the test page"
+    "Runtime.evaluate works against the targetted document"
   );
 }
 

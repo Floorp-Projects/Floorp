@@ -67,20 +67,27 @@ class Runtime extends ContentProcessDomain {
     }
   }
 
-  evaluate(request) {
-    const context = this.contexts.get(request.contextId);
-    if (!context) {
-      throw new Error(
-        `Unable to find execution context with id: ${request.contextId}`
-      );
+  evaluate({ expression, contextId = null } = {}) {
+    let context;
+    if (contextId) {
+      context = this.contexts.get(contextId);
+      if (!context) {
+        throw new Error(
+          `Unable to find execution context with id: ${contextId}`
+        );
+      }
+    } else {
+      context = this.getCurrentContext();
     }
-    if (typeof request.expression != "string") {
+
+    if (typeof expression != "string") {
       throw new Error(
         `Expecting 'expression' attribute to be a string. ` +
-          `But was: ${typeof request.expression}`
+          `But was: ${typeof expression}`
       );
     }
-    return context.evaluate(request.expression);
+
+    return context.evaluate(expression);
   }
 
   getRemoteObject(objectId) {
@@ -172,6 +179,11 @@ class Runtime extends ContentProcessDomain {
     }
     this.__debugger = new Debugger();
     return this.__debugger;
+  }
+
+  getCurrentContext() {
+    const { windowUtils } = this.content;
+    return this.contexts.get(windowUtils.currentInnerWindowID);
   }
 
   getContextByFrameId(frameId) {
