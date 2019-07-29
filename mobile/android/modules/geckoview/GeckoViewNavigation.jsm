@@ -105,7 +105,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         this.browser.gotoIndex(aData.index);
         break;
       case "GeckoView:LoadUri":
-        const { uri, referrer, flags } = aData;
+        const { uri, referrerUri, referrerSessionId, flags } = aData;
 
         let navFlags = 0;
 
@@ -138,34 +138,72 @@ class GeckoViewNavigation extends GeckoViewModule {
           this.moduleManager.updateRemoteTypeForURI(uri);
         }
 
-        let parsedUri;
-        let triggeringPrincipal;
-        try {
-          parsedUri = Services.io.newURI(uri);
-          if (
-            parsedUri.schemeIs("about") ||
-            parsedUri.schemeIs("data") ||
-            parsedUri.schemeIs("file") ||
-            parsedUri.schemeIs("resource") ||
-            parsedUri.schemeIs("moz-extension")
-          ) {
-            // Only allow privileged loading for certain URIs.
-            triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-              parsedUri,
-              {}
-            );
-          }
-        } catch (ignored) {}
+        let triggeringPrincipal, referrerInfo, csp;
+        if (referrerSessionId) {
+          const referrerWindow = Services.ww.getWindowByName(
+            referrerSessionId,
+            this.window
+          );
+          triggeringPrincipal = referrerWindow.browser.contentPrincipal;
+          csp = referrerWindow.browser.csp;
+
+          const referrerPolicy = referrerWindow.browser.referrerInfo
+            ? referrerWindow.browser.referrerInfo.referrerPolicy
+            : Ci.nsIHttpChannel.REFERRER_POLICY_UNSET;
+
+          referrerInfo = new ReferrerInfo(
+            referrerPolicy,
+            true,
+            referrerWindow.browser.documentURI
+          );
+        } else {
+          try {
+            const parsedUri = Services.io.newURI(uri);
+            if (
+              parsedUri.schemeIs("about") ||
+              parsedUri.schemeIs("data") ||
+              parsedUri.schemeIs("file") ||
+              parsedUri.schemeIs("resource") ||
+              parsedUri.schemeIs("moz-extension")
+            ) {
+              // Only allow privileged loading for certain URIs.
+              triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
+                parsedUri,
+                {}
+              );
+            }
+          } catch (ignored) {}
+
+          referrerInfo = createReferrerInfo(referrerUri);
+        }
+
         if (!triggeringPrincipal) {
           triggeringPrincipal = Services.scriptSecurityManager.createNullPrincipal(
             {}
           );
         }
 
-        this.browser.loadURI(parsedUri ? parsedUri.spec : uri, {
+        // For any navigation here, we should have an appropriate triggeringPrincipal:
+        //
+        // 1) If we have a referring session, triggeringPrincipal is the contentPrincipal from the
+        //    referring document.
+        // 2) For certain URI schemes listed above, we will have a codebase principal.
+        // 3) In all other cases, we create a NullPrincipal.
+        //
+        // The navigation flags are driven by the app. We purposely do not propagate these from
+        // the referring document, but expect that the app will in most cases.
+        //
+        // The referrerInfo is derived from the referring document, if present, by propagating any
+        // referrer policy. If we only have the referrerUri from the app, we create a referrerInfo
+        // with the specified URI and no policy set. If no referrerUri is present and we have no
+        // referring session, the referrerInfo is null.
+        //
+        // csp is only present if we have a referring document, null otherwise.
+        this.browser.loadURI(uri, {
           flags: navFlags,
-          referrerInfo: createReferrerInfo(referrer),
+          referrerInfo,
           triggeringPrincipal,
+          csp,
         });
         break;
       case "GeckoView:Reload":
