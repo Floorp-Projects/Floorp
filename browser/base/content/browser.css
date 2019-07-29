@@ -697,8 +697,15 @@ html|input.urlbar-input {
   background-color: hsla(0,0%,80%,.5); /* match arrowpanel-dimmed-further */
 }
 
-#PopupAutoComplete[firstresultstyle="insecureWarning"] {
-  min-width: 200px;
+/* Define the minimum width based on the style of result rows.
+   The order of the min-width rules below must be in increasing order. */
+#PopupAutoComplete[resultstyles~="loginsFooter"],
+#PopupAutoComplete[resultstyles~="insecureWarning"] {
+  min-width: 17em;
+}
+
+#PopupAutoComplete[resultstyles~="generatedPassword"] {
+  min-width: 21em;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="insecureWarning"] {
