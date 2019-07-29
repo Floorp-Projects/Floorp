@@ -274,9 +274,13 @@ interface nsIEditor  : nsISupports
   [can_run_script]
   void cut();
 
-  /** Can we cut? True if the doc is modifiable, and we have a non-
-    * collapsed selection.
-    */
+  /**
+   * canCut() returns true if selected content is allowed to be copied to the
+   * clipboard and to be removed.
+   * Note that this always returns true if the editor is in a non-chrome
+   * HTML/XHTML document.
+   * FYI: Current user in script is only BlueGriffon.
+   */
   boolean canCut();
 
   /** copy the currently selected text, putting it into the OS clipboard
@@ -286,13 +290,14 @@ interface nsIEditor  : nsISupports
     */
   void copy();
 
-  /** Can we copy? True if we have a non-collapsed selection.
-    */
+  /**
+   * canCopy() returns true if selected content is allowed to be copied to
+   * the clipboard.
+   * Note that this always returns true if the editor is in a non-chrome
+   * HTML/XHTML document.
+   * FYI: Current user in script is only BlueGriffon.
+   */
   boolean canCopy();
-
-  /** Can we delete? True if we have a non-collapsed selection.
-    */
-  boolean canDelete();
 
   /** paste the text in the OS clipboard at the cursor position, replacing
     * the selected text (if any)

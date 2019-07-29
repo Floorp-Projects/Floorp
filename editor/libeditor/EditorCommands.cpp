@@ -574,11 +574,11 @@ bool DeleteCommand::IsCommandEnabled(Command aCommand,
   }
   // We can generally delete whenever the selection is editable.  However,
   // cmd_delete doesn't make sense if the selection is collapsed because it's
-  // directionless, which is the same condition under which we can't cut.
+  // directionless.
   bool isEnabled = aTextEditor->IsSelectionEditable();
 
   if (aCommand == Command::Delete && isEnabled) {
-    return aTextEditor->CanDelete();
+    return aTextEditor->CanDeleteSelection();
   }
   return isEnabled;
 }
