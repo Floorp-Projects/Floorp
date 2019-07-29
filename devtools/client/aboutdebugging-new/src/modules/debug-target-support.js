@@ -16,10 +16,21 @@ function isProcessDebuggingSupported() {
   );
 }
 
-// Process target debugging is disabled by default.
+// Local tab debugging is disabled by default.
 function isLocalTabDebuggingSupported() {
   return Services.prefs.getBoolPref(
     PREFERENCES.LOCAL_TAB_DEBUGGING_ENABLED,
+    false
+  );
+}
+
+// Local process debugging is disabled by default.
+// This preference has no default value in
+// devtools/client/preferences/devtools-client.js
+// because it is only intended for tests.
+function isLocalProcessDebuggingSupported() {
+  return Services.prefs.getBoolPref(
+    "devtools.aboutdebugging.test-local-process-debugging",
     false
   );
 }
@@ -53,7 +64,9 @@ const THIS_FIREFOX_DEBUG_TARGET_PANES = ALL_DEBUG_TARGET_PANES
   // Main process debugging is not available for This Firefox.
   // At the moment only the main process is listed under processes, so remove the category
   // for this runtime.
-  .filter(p => p !== DEBUG_TARGET_PANE.PROCESSES)
+  .filter(
+    p => p !== DEBUG_TARGET_PANE.PROCESSES || isLocalProcessDebuggingSupported()
+  )
   // Showing tab targets for This Firefox is behind a preference.
   .filter(p => p !== DEBUG_TARGET_PANE.TAB || isLocalTabDebuggingSupported());
 
