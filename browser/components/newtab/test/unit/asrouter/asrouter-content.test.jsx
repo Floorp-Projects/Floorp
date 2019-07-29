@@ -20,6 +20,21 @@ const FAKE_BELOW_SEARCH_SNIPPET = FAKE_LOCAL_MESSAGES.find(
 );
 
 FAKE_MESSAGE = Object.assign({}, FAKE_MESSAGE, { provider: "fakeprovider" });
+const FAKE_BUNDLED_MESSAGE = {
+  bundle: [
+    {
+      id: "foo",
+      template: "onboarding",
+      content: {
+        title: "Foo",
+        primary_button: { label: "Bar" },
+        text: "Foo123",
+      },
+    },
+  ],
+  extraTemplateStrings: {},
+  template: "onboarding",
+};
 
 describe("ASRouterUtils", () => {
   let global;
@@ -63,11 +78,6 @@ describe("ASRouterUISurface", () => {
       location: { href: "" },
       _listeners: new Set(),
       _visibilityState: "hidden",
-      head: {
-        appendChild(el) {
-          return el;
-        },
-      },
       get visibilityState() {
         return this._visibilityState;
       },
@@ -88,15 +98,7 @@ describe("ASRouterUISurface", () => {
         return document.createElement("body");
       },
       getElementById(id) {
-        switch (id) {
-          case "header-asrouter-container":
-            return headerPortal;
-          default:
-            return footerPortal;
-        }
-      },
-      createElement(tag) {
-        return document.createElement(tag);
+        return id === "header-asrouter-container" ? headerPortal : footerPortal;
       },
     };
     global = new GlobalOverrider();
@@ -143,6 +145,11 @@ describe("ASRouterUISurface", () => {
     );
   });
 
+  it("should render the component if a bundle of messages is defined", () => {
+    wrapper.setState({ bundle: FAKE_BUNDLED_MESSAGE });
+    assert.isTrue(wrapper.exists());
+  });
+
   it("should render a preview banner if message provider is preview", () => {
     wrapper.setState({ message: { ...FAKE_MESSAGE, provider: "preview" } });
     assert.isTrue(wrapper.find(".snippets-preview-banner").exists());
@@ -166,13 +173,10 @@ describe("ASRouterUISurface", () => {
   });
 
   it("should render a trailhead message in the header portal", async () => {
-    // wrapper = shallow(<ASRouterUISurface document={fakeDocument} />);
     const message = (await OnboardingMessageProvider.getUntranslatedMessages()).find(
       msg => msg.template === "trailhead"
     );
-
     wrapper.setState({ message });
-
     assert.isTrue(headerPortal.childElementCount > 0);
     assert.equal(footerPortal.childElementCount, 0);
   });
@@ -365,6 +369,19 @@ describe("ASRouterUISurface", () => {
         `${FAKE_MESSAGE.provider}_user_event`
       );
       assert.propertyVal(payload, "source", "NEWTAB_FOOTER_BAR");
+    });
+
+    it("should call .sendTelemetry with the right message data when a bundle is dismissed", () => {
+      wrapper.instance().dismissBundle([{ id: 1 }, { id: 2 }, { id: 3 }])();
+
+      assert.calledOnce(ASRouterUtils.sendTelemetry);
+      assert.calledWith(ASRouterUtils.sendTelemetry, {
+        action: "onboarding_user_event",
+        event: "DISMISS",
+        id: "onboarding-cards",
+        message_id: "1,2,3",
+        source: "onboarding-cards",
+      });
     });
   });
 });
