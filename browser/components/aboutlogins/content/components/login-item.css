@@ -100,13 +100,14 @@
   color: var(--in-content-link-color-active) !important;
 }
 
-.detail-row,
 .reveal-password-wrapper {
   display: flex;
   align-items: center;
 }
 
 .detail-row {
+  display: flex;
+  align-items: end;
   margin-bottom: 40px;
 }
 
@@ -119,6 +120,10 @@
   font-size: smaller;
   color: var(--in-content-deemphasized-text);
   margin-bottom: 5px;
+}
+
+:host([data-editing]) .detail-cell input:not([type="checkbox"]) {
+  width: 280px;
 }
 
 .copy-button:not([data-copied]) .copied-button-text,
