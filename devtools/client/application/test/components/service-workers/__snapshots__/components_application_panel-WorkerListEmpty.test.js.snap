@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Empty Service Worker List: renders the expected snapshot for a workerListEmpty with empty worker list 1`] = `
+exports[`WorkerListEmpty renders the expected snapshot 1`] = `
 <article
   className="worker-list-empty js-worker-list-empty"
 >
