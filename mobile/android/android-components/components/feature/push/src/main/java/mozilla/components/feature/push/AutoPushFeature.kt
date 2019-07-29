@@ -194,7 +194,7 @@ class AutoPushFeature(
     /**
      * Returns subscription information for the push type if available.
      */
-    internal fun unsubscribeForType(type: PushType) {
+    fun unsubscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
             scope.launchAndTry {
                 unsubscribe(type.toChannelId())
