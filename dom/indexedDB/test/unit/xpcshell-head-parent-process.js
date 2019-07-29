@@ -150,6 +150,9 @@ function continueToNextStepSync() {
   testGenerator.next();
 }
 
+// TODO compareKeys is duplicated in ../helpers.js, can we import that here?
+// the same applies to many other functions in this file
+// this duplication should be avoided (bug 1565986)
 function compareKeys(k1, k2) {
   let t = typeof k1;
   if (t != typeof k2) {
