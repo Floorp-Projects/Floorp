@@ -264,6 +264,10 @@ def _uniqueptr(T):
     return Type('UniquePtr', T=T)
 
 
+def _alreadyaddrefed(T):
+    return Type('already_AddRefed', T=T)
+
+
 def _tuple(types, const=False, ref=False):
     return Type('Tuple', T=types, const=const, ref=ref)
 
@@ -1125,7 +1129,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
             # implementors take these parameters as T*, and
             # std::move(RefPtr<T>) doesn't coerce to T*.
             cxxargs.extend([
-                p.var() if p.ipdltype.isCxx() and p.ipdltype.isRefcounted() else ExprMove(p.var())
+                p.var() if p.ipdltype.isRefcounted() else ExprMove(p.var())
                 for p in self.params
             ])
         elif paramsems == 'in':
@@ -3329,15 +3333,22 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 # add the Alloc interface for managed actors
                 actortype = md.actorDecl().bareType(self.side)
 
+                if managed.isRefcounted():
+                    actortype.ptr = False
+                    actortype = _alreadyaddrefed(actortype)
+
                 self.cls.addstmt(StmtDecl(MethodDecl(
                     _allocMethod(managed, self.side),
                     params=md.makeCxxParams(side=self.side, implicit=False),
                     ret=actortype, methodspec=MethodSpec.PURE)))
 
-            # add the Dealloc interface for all managed actors, even without
-            # ctors.  This is useful for protocols which use ManagedEndpoint
-            # for construction.
+            # add the Dealloc interface for all managed non-refcounted actors,
+            # even without ctors. This is useful for protocols which use
+            # ManagedEndpoint for construction.
             for managed in ptype.manages:
+                if managed.isRefcounted():
+                    continue
+
                 self.cls.addstmt(StmtDecl(MethodDecl(
                     _deallocMethod(managed, self.side),
                     params=[Decl(p.managedCxxType(managed, self.side), 'aActor')],
@@ -3405,6 +3416,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls.addstmts([dtor, Whitespace.NL])
 
+        if ptype.isRefcounted():
+            self.cls.addcode(
+                '''
+                NS_INLINE_DECL_PURE_VIRTUAL_REFCOUNTING
+                ''')
+            self.cls.addstmt(Label.PROTECTED)
+            self.cls.addcode(
+                '''
+                void ActorAlloc() final { AddRef(); }
+                void ActorDealloc() final { Release(); }
+                ''')
+
+        self.cls.addstmt(Label.PUBLIC)
         if not ptype.isToplevel():
             if 1 == len(p.managers):
                 # manager() const
@@ -3824,6 +3848,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             switchontype = StmtSwitch(pvar)
             for managee in p.managesStmts:
                 manageeipdltype = managee.decl.type
+                # Reference counted actor types don't have corresponding
+                # `Dealloc` methods, as they are deallocated by releasing the
+                # IPDL-held reference.
+                if manageeipdltype.isRefcounted():
+                    continue
+
                 case = StmtCode(
                     '''
                     ${concrete}->${dealloc}(static_cast<${type}>(aListener));
@@ -4094,9 +4124,10 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         helperdecl.params = helperdecl.params[1:]
         helper = MethodDefn(helperdecl)
 
-        callctor = self.callAllocActor(md, retsems='out', side=self.side)
-        helper.addstmt(StmtReturn(ExprCall(
-            ExprVar(helperdecl.name), args=[callctor] + callctor.args)))
+        helper.addstmts([
+            self.callAllocActor(md, retsems='out', side=self.side),
+            StmtReturn(ExprCall(ExprVar(helperdecl.name), args=md.makeCxxArgs())),
+        ])
         return helper
 
     def genAsyncDtor(self, md):
@@ -4289,7 +4320,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
     def genCtorRecvCase(self, md):
         lbl = CaseLabel(md.pqMsgId())
         case = StmtBlock()
-        actorvar = md.actorDecl().var()
         actorhandle = self.handlevar
 
         stmts = self.deserializeMessage(md, self.side, errfnRecv,
@@ -4301,9 +4331,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             + [StmtDecl(Decl(r.bareType(self.side), r.var().name))
                 for r in md.returns]
             # alloc the actor, register it under the foreign ID
-            + [StmtExpr(ExprAssn(
-                actorvar,
-                self.callAllocActor(md, retsems='in', side=self.side)))]
+            + [self.callAllocActor(md, retsems='in', side=self.side)]
             + self.bindManagedActor(md.actorDecl(), errfn=_Result.ValuError,
                                     idexpr=_actorHId(actorhandle))
             + [Whitespace.NL]
@@ -4558,7 +4586,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             [StmtDecl(Decl(_iterType(ptr=False), self.itervar.name),
                       initargs=[msgvar])]
             + decls + [StmtDecl(Decl(p.bareType(side), p.var().name))
-                       for p in md.params]
+                       for p in md.params[start:]]
             + [Whitespace.NL]
             + reads + [_ParamTraits.checkedRead(p.ipdltype, ExprAddrOf(p.var()),
                                                 msgexpr, ExprAddrOf(itervar),
@@ -4752,10 +4780,18 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [stmt]
 
     def callAllocActor(self, md, retsems, side):
-        return self.thisCall(
+        actortype = md.actorDecl().bareType(self.side)
+        if md.decl.type.constructedType().isRefcounted():
+            actortype.ptr = False
+            actortype = _refptr(actortype)
+
+        callalloc = self.thisCall(
             _allocMethod(md.decl.type.constructedType(), side),
             args=md.makeCxxArgs(retsems=retsems, retcallsems='out',
                                 implicit=False))
+
+        return StmtDecl(Decl(actortype, md.actorDecl().var().name),
+                        init=callalloc)
 
     def invokeRecvHandler(self, md, implicit=True):
         retsems = 'in'
