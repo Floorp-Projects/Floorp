@@ -105,7 +105,7 @@
   border-image-slice: 1;
 }
 
-#sharing-icon,
+.sharing-icon,
 #identity-icon,
 #tracking-protection-icon,
 .notification-anchor-icon,
@@ -167,23 +167,27 @@
 
 /* SHARING ICON */
 
-#identity-box[sharing="camera"] > #sharing-icon {
+#webrtc-sharing-icon[sharing="camera"] {
   list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
 }
 
-#identity-box[sharing="microphone"] > #sharing-icon {
+#webrtc-sharing-icon[sharing="microphone"] {
   list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
-#identity-box[sharing="screen"] > #sharing-icon {
+#webrtc-sharing-icon[sharing="screen"] {
   list-style-image: url("chrome://browser/skin/notification-icons/screen.svg");
 }
 
-#identity-box:not([sharing]) > #sharing-icon {
+#geo-sharing-icon[sharing] {
+  list-style-image: url("chrome://browser/skin/notification-icons/geo.svg");
+}
+
+.sharing-icon:not([sharing]) {
   display: none;
 }
 
-#identity-box[sharing]:not([paused]) > #sharing-icon {
+#webrtc-sharing-icon[sharing]:not([paused]) {
   animation: 1.5s ease in-use-blink infinite;
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
