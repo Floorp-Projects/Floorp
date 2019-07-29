@@ -94,17 +94,38 @@ class TextEditor : public EditorBase,
    */
   MOZ_CAN_RUN_SCRIPT nsresult CutAsAction(nsIPrincipal* aPrincipal = nullptr);
 
+  /**
+   * CanCut() always returns true if we're in non-chrome HTML/XHTML document.
+   * Otherwise, returns true when:
+   * - `Selection` is not collapsed and we're not a password editor.
+   * - `Selection` is not collapsed and we're a password editor but selection
+   *   range in unmasked range.
+   */
   bool CanCut() const;
+
   NS_IMETHOD Copy() override;
+
+  /**
+   * CanCopy() always returns true if we're in non-chrome HTML/XHTML document.
+   * Otherwise, returns true when:
+   * - `Selection` is not collapsed and we're not a password editor.
+   * - `Selection` is not collapsed and we're a password editor but selection
+   *   range in unmasked range.
+   */
   bool CanCopy() const;
-  bool CanDelete() const;
+
+  /**
+   * CanDeleteSelection() returns true if `Selection` is not collapsed and
+   * it's allowed to be removed.
+   */
+  bool CanDeleteSelection() const;
+
   virtual bool CanPaste(int32_t aClipboardType) const;
 
   // Shouldn't be used internally, but we need these using declarations for
   // avoiding warnings of clang.
   using EditorBase::CanCopy;
   using EditorBase::CanCut;
-  using EditorBase::CanDelete;
   using EditorBase::CanPaste;
 
   /**
@@ -692,8 +713,12 @@ class TextEditor : public EditorBase,
   nsresult SharedOutputString(uint32_t aFlags, bool* aIsCollapsed,
                               nsAString& aResult);
 
-  enum PasswordFieldAllowed { ePasswordFieldAllowed, ePasswordFieldNotAllowed };
-  bool CanCutOrCopy(PasswordFieldAllowed aPasswordFieldAllowed) const;
+  /**
+   * CanCutOrCopy() returns true if "cut" or "copy" command is available
+   * right now.
+   */
+  bool CanCutOrCopy() const;
+
   bool FireClipboardEvent(EventMessage aEventMessage, int32_t aSelectionType,
                           bool* aActionTaken = nullptr);
 

@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
 -->
 
 <head>
-  <title>Test for Bug 1067255</title>
+  <title>Test for enabled state of cut/copy/delete commands</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script src="/tests/SimpleTest/EventUtils.js"></script>
@@ -32,19 +32,33 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
         text.focus();
         text.select();
 
-        ok(editor1.canCopy(), "can copy, text");
-        ok(editor1.canCut(), "can cut, text");
-        ok(editor1.canDelete(), "can delete, text");
+        ok(editor1.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=text>");
+        ok(editor1.canCut(),
+           "nsIEditor.canCut() should return true in <input type=text>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=text>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=text>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be enabled in <input type=text>");
 
         password.focus();
         password.select();
 
-        // Copy and cut commands don't do anything on passoword fields by default,
+        // Copy and cut commands don't do anything on password fields by default,
         // but webpages can hook up event handlers to the event, and thus, we have to
         // always keep the cut and copy event enabled in HTML/XHTML documents.
-        ok(editor2.canCopy(), "can copy, password");
-        ok(editor2.canCut(), "can cut, password");
-        ok(editor2.canDelete(), "can delete, password");
+        ok(editor2.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=password>");
+        ok(editor2.canCut(),
+           "nsIEditor.canCut() should return true in <input type=password>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=password>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=password>");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be enabled in <input type=password>");
 
         SimpleTest.finish();
       }

@@ -1150,15 +1150,6 @@ EditorBase::CanCopy(bool* aCanCopy) {
 }
 
 NS_IMETHODIMP
-EditorBase::CanDelete(bool* aCanDelete) {
-  if (NS_WARN_IF(!aCanDelete)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aCanDelete = AsTextEditor()->CanDelete();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 EditorBase::Paste(int32_t aClipboardType) {
   nsresult rv =
       MOZ_KnownLive(AsTextEditor())->PasteAsAction(aClipboardType, true);
