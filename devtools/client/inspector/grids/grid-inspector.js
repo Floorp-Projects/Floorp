@@ -292,7 +292,6 @@ class GridInspector {
    * Updates the grid panel by dispatching the new grid data. This is called when the
    * layout view becomes visible or the view needs to be updated with new grid data.
    */
-  // eslint-disable-next-line complexity
   async updateGridPanel() {
     // Stop refreshing if the inspector or store is already destroyed.
     if (!this.inspector || !this.store) {
@@ -306,11 +305,6 @@ class GridInspector {
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
-      return;
-    }
-
-    // Stop if the panel has been destroyed during the call to getGrids
-    if (!this.inspector) {
       return;
     }
 
@@ -359,10 +353,6 @@ class GridInspector {
         } catch (e) {
           // This call might fail if called asynchrously after the toolbox is finished
           // closing.
-          return;
-        }
-        // Stop if the panel has been destroyed during the call getNodeFromActor
-        if (!this.inspector) {
           return;
         }
       }
@@ -521,10 +511,6 @@ class GridInspector {
     } catch (e) {
       // This call might fail if called asynchrously after the toolbox is finished
       // closing.
-      return;
-    }
-    // Stop if the panel has been destroyed during the call to getGrids
-    if (!this.inspector) {
       return;
     }
 
