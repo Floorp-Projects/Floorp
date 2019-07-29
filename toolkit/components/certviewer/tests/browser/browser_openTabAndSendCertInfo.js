@@ -57,7 +57,7 @@ add_task(async function testBadCert() {
   });
 
   let tabsCount = gBrowser.tabs.length;
-  let loaded = BrowserTestUtils.waitForNewTab(gBrowser);
+  let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
 
   await ContentTask.spawn(browser, null, async function() {
     let advancedButton = content.document.getElementById("advancedButton");
@@ -108,7 +108,7 @@ add_task(async function testGoodCert() {
     );
     Assert.ok(securityTab, "Security tab is available");
 
-    let loaded = BrowserTestUtils.waitForNewTab(gBrowser);
+    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
     checkAndClickButton(pageInfo.document, "security-view-cert");
     await loaded;
 
@@ -217,7 +217,7 @@ add_task(async function testPreferencesCert() {
     let viewButton = doc.getElementById("ca_viewButton");
     Assert.equal(viewButton.disabled, false, "Should enable view button");
 
-    let loaded = BrowserTestUtils.waitForNewTab(gBrowser);
+    let loaded = BrowserTestUtils.waitForNewTab(gBrowser, null, true);
     viewButton.click();
     await loaded;
 
