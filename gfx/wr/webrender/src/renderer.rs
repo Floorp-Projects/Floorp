@@ -115,6 +115,7 @@ cfg_if! {
 }
 
 const DEFAULT_BATCH_LOOKBACK_COUNT: usize = 10;
+const VERTEX_TEXTURE_EXTRA_ROWS: i32 = 10;
 
 /// Is only false if no WR instances have ever been created.
 static HAS_BEEN_INITIALIZED: AtomicBool = AtomicBool::new(false);
@@ -1529,8 +1530,6 @@ impl<T> VertexDataTexture<T> {
             }
         }
 
-        let width =
-            (MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)) as i32;
         let needed_height = (data.len() / items_per_row) as i32;
         let existing_height = self.texture.as_ref().map_or(0, |t| t.get_dimensions().height);
 
@@ -1540,10 +1539,10 @@ impl<T> VertexDataTexture<T> {
         // with incremental updates and just re-upload every frame. For most pages
         // they're one row each, and on stress tests like css-francine they end up
         // in the 6-14 range. So we size the texture tightly to what we need (usually
-        // 1), and shrink it if the waste would be more than 10 rows. This helps
-        // with memory overhead, especially because there are several instances of
-        // these textures per Renderer.
-        if needed_height > existing_height || needed_height + 10 < existing_height {
+        // 1), and shrink it if the waste would be more than `VERTEX_TEXTURE_EXTRA_ROWS`
+        // rows. This helps with memory overhead, especially because there are several
+        // instances of these textures per Renderer.
+        if needed_height > existing_height || needed_height + VERTEX_TEXTURE_EXTRA_ROWS < existing_height {
             // Drop the existing texture, if any.
             if let Some(t) = self.texture.take() {
                 device.delete_texture(t);
@@ -1552,7 +1551,7 @@ impl<T> VertexDataTexture<T> {
             let texture = device.create_texture(
                 TextureTarget::Default,
                 self.format,
-                width,
+                MAX_VERTEX_TEXTURE_WIDTH as i32,
                 // Ensure height is at least two to work around
                 // https://bugs.chromium.org/p/angleproject/issues/detail?id=3039
                 needed_height.max(2),
@@ -1563,9 +1562,17 @@ impl<T> VertexDataTexture<T> {
             self.texture = Some(texture);
         }
 
+        // Note: the actual width can be larger than the logical one, with a few texels
+        // of each row unused at the tail. This is needed because there is still hardware
+        // (like Intel iGPUs) that prefers power-of-two sizes of textures ([1]).
+        //
+        // [1] https://software.intel.com/en-us/articles/opengl-performance-tips-power-of-two-textures-have-better-performance
+        let logical_width =
+            (MAX_VERTEX_TEXTURE_WIDTH - (MAX_VERTEX_TEXTURE_WIDTH % texels_per_item)) as i32;
+
         let rect = DeviceIntRect::new(
             DeviceIntPoint::zero(),
-            DeviceIntSize::new(width, needed_height),
+            DeviceIntSize::new(logical_width, needed_height),
         );
         device
             .upload_texture(self.texture(), &self.pbo, 0)
