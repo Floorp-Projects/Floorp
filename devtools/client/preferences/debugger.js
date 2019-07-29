@@ -20,7 +20,7 @@ pref("devtools.debugger.workers", false);
 
 // The default Debugger UI settings
 // This schema version needs to match that in devtools/client/debugger/src/utils/prefs.js.
-pref("devtools.debugger.prefs-schema-version", "1.0.10");
+pref("devtools.debugger.prefs-schema-version", "1.0.11");
 pref("devtools.debugger.ui.panes-workers-and-sources-width", 200);
 pref("devtools.debugger.ui.panes-instruments-width", 300);
 pref("devtools.debugger.ui.panes-visible-on-startup", false);
