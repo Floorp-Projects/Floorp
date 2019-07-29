@@ -372,6 +372,8 @@ class nsDocumentViewer final : public nsIContentViewer,
   void DestroyPresShell();
   void DestroyPresContext();
 
+  void InvalidatePotentialSubDocDisplayItem();
+
 #ifdef NS_PRINTING
   // Called when the DocViewer is notified that the state
   // of Printing or PP has changed
@@ -4057,6 +4059,7 @@ void nsDocumentViewer::SetIsPrintPreview(bool aIsPrintPreview) {
   nsAutoScriptBlocker scriptBlocker;
 
   if (!aIsPrintPreview) {
+    InvalidatePotentialSubDocDisplayItem();
     if (mPresShell) {
       DestroyPresShell();
     }
@@ -4208,7 +4211,24 @@ void nsDocumentViewer::DestroyPresShell() {
   mPresShell = nullptr;
 }
 
+void nsDocumentViewer::InvalidatePotentialSubDocDisplayItem() {
+  if (mViewManager) {
+    if (nsView* rootView = mViewManager->GetRootView()) {
+      if (nsView* rootViewParent = rootView->GetParent()) {
+        if (nsView* subdocview = rootViewParent->GetParent()) {
+          if (nsIFrame* f = subdocview->GetFrame()) {
+            if (nsSubDocumentFrame* s = do_QueryFrame(f)) {
+              s->MarkNeedsDisplayItemRebuild();
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 void nsDocumentViewer::DestroyPresContext() {
+  InvalidatePotentialSubDocDisplayItem();
   mPresContext->Detach();
   mPresContext = nullptr;
 }
