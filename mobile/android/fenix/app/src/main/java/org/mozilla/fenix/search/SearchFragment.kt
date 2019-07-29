@@ -89,8 +89,13 @@ class SearchFragment : Fragment(), BackHandler {
             searchStore
         )
 
-        toolbarView = ToolbarView(view.toolbar_component_wrapper, searchInteractor, historyStorageProvider())
         awesomeBarView = AwesomeBarView(view.search_layout, searchInteractor)
+        toolbarView = ToolbarView(
+            view.toolbar_component_wrapper,
+            searchInteractor,
+            historyStorageProvider(),
+            (activity as HomeActivity).browsingModeManager.isPrivate
+        )
 
         return view
     }

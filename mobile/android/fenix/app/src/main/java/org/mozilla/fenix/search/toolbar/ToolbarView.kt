@@ -49,7 +49,8 @@ interface ToolbarInteractor {
 class ToolbarView(
     private val container: ViewGroup,
     private val interactor: ToolbarInteractor,
-    private val historyStorage: HistoryStorage?
+    private val historyStorage: HistoryStorage?,
+    private val isPrivate: Boolean
 ) : LayoutContainer {
 
     override val containerView: View?
@@ -86,6 +87,8 @@ class ToolbarView(
                 container.context,
                 R.color.suggestion_highlight_color
             )
+
+            private = isPrivate
 
             setOnEditListener(object : mozilla.components.concept.toolbar.Toolbar.OnEditListener {
                 override fun onCancelEditing(): Boolean {
