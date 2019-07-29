@@ -119,6 +119,7 @@ export class CollapsibleSection extends React.PureComponent {
 
   onKeyPress(event) {
     if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
       this.onHeaderClick();
     }
   }
@@ -223,16 +224,13 @@ export class CollapsibleSection extends React.PureComponent {
               >
                 {this.renderIcon()}
                 <FluentOrText message={title} />
-              </span>
-              <span
-                className="click-target"
-                role="button"
-                tabIndex="0"
-                onKeyPress={this.onKeyPress}
-                onClick={this.onHeaderClick}
-              >
                 {isCollapsible && (
                   <span
+                    data-l10n-id={
+                      collapsed
+                        ? "newtab-section-expand-section-label"
+                        : "newtab-section-collapse-section-label"
+                    }
                     className={`collapsible-arrow icon ${
                       collapsed
                         ? "icon-arrowhead-forward-small"

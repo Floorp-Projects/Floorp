@@ -32,7 +32,7 @@ export class ContextMenuButton extends React.PureComponent {
   }
 
   onKeyDown(event) {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       this.openContextMenu(true, event);
     }
