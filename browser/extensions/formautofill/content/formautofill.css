@@ -23,11 +23,11 @@
   display: none;
 }
 
-#PopupAutoComplete[firstresultstyle="autofill-profile"] {
+#PopupAutoComplete[resultstyles~="autofill-profile"] {
   min-width: 150px !important;
 }
 
-#PopupAutoComplete[firstresultstyle="autofill-insecureWarning"] {
+#PopupAutoComplete[resultstyles~="autofill-insecureWarning"] {
   min-width: 200px !important;
 }
 
