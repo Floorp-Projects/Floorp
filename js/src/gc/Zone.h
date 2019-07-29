@@ -267,6 +267,10 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
     return needsIncrementalBarrier() || isGCMarking();
   }
 
+  // Was this zone collected in the last GC.
+  bool wasCollected() const { return wasCollected_; }
+  void setWasCollected(bool v) { wasCollected_ = v; }
+
   // Get a number that is incremented whenever this zone is collected, and
   // possibly at other times too.
   uint64_t gcNumber();
@@ -609,6 +613,7 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::MainThreadData<bool> gcScheduledSaved_;
   js::MainThreadData<bool> gcPreserveCode_;
   js::ZoneData<bool> keepShapeCaches_;
+  js::MainThreadData<bool> wasCollected_;
 
   // Allow zones to be linked into a list
   friend class js::gc::ZoneList;

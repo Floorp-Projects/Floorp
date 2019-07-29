@@ -759,7 +759,6 @@ Statistics::Statistics(JSRuntime* rt)
       preTotalHeapBytes(0),
       postTotalHeapBytes(0),
       preCollectedHeapBytes(0),
-      heapBytesFreed(0),
       thresholdTriggered(false),
       triggerAmount(0.0),
       triggerThreshold(0.0),
@@ -994,7 +993,6 @@ void Statistics::beginGC(JSGCInvocationKind kind,
   preTotalHeapBytes = gc.heapSize.gcBytes();
 
   preCollectedHeapBytes = 0;
-  heapBytesFreed = 0;
 
   startingMajorGCNumber = gc.majorGCCount();
   startingSliceNumber = gc.gcNumber();
@@ -1090,8 +1088,14 @@ void Statistics::sendGCTelemetry() {
     }
   }
 
-  MOZ_ASSERT(preCollectedHeapBytes >= heapBytesFreed);
-  size_t bytesSurvived = preCollectedHeapBytes - heapBytesFreed;
+  size_t bytesSurvived = 0;
+  for (ZonesIter zone(runtime, WithAtoms); !zone.done(); zone.next()) {
+    if (zone->wasCollected()) {
+      bytesSurvived += zone->zoneSize.retainedBytes();
+    }
+  }
+
+  MOZ_ASSERT(preCollectedHeapBytes >= bytesSurvived);
   double survialRate =
       100.0 * double(bytesSurvived) / double(preCollectedHeapBytes);
   runtime->addTelemetry(JS_TELEMETRY_GC_TENURED_SURVIVAL_RATE,
