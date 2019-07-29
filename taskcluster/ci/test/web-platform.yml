@@ -46,6 +46,7 @@ web-platform-tests:
         by-test-platform:
             android.*: 18
             linux64-asan/opt: 18
+            linux64-ccov/debug: 24
             linux.*/debug: 18
             macosx*/opt: 8
             macosx.*/debug: 16
