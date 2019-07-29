@@ -1732,7 +1732,7 @@ nsresult TextEditor::RedoAsAction(uint32_t aCount, nsIPrincipal* aPrincipal) {
   return NS_OK;
 }
 
-bool TextEditor::CanCutOrCopy() const {
+bool TextEditor::IsCopyToClipboardAllowedInternal() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
   if (SelectionRefPtr()->IsCollapsed()) {
     return false;
@@ -1804,7 +1804,7 @@ nsresult TextEditor::CutAsAction(nsIPrincipal* aPrincipal) {
       actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
 }
 
-bool TextEditor::CanCut() const {
+bool TextEditor::IsCutCommandEnabled() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return false;
@@ -1818,7 +1818,7 @@ bool TextEditor::CanCut() const {
     return true;
   }
 
-  return IsModifiable() && CanCutOrCopy();
+  return IsModifiable() && IsCopyToClipboardAllowedInternal();
 }
 
 NS_IMETHODIMP
@@ -1835,7 +1835,7 @@ TextEditor::Copy() {
       actionTaken ? NS_OK : NS_ERROR_EDITOR_ACTION_CANCELED);
 }
 
-bool TextEditor::CanCopy() const {
+bool TextEditor::IsCopyCommandEnabled() const {
   AutoEditActionDataSetter editActionData(*this, EditAction::eNotEditing);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return false;
@@ -1849,7 +1849,7 @@ bool TextEditor::CanCopy() const {
     return true;
   }
 
-  return CanCutOrCopy();
+  return IsCopyToClipboardAllowedInternal();
 }
 
 bool TextEditor::CanDeleteSelection() const {
