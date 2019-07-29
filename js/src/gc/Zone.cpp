@@ -74,9 +74,11 @@ void js::ZoneAllocator::updateMemoryCountersOnGCEnd(
 void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
                                            JSGCInvocationKind invocationKind,
                                            const js::AutoLockGC& lock) {
-  threshold.updateAfterGC(zoneSize.gcBytes(), invocationKind, gc.tunables,
+  // This is called repeatedly during a GC to update thresholds as memory is
+  // freed.
+  threshold.updateAfterGC(zoneSize.retainedBytes(), invocationKind, gc.tunables,
                           gc.schedulingState, lock);
-  gcMallocThreshold.updateAfterGC(gcMallocBytes.gcBytes(),
+  gcMallocThreshold.updateAfterGC(gcMallocBytes.retainedBytes(),
                                   gc.tunables.maxMallocBytes(), lock);
 }
 
