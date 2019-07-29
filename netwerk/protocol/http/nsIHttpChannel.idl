@@ -576,6 +576,14 @@ interface nsIHttpChannel : nsIChannel
        */
       CLASSIFIED_ANY_STRICT_TRACKING = CLASSIFIED_ANY_BASIC_TRACKING |
         CLASSIFIED_TRACKING_CONTENT | CLASSIFIED_FINGERPRINTING_CONTENT,
+
+      /**
+       * This is exposed to help to identify social tracking classification
+       * flags.
+       */
+      CLASSIFIED_ANY_SOCIAL_TRACKING = CLASSIFIED_SOCIALTRACKING |
+        CLASSIFIED_SOCIALTRACKING_FACEBOOK |
+        CLASSIFIED_SOCIALTRACKING_LINKEDIN | CLASSIFIED_SOCIALTRACKING_TWITTER,
     };
 
     /**
