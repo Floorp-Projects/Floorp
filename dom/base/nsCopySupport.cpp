@@ -53,12 +53,14 @@
 #endif
 
 #include "mozilla/ContentEvents.h"
-#include "mozilla/dom/Element.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/Selection.h"
+#include "mozilla/TextEditor.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLInputElement.h"
+#include "mozilla/dom/Selection.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -878,11 +880,17 @@ bool nsCopySupport::FireClipboardEvent(EventMessage aEventMessage,
       sourceContent = targetElement->FindFirstNonChromeOnlyAccessContent();
     }
 
-    // check if we are looking at a password input
-    nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(sourceContent);
-    if (formControl) {
-      if (formControl->ControlType() == NS_FORM_INPUT_PASSWORD) {
-        return false;
+    // If it's <input type="password"> and there is no unmasked range or
+    // there is unmasked range but it's collapsed or it'll be masked
+    // automatically, the selected password shouldn't be copied into the
+    // clipboard.
+    if (HTMLInputElement* inputElement =
+            HTMLInputElement::FromNodeOrNull(sourceContent)) {
+      if (TextEditor* textEditor = inputElement->GetTextEditor()) {
+        if (textEditor->IsPasswordEditor() &&
+            !textEditor->IsCopyToClipboardAllowed()) {
+          return false;
+        }
       }
     }
 

@@ -19,7 +19,10 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "mozilla/EditorUtils.h"
+#include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/Text.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/BinarySearch.h"
 #include "nsComputedDOMStyle.h"
@@ -313,6 +316,11 @@ nsPlainTextSerializer::AppendText(nsIContent* aText, int32_t aStartOffset,
     // AssignASCII is for 7-bit character only, so don't use it
     const char* data = frag->Get1b();
     CopyASCIItoUTF16(Substring(data + aStartOffset, data + endoffset), textstr);
+  }
+
+  // Mask the text if the text node is in a password field.
+  if (content->HasFlag(NS_MAYBE_MASKED)) {
+    EditorUtils::MaskString(textstr, content->AsText(), 0, aStartOffset);
   }
 
   mOutputString = &aStr;
