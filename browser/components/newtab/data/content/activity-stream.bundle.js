@@ -3834,18 +3834,11 @@ class ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureC
     super(props);
     this.onClick = this.onClick.bind(this);
     this.onKeyDown = this.onKeyDown.bind(this);
-    this.focusFirst = this.focusFirst.bind(this);
   }
 
   onClick() {
     this.props.hideContext();
     this.props.option.onClick();
-  }
-
-  focusFirst(button) {
-    if (button) {
-      button.focus();
-    }
   } // This selects the correct node based on the key pressed
 
 
@@ -3908,8 +3901,7 @@ class ContextMenuItem extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureC
       className: option.disabled ? "disabled" : "",
       tabIndex: "0",
       onClick: this.onClick,
-      onKeyDown: this.onKeyDown,
-      ref: option.first ? this.focusFirst : null
+      onKeyDown: this.onKeyDown
     }, option.icon && react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
       className: `icon icon-spacer icon-${option.icon}`
     }), react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement("span", {
