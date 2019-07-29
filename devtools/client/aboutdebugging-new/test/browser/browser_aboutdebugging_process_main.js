@@ -63,6 +63,8 @@ add_task(async function() {
   mocks.emitUSBUpdate();
   await waitUntilUsbDeviceIsUnplugged(RUNTIME_DEVICE_NAME, document);
 
+  // Note that we can't use `closeAboutDevtoolsToolbox` because the toolbox init
+  // is expected to fail, and we are redirected to the error page.
   await removeTab(devtoolsTab);
   await waitUntil(() => !findDebugTargetByText("Toolbox - ", document));
   await removeTab(tab);
