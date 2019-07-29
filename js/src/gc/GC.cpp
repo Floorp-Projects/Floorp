@@ -5651,6 +5651,7 @@ static void UpdateAtomsBitmap(JSRuntime* runtime) {
 }
 
 static void SweepCCWrappers(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupCompartmentsIter c(runtime); !c.done(); c.next()) {
     c->sweepCrossCompartmentWrappers();
@@ -5658,6 +5659,7 @@ static void SweepCCWrappers(GCParallelTask* task) {
 }
 
 static void SweepObjectGroups(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupRealmsIter r(runtime); !r.done(); r.next()) {
     r->sweepObjectGroups();
@@ -5665,6 +5667,7 @@ static void SweepObjectGroups(GCParallelTask* task) {
 }
 
 static void SweepMisc(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupRealmsIter r(runtime); !r.done(); r.next()) {
     r->sweepGlobalObject();
@@ -5677,6 +5680,7 @@ static void SweepMisc(GCParallelTask* task) {
 }
 
 static void SweepCompressionTasks(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
 
   // Attach finished compression tasks.
@@ -5693,6 +5697,7 @@ static void SweepCompressionTasks(GCParallelTask* task) {
 }
 
 void js::gc::SweepLazyScripts(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
     for (auto i = zone->cellIter<LazyScript>(); !i.done(); i.next()) {
@@ -5705,6 +5710,7 @@ void js::gc::SweepLazyScripts(GCParallelTask* task) {
 }
 
 static void SweepWeakMaps(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   JSRuntime* runtime = task->runtime();
   for (SweepGroupZonesIter zone(runtime); !zone.done(); zone.next()) {
     /* No need to look up any more weakmap keys from this sweep group. */
@@ -5718,6 +5724,7 @@ static void SweepWeakMaps(GCParallelTask* task) {
 }
 
 static void SweepUniqueIds(GCParallelTask* task) {
+  AutoSetThreadIsSweeping threadIsSweeping;
   for (SweepGroupZonesIter zone(task->runtime()); !zone.done(); zone.next()) {
     zone->sweepUniqueIds();
   }
@@ -6145,23 +6152,24 @@ void GCRuntime::drainMarkStack() {
   MOZ_RELEASE_ASSERT(marker.markUntilBudgetExhausted(unlimited));
 }
 
-static void SweepThing(Shape* shape) {
+static void SweepThing(FreeOp* fop, Shape* shape) {
   if (!shape->isMarkedAny()) {
-    shape->sweep();
+    shape->sweep(fop);
   }
 }
 
-static void SweepThing(JSScript* script) { AutoSweepJitScript sweep(script); }
+static void SweepThing(FreeOp* fop, JSScript* script) { AutoSweepJitScript sweep(script); }
 
-static void SweepThing(ObjectGroup* group) {
+static void SweepThing(FreeOp* fop, ObjectGroup* group) {
   AutoSweepObjectGroup sweep(group);
 }
 
 template <typename T>
-static bool SweepArenaList(Arena** arenasToSweep, SliceBudget& sliceBudget) {
+static bool SweepArenaList(FreeOp* fop, Arena** arenasToSweep,
+                           SliceBudget& sliceBudget) {
   while (Arena* arena = *arenasToSweep) {
     for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
-      SweepThing(i.get<T>());
+      SweepThing(fop, i.get<T>());
     }
 
     *arenasToSweep = (*arenasToSweep)->next;
@@ -6192,11 +6200,12 @@ IncrementalProgress GCRuntime::sweepTypeInformation(FreeOp* fop,
 
   AutoClearTypeInferenceStateOnOOM oom(sweepZone);
 
-  if (!SweepArenaList<JSScript>(&al.gcScriptArenasToUpdate.ref(), budget)) {
+  if (!SweepArenaList<JSScript>(fop, &al.gcScriptArenasToUpdate.ref(),
+                                budget)) {
     return NotFinished;
   }
 
-  if (!SweepArenaList<ObjectGroup>(&al.gcObjectGroupArenasToUpdate.ref(),
+  if (!SweepArenaList<ObjectGroup>(fop, &al.gcObjectGroupArenasToUpdate.ref(),
                                    budget)) {
     return NotFinished;
   }
@@ -6346,6 +6355,7 @@ class IncrementalSweepWeakCacheTask
   }
 
   void run() {
+    AutoSetThreadIsSweeping threadIsSweeping;
     do {
       MOZ_ASSERT(cache_->needsIncrementalBarrier());
       size_t steps = cache_->sweep();
@@ -6416,11 +6426,12 @@ IncrementalProgress GCRuntime::sweepShapeTree(FreeOp* fop,
 
   ArenaLists& al = sweepZone->arenas;
 
-  if (!SweepArenaList<Shape>(&al.gcShapeArenasToUpdate.ref(), budget)) {
+  if (!SweepArenaList<Shape>(fop, &al.gcShapeArenasToUpdate.ref(), budget)) {
     return NotFinished;
   }
 
-  if (!SweepArenaList<AccessorShape>(&al.gcAccessorShapeArenasToUpdate.ref(),
+  if (!SweepArenaList<AccessorShape>(fop,
+                                     &al.gcAccessorShapeArenasToUpdate.ref(),
                                      budget)) {
     return NotFinished;
   }
@@ -7081,7 +7092,6 @@ class AutoDisableBarriers {
 
  private:
   JSRuntime* runtime;
-  AutoSetThreadIsPerformingGC performingGC;
 };
 
 } /* anonymous namespace */
@@ -7144,6 +7154,7 @@ void GCRuntime::incrementalSlice(SliceBudget& budget,
                                  const MaybeInvocationKind& gckind,
                                  JS::GCReason reason, AutoGCSession& session) {
   AutoDisableBarriers disableBarriers(rt);
+  AutoSetThreadIsPerformingGC performingGC;
 
   bool destroyingRuntime = (reason == JS::GCReason::DESTROY_RUNTIME);
 

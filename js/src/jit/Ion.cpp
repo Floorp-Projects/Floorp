@@ -2827,7 +2827,7 @@ void jit::FinishInvalidation(FreeOp* fop, JSScript* script) {
 
   // In all cases, null out script->ion to avoid re-entry.
   IonScript* ion = script->ionScript();
-  script->setIonScript(fop->runtime(), nullptr);
+  script->setIonScript(fop, nullptr);
 
   // If this script has Ion code on the stack, invalidated() will return
   // true. In this case we have to wait until destroying it.
@@ -3017,18 +3017,18 @@ size_t jit::SizeOfIonData(JSScript* script,
 void jit::DestroyJitScripts(FreeOp* fop, JSScript* script) {
   if (script->hasIonScript()) {
     IonScript* ion = script->ionScript();
-    script->clearIonScript();
+    script->clearIonScript(fop);
     jit::IonScript::Destroy(fop, ion);
   }
 
   if (script->hasBaselineScript()) {
     BaselineScript* baseline = script->baselineScript();
-    script->clearBaselineScript();
+    script->clearBaselineScript(fop);
     jit::BaselineScript::Destroy(fop, baseline);
   }
 
   if (script->hasJitScript()) {
-    script->releaseJitScript();
+    script->releaseJitScript(fop);
   }
 }
 

@@ -94,16 +94,16 @@ static inline size_t AddendumAllocSize(ObjectGroup::AddendumKind kind,
 }
 
 void ObjectGroup::setAddendum(AddendumKind kind, void* addendum,
-                              bool writeBarrier /* = true */) {
+                              bool isSweeping /* = flase */) {
   MOZ_ASSERT(!needsSweep());
   MOZ_ASSERT(kind <= (OBJECT_FLAG_ADDENDUM_MASK >> OBJECT_FLAG_ADDENDUM_SHIFT));
 
   RemoveCellMemory(this, AddendumAllocSize(addendumKind(), addendum_),
-                   MemoryUse::ObjectGroupAddendum);
+                   MemoryUse::ObjectGroupAddendum, isSweeping);
 
-  if (writeBarrier) {
-    // Manually trigger barriers if we are clearing new script or
-    // preliminary object information. Other addendums are immutable.
+  if (!isSweeping) {
+    // Trigger a write barrier if we are clearing new script or preliminary
+    // object information outside of sweeping. Other addendums are immutable.
     AutoSweepObjectGroup sweep(this);
     switch (addendumKind()) {
       case Addendum_PreliminaryObjects:

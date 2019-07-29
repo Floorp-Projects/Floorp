@@ -1513,18 +1513,22 @@ size_t ScriptCounts::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
 }
 
 void JSScript::setIonScript(JSRuntime* rt, js::jit::IonScript* ionScript) {
+  setIonScript(rt->defaultFreeOp(), ionScript);
+}
+
+void JSScript::setIonScript(FreeOp* fop, js::jit::IonScript* ionScript) {
   MOZ_ASSERT_IF(ionScript != ION_DISABLED_SCRIPT,
                 !baselineScript()->hasPendingIonBuilder());
   if (hasIonScript()) {
     js::jit::IonScript::writeBarrierPre(zone(), ion);
-    clearIonScript();
+    clearIonScript(fop);
   }
   ion = ionScript;
   MOZ_ASSERT_IF(hasIonScript(), hasBaselineScript());
   if (hasIonScript()) {
     AddCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
   }
-  updateJitCodeRaw(rt);
+  updateJitCodeRaw(fop->runtime());
 }
 
 js::PCCounts* JSScript::maybeGetPCCounts(jsbytecode* pc) {

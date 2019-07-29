@@ -30,7 +30,8 @@ static inline bool OnHelperThread() {
 
   if (Helper == AllowedHelperThread::GCTask ||
       Helper == AllowedHelperThread::GCTaskOrIonCompile) {
-    if (TlsContext.get()->performingGC) {
+    JSContext* cx = TlsContext.get();
+    if (cx->defaultFreeOp()->isCollecting()) {
       return true;
     }
   }

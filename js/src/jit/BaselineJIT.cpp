@@ -1044,7 +1044,7 @@ void jit::FinishDiscardBaselineScript(FreeOp* fop, JSScript* script) {
   MOZ_ASSERT(!script->jitScript()->active());
 
   BaselineScript* baseline = script->baselineScript();
-  script->setBaselineScript(fop->runtime(), nullptr);
+  script->setBaselineScript(fop, nullptr);
   BaselineScript::Destroy(fop, baseline);
 }
 

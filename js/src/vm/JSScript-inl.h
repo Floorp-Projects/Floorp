@@ -162,9 +162,14 @@ inline JSPrincipals* JSScript::principals() { return realm()->principals(); }
 
 inline void JSScript::setBaselineScript(
     JSRuntime* rt, js::jit::BaselineScript* baselineScript) {
+  setBaselineScript(rt->defaultFreeOp(), baselineScript);
+}
+
+inline void JSScript::setBaselineScript(
+    js::FreeOp* fop, js::jit::BaselineScript* baselineScript) {
   if (hasBaselineScript()) {
     js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
-    clearBaselineScript();
+    clearBaselineScript(fop);
   }
   MOZ_ASSERT(!ion || ion == ION_DISABLED_SCRIPT);
 
@@ -173,18 +178,18 @@ inline void JSScript::setBaselineScript(
     AddCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
   }
   resetWarmUpResetCounter();
-  updateJitCodeRaw(rt);
+  updateJitCodeRaw(fop->runtime());
 }
 
-inline void JSScript::clearBaselineScript() {
+inline void JSScript::clearBaselineScript(js::FreeOp* fop) {
   MOZ_ASSERT(hasBaselineScript());
-  RemoveCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
+  fop->removeCellMemory(this, baseline->allocBytes(), js::MemoryUse::BaselineScript);
   baseline = nullptr;
 }
 
-inline void JSScript::clearIonScript() {
+inline void JSScript::clearIonScript(js::FreeOp* fop) {
   MOZ_ASSERT(hasIonScript());
-  RemoveCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
+  fop->removeCellMemory(this, ion->allocBytes(), js::MemoryUse::IonScript);
   ion = nullptr;
 }
 

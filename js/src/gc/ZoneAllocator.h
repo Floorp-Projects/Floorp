@@ -87,6 +87,7 @@ class ZoneAllocator : public JS::shadow::Zone,
                         bool wasSwept = false) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
+    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), wasSwept);
 
     gcMallocBytes.removeBytes(nbytes, wasSwept);
 
@@ -124,8 +125,10 @@ class ZoneAllocator : public JS::shadow::Zone,
     maybeMallocTriggerZoneGC();
   }
   void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes,
-                       bool wasSwept = false) {
+                       bool wasSwept) {
     MOZ_ASSERT(nbytes);
+    MOZ_ASSERT_IF(CurrentThreadIsGCSweeping(), wasSwept);
+
     gcMallocBytes.removeBytes(nbytes, wasSwept);
 
 #ifdef DEBUG
@@ -290,7 +293,7 @@ class ZoneAllocPolicy : public MallocProvider<ZoneAllocPolicy> {
     MOZ_ASSERT(zone_);
     return zone_;
   }
-  void decMemory(size_t nbytes) { zone_->decPolicyMemory(this, nbytes); }
+  void decMemory(size_t nbytes);
 };
 
 // Functions for memory accounting on the zone.

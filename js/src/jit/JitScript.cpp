@@ -18,6 +18,7 @@
 #include "vm/TypeInference.h"
 #include "wasm/WasmInstance.h"
 
+#include "gc/FreeOp-inl.h"
 #include "jit/JSJitFrameIter-inl.h"
 #include "vm/JSScript-inl.h"
 #include "vm/TypeInference-inl.h"
@@ -161,23 +162,23 @@ bool JSScript::createJitScript(JSContext* cx) {
   return true;
 }
 
-void JSScript::maybeReleaseJitScript() {
+void JSScript::maybeReleaseJitScript(FreeOp* fop) {
   if (!jitScript_ || zone()->types.keepJitScripts || hasBaselineScript() ||
       jitScript_->active()) {
     return;
   }
 
-  releaseJitScript();
+  releaseJitScript(fop);
 }
 
-void JSScript::releaseJitScript() {
+void JSScript::releaseJitScript(FreeOp* fop) {
   MOZ_ASSERT(!hasIonScript());
 
-  RemoveCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);
+  fop->removeCellMemory(this, jitScript_->allocBytes(), MemoryUse::JitScript);
 
   JitScript::Destroy(zone(), jitScript_);
   jitScript_ = nullptr;
-  updateJitCodeRaw(runtimeFromMainThread());
+  updateJitCodeRaw(fop->runtime());
 }
 
 void JitScript::CachedIonData::trace(JSTracer* trc) {

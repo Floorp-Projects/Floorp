@@ -20,6 +20,10 @@ struct JSRuntime;
 
 namespace js {
 
+namespace gc {
+class AutoSetThreadIsPerformingGC;
+} // namespace gc
+
 /*
  * A FreeOp can do one thing: free memory. For convenience, it has delete_
  * convenience methods that also call destructors.
@@ -31,6 +35,9 @@ class FreeOp : public JSFreeOp {
   Vector<void*, 0, SystemAllocPolicy> freeLaterList;
   jit::JitPoisonRangeVector jitPoisonRanges;
   const bool isDefault;
+  bool isCollecting_;
+
+  friend class gc::AutoSetThreadIsPerformingGC;
 
  public:
   static FreeOp* get(JSFreeOp* fop) { return static_cast<FreeOp*>(fop); }
@@ -47,6 +54,7 @@ class FreeOp : public JSFreeOp {
   }
 
   bool isDefaultFreeOp() const { return isDefault; }
+  bool isCollecting() const { return isCollecting_; }
 
   // Deprecated. Where possible, memory should be tracked against the owning GC
   // thing by calling js::AddCellMemory and the memory freed with free_() below.
@@ -143,6 +151,10 @@ class FreeOp : public JSFreeOp {
   // js::AddCellMemory.
   template <class T>
   void release(gc::Cell* cell, T* p, size_t nbytes, MemoryUse use);
+
+  // Update the memory accounting for a GC for memory freed by some other
+  // method.
+  void removeCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use);
 
  private:
   void queueForFreeLater(void* p);

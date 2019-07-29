@@ -433,7 +433,7 @@ class FileObject : public NativeObject {
   static void finalize(FreeOp* fop, JSObject* obj) {
     FileObject* fileObj = &obj->as<FileObject>();
     RCFile* file = fileObj->rcFile();
-    RemoveCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
+    fop->removeCellMemory(obj, sizeof(*file), MemoryUse::FileObjectFile);
     if (file->release()) {
       fop->deleteUntracked(file);
     }

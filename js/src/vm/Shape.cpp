@@ -731,7 +731,8 @@ Shape* NativeObject::addDataPropertyInternal(JSContext* cx,
   return shape;
 }
 
-static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(Shape* parent,
+static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(JSContext* cx,
+                                                        Shape* parent,
                                                         Shape* shape) {
   JS::Zone* zone = shape->zone();
   if (zone->needsIncrementalBarrier()) {
@@ -754,7 +755,7 @@ static MOZ_ALWAYS_INLINE Shape* PropertyTreeReadBarrier(Shape* parent,
   // The shape we've found is unreachable and due to be finalized, so
   // remove our weak reference to it and don't use it.
   MOZ_ASSERT(parent->isMarkedAny());
-  parent->removeChild(shape);
+  parent->removeChild(cx->defaultFreeOp(), shape);
 
   return nullptr;
 }
@@ -793,7 +794,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
 
     MOZ_ASSERT(kid->isDataProperty());
 
-    kid = PropertyTreeReadBarrier(lastProperty, kid);
+    kid = PropertyTreeReadBarrier(cx, lastProperty, kid);
     if (!kid) {
       break;
     }
@@ -1793,7 +1794,7 @@ bool PropertyTree::insertChild(JSContext* cx, Shape* parent, Shape* child) {
   return true;
 }
 
-void Shape::removeChild(Shape* child) {
+void Shape::removeChild(FreeOp* fop, Shape* child) {
   MOZ_ASSERT(!child->inDictionary());
   MOZ_ASSERT(child->parent == this);
 
@@ -1824,8 +1825,7 @@ void Shape::removeChild(Shape* child) {
     Shape* otherChild = r.front();
     MOZ_ASSERT((r.popFront(), r.empty())); /* No more elements! */
     kidp->setShape(otherChild);
-    js_delete(hash);
-    RemoveCellMemory(this, sizeof(KidsHash), MemoryUse::ShapeKids);
+    fop->delete_(this, hash, MemoryUse::ShapeKids);
   }
 }
 
@@ -1858,7 +1858,7 @@ MOZ_ALWAYS_INLINE Shape* PropertyTree::inlinedGetChild(
   }
 
   if (existingShape) {
-    existingShape = PropertyTreeReadBarrier(parent, existingShape);
+    existingShape = PropertyTreeReadBarrier(cx, parent, existingShape);
     if (existingShape) {
       return existingShape;
     }
@@ -1882,7 +1882,7 @@ Shape* PropertyTree::getChild(JSContext* cx, Shape* parent,
   return inlinedGetChild(cx, parent, child);
 }
 
-void Shape::sweep() {
+void Shape::sweep(FreeOp* fop) {
   /*
    * We detach the child from the parent if the parent is reachable.
    *
@@ -1898,7 +1898,7 @@ void Shape::sweep() {
         parent->listp = nullptr;
       }
     } else {
-      parent->removeChild(this);
+      parent->removeChild(fop, this);
     }
   }
 }
