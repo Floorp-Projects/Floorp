@@ -1086,3 +1086,23 @@ This reports when a user has seen or clicked a badge/notification in the browser
   "event": ["CLICK" | "IMPRESSION"],
 }
 ```
+
+## Panel interaction pings
+
+This reports when a user opens the panel, views messages and clicks on a message.
+For message impressions we concatenate the ids of all messages in the panel.
+
+```
+{
+  "locale": "en-US",
+  "client_id": "9da773d8-4356-f54f-b7cf-6134726bcf3d",
+  "version": "70.0a1",
+  "release_channel": "default",
+  "addon_version": "20190712095934",
+  "action": "cfr_user_event",
+  "source": "CFR",
+  "message_id": "WHATS_NEW_70",
+  "event": ["CLICK" | "IMPRESSION"],
+  "value": { "view": ["application_menu" | "toolbar_dropdown"] }
+}
+```

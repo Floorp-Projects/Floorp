@@ -3421,20 +3421,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
   .submissionStatus .submitStatusTitle {
     font-size: 20px; }
 
-.onboardingMessageContainer {
-  display: grid;
-  grid-column-gap: 21px;
-  grid-template-columns: auto auto auto;
-  padding-left: 30px;
-  padding-right: 30px;
-  min-height: 500px; }
-  @media (max-width: 850px) {
-    .onboardingMessageContainer {
-      grid-template-columns: none;
-      grid-template-rows: auto auto auto;
-      padding-left: 110px;
-      padding-right: 110px; } }
-
 .onboardingMessage {
   height: 340px;
   text-align: center;

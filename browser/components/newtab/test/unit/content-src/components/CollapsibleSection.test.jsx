@@ -69,21 +69,6 @@ describe("CollapsibleSection", () => {
       .simulate("click");
   });
 
-  it("should fire a pref change event when section title arrow is clicked", done => {
-    function dispatch(a) {
-      if (a.type === at.UPDATE_SECTION_PREFS) {
-        assert.equal(a.data.id, DEFAULT_PROPS.id);
-        assert.equal(a.data.value.collapsed, true);
-        done();
-      }
-    }
-    setup({ dispatch });
-    wrapper
-      .find(".click-target")
-      .at(1)
-      .simulate("click");
-  });
-
   it("should not fire a pref change when section title is clicked if sectionBody is falsy", () => {
     const dispatch = sinon.spy();
     setup({ dispatch });
