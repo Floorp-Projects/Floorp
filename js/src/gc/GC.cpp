@@ -1466,7 +1466,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
         return false;
       }
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->updateAllGCThresholds(*this, GC_NORMAL, lock);
+        zone->updateGCThresholds(*this, GC_NORMAL, lock);
       }
   }
 
@@ -1725,7 +1725,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
     default:
       tunables.resetParameter(key, lock);
       for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-        zone->updateAllGCThresholds(*this, GC_NORMAL, lock);
+        zone->updateGCThresholds(*this, GC_NORMAL, lock);
       }
   }
 }
@@ -3114,7 +3114,10 @@ void GCRuntime::clearRelocatedArenasWithoutUnlocking(Arena* arenaList,
                  JS_MOVED_TENURED_PATTERN, arena->getThingsSpan(),
                  MemCheckKind::MakeNoAccess);
 
-    arena->zone->zoneSize.removeGCArena();
+    // Don't count arenas as swept if we purposely moved everything to new
+    // arenas.
+    arena->zone->zoneSize.removeBytes(ArenaSize,
+                                      !ShouldRelocateAllArenas(reason));
 
     // Don't count arenas as freed if we purposely moved everything to new
     // arenas.
@@ -4600,7 +4603,7 @@ bool GCRuntime::beginMarkPhase(JS::GCReason reason, AutoGCSession& session) {
     markCompartments();
   }
 
-  updateMallocCountersOnGCStart();
+  updateMemoryCountersOnGCStart();
   stats().measureInitialHeapSize();
 
   /*
@@ -4684,10 +4687,12 @@ void GCRuntime::markCompartments() {
   }
 }
 
-void GCRuntime::updateMallocCountersOnGCStart() {
-  // Update the malloc counters for any zones we are collecting.
+void GCRuntime::updateMemoryCountersOnGCStart() {
+  heapSize.updateOnGCStart();
+
+  // Update memory counters for the zones we are collecting.
   for (GCZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-    zone->updateAllGCMallocCountersOnGCStart();
+    zone->updateMemoryCountersOnGCStart();
   }
 
   // Update the runtime malloc counter only if we are doing a full GC.
@@ -6039,8 +6044,8 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
   for (SweepGroupZonesIter zone(rt); !zone.done(); zone.next()) {
     AutoLockGC lock(rt);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
-    zone->updateAllGCThresholds(*this, invocationKind, lock);
-    zone->updateAllGCMallocCountersOnGCEnd(lock);
+    zone->updateGCThresholds(*this, invocationKind, lock);
+    zone->updateMemoryCountersOnGCEnd(lock);
     zone->arenas.unmarkPreMarkedFreeCells();
   }
 

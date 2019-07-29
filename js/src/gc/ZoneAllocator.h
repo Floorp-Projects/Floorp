@@ -63,11 +63,10 @@ class ZoneAllocator : public JS::shadow::Zone,
     updateMemoryCounter(jitCodeCounter, nbytes);
   }
 
-  void updateAllGCMallocCountersOnGCStart();
-  void updateAllGCMallocCountersOnGCEnd(const js::AutoLockGC& lock);
-  void updateAllGCThresholds(gc::GCRuntime& gc,
-                             JSGCInvocationKind invocationKind,
-                             const js::AutoLockGC& lock);
+  void updateMemoryCountersOnGCStart();
+  void updateMemoryCountersOnGCEnd(const js::AutoLockGC& lock);
+  void updateGCThresholds(gc::GCRuntime& gc, JSGCInvocationKind invocationKind,
+                          const js::AutoLockGC& lock);
   js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc();
 
   // Memory accounting APIs for malloc memory owned by GC cells.
@@ -84,10 +83,12 @@ class ZoneAllocator : public JS::shadow::Zone,
 #endif
   }
 
-  void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use) {
+  void removeCellMemory(js::gc::Cell* cell, size_t nbytes, js::MemoryUse use,
+                        bool wasSwept = false) {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(nbytes);
-    gcMallocBytes.removeBytes(nbytes);
+
+    gcMallocBytes.removeBytes(nbytes, wasSwept);
 
 #ifdef DEBUG
     gcMallocTracker.untrackMemory(cell, nbytes, use);
@@ -122,9 +123,10 @@ class ZoneAllocator : public JS::shadow::Zone,
 
     maybeMallocTriggerZoneGC();
   }
-  void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes) {
+  void decPolicyMemory(js::ZoneAllocPolicy* policy, size_t nbytes,
+                       bool wasSwept = false) {
     MOZ_ASSERT(nbytes);
-    gcMallocBytes.removeBytes(nbytes);
+    gcMallocBytes.removeBytes(nbytes, wasSwept);
 
 #ifdef DEBUG
     gcMallocTracker.decPolicyMemory(policy, nbytes);
@@ -315,15 +317,16 @@ inline void AddCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
 // follow a call to AddCellMemory with the same size and use.
 
 inline void RemoveCellMemory(gc::TenuredCell* cell, size_t nbytes,
-                             MemoryUse use) {
+                             MemoryUse use, bool wasSwept = false) {
   if (nbytes) {
     auto zoneBase = ZoneAllocator::from(cell->zoneFromAnyThread());
-    zoneBase->removeCellMemory(cell, nbytes, use);
+    zoneBase->removeCellMemory(cell, nbytes, use, wasSwept);
   }
 }
-inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use) {
+inline void RemoveCellMemory(gc::Cell* cell, size_t nbytes, MemoryUse use,
+                             bool wasSwept = false) {
   if (cell->isTenured()) {
-    RemoveCellMemory(&cell->asTenured(), nbytes, use);
+    RemoveCellMemory(&cell->asTenured(), nbytes, use, wasSwept);
   }
 }
 
