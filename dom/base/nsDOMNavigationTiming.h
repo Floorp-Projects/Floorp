@@ -122,6 +122,10 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
 
   void NotifyNavigationStart(DocShellState aDocShellState);
   void NotifyFetchStart(nsIURI* aURI, Type aNavigationType);
+  // A restoration occurs when the document is loaded from the
+  // bfcache. This method sets the appropriate parameters of the
+  // navigation timing object in this case.
+  void NotifyRestoreStart();
   void NotifyBeforeUnload();
   void NotifyUnloadAccepted(nsIURI* aOldURI);
   void NotifyUnloadEventStart();
