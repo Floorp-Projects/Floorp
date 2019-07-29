@@ -950,15 +950,10 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     const thread = this;
     return function() {
       // onStep is called with 'this' set to the current frame.
-
       const location = thread.sources.getFrameLocation(this);
 
-      // Always continue execution if either:
-      //
-      // 1. We are in a source mapped region, but inside a null mapping
-      //    (doesn't correlate to any region of source)
-      // 2. The source we are in is black boxed.
-      if (location.url == null || thread.sources.isBlackBoxed(location.url)) {
+      // Continue if the source is black boxed.
+      if (thread.sources.isBlackBoxed(location.url)) {
         return undefined;
       }
 
