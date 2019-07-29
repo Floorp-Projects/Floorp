@@ -30,7 +30,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-lookbehind",
     "regexp-named-groups",
     "regexp-unicode-property-escapes",
-    "Intl.Locale",
     "global",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
@@ -410,6 +409,9 @@ def process_test262(test262Dir, test262OutDir, strictTests, externManifests):
     explicitIncludes[os.path.join("built-ins", "TypedArray")] = ["byteConversionValues.js",
                                                                  "detachArrayBuffer.js", "nans.js"]
     explicitIncludes[os.path.join("built-ins", "TypedArrays")] = ["detachArrayBuffer.js"]
+
+    # Intl.Locale isn't yet enabled by default.
+    localIncludesMap[os.path.join("intl402")] = ["test262-intl-locale.js"]
 
     # Process all test directories recursively.
     for (dirPath, dirNames, fileNames) in os.walk(testDir):

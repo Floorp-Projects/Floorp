@@ -61,6 +61,10 @@ skip-if(!this.hasOwnProperty("Intl")) script test262/built-ins/String/prototype/
 # Skip intl402 tests when Intl isn't available.
 skip-if(!this.hasOwnProperty("Intl")) include test262/intl402/jstests.list
 
+# Skip Intl.Locale tests when the addIntlExtras helper isn't available.
+skip-if(!this.hasOwnProperty('addIntlExtras')) include test262/intl402/Locale/jstests.list
+skip-if(!this.hasOwnProperty('addIntlExtras')) script test262/intl402/Intl/getCanonicalLocales/Locale-object.js
+
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1415303
 skip-if(!this.hasOwnProperty("Atomics")) include test262/built-ins/Atomics/jstests.list
 skip-if(!this.hasOwnProperty("SharedArrayBuffer")) include test262/built-ins/SharedArrayBuffer/jstests.list
@@ -527,9 +531,20 @@ skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
 
 # Regular grandfathered tags canonicalized differently in CLDR.
 skip script test262/intl402/Intl/getCanonicalLocales/grandfathered.js
+skip script test262/intl402/Locale/likely-subtags-grandfathered.js
 
 # Deprecated variant subtag mappings are no longer supported.
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
+skip script test262/intl402/Locale/constructor-non-iana-canon.js
+
+# 3-digit region subtags are canonicalised.
+skip script test262/intl402/Locale/constructor-options-region-valid.js
+
+# Variant subtags are sorted in alphabetical order.
+skip script test262/intl402/Locale/constructor-tag.js
+
+# "u-kf" now returns "" for the "caseFirst" property.
+skip script test262/intl402/Locale/getters.js
 
 # Test requires signDisplay option to not exist.
 skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
