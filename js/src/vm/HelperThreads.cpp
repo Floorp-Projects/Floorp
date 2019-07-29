@@ -543,11 +543,14 @@ size_t ParseTask::sizeOfExcludingThis(
 }
 
 void ParseTask::runTask() {
+  AutoSetHelperThreadContext usesContext;
+
   JSContext* cx = TlsContext.get();
   JSRuntime* runtime = parseGlobal->runtimeFromAnyThread();
 
   AutoSetContextRuntime ascr(runtime);
   AutoSetContextParse parsetask(this);
+  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(cx);
 
   Zone* zone = parseGlobal->zoneFromAnyThread();
   zone->setHelperThreadOwnerContext(cx);
@@ -1765,11 +1768,11 @@ void js::GCParallelTask::runFromMainThread(JSRuntime* rt) {
 void js::GCParallelTask::runFromHelperThread(AutoLockHelperThreadState& lock) {
   MOZ_ASSERT(isDispatched(lock));
 
-  AutoSetContextRuntime ascr(runtime());
-  gc::AutoSetThreadIsPerformingGC performingGC;
-
   {
     AutoUnlockHelperThreadState parallelSection(lock);
+    AutoSetHelperThreadContext usesContext;
+    AutoSetContextRuntime ascr(runtime());
+    gc::AutoSetThreadIsPerformingGC performingGC;
     TimeStamp timeStart = ReallyNow();
     runTask();
     duration_ = TimeSince(timeStart);
@@ -2173,7 +2176,6 @@ void HelperThread::handleIonWorkload(AutoLockHelperThreadState& locked) {
 
   {
     AutoUnlockHelperThreadState unlock(locked);
-    AutoSetContextRuntime ascr(rt);
 
     builder->runTask();
   }
@@ -2541,21 +2543,8 @@ void HelperThread::threadLoop() {
 
   ensureRegisteredWithProfiler();
 
-  JSContext cx(nullptr, JS::ContextOptions());
-  {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    cx.setHelperThread(lock);
-    if (!cx.init(ContextKind::HelperThread)) {
-      oomUnsafe.crash("HelperThread cx.init()");
-    }
-  }
-  gc::AutoSuppressNurseryCellAlloc noNurseryAlloc(&cx);
-  JS_SetNativeStackQuota(&cx, HELPER_STACK_QUOTA);
-
   while (!terminate) {
     MOZ_ASSERT(idle());
-
-    maybeFreeUnusedMemory(&cx);
 
     // The selectors may depend on the HelperThreadState not changing
     // between task selection and task execution, in particular, on new
