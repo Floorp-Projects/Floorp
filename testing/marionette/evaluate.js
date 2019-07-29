@@ -99,6 +99,8 @@ evaluate.sandbox = function(
 ) {
   let unloadHandler;
 
+  let marionetteSandbox = sandbox.create(sb.window);
+
   // timeout handler
   let scriptTimeoutID, timeoutPromise;
   if (timeout !== null) {
@@ -128,9 +130,9 @@ evaluate.sandbox = function(
 
     unloadHandler = sandbox.cloneInto(
       () => reject(new JavaScriptError("Document was unloaded")),
-      sb
+      marionetteSandbox
     );
-    sb.window.onunload = unloadHandler;
+    marionetteSandbox.window.addEventListener("unload", unloadHandler);
 
     let promises = [
       Cu.evalInSandbox(src, sb, "1.8", file, line),
@@ -165,7 +167,7 @@ evaluate.sandbox = function(
     })
     .finally(() => {
       clearTimeout(scriptTimeoutID);
-      sb.window.removeEventListener("unload", unloadHandler);
+      marionetteSandbox.window.removeEventListener("unload", unloadHandler);
     });
 };
 
