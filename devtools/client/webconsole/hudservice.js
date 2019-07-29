@@ -95,13 +95,12 @@ HUDService.prototype = {
    *        The target that the browser console will connect to.
    * @param nsIDOMWindow iframeWindow
    *        The window where the browser console UI is already loaded.
-   * @param nsIDOMWindow chromeWindow
-   *        The window of the browser console owner.
+   * @param Boolean fissionSupport
    * @return object
    *         A promise object for the opening of the new BrowserConsole instance.
    */
-  openBrowserConsole(target, iframeWindow, chromeWindow) {
-    const hud = new BrowserConsole(target, iframeWindow, chromeWindow, this);
+  openBrowserConsole(target, win, fissionSupport = false) {
+    const hud = new BrowserConsole(target, win, win, this, fissionSupport);
     this._browserConsoleID = hud.hudId;
     this.consoles.set(hud.hudId, hud);
     return hud.init();
@@ -129,6 +128,11 @@ HUDService.prototype = {
     if (this._browserConsoleInitializing) {
       return this._browserConsoleInitializing;
     }
+
+    const fissionSupport = Services.prefs.getBoolPref(
+      "devtools.browserconsole.fission",
+      false
+    );
 
     async function connect() {
       // The Browser console ends up using the debugger in autocomplete.
@@ -174,9 +178,11 @@ HUDService.prototype = {
         win.addEventListener("DOMContentLoaded", resolve, { once: true });
       });
 
-      win.document.title = l10n.getStr("browserConsole.title");
-
-      return { iframeWindow: win, chromeWindow: win };
+      const title = fissionSupport
+        ? `💥 Fission Browser Console 💥`
+        : l10n.getStr("browserConsole.title");
+      win.document.title = title;
+      return win;
     }
 
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
@@ -184,11 +190,11 @@ HUDService.prototype = {
     this._browserConsoleInitializing = (async () => {
       const target = await connect();
       await target.attach();
-      const { iframeWindow, chromeWindow } = await openWindow(target);
+      const win = await openWindow(target);
       const browserConsole = await this.openBrowserConsole(
         target,
-        iframeWindow,
-        chromeWindow
+        win,
+        fissionSupport
       );
       return browserConsole;
     })();

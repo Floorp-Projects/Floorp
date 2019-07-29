@@ -29,11 +29,18 @@ class BrowserConsole extends WebConsole {
    *        The window where the browser console UI is already loaded.
    * @param nsIDOMWindow chromeWindow
    *        The window of the browser console owner.
+   * @param Boolean fissionSupport
    * @param object hudService
    *        The parent HUD Service
    */
-  constructor(target, iframeWindow, chromeWindow, hudService) {
-    super(target, iframeWindow, chromeWindow, hudService, true);
+  constructor(
+    target,
+    iframeWindow,
+    chromeWindow,
+    hudService,
+    fissionSupport = false
+  ) {
+    super(target, iframeWindow, chromeWindow, hudService, true, fissionSupport);
 
     this._telemetry = new Telemetry();
     this._bcInitializer = null;

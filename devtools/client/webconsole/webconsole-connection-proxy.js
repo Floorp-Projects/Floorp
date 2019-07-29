@@ -21,11 +21,22 @@ const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
  *        A WebConsoleUI instance that owns this connection proxy.
  * @param RemoteTarget target
  *        The target that the console will connect to.
+ * @param Boolean isBrowserConsole
+ *        Indicates if we're setting up the connection for a browser console
+ * @param Boolean fissionSupport
+ *        Indicates if the console should support a "Fission architecture".
  */
-function WebConsoleConnectionProxy(webConsoleUI, target) {
+function WebConsoleConnectionProxy(
+  webConsoleUI,
+  target,
+  isBrowserConsole,
+  fissionSupport
+) {
   this.webConsoleUI = webConsoleUI;
   this.target = target;
   this.webConsoleClient = target.activeConsole;
+  this.isBrowserConsole = isBrowserConsole;
+  this.fissionSupport = fissionSupport;
 
   this._onPageError = this._onPageError.bind(this);
   this._onLogMessage = this._onLogMessage.bind(this);
