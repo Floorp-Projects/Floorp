@@ -927,7 +927,9 @@ var gProtectionsHandler = {
   },
   get appMenuLabel() {
     delete this.appMenuLabel;
-    return (this.appMenuLabel = document.getElementById("appMenu-tp-label"));
+    return (this.appMenuLabel = document.getElementById(
+      "appMenu-protection-report-text"
+    ));
   },
   get _protectionsIconBox() {
     delete this._protectionsIconBox;
@@ -1012,19 +1014,14 @@ var gProtectionsHandler = {
     get appMenuTitle() {
       delete this.appMenuTitle;
       return (this.appMenuTitle = gNavigatorBundle.getString(
-        "contentBlocking.title"
+        "protectionReport.title"
       ));
     },
 
     get appMenuTooltip() {
       delete this.appMenuTooltip;
-      if (AppConstants.platform == "win") {
-        return (this.appMenuTooltip = gNavigatorBundle.getString(
-          "contentBlocking.tooltipWin"
-        ));
-      }
       return (this.appMenuTooltip = gNavigatorBundle.getString(
-        "contentBlocking.tooltipOther"
+        "protectionReport.tooltip"
       ));
     },
 
@@ -1120,13 +1117,6 @@ var gProtectionsHandler = {
 
     this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
-
-    this.updateCBCategoryLabel = this.updateCBCategoryLabel.bind(this);
-    this.updateCBCategoryLabel();
-    Services.prefs.addObserver(
-      this.PREF_CB_CATEGORY,
-      this.updateCBCategoryLabel
-    );
   },
 
   uninit() {
@@ -1140,36 +1130,17 @@ var gProtectionsHandler = {
       this.PREF_ANIMATIONS_ENABLED,
       this.updateAnimationsEnabled
     );
-    Services.prefs.removeObserver(
-      this.PREF_CB_CATEGORY,
-      this.updateCBCategoryLabel
-    );
-  },
-
-  updateCBCategoryLabel() {
-    if (!Services.prefs.prefHasUserValue(this.PREF_CB_CATEGORY)) {
-      // Fallback to not setting a label, it's preferable to not set a label than to set an incorrect one.
-      return;
-    }
-    let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
-    let label;
-    let category = Services.prefs.getStringPref(this.PREF_CB_CATEGORY);
-    switch (category) {
-      case "standard":
-        label = gNavigatorBundle.getString("contentBlocking.category.standard");
-        break;
-      case "strict":
-        label = gNavigatorBundle.getString("contentBlocking.category.strict");
-        break;
-      case "custom":
-        label = gNavigatorBundle.getString("contentBlocking.category.custom");
-        break;
-    }
-    appMenuCategoryLabel.value = label;
   },
 
   openPreferences(origin) {
     openPreferences("privacy-trackingprotection", { origin });
+  },
+
+  openProtections() {
+    switchToTabHavingURI("about:protections", true, {
+      replaceQueryString: true,
+      triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+    });
   },
 
   async showTrackersSubview() {
