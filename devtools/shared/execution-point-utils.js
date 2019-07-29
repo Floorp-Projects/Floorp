@@ -17,13 +17,13 @@
 //   "OnPop": Break when a script's frame with a given frame depth is popped.
 //   "EnterFrame": Break when any script is entered.
 //
-// script: For all kinds but "EnterFrame", the ID of the position's script.
+// script: The ID of the position's script. This is optional for "EnterFrame".
 //
 // offset: For "Break" and "OnStep", the offset within the script.
 //
-// frameIndex: For "OnStep" and "OnPop", the index of the topmost script frame.
-//   Indexes start at zero for the first frame pushed, and increase with the
-//   depth of the frame.
+// frameIndex: For "OnStep", "OnPop" and optionally "EnterFrame", the index of
+//   the topmost script frame. Indexes start at zero for the first frame pushed,
+//   and increase with the depth of the frame.
 //
 // An execution point is a unique identifier for a point in the recording where
 // the debugger can pause, and has the following properties:
@@ -73,11 +73,13 @@ function pointPrecedes(pointA, pointB) {
     return false;
   }
 
-  // If an execution point doesn't have a frame index (i.e. EnterFrame) then it
-  // has bumped the progress counter and predates everything else that is
-  // associated with the same progress counter.
-  if ("frameIndex" in posA != "frameIndex" in posB) {
-    return "frameIndex" in posB;
+  assert("frameIndex" in posA && "frameIndex" in posB);
+  assert("script" in posA && "script" in posB);
+
+  // If either point is an EnterFrame, it bumped the progress counter and
+  // happens first.
+  if (posA.kind == "EnterFrame" || posB.kind == "EnterFrame") {
+    return posA.kind == "EnterFrame";
   }
 
   // Only certain execution point kinds do not bump the progress counter.
@@ -87,7 +89,6 @@ function pointPrecedes(pointA, pointB) {
   // Deeper frames predate shallower frames, if the progress counter is the
   // same. We bump the progress counter when pushing frames, but not when
   // popping them.
-  assert("frameIndex" in posA && "frameIndex" in posB);
   if (posA.frameIndex != posB.frameIndex) {
     return posA.frameIndex > posB.frameIndex;
   }
@@ -106,6 +107,43 @@ function pointPrecedes(pointA, pointB) {
 // eslint-disable-next-line no-unused-vars
 function pointEquals(pointA, pointB) {
   return !pointPrecedes(pointA, pointB) && !pointPrecedes(pointB, pointA);
+}
+
+// eslint-disable-next-line no-unused-vars
+function pointToString(point) {
+  if (point.position) {
+    return `${point.checkpoint}:${point.progress}:${positionToString(
+      point.position
+    )}`;
+  }
+  return `${point.checkpoint}:${point.progress}`;
+}
+
+// eslint-disable-next-line no-unused-vars
+function pointArrayIncludes(points, point) {
+  return points.some(p => pointEquals(point, p));
+}
+
+// Find the closest point in an array to point, either before or after it.
+// If inclusive is set then the point itself can be returned, if it is in the
+// array.
+// eslint-disable-next-line no-unused-vars
+function findClosestPoint(points, point, before, inclusive) {
+  let result = null;
+  for (const p of points) {
+    if (inclusive && pointEquals(p, point)) {
+      return p;
+    }
+    if (before ? pointPrecedes(p, point) : pointPrecedes(point, p)) {
+      if (
+        !result ||
+        (before ? pointPrecedes(result, p) : pointPrecedes(p, result))
+      ) {
+        result = p;
+      }
+    }
+  }
+  return result;
 }
 
 // Return whether two breakpoint positions are the same.
@@ -134,19 +172,37 @@ function positionSubsumes(posA, posB) {
     return true;
   }
 
+  // EnterFrame positions may or may not specify a script.
+  if (
+    posA.kind == "EnterFrame" &&
+    posB.kind == "EnterFrame" &&
+    !posA.script &&
+    posB.script
+  ) {
+    return true;
+  }
+
   return false;
+}
+
+function positionToString(pos) {
+  return `${pos.kind}:${pos.script}:${pos.offset}:${pos.frameIndex}`;
 }
 
 function assert(v) {
   if (!v) {
     dump(`Assertion failed: ${Error().stack}\n`);
-    throw new Error("Assertion failed!");
+    throw new Error(`Assertion failed! ${Error().stack}`);
   }
 }
 
 this.EXPORTED_SYMBOLS = [
   "pointPrecedes",
   "pointEquals",
+  "pointToString",
+  "pointArrayIncludes",
+  "findClosestPoint",
   "positionEquals",
   "positionSubsumes",
+  "positionToString",
 ];

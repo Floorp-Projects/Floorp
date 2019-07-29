@@ -69,7 +69,7 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
       return;
     }
     case MessageType::Paint:
-      UpdateGraphicsInUIProcess(&static_cast<const PaintMessage&>(aMsg));
+      UpdateGraphicsAfterPaint(static_cast<const PaintMessage&>(aMsg));
       break;
     case MessageType::ManifestFinished:
       mPaused = true;
