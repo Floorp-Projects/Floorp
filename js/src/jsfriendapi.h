@@ -2630,6 +2630,10 @@ extern JS_FRIEND_API JSObject* ToWindowIfWindowProxy(JSObject* obj);
 extern bool AddMozDateTimeFormatConstructor(JSContext* cx,
                                             JS::Handle<JSObject*> intl);
 
+// Create and add the Intl.Locale constructor function to the provided object.
+// This function throws if called more than once per realm/global object.
+extern bool AddLocaleConstructor(JSContext* cx, JS::Handle<JSObject*> intl);
+
 class MOZ_STACK_CLASS JS_FRIEND_API AutoAssertNoContentJS {
  public:
   explicit AutoAssertNoContentJS(JSContext* cx);

@@ -569,6 +569,82 @@ function parseLanguageTag(locale) {
 }
 
 /**
+ * Returns the input normalized to lower case if it matches the
+ * 'unicode_language_subtag' production. Otherwise returns null.
+ */
+function parseStandaloneLanguage(language) {
+    // unicode_language_subtag = alpha{2,3} | alpha{5,8} ;
+    var length = language.length;
+    if (length < 2 || length === 4 || length > 8 || !IsASCIIAlphaString(language)) {
+        // Four character language subtags are not allowed in Unicode BCP 47
+        // locale identifiers. Also see the comparison to Unicode CLDR locale
+        // identifiers in <https://unicode.org/reports/tr35/#BCP_47_Conformance>.
+        return null;
+    }
+
+    return callFunction(std_String_toLowerCase, language);
+}
+
+/**
+ * Returns the input normalized to title case if it matches the
+ * 'unicode_script_subtag' production. Otherwise returns null.
+ */
+function parseStandaloneScript(script) {
+    // unicode_script_subtag = alpha{4} ;
+    if (script.length !== 4 || !IsASCIIAlphaString(script)) {
+        return null;
+    }
+
+    // The first character of a script code needs to be capitalized.
+    // "hans" -> "Hans"
+    return callFunction(std_String_toUpperCase, script[0]) +
+           callFunction(std_String_toLowerCase, Substring(script, 1, script.length - 1));
+}
+
+/**
+ * Returns the input normalized to upper case if it matches the
+ * 'unicode_region_subtag' production. Otherwise returns null.
+ */
+function parseStandaloneRegion(region) {
+    // unicode_region_subtag = (alpha{2} | digit{3}) ;
+    var length = region.length;
+    if ((length !== 2 || !IsASCIIAlphaString(region)) &&
+        (length !== 3 || !IsASCIIDigitString(region)))
+    {
+        return null;
+    }
+
+    // Region codes need to be in upper-case. "bu" -> "BU"
+    return callFunction(std_String_toUpperCase, region);
+}
+
+/**
+ * Returns the input normalized to lower case if it can be parsed as a
+ * '(3*8alphanum) *("-" (3*8alphanum))' subtag sequence. Otherwise returns
+ * null.
+ */
+function parseStandaloneUnicodeExtensionType(type) {
+    // Reuse the BCP 47 parser for Unicode extension types.
+    var ts = new BCP47TokenStream(type);
+    NEXT_TOKEN_OR_RETURN_NULL(ts);
+
+    // Unicode extension 'type' subtags must match the following ABNF.
+    //
+    // type     = (3*8alphanum) *("-" (3*8alphanum))
+    // alphanum = (ALPHA / DIGIT)       ; letters and numbers
+    // ALPHA    = %x41-5A / %x61-7A     ; A-Z / a-z
+    // DIGIT    = %x30-39               ; 0-9
+    do {
+        if (ts.tokenLength < 3 || ts.tokenLength > 8)
+            return null;
+
+        NEXT_TOKEN_OR_RETURN_NULL(ts);
+    } while (ts.token !== NONE);
+
+    return ts.localeLowercase;
+}
+
+/**
  * Return the locale and fields components of the given valid Transform
  * extension subtag.
  */
@@ -807,7 +883,7 @@ function CanonicalizeLanguageTagObject(localeObj) {
             // Canonicalize Unicode locale extension subtag if present.
             if (ext[0] === "u") {
                 var {attributes, keywords} = UnicodeExtensionComponents(ext);
-                extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords);
+                extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords, false);
             }
 
             // Canonicalize Unicode BCP 47 T extension if present.
@@ -934,7 +1010,7 @@ function UnicodeExtensionComponents(extension) {
  * - All keys and types use the canonical form (from the name attribute;
  *   see Section 3.6.4 U Extension Data Files).
  */
-function CanonicalizeUnicodeExtension(attributes, keywords) {
+function CanonicalizeUnicodeExtension(attributes, keywords, canonicalForm) {
     assert(attributes.length > 0 || keywords.length > 0,
            "unexpected empty Unicode locale extension components");
 
@@ -969,13 +1045,41 @@ function CanonicalizeUnicodeExtension(attributes, keywords) {
 
     // Append all attributes.
     for (var i = 0; i < attributes.length; i++) {
+        var attribute = attributes[i];
+        assert(attribute === callFunction(std_String_toLowerCase, attribute),
+               "Attributes are already canonicalized to lower case");
+
+        // UnicodeExtensionComponents ignores duplicate attributes.
+        if (canonicalForm && i > 0 && attributes[i - 1] === attribute) {
+            continue;
+        }
+
         extension += "-" + attributes[i];
     }
 
     // Append all keywords.
     for (var i = 0; i < keywords.length; i++) {
         var {key, value} = keywords[i];
+        assert(key === callFunction(std_String_toLowerCase, key) &&
+               value === callFunction(std_String_toLowerCase, value),
+               "Keywords are already canonicalized to lower case");
+
+
+        // UnicodeExtensionComponents ignores duplicate keys.
+        if (canonicalForm && i > 0 && keywords[i - 1].key === key) {
+            continue;
+        }
+
         extension += "-" + key;
+
+        if (canonicalForm &&
+            hasOwn(key, deprecatedUnicodeExtensionTypes) &&
+            hasOwn(value, deprecatedUnicodeExtensionTypes[key]))
+        {
+            value = deprecatedUnicodeExtensionTypes[key][value];
+            assert(value === callFunction(std_String_toLowerCase, value),
+                   "Preferred keyword value is already in lower case");
+        }
 
         // Type value "true" is removed.
         if (value !== "" && value !== "true")
@@ -1127,6 +1231,20 @@ function IsASCIIAlphaString(s) {
     for (var i = 0; i < s.length; i++) {
         var c = callFunction(std_String_charCodeAt, s, i);
         if (!((0x41 <= c && c <= 0x5A) || (0x61 <= c && c <= 0x7A)))
+            return false;
+    }
+    return true;
+}
+
+/**
+ * Returns true if the input contains only ASCII digit characters.
+ */
+function IsASCIIDigitString(s) {
+    assert(typeof s === "string", "IsASCIIDigitString");
+
+    for (var i = 0; i < s.length; i++) {
+        var c = callFunction(std_String_charCodeAt, s, i);
+        if (!(0x30 <= c && c <= 0x39))
             return false;
     }
     return true;
@@ -1325,6 +1443,10 @@ function CanonicalizeLocaleList(locales) {
     if (typeof locales === "string")
         return [ValidateAndCanonicalizeLanguageTag(locales)];
 
+    var unboxedLocale = callFunction(unboxLocaleOrNull, locales);
+    if (unboxedLocale !== null)
+        return [StringFromLanguageTagObject(unboxedLocale.locale)]
+
     // Step 2.
     var seen = [];
 
@@ -1348,11 +1470,11 @@ function CanonicalizeLocaleList(locales) {
             if (!(typeof kValue === "string" || IsObject(kValue)))
                 ThrowTypeError(JSMSG_INVALID_LOCALES_ELEMENT);
 
-            // Step 7.c.iii.
-            var tag = ToString(kValue);
-
-            // Step 7.c.iv.
-            tag = ValidateAndCanonicalizeLanguageTag(tag);
+            // Steps 7.c.iii-iv.
+            var unboxedLocale = callFunction(unboxLocaleOrNull, kValue);
+            var tag = unboxedLocale !== null
+                      ? StringFromLanguageTagObject(unboxedLocale.locale)
+                      : ValidateAndCanonicalizeLanguageTag(ToString(kValue));
 
             // Step 7.c.v.
             if (callFunction(ArrayIndexOf, seen, tag) === -1)
