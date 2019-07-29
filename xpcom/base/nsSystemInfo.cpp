@@ -1160,7 +1160,7 @@ nsSystemInfo::GetDiskInfo(JSContext* aCx, Promise** aResult) {
         }
 
         JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*jsInfo));
-        capturedPromise->MaybeResolve(cx, val);
+        capturedPromise->MaybeResolve(val);
       },
       [capturedPromise](const nsresult rv) {
         capturedPromise->MaybeReject(rv);
