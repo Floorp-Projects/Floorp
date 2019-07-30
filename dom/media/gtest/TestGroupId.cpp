@@ -33,20 +33,21 @@ class MockMediaEngineSource : public MediaEngineSource {
   MOCK_CONST_METHOD0(GetUUID, nsCString());
   MOCK_CONST_METHOD0(GetGroupId, nsString());
   MOCK_CONST_METHOD1(GetSettings, void(dom::MediaTrackSettings&));
-  MOCK_METHOD5(Allocate, nsresult(const dom::MediaTrackConstraints&,
+  MOCK_METHOD6(Allocate, nsresult(const dom::MediaTrackConstraints&,
                                   const MediaEnginePrefs&, const nsString&,
-                                  const ipc::PrincipalInfo&, const char**));
+                                  const nsString&, const ipc::PrincipalInfo&,
+                                  const char**));
   MOCK_METHOD3(SetTrack, void(const RefPtr<SourceMediaStream>&, TrackID,
                               const PrincipalHandle&));
   MOCK_METHOD0(Start, nsresult());
-  MOCK_METHOD4(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
+  MOCK_METHOD5(Reconfigure, nsresult(const dom::MediaTrackConstraints&,
                                      const MediaEnginePrefs&, const nsString&,
-                                     const char**));
+                                     const nsString&, const char**));
   MOCK_METHOD0(Stop, nsresult());
   MOCK_METHOD0(Deallocate, nsresult());
-  MOCK_CONST_METHOD2(GetBestFitnessDistance,
+  MOCK_CONST_METHOD3(GetBestFitnessDistance,
                      uint32_t(const nsTArray<const NormalizedConstraintSet*>&,
-                              const nsString&));
+                              const nsString&, const nsString&));
   MOCK_METHOD5(Pull,
                void(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
                     StreamTime aEndOfAppendedData, StreamTime aDesiredTime,
@@ -94,16 +95,18 @@ RefPtr<MediaDevice> MakeSpeakerDevice(const nsString& aName,
 TEST(TestGroupId, MatchInput_PartOfName)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(
-      MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
-                    NS_LITERAL_STRING("Mic-Model-GroupId")));
+  auto mic = MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
+                           NS_LITERAL_STRING("Mic-Model-GroupId"));
+  devices.AppendElement(mic);
+  audios.AppendElement(mic);
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
   EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
       << "Video group id is the same as audio input group id.";
@@ -115,15 +118,18 @@ TEST(TestGroupId, MatchInput_PartOfName)
 TEST(TestGroupId, MatchInput_FullName)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Vendor Model"),
-                                      NS_LITERAL_STRING("Mic-Model-GroupId")));
+  auto mic = MakeMicDevice(NS_LITERAL_STRING("Vendor Model"),
+                           NS_LITERAL_STRING("Mic-Model-GroupId"));
+  devices.AppendElement(mic);
+  audios.AppendElement(mic);
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
   EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
       << "Video group id is the same as audio input group id.";
@@ -134,19 +140,20 @@ TEST(TestGroupId, MatchInput_FullName)
 TEST(TestGroupId, NoMatchInput)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"), Cam_Model_GroupId));
 
-  devices.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Model Analog Stereo"),
-                                      NS_LITERAL_STRING("Mic-Model-GroupId")));
+  audios.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Model Analog Stereo"),
+                                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
   EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
       << "Video group id is different than audio input group id.";
 }
 
@@ -156,33 +163,34 @@ TEST(TestGroupId, NoMatchInput)
 TEST(TestGroupId, NoMatch_TwoIdenticalDevices)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"), Cam_Model_GroupId));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
   EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, devices[1]->mGroupID)
-      << "Video group id is different than audio input group id.";
-  EXPECT_NE(devices[0]->mGroupID, devices[3]->mGroupID)
-      << "Video group id is different than audio output group id.";
+  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
+      << "Video group id is different from audio input group id.";
+  EXPECT_NE(devices[0]->mGroupID, audios[2]->mGroupID)
+      << "Video group id is different from audio output group id.";
 }
 
 /* Verify that when more that one audio input device name contain the video
@@ -192,25 +200,26 @@ TEST(TestGroupId, NoMatch_TwoIdenticalDevices)
 TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"), Cam_Model_GroupId));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[3]->mGroupID)
+  EXPECT_EQ(devices[0]->mGroupID, audios[2]->mGroupID)
       << "Video group id is the same as audio output group id.";
 }
 
@@ -220,39 +229,40 @@ TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput)
 TEST(TestGroupId, NoMatch_ThreeIdenticalDevices)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"), Cam_Model_GroupId));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
   EXPECT_EQ(devices[0]->mGroupID, Cam_Model_GroupId)
       << "Video group id has not been updated.";
-  EXPECT_NE(devices[0]->mGroupID, devices[1]->mGroupID)
-      << "Video group id is different than audio input group id.";
-  EXPECT_NE(devices[0]->mGroupID, devices[4]->mGroupID)
-      << "Video group id is different than audio output group id.";
+  EXPECT_NE(devices[0]->mGroupID, audios[0]->mGroupID)
+      << "Video group id is different from audio input group id.";
+  EXPECT_NE(devices[0]->mGroupID, audios[3]->mGroupID)
+      << "Video group id is different from audio output group id.";
 }
 
 /* Verify that when an audio output device name contains the video input device
@@ -261,21 +271,22 @@ TEST(TestGroupId, NoMatch_ThreeIdenticalDevices)
 TEST(TestGroupId, MatchOutput)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Mic Analog Stereo"),
-                                      NS_LITERAL_STRING("Mic-Model-GroupId")));
+  audios.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Mic Analog Stereo"),
+                                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model Analog Stereo"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[2]->mGroupID)
+  EXPECT_EQ(devices[0]->mGroupID, audios[1]->mGroupID)
       << "Video group id is the same as audio output group id.";
 }
 
@@ -285,21 +296,22 @@ TEST(TestGroupId, MatchOutput)
 TEST(TestGroupId, InputOutputSameName)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Vendor Model"),
-                                      NS_LITERAL_STRING("Mic-Model-GroupId")));
+  audios.AppendElement(MakeMicDevice(NS_LITERAL_STRING("Vendor Model"),
+                                     NS_LITERAL_STRING("Mic-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model"),
                         NS_LITERAL_STRING("Speaker-Model-GroupId")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
       << "Video input group id is the same as audio input group id.";
 }
 
@@ -309,17 +321,18 @@ TEST(TestGroupId, InputOutputSameName)
 TEST(TestGroupId, InputEmptyGroupId)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(
+  audios.AppendElement(
       MakeMicDevice(NS_LITERAL_STRING("Vendor Model"), NS_LITERAL_STRING("")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
       << "Video input group id is the same as audio input group id.";
 }
 
@@ -329,16 +342,17 @@ TEST(TestGroupId, InputEmptyGroupId)
 TEST(TestGroupId, OutputEmptyGroupId)
 {
   MediaManager::MediaDeviceSet devices;
+  MediaManager::MediaDeviceSet audios;
 
   devices.AppendElement(
       MakeCameraDevice(NS_LITERAL_STRING("Vendor Model"),
                        NS_LITERAL_STRING("Cam-Model-GroupId")));
 
-  devices.AppendElement(MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model"),
-                                          NS_LITERAL_STRING("")));
+  audios.AppendElement(MakeSpeakerDevice(NS_LITERAL_STRING("Vendor Model"),
+                                         NS_LITERAL_STRING("")));
 
-  MediaManager::GuessVideoDeviceGroupIDs(devices);
+  MediaManager::GuessVideoDeviceGroupIDs(devices, audios);
 
-  EXPECT_EQ(devices[0]->mGroupID, devices[1]->mGroupID)
+  EXPECT_EQ(devices[0]->mGroupID, audios[0]->mGroupID)
       << "Video input group id is the same as audio output group id.";
 }

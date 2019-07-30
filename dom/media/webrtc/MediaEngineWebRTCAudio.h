@@ -42,6 +42,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+                    const nsString& aGroupId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
@@ -51,7 +52,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
   nsresult Stop() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
 
   /**
@@ -70,7 +71,7 @@ class MediaEngineWebRTCMicrophoneSource : public MediaEngineSource {
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId, const nsString& aGroupId) const override;
 
   void Shutdown() override;
 
@@ -287,6 +288,7 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
   nsString GetGroupId() const override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+                    const nsString& aGroupId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override {
     // Nothing to do here, everything is managed in MediaManager.cpp
@@ -302,7 +304,7 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
   nsresult Stop() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
 
   dom::MediaSourceEnum GetMediaSource() const override {
@@ -315,7 +317,7 @@ class MediaEngineWebRTCAudioCaptureSource : public MediaEngineSource {
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId, const nsString& aGroupId) const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
  protected:
