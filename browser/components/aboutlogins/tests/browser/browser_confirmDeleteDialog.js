@@ -15,10 +15,13 @@ add_task(async function test() {
   let browser = gBrowser.selectedBrowser;
 
   await ContentTask.spawn(browser, null, async () => {
-    let dialog = Cu.waiveXrays(
-      content.document.querySelector("confirm-delete-dialog")
-    );
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
 
+    let showPromise = loginItem.showConfirmationDialog("delete");
+
+    let dialog = Cu.waiveXrays(
+      content.document.querySelector("confirmation-dialog")
+    );
     let cancelButton = dialog.shadowRoot.querySelector(".cancel-button");
     let confirmDeleteButton = dialog.shadowRoot.querySelector(
       ".confirm-button"
@@ -26,6 +29,12 @@ add_task(async function test() {
     let dismissButton = dialog.shadowRoot.querySelector(".dismiss-button");
     let message = dialog.shadowRoot.querySelector(".message");
     let title = dialog.shadowRoot.querySelector(".title");
+
+    await content.document.l10n.translateElements([
+      title,
+      message,
+      confirmDeleteButton,
+    ]);
 
     is(
       title.textContent,
@@ -48,7 +57,6 @@ add_task(async function test() {
       "Delete button contents should match l10n attribute set on outer element"
     );
 
-    let showPromise = dialog.show();
     cancelButton.click();
     try {
       await showPromise;
@@ -68,7 +76,7 @@ add_task(async function test() {
     );
     ok(dialog.hidden, "Dialog should be hidden after clicking cancel button");
 
-    showPromise = dialog.show();
+    showPromise = loginItem.showConfirmationDialog("delete");
     dismissButton.click();
     try {
       await showPromise;
@@ -88,7 +96,7 @@ add_task(async function test() {
     );
     ok(dialog.hidden, "Dialog should be hidden after clicking dismiss button");
 
-    showPromise = dialog.show();
+    showPromise = loginItem.showConfirmationDialog("delete");
     confirmDeleteButton.click();
     try {
       await showPromise;
