@@ -192,10 +192,11 @@ open class ExperimentsInternalAPI internal constructor() {
         assert(activeExperiment == null) { "Should not have an active experiment" }
 
         val activeExperiment = ActiveExperiment.load(context, experiments)
-        logger.info(activeExperiment?.let
-        { """Loaded active experiment from cache - id="${it.experiment.id}", branch="${it.branch}"""" }
-            ?: "No active experiment in cache"
-        )
+
+        activeExperiment?.let {
+            Glean.setExperimentActive(it.experiment.id, it.branch)
+            logger.info("""Loaded active experiment from cache - id="${it.experiment.id}", branch="${it.branch}"""")
+        } ?: logger.info("No active experiment in cache")
 
         return activeExperiment
     }
