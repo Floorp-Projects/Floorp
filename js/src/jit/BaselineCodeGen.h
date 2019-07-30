@@ -285,6 +285,9 @@ class BaselineCodeGen {
 
   NonAssertingLabel postBarrierSlot_;
 
+  // Prologue code where we resume for Ion prologue bailouts.
+  NonAssertingLabel bailoutPrologue_;
+
   CodeOffset profilerEnterFrameToggleOffset_;
   CodeOffset profilerExitFrameToggleOffset_;
 
