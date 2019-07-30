@@ -240,3 +240,31 @@ wine-3.0.3:
         gpg-signature:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
+
+cbindgen-0.9.0:
+    description: cbindgen source code
+    fetch:
+        type: git
+        repo: https://github.com/eqrion/cbindgen
+        revision: e19526e00b3fe6921b881682147a1fe5d6b64124
+
+cctools-port:
+    description: cctools-port source code
+    fetch:
+        type: git
+        repo: https://github.com/tpoechtrager/cctools-port
+        revision: 3f979bbcd7ee29d79fb93f829edf3d1d16441147
+
+libtapi:
+    description: libtapi source code
+    fetch:
+        type: git
+        repo: https://github.com/tpoechtrager/apple-libtapi
+        revision: 3efb201881e7a76a21e0554906cf306432539cef
+
+libdmg-hfsplus:
+    description: libdmg-hfsplug source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/libdmg-hfsplus/
+        revision: 2ee327795680101d36f9700bd0fb618362237718
