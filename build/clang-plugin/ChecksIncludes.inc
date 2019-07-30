@@ -35,4 +35,5 @@
 #include "ScopeChecker.h"
 #include "SprintfLiteralChecker.h"
 #include "TrivialCtorDtorChecker.h"
+#include "TrivialDtorChecker.h"
 
