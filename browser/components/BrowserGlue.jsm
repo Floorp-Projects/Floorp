@@ -136,6 +136,8 @@ let LEGACY_ACTORS = {
         AboutLoginsOpenPreferences: { wantUntrusted: true },
         AboutLoginsOpenSite: { wantUntrusted: true },
         AboutLoginsRecordTelemetryEvent: { wantUntrusted: true },
+        AboutLoginsSyncEnable: { wantUntrusted: true },
+        AboutLoginsSyncOptions: { wantUntrusted: true },
         AboutLoginsUpdateLogin: { wantUntrusted: true },
       },
       messages: [
@@ -632,6 +634,8 @@ const listeners = {
     "AboutLogins:OpenMobileIos": ["AboutLoginsParent"],
     "AboutLogins:OpenSite": ["AboutLoginsParent"],
     "AboutLogins:Subscribe": ["AboutLoginsParent"],
+    "AboutLogins:SyncEnable": ["AboutLoginsParent"],
+    "AboutLogins:SyncOptions": ["AboutLoginsParent"],
     "AboutLogins:UpdateLogin": ["AboutLoginsParent"],
     "Content:Click": ["ContentClick"],
     ContentSearch: ["ContentSearch"],

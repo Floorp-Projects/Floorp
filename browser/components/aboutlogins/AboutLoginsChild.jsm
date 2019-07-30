@@ -132,6 +132,14 @@ class AboutLoginsChild extends ActorChild {
         }
         break;
       }
+      case "AboutLoginsSyncEnable": {
+        this.mm.sendAsyncMessage("AboutLogins:SyncEnable");
+        break;
+      }
+      case "AboutLoginsSyncOptions": {
+        this.mm.sendAsyncMessage("AboutLogins:SyncOptions");
+        break;
+      }
       case "AboutLoginsUpdateLogin": {
         this.mm.sendAsyncMessage("AboutLogins:UpdateLogin", {
           login: event.detail,
