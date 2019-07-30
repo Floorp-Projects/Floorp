@@ -777,7 +777,7 @@ static FieldType GetFieldTypeForFormatField(UDateFormatField fieldName) {
 
     case UDAT_FRACTIONAL_SECOND_FIELD:
 #ifdef NIGHTLY_BUILD
-      return &JSAtomState::fractionalSecondDigits;
+      return &JSAtomState::fractionalSecond;
 #else
       // Currently restricted to Nightly.
       return &JSAtomState::unknown;
