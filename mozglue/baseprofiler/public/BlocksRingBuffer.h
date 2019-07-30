@@ -172,7 +172,13 @@ class BlocksRingBuffer {
 
   // Destructor explictly destroys all remaining entries, this may invoke the
   // caller-provided entry destructor.
-  ~BlocksRingBuffer() { DestroyAllEntries(); }
+  ~BlocksRingBuffer() {
+#ifdef DEBUG
+    // Needed because of lock DEBUG-check in `DestroyAllEntries()`.
+    baseprofiler::detail::BPAutoLock lock(mMutex);
+#endif  // DEBUG
+    DestroyAllEntries();
+  }
 
   // Buffer length, constant. No need for locking.
   PowerOfTwo<Length> BufferLength() const { return mBuffer.BufferLength(); }
@@ -190,11 +196,15 @@ class BlocksRingBuffer {
   // within a lock guard lifetime.
   class EntryReader : public BufferReader {
    public:
+#ifdef DEBUG
     ~EntryReader() {
       // Expect reader to stay within the entry.
       MOZ_ASSERT(CurrentIndex() >= mEntryStart);
       MOZ_ASSERT(CurrentIndex() <= mEntryStart + mEntryBytes);
+      // No EntryReader should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
     }
+#endif  // DEBUG
 
     // All BufferReader (aka ModuloBuffer<uint32_t, Index>::Reader) APIs are
     // available to read data from this entry.
@@ -262,7 +272,10 @@ class BlocksRingBuffer {
         : BufferReader(aRing.mBuffer.ReaderAt(Index(aBlockIndex))),
           mRing(WrapNotNull(&aRing)),
           mEntryBytes(BufferReader::ReadULEB128<Length>()),
-          mEntryStart(CurrentIndex()) {}
+          mEntryStart(CurrentIndex()) {
+      // No EntryReader should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
 
     // Using a non-null pointer instead of a reference, to allow copying.
     // This EntryReader should only live inside one of the thread-safe
@@ -278,6 +291,13 @@ class BlocksRingBuffer {
   // Created through `Reader`, lives within a lock guard lifetime.
   class BlockIterator {
    public:
+#ifdef DEBUG
+    ~BlockIterator() {
+      // No BlockIterator should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
     // Comparison with other iterator, mostly used in range-for loops.
     bool operator==(const BlockIterator aRhs) const {
       MOZ_ASSERT(mRing == aRhs.mRing);
@@ -327,7 +347,10 @@ class BlocksRingBuffer {
     friend class Reader;
 
     BlockIterator(const BlocksRingBuffer& aRing, BlockIndex aBlockIndex)
-        : mRing(WrapNotNull(&aRing)), mBlockIndex(aBlockIndex) {}
+        : mRing(WrapNotNull(&aRing)), mBlockIndex(aBlockIndex) {
+      // No BlockIterator should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
 
     // Using a non-null pointer instead of a reference, to allow copying.
     // This BlockIterator should only live inside one of the thread-safe
@@ -340,6 +363,13 @@ class BlocksRingBuffer {
   // iterate through entries; lives within a lock guard lifetime.
   class Reader {
    public:
+#ifdef DEBUG
+    ~Reader() {
+      // No Reader should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
     // Index of the first block in the whole buffer.
     BlockIndex BufferRangeStart() const { return mRing->mFirstReadIndex; }
 
@@ -369,7 +399,10 @@ class BlocksRingBuffer {
     friend class BlocksRingBuffer;
 
     explicit Reader(const BlocksRingBuffer& aRing)
-        : mRing(WrapNotNull(&aRing)) {}
+        : mRing(WrapNotNull(&aRing)) {
+      // No Reader should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
 
     // Using a non-null pointer instead of a reference, to allow copying.
     // This Reader should only live inside one of the thread-safe
@@ -419,6 +452,14 @@ class BlocksRingBuffer {
   // Created through `EntryReserver`, lives within a lock guard lifetime.
   class EntryWriter : public BufferWriter {
    public:
+#ifdef DEBUG
+    ~EntryWriter() {
+      MOZ_ASSERT(RemainingBytes() == 0);
+      // No EntryWriter should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
     // All BufferWriter (aka ModuloBuffer<uint32_t, Index>::Writer) APIs are
     // available to read/write data from/to this entry.
     // Note that there are no bound checks! So this should not be used with
@@ -489,9 +530,10 @@ class BlocksRingBuffer {
             BufferWriter::WriteULEB128(aEntryBytes);
             // ... BufferWriter now at start of entry section.
             return CurrentIndex();
-          }()) {}
-
-    ~EntryWriter() { MOZ_ASSERT(RemainingBytes() == 0); }
+          }()) {
+      // No EntryWriter should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
 
     // Using a non-null pointer instead of a reference, to allow copying.
     // This EntryWriter should only live inside one of the thread-safe
@@ -505,6 +547,13 @@ class BlocksRingBuffer {
   // for them; lives within a lock guard lifetime.
   class EntryReserver {
    public:
+#ifdef DEBUG
+    ~EntryReserver() {
+      // No EntryReserver should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
+#endif  // DEBUG
+
     // Reserve `aBytes`, call `aCallback` with a temporary EntryWriter, and
     // return whatever `aCallback` returns.
     // Callback should not store `EntryWriter`, as it may become invalid after
@@ -583,7 +632,10 @@ class BlocksRingBuffer {
     friend class BlocksRingBuffer;
 
     explicit EntryReserver(BlocksRingBuffer& aRing)
-        : mRing(WrapNotNull(&aRing)) {}
+        : mRing(WrapNotNull(&aRing)) {
+      // No EntryReserver should live outside of a mutexed call.
+      mRing->mMutex.AssertCurrentThreadOwns();
+    }
 
     // Using a non-null pointer instead of a reference, to allow copying.
     // This EntryReserver should only live inside one of the thread-safe
@@ -703,6 +755,7 @@ class BlocksRingBuffer {
   // Slow, so avoid it for internal checks; this is more to check what callers
   // provide us.
   void AssertBlockIndexIsValid(BlockIndex aBlockIndex) const {
+    mMutex.AssertCurrentThreadOwns();
 #ifdef DEBUG
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
     MOZ_ASSERT(aBlockIndex < mNextWriteIndex);
@@ -735,6 +788,7 @@ class BlocksRingBuffer {
 
   // Create a reader for the block starting at aBlockIndex.
   EntryReader ReaderInBlockAt(BlockIndex aBlockIndex) const {
+    mMutex.AssertCurrentThreadOwns();
     MOZ_ASSERT(aBlockIndex >= mFirstReadIndex);
     MOZ_ASSERT(aBlockIndex < mNextWriteIndex);
     return EntryReader(*this, aBlockIndex);
@@ -744,6 +798,7 @@ class BlocksRingBuffer {
   // Note: The read index is not moved; this should only be called from the
   // destructor or ClearAllEntries.
   void DestroyAllEntries() {
+    mMutex.AssertCurrentThreadOwns();
     if (mEntryDestructor) {
       // We have an entry destructor, destroy all the things!
       Reader(*this).ForEach(
@@ -755,6 +810,7 @@ class BlocksRingBuffer {
   // Clear all entries, calling entry destructor (if any), and move read index
   // to the end so that these entries cannot be read anymore.
   void ClearAllEntries() {
+    mMutex.AssertCurrentThreadOwns();
     DestroyAllEntries();
     // Move read index to write index, so there's effectively no more entries
     // that can be read. (Not setting both to 0, in case user is keeping
