@@ -73,7 +73,7 @@ class ElementStyle {
     this.showUserAgentStyles = showUserAgentStyles;
     this.rules = [];
     this.cssProperties = this.ruleView.cssProperties;
-    this.variables = new Map();
+    this.variablesMap = new Map();
 
     // We don't want to overwrite this.store.userProperties so we only create it
     // if it doesn't already exist.
@@ -302,7 +302,6 @@ class ElementStyle {
    * Calls updateDeclarations with all supported pseudo elements
    */
   onRuleUpdated() {
-    this.variables.clear();
     this.updateDeclarations();
 
     // Update declarations for matching rules for pseudo-elements.
@@ -335,6 +334,9 @@ class ElementStyle {
     for (const textProp of textProps) {
       computedProps = computedProps.concat(textProp.computed);
     }
+
+    // CSS Variables inherits from the normal element in case of pseudo element.
+    const variables = new Map(pseudo ? this.variablesMap.get("") : null);
 
     // Walk over the computed properties. As we see a property name
     // for the first time, mark that property's name as taken by this
@@ -390,10 +392,20 @@ class ElementStyle {
         taken[computedProp.name] = computedProp;
 
         if (isCssVariable(computedProp.name)) {
-          this.variables.set(computedProp.name, computedProp.value);
+          variables.set(computedProp.name, computedProp.value);
         }
       }
     }
+
+    // Find the CSS variables that have been updated.
+    const previousVariablesMap = new Map(this.variablesMap.get(pseudo));
+    const changedVariableNamesSet = new Set(
+      [...variables.keys(), ...previousVariablesMap.keys()].filter(
+        k => variables.get(k) !== previousVariablesMap.get(k)
+      )
+    );
+
+    this.variablesMap.set(pseudo, variables);
 
     // For each TextProperty, mark it overridden if all of its computed
     // properties are marked overridden. Update the text property's associated
@@ -403,7 +415,12 @@ class ElementStyle {
     for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
-      if (this._updatePropertyOverridden(textProp)) {
+      // _hasUpdatedCSSVariable will return true if the declaration contains any
+      // of the updated CSS variable names.
+      if (
+        this._updatePropertyOverridden(textProp) ||
+        this._hasUpdatedCSSVariable(textProp, changedVariableNamesSet)
+      ) {
         textProp.updateEditor();
       }
 
@@ -412,6 +429,25 @@ class ElementStyle {
         textProp.editor.updatePropertyState();
       }
     }
+  }
+
+  /**
+   * Returns true if the given declaration's property value contains a CSS variable
+   * matching any of the updated CSS variable names.
+   *
+   * @param {TextProperty} declaration
+   *        A TextProperty of a rule.
+   * @param {Set<>String} variableNamesSet
+   *        A Set of CSS variable names that have been updated.
+   */
+  _hasUpdatedCSSVariable(declaration, variableNamesSet) {
+    for (const variableName of variableNamesSet) {
+      if (declaration.hasCSSVariable(variableName)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
@@ -808,11 +844,14 @@ class ElementStyle {
    *
    * @param  {String} name
    *         The name of the variable.
+   * @param  {String} pseudo
+   *         The pseudo-element name of the rule.
    * @return {String} the variable's value or null if the variable is
    *         not defined.
    */
-  getVariable(name) {
-    return this.variables.get(name);
+  getVariable(name, pseudo = "") {
+    const variables = this.variablesMap.get(pseudo);
+    return variables ? variables.get(name) : null;
   }
 
   /**

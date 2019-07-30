@@ -244,7 +244,7 @@ VRPose::~VRPose() { mozilla::DropJSObjects(this); }
 void VRPose::GetPosition(JSContext* aCx, JS::MutableHandle<JSObject*> aRetval,
                          ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mPosition, mVRState.pose.position, 3,
+      aCx, this, aRetval, mPosition, mVRState.pose.position, 3,
       !mPosition &&
           (bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position) ||
            bool(mVRState.flags &
@@ -256,7 +256,7 @@ void VRPose::GetLinearVelocity(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mLinearVelocity, mVRState.pose.linearVelocity, 3,
+      aCx, this, aRetval, mLinearVelocity, mVRState.pose.linearVelocity, 3,
       !mLinearVelocity &&
           bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Position),
       aRv);
@@ -266,7 +266,8 @@ void VRPose::GetLinearAcceleration(JSContext* aCx,
                                    JS::MutableHandle<JSObject*> aRetval,
                                    ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mLinearAcceleration, mVRState.pose.linearAcceleration, 3,
+      aCx, this, aRetval, mLinearAcceleration, mVRState.pose.linearAcceleration,
+      3,
       !mLinearAcceleration &&
           bool(mVRState.flags &
                gfx::VRDisplayCapabilityFlags::Cap_LinearAcceleration),
@@ -277,7 +278,7 @@ void VRPose::GetOrientation(JSContext* aCx,
                             JS::MutableHandle<JSObject*> aRetval,
                             ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mOrientation, mVRState.pose.orientation, 4,
+      aCx, this, aRetval, mOrientation, mVRState.pose.orientation, 4,
       !mOrientation &&
           bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
       aRv);
@@ -287,7 +288,7 @@ void VRPose::GetAngularVelocity(JSContext* aCx,
                                 JS::MutableHandle<JSObject*> aRetval,
                                 ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mAngularVelocity, mVRState.pose.angularVelocity, 3,
+      aCx, this, aRetval, mAngularVelocity, mVRState.pose.angularVelocity, 3,
       !mAngularVelocity &&
           bool(mVRState.flags & gfx::VRDisplayCapabilityFlags::Cap_Orientation),
       aRv);
@@ -297,12 +298,15 @@ void VRPose::GetAngularAcceleration(JSContext* aCx,
                                     JS::MutableHandle<JSObject*> aRetval,
                                     ErrorResult& aRv) {
   SetFloat32Array(
-      aCx, aRetval, mAngularAcceleration, mVRState.pose.angularAcceleration, 3,
+      aCx, this, aRetval, mAngularAcceleration,
+      mVRState.pose.angularAcceleration, 3,
       !mAngularAcceleration &&
           bool(mVRState.flags &
                gfx::VRDisplayCapabilityFlags::Cap_AngularAcceleration),
       aRv);
 }
+
+void VRPose::Update(const gfx::VRHMDSensorState& aState) { mVRState = aState; }
 
 JSObject* VRPose::WrapObject(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) {
@@ -691,21 +695,6 @@ JSObject* VRFrameData::WrapObject(JSContext* aCx,
 
 VRPose* VRFrameData::Pose() { return mPose; }
 
-void VRFrameData::LazyCreateMatrix(JS::Heap<JSObject*>& aArray,
-                                   gfx::Matrix4x4& aMat, JSContext* aCx,
-                                   JS::MutableHandle<JSObject*> aRetval,
-                                   ErrorResult& aRv) {
-  if (!aArray) {
-    // Lazily create the Float32Array
-    aArray = dom::Float32Array::Create(aCx, this, 16, aMat.components);
-    if (!aArray) {
-      aRv.NoteJSContextException(aCx);
-      return;
-    }
-  }
-  aRetval.set(aArray);
-}
-
 double VRFrameData::Timestamp() const {
   // Converting from seconds to milliseconds
   return mFrameInfo.mVRState.timestamp * 1000.0f;
@@ -714,38 +703,34 @@ double VRFrameData::Timestamp() const {
 void VRFrameData::GetLeftProjectionMatrix(JSContext* aCx,
                                           JS::MutableHandle<JSObject*> aRetval,
                                           ErrorResult& aRv) {
-  LazyCreateMatrix(mLeftProjectionMatrix, mFrameInfo.mLeftProjection, aCx,
-                   aRetval, aRv);
+  Pose::SetFloat32Array(aCx, this, aRetval, mLeftProjectionMatrix,
+                        mFrameInfo.mLeftProjection.components, 16, true, aRv);
 }
 
 void VRFrameData::GetLeftViewMatrix(JSContext* aCx,
                                     JS::MutableHandle<JSObject*> aRetval,
                                     ErrorResult& aRv) {
-  LazyCreateMatrix(mLeftViewMatrix, mFrameInfo.mLeftView, aCx, aRetval, aRv);
+  Pose::SetFloat32Array(aCx, this, aRetval, mLeftViewMatrix,
+                        mFrameInfo.mLeftView.components, 16, true, aRv);
 }
 
 void VRFrameData::GetRightProjectionMatrix(JSContext* aCx,
                                            JS::MutableHandle<JSObject*> aRetval,
                                            ErrorResult& aRv) {
-  LazyCreateMatrix(mRightProjectionMatrix, mFrameInfo.mRightProjection, aCx,
-                   aRetval, aRv);
+  Pose::SetFloat32Array(aCx, this, aRetval, mRightProjectionMatrix,
+                        mFrameInfo.mRightProjection.components, 16, true, aRv);
 }
 
 void VRFrameData::GetRightViewMatrix(JSContext* aCx,
                                      JS::MutableHandle<JSObject*> aRetval,
                                      ErrorResult& aRv) {
-  LazyCreateMatrix(mRightViewMatrix, mFrameInfo.mRightView, aCx, aRetval, aRv);
+  Pose::SetFloat32Array(aCx, this, aRetval, mRightViewMatrix,
+                        mFrameInfo.mRightView.components, 16, true, aRv);
 }
 
 void VRFrameData::Update(const VRFrameInfo& aFrameInfo) {
   mFrameInfo = aFrameInfo;
-
-  mLeftProjectionMatrix = nullptr;
-  mLeftViewMatrix = nullptr;
-  mRightProjectionMatrix = nullptr;
-  mRightViewMatrix = nullptr;
-
-  mPose = new VRPose(GetParentObject(), mFrameInfo.mVRState);
+  mPose->Update(mFrameInfo.mVRState);
 }
 
 void VRFrameInfo::Update(const gfx::VRDisplayInfo& aInfo,
