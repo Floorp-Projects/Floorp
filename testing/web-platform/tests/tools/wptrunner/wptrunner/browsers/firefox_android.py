@@ -203,4 +203,4 @@ class FirefoxAndroidBrowser(FirefoxBrowser):
     def check_crash(self, process, test):
         if not os.environ.get("MINIDUMP_STACKWALK", "") and self.stackwalk_binary:
             os.environ["MINIDUMP_STACKWALK"] = self.stackwalk_binary
-        return self.runner.check_for_crashes()
+        return bool(self.runner.check_for_crashes(test_name=test))
