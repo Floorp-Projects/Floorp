@@ -27,6 +27,7 @@ import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.storages.StringsStorageEngine
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.utils.getLanguageFromLocale
 import mozilla.components.service.glean.utils.getLocaleTag
 import org.json.JSONObject
@@ -37,7 +38,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
@@ -60,10 +61,8 @@ import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
 @RunWith(RobolectricTestRunner::class)
 class GleanTest {
 
-    @Before
-    fun setup() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `disabling upload should disable metrics recording`() {

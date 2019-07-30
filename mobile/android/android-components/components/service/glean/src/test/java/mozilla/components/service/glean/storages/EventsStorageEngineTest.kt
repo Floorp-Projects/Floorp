@@ -4,6 +4,7 @@
 package mozilla.components.service.glean.storages
 
 import android.os.SystemClock
+import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.checkPingSchema
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
@@ -14,14 +15,15 @@ import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.triggerWorkManager
 import org.json.JSONObject
-import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -48,9 +50,11 @@ enum class TruncatedKeys {
 
 @RunWith(RobolectricTestRunner::class)
 class EventsStorageEngineTest {
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
+
     @Before
     fun setUp() {
-        resetGlean()
         assert(Glean.initialized)
         EventsStorageEngine.clearAllStores()
     }
@@ -276,7 +280,7 @@ class EventsStorageEngineTest {
                 click.record(extra = mapOf(TestEventNumberKeys.TestEventNumber to "$i"))
             }
 
-            Assert.assertTrue(click.testHasValue())
+            assertTrue(click.testHasValue())
 
             // Trigger worker task to upload the pings in the background
             triggerWorkManager()

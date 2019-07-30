@@ -4,12 +4,13 @@
 
 package mozilla.components.service.glean.private
 
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -20,10 +21,8 @@ import java.lang.NullPointerException
 @RunWith(RobolectricTestRunner::class)
 class BooleanMetricTypeTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `The API saves to its storage engine`() {

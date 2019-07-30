@@ -14,14 +14,14 @@ import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.private.PingType
-import mozilla.components.service.glean.resetGlean
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.timing.TimingManager
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -31,10 +31,8 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class TimingDistributionsStorageEngineTest {
 
-    @Before
-    fun setUp() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @After
     fun reset() {

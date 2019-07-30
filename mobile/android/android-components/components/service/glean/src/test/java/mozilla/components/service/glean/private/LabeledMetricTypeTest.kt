@@ -10,7 +10,6 @@ import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.GleanMetrics.Pings
 import mozilla.components.service.glean.collectAndCheckPingSchema
 import mozilla.components.service.glean.error.ErrorRecording
-import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.storages.BooleansStorageEngine
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.service.glean.storages.MockGenericStorageEngine
@@ -18,10 +17,11 @@ import mozilla.components.service.glean.storages.StringListsStorageEngine
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.service.glean.storages.UuidsStorageEngine
+import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyString
@@ -44,10 +44,8 @@ class LabeledMetricTypeTest {
         override val sendInPings: List<String>
     ) : CommonMetricData
 
-    @Before
-    fun setup() {
-        resetGlean()
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
 
     @Test
     fun `test labeled counter type`() {
