@@ -1583,6 +1583,7 @@ static Result<Pref*, nsresult> pref_LookupForModify(
 static nsresult pref_SetPref(const char* aPrefName, PrefType aType,
                              PrefValueKind aKind, PrefValue aValue,
                              bool aIsSticky, bool aIsLocked, bool aFromInit) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
   if (!gHashTable) {
@@ -1637,7 +1638,7 @@ static nsresult pref_SetPref(const char* aPrefName, PrefType aType,
   }
 
   if (valueChanged) {
-    if (aKind == PrefValueKind::User && XRE_IsParentProcess()) {
+    if (aKind == PrefValueKind::User) {
       Preferences::HandleDirty();
     }
     NotifyCallbacks(aPrefName, PrefWrapper(pref));
@@ -1760,6 +1761,7 @@ class Parser {
 
   bool Parse(const nsCString& aName, PrefValueKind aKind, const char* aPath,
              const TimeStamp& aStartTime, const nsCString& aBuf) {
+    MOZ_ASSERT(XRE_IsParentProcess());
     sNumPrefs = 0;
     bool ok = prefs_parser_parse(aPath, aKind, aBuf.get(), aBuf.Length(),
                                  HandlePref, HandleError);
@@ -1782,6 +1784,7 @@ class Parser {
   static void HandlePref(const char* aPrefName, PrefType aType,
                          PrefValueKind aKind, PrefValue aValue, bool aIsSticky,
                          bool aIsLocked) {
+    MOZ_ASSERT(XRE_IsParentProcess());
     sNumPrefs++;
     pref_SetPref(aPrefName, aType, aKind, aValue, aIsSticky, aIsLocked,
                  /* fromInit */ true);
@@ -4254,6 +4257,8 @@ nsresult Preferences::WritePrefFile(nsIFile* aFile, SaveMethod aSaveMethod) {
 }
 
 static nsresult openPrefFile(nsIFile* aFile, PrefValueKind aKind) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   TimeStamp startTime = TimeStamp::Now();
 
   nsCString data;
@@ -4302,6 +4307,8 @@ static int pref_CompareFileNames(nsIFile* aFile1, nsIFile* aFile2,
 static nsresult pref_LoadPrefsInDir(nsIFile* aDir,
                                     char const* const* aSpecialFiles,
                                     uint32_t aSpecialFilesCount) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
   nsresult rv, rv2;
 
   nsCOMPtr<nsIDirectoryEnumerator> dirIterator;
@@ -4485,6 +4492,8 @@ struct PreferencesInternalMethods {
 // resources.
 /* static */
 Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   // Initialize static prefs before prefs from data files so that the latter
   // will override the former.
   StaticPrefs::InitAll(aIsStartup);
@@ -5200,6 +5209,8 @@ static void CacheDataAppendElement(CacheData* aData) {
 template <typename T>
 static nsresult AddVarCacheNoAssignment(T* aCache, const nsACString& aPref,
                                         StripAtomic<T> aDefault) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   CacheData* data = new CacheData(aCache, aDefault);
   CacheDataAppendElement(data);
   PreferencesInternalMethods::RegisterCallback<T>(data, aPref);
@@ -5306,6 +5317,7 @@ nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
 // used by the PREF macro definition in InitAll() below.
 
 static void SetPref_bool(const char* aName, bool aDefaultValue) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mBoolVal = aDefaultValue;
   pref_SetPref(aName, PrefType::Bool, PrefValueKind::Default, value,
@@ -5315,6 +5327,7 @@ static void SetPref_bool(const char* aName, bool aDefaultValue) {
 }
 
 static void SetPref_int32_t(const char* aName, int32_t aDefaultValue) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mIntVal = aDefaultValue;
   pref_SetPref(aName, PrefType::Int, PrefValueKind::Default, value,
@@ -5328,6 +5341,7 @@ static void SetPref_uint32_t(const char* aName, uint32_t aDefaultValue) {
 }
 
 static void SetPref_float(const char* aName, float aDefaultValue) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   // Convert the value in a locale-independent way.
   nsAutoCString defaultValue;
@@ -5342,6 +5356,7 @@ static void SetPref_float(const char* aName, float aDefaultValue) {
 // XXX: this will eventually become used
 MOZ_MAYBE_UNUSED static void SetPref_String(const char* aName,
                                             const char* aDefaultValue) {
+  MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mStringVal = aDefaultValue;
   pref_SetPref(aName, PrefType::String, PrefValueKind::Default, value,
@@ -5371,13 +5386,12 @@ template <typename T>
 static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
                              const nsACString& aName, T* aCache,
                              StripAtomic<T> aDefaultValue, bool aIsStartup,
-                             bool aSetValue) {
-  // aSetValue is set when we are running in the parent process.
+                             bool aIsParent) {
   // aIsStartup will be true when we first initialize the StaticPrefs and false
   // when we want to reset the Preferences/StaticPrefs to their default value.
 
   // InitVarCachePref is called under the following scenarios:
-  // aSetValue | aIsStartup | Action
+  // aIsParent | aIsStartup | Action
   // true      | true       | Set underlying preference and StaticPrefs to
   //           |            | their default value, set callback for Live pref.
   // true      | false      | reset underlying preference and StaticPref to
@@ -5389,7 +5403,7 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
   // 1- On startup, `Once` prefs will be initialized lazily in InitOncePrefs(),
   // 2- After that, `Once` prefs are immutable.
 
-  if (aSetValue) {
+  if (aIsParent) {
     SetPref(PromiseFlatCString(aName).get(), aDefaultValue);
     if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live)) {
       *aCache = aDefaultValue;
@@ -5441,6 +5455,8 @@ void MaybeInitOncePrefs() {
 #undef VARCACHE_PREF
 
 static void InitAll(bool aIsStartup) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   bool isParent = XRE_IsParentProcess();
 
   // For prefs like these:
