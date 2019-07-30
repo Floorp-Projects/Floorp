@@ -5,6 +5,7 @@
  */
 
 const PREF_POSTUPDATE = "app.update.postupdate";
+const PREF_PAGE = "browser.startup.page";
 const PREF_MSTONE = "browser.startup.homepage_override.mstone";
 const PREF_OVERRIDE_URL = "startup.homepage_override_url";
 
@@ -82,6 +83,7 @@ const BCH_TESTS = [
   },
 ];
 
+var gOriginalPage;
 var gOriginalMStone;
 var gOriginalOverrideURL;
 
@@ -89,8 +91,9 @@ function test() {
   waitForExplicitFinish();
 
   // Reset the startup page pref since it may have been set by other tests
-  // and we will assume it is default.
-  Services.prefs.clearUserPref("browser.startup.page");
+  // and we will assume it is (non-test) default.
+  gOriginalPage = Services.prefs.getIntPref(PREF_PAGE);
+  Services.prefs.clearUserPref(PREF_PAGE);
 
   if (Services.prefs.prefHasUserValue(PREF_MSTONE)) {
     gOriginalMStone = Services.prefs.getCharPref(PREF_MSTONE);
@@ -104,6 +107,8 @@ function test() {
 }
 
 function finish_test() {
+  Services.prefs.setIntPref(PREF_PAGE, gOriginalPage);
+
   // Reset browser.startup.homepage_override.mstone to the original value or
   // clear it if it didn't exist.
   if (gOriginalMStone) {
