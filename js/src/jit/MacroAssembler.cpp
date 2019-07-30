@@ -1571,8 +1571,6 @@ void MacroAssembler::generateBailoutTail(Register scratch,
     enterFakeExitFrame(scratch, scratch, ExitFrameType::Bare);
 
     // Save needed values onto stack temporarily.
-    pushValue(Address(bailoutInfo, offsetof(BaselineBailoutInfo, valueR0)));
-    pushValue(Address(bailoutInfo, offsetof(BaselineBailoutInfo, valueR1)));
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeFramePtr)));
     push(Address(bailoutInfo, offsetof(BaselineBailoutInfo, resumeAddr)));
 
@@ -1585,15 +1583,11 @@ void MacroAssembler::generateBailoutTail(Register scratch,
 
     // Restore values where they need to be and resume execution.
     AllocatableGeneralRegisterSet enterRegs(GeneralRegisterSet::All());
-    enterRegs.take(R0);
-    enterRegs.take(R1);
     enterRegs.take(BaselineFrameReg);
     Register jitcodeReg = enterRegs.takeAny();
 
     pop(jitcodeReg);
     pop(BaselineFrameReg);
-    popValue(R1);
-    popValue(R0);
 
     // Discard exit frame.
     addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));

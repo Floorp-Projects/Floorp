@@ -440,11 +440,10 @@ bool jit::BaselineCompileFromBaselineInterpreter(JSContext* cx,
 }
 
 BaselineScript* BaselineScript::New(
-    JSScript* jsscript, uint32_t bailoutPrologueOffset,
-    uint32_t warmUpCheckPrologueOffset, uint32_t profilerEnterToggleOffset,
-    uint32_t profilerExitToggleOffset, size_t retAddrEntries,
-    size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
-    size_t traceLoggerToggleOffsetEntries) {
+    JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
+    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
+    size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
+    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
@@ -472,8 +471,8 @@ BaselineScript* BaselineScript::New(
     return nullptr;
   }
   new (script)
-      BaselineScript(bailoutPrologueOffset, warmUpCheckPrologueOffset,
-                     profilerEnterToggleOffset, profilerExitToggleOffset);
+      BaselineScript(warmUpCheckPrologueOffset, profilerEnterToggleOffset,
+                     profilerExitToggleOffset);
 
   size_t offsetCursor = sizeof(BaselineScript);
   MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
@@ -1115,6 +1114,7 @@ void jit::ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable) {
 
 void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                uint32_t interpretOpNoDebugTrapOffset,
+                               uint32_t bailoutPrologueOffset,
                                uint32_t profilerEnterToggleOffset,
                                uint32_t profilerExitToggleOffset,
                                CodeOffsetVector&& debugInstrumentationOffsets,
@@ -1125,6 +1125,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   code_ = code;
   interpretOpOffset_ = interpretOpOffset;
   interpretOpNoDebugTrapOffset_ = interpretOpNoDebugTrapOffset;
+  bailoutPrologueOffset_ = bailoutPrologueOffset;
   profilerEnterToggleOffset_ = profilerEnterToggleOffset;
   profilerExitToggleOffset_ = profilerExitToggleOffset;
   debugInstrumentationOffsets_ = std::move(debugInstrumentationOffsets);

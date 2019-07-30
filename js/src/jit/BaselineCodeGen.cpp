@@ -292,8 +292,7 @@ MethodStatus BaselineCompiler::compile() {
   }
 
   UniquePtr<BaselineScript> baselineScript(
-      BaselineScript::New(script, bailoutPrologueOffset_.offset(),
-                          warmUpCheckPrologueOffset_.offset(),
+      BaselineScript::New(script, warmUpCheckPrologueOffset_.offset(),
                           profilerEnterFrameToggleOffset_.offset(),
                           profilerExitFrameToggleOffset_.offset(),
                           handler.retAddrEntries().length(),
@@ -6808,8 +6807,8 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   }
 #endif
 
-  // Record prologue offset for Ion bailouts.
-  bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
+  // Ion prologue bailouts will enter here in the Baseline Interpreter.
+  masm.bind(&bailoutPrologue_);
 
   frame.assertSyncedStack();
 
@@ -7089,6 +7088,11 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
   restoreInterpreterPCReg();
   masm.jump(&interpretOpAfterDebugTrap);
 
+  // External entry point for Ion prologue bailouts.
+  bailoutPrologueOffset_ = CodeOffset(masm.currentOffset());
+  restoreInterpreterPCReg();
+  masm.jump(&bailoutPrologue_);
+
   // Emit code for JSOP_UNUSED* ops.
   Label invalidOp;
   masm.bind(&invalidOp);
@@ -7220,6 +7224,7 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
 
     interpreter.init(
         code, interpretOpOffset_, interpretOpNoDebugTrapOffset_,
+        bailoutPrologueOffset_.offset(),
         profilerEnterFrameToggleOffset_.offset(),
         profilerExitFrameToggleOffset_.offset(),
         std::move(handler.debugInstrumentationOffsets()),

@@ -129,15 +129,9 @@ struct BaselineStackBuilder {
     header_->incomingStack = reinterpret_cast<uint8_t*>(frame_);
     header_->copyStackTop = buffer_ + bufferTotal_;
     header_->copyStackBottom = header_->copyStackTop;
-    header_->setR0 = 0;
-    header_->valueR0 = UndefinedValue();
-    header_->setR1 = 0;
-    header_->valueR1 = UndefinedValue();
     header_->resumeFramePtr = nullptr;
     header_->resumeAddr = nullptr;
-    header_->resumePC = nullptr;
     header_->monitorPC = nullptr;
-    header_->monitorValue = UndefinedValue();
     header_->tryPC = nullptr;
     header_->faultPC = nullptr;
     header_->numFrames = 0;
@@ -287,36 +281,13 @@ struct BaselineStackBuilder {
     return result;
   }
 
-  void popValueInto(PCMappingSlotInfo::SlotLocation loc) {
-    MOZ_ASSERT(PCMappingSlotInfo::ValidSlotLocation(loc));
-    switch (loc) {
-      case PCMappingSlotInfo::SlotInR0:
-        header_->setR0 = 1;
-        header_->valueR0 = popValue();
-        break;
-      case PCMappingSlotInfo::SlotInR1:
-        header_->setR1 = 1;
-        header_->valueR1 = popValue();
-        break;
-      default:
-        MOZ_ASSERT(loc == PCMappingSlotInfo::SlotIgnore);
-        popValue();
-        break;
-    }
-  }
-
   void setResumeFramePtr(void* resumeFramePtr) {
     header_->resumeFramePtr = resumeFramePtr;
   }
 
   void setResumeAddr(void* resumeAddr) { header_->resumeAddr = resumeAddr; }
 
-  void setResumePC(jsbytecode* pc) { header_->resumePC = pc; }
-
-  void setMonitorPCAndValue(jsbytecode* pc, Value val) {
-    header_->monitorPC = pc;
-    header_->monitorValue = val;
-  }
+  void setMonitorPC(jsbytecode* pc) { header_->monitorPC = pc; }
 
   template <typename T>
   BufferPointer<T> pointerAtStackOffset(size_t offset) {
@@ -694,7 +665,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   BufferPointer<BaselineFrame> blFrame =
       builder.pointerAtStackOffset<BaselineFrame>(0);
 
-  uint32_t flags = 0;
+  uint32_t flags = BaselineFrame::RUNNING_IN_INTERPRETER;
 
   // If we are bailing to a script whose execution is observed, mark the
   // baseline frame as a debuggee frame. This is to cover the case where we
@@ -1053,8 +1024,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   MOZ_ASSERT(blFrame->numValueSlots() <= script->nslots());
 
   // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
-  // a bailout -> enter Ion -> bailout loop with --ion-eager. See also
-  // ThunkToInterpreter.
+  // a bailout -> enter Ion -> bailout loop with --ion-eager.
   //
   // The algorithm below is the "tortoise and the hare" algorithm. See bug
   // 994444 for more explanation.
@@ -1077,7 +1047,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   }
 
   const uint32_t pcOff = script->pcToOffset(pc);
-  BaselineScript* baselineScript = script->baselineScript();
   JitScript* jitScript = script->jitScript();
 
 #ifdef DEBUG
@@ -1128,6 +1097,9 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
           BailoutKindString(bailoutKind));
 #endif
 
+  const BaselineInterpreter& baselineInterp =
+      cx->runtime()->jitRuntime()->baselineInterpreter();
+
   // If this was the last inline frame, or we are bailing out to a catch or
   // finally block in this frame, then unpacking is almost done.
   if (!iter.moreFrames() || catchingException) {
@@ -1141,76 +1113,33 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       // value directly.
       if ((CodeSpec[op].format & JOF_TYPESET) &&
           !propagatingIonExceptionForDebugMode) {
-        builder.setMonitorPCAndValue(pc, blFrame->topStackValue());
+        builder.setMonitorPC(pc);
       }
       pc = GetNextPc(pc);
     }
 
-    builder.setResumePC(pc);
     builder.setResumeFramePtr(prevFramePtr);
 
-    // If needed, initialize BaselineBailoutInfo's valueR0 and/or valueR1 with
-    // the top stack values.
-    //
-    // Note that we use the 'maybe' variant of nativeCodeForPC because
-    // of exception propagation for debug mode. See note below.
-    PCMappingSlotInfo slotInfo;
-    uint8_t* nativeCodeForPC;
-
-    if (propagatingIonExceptionForDebugMode) {
+    uint8_t* resumeAddr;
+    if (isPrologueBailout) {
+      JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
+      MOZ_ASSERT(pc == script->code());
+      blFrame->setInterpreterFieldsForPrologueBailout(script);
+      resumeAddr = baselineInterp.bailoutPrologueEntryAddr();
+    } else if (propagatingIonExceptionForDebugMode) {
       // When propagating an exception for debug mode, set the
       // resume pc to the throwing pc, so that Debugger hooks report
       // the correct pc offset of the throwing op instead of its
-      // successor (this pc will be used as the BaselineFrame's
-      // override pc).
+      // successor.
       jsbytecode* throwPC = script->offsetToPC(iter.pcOffset());
-      builder.setResumePC(throwPC);
-
-      // Note that we never resume at this pc, it is set for the sake
-      // of frame iterators giving the correct answer.
-      PCMappingSlotInfo unused;
-      nativeCodeForPC =
-          baselineScript->nativeCodeForPC(script, throwPC, &unused);
+      blFrame->setInterpreterFields(script, throwPC);
+      resumeAddr = baselineInterp.interpretOpAddr().value;
     } else {
-      nativeCodeForPC = baselineScript->nativeCodeForPC(script, pc, &slotInfo);
+      blFrame->setInterpreterFields(script, pc);
+      resumeAddr = baselineInterp.interpretOpAddr().value;
     }
-    MOZ_ASSERT(nativeCodeForPC);
-
-    unsigned numUnsynced = slotInfo.numUnsynced();
-
-    MOZ_ASSERT(numUnsynced <= 2);
-    PCMappingSlotInfo::SlotLocation loc1, loc2;
-    if (numUnsynced > 0) {
-      loc1 = slotInfo.topSlotLocation();
-      JitSpew(JitSpew_BaselineBailouts,
-              "      Popping top stack value into %d.", (int)loc1);
-      builder.popValueInto(loc1);
-    }
-    if (numUnsynced > 1) {
-      loc2 = slotInfo.nextSlotLocation();
-      JitSpew(JitSpew_BaselineBailouts,
-              "      Popping next stack value into %d.", (int)loc2);
-      MOZ_ASSERT_IF(loc1 != PCMappingSlotInfo::SlotIgnore, loc1 != loc2);
-      builder.popValueInto(loc2);
-    }
-
-    // Need to adjust the frameSize for the frame to match the values popped
-    // into registers.
-    frameSize -= sizeof(Value) * numUnsynced;
-    blFrame->setFrameSize(frameSize);
-    JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
-            int(sizeof(Value) * numUnsynced), int(frameSize));
-
-    uint8_t* opReturnAddr;
-    if (isPrologueBailout) {
-      MOZ_ASSERT(numUnsynced == 0);
-      opReturnAddr = baselineScript->bailoutPrologueEntryAddr();
-      JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
-    } else {
-      opReturnAddr = nativeCodeForPC;
-    }
-    builder.setResumeAddr(opReturnAddr);
-    JitSpew(JitSpew_BaselineBailouts, "      Set resumeAddr=%p", opReturnAddr);
+    builder.setResumeAddr(resumeAddr);
+    JitSpew(JitSpew_BaselineBailouts, "      Set resumeAddr=%p", resumeAddr);
 
     if (cx->runtime()->geckoProfiler().enabled()) {
       // Register bailout with profiler.
@@ -1234,6 +1163,10 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     return true;
   }
 
+  // This is an outer frame for an inlined getter/setter/call.
+
+  blFrame->setInterpreterFields(script, pc);
+
   // Write out descriptor of BaselineJS frame.
   size_t baselineFrameDescr = MakeFrameDescriptor(
       (uint32_t)builder.framePushed(), FrameType::BaselineJS,
@@ -1247,10 +1180,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   ICEntry& icEntry = jitScript->icEntryFromPCOffset(pcOff);
   MOZ_ASSERT(IsInlinableFallback(icEntry.fallbackStub()));
 
-  RetAddrEntry& retAddrEntry =
-      baselineScript->retAddrEntryFromPCOffset(pcOff, RetAddrEntry::Kind::IC);
-  if (!builder.writePtr(baselineScript->returnAddressForEntry(retAddrEntry),
-                        "ReturnAddr")) {
+  uint8_t* retAddr = baselineInterp.retAddrForIC(JSOp(*pc));
+  if (!builder.writePtr(retAddr, "ReturnAddr")) {
     return false;
   }
 
@@ -1906,12 +1837,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
 
   JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");
 
-  // The current native code pc may not have a corresponding ICEntry, so we
-  // store the bytecode pc in the frame for frame iterators. This pc is
-  // cleared at the end of this function. If we return false, we don't clear
-  // it: the exception handler also needs it and will clear it for us.
   BaselineFrame* topFrame = GetTopBaselineFrame(cx);
-  topFrame->setOverridePc(bailoutInfo->resumePC);
 
   jsbytecode* faultPC = bailoutInfo->faultPC;
   jsbytecode* tryPC = bailoutInfo->tryPC;
@@ -1923,7 +1849,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   uint8_t* incomingStack = bailoutInfo->incomingStack;
 
   jsbytecode* monitorPC = bailoutInfo->monitorPC;
-  RootedValue monitorValue(cx, bailoutInfo->monitorValue);
 
   // We have to get rid of the rematerialized frame, whether it is
   // restored or unwound.
@@ -1956,7 +1881,7 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   // Monitor the top stack value if we are resuming after a JOF_TYPESET op.
   if (monitorPC) {
     MOZ_ASSERT(CodeSpec[*monitorPC].format & JOF_TYPESET);
-    MOZ_ASSERT(GetNextPc(monitorPC) == topFrame->overridePc());
+    MOZ_ASSERT(GetNextPc(monitorPC) == topFrame->interpreterPC());
 
     RootedScript script(cx, topFrame->script());
     uint32_t monitorOffset = script->pcToOffset(monitorPC);
@@ -1968,8 +1893,8 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
     // particular script/pc location.
     if (fallbackStub->isMonitoredFallback()) {
       ICMonitoredFallbackStub* stub = fallbackStub->toMonitoredFallbackStub();
-      if (!TypeMonitorResult(cx, stub, topFrame, script, monitorPC,
-                             monitorValue)) {
+      RootedValue val(cx, topFrame->topStackValue());
+      if (!TypeMonitorResult(cx, stub, topFrame, script, monitorPC, val)) {
         return false;
       }
     }
@@ -2164,8 +2089,5 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   }
 
   CheckFrequentBailouts(cx, outerScript, bailoutKind);
-
-  // We're returning to JIT code, so we should clear the override pc.
-  topFrame->clearOverridePc();
   return true;
 }
