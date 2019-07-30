@@ -342,6 +342,59 @@ def fetch_urls(downloads):
             f.result()
 
 
+def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
+                         prefix=None):
+    """Produce an archive of the files comprising a Git checkout."""
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if dest_path.suffixes[-2:] != ['.tar', '.zst']:
+        raise Exception('Only producing .tar.zst archives is supported.')
+
+    if not zstandard:
+        raise ValueError('zstandard Python package not available')
+
+    with tempfile.TemporaryDirectory() as td:
+        temp_dir = pathlib.Path(td)
+
+        git_dir = temp_dir / 'git_dir'
+        if not prefix:
+            prefix = repo.rstrip('/').rsplit('/', 1)[-1]
+
+        # This could be faster with a shallow clone. However, Git requires a ref
+        # to initiate a clone. Since the commit-ish may not refer to a ref, we
+        # simply perform a full clone followed by a checkout.
+        print('cloning %s to %s' % (repo, git_dir))
+        subprocess.run(['git', 'clone', '--bare', repo, str(git_dir)],
+                       check=True)
+
+        print('creating archive %s of commit %s' % (dest_path, commit))
+        proc = subprocess.Popen([
+            'git', '--git-dir={}'.format(git_dir), 'archive',
+            '--format=tar', '--prefix=%s/' % prefix, commit
+        ], stdout=subprocess.PIPE)
+
+        with open(dest_path, 'wb') as out:
+            ctx = zstandard.ZstdCompressor()
+            ctx.copy_stream(proc.stdout, out)
+
+        proc.wait()
+
+
+def command_git_checkout_archive(args):
+    dest = pathlib.Path(args.dest)
+
+    try:
+        git_checkout_archive(dest, args.repo, args.commit,
+                             prefix=args.path_prefix)
+    except Exception:
+        try:
+            dest.unlink()
+        except FileNotFoundError:
+            pass
+
+        raise
+
+
 def command_static_url(args):
     gpg_sig_url = args.gpg_sig_url
     gpg_env_key = args.gpg_key_env
@@ -408,6 +461,19 @@ def command_task_artifacts(args):
 def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(title='sub commands')
+
+    git_checkout = subparsers.add_parser(
+        'git-checkout-archive',
+        help='Obtain an archive of files from a Git repository checkout')
+    git_checkout.set_defaults(func=command_git_checkout_archive)
+    git_checkout.add_argument('--path-prefix',
+                              help='Prefix for paths in produced archive')
+    git_checkout.add_argument('repo',
+                              help='URL to Git repository to be cloned')
+    git_checkout.add_argument('commit',
+                              help='Git commit to check out')
+    git_checkout.add_argument('dest',
+                              help='Destination path of archive')
 
     url = subparsers.add_parser('static-url', help='Download a static URL')
     url.set_defaults(func=command_static_url)

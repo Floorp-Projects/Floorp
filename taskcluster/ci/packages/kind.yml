@@ -284,8 +284,9 @@ jobs:
         run:
             using: debian-package
             tarball:
-                url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
-                sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
+                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
+            name: python-zstandard
             patch: python-zstandard-wheezy.diff
             packages:
                 - deb7-dh-python
@@ -301,8 +302,10 @@ jobs:
             using: debian-package
             dist: stretch
             tarball:
-                url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
-                sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
+                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
+            name: python-zstandard
+            pre-build-command: debchange -v 0.11.1-1.deb9moz --distribution stretch "Mozilla backport for stretch"
 
     deb10-python-zstandard:
         description: "python-zstandard for Debian buster"
@@ -312,8 +315,10 @@ jobs:
             using: debian-package
             dist: buster
             tarball:
-                url: https://github.com/indygreg/python-zstandard/releases/download/0.9.1/python-zstandard-0.9.1.tar.gz
-                sha256: 59c7d6f1f85cebb5124abb50d8ec281c5311e0812e18785e28b197cf1515dd3b
+                url: https://github.com/indygreg/python-zstandard/archive/0.11.1.tar.gz
+                sha256: 2df90698e22f0da49cdd360438479f363e58eb8c3ac6e8bac84d831cf8e7baf4
+            name: python-zstandard
+            pre-build-command: debchange -v 0.11.1-1.deb10moz --distribution buster "Mozilla backport for buster"
 
     deb7-pcre3:
         description: "pcre3 8.31 for Debian Wheezy"
