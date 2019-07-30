@@ -617,14 +617,14 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
   MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
 
-  CodeOffset callOffset;
-  EmitCallIC(masm, entry, &callOffset);
+  CodeOffset returnOffset;
+  EmitCallIC(masm, entry, &returnOffset);
 
   RetAddrEntry::Kind kind = entry->isForPrologue()
                                 ? RetAddrEntry::Kind::PrologueIC
                                 : RetAddrEntry::Kind::IC;
 
-  if (!handler.retAddrEntries().emplaceBack(pcOffset, kind, callOffset)) {
+  if (!handler.retAddrEntries().emplaceBack(pcOffset, kind, returnOffset)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -638,7 +638,21 @@ bool BaselineInterpreterCodeGen::emitNextIC() {
   masm.loadPtr(frame.addressOfInterpreterICEntry(), ICStubReg);
   masm.loadPtr(Address(ICStubReg, ICEntry::offsetOfFirstStub()), ICStubReg);
   masm.call(Address(ICStubReg, ICStub::offsetOfStubCode()));
+  uint32_t returnOffset = masm.currentOffset();
   restoreInterpreterPCReg();
+
+  // If this is an IC for a bytecode op where Ion may inline scripts, we need to
+  // record the return offset for Ion bailouts.
+  if (handler.currentOp()) {
+    JSOp op = *handler.currentOp();
+    MOZ_ASSERT(BytecodeOpHasIC(op));
+    if (IsIonInlinableOp(op)) {
+      if (!handler.icReturnOffsets().emplaceBack(returnOffset, op)) {
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -7049,12 +7063,14 @@ bool BaselineInterpreterGenerator::emitInterpreterLoop() {
 #define EMIT_OP(OP)                     \
   {                                     \
     masm.bind(&opLabels[OP]);           \
+    handler.setCurrentOp(OP);           \
     if (!this->emit_##OP()) {           \
       return false;                     \
     }                                   \
     if (!opEpilogue(OP, OP##_LENGTH)) { \
       return false;                     \
     }                                   \
+    handler.resetCurrentOp();           \
   }
   OPCODE_LIST(EMIT_OP)
 #undef EMIT_OP
@@ -7202,13 +7218,13 @@ bool BaselineInterpreterGenerator::generate(BaselineInterpreter& interpreter) {
     vtune::MarkStub(code, "BaselineInterpreter");
 #endif
 
-    interpreter.init(code, interpretOpOffset_, interpretOpNoDebugTrapOffset_,
-                     profilerEnterFrameToggleOffset_.offset(),
-                     profilerExitFrameToggleOffset_.offset(),
-                     std::move(handler.debugInstrumentationOffsets()),
-                     std::move(debugTrapOffsets_),
-                     std::move(handler.codeCoverageOffsets()),
-                     handler.callVMOffsets());
+    interpreter.init(
+        code, interpretOpOffset_, interpretOpNoDebugTrapOffset_,
+        profilerEnterFrameToggleOffset_.offset(),
+        profilerExitFrameToggleOffset_.offset(),
+        std::move(handler.debugInstrumentationOffsets()),
+        std::move(debugTrapOffsets_), std::move(handler.codeCoverageOffsets()),
+        std::move(handler.icReturnOffsets()), handler.callVMOffsets());
   }
 
   if (cx->runtime()->geckoProfiler().enabled()) {
