@@ -428,6 +428,7 @@ class StaticAnalysis(MachCommandBase):
                 dict_issue = {
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
+                    'build_error': issue['checkerName'].startswith('RW.CLANG'),
                     'message': event_path['eventDescription'],
                     'reliability': self.get_reliability_index_for_cov_checker(
                         issue['checkerName']
