@@ -755,6 +755,7 @@ JSObject* Key::DecodeBinary(const unsigned char*& aPos,
   }
 
   if (!size) {
+    ++aPos;
     return JS::NewArrayBuffer(aCx, 0);
   }
 
