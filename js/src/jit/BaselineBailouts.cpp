@@ -707,7 +707,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
   // Initialize BaselineFrame's envChain and argsObj
   JSObject* envChain = nullptr;
-  Value returnValue;
+  Value returnValue = UndefinedValue();
   ArgumentsObject* argsObj = nullptr;
   BailoutKind bailoutKind = iter.bailoutKind();
   if (bailoutKind == Bailout_ArgumentCheck) {
@@ -722,7 +722,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
     // skip |return value|
     iter.skip();
-    returnValue = UndefinedValue();
 
     // Scripts with |argumentsHasVarBinding| have an extra slot.
     if (script->argumentsHasVarBinding()) {
@@ -789,10 +788,16 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       }
     }
 
-    // Make sure to add HAS_RVAL to flags here because setFlags() below
-    // will clobber it.
-    returnValue = iter.read();
-    flags |= BaselineFrame::HAS_RVAL;
+    if (script->noScriptRval()) {
+      // Don't use the return value (likely a JS_OPTIMIZED_OUT MagicValue) to
+      // not confuse Baseline.
+      iter.skip();
+    } else {
+      // Make sure to add HAS_RVAL to |flags| and not blFrame->flags because
+      // blFrame->setFlags(flags) below clobbers all frame flags.
+      flags |= BaselineFrame::HAS_RVAL;
+      returnValue = iter.read();
+    }
 
     // If script maybe has an arguments object, the third slot will hold it.
     if (script->argumentsHasVarBinding()) {
