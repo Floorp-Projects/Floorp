@@ -1,9 +1,6 @@
 #!/bin/bash
 set -x -e -v
 
-# If you update this, make sure to update the minimum version in
-# build/moz.configure/bindgen.configure as well.
-CBINDGEN_REVISION=e19526e00b3fe6921b881682147a1fe5d6b64124 # v0.9.0
 TARGET="$1"
 
 case "$(uname -s)" in
@@ -50,18 +47,7 @@ fi
 
 export PATH="$PWD/rustc/bin:$PATH"
 
-# XXX On Windows there's a workspace/builds/src/Cargo.toml from the root of
-# mozilla-central, and cargo complains below if it's not gone...
-if [ -f Cargo.toml ]; then
-  cat Cargo.toml
-  rm Cargo.toml
-fi
-
-git clone https://github.com/eqrion/cbindgen cbindgen
-
-cd $_
-
-git checkout $CBINDGEN_REVISION
+cd $MOZ_FETCHES_DIR/cbindgen
 
 cargo build --verbose --release --target "$TARGET"
 
