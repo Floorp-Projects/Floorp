@@ -2002,6 +2002,7 @@ this.DownloadCopySaver.prototype = {
       let channel = NetUtil.newChannel({
         uri: download.source.url,
         loadUsingSystemPrincipal: true,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_SAVEAS_DOWNLOAD,
       });
       if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
         channel.setPrivate(download.source.isPrivate);
