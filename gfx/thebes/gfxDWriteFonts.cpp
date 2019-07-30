@@ -654,8 +654,6 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
   }
   if (!mAzureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool useEmbeddedBitmap =
-        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
     bool forceGDI = GetForceGDIClassic();
 
     IDWriteRenderingParams* params =
@@ -673,6 +671,11 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
       gamma = GetSystemGDIGamma();
       contrast = 0.0f;
     }
+
+    bool useEmbeddedBitmap =
+        (renderingMode == DWRITE_RENDERING_MODE_DEFAULT ||
+         renderingMode == DWRITE_RENDERING_MODE_GDI_CLASSIC) &&
+        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
 
     const gfxFontStyle* fontStyle = GetStyle();
     mAzureScaledFont = Factory::CreateScaledFontForDWriteFont(
