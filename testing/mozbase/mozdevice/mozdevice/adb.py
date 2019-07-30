@@ -617,31 +617,10 @@ class ADBDevice(ADBCommand):
         self._have_android_su = False
         self._re_internal_storage = None
 
+        self._initialize_boot_state(timeout=timeout)
+
         # Catch exceptions due to the potential for segfaults
         # calling su when using an improperly rooted device.
-
-        # Note this check to see if adbd is running is performed on
-        # the device in the state it exists in when the ADBDevice is
-        # initialized. It may be the case that it has been manipulated
-        # since its last boot and that its current state does not
-        # match the state the device will have immediately after a
-        # reboot. For example, if adb root was called manually prior
-        # to ADBDevice being initialized, then self._have_root_shell
-        # will not reflect the state of the device after it has been
-        # rebooted again. Therefore this check will need to be
-        # performed again after a reboot.
-
-        self._check_adb_root(timeout=timeout)
-
-        # To work around bug 1525401 where su -c id will return an
-        # exitcode of 1 if selinux permissive is not already in effect,
-        # we need su to turn off selinux prior to checking for su.
-        # We can use shell() directly to prevent the non-zero exitcode
-        # from raising an ADBError.
-        adb_process = self.shell("su -c setenforce 0")
-        self._logger.info("setenforce 0 exitcode %s, stdout: %s" % (
-            adb_process.proc.poll(),
-            adb_process.proc.stdout))
 
         uid = 'uid=0'
         # Do we have a 'Superuser' sh like su?
@@ -790,6 +769,66 @@ class ADBDevice(ADBCommand):
         self.stack_trace_dir = stack_trace_dir
 
         self._logger.debug("ADBDevice: %s" % self.__dict__)
+
+    def _initialize_boot_state(self, timeout=None):
+        """Internal method to prepare the device state during initialization
+        of ADBDevice or after rebooting.
+
+        _initialize_boot_state will wait for sys.boot_completed=1 and
+        dev.bootcomplete=1, restarting adbd as root if required, and
+        then set SELinux to Permissive.
+
+        This method must be called during ADBDevice
+        initialization or immediately after rebooting the device.
+
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+
+        :raises: * ADBError
+
+        """
+        self._wait_for_boot_completed(timeout=timeout)
+        self._check_adb_root(timeout=timeout)
+
+        # To work around bug 1525401 where su -c id will return an
+        # exitcode of 1 if selinux permissive is not already in effect,
+        # we need su to turn off selinux prior to checking for su.
+        # We can use shell() directly to prevent the non-zero exitcode
+        # from raising an ADBError.
+        # Note: We are assuming su -c is supported and do not attempt to
+        # use su 0.
+        adb_process = self.shell("su -c setenforce 0")
+        self._logger.info("su -c setenforce 0 exitcode %s, stdout: %s" % (
+            adb_process.proc.poll(),
+            adb_process.proc.stdout))
+
+    def _wait_for_boot_completed(self, timeout=None):
+        """Internal method to wait for boot to complete.
+
+        Wait for sys.boot_completed=1 and dev.bootcomplete=1 and
+        raise ADBError if boot does not complete within retry attempts.
+
+        :param timeout: The default maximum time in
+            seconds for any spawned adb process to complete before
+            throwing an ADBTimeoutError.  This timeout is per adb call. The
+            total time spent may exceed this value. If it is not
+            specified, the value defaults to 300.
+        :type timeout: integer or None
+
+        :raises: * ADBError
+        """
+        for attempt in range(self._device_ready_retry_attempts):
+            sys_boot_completed = self.shell_output('getprop sys.boot_completed', timeout=timeout)
+            dev_bootcomplete = self.shell_output('getprop dev.bootcomplete', timeout=timeout)
+            if dev_bootcomplete == "1" and sys_boot_completed == "1":
+                break
+            time.sleep(self._device_ready_retry_wait)
+        if dev_bootcomplete != "1" or sys_boot_completed != "1":
+            raise ADBError('Failed to complete boot in time')
 
     def _get_device_serial(self, device):
         if device is None:
@@ -1452,6 +1491,21 @@ class ADBDevice(ADBCommand):
             return adb_process.exitcode == 0
         finally:
             if adb_process:
+                if self._verbose:
+                    output = adb_process.stdout_file.read().rstrip()
+                    self._logger.debug('shell_bool: %s, '
+                                       'timeout: %s, '
+                                       'root: %s, '
+                                       'timedout: %s, '
+                                       'exitcode: %s, '
+                                       'output: %s' %
+                                       (' '.join(adb_process.args),
+                                        timeout,
+                                        root,
+                                        adb_process.timedout,
+                                        adb_process.exitcode,
+                                        output))
+
                 adb_process.stdout_file.close()
 
     def shell_output(self, cmd, env=None, cwd=None, timeout=None, root=False):
@@ -1942,7 +1996,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return self._test_path('e', path, timeout, root)
+        return self._test_path('e', path, timeout=timeout, root=root)
 
     def is_dir(self, path, timeout=None, root=False):
         """Returns True if path is an existing directory on the device.
@@ -1963,7 +2017,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return self._test_path('d', path, timeout, root)
+        return self._test_path('d', path, timeout=timeout, root=root)
 
     def is_file(self, path, timeout=None, root=False):
         """Returns True if path is an existing file on the device.
@@ -1984,7 +2038,7 @@ class ADBDevice(ADBCommand):
                  * ADBRootError
         """
         path = posixpath.normpath(path)
-        return self._test_path('f', path, timeout, root)
+        return self._test_path('f', path, timeout=timeout, root=root)
 
     def list_files(self, path, timeout=None, root=False):
         """Return a list of files/directories contained in a directory
@@ -2658,14 +2712,7 @@ class ADBDevice(ADBCommand):
 
         """
         self.command_output(["reboot"], timeout=timeout)
-        # command_output automatically inserts a 'wait-for-device'
-        # argument to adb. Issuing an empty command is the same as adb
-        # -s <device> wait-for-device. We don't send an explicit
-        # 'wait-for-device' since that would add duplicate
-        # 'wait-for-device' arguments which is an error in newer
-        # versions of adb.
-        self.command_output([], timeout=timeout)
-        self._check_adb_root(timeout=timeout)
+        self._initialize_boot_state(timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
     def get_info(self, directive=None, timeout=None):
@@ -2860,7 +2907,7 @@ class ADBDevice(ADBCommand):
         # 'wait-for-device' since that would add duplicate
         # 'wait-for-device' arguments which is an error in newer
         # versions of adb.
-        self.command_output([], timeout=timeout)
+        self._wait_for_boot_completed(timeout=timeout)
         pm_error_string = "Error: Could not access the Package Manager"
         pm_list_commands = ["packages", "permission-groups", "permissions",
                             "instrumentation", "features", "libraries"]
