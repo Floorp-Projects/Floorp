@@ -29,7 +29,7 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
  public:
   typedef mozilla::layers::LayersId LayersId;
 
-  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild);
+  NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild, final);
 
   BrowserChild* Manager() {
     MOZ_ASSERT(mIPCOpen);

@@ -31,7 +31,7 @@ def capture_commands(monkeypatch):
 
 @pytest.fixture
 def result():
-    result = ResultSummary()
+    result = ResultSummary('/fake/root')
     result.issues['foo.py'].extend([
         Issue(
             linter='no-foobar',

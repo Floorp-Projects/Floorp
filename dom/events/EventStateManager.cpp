@@ -6329,16 +6329,12 @@ void EventStateManager::Prefs::Init() {
     return;
   }
 
-  DebugOnly<nsresult> rv = Preferences::AddBoolVarCache(
-      &sKeyCausesActivation, "accessibility.accesskeycausesactivation",
-      sKeyCausesActivation);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"accessibility.accesskeycausesactivation\"");
-  rv = Preferences::AddBoolVarCache(&sClickHoldContextMenu,
-                                    "ui.click_hold_context_menus",
-                                    sClickHoldContextMenu);
-  MOZ_ASSERT(NS_SUCCEEDED(rv),
-             "Failed to observe \"ui.click_hold_context_menus\"");
+  Preferences::AddBoolVarCache(&sKeyCausesActivation,
+                               "accessibility.accesskeycausesactivation",
+                               sKeyCausesActivation);
+  Preferences::AddBoolVarCache(&sClickHoldContextMenu,
+                               "ui.click_hold_context_menus",
+                               sClickHoldContextMenu);
   sPrefsAlreadyCached = true;
 }
 

@@ -6,13 +6,20 @@ from __future__ import absolute_import
 
 from collections import defaultdict
 from json import dumps, JSONEncoder
+import os
 
 
 class ResultSummary(object):
     """Represents overall result state from an entire lint run."""
+    root = None
 
-    def __init__(self):
+    def __init__(self, root):
         self.reset()
+
+        # Store the repository root folder to be able to build
+        # Issues relative paths to that folder
+        if ResultSummary.root is None:
+            ResultSummary.root = root
 
     def reset(self):
         self.issues = defaultdict(list)
@@ -78,6 +85,7 @@ class Issue(object):
         "rule",
         "lineoffset",
         "diff",
+        "relpath",
     )
 
     def __init__(
@@ -93,8 +101,8 @@ class Issue(object):
         rule=None,
         lineoffset=None,
         diff=None,
+        relpath=None,
     ):
-        self.path = path
         self.message = message
         self.lineno = int(lineno) if lineno else 0
         self.column = int(column) if column else column
@@ -105,6 +113,15 @@ class Issue(object):
         self.rule = rule
         self.lineoffset = lineoffset
         self.diff = diff
+
+        root = ResultSummary.root
+        assert root is not None, 'Missing ResultSummary.root'
+        if os.path.isabs(path):
+            self.path = path
+            self.relpath = os.path.relpath(path, root)
+        else:
+            self.path = os.path.join(root, path)
+            self.relpath = path
 
     def __repr__(self):
         s = dumps(self, cls=IssueEncoder, indent=2)

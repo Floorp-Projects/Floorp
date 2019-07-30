@@ -87,6 +87,10 @@ void nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI,
   mLoadedURI = aURI;
 }
 
+void nsDOMNavigationTiming::NotifyRestoreStart() {
+  mNavigationType = TYPE_BACK_FORWARD;
+}
+
 void nsDOMNavigationTiming::NotifyBeforeUnload() {
   mBeforeUnloadStart = TimeStamp::Now();
 }

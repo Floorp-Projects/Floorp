@@ -829,8 +829,12 @@ def main(args):
     vcs_checkout_from_args(args, 'comm')
 
     try:
-        if 'GECKO_PATH' in os.environ:
-            os.environ['GECKO_PATH'] = os.path.abspath(os.environ['GECKO_PATH'])
+        for k in ('GECKO_PATH', 'MOZ_FETCHES_DIR'):
+            if k in os.environ:
+                os.environ[k] = os.path.abspath(os.environ[k])
+                print_line(b'setup', b'%s is %s\n' % (
+                    k.encode('utf-8'),
+                    os.environ[k].encode('utf-8')))
 
         if 'MOZ_FETCHES' in os.environ:
             fetch_artifacts()

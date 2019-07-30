@@ -1,5 +1,3 @@
-package com.leanplum.utils;
-
 /*
  * Copyright 2017, Leanplum, Inc. All rights reserved.
  *
@@ -20,6 +18,7 @@ package com.leanplum.utils;
  * specific language governing permissions and limitations
  * under the License.
  */
+package com.leanplum.utils;
 
 import android.content.Context;
 import android.os.Build;
@@ -30,28 +29,28 @@ import android.os.Build;
  * @author Anna Orlova
  */
 public class BuildUtil {
-    private static int targetSdk = -1;
+  private static int targetSdk = -1;
 
-    /**
-     * Whether notification channels are supported.
-     *
-     * @param context The application context.
-     * @return True if notification channels are supported, false otherwise.
-     */
-    public static boolean isNotificationChannelSupported(Context context) {
-        return Build.VERSION.SDK_INT >= 26 && getTargetSdkVersion(context) >= 26;
-    }
+  /**
+   * Whether notification channels are supported.
+   *
+   * @param context The application context.
+   * @return True if notification channels are supported, false otherwise.
+   */
+  public static boolean isNotificationChannelSupported(Context context) {
+    return Build.VERSION.SDK_INT >= 26 && getTargetSdkVersion(context) >= 26;
+  }
 
-    /**
-     * Returns target SDK version parsed from manifest.
-     *
-     * @param context The application context.
-     * @return Target SDK version.
-     */
-    private static int getTargetSdkVersion(Context context) {
-        if (targetSdk == -1 && context != null) {
-            targetSdk = context.getApplicationInfo().targetSdkVersion;
-        }
-        return targetSdk;
+  /**
+   * Returns target SDK version parsed from manifest.
+   *
+   * @param context The application context.
+   * @return Target SDK version.
+   */
+  private static int getTargetSdkVersion(Context context) {
+    if (targetSdk == -1 && context != null) {
+      targetSdk = context.getApplicationInfo().targetSdkVersion;
     }
+    return targetSdk;
+  }
 }

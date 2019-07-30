@@ -46,57 +46,47 @@ void SetFunc(const nsCString& aPrefName, float aValue) {
 }
 
 void AddVarCacheFunc(bool* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddBoolVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddBoolVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(Atomic<bool, Relaxed>* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(Atomic<bool, ReleaseAcquire>* aVar,
                      const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicBoolVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(int32_t* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddIntVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddIntVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(Atomic<int32_t, Relaxed>* aVar,
                      const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicIntVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicIntVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(uint32_t* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddUintVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddUintVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(Atomic<uint32_t, Relaxed>* aVar,
                      const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicUintVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicUintVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(Atomic<uint32_t, ReleaseAcquire>* aVar,
                      const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicUintVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicUintVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(float* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddFloatVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddFloatVarCache(aVar, aPrefName);
 }
 
 void AddVarCacheFunc(std::atomic<float>* aVar, const nsCString& aPrefName) {
-  nsresult rv = Preferences::AddAtomicFloatVarCache(aVar, aPrefName);
-  ASSERT_TRUE(NS_SUCCEEDED(rv));
+  Preferences::AddAtomicFloatVarCache(aVar, aPrefName);
 }
 
 template <typename T, typename U = T>
