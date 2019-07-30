@@ -7,7 +7,7 @@ const tests = [
           1: {
               string: "1 (second: 0)",
               parts: [
-                  {type: "fractionalSecondDigits", value: "1"},
+                  {type: "fractionalSecond", value: "1"},
                   {type: "literal", value: " (second: "},
                   {type: "second", value: "0"},
                   {type: "literal", value: ")"},
@@ -18,7 +18,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "12"},
+                  {type: "fractionalSecond", value: "12"},
               ],
           },
           3: {
@@ -26,7 +26,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "123"},
+                  {type: "fractionalSecond", value: "123"},
               ],
           },
       }
@@ -37,7 +37,7 @@ const tests = [
           1: {
               string: "0 (second: 0)",
               parts: [
-                  {type: "fractionalSecondDigits", value: "0"},
+                  {type: "fractionalSecond", value: "0"},
                   {type: "literal", value: " (second: "},
                   {type: "second", value: "0"},
                   {type: "literal", value: ")"},
@@ -48,7 +48,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "02"},
+                  {type: "fractionalSecond", value: "02"},
               ],
           },
           3: {
@@ -56,7 +56,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "023"},
+                  {type: "fractionalSecond", value: "023"},
               ],
           },
       }
@@ -67,7 +67,7 @@ const tests = [
           1: {
               string: "0 (second: 0)",
               parts: [
-                  {type: "fractionalSecondDigits", value: "0"},
+                  {type: "fractionalSecond", value: "0"},
                   {type: "literal", value: " (second: "},
                   {type: "second", value: "0"},
                   {type: "literal", value: ")"},
@@ -78,7 +78,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "00"},
+                  {type: "fractionalSecond", value: "00"},
               ],
           },
           3: {
@@ -86,7 +86,7 @@ const tests = [
               parts: [
                   {type: "second", value: "0"},
                   {type: "literal", value: "."},
-                  {type: "fractionalSecondDigits", value: "003"},
+                  {type: "fractionalSecond", value: "003"},
               ],
           },
       }
