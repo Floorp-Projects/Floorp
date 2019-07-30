@@ -755,6 +755,70 @@ add_task(async function testExtensionGenericIcon() {
   await closeView(win);
 });
 
+add_task(async function testSectionHeadingKeys() {
+  let mockProvider = new MockProvider();
+
+  mockProvider.createAddons([
+    {
+      id: "test-theme",
+      name: "Test Theme",
+      type: "theme",
+    },
+    {
+      id: "test-extension-disabled",
+      name: "Test Disabled Extension",
+      type: "extension",
+      userDisabled: true,
+    },
+    {
+      id: "test-plugin-disabled",
+      name: "Test Disabled Plugin",
+      type: "plugin",
+      userDisabled: true,
+    },
+    {
+      id: "test-locale",
+      name: "Test Enabled Locale",
+      type: "locale",
+    },
+    {
+      id: "test-locale-disabled",
+      name: "Test Disabled Locale",
+      type: "locale",
+      userDisabled: true,
+    },
+    {
+      id: "test-dictionary",
+      name: "Test Enabled Dictionary",
+      type: "dictionary",
+    },
+    {
+      id: "test-dictionary-disabled",
+      name: "Test Disabled Dictionary",
+      type: "dictionary",
+      userDisabled: true,
+    },
+  ]);
+
+  for (let type of ["extension", "theme", "plugin", "locale", "dictionary"]) {
+    let win = await loadInitialView(type);
+    let doc = win.document;
+
+    for (let status of ["enabled", "disabled"]) {
+      let section = getSection(doc, status);
+      let el = section.querySelector(".list-section-heading");
+      isnot(el, null, "Should have heading present");
+      is(
+        doc.l10n.getAttributes(el).id,
+        `${type}-${status}-heading`,
+        `Should have correct ${status} heading for ${type} section`
+      );
+    }
+
+    await closeView(win);
+  }
+});
+
 add_task(async function testDisabledDimming() {
   const id = "disabled@mochi.test";
   let extension = ExtensionTestUtils.loadExtension({
