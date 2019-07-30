@@ -107,6 +107,27 @@
 
                 "-/*/dnam"
             ]
+        },
+        {
+            "categories": [
+                "coll_tree",
+                "curr_tree",
+                "locales_tree",
+                "rbnf_tree",
+                "unit_tree",
+                "zone_tree"
+            ],
+            "rules": [
+                "-/Version"
+            ]
+        },
+        {
+            "categories": [
+                "coll_tree"
+            ],
+            "rules": [
+                "-/collations/*/Version"
+            ]
         }
     ]
 }
