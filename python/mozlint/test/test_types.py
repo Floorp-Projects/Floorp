@@ -8,6 +8,7 @@ import os
 
 import mozunit
 import pytest
+import mozpack.path as mozpath
 
 from mozlint.result import Issue, ResultSummary
 
@@ -15,7 +16,7 @@ from mozlint.result import Issue, ResultSummary
 @pytest.fixture
 def path(filedir):
     def _path(name):
-        return os.path.join(filedir, name)
+        return mozpath.join(filedir, name)
     return _path
 
 

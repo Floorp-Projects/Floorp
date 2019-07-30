@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import os
-
 from ..result import Issue
 
 
@@ -25,7 +23,7 @@ class UnixFormatter(object):
                 assert isinstance(err, Issue)
 
                 slots = {s: getattr(err, s) for s in err.__slots__}
-                slots["path"] = os.path.relpath(slots["path"])
+                slots["path"] = slots['relpath']
                 slots["column"] = "%d:" % slots["column"] if slots["column"] else ""
                 slots["rule"] = slots["rule"] or slots["linter"]
 
