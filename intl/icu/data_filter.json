@@ -128,6 +128,15 @@
             "rules": [
                 "-/collations/*/Version"
             ]
+        },
+        {
+            "categories": [
+                "curr_tree"
+            ],
+            "rules": [
+                "-/Currencies%formal",
+                "-/Currencies%variant"
+            ]
         }
     ]
 }
