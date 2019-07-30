@@ -3386,6 +3386,10 @@ var AddonManagerInternal = {
         return false;
       }
 
+      if (!(addon.permissions & AddonManager.PERM_CAN_UNINSTALL)) {
+        return Promise.reject({ message: "Addon cannot be uninstalled" });
+      }
+
       try {
         addon.uninstall();
         return true;
