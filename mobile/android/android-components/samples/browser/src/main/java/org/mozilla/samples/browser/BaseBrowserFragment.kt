@@ -172,7 +172,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler {
                 context = requireContext(),
                 sessionManager = components.sessionManager,
                 sessionId = sessionId,
-                fragmentManager = requireFragmentManager()
+                fragmentManager = requireFragmentManager(),
+                interceptLinkClicks = true
             ),
             owner = this,
             view = layout
