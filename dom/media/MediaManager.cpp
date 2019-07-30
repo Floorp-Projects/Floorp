@@ -1124,111 +1124,6 @@ class GetUserMediaStreamRunnable : public Runnable {
         MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError), __func__);
   }
 
-  class TracksCreatedListener : public MediaStreamTrackListener {
-   public:
-    TracksCreatedListener(
-        RefPtr<MediaManager> aManager,
-        MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
-        RefPtr<GetUserMediaWindowListener> aWindowListener, uint64_t aWindowID,
-        RefPtr<DOMMediaStream> aStream, RefPtr<MediaStreamTrack> aTrack,
-        RefPtr<GenericNonExclusivePromise>&& aFirstFramePromise)
-        : mWindowListener(std::move(aWindowListener)),
-          mHolder(std::move(aHolder)),
-          mManager(std::move(aManager)),
-          mWindowID(aWindowID),
-          mGraph(aTrack->GraphImpl()),
-          mStream(new nsMainThreadPtrHolder<DOMMediaStream>(
-              "TracksCreatedListener::mStream", aStream.forget())),
-          mTrack(new nsMainThreadPtrHolder<MediaStreamTrack>(
-              "TracksCreatedListener::mTrack", aTrack.forget())),
-          mFirstFramePromise(aFirstFramePromise) {}
-
-    ~TracksCreatedListener() {
-      RejectIfExists(MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
-                     __func__);
-    }
-
-    // TODO: The need for this should be removed by an upcoming refactor.
-    void RejectIfExists(RefPtr<MediaMgrError>&& aError,
-                        const char* aMethodName) {
-      mHolder.RejectIfExists(std::move(aError), aMethodName);
-    }
-
-    void NotifyOutput(MediaStreamGraph* aGraph,
-                      StreamTime aCurrentTrackTime) override {
-      // It's enough to know that one of the tracks have output, as both tracks
-      // are guaranteed to be created in the graph at this point.
-
-      if (mDispatchedTracksCreated) {
-        return;
-      }
-      mDispatchedTracksCreated = true;
-      nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction(
-          "TracksCreatedListener::NotifyOutput Notifier",
-          [self = RefPtr<TracksCreatedListener>(this), this]() {
-            mTrack->RemoveListener(this);
-
-            if (!mManager->IsWindowListenerStillActive(mWindowListener)) {
-              return;
-            }
-
-            // This is safe since we're on main-thread, and the windowlist can
-            // only be invalidated from the main-thread (see OnNavigation)
-            if (!mFirstFramePromise) {
-              LOG("Returning success for getUserMedia()");
-              mHolder.Resolve(RefPtr<DOMMediaStream>(mStream), __func__);
-              return;
-            }
-            LOG("Deferring getUserMedia success to arrival of 1st frame");
-            mFirstFramePromise->Then(
-                GetMainThreadSerialEventTarget(), __func__,
-                [holder = std::move(mHolder), stream = mStream](
-                    const GenericNonExclusivePromise::ResolveOrRejectValue&
-                        aValue) mutable {
-                  if (aValue.IsReject()) {
-                    holder.Reject(MakeRefPtr<MediaMgrError>(
-                                      MediaMgrError::Name::AbortError),
-                                  __func__);
-                  } else {
-                    LOG("Returning success for getUserMedia()!");
-                    holder.Resolve(RefPtr<DOMMediaStream>(stream), __func__);
-                  }
-                });
-          });
-      // DispatchToMainThreadStableState will make the runnable run
-      // in stable state. But since the runnable runs JS we need to make a
-      // double dispatch.
-      mGraph->DispatchToMainThreadStableState(NS_NewRunnableFunction(
-          "TracksCreatedListener::NotifyOutput Stable State Notifier",
-          [graph = mGraph, r = std::move(r)]() mutable {
-            graph->Dispatch(r.forget());
-          }));
-    }
-    void NotifyRemoved() override {
-      mGraph->Dispatch(NS_NewRunnableFunction(
-          "TracksCreatedListener::NotifyRemoved CycleBreaker",
-          [self = RefPtr<TracksCreatedListener>(this)]() {
-            self->mTrack->RemoveListener(self);
-          }));
-    }
-    const RefPtr<GetUserMediaWindowListener> mWindowListener;
-    MozPromiseHolder<MediaManager::StreamPromise> mHolder;
-    const RefPtr<MediaManager> mManager;
-    uint64_t mWindowID;
-    const RefPtr<MediaStreamGraphImpl> mGraph;
-    // Keep the DOMMediaStream alive until the success callback has been called,
-    // otherwise we might immediately destroy the DOMMediaStream and
-    // shut down the underlying MediaStream prematurely.
-    // This creates a cycle which is broken when we're destroyed, i.e., either
-    // when we've called the success callback and thus removed the listener from
-    // the graph, or on graph shutdown.
-    nsMainThreadPtrHandle<DOMMediaStream> mStream;
-    nsMainThreadPtrHandle<MediaStreamTrack> mTrack;
-    RefPtr<GenericNonExclusivePromise> mFirstFramePromise;
-    // Graph thread only.
-    bool mDispatchedTracksCreated = false;
-  };
-
   NS_IMETHOD
   Run() override {
     MOZ_ASSERT(NS_IsMainThread());
@@ -1337,44 +1232,55 @@ class GetUserMediaStreamRunnable : public Runnable {
                               std::move(audioTrackSource), mVideoDevice,
                               std::move(videoTrackSource));
 
-    nsTArray<RefPtr<MediaStreamTrack>> tracks(2);
-    domStream->GetTracks(tracks);
-    RefPtr<MediaStreamTrack> track = tracks[0];
-    auto tracksCreatedListener = MakeRefPtr<TracksCreatedListener>(
-        mManager, std::move(mHolder), mWindowListener, mWindowID, domStream,
-        track, std::move(firstFramePromise));
-
-    // Dispatch to the media thread to ask it to start the sources,
-    // because that can take a while.
-    // Pass ownership of domStream through the lambda to the nested chrome
-    // notification lambda to ensure it's kept alive until that lambda runs or
-    // is discarded.
-    mSourceListener->InitializeAsync()->Then(
-        GetMainThreadSerialEventTarget(), __func__,
-        [manager = mManager, windowListener = mWindowListener, track,
-         tracksCreatedListener]() {
-          LOG("GetUserMediaStreamRunnable::Run: starting success callback "
-              "following InitializeAsync()");
-          // Initiating and starting devices succeeded.
-          track->AddListener(tracksCreatedListener);
-          windowListener->ChromeAffectingStateChanged();
-          manager->SendPendingGUMRequest();
-        },
-        [manager = mManager, windowID = mWindowID,
-         tracksCreatedListener](RefPtr<MediaMgrError>&& aError) {
-          MOZ_ASSERT(NS_IsMainThread());
-          LOG("GetUserMediaStreamRunnable::Run: starting failure callback "
-              "following InitializeAsync()");
-          // Initiating and starting devices failed.
-
-          // Only run if the window is still active for our window listener.
-          if (!(manager->IsWindowStillActive(windowID))) {
-            return;
-          }
-          // This is safe since we're on main-thread, and the windowlist can
-          // only be invalidated from the main-thread (see OnNavigation)
-          tracksCreatedListener->RejectIfExists(std::move(aError), __func__);
-        });
+    // Dispatch to the media thread to ask it to start the sources, because that
+    // can take a while.
+    mSourceListener->InitializeAsync()
+        ->Then(
+            GetMainThreadSerialEventTarget(), __func__,
+            [manager = mManager, windowListener = mWindowListener,
+             firstFramePromise] {
+              LOG("GetUserMediaStreamRunnable::Run: starting success callback "
+                  "following InitializeAsync()");
+              // Initiating and starting devices succeeded.
+              windowListener->ChromeAffectingStateChanged();
+              manager->SendPendingGUMRequest();
+              if (!firstFramePromise) {
+                return SourceListener::SourceListenerPromise::CreateAndResolve(
+                    true, __func__);
+              }
+              RefPtr<SourceListener::SourceListenerPromise> resolvePromise =
+                  firstFramePromise->Then(
+                      GetMainThreadSerialEventTarget(), __func__,
+                      [] {
+                        return SourceListener::SourceListenerPromise::
+                            CreateAndResolve(true, __func__);
+                      },
+                      [] {
+                        return SourceListener::SourceListenerPromise::
+                            CreateAndReject(
+                                MakeRefPtr<MediaMgrError>(
+                                    MediaMgrError::Name::AbortError,
+                                    NS_LITERAL_STRING("In shutdown")),
+                                __func__);
+                      });
+              return resolvePromise;
+            },
+            [](RefPtr<MediaMgrError>&& aError) {
+              LOG("GetUserMediaStreamRunnable::Run: starting failure callback "
+                  "following InitializeAsync()");
+              return SourceListener::SourceListenerPromise::CreateAndReject(
+                  aError, __func__);
+            })
+        ->Then(GetMainThreadSerialEventTarget(), __func__,
+               [holder = std::move(mHolder),
+                domStream](const SourceListener::SourceListenerPromise::
+                               ResolveOrRejectValue& aValue) mutable {
+                 if (aValue.IsResolve()) {
+                   holder.Resolve(domStream, __func__);
+                 } else {
+                   holder.Reject(aValue.RejectValue(), __func__);
+                 }
+               });
 
     if (!IsPincipalInfoPrivate(mPrincipalInfo)) {
       // Call GetPrincipalKey again, this time w/persist = true, to promote
