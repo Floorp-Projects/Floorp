@@ -457,6 +457,7 @@ description#identity-popup-content-verifier,
 
 /* This subview could get filled with a lot of trackers, set a maximum size
  * and allow it to scroll vertically.*/
+#protections-popup-socialblockView,
 #protections-popup-cookiesView,
 #protections-popup-trackersView {
   max-height: 600px;
@@ -522,6 +523,7 @@ description#identity-popup-content-verifier,
   margin-inline-end: 2px;
 }
 
+.protections-popup-socialblockView-icon,
 .protections-popup-fingerprintersView-icon,
 .protections-popup-cryptominersView-icon,
 .protections-popup-trackersView-icon,
@@ -536,6 +538,14 @@ description#identity-popup-content-verifier,
 
 .protections-popup-trackersView-icon.allowed {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+}
+
+.protections-popup-socialblockView-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/socialblock-disabled.svg);
+}
+
+.protections-popup-socialblockView-icon.allowed {
+  list-style-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
 }
 
 .protections-popup-cookiesView-icon {
@@ -597,6 +607,10 @@ description#identity-popup-content-verifier,
 
 .tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/controlcenter/trackers.svg);
+}
+
+.socialblock-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/socialblock.svg);
 }
 
 .thirdpartycookies-icon {
@@ -928,4 +942,12 @@ description#identity-popup-content-verifier,
 #protections-popup-tp-switch[showdotindicator]:-moz-locale-dir(rtl)::after {
   left: unset;
   right: calc(1em + 20px);
+}
+
+#protections-popup-socialblockView-heading {
+  border-bottom: 1px solid var(--panel-separator-color);
+}
+
+#protections-popup-socialblockView-heading > description {
+  margin: 10px 24px;
 }
