@@ -485,6 +485,8 @@ function workerScript() {
     },
   };
 
+  // TODO this is duplicate from the global compareKeys function defined above,
+  // this duplication should be avoided (bug 1565986)
   self.compareKeys = function(_k1_, _k2_) {
     let t = typeof _k1_;
     if (t != typeof _k2_) {
