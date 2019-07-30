@@ -806,6 +806,7 @@ fn try_convert_to_marionette_message(
         FindElements(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
+        GetCookies => Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies)),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
         SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
             x.to_marionette()?,
@@ -929,7 +930,7 @@ impl MarionetteCommand {
                 Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
                 GetAlertText => (Some("WebDriver:GetAlertText"), None),
                 GetActiveElement => (Some("WebDriver:GetActiveElement"), None),
-                GetCookies | GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
+                GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
                 GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
                 GetCSSValue(ref e, ref x) => {
                     let mut data = Map::new();
