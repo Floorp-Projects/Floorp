@@ -7,6 +7,7 @@ from __future__ import absolute_import
 from collections import defaultdict
 from json import dumps, JSONEncoder
 import os
+import mozpack.path as mozpath
 
 
 class ResultSummary(object):
@@ -19,7 +20,7 @@ class ResultSummary(object):
         # Store the repository root folder to be able to build
         # Issues relative paths to that folder
         if ResultSummary.root is None:
-            ResultSummary.root = root
+            ResultSummary.root = mozpath.normpath(root)
 
     def reset(self):
         self.issues = defaultdict(list)
@@ -117,11 +118,14 @@ class Issue(object):
         root = ResultSummary.root
         assert root is not None, 'Missing ResultSummary.root'
         if os.path.isabs(path):
-            self.path = path
-            self.relpath = os.path.relpath(path, root)
+            self.path = mozpath.normpath(path)
+            if self.path.startswith(root):
+                self.relpath = mozpath.relpath(self.path, root)
+            else:
+                self.relpath = self.path
         else:
-            self.path = os.path.join(root, path)
-            self.relpath = path
+            self.path = mozpath.join(root, path)
+            self.relpath = mozpath.normpath(path)
 
     def __repr__(self):
         s = dumps(self, cls=IssueEncoder, indent=2)
