@@ -219,7 +219,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         worker = taskdesc['worker'] = job['worker']
 
     bitbar_script = 'test-linux.sh'
-    bitbar_wrapper = '/builds/taskcluster/script.py'
 
     is_macosx = worker['os'] == 'macosx'
     is_windows = worker['os'] == 'windows'
@@ -338,7 +337,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         ]
     elif is_bitbar:
         mh_command = [
-            bitbar_wrapper,
             'bash',
             "./{}".format(bitbar_script)
         ]
