@@ -36,13 +36,6 @@ var gIdentityHandler = {
   _isSecureInternalUI: false,
 
   /**
-   * Whether the content window is considered a "secure context". This
-   * includes "potentially trustworthy" origins such as file:// URLs or localhost.
-   * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
-   */
-  _isSecureContext: false,
-
-  /**
    * nsITransportSecurityInfo metadata provided by gBrowser.securityUI the last
    * time the identity UI was updated, or null if the connection is not secure.
    */
@@ -59,23 +52,11 @@ var gIdentityHandler = {
    */
   _secureInternalUIWhitelist: /^(?:accounts|addons|cache|config|crashes|downloads|license|logins|preferences|protections|rights|sessionrestore|support|welcomeback)(?:[?#]|$)/i,
 
-  /**
-   * Whether the established HTTPS connection is considered "broken".
-   * This could have several reasons, such as mixed content or weak
-   * cryptography. If this is true, _isSecureConnection is false.
-   */
-  get _isBrokenConnection() {
+  get _isBroken() {
     return this._state & Ci.nsIWebProgressListener.STATE_IS_BROKEN;
   },
 
-  /**
-   * Whether the connection to the current site was done via secure
-   * transport. Note that this attribute is not true in all cases that
-   * the site was accessed via HTTPS, i.e. _isSecureConnection will
-   * be false when _isBrokenConnection is true, even though the page
-   * was loaded over HTTPS.
-   */
-  get _isSecureConnection() {
+  get _isSecure() {
     // If a <browser> is included within a chrome document, then this._state
     // will refer to the security state for the <browser> and not the top level
     // document. In this case, don't upgrade the security state in the UI
@@ -476,7 +457,6 @@ var gIdentityHandler = {
     // the documentation of the individual properties for details.
     this.setURI(uri);
     this._secInfo = gBrowser.securityUI.secInfo;
-    this._isSecureContext = gBrowser.securityUI.isSecureContext;
 
     // Then, update the user interface with the available data.
     this.refreshIdentityBlock();
@@ -606,7 +586,7 @@ var gIdentityHandler = {
     if (this._uriHasHost && this._isEV) {
       return "verifiedIdentity";
     }
-    if (this._uriHasHost && this._isSecureConnection) {
+    if (this._uriHasHost && this._isSecure) {
       return "verifiedDomain";
     }
     return "unknownIdentity";
@@ -640,12 +620,10 @@ var gIdentityHandler = {
     let icon_labels_dir = "ltr";
 
     if (this._isSecureInternalUI) {
-      // This is a secure internal Firefox page.
       this._identityBox.className = "chromeUI";
       let brandBundle = document.getElementById("bundle_brand");
       icon_label = brandBundle.getString("brandShorterName");
     } else if (this._uriHasHost && this._isEV) {
-      // This is a secure connection with EV.
       this._identityBox.className = "verifiedIdentity";
       if (this._isMixedActiveContentBlocked) {
         this._identityBox.classList.add("mixedActiveBlocked");
@@ -676,15 +654,13 @@ var gIdentityHandler = {
           : "ltr";
       }
     } else if (this._pageExtensionPolicy) {
-      // This is a WebExtension page.
       this._identityBox.className = "extensionPage";
       let extensionName = this._pageExtensionPolicy.name;
       icon_label = gNavigatorBundle.getFormattedString(
         "identity.extension.label",
         [extensionName]
       );
-    } else if (this._uriHasHost && this._isSecureConnection) {
-      // This is a secure connection.
+    } else if (this._uriHasHost && this._isSecure) {
       this._identityBox.className = "verifiedDomain";
       if (this._isMixedActiveContentBlocked) {
         this._identityBox.classList.add("mixedActiveBlocked");
@@ -696,45 +672,46 @@ var gIdentityHandler = {
           [this.getIdentityData().caOrg]
         );
       }
-    } else if (this._isBrokenConnection) {
-      // This is a secure connection, but something is wrong.
+    } else if (!this._uriHasHost) {
       this._identityBox.className = "unknownIdentity";
-
-      if (this._isMixedActiveContentLoaded) {
-        this._identityBox.classList.add("mixedActiveContent");
-      } else if (this._isMixedActiveContentBlocked) {
-        this._identityBox.classList.add(
-          "mixedDisplayContentLoadedActiveBlocked"
-        );
-      } else if (this._isMixedPassiveContentLoaded) {
-        this._identityBox.classList.add("mixedDisplayContent");
-      } else {
-        this._identityBox.classList.add("weakCipher");
-      }
     } else if (
-      this._isSecureContext ||
-      (gBrowser.selectedBrowser.documentURI &&
-        (gBrowser.selectedBrowser.documentURI.scheme == "about" ||
-          gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
+      gBrowser.selectedBrowser.documentURI &&
+      (gBrowser.selectedBrowser.documentURI.scheme == "about" ||
+        gBrowser.selectedBrowser.documentURI.scheme == "chrome")
     ) {
-      // This is a local resource (and shouldn't be marked insecure).
+      // For net errors we should not show notSecure as it's likely confusing
       this._identityBox.className = "unknownIdentity";
     } else {
-      // This is an insecure connection.
-      let warnOnInsecure =
-        this._insecureConnectionIconEnabled ||
-        (this._insecureConnectionIconPBModeEnabled &&
-          PrivateBrowsingUtils.isWindowPrivate(window));
-      let className = warnOnInsecure ? "notSecure" : "unknownIdentity";
-      this._identityBox.className = className;
+      if (this._isBroken) {
+        this._identityBox.className = "unknownIdentity";
 
-      let warnTextOnInsecure =
-        this._insecureConnectionTextEnabled ||
-        (this._insecureConnectionTextPBModeEnabled &&
-          PrivateBrowsingUtils.isWindowPrivate(window));
-      if (warnTextOnInsecure) {
-        icon_label = gNavigatorBundle.getString("identity.notSecure.label");
-        this._identityBox.classList.add("notSecureText");
+        if (this._isMixedActiveContentLoaded) {
+          this._identityBox.classList.add("mixedActiveContent");
+        } else if (this._isMixedActiveContentBlocked) {
+          this._identityBox.classList.add(
+            "mixedDisplayContentLoadedActiveBlocked"
+          );
+        } else if (this._isMixedPassiveContentLoaded) {
+          this._identityBox.classList.add("mixedDisplayContent");
+        } else {
+          this._identityBox.classList.add("weakCipher");
+        }
+      } else {
+        let warnOnInsecure =
+          this._insecureConnectionIconEnabled ||
+          (this._insecureConnectionIconPBModeEnabled &&
+            PrivateBrowsingUtils.isWindowPrivate(window));
+        let className = warnOnInsecure ? "notSecure" : "unknownIdentity";
+        this._identityBox.className = className;
+
+        let warnTextOnInsecure =
+          this._insecureConnectionTextEnabled ||
+          (this._insecureConnectionTextPBModeEnabled &&
+            PrivateBrowsingUtils.isWindowPrivate(window));
+        if (warnTextOnInsecure) {
+          icon_label = gNavigatorBundle.getString("identity.notSecure.label");
+          this._identityBox.classList.add("notSecureText");
+        }
       }
       if (this._hasInsecureLoginForms) {
         // Insecure login forms can only be present on "unknown identity"
@@ -879,7 +856,7 @@ var gIdentityHandler = {
       connection = "secure-ev";
     } else if (this._isCertUserOverridden) {
       connection = "secure-cert-user-overridden";
-    } else if (this._isSecureConnection) {
+    } else if (this._isSecure) {
       connection = "secure";
       customRoot = this._hasCustomRoot();
     }
@@ -907,7 +884,7 @@ var gIdentityHandler = {
     // cipher.
     let ciphers = "";
     if (
-      this._isBrokenConnection &&
+      this._isBroken &&
       !this._isMixedActiveContentLoaded &&
       !this._isMixedPassiveContentLoaded
     ) {
@@ -931,7 +908,7 @@ var gIdentityHandler = {
       updateAttribute(element, "loginforms", loginforms);
       updateAttribute(element, "ciphers", ciphers);
       updateAttribute(element, "mixedcontent", mixedcontent);
-      updateAttribute(element, "isbroken", this._isBrokenConnection);
+      updateAttribute(element, "isbroken", this._isBroken);
       updateAttribute(element, "customroot", customRoot);
     }
 
@@ -942,7 +919,7 @@ var gIdentityHandler = {
     let owner = "";
 
     // Fill in the CA name if we have a valid TLS certificate.
-    if (this._isSecureConnection || this._isCertUserOverridden) {
+    if (this._isSecure || this._isCertUserOverridden) {
       verifier = this._identityIconLabels.tooltipText;
     }
 
