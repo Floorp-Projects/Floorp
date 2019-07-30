@@ -202,6 +202,7 @@ STATIC_ATOMS = [
     Atom("canvas", "canvas"),
     Atom("caption", "caption"),
     Atom("captionBox", "caption-box"),
+    Atom("capture", "capture"),
     Atom("caseOrder", "case-order"),
     Atom("cdataSectionElements", "cdata-section-elements"),
     Atom("ceiling", "ceiling"),

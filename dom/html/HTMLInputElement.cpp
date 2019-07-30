@@ -195,6 +195,14 @@ static const nsAttrValue::EnumTable kInputInputmodeTable[] = {
 static const nsAttrValue::EnumTable* kInputDefaultInputmode =
     &kInputInputmodeTable[0];
 
+static const nsAttrValue::EnumTable kCaptureTable[] = {
+    {"user", static_cast<int16_t>(nsIFilePicker::captureUser)},
+    {"environment", static_cast<int16_t>(nsIFilePicker::captureEnv)},
+    {"", static_cast<int16_t>(nsIFilePicker::captureDefault)},
+    {nullptr, static_cast<int16_t>(nsIFilePicker::captureNone)}};
+
+static const nsAttrValue::EnumTable* kCaptureDefault = &kCaptureTable[2];
+
 const Decimal HTMLInputElement::kStepScaleFactorDate = Decimal(86400000);
 const Decimal HTMLInputElement::kStepScaleFactorNumberRange = Decimal(1);
 const Decimal HTMLInputElement::kStepScaleFactorTime = Decimal(1000);
@@ -762,6 +770,14 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::accept) &&
       aType != FILE_PICKER_DIRECTORY) {
     SetFilePickerFiltersFromAccept(filePicker);
+
+    if (StaticPrefs::dom_capture_enabled()) {
+      const nsAttrValue* captureVal = GetParsedAttr(nsGkAtoms::capture,
+                                                    kNameSpaceID_None);
+      if (captureVal) {
+        filePicker->SetCapture(captureVal->GetEnumValue());
+      }
+    }
   } else {
     filePicker->AppendFilters(nsIFilePicker::filterAll);
   }
@@ -1357,6 +1373,10 @@ void HTMLInputElement::GetAutocompleteInfo(Nullable<AutocompleteInfo>& aInfo) {
   const nsAttrValue* attributeVal = GetParsedAttr(nsGkAtoms::autocomplete);
   mAutocompleteInfoState = nsContentUtils::SerializeAutocompleteAttribute(
       attributeVal, aInfo.SetValue(), mAutocompleteInfoState, true);
+}
+
+void HTMLInputElement::GetCapture(nsAString& aValue) {
+  GetEnumAttr(nsGkAtoms::capture, kCaptureDefault->tag, aValue);
 }
 
 void HTMLInputElement::GetFormEnctype(nsAString& aValue) {
@@ -5211,6 +5231,9 @@ bool HTMLInputElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
     if (aAttribute == nsGkAtoms::inputmode) {
       return aResult.ParseEnumValue(aValue, kInputInputmodeTable, false);
+    }
+    if (aAttribute == nsGkAtoms::capture) {
+      return aResult.ParseEnumValue(aValue, kCaptureTable, false, kCaptureDefault);
     }
     if (ParseImageAttribute(aAttribute, aValue, aResult)) {
       // We have to call |ParseImageAttribute| unconditionally since we
