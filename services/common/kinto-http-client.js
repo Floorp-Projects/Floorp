@@ -27,7 +27,7 @@ const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm
 XPCOMUtils.defineLazyGlobalGetters(global, ["fetch"]);
 
 /*
- * Version 4.7.2 - bd29c19
+ * Version 4.7.3 - 3796f57
  */
 
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.KintoHttpClient = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
@@ -2873,6 +2873,13 @@ class HTTP {
       if (this.timeout) {
         _timeoutId = setTimeout(() => {
           hasTimedout = true;
+
+          if (options && options.headers) {
+            options = { ...options,
+              headers: (0, _utils.replaceKey)(options.headers, "authorization", "**** (suppressed)")
+            };
+          }
+
           reject(new _errors.NetworkTimeoutError(url, options));
         }, this.timeout);
       }
@@ -3255,6 +3262,7 @@ exports.partition = partition;
 exports.delay = delay;
 exports.pMap = pMap;
 exports.omit = omit;
+exports.replaceKey = replaceKey;
 exports.toDataBody = toDataBody;
 exports.qsify = qsify;
 exports.checkVersion = checkVersion;
@@ -3338,6 +3346,23 @@ function omit(obj, ...keys) {
       acc[key] = obj[key];
     }
 
+    return acc;
+  }, {});
+}
+/**
+ * Replace an object key (case insensitive) value with the specified one.
+ *
+ * @private
+ * @param  {Object} obj
+ * @param  {String} key
+ * @param  {Object} value
+ * @return {Object}
+ */
+
+
+function replaceKey(obj, key, value) {
+  return Object.keys(obj).reduce((acc, k) => {
+    acc[k] = k.toLowerCase() == key.toLowerCase() ? value : obj[k];
     return acc;
   }, {});
 }
@@ -3579,9 +3604,18 @@ function extractFileInfo(dataURL) {
     array.push(binary.charCodeAt(i));
   }
 
-  const blob = new Blob([new Uint8Array(array)], {
-    type
-  });
+  let blob;
+
+  if (typeof Blob !== "undefined") {
+    // Running in a browser environment.
+    blob = new Blob([new Uint8Array(array)], {
+      type
+    });
+  } else {
+    // In NodeJS. Blob is not available.
+    blob = Buffer.from(array);
+  }
+
   return {
     blob,
     name
