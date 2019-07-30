@@ -562,8 +562,8 @@ class JS::Realm : public JS::shadow::Realm {
 
   void purge();
 
-  void fixupAfterMovingGC();
-  void fixupScriptMapsAfterMovingGC();
+  void fixupAfterMovingGC(JSTracer* trc);
+  void fixupScriptMapsAfterMovingGC(JSTracer* trc);
 
 #ifdef JSGC_HASH_TABLE_CHECKS
   void checkObjectGroupTablesAfterMovingGC() {
