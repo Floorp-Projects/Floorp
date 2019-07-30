@@ -5,7 +5,12 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="?foundation" />
+             <gradient
+                android:angle="45"
+                android:startColor="?toolbarStartGradient"
+                android:centerColor="?toolbarCenterGradient"
+                android:endColor="?toolbarEndGradient"
+                android:type="linear" />
         </shape>
     </item>
     <item android:gravity="top">

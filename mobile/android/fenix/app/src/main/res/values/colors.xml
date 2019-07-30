@@ -26,6 +26,9 @@
     <color name="collection_icon_color_pink_light_theme">#E31587</color>
     <color name="collection_icon_color_green_light_theme">#2AC3A2</color>
     <color name="collection_icon_color_yellow_light_theme">#E27F2E</color>
+    <color name="toolbar_start_gradient_light_theme">@color/foundation_light_theme</color>
+    <color name="toolbar_center_gradient_light_theme">@color/foundation_light_theme</color>
+    <color name="toolbar_end_gradient_light_theme">@color/foundation_light_theme</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
@@ -39,7 +42,7 @@
     <color name="accent_high_contrast_dark_theme">#AB71FF</color>
     <color name="tab_ring_dark_theme">@color/accent_dark_theme</color>
     <color name="neutral_dark_theme">@color/photonGrey20</color>
-    <color name="neutral_faded_dark_theme">#1FEDEDF0</color>
+    <color name="neutral_faded_dark_theme">#1FFBFBFE</color>
     <color name="shadow_dark_theme">#050505</color>
     <color name="destructive_dark_theme">#FF6A75</color>
     <color name="disabled_dark_theme">#66FBFBFE</color>
@@ -50,12 +53,15 @@
     <color name="collection_icon_color_pink_dark_theme">#FF6BBA</color>
     <color name="collection_icon_color_green_dark_theme">#88FFD1</color>
     <color name="collection_icon_color_yellow_dark_theme">#FFDE67</color>
+    <color name="toolbar_start_gradient_dark_theme">@color/foundation_dark_theme</color>
+    <color name="toolbar_center_gradient_dark_theme">@color/foundation_dark_theme</color>
+    <color name="toolbar_end_gradient_dark_theme">@color/foundation_dark_theme</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
     <color name="secondary_text_private_theme">#A7A2B7</color>
     <color name="contrast_text_private_theme">@color/primary_text_private_theme</color>
-    <color name="foundation_private_theme">#1D1133</color>
+    <color name="foundation_private_theme">#261E4B</color>
     <color name="inset_private_theme">#362A5C</color>
     <color name="above_private_theme">#291D4F</color>
     <color name="accent_private_theme">#9059FF</color>
@@ -63,7 +69,7 @@
     <color name="accent_high_contrast_private_theme">#AA71FF</color>
     <color name="tab_ring_private_theme">#F565FF</color>
     <color name="neutral_private_theme">@color/photonGrey20</color>
-    <color name="neutral_faded_private_theme">#1FEDEDF0</color>
+    <color name="neutral_faded_private_theme">#1FFBFBFE</color>
     <color name="shadow_private_theme">#2B1067</color>
     <color name="destructive_private_theme">#FF6A75</color>
     <color name="disabled_private_theme">#66FBFBFE</color>
@@ -71,6 +77,9 @@
     <color name="scrimEnd_private_theme">#F515141A</color>
     <color name="snackbar_private_theme">@color/accent_bright_private_theme</color>
     <color name="accent_on_dark_background_private_theme">@color/accent_high_contrast_private_theme</color>
+    <color name="toolbar_start_gradient_private_theme">#7529A7</color>
+    <color name="toolbar_center_gradient_private_theme">#492E85</color>
+    <color name="toolbar_end_gradient_private_theme">#383372</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
@@ -92,6 +101,9 @@
     <color name="scrimEnd_normal_theme">@color/scrimEnd_light_theme</color>
     <color name="snackbar_normal_theme">@color/accent_light_theme</color>
     <color name="accent_on_dark_background_normal_theme">@color/accent_bright_light_theme</color>
+    <color name="toolbar_start_gradient_normal_theme">@color/toolbar_start_gradient_light_theme</color>
+    <color name="toolbar_center_gradient_normal_theme">@color/toolbar_center_gradient_light_theme</color>
+    <color name="toolbar_end_gradient_normal_theme">@color/toolbar_end_gradient_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>

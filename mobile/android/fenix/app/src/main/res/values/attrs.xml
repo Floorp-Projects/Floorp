@@ -21,7 +21,6 @@
     <attr name="shadow" format="reference" />
     <attr name="destructive" format="reference"/>
     <attr name="disabled" format="reference" />
-
     <attr name="scrimStart" format="reference"/>
     <attr name="scrimEnd" format="reference"/>
 
@@ -31,6 +30,9 @@
     <attr name="privateBrowsingButtonAccent" format="reference" />
     <attr name="fenixLogo" format="reference" />
     <attr name="fenixSnackbarBackground" format="reference" />
+    <attr name="toolbarStartGradient" format="reference"/>
+    <attr name="toolbarCenterGradient" format="reference"/>
+    <attr name="toolbarEndGradient" format="reference"/>
 
     <declare-styleable name="LibraryListItem">
         <attr name="listItemTitle" format="reference" />

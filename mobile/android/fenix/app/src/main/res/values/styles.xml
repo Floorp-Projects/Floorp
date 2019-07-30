@@ -45,6 +45,10 @@
         <item name="scrimEnd">@color/scrimEnd_normal_theme</item>
         <item name="snackbar">@color/snackbar_normal_theme</item>
         <item name="accentUsedOnDarkBackground">@color/accent_on_dark_background_normal_theme</item>
+        <item name="toolbarStartGradient">@color/toolbar_start_gradient_normal_theme</item>
+        <item name="toolbarCenterGradient">@color/toolbar_center_gradient_normal_theme</item>
+        <item name="toolbarEndGradient">@color/toolbar_end_gradient_normal_theme</item>
+
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_normal</item>
         <item name="homeBackground">@color/foundation_normal_theme</item>
@@ -121,6 +125,9 @@
         <item name="scrimEnd">@color/scrimEnd_private_theme</item>
         <item name="snackbar">@color/snackbar_private_theme</item>
         <item name="accentUsedOnDarkBackground">@color/accent_on_dark_background_private_theme</item>
+        <item name="toolbarStartGradient">@color/toolbar_start_gradient_private_theme</item>
+        <item name="toolbarCenterGradient">@color/toolbar_center_gradient_private_theme</item>
+        <item name="toolbarEndGradient">@color/toolbar_end_gradient_private_theme</item>
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_private</item>
