@@ -195,6 +195,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
                                              'build/virtualenv_packages.txt')]
     import mach.base
     import mach.main
+    from mach.util import setenv
     from mozboot.util import get_state_dir
 
     from mozbuild.util import patch_main
@@ -347,7 +348,7 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # Note which process is top-level so that recursive mach invocations can avoid writing
     # telemetry data.
     if 'MACH_MAIN_PID' not in os.environ:
-        os.environ[b'MACH_MAIN_PID'] = str(os.getpid()).encode('ascii')
+        setenv('MACH_MAIN_PID', str(os.getpid()))
 
     driver = mach.main.Mach(os.getcwd())
     driver.populate_context_handler = populate_context
