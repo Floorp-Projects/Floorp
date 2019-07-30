@@ -159,8 +159,13 @@ endif
 
 ifdef MOZ_ANDROID_FAT_AAR_ARCHITECTURES
 recurse_android-fat-aar-artifact:
-	$(call py_action,fat_aar,$(MOZ_ANDROID_FAT_AAR_ARCHITECTURES) --distdir $(abspath $(DIST)/fat-aar))
-endif # MOZ_ANDROID_FAT_AAR_ARCHITECTURES
+	$(call py_action,fat_aar,\
+    $(if $(MOZ_ANDROID_FAT_AAR_ARMEABI_V7A),--armeabi-v7a $(MOZ_ANDROID_FAT_AAR_ARMEABI_V7A)) \
+    $(if $(MOZ_ANDROID_FAT_AAR_ARM64_V8A),--arm64-v8a $(MOZ_ANDROID_FAT_AAR_ARM64_V8A)) \
+    $(if $(MOZ_ANDROID_FAT_AAR_X86),--x86 $(MOZ_ANDROID_FAT_AAR_X86)) \
+    $(if $(MOZ_ANDROID_FAT_AAR_X86_64),--x86-64 $(MOZ_ANDROID_FAT_AAR_X86_64)) \
+    --distdir $(abspath $(DIST)/fat-aar))
+endif
 
 ifdef MOZ_WIDGET_TOOLKIT
 ifdef ENABLE_TESTS

@@ -228,10 +228,19 @@ def use_fetches(config, jobs):
 
         env = worker.setdefault('env', {})
         env['MOZ_FETCHES'] = {'task-reference': json.dumps(job_fetches, sort_keys=True)}
-
-        env.setdefault('MOZ_FETCHES_DIR', 'fetches')
+        env.setdefault('MOZ_FETCHES_DIR', get_default_moz_fetches_dir(job))
 
         yield job
+
+
+def get_default_moz_fetches_dir(job):
+    if job.get('worker', {}).get('os') in ('windows', 'macosx'):
+        moz_fetches_dir = 'fetches'
+    else:
+        workdir = job['run'].get('workdir', '/builds/worker')
+        moz_fetches_dir = '{}/fetches'.format(workdir)
+
+    return moz_fetches_dir
 
 
 @transforms.add

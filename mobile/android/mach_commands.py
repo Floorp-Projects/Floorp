@@ -9,8 +9,6 @@ import logging
 import os
 import json
 
-from zipfile import ZipFile
-
 import mozpack.path as mozpath
 
 from mozbuild.base import (
@@ -401,14 +399,7 @@ class MachCommands(MachCommandBase):
             self.substs['GRADLE_ANDROID_ARCHIVE_GECKOVIEW_TASKS'] + args,
             verbose=True)
 
-        if ret != 0:
-            return ret
-
-        # TODO Bug 1563711 - Remove target.maven.zip
-        # The zip archive is passed along in CI to ship geckoview onto a maven repo
-        _craft_maven_zip_archive(self.topobjdir)
-
-        return 0
+        return ret
 
     @SubCommand('android', 'build-geckoview_example',
                 """Build geckoview_example """)
@@ -704,26 +695,6 @@ class MachCommands(MachCommandBase):
             fail_if_running=fail_if_running)
 
         return 0
-
-
-def _get_maven_archive_abs_and_relative_paths(maven_folder):
-    for subdir, _, files in os.walk(maven_folder):
-        for file in files:
-            full_path = os.path.join(subdir, file)
-            relative_path = os.path.relpath(full_path, maven_folder)
-
-            # maven-metadata is intended to be generated on the real maven server
-            if 'maven-metadata.xml' not in relative_path:
-                yield full_path, relative_path
-
-
-def _craft_maven_zip_archive(topobjdir):
-    geckoview_folder = os.path.join(topobjdir, 'gradle/build/mobile/android/geckoview')
-    maven_folder = os.path.join(geckoview_folder, 'maven')
-
-    with ZipFile(os.path.join(geckoview_folder, 'target.maven.zip'), 'w') as target_zip:
-        for abs, rel in _get_maven_archive_abs_and_relative_paths(maven_folder):
-            target_zip.write(abs, arcname=rel)
 
 
 @CommandProvider
