@@ -24,13 +24,11 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
     MICROPHONE(ID_MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
     NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray());
 
-    @Suppress("SpreadOperator")
     fun isAndroidPermissionGranted(context: Context): Boolean {
-        val permissions = when (this) {
-            CAMERA, LOCATION, MICROPHONE -> androidPermissionsList
-            NOTIFICATION -> return true
+        return when (this) {
+            CAMERA, LOCATION, MICROPHONE -> context.isPermissionGranted(androidPermissionsList.asIterable())
+            NOTIFICATION -> true
         }
-        return context.isPermissionGranted(*permissions)
     }
 
     fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null): String {

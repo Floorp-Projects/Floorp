@@ -8,10 +8,10 @@ import android.content.Context
 import android.view.View
 import android.widget.RadioButton
 import android.widget.TextView
-import androidx.core.content.ContextCompat
 import androidx.core.text.HtmlCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelative
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
 
@@ -104,11 +104,11 @@ fun PhoneFeature.getPreferenceKey(context: Context): String {
  */
 fun RadioButton.setStartCheckedIndicator() {
     val attr = ThemeManager.resolveAttribute(android.R.attr.listChoiceIndicatorSingle, context)
-    val buttonDrawable = ContextCompat.getDrawable(context, attr)
+    val buttonDrawable = context.getDrawable(attr)
     buttonDrawable?.apply {
-        setBounds(0, 0, this.intrinsicWidth, this.intrinsicHeight)
+        setBounds(0, 0, intrinsicWidth, intrinsicHeight)
     }
-    setCompoundDrawablesRelative(buttonDrawable, null, null, null)
+    putCompoundDrawablesRelative(start = buttonDrawable)
 }
 
 fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: View) {

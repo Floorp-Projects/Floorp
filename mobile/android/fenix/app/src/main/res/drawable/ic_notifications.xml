@@ -5,18 +5,18 @@
 <animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
             android:id="@+id/enabled"
-            android:drawable="@drawable/ic_camera_enabled"
+            android:drawable="@drawable/ic_notifications_enabled"
             android:state_enabled="true" />
     <item
             android:id="@+id/disabled"
-            android:drawable="@drawable/ic_camera_disabled" />
+            android:drawable="@drawable/ic_notifications_disabled" />
 
     <transition
-            android:drawable="@drawable/ic_camera_anim_enable"
+            android:drawable="@drawable/ic_notifications_anim_enable"
             android:fromId="@id/disabled"
             android:toId="@id/enabled" />
     <transition
-            android:drawable="@drawable/ic_camera_anim_disable"
+            android:drawable="@drawable/ic_notifications_anim_disable"
             android:fromId="@+id/enabled"
             android:toId="@+id/disabled" />
 </animated-selector>

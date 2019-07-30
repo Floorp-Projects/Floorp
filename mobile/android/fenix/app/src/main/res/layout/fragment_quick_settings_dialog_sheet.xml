@@ -20,22 +20,24 @@
         <TextView
             android:id="@+id/url"
             style="@style/QuickSettingsText"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="https://wikipedia.org" />
+            tools:text="https://wikipedia.org"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
             android:id="@+id/security_info"
             style="@style/QuickSettingsText.Icon"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/url"
-            tools:drawableStartCompat="@drawable/mozac_ic_lock"
+            tools:drawableStart="@drawable/mozac_ic_lock"
             tools:drawableTint="@color/photonGreen50"
-            tools:text="Secure connection" />
+            tools:text="Secure connection"
+            app:layout_constraintEnd_toEndOf="parent"/>
 
         <View
             android:id="@+id/line_divider_security"
@@ -52,7 +54,7 @@
             style="@style/QuickSettingsText.Icon"
             android:layout_width="match_parent"
             android:layout_height="@dimen/quicksettings_item_height"
-            android:drawableStart="@drawable/ic_tracking_protection"
+            tools:drawableStart="@drawable/ic_tracking_protection"
             android:paddingEnd="24dp"
             android:text="@string/preferences_tracking_protection"
             app:layout_constraintBottom_toTopOf="@id/tracking_protection_action"
@@ -96,12 +98,13 @@
         <TextView
             android:id="@+id/camera_icon"
             style="@style/QuickSettingsText.Icon"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             android:text="@string/preference_phone_feature_camera"
-            app:drawableStartCompat="@drawable/ic_camera"
+            android:drawableStart="@drawable/ic_camera"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/line_divider" />
+            app:layout_constraintTop_toBottomOf="@id/line_divider"
+            app:layout_constraintEnd_toStartOf="@+id/camera_action_label"/>
 
         <TextView
             android:id="@+id/camera_action_label"
@@ -115,13 +118,13 @@
         <TextView
             android:id="@+id/microphone_icon"
             style="@style/QuickSettingsText.Icon"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             android:text="@string/preference_phone_feature_microphone"
-            app:drawableStartCompat="@drawable/ic_microphone"
+            android:drawableStart="@drawable/ic_microphone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/camera_icon" />
-
+            app:layout_constraintTop_toBottomOf="@id/camera_icon"
+            app:layout_constraintEnd_toStartOf="@+id/microphone_action_label"/>
 
         <TextView
             android:id="@+id/microphone_action_label"
@@ -135,12 +138,13 @@
         <TextView
             android:id="@+id/notification_icon"
             style="@style/QuickSettingsText.Icon"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             android:text="@string/preference_phone_feature_notification"
-            app:drawableStartCompat="@drawable/ic_notification"
+            android:drawableStart="@drawable/ic_notifications"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/microphone_icon" />
+            app:layout_constraintTop_toBottomOf="@id/microphone_icon"
+            app:layout_constraintEnd_toStartOf="@+id/notification_action_label" />
 
         <TextView
             android:id="@+id/notification_action_label"
@@ -154,12 +158,13 @@
         <TextView
             android:id="@+id/location_icon"
             style="@style/QuickSettingsText.Icon"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="@dimen/quicksettings_item_height"
             android:text="@string/preference_phone_feature_location"
-            app:drawableStartCompat="@drawable/ic_location"
+            android:drawableStart="@drawable/ic_location"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/notification_icon" />
+            app:layout_constraintTop_toBottomOf="@id/notification_icon"
+            app:layout_constraintEnd_toStartOf="@+id/location_action_label"/>
 
         <TextView
             android:id="@+id/location_action_label"
