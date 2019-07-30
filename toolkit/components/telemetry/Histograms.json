@@ -12758,12 +12758,18 @@
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1204994, 1569672],
+    "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
     "description": "Number of content documents destroyed; used in conjunction with use counter histograms"
   },
   "TOP_LEVEL_CONTENT_DOCUMENTS_DESTROYED": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
     "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1204994, 1569672],
+    "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
     "description": "Number of top-level content documents destroyed; used in conjunction with use counter histograms"
   },
   "PUSH_API_NOTIFY": {
