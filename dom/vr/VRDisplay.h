@@ -116,6 +116,8 @@ class VRPose final : public Pose {
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  void Update(const gfx::VRHMDSensorState& aState);
+
  protected:
   ~VRPose();
 
