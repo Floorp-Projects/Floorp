@@ -46,6 +46,7 @@
 #  include "mozilla/ArrayUtils.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/AutoProfilerLabel.h"
+#  include "mozilla/BaseProfilerDetail.h"
 #  include "mozilla/Printf.h"
 #  include "mozilla/Services.h"
 #  include "mozilla/StackWalk.h"
@@ -215,10 +216,10 @@ class MOZ_RAII PSAutoLock {
   void operator=(const PSAutoLock&) = delete;
 
  private:
-  static PSMutex gPSMutex;
+  static detail::BaseProfilerMutex gPSMutex;
 };
 
-PSMutex PSAutoLock::gPSMutex;
+detail::BaseProfilerMutex PSAutoLock::gPSMutex;
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
