@@ -188,11 +188,15 @@ div[collapsed="true"] > .expander + * {
     width: auto;
   }
 
-  /* If the tablet is tall as well, add some padding to make content feel a bit more centered */
+  /* If the tablet is tall as well, add some padding to make content feel a bit more centered
+   border-box value of box-sizing property makes height property include both content and padding */
   @media (min-height: 550px) {
     #errorPageContainer {
       padding-top: 64px;
       min-height: calc(100% - 64px);
+      -webkit-box-sizing: border-box;
+         -moz-box-sizing: border-box;
+              box-sizing: border-box;
     }
   }
 }
