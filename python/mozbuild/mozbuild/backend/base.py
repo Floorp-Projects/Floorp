@@ -263,7 +263,7 @@ class BuildBackend(LoggingMixin):
         return status
 
     @contextmanager
-    def _write_file(self, path=None, fh=None, mode='rU'):
+    def _write_file(self, path=None, fh=None, readmode='rU'):
         """Context manager to write a file.
 
         This is a glorified wrapper around FileAvoidWrite with integration to
@@ -278,7 +278,7 @@ class BuildBackend(LoggingMixin):
         if path is not None:
             assert fh is None
             fh = FileAvoidWrite(path, capture_diff=True, dry_run=self.dry_run,
-                                mode=mode)
+                                readmode=readmode)
         else:
             assert fh is not None
 
