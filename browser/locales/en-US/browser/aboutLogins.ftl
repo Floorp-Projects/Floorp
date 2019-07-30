@@ -77,11 +77,14 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
+## Dialogs
+
+confirmation-dialog-cancel-button = Cancel
+confirmation-dialog-dismiss-button =
+  .title = Cancel
+
 confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
-confirm-delete-dialog-dismiss-button =
-  .title = Cancel
-confirm-delete-dialog-cancel-button = Cancel
 confirm-delete-dialog-confirm-button = Delete
 
 ## Breach Alert notification
