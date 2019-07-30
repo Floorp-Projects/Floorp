@@ -1416,11 +1416,6 @@ class PrefsIter {
 
     operator ElemType() { return ref(); }
 
-    void Remove() {
-      MOZ_ASSERT(!mParent.IteratingBase());
-      mParent.mPos.as<HashElem>().Remove();
-    }
-
     Elem& operator++() {
       MOZ_ASSERT(!mDone);
       Next();
