@@ -21,6 +21,12 @@
         "lang_tree": {
             "filterType": "exclude"
         },
+        "misc": {
+            "blacklist": [
+                "currencyNumericCodes",
+                "genderList"
+            ]
+        },
         "rbnf_tree": {
             "filterType": "locale",
             "whitelist": [ "ja" ]
