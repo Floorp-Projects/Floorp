@@ -605,7 +605,7 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
-  friend struct PreferencesInternalMethods;
+  friend struct Internals;
 
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,
