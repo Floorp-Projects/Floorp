@@ -94,11 +94,7 @@ class WebProgressChild {
     let json = this._setupJSON(aWebProgress, aRequest);
 
     json.state = aState;
-
-    if (aWebProgress.isTopLevel) {
-      json.secInfo = this.getSecInfoAsString();
-      json.isSecureContext = this.mm.content.isSecureContext;
-    }
+    json.secInfo = this.getSecInfoAsString();
 
     this._send("Content:SecurityChange", json);
   }

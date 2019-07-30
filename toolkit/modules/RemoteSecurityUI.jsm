@@ -9,7 +9,6 @@ function RemoteSecurityUI() {
   this._secInfo = null;
   this._state = 0;
   this._event = 0;
-  this._isSecureContext = false;
 }
 
 RemoteSecurityUI.prototype = {
@@ -25,14 +24,10 @@ RemoteSecurityUI.prototype = {
   get secInfo() {
     return this._secInfo;
   },
-  get isSecureContext() {
-    return this._isSecureContext;
-  },
 
-  _update(aSecInfo, aState, aIsSecureContext) {
+  _update(aSecInfo, aState) {
     this._secInfo = aSecInfo;
     this._state = aState;
-    this._isSecureContext = aIsSecureContext;
   },
   _updateContentBlockingEvent(aEvent) {
     this._event = aEvent;
