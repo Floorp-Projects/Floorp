@@ -5556,11 +5556,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-- name: privacy.resistFingerprinting
-  type: bool
-  value: false
-  mirror: never
-
 # Anti-tracking permission expiration
 - name: privacy.restrict3rdpartystorage.expiration
   type: uint32_t

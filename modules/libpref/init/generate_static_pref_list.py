@@ -124,6 +124,9 @@ def generate_headers(pref_list):
     # The required includes, one set of header file names per pref group.
     includes = defaultdict(set)
 
+    # Pref names seen so far. Used to detect any duplicates.
+    seen_names = set()
+
     prev_pref = None
     for pref in pref_list:
         # Check all given keys are known ones.
@@ -137,14 +140,17 @@ def generate_headers(pref_list):
         name = pref['name']
         if type(name) != str:
             error('non-string `name` value `{}`'.format(name))
+        if name in seen_names:
+            error('`{}` pref is defined more than once'.format(name))
+        seen_names.add(name)
 
         segs = name.split('.', 1)
         if len(segs) != 2:
             error('`name` value `{}` lacks a \'.\''.format(name))
         group = mk_id(segs[0])
         if prev_pref:
-            prev_pref_prefix = prev_pref['name'].partition('.')[0]
-            if prev_pref_prefix > name:
+            prev_pref_group = prev_pref['name'].split('.', 1)[0]
+            if prev_pref_group > group:
                 error('`{}` pref must come before `{}` pref'
                       .format(name, prev_pref['name']))
 
