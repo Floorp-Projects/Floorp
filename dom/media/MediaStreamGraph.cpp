@@ -3731,9 +3731,7 @@ void MediaStreamGraphImpl::ApplyAudioContextOperationImpl(
                                                 aOperation, aFlags);
 
       SystemClockDriver* driver;
-      if (nextDriver) {
-        MOZ_ASSERT(!nextDriver->AsAudioCallbackDriver());
-      } else {
+      if (!nextDriver) {
         driver = new SystemClockDriver(this);
         MonitorAutoLock lock(mMonitor);
         CurrentDriver()->SwitchAtNextIteration(driver);
