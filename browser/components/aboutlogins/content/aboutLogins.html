@@ -8,8 +8,10 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; img-src data: blob:;"/>
     <title data-l10n-id="about-logins-page-title"></title>
+    <link rel="localization" href="browser/branding/sync-brand.ftl">
     <link rel="localization" href="browser/aboutLogins.ftl">
     <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.js"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
@@ -25,6 +27,7 @@
     <header>
       <img id="branding-logo" src="chrome://branding/content/aboutlogins.svg" alt=""/>
       <login-filter></login-filter>
+      <fxaccounts-button></fxaccounts-button>
       <menu-button></menu-button>
     </header>
     <login-list></login-list>
@@ -48,6 +51,20 @@
             <button class="cancel-button" tabindex="1" data-l10n-id="confirmation-dialog-cancel-button"></button>
           </div>
         </div>
+      </div>
+    </template>
+
+    <template id="fxaccounts-button-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/fxaccounts-button.css">
+      <div class="logged-out-view">
+        <p class="fxaccounts-extra-text" data-l10n-id="fxaccounts-sign-in-text"></p>
+        <button class="fxaccounts-enable-button" data-l10n-id="fxaccounts-sign-in-button"></button>
+      </div>
+      <div class="logged-in-view">
+        <p class="fxaccount-email"></p>
+        <button class="fxaccounts-avatar-button"></button>
       </div>
     </template>
 
