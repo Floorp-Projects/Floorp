@@ -10,8 +10,6 @@ compatibility, and ready inputs to an Android multi-architecture fat AAR build.
 from __future__ import absolute_import, unicode_literals, print_function
 
 import argparse
-import buildconfig
-import subprocess
 import sys
 
 from collections import (
@@ -29,38 +27,9 @@ from mozpack.packager.unpack import UnpackFinder
 import mozpack.path as mozpath
 
 
-def _download_zips(distdir, architectures):
-    # The mapping from Android CPU architecture to TC job is defined here, and the TC index
-    # lookup is mediated by python/mozbuild/mozbuild/artifacts.py and
-    # python/mozbuild/mozbuild/artifact_builds.py.
-    jobs = {
-        'arm64-v8a': 'android-aarch64-opt',
-        'armeabi-v7a': 'android-api-16-opt',
-        'x86': 'android-x86-opt',
-        'x86_64': 'android-x86_64-opt',
-    }
-
-    for arch in architectures:
-        # It's unfortunate that we must couple tightly, but that's the current API for
-        # dispatching.  In automation, MOZ_ARTIFACT_TASK* environment variables will ensure
-        # that the correct tasks are chosen as install sources.
-        subprocess.check_call([sys.executable, mozpath.join(buildconfig.topsrcdir, 'mach'),
-                               'artifact', 'install',
-                               '--job', jobs[arch],
-                               '--distdir', mozpath.join(distdir, 'input', arch),
-                               '--no-tests', '--no-process', '--maven-zip'])
-
-
-def fat_aar(distdir, architectures=[],
-            no_download=False, no_process=False, no_compatibility_check=False,
-            rewrite_old_archives=False):
-    if not no_download:
-        _download_zips(distdir, architectures)
-    else:
-        print('Not downloading architecture-specific artifact Maven zips.')
-
+def fat_aar(distdir, aars_paths, no_process=False, no_compatibility_check=False):
     if no_process:
-        print('Not processing architecture-specific artifact Maven zips.')
+        print('Not processing architecture-specific artifact Maven AARs.')
         return 0
 
     # Map {filename: {fingerprint: [arch1, arch2, ...]}}.
@@ -69,7 +38,7 @@ def fat_aar(distdir, architectures=[],
     # Collect multi-architecture inputs to the fat AAR.
     copier = FileCopier()
 
-    for arch in architectures:
+    for arch, aar_path in aars_paths.items():
         # Map old non-architecture-specific path to new architecture-specific path.
         old_rewrite_map = {
             'greprefs.js': '{}/greprefs.js'.format(arch),
@@ -80,16 +49,7 @@ def fat_aar(distdir, architectures=[],
         arch_prefs = set(old_rewrite_map.values())
         missing_arch_prefs |= set(arch_prefs)
 
-        path = mozpath.join(distdir, 'input', arch, 'target.maven.zip')
-
-        aars = list(JarFinder(path, JarReader(path)).find('**/geckoview-*.aar'))
-        if len(aars) != 1:
-            raise ValueError('Maven zip "{path}" with more than one candidate AAR found: {aars}'
-                             .format(path=path, aars=tuple(sorted(p for p, _ in aars))))
-
-        [aar_path, aar_file] = aars[0]
-
-        jar_finder = JarFinder(aar_file.file.filename, JarReader(fileobj=aar_file.open()))
+        jar_finder = JarFinder(aar_path, JarReader(aar_path))
         for path, fileobj in UnpackFinder(jar_finder):
             # Native libraries go straight through.
             if mozpath.match(path, 'jni/**'):
@@ -97,14 +57,6 @@ def fat_aar(distdir, architectures=[],
 
             elif path in arch_prefs:
                 copier.add(path, fileobj)
-
-            elif rewrite_old_archives and path in old_rewrite_map:
-                # Ease testing during transition by allowing old omnijars that don't have
-                # architecture-specific files yet.
-                new_path = old_rewrite_map[path]
-                print('Rewrote old path "{path}" to new path "{new_path}"'.format(
-                    path=path, new_path=new_path))
-                copier.add(new_path, fileobj)
 
             elif path in ('classes.jar', 'annotations.zip'):
                 # annotations.zip differs due to timestamps, but the contents should not.
@@ -172,36 +124,49 @@ def fat_aar(distdir, architectures=[],
     if not no_compatibility_check and (missing_arch_prefs or not_allowed):
         return 1
 
-    copier.copy(mozpath.join(distdir, 'output'))
+    output_dir = mozpath.join(distdir, 'output')
+    copier.copy(output_dir)
 
     return 0
 
 
+_ALL_ARCHS = ('armeabi-v7a', 'arm64-v8a', 'x86_64', 'x86')
+
+
 def main(argv):
-    description = '''Fetch and unpack architecture-specific Maven zips, verify cross-architecture
+    description = '''Unpack architecture-specific Maven AARs, verify cross-architecture
 compatibility, and ready inputs to an Android multi-architecture fat AAR build.'''
 
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('--no-download', action='store_true',
-                        help='Do not fetch Maven zips.')
     parser.add_argument('--no-process', action='store_true',
-                        help='Do not process Maven zips.')
+                        help='Do not process Maven AARs.')
     parser.add_argument('--no-compatibility-check', action='store_true',
-                        help='Do not fail if Maven zips are not compatible.')
-    parser.add_argument('--rewrite-old-archives', action='store_true',
-                        help='Rewrite Maven zips containing omnijars that do not contain '
-                             'architecture-specific preference files.')
+                        help='Do not fail if Maven AARs are not compatible.')
     parser.add_argument('--distdir', required=True)
-    parser.add_argument('architectures', nargs='+',
-                        choices=('armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'))
+
+    for arch in _ALL_ARCHS:
+        command_line_flag = arch.replace('_', '-')
+        parser.add_argument('--{}'.format(command_line_flag), dest=arch)
 
     args = parser.parse_args(argv)
 
+    args_dict = vars(args)
+
+    aars_paths = {
+        arch: args_dict.get(arch)
+        for arch in _ALL_ARCHS
+        if args_dict.get(arch)
+    }
+
+    if not aars_paths:
+        raise ValueError('You must provide at least one AAR file!')
+
     return fat_aar(
-        args.distdir, architectures=args.architectures,
-        no_download=args.no_download, no_process=args.no_process,
-        no_compatibility_check=args.no_compatibility_check,
-        rewrite_old_archives=args.rewrite_old_archives)
+        args.distdir,
+        aars_paths,
+        no_process=args.no_process,
+        no_compatibility_check=args.no_compatibility_check
+    )
 
 
 if __name__ == '__main__':
