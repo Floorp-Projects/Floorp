@@ -46,6 +46,13 @@ dependencies {
     implementation Dependencies.androidx_browser
 
     implementation project(':samples-glean-library')
+
+    androidTestImplementation Dependencies.androidx_test_core
+    androidTestImplementation Dependencies.androidx_test_runner
+    androidTestImplementation Dependencies.androidx_test_rules
+    androidTestImplementation Dependencies.androidx_test_junit
+    androidTestImplementation Dependencies.androidx_espresso_core
+    androidTestImplementation Dependencies.androidx_work_testing
 }
 
 apply from: '../../components/service/glean/scripts/sdk_generator.gradle'
