@@ -241,8 +241,7 @@ class BaselineFrame {
   void switchFromJitToInterpreter(jsbytecode* pc) {
     MOZ_ASSERT(!runningInInterpreter());
     flags_ |= RUNNING_IN_INTERPRETER;
-    interpreterScript_ = script();
-    setInterpreterPC(pc);
+    setInterpreterFields(pc);
   }
 
   bool runningInInterpreter() const { return flags_ & RUNNING_IN_INTERPRETER; }
@@ -256,7 +255,14 @@ class BaselineFrame {
     MOZ_ASSERT(runningInInterpreter());
     return interpreterPC_;
   }
-  void setInterpreterPC(jsbytecode* pc);
+
+  void setInterpreterFields(JSScript* script, jsbytecode* pc);
+
+  void setInterpreterFields(jsbytecode* pc) {
+    setInterpreterFields(script(), pc);
+  }
+
+  void setInterpreterFieldsForPrologueBailout(JSScript* script);
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
   MutableHandleValue returnValue() {
