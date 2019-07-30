@@ -148,7 +148,7 @@ class DeleteBrowsingDataFragment : Fragment() {
 
     private fun updateTabCount() {
         view?.open_tabs_item?.apply {
-            val openTabs = requireComponents.core.sessionManager.size
+            val openTabs = requireComponents.core.sessionManager.sessions.size
             subtitleView.text = resources.getString(R.string.preferences_delete_browsing_data_tabs_subtitle, openTabs)
         }
     }
