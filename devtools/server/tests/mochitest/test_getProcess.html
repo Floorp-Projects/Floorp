@@ -83,28 +83,33 @@ function runTests() {
          "Got one additional process on the second call to listProcesses");
 
       // Connect to the first content processe available
-      const content = response.processes.filter(p => (!p.isParent))[0];
+      const content = response.processes.filter(p => (!p.parent))[0];
 
-      client.mainRoot.getProcess(content.id).then(async front => {
-        const targetForm = front.targetForm;
-        ok(targetForm.consoleActor, "Got the console actor");
-        ok(targetForm.threadActor, "Got the thread actor");
+      client.mainRoot.getProcess(content.id).then(front => {
+        const actor = front.targetForm;
+        ok(actor.consoleActor, "Got the console actor");
+        ok(actor.threadActor, "Got the thread actor");
 
         // Ensure sending at least one request to an actor...
-        const consoleFront = await front.getFront("console");
-        const { result } = await consoleFront.evaluateJS("var a = 42; a");
-        is(result, 42, "console.eval worked");
+        client.request({
+          to: actor.consoleActor,
+          type: "evaluateJS",
+          text: "var a = 42; a",
+        }, function({result}) {
+          is(result, 42, "console.eval worked");
 
-        getProcessAgain(front, content.id);
+          getProcessAgain(actor, content.id);
+        });
       });
     });
   }
 
   // Assert that calling client.getProcess against the same process id is
   // returning the same actor.
-  function getProcessAgain(firstTargetFront, id) {
+  function getProcessAgain(firstActor, id) {
     client.mainRoot.getProcess(id).then(front => {
-      is(front, firstTargetFront,
+      const actor = front.targetForm;
+      is(actor, firstActor,
          "Second call to getProcess with the same id returns the same form");
       closeClient();
     });
