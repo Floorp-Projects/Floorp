@@ -1,0 +1,411 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
+    <string name="mozac_browser_errorpages_page_title">Probleem bij het laden van de pagina</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_refresh">Opnieuw proberen</string>
+
+    <!-- The button that appears at the bottom of an error page. -->
+    <string name="mozac_browser_errorpages_page_go_back">Terug</string>
+
+    <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_title">Kan aanvraag niet voltooien</string>
+
+    <!-- The error message shown when a website cannot be loaded for an unknown reason. -->
+    <string name="mozac_browser_errorpages_generic_message"><![CDATA[
+      
+      <p>Extra informatie over dit probleem of deze fout is momenteel niet beschikbaar.</p>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_title">Beveiligde verbinding mislukt</string>
+
+    <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
+      
+      <ul>
+        <li>De pagina die u wilt bekijken kan niet worden weergegeven, omdat de echtheid van de ontvangen gegevens niet kon worden geverifieerd.</li>
+        
+        <li>Neem contact op met de website-eigenaars om ze over dit probleem te informeren.</li>
+      
+      </ul>
+    
+    
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_title">Beveiligde verbinding mislukt</string>
+
+    <!-- The error message shown when a website sends has an invalid or expired SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
+      
+      <ul>
+        
+        <li>Dit kan een probleem met de serverconfiguratie zijn, of iemand probeert de server na te bootsen.</li>
+        
+        <li>Als u in het verleden met succes verbinding met deze server hebt gemaakt, kan de fout van tijdelijke aard zijn en kunt u het later nogmaals proberen.</li>
+      
+      </ul>
+    
+    
+]]></string>
+
+    <!-- The document title and heading of the error page shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_title">De verbinding werd onderbroken</string>
+
+    <!-- The error message shown when the user's network connection is interrupted while connecting to a website. -->
+    <string name="mozac_browser_errorpages_net_interrupt_message"><![CDATA[
+      
+      <p>De browser is succesvol verbonden, maar de verbinding is verbroken tijdens het overbrengen van informatie. Probeer het opnieuw.</p>
+      
+      <ul>
+        
+        <li>De website kan tijdelijk niet beschikbaar of te druk zijn. Probeer het over een paar seconden opnieuw.</li>
+        
+        <li>Als u geen pagina’s kunt laden, controleer dan de gegevens of Wi-Fi-verbinding van uw apparaat.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website takes too long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_title">De wachttijd voor de verbinding is verstreken</string>
+
+    <!-- The error message shown when a website took long to load. -->
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[
+      
+      <p>De opgevraagde website heeft niet op een verbindingsaanvraag geantwoord, en de browser wacht niet meer op een antwoord.</p>
+      
+      <ul>
+        
+        <li>Misschien wordt de server zwaar belast of is deze tijdelijk onbereikbaar? Probeer het later opnieuw.</li>
+        
+        <li>Kunt u geen andere websites bezoeken? Controleer de netwerkverbinding van de computer.</li>
+        
+        <li>Wordt uw computer of netwerk beschermd door een firewall of proxy? Onjuiste instellingen kunnen een goede werking tijdens het webbrowsen verstoren.</li>
+        
+        <li>Hebt u nog steeds problemen? Raadpleeg uw netwerkbeheerder of internetprovider voor assistentie.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_title">Kan geen verbinding maken</string>
+
+    <!-- The error message shown when a website could not be reached. -->
+    <string name="mozac_browser_errorpages_connection_failure_message"><![CDATA[
+      
+      <ul>
+        
+        <li>Misschien is de website tijdelijk niet beschikbaar of overbelast. Probeer het over enkele ogenblikken opnieuw.</li>
+        
+        <li>Als u geen enkele pagina kunt laden, controleer dan de gegevens- of wifi-verbinding van uw apparaat.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Onverwacht antwoord van server</string>
+
+    <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
+    <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
+      
+      <p>De website antwoordde op een onverwachte manier op de netwerkaanvraag, en de browser kan niet doorgaan.</p>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">De pagina verwijst niet op een juiste manier door</string>
+
+    <!-- The error message shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_message"><![CDATA[
+      
+      <p>De browser is gestopt met pogen het opgevraagde item op te halen. De website verwijst de aanvraag door op een manier die nooit zal worden voltooid.</p>
+      
+      <ul>
+        
+        <li>Hebt u cookies die nodig zijn voor deze website uitgeschakeld of geblokkeerd?</li>
+        
+        <li>Als het accepteren van cookies van deze website het probleem niet oplost, is dit waarschijnlijk een probleem met de serverconfiguratie en niet met uw computer.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_title">Offlinemodus</string>
+
+    <!-- The error message shown when a website cannot be loaded because the browser is in offline mode. -->
+    <string name="mozac_browser_errorpages_offline_message"><![CDATA[
+      
+      <p>De browser werkt momenteel in offlinemodus en kan geen verbinding maken met het opgevraagde item.</p>
+      
+      <ul>
+        
+        <li>Is de computer verbonden met een actief netwerk?</li>
+        
+        <li>Klik op ‘Opnieuw proberen’ om naar de onlinemodus over te schakelen en de pagina opnieuw te laden.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_title">Poort beperkt om veiligheidsredenen</string>
+
+    <!-- The error message shown when the browser prevents loading a website on a restricted port. -->
+    <string name="mozac_browser_errorpages_port_blocked_message"><![CDATA[
+      
+      <p>Het opgevraagde adres specificeert een poort (bv. <q>mozilla.org:80</q> voor poort 80 op mozilla.org) die normaal gesproken voor <em>andere</em> doeleinden dan webbrowsen wordt gebruikt. De browser heeft de aanvraag voor uw bescherming en veiligheid geannuleerd.</p>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_title">De verbinding werd geherinitialiseerd</string>
+
+    <!-- The error message shown when the Internet connection is disrupted while loading a website. -->
+    <string name="mozac_browser_errorpages_net_reset_message"><![CDATA[
+      
+      <p>De netwerkkoppeling werd onderbroken tijdens het onderhandelen over een verbinding. Probeer het opnieuw.</p>
+      
+      <ul>
+        
+        <li>De website is mogelijk tijdelijk niet beschikbaar of te druk. Probeer het over een aantal ogenblikken opnieuw.</li>
+        
+        <li>Als u geen pagina’s kunt laden, controleer dan de gegevens- of Wi-Fi-verbinding van uw apparaat.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_title">Onveilig bestandstype</string>
+
+    <!-- The error message shown when the browser refuses to load a type of file that is considered unsafe. -->
+    <string name="mozac_browser_errorpages_unsafe_content_type_message"><![CDATA[
+      
+      <ul>
+        
+        <li>Neem contact op met de website-eigenaars om ze over dit probleem te informeren.</li>
+      
+      </ul>
+    
+    
+]]></string>
+
+    <!-- The document title and heading of the error page shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_title">Beschadigde-inhoudsfout</string>
+
+    <!-- The error message shown when shown when a file cannot be loaded because of a detected data corruption. -->
+    <string name="mozac_browser_errorpages_corrupted_content_message"><![CDATA[
+      
+      <p>De pagina die u wilt bekijken kan niet worden weergegeven, omdat er een fout in de gegevensoverdracht is gedetecteerd.</p>
+      
+      <ul>
+        
+        <li>Neem contact op met de website-eigenaars om ze over dit probleem te informeren.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_content_crashed_title">Inhoud gecrasht</string>
+
+    <string name="mozac_browser_errorpages_content_crashed_message"><![CDATA[
+      
+      <p>De pagina die u wilt bekijken kan niet worden weergegeven, omdat er een fout in de gegevensoverdracht is gedetecteerd.</p>
+      
+      <ul>
+        
+        <li>Neem contact op met de website-eigenaars om ze over dit probleem te informeren.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_invalid_content_encoding_title">Inhoudcoderingsfout</string>
+
+    <string name="mozac_browser_errorpages_invalid_content_encoding_message"><![CDATA[
+      
+      <p>De pagina die u wilt bekijken kan niet worden weergegeven, omdat deze gebruikmaakt van een ongeldige of niet-ondersteunde vorm van compressie.</p>
+      
+      <ul>
+      
+        <li>Neem contact op met de website-eigenaars om ze over dit probleem te informeren.</li>
+      
+      </ul>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_host_title">Adres niet gevonden</string>
+
+    <!-- In the example, the two URLs in markup do not need to be translated. -->
+    <string name="mozac_browser_errorpages_unknown_host_message"><![CDATA[
+      
+      <p>De browser kon de hostserver voor het opgegeven adres niet vinden.</p>
+      
+      <ul>
+        <li>Controleer het adres op typefouten, zoals
+      
+          <strong>ww</strong>.example.com in plaats van 
+      
+          <strong>www</strong>.exemple.com.</li>
+      
+        <li>Als u geen pagina’s kunt laden, controleer dan de gegevens- of Wi-Fi-verbinding van uw apparaat.</li>
+      
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title">Ongeldig adres</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      
+      <p>Het opgegeven adres heeft geen herkenbare indeling. Controleer de locatiebalk op fouten en probeer het opnieuw.</p>
+    
+    ]]></string>
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_malformed_uri_title_alternative">Het adres is niet geldig</string>
+
+    <!-- This string contains markup. The URL should not be localized. -->
+    <string name="mozac_browser_errorpages_malformed_uri_message_alternative"><![CDATA[
+      
+      <ul>
+  
+        <li>Webadressen worden doorgaans geschreven als <strong>http://www.example.com/</strong></li>
+  
+        <li>Let erop dat u voorwaartse slashes gebruikt (d.i. <strong>/</strong>).</li>
+
+      </ul>
+    
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_protocol_title">Onbekend protocol</string>
+
+    <string name="mozac_browser_errorpages_unknown_protocol_message"><![CDATA[
+      
+      <p>Het adres specificeert een protocol (bv. <q>wxyz://</q>) dat de browser niet herkent, waardoor de browser niet op een juiste manier met de website kan verbinden.</p>
+      
+      <ul>
+        
+        <li>Probeert u toegang te krijgen tot multimedia- of andere niet-tekstservices? Controleer de website op extra benodigdheden.</li>
+        
+        <li>Sommige protocollen kunnen software of plug-ins van derden vereisen voordat de browser ze kan herkennen.</li>
+      
+      </ul>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_not_found_title">Bestand niet gevonden</string>
+
+    <string name="mozac_browser_errorpages_file_not_found_message"><![CDATA[
+      
+      <ul>
+      
+        <li>Kan het item zijn hernoemd, verwijderd of verplaatst?</li>
+      
+        <li>Staat er een spel-, hoofdletter- of andere typografische fout in het adres?</li>
+      
+        <li>Hebt u voldoende toegangsrechten voor het opgevraagde item?</li>
+      
+      </ul>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_file_access_denied_title">Toegang tot het bestand is geweigerd</string>
+
+    <string name="mozac_browser_errorpages_file_access_denied_message"><![CDATA[
+      
+      <ul>
+      
+        <li>Het kan zijn verwijderd, verplaatst, of bestandsmachtigingen kunnen toegang verhinderen.</li>
+      
+      </ul>
+      
+    
+]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_proxy_connection_refused_title">Proxyserver weigerde verbinding</string>
+
+    <string name="mozac_browser_errorpages_proxy_connection_refused_message"><![CDATA[
+      
+      <p>De browser is geconfigureerd om een proxyserver te gebruiken, maar de proxy weigerde een verbinding.</p>
+      
+      <ul>
+      
+        <li>Is de proxyconfiguratie van de browser in orde? Controleer de instellingen en probeer het opnieuw.</li>
+      
+        <li>Staat de proxyservice verbindingen van dit netwerk toe?</li>
+      
+        <li>Hebt u nog steeds problemen? Raadpleeg uw netwerkbeheerder of internetprovider voor assistentie.</li>
+      
+      </ul>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_unknown_proxy_host_title">Proxyserver niet gevonden</string>
+
+    <string name="mozac_browser_errorpages_unknown_proxy_host_message"><![CDATA[
+      
+      <p>De browser is geconfigureerd om een proxyserver te gebruiken, maar de proxy kon niet worden gevonden.</p>
+      
+      <ul>
+      
+        <li>Is de proxyconfiguratie van de browser in orde? Controleer de instellingen en probeer het opnieuw.</li>
+      
+        <li>Is de computer verbonden met een actief netwerk?</li>
+      
+        <li>Hebt u nog steeds problemen? Raadpleeg uw netwerkbeheerder of internetprovider voor assistentie.</li>
+      
+      </ul>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_title">Probleem met malware op website</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_malware_uri_message"><![CDATA[
+      
+      <p>De website op %1$s is gerapporteerd als een aanvalsite en is geblokkeerd op basis van uw beveiligingsvoorkeuren.</p>
+    
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_title">Probleem met ongewenste website</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_browsing_unwanted_uri_message"><![CDATA[
+      
+      <p>De website op %1$s is gerapporteerd als een website die ongewenste software aanbiedt en is geblokkeerd op basis van uw beveiligingsvoorkeuren.</p>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_title">Probleem met schadelijke website</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_harmful_uri_message"><![CDATA[
+      
+      <p>De website op %1$s is gerapporteerd als een mogelijk schadelijke website en is geblokkeerd op basis van uw beveiligingsvoorkeuren.</p>
+      
+    ]]></string>
+
+    <!-- The document title and heading of an error page. -->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_title">Probleem met misleidende website</string>
+    <!-- The %1$s will be replaced by the malicious website URL-->
+    <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
+      
+      <p>De website op %1$s is gerapporteerd als een misleidende website en is geblokkeerd op basis van uw beveiligingsvoorkeuren.</p>
+      
+    ]]></string>
+</resources>
