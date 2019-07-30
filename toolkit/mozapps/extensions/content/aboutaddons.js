@@ -2882,12 +2882,12 @@ class ListView {
     list.type = this.type;
     list.setSections([
       {
-        headingId: "addons-enabled-heading",
+        headingId: this.type + "-enabled-heading",
         filterFn: addon =>
           !addon.hidden && addon.isActive && !isPending(addon, "uninstall"),
       },
       {
-        headingId: "addons-disabled-heading",
+        headingId: this.type + "-disabled-heading",
         filterFn: addon =>
           !addon.hidden && !addon.isActive && !isPending(addon, "uninstall"),
       },

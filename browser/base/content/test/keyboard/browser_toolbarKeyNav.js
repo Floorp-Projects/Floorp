@@ -127,11 +127,14 @@ add_task(async function testTabStopsPageLoaded() {
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     await waitUntilReloadEnabled();
     startFromUrlBar();
-    await expectFocusAfterKey("Shift+Tab", "identity-box");
+    await expectFocusAfterKey(
+      "Shift+Tab",
+      "tracking-protection-icon-container"
+    );
     await expectFocusAfterKey("Shift+Tab", "reload-button");
     await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", "reload-button");
-    await expectFocusAfterKey("Tab", "identity-box");
+    await expectFocusAfterKey("Tab", "tracking-protection-icon-container");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
     await expectFocusAfterKey("Tab", "pageActionButton");
     await expectFocusAfterKey("Tab", "library-button");
@@ -152,8 +155,11 @@ add_task(async function testTabStopsWithNotification() {
     await popupShown;
     startFromUrlBar();
     // If the notification anchor were in the tab order, the next shift+tab
-    // would focus it instead of #identity-box.
-    await expectFocusAfterKey("Shift+Tab", "identity-box");
+    // would focus it instead of #tracking-protection-icon-container.
+    await expectFocusAfterKey(
+      "Shift+Tab",
+      "tracking-protection-icon-container"
+    );
   });
 });
 
@@ -241,7 +247,10 @@ add_task(async function testArrowsDisabledButtons() {
   ) {
     await waitUntilReloadEnabled();
     startFromUrlBar();
-    await expectFocusAfterKey("Shift+Tab", "identity-box");
+    await expectFocusAfterKey(
+      "Shift+Tab",
+      "tracking-protection-icon-container"
+    );
     // Back and Forward buttons are disabled.
     await expectFocusAfterKey("Shift+Tab", "reload-button");
     EventUtils.synthesizeKey("KEY_ArrowLeft");
@@ -255,7 +264,10 @@ add_task(async function testArrowsDisabledButtons() {
     await BrowserTestUtils.browserLoaded(aBrowser);
     await waitUntilReloadEnabled();
     startFromUrlBar();
-    await expectFocusAfterKey("Shift+Tab", "identity-box");
+    await expectFocusAfterKey(
+      "Shift+Tab",
+      "tracking-protection-icon-container"
+    );
     await expectFocusAfterKey("Shift+Tab", "back-button");
     // Forward button is still disabled.
     await expectFocusAfterKey("ArrowRight", "reload-button");
@@ -370,6 +382,24 @@ add_task(async function testPanelCloseRestoresFocus() {
       document.activeElement.id,
       "library-button",
       "Focus restored to Library button after panel closed"
+    );
+  });
+});
+
+// Test that the arrow key works in the group of the
+// 'tracking-protection-icon-container' and the 'identity-box'.
+add_task(async function testArrowKeyForTPIconContainerandIdentityBox() {
+  await BrowserTestUtils.withNewTab("https://example.com", async function() {
+    await waitUntilReloadEnabled();
+    startFromUrlBar();
+    await expectFocusAfterKey(
+      "Shift+Tab",
+      "tracking-protection-icon-container"
+    );
+    await expectFocusAfterKey("ArrowRight", "identity-box");
+    await expectFocusAfterKey(
+      "ArrowLeft",
+      "tracking-protection-icon-container"
     );
   });
 });

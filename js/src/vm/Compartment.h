@@ -652,7 +652,7 @@ class JS::Compartment {
   void sweepCrossCompartmentWrappers();
 
   static void fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc);
-  void fixupAfterMovingGC();
+  void fixupAfterMovingGC(JSTracer* trc);
 
   MOZ_MUST_USE bool findSweepGroupEdges();
 };

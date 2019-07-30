@@ -54,29 +54,15 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
   // are subject to CSP, hence we have to make sure those
   // protocols are subject to CSP, see:
   // http://www.w3.org/TR/CSP2/#source-list-guid-matching
-  bool match = false;
-  nsresult rv = aURI->SchemeIs("data", &match);
-  if (NS_SUCCEEDED(rv) && match) {
-    return true;
-  }
-  rv = aURI->SchemeIs("blob", &match);
-  if (NS_SUCCEEDED(rv) && match) {
-    return true;
-  }
-  rv = aURI->SchemeIs("filesystem", &match);
-  if (NS_SUCCEEDED(rv) && match) {
+  if (aURI->SchemeIs("data") || aURI->SchemeIs("blob") ||
+      aURI->SchemeIs("filesystem")) {
     return true;
   }
 
   // Finally we have to whitelist "about:" which does not fall into
   // the category underneath and also "javascript:" which is not
   // subject to CSP content loading rules.
-  rv = aURI->SchemeIs("about", &match);
-  if (NS_SUCCEEDED(rv) && match) {
-    return false;
-  }
-  rv = aURI->SchemeIs("javascript", &match);
-  if (NS_SUCCEEDED(rv) && match) {
+  if (aURI->SchemeIs("about") || aURI->SchemeIs("javascript")) {
     return false;
   }
 
@@ -92,20 +78,18 @@ bool subjectToCSP(nsIURI* aURI, nsContentPolicyType aContentType) {
       contentType == nsIContentPolicy::TYPE_STYLESHEET ||
       contentType == nsIContentPolicy::TYPE_DTD ||
       contentType == nsIContentPolicy::TYPE_XBL;
-  rv = aURI->SchemeIs("resource", &match);
-  if (NS_SUCCEEDED(rv) && match && !isImgOrStyleOrDTDorXBL) {
+  if (aURI->SchemeIs("resource") && !isImgOrStyleOrDTDorXBL) {
     return true;
   }
-  rv = aURI->SchemeIs("chrome", &match);
-  if (NS_SUCCEEDED(rv) && match && !isImgOrStyleOrDTDorXBL) {
+  if (aURI->SchemeIs("chrome") && !isImgOrStyleOrDTDorXBL) {
     return true;
   }
-  rv = aURI->SchemeIs("moz-icon", &match);
-  if (NS_SUCCEEDED(rv) && match) {
+  if (aURI->SchemeIs("moz-icon")) {
     return true;
   }
-  rv = NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                           &match);
+  bool match;
+  nsresult rv = NS_URIChainHasFlags(
+      aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &match);
   if (NS_SUCCEEDED(rv) && match) {
     return false;
   }

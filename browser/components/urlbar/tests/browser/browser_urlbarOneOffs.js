@@ -207,9 +207,9 @@ add_task(async function oneOffReturn() {
   gBrowser.removeTab(gBrowser.selectedTab);
 });
 
-add_task(async function collapsedOneOffs() {
+add_task(async function hiddenOneOffs() {
   // Disable all the engines but the current one, check the oneoffs are
-  // collapsed and that moving up selects the last match.
+  // hidden and that moving up selects the last match.
   let defaultEngine = await Services.search.getDefault();
   let engines = (await Services.search.getVisibleEngines()).filter(
     e => e.name != defaultEngine.name
@@ -223,8 +223,8 @@ add_task(async function collapsedOneOffs() {
   await UrlbarTestUtils.getDetailsOfResultAt(window, 0);
   assertState(0, -1);
   Assert.ok(
-    oneOffSearchButtons.buttons.collapsed,
-    "The one-off buttons should be collapsed"
+    oneOffSearchButtons.container.hidden,
+    "The one-off buttons should be hidden"
   );
   EventUtils.synthesizeKey("KEY_ArrowUp");
   assertState(1, -1);

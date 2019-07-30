@@ -149,6 +149,10 @@ struct SerialNumberRecord {
       return;
     }
 
+    if (!nsContentUtils::IsInitialized()) {
+      return;
+    }
+
     JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (!cx) {
       return;

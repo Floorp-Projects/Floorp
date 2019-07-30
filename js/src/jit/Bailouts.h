@@ -221,7 +221,7 @@ MOZ_MUST_USE bool ExceptionHandlerBailout(JSContext* cx,
                                           ResumeFromException* rfe,
                                           const ExceptionBailoutInfo& excInfo);
 
-MOZ_MUST_USE bool FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo);
+MOZ_MUST_USE bool FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg);
 
 void CheckFrequentBailouts(JSContext* cx, JSScript* script,
                            BailoutKind bailoutKind);

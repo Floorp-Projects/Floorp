@@ -7,13 +7,13 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { FluentBundle } =
+  const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
   async function* mockGenerateMessages(locales, resourceIds) {
     const bundle = new FluentBundle(locales);
-    bundle.addMessages("title = Hello World");
-    bundle.addMessages("link =\n    .title = Click me");
+    bundle.addResource(new FluentResource("title = Hello World"));
+    bundle.addResource(new FluentResource("link =\n    .title = Click me"));
     yield bundle;
   }
 

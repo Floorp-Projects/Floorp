@@ -291,14 +291,6 @@ Inspector.prototype = {
     }
   },
 
-  get notificationBox() {
-    if (!this._notificationBox) {
-      this._notificationBox = this.toolbox.getNotificationBox();
-    }
-
-    return this._notificationBox;
-  },
-
   get search() {
     if (!this._search) {
       this._search = new InspectorSearch(
@@ -1630,7 +1622,6 @@ Inspector.prototype = {
     this._is3PaneModeEnabled = null;
     this._markupBox = null;
     this._markupFrame = null;
-    this._notificationBox = null;
     this._target = null;
     this._toolbox = null;
     this.breadcrumbs = null;
