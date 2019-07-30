@@ -5313,10 +5313,10 @@ nsresult Preferences::AddAtomicFloatVarCache(std::atomic<float>* aCache,
   return AddVarCache(aCache, aPref, aDefault);
 }
 
-// The SetPref_*() functions below end in a `_<type>` suffix because they are
+// The InitPref_*() functions below end in a `_<type>` suffix because they are
 // used by the PREF macro definition in InitAll() below.
 
-static void SetPref_bool(const char* aName, bool aDefaultValue) {
+static void InitPref_bool(const char* aName, bool aDefaultValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mBoolVal = aDefaultValue;
@@ -5326,7 +5326,7 @@ static void SetPref_bool(const char* aName, bool aDefaultValue) {
                /* fromInit */ true);
 }
 
-static void SetPref_int32_t(const char* aName, int32_t aDefaultValue) {
+static void InitPref_int32_t(const char* aName, int32_t aDefaultValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mIntVal = aDefaultValue;
@@ -5336,11 +5336,11 @@ static void SetPref_int32_t(const char* aName, int32_t aDefaultValue) {
                /* fromInit */ true);
 }
 
-static void SetPref_uint32_t(const char* aName, uint32_t aDefaultValue) {
-  SetPref_int32_t(aName, int32_t(aDefaultValue));
+static void InitPref_uint32_t(const char* aName, uint32_t aDefaultValue) {
+  InitPref_int32_t(aName, int32_t(aDefaultValue));
 }
 
-static void SetPref_float(const char* aName, float aDefaultValue) {
+static void InitPref_float(const char* aName, float aDefaultValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   // Convert the value in a locale-independent way.
@@ -5353,9 +5353,7 @@ static void SetPref_float(const char* aName, float aDefaultValue) {
                /* fromInit */ true);
 }
 
-// XXX: this will eventually become used
-MOZ_MAYBE_UNUSED static void SetPref_String(const char* aName,
-                                            const char* aDefaultValue) {
+static void InitPref_String(const char* aName, const char* aDefaultValue) {
   MOZ_ASSERT(XRE_IsParentProcess());
   PrefValue value;
   value.mStringVal = aDefaultValue;
@@ -5365,21 +5363,17 @@ MOZ_MAYBE_UNUSED static void SetPref_String(const char* aName,
                /* fromInit */ true);
 }
 
-static void SetPref(const char* aName, bool aDefaultValue) {
-  SetPref_bool(aName, aDefaultValue);
+static void InitPref(const char* aName, bool aDefaultValue) {
+  InitPref_bool(aName, aDefaultValue);
 }
-static void SetPref(const char* aName, int32_t aDefaultValue) {
-  SetPref_int32_t(aName, aDefaultValue);
+static void InitPref(const char* aName, int32_t aDefaultValue) {
+  InitPref_int32_t(aName, aDefaultValue);
 }
-static void SetPref(const char* aName, uint32_t aDefaultValue) {
-  SetPref_uint32_t(aName, aDefaultValue);
+static void InitPref(const char* aName, uint32_t aDefaultValue) {
+  InitPref_uint32_t(aName, aDefaultValue);
 }
-static void SetPref(const char* aName, float aDefaultValue) {
-  SetPref_float(aName, aDefaultValue);
-}
-MOZ_MAYBE_UNUSED static void SetPref(const char* aName,
-                                     const char* aDefaultValue) {
-  SetPref_String(aName, aDefaultValue);
+static void InitPref(const char* aName, float aDefaultValue) {
+  InitPref_float(aName, aDefaultValue);
 }
 
 template <typename T>
@@ -5404,7 +5398,7 @@ static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
   // 2- After that, `Once` prefs are immutable.
 
   if (aIsParent) {
-    SetPref(PromiseFlatCString(aName).get(), aDefaultValue);
+    InitPref(PromiseFlatCString(aName).get(), aDefaultValue);
     if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live)) {
       *aCache = aDefaultValue;
     }
@@ -5467,21 +5461,21 @@ static void InitAll(bool aIsStartup) {
   // we generate registration calls like this:
   //
   //   if (isParent) {
-  //     SetPref_bool("foo.bar.baz", true);
+  //     InitPref_bool("foo.bar.baz", true);
   //   }
   //   InitVarCachePref(UpdatePolicy::Live, "my.pref", &sVarCache_my_pref,
   //                    99, aIsStartup, isParent);
   //
-  // The SetPref_*() functions have a type suffix to avoid ambiguity between
+  // The InitPref_*() functions have a type suffix to avoid ambiguity between
   // prefs having int32_t and float default values. That suffix is not needed
   // for the InitVarCachePref() functions because they take a pointer parameter,
   // which prevents automatic int-to-float coercion.
   //
   // In content processes, we rely on the parent to send us the correct initial
   // values via shared memory, so we do not re-initialize them here.
-#define PREF(name, cpp_type, value)  \
-  if (isParent) {                    \
-    SetPref_##cpp_type(name, value); \
+#define PREF(name, cpp_type, value)   \
+  if (isParent) {                     \
+    InitPref_##cpp_type(name, value); \
   }
 #define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value) \
   InitVarCachePref(UpdatePolicy::policy, NS_LITERAL_CSTRING(name),     \
