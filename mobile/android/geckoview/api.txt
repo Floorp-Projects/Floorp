@@ -646,12 +646,16 @@ package org.mozilla.geckoview {
     method @UiThread default public void onChoicePrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, int, @NonNull GeckoSession.PromptDelegate.Choice[], @NonNull GeckoSession.PromptDelegate.ChoiceCallback);
     method @UiThread default public void onColorPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
     method @UiThread default public void onDateTimePrompt(@NonNull GeckoSession, @Nullable String, int, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
-    method @UiThread default public void onFilePrompt(@NonNull GeckoSession, @Nullable String, int, @Nullable String[], @NonNull GeckoSession.PromptDelegate.FileCallback);
+    method @UiThread default public void onFilePrompt(@NonNull GeckoSession, @Nullable String, int, @Nullable String[], int, @NonNull GeckoSession.PromptDelegate.FileCallback);
     method @UiThread @Nullable default public GeckoResult<AllowOrDeny> onPopupRequest(@NonNull GeckoSession, @Nullable String);
     method @UiThread default public void onTextPrompt(@NonNull GeckoSession, @Nullable String, @Nullable String, @Nullable String, @NonNull GeckoSession.PromptDelegate.TextCallback);
     field public static final int BUTTON_TYPE_NEGATIVE = 2;
     field public static final int BUTTON_TYPE_NEUTRAL = 1;
     field public static final int BUTTON_TYPE_POSITIVE = 0;
+    field public static final int CAPTURE_TYPE_ANY = 1;
+    field public static final int CAPTURE_TYPE_ENVIRONMENT = 3;
+    field public static final int CAPTURE_TYPE_NONE = 0;
+    field public static final int CAPTURE_TYPE_USER = 2;
     field public static final int DATETIME_TYPE_DATE = 1;
     field public static final int DATETIME_TYPE_DATETIME_LOCAL = 5;
     field public static final int DATETIME_TYPE_MONTH = 2;
