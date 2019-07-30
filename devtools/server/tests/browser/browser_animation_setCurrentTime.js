@@ -40,7 +40,7 @@ async function testSetCurrentTimes(walker, animations) {
     const state = await players[i].getCurrentState();
     is(state.playState, "paused", `Player ${i + 1} is paused`);
     is(
-      parseInt(state.currentTime.toPrecision(6), 10),
+      parseInt(state.currentTime.toPrecision(4), 10),
       500,
       `Player ${i + 1} has the right currentTime`
     );
