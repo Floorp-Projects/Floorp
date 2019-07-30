@@ -8,7 +8,7 @@
 # having to create the same entry for each locale.
 
 [localization] @AB_CD@.jar:
-  browser/aboutLogins.ftl                          (../components/aboutlogins/content/aboutLogins.ftl)
+  preview/aboutLogins.ftl                          (../components/aboutlogins/content/aboutLogins.ftl)
   browser                                          (%browser/**/*.ftl)
 
 @AB_CD@.jar:
