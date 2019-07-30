@@ -30,13 +30,10 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (activity as AppCompatActivity).supportActionBar?.show()
 
         sitePermissions = SitePermissionsDetailsExceptionsFragmentArgs
             .fromBundle(requireArguments())
             .sitePermissions
-
-        (activity as AppCompatActivity).title = sitePermissions.origin
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
@@ -45,6 +42,10 @@ class SitePermissionsDetailsExceptionsFragment : PreferenceFragmentCompat() {
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).apply {
+            title = sitePermissions.origin
+            supportActionBar?.show()
+        }
         lifecycleScope.launch(IO) {
             val context = requireContext()
             sitePermissions =
