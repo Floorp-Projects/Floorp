@@ -113,6 +113,9 @@ linux64-tup:
         - try
     toolchains:
         - linux64-gcc-6
+    fetches:
+        fetch:
+            - tup
 
 linux64-upx:
     description: "UPX build"
