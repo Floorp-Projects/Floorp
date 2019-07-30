@@ -9,6 +9,9 @@
         "brkitr_tree": {
             "filterType": "exclude"
         },
+        "confusables": {
+            "filterType": "exclude"
+        },
         "conversion_mappings": {
             "whitelist": [
                 "ibm-37_P100-1995",
@@ -25,7 +28,13 @@
         "region_tree": {
             "filterType": "exclude"
         },
+        "stringprep": {
+            "filterType": "exclude"
+        },
         "translit": {
+            "filterType": "exclude"
+        },
+        "unames": {
             "filterType": "exclude"
         }
     },
