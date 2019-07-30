@@ -79,14 +79,14 @@
           <vbox id="identity-popup-content-blocking-category-list">
             <toolbarbutton id="identity-popup-content-blocking-category-tracking-protection"
                            onclick="ContentBlocking.showTrackersSubview(); gIdentityHandler.recordClick('trackers_subview_btn');"
-                           class="identity-popup-content-blocking-category" align="center">
+                           class="identity-popup-content-blocking-category" align="center" wrap="true">
               <image class="identity-popup-content-blocking-category-icon tracking-protection-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.trackingProtection3.label;</label>
               <label flex="1" id="identity-popup-content-blocking-tracking-protection-state-label" class="identity-popup-content-blocking-category-state-label"/>
             </toolbarbutton>
             <toolbarbutton id="identity-popup-content-blocking-category-cookies"
                            onclick="ContentBlocking.showCookiesSubview(); gIdentityHandler.recordClick('cookies_subview_btn');"
-                           class="identity-popup-content-blocking-category" align="center">
+                           class="identity-popup-content-blocking-category" align="center" wrap="true">
               <image class="identity-popup-content-blocking-category-icon thirdpartycookies-icon"/>
               <label flex="1" id="identity-popup-content-blocking-category-label-default"
                      class="identity-popup-content-blocking-category-label">&contentBlocking.cookies.label;</label>
@@ -94,14 +94,14 @@
             </toolbarbutton>
             <toolbarbutton id="identity-popup-content-blocking-category-cryptominers"
                            onclick="ContentBlocking.showCryptominersSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
+                           class="identity-popup-content-blocking-category" align="center" wrap="true">
               <image class="identity-popup-content-blocking-category-icon cryptominers-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.cryptominers.label;</label>
               <label flex="1" id="identity-popup-content-blocking-cryptominers-state-label" class="identity-popup-content-blocking-category-state-label"/>
             </toolbarbutton>
             <toolbarbutton id="identity-popup-content-blocking-category-fingerprinters"
                            onclick="ContentBlocking.showFingerprintersSubview();"
-                           class="identity-popup-content-blocking-category" align="center">
+                           class="identity-popup-content-blocking-category" align="center" wrap="true">
               <image class="identity-popup-content-blocking-category-icon fingerprinters-icon"/>
               <label flex="1" class="identity-popup-content-blocking-category-label">&contentBlocking.fingerprinters.label;</label>
               <label flex="1" id="identity-popup-content-blocking-fingerprinters-state-label" class="identity-popup-content-blocking-category-state-label"/>
