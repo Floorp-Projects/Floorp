@@ -1,7 +1,6 @@
 import os
 
 import moznetwork
-from mozprocess import ProcessHandler
 from mozprofile import FirefoxProfile
 from mozrunner import FennecEmulatorRunner
 
@@ -163,9 +162,7 @@ class FirefoxAndroidBrowser(FirefoxBrowser):
                                            symbols_path=self.symbols_path,
                                            serial=self.device_serial,
                                            # TODO - choose appropriate log dir
-                                           logdir=os.getcwd(),
-                                           process_class=ProcessHandler,
-                                           process_args={"processOutputLine": [self.on_output]})
+                                           logdir=os.getcwd())
 
         self.logger.debug("Starting %s" % self.package_name)
         # connect to a running emulator
