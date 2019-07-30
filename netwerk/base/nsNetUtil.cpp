@@ -1848,15 +1848,7 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 
-  // web-extensions can add custom protocol implementations with standard URLs
-  // that have notion of hostname, authority and relative URLs. Below we
-  // manually check agains  set of known protocols schemes and `ext+` prefix
-  // (used by web-extensions) until more general solution is in place
-  // (See Bug 1569733)
-  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat") ||
-      scheme.EqualsLiteral("ipfs") || scheme.EqualsLiteral("ipns") ||
-      scheme.EqualsLiteral("ssb") || scheme.EqualsLiteral("wtp") ||
-      StringBeginsWith(scheme, NS_LITERAL_CSTRING("ext+"))) {
+  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat")) {
     return NewStandardURI(aSpec, aCharset, aBaseURI, -1, aURI);
   }
 
