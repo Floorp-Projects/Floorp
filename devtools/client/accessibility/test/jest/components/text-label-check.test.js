@@ -60,7 +60,7 @@ describe("TextLabelCheck component:", () => {
   for (const props of testProps) {
     it(`${props.score} render`, () => {
       const wrapper = mount(
-        LocalizationProvider({ messages: [] }, TextLabelCheck(props))
+        LocalizationProvider({ bundles: [] }, TextLabelCheck(props))
       );
 
       const textLabelCheck = wrapper.find(TextLabelCheckClass);
