@@ -47,5 +47,5 @@ URL="https://$USER:$TOKEN@github.com/$OWNER/$REPO/"
 echo "token=$TOKEN" > token.properties
 
 echo "Pushing branch to GitHub"
-git push --no-verify --quiet $URL $BRANCH &>/dev/null
+git push --no-verify --quiet $URL "$BRANCH:master" &>/dev/null
 echo "Done ($?)"
