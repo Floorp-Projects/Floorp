@@ -19,8 +19,14 @@ function test() {
 function focusNotificationAnchor(anchor) {
   let urlbarContainer = anchor.closest("#urlbar-container");
   urlbarContainer.querySelector("toolbartabstop").focus();
-  const identityBox = urlbarContainer.querySelector("#identity-box");
-  is(document.activeElement, identityBox, "Identity box is focused.");
+  const trackingProtectionIconContainer = urlbarContainer.querySelector(
+    "#tracking-protection-icon-container"
+  );
+  is(
+    document.activeElement,
+    trackingProtectionIconContainer,
+    "tracking protection icon container is focused."
+  );
   while (document.activeElement !== anchor) {
     EventUtils.synthesizeKey("ArrowRight");
   }
