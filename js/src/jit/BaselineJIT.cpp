@@ -1120,6 +1120,7 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
                                CodeOffsetVector&& debugInstrumentationOffsets,
                                CodeOffsetVector&& debugTrapOffsets,
                                CodeOffsetVector&& codeCoverageOffsets,
+                               ICReturnOffsetVector&& icReturnOffsets,
                                const CallVMOffsets& callVMOffsets) {
   code_ = code;
   interpretOpOffset_ = interpretOpOffset;
@@ -1129,7 +1130,17 @@ void BaselineInterpreter::init(JitCode* code, uint32_t interpretOpOffset,
   debugInstrumentationOffsets_ = std::move(debugInstrumentationOffsets);
   debugTrapOffsets_ = std::move(debugTrapOffsets);
   codeCoverageOffsets_ = std::move(codeCoverageOffsets);
+  icReturnOffsets_ = std::move(icReturnOffsets);
   callVMOffsets_ = callVMOffsets;
+}
+
+uint8_t* BaselineInterpreter::retAddrForIC(JSOp op) const {
+  for (const ICReturnOffset& entry : icReturnOffsets_) {
+    if (entry.op == op) {
+      return codeAtOffset(entry.offset);
+    }
+  }
+  MOZ_CRASH("Unexpected op");
 }
 
 bool jit::GenerateBaselineInterpreter(JSContext* cx,
