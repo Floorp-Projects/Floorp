@@ -103,7 +103,7 @@ const AboutDebugging = {
           store: this.store,
         },
         LocalizationProvider(
-          { messages: l10n.getBundles() },
+          { bundles: l10n.getBundles() },
           Router({}, App({}))
         )
       ),
