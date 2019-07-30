@@ -42,6 +42,7 @@ skip_on(android) == filter-mix-blend-mode.yaml filter-mix-blend-mode-ref.yaml  #
 != srgb-to-linear-2.yaml srgb-to-linear-ref.yaml
 != filter-blur-huge.yaml blank.yaml
 != filter-drop-shadow-huge.yaml blank.yaml
+!= filter-drop-shadow-transform-huge.yaml blank.yaml
 == filter-blur-scaled.yaml filter-blur-scaled-ref.yaml
 skip_on(android) == filter-blur-scaled-xonly.yaml filter-blur-scaled-xonly.png  # fails on Android emulator and Pixel2
 == filter-flood.yaml filter-flood-ref.yaml
