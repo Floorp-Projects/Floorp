@@ -7,6 +7,7 @@
 #ifndef jit_BaselineJIT_h
 #define jit_BaselineJIT_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "ds/LifoAlloc.h"
@@ -459,38 +460,43 @@ void ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable);
 
 struct BaselineBailoutInfo {
   // Pointer into the current C stack, where overwriting will start.
-  uint8_t* incomingStack;
+  uint8_t* incomingStack = nullptr;
 
   // The top and bottom heapspace addresses of the reconstructed stack
   // which will be copied to the bottom.
-  uint8_t* copyStackTop;
-  uint8_t* copyStackBottom;
+  uint8_t* copyStackTop = nullptr;
+  uint8_t* copyStackBottom = nullptr;
 
   // The value of the frame pointer register on resume.
-  void* resumeFramePtr;
+  void* resumeFramePtr = nullptr;
 
   // The native code address to resume into.
-  void* resumeAddr;
+  void* resumeAddr = nullptr;
 
   // If non-null, we have to type monitor the top stack value for this pc (we
   // resume right after it).
-  jsbytecode* monitorPC;
+  jsbytecode* monitorPC = nullptr;
 
   // The bytecode pc of try block and fault block.
-  jsbytecode* tryPC;
-  jsbytecode* faultPC;
+  jsbytecode* tryPC = nullptr;
+  jsbytecode* faultPC = nullptr;
 
   // Number of baseline frames to push on the stack.
-  uint32_t numFrames;
+  uint32_t numFrames = 0;
 
   // If Ion bailed out on a global script before it could perform the global
   // declaration conflicts check. In such cases the baseline script is
   // resumed at the first pc instead of the prologue, so an extra flag is
   // needed to perform the check.
-  bool checkGlobalDeclarationConflicts;
+  bool checkGlobalDeclarationConflicts = false;
 
   // The bailout kind.
-  BailoutKind bailoutKind;
+  mozilla::Maybe<BailoutKind> bailoutKind = {};
+
+  BaselineBailoutInfo() = default;
+  BaselineBailoutInfo(const BaselineBailoutInfo&) = default;
+
+  void operator=(const BaselineBailoutInfo&) = delete;
 };
 
 MOZ_MUST_USE bool BailoutIonToBaseline(
