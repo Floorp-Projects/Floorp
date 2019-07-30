@@ -8,7 +8,7 @@ use marionette_rs::common::{
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Locator as MarionetteLocator,
-    Selector as MarionetteSelector,
+    NewWindow as MarionetteNewWindow, Selector as MarionetteSelector,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -816,6 +816,9 @@ fn try_convert_to_marionette_message(
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
+            x.to_marionette()?,
+        ))),
         SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
             x.to_marionette()?,
         ))),
@@ -875,7 +878,6 @@ impl MarionetteCommand {
                     // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
                     (Some("WebDriver:AcceptDialog"), None)
                 }
-                NewWindow(ref x) => (Some("WebDriver:NewWindow"), Some(x.to_marionette())),
                 CloseWindow => (Some("WebDriver:CloseWindow"), None),
                 DeleteSession => {
                     let mut body = Map::new();
@@ -1525,13 +1527,11 @@ impl ToMarionette<MarionetteSelector> for LocatorStrategy {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for NewWindowParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut data = Map::new();
-        if let Some(ref x) = self.type_hint {
-            data.insert("type".to_string(), serde_json::to_value(x)?);
-        }
-        Ok(data)
+impl ToMarionette<MarionetteNewWindow> for NewWindowParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteNewWindow> {
+        Ok(MarionetteNewWindow {
+            type_hint: self.type_hint.clone(),
+        })
     }
 }
 
