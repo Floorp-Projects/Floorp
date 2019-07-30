@@ -66,7 +66,7 @@ def main(argv):
 
     ret = 1
     try:
-        with FileAvoidWrite(args.output_file, mode='rb') as output:
+        with FileAvoidWrite(args.output_file, readmode='rb') as output:
             try:
                 ret = module.__dict__[method](output, *args.additional_arguments, **kwargs)
             except Exception:
