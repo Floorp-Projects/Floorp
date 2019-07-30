@@ -35,16 +35,17 @@ using namespace js::jit;
 // this buffer as a pointer to the header and a fixed offset.
 template <typename T>
 class BufferPointer {
-  BaselineBailoutInfo** header_;
+  const UniquePtr<BaselineBailoutInfo>& header_;
   size_t offset_;
   bool heap_;
 
  public:
-  BufferPointer(BaselineBailoutInfo** header, size_t offset, bool heap)
+  BufferPointer(const UniquePtr<BaselineBailoutInfo>& header, size_t offset,
+                bool heap)
       : header_(header), offset_(offset), heap_(heap) {}
 
   T* get() const {
-    BaselineBailoutInfo* header = *header_;
+    BaselineBailoutInfo* header = header_.get();
     if (!heap_) {
       return (T*)(header->incomingStack + offset_);
     }
@@ -85,85 +86,91 @@ class BufferPointer {
 struct BaselineStackBuilder {
   JSContext* cx_;
   const JSJitFrameIter& iter_;
-  JitFrameLayout* frame_;
+  JitFrameLayout* frame_ = nullptr;
 
-  static size_t HeaderSize() {
-    return AlignBytes(sizeof(BaselineBailoutInfo), sizeof(void*));
-  }
-  size_t bufferTotal_;
-  size_t bufferAvail_;
-  size_t bufferUsed_;
-  uint8_t* buffer_;
-  BaselineBailoutInfo* header_;
+  size_t bufferTotal_ = 0;
+  size_t bufferAvail_ = 0;
+  size_t bufferUsed_ = 0;
+  size_t framePushed_ = 0;
 
-  size_t framePushed_;
+  UniquePtr<BaselineBailoutInfo> header_;
 
   BaselineStackBuilder(JSContext* cx, const JSJitFrameIter& iter,
                        size_t initialSize)
       : cx_(cx),
         iter_(iter),
         frame_(static_cast<JitFrameLayout*>(iter.current())),
-        bufferTotal_(initialSize),
-        bufferAvail_(0),
-        bufferUsed_(0),
-        buffer_(nullptr),
-        header_(nullptr),
-        framePushed_(0) {
-    MOZ_ASSERT(bufferTotal_ >= HeaderSize());
+        bufferTotal_(initialSize) {
+    MOZ_ASSERT(bufferTotal_ >= sizeof(BaselineBailoutInfo));
     MOZ_ASSERT(iter.isBailoutJS());
   }
 
-  ~BaselineStackBuilder() { js_free(buffer_); }
-
   MOZ_MUST_USE bool init() {
-    MOZ_ASSERT(!buffer_);
+    MOZ_ASSERT(!header_);
     MOZ_ASSERT(bufferUsed_ == 0);
-    buffer_ = cx_->pod_calloc<uint8_t>(bufferTotal_);
-    if (!buffer_) {
+
+    uint8_t* bufferRaw = cx_->pod_calloc<uint8_t>(bufferTotal_);
+    if (!bufferRaw) {
       return false;
     }
-    bufferAvail_ = bufferTotal_ - HeaderSize();
-    bufferUsed_ = 0;
+    bufferAvail_ = bufferTotal_ - sizeof(BaselineBailoutInfo);
 
-    header_ = new (buffer_) BaselineBailoutInfo();
+    header_.reset(new (bufferRaw) BaselineBailoutInfo());
     header_->incomingStack = reinterpret_cast<uint8_t*>(frame_);
-    header_->copyStackTop = buffer_ + bufferTotal_;
+    header_->copyStackTop = bufferRaw + bufferTotal_;
     header_->copyStackBottom = header_->copyStackTop;
     return true;
   }
 
   MOZ_MUST_USE bool enlarge() {
-    MOZ_ASSERT(buffer_ != nullptr);
+    MOZ_ASSERT(header_ != nullptr);
     if (bufferTotal_ & mozilla::tl::MulOverflowMask<2>::value) {
       ReportOutOfMemory(cx_);
       return false;
     }
+
     size_t newSize = bufferTotal_ * 2;
-    uint8_t* newBuffer = cx_->pod_calloc<uint8_t>(newSize);
-    if (!newBuffer) {
+    uint8_t* newBufferRaw = cx_->pod_calloc<uint8_t>(newSize);
+    if (!newBufferRaw) {
       return false;
     }
-    memcpy((newBuffer + newSize) - bufferUsed_, header_->copyStackBottom,
-           bufferUsed_);
-    header_ = new (newBuffer) BaselineBailoutInfo(*header_);
-    js_free(buffer_);
-    buffer_ = newBuffer;
+
+    // Initialize the new buffer.
+    //
+    //   Before:
+    //
+    //     [ Header | .. | Payload ]
+    //
+    //   After:
+    //
+    //     [ Header | ............... | Payload ]
+    //
+    // Size of Payload is |bufferUsed_|.
+    //
+    // We need to copy from the old buffer and header to the new buffer before
+    // we set header_ (this deletes the old buffer).
+    //
+    // We also need to update |copyStackBottom| and |copyStackTop| because these
+    // fields point to the Payload's start and end, respectively.
+    using BailoutInfoPtr = UniquePtr<BaselineBailoutInfo>;
+    BailoutInfoPtr newHeader(new (newBufferRaw) BaselineBailoutInfo(*header_));
+    newHeader->copyStackTop = newBufferRaw + newSize;
+    newHeader->copyStackBottom = newHeader->copyStackTop - bufferUsed_;
+    memcpy(newHeader->copyStackBottom, header_->copyStackBottom, bufferUsed_);
     bufferTotal_ = newSize;
-    bufferAvail_ = newSize - (HeaderSize() + bufferUsed_);
-    header_->copyStackTop = buffer_ + bufferTotal_;
-    header_->copyStackBottom = header_->copyStackTop - bufferUsed_;
+    bufferAvail_ = newSize - (sizeof(BaselineBailoutInfo) + bufferUsed_);
+    header_ = std::move(newHeader);
     return true;
   }
 
   BaselineBailoutInfo* info() {
-    MOZ_ASSERT(header_ == reinterpret_cast<BaselineBailoutInfo*>(buffer_));
-    return header_;
+    MOZ_ASSERT(header_);
+    return header_.get();
   }
 
   BaselineBailoutInfo* takeBuffer() {
-    MOZ_ASSERT(header_ == reinterpret_cast<BaselineBailoutInfo*>(buffer_));
-    buffer_ = nullptr;
-    return header_;
+    MOZ_ASSERT(header_);
+    return header_.release();
   }
 
   void resetFramePushed() { framePushed_ = 0; }
@@ -285,10 +292,10 @@ struct BaselineStackBuilder {
     if (offset < bufferUsed_) {
       // Calculate offset from copyStackTop.
       offset = header_->copyStackTop - (header_->copyStackBottom + offset);
-      return BufferPointer<T>(&header_, offset, /* heap = */ true);
+      return BufferPointer<T>(header_, offset, /* heap = */ true);
     }
 
-    return BufferPointer<T>(&header_, offset - bufferUsed_, /* heap = */ false);
+    return BufferPointer<T>(header_, offset - bufferUsed_, /* heap = */ false);
   }
 
   BufferPointer<Value> valuePointerAtStackOffset(size_t offset) {
