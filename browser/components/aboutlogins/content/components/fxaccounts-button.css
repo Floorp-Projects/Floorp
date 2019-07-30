@@ -1,0 +1,49 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.logged-out-view,
+.logged-in-view {
+  display: flex;
+  align-items: center;
+}
+
+.fxaccounts-extra-text {
+  color: var(--in-content-deemphasized-text);
+  font-size: smaller;
+  width: 250px;
+  text-align: end;
+  margin-inline-start: 36px;
+}
+
+.fxaccounts-avatar-button,
+.fxaccounts-enable-button {
+  margin-inline-start: 9px;
+}
+
+.fxaccount-email {
+  font-weight: bold;
+  font-size: .9em;
+}
+
+.fxaccounts-avatar-button {
+  background-image: var(--avatar-url),
+    url(chrome://browser/skin/fxa/avatar-color.svg);
+  background-color: transparent;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border: 1px solid var(--in-content-border-color);
+  border-radius: 1000px;
+  width: 32px;
+  min-width: auto;
+  cursor: pointer;
+}
+
+.fxaccounts-avatar-button:hover {
+  border-color: var(--in-content-border-hover);
+}
+
+.fxaccounts-avatar-button:hover:active {
+  border-color: var(--in-content-border-active);
+}

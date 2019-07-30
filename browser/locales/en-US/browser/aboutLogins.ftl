@@ -9,6 +9,9 @@ login-filter =
 
 create-login-button = Create New Login
 
+fxaccounts-sign-in-text = Get your passwords on your other devices
+fxaccounts-sign-in-button = Sign in to { -sync-brand-short-name }
+
 ## The ⋯ menu that is in the top corner of the page
 
 menu =
