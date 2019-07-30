@@ -807,18 +807,25 @@ void LogCallingScriptLocation(void* instance) {
        col));
 }
 
+static bool sSanitize = true;
+
+static bool InitPreferences() {
+  Preferences::AddBoolVarCache(&sSanitize,
+                               "network.http.sanitize-headers-in-logs", true);
+  return true;
+}
+
 void LogHeaders(const char* lineStart) {
-  static bool sanitize = true;
-  static nsresult once = Preferences::AddBoolVarCache(
-      &sanitize, "network.http.sanitize-headers-in-logs", true);
+  // The static bool assignment means that AddBoolVarCache is called just once.
+  static bool once = InitPreferences();
   Unused << once;
 
   nsAutoCString buf;
   char* endOfLine;
   while ((endOfLine = PL_strstr(lineStart, "\r\n"))) {
     buf.Assign(lineStart, endOfLine - lineStart);
-    if (sanitize && (PL_strcasestr(buf.get(), "authorization: ") ||
-                     PL_strcasestr(buf.get(), "proxy-authorization: "))) {
+    if (sSanitize && (PL_strcasestr(buf.get(), "authorization: ") ||
+                      PL_strcasestr(buf.get(), "proxy-authorization: "))) {
       char* p = PL_strchr(buf.get(), ' ');
       while (p && *++p) {
         *p = '*';
