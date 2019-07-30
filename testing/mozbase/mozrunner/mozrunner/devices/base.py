@@ -78,6 +78,7 @@ class Device(object):
                 print("WARNING: {}".format(e))
         if os.listdir(local_dump_dir):
             self.device.rm(remote_dump_dir, recursive=True)
+            self.device.mkdir(remote_dump_dir)
         return local_dump_dir
 
     def setup_profile(self, profile):
