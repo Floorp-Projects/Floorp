@@ -7,6 +7,7 @@ from collections import defaultdict
 from mozbuild.base import MozbuildObject
 from mozlint.pathutils import findobject
 from mozlint.parser import Parser
+from mozlint.result import ResultSummary
 
 import pytest
 
@@ -86,6 +87,8 @@ def lint(config, root):
         func = findobject(config['payload'])
     except (ImportError, ValueError):
         pytest.fail("could not resolve a lint function from '{}'".format(config['payload']))
+
+    ResultSummary.root = root
 
     def wrapper(paths, config=config, root=root, collapse_results=False, **lintargs):
         results = func(paths, config, root=root, **lintargs)

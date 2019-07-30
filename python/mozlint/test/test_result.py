@@ -7,9 +7,12 @@ from __future__ import absolute_import
 import mozunit
 
 from mozlint.result import Issue
+from mozlint.result import ResultSummary
 
 
 def test_issue_defaults():
+    ResultSummary.root = '/fake/root'
+
     issue = Issue('linter', 'path', 'message', None)
     assert issue.lineno == 0
     assert issue.column is None
