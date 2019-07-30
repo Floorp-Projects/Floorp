@@ -7,7 +7,6 @@
 DIRS += [
     'accessibility',
     'addon',
-    'descriptors',
     'emulation',
     'highlighters',
     'inspector',
