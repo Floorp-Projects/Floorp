@@ -146,6 +146,12 @@ class BaselineFrame {
     return (Value*)this - (slot + 1);
   }
 
+  Value topStackValue() const {
+    size_t numSlots = numValueSlots();
+    MOZ_ASSERT(numSlots > 0);
+    return *valueSlot(numSlots - 1);
+  }
+
   Value& unaliasedFormal(
       unsigned i, MaybeCheckAliasing checkAliasing = CHECK_ALIASING) const {
     MOZ_ASSERT(i < numFormalArgs());

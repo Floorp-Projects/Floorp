@@ -495,17 +495,14 @@ struct BaselineBailoutInfo {
   // The bytecode pc where we will resume.
   jsbytecode* resumePC;
 
+  // If non-null, we have to type monitor the top stack value for this pc (we
+  // resume right after it).
+  jsbytecode* monitorPC;
+  Value monitorValue;
+
   // The bytecode pc of try block and fault block.
   jsbytecode* tryPC;
   jsbytecode* faultPC;
-
-  // If resuming into a TypeMonitor IC chain, this field holds the
-  // address of the first stub in that chain.  If this field is
-  // set, then the actual jitcode resumed into is the jitcode for
-  // the first stub, not the resumeAddr above.  The resumeAddr
-  // above, in this case, is pushed onto the stack so that the
-  // TypeMonitor chain can tail-return into the main jitcode when done.
-  ICStub* monitorStub;
 
   // Number of baseline frames to push on the stack.
   uint32_t numFrames;
