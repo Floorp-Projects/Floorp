@@ -79,12 +79,12 @@ class MediaEngineSourceInterface {
   virtual nsString GetName() const = 0;
 
   /**
-   * Gets the UUID of this device.
+   * Gets the raw (non-anonymous) UUID of this device.
    */
   virtual nsCString GetUUID() const = 0;
 
   /**
-   * Gets the Group id of this device.
+   * Gets the raw Group id of this device.
    */
   virtual nsString GetGroupId() const = 0;
 
@@ -111,7 +111,7 @@ class MediaEngineSourceInterface {
    */
   virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                             const MediaEnginePrefs& aPrefs,
-                            const nsString& aDeviceId,
+                            const nsString& aDeviceId, const nsString& aGroupId,
                             const mozilla::ipc::PrincipalInfo& aPrincipalInfo,
                             const char** aOutBadConstraint) = 0;
 
@@ -164,6 +164,7 @@ class MediaEngineSourceInterface {
   virtual nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                                const MediaEnginePrefs& aPrefs,
                                const nsString& aDeviceId,
+                               const nsString& aGroupId,
                                const char** aOutBadConstraint) = 0;
 
   /**
@@ -205,7 +206,7 @@ class MediaEngineSourceInterface {
    */
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const = 0;
+      const nsString& aDeviceId, const nsString& aGroupId) const = 0;
 
   /**
    * Returns the current settings of the underlying device.
