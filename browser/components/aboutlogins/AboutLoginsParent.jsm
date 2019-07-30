@@ -265,7 +265,7 @@ var AboutLoginsParent = {
   async showMasterPasswordLoginNotifications() {
     for (let subscriber of this._subscriberIterator()) {
       let MozXULElement = subscriber.ownerGlobal.MozXULElement;
-      MozXULElement.insertFTLIfNeeded("browser/aboutLogins.ftl");
+      MozXULElement.insertFTLIfNeeded("preview/aboutLogins.ftl");
 
       // If there's already an existing notification bar, don't do anything.
       let { gBrowser } = subscriber.ownerGlobal;
