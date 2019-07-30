@@ -1821,17 +1821,13 @@ static bool CopyFromRematerializedFrame(JSContext* cx, JitActivation* act,
 }
 
 bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfoArg) {
-  // The caller pushes R0 and R1 on the stack without rooting them.
-  // Since GC here is very unlikely just suppress it.
-  JSContext* cx = TlsContext.get();
-  js::gc::AutoSuppressGC suppressGC(cx);
-
   JitSpew(JitSpew_BaselineBailouts, "  Done restoring frames");
 
   // Use UniquePtr to free the bailoutInfo before we return.
   UniquePtr<BaselineBailoutInfo> bailoutInfo(bailoutInfoArg);
   bailoutInfoArg = nullptr;
 
+  JSContext* cx = TlsContext.get();
   BaselineFrame* topFrame = GetTopBaselineFrame(cx);
 
   // We have to get rid of the rematerialized frame, whether it is
