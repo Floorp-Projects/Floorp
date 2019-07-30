@@ -53,9 +53,6 @@ class RealmInstrumentation {
   // int32_t so it can be directly accessed from JIT code.
   int32_t active = 0;
 
-  void trace(JSTracer* trc);
-  friend struct GCManagedDeletePolicy<RealmInstrumentation>;
-
  public:
   static bool install(JSContext* cx, Handle<GlobalObject*> global,
                       HandleObject callback,
@@ -84,6 +81,8 @@ class RealmInstrumentation {
   // This is public for js_new.
   RealmInstrumentation(Zone* zone, JSObject* callback, JSObject* dbgObject,
                        uint32_t kinds);
+
+  void trace(JSTracer* trc);
 
   static void holderFinalize(FreeOp* fop, JSObject* obj);
   static void holderTrace(JSTracer* trc, JSObject* obj);
