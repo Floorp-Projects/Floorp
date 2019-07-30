@@ -445,23 +445,23 @@ static inline bool IsInlinableFallback(ICFallbackStub* icEntry) {
 }
 #endif
 
-static inline void* GetStubReturnAddress(JSContext* cx, jsbytecode* pc) {
+static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
   const BaselineICFallbackCode& code =
       cx->runtime()->jitRuntime()->baselineICFallbackCode();
 
-  if (IsGetPropPC(pc)) {
+  if (IsGetPropOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::GetProp);
   }
-  if (IsSetPropPC(pc)) {
+  if (IsSetPropOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::SetProp);
   }
-  if (IsGetElemPC(pc)) {
+  if (IsGetElemOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::GetElem);
   }
 
   // This should be a call op of some kind, now.
-  MOZ_ASSERT(IsCallPC(pc) && !IsSpreadCallPC(pc));
-  if (IsConstructorCallPC(pc)) {
+  MOZ_ASSERT(IsCallOp(op) && !IsSpreadCallOp(op));
+  if (IsConstructorCallOp(op)) {
     return code.bailoutReturnAddr(BailoutReturnKind::New);
   }
   return code.bailoutReturnAddr(BailoutReturnKind::Call);
@@ -903,7 +903,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   JSOp op = JSOp(*pc);
 
   // Inlining of SPREADCALL-like frames not currently supported.
-  MOZ_ASSERT_IF(IsSpreadCallPC(pc), !iter.moreFrames());
+  MOZ_ASSERT_IF(IsSpreadCallOp(op), !iter.moreFrames());
 
   // Fixup inlined JSOP_FUNCALL, JSOP_FUNAPPLY, and accessors on the caller
   // side. On the caller side this must represent like the function wasn't
@@ -911,7 +911,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   uint32_t pushedSlots = 0;
   RootedValueVector savedCallerArgs(cx);
   bool needToSaveArgs =
-      op == JSOP_FUNAPPLY || IsIonInlinableGetterOrSetterPC(pc);
+      op == JSOP_FUNAPPLY || IsIonInlinableGetterOrSetterOp(op);
   if (iter.moreFrames() && (op == JSOP_FUNCALL || needToSaveArgs)) {
     uint32_t inlined_args = 0;
     if (op == JSOP_FUNCALL) {
@@ -919,8 +919,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     } else if (op == JSOP_FUNAPPLY) {
       inlined_args = 2 + blFrame->numActualArgs();
     } else {
-      MOZ_ASSERT(IsIonInlinableGetterOrSetterPC(pc));
-      inlined_args = 2 + IsSetPropPC(pc);
+      MOZ_ASSERT(IsIonInlinableGetterOrSetterOp(op));
+      inlined_args = 2 + IsSetPropOp(op);
     }
 
     MOZ_ASSERT(exprStackSlots >= inlined_args);
@@ -986,7 +986,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         savedCallerArgs[i].set(iter.read());
       }
 
-      if (IsSetPropPC(pc)) {
+      if (IsSetPropOp(op)) {
         // We would love to just save all the arguments and leave them
         // in the stub frame pushed below, but we will lose the inital
         // argument which the function was called with, which we must
@@ -1095,7 +1095,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         // include the this. When inlining that is not included.
         // So the exprStackSlots will be one less.
         MOZ_ASSERT(expectedDepth - exprStackSlots <= 1);
-      } else if (iter.moreFrames() && IsIonInlinableGetterOrSetterPC(pc)) {
+      } else if (iter.moreFrames() && IsIonInlinableGetterOrSetterOp(op)) {
         // Accessors coming out of ion are inlined via a complete
         // lie perpetrated by the compiler internally. Ion just rearranges
         // the stack, and pretends that it looked like a call all along.
@@ -1106,7 +1106,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         // but that's just because getelem expects one more item on the stack.
         // Note that none of that was pushed, but it's still reflected
         // in exprStackSlots.
-        MOZ_ASSERT(exprStackSlots - expectedDepth == (IsGetElemPC(pc) ? 0 : 1));
+        MOZ_ASSERT(exprStackSlots - expectedDepth == (IsGetElemOp(op) ? 0 : 1));
       } else {
         // For fun.apply({}, arguments) the reconstructStackDepth will
         // have stackdepth 4, but it could be that we inlined the
@@ -1298,7 +1298,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // Write out actual arguments (and thisv), copied from unpacked stack of
   // BaselineJS frame. Arguments are reversed on the BaselineJS frame's stack
   // values.
-  MOZ_ASSERT(IsIonInlinablePC(pc));
+  MOZ_ASSERT(IsIonInlinableOp(op));
   bool pushedNewTarget = IsConstructorCallPC(pc);
   unsigned actualArgc;
   Value callee;
@@ -1308,7 +1308,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     if (op == JSOP_FUNAPPLY) {
       actualArgc = blFrame->numActualArgs();
     } else {
-      actualArgc = IsSetPropPC(pc);
+      actualArgc = IsSetPropOp(op);
     }
     callee = savedCallerArgs[0];
 
@@ -1401,7 +1401,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   }
 
   // Push return address into ICCall_Scripted stub, immediately after the call.
-  void* baselineCallReturnAddr = GetStubReturnAddress(cx, pc);
+  void* baselineCallReturnAddr = GetStubReturnAddress(cx, op);
   MOZ_ASSERT(baselineCallReturnAddr);
   if (!builder.writePtr(baselineCallReturnAddr, "ReturnAddr")) {
     return false;
