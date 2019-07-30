@@ -148,6 +148,13 @@ class BackgroundServices(
         }
     }
 
+    private val defaultDeviceName = context.getString(
+        R.string.default_device_name,
+        context.getString(R.string.app_name),
+        Build.MANUFACTURER,
+        Build.MODEL
+    )
+
     /**
      * We add an observer to the AccountManager so that we can control when the Firebase service
      * will start/stop. This is only needed when landing the push service to ensure Firebase works
@@ -161,7 +168,6 @@ class BackgroundServices(
      */
     private val accountObserver = object : AccountObserver {
         override fun onAuthenticationProblems() {}
-
         override fun onProfileUpdated(profile: Profile) {}
 
         override fun onLoggedOut() {
