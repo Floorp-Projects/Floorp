@@ -303,7 +303,7 @@ class Key {
                                                          ErrorResult& aRv);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
-  // past the consumed value.
+  // past the consumed value. (Note: this may be beyond aEnd).
   static nsresult DecodeJSVal(const unsigned char*& aPos,
                               const unsigned char* aEnd, JSContext* aCx,
                               JS::MutableHandle<JS::Value> aVal);
@@ -316,6 +316,28 @@ class Key {
 
   static JSObject* DecodeBinary(const unsigned char*& aPos,
                                 const unsigned char* aEnd, JSContext* aCx);
+
+  // Returns the size of the decoded data for stringy (string or binary),
+  // excluding a null terminator.
+  // On return, aOutSectionEnd points to the last byte behind the current
+  // encoded section, i.e. either aEnd, or the eTerminator.
+  // T is the base type for the decoded data.
+  template <typename T>
+  static uint32_t CalcDecodedStringySize(
+      const unsigned char* aBegin, const unsigned char* aEnd,
+      const unsigned char** aOutEncodedSectionEnd);
+
+  template <typename T>
+  static void DecodeAsStringy(const unsigned char* aEncodedSectionBegin,
+                              const unsigned char* aEncodedSectionEnd,
+                              uint32_t aDecodedLength, T* aOut);
+
+  template <unsigned char TypeMask, typename T, typename AcquireBuffer,
+            typename AcquireEmpty>
+  static void DecodeStringy(const unsigned char*& aPos,
+                            const unsigned char* aEnd,
+                            const AcquireBuffer& acquireBuffer,
+                            const AcquireEmpty& acquireEmpty);
 
   IDBResult<void, IDBSpecialValue::Invalid> EncodeJSValInternal(
       JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset,
