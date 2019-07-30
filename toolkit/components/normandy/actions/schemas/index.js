@@ -230,7 +230,7 @@ const ActionSchemas = {
     },
   },
 
-  "multiple-preference-experiment": {
+  "multi-preference-experiment": {
     $schema: "http://json-schema.org/draft-04/schema#",
     title: "Run a feature experiment activated by a set of preferences.",
     type: "object",
