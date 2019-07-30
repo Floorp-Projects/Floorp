@@ -23,6 +23,12 @@ pub enum Selector {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct NewWindow {
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub type_hint: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
     #[serde(
         rename = "WebDriver:AddCookie",
@@ -46,6 +52,8 @@ pub enum Command {
     GetCookies,
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
+    #[serde(rename = "WebDriver:NewWindow")]
+    NewWindow(NewWindow),
     #[serde(rename = "WebDriver:SetTimeouts")]
     SetTimeouts(Timeouts),
 }
@@ -102,6 +110,14 @@ mod tests {
     }
 
     #[test]
+    fn test_json_new_window() {
+        let data = NewWindow {
+            type_hint: Some("foo".into()),
+        };
+        assert_ser_de(&data, json!({ "type": "foo" }));
+    }
+
+    #[test]
     fn test_command_with_params() {
         let locator = Locator {
             using: Selector::CSS,
@@ -140,5 +156,21 @@ mod tests {
     fn test_json_delete_cookie_command() {
         let json = json!({"WebDriver:DeleteCookie": {"name": "foo"}});
         assert_ser_de(&Command::DeleteCookie("foo".into()), json);
+    }
+
+    #[test]
+    fn test_json_new_window_command() {
+        let data = NewWindow {
+            type_hint: Some("foo".into()),
+        };
+        let json = json!({"WebDriver:NewWindow": {"type": "foo"}});
+        assert_ser_de(&Command::NewWindow(data), json);
+    }
+
+    #[test]
+    fn test_json_new_window_command_with_none_value() {
+        let data = NewWindow { type_hint: None };
+        let json = json!({"WebDriver:NewWindow": {}});
+        assert_ser_de(&Command::NewWindow(data), json);
     }
 }
