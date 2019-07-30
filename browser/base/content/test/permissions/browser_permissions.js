@@ -133,20 +133,27 @@ add_task(async function testCancelPermission() {
       "List of permissions is not empty"
     );
 
-    let cancelButtons = permissionsList.querySelectorAll(
-      ".identity-popup-permission-remove-button"
+    permissionsList
+      .querySelector(".identity-popup-permission-remove-button")
+      .click();
+
+    is(
+      permissionsList.querySelectorAll(".identity-popup-permission-label")
+        .length,
+      1,
+      "First permission should be removed"
     );
 
-    cancelButtons[0].click();
-    let labels = permissionsList.querySelectorAll(
-      ".identity-popup-permission-label"
+    permissionsList
+      .querySelector(".identity-popup-permission-remove-button")
+      .click();
+
+    is(
+      permissionsList.querySelectorAll(".identity-popup-permission-label")
+        .length,
+      0,
+      "Second permission should be removed"
     );
-    is(labels.length, 1, "One permission should be removed");
-    cancelButtons[1].click();
-    labels = permissionsList.querySelectorAll(
-      ".identity-popup-permission-label"
-    );
-    is(labels.length, 0, "One permission should be removed");
 
     await closeIdentityPopup();
   });
