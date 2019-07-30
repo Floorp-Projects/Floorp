@@ -86,6 +86,19 @@ confirmation-dialog-cancel-button = Cancel
 confirmation-dialog-dismiss-button =
   .title = Cancel
 
+enable-password-sync-notification-message =
+  { PLATFORM() ->
+      [windows] Want your logins everywhere you use { -brand-short-name }? Go to your { -sync-brand-short-name } Options and select the Logins checkbox.
+     *[other] Want your logins everywhere you use { -brand-short-name }? Go to your { -sync-brand-short-name } Preferences and select the Logins checkbox.
+  }
+enable-password-sync-preferences-button =
+  .label =
+    { PLATFORM() ->
+        [windows] Visit { -sync-brand-short-name } Options
+       *[other] Visit { -sync-brand-short-name } Preferences
+    }
+  .accesskey = V
+
 confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
 confirm-delete-dialog-confirm-button = Delete

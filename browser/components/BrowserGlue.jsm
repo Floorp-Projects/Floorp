@@ -140,11 +140,12 @@ let LEGACY_ACTORS = {
       },
       messages: [
         "AboutLogins:AllLogins",
-        "AboutLogins:UpdateBreaches",
         "AboutLogins:LoginAdded",
         "AboutLogins:LoginModified",
         "AboutLogins:LoginRemoved",
         "AboutLogins:MasterPasswordResponse",
+        "AboutLogins:SyncState",
+        "AboutLogins:UpdateBreaches",
       ],
     },
   },
@@ -651,7 +652,6 @@ const listeners = {
     "PasswordManager:autoCompleteLogins": ["LoginManagerParent"],
     "PasswordManager:removeLogin": ["LoginManagerParent"],
     "PasswordManager:insecureLoginFormPresent": ["LoginManagerParent"],
-    "PasswordManager:OpenFeedback": ["AboutLoginsParent"],
     "PasswordManager:OpenPreferences": ["LoginManagerParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js
     "rtcpeer:CancelRequest": ["webrtcUI"],
