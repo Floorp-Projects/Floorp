@@ -137,6 +137,14 @@
                 "-/Currencies%formal",
                 "-/Currencies%variant"
             ]
+        },
+        {
+            "categories": [
+                "coll_tree"
+            ],
+            "rules": [
+                "-/UCARules"
+            ]
         }
     ]
 }
