@@ -69,6 +69,9 @@ linux64-libdmg:
     run:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
+    fetches:
+        fetch:
+            - libdmg-hfsplus
 
 linux64-mar-tools:
     description: "mar-tools toolchain build"
