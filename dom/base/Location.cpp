@@ -132,13 +132,8 @@ already_AddRefed<nsDocShellLoadState> Location::CheckURL(
       // cleaner, but given that we need to start using Source Browsing
       // Context for referrer (see Bug 960639) this may be wasted effort at
       // this stage.
-      if (principalURI) {
-        bool isNullPrincipalScheme;
-        rv = principalURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME,
-                                    &isNullPrincipalScheme);
-        if (NS_SUCCEEDED(rv) && !isNullPrincipalScheme) {
-          sourceURI = principalURI;
-        }
+      if (principalURI && !principalURI->SchemeIs(NS_NULLPRINCIPAL_SCHEME)) {
+        sourceURI = principalURI;
       }
     }
   } else {
@@ -669,19 +664,7 @@ void Location::SetProtocol(const nsAString& aProtocol,
     return;
   }
 
-  bool isHttp;
-  aRv = uri->SchemeIs("http", &isHttp);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  bool isHttps;
-  aRv = uri->SchemeIs("https", &isHttps);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return;
-  }
-
-  if (!isHttp && !isHttps) {
+  if (!uri->SchemeIs("http") && !uri->SchemeIs("https")) {
     // No-op, per spec.
     return;
   }
