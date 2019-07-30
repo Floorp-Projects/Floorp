@@ -19,9 +19,6 @@
         // the width of the textfield.
         let DOMUtils = window.windowUtils;
         let textboxRect = DOMUtils.getBoundsWithoutFlushing(this.mInput);
-        let inputRect = DOMUtils.getBoundsWithoutFlushing(
-          this.mInput.inputField
-        );
 
         // Ensure the panel is wide enough to fit at least 3 engines.
         let minWidth = Math.max(
@@ -29,12 +26,6 @@
           this.oneOffButtons.buttonWidth * 3
         );
         this.style.minWidth = Math.round(minWidth) + "px";
-        // Alignment of the panel with the searchbar is obtained with negative
-        // margins.
-        this.style.marginLeft = textboxRect.left - inputRect.left + "px";
-        // This second margin is needed when the direction is reversed,
-        // eg. when using command+shift+X.
-        this.style.marginRight = inputRect.right - textboxRect.right + "px";
 
         // First handle deciding if we are showing the reduced version of the
         // popup containing only the preferences button. We do this if the
