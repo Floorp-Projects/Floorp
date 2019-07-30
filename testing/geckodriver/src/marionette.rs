@@ -800,13 +800,21 @@ fn try_convert_to_marionette_message(
         AddCookie(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::AddCookie(
             x.to_marionette()?,
         ))),
+        DeleteCookie(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::DeleteCookie(x.clone()),
+        )),
+        DeleteCookies => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::DeleteCookies,
+        )),
         FindElement(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::FindElement(
             x.to_marionette()?,
         ))),
         FindElements(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
-        GetCookies => Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies)),
+        GetCookies | GetNamedCookie(_) => {
+            Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
+        }
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
         SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
             x.to_marionette()?,
@@ -869,12 +877,6 @@ impl MarionetteCommand {
                 }
                 NewWindow(ref x) => (Some("WebDriver:NewWindow"), Some(x.to_marionette())),
                 CloseWindow => (Some("WebDriver:CloseWindow"), None),
-                DeleteCookie(ref x) => {
-                    let mut data = Map::new();
-                    data.insert("name".to_string(), Value::String(x.clone()));
-                    (Some("WebDriver:DeleteCookie"), Some(Ok(data)))
-                }
-                DeleteCookies => (Some("WebDriver:DeleteAllCookies"), None),
                 DeleteSession => {
                     let mut body = Map::new();
                     body.insert(
@@ -930,7 +932,6 @@ impl MarionetteCommand {
                 Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
                 GetAlertText => (Some("WebDriver:GetAlertText"), None),
                 GetActiveElement => (Some("WebDriver:GetActiveElement"), None),
-                GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
                 GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
                 GetCSSValue(ref e, ref x) => {
                     let mut data = Map::new();
