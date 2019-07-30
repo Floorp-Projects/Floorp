@@ -20,16 +20,23 @@ pub struct WebElement {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Timeouts {
-    pub implicit: u64,
-    #[serde(rename = "pageLoad", alias = "page load")]
-    pub page_load: u64,
-    pub script: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub implicit: Option<u64>,
+    #[serde(
+        default,
+        rename = "pageLoad",
+        alias = "page load",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub page_load: Option<u64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub script: Option<Option<u64>>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::test::{assert_de, assert_ser_de, ELEMENT_KEY};
+    use crate::test::{assert_de, assert_ser, assert_ser_de, ELEMENT_KEY};
     use serde_json::json;
 
     #[test]
@@ -41,11 +48,11 @@ mod tests {
     }
 
     #[test]
-    fn test_timeouts() {
+    fn test_timeouts_with_all_params() {
         let data = Timeouts {
-            implicit: 1000,
-            page_load: 200000,
-            script: Some(60000),
+            implicit: Some(1000),
+            page_load: Some(200000),
+            script: Some(Some(60000)),
         };
         assert_ser_de(
             &data,
@@ -55,5 +62,25 @@ mod tests {
             &data,
             json!({"implicit":1000,"page load":200000,"script":60000}),
         );
+    }
+
+    #[test]
+    fn test_timeouts_with_missing_params() {
+        let data = Timeouts {
+            implicit: Some(1000),
+            page_load: None,
+            script: None,
+        };
+        assert_ser_de(&data, json!({"implicit":1000}));
+    }
+
+    #[test]
+    fn test_timeouts_setting_script_none() {
+        let data = Timeouts {
+            implicit: Some(1000),
+            page_load: None,
+            script: Some(None),
+        };
+        assert_ser(&data, json!({"implicit":1000, "script":null}));
     }
 }

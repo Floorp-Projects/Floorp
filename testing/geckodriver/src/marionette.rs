@@ -2,6 +2,7 @@ use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
     GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
+use marionette_rs::common::Timeouts as MarionetteTimeouts;
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Locator as MarionetteLocator,
@@ -801,6 +802,9 @@ fn try_convert_to_marionette_message(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
+            x.to_marionette()?,
+        ))),
         _ => None,
     })
 }
@@ -995,7 +999,6 @@ impl MarionetteCommand {
                     );
                     (Some("WebDriver:SendAlertText"), Some(Ok(data)))
                 }
-                SetTimeouts(ref x) => (Some("WebDriver:SetTimeouts"), Some(x.to_marionette())),
                 SetWindowRect(ref x) => (Some("WebDriver:SetWindowRect"), Some(x.to_marionette())),
                 SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
                 SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
@@ -1558,14 +1561,13 @@ impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for TimeoutsParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionetteTimeouts> for TimeoutsParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteTimeouts> {
+        Ok(MarionetteTimeouts {
+            implicit: self.implicit.clone(),
+            page_load: self.page_load.clone(),
+            script: self.script.clone(),
+        })
     }
 }
 
