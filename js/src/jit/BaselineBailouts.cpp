@@ -703,20 +703,22 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     flags |= BaselineFrame::DEBUGGEE;
   }
 
+  const bool isPrologueBailout = IsPrologueBailout(iter, excInfo);
+
   // Initialize BaselineFrame's envChain and argsObj
   JSObject* envChain = nullptr;
   Value returnValue;
   ArgumentsObject* argsObj = nullptr;
   BailoutKind bailoutKind = iter.bailoutKind();
   if (bailoutKind == Bailout_ArgumentCheck) {
-    // Temporary hack -- skip the (unused) envChain, because it could be
-    // bogus (we can fail before the env chain slot is set). Strip the
-    // hasEnvironmentChain flag and this will be fixed up later in
-    // |FinishBailoutToBaseline|, which calls
-    // |EnsureHasEnvironmentObjects|.
+    // Skip the (unused) envChain, because it could be bogus (we can fail before
+    // the env chain slot is set) and use the function's initial environment.
+    // This will be fixed up later if needed in |FinishBailoutToBaseline|, which
+    // calls |EnsureHasEnvironmentObjects|.
     JitSpew(JitSpew_BaselineBailouts,
-            "      Bailout_ArgumentCheck! (no valid envChain)");
+            "      Bailout_ArgumentCheck! (using function's environment)");
     iter.skip();
+    envChain = fun->environment();
 
     // skip |return value|
     iter.skip();
@@ -763,12 +765,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
       // Get env chain from function or script.
       if (fun) {
-        // If pcOffset == 0, we may have to push a new call object, so
-        // we leave envChain nullptr and enter baseline code before
-        // the prologue.
-        if (!IsPrologueBailout(iter, excInfo)) {
-          envChain = fun->environment();
-        }
+        envChain = fun->environment();
       } else if (script->module()) {
         envChain = script->module()->environment();
       } else {
@@ -786,7 +783,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
         // declaration conflicts check. Since it's invalid to resume
         // into the prologue, set a flag so FinishBailoutToBaseline
         // can do the conflict check.
-        if (IsPrologueBailout(iter, excInfo)) {
+        if (isPrologueBailout) {
           builder.setCheckGlobalDeclarationConflicts();
         }
       }
@@ -807,6 +804,9 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       }
     }
   }
+
+  MOZ_ASSERT(envChain);
+
   JitSpew(JitSpew_BaselineBailouts, "      EnvChain=%p", envChain);
   blFrame->setEnvironmentChain(envChain);
   JitSpew(JitSpew_BaselineBailouts, "      ReturnValue=%016" PRIx64,
@@ -1196,14 +1196,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     JitSpew(JitSpew_BaselineBailouts, "      Adjusted framesize -= %d: %d",
             int(sizeof(Value) * numUnsynced), int(frameSize));
 
-    // If envChain is nullptr, then bailout is occurring during argument check
-    // or early in the script's execution. In this case, resume into the
-    // prologue.
     uint8_t* opReturnAddr;
-    if (envChain == nullptr) {
-      // Global and eval scripts expect the env chain in R1, so only
-      // resume into the prologue for function scripts.
-      MOZ_ASSERT(fun);
+    if (isPrologueBailout) {
       MOZ_ASSERT(numUnsynced == 0);
       opReturnAddr = baselineScript->bailoutPrologueEntryAddr();
       JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
@@ -1943,13 +1937,6 @@ bool jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo) {
   // Free the bailout buffer.
   js_free(bailoutInfo);
   bailoutInfo = nullptr;
-
-  // If the frame has no environment chain, this must be a prologue bailout and
-  // we have to initialize with the function's initial environment to match
-  // emitInitFrameFields.
-  if (!topFrame->environmentChain()) {
-    topFrame->setEnvironmentChain(topFrame->callee()->environment());
-  }
 
   // Ensure the frame has a call object if it needs one.
   if (!EnsureHasEnvironmentObjects(cx, topFrame)) {
