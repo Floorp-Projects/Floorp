@@ -7,14 +7,14 @@ package mozilla.components.lib.crash.service
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import androidx.work.testing.WorkManagerTestInitHelper
 import mozilla.components.lib.crash.Crash
 import mozilla.components.lib.crash.GleanMetrics.CrashMetrics
-import mozilla.components.service.glean.Glean
+import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -26,18 +26,11 @@ class GleanCrashReporterServiceTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    private fun setupGleanCrashReporterServiceTest() {
-        WorkManagerTestInitHelper.initializeTestWorkManager(
-            ApplicationProvider.getApplicationContext())
-
-        Glean.enableTestingMode()
-        Glean.initialize(context)
-    }
+    @get:Rule
+    val gleanRule = GleanTestRule(context)
 
     @Test
     fun `GleanCrashReporterService records native code crashes`() {
-        setupGleanCrashReporterServiceTest()
-
         // Because of how Glean is implemented, it can potentially persist information between
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
@@ -77,8 +70,6 @@ class GleanCrashReporterServiceTest {
 
     @Test
     fun `GleanCrashReporterService records uncaught exceptions`() {
-        setupGleanCrashReporterServiceTest()
-
         // Because of how Glean is implemented, it can potentially persist information between
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
@@ -117,8 +108,6 @@ class GleanCrashReporterServiceTest {
 
     @Test
     fun `GleanCrashReporterService correctly handles multiple crashes in a single file`() {
-        setupGleanCrashReporterServiceTest()
-
         val initialExceptionValue = try {
             CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()
         } catch (e: NullPointerException) {
@@ -194,8 +183,6 @@ class GleanCrashReporterServiceTest {
 
     @Test
     fun `GleanCrashReporterService does not crash if the persistent file is corrupted`() {
-        setupGleanCrashReporterServiceTest()
-
         // Because of how Glean is implemented, it can potentially persist information between
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
