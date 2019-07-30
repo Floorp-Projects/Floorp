@@ -22,6 +22,8 @@ include('../build/moz.configure/rust.configure',
         when='--enable-compile-environment')
 include('../build/moz.configure/bindgen.configure',
         when='--enable-compile-environment')
+include('../build/moz.configure/lto-pgo.configure',
+        when='--enable-compile-environment')
 
 @depends('JS_STANDALONE')
 def js_standalone(value):
