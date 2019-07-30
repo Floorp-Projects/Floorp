@@ -78,10 +78,6 @@ var FormAutofillFrameScript = {
         this.onFocusIn(evt);
         break;
       }
-      case "focusout": {
-        this.onFocusOut();
-        break;
-      }
       case "DOMFormBeforeSubmit": {
         this.onDOMFormBeforeSubmit(evt);
         break;
@@ -118,12 +114,6 @@ var FormAutofillFrameScript = {
     }
 
     this._doIdentifyAutofillFields();
-  },
-
-  onFocusOut() {
-    // Update active input on blur to release references on the previously
-    // focused element in FormAutofillContent.
-    FormAutofillContent.updateActiveInput();
   },
 
   /**
