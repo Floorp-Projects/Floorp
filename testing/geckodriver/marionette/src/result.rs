@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::common::{Timeouts, WebElement};
+use crate::common::{Cookie, Timeouts, WebElement};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -13,6 +13,7 @@ pub enum MarionetteResult {
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     WebElement(WebElement),
     WebElements(Vec<WebElement>),
+    Cookies(Vec<Cookie>),
     Timeouts(Timeouts),
 }
 
@@ -61,6 +62,24 @@ mod tests {
     use super::*;
     use crate::test::{assert_ser_de, ELEMENT_KEY};
     use serde_json::json;
+
+    #[test]
+    fn test_cookies_response() {
+        let mut data = Vec::new();
+        data.push(Cookie {
+            name: "foo".into(),
+            value: "bar".into(),
+            path: Some("/common".into()),
+            domain: Some("web-platform.test".into()),
+            secure: false,
+            http_only: false,
+            expiry: None,
+        });
+        assert_ser_de(
+            &MarionetteResult::Cookies(data),
+            json!([{"name":"foo","value":"bar","path":"/common","domain":"web-platform.test","secure":false,"httpOnly":false}]),
+        );
+    }
 
     #[test]
     fn test_web_element_response() {
