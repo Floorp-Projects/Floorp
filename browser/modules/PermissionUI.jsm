@@ -94,6 +94,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIIDNService"
 );
 
+XPCOMUtils.defineLazyServiceGetter(
+  this,
+  "ContentPrefService2",
+  "@mozilla.org/content-pref/service;1",
+  "nsIContentPrefService2"
+);
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"
@@ -808,6 +815,42 @@ GeolocationPermissionPrompt.prototype = {
         action: SitePermissions.BLOCK,
       },
     ];
+  },
+
+  _updateGeoSharing(state) {
+    let gBrowser = this.browser.ownerGlobal.gBrowser;
+    if (gBrowser == null) {
+      return;
+    }
+    gBrowser.updateBrowserSharing(this.browser, { geo: state });
+    if (!state) {
+      return;
+    }
+    let host;
+    try {
+      host = this.browser.currentURI.host;
+    } catch (e) {
+      return;
+    }
+    if (host == null || host == "") {
+      return;
+    }
+    ContentPrefService2.set(
+      this.browser.currentURI.host,
+      "permissions.geoLocation.lastAccess",
+      new Date().toString(),
+      this.browser.loadContext
+    );
+  },
+
+  allow(...args) {
+    this._updateGeoSharing(true);
+    PermissionPromptForRequestPrototype.allow.apply(this, args);
+  },
+
+  cancel(...args) {
+    this._updateGeoSharing(false);
+    PermissionPromptForRequestPrototype.cancel.apply(this, args);
   },
 };
 
