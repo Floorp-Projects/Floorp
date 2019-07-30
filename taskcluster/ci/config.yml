@@ -15,7 +15,7 @@ treeherder:
         'py3': 'Python 3 unit tests'
         'A': 'Android Gradle tests'
         'Bpgo': 'Profile-guided optimization builds'
-        'Fetch-URL': 'Fetch and store content'
+        'Fetch': 'Fetch and store content'
         'Fxfn-l': 'Firefox functional tests (local)'
         'Fxfn-l-1proc': 'Firefox functional tests (local) without e10s'
         'Fxfn-r': 'Firefox functional tests (remote)'
