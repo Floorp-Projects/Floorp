@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BoolValue {
@@ -10,6 +10,53 @@ impl BoolValue {
         BoolValue { value: val }
     }
 }
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Cookie {
+    pub name: String,
+    pub value: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub domain: Option<String>,
+    #[serde(default)]
+    pub secure: bool,
+    #[serde(default, rename = "httpOnly")]
+    pub http_only: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expiry: Option<Date>,
+}
+
+pub fn to_cookie<T, S>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: Serialize,
+{
+    #[derive(Serialize)]
+    struct Wrapper<T> {
+        cookie: T,
+    }
+
+    Wrapper { cookie: data }.serialize(serializer)
+}
+
+pub fn from_cookie<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+    T: std::fmt::Debug,
+{
+    #[derive(Debug, Deserialize)]
+    struct Wrapper<T> {
+        cookie: T,
+    }
+
+    let w = Wrapper::deserialize(deserializer)?;
+    Ok(w.cookie)
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Date(pub u64);
 
 // TODO(nupur): Bug 1567165 - Make WebElement in Marionette a unit struct
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -38,6 +85,20 @@ mod tests {
     use super::*;
     use crate::test::{assert_de, assert_ser, assert_ser_de, ELEMENT_KEY};
     use serde_json::json;
+
+    #[test]
+    fn test_cookie_default_values() {
+        let data = Cookie {
+            name: "hello".into(),
+            value: "world".into(),
+            path: None,
+            domain: None,
+            secure: false,
+            http_only: false,
+            expiry: None,
+        };
+        assert_de(&data, json!({"name":"hello", "value":"world"}));
+    }
 
     #[test]
     fn test_web_element() {
