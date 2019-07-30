@@ -7,6 +7,7 @@ let gElements = {};
 document.addEventListener(
   "DOMContentLoaded",
   () => {
+    gElements.fxAccountsButton = document.querySelector("fxaccounts-button");
     gElements.loginList = document.querySelector("login-list");
     gElements.loginItem = document.querySelector("login-item");
     gElements.loginFilter = document.querySelector("login-filter");
@@ -31,11 +32,6 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginList.setLogins(event.detail.value);
       break;
     }
-    case "UpdateBreaches": {
-      gElements.loginList.updateBreaches(event.detail.value);
-      gElements.loginItem.updateBreaches(event.detail.value);
-      break;
-    }
     case "LoginAdded": {
       gElements.loginList.loginAdded(event.detail.value);
       gElements.loginItem.loginAdded(event.detail.value);
@@ -49,6 +45,15 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     case "LoginRemoved": {
       gElements.loginList.loginRemoved(event.detail.value);
       gElements.loginItem.loginRemoved(event.detail.value);
+      break;
+    }
+    case "SyncState": {
+      gElements.fxAccountsButton.updateState(event.detail.value);
+      break;
+    }
+    case "UpdateBreaches": {
+      gElements.loginList.updateBreaches(event.detail.value);
+      gElements.loginItem.updateBreaches(event.detail.value);
       break;
     }
   }
