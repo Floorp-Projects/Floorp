@@ -7,5 +7,5 @@
 TELEMETRY_TESTS_CLIENT_MANIFESTS += ["tests/manifest.ini"]
 
 with Files("**"):
-    BUG_COMPONENT = ("Tookit", "Telemetry")
+    BUG_COMPONENT = ("Toolkit", "Telemetry")
     SCHEDULES.exclusive = ["telemetry-tests-client"]
