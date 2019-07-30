@@ -15,6 +15,13 @@ loader.lazyRequireGetter(
   true
 );
 
+loader.lazyRequireGetter(
+  this,
+  "hasCSSVariable",
+  "devtools/client/inspector/rules/utils/utils",
+  true
+);
+
 /**
  * TextProperty is responsible for the following:
  *   Manages a single property from the authoredText attribute of the
@@ -283,8 +290,7 @@ class TextProperty {
    * @return {Boolean}
    */
   hasCSSVariable(name) {
-    const regex = new RegExp(`(^|\\W)var\\(${name}\\s*[,)]`);
-    return regex.test(this.value);
+    return hasCSSVariable(this.value, name);
   }
 }
 
