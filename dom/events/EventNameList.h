@@ -246,9 +246,12 @@ EVENT(toggle, eToggle, EventNameType_HTML, eBasicEventClass)
 EVENT(volumechange, eVolumeChange, EventNameType_HTML, eBasicEventClass)
 EVENT(waiting, eWaiting, EventNameType_HTML, eBasicEventClass)
 EVENT(wheel, eWheel, EventNameType_All, eWheelEventClass)
-EVENT(copy, eCopy, EventNameType_HTMLXUL, eClipboardEventClass)
-EVENT(cut, eCut, EventNameType_HTMLXUL, eClipboardEventClass)
-EVENT(paste, ePaste, EventNameType_HTMLXUL, eClipboardEventClass)
+EVENT(copy, eCopy, EventNameType_HTMLXUL | EventNameType_SVGGraphic,
+      eClipboardEventClass)
+EVENT(cut, eCut, EventNameType_HTMLXUL | EventNameType_SVGGraphic,
+      eClipboardEventClass)
+EVENT(paste, ePaste, EventNameType_HTMLXUL | EventNameType_SVGGraphic,
+      eClipboardEventClass)
 // Gecko-specific extensions that apply to elements
 EVENT(beforescriptexecute, eBeforeScriptExecute, EventNameType_HTMLXUL,
       eBasicEventClass)
