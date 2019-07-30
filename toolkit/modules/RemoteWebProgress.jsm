@@ -69,7 +69,7 @@ class RemoteWebProgressManager {
     );
   }
 
-  _fixSecInfoAndState(aSecInfo, aState) {
+  _fixSecInfo(aSecInfo) {
     let deserialized = null;
     if (aSecInfo) {
       let helper = Cc["@mozilla.org/network/serialization-helper;1"].getService(
@@ -80,7 +80,7 @@ class RemoteWebProgressManager {
       deserialized.QueryInterface(Ci.nsITransportSecurityInfo);
     }
 
-    return [deserialized, aState];
+    return deserialized;
   }
 
   setCurrentURI(aURI) {
@@ -216,17 +216,17 @@ class RemoteWebProgressManager {
 
     switch (aMessage.name) {
       case "Content:SecurityChange":
-        let [secInfo, state] = this._fixSecInfoAndState(
-          json.secInfo,
-          json.state
-        );
+        let state = json.state;
 
         if (isTopLevel) {
+          let secInfo = this._fixSecInfo(json.secInfo);
+          let isSecureContext = json.isSecureContext;
+
           // Invoking this getter triggers the generation of the underlying object,
           // which we need to access with ._securityUI, because .securityUI returns
           // a wrapper that makes _update inaccessible.
           void this._browser.securityUI;
-          this._browser._securityUI._update(secInfo, state);
+          this._browser._securityUI._update(secInfo, state, isSecureContext);
         }
 
         this.onSecurityChange(webProgress, request, state);
