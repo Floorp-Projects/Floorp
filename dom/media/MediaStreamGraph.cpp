@@ -2454,6 +2454,7 @@ void SourceMediaStream::DestroyImpl() {
   // Hold mMutex while mGraph is reset so that other threads holding mMutex
   // can null-check know that the graph will not destroyed.
   MutexAutoLock lock(mMutex);
+  mUpdateTracks.Clear();
   MediaStream::DestroyImpl();
 }
 
