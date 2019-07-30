@@ -37,6 +37,15 @@ function isPanelReady(toolbox, toolId) {
  * returning. See Bug 1543907.
  */
 add_task(async function automaticallyBindTexbox() {
+  // We have to disable CSP for this test otherwise the CSP of
+  // about:devtools-toolbox will block the data: url.
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["security.csp.enable", false],
+      ["csp.skip_about_page_has_csp_assert", true],
+    ],
+  });
+
   info(
     "Registering a tool with an input field and making sure the context menu works"
   );

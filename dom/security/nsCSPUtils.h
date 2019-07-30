@@ -22,6 +22,7 @@ class nsIChannel;
 namespace mozilla {
 namespace dom {
 struct CSP;
+class Document;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -206,6 +207,9 @@ class nsCSPSrcVisitor;
 
 void CSP_PercentDecodeStr(const nsAString& aEncStr, nsAString& outDecStr);
 bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel);
+
+void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
+                           const nsAString& aPolicyStr);
 
 /* =============== nsCSPSrc ================== */
 
