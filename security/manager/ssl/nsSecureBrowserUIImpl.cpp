@@ -13,6 +13,7 @@
 #include "nsIChannel.h"
 #include "nsDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsGlobalWindow.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsITransportSecurityInfo.h"
 #include "nsIWebProgress.h"
@@ -21,7 +22,8 @@ using namespace mozilla;
 
 LazyLogModule gSecureBrowserUILog("nsSecureBrowserUI");
 
-nsSecureBrowserUIImpl::nsSecureBrowserUIImpl() : mState(0), mEvent(0) {
+nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
+    : mState(0), mEvent(0), mIsSecureContext(false) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -70,6 +72,15 @@ nsSecureBrowserUIImpl::GetState(uint32_t* aState) {
   MOZ_LOG(gSecureBrowserUILog, LogLevel::Debug, ("  mState: %x", mState));
 
   *aState = mState;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSecureBrowserUIImpl::GetIsSecureContext(bool* aIsSecureContext) {
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG(aIsSecureContext);
+
+  *aIsSecureContext = mIsSecureContext;
   return NS_OK;
 }
 
@@ -389,6 +400,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   mState = 0;
   mEvent = 0;
+  mIsSecureContext = false;
   mTopLevelSecurityInfo = nullptr;
 
   if (aFlags & LOCATION_CHANGE_ERROR_PAGE) {
@@ -410,6 +422,19 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                  "Setting everything to 'not secure' to be safe."));
         mState = STATE_IS_INSECURE;
         mTopLevelSecurityInfo = nullptr;
+      }
+    }
+
+    nsCOMPtr<mozIDOMWindowProxy> domWindow;
+    aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
+    if (domWindow) {
+      nsPIDOMWindowOuter* outerWindow = nsPIDOMWindowOuter::From(domWindow);
+      if (outerWindow) {
+        nsGlobalWindowInner* innerWindow =
+            nsGlobalWindowInner::Cast(outerWindow->GetCurrentInnerWindow());
+        if (innerWindow) {
+          mIsSecureContext = innerWindow->IsSecureContext();
+        }
       }
     }
   }
