@@ -1,9 +1,7 @@
 #!/bin/bash
 set -x -e -v
 
-OWNER=luser
 PROJECT=rust-size
-PROJECT_REVISION=ab659d93b1faba95307df952aefe3fbed3583669
 
 # This script is for building rust-size
 case "$(uname -s)" in
@@ -36,11 +34,7 @@ fi
 
 PATH="$PWD/rustc/bin:$PATH"
 
-git clone -n https://github.com/${OWNER}/${PROJECT} ${PROJECT}
-
-cd $PROJECT
-
-git checkout $PROJECT_REVISION
+cd $MOZ_FETCHES_DIR/$PROJECT
 
 cargo build --verbose --release
 

@@ -291,3 +291,10 @@ tup:
         type: git
         repo: https://github.com/gittup/tup
         revision: 4371a41ba4ece660bf060b598b9eee4c2eb347d8
+
+rust-size:
+    description: rust-size source code
+    fetch:
+        type: git
+        repo: https://github.com/luser/rust-size
+        revision: ab659d93b1faba95307df952aefe3fbed3583669
