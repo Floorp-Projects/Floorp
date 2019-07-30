@@ -2035,7 +2035,7 @@ void InlineFrameIterator::findNextFrame() {
 
   size_t i = 1;
   for (; i <= remaining && si_.moreFrames(); i++) {
-    MOZ_ASSERT(IsIonInlinablePC(pc_));
+    MOZ_ASSERT(IsIonInlinableOp(JSOp(*pc_)));
 
     // Recover the number of actual arguments from the script.
     if (JSOp(*pc_) != JSOP_FUNAPPLY) {
@@ -2218,14 +2218,15 @@ bool InlineFrameIterator::isConstructing() const {
     ++parent;
 
     // Inlined Getters and Setters are never constructing.
-    if (IsIonInlinableGetterOrSetterPC(parent.pc())) {
+    JSOp parentOp = JSOp(*parent.pc());
+    if (IsIonInlinableGetterOrSetterOp(parentOp)) {
       return false;
     }
 
     // In the case of a JS frame, look up the pc from the snapshot.
-    MOZ_ASSERT(IsCallPC(parent.pc()) && !IsSpreadCallPC(parent.pc()));
+    MOZ_ASSERT(IsCallOp(parentOp) && !IsSpreadCallOp(parentOp));
 
-    return IsConstructorCallPC(parent.pc());
+    return IsConstructorCallOp(parentOp);
   }
 
   return frame_->isConstructing();
