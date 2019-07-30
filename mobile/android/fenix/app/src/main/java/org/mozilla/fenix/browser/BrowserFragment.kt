@@ -172,50 +172,56 @@ class BrowserFragment : Fragment(), BackHandler {
             ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
         }
 
-        browserInteractor = BrowserInteractor(
-            context = context!!,
-            store = browserStore,
-            browserToolbarController = DefaultBrowserToolbarController(
-                context!!,
-                findNavController(),
-                findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
-                nestedScrollQuickActionView = nestedScrollQuickAction,
-                engineView = engineView,
-                currentSession = getSessionById() ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
-                viewModel = viewModel
-            ),
-            quickActionSheetController = DefaultQuickActionSheetController(
+        getSessionById()?.let { session ->
+            browserInteractor = BrowserInteractor(
                 context = context!!,
-                navController = findNavController(),
-                currentSession = getSessionById() ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
-                appLinksUseCases = requireComponents.useCases.appLinksUseCases,
-                bookmarkTapped = {
-                    lifecycleScope.launch { bookmarkTapped(it) }
-                }
-            ),
-            readerModeController = DefaultReaderModeController(readerViewFeature),
-            currentSession = getSessionById() ?: requireComponents.core.sessionManager.selectedSessionOrThrow
-        )
+                store = browserStore,
+                browserToolbarController = DefaultBrowserToolbarController(
+                    context!!,
+                    findNavController(),
+                    findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
+                    nestedScrollQuickActionView = nestedScrollQuickAction,
+                    engineView = engineView,
+                    currentSession = session,
+                    viewModel = viewModel
+                ),
+                quickActionSheetController = DefaultQuickActionSheetController(
+                    context = context!!,
+                    navController = findNavController(),
+                    currentSession = session,
+                    appLinksUseCases = requireComponents.useCases.appLinksUseCases,
+                    bookmarkTapped = {
+                        lifecycleScope.launch { bookmarkTapped(it) }
+                    }
+                ),
+                readerModeController = DefaultReaderModeController(readerViewFeature),
+                currentSession = session
+            )
 
-        browserToolbarView = BrowserToolbarView(
-            container = view.browserLayout,
-            interactor = browserInteractor,
-            currentSession = getSessionById() ?: requireComponents.core.sessionManager.selectedSessionOrThrow
-        )
+            browserToolbarView = BrowserToolbarView(
+                container = view.browserLayout,
+                interactor = browserInteractor,
+                currentSession = session
+            )
 
-        toolbarIntegration.set(
-            feature = browserToolbarView.toolbarIntegration,
-            owner = this,
-            view = view
-        )
+            toolbarIntegration.set(
+                feature = browserToolbarView.toolbarIntegration,
+                owner = this,
+                view = view
+            )
 
-        findInPageIntegration.set(
-            feature = FindInPageIntegration(
-                requireComponents.core.sessionManager, customTabSessionId, view.findInPageView, view.engineView, toolbar
-            ),
-            owner = this,
-            view = view
-        )
+            findInPageIntegration.set(
+                feature = FindInPageIntegration(
+                    sessionManager = requireComponents.core.sessionManager,
+                    sessionId = customTabSessionId,
+                    view = view.findInPageView,
+                    engineView = view.engineView,
+                    toolbar = toolbar
+                ),
+                owner = this,
+                view = view
+            )
+        }
 
         quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
 
@@ -475,6 +481,7 @@ class BrowserFragment : Fragment(), BackHandler {
 
         getSessionById()?.let { updateBookmarkState(it) }
 
+        // See #4387 for why we're popping here
         if (getSessionById() == null) findNavController(this).popBackStack(R.id.homeFragment, false)
         context?.components?.core?.let {
             val preferredColorScheme = it.getPreferredColorScheme()
