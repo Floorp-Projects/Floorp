@@ -50,6 +50,6 @@ add_task(async function() {
     "The .focusme input is the active element"
   );
 
-  // Stop the test without blurring the input, the cleanup should still prevent
-  // leaks in the test.
+  info("Remove the focused input");
+  focusMeInput.remove();
 });
