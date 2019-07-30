@@ -13,10 +13,6 @@ job-defaults:
         env:
             GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-offline"
         artifacts:
-            # TODO Bug 1563711 - Remove target.maven.zip
-            - name: public/build/target.maven.zip
-              path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/target.maven.zip
-              type: file
             - name: public/build/maven
               path: /builds/worker/workspace/build/src/obj-firefox/gradle/build/mobile/android/geckoview/maven/
               type: directory
@@ -515,74 +511,3 @@ android-x86_64-gcp/debug:
         custom-build-variant-cfg: x86_64-debug
     toolchains:
         - linux64-sccache
-
-android-geckoview-fat-aar/opt:
-    description: "Android GeckoView multi-architecture fat AAR Opt"
-    index:
-        job-name: android-geckoview-fat-aar-opt
-    treeherder:
-        platform: android-4-0-geckoview-fat-aar/opt
-        symbol: Bgv
-    worker-type: b-linux
-    dependencies:
-        android-x86-opt: build-android-x86/opt
-        android-x86_64-opt: build-android-x86_64/opt
-        android-api-16-opt: build-android-api-16/opt
-        android-aarch64-opt: build-android-aarch64/opt
-    worker:
-        env:
-            # Online in order to download the per-architecture AARs.
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-opt
-            MOZ_ANDROID_FAT_AAR_ARCHITECTURES: 'armeabi-v7a,arm64-v8a,x86,x86_64'
-            USE_ARTIFACT: '1'
-            MOZ_ARTIFACT_TASK: {task-reference: '<android-api-16-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_API_16_OPT: {task-reference: '<android-api-16-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_AARCH64_OPT: {task-reference: '<android-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_X86_OPT: {task-reference: '<android-x86-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_X86_64_OPT: {task-reference: '<android-x86_64-opt>'}
-    run:
-        actions: [get-secrets, build]
-        config: ["builds/releng_base_android_64_builds.py"]
-        custom-build-variant-cfg: api-16
-    toolchains:
-        - linux64-sccache
-
-android-geckoview-fat-aar-nightly/opt:
-    description: "Android GeckoView multi-architecture fat AAR Nightly"
-    attributes:
-        nightly: true
-        enable-full-crashsymbols: true
-        disable-push-apk: true
-    shipping-phase: build
-    shipping-product: fennec
-    index:
-        job-name: android-geckoview-fat-aar-nightly
-        type: nightly-with-multi-l10n
-    treeherder:
-        platform: android-4-0-geckoview-fat-aar/opt
-        symbol: Ngv
-    worker-type: b-linux
-    dependencies:
-        android-x86-opt: build-android-x86-nightly/opt
-        android-x86_64-opt: build-android-x86_64-nightly/opt
-        android-api-16-opt: build-android-api-16-nightly/opt
-        android-aarch64-opt: build-android-aarch64-nightly/opt
-    worker:
-        env:
-            # Online in order to download the per-architecture AARs.
-            GRADLE_USER_HOME: "/builds/worker/workspace/build/src/mobile/android/gradle/dotgradle-online"
-            TOOLTOOL_MANIFEST: "mobile/android/config/tooltool-manifests/android/releng.manifest"
-            PERFHERDER_EXTRA_OPTIONS: android-geckoview-fat-aar-nightly
-            MOZ_ANDROID_FAT_AAR_ARCHITECTURES: 'armeabi-v7a,arm64-v8a,x86,x86_64'
-            MOZ_ARTIFACT_TASK_ANDROID_API_16_OPT: {task-reference: '<android-api-16-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_AARCH64_OPT: {task-reference: '<android-aarch64-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_X86_OPT: {task-reference: '<android-x86-opt>'}
-            MOZ_ARTIFACT_TASK_ANDROID_X86_64_OPT: {task-reference: '<android-x86_64-opt>'}
-    run:
-        actions: [get-secrets, build, multi-l10n]
-        config:
-            - builds/releng_base_android_64_builds.py
-            - taskcluster_nightly.py
-        custom-build-variant-cfg: api-16

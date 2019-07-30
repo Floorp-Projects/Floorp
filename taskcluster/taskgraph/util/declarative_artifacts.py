@@ -6,6 +6,12 @@ from taskgraph.util.scriptworker import generate_beetmover_upstream_artifacts
 
 
 _ARTIFACT_ID_PER_PLATFORM = {
+    'android-aarch64-opt': 'geckoview-default-arm64-v8a',
+    'android-api-16-opt': 'geckoview-default-armeabi-v7a',
+    'android-x86-opt': 'geckoview-default-x86',
+    'android-x86_64-opt': 'geckoview-default-x86_64',
+    'android-geckoview-fat-aar-opt': 'geckoview-default',
+
     'android-aarch64-nightly': 'geckoview{update_channel}-arm64-v8a',
     'android-api-16-nightly': 'geckoview{update_channel}-armeabi-v7a',
     'android-x86-nightly': 'geckoview{update_channel}-x86',
@@ -14,14 +20,12 @@ _ARTIFACT_ID_PER_PLATFORM = {
 }
 
 
-def get_geckoview_upstream_artifacts(config, job):
+def get_geckoview_upstream_artifacts(config, job, platform=''):
+    if not platform:
+        platform = job['attributes']['build_platform']
     upstream_artifacts = generate_beetmover_upstream_artifacts(
         config, job, platform='',
-        **get_geckoview_template_vars(
-            config,
-            job['attributes']['build_platform'],
-            job['attributes'].get('update-channel'),
-        )
+        **get_geckoview_template_vars(config, platform, job['attributes'].get('update-channel'))
     )
     return [{
         key: value for key, value in upstream_artifact.items()
