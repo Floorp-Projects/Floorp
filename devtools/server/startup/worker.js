@@ -37,6 +37,7 @@ this.rpc = function(method, ...params) {
 loadSubScript("resource://devtools/shared/worker/loader.js");
 
 var defer = worker.require("devtools/shared/defer");
+var EventEmitter = worker.require("devtools/shared/event-emitter");
 var { ActorPool } = worker.require("devtools/server/actors/common");
 var { ThreadActor } = worker.require("devtools/server/actors/thread");
 var { WebConsoleActor } = worker.require("devtools/server/actors/webconsole");
@@ -96,6 +97,8 @@ this.addEventListener("message", function(event) {
           postMessage(JSON.stringify({ type: "attached" }));
         },
       };
+
+      EventEmitter.decorate(parent);
 
       const threadActor = new ThreadActor(parent, global);
       pool.addActor(threadActor);
