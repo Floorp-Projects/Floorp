@@ -273,6 +273,19 @@ class TextProperty {
 
     return this.rule.domRule.declarations[selfIndex].isNameValid;
   }
+
+  /**
+   * Returns true if the property value is a CSS variables and contains the given variable
+   * name, and false otherwise.
+   *
+   * @param {String}
+   *        CSS variable name (e.g. "--color")
+   * @return {Boolean}
+   */
+  hasCSSVariable(name) {
+    const regex = new RegExp(`(^|\\W)var\\(${name}\\s*[,)]`);
+    return regex.test(this.value);
+  }
 }
 
 module.exports = TextProperty;

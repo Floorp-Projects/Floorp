@@ -302,7 +302,6 @@ class ElementStyle {
    * Calls updateDeclarations with all supported pseudo elements
    */
   onRuleUpdated() {
-    this.variablesMap.clear();
     this.updateDeclarations();
 
     // Update declarations for matching rules for pseudo-elements.
@@ -398,6 +397,16 @@ class ElementStyle {
       }
     }
 
+    // Find the CSS variables that have been updated.
+    const previousVariablesMap = new Map(this.variablesMap.get(pseudo));
+    const changedVariableNamesSet = new Set(
+      [...variables.keys(), ...previousVariablesMap.keys()].filter(
+        k => variables.get(k) !== previousVariablesMap.get(k)
+      )
+    );
+
+    this.variablesMap.set(pseudo, variables);
+
     // For each TextProperty, mark it overridden if all of its computed
     // properties are marked overridden. Update the text property's associated
     // editor, if any. This will clear the _overriddenDirty state on all
@@ -406,7 +415,12 @@ class ElementStyle {
     for (const textProp of textProps) {
       // _updatePropertyOverridden will return true if the
       // overridden state has changed for the text property.
-      if (this._updatePropertyOverridden(textProp)) {
+      // _hasUpdatedCSSVariable will return true if the declaration contains any
+      // of the updated CSS variable names.
+      if (
+        this._updatePropertyOverridden(textProp) ||
+        this._hasUpdatedCSSVariable(textProp, changedVariableNamesSet)
+      ) {
         textProp.updateEditor();
       }
 
@@ -415,8 +429,25 @@ class ElementStyle {
         textProp.editor.updatePropertyState();
       }
     }
+  }
 
-    this.variablesMap.set(pseudo, variables);
+  /**
+   * Returns true if the given declaration's property value contains a CSS variable
+   * matching any of the updated CSS variable names.
+   *
+   * @param {TextProperty} declaration
+   *        A TextProperty of a rule.
+   * @param {Set<>String} variableNamesSet
+   *        A Set of CSS variable names that have been updated.
+   */
+  _hasUpdatedCSSVariable(declaration, variableNamesSet) {
+    for (const variableName of variableNamesSet) {
+      if (declaration.hasCSSVariable(variableName)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   /**
