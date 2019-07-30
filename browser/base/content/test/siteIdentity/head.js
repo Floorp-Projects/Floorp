@@ -2,6 +2,13 @@ var { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
+function openIdentityPopup() {
+  let mainView = document.getElementById("identity-popup-mainView");
+  let viewShown = BrowserTestUtils.waitForEvent(mainView, "ViewShown");
+  gIdentityHandler._identityBox.click();
+  return viewShown;
+}
+
 /**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
