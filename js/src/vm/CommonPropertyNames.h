@@ -171,8 +171,7 @@
   MACRO(forEach, forEach, "forEach")                                           \
   MACRO(format, format, "format")                                              \
   MACRO(fraction, fraction, "fraction")                                        \
-  MACRO(fractionalSecondDigits, fractionalSecondDigits,                        \
-        "fractionalSecondDigits")                                              \
+  MACRO(fractionalSecond, fractionalSecond, "fractionalSecond")                \
   MACRO(frame, frame, "frame")                                                 \
   MACRO(from, from, "from")                                                    \
   MACRO(fulfilled, fulfilled, "fulfilled")                                     \
