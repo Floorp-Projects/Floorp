@@ -68,7 +68,12 @@ class Device(object):
         except ADBError as e:
             # OK if directory not present -- sometimes called before browser start
             if 'does not exist' not in str(e):
-                raise
+                try:
+                    shutil.rmtree(local_dump_dir)
+                except Exception:
+                    pass
+                finally:
+                    raise e
             else:
                 print("WARNING: {}".format(e))
         if os.listdir(local_dump_dir):
