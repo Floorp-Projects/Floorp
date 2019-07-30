@@ -413,9 +413,9 @@ jobs:
             checkout: false
             run-as-root: true
             command: >-
-                export WRENCH_APK=$PWD/$MOZ_FETCHES_DIR/wrench-debug.apk &&
-                export WRENCH_REFTESTS=$PWD/$MOZ_FETCHES_DIR/reftests &&
-                export MOZHARNESS_PATH=$PWD/$MOZ_FETCHES_DIR/mozharness &&
+                export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-debug.apk &&
+                export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
+                export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/debug
@@ -453,9 +453,9 @@ jobs:
             checkout: false
             run-as-root: true
             command: >-
-                export WRENCH_APK=$PWD/$MOZ_FETCHES_DIR/wrench-release.apk &&
-                export WRENCH_REFTESTS=$PWD/$MOZ_FETCHES_DIR/reftests &&
-                export MOZHARNESS_PATH=$PWD/$MOZ_FETCHES_DIR/mozharness &&
+                export WRENCH_APK=$MOZ_FETCHES_DIR/wrench-release.apk &&
+                export WRENCH_REFTESTS=$MOZ_FETCHES_DIR/reftests &&
+                export MOZHARNESS_PATH=$MOZ_FETCHES_DIR/mozharness &&
                 python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} --config-file ${MOZHARNESS_PATH}/configs/${MOZHARNESS_CONFIG}
         treeherder:
             platform: android-hw-p2-8-0-arm7-api-16/opt
