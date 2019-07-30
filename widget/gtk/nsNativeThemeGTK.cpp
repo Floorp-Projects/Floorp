@@ -867,8 +867,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  bool useHiDPIWidgets = (aScaleFactor != 1) &&
-                         (gtk_check_version(3, 22, 0) != nullptr) &&
+  // Support HiDPI widget styles on Wayland only for now.
+  bool useHiDPIWidgets = !isX11Display && (aScaleFactor != 1) &&
                          (sCairoSurfaceSetDeviceScalePtr != nullptr);
 
   Point drawOffsetScaled;
