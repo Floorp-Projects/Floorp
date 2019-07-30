@@ -58,6 +58,11 @@ interface nsIFilePicker : nsISupports
                                                 // *.rm; *.rmvb; *.smil; *.webm;
                                                 // *.wmv; *.xvid
 
+  const short captureNone     = 0;              // No capture target specified.
+  const short captureDefault  = 1;              // Missing/invalid value default.
+  const short captureUser     = 2;              // "user" capture target specified.
+  const short captureEnv      = 3;              // "environment" capture target specified.
+
  /**
   * Initialize the file picker widget.  The file picker is not valid until this
   * method is called.
@@ -205,4 +210,6 @@ interface nsIFilePicker : nsISupports
    * file selection.
    */
   attribute AString okButtonLabel;
+
+  attribute short capture;
 };
