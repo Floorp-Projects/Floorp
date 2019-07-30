@@ -100,7 +100,7 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
   nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, false);
 
-  bool isAbout = (NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout);
+  bool isAbout = uri->SchemeIs("about");
   if (isAbout) {
     nsAutoCString aboutSpec;
     rv = uri->GetSpec(aboutSpec);
@@ -112,12 +112,8 @@ bool CSP_ShouldResponseInheritCSP(nsIChannel* aChannel) {
     }
   }
 
-  bool isBlob = (NS_SUCCEEDED(uri->SchemeIs("blob", &isBlob)) && isBlob);
-  bool isData = (NS_SUCCEEDED(uri->SchemeIs("data", &isData)) && isData);
-  bool isFS = (NS_SUCCEEDED(uri->SchemeIs("filesystem", &isFS)) && isFS);
-  bool isJS = (NS_SUCCEEDED(uri->SchemeIs("javascript", &isJS)) && isJS);
-
-  return isBlob || isData || isFS || isJS;
+  return uri->SchemeIs("blob") || uri->SchemeIs("data") ||
+         uri->SchemeIs("filesystem") || uri->SchemeIs("javascript");
 }
 
 void CSP_ApplyMetaCSPToDoc(mozilla::dom::Document& aDoc,
@@ -689,14 +685,8 @@ bool nsCSPHostSrc::permits(nsIURI* aUri, const nsAString& aNonce,
     // future compatibility we support it in CSP according to the spec,
     // see: 4.2.2 Matching Source Expressions Note, that whitelisting any of
     // these schemes would call nsCSPSchemeSrc::permits().
-    bool isBlobScheme =
-        (NS_SUCCEEDED(aUri->SchemeIs("blob", &isBlobScheme)) && isBlobScheme);
-    bool isDataScheme =
-        (NS_SUCCEEDED(aUri->SchemeIs("data", &isDataScheme)) && isDataScheme);
-    bool isFileScheme =
-        (NS_SUCCEEDED(aUri->SchemeIs("filesystem", &isFileScheme)) &&
-         isFileScheme);
-    if (isBlobScheme || isDataScheme || isFileScheme) {
+    if (aUri->SchemeIs("blob") || aUri->SchemeIs("data") ||
+        aUri->SchemeIs("filesystem")) {
       return false;
     }
 

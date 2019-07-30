@@ -1101,6 +1101,8 @@ class nsContentUtils {
     eMATHML_PROPERTIES,
     eSECURITY_PROPERTIES,
     eNECKO_PROPERTIES,
+    eFORMS_PROPERTIES_MAYBESPOOF,
+    eFORMS_PROPERTIES_en_US,
     PropertiesFile_COUNT
   };
   static nsresult ReportToConsole(

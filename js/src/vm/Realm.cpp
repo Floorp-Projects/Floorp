@@ -475,11 +475,11 @@ void Realm::sweepTemplateObjects() {
   }
 }
 
-void Realm::fixupAfterMovingGC() {
+void Realm::fixupAfterMovingGC(JSTracer* trc) {
   purge();
   fixupGlobal();
   objectGroups_.fixupTablesAfterMovingGC();
-  fixupScriptMapsAfterMovingGC();
+  fixupScriptMapsAfterMovingGC(trc);
 }
 
 void Realm::fixupGlobal() {
@@ -489,15 +489,15 @@ void Realm::fixupGlobal() {
   }
 }
 
-void Realm::fixupScriptMapsAfterMovingGC() {
+void Realm::fixupScriptMapsAfterMovingGC(JSTracer* trc) {
   // Map entries are removed by JSScript::finalize, but we need to update the
   // script pointers here in case they are moved by the GC.
 
   if (scriptCountsMap) {
     for (ScriptCountsMap::Enum e(*scriptCountsMap); !e.empty(); e.popFront()) {
       JSScript* script = e.front().key();
-      if (!IsAboutToBeFinalizedUnbarriered(&script) &&
-          script != e.front().key()) {
+      TraceManuallyBarrieredEdge(trc, &script, "Realm::scriptCountsMap::key");
+      if (script != e.front().key()) {
         e.rekeyFront(script);
       }
     }

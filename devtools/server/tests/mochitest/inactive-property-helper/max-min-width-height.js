@@ -111,6 +111,13 @@ export default [
     isActive: true,
   },
   {
+    info: "width is active on a textarea element",
+    property: "width",
+    tagName: "textarea",
+    rules: ["textarea { width: 500px; }"],
+    isActive: true,
+  },
+  {
     info: "min-width is active on a replaced inline element",
     property: "min-width",
     tagName: "img",
@@ -227,6 +234,13 @@ export default [
     property: "height",
     tagName: "select",
     rules: ["select { display: inline; height: 500px; }"],
+    isActive: true,
+  },
+  {
+    info: "height is active on a textarea element",
+    property: "height",
+    tagName: "textarea",
+    rules: ["textarea { height: 500px; }"],
     isActive: true,
   },
   {

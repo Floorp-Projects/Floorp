@@ -5,6 +5,19 @@
 
 var testGenerator = testSteps();
 
+// helper function that ensures that ArrayBuffer instances are meaningfully
+// displayed (not just as 'object ArrayBuffer')
+// TODO better move to helpers.js?
+function showKey(key) {
+  if (key instanceof Array) {
+    return key.map(x => showKey(x)).toString();
+  }
+  if (key instanceof ArrayBuffer) {
+    return "ArrayBuffer([" + new Uint8Array(key).toString() + "])";
+  }
+  return key.toString();
+}
+
 function* testSteps() {
   const dbname = this.window ? window.location.pathname : "Splendid Test";
 
@@ -17,8 +30,10 @@ function* testSteps() {
 
   // Create test stores
   let store = db.createObjectStore("store");
+  let enc = new TextEncoder();
 
   // Test simple inserts
+  // Note: the keys must be in order
   var keys = [
     -1 / 0,
     -1.7e308,
@@ -107,6 +122,20 @@ function* testSteps() {
     "\uFFFF",
     "\uFFFF\x00",
     "\uFFFFZZZ",
+    // Note: enc.encode returns an Uint8Array, which is a valid key, but when
+    // converting it back and forth, the result will be a plain ArrayBuffer,
+    // which is expected in comparisons below
+    // TODO is it ok that the information that the original key was an
+    // Uint8Array is lost?
+    new ArrayBuffer(0),
+    Uint8Array.from([0]).buffer,
+    Uint8Array.from([0, 0]).buffer,
+    Uint8Array.from([0, 1]).buffer,
+    Uint8Array.from([0, 1, 0]).buffer,
+    enc.encode("abc").buffer,
+    enc.encode("abcd").buffer,
+    enc.encode("xyz").buffer,
+    Uint8Array.from([0x80]).buffer,
     [],
     [-1 / 0],
     [-1],
@@ -136,6 +165,15 @@ function* testSteps() {
     ["abc\x00\x00def"],
     ["x", [[]]],
     ["x", [[[]]]],
+    // see comment on scalar ArrayBuffers above
+    [new ArrayBuffer(0)],
+    [new ArrayBuffer(0), "abc"],
+    [new ArrayBuffer(0), new ArrayBuffer(0)],
+    [new ArrayBuffer(0), enc.encode("abc").buffer],
+    [enc.encode("abc").buffer],
+    [enc.encode("abc").buffer, new ArrayBuffer(0)],
+    [enc.encode("abc").buffer, enc.encode("xyz").buffer],
+    [enc.encode("xyz").buffer],
     [[]],
     [[], "foo"],
     [[], []],
@@ -164,11 +202,21 @@ function* testSteps() {
       is(
         indexedDB.cmp(e.target.result, keyI),
         0,
-        "Returned key should cmp as equal"
+        "Returned key should cmp as equal; index = " +
+          i +
+          ", input = " +
+          showKey(keyI) +
+          ", returned = " +
+          showKey(e.target.result)
       );
       ok(
         compareKeys(e.target.result, keyI),
-        "Returned key should actually be equal"
+        "Returned key should actually be equal; index = " +
+          i +
+          ", input = " +
+          showKey(keyI) +
+          ", returned = " +
+          showKey(e.target.result)
       );
     };
 
@@ -195,11 +243,21 @@ function* testSteps() {
     is(
       indexedDB.cmp(cursor.key, keys[i]),
       0,
-      "Read back key should cmp as equal"
+      "Read back key should cmp as equal; index = " +
+        i +
+        ", input = " +
+        showKey(keys[i]) +
+        ", readBack = " +
+        showKey(cursor.key)
     );
     ok(
       compareKeys(cursor.key, keys[i]),
-      "Read back key should actually be equal"
+      "Read back key should actually be equal; index = " +
+        i +
+        ", input = " +
+        showKey(keys[i]) +
+        ", readBack = " +
+        showKey(cursor.key)
     );
     is(cursor.value, i, "Stored with right value");
 

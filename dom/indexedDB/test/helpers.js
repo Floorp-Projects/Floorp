@@ -272,6 +272,22 @@ function compareKeys(_k1_, _k2_) {
     return true;
   }
 
+  if (_k1_ instanceof ArrayBuffer) {
+    if (!(_k2_ instanceof ArrayBuffer)) {
+      return false;
+    }
+
+    function arrayBuffersAreEqual(a, b) {
+      if (a.byteLength != b.byteLength) {
+        return false;
+      }
+      let ui8b = new Uint8Array(b);
+      return new Uint8Array(a).every((val, i) => val === ui8b[i]);
+    }
+
+    return arrayBuffersAreEqual(_k1_, _k2_);
+  }
+
   return false;
 }
 
@@ -485,6 +501,8 @@ function workerScript() {
     },
   };
 
+  // TODO this is duplicate from the global compareKeys function defined above,
+  // this duplication should be avoided (bug 1565986)
   self.compareKeys = function(_k1_, _k2_) {
     let t = typeof _k1_;
     if (t != typeof _k2_) {
@@ -511,6 +529,22 @@ function workerScript() {
       }
 
       return true;
+    }
+
+    if (_k1_ instanceof ArrayBuffer) {
+      if (!(_k2_ instanceof ArrayBuffer)) {
+        return false;
+      }
+
+      function arrayBuffersAreEqual(a, b) {
+        if (a.byteLength != b.byteLength) {
+          return false;
+        }
+        let ui8b = new Uint8Array(b);
+        return new Uint8Array(a).every((val, i) => val === ui8b[i]);
+      }
+
+      return arrayBuffersAreEqual(_k1_, _k2_);
     }
 
     return false;

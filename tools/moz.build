@@ -42,7 +42,7 @@ with Files("rewriting/**"):
     BUG_COMPONENT = ("Firefox Build System", "Source Code Analysis")
 
 with Files("tryselect/**"):
-    BUG_COMPONENT = ("Testing", "General")
+    BUG_COMPONENT = ("Firefox Build System", "Try")
 
 with Files("tryselect/selectors/release.py"):
     BUG_COMPONENT = ("Release Engineering", "General")

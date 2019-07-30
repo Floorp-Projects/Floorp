@@ -13,12 +13,17 @@
   <script type="text/javascript">
   addEventListener("load", async () => {
     await TalosPowers.loadPromise;
+    var devicePixelRatio = window.devicePixelRatio;
 
-    dumpLog(`__metrics\tScreen width/height: ${screen.width}/${screen.height}\n\tcolorDepth: ${screen.colorDepth}\n`);
+    dumpLog(`__metrics\n\tScreen width/height: ${screen.width}/${screen.height}`);
+    if (devicePixelRatio != 1) {
+      dumpLog(` (scaled from ${screen.width * devicePixelRatio}/${screen.height * devicePixelRatio})`);
+    }
+    dumpLog(`\n\tcolorDepth: ${screen.colorDepth}\n`);
     dumpLog(`\tBrowser inner width/height: ${window.innerWidth}/${window.innerHeight}\n`);
     // JMAHER: this is temporarily commented out because this hangs the fennec browser
     //  dumpLog(`\tBrowser outer width/height: ${window.outerWidth}/${window.outerHeight}`);
-    dumpLog("__metrics\n");
+    dumpLog("\n__metrics\n");
     TalosPowersParent.exec("dumpAboutSupport");
     TalosPowersContent.goQuitApplication(true);
   });

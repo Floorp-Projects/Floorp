@@ -9,14 +9,16 @@ add_task(async function test_tabs_mediaIndicators() {
     gBrowser,
     "http://example.com/"
   );
-  // setBrowserSharing is called when a request for media icons occurs.  We're
+  // updateBrowserSharing is called when a request for media icons occurs.  We're
   // just testing that extension tabs get the info and are updated when it is
   // called.
-  gBrowser.setBrowserSharing(tab.linkedBrowser, {
-    sharing: "screen",
-    screen: "Window",
-    microphone: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
-    camera: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+  gBrowser.updateBrowserSharing(tab.linkedBrowser, {
+    webRTC: {
+      sharing: "screen",
+      screen: "Window",
+      microphone: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+      camera: Ci.nsIMediaManagerService.STATE_CAPTURE_ENABLED,
+    },
   });
 
   async function background() {
@@ -71,7 +73,7 @@ add_task(async function test_tabs_mediaIndicators() {
   // Test that onUpdated is called after the sharing state is changed from
   // chrome code.
   await extension.awaitMessage("ready");
-  gBrowser.setBrowserSharing(tab.linkedBrowser, {});
+  gBrowser.resetBrowserSharing(tab.linkedBrowser);
 
   await extension.awaitFinish("done");
   await extension.unload();

@@ -555,7 +555,10 @@ impl ResourceCache {
         user_data: Option<[f32; 3]>,
         is_opaque: bool,
         f: F,
-    ) -> RenderTaskCacheEntryHandle where F: FnOnce(&mut RenderTaskGraph) -> RenderTaskId {
+    ) -> RenderTaskCacheEntryHandle
+    where
+        F: FnOnce(&mut RenderTaskGraph) -> RenderTaskId,
+    {
         self.cached_render_tasks.request_render_task(
             key,
             &mut self.texture_cache,
@@ -563,7 +566,7 @@ impl ResourceCache {
             render_tasks,
             user_data,
             is_opaque,
-            |render_task_tree| Ok(f(render_task_tree))
+            |render_graph| Ok(f(render_graph))
         ).expect("Failed to request a render task from the resource cache!")
     }
 
@@ -923,6 +926,10 @@ impl ResourceCache {
             _ => {}
         }
 
+        if image.descriptor.format != descriptor.format {
+            // could be a stronger warning/error?
+            trace!("Format change {:?} -> {:?}", image.descriptor.format, descriptor.format);
+        }
         *image = ImageResource {
             descriptor,
             data,
@@ -2196,6 +2203,8 @@ impl ResourceCache {
                     self.texture_cache.max_texture_layers(),
                     &self.texture_cache.picture_tile_sizes(),
                     DeviceIntSize::zero(),
+                    self.texture_cache.color_formats(),
+                    self.texture_cache.bgra_swizzle(),
                 );
             }
         }

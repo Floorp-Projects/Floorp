@@ -5,9 +5,9 @@ rst:
     exclude:
         - toolkit/components/telemetry/docs/
         - toolkit/components/extensions/
-        - taskcluster/docs/
         - tools/tryselect/docs/
         - browser/docs/
+        - intl/l10n/docs/
     extensions:
         - rst
     support-files:

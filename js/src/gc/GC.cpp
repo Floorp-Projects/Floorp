@@ -3004,7 +3004,7 @@ void GCRuntime::updateZonePointersToRelocatedCells(Zone* zone) {
 
   // Fixup compartment global pointers as these get accessed during marking.
   for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next()) {
-    comp->fixupAfterMovingGC();
+    comp->fixupAfterMovingGC(&trc);
   }
 
   zone->externalStringCache().purge();
