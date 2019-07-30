@@ -75,7 +75,7 @@ promise_test(async t => {
       await prepare_ready_registration(t, 'bad_mime_type');
   t.add_cleanup(() => registration.unregister());
 
-  promise_rejects(t, 'SecurityError', registration.update());
+  await promise_rejects(t, 'SecurityError', registration.update());
   assert_active_only(registration, expected_url);
 }, 'update() should fail when mime type is invalid.');
 
@@ -84,7 +84,7 @@ promise_test(async t => {
       await prepare_ready_registration(t, 'redirect');
   t.add_cleanup(() => registration.unregister());
 
-  promise_rejects(t, new TypeError(), registration.update())
+  await promise_rejects(t, new TypeError(), registration.update());
   assert_active_only(registration, expected_url);
 }, 'update() should fail when a response for the main script is redirect.');
 
@@ -93,7 +93,7 @@ promise_test(async t => {
       await prepare_ready_registration(t, 'syntax_error');
   t.add_cleanup(() => registration.unregister());
 
-  promise_rejects(t, new TypeError(), registration.update());
+  await promise_rejects(t, new TypeError(), registration.update());
   assert_active_only(registration, expected_url);
 }, 'update() should fail when a new script contains a syntax error.');
 
@@ -117,7 +117,7 @@ promise_test(async t => {
   const frame = await with_iframe(SCOPE);
   t.add_cleanup(() => frame.remove());
 
-  promise_rejects(
+  await promise_rejects(
       t, new TypeError(),
       Promise.all([registration.unregister(), registration.update()]));
 }, 'update() should fail when the pending uninstall flag is set.')
