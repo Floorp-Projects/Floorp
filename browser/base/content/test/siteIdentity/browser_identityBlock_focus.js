@@ -22,29 +22,29 @@ function synthesizeKeyAndWaitForFocus(element, keyCode, options) {
   return focused;
 }
 
-// Checks that the identity block is the next element after the urlbar
-// to be focused if there are no active notification anchors.
+// Checks that the tracking protection icon container is the next element after
+// the urlbar to be focused if there are no active notification anchors.
 add_task(async function testWithoutNotifications() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     await synthesizeKeyAndWaitForFocus(gURLBar, "l", { accelKey: true });
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
     await synthesizeKeyAndWaitForFocus(
-      gIdentityHandler._identityBox,
+      gIdentityHandler._trackingProtectionIconContainer,
       "VK_TAB",
       { shiftKey: true }
     );
     is(
       document.activeElement,
-      gIdentityHandler._identityBox,
-      "identity block should be focused"
+      gIdentityHandler._trackingProtectionIconContainer,
+      "tracking protection icon container should be focused"
     );
   });
 });
 
 // Checks that when there is a notification anchor, it will receive
 // focus before the identity block.
-add_task(async function testWithoutNotifications() {
+add_task(async function testWithNotifications() {
   await SpecialPowers.pushPrefEnv({ set: [["accessibility.tabfocus", 7]] });
   await BrowserTestUtils.withNewTab(PERMISSIONS_PAGE, async function(browser) {
     let popupshown = BrowserTestUtils.waitForEvent(
@@ -58,9 +58,18 @@ add_task(async function testWithoutNotifications() {
     await synthesizeKeyAndWaitForFocus(gURLBar, "l", { accelKey: true });
     is(document.activeElement, gURLBar.inputField, "urlbar should be focused");
     await synthesizeKeyAndWaitForFocus(
-      gIdentityHandler._identityBox,
+      gIdentityHandler._trackingProtectionIconContainer,
       "VK_TAB",
       { shiftKey: true }
+    );
+    is(
+      document.activeElement,
+      gIdentityHandler._trackingProtectionIconContainer,
+      "tracking protection icon container should be focused"
+    );
+    await synthesizeKeyAndWaitForFocus(
+      gIdentityHandler._identityBox,
+      "ArrowRight"
     );
     is(
       document.activeElement,
@@ -99,8 +108,8 @@ add_task(async function testInvalidPageProxyState() {
     );
     isnot(
       document.activeElement,
-      gIdentityHandler._identityBox,
-      "identity block should not be focused"
+      gIdentityHandler._trackingProtectionIconContainer,
+      "tracking protection icon container should not be focused"
     );
     // Restore focus to the url bar.
     gURLBar.focus();

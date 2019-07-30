@@ -547,7 +547,7 @@ void Navigator::GetBuildID(nsAString& aBuildID, CallerType aCallerType,
       if (doc) {
         nsIURI* uri = doc->GetDocumentURI();
         if (uri) {
-          MOZ_ALWAYS_SUCCEEDS(uri->SchemeIs("https", &isHTTPS));
+          isHTTPS = uri->SchemeIs("https");
           if (isHTTPS) {
             MOZ_ALWAYS_SUCCEEDS(uri->GetHost(host));
           }
@@ -1120,10 +1120,7 @@ bool Navigator::SendBeaconInternal(const nsAString& aUrl,
   }
 
   // Spec disallows any schemes save for HTTP/HTTPs
-  bool isValidScheme;
-  if (!(NS_SUCCEEDED(uri->SchemeIs("http", &isValidScheme)) && isValidScheme) &&
-      !(NS_SUCCEEDED(uri->SchemeIs("https", &isValidScheme)) &&
-        isValidScheme)) {
+  if (!uri->SchemeIs("http") && !uri->SchemeIs("https")) {
     aRv.ThrowTypeError<MSG_INVALID_URL_SCHEME>(NS_LITERAL_STRING("Beacon"),
                                                aUrl);
     return false;

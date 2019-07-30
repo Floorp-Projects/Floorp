@@ -415,13 +415,14 @@ add_task(async function test_downloads() {
   await extension.unload();
 });
 
-add_task(async function test_download_post() {
+add_task(async function test_download_http_details() {
   const server = createHttpServer();
   const url = `http://localhost:${server.identity.primaryPort}/post-log`;
 
   let received;
-  server.registerPathHandler("/post-log", request => {
+  server.registerPathHandler("/post-log", (request, response) => {
     received = request;
+    response.setHeader("Set-Cookie", "monster=", false);
   });
 
   // Confirm received vs. expected values.
@@ -461,8 +462,13 @@ add_task(async function test_download_post() {
     });
   }
 
-  const manifest = { permissions: ["downloads"] };
-  const extension = ExtensionTestUtils.loadExtension({ background, manifest });
+  const extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["downloads"],
+    },
+    background,
+    incognitoOverride: "spanning",
+  });
   await extension.startup();
 
   function download(options) {
@@ -472,6 +478,25 @@ add_task(async function test_download_post() {
     extension.sendMessage(options);
     return extension.awaitMessage("done");
   }
+
+  // Test that site cookies are sent with download requests,
+  // and "incognito" downloads use a separate cookie jar.
+  let testDownloadCookie = async function(incognito) {
+    let result = await download({ incognito });
+    ok(result.ok, `preflight to set cookies with incognito=${incognito}`);
+    ok(!received.hasHeader("cookie"), "first request has no cookies");
+
+    result = await download({ incognito });
+    ok(result.ok, `download with cookie with incognito=${incognito}`);
+    equal(
+      received.getHeader("cookie"),
+      "monster=",
+      "correct cookie header sent for second download"
+    );
+  };
+
+  await testDownloadCookie(false);
+  await testDownloadCookie(true);
 
   // Test method option.
   let result = await download({});

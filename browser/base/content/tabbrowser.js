@@ -1403,21 +1403,35 @@
       aTab.dispatchEvent(event);
     },
 
-    setBrowserSharing(aBrowser, aState) {
+    resetBrowserSharing(aBrowser) {
       let tab = this.getTabForBrowser(aBrowser);
       if (!tab) {
         return;
       }
+      tab._sharingState = {};
+      tab.removeAttribute("sharing");
+      this._tabAttrModified(tab, ["sharing"]);
+      if (aBrowser == this.selectedBrowser) {
+        gIdentityHandler.updateSharingIndicator();
+      }
+    },
 
-      if (aState.sharing) {
-        tab._sharingState = aState;
-        if (aState.paused) {
+    updateBrowserSharing(aBrowser, aState) {
+      let tab = this.getTabForBrowser(aBrowser);
+      if (!tab) {
+        return;
+      }
+      if (tab._sharingState == null) {
+        tab._sharingState = {};
+      }
+      tab._sharingState = Object.assign(tab._sharingState, aState);
+      if (aState.webRTC && aState.webRTC.sharing) {
+        if (aState.webRTC.paused) {
           tab.removeAttribute("sharing");
         } else {
-          tab.setAttribute("sharing", aState.sharing);
+          tab.setAttribute("sharing", aState.webRTC.sharing);
         }
       } else {
-        tab._sharingState = null;
         tab.removeAttribute("sharing");
       }
       this._tabAttrModified(tab, ["sharing"]);
@@ -1429,7 +1443,10 @@
 
     getTabSharingState(aTab) {
       // Normalize the state object for consumers (ie.extensions).
-      let state = Object.assign({}, aTab._sharingState);
+      let state = Object.assign(
+        {},
+        aTab._sharingState && aTab._sharingState.webRTC
+      );
       return {
         camera: !!state.camera,
         microphone: !!state.microphone,
@@ -2445,9 +2462,9 @@
         return false;
       }
 
-      // Reset webrtc sharing state.
+      // Reset sharing state.
       if (aTab._sharingState) {
-        this.setBrowserSharing(browser, {});
+        this.resetBrowserSharing(browser);
       }
       webrtcUI.forgetStreamsFromBrowser(browser);
 

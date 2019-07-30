@@ -16,7 +16,7 @@
  */
 
 
-/* fluent@0.12.0 */
+/* @fluent/bundle@0.14.0 */
 
 /* global Intl */
 
@@ -29,15 +29,14 @@
  */
 class FluentType {
   /**
-   * Create an `FluentType` instance.
+   * Create a `FluentType` instance.
    *
-   * @param   {Any}    value - JavaScript value to wrap.
-   * @param   {Object} opts  - Configuration.
+   * @param   {Any} value - JavaScript value to wrap.
    * @returns {FluentType}
    */
-  constructor(value, opts) {
+  constructor(value) {
+    /** The wrapped native value. */
     this.value = value;
-    this.opts = opts;
   }
 
   /**
@@ -53,55 +52,102 @@ class FluentType {
    * Format this instance of `FluentType` to a string.
    *
    * Formatted values are suitable for use outside of the `FluentBundle`.
-   * This method can use `Intl` formatters memoized by the `FluentBundle`
-   * instance passed as an argument.
+   * This method can use `Intl` formatters available through the `scope`
+   * argument.
    *
-   * @param   {FluentBundle} [bundle]
+   * @abstract
+   * @param   {Scope} scope
    * @returns {string}
    */
-  toString() {
+  toString(scope) { // eslint-disable-line no-unused-vars
     throw new Error("Subclasses of FluentType must implement toString.");
   }
 }
 
+/**
+ * A `FluentType` representing no correct value.
+ */
 class FluentNone extends FluentType {
+  /**
+   * Create an instance of `FluentNone` with an optional fallback value.
+   * @param   {string} value - The fallback value of this `FluentNone`.
+   * @returns {FluentType}
+   */
+  constructor(value = "???") {
+    super(value);
+  }
+
+  /**
+   * Format this `FluentNone` to the fallback string.
+   * @returns {string}
+   */
   toString() {
-    return this.value || "???";
+    return `{${this.value}}`;
   }
 }
 
+/**
+ * A `FluentType` representing a number.
+ */
 class FluentNumber extends FluentType {
+  /**
+   * Create an instance of `FluentNumber` with options to the
+   * `Intl.NumberFormat` constructor.
+   * @param   {number} value
+   * @param   {Intl.NumberFormatOptions} opts
+   * @returns {FluentType}
+   */
   constructor(value, opts) {
-    super(parseFloat(value), opts);
+    super(value);
+    /** Options passed to Intl.NumberFormat. */
+    this.opts = opts;
   }
 
-  toString(bundle) {
+  /**
+   * Format this `FluentNumber` to a string.
+   * @param   {Scope} scope
+   * @returns {string}
+   */
+  toString(scope) {
     try {
-      const nf = bundle._memoizeIntlObject(
-        Intl.NumberFormat, this.opts
-      );
+      const nf = scope.memoizeIntlObject(Intl.NumberFormat, this.opts);
       return nf.format(this.value);
-    } catch (e) {
-      // XXX Report the error.
-      return this.value;
+    } catch (err) {
+      scope.reportError(err);
+      return this.value.toString(10);
     }
   }
 }
 
+/**
+ * A `FluentType` representing a date and time.
+ */
 class FluentDateTime extends FluentType {
+  /**
+   * Create an instance of `FluentDateTime` with options to the
+   * `Intl.DateTimeFormat` constructor.
+   * @param   {number} value - timestamp in milliseconds
+   * @param   {Intl.DateTimeFormatOptions} opts
+   * @returns {FluentType}
+   */
   constructor(value, opts) {
-    super(new Date(value), opts);
+    super(value);
+    /** Options passed to Intl.DateTimeFormat. */
+    this.opts = opts;
   }
 
-  toString(bundle) {
+  /**
+   * Format this `FluentDateTime` to a string.
+   * @param   {Scope} scope
+   * @returns {string}
+   */
+  toString(scope) {
     try {
-      const dtf = bundle._memoizeIntlObject(
-        Intl.DateTimeFormat, this.opts
-      );
+      const dtf = scope.memoizeIntlObject(Intl.DateTimeFormat, this.opts);
       return dtf.format(this.value);
-    } catch (e) {
-      // XXX Report the error.
-      return this.value;
+    } catch (err) {
+      scope.reportError(err);
+      return (new Date(this.value)).toISOString();
     }
   }
 }
@@ -119,13 +165,6 @@ class FluentDateTime extends FluentType {
  * `FluentType`.  Functions must return `FluentType` objects as well.
  */
 
-const builtins = {
-  "NUMBER": ([arg], opts) =>
-    new FluentNumber(arg.valueOf(), merge(arg.opts, opts)),
-  "DATETIME": ([arg], opts) =>
-    new FluentDateTime(arg.valueOf(), merge(arg.opts, opts)),
-};
-
 function merge(argopts, opts) {
   return Object.assign({}, argopts, values(opts));
 }
@@ -138,6 +177,37 @@ function values(opts) {
   return unwrapped;
 }
 
+function NUMBER([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return new FluentNone(`NUMBER(${arg.valueOf()})`);
+  }
+
+  let value = Number(arg.valueOf());
+  if (Number.isNaN(value)) {
+    throw new TypeError("Invalid argument to NUMBER");
+  }
+
+  return new FluentNumber(value, merge(arg.opts, opts));
+}
+
+function DATETIME([arg], opts) {
+  if (arg instanceof FluentNone) {
+    return new FluentNone(`DATETIME(${arg.valueOf()})`);
+  }
+
+  let value = Number(arg.valueOf());
+  if (Number.isNaN(value)) {
+    throw new TypeError("Invalid argument to DATETIME");
+  }
+
+  return new FluentDateTime(value, merge(arg.opts, opts));
+}
+
+const builtins = /*#__PURE__*/Object.freeze({
+  NUMBER: NUMBER,
+  DATETIME: DATETIME
+});
+
 /* global Intl */
 
 // Prevent expansion of too long placeables.
@@ -149,7 +219,7 @@ const PDI = "\u2069";
 
 
 // Helper: match a variant key to the given selector.
-function match(bundle, selector, key) {
+function match(scope, selector, key) {
   if (key === selector) {
     // Both are strings.
     return true;
@@ -163,8 +233,8 @@ function match(bundle, selector, key) {
   }
 
   if (selector instanceof FluentNumber && typeof key === "string") {
-    let category = bundle
-      ._memoizeIntlObject(Intl.PluralRules, selector.opts)
+    let category = scope
+      .memoizeIntlObject(Intl.PluralRules, selector.opts)
       .select(selector.value);
     if (key === category) {
       return true;
@@ -177,10 +247,10 @@ function match(bundle, selector, key) {
 // Helper: resolve the default variant from a list of variants.
 function getDefault(scope, variants, star) {
   if (variants[star]) {
-    return Type(scope, variants[star]);
+    return resolvePattern(scope, variants[star].value);
   }
 
-  scope.errors.push(new RangeError("No default"));
+  scope.reportError(new RangeError("No default"));
   return new FluentNone();
 }
 
@@ -191,9 +261,9 @@ function getArguments(scope, args) {
 
   for (const arg of args) {
     if (arg.type === "narg") {
-      named[arg.name] = Type(scope, arg.value);
+      named[arg.name] = resolveExpression(scope, arg.value);
     } else {
-      positional.push(Type(scope, arg));
+      positional.push(resolveExpression(scope, arg));
     }
   }
 
@@ -201,25 +271,7 @@ function getArguments(scope, args) {
 }
 
 // Resolve an expression to a Fluent type.
-function Type(scope, expr) {
-  // A fast-path for strings which are the most common case. Since they
-  // natively have the `toString` method they can be used as if they were
-  // a FluentType instance without incurring the cost of creating one.
-  if (typeof expr === "string") {
-    return scope.bundle._transform(expr);
-  }
-
-  // A fast-path for `FluentNone` which doesn't require any additional logic.
-  if (expr instanceof FluentNone) {
-    return expr;
-  }
-
-  // The Runtime AST (Entries) encodes patterns (complex strings with
-  // placeables) as Arrays.
-  if (Array.isArray(expr)) {
-    return Pattern(scope, expr);
-  }
-
+function resolveExpression(scope, expr) {
   switch (expr.type) {
     case "str":
       return expr.value;
@@ -237,15 +289,6 @@ function Type(scope, expr) {
       return FunctionReference(scope, expr);
     case "select":
       return SelectExpression(scope, expr);
-    case undefined: {
-      // If it's a node with a value, resolve the value.
-      if (expr.value !== null && expr.value !== undefined) {
-        return Type(scope, expr.value);
-      }
-
-      scope.errors.push(new RangeError("No value"));
-      return new FluentNone();
-    }
     default:
       return new FluentNone();
   }
@@ -255,7 +298,7 @@ function Type(scope, expr) {
 function VariableReference(scope, {name}) {
   if (!scope.args || !scope.args.hasOwnProperty(name)) {
     if (scope.insideTermReference === false) {
-      scope.errors.push(new ReferenceError(`Unknown variable: ${name}`));
+      scope.reportError(new ReferenceError(`Unknown variable: $${name}`));
     }
     return new FluentNone(`$${name}`);
   }
@@ -275,11 +318,11 @@ function VariableReference(scope, {name}) {
       return new FluentNumber(arg);
     case "object":
       if (arg instanceof Date) {
-        return new FluentDateTime(arg);
+        return new FluentDateTime(arg.getTime());
       }
     default:
-      scope.errors.push(
-        new TypeError(`Unsupported variable type: ${name}, ${typeof arg}`)
+      scope.reportError(
+        new TypeError(`Variable type not supported: $${name}, ${typeof arg}`)
       );
       return new FluentNone(`$${name}`);
   }
@@ -289,21 +332,25 @@ function VariableReference(scope, {name}) {
 function MessageReference(scope, {name, attr}) {
   const message = scope.bundle._messages.get(name);
   if (!message) {
-    const err = new ReferenceError(`Unknown message: ${name}`);
-    scope.errors.push(err);
+    scope.reportError(new ReferenceError(`Unknown message: ${name}`));
     return new FluentNone(name);
   }
 
   if (attr) {
-    const attribute = message.attrs && message.attrs[attr];
+    const attribute = message.attributes[attr];
     if (attribute) {
-      return Type(scope, attribute);
+      return resolvePattern(scope, attribute);
     }
-    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(scope, message);
+    scope.reportError(new ReferenceError(`Unknown attribute: ${attr}`));
+    return new FluentNone(`${name}.${attr}`);
   }
 
-  return Type(scope, message);
+  if (message.value) {
+    return resolvePattern(scope, message.value);
+  }
+
+  scope.reportError(new ReferenceError(`No value: ${name}`));
+  return new FluentNone(name);
 }
 
 // Resolve a call to a Term with key-value arguments.
@@ -311,25 +358,24 @@ function TermReference(scope, {name, attr, args}) {
   const id = `-${name}`;
   const term = scope.bundle._terms.get(id);
   if (!term) {
-    const err = new ReferenceError(`Unknown term: ${id}`);
-    scope.errors.push(err);
+    scope.reportError(new ReferenceError(`Unknown term: ${id}`));
     return new FluentNone(id);
   }
 
-  // Every TermReference has its own args.
-  const [, keyargs] = getArguments(scope, args);
-  const local = {...scope, args: keyargs, insideTermReference: true};
+  // Every TermReference has its own variables.
+  const [, params] = getArguments(scope, args);
+  const local = scope.cloneForTermReference(params);
 
   if (attr) {
-    const attribute = term.attrs && term.attrs[attr];
+    const attribute = term.attributes[attr];
     if (attribute) {
-      return Type(local, attribute);
+      return resolvePattern(local, attribute);
     }
-    scope.errors.push(new ReferenceError(`Unknown attribute: ${attr}`));
-    return Type(local, term);
+    scope.reportError(new ReferenceError(`Unknown attribute: ${attr}`));
+    return new FluentNone(`${id}.${attr}`);
   }
 
-  return Type(local, term);
+  return resolvePattern(local, term.value);
 }
 
 // Resolve a call to a Function with positional and key-value arguments.
@@ -338,47 +384,45 @@ function FunctionReference(scope, {name, args}) {
   // the `FluentBundle` constructor.
   const func = scope.bundle._functions[name] || builtins[name];
   if (!func) {
-    scope.errors.push(new ReferenceError(`Unknown function: ${name}()`));
+    scope.reportError(new ReferenceError(`Unknown function: ${name}()`));
     return new FluentNone(`${name}()`);
   }
 
   if (typeof func !== "function") {
-    scope.errors.push(new TypeError(`Function ${name}() is not callable`));
+    scope.reportError(new TypeError(`Function ${name}() is not callable`));
     return new FluentNone(`${name}()`);
   }
 
   try {
     return func(...getArguments(scope, args));
-  } catch (e) {
-    // XXX Report errors.
-    return new FluentNone();
+  } catch (err) {
+    scope.reportError(err);
+    return new FluentNone(`${name}()`);
   }
 }
 
 // Resolve a select expression to the member object.
 function SelectExpression(scope, {selector, variants, star}) {
-  let sel = Type(scope, selector);
+  let sel = resolveExpression(scope, selector);
   if (sel instanceof FluentNone) {
-    const variant = getDefault(scope, variants, star);
-    return Type(scope, variant);
+    return getDefault(scope, variants, star);
   }
 
   // Match the selector against keys of each variant, in order.
   for (const variant of variants) {
-    const key = Type(scope, variant.key);
-    if (match(scope.bundle, sel, key)) {
-      return Type(scope, variant);
+    const key = resolveExpression(scope, variant.key);
+    if (match(scope, sel, key)) {
+      return resolvePattern(scope, variant.value);
     }
   }
 
-  const variant = getDefault(scope, variants, star);
-  return Type(scope, variant);
+  return getDefault(scope, variants, star);
 }
 
 // Resolve a pattern (a complex string with placeables).
-function Pattern(scope, ptn) {
+function resolveComplexPattern(scope, ptn) {
   if (scope.dirty.has(ptn)) {
-    scope.errors.push(new RangeError("Cyclic reference"));
+    scope.reportError(new RangeError("Cyclic reference"));
     return new FluentNone();
   }
 
@@ -396,23 +440,25 @@ function Pattern(scope, ptn) {
       continue;
     }
 
-    const part = Type(scope, elem).toString(scope.bundle);
+    const part = resolveExpression(scope, elem).toString(scope);
 
     if (useIsolating) {
       result.push(FSI);
     }
 
     if (part.length > MAX_PLACEABLE_LENGTH) {
-      scope.errors.push(
-        new RangeError(
-          "Too many characters in placeable " +
-          `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`
-        )
+      scope.dirty.delete(ptn);
+      // This is a fatal error which causes the resolver to instantly bail out
+      // on this pattern. The length check protects against excessive memory
+      // usage, and throwing protects against eating up the CPU when long
+      // placeables are deeply nested.
+      throw new RangeError(
+        "Too many characters in placeable " +
+        `(${part.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`
       );
-      result.push(part.slice(MAX_PLACEABLE_LENGTH));
-    } else {
-      result.push(part);
     }
+
+    result.push(part);
 
     if (useIsolating) {
       result.push(PDI);
@@ -423,28 +469,244 @@ function Pattern(scope, ptn) {
   return result.join("");
 }
 
+// Resolve a simple or a complex Pattern to a FluentString (which is really the
+// string primitive).
+function resolvePattern(scope, node) {
+  // Resolve a simple pattern.
+  if (typeof node === "string") {
+    return scope.bundle._transform(node);
+  }
+
+  return resolveComplexPattern(scope, node);
+}
+
+class Scope {
+  constructor(
+    bundle,
+    errors,
+    args,
+    insideTermReference = false,
+    dirty = new WeakSet()
+  ) {
+    /** The bundle for which the given resolution is happening. */
+    this.bundle = bundle;
+    /** The list of errors collected while resolving. */
+    this.errors = errors;
+    /** A dict of developer-provided variables. */
+    this.args = args;
+
+    /** Term references require different variable lookup logic. */
+    this.insideTermReference = insideTermReference;
+    /** The Set of patterns already encountered during this resolution.
+      * Used to detect and prevent cyclic resolutions. */
+    this.dirty = dirty;
+  }
+
+  cloneForTermReference(args) {
+    return new Scope(this.bundle, this.errors, args, true, this.dirty);
+  }
+
+  reportError(error) {
+    if (!this.errors) {
+      throw error;
+    }
+    this.errors.push(error);
+  }
+
+  memoizeIntlObject(ctor, opts) {
+    let cache = this.bundle._intls.get(ctor);
+    if (!cache) {
+      cache = {};
+      this.bundle._intls.set(ctor, cache);
+    }
+    let id = JSON.stringify(opts);
+    if (!cache[id]) {
+      cache[id] = new ctor(this.bundle.locales, opts);
+    }
+    return cache[id];
+  }
+}
+
 /**
- * Format a translation into a string.
- *
- * @param   {FluentBundle} bundle
- *    A FluentBundle instance which will be used to resolve the
- *    contextual information of the message.
- * @param   {Object}         args
- *    List of arguments provided by the developer which can be accessed
- *    from the message.
- * @param   {Object}         message
- *    An object with the Message to be resolved.
- * @param   {Array}          errors
- *    An error array that any encountered errors will be appended to.
- * @returns {FluentType}
+ * Message bundles are single-language stores of translation resources. They are
+ * responsible for formatting message values and attributes to strings.
  */
-function resolve(bundle, args, message, errors = []) {
-  const scope = {
-    bundle, args, errors, dirty: new WeakSet(),
-    // TermReferences are resolved in a new scope.
-    insideTermReference: false,
-  };
-  return Type(scope, message).toString(bundle);
+class FluentBundle {
+  /**
+   * Create an instance of `FluentBundle`.
+   *
+   * The `locales` argument is used to instantiate `Intl` formatters used by
+   * translations. The `options` object can be used to configure the bundle.
+   *
+   * Examples:
+   *
+   *     let bundle = new FluentBundle(["en-US", "en"]);
+   *
+   *     let bundle = new FluentBundle(locales, {useIsolating: false});
+   *
+   *     let bundle = new FluentBundle(locales, {
+   *       useIsolating: true,
+   *       functions: {
+   *         NODE_ENV: () => process.env.NODE_ENV
+   *       }
+   *     });
+   *
+   * Available options:
+   *
+   *   - `functions` - an object of additional functions available to
+   *     translations as builtins.
+   *
+   *   - `useIsolating` - boolean specifying whether to use Unicode isolation
+   *     marks (FSI, PDI) for bidi interpolations. Default: `true`.
+   *
+   *   - `transform` - a function used to transform string parts of patterns.
+   *
+   * @param   {(string|Array.<string>)} locales - The locales of the bundle
+   * @param   {Object} [options]
+   * @returns {FluentBundle}
+   */
+  constructor(locales, {
+    functions = {},
+    useIsolating = true,
+    transform = v => v,
+  } = {}) {
+    this.locales = Array.isArray(locales) ? locales : [locales];
+
+    this._terms = new Map();
+    this._messages = new Map();
+    this._functions = functions;
+    this._useIsolating = useIsolating;
+    this._transform = transform;
+    this._intls = new WeakMap();
+  }
+
+  /**
+   * Check if a message is present in the bundle.
+   *
+   * @param {string} id - The identifier of the message to check.
+   * @returns {bool}
+   */
+  hasMessage(id) {
+    return this._messages.has(id);
+  }
+
+  /**
+   * Return a raw unformatted message object from the bundle.
+   *
+   * Raw messages are `{value, attributes}` shapes containing translation units
+   * called `Patterns`. `Patterns` are implementation-specific; they should be
+   * treated as black boxes and formatted with `FluentBundle.formatPattern`.
+   *
+   *     interface RawMessage {
+   *         value: Pattern | null;
+   *         attributes: Record<string, Pattern>;
+   *     }
+   *
+   * @param {string} id - The identifier of the message to check.
+   * @returns {{value: ?Pattern, attributes: Object.<string, Pattern>}}
+   */
+  getMessage(id) {
+    return this._messages.get(id);
+  }
+
+  /**
+   * Add a translation resource to the bundle.
+   *
+   * The translation resource must be an instance of `FluentResource`.
+   *
+   *     let res = new FluentResource("foo = Foo");
+   *     bundle.addResource(res);
+   *     bundle.getMessage("foo");
+   *     // → {value: .., attributes: {..}}
+   *
+   * Available options:
+   *
+   *   - `allowOverrides` - boolean specifying whether it's allowed to override
+   *     an existing message or term with a new value. Default: `false`.
+   *
+   * @param   {FluentResource} res - FluentResource object.
+   * @param   {Object} [options]
+   * @returns {Array.<FluentError>}
+   */
+  addResource(res, {
+    allowOverrides = false,
+  } = {}) {
+    const errors = [];
+
+    for (let i = 0; i < res.body.length; i++) {
+      let entry = res.body[i];
+      if (entry.id.startsWith("-")) {
+        // Identifiers starting with a dash (-) define terms. Terms are private
+        // and cannot be retrieved from FluentBundle.
+        if (allowOverrides === false && this._terms.has(entry.id)) {
+          errors.push(`Attempt to override an existing term: "${entry.id}"`);
+          continue;
+        }
+        this._terms.set(entry.id, entry);
+      } else {
+        if (allowOverrides === false && this._messages.has(entry.id)) {
+          errors.push(`Attempt to override an existing message: "${entry.id}"`);
+          continue;
+        }
+        this._messages.set(entry.id, entry);
+      }
+    }
+
+    return errors;
+  }
+
+  /**
+   * Format a `Pattern` to a string.
+   *
+   * Format a raw `Pattern` into a string. `args` will be used to resolve
+   * references to variables passed as arguments to the translation.
+   *
+   * In case of errors `formatPattern` will try to salvage as much of the
+   * translation as possible and will still return a string. For performance
+   * reasons, the encountered errors are not returned but instead are appended
+   * to the `errors` array passed as the third argument.
+   *
+   *     let errors = [];
+   *     bundle.addResource(
+   *         new FluentResource("hello = Hello, {$name}!"));
+   *
+   *     let hello = bundle.getMessage("hello");
+   *     if (hello.value) {
+   *         bundle.formatPattern(hello.value, {name: "Jane"}, errors);
+   *         // Returns "Hello, Jane!" and `errors` is empty.
+   *
+   *         bundle.formatPattern(hello.value, undefined, errors);
+   *         // Returns "Hello, {$name}!" and `errors` is now:
+   *         // [<ReferenceError: Unknown variable: name>]
+   *     }
+   *
+   * If `errors` is omitted, the first encountered error will be thrown.
+   *
+   * @param   {Pattern} pattern
+   * @param   {?Object} args
+   * @param   {?Array.<Error>} errors
+   * @returns {string}
+   */
+  formatPattern(pattern, args, errors) {
+    // Resolve a simple pattern without creating a scope. No error handling is
+    // required; by definition simple patterns don't have placeables.
+    if (typeof pattern === "string") {
+      return this._transform(pattern);
+    }
+
+    // Resolve a complex pattern.
+    let scope = new Scope(this, errors, args);
+    try {
+      let value = resolveComplexPattern(scope, pattern);
+      return value.toString(scope);
+    } catch (err) {
+      if (scope.errors) {
+        scope.errors.push(err);
+        return new FluentNone().toString(scope);
+      }
+      throw err;
+    }
+  }
 }
 
 class FluentError extends Error {}
@@ -502,16 +764,17 @@ const TOKEN_BLANK = /\s+/y;
 const MAX_PLACEABLES = 100;
 
 /**
- * Fluent Resource is a structure storing a map of parsed localization entries.
+ * Fluent Resource is a structure storing parsed localization entries.
  */
-class FluentResource extends Map {
-  /**
-   * Create a new FluentResource from Fluent code.
-   */
-  static fromString(source) {
+class FluentResource {
+  constructor(source) {
+    this.body = this._parse(source);
+  }
+
+  _parse(source) {
     RE_MESSAGE_START.lastIndex = 0;
 
-    let resource = new this();
+    let resource = [];
     let cursor = 0;
 
     // Iterate over the beginnings of messages and terms to efficiently skip
@@ -524,7 +787,7 @@ class FluentResource extends Map {
 
       cursor = RE_MESSAGE_START.lastIndex;
       try {
-        resource.set(next[1], parseMessage());
+        resource.push(parseMessage(next[1]));
       } catch (err) {
         if (err instanceof FluentError) {
           // Don't report any Fluent syntax errors. Skip directly to the
@@ -537,7 +800,8 @@ class FluentResource extends Map {
 
     return resource;
 
-    // The parser implementation is inlined below for performance reasons.
+    // The parser implementation is inlined below for performance reasons,
+    // as well as for convenience of accessing `source` and `cursor`.
 
     // The parser focuses on minimizing the number of false negatives at the
     // expense of increasing the risk of false positives. In other words, it
@@ -599,22 +863,19 @@ class FluentResource extends Map {
       return match(re)[1];
     }
 
-    function parseMessage() {
+    function parseMessage(id) {
       let value = parsePattern();
-      let attrs = parseAttributes();
+      let attributes = parseAttributes();
 
-      if (attrs === null) {
-        if (value === null) {
-          throw new FluentError("Expected message value or attributes");
-        }
-        return value;
+      if (value === null && Object.keys(attributes).length === 0) {
+        throw new FluentError("Expected message value or attributes");
       }
 
-      return {value, attrs};
+      return {id, value, attributes};
     }
 
     function parseAttributes() {
-      let attrs = {};
+      let attrs = Object.create(null);
 
       while (test(RE_ATTRIBUTE_START)) {
         let name = match1(RE_ATTRIBUTE_START);
@@ -625,7 +886,7 @@ class FluentResource extends Map {
         attrs[name] = value;
       }
 
-      return Object.keys(attrs).length > 0 ? attrs : null;
+      return attrs;
     }
 
     function parsePattern() {
@@ -707,9 +968,6 @@ class FluentResource extends Map {
         if (element.type === "indent") {
           // Dedent indented lines by the maximum common indent.
           element = element.value.slice(0, element.value.length - commonIndent);
-        } else if (element.type === "str") {
-          // Optimize StringLiterals into their value.
-          element = element.value;
         }
         if (element) {
           baked.push(element);
@@ -839,7 +1097,7 @@ class FluentResource extends Map {
       consumeToken(TOKEN_BRACKET_OPEN, FluentError);
       let key = test(RE_NUMBER_LITERAL)
         ? parseNumberLiteral()
-        : match1(RE_IDENTIFIER);
+        : {type: "str", value: match1(RE_IDENTIFIER)};
       consumeToken(TOKEN_BRACKET_CLOSE, FluentError);
       return key;
     }
@@ -952,258 +1210,6 @@ class FluentResource extends Map {
 }
 
 /**
- * Message bundles are single-language stores of translations.  They are
- * responsible for parsing translation resources in the Fluent syntax and can
- * format translation units (entities) to strings.
- *
- * Always use `FluentBundle.format` to retrieve translation units from a
- * bundle. Translations can contain references to other entities or variables,
- * conditional logic in form of select expressions, traits which describe their
- * grammatical features, and can use Fluent builtins which make use of the
- * `Intl` formatters to format numbers, dates, lists and more into the
- * bundle's language. See the documentation of the Fluent syntax for more
- * information.
- */
-class FluentBundle {
-  /**
-   * Create an instance of `FluentBundle`.
-   *
-   * The `locales` argument is used to instantiate `Intl` formatters used by
-   * translations.  The `options` object can be used to configure the bundle.
-   *
-   * Examples:
-   *
-   *     const bundle = new FluentBundle(locales);
-   *
-   *     const bundle = new FluentBundle(locales, { useIsolating: false });
-   *
-   *     const bundle = new FluentBundle(locales, {
-   *       useIsolating: true,
-   *       functions: {
-   *         NODE_ENV: () => process.env.NODE_ENV
-   *       }
-   *     });
-   *
-   * Available options:
-   *
-   *   - `functions` - an object of additional functions available to
-   *                   translations as builtins.
-   *
-   *   - `useIsolating` - boolean specifying whether to use Unicode isolation
-   *                    marks (FSI, PDI) for bidi interpolations.
-   *                    Default: true
-   *
-   *   - `transform` - a function used to transform string parts of patterns.
-   *
-   * @param   {string|Array<string>} locales - Locale or locales of the bundle
-   * @param   {Object} [options]
-   * @returns {FluentBundle}
-   */
-  constructor(locales, {
-    functions = {},
-    useIsolating = true,
-    transform = v => v,
-  } = {}) {
-    this.locales = Array.isArray(locales) ? locales : [locales];
-
-    this._terms = new Map();
-    this._messages = new Map();
-    this._functions = functions;
-    this._useIsolating = useIsolating;
-    this._transform = transform;
-    this._intls = new WeakMap();
-  }
-
-  /*
-   * Return an iterator over public `[id, message]` pairs.
-   *
-   * @returns {Iterator}
-   */
-  get messages() {
-    return this._messages[Symbol.iterator]();
-  }
-
-  /*
-   * Check if a message is present in the bundle.
-   *
-   * @param {string} id - The identifier of the message to check.
-   * @returns {bool}
-   */
-  hasMessage(id) {
-    return this._messages.has(id);
-  }
-
-  /*
-   * Return the internal representation of a message.
-   *
-   * The internal representation should only be used as an argument to
-   * `FluentBundle.format`.
-   *
-   * @param {string} id - The identifier of the message to check.
-   * @returns {Any}
-   */
-  getMessage(id) {
-    return this._messages.get(id);
-  }
-
-  /**
-   * Add a translation resource to the bundle.
-   *
-   * The translation resource must use the Fluent syntax.  It will be parsed by
-   * the bundle and each translation unit (message) will be available in the
-   * bundle by its identifier.
-   *
-   *     bundle.addMessages('foo = Foo');
-   *     bundle.getMessage('foo');
-   *
-   *     // Returns a raw representation of the 'foo' message.
-   *
-   *     bundle.addMessages('bar = Bar');
-   *     bundle.addMessages('bar = Newbar', { allowOverrides: true });
-   *     bundle.getMessage('bar');
-   *
-   *     // Returns a raw representation of the 'bar' message: Newbar.
-   *
-   * Parsed entities should be formatted with the `format` method in case they
-   * contain logic (references, select expressions etc.).
-   *
-   * Available options:
-   *
-   *   - `allowOverrides` - boolean specifying whether it's allowed to override
-   *                      an existing message or term with a new value.
-   *                      Default: false
-   *
-   * @param   {string} source - Text resource with translations.
-   * @param   {Object} [options]
-   * @returns {Array<Error>}
-   */
-  addMessages(source, options) {
-    const res = FluentResource.fromString(source);
-    return this.addResource(res, options);
-  }
-
-  /**
-   * Add a translation resource to the bundle.
-   *
-   * The translation resource must be an instance of FluentResource,
-   * e.g. parsed by `FluentResource.fromString`.
-   *
-   *     let res = FluentResource.fromString("foo = Foo");
-   *     bundle.addResource(res);
-   *     bundle.getMessage('foo');
-   *
-   *     // Returns a raw representation of the 'foo' message.
-   *
-   *     let res = FluentResource.fromString("bar = Bar");
-   *     bundle.addResource(res);
-   *     res = FluentResource.fromString("bar = Newbar");
-   *     bundle.addResource(res, { allowOverrides: true });
-   *     bundle.getMessage('bar');
-   *
-   *     // Returns a raw representation of the 'bar' message: Newbar.
-   *
-   * Parsed entities should be formatted with the `format` method in case they
-   * contain logic (references, select expressions etc.).
-   *
-   * Available options:
-   *
-   *   - `allowOverrides` - boolean specifying whether it's allowed to override
-   *                      an existing message or term with a new value.
-   *                      Default: false
-   *
-   * @param   {FluentResource} res - FluentResource object.
-   * @param   {Object} [options]
-   * @returns {Array<Error>}
-   */
-  addResource(res, {
-    allowOverrides = false,
-  } = {}) {
-    const errors = [];
-
-    for (const [id, value] of res) {
-      if (id.startsWith("-")) {
-        // Identifiers starting with a dash (-) define terms. Terms are private
-        // and cannot be retrieved from FluentBundle.
-        if (allowOverrides === false && this._terms.has(id)) {
-          errors.push(`Attempt to override an existing term: "${id}"`);
-          continue;
-        }
-        this._terms.set(id, value);
-      } else {
-        if (allowOverrides === false && this._messages.has(id)) {
-          errors.push(`Attempt to override an existing message: "${id}"`);
-          continue;
-        }
-        this._messages.set(id, value);
-      }
-    }
-
-    return errors;
-  }
-
-  /**
-   * Format a message to a string or null.
-   *
-   * Format a raw `message` from the bundle into a string (or a null if it has
-   * a null value).  `args` will be used to resolve references to variables
-   * passed as arguments to the translation.
-   *
-   * In case of errors `format` will try to salvage as much of the translation
-   * as possible and will still return a string.  For performance reasons, the
-   * encountered errors are not returned but instead are appended to the
-   * `errors` array passed as the third argument.
-   *
-   *     const errors = [];
-   *     bundle.addMessages('hello = Hello, { $name }!');
-   *     const hello = bundle.getMessage('hello');
-   *     bundle.format(hello, { name: 'Jane' }, errors);
-   *
-   *     // Returns 'Hello, Jane!' and `errors` is empty.
-   *
-   *     bundle.format(hello, undefined, errors);
-   *
-   *     // Returns 'Hello, name!' and `errors` is now:
-   *
-   *     [<ReferenceError: Unknown variable: name>]
-   *
-   * @param   {Object | string}    message
-   * @param   {Object | undefined} args
-   * @param   {Array}              errors
-   * @returns {?string}
-   */
-  format(message, args, errors) {
-    // optimize entities which are simple strings with no attributes
-    if (typeof message === "string") {
-      return this._transform(message);
-    }
-
-    // optimize entities with null values
-    if (message === null || message.value === null) {
-      return null;
-    }
-
-    // optimize simple-string entities with attributes
-    if (typeof message.value === "string") {
-      return this._transform(message.value);
-    }
-
-    return resolve(this, args, message, errors);
-  }
-
-  _memoizeIntlObject(ctor, opts) {
-    const cache = this._intls.get(ctor) || {};
-    const id = JSON.stringify(opts);
-
-    if (!cache[id]) {
-      cache[id] = new ctor(this.locales, opts);
-      this._intls.set(ctor, cache);
-    }
-
-    return cache[id];
-  }
-}
-
-/*
  * @module fluent
  * @overview
  *

@@ -725,15 +725,15 @@ nsresult HTMLInputElement::InitFilePicker(FilePickerType aType) {
   nsAutoString title;
   nsAutoString okButtonLabel;
   if (aType == FILE_PICKER_DIRECTORY) {
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "DirectoryUpload", title);
+    nsContentUtils::GetLocalizedString(
+        nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "DirectoryUpload", title);
 
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "DirectoryPickerOkButtonLabel",
-                                       okButtonLabel);
+    nsContentUtils::GetLocalizedString(
+        nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF,
+        "DirectoryPickerOkButtonLabel", okButtonLabel);
   } else {
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "FileUpload", title);
+    nsContentUtils::GetLocalizedString(
+        nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "FileUpload", title);
   }
 
   nsCOMPtr<nsIFilePicker> filePicker =
@@ -2333,21 +2333,24 @@ void HTMLInputElement::GetDisplayFileName(nsAString& aValue) const {
     if ((StaticPrefs::dom_input_dirpicker() && Allowdirs()) ||
         (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
          HasAttr(kNameSpaceID_None, nsGkAtoms::webkitdirectory))) {
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "NoDirSelected", value);
+      nsContentUtils::GetLocalizedString(
+          nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "NoDirSelected", value);
     } else if (HasAttr(kNameSpaceID_None, nsGkAtoms::multiple)) {
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "NoFilesSelected", value);
+      nsContentUtils::GetLocalizedString(
+          nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "NoFilesSelected",
+          value);
     } else {
-      nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                         "NoFileSelected", value);
+      nsContentUtils::GetLocalizedString(
+          nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "NoFileSelected",
+          value);
     }
   } else {
     nsString count;
     count.AppendInt(int(mFileData->mFilesOrDirectories.Length()));
 
     nsContentUtils::FormatLocalizedString(
-        value, nsContentUtils::eFORMS_PROPERTIES, "XFilesSelected", count);
+        value, nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "XFilesSelected",
+        count);
   }
 
   aValue = value;
@@ -5776,8 +5779,8 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
       !HasAttr(kNameSpaceID_None, nsGkAtoms::value)) {
     // Get our default value, which is the same as our default label
     nsAutoString defaultValue;
-    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "Submit", defaultValue);
+    nsContentUtils::GetLocalizedString(
+        nsContentUtils::eFORMS_PROPERTIES_MAYBESPOOF, "Submit", defaultValue);
     value = defaultValue;
   }
 

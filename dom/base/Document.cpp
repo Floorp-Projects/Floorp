@@ -1391,9 +1391,7 @@ bool Document::CallerIsTrustedAboutCertError(JSContext* aCx,
 
   // getSpec is an expensive operation, hence we first check the scheme
   // to see if the caller is actually an about: page.
-  bool isAboutScheme = false;
-  uri->SchemeIs("about", &isAboutScheme);
-  if (!isAboutScheme) {
+  if (!uri->SchemeIs("about")) {
     return false;
   }
 
@@ -1658,11 +1656,7 @@ bool Document::IsAboutPage() const {
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsCOMPtr<nsIURI> uri;
   principal->GetURI(getter_AddRefs(uri));
-  bool isAboutScheme = true;
-  if (uri) {
-    uri->SchemeIs("about", &isAboutScheme);
-  }
-  return isAboutScheme;
+  return !uri || uri->SchemeIs("about");
 }
 
 void Document::ConstructUbiNode(void* storage) {
@@ -3506,8 +3500,7 @@ void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
   if (aNewPrincipal && mAllowDNSPrefetch && sDisablePrefetchHTTPSPref) {
     nsCOMPtr<nsIURI> uri;
     aNewPrincipal->GetURI(getter_AddRefs(uri));
-    bool isHTTPS;
-    if (!uri || NS_FAILED(uri->SchemeIs("https", &isHTTPS)) || isHTTPS) {
+    if (!uri || uri->SchemeIs("https")) {
       mAllowDNSPrefetch = false;
     }
   }
@@ -7165,10 +7158,7 @@ void Document::DispatchContentLoadedEvents() {
 static void AssertAboutPageHasCSP(Document* aDocument) {
   // Check if we are loading an about: URI at all
   nsCOMPtr<nsIURI> documentURI = aDocument->GetDocumentURI();
-  bool isAboutURI =
-      (NS_SUCCEEDED(documentURI->SchemeIs("about", &isAboutURI)) && isAboutURI);
-
-  if (!isAboutURI ||
+  if (!documentURI->SchemeIs("about") ||
       Preferences::GetBool("csp.skip_about_page_has_csp_assert")) {
     return;
   }
@@ -10508,10 +10498,7 @@ bool Document::CanSavePresentation(nsIRequest* aNewRequest,
 }
 
 static bool HasHttpScheme(nsIURI* aURI) {
-  bool isHttpish = false;
-  return aURI &&
-         ((NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpish)) && isHttpish) ||
-          (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpish)) && isHttpish));
+  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https"));
 }
 
 void Document::Destroy() {
@@ -11569,17 +11556,12 @@ bool Document::IsDocumentRightToLeft() {
   if (!reg) return false;
 
   nsAutoCString package;
-  bool isChrome;
-  if (NS_SUCCEEDED(mDocumentURI->SchemeIs("chrome", &isChrome)) && isChrome) {
+  if (mDocumentURI->SchemeIs("chrome")) {
     mDocumentURI->GetHostPort(package);
   } else {
     // use the 'global' package for about and resource uris.
     // otherwise, just default to left-to-right.
-    bool isAbout, isResource;
-    if (NS_SUCCEEDED(mDocumentURI->SchemeIs("about", &isAbout)) && isAbout) {
-      package.AssignLiteral("global");
-    } else if (NS_SUCCEEDED(mDocumentURI->SchemeIs("resource", &isResource)) &&
-               isResource) {
+    if (mDocumentURI->SchemeIs("about") || mDocumentURI->SchemeIs("resource")) {
       package.AssignLiteral("global");
     } else {
       return false;
@@ -14379,27 +14361,13 @@ const Document* Document::GetTopLevelContentDocument() const {
   return parent;
 }
 
-static bool MightBeChromeScheme(nsIURI* aURI) {
-  MOZ_ASSERT(aURI);
-  bool isChrome = true;
-  aURI->SchemeIs("chrome", &isChrome);
-  return isChrome;
-}
-
-static bool MightBeAboutOrChromeScheme(nsIURI* aURI) {
-  MOZ_ASSERT(aURI);
-  bool isAbout = true;
-  aURI->SchemeIs("about", &isAbout);
-  return isAbout || MightBeChromeScheme(aURI);
-}
-
 void Document::PropagateUseCounters(Document* aParentDocument) {
   MOZ_ASSERT(this != aParentDocument);
 
   // Don't count chrome resources, even in the web content.
   nsCOMPtr<nsIURI> uri;
   NodePrincipal()->GetURI(getter_AddRefs(uri));
-  if (!uri || MightBeChromeScheme(uri)) {
+  if (!uri || uri->SchemeIs("chrome")) {
     return;
   }
 
@@ -14507,7 +14475,7 @@ void Document::ReportUseCounters(UseCounterReportKind aKind) {
       (IsContentDocument() || IsResourceDoc())) {
     nsCOMPtr<nsIURI> uri;
     NodePrincipal()->GetURI(getter_AddRefs(uri));
-    if (!uri || MightBeAboutOrChromeScheme(uri)) {
+    if (!uri || uri->SchemeIs("about") || uri->SchemeIs("chrome")) {
       return;
     }
 

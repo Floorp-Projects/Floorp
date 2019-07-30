@@ -10,6 +10,7 @@ async function focusIdentityBox() {
     "focus"
   );
   EventUtils.synthesizeKey("VK_TAB", { shiftKey: true });
+  EventUtils.synthesizeKey("ArrowRight");
   await focused;
 }
 

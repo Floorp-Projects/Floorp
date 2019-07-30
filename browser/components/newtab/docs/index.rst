@@ -21,7 +21,7 @@ Prerequisites
 
 You will need the following:
 
-- Node.js 8+ (On Mac, the best way to install Node.js is to use the [install link on the Node.js homepage](https://nodejs.org/en/))
+- Node.js 8+ (On Mac, the best way to install Node.js is to use the install link on the `Node.js homepage`_)
 - npm (packaged with Node.js)
 
 To install dependencies, run the following from the root of the mozilla-central repository
@@ -63,3 +63,5 @@ until these tests are running in Try, so this is currently an optional step.
 GitHub workflow
 ---------------
 The files in this directory, including vendor dependencies, are synchronized with the https://github.com/mozilla/activity-stream repository. If you prefer a GitHub-based workflow, you can look at the documentation there to learn more.
+
+..  _Node.js homepage: https://nodejs.org/

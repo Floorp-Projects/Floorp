@@ -9,7 +9,7 @@ fuzzy(1,68) == border-overlapping-corner.yaml border-overlapping-corner-ref.yaml
 == border-overlapping-edge.yaml border-overlapping-edge-ref.yaml
 == border-invisible.yaml border-invisible-ref.yaml
 platform(linux,mac) == border-suite.yaml border-suite.png
-platform(linux,mac) fuzzy(8,8) == border-suite-2.yaml border-suite-2.png
+platform(linux,mac) fuzzy(8,80) == border-suite-2.yaml border-suite-2.png
 platform(linux,mac) == border-suite-3.yaml border-suite-3.png
 skip_on(android,device) == border-double-simple.yaml border-double-simple-ref.yaml  # Fails on Pixel2
 == border-double-simple-2.yaml border-double-simple-2-ref.yaml

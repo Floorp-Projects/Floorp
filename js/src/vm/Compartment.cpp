@@ -493,11 +493,11 @@ void Compartment::fixupCrossCompartmentWrappersAfterMovingGC(JSTracer* trc) {
   }
 }
 
-void Compartment::fixupAfterMovingGC() {
+void Compartment::fixupAfterMovingGC(JSTracer* trc) {
   MOZ_ASSERT(zone()->isGCCompacting());
 
   for (RealmsInCompartmentIter r(this); !r.done(); r.next()) {
-    r->fixupAfterMovingGC();
+    r->fixupAfterMovingGC(trc);
   }
 
   // Sweep the wrapper map to update values (wrapper objects) in this

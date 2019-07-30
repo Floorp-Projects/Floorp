@@ -1148,7 +1148,7 @@ fn wr_device_new(gl_context: *mut c_void, pc: Option<&mut WrProgramCache>)
       None => None,
     };
 
-    Device::new(gl, resource_override_path, upload_method, cached_programs, false, None)
+    Device::new(gl, resource_override_path, upload_method, cached_programs, false, true, true, None)
 }
 
 // Call MakeCurrent before this.

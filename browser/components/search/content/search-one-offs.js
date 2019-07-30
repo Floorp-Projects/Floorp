@@ -484,14 +484,18 @@ class SearchOneOffs {
     let engines = await this.getEngines();
     let defaultEngine = await Services.search.getDefault();
     let oneOffCount = engines.length;
-    let collapsed =
+    let hideOneOffs =
       !oneOffCount ||
       (oneOffCount == 1 && engines[0].name == defaultEngine.name);
 
-    // header is a xul:deck so collapsed doesn't work on it, see bug 589569.
-    this.header.hidden = this.buttons.collapsed = collapsed;
+    if (this.compact) {
+      this.container.hidden = hideOneOffs;
+    } else {
+      // Hide everything except the settings button.
+      this.header.hidden = this.buttons.hidden = hideOneOffs;
+    }
 
-    if (collapsed) {
+    if (hideOneOffs) {
       return;
     }
 
@@ -917,7 +921,7 @@ class SearchOneOffs {
   }
 
   _handleKeyPress(event, numListItems, allowEmptySelection, textboxUserValue) {
-    if (this.compact && this.buttons.collapsed) {
+    if (this.compact && this.container.hidden) {
       return false;
     }
     if (
