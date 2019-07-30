@@ -375,7 +375,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         if (frame.baselineFrame()->runningInInterpreter()) {
           const BaselineInterpreter& interp =
               cx->runtime()->jitRuntime()->baselineInterpreter();
-          frame.baselineFrame()->setInterpreterPC(*pc);
+          frame.baselineFrame()->setInterpreterFields(*pc);
           rfe->target = interp.interpretOpAddr().value;
         } else {
           PCMappingSlotInfo slotInfo;
@@ -392,7 +392,7 @@ static bool ProcessTryNotesBaseline(JSContext* cx, const JSJitFrameIter& frame,
         if (frame.baselineFrame()->runningInInterpreter()) {
           const BaselineInterpreter& interp =
               cx->runtime()->jitRuntime()->baselineInterpreter();
-          frame.baselineFrame()->setInterpreterPC(*pc);
+          frame.baselineFrame()->setInterpreterFields(*pc);
           rfe->target = interp.interpretOpAddr().value;
         } else {
           PCMappingSlotInfo slotInfo;

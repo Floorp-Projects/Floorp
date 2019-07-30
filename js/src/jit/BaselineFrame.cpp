@@ -108,11 +108,26 @@ bool BaselineFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
   return js::PushVarEnvironmentObject(cx, scope, this);
 }
 
-void BaselineFrame::setInterpreterPC(jsbytecode* pc) {
-  uint32_t pcOffset = script()->pcToOffset(pc);
-  JitScript* jitScript = script()->jitScript();
+void BaselineFrame::setInterpreterFields(JSScript* script, jsbytecode* pc) {
+  uint32_t pcOffset = script->pcToOffset(pc);
+  JitScript* jitScript = script->jitScript();
+  interpreterScript_ = script;
   interpreterPC_ = pc;
   interpreterICEntry_ = jitScript->interpreterICEntryFromPCOffset(pcOffset);
+}
+
+void BaselineFrame::setInterpreterFieldsForPrologueBailout(JSScript* script) {
+  JitScript* jitScript = script->jitScript();
+  interpreterScript_ = script;
+  interpreterPC_ = script->code();
+  if (jitScript->numICEntries() > 0) {
+    interpreterICEntry_ = &jitScript->icEntry(0);
+  } else {
+    // If the script does not have any ICEntries (possible for non-function
+    // scripts) the interpreterICEntry_ field won't be used. Just set it to
+    // nullptr.
+    interpreterICEntry_ = nullptr;
+  }
 }
 
 bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {
@@ -143,8 +158,7 @@ bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {
   // We are doing OSR into the Baseline Interpreter. We can get the pc from the
   // C++ interpreter's activation, we just have to skip the JitActivation.
   flags_ |= BaselineFrame::RUNNING_IN_INTERPRETER;
-  interpreterScript_ = fp->script();
-  setInterpreterPC(pc);
+  setInterpreterFields(pc);
 
   frameSize_ = BaselineFrame::FramePointerOffset + BaselineFrame::Size() +
                numStackValues * sizeof(Value);
