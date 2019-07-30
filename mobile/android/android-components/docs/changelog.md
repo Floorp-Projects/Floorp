@@ -91,6 +91,9 @@ permalink: /changelog/
 
 * **support-ktx**
   * Added `Collection.crossProduct` to retrieve the cartesian product of two `Collections`.
+  
+* **service-glean**
+  * ⚠️ **This is a breaking change**: `Glean.enableTestingMode` is now `internal`. Tests can use the `GleanTestRule` to enable testing mode. [Updated docs available here](https://mozilla.github.io/glean/book/user/testing-metrics.html).
 
 * **feature-push**
   * Added default arguments when registering for subscriptions/messages.

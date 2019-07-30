@@ -47,6 +47,15 @@ dependencies {
     implementation project(':concept-fetch')
     implementation project(':lib-fetch-httpurlconnection')
 
+    // We need a compileOnly dependency on the following block of testing
+    // libraries in order to expose the GleanTestRule to applications/libraries
+    // using the Glean SDK.
+    // We can't simply create a separate package otherwise we would need
+    // to provide a public API for the testing package to access the
+    // Glean internals, which is something we would not want to do.
+    compileOnly Dependencies.testing_junit
+    compileOnly Dependencies.androidx_work_testing
+
     testImplementation Dependencies.androidx_test_core
 
     testImplementation Dependencies.testing_junit

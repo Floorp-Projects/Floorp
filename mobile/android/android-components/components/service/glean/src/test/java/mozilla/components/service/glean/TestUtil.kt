@@ -22,7 +22,6 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.private.PingType
 import mozilla.components.service.glean.scheduler.PingUploadWorker
-import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import okhttp3.mockwebserver.Dispatcher
 import okhttp3.mockwebserver.MockResponse
@@ -123,25 +122,10 @@ internal fun resetGlean(
     config: Configuration = Configuration(),
     clearStores: Boolean = true
 ) {
-    Glean.enableTestingMode()
-
     // We're using the WorkManager in a bunch of places, and Glean will crash
     // in tests without this line. Let's simply put it here.
     WorkManagerTestInitHelper.initializeTestWorkManager(context)
-
-    if (clearStores) {
-        // Clear all the stored data.
-        val storageManager = StorageEngineManager(applicationContext = context)
-        storageManager.clearAllStores()
-        // The experiments storage engine needs to be cleared manually as it's not listed
-        // in the `StorageEngineManager`.
-        ExperimentsStorageEngine.clearAllStores()
-    }
-
-    // Init Glean.
-    Glean.initialized = false
-    Glean.setUploadEnabled(true)
-    Glean.initialize(context, config)
+    Glean.resetGlean(context, config, clearStores)
 }
 
 /**
