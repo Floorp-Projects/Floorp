@@ -40,12 +40,14 @@ set +x
 
 USER='MickeyMoz'
 REPO='android-components'
-OWNER='mozilla-mobile'
 TOKEN=`cat .github_token`
-URL="https://$USER:$TOKEN@github.com/$OWNER/$REPO/"
+URL="https://$USER:$TOKEN@github.com/$USER/$REPO/"
 
 echo "token=$TOKEN" > token.properties
 
 echo "Pushing branch to GitHub"
-git push --no-verify --quiet $URL $BRANCH &>/dev/null
+git push  --no-verify --quiet $URL $BRANCH
 echo "Done ($?)"
+
+echo "Opening pull request"
+./gradlew openPR -Ptitle="Docs update ($TIMESTAMP) [ci skip]" -Pbranch="$BRANCH" -PtokenFile="token.properties"
