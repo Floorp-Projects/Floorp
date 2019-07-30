@@ -148,7 +148,7 @@ def test_roll_warnings(lint, linters, files):
 
 
 def fake_run_worker(config, paths, **lintargs):
-    result = ResultSummary()
+    result = ResultSummary(lintargs['root'])
     result.issues['count'].append(1)
     return result
 

@@ -3268,15 +3268,10 @@ void InitializeLocalStorage() {
     NS_WARNING("Failed to initialize quota client!");
   }
 
-  if (NS_FAILED(Preferences::AddAtomicBoolVarCache(&gNextGen, kNextGenPref,
-                                                   kDefaultNextGen))) {
-    NS_WARNING("Unable to respond to next gen pref changes!");
-  }
+  Preferences::AddAtomicBoolVarCache(&gNextGen, kNextGenPref, kDefaultNextGen);
 
-  if (NS_FAILED(Preferences::AddAtomicUintVarCache(
-          &gOriginLimitKB, kDefaultQuotaPref, kDefaultOriginLimitKB))) {
-    NS_WARNING("Unable to respond to default quota pref changes!");
-  }
+  Preferences::AddAtomicUintVarCache(&gOriginLimitKB, kDefaultQuotaPref,
+                                     kDefaultOriginLimitKB);
 
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);

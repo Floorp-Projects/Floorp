@@ -112,7 +112,7 @@ def result(scope="module"):
             diff="diff 1\n- hello\n+ hello2",
         ),
     )
-    result = ResultSummary()
+    result = ResultSummary('/fake/root')
     for c in containers:
         result.issues[c.path].append(c)
     return result

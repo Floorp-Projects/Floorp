@@ -19,52 +19,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(FP_PREF);
 });
 
-add_task(async function testCategoryLabelsInAppMenu() {
-  await BrowserTestUtils.withNewTab("http://www.example.com", async function() {
-    let cuiTestUtils = new CustomizableUITestUtils(window);
-    await cuiTestUtils.openMainMenu();
-
-    let appMenuCategoryLabel = document.getElementById("appMenu-tp-category");
-    ok(appMenuCategoryLabel.value, "The appMenuCategory label exists");
-
-    Services.prefs.setStringPref(CAT_PREF, "strict");
-    await TestUtils.waitForCondition(
-      () =>
-        appMenuCategoryLabel.value ==
-        gNavigatorBundle.getString("contentBlocking.category.strict")
-    );
-    is(
-      appMenuCategoryLabel.value,
-      gNavigatorBundle.getString("contentBlocking.category.strict"),
-      "The appMenuCategory label has been changed to strict"
-    );
-
-    Services.prefs.setStringPref(CAT_PREF, "standard");
-    await TestUtils.waitForCondition(
-      () =>
-        appMenuCategoryLabel.value ==
-        gNavigatorBundle.getString("contentBlocking.category.standard")
-    );
-    is(
-      appMenuCategoryLabel.value,
-      gNavigatorBundle.getString("contentBlocking.category.standard"),
-      "The appMenuCategory label has been changed to standard"
-    );
-
-    Services.prefs.setStringPref(CAT_PREF, "custom");
-    await TestUtils.waitForCondition(
-      () =>
-        appMenuCategoryLabel.value ==
-        gNavigatorBundle.getString("contentBlocking.category.custom")
-    );
-    is(
-      appMenuCategoryLabel.value,
-      gNavigatorBundle.getString("contentBlocking.category.custom"),
-      "The appMenuCategory label has been changed to custom"
-    );
-  });
-});
-
 add_task(async function testSubcategoryLabels() {
   SpecialPowers.pushPrefEnv({
     set: [

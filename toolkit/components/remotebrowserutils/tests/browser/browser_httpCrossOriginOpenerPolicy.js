@@ -114,57 +114,50 @@ function waitForDownloadWindow() {
 }
 
 async function test_download_from(initCoop, downloadCoop) {
-  let start = httpURL(
-    "coop_header.sjs?downloadPage&" + initCoop,
-    "https://example.com"
-  );
-  return BrowserTestUtils.withNewTab(
-    {
-      gBrowser,
-      waitForStateStop: true,
-    },
-    async function(_browser) {
-      info(`test_download: Test tab ready`);
+  return BrowserTestUtils.withNewTab("about:blank", async function(_browser) {
+    info(`test_download: Test tab ready`);
 
-      let browser = gBrowser.selectedBrowser;
-      await performLoad(
-        browser,
-        {
-          url: start,
-          maybeErrorPage: false,
-        },
-        async () => {
-          BrowserTestUtils.loadURI(browser, start);
-          info(`test_download: Loading download page ${start}`);
+    let start = httpURL(
+      "coop_header.sjs?downloadPage&" + initCoop,
+      "https://example.com"
+    );
+    await performLoad(
+      _browser,
+      {
+        url: start,
+        maybeErrorPage: false,
+      },
+      async () => {
+        BrowserTestUtils.loadURI(_browser, start);
+        info(`test_download: Loading download page ${start}`);
 
-          // Wait for process switch even the page is load from a new tab.
-          if (initCoop != "") {
-            await BrowserTestUtils.waitForEvent(
-              gBrowser.getTabForBrowser(browser),
-              "SSTabRestored"
-            );
-          }
+        // Wait for process switch even the page is load from a new tab.
+        if (initCoop != "") {
+          await BrowserTestUtils.waitForEvent(
+            gBrowser.getTabForBrowser(_browser),
+            "SSTabRestored"
+          );
         }
-      );
+      }
+    );
 
-      info(`test_download: Download page ready ${start}`);
+    info(`test_download: Download page ready ${start}`);
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise(resolve => setTimeout(resolve, 20));
 
-      info(`Downloading ${downloadCoop}`);
+    info(`Downloading ${downloadCoop}`);
 
-      let winPromise = waitForDownloadWindow();
-      browser = gBrowser.selectedBrowser;
-      ContentTask.spawn(browser, downloadCoop, downloadCoop => {
-        content.document.getElementById(downloadCoop).click();
-      });
+    let winPromise = waitForDownloadWindow();
+    let browser = gBrowser.selectedBrowser;
+    ContentTask.spawn(browser, downloadCoop, downloadCoop => {
+      content.document.getElementById(downloadCoop).click();
+    });
 
-      // if the download page doesn't appear, the promise leads a timeout.
-      let win = await winPromise;
+    // if the download page doesn't appear, the promise leads a timeout.
+    let win = await winPromise;
 
-      await BrowserTestUtils.closeWindow(win);
-    }
-  );
+    await BrowserTestUtils.closeWindow(win);
+  });
 }
 
 // Check that multiple navigations of the same tab will only switch processes

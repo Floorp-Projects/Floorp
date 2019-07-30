@@ -663,13 +663,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool DeallocPWindowGlobalChild(PWindowGlobalChild* aActor);
 
-  PBrowserBridgeChild* AllocPBrowserBridgeChild(
-      const nsString& aName, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
-      const TabId& aTabId);
-
-  bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor);
-
   mozilla::ipc::IPCResult RecvDestroy();
 
   mozilla::ipc::IPCResult RecvSetDocShellIsActive(const bool& aIsActive);

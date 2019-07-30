@@ -272,14 +272,10 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
   }
   if (!sPrefsRegistered.exchange(true)) {
     MOZ_ASSERT(Preferences::IsServiceAvailable());
-    bool ok =
-        Preferences::AddAtomicBoolVarCache(&sForceDisableRtcpReceptionPref,
-                                           kQuashRtcpRxPref, false) == NS_OK;
-    MOZ_LOG(gMediaPipelineLog, ok ? LogLevel::Info : LogLevel::Error,
-            ("Creating pref cache: %s%s", kQuashRtcpRxPref.get(),
-             ok ? " succeded." : " FAILED!"));
-    // If we failed to register allow us try again
-    sPrefsRegistered.exchange(ok);
+    Preferences::AddAtomicBoolVarCache(&sForceDisableRtcpReceptionPref,
+                                       kQuashRtcpRxPref, false);
+    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
+            ("Creating pref cache: %s succeeded", kQuashRtcpRxPref.get()));
   }
 }
 

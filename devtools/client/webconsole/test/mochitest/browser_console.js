@@ -22,9 +22,8 @@ const TEST_IMAGE =
   "http://example.com/browser/devtools/client/webconsole/" +
   "test/test-image.png";
 
-const ObjectClient = require("devtools/shared/client/object-client");
-
 add_task(async function() {
+  await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
 
   const opened = waitForBrowserConsole();
@@ -42,16 +41,14 @@ add_task(async function() {
   });
 
   await testMessages(hud);
-  await testCPOWInspection(hud);
   await resetFilters(hud);
 });
 
 async function testMessages(hud) {
   hud.ui.clearOutput(true);
 
-  expectUncaughtException();
-
   executeSoon(() => {
+    expectUncaughtException();
     // eslint-disable-next-line no-undef
     foobarException();
   });
@@ -75,7 +72,9 @@ async function testMessages(hud) {
   Cu.nukeSandbox(sandbox);
 
   // Add a message from a content window.
-  content.console.log("message from content window");
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, () => {
+    content.console.log("message from content window");
+  });
 
   // Test eval.
   hud.jsterm.execute("document.location.href");
@@ -119,91 +118,6 @@ async function testMessages(hud) {
   await checkMessageExists(hud, "test-console.html");
   await checkMessageExists(hud, "404.html");
   await checkMessageExists(hud, "test-image.png");
-}
-
-async function testCPOWInspection(hud) {
-  // Directly request evaluation to get an actor for the selected browser.
-  // Note that this doesn't actually render a message, and instead allows us
-  // us to assert that inspecting an object doesn't throw in the server.
-  // This would be done in a mochitest-chrome suite, but that doesn't run in
-  // e10s, so it's harder to get ahold of a CPOW.
-  const cpowEval = await hud.jsterm.requestEvaluation(
-    "gBrowser.selectedBrowser"
-  );
-  info("Creating an ObjectClient with: " + cpowEval.result.actor);
-
-  const objectClient = new ObjectClient(hud.ui.proxy.client, {
-    actor: cpowEval.result.actor,
-  });
-
-  // Before the fix for Bug 1382833, this wouldn't resolve due to a CPOW error
-  // in the ObjectActor.
-  const prototypeAndProperties = await objectClient.getPrototypeAndProperties();
-
-  // Just a sanity check to make sure a valid packet came back
-  is(
-    prototypeAndProperties.prototype.class,
-    "XBL prototype JSClass",
-    "Looks like a valid response"
-  );
-
-  // The CPOW is in the _contentWindow property.
-  const cpow = prototypeAndProperties.ownProperties._contentWindow.value;
-
-  // But it's only a CPOW in e10s.
-  const e10sCheck = await hud.jsterm.requestEvaluation(
-    "Cu.isCrossProcessWrapper(gBrowser.selectedBrowser._contentWindow)"
-  );
-  if (!e10sCheck.result) {
-    is(cpow.class, "Window", "The object is not a CPOW.");
-    return;
-  }
-
-  is(cpow.class, "CPOW: Window", "The CPOW grip has the right class.");
-
-  // Check that various protocol request methods work for the CPOW.
-  const objClient = new ObjectClient(hud.ui.proxy.client, cpow);
-
-  let response = await objClient.getPrototypeAndProperties();
-  is(
-    Reflect.ownKeys(response.ownProperties).length,
-    0,
-    "No property was retrieved."
-  );
-  is(response.ownSymbols.length, 0, "No symbol property was retrieved.");
-  is(response.prototype.type, "null", "The prototype is null.");
-
-  response = await objClient.enumProperties({ ignoreIndexedProperties: true });
-  let slice = await response.iterator.slice(0, response.iterator.count);
-  is(
-    Reflect.ownKeys(slice.ownProperties).length,
-    0,
-    "No property was retrieved."
-  );
-
-  response = await objClient.enumProperties({});
-  slice = await response.iterator.slice(0, response.iterator.count);
-  is(
-    Reflect.ownKeys(slice.ownProperties).length,
-    0,
-    "No property was retrieved."
-  );
-
-  response = await objClient.getOwnPropertyNames();
-  is(response.ownPropertyNames.length, 0, "No property was retrieved.");
-
-  response = await objClient.getProperty("x");
-  is(response.descriptor, undefined, "The property does not exist.");
-
-  response = await objClient.enumSymbols();
-  slice = await response.iterator.slice(0, response.iterator.count);
-  is(slice.ownSymbols.length, 0, "No symbol property was retrieved.");
-
-  response = await objClient.getPrototype();
-  is(response.prototype.type, "null", "The prototype is null.");
-
-  response = await objClient.getDisplayString();
-  is(response.displayString, "<cpow>", "The CPOW stringifies to <cpow>");
 }
 
 async function checkMessageExists(hud, msg) {

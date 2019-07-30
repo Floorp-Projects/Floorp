@@ -319,6 +319,10 @@ class IProtocol : public HasResultCodes {
   virtual void ActorDestroy(ActorDestroyReason aWhy) {}
   void DestroySubtree(ActorDestroyReason aWhy);
 
+  // Called when IPC has acquired its first reference to the actor. This method
+  // may take references which will later be freed by `ActorDealloc`.
+  virtual void ActorAlloc() {}
+
   // Called when IPC has released its final reference to the actor. It will call
   // the dealloc method, causing the actor to be actually freed.
   //

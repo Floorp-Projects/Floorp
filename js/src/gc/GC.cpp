@@ -1435,6 +1435,8 @@ void GCRuntime::finish() {
 
 bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
                              AutoLockGC& lock) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
   switch (key) {
     case JSGC_MAX_MALLOC_BYTES:
       setMaxMallocBytes(value, lock);
@@ -1703,6 +1705,8 @@ GCSchedulingTunables::GCSchedulingTunables()
           TimeDuration::FromSeconds(TuningDefaults::MinLastDitchGCPeriod)) {}
 
 void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+
   switch (key) {
     case JSGC_MAX_MALLOC_BYTES:
       setMaxMallocBytes(TuningDefaults::MaxMallocBytes, lock);
@@ -2148,24 +2152,10 @@ void ZoneHeapThreshold::updateAfterGC(size_t lastBytes,
                                       const GCSchedulingTunables& tunables,
                                       const GCSchedulingState& state,
                                       const AutoLockGC& lock) {
-  gcHeapGrowthFactor_ =
+  float growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-  gcTriggerBytes_ = computeZoneTriggerBytes(gcHeapGrowthFactor_, lastBytes,
-                                            gckind, tunables, lock);
-}
-
-void ZoneHeapThreshold::updateForRemovedArena(
-    const GCSchedulingTunables& tunables) {
-  size_t amount = ArenaSize * gcHeapGrowthFactor_;
-  MOZ_ASSERT(amount > 0);
-
-  if ((gcTriggerBytes_ < amount) ||
-      (gcTriggerBytes_ - amount <
-       tunables.gcZoneAllocThresholdBase() * gcHeapGrowthFactor_)) {
-    return;
-  }
-
-  gcTriggerBytes_ -= amount;
+  gcTriggerBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, gckind,
+                                            tunables, lock);
 }
 
 /* static */
@@ -3761,26 +3751,30 @@ void GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks) {
 
     AutoLockGC lock(rt);
 
-    // Release any arenas that are now empty, dropping and reaquiring the GC
-    // lock every so often to avoid blocking the main thread from
-    // allocating chunks.
+    // Release any arenas that are now empty.
+    //
+    // Periodically drop and reaquire the GC lock every so often to avoid
+    // blocking the main thread from allocating chunks.
+    //
+    // Also use this opportunity to periodically recalculate the GC thresholds
+    // as we free more memory.
     static const size_t LockReleasePeriod = 32;
     size_t releaseCount = 0;
     Arena* next;
     for (Arena* arena = emptyArenas; arena; arena = next) {
       next = arena->next;
 
-      // We already calculated the zone's GC trigger after foreground
-      // sweeping finished. Now we must update this value.
-      arena->zone->threshold.updateForRemovedArena(tunables);
-
       releaseArena(arena, lock);
       releaseCount++;
       if (releaseCount % LockReleasePeriod == 0) {
         lock.unlock();
         lock.lock();
+        zone->updateGCThresholds(*this, invocationKind, lock);
       }
     }
+
+    // Do a final update now we've finished.
+    zone->updateGCThresholds(*this, invocationKind, lock);
   }
 }
 
@@ -6158,7 +6152,9 @@ static void SweepThing(FreeOp* fop, Shape* shape) {
   }
 }
 
-static void SweepThing(FreeOp* fop, JSScript* script) { AutoSweepJitScript sweep(script); }
+static void SweepThing(FreeOp* fop, JSScript* script) {
+  AutoSweepJitScript sweep(script);
+}
 
 static void SweepThing(FreeOp* fop, ObjectGroup* group) {
   AutoSweepObjectGroup sweep(group);
@@ -9067,14 +9063,6 @@ static bool ZoneGCDelayBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool ZoneGCHeapGrowthFactorGetter(JSContext* cx, unsigned argc,
-                                         Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  AutoLockGC lock(cx->runtime());
-  args.rval().setNumber(cx->zone()->threshold.gcHeapGrowthFactor());
-  return true;
-}
-
 static bool ZoneGCNumberGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setNumber(double(cx->zone()->gcNumber()));
@@ -9140,7 +9128,6 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
                      {"mallocBytesRemaining", ZoneMallocBytesGetter},
                      {"maxMalloc", ZoneMaxMallocGetter},
                      {"delayBytes", ZoneGCDelayBytesGetter},
-                     {"heapGrowthFactor", ZoneGCHeapGrowthFactorGetter},
                      {"gcNumber", ZoneGCNumberGetter}};
 
   for (auto pair : zoneGetters) {

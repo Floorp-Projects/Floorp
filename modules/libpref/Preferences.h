@@ -464,77 +464,77 @@ class Preferences final : public nsIPrefService,
   // static variable. The value will be modified when the pref value is changed
   // but note that even if you modified it, the value isn't assigned to the
   // pref.
-  static nsresult AddBoolVarCache(bool* aVariable, const nsACString& aPref,
-                                  bool aDefault = false);
+  static void AddBoolVarCache(bool* aVariable, const nsACString& aPref,
+                              bool aDefault = false);
   template <MemoryOrdering Order>
-  static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
-                                        const nsACString& aPref,
-                                        bool aDefault = false);
-  static nsresult AddIntVarCache(int32_t* aVariable, const nsACString& aPref,
-                                 int32_t aDefault = 0);
+  static void AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
+                                    const nsACString& aPref,
+                                    bool aDefault = false);
+  static void AddIntVarCache(int32_t* aVariable, const nsACString& aPref,
+                             int32_t aDefault = 0);
   template <MemoryOrdering Order>
-  static nsresult AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
-                                       const nsACString& aPref,
-                                       int32_t aDefault = 0);
-  static nsresult AddUintVarCache(uint32_t* aVariable, const nsACString& aPref,
-                                  uint32_t aDefault = 0);
+  static void AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
+                                   const nsACString& aPref,
+                                   int32_t aDefault = 0);
+  static void AddUintVarCache(uint32_t* aVariable, const nsACString& aPref,
+                              uint32_t aDefault = 0);
   template <MemoryOrdering Order>
-  static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
-                                        const nsACString& aPref,
-                                        uint32_t aDefault = 0);
-  static nsresult AddFloatVarCache(float* aVariable, const nsACString& aPref,
-                                   float aDefault = 0.0f);
+  static void AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
+                                    const nsACString& aPref,
+                                    uint32_t aDefault = 0);
+  static void AddFloatVarCache(float* aVariable, const nsACString& aPref,
+                               float aDefault = 0.0f);
 
-  static nsresult AddAtomicFloatVarCache(std::atomic<float>* aVariable,
-                                         const nsACString& aPref,
-                                         float aDefault = 0.0f);
+  static void AddAtomicFloatVarCache(std::atomic<float>* aVariable,
+                                     const nsACString& aPref,
+                                     float aDefault = 0.0f);
 
   template <int N>
-  static nsresult AddBoolVarCache(bool* aVariable, const char (&aPref)[N],
-                                  bool aDefault = false) {
+  static void AddBoolVarCache(bool* aVariable, const char (&aPref)[N],
+                              bool aDefault = false) {
     return AddBoolVarCache(aVariable, nsLiteralCString(aPref), aDefault);
   }
   template <MemoryOrdering Order, int N>
-  static nsresult AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
-                                        const char (&aPref)[N],
-                                        bool aDefault = false) {
+  static void AddAtomicBoolVarCache(Atomic<bool, Order>* aVariable,
+                                    const char (&aPref)[N],
+                                    bool aDefault = false) {
     return AddAtomicBoolVarCache<Order>(aVariable, nsLiteralCString(aPref),
                                         aDefault);
   }
   template <int N>
-  static nsresult AddIntVarCache(int32_t* aVariable, const char (&aPref)[N],
-                                 int32_t aDefault = 0) {
+  static void AddIntVarCache(int32_t* aVariable, const char (&aPref)[N],
+                             int32_t aDefault = 0) {
     return AddIntVarCache(aVariable, nsLiteralCString(aPref), aDefault);
   }
   template <MemoryOrdering Order, int N>
-  static nsresult AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
-                                       const char (&aPref)[N],
-                                       int32_t aDefault = 0) {
+  static void AddAtomicIntVarCache(Atomic<int32_t, Order>* aVariable,
+                                   const char (&aPref)[N],
+                                   int32_t aDefault = 0) {
     return AddAtomicIntVarCache<Order>(aVariable, nsLiteralCString(aPref),
                                        aDefault);
   }
   template <int N>
-  static nsresult AddUintVarCache(uint32_t* aVariable, const char (&aPref)[N],
-                                  uint32_t aDefault = 0) {
+  static void AddUintVarCache(uint32_t* aVariable, const char (&aPref)[N],
+                              uint32_t aDefault = 0) {
     return AddUintVarCache(aVariable, nsLiteralCString(aPref), aDefault);
   }
   template <MemoryOrdering Order, int N>
-  static nsresult AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
-                                        const char (&aPref)[N],
-                                        uint32_t aDefault = 0) {
+  static void AddAtomicUintVarCache(Atomic<uint32_t, Order>* aVariable,
+                                    const char (&aPref)[N],
+                                    uint32_t aDefault = 0) {
     return AddAtomicUintVarCache<Order>(aVariable, nsLiteralCString(aPref),
                                         aDefault);
   }
   template <int N>
-  static nsresult AddFloatVarCache(float* aVariable, const char (&aPref)[N],
-                                   float aDefault = 0.0f) {
+  static void AddFloatVarCache(float* aVariable, const char (&aPref)[N],
+                               float aDefault = 0.0f) {
     return AddFloatVarCache(aVariable, nsLiteralCString(aPref), aDefault);
   }
 
   template <int N>
-  static nsresult AddAtomicFloatVarCache(std::atomic<float>* aVariable,
-                                         const char (&aPref)[N],
-                                         float aDefault = 0.0f) {
+  static void AddAtomicFloatVarCache(std::atomic<float>* aVariable,
+                                     const char (&aPref)[N],
+                                     float aDefault = 0.0f) {
     return AddAtomicFloatVarCache(aVariable, nsLiteralCString(aPref), aDefault);
   }
 
@@ -605,7 +605,7 @@ class Preferences final : public nsIPrefService,
   static mozilla::Result<mozilla::Ok, const char*> InitInitialObjects(
       bool aIsStartup);
 
-  friend struct PreferencesInternalMethods;
+  friend struct Internals;
 
   static nsresult RegisterCallback(PrefChangedFunc aCallback,
                                    const nsACString& aPref, void* aClosure,

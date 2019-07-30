@@ -37,6 +37,7 @@ TESTING_JS_MODULES += ['test/fixtures/OSKeyStoreTestUtils.jsm']
 BROWSER_CHROME_MANIFESTS += [
     'test/browser/browser.ini',
     'test/browser/creditCard/browser.ini',
+    'test/browser/focus-leak/browser.ini',
 ]
 
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']

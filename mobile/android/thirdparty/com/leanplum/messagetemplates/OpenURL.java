@@ -80,9 +80,8 @@ class OpenURL {
                           for (ResolveInfo resolveInfo : resolveInfoList) {
                             if (resolveInfo != null && resolveInfo.activityInfo != null &&
                                 resolveInfo.activityInfo.name != null) {
-                              final String contextPackageName = context.getPackageName();
-                              if (resolveInfo.activityInfo.name.contains(contextPackageName) ||
-                                      resolveInfo.activityInfo.packageName.contains(contextPackageName)) {
+                              if (resolveInfo.activityInfo.name.contains(
+                                  context.getPackageName())) {
                                 uriIntent.setPackage(resolveInfo.activityInfo.packageName);
                               }
                             }

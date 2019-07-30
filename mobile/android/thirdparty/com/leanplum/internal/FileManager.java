@@ -108,8 +108,8 @@ public class FileManager {
       if (!FileManager.fileExistsAtPath(realPath)) {
         realPath = FileManager.fileRelativeToDocuments(stringValue);
         if (!FileManager.fileExistsAtPath(realPath)) {
-          Request downloadRequest = Request.get(Constants.Methods.DOWNLOAD_FILE, null);
-          downloadRequest.onResponse(new Request.ResponseCallback() {
+          RequestOld downloadRequest = RequestOld.get(Constants.Methods.DOWNLOAD_FILE, null);
+          downloadRequest.onResponse(new RequestOld.ResponseCallback() {
             @Override
             public void response(JSONObject response) {
               if (onComplete != null) {
@@ -117,7 +117,7 @@ public class FileManager {
               }
             }
           });
-          downloadRequest.onError(new Request.ErrorCallback() {
+          downloadRequest.onError(new RequestOld.ErrorCallback() {
             @Override
             public void error(Exception e) {
               if (onComplete != null) {
@@ -130,6 +130,7 @@ public class FileManager {
         }
       }
     }
+    Leanplum.countAggregator().incrementCount("maybe_download_file");
     return DownloadFileResult.NONE;
   }
 

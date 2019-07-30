@@ -29,7 +29,7 @@ orig_sigint = signal.getsignal(signal.SIGINT)
 
 
 def _run_worker(config, paths, **lintargs):
-    result = ResultSummary()
+    result = ResultSummary(lintargs['root'])
 
     if SHUTDOWN:
         return result
@@ -106,7 +106,7 @@ class LintRoller(object):
         self.lintargs['root'] = root
 
         # result state
-        self.result = ResultSummary()
+        self.result = ResultSummary(root)
 
         self.root = root
         self.exclude = exclude or []

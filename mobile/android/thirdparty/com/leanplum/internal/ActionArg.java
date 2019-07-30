@@ -24,6 +24,7 @@ package com.leanplum.internal;
 import android.text.TextUtils;
 
 import java.io.InputStream;
+import com.leanplum.Leanplum;
 
 /**
  * Represents an argument for a message or action.
@@ -46,6 +47,7 @@ public class ActionArg<T> {
     arg.name = name;
     arg.kind = kind;
     arg.defaultValue = defaultValue;
+    Leanplum.countAggregator().incrementCount("arg_named");
     return arg;
   }
 
