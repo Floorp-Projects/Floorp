@@ -11,12 +11,8 @@ cd $HOME_DIR/src
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-git clone -n https://github.com/llvm/llvm-project
+cd $MOZ_FETCHES_DIR/llvm-project/llvm
 
-cd llvm-project
-git checkout 3b7811f6441be13c9f613f81ef93297d231b4f8e
-
-cd llvm
 mkdir build
 cd build
 

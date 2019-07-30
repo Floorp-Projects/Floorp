@@ -268,3 +268,10 @@ libdmg-hfsplus:
         type: git
         repo: https://github.com/mozilla/libdmg-hfsplus/
         revision: 2ee327795680101d36f9700bd0fb618362237718
+
+llvm-for-dsymutil:
+    description: llvm source code for dsymutil
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: 3b7811f6441be13c9f613f81ef93297d231b4f8e
