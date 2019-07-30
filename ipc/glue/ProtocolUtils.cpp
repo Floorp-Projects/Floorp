@@ -322,6 +322,9 @@ ActorLifecycleProxy::ActorLifecycleProxy(IProtocol* aActor) : mActor(aActor) {
   if (mActor->mManager) {
     mManager = mActor->mManager->mLifecycleProxy;
   }
+
+  // Record that we've taken our first reference to our actor.
+  mActor->ActorAlloc();
 }
 
 ActorLifecycleProxy::~ActorLifecycleProxy() {

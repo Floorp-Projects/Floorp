@@ -22,6 +22,8 @@
 package com.leanplum.internal;
 
 
+import org.mozilla.gecko.thirdparty_unused.BuildConfig;
+
 import java.util.HashMap;
 
 /**
@@ -132,7 +134,10 @@ public class Log {
       case PRIVATE:
         maybeSendLog(tag + prefix + message);
         return;
-      default:
+      default: // DEBUG
+        if (BuildConfig.DEBUG) {
+          android.util.Log.d(tag, prefix + message);
+        }
     }
   }
 
@@ -183,7 +188,7 @@ public class Log {
       HashMap<String, Object> params = new HashMap<>();
       params.put(Constants.Params.TYPE, Constants.Values.SDK_LOG);
       params.put(Constants.Params.MESSAGE, message);
-      Request.post(Constants.Methods.LOG, params).sendEventually();
+      RequestOld.post(Constants.Methods.LOG, params).sendEventually();
     } catch (Throwable t) {
       android.util.Log.e("Leanplum", "Unable to send log.", t);
     } finally {

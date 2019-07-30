@@ -30,7 +30,7 @@ namespace dom {
  * See `dom/docs/Fission-IPC-Diagram.svg` for an overview of the DOM IPC
  * actors.
  */
-async protocol PBrowserBridge {
+async refcounted protocol PBrowserBridge {
   manager PBrowser;
 
 child:

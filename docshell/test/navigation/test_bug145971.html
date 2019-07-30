@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script>
+      let pass = false;
+      let initialLoad = false;
+      function checkNavigationTypeEquals2() {
+        if (performance.navigation.type == 2) {
+          pass = true;
+        }
+        testDone();
+      }
+
+      function testDone() {
+        opener.ok(pass, "Bug 145971: Navigation type does not equal 2 when restoring document from session history.");
+        opener.nextTest();
+        window.close();
+      }
+
+      function test() {
+        window.onpageshow = checkNavigationTypeEquals2;
+        window.location.href = 'goback.html';
+      }
+    </script>
+  </head>
+  <body onload="setTimeout(test, 0);">
+  Testing bug 145971.
+  </body>
+</html>

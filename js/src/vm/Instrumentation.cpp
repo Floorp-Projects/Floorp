@@ -136,8 +136,9 @@ bool RealmInstrumentation::install(JSContext* cx, Handle<GlobalObject*> global,
     kinds |= (uint32_t) kind;
   }
 
-  UniquePtr<RealmInstrumentation> instrumentation =
-      MakeUnique<RealmInstrumentation>(cx->zone(), callback, dbgObject, kinds);
+  Rooted<UniquePtr<RealmInstrumentation>> instrumentation(
+      cx,
+      MakeUnique<RealmInstrumentation>(cx->zone(), callback, dbgObject, kinds));
   if (!instrumentation) {
     ReportOutOfMemory(cx);
     return false;

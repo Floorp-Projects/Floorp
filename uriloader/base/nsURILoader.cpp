@@ -66,9 +66,9 @@ mozilla::LazyLogModule nsURILoader::mLog("URILoader");
 static uint32_t sConvertDataLimit = 20;
 
 static bool InitPreferences() {
-  nsresult rv = mozilla::Preferences::AddUintVarCache(
+  mozilla::Preferences::AddUintVarCache(
       &sConvertDataLimit, "general.document_open_conversion_depth_limit", 20);
-  return NS_SUCCEEDED(rv);
+  return true;
 }
 
 /**

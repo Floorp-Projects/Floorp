@@ -41,13 +41,13 @@ import android.support.annotation.RequiresPermission;
 import android.text.TextUtils;
 import android.util.TypedValue;
 
-import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.leanplum.Leanplum;
 import com.leanplum.LeanplumActivityHelper;
 import com.leanplum.LeanplumDeviceIdMode;
 import com.leanplum.LeanplumException;
 import com.leanplum.internal.Constants.Methods;
 import com.leanplum.internal.Constants.Params;
+import com.leanplum.monitoring.ExceptionHandler;
 import com.leanplum.utils.SharedPreferencesUtil;
 
 import org.json.JSONException;
@@ -203,14 +203,18 @@ public class Util {
    */
   private static DeviceIdInfo getAdvertisingId(Context caller) throws Exception {
     try {
-      AdvertisingIdClient.Info info = AdvertisingIdClient.getAdvertisingIdInfo(caller);
-      if (info != null) {
-        String advertisingId = info.getId();
-        String deviceId = checkDeviceId("advertising id", advertisingId);
-        if (deviceId != null) {
-          boolean limitedTracking = info.isLimitAdTrackingEnabled();
-          return new DeviceIdInfo(deviceId, limitedTracking);
-        }
+      // Using reflection because the app will either crash or print warnings
+      // if the app doesn't link to Google Play Services, even if this method is not called.
+      Object adInfo = Class.forName("com.google.android.gms.ads.identifier.AdvertisingIdClient")
+          .getMethod("getAdvertisingIdInfo", Context.class).invoke(null, caller);
+      String id = checkDeviceId(
+          "advertising id", (String) adInfo.getClass().getMethod("getId")
+              .invoke(adInfo));
+      if (id != null) {
+        boolean limitTracking = (Boolean) adInfo.getClass()
+            .getMethod("isLimitAdTrackingEnabled").invoke(adInfo);
+        Log.v("Using advertising device id: " + id);
+        return new DeviceIdInfo(id, limitTracking);
       }
     } catch (Throwable t) {
       Log.e("Error getting advertising ID. Google Play Services are not available: ", t);
@@ -450,7 +454,7 @@ public class Util {
     Uri.Builder builder = new Uri.Builder();
     for (Map.Entry<String, Object> pair : params.entrySet()) {
       if (pair.getValue() == null) {
-        Log.w("Request parameter for key: " + pair.getKey() + " is null.");
+        Log.w("RequestOld parameter for key: " + pair.getKey() + " is null.");
         continue;
       }
       builder.appendQueryParameter(pair.getKey(), pair.getValue().toString());
@@ -550,7 +554,7 @@ public class Util {
     urlConnection.setInstanceFollowRedirects(true);
     Context context = Leanplum.getContext();
     urlConnection.setRequestProperty("User-Agent",
-        getApplicationName(context) + "/" + getVersionName() + "/" + Request.appId() + "/" +
+        getApplicationName(context) + "/" + getVersionName() + "/" + RequestOld.appId() + "/" +
             Constants.CLIENT + "/" + Constants.LEANPLUM_VERSION + "/" + getSystemName() + "/" +
             getSystemVersion() + "/" + Constants.LEANPLUM_PACKAGE_IDENTIFIER);
     return urlConnection;
@@ -835,9 +839,18 @@ public class Util {
   }
 
   /**
+   * Initialize exception handling in the SDK.
+   */
+  public static void initExceptionHandling(Context context) {
+    ExceptionHandler.getInstance().setContext(context);
+  }
+
+  /**
    * Handles uncaught exceptions in the SDK.
    */
   public static void handleException(Throwable t) {
+    ExceptionHandler.getInstance().reportException(t);
+
     if (t instanceof OutOfMemoryError) {
       if (Constants.isDevelopmentModeEnabled) {
         throw (OutOfMemoryError) t;
@@ -880,7 +893,7 @@ public class Util {
       params.put("stackTrace", stringWriter.toString());
 
       params.put(Params.VERSION_NAME, versionName);
-      Request.post(Methods.LOG, params).send();
+      RequestOld.post(Methods.LOG, params).send();
     } catch (Throwable t2) {
       Log.e("Unable to send error report.", t2);
     }

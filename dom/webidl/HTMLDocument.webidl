@@ -10,23 +10,3 @@ interface HTMLDocument : Document {
   [Throws]
   getter object (DOMString name);
 };
-
-partial interface HTMLDocument {
-  /*
-   * Number of nodes that have been blocked by the Safebrowsing API to prevent
-   * tracking, cryptomining and so on. This method is for testing only.
-   */
-  [ChromeOnly, Pure]
-  readonly attribute long blockedNodeByClassifierCount;
-
-  /*
-   * List of nodes that have been blocked by the Safebrowsing API to prevent
-   * tracking, fingerprinting, cryptomining and so on. This method is for
-   * testing only.
-   */
-  [ChromeOnly, Pure]
-  readonly attribute NodeList blockedNodesByClassifier;
-
-  [ChromeOnly]
-  void userInteractionForTesting();
-};

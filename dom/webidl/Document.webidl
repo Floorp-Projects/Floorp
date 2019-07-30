@@ -652,3 +652,29 @@ partial interface Document {
   [ChromeOnly]
   void setKeyPressEventModel(unsigned short aKeyPressEventModel);
 };
+
+// Extensions to return information about about the nodes blocked by the
+// Safebrowsing API inside a document.
+partial interface Document {
+  /*
+   * Number of nodes that have been blocked by the Safebrowsing API to prevent
+   * tracking, cryptomining and so on. This method is for testing only.
+   */
+  [ChromeOnly, Pure]
+  readonly attribute long blockedNodeByClassifierCount;
+
+  /*
+   * List of nodes that have been blocked by the Safebrowsing API to prevent
+   * tracking, fingerprinting, cryptomining and so on. This method is for
+   * testing only.
+   */
+  [ChromeOnly, Pure]
+  readonly attribute NodeList blockedNodesByClassifier;
+};
+
+// Extension to programmatically simulate a user interaction on a document,
+// used for testing.
+partial interface Document {
+  [ChromeOnly, BinaryName="setUserHasInteracted"]
+  void userInteractionForTesting();
+};

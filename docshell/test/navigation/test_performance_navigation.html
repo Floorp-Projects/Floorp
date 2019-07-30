@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=
+-->
+<head>
+  <title>Test for Bug </title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body onload="nextTest()">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">Mozilla Bug </a>
+<p id="display"></p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug  **/
+
+var testFiles =
+  [ "test_bug145971.html"
+  ];
+
+var testWindow;
+function nextTest_() {
+  if (testFiles.length) {
+    let nextFile = testFiles.shift();
+    info("Running " + nextFile);
+    testWindow = window.open(nextFile, "", "width=360,height=480");
+  } else {
+    SimpleTest.finish();
+  }
+}
+
+function nextTest() {
+  setTimeout(nextTest_, 0);
+}
+
+</script>
+</pre>
+</body>
+</html>

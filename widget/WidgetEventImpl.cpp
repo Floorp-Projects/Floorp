@@ -1041,10 +1041,8 @@ int32_t WidgetKeyboardEvent::GenericAccessModifierKeyPref() {
   static bool sInitialized = false;
   static int32_t sValue = -1;
   if (!sInitialized) {
-    nsresult rv =
-        Preferences::AddIntVarCache(&sValue, "ui.key.generalAccessKey", sValue);
-    sInitialized = NS_SUCCEEDED(rv);
-    MOZ_ASSERT(sInitialized);
+    Preferences::AddIntVarCache(&sValue, "ui.key.generalAccessKey", sValue);
+    sInitialized = true;
   }
   return sValue;
 }
@@ -1054,10 +1052,8 @@ int32_t WidgetKeyboardEvent::ChromeAccessModifierMaskPref() {
   static bool sInitialized = false;
   static int32_t sValue = 0;
   if (!sInitialized) {
-    nsresult rv =
-        Preferences::AddIntVarCache(&sValue, "ui.key.chromeAccess", sValue);
-    sInitialized = NS_SUCCEEDED(rv);
-    MOZ_ASSERT(sInitialized);
+    Preferences::AddIntVarCache(&sValue, "ui.key.chromeAccess", sValue);
+    sInitialized = true;
   }
   return sValue;
 }
@@ -1067,10 +1063,8 @@ int32_t WidgetKeyboardEvent::ContentAccessModifierMaskPref() {
   static bool sInitialized = false;
   static int32_t sValue = 0;
   if (!sInitialized) {
-    nsresult rv =
-        Preferences::AddIntVarCache(&sValue, "ui.key.contentAccess", sValue);
-    sInitialized = NS_SUCCEEDED(rv);
-    MOZ_ASSERT(sInitialized);
+    Preferences::AddIntVarCache(&sValue, "ui.key.contentAccess", sValue);
+    sInitialized = true;
   }
   return sValue;
 }
