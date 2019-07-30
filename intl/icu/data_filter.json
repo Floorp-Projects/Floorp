@@ -146,6 +146,45 @@
                 "-/UCARules",
                 "-/collations/*/Sequence"
             ]
+        },
+        {
+            "categories": [
+                "locales_tree"
+            ],
+            "rules": [
+                "-/AuxExemplarCharacters",
+                "-/Ellipsis",
+                "-/ExemplarCharacters",
+                "-/ExemplarCharactersIndex",
+                "-/ExemplarCharactersNumbers",
+                "-/ExemplarCharactersPunctuation",
+                "-/MoreInformation",
+                "-/NumberElements/minimalPairs",
+                "-/characterLabel",
+                "-/delimiters",
+                "-/fields/mon",
+                "-/fields/mon-narrow",
+                "-/fields/mon-short",
+                "-/fields/tue",
+                "-/fields/tue-narrow",
+                "-/fields/tue-short",
+                "-/fields/wed",
+                "-/fields/wed-narrow",
+                "-/fields/wed-short",
+                "-/fields/thu",
+                "-/fields/thu-narrow",
+                "-/fields/thu-short",
+                "-/fields/fri",
+                "-/fields/fri-narrow",
+                "-/fields/fri-short",
+                "-/fields/sat",
+                "-/fields/sat-narrow",
+                "-/fields/sat-short",
+                "-/fields/sun",
+                "-/fields/sun-narrow",
+                "-/fields/sun-short",
+                "-/measurementSystemNames"
+            ]
         }
     ]
 }
