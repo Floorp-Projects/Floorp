@@ -1053,8 +1053,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   //
   // The algorithm below is the "tortoise and the hare" algorithm. See bug
   // 994444 for more explanation.
-  jsbytecode* skippedLoopEntry = nullptr;
-  if (!resumeAfter) {
+  if (!isPrologueBailout && !resumeAfter) {
+    jsbytecode* skippedLoopEntry = nullptr;
     jsbytecode* fasterPc = pc;
     while (true) {
       pc = GetNextNonLoopEntryPc(pc, &skippedLoopEntry);
@@ -1201,12 +1201,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       MOZ_ASSERT(numUnsynced == 0);
       opReturnAddr = baselineScript->bailoutPrologueEntryAddr();
       JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
-
-      // Undo the progress for any loop entry we thought we were skipping
-      // over earlier.
-      if (skippedLoopEntry && script->trackRecordReplayProgress()) {
-        --*mozilla::recordreplay::ExecutionProgressCounter();
-      }
     } else {
       opReturnAddr = nativeCodeForPC;
     }
