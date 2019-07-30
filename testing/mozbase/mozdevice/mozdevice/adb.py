@@ -2313,8 +2313,6 @@ class ADBDevice(ADBCommand):
                 local = '/'.join(local.rstrip('/').split('/')[:-1])
         try:
             self.command_output(["pull", remote, local], timeout=timeout)
-        except BaseException:
-            raise
         finally:
             if copy_required:
                 dir_util.copy_tree(local, original_local)
