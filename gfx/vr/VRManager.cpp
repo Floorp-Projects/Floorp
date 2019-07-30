@@ -1212,7 +1212,7 @@ void VRManager::SubmitFrameInternal(const layers::SurfaceDescriptor& aTexture,
     mCurrentSubmitTask = nullptr;
   }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(XP_MACOSX)
 
   /**
    * Trigger the next VSync immediately after we are successfully
@@ -1228,6 +1228,9 @@ void VRManager::SubmitFrameInternal(const layers::SurfaceDescriptor& aTexture,
 
   loop->PostTask(NewRunnableMethod("gfx::VRManager::StartFrame", this,
                                    &VRManager::StartFrame));
+#elif defined(MOZ_WIDGET_ANDROID)
+  // We are already in the CompositorThreadHolder event loop on Android.
+  StartFrame();
 #endif
 }
 

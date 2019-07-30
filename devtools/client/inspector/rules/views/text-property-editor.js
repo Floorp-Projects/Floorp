@@ -340,7 +340,9 @@ TextPropertyEditor.prototype = {
         multiline: true,
         maxWidth: () => this.container.getBoundingClientRect().width,
         cssProperties: this.cssProperties,
-        cssVariables: this.rule.elementStyle.variables,
+        cssVariables:
+          this.rule.elementStyle.variablesMap.get(this.rule.pseudoElement) ||
+          [],
         getGridLineNames: this.getGridlineNames,
       });
     }
@@ -489,7 +491,8 @@ TextPropertyEditor.prototype = {
       baseURI: this.sheetHref,
       unmatchedVariableClass: "ruleview-unmatched-variable",
       matchedVariableClass: "ruleview-variable",
-      isVariableInUse: varName => this.rule.elementStyle.getVariable(varName),
+      isVariableInUse: varName =>
+        this.rule.elementStyle.getVariable(varName, this.rule.pseudoElement),
     };
     const frag = outputParser.parseCssProperty(name, val, parserOptions);
 

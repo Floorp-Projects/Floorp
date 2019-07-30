@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::common::{from_cookie, to_cookie, Cookie, Timeouts};
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Locator {
     pub using: Selector,
@@ -22,17 +24,28 @@ pub enum Selector {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
+    #[serde(
+        rename = "WebDriver:AddCookie",
+        serialize_with = "to_cookie",
+        deserialize_with = "from_cookie"
+    )]
+    AddCookie(Cookie),
     #[serde(rename = "WebDriver:FindElement")]
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
     FindElements(Locator),
+    #[serde(rename = "WebDriver:GetCookies")]
+    GetCookies,
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
+    #[serde(rename = "WebDriver:SetTimeouts")]
+    SetTimeouts(Timeouts),
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::common::Date;
     use crate::test::assert_ser_de;
     use serde_json::json;
 
@@ -88,6 +101,21 @@ mod tests {
         };
         let json = json!({"WebDriver:FindElement": {"using": "css selector", "value": "value"}});
         assert_ser_de(&Command::FindElement(locator), json);
+    }
+
+    #[test]
+    fn test_command_with_wrapper_params() {
+        let cookie = Cookie {
+            name: "hello".into(),
+            value: "world".into(),
+            path: None,
+            domain: None,
+            secure: false,
+            http_only: false,
+            expiry: Some(Date(1564488092)),
+        };
+        let json = json!({"WebDriver:AddCookie": {"cookie": {"name": "hello", "value": "world", "secure": false, "httpOnly": false, "expiry": 1564488092}}});
+        assert_ser_de(&Command::AddCookie(cookie), json);
     }
 
     #[test]

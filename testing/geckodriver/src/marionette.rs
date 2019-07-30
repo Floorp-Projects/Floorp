@@ -2,6 +2,9 @@ use crate::command::{
     AddonInstallParameters, AddonUninstallParameters, GeckoContextParameters,
     GeckoExtensionCommand, GeckoExtensionRoute, XblLocatorParameters, CHROME_ELEMENT_KEY,
 };
+use marionette_rs::common::{
+    Cookie as MarionetteCookie, Date as MarionetteDate, Timeouts as MarionetteTimeouts,
+};
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Locator as MarionetteLocator,
@@ -43,7 +46,7 @@ use webdriver::command::{
 };
 use webdriver::command::{WebDriverCommand, WebDriverMessage};
 use webdriver::common::{
-    Cookie, FrameId, LocatorStrategy, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY,
+    Cookie, Date, FrameId, LocatorStrategy, WebElement, ELEMENT_KEY, FRAME_KEY, WINDOW_KEY,
 };
 use webdriver::error::{ErrorStatus, WebDriverError, WebDriverResult};
 use webdriver::response::{
@@ -794,13 +797,20 @@ fn try_convert_to_marionette_message(
 ) -> WebDriverResult<Option<Command>> {
     use self::WebDriverCommand::*;
     Ok(match msg.command {
+        AddCookie(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::AddCookie(
+            x.to_marionette()?,
+        ))),
         FindElement(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::FindElement(
             x.to_marionette()?,
         ))),
         FindElements(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
+        GetCookies => Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies)),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
+            x.to_marionette()?,
+        ))),
         _ => None,
     })
 }
@@ -857,7 +867,6 @@ impl MarionetteCommand {
                     // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
                     (Some("WebDriver:AcceptDialog"), None)
                 }
-                AddCookie(ref x) => (Some("WebDriver:AddCookie"), Some(x.to_marionette())),
                 NewWindow(ref x) => (Some("WebDriver:NewWindow"), Some(x.to_marionette())),
                 CloseWindow => (Some("WebDriver:CloseWindow"), None),
                 DeleteCookie(ref x) => {
@@ -921,7 +930,7 @@ impl MarionetteCommand {
                 Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
                 GetAlertText => (Some("WebDriver:GetAlertText"), None),
                 GetActiveElement => (Some("WebDriver:GetActiveElement"), None),
-                GetCookies | GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
+                GetNamedCookie(_) => (Some("WebDriver:GetCookies"), None),
                 GetCurrentUrl => (Some("WebDriver:GetCurrentURL"), None),
                 GetCSSValue(ref e, ref x) => {
                     let mut data = Map::new();
@@ -995,7 +1004,6 @@ impl MarionetteCommand {
                     );
                     (Some("WebDriver:SendAlertText"), Some(Ok(data)))
                 }
-                SetTimeouts(ref x) => (Some("WebDriver:SetTimeouts"), Some(x.to_marionette())),
                 SetWindowRect(ref x) => (Some("WebDriver:SetWindowRect"), Some(x.to_marionette())),
                 SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
                 SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
@@ -1425,26 +1433,26 @@ impl ToMarionette<Map<String, Value>> for ActionsParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for AddCookieParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        let mut cookie = Map::new();
-        cookie.insert("name".to_string(), serde_json::to_value(&self.name)?);
-        cookie.insert("value".to_string(), serde_json::to_value(&self.value)?);
-        if self.path.is_some() {
-            cookie.insert("path".to_string(), serde_json::to_value(&self.path)?);
-        }
-        if self.domain.is_some() {
-            cookie.insert("domain".to_string(), serde_json::to_value(&self.domain)?);
-        }
-        if self.expiry.is_some() {
-            cookie.insert("expiry".to_string(), serde_json::to_value(&self.expiry)?);
-        }
-        cookie.insert("secure".to_string(), serde_json::to_value(self.secure)?);
-        cookie.insert("httpOnly".to_string(), serde_json::to_value(self.httpOnly)?);
+impl ToMarionette<MarionetteCookie> for AddCookieParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteCookie> {
+        Ok(MarionetteCookie {
+            name: self.name.clone(),
+            value: self.value.clone(),
+            path: self.path.clone(),
+            domain: self.domain.clone(),
+            secure: self.secure.clone(),
+            http_only: self.httpOnly.clone(),
+            expiry: match &self.expiry {
+                Some(date) => Some(date.to_marionette()?),
+                None => None,
+            },
+        })
+    }
+}
 
-        let mut data = Map::new();
-        data.insert("cookie".to_string(), serde_json::to_value(cookie)?);
-        Ok(data)
+impl ToMarionette<MarionetteDate> for Date {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteDate> {
+        Ok(MarionetteDate(self.0))
     }
 }
 
@@ -1558,14 +1566,13 @@ impl ToMarionette<Map<String, Value>> for SwitchToWindowParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for TimeoutsParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionetteTimeouts> for TimeoutsParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteTimeouts> {
+        Ok(MarionetteTimeouts {
+            implicit: self.implicit.clone(),
+            page_load: self.page_load.clone(),
+            script: self.script.clone(),
+        })
     }
 }
 
