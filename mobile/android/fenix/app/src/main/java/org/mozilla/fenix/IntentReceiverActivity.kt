@@ -54,7 +54,7 @@ class IntentReceiverActivity : Activity() {
                 intent.setClassName(applicationContext, activityClass.java.name)
                 true
             }
-            intent.action == Intent.ACTION_VIEW -> {
+            intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_SEND -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
                 if (!intent.getBooleanExtra(NotificationManager.RECEIVE_TABS_TAG, false)) {
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
