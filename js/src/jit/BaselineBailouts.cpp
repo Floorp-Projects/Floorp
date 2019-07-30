@@ -1106,28 +1106,17 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   // If this was the last inline frame, or we are bailing out to a catch or
   // finally block in this frame, then unpacking is almost done.
   if (!iter.moreFrames() || catchingException) {
-    bool propagatingIonExceptionForDebugMode =
-        (excInfo && excInfo->propagatingIonExceptionForDebugMode());
-
-    // If the opcode is monitored we should monitor the top stack value when
-    // we finish the bailout. For now we save this value in the BailoutInfo
-    // because we pop values into R0/R1 below, but once we resume into the
-    // interpreter we have a synced stack and can use the frame's top stack
-    // value directly.
-    if (resumeAfter && (CodeSpec[op].format & JOF_TYPESET) &&
-        !propagatingIonExceptionForDebugMode) {
-      builder.setMonitorPC(pc);
-    }
-
     builder.setResumeFramePtr(prevFramePtr);
 
+    // Compute the native address (within the Baseline Interpreter) that we will
+    // resume at and initialize the frame's interpreter fields.
     uint8_t* resumeAddr;
     if (isPrologueBailout) {
       JitSpew(JitSpew_BaselineBailouts, "      Resuming into prologue.");
       MOZ_ASSERT(pc == script->code());
       blFrame->setInterpreterFieldsForPrologueBailout(script);
       resumeAddr = baselineInterp.bailoutPrologueEntryAddr();
-    } else if (propagatingIonExceptionForDebugMode) {
+    } else if (excInfo && excInfo->propagatingIonExceptionForDebugMode()) {
       // When propagating an exception for debug mode, set the
       // resume pc to the throwing pc, so that Debugger hooks report
       // the correct pc offset of the throwing op instead of its
@@ -1136,6 +1125,11 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       blFrame->setInterpreterFields(script, throwPC);
       resumeAddr = baselineInterp.interpretOpAddr().value;
     } else {
+      // If the opcode is monitored we should monitor the top stack value when
+      // we finish the bailout in FinishBailoutToBaseline.
+      if (resumeAfter && (CodeSpec[op].format & JOF_TYPESET)) {
+        builder.setMonitorPC(pc);
+      }
       jsbytecode* resumePC = GetResumePC(script, pc, resumeAfter);
       blFrame->setInterpreterFields(script, resumePC);
       resumeAddr = baselineInterp.interpretOpAddr().value;
