@@ -372,8 +372,9 @@
 
         for (let [selector, newAttr] of list) {
           if (!(selector in this._inheritedElements)) {
-            let parent = this.shadowRoot || this;
-            this._inheritedElements[selector] = parent.querySelector(selector);
+            this._inheritedElements[
+              selector
+            ] = this.getElementForAttrInheritance(selector);
           }
           let el = this._inheritedElements[selector];
           if (el) {
@@ -386,6 +387,51 @@
             }
           }
         }
+      }
+
+      /**
+       * Used in setting up attribute inheritance. Takes a selector and returns
+       * an element for that selector from shadow DOM if there is a shadowRoot,
+       * or from the light DOM if not.
+       *
+       * Here's one problem this solves. ElementB extends ElementA which extends
+       * MozXULElement. ElementA has a shadowRoot. ElementB tries to inherit
+       * attributes in light DOM by calling `initializeAttributeInheritance`
+       * but that fails because it defaults to inheriting from the shadow DOM
+       * and not the light DOM. (See bug 1545824.)
+       *
+       * To solve this, ElementB can override `getElementForAttrInheritance` so
+       * it queries the light DOM for some selectors as needed. For example:
+       *
+       *  class ElementA extends MozXULElement {
+       *    static get inheritedAttributes() {
+       *      return { ".one": "attr" };
+       *    }
+       *  }
+       *
+       *  class ElementB extends customElements.get("elementa") {
+       *    static get inheritedAttributes() {
+       *      return Object.assign({}, super.inheritedAttributes(), {
+       *        ".two": "attr",
+       *      });
+       *    }
+       *    getElementForAttrInheritance(selector) {
+       *      if (selector == ".two") {
+       *        return this.querySelector(selector)
+       *      } else {
+       *        return super.getElementForAttrInheritance(selector);
+       *      }
+       *    }
+       *  }
+       *
+       * @param {string} selector
+       *        A selector used to query an element.
+       *
+       * @return {Element} The element found by the selector.
+       */
+      getElementForAttrInheritance(selector) {
+        let parent = this.shadowRoot || this;
+        return parent.querySelector(selector);
       }
 
       /**
