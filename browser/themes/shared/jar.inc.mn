@@ -38,6 +38,7 @@
   skin/classic/browser/controlcenter/info.svg                  (../shared/controlcenter/info.svg)
   skin/classic/browser/controlcenter/permissions.svg           (../shared/controlcenter/permissions.svg)
   skin/classic/browser/controlcenter/socialblock.svg           (../shared/controlcenter/socialblock.svg)
+  skin/classic/browser/controlcenter/socialblock-disabled.svg  (../shared/controlcenter/socialblock-disabled.svg)
   skin/classic/browser/controlcenter/tracker-image.svg         (../shared/controlcenter/tracker-image.svg)
   skin/classic/browser/controlcenter/trackers.svg              (../shared/controlcenter/trackers.svg)
   skin/classic/browser/controlcenter/trackers-disabled.svg     (../shared/controlcenter/trackers-disabled.svg)
