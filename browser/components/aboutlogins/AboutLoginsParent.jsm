@@ -116,6 +116,16 @@ var AboutLoginsParent = {
         Services.logins.removeLogin(login);
         break;
       }
+      case "AboutLogins:SyncEnable": {
+        message.target.ownerGlobal.gSync.openFxAEmailFirstPage(
+          "password-manager"
+        );
+        break;
+      }
+      case "AboutLogins:SyncOptions": {
+        message.target.ownerGlobal.gSync.openFxAManagePage("password-manager");
+        break;
+      }
       case "AboutLogins:Import": {
         try {
           MigrationUtils.showMigrationWizard(message.target.ownerGlobal, [
@@ -246,6 +256,11 @@ var AboutLoginsParent = {
         const logins = await this.getAllLogins();
         try {
           messageManager.sendAsyncMessage("AboutLogins:AllLogins", logins);
+
+          let syncState = this.getSyncState();
+          messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
+          this.updatePasswordSyncNotificationState();
+
           if (!BREACH_ALERTS_ENABLED) {
             return;
           }
@@ -257,9 +272,6 @@ var AboutLoginsParent = {
             "AboutLogins:UpdateBreaches",
             breachesByLoginGUID
           );
-          let syncState = this.getSyncState();
-          messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
-          this.updatePasswordSyncNotificationState();
         } catch (ex) {
           if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
             throw ex;

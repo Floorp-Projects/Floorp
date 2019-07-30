@@ -20,7 +20,28 @@ export default class FxAccountsButton extends HTMLElement {
     this._loggedInView = shadowRoot.querySelector(".logged-in-view");
     this._emailText = shadowRoot.querySelector(".fxaccount-email");
 
+    this._avatarButton.addEventListener("click", this);
+    this._enableButton.addEventListener("click", this);
+
     this.render();
+  }
+
+  handleEvent(event) {
+    if (event.target == this._avatarButton) {
+      document.dispatchEvent(
+        new CustomEvent("AboutLoginsSyncOptions", {
+          bubbles: true,
+        })
+      );
+      return;
+    }
+    if (event.target == this._enableButton) {
+      document.dispatchEvent(
+        new CustomEvent("AboutLoginsSyncEnable", {
+          bubbles: true,
+        })
+      );
+    }
   }
 
   render() {
