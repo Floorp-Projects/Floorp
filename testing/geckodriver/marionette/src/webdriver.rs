@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::common::{from_cookie, to_cookie, Cookie, Timeouts};
+use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Timeouts};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Locator {
@@ -30,6 +30,14 @@ pub enum Command {
         deserialize_with = "from_cookie"
     )]
     AddCookie(Cookie),
+    #[serde(
+        rename = "WebDriver:DeleteCookie",
+        serialize_with = "to_name",
+        deserialize_with = "from_name"
+    )]
+    DeleteCookie(String),
+    #[serde(rename = "WebDriver:DeleteAllCookies")]
+    DeleteCookies,
     #[serde(rename = "WebDriver:FindElement")]
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
@@ -126,5 +134,11 @@ mod tests {
     #[test]
     fn test_json_command_invalid() {
         assert!(serde_json::from_value::<Command>(json!("foo")).is_err());
+    }
+
+    #[test]
+    fn test_json_delete_cookie_command() {
+        let json = json!({"WebDriver:DeleteCookie": {"name": "foo"}});
+        assert_ser_de(&Command::DeleteCookie("foo".into()), json);
     }
 }
