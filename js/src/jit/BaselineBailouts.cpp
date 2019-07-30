@@ -432,15 +432,49 @@ static inline void* GetStubReturnAddress(JSContext* cx, JSOp op) {
 static inline jsbytecode* GetNextNonLoopEntryPc(jsbytecode* pc,
                                                 jsbytecode** skippedLoopEntry) {
   JSOp op = JSOp(*pc);
-  if (op == JSOP_GOTO) {
-    return pc + GET_JUMP_OFFSET(pc);
-  }
-  if (op == JSOP_LOOPENTRY || op == JSOP_NOP || op == JSOP_LOOPHEAD) {
-    if (op == JSOP_LOOPENTRY) {
+  switch (op) {
+    case JSOP_GOTO:
+      return pc + GET_JUMP_OFFSET(pc);
+
+    case JSOP_LOOPENTRY:
       *skippedLoopEntry = pc;
-    }
+      return GetNextPc(pc);
+
+    case JSOP_NOP:
+    case JSOP_LOOPHEAD:
+      return GetNextPc(pc);
+
+    default:
+      return pc;
+  }
+}
+
+// Returns the pc to resume execution at in Baseline after a bailout.
+static jsbytecode* GetResumePC(JSScript* script, jsbytecode* pc,
+                               bool resumeAfter) {
+  if (resumeAfter) {
     return GetNextPc(pc);
   }
+
+  // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
+  // a bailout -> enter Ion -> bailout loop with --ion-eager.
+  //
+  // The algorithm below is the "tortoise and the hare" algorithm. See bug
+  // 994444 for more explanation.
+  jsbytecode* skippedLoopEntry = nullptr;
+  jsbytecode* fasterPc = pc;
+  while (true) {
+    pc = GetNextNonLoopEntryPc(pc, &skippedLoopEntry);
+    fasterPc = GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry);
+    fasterPc = GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry);
+    if (fasterPc == pc) {
+      break;
+    }
+  }
+  if (skippedLoopEntry && script->trackRecordReplayProgress()) {
+    mozilla::recordreplay::AdvanceExecutionProgressCounter();
+  }
+
   return pc;
 }
 
@@ -847,9 +881,10 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
 
   // Get the pc. If we are handling an exception, resume at the pc of the
   // catch or finally block.
-  jsbytecode* pc = catchingException ? excInfo->resumePC()
-                                     : script->offsetToPC(iter.pcOffset());
-  bool resumeAfter = catchingException ? false : iter.resumeAfter();
+  jsbytecode* const pc = catchingException
+                             ? excInfo->resumePC()
+                             : script->offsetToPC(iter.pcOffset());
+  const bool resumeAfter = catchingException ? false : iter.resumeAfter();
 
   // When pgo is enabled, increment the counter of the block in which we
   // resume, as Ion does not keep track of the code coverage.
@@ -862,7 +897,7 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
     script->incHitCount(pc);
   }
 
-  JSOp op = JSOp(*pc);
+  const JSOp op = JSOp(*pc);
 
   // Inlining of SPREADCALL-like frames not currently supported.
   MOZ_ASSERT_IF(IsSpreadCallOp(op), !iter.moreFrames());
@@ -1014,29 +1049,6 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   MOZ_ASSERT(blFrame->numValueSlots() >= script->nfixed());
   MOZ_ASSERT(blFrame->numValueSlots() <= script->nslots());
 
-  // If we are resuming at a LOOPENTRY op, resume at the next op to avoid
-  // a bailout -> enter Ion -> bailout loop with --ion-eager.
-  //
-  // The algorithm below is the "tortoise and the hare" algorithm. See bug
-  // 994444 for more explanation.
-  if (!isPrologueBailout && !resumeAfter) {
-    jsbytecode* skippedLoopEntry = nullptr;
-    jsbytecode* fasterPc = pc;
-    while (true) {
-      pc = GetNextNonLoopEntryPc(pc, &skippedLoopEntry);
-      fasterPc = GetNextNonLoopEntryPc(
-          GetNextNonLoopEntryPc(fasterPc, &skippedLoopEntry),
-          &skippedLoopEntry);
-      if (fasterPc == pc) {
-        break;
-      }
-    }
-    op = JSOp(*pc);
-    if (skippedLoopEntry && script->trackRecordReplayProgress()) {
-      mozilla::recordreplay::AdvanceExecutionProgressCounter();
-    }
-  }
-
   const uint32_t pcOff = script->pcToOffset(pc);
   JitScript* jitScript = script->jitScript();
 
@@ -1096,17 +1108,15 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
   if (!iter.moreFrames() || catchingException) {
     bool propagatingIonExceptionForDebugMode =
         (excInfo && excInfo->propagatingIonExceptionForDebugMode());
-    if (resumeAfter) {
-      // If the opcode is monitored we should monitor the top stack value when
-      // we finish the bailout. For now we save this value in the BailoutInfo
-      // because we pop values into R0/R1 below, but once we resume into the
-      // interpreter we have a synced stack and can use the frame's top stack
-      // value directly.
-      if ((CodeSpec[op].format & JOF_TYPESET) &&
-          !propagatingIonExceptionForDebugMode) {
-        builder.setMonitorPC(pc);
-      }
-      pc = GetNextPc(pc);
+
+    // If the opcode is monitored we should monitor the top stack value when
+    // we finish the bailout. For now we save this value in the BailoutInfo
+    // because we pop values into R0/R1 below, but once we resume into the
+    // interpreter we have a synced stack and can use the frame's top stack
+    // value directly.
+    if (resumeAfter && (CodeSpec[op].format & JOF_TYPESET) &&
+        !propagatingIonExceptionForDebugMode) {
+      builder.setMonitorPC(pc);
     }
 
     builder.setResumeFramePtr(prevFramePtr);
@@ -1126,7 +1136,8 @@ static bool InitFromBailout(JSContext* cx, size_t frameNo, HandleFunction fun,
       blFrame->setInterpreterFields(script, throwPC);
       resumeAddr = baselineInterp.interpretOpAddr().value;
     } else {
-      blFrame->setInterpreterFields(script, pc);
+      jsbytecode* resumePC = GetResumePC(script, pc, resumeAfter);
+      blFrame->setInterpreterFields(script, resumePC);
       resumeAddr = baselineInterp.interpretOpAddr().value;
     }
     builder.setResumeAddr(resumeAddr);
