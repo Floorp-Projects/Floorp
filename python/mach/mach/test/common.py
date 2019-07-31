@@ -23,13 +23,14 @@ here = os.path.abspath(os.path.dirname(__file__))
 class TestBase(unittest.TestCase):
     provider_dir = os.path.join(here, 'providers')
 
-    def get_mach(self, provider_file=None, entry_point=None, context_handler=None):
+    @classmethod
+    def get_mach(cls, provider_file=None, entry_point=None, context_handler=None):
         m = Mach(os.getcwd())
         m.define_category('testing', 'Mach unittest', 'Testing for mach core', 10)
         m.populate_context_handler = context_handler
 
         if provider_file:
-            m.load_commands_from_file(os.path.join(self.provider_dir, provider_file))
+            m.load_commands_from_file(os.path.join(cls.provider_dir, provider_file))
 
         if entry_point:
             m.load_commands_from_entry_point(entry_point)

@@ -34,6 +34,16 @@ class BrowserElementChild extends JSWindowActorChild {
         this.sendAsyncMessage("Done", { permitUnload });
         break;
       }
+
+      case "EnterModalState": {
+        this.contentWindow.windowUtils.enterModalState();
+        break;
+      }
+
+      case "LeaveModalState": {
+        this.contentWindow.windowUtils.leaveModalState();
+        break;
+      }
     }
   }
 }

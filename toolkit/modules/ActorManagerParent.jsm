@@ -201,16 +201,9 @@ let ACTORS = {
     allFrames: true,
   },
 
-  // UAWidgetsDateTimeBox is a _duplicate_ of UAWidgetsChild
-  // that handles only the datetime box widget. The original
-  // intention to port all all UAWidgets to JSWindowActor
-  // at once is blocked by some jUnit tests related to
-  // the video element failing in
-  // mobile/android/geckoview/src/androidTest/java/org/mozilla/geckoview/test/MediaElementTest.kt
-  // when running on android API 16 (debug & pgo) platforms.
-  UAWidgetsDateTimeBox: {
+  UAWidgets: {
     child: {
-      moduleURI: "resource://gre/actors/UAWidgetsDateTimeBoxChild.jsm",
+      moduleURI: "resource://gre/actors/UAWidgetsChild.jsm",
       events: {
         UAWidgetSetupOrChange: {},
         UAWidgetTeardown: {},
@@ -369,16 +362,6 @@ let LEGACY_ACTORS = {
         "Browser:Thumbnail:CheckState",
         "Browser:Thumbnail:GetOriginalURL",
       ],
-    },
-  },
-
-  UAWidgets: {
-    child: {
-      module: "resource://gre/actors/UAWidgetsChild.jsm",
-      events: {
-        UAWidgetSetupOrChange: {},
-        UAWidgetTeardown: {},
-      },
     },
   },
 

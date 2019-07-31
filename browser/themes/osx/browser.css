@@ -847,11 +847,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   padding-right: 0;
 }
 
-.browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-  overflow: hidden;
-}
-
 .cui-widget-panelview[id^=PanelUI-webext-] {
   border-radius: 3.5px;
 }

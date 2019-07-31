@@ -14,6 +14,14 @@
   --popup-width: 33rem;
 }
 
+#identity-popup,
+#protections-popup {
+  /* Set default fill for icons in the identity popup.
+     Individual icons can override this. */
+  fill: currentColor;
+  fill-opacity: .6;
+}
+
 /* This is used by screenshots tests to hide intermittently different
  * identity popup shadows (see bug 1425253). */
 #identity-popup.no-shadow {
@@ -63,15 +71,6 @@
    above selectors (see Bug 1194258) */
 #identity-popup [hidden] {
   display: none !important;
-}
-
-#identity-popup > .panel-arrowcontainer > .panel-arrowcontent,
-#protections-popup > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-  /* Set default fill for icons in the identity popup.
-     Individual icons can override this. */
-  fill: currentColor;
-  fill-opacity: .6;
 }
 
 #identity-popup-mainView {

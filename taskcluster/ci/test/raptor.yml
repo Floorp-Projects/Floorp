@@ -2269,10 +2269,10 @@ raptor-youtube-playback-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     max-run-time: 3600
     tier: 2
@@ -2280,7 +2280,7 @@ raptor-youtube-playback-fenix:
         extra-options:
             - --test=raptor-youtube-playback
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
 
 raptor-tp6-1-firefox-cold:

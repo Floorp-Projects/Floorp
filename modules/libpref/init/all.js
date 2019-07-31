@@ -1490,12 +1490,8 @@ pref("network.http.referer.defaultPolicy", 3);
 // default cookie policy is set to reject third-party trackers;
 // to be used unless overriden by the site;
 // values are identical to defaultPolicy above
-#ifdef NIGHTLY_BUILD
-// On Nightly, trim referrers from trackers to origins.
+// Trim referrers from trackers to origins by default.
 pref("network.http.referer.defaultPolicy.trackers", 2);
-#else
-pref("network.http.referer.defaultPolicy.trackers", 3);
-#endif
 // Set the Private Browsing Default Referrer Policy;
 // to be used unless overriden by the site;
 // values are identical to defaultPolicy above
@@ -1505,8 +1501,8 @@ pref("network.http.referer.defaultPolicy.pbmode", 2);
 // trackers;
 // to be used unless overriden by the site;
 // values are identical to defaultPolicy above
-// No need to change this pref for Nightly only since in private windows we
-// already trim all referrers to origin only.
+// No need to change this pref for trimming referrers from trackers since in
+// private windows we already trim all referrers to origin only.
 pref("network.http.referer.defaultPolicy.trackers.pbmode", 2);
 // false=real referer, true=spoof referer (use target URI as referer)
 pref("network.http.referer.spoofSource", false);
@@ -5452,9 +5448,6 @@ pref("toolkit.telemetry.overrideUpdateChannel", "nightly-asan");
 // on Windows 7.
 pref("layers.mlgpu.enable-on-windows7", true);
 #endif
-
-// Enable lowercased response header name
-pref("dom.xhr.lowercase_header.enabled", true);
 
 // Control whether clients.openWindow() opens windows in the same process
 // that called the API vs following our normal multi-process selection

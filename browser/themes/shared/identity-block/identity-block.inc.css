@@ -29,6 +29,8 @@
 
 #urlbar[pageproxystate="invalid"] > #identity-box {
   pointer-events: none;
+  /* This would make the spaces around the glass icon balanced. */
+  margin-inline-end: 2px;
   -moz-user-focus: ignore;
 }
 
@@ -134,9 +136,6 @@
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
   list-style-image: url(chrome://browser/skin/search-glass.svg);
-  /* This is needed in order to position the search glass icon correctly since
-     the tracking protection icon won't be shown in such case. */
-  margin-inline-start: 4px;
   fill-opacity: .4;
 }
 

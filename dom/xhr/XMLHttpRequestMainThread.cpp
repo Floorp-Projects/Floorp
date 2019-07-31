@@ -2969,20 +2969,6 @@ bool XMLHttpRequestMainThread::IsMappedArrayBufferEnabled() {
   return sIsMappedArrayBufferEnabled;
 }
 
-/* static */
-bool XMLHttpRequestMainThread::IsLowercaseResponseHeader() {
-  static bool sLowercaseResponseHeaderAdded = false;
-  static bool sIsLowercaseResponseHeaderEnabled;
-
-  if (!sLowercaseResponseHeaderAdded) {
-    Preferences::AddBoolVarCache(&sIsLowercaseResponseHeaderEnabled,
-                                 "dom.xhr.lowercase_header.enabled", false);
-    sLowercaseResponseHeaderAdded = true;
-  }
-
-  return sIsLowercaseResponseHeaderEnabled;
-}
-
 // http://dvcs.w3.org/hg/xhr/raw-file/tip/Overview.html#dom-xmlhttprequest-setrequestheader
 void XMLHttpRequestMainThread::SetRequestHeader(const nsACString& aName,
                                                 const nsACString& aValue,
@@ -3572,14 +3558,6 @@ NS_IMPL_ISUPPORTS(XMLHttpRequestMainThread::nsHeaderVisitor,
 NS_IMETHODIMP XMLHttpRequestMainThread::nsHeaderVisitor::VisitHeader(
     const nsACString& header, const nsACString& value) {
   if (mXHR.IsSafeHeader(header, mHttpChannel)) {
-    if (!IsLowercaseResponseHeader()) {
-      if (!mHeaderList.InsertElementSorted(HeaderEntry(header, value),
-                                           fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-      return NS_OK;
-    }
-
     nsAutoCString lowerHeader(header);
     ToLowerCase(lowerHeader);
     if (!mHeaderList.InsertElementSorted(HeaderEntry(lowerHeader, value),
