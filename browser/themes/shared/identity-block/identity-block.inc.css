@@ -23,7 +23,8 @@
 
 #urlbar[pageproxystate="invalid"] > #identity-box > #blocked-permissions-container,
 #urlbar[pageproxystate="invalid"] > #identity-box > #notification-popup-box,
-#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels {
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon-labels,
+#urlbar[pageproxystate="invalid"] > #identity-box > #remote-control-icon {
   display: none;
 }
 
