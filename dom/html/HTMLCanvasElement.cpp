@@ -10,7 +10,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "Layers.h"
-#include "MediaSegment.h"
+#include "MediaStreamGraph.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
@@ -19,7 +19,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
-#include "mozilla/dom/MediaStreamTrack.h"
+#include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/EventDispatcher.h"
@@ -677,14 +677,9 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
     return nullptr;
   }
 
-  RefPtr<CanvasCaptureMediaStream> stream =
-      CanvasCaptureMediaStream::CreateSourceStream(window, this);
-  if (!stream) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
+  auto stream = MakeRefPtr<CanvasCaptureMediaStream>(window, this);
 
-  TrackID videoTrackId = 1;
+  const TrackID videoTrackId = 1;
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
   nsresult rv = stream->Init(aFrameRate, videoTrackId, principal);
   if (NS_FAILED(rv)) {
@@ -693,8 +688,8 @@ already_AddRefed<CanvasCaptureMediaStream> HTMLCanvasElement::CaptureStream(
   }
 
   RefPtr<MediaStreamTrack> track =
-      stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
-                             new CanvasCaptureTrackSource(principal, stream));
+      new VideoStreamTrack(window, stream->GetSourceStream(), videoTrackId,
+                           new CanvasCaptureTrackSource(principal, stream));
   stream->AddTrackInternal(track);
 
   // Check site-specific permission and display prompt if appropriate.

@@ -84,13 +84,12 @@ class OutputStreamDriver : public FrameCaptureListener {
    */
   virtual void Forget() {}
 
- protected:
-  virtual ~OutputStreamDriver();
-
- private:
   const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSourceStream;
   const PrincipalHandle mPrincipalHandle;
+
+ protected:
+  virtual ~OutputStreamDriver();
 };
 
 class CanvasCaptureMediaStream : public DOMMediaStream {
@@ -102,7 +101,7 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanvasCaptureMediaStream,
                                            DOMMediaStream)
 
-  nsresult Init(const dom::Optional<double>& aFPS, const TrackID& aTrackId,
+  nsresult Init(const dom::Optional<double>& aFPS, const TrackID aTrackId,
                 nsIPrincipal* aPrincipal);
 
   JSObject* WrapObject(JSContext* aCx,
@@ -119,12 +118,7 @@ class CanvasCaptureMediaStream : public DOMMediaStream {
    */
   void StopCapture();
 
-  /**
-   * Create a CanvasCaptureMediaStream whose underlying stream is a
-   * SourceMediaStream.
-   */
-  static already_AddRefed<CanvasCaptureMediaStream> CreateSourceStream(
-      nsPIDOMWindowInner* aWindow, HTMLCanvasElement* aCanvas);
+  SourceMediaStream* GetSourceStream() const;
 
  protected:
   ~CanvasCaptureMediaStream();

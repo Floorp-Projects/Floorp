@@ -3339,7 +3339,6 @@ RefPtr<ShutdownPromise> MediaDecoderStateMachine::BeginShutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
     mOutputStreamManager->Disconnect();
-    mNextOutputStreamTrackID = mOutputStreamManager->NextTrackID();
   }
   return InvokeAsync(OwnerThread(), this, __func__,
                      &MediaDecoderStateMachine::Shutdown);
@@ -3777,14 +3776,13 @@ void MediaDecoderStateMachine::RemoveOutputStream(DOMMediaStream* aStream) {
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManager(
-    MediaStreamGraph* aGraph) {
+    MediaStreamGraphImpl* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mOutputStreamManager) {
     return;
   }
-  mOutputStreamManager = new OutputStreamManager(
-      aGraph->CreateSourceStream(), mNextOutputStreamTrackID,
-      mOutputStreamPrincipal, mAbstractMainThread);
+  mOutputStreamManager = new OutputStreamManager(aGraph, mOutputStreamPrincipal,
+                                                 mAbstractMainThread);
 }
 
 void MediaDecoderStateMachine::EnsureOutputStreamManagerHasTracks(
@@ -3801,31 +3799,18 @@ void MediaDecoderStateMachine::EnsureOutputStreamManagerHasTracks(
   }
   if (aLoadedInfo.HasAudio()) {
     MOZ_ASSERT(!mOutputStreamManager->HasTrackType(MediaSegment::AUDIO));
-    mOutputStreamManager->AddTrack(MediaSegment::AUDIO);
-    LOG("Pre-created audio track with id %d",
-        mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::AUDIO));
+    RefPtr<SourceMediaStream> dummy =
+        mOutputStreamManager->AddTrack(MediaSegment::AUDIO);
+    LOG("Pre-created audio track with underlying stream %p", dummy.get());
+    Unused << dummy;
   }
   if (aLoadedInfo.HasVideo()) {
     MOZ_ASSERT(!mOutputStreamManager->HasTrackType(MediaSegment::VIDEO));
-    mOutputStreamManager->AddTrack(MediaSegment::VIDEO);
-    LOG("Pre-created video track with id %d",
-        mOutputStreamManager->GetLiveTrackIDFor(MediaSegment::VIDEO));
+    RefPtr<SourceMediaStream> dummy =
+        mOutputStreamManager->AddTrack(MediaSegment::VIDEO);
+    LOG("Pre-created video track with underlying stream %p", dummy.get());
+    Unused << dummy;
   }
-}
-
-void MediaDecoderStateMachine::SetNextOutputStreamTrackID(
-    TrackID aNextTrackID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  LOG("SetNextOutputStreamTrackID aNextTrackID=%d", aNextTrackID);
-  mNextOutputStreamTrackID = aNextTrackID;
-}
-
-TrackID MediaDecoderStateMachine::GetNextOutputStreamTrackID() {
-  MOZ_ASSERT(NS_IsMainThread());
-  if (mOutputStreamManager) {
-    return mOutputStreamManager->NextTrackID();
-  }
-  return mNextOutputStreamTrackID;
 }
 
 class VideoQueueMemoryFunctor : public nsDequeFunctor {

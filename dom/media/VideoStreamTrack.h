@@ -19,7 +19,7 @@ namespace dom {
 class VideoStreamTrack : public MediaStreamTrack {
  public:
   VideoStreamTrack(
-      DOMMediaStream* aStream, TrackID aTrackID, TrackID aInputTrackID,
+      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints());
 
@@ -39,10 +39,10 @@ class VideoStreamTrack : public MediaStreamTrack {
   void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
 
  protected:
-  already_AddRefed<MediaStreamTrack> CloneInternal(
-      DOMMediaStream* aOwningStream, TrackID aTrackID) override {
-    return do_AddRef(new VideoStreamTrack(
-        aOwningStream, aTrackID, mInputTrackID, mSource, mConstraints));
+  already_AddRefed<MediaStreamTrack> CloneInternal() override {
+    return do_AddRef(
+        new VideoStreamTrack(mWindow, Ended() ? nullptr : mInputStream.get(),
+                             mTrackID, mSource, mConstraints));
   }
 
  private:

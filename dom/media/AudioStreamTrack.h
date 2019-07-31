@@ -15,14 +15,18 @@ namespace dom {
 class AudioStreamTrack : public MediaStreamTrack {
  public:
   AudioStreamTrack(
-      DOMMediaStream* aStream, TrackID aTrackID, TrackID aInputTrackID,
+      nsPIDOMWindowInner* aWindow, MediaStream* aInputStream, TrackID aTrackID,
       MediaStreamTrackSource* aSource,
       const MediaTrackConstraints& aConstraints = MediaTrackConstraints())
-      : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource,
+      : MediaStreamTrack(aWindow, aInputStream, aTrackID, aSource,
                          aConstraints) {}
 
   AudioStreamTrack* AsAudioStreamTrack() override { return this; }
   const AudioStreamTrack* AsAudioStreamTrack() const override { return this; }
+
+  void AddAudioOutput(void* aKey);
+  void RemoveAudioOutput(void* aKey);
+  void SetAudioOutputVolume(void* aKey, float aVolume);
 
   // WebIDL
   void GetKind(nsAString& aKind) override { aKind.AssignLiteral("audio"); }
@@ -30,10 +34,10 @@ class AudioStreamTrack : public MediaStreamTrack {
   void GetLabel(nsAString& aLabel, CallerType aCallerType) override;
 
  protected:
-  already_AddRefed<MediaStreamTrack> CloneInternal(
-      DOMMediaStream* aOwningStream, TrackID aTrackID) override {
-    return do_AddRef(new AudioStreamTrack(
-        aOwningStream, aTrackID, mInputTrackID, mSource, mConstraints));
+  already_AddRefed<MediaStreamTrack> CloneInternal() override {
+    return do_AddRef(
+        new AudioStreamTrack(mWindow, Ended() ? nullptr : mInputStream.get(),
+                             mTrackID, mSource, mConstraints));
   }
 };
 

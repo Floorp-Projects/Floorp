@@ -44,7 +44,9 @@ OutputStreamDriver::~OutputStreamDriver() {
 
 void OutputStreamDriver::EndTrack() {
   MOZ_ASSERT(NS_IsMainThread());
-  mSourceStream->EndTrack(mTrackId);
+  if (!mSourceStream->IsDestroyed()) {
+    mSourceStream->Destroy();
+  }
 }
 
 void OutputStreamDriver::SetImage(const RefPtr<layers::Image>& aImage,
@@ -148,7 +150,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 CanvasCaptureMediaStream::CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow,
                                                    HTMLCanvasElement* aCanvas)
-    : DOMMediaStream(aWindow), mCanvas(aCanvas), mOutputStreamDriver(nullptr) {}
+    : DOMMediaStream(aWindow), mCanvas(aCanvas) {}
 
 CanvasCaptureMediaStream::~CanvasCaptureMediaStream() {
   if (mOutputStreamDriver) {
@@ -168,34 +170,24 @@ void CanvasCaptureMediaStream::RequestFrame() {
 }
 
 nsresult CanvasCaptureMediaStream::Init(const dom::Optional<double>& aFPS,
-                                        const TrackID& aTrackId,
+                                        const TrackID aTrackId,
                                         nsIPrincipal* aPrincipal) {
+  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
+      MediaStreamGraph::SYSTEM_THREAD_DRIVER, mWindow,
+      MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+  SourceMediaStream* source = graph->CreateSourceStream();
   PrincipalHandle principalHandle = MakePrincipalHandle(aPrincipal);
-
   if (!aFPS.WasPassed()) {
-    mOutputStreamDriver = new AutoDriver(GetInputStream()->AsSourceStream(),
-                                         aTrackId, principalHandle);
+    mOutputStreamDriver = new AutoDriver(source, aTrackId, principalHandle);
   } else if (aFPS.Value() < 0) {
     return NS_ERROR_ILLEGAL_VALUE;
   } else {
     // Cap frame rate to 60 FPS for sanity
     double fps = std::min(60.0, aFPS.Value());
-    mOutputStreamDriver = new TimerDriver(GetInputStream()->AsSourceStream(),
-                                          fps, aTrackId, principalHandle);
+    mOutputStreamDriver =
+        new TimerDriver(source, fps, aTrackId, principalHandle);
   }
   return NS_OK;
-}
-
-already_AddRefed<CanvasCaptureMediaStream>
-CanvasCaptureMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
-                                             HTMLCanvasElement* aCanvas) {
-  RefPtr<CanvasCaptureMediaStream> stream =
-      new CanvasCaptureMediaStream(aWindow, aCanvas);
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      MediaStreamGraph::SYSTEM_THREAD_DRIVER, aWindow,
-      MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
-  stream->InitSourceStream(graph);
-  return stream.forget();
 }
 
 FrameCaptureListener* CanvasCaptureMediaStream::FrameCaptureListener() {
@@ -210,6 +202,13 @@ void CanvasCaptureMediaStream::StopCapture() {
   mOutputStreamDriver->EndTrack();
   mOutputStreamDriver->Forget();
   mOutputStreamDriver = nullptr;
+}
+
+SourceMediaStream* CanvasCaptureMediaStream::GetSourceStream() const {
+  if (!mOutputStreamDriver) {
+    return nullptr;
+  }
+  return mOutputStreamDriver->mSourceStream;
 }
 
 }  // namespace dom

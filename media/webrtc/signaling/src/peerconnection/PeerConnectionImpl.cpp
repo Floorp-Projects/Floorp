@@ -35,6 +35,7 @@
 
 #include "AudioConduit.h"
 #include "VideoConduit.h"
+#include "MediaStreamGraph.h"
 #include "runnable_utils.h"
 #include "PeerConnectionCtx.h"
 #include "PeerConnectionImpl.h"
@@ -1797,18 +1798,7 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
     SdpMediaSection::MediaType type) {
   bool audio = (type == SdpMediaSection::MediaType::kAudio);
 
-  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
-      audio ? MediaStreamGraph::AUDIO_THREAD_DRIVER
-            : MediaStreamGraph::SYSTEM_THREAD_DRIVER,
-      GetWindow(), MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
-
-  RefPtr<DOMMediaStream> stream =
-      DOMMediaStream::CreateSourceStreamAsInput(GetWindow(), graph);
-
-  CSFLogDebug(LOGTAG, "Created media stream %p, inner: %p", stream.get(),
-              stream->GetInputStream());
-
-  // Set the principal used for creating the tracks. This makes the stream
+  // Set the principal used for creating the tracks. This makes the track
   // data (audio/video samples) accessible to the receiving page. We're
   // only certain that privacy hasn't been requested if we're connected.
   nsCOMPtr<nsIPrincipal> principal;
@@ -1817,29 +1807,39 @@ OwningNonNull<dom::MediaStreamTrack> PeerConnectionImpl::CreateReceiveTrack(
   if (mPrivacyRequested.isSome() && !*mPrivacyRequested) {
     principal = doc->NodePrincipal();
   } else {
-    // we're either certain that we need isolation for the streams, OR
-    // we're not sure and we can fix the stream in SetDtlsConnected
+    // we're either certain that we need isolation for the tracks, OR
+    // we're not sure and we can fix the track in SetDtlsConnected
     principal =
         NullPrincipal::CreateWithInheritedAttributes(doc->NodePrincipal());
   }
 
+  MediaStreamGraph* graph = MediaStreamGraph::GetInstance(
+      audio ? MediaStreamGraph::AUDIO_THREAD_DRIVER
+            : MediaStreamGraph::SYSTEM_THREAD_DRIVER,
+      GetWindow(), MediaStreamGraph::REQUEST_DEFAULT_SAMPLE_RATE);
+
   RefPtr<MediaStreamTrack> track;
   RefPtr<RemoteTrackSource> trackSource;
+  RefPtr<SourceMediaStream> source = graph->CreateSourceStream();
   if (audio) {
-    trackSource = new RemoteTrackSource(principal,
+    trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote audio"));
-    track = stream->CreateDOMTrack(333,  // Use a constant TrackID. Dependents
-                                         // read this from the DOM track.
-                                   MediaSegment::AUDIO, trackSource);
+    track = new AudioStreamTrack(GetWindow(), source,
+                                 333,  // Use a constant TrackID. Dependents
+                                       // read this from the DOM track.
+                                 trackSource);
   } else {
-    trackSource = new RemoteTrackSource(principal,
+    trackSource = new RemoteTrackSource(source, principal,
                                         NS_ConvertASCIItoUTF16("remote video"));
-    track = stream->CreateDOMTrack(666,  // Use a constant TrackID. Dependents
-                                         // read this from the DOM track.
-                                   MediaSegment::VIDEO, trackSource);
+    track = new VideoStreamTrack(GetWindow(), source,
+                                 666,  // Use a constant TrackID. Dependents
+                                       // read this from the DOM track.
+                                 trackSource);
   }
 
-  stream->AddTrackInternal(track);
+  CSFLogDebug(LOGTAG, "Created %s track %p, inner: %p",
+              audio ? "audio" : "video", track.get(), track->GetStream());
+
   // Spec says remote tracks start out muted.
   trackSource->SetMuted(true);
 
