@@ -1,4 +1,4 @@
-// |reftest| skip -- Promise.allSettled is not supported
+// |reftest| skip-if(release_or_beta) -- Promise.allSettled is not released yet
 // Copyright (C) 2019 Leo Balter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
@@ -50,5 +50,4 @@ Promise.allSettled([fulfiller, rejector])
     assert.sameValue(settleds[0].value, 42);
     assert.sameValue(settleds[1].status, 'fulfilled');
     assert.sameValue(settleds[1].value, simulation);
-    $DONE();
   }).then($DONE, $DONE);

@@ -95,6 +95,14 @@ let ACTORS = {
     allFrames: true,
   },
 
+  Prompt: {
+    parent: {
+      moduleURI: "resource:///actors/PromptParent.jsm",
+    },
+
+    allFrames: true,
+  },
+
   SwitchDocumentDirection: {
     child: {
       moduleURI: "resource:///actors/SwitchDocumentDirectionChild.jsm",
@@ -540,7 +548,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   PluginManager: "resource:///actors/PluginParent.jsm",
   PictureInPicture: "resource://gre/modules/PictureInPicture.jsm",
   ReaderParent: "resource:///modules/ReaderParent.jsm",
-  RemotePrompt: "resource:///modules/RemotePrompt.jsm",
 });
 
 /* global ContentPrefServiceParent:false, ContentSearch:false,
@@ -645,7 +652,6 @@ const listeners = {
     "PictureInPicture:Close": ["PictureInPicture"],
     "PictureInPicture:Playing": ["PictureInPicture"],
     "PictureInPicture:Paused": ["PictureInPicture"],
-    "Prompt:Open": ["RemotePrompt"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],
     // PLEASE KEEP THIS LIST IN SYNC WITH THE MOBILE LISTENERS IN BrowserCLH.js

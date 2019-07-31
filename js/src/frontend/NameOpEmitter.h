@@ -79,7 +79,7 @@ class MOZ_STACK_CLASS NameOpEmitter {
 
   bool emittedBindOp_ = false;
 
-  RootedAtom name_;
+  Handle<JSAtom*> name_;
 
   uint32_t atomIndex_;
 
@@ -132,9 +132,9 @@ class MOZ_STACK_CLASS NameOpEmitter {
 #endif
 
  public:
-  NameOpEmitter(BytecodeEmitter* bce, JSAtom* name, Kind kind);
-  NameOpEmitter(BytecodeEmitter* bce, JSAtom* name, const NameLocation& loc,
-                Kind kind);
+  NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name, Kind kind);
+  NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name,
+                const NameLocation& loc, Kind kind);
 
  private:
   MOZ_MUST_USE bool isCall() const { return kind_ == Kind::Call; }

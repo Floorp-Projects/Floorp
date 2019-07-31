@@ -442,7 +442,7 @@ class PanelPopup extends BasePopup {
   constructor(extension, document, popupURL, browserStyle) {
     let panel = document.createXULElement("panel");
     panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
-    panel.setAttribute("class", "browser-extension-panel");
+    panel.setAttribute("class", "browser-extension-panel panel-no-padding");
     panel.setAttribute("tabspecific", "true");
     panel.setAttribute("type", "arrow");
     panel.setAttribute("role", "group");

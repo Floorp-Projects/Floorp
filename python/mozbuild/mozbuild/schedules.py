@@ -28,6 +28,7 @@ INCLUSIVE_COMPONENTS = [
     'test-coverage',
     'test-coverage-wpt',
     'jsreftest',
+    'android-hw-gfx',
 ]
 INCLUSIVE_COMPONENTS = sorted(INCLUSIVE_COMPONENTS)
 

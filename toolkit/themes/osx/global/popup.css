@@ -53,6 +53,11 @@ panel[type="arrow"][side="right"] {
   margin: 1px;
 }
 
+panel[type="arrow"].panel-no-padding > .panel-arrowcontainer > .panel-arrowcontent {
+  padding: 0;
+  overflow: hidden; /* Don't let panel content overflow the border-radius */
+}
+
 .panel-arrow {
   -moz-context-properties: fill, stroke;
   fill: var(--arrowpanel-background);

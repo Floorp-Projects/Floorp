@@ -54,6 +54,6 @@ Object.defineProperty(Promise, 'resolve', {
 Promise.all(iter);
 
 assert.sameValue(nextCount, 0);
-assert.sameValue(returnCount, 0);
+assert.sameValue(returnCount, 1);
 
 reportCompare(0, 0);

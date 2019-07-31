@@ -176,13 +176,9 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     if (!consoleActor) {
       return false;
     }
-    consoleActor.startListeners({
-      listeners: ["NetworkActivity"],
-    });
+    consoleActor.startListeners(["NetworkActivity"]);
     consoleActor.setPreferences({
-      preferences: {
-        "NetworkMonitor.throttleData": throttleData,
-      },
+      "NetworkMonitor.throttleData": throttleData,
     });
     return true;
   },
@@ -208,9 +204,7 @@ const EmulationActor = protocol.ActorClassWithSpec(emulationSpec, {
     if (!consoleActor) {
       return null;
     }
-    const prefs = consoleActor.getPreferences({
-      preferences: ["NetworkMonitor.throttleData"],
-    });
+    const prefs = consoleActor.getPreferences(["NetworkMonitor.throttleData"]);
     return prefs.preferences["NetworkMonitor.throttleData"] || null;
   },
 
