@@ -199,8 +199,6 @@ class Nursery {
     return JS_HOWMANY(capacity(), gc::ChunkSize);
   }
 
-  bool exists() const { return chunkCountLimit() != 0; }
-
   void enable();
   void disable();
   bool isEnabled() const { return capacity() != 0; }
@@ -337,10 +335,7 @@ class Nursery {
   // limit respectively.
   size_t spaceToEnd(unsigned chunkCount) const;
 
-  size_t capacity() const {
-    MOZ_ASSERT(capacity_ <= chunkCountLimit() * gc::ChunkSize);
-    return capacity_;
-  }
+  size_t capacity() const { return capacity_; }
   size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space both include chunk trailers for that part of the
