@@ -170,8 +170,9 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
 
   Maybe<IntRect> rect;
   if (aRect) {
-    *rect = IntRect::RoundOut((float)aRect->X(), (float)aRect->Y(),
-                              (float)aRect->Width(), (float)aRect->Height());
+    rect =
+        Some(IntRect::RoundOut((float)aRect->X(), (float)aRect->Y(),
+                               (float)aRect->Width(), (float)aRect->Height()));
   }
 
   RefPtr<CrossProcessPaint> resolver =
