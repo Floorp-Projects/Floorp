@@ -36,11 +36,13 @@ function ConsoleCommand(props) {
     maybeScrollToBottom,
   } = props;
 
-  const { indent, source, type, level, messageText, timeStamp } = message;
+  const { indent, source, type, level, timeStamp } = message;
+  const messageText = trimCode(message.messageText);
 
   // This uses a Custom Element to syntax highlight when possible. If it's not
   // (no CodeMirror editor), then it will just render text.
   const messageBody = createElement("syntax-highlighted", null, messageText);
+
   return Message({
     source,
     type,
@@ -57,3 +59,21 @@ function ConsoleCommand(props) {
 }
 
 module.exports = ConsoleCommand;
+
+/**
+ * Trim user input to avoid blank lines before and after messages
+ */
+function trimCode(input) {
+  if (typeof input !== "string") {
+    return input;
+  }
+
+  // Trim on both edges if we have a single line of content
+  if (input.trim().includes("\n") === false) {
+    return input.trim();
+  }
+
+  // For multiline input we want to keep the indentation of the first line
+  // with non-whitespace, so we can't .trim()/.trimStart().
+  return input.replace(/^\s*\n/, "").trimEnd();
+}
