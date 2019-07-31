@@ -39,6 +39,7 @@
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/TextEditor.h"
+#include "mozilla/URLDecorationStripper.h"
 #include "mozilla/URLExtraData.h"
 #include "mozilla/Base64.h"
 #include <algorithm>
@@ -5411,7 +5412,7 @@ void Document::GetReferrer(nsAString& aReferrer) const {
   }
 
   nsAutoCString uri;
-  nsresult rv = referrer->GetSpec(uri);
+  nsresult rv = URLDecorationStripper::StripTrackingIdentifiers(referrer, uri);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
