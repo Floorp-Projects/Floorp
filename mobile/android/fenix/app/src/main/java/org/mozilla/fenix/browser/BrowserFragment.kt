@@ -223,10 +223,10 @@ class BrowserFragment : Fragment(), BackHandler {
             )
 
             quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
-        }
 
-        browserToolbarView.view.setOnSiteSecurityClickedListener {
-            showQuickSettingsDialog()
+            browserToolbarView.view.setOnSiteSecurityClickedListener {
+                showQuickSettingsDialog()
+            }
         }
 
         contextMenuFeature.set(
@@ -419,10 +419,6 @@ class BrowserFragment : Fragment(), BackHandler {
                 ),
                 owner = this,
                 view = view)
-        }
-
-        browserToolbarView.view.setOnSiteSecurityClickedListener {
-            showQuickSettingsDialog()
         }
 
         consumeFrom(browserStore) {
