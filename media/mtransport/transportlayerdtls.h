@@ -168,7 +168,6 @@ class TransportLayerDtls final : public TransportLayer {
   nsCOMPtr<nsITimer> timer_ = nullptr;
   bool auth_hook_called_ = false;
   bool cert_ok_ = false;
-  TimeStamp handshake_started_;
 };
 
 }  // namespace mozilla
