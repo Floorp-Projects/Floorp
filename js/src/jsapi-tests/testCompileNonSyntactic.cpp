@@ -18,7 +18,7 @@ struct OffThreadTask {
   OffThreadTask() : monitor(js::mutexid::ShellOffThreadState), token(nullptr) {}
 
   OffThreadToken* waitUntilDone(JSContext* cx) {
-    if (OffThreadParsingMustWaitForGC(cx->runtime())) {
+    if (js::OffThreadParsingMustWaitForGC(cx->runtime())) {
       js::gc::FinishGC(cx);
     }
 

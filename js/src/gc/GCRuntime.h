@@ -369,30 +369,7 @@ class GCRuntime {
   MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
   void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
-  int32_t getMallocBytes() const { return mallocCounter.bytes(); }
-  size_t maxMallocBytesAllocated() const { return mallocCounter.maxBytes(); }
   void setMaxMallocBytes(size_t value, const AutoLockGC& lock);
-
-  bool updateMallocCounter(size_t nbytes) {
-    mallocCounter.update(nbytes);
-    TriggerKind trigger = mallocCounter.shouldTriggerGC(tunables);
-    if (MOZ_LIKELY(trigger == NoTrigger) ||
-        trigger <= mallocCounter.triggered()) {
-      return false;
-    }
-
-    if (!triggerGC(JS::GCReason::TOO_MUCH_MALLOC)) {
-      return false;
-    }
-
-    // Even though this method may be called off the main thread it is safe
-    // to access mallocCounter here since triggerGC() will return false in
-    // that case.
-    stats().recordTrigger(mallocCounter.bytes(), mallocCounter.maxBytes());
-
-    mallocCounter.recordTrigger(trigger);
-    return true;
-  }
 
   void updateMemoryCountersOnGCStart();
 
@@ -1013,8 +990,6 @@ class GCRuntime {
   CallbackVector<JSWeakPointerZonesCallback> updateWeakPointerZonesCallbacks;
   CallbackVector<JSWeakPointerCompartmentCallback>
       updateWeakPointerCompartmentCallbacks;
-
-  MemoryCounter mallocCounter;
 
   /*
    * The trace operations to trace embedding-specific GC roots. One is for
