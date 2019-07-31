@@ -168,11 +168,11 @@ class BrowserFragment : Fragment(), BackHandler {
 
         val sessionManager = requireComponents.core.sessionManager
 
-        val viewModel = activity!!.run {
-            ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
-        }
-
         getSessionById()?.let { session ->
+            val viewModel = activity!!.run {
+                ViewModelProviders.of(this).get(CreateCollectionViewModel::class.java)
+            }
+
             browserInteractor = BrowserInteractor(
                 context = context!!,
                 store = browserStore,
@@ -221,9 +221,9 @@ class BrowserFragment : Fragment(), BackHandler {
                 owner = this,
                 view = view
             )
-        }
 
-        quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
+            quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
+        }
 
         browserToolbarView.view.setOnSiteSecurityClickedListener {
             showQuickSettingsDialog()
