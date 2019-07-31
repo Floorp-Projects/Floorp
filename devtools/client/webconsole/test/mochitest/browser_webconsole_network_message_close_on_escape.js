@@ -35,6 +35,11 @@ add_task(async function task() {
   );
   ok(headersTab, "Headers tab is available");
 
+  // Wait for all network RDP request to be finished and have updated the UI
+  await waitUntil(() =>
+    messageNode.querySelector("#headers-panel .headers-overview")
+  );
+
   info("Focus header tab and hit Escape");
   headersTab.focus();
   EventUtils.sendKey("ESCAPE", toolbox.win);

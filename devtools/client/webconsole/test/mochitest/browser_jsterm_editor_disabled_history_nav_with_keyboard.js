@@ -37,7 +37,8 @@ async function performTests() {
 
   info("Executing a bunch of non-sense JS expression");
   for (const expression of testExpressions) {
-    await executeAndWaitForMessage(hud, expression, expression);
+    // Wait until we get the result of the command.
+    await executeAndWaitForMessage(hud, expression, "", ".result");
     ok(true, `JS expression executed successfully: ${expression} `);
   }
 

@@ -933,6 +933,13 @@ async function openMessageInNetmonitor(toolbox, hud, url, urlInConsole) {
   });
 
   ok(true, "The attached url is correct.");
+
+  info(
+    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+  );
+  await waitUntil(() =>
+    panelWin.document.querySelector("#headers-panel .headers-overview")
+  );
 }
 
 function selectNode(hud, node) {

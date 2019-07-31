@@ -19,10 +19,15 @@ add_task(async function() {
        .querySelectorAll("*")
        .forEach(console.log)`,
     `document`,
-    `"😎"`,
+    `"a" + "😎"`,
   ];
 
-  const onLastMessage = waitForMessage(hud, `"😎"`);
+  // We have to wait for the same message twice in order to wait for the evaluation line
+  // as well as the result line
+  const onLastMessage = waitForMessages({
+    hud,
+    messages: [{ text: `"a" + "😎"` }, { text: `"a😎"` }],
+  });
   for (const input of jstermHistory) {
     await hud.jsterm.execute(input);
   }
@@ -156,7 +161,12 @@ add_task(async function() {
   );
 
   info("Check that Enter evaluates the JsTerm and closes the UI");
-  const onMessage = waitForMessage(hud, `"😎"`);
+  // We have to wait for the same message twice in order to wait for the evaluation line
+  // as well as the result line
+  const onMessage = waitForMessages({
+    hud,
+    messages: [{ text: `"a" + "😎"` }, { text: `"a😎"` }],
+  });
   const onReverseSearchClose = waitFor(() => !getReverseSearchElement(hud));
   EventUtils.synthesizeKey("KEY_Enter");
   await Promise.all([onMessage, onReverseSearchClose]);

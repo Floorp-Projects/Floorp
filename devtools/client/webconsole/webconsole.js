@@ -374,28 +374,24 @@ class WebConsole {
    * @return object
    *         A promise object that is resolved once the Web Console is closed.
    */
-  async destroy() {
-    if (this._destroyer) {
-      return this._destroyer;
+  destroy() {
+    if (!this.hudId) {
+      return;
+    }
+    this.hudService.consoles.delete(this.hudId);
+
+    if (this.ui) {
+      this.ui.destroy();
     }
 
-    this._destroyer = (async () => {
-      this.hudService.consoles.delete(this.hudId);
+    if (this._parserService) {
+      this._parserService.stop();
+      this._parserService = null;
+    }
 
-      if (this.ui) {
-        this.ui.destroy();
-      }
-
-      if (this._parserService) {
-        this._parserService.stop();
-        this._parserService = null;
-      }
-
-      const id = Utils.supportsString(this.hudId);
-      Services.obs.notifyObservers(id, "web-console-destroyed");
-    })();
-
-    return this._destroyer;
+    const id = Utils.supportsString(this.hudId);
+    Services.obs.notifyObservers(id, "web-console-destroyed");
+    this.hudId = null;
   }
 }
 
