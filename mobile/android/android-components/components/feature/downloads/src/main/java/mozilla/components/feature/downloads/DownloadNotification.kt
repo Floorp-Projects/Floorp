@@ -4,10 +4,14 @@
 
 package mozilla.components.feature.downloads
 
+import android.app.DownloadManager.ACTION_VIEW_DOWNLOADS
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.core.app.NotificationCompat
@@ -42,12 +46,16 @@ internal object DownloadNotification {
      */
     fun createDownloadCompletedNotification(context: Context, fileName: String?): Notification {
         val channelId = ensureChannelExists(context)
+        val intent = Intent(ACTION_VIEW_DOWNLOADS).apply {
+            flags = FLAG_ACTIVITY_NEW_TASK
+        }
 
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.mozac_feature_download_ic_download)
             .setContentTitle(fileName)
             .setContentText(context.getString(R.string.mozac_feature_downloads_completed_notification_text))
             .setColor(ContextCompat.getColor(context, R.color.mozac_feature_downloads_notification))
+            .setContentIntent(PendingIntent.getActivity(context, 0, intent, 0))
             .build()
     }
 
