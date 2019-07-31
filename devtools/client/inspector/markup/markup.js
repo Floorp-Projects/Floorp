@@ -92,6 +92,129 @@ const ATTR_COLLAPSE_LENGTH_PREF = "devtools.markup.collapseAttributeLength";
 const BEAUTIFY_HTML_ON_COPY_PREF = "devtools.markup.beautifyOnCopy";
 
 /**
+ * These functions are called when a shortcut (as defined in `_initShortcuts`) occurs.
+ * Each property in the following object corresponds to one of the shortcut that is
+ * handled by the markup-view.
+ * Each property value is a function that takes the markup-view instance as only
+ * argument, and returns a boolean that signifies whether the event should be consumed.
+ * By default, the event gets consumed after the shortcut handler returns,
+ * this means its propagation is stopped. If you do want the shortcut event
+ * to continue propagating through DevTools, then return true from the handler.
+ */
+const shortcutHandlers = {
+  // Localizable keys
+  "markupView.hide.key": markupView => {
+    const node = markupView._selectedContainer.node;
+    if (node.hidden) {
+      markupView.walker.unhideNode(node);
+    } else {
+      markupView.walker.hideNode(node);
+    }
+  },
+  "markupView.edit.key": markupView => {
+    markupView.beginEditingOuterHTML(markupView._selectedContainer.node);
+  },
+  "markupView.scrollInto.key": markupView => {
+    markupView.scrollNodeIntoView();
+  },
+  // Generic keys
+  Delete: markupView => {
+    markupView.deleteNodeOrAttribute();
+  },
+  Backspace: markupView => {
+    markupView.deleteNodeOrAttribute(true);
+  },
+  Home: markupView => {
+    const rootContainer = markupView.getContainer(markupView._rootNode);
+    markupView.navigate(rootContainer.children.firstChild.container);
+  },
+  Left: markupView => {
+    if (markupView._selectedContainer.expanded) {
+      markupView.collapseNode(markupView._selectedContainer.node);
+    } else {
+      const parent = markupView._selectionWalker().parentNode();
+      if (parent) {
+        markupView.navigate(parent.container);
+      }
+    }
+  },
+  Right: markupView => {
+    if (
+      !markupView._selectedContainer.expanded &&
+      markupView._selectedContainer.hasChildren
+    ) {
+      markupView._expandContainer(markupView._selectedContainer);
+    } else {
+      const next = markupView._selectionWalker().nextNode();
+      if (next) {
+        markupView.navigate(next.container);
+      }
+    }
+  },
+  Up: markupView => {
+    const previousNode = markupView._selectionWalker().previousNode();
+    if (previousNode) {
+      markupView.navigate(previousNode.container);
+    }
+  },
+  Down: markupView => {
+    const nextNode = markupView._selectionWalker().nextNode();
+    if (nextNode) {
+      markupView.navigate(nextNode.container);
+    }
+  },
+  PageUp: markupView => {
+    const walker = markupView._selectionWalker();
+    let selection = markupView._selectedContainer;
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      const previousNode = walker.previousNode();
+      if (!previousNode) {
+        break;
+      }
+      selection = previousNode.container;
+    }
+    markupView.navigate(selection);
+  },
+  PageDown: markupView => {
+    const walker = markupView._selectionWalker();
+    let selection = markupView._selectedContainer;
+    for (let i = 0; i < PAGE_SIZE; i++) {
+      const nextNode = walker.nextNode();
+      if (!nextNode) {
+        break;
+      }
+      selection = nextNode.container;
+    }
+    markupView.navigate(selection);
+  },
+  Enter: markupView => {
+    if (!markupView._selectedContainer.canFocus) {
+      markupView._selectedContainer.canFocus = true;
+      markupView._selectedContainer.focus();
+      return false;
+    }
+    return true;
+  },
+  Space: markupView => {
+    if (!markupView._selectedContainer.canFocus) {
+      markupView._selectedContainer.canFocus = true;
+      markupView._selectedContainer.focus();
+      return false;
+    }
+    return true;
+  },
+  Esc: markupView => {
+    if (markupView.isDragging) {
+      markupView.cancelDragging();
+      return false;
+    }
+    // Prevent cancelling the event when not
+    // dragging, to allow the split console to be toggled.
+    return true;
+  },
+};
+
+/**
  * Vocabulary for the purposes of this file:
  *
  * MarkupContainer - the structure that holds an editor and its
@@ -1006,139 +1129,20 @@ MarkupView.prototype = {
   /**
    * Key shortcut listener.
    */
-  /* eslint-disable complexity */
   _onShortcut(name, event) {
     if (this._isInputOrTextarea(event.target)) {
       return;
     }
-    switch (name) {
-      // Localizable keys
-      case "markupView.hide.key": {
-        const node = this._selectedContainer.node;
-        if (node.hidden) {
-          this.walker.unhideNode(node);
-        } else {
-          this.walker.hideNode(node);
-        }
-        break;
-      }
-      case "markupView.edit.key": {
-        this.beginEditingOuterHTML(this._selectedContainer.node);
-        break;
-      }
-      case "markupView.scrollInto.key": {
-        this.scrollNodeIntoView();
-        break;
-      }
-      // Generic keys
-      case "Delete": {
-        this.deleteNodeOrAttribute();
-        break;
-      }
-      case "Backspace": {
-        this.deleteNodeOrAttribute(true);
-        break;
-      }
-      case "Home": {
-        const rootContainer = this.getContainer(this._rootNode);
-        this.navigate(rootContainer.children.firstChild.container);
-        break;
-      }
-      case "Left": {
-        if (this._selectedContainer.expanded) {
-          this.collapseNode(this._selectedContainer.node);
-        } else {
-          const parent = this._selectionWalker().parentNode();
-          if (parent) {
-            this.navigate(parent.container);
-          }
-        }
-        break;
-      }
-      case "Right": {
-        if (
-          !this._selectedContainer.expanded &&
-          this._selectedContainer.hasChildren
-        ) {
-          this._expandContainer(this._selectedContainer);
-        } else {
-          const next = this._selectionWalker().nextNode();
-          if (next) {
-            this.navigate(next.container);
-          }
-        }
-        break;
-      }
-      case "Up": {
-        const previousNode = this._selectionWalker().previousNode();
-        if (previousNode) {
-          this.navigate(previousNode.container);
-        }
-        break;
-      }
-      case "Down": {
-        const nextNode = this._selectionWalker().nextNode();
-        if (nextNode) {
-          this.navigate(nextNode.container);
-        }
-        break;
-      }
-      case "PageUp": {
-        const walker = this._selectionWalker();
-        let selection = this._selectedContainer;
-        for (let i = 0; i < PAGE_SIZE; i++) {
-          const previousNode = walker.previousNode();
-          if (!previousNode) {
-            break;
-          }
-          selection = previousNode.container;
-        }
-        this.navigate(selection);
-        break;
-      }
-      case "PageDown": {
-        const walker = this._selectionWalker();
-        let selection = this._selectedContainer;
-        for (let i = 0; i < PAGE_SIZE; i++) {
-          const nextNode = walker.nextNode();
-          if (!nextNode) {
-            break;
-          }
-          selection = nextNode.container;
-        }
-        this.navigate(selection);
-        break;
-      }
-      case "Enter":
-      case "Space": {
-        if (!this._selectedContainer.canFocus) {
-          this._selectedContainer.canFocus = true;
-          this._selectedContainer.focus();
-        } else {
-          // Return early to prevent cancelling the event.
-          return;
-        }
-        break;
-      }
-      case "Esc": {
-        if (this.isDragging) {
-          this.cancelDragging();
-        } else {
-          // Return early to prevent cancelling the event when not
-          // dragging, to allow the split console to be toggled.
-          return;
-        }
-        break;
-      }
-      default:
-        console.error("Unexpected markup-view key shortcut", name);
-        return;
+
+    const handler = shortcutHandlers[name];
+    const shouldPropagate = handler(this);
+    if (shouldPropagate) {
+      return;
     }
-    // Prevent default for this action
+
     event.stopPropagation();
     event.preventDefault();
   },
-  /* eslint-enable complexity */
 
   /**
    * Check if a node is an input or textarea
