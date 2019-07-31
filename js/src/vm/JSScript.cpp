@@ -4101,6 +4101,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
 
   // Initialize POD fields
   script->lineno_ = bce->firstLine;
+  script->column_ = bce->firstColumn;
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());

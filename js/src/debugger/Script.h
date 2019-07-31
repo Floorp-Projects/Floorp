@@ -64,6 +64,7 @@ class DebuggerScript : public NativeObject {
   static bool getDisplayName(JSContext* cx, unsigned argc, Value* vp);
   static bool getUrl(JSContext* cx, unsigned argc, Value* vp);
   static bool getStartLine(JSContext* cx, unsigned argc, Value* vp);
+  static bool getStartColumn(JSContext* cx, unsigned argc, Value* vp);
   static bool getLineCount(JSContext* cx, unsigned argc, Value* vp);
   static bool getSource(JSContext* cx, unsigned argc, Value* vp);
   static bool getSourceStart(JSContext* cx, unsigned argc, Value* vp);
@@ -110,6 +111,7 @@ class DebuggerScript : public NativeObject {
 
   class SetPrivateMatcher;
   struct GetStartLineMatcher;
+  struct GetStartColumnMatcher;
   struct GetLineCountMatcher;
   class GetSourceMatcher;
   class GetFormatMatcher;

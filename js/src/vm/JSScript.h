@@ -2343,8 +2343,6 @@ class JSScript : public js::BaseScript {
 
   size_t mainOffset() const { return immutableScriptData()->mainOffset; }
 
-  void setColumn(size_t column) { column_ = column; }
-
   // The fixed part of a stack frame is comprised of vars (in function and
   // module code) and block-scoped locals (in all kinds of code).
   size_t nfixed() const { return immutableScriptData()->nfixed; }
