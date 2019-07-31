@@ -10,8 +10,8 @@
   const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
-  async function* mockGenerateMessages(locales, resourceIds) {
-    const bundle = new FluentBundle(locales);
+  async function* mockGenerateMessages(resourceIds) {
+    const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource("title = <strong>Hello</strong> World"));
     bundle.addResource(new FluentResource(`title2 = This is <a data-l10n-name="link">a link</a>!`));
     yield bundle;

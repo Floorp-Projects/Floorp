@@ -13,8 +13,8 @@
   const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
-  async function * generateMessages(locales, resourceIds) {
-    const bundle = new FluentBundle(locales);
+  async function * generateMessages(resourceIds) {
+    const bundle = new FluentBundle("en-US");
     bundle.addResource(new FluentResource(`
 file-menu =
     .label = File
