@@ -65,7 +65,7 @@ function run_test() {
       ok(debuggeree.fired >= 1);
       ok(fired >= 1);
 
-      debuggeree.dbg.enabled = dbg.enabled = false;
+      debuggeree.dbg.removeAllDebuggees();
       do_test_finished();
     });
   });
