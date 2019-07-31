@@ -2278,23 +2278,18 @@ bool nsGlobalWindowInner::ShouldReportForServiceWorkerScope(
   return result;
 }
 
-already_AddRefed<InstallTriggerImpl> nsGlobalWindowInner::GetInstallTrigger() {
+InstallTriggerImpl* nsGlobalWindowInner::GetInstallTrigger() {
   if (!mInstallTrigger) {
-    JS::Rooted<JSObject*> jsImplObj(RootingCx());
     ErrorResult rv;
-    ConstructJSImplementation("@mozilla.org/addons/installtrigger;1", this,
-                              &jsImplObj, rv);
+    mInstallTrigger = ConstructJSImplementation<InstallTriggerImpl>(
+        "@mozilla.org/addons/installtrigger;1", this, rv);
     if (rv.Failed()) {
       rv.SuppressException();
       return nullptr;
     }
-    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
-    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
-                                       JS::GetNonCCWObjectGlobal(jsImplObj));
-    mInstallTrigger = new InstallTriggerImpl(jsImplObj, jsImplGlobal, this);
   }
 
-  return do_AddRef(mInstallTrigger);
+  return mInstallTrigger;
 }
 
 nsIDOMWindowUtils* nsGlobalWindowInner::GetWindowUtils(ErrorResult& aRv) {
@@ -6760,22 +6755,17 @@ bool nsGlobalWindowInner::IsSecureContext() const {
   return JS::GetIsSecureContext(realm);
 }
 
-already_AddRefed<External> nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
+External* nsGlobalWindowInner::GetExternal(ErrorResult& aRv) {
 #ifdef HAVE_SIDEBAR
   if (!mExternal) {
-    JS::Rooted<JSObject*> jsImplObj(RootingCx());
-    ConstructJSImplementation("@mozilla.org/sidebar;1", this, &jsImplObj, aRv);
+    mExternal = ConstructJSImplementation<External>("@mozilla.org/sidebar;1",
+                                                    this, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
-    MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
-    JS::Rooted<JSObject*> jsImplGlobal(RootingCx(),
-                                       JS::GetNonCCWObjectGlobal(jsImplObj));
-    mExternal = new External(jsImplObj, jsImplGlobal, this);
   }
 
-  RefPtr<External> external = static_cast<External*>(mExternal.get());
-  return external.forget();
+  return static_cast<External*>(mExternal.get());
 #else
   aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   return nullptr;
