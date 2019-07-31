@@ -55,6 +55,8 @@ public class MmaDelegate {
     public static final String ONBOARDING_REMOTE_VALUES = "E_Onboarding_With_Remote_Values";
 
     public static final String USER_SIGNED_IN_TO_FXA = "E_User_Signed_In_To_FxA";
+    public static final String USER_SIGNED_UP_FOR_FXA = "E_User_Signed_Up_For_FxA";
+    public static final String USER_RECONNECTED_TO_FXA = "E_User_Reconnected_To_FxA";
     public static final String USER_FINISHED_SYNC = "E_User_Finished_Sync";
 
     private static final String LAUNCH_BUT_NOT_DEFAULT_BROWSER = "E_Launch_But_Not_Default_Browser";
