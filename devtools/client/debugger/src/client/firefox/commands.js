@@ -5,7 +5,7 @@
 // @flow
 
 import { prepareSourcePayload, createWorker } from "./create";
-import { supportsWorkers, updateWorkerClients } from "./workers";
+import { supportsWorkers, updateWorkerTargets } from "./workers";
 import { features } from "../../utils/prefs";
 
 import Reps from "devtools-reps";
@@ -40,7 +40,7 @@ import type {
   EventListenerActiveList,
 } from "../../actions/types";
 
-let workerClients: Object;
+let workerTargets: Object;
 let threadFront: ThreadFront;
 let tabTarget: TabTarget;
 let debuggerClient: DebuggerClient;
@@ -61,7 +61,7 @@ function setupCommands(dependencies: Dependencies) {
   tabTarget = dependencies.tabTarget;
   debuggerClient = dependencies.debuggerClient;
   supportsWasm = dependencies.supportsWasm;
-  workerClients = {};
+  workerTargets = {};
   sourceActors = {};
   breakpoints = {};
 }
@@ -98,25 +98,23 @@ function sendPacket(packet: Object) {
   return debuggerClient.request(packet);
 }
 
-function lookupThreadFront(thread: string) {
+function lookupTarget(thread: string) {
   if (thread == threadFront.actor) {
-    return threadFront;
+    return tabTarget;
   }
-  if (!workerClients[thread]) {
-    throw new Error(`Unknown thread client: ${thread}`);
+  if (!workerTargets[thread]) {
+    throw new Error(`Unknown thread front: ${thread}`);
   }
-  return workerClients[thread].thread;
+  return workerTargets[thread];
 }
 
-function lookupConsoleClient(thread: string) {
-  if (thread == threadFront.actor) {
-    return tabTarget.activeConsole;
-  }
-  return workerClients[thread].console;
+function lookupThreadFront(thread: string) {
+  const target = lookupTarget(thread);
+  return target.threadFront;
 }
 
 function listWorkerThreadFronts() {
-  return (Object.values(workerClients): any).map(({ thread }) => thread);
+  return (Object.values(workerTargets): any).map(target => target.threadFront);
 }
 
 function forEachThread(iteratee) {
@@ -253,9 +251,8 @@ function evaluate(
     return Promise.resolve({ result: null });
   }
 
-  const console = thread
-    ? lookupConsoleClient(thread)
-    : tabTarget.activeConsole;
+  const target = thread ? lookupTarget(thread) : tabTarget;
+  const console = target.activeConsole;
   if (!console) {
     return Promise.resolve({ result: null });
   }
@@ -410,32 +407,32 @@ async function fetchWorkers(): Promise<Worker[]> {
       observeAsmJS: true,
     };
 
-    const newWorkerClients = await updateWorkerClients({
+    const newWorkerTargets = await updateWorkerTargets({
       tabTarget,
       debuggerClient,
       threadFront,
-      workerClients,
+      workerTargets,
       options,
     });
 
     // Fetch the sources and install breakpoints on any new workers.
-    const workerNames = Object.getOwnPropertyNames(newWorkerClients);
+    const workerNames = Object.getOwnPropertyNames(newWorkerTargets);
     for (const actor of workerNames) {
-      if (!workerClients[actor]) {
-        const client = newWorkerClients[actor].thread;
+      if (!workerTargets[actor]) {
+        const front = newWorkerTargets[actor].threadFront;
 
         // This runs in the background and populates some data, but we also
         // want to allow it to fail quietly. For instance, it is pretty easy
         // for source clients to throw during the fetch if their thread
         // shuts down, and this would otherwise cause test failures.
-        getSources(client).catch(e => console.error(e));
+        getSources(front).catch(e => console.error(e));
       }
     }
 
-    workerClients = newWorkerClients;
+    workerTargets = newWorkerTargets;
 
     return workerNames.map(actor =>
-      createWorker(actor, workerClients[actor].url)
+      createWorker(actor, workerTargets[actor].url)
     );
   }
 
@@ -544,7 +541,7 @@ const clientCommands = {
   getEventListenerBreakpointTypes,
   detachWorkers,
   hasWasmSupport,
-  lookupConsoleClient,
+  lookupTarget,
 };
 
 export { setupCommands, clientCommands };
