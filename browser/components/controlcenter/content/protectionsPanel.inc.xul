@@ -80,24 +80,28 @@
         </vbox>
       </hbox>
 
-
-      <vbox id="protections-popup-settings-section"
-            class="protections-popup-section">
+      <vbox id="protections-popup-footer" class="protections-popup-section">
         <toolbarbutton id="protections-popup-settings-button"
+                       class="protections-popup-footer-button"
                        oncommand="gProtectionsHandler.openPreferences();">
-          <image class="protection-settings-icon"/>
-          <label class="protections-popup-settings-label" flex="1">&protections.settings.label;</label>
+          <image class="protection-popup-footer-icon protections-popup-settings-icon"/>
+          <label class="protections-popup-footer-button-label" flex="1">&protections.settings.label;</label>
         </toolbarbutton>
+        <stack id="protections-popup-show-report-stack">
+          <toolbarbutton id="protections-popup-show-report-button"
+                         class="protections-popup-footer-button"
+                         oncommand="gProtectionsHandler.openProtections(true);">
+            <image class="protection-popup-footer-icon protections-popup-show-report-icon"/>
+            <label class="protections-popup-footer-button-label" flex="1">&protections.report.label;</label>
+          </toolbarbutton>
+          <hbox id="protections-popup-trackers-blocked-counter-box"
+                align="center"
+                right="0">
+            <description id="protections-popup-trackers-blocked-counter-description"
+                         onclick="gProtectionsHandler.openProtections(true);"/>
+          </hbox>
+        </stack>
       </vbox>
-
-      <hbox id="protections-popup-footer">
-        <description id="protections-popup-trackers-blocked-counter-description"
-                     flex="1"/>
-        <label id="protections-popup-show-full-report-link"
-               is="text-link"
-               useoriginprincipal="true"
-               href="about:protections">&protections.report.label;</label>
-      </hbox>
     </panelview>
 
     <!-- Site Not Working? SubView -->
