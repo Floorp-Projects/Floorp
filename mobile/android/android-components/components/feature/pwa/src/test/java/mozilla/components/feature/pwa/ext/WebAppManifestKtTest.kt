@@ -6,6 +6,7 @@ package mozilla.components.feature.pwa.ext
 
 import android.graphics.Color
 import android.graphics.Color.rgb
+import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.manifest.WebAppManifest
 import org.junit.Assert.assertEquals
@@ -56,5 +57,41 @@ class WebAppManifestKtTest {
         assertNull(config.actionButtonConfig)
         assertTrue(config.showShareMenuItem)
         assertEquals(0, config.menuItems.size)
+    }
+
+    @Test
+    fun `should return the scope as a uri`() {
+        val scope = WebAppManifest(
+            name = "My App",
+            startUrl = "https://example.com/pwa",
+            scope = "https://example.com/",
+            display = WebAppManifest.DisplayMode.STANDALONE
+        ).getTrustedScope()
+        assertEquals("https://example.com/".toUri(), scope)
+
+        val fallbackToStartUrl = WebAppManifest(
+            name = "My App",
+            startUrl = "https://example.com/pwa",
+            display = WebAppManifest.DisplayMode.STANDALONE
+        ).getTrustedScope()
+        assertEquals("https://example.com/pwa".toUri(), fallbackToStartUrl)
+    }
+
+    @Test
+    fun `should not return the scope if display mode is minimal-ui`() {
+        val scope = WebAppManifest(
+            name = "My App",
+            startUrl = "https://example.com/pwa",
+            scope = "https://example.com/",
+            display = WebAppManifest.DisplayMode.MINIMAL_UI
+        ).getTrustedScope()
+        assertNull(scope)
+
+        val fallbackToStartUrl = WebAppManifest(
+            name = "My App",
+            startUrl = "https://example.com/pwa",
+            display = WebAppManifest.DisplayMode.MINIMAL_UI
+        ).getTrustedScope()
+        assertNull(fallbackToStartUrl)
     }
 }

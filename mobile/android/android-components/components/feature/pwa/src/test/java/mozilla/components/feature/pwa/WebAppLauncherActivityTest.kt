@@ -39,9 +39,9 @@ class WebAppLauncherActivityTest {
     }
 
     @Test
-    fun `DisplayMode-minimalui launches browser`() {
+    fun `DisplayMode-minimalui launches web app shell`() {
         val activity = spy(WebAppLauncherActivity())
-        doNothing().`when`(activity).launchBrowser(any())
+        doNothing().`when`(activity).launchWebAppShell("https://www.mozilla.org".toUri())
 
         val manifest = WebAppManifest(
             name = "Test",
@@ -51,7 +51,7 @@ class WebAppLauncherActivityTest {
 
         activity.routeManifest(manifest.startUrl.toUri(), manifest)
 
-        verify(activity).launchBrowser(manifest.startUrl.toUri())
+        verify(activity).launchWebAppShell(manifest.startUrl.toUri())
     }
 
     @Test

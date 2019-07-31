@@ -51,14 +51,12 @@ class WebAppLauncherActivity : AppCompatActivity(), CoroutineScope by MainScope(
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun routeManifest(startUrl: Uri, manifest: WebAppManifest?) {
         when (manifest?.display) {
-            WebAppManifest.DisplayMode.FULLSCREEN, WebAppManifest.DisplayMode.STANDALONE -> launchWebAppShell(startUrl)
-
-            // We do not implement "minimal-ui" mode. Following the Web App Manifest spec we fallback to
-            // using "browser" in this case.
-            WebAppManifest.DisplayMode.MINIMAL_UI, WebAppManifest.DisplayMode.BROWSER -> launchBrowser(startUrl)
+            WebAppManifest.DisplayMode.FULLSCREEN,
+            WebAppManifest.DisplayMode.STANDALONE,
+            WebAppManifest.DisplayMode.MINIMAL_UI -> launchWebAppShell(startUrl)
 
             // If no manifest is saved for this site, just open the browser.
-            null -> launchBrowser(startUrl)
+            WebAppManifest.DisplayMode.BROWSER, null -> launchBrowser(startUrl)
         }
     }
 

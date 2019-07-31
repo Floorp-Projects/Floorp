@@ -4,9 +4,8 @@
 
 package org.mozilla.samples.browser
 
-import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import mozilla.components.concept.engine.manifest.WebAppManifest
+import mozilla.components.feature.pwa.ext.getTrustedScope
 import mozilla.components.feature.pwa.ext.getWebAppManifest
 
 /**
@@ -22,13 +21,11 @@ class ExternalAppBrowserActivity : BrowserActivity() {
             ExternalAppBrowserFragment.create(
                 sessionId,
                 manifest = manifest,
-                trustedScopes = listOfNotNull(manifest?.getScope())
+                trustedScopes = listOfNotNull(manifest?.getTrustedScope())
             )
         } else {
             // Fall back to browser fragment
             super.createBrowserFragment(sessionId)
         }
     }
-
-    private fun WebAppManifest.getScope() = (scope ?: startUrl).toUri()
 }
