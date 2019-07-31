@@ -20,8 +20,6 @@ from distutils.dir_util import copy_tree
 
 from mozfile import which
 
-URL_REPO = "https://github.com/llvm/llvm-project"
-
 
 def symlink(source, link_name):
     os_symlink = getattr(os, "symlink", None)
@@ -78,7 +76,7 @@ def import_clang_tidy(source_dir):
     clang_plugin_path = os.path.join(os.path.dirname(sys.argv[0]),
                                      '..', 'clang-plugin')
     clang_tidy_path = os.path.join(source_dir,
-                                   'clang-tools-extra/clang-tidy')
+                                   'tools/clang/tools/extra/clang-tidy')
     sys.path.append(clang_plugin_path)
     from import_mozilla_checks import do_import
     do_import(clang_plugin_path, clang_tidy_path)
@@ -199,14 +197,13 @@ def install_asan_symbols(build_dir, clang_dir):
     shutil.copy2(src_path[0], dst_path[0])
 
 
-def git_clone(base_dir, url, directory, revision):
-    run_in(base_dir, ["git", "clone", "-n", url, directory])
-    run_in(os.path.join(base_dir, directory), ["git", "checkout", revision])
+def svn_co(source_dir, url, directory, revision):
+    run_in(source_dir, ["svn", "co", "-q", "-r", revision, url, directory])
 
 
-def git_update(directory, revision):
-    run_in(directory, ["git", "remote", "update"])
-    run_in(directory, ["git", "reset", "--hard", revision])
+def svn_update(directory, revision):
+    run_in(directory, ["svn", "revert", "-q", "-R", "."])
+    run_in(directory, ["svn", "update", "-q", "-r", revision])
 
 
 def is_darwin():
@@ -586,6 +583,7 @@ if __name__ == "__main__":
 
     llvm_source_dir = source_dir + "/llvm"
     clang_source_dir = source_dir + "/clang"
+    extra_source_dir = source_dir + "/extra"
     lld_source_dir = source_dir + "/lld"
     compiler_rt_source_dir = source_dir + "/compiler-rt"
     libcxx_source_dir = source_dir + "/libcxx"
@@ -607,8 +605,14 @@ if __name__ == "__main__":
     config = json.load(args.config)
 
     llvm_revision = config["llvm_revision"]
-    if not re.match(r'^[0-9a-fA-F]{40}$', llvm_revision):
-        raise ValueError("Incorrect format of the git revision")
+    llvm_repo = config["llvm_repo"]
+    clang_repo = config["clang_repo"]
+    extra_repo = config.get("extra_repo")
+    lld_repo = config.get("lld_repo")
+    # On some packages we don't use compiler_repo
+    compiler_repo = config.get("compiler_repo")
+    libcxx_repo = config["libcxx_repo"]
+    libcxxabi_repo = config.get("libcxxabi_repo")
     stages = 3
     if "stages" in config:
         stages = int(config["stages"])
@@ -682,20 +686,33 @@ if __name__ == "__main__":
     if not os.path.exists(source_dir):
         os.makedirs(source_dir)
 
-    if not args.skip_checkout:
-        if os.path.exists(os.path.join(source_dir, '.git')):
-            git_update(source_dir, llvm_revision)
+    def checkout_or_update(repo, checkout_dir):
+        if os.path.exists(checkout_dir):
+            svn_update(checkout_dir, llvm_revision)
         else:
-            delete(source_dir)
-            git_clone(base_dir, URL_REPO, source_dir, llvm_revision)
+            svn_co(source_dir, repo, checkout_dir, llvm_revision)
 
-    for p in config.get("patches", []):
-        patch(p, source_dir)
+    if not args.skip_checkout:
+        checkout_or_update(llvm_repo, llvm_source_dir)
+        checkout_or_update(clang_repo, clang_source_dir)
+        if compiler_repo is not None:
+            checkout_or_update(compiler_repo, compiler_rt_source_dir)
+        checkout_or_update(libcxx_repo, libcxx_source_dir)
+        if lld_repo:
+            checkout_or_update(lld_repo, lld_source_dir)
+        if libcxxabi_repo:
+            checkout_or_update(libcxxabi_repo, libcxxabi_source_dir)
+        if extra_repo:
+            checkout_or_update(extra_repo, extra_source_dir)
+        for p in config.get("patches", []):
+            patch(p, source_dir)
 
     compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
 
     symlinks = [(clang_source_dir,
                  llvm_source_dir + "/tools/clang"),
+                (extra_source_dir,
+                 llvm_source_dir + "/tools/clang/tools/extra"),
                 (lld_source_dir,
                  llvm_source_dir + "/tools/lld"),
                 (compiler_rt_source_dir, compiler_rt_source_link),
@@ -714,7 +731,7 @@ if __name__ == "__main__":
     package_name = "clang"
     if build_clang_tidy:
         package_name = "clang-tidy"
-        import_clang_tidy(source_dir)
+        import_clang_tidy(llvm_source_dir)
 
     if not os.path.exists(build_dir):
         os.makedirs(build_dir)
