@@ -33,6 +33,12 @@ add_task(async function() {
     filterButton.click();
   });
 
+  // Wait for the confirmation message about CSS warnings so we don't have a pending
+  // promise.
+  await waitFor(() =>
+    findMessage(hud, "Stylesheets without CSSOM changes reparsed")
+  );
+
   info("Close and re-open the console");
   await closeTabAndToolbox();
   hud = await openNewTabAndConsole(TEST_URI);
