@@ -51,6 +51,8 @@ testChangeParam("allocationThreshold");
 testChangeParam("minEmptyChunkCount");
 testChangeParam("maxEmptyChunkCount");
 testChangeParam("compactingEnabled");
+testChangeParam("mallocThresholdBase");
+testChangeParam("mallocGrowthFactor");
 
 testMBParamValue("highFrequencyLowLimit");
 testMBParamValue("highFrequencyHighLimit");
