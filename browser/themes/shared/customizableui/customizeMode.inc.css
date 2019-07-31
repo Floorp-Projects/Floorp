@@ -311,20 +311,19 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   margin-bottom: 10px;
 }
 
-#customization-uidensity-menu > .panel-arrowcontainer > .panel-arrowcontent,
-#customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
-  -moz-box-orient: vertical;
+#customization-uidensity-menu,
+#customization-lwtheme-menu {
   font: menu;
 }
 
-#customization-lwtheme-menu > .panel-arrowcontainer > .panel-arrowcontent {
+#customization-lwtheme-menu {
   /* Make the panel padding uniform across all platforms due to the
      styling of the section headers and footer. */
-  padding: 10px;
+  --arrowpanel-padding: 10px;
 }
 
-#customization-uidensity-menu > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 5px 10px;
+#customization-uidensity-menu {
+  --arrowpanel-padding: 5px 10px;
 }
 
 .customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon,
@@ -379,10 +378,6 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
 .customization-uidensity-menuitem > .menu-iconic-text,
 .customization-lwtheme-menu-theme > .toolbarbutton-text {
   text-align: start;
-}
-
-.customization-uidensity-menuitem > .menu-iconic-text {
-  font: menu;
 }
 
 #customization-lwtheme-menu-header,
@@ -560,8 +555,8 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
   opacity: 0;
 }
 
-#downloads-button-autohide-panel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 5px 12px;
+#downloads-button-autohide-panel {
+  --arrowpanel-padding: 5px 12px;
 }
 
 #downloads-button-autohide-checkbox {

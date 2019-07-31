@@ -3,11 +3,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <panel id="widget-overflow"
+       class="panel-no-padding"
        role="group"
        type="arrow"
        noautofocus="true"
        position="bottomcenter topright"
-       photon="true"
        hidden="true">
   <panelmultiview mainViewId="widget-overflow-mainView">
     <panelview id="widget-overflow-mainView"
@@ -90,7 +90,7 @@
 </panel>
 
 <panel id="appMenu-notification-popup"
-       class="popup-notification-panel"
+       class="popup-notification-panel panel-no-padding"
        type="arrow"
        position="after_start"
        hidden="true"
@@ -215,7 +215,7 @@
 </menupopup>
 
 <panel id="appMenu-popup"
-       class="cui-widget-panel"
+       class="cui-widget-panel panel-no-padding"
        role="group"
        type="arrow"
        hidden="true"
@@ -840,6 +840,7 @@
 </panel>
 
 <panel id="extension-notification-panel"
+       class="panel-no-padding"
        role="group"
        type="arrow"
        hidden="true"

@@ -13,11 +13,6 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsPanel > .panel-arrowcontainer > .panel-arrowcontent {
-  overflow: hidden;
-  padding: 0;
-}
-
 #downloadsListBox {
   background: transparent;
   color: inherit;
