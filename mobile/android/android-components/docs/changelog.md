@@ -24,6 +24,18 @@ permalink: /changelog/
   ```kotlin
      val windowFeature = WindowFeature(components.sessionManager)
   ```
+  
+# 6.0.1
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.0...v6.0.1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v6.0.1/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v6.0.1/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v6.0.1/buildSrc/src/main/java/Config.kt)
+
+* **feature-app-links**
+  * Fixed [#3944](https://github.com/mozilla-mobile/android-components/issues/3944) causing third-party apps being opened when links with a `javascript` scheme are clicked.
+
+* Imported latest state of translations.
 
 # 6.0.0
 
