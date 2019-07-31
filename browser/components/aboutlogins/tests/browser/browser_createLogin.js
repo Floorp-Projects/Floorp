@@ -87,7 +87,7 @@ add_task(async function test_create_login() {
 
         let loginListItem = [
           ...loginList.shadowRoot.querySelectorAll(".login-list-item"),
-        ].find(l => l._login.origin == aOriginTuple[1]);
+        ].find(l => l._login && l._login.origin == aOriginTuple[1]);
         ok(
           !!loginListItem,
           `Stored login should only include the origin of the URL provided during creation (${
