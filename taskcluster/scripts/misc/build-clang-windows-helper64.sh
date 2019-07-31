@@ -34,7 +34,8 @@ export PATH="${VSWINPATH}/VC/bin/Hostx64/x64:${VSWINPATH}/SDK/bin/10.0.17134.0/x
 export INCLUDE="${VSWINPATH}/VC/include:${VSWINPATH}/VC/atlmfc/include:${VSWINPATH}/SDK/Include/10.0.17134.0/ucrt:${VSWINPATH}/SDK/Include/10.0.17134.0/shared:${VSWINPATH}/SDK/Include/10.0.17134.0/um:${VSWINPATH}/SDK/Include/10.0.17134.0/winrt:${VSWINPATH}/DIA SDK/include"
 export LIB="${VSWINPATH}/VC/lib/x64:${VSWINPATH}/VC/atlmfc/lib/x64:${VSWINPATH}/SDK/Lib/10.0.17134.0/ucrt/x64:${VSWINPATH}/SDK/Lib/10.0.17134.0/um/x64:${VSWINPATH}/DIA SDK/lib/amd64"
 
-export PATH="$(cd svn && pwd)/bin:${PATH}"
+# Add git.exe to the path
+export PATH="$(pwd)/cmd:${PATH}"
 export PATH="$(cd cmake && pwd)/bin:${PATH}"
 export PATH="$(cd ninja && pwd)/bin:${PATH}"
 
