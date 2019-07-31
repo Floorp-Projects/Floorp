@@ -886,12 +886,8 @@ void StripURIForReporting(nsIURI* aURI, nsIURI* aSelfURI,
   // aURI has a scheme of data, blob, or filesystem), then return the
   // ASCII serialization of uri’s scheme.
   bool isHttpFtpOrWs =
-      (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
-      (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttpFtpOrWs)) &&
-       isHttpFtpOrWs) ||
-      (NS_SUCCEEDED(aURI->SchemeIs("ftp", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
-      (NS_SUCCEEDED(aURI->SchemeIs("ws", &isHttpFtpOrWs)) && isHttpFtpOrWs) ||
-      (NS_SUCCEEDED(aURI->SchemeIs("wss", &isHttpFtpOrWs)) && isHttpFtpOrWs);
+      (aURI->SchemeIs("http") || aURI->SchemeIs("https") ||
+       aURI->SchemeIs("ftp") || aURI->SchemeIs("ws") || aURI->SchemeIs("wss"));
 
   if (!isHttpFtpOrWs) {
     // not strictly spec compliant, but what we really care about is
@@ -1112,10 +1108,7 @@ nsresult nsCSPContext::SendReports(
 
     // log a warning to console if scheme is not http or https
     bool isHttpScheme =
-        (NS_SUCCEEDED(reportURI->SchemeIs("http", &isHttpScheme)) &&
-         isHttpScheme) ||
-        (NS_SUCCEEDED(reportURI->SchemeIs("https", &isHttpScheme)) &&
-         isHttpScheme);
+        reportURI->SchemeIs("http") || reportURI->SchemeIs("https");
 
     if (!isHttpScheme) {
       AutoTArray<nsString, 1> params = {reportURIs[r]};
@@ -1335,8 +1328,7 @@ class CSPReportSenderRunnable final : public Runnable {
       mBlockedURI->GetSpec(blockedContentSource);
       if (blockedContentSource.Length() >
           nsCSPContext::ScriptSampleMaxLength()) {
-        bool isData = false;
-        rv = mBlockedURI->SchemeIs("data", &isData);
+        bool isData = mBlockedURI->SchemeIs("data");
         if (NS_SUCCEEDED(rv) && isData &&
             blockedContentSource.Length() >
                 nsCSPContext::ScriptSampleMaxLength()) {

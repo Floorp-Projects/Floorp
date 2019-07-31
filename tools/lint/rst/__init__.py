@@ -88,13 +88,11 @@ def lint(files, config, **lintargs):
         for errors in all_errors.split("\n"):
             if len(errors) > 1:
                 filename, lineno, level, message = parse_with_split(errors)
-                if int(level) < 3:
-                    continue
                 res = {
                     'path': filename,
                     'message': message,
                     'lineno': lineno,
-                    'level': "error" if int(level) >= 3 else "warning",
+                    'level': "error" if int(level) >= 2 else "warning",
                 }
                 results.append(result.from_config(config, **res))
         paths = paths[chunk_size:]

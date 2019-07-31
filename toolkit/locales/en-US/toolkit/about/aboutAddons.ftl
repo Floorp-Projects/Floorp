@@ -392,8 +392,20 @@ details-addon-button = Details
 release-notes-addon-button = Release Notes
 permissions-addon-button = Permissions
 
-addons-enabled-heading = Enabled
-addons-disabled-heading = Disabled
+extension-enabled-heading = Enabled
+extension-disabled-heading = Disabled
+
+theme-enabled-heading = Enabled
+theme-disabled-heading = Disabled
+
+plugin-enabled-heading = Enabled
+plugin-disabled-heading = Disabled
+
+dictionary-enabled-heading = Enabled
+dictionary-disabled-heading = Disabled
+
+locale-enabled-heading = Enabled
+locale-disabled-heading = Disabled
 
 ask-to-activate-button = Ask to Activate
 always-activate-button = Always Activate

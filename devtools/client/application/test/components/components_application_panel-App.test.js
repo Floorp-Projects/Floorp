@@ -19,7 +19,7 @@ const App = createFactory(
 describe("App", () => {
   it("renders the expected snapshot", () => {
     const wrapper = shallow(
-      LocalizationProvider({ messages: [] }, App({}))
+      LocalizationProvider({ bundles: [] }, App({}))
     ).dive(); // dive to bypass the LocalizationProvider wrapper
     expect(wrapper).toMatchSnapshot();
   });

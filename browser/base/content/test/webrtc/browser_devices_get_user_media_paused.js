@@ -88,7 +88,7 @@ var gTests = [
       // wait for it to avoid intermittents.
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.camera ==
+          window.gIdentityHandler._sharingState.webRTC.camera ==
           STATE_CAPTURE_DISABLED,
         "video should be disabled"
       );
@@ -106,7 +106,7 @@ var gTests = [
 
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.microphone ==
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
           STATE_CAPTURE_ENABLED,
         "audio should be enabled"
       );
@@ -124,7 +124,8 @@ var gTests = [
 
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.camera == STATE_CAPTURE_ENABLED,
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_ENABLED,
         "video should be enabled"
       );
 
@@ -181,9 +182,9 @@ var gTests = [
       // wait for it to avoid intermittents.
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.camera ==
+          window.gIdentityHandler._sharingState.webRTC.camera ==
             STATE_CAPTURE_DISABLED &&
-          window.gIdentityHandler._sharingState.microphone ==
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
             STATE_CAPTURE_DISABLED,
         "video and audio should be disabled"
       );
@@ -201,7 +202,7 @@ var gTests = [
 
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.microphone ==
+          window.gIdentityHandler._sharingState.webRTC.microphone ==
           STATE_CAPTURE_ENABLED,
         "audio should be enabled"
       );
@@ -219,7 +220,8 @@ var gTests = [
 
       await BrowserTestUtils.waitForCondition(
         () =>
-          window.gIdentityHandler._sharingState.camera == STATE_CAPTURE_ENABLED,
+          window.gIdentityHandler._sharingState.webRTC.camera ==
+          STATE_CAPTURE_ENABLED,
         "video should be enabled"
       );
 
@@ -276,7 +278,8 @@ var gTests = [
       // It sometimes takes a bit longer before the change propagates to the UI,
       // wait for it to avoid intermittents.
       await BrowserTestUtils.waitForCondition(
-        () => window.gIdentityHandler._sharingState.screen == "ScreenPaused",
+        () =>
+          window.gIdentityHandler._sharingState.webRTC.screen == "ScreenPaused",
         "screen should be disabled"
       );
       await expectObserverCalled("recording-device-events");
@@ -287,7 +290,7 @@ var gTests = [
       await setTrackEnabled(null, true);
 
       await BrowserTestUtils.waitForCondition(
-        () => window.gIdentityHandler._sharingState.screen == "Screen",
+        () => window.gIdentityHandler._sharingState.webRTC.screen == "Screen",
         "screen should be enabled"
       );
       await expectObserverCalled("recording-device-events");

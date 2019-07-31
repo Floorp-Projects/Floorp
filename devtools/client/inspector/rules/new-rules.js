@@ -601,7 +601,8 @@ class RulesView {
       advanceChars: advanceValidate,
       contentType: InplaceEditor.CONTENT_TYPES.CSS_VALUE,
       cssProperties: this.cssProperties,
-      cssVariables: this.elementStyle.variables,
+      cssVariables:
+        this.elementStyle.variablesMap.get(rule.pseudoElement) || [],
       defaultIncrement: declaration.name === "opacity" ? 0.1 : 1,
       done: async (value, commit) => {
         if (!commit || !value || !value.trim()) {

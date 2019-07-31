@@ -12,7 +12,7 @@ use crate::display_list_flattener::{CreateShadow, IsVisible};
 use crate::frame_builder::FrameBuildingState;
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
-use crate::internal_types::LayoutPrimitiveInfo;
+use crate::internal_types::{LayoutPrimitiveInfo};
 use crate::prim_store::{
     EdgeAaSegmentMask, OpacityBindingIndex, PrimitiveInstanceKind,
     PrimitiveOpacity, PrimitiveSceneData, PrimKey, PrimKeyCommonData,
@@ -21,7 +21,7 @@ use crate::prim_store::{
 };
 use crate::render_task::{
     BlitSource, RenderTask, RenderTaskCacheEntryHandle, RenderTaskCacheKey,
-    RenderTaskCacheKeyKind
+    RenderTaskCacheKeyKind, RenderTargetKind,
 };
 use crate::resource_cache::{ImageRequest, ResourceCache};
 use crate::util::pack_as_float;
@@ -88,7 +88,6 @@ impl ImageKey {
         prim_size: LayoutSize,
         image: Image,
     ) -> Self {
-
         ImageKey {
             common: PrimKeyCommonData {
                 is_backface_visible,
@@ -208,7 +207,6 @@ impl ImageData {
                                 0,
                             );
 
-                            let inner_size = *size;
                             size.width += padding.horizontal();
                             size.height += padding.vertical();
 
@@ -217,6 +215,11 @@ impl ImageData {
                             let image_cache_key = ImageCacheKey {
                                 request,
                                 texel_rect: self.sub_rect,
+                            };
+                            let target_kind = if image_properties.descriptor.format.bytes_per_pixel() == 1 {
+                                RenderTargetKind::Alpha
+                            } else {
+                                RenderTargetKind::Color
                             };
 
                             // Request a pre-rendered image task.
@@ -233,16 +236,27 @@ impl ImageData {
                                     // Create a task to blit from the texture cache to
                                     // a normal transient render task surface. This will
                                     // copy only the sub-rect, if specified.
-                                    let cache_to_target_task = RenderTask::new_blit_with_padding(
-                                        inner_size,
-                                        &padding,
-                                        BlitSource::Image { key: image_cache_key },
-                                    );
+                                    let cache_to_target_task = if false {
+                                        // TODO: figure out if/when this can be used
+                                        RenderTask::new_blit_with_padding(
+                                            *size,
+                                            padding,
+                                            BlitSource::Image { key: image_cache_key },
+                                        )
+                                    } else {
+                                        RenderTask::new_scaling_with_padding(
+                                            BlitSource::Image { key: image_cache_key },
+                                            render_tasks,
+                                            target_kind,
+                                            *size,
+                                            padding,
+                                        )
+                                    };
                                     let cache_to_target_task_id = render_tasks.add(cache_to_target_task);
 
                                     // Create a task to blit the rect from the child render
                                     // task above back into the right spot in the persistent
-                                        // render target cache.
+                                    // render target cache.
                                     let target_to_cache_task = RenderTask::new_blit(
                                         *size,
                                         BlitSource::RenderTask {

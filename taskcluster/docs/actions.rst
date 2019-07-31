@@ -59,6 +59,7 @@ To create a new callback action you must create a file
       print("Hello was triggered from taskGroupId: {}".format(task_group_id))
 
 The arguments are:
+
 ``parameters``
   an instance of ``taskgraph.parameters.Parameters``, carrying decision task parameters from the original decision task.
 

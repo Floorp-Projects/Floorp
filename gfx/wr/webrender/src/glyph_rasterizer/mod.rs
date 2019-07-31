@@ -175,7 +175,7 @@ impl GlyphRasterizer {
                             ImageDescriptor {
                                 size: size2(glyph.width, glyph.height),
                                 stride: None,
-                                format: ImageFormat::BGRA8,
+                                format: FORMAT,
                                 is_opaque: false,
                                 allow_mipmaps: false,
                                 offset: 0,
@@ -204,6 +204,9 @@ impl GlyphRasterizer {
         self.remove_dead_fonts();
     }
 }
+
+#[allow(dead_code)]
+pub const FORMAT: ImageFormat = ImageFormat::BGRA8;
 
 #[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, PartialOrd)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -1023,7 +1026,7 @@ mod test_glyph_rasterizer {
         use crate::render_backend::FrameId;
         use thread_profiler::register_thread_with_profiler;
         use std::sync::Arc;
-        use crate::glyph_rasterizer::{FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
+        use crate::glyph_rasterizer::{FORMAT, FontInstance, BaseFontInstance, GlyphKey, GlyphRasterizer};
 
         let worker = ThreadPoolBuilder::new()
             .thread_name(|idx|{ format!("WRWorker#{}", idx) })
@@ -1035,7 +1038,7 @@ mod test_glyph_rasterizer {
         let mut glyph_rasterizer = GlyphRasterizer::new(workers).unwrap();
         let mut glyph_cache = GlyphCache::new(GlyphCache::DEFAULT_MAX_BYTES_USED);
         let mut gpu_cache = GpuCache::new_for_testing();
-        let mut texture_cache = TextureCache::new_for_testing(2048, 1024);
+        let mut texture_cache = TextureCache::new_for_testing(2048, 1024, FORMAT);
         let mut render_task_cache = RenderTaskCache::new();
         let mut render_task_tree = RenderTaskGraph::new(FrameId::INVALID, &RenderTaskGraphCounters::new());
         let mut font_file =
@@ -1087,7 +1090,7 @@ mod test_glyph_rasterizer {
 
         glyph_rasterizer.resolve_glyphs(
             &mut glyph_cache,
-            &mut TextureCache::new_for_testing(4096, 1024),
+            &mut TextureCache::new_for_testing(4096, 1024, FORMAT),
             &mut gpu_cache,
             &mut render_task_cache,
             &mut render_task_tree,

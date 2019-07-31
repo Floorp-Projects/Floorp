@@ -83,13 +83,14 @@ bool MResumePoint::writeRecoverData(CompactBufferWriter& writer) const {
     }
 
     if (reachablePC) {
-      if (JSOp(*bailPC) == JSOP_FUNCALL) {
+      JSOp bailOp = JSOp(*bailPC);
+      if (bailOp == JSOP_FUNCALL) {
         // For fun.call(this, ...); the reconstructStackDepth will
         // include the this. When inlining that is not included.  So the
         // exprStackSlots will be one less.
         MOZ_ASSERT(stackDepth - exprStack <= 1);
-      } else if (JSOp(*bailPC) != JSOP_FUNAPPLY &&
-                 !IsIonInlinableGetterOrSetterPC(bailPC)) {
+      } else if (bailOp != JSOP_FUNAPPLY &&
+                 !IsIonInlinableGetterOrSetterOp(bailOp)) {
         // For fun.apply({}, arguments) the reconstructStackDepth will
         // have stackdepth 4, but it could be that we inlined the
         // funapply. In that case exprStackSlots, will have the real
