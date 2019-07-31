@@ -848,7 +848,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PluginArray", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PointerEvent", insecureContext: true, android: false },
+  { name: "PointerEvent", insecureContext: true, fennec: false },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PopStateEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!

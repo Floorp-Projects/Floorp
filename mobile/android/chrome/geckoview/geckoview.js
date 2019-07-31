@@ -431,6 +431,13 @@ function createBrowser() {
   const settings = window.arguments[0].QueryInterface(Ci.nsIAndroidView)
     .initData.settings;
   if (settings.useMultiprocess) {
+    if (
+      Services.prefs.getBoolPref(
+        "dom.w3c_pointer_events.multiprocess.android.enabled"
+      )
+    ) {
+      Services.prefs.setBoolPref("dom.w3c_pointer_events.enabled", true);
+    }
     browser.setAttribute("remote", "true");
     browser.setAttribute("remoteType", E10SUtils.DEFAULT_REMOTE_TYPE);
   }
