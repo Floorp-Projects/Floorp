@@ -69,7 +69,7 @@ class TestWebMWriter : public WebMWriter {
   // previous cluster so that we can retrieve data by |GetContainerData|.
   void AppendDummyFrame(EncodedFrame::FrameType aFrameType,
                         uint64_t aDuration) {
-    EncodedFrameContainer encodedVideoData;
+    nsTArray<RefPtr<EncodedFrame>> encodedVideoData;
     nsTArray<uint8_t> frameData;
     RefPtr<EncodedFrame> videoData = new EncodedFrame();
     // Create dummy frame data.
@@ -78,13 +78,13 @@ class TestWebMWriter : public WebMWriter {
     videoData->SetTimeStamp(mTimestamp);
     videoData->SetDuration(aDuration);
     videoData->SwapInFrameData(frameData);
-    encodedVideoData.AppendEncodedFrame(videoData);
+    encodedVideoData.AppendElement(videoData);
     WriteEncodedTrack(encodedVideoData, 0);
     mTimestamp += aDuration;
   }
 
   bool HaveValidCluster() {
-    nsTArray<nsTArray<uint8_t> > encodedBuf;
+    nsTArray<nsTArray<uint8_t>> encodedBuf;
     GetContainerData(&encodedBuf, 0);
     return (encodedBuf.Length() > 0) ? true : false;
   }
@@ -100,7 +100,7 @@ TEST(WebMWriter, Metadata)
                         ContainerWriter::CREATE_VIDEO_TRACK);
 
   // The output should be empty since we didn't set any metadata in writer.
-  nsTArray<nsTArray<uint8_t> > encodedBuf;
+  nsTArray<nsTArray<uint8_t>> encodedBuf;
   writer.GetContainerData(&encodedBuf, ContainerWriter::GET_HEADER);
   EXPECT_TRUE(encodedBuf.Length() == 0);
   writer.GetContainerData(&encodedBuf, ContainerWriter::FLUSH_NEEDED);
@@ -146,7 +146,7 @@ TEST(WebMWriter, Cluster)
   int32_t displayHeight = 240;
   writer.SetVP8Metadata(width, height, displayWidth, displayHeight, aTrackRate);
 
-  nsTArray<nsTArray<uint8_t> > encodedBuf;
+  nsTArray<nsTArray<uint8_t>> encodedBuf;
   writer.GetContainerData(&encodedBuf, ContainerWriter::GET_HEADER);
   EXPECT_TRUE(encodedBuf.Length() > 0);
   encodedBuf.Clear();
@@ -199,7 +199,7 @@ TEST(WebMWriter, FLUSH_NEEDED)
   // retrieved
   EXPECT_FALSE(writer.HaveValidCluster());
 
-  nsTArray<nsTArray<uint8_t> > encodedBuf;
+  nsTArray<nsTArray<uint8_t>> encodedBuf;
   // Have data because the flag ContainerWriter::FLUSH_NEEDED
   writer.GetContainerData(&encodedBuf, ContainerWriter::FLUSH_NEEDED);
   EXPECT_TRUE(encodedBuf.Length() > 0);
@@ -315,7 +315,7 @@ TEST(WebMWriter, bug970774_aspect_ratio)
   writer.AppendDummyFrame(EncodedFrame::VP8_I_FRAME, FIXED_DURATION);
 
   // Get the metadata and the first cluster.
-  nsTArray<nsTArray<uint8_t> > encodedBuf;
+  nsTArray<nsTArray<uint8_t>> encodedBuf;
   writer.GetContainerData(&encodedBuf, 0);
   // Flatten the encodedBuf.
   WebMioData ioData;
