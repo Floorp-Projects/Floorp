@@ -15,6 +15,7 @@
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 #include "nsError.h"
 #include "nsIFrame.h"
