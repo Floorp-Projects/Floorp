@@ -39,12 +39,5 @@ class Utilities(
         CustomTabIntentProcessor(sessionManager, sessionUseCases.loadUrl, context.resources)
     }
 
-    /**
-     * Provides notification functionality, manages notification channels.
-     */
-    val notificationManager by lazy {
-        NotificationManager(context)
-    }
-
     val publicSuffixList by lazy { PublicSuffixList(context) }
 }

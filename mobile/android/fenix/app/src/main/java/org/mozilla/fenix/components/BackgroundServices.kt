@@ -48,8 +48,7 @@ import org.mozilla.fenix.test.Mockable
 class BackgroundServices(
     context: Context,
     historyStorage: PlacesHistoryStorage,
-    bookmarkStorage: PlacesBookmarksStorage,
-    notificationManager: NotificationManager
+    bookmarkStorage: PlacesBookmarksStorage
 ) {
     companion object {
         const val CLIENT_ID = "a2270f727f45f648"
@@ -233,5 +232,12 @@ class BackgroundServices(
             }
         }
         CoroutineScope(Dispatchers.Main).launch { it.initAsync().await() }
+    }
+
+    /**
+     * Provides notification functionality, manages notification channels.
+     */
+    val notificationManager by lazy {
+        NotificationManager(context)
     }
 }
