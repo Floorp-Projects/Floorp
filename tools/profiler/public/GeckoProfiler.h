@@ -514,10 +514,42 @@ using UniqueProfilerBacktrace =
 // if the profiler is inactive or in privacy mode.
 UniqueProfilerBacktrace profiler_get_backtrace();
 
+struct ProfilerStats {
+  unsigned n = 0;
+  double sum = 0;
+  double min = std::numeric_limits<double>::max();
+  double max = 0;
+  void Count(double v) {
+    ++n;
+    sum += v;
+    if (v < min) {
+      min = v;
+    }
+    if (v > max) {
+      max = v;
+    }
+  }
+};
+
 struct ProfilerBufferInfo {
+  // Index of the oldest entry.
   uint64_t mRangeStart;
+  // Index of the newest entry.
   uint64_t mRangeEnd;
+  // Buffer capacity in number of entries.
   uint32_t mEntryCount;
+  // Sampling stats: Interval between successive samplings.
+  ProfilerStats mIntervalsNs;
+  // Sampling stats: Total sampling duration. (Split detail below.)
+  ProfilerStats mOverheadsNs;
+  // Sampling stats: Time to acquire the lock before sampling.
+  ProfilerStats mLockingsNs;
+  // Sampling stats: Time to discard expired data.
+  ProfilerStats mCleaningsNs;
+  // Sampling stats: Time to collect counter data.
+  ProfilerStats mCountersNs;
+  // Sampling stats: Time to sample thread stacks.
+  ProfilerStats mThreadsNs;
 };
 
 // Get information about the current buffer status.
