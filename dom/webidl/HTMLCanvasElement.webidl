@@ -27,7 +27,7 @@ interface HTMLCanvasElement : HTMLElement {
   DOMString toDataURL(optional DOMString type = "",
                       optional any encoderOptions);
   [Throws, NeedsSubjectPrincipal]
-  void toBlob(BlobCallback _callback,
+  void toBlob(BlobCallback callback,
               optional DOMString type = "",
               optional any encoderOptions);
 };
