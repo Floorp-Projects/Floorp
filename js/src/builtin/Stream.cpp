@@ -8,6 +8,8 @@
 
 #include "js/Stream.h"
 
+#include <stdint.h>  // int32_t
+
 #include "gc/Heap.h"
 #include "js/ArrayBuffer.h"  // JS::NewArrayBuffer
 #include "js/PropertySpec.h"
@@ -21,7 +23,7 @@
 
 using namespace js;
 
-enum ReaderType { ReaderType_Default, ReaderType_BYOB };
+enum class ReaderType : int32_t { Default = 0, BYOB = 1 };
 
 template <class T>
 bool Is(const HandleValue v) {
@@ -249,15 +251,18 @@ class PullIntoDescriptor : public NativeObject {
   uint32_t elementSize() const {
     return getFixedSlot(Slot_ElementSize).toInt32();
   }
-  uint32_t readerType() const {
-    return getFixedSlot(Slot_ReaderType).toInt32();
+  ReaderType readerType() const {
+    int32_t n = getFixedSlot(Slot_ReaderType).toInt32();
+    MOZ_ASSERT(n == int32_t(ReaderType::Default) ||
+               n == int32_t(ReaderType::BYOB));
+    return ReaderType(n);
   }
 
   static PullIntoDescriptor* create(JSContext* cx,
                                     HandleArrayBufferObject buffer,
                                     uint32_t byteOffset, uint32_t byteLength,
                                     uint32_t bytesFilled, uint32_t elementSize,
-                                    HandleObject ctor, uint32_t readerType) {
+                                    HandleObject ctor, ReaderType readerType) {
     Rooted<PullIntoDescriptor*> descriptor(
         cx, NewBuiltinClassInstance<PullIntoDescriptor>(cx));
     if (!descriptor) {
@@ -270,7 +275,8 @@ class PullIntoDescriptor : public NativeObject {
     descriptor->setFixedSlot(Slot_ByteLength, Int32Value(byteLength));
     descriptor->setFixedSlot(Slot_BytesFilled, Int32Value(bytesFilled));
     descriptor->setFixedSlot(Slot_ElementSize, Int32Value(elementSize));
-    descriptor->setFixedSlot(Slot_ReaderType, Int32Value(readerType));
+    descriptor->setFixedSlot(Slot_ReaderType,
+                             Int32Value(static_cast<int32_t>(readerType)));
     return descriptor;
   }
 };
@@ -3786,7 +3792,7 @@ static MOZ_MUST_USE JSObject* ReadableByteStreamControllerPullSteps(
     //                   [[readerType]]: `"default"`}.
     RootedObject pullIntoDescriptor(
         cx, PullIntoDescriptor::create(cx, buffer, 0, autoAllocateChunkSize, 0,
-                                       1, nullptr, ReaderType_Default));
+                                       1, nullptr, ReaderType::Default));
     if (!pullIntoDescriptor) {
       return PromiseRejectedWithPendingError(cx);
     }
