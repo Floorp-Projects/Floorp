@@ -675,7 +675,7 @@ this.LoginManagerParent = {
     browsingContextId,
     formActionOrigin,
     openerTopWindowID,
-    password: passwordInField,
+    password,
     username = "",
   }) {
     log("_onGeneratedPasswordFilledOrEdited");
@@ -708,12 +708,11 @@ this.LoginManagerParent = {
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
-    let password = generatedPW.value;
-    if (!passwordInField) {
+    if (!password) {
       log("_onGeneratedPasswordFilledOrEdited: The password field is empty");
       return;
     }
-    if (passwordInField != password) {
+    if (password != generatedPW.value) {
       // The user edited the field after generation to a non-empty value.
       log("The field containing the generated password has changed");
 
@@ -727,6 +726,8 @@ this.LoginManagerParent = {
         log("filled_field_edited telemetry event recorded");
         generatedPW.edited = true;
       }
+
+      generatedPW.value = password;
       return;
     }
 
@@ -735,7 +736,7 @@ this.LoginManagerParent = {
       formActionOrigin,
       null,
       username,
-      password
+      generatedPW.value
     );
 
     let formLoginWithoutUsername = new LoginInfo(
@@ -743,7 +744,7 @@ this.LoginManagerParent = {
       formActionOrigin,
       null,
       "",
-      password
+      generatedPW.value
     );
 
     let autoSaveLogin = true;
