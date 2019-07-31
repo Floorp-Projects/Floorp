@@ -343,7 +343,14 @@ class Tokenizer(object):
                 spaces = 0
                 rv += c
                 self.consume()
-        yield (token_types.string, decode(rv))
+        rv = decode(rv)
+        if rv.startswith("if "):
+            # Hack to avoid a problem where people write
+            # disabled: if foo
+            # and expect that to disable conditionally
+            raise ParseError(self.filename, self.line_number, "Strings starting 'if ' must be quoted "
+                             "(expressions must start on a newline and be indented)")
+        yield (token_types.string, rv)
 
     def comment_state(self):
         while self.char() is not eol:
