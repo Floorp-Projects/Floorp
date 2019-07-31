@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty('BigInt')) -- BigInt is not enabled unconditionally
 // Copyright 2019 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 // Test case written by André Bargull.

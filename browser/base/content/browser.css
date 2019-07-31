@@ -558,9 +558,6 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   background-color: rgba(255,170,68,.8);
   color: black;
 }
-:root[remotecontrol] #urlbar #identity-box {
-  background: white;
-}
 
 /* Show the url scheme in a static box when overflowing to the left */
 .urlbar-input-box {

@@ -36,6 +36,7 @@ from .decorators import (
 from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
+from .util import setenv
 
 SUGGEST_MACH_BUSTED = r'''
 You can invoke |./mach busted| to check if this issue is already on file. If it
@@ -354,7 +355,7 @@ To see more help for a specific command, run:
             # is a TTY. This provides a mechanism to allow said processes to
             # enable emitting code codes, for example.
             if os.isatty(orig_stdout.fileno()):
-                os.environ[b'MACH_STDOUT_ISATTY'] = b'1'
+                setenv('MACH_STDOUT_ISATTY', '1')
 
             return self._run(argv)
         except KeyboardInterrupt:

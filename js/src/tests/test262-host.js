@@ -20,6 +20,7 @@
     var getSharedArrayBuffer = global.getSharedArrayBuffer;
     var evalInWorker = global.evalInWorker;
     var monotonicNow = global.monotonicNow;
+    var gc = global.gc;
 
     var hasCreateIsHTMLDDA = "createIsHTMLDDA" in global;
     var hasThreads = ("helperThreadCount" in global ? global.helperThreadCount() > 0 : true);
@@ -51,6 +52,9 @@
         evalScript: global.evaluateScript || global.evaluate,
         global,
         IsHTMLDDA,
+        gc() {
+            gc();
+        },
         agent: (function () {
 
             // SpiderMonkey complication: With run-time argument --no-threads

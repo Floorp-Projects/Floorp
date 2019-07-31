@@ -43,6 +43,7 @@ let gContainersPane = {
       userContextIcon.className = "userContext-icon";
       userContextIcon.setAttribute("width", 24);
       userContextIcon.setAttribute("height", 24);
+      userContextIcon.classList.add("userContext-icon-inprefs");
       userContextIcon.classList.add("identity-icon-" + container.icon);
       userContextIcon.classList.add("identity-color-" + container.color);
       outer.appendChild(userContextIcon);

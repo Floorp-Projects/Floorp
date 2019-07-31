@@ -1152,6 +1152,16 @@ def enable_webrender(config, tests):
 
 
 @transforms.add
+def set_schedules_for_webrender_android(config, tests):
+    """android-hw has limited resources, we need webrender on phones"""
+    for test in tests:
+        if test['suite'] in ['crashtest', 'reftest'] and \
+           test['test-platform'].startswith('android-hw'):
+            test['schedules-component'] = 'android-hw-gfx'
+        yield test
+
+
+@transforms.add
 def set_retry_exit_status(config, tests):
     """Set the retry exit status to TBPL_RETRY, the value returned by mozharness
        scripts to indicate a transient failure that should be retried."""

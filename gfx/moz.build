@@ -6,6 +6,7 @@
 
 with Files('**'):
     BUG_COMPONENT = ('Core', 'Graphics')
+    SCHEDULES.inclusive += ['android-hw-gfx']
 with Files('wr/**'):
     BUG_COMPONENT = ('Core', 'Graphics: WebRender')
 

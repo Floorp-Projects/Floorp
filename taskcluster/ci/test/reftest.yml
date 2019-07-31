@@ -17,7 +17,8 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             android-em-4.*/.*: ['try', 'mozilla-central']  # bug 1548659
-            android-hw-.*-qr/.*: ['try', 'mozilla-central']
+            android-hw-.*-qr/debug: ['try', 'mozilla-central']
+            android-hw-.*-qr/opt: ['try', 'mozilla-central', 'mozilla-inbound', 'autoland']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:

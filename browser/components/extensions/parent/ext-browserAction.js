@@ -191,6 +191,7 @@ this.browserAction = class extends ExtensionAPI {
       },
 
       onCreated: node => {
+        node.classList.add("panel-no-padding");
         node.classList.add("webextension-browser-action");
         node.setAttribute("badged", "true");
         node.setAttribute("constrain-size", "true");
