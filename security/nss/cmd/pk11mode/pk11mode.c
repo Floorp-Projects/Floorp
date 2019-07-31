@@ -5229,7 +5229,7 @@ PKM_Digest(CK_FUNCTION_LIST_PTR pFunctionList,
 char *
 PKM_FilePasswd(char *pwFile)
 {
-    unsigned char phrase[200];
+    unsigned char phrase[500];
     PRFileDesc *fd;
     PRInt32 nb;
     int i;
