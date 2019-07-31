@@ -1,5 +1,9 @@
-commit df1a1c75b785192a6ee9ab46a862cb83aaed037a
-Author: Alexey Shvayka <shvaikalesh@gmail.com>
-Date:   Wed Jun 19 23:39:21 2019 +0300
+commit aeff2b0048c23d1959605086614de76144785064
+Author: Caio Lima <ticaiolima@gmail.com>
+Date:   Tue Jul 30 11:53:56 2019 -0700
 
-    Remove trailing spaces from YAML blocks (#2201)
+    Adding case where PrivateName is used inside computed property. (#2241)
+    
+    * Adding case where PrivateName is used inside computed property.
+    
+    * Adding proper description to early errors on usage of undeclared private names inside computed property.
