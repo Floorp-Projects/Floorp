@@ -1702,7 +1702,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   LazyScript* lazy = LazyScript::Create(
       cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
       pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
-      funbox->toStringStart, funbox->startLine, funbox->startColumn,
+      funbox->toStringStart, funbox->toStringEnd, funbox->startLine, funbox->startColumn,
       parseGoal());
   if (!lazy) {
     return false;
