@@ -383,14 +383,12 @@ class Expressions extends Component<Props, State> {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    cx: getThreadContext(state),
-    autocompleteMatches: getAutocompleteMatchset(state),
-    expressions: getExpressions(state),
-    expressionError: getExpressionError(state),
-  };
-};
+const mapStateToProps = state => ({
+  cx: getThreadContext(state),
+  autocompleteMatches: getAutocompleteMatchset(state),
+  expressions: getExpressions(state),
+  expressionError: getExpressionError(state),
+});
 
 export default connect(
   mapStateToProps,

@@ -159,13 +159,11 @@ class EventListeners extends Component<Props> {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    activeEventListeners: getActiveEventListeners(state),
-    categories: getEventListenerBreakpointTypes(state),
-    expandedCategories: getEventListenerExpanded(state),
-  };
-};
+const mapStateToProps = state => ({
+  activeEventListeners: getActiveEventListeners(state),
+  categories: getEventListenerBreakpointTypes(state),
+  expandedCategories: getEventListenerExpanded(state),
+});
 
 export default connect(
   mapStateToProps,

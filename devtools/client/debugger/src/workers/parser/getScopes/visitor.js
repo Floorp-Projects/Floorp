@@ -213,22 +213,20 @@ function toParsedScopes(
   if (!children || children.length === 0) {
     return undefined;
   }
-  return children.map(scope => {
+  return children.map(scope => ({
     // Removing unneed information from TempScope such as parent reference.
     // We also need to convert BabelLocation to the Location type.
-    return {
-      start: scope.loc.start,
-      end: scope.loc.end,
-      type:
-        scope.type === "module" || scope.type === "function-body"
-          ? "block"
-          : scope.type,
-      scopeKind: "",
-      displayName: scope.displayName,
-      bindings: scope.bindings,
-      children: toParsedScopes(scope.children, sourceId),
-    };
-  });
+    start: scope.loc.start,
+    end: scope.loc.end,
+    type:
+      scope.type === "module" || scope.type === "function-body"
+        ? "block"
+        : scope.type,
+    scopeKind: "",
+    displayName: scope.displayName,
+    bindings: scope.bindings,
+    children: toParsedScopes(scope.children, sourceId),
+  }));
 }
 
 function createTempScope(
@@ -417,10 +415,7 @@ function createGlobalScope(
     end: fromBabelLocation(ast.loc.end, sourceId),
   });
 
-  return {
-    global,
-    lexical,
-  };
+  return { global, lexical };
 }
 
 const scopeCollectionVisitor = {
