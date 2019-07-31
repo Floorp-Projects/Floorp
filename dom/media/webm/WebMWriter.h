@@ -41,9 +41,8 @@ class VP8Metadata : public TrackMetadataBase {
  */
 class WebMWriter : public ContainerWriter {
  public:
-  // aTrackTypes indicate this muxer should multiplex into Video only or A/V
-  // foramt. Run in MediaRecorder thread
-  explicit WebMWriter(uint32_t aTrackTypes);
+  // Run in MediaRecorder thread
+  WebMWriter();
   virtual ~WebMWriter();
 
   // WriteEncodedTrack inserts raw packets into WebM stream. Does not accept
@@ -59,14 +58,11 @@ class WebMWriter : public ContainerWriter {
                             uint32_t aFlags = 0) override;
 
   // Assign metadata into muxer
-  nsresult SetMetadata(TrackMetadataBase* aMetadata) override;
+  nsresult SetMetadata(
+      const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) override;
 
  private:
   nsAutoPtr<EbmlComposer> mEbmlComposer;
-
-  // Indicate what kind of meta data needed in the writer.
-  // If this value become 0, it means writer can start to generate header.
-  uint8_t mMetadataRequiredFlag;
 };
 
 }  // namespace mozilla

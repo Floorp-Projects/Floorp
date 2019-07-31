@@ -37,13 +37,15 @@ class ContainerWriter {
       const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags = 0) = 0;
 
   /**
-   * Set the meta data pointer into muxer
-   * This function will check the integrity of aMetadata.
-   * If the meta data isn't well format, this function will return
-   * NS_ERROR_FAILURE to caller, else save the pointer to mMetadata and return
+   * Stores the metadata for all given tracks to the muxer.
+   *
+   * This method checks the integrity of aMetadata.
+   * If the metadata isn't well formatted, this method returns NS_ERROR_FAILURE.
+   * If the metadata is well formatted, it stores the metadata and returns
    * NS_OK.
    */
-  virtual nsresult SetMetadata(TrackMetadataBase* aMetadata) = 0;
+  virtual nsresult SetMetadata(
+      const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) = 0;
 
   /**
    * Indicate if the writer has finished to output data
