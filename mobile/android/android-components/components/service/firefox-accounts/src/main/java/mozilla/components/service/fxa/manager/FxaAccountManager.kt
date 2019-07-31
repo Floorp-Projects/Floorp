@@ -561,7 +561,7 @@ open class FxaAccountManager(
 
                         maybeUpdateSyncAuthInfoCache()
 
-                        notifyObservers { onAuthenticated(account) }
+                        notifyObservers { onAuthenticated(account, true) }
 
                         Event.FetchProfile
                     }
@@ -588,7 +588,7 @@ open class FxaAccountManager(
 
                         maybeUpdateSyncAuthInfoCache()
 
-                        notifyObservers { onAuthenticated(account) }
+                        notifyObservers { onAuthenticated(account, false) }
 
                         Event.FetchProfile
                     }
@@ -604,7 +604,7 @@ open class FxaAccountManager(
 
                         maybeUpdateSyncAuthInfoCache()
 
-                        notifyObservers { onAuthenticated(account) }
+                        notifyObservers { onAuthenticated(account, true) }
 
                         Event.FetchProfile
                     }
@@ -626,7 +626,7 @@ open class FxaAccountManager(
 
                         maybeUpdateSyncAuthInfoCache()
 
-                        notifyObservers { onAuthenticated(account) }
+                        notifyObservers { onAuthenticated(account, false) }
 
                         Event.FetchProfile
                     }
@@ -791,7 +791,7 @@ open class FxaAccountManager(
             syncManager.stop()
         }
 
-        override fun onAuthenticated(account: OAuthAccount) {
+        override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
             syncManager.start()
         }
 

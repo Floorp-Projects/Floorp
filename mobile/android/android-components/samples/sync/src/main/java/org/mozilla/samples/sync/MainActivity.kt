@@ -260,7 +260,7 @@ class MainActivity :
             }
         }
 
-        override fun onAuthenticated(account: OAuthAccount) {
+        override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
             launch {
                 val txtView: TextView = findViewById(R.id.fxaStatusView)
                 txtView.text = getString(R.string.signed_in_waiting_for_profile)
