@@ -1,4 +1,3 @@
-// |reftest| skip-if((function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()) -- class-fields-public is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/class-elements/eval-contains-superproperty-1.case
 // - src/class-elements/initializer-eval-super-property/cls-decl-fields-indirect-eval.template

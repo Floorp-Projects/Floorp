@@ -1,4 +1,4 @@
-// |reftest| skip-if(!this.hasOwnProperty('BigInt')) error:SyntaxError -- BigInt is not enabled unconditionally
+// |reftest| error:SyntaxError
 // Copyright (C) 2017 Robin Templeton. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
