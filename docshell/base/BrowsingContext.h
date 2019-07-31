@@ -223,13 +223,17 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
   // BrowsingContext::FindWithName(const nsAString&) is equivalent to
   // calling nsIDocShellTreeItem::FindItemWithName(aName, nullptr,
   // nullptr, false, <return value>).
-  BrowsingContext* FindWithName(const nsAString& aName);
+  BrowsingContext* FindWithName(const nsAString& aName,
+                                BrowsingContext& aRequestingContext);
+
 
   // Find a browsing context in this context's list of
   // children. Doesn't consider the special names, '_self', '_parent',
   // '_top', or '_blank'. Performs access control with regard to
   // 'this'.
-  BrowsingContext* FindChildWithName(const nsAString& aName);
+  BrowsingContext* FindChildWithName(const nsAString& aName,
+                                     BrowsingContext& aRequestingContext);
+
 
   nsISupports* GetParentObject() const;
   JSObject* WrapObject(JSContext* aCx,
@@ -392,14 +396,15 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
  private:
   // Find the special browsing context if aName is '_self', '_parent',
   // '_top', but not '_blank'. The latter is handled in FindWithName
-  BrowsingContext* FindWithSpecialName(const nsAString& aName);
+  BrowsingContext* FindWithSpecialName(const nsAString& aName,
+                                       BrowsingContext& aRequestingContext);
 
   // Find a browsing context in the subtree rooted at 'this' Doesn't
   // consider the special names, '_self', '_parent', '_top', or
   // '_blank'. Performs access control with regard to
   // 'aRequestingContext'.
   BrowsingContext* FindWithNameInSubtree(const nsAString& aName,
-                                         BrowsingContext* aRequestingContext);
+                                         BrowsingContext& aRequestingContext);
 
   // Removes the context from its group and sets mIsDetached to true.
   void Unregister();
