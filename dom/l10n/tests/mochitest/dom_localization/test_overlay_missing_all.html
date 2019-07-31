@@ -10,8 +10,8 @@
   const { FluentBundle } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
-  async function* mockGenerateMessages(locales, resourceIds) {
-    const bundle = new FluentBundle(locales);
+  async function* mockGenerateMessages(resourceIds) {
+    const bundle = new FluentBundle("en-US");
     // No translations!
     yield bundle;
   }
