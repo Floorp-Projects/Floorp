@@ -124,6 +124,11 @@ add_task(async function load_in_current_tab_test() {
       type: "keypress",
       details: { altKey: true },
     },
+    {
+      desc: "AltGr+Return keypress in a blank tab",
+      type: "keypress",
+      details: { altGraphKey: true },
+    },
   ];
 
   for (let { desc, type, details } of tests) {
@@ -166,6 +171,12 @@ add_task(async function load_in_new_tab_test() {
       details: { altKey: true },
       url: START_VALUE,
     },
+    {
+      desc: "AltGr+Return keypress in a dirty tab",
+      type: "keypress",
+      details: { altGraphKey: true },
+      url: START_VALUE,
+    },
   ];
 
   for (let { desc, type, details, url } of tests) {
@@ -174,7 +185,7 @@ add_task(async function load_in_new_tab_test() {
     // Add a new tab.
     let tab = await promiseOpenNewTab(url);
 
-    // Trigger a load and check it occurs in the current tab.
+    // Trigger a load and check it occurs in a new tab.
     let tabSwitchedPromise = promiseNewTabSwitched();
     await triggerCommand(type, details);
     await tabSwitchedPromise;
