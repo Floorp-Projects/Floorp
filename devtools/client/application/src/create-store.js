@@ -10,12 +10,14 @@ const { createStore } = require("devtools/client/shared/vendor/redux");
 const rootReducer = require("./reducers/index");
 const { WorkersState } = require("./reducers/workers-state");
 const { PageState } = require("./reducers/page-state");
+const { UiState } = require("./reducers/ui-state");
 
 function configureStore() {
   // Prepare initial state.
   const initialState = {
     workers: new WorkersState(),
     page: new PageState(),
+    ui: new UiState(),
   };
 
   return createStore(rootReducer, initialState);

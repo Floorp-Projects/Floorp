@@ -3,20 +3,14 @@
 
 "use strict";
 
-const {
-  reducers,
-} = require("devtools/client/application/test/components/helpers/helper-reducer");
-
-const {
-  createStore,
-  combineReducers,
-} = require("devtools/client/shared/vendor/redux");
+const reducers = require("devtools/client/application/src/reducers/index");
+const { createStore } = require("devtools/client/shared/vendor/redux");
 
 /**
  * Prepare the store for use in testing.
  */
 function setupStore({ preloadedState } = {}) {
-  const store = createStore(combineReducers(reducers), preloadedState);
+  const store = createStore(reducers, preloadedState);
   return store;
 }
 
