@@ -256,11 +256,6 @@ static int32_t gDocShellCount = 0;
 // Global count of docshells with the private attribute set
 static uint32_t gNumberOfPrivateDocShells = 0;
 
-// True means we validate window targets to prevent frameset
-// spoofing. Initialize this to a non-bolean value so we know to check
-// the pref on the creation of the first docshell.
-static uint32_t gValidateOrigin = 0xffffffff;
-
 #ifdef DEBUG
 static mozilla::LazyLogModule gDocShellLog("nsDocShell");
 #endif
@@ -2847,35 +2842,8 @@ bool nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
                                bool aConsiderOpener) {
   MOZ_ASSERT(aTargetItem, "Must have target item!");
 
-  if (!gValidateOrigin || !aAccessingItem) {
+  if (!aAccessingItem) {
     // Good to go
-    return true;
-  }
-
-  // XXXbz should we care if aAccessingItem or the document therein is
-  // chrome?  Should those get extra privileges?
-
-  // For historical context, see:
-  //
-  // Bug 13871:  Prevent frameset spoofing
-  // Bug 103638: Targets with same name in different windows open in wrong
-  //             window with javascript
-  // Bug 408052: Adopt "ancestor" frame navigation policy
-
-  // Now do a security check.
-  //
-  // Disallow navigation if the two frames are not part of the same app, or if
-  // they have different is-in-browser-element states.
-  //
-  // Allow navigation if
-  //  1) aAccessingItem can script aTargetItem or one of its ancestors in
-  //     the frame hierarchy or
-  //  2) aTargetItem is a top-level frame and aAccessingItem is its descendant
-  //  3) aTargetItem is a top-level frame and aAccessingItem can target
-  //     its opener per rule (1) or (2).
-
-  if (aTargetItem == aAccessingItem) {
-    // A frame is allowed to navigate itself.
     return true;
   }
 
@@ -2886,105 +2854,9 @@ bool nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
-  nsCOMPtr<nsIDocShellTreeItem> accessingRoot;
-  aAccessingItem->GetInProcessSameTypeRootTreeItem(
-      getter_AddRefs(accessingRoot));
-  nsCOMPtr<nsIDocShell> accessingRootDS = do_QueryInterface(accessingRoot);
-
-  nsCOMPtr<nsIDocShellTreeItem> targetRoot;
-  aTargetItem->GetInProcessSameTypeRootTreeItem(getter_AddRefs(targetRoot));
-  nsCOMPtr<nsIDocShell> targetRootDS = do_QueryInterface(targetRoot);
-
-  OriginAttributes targetOA =
-      static_cast<nsDocShell*>(targetDS.get())->GetOriginAttributes();
-  OriginAttributes accessingOA =
-      static_cast<nsDocShell*>(accessingDS.get())->GetOriginAttributes();
-
-  // When the first party isolation is on, the top-level docShell may not have
-  // the firstPartyDomain in its originAttributes, but its document will have
-  // it. So we get the firstPartyDomain from the nodePrincipal of the document
-  // before we compare the originAttributes.
-  if (OriginAttributes::IsFirstPartyEnabled()) {
-    if (aAccessingItem->ItemType() == nsIDocShellTreeItem::typeContent &&
-        (accessingDS == accessingRootDS || accessingDS->GetIsMozBrowser())) {
-      RefPtr<Document> accessingDoc = aAccessingItem->GetDocument();
-
-      if (accessingDoc) {
-        nsCOMPtr<nsIPrincipal> accessingPrincipal =
-            accessingDoc->NodePrincipal();
-
-        accessingOA.mFirstPartyDomain =
-            accessingPrincipal->OriginAttributesRef().mFirstPartyDomain;
-      }
-    }
-
-    if (aTargetItem->ItemType() == nsIDocShellTreeItem::typeContent &&
-        (targetDS == targetRootDS || targetDS->GetIsMozBrowser())) {
-      RefPtr<Document> targetDoc = aAccessingItem->GetDocument();
-
-      if (targetDoc) {
-        nsCOMPtr<nsIPrincipal> targetPrincipal = targetDoc->NodePrincipal();
-
-        targetOA.mFirstPartyDomain =
-            targetPrincipal->OriginAttributesRef().mFirstPartyDomain;
-      }
-    }
-  }
-
-  if (targetOA != accessingOA) {
-    return false;
-  }
-
-  // A private document can't access a non-private one, and vice versa.
-  if (static_cast<nsDocShell*>(targetDS.get())->UsePrivateBrowsing() !=
-      static_cast<nsDocShell*>(accessingDS.get())->UsePrivateBrowsing()) {
-    return false;
-  }
-
-  if (aTargetItem == accessingRoot) {
-    // A frame can navigate its root.
-    return true;
-  }
-
-  // Check if aAccessingItem can navigate one of aTargetItem's ancestors.
-  nsCOMPtr<nsIDocShellTreeItem> target = aTargetItem;
-  do {
-    if (ValidateOrigin(aAccessingItem, target)) {
-      return true;
-    }
-
-    nsCOMPtr<nsIDocShellTreeItem> parent;
-    target->GetInProcessSameTypeParent(getter_AddRefs(parent));
-    parent.swap(target);
-  } while (target);
-
-  if (aTargetItem != targetRoot) {
-    // target is a subframe, not in accessor's frame hierarchy, and all its
-    // ancestors have origins different from that of the accessor. Don't
-    // allow access.
-    return false;
-  }
-
-  if (!aConsiderOpener) {
-    // All done here
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowOuter> targetWindow = aTargetItem->GetWindow();
-  if (!targetWindow) {
-    NS_ERROR("This should not happen, really");
-    return false;
-  }
-
-  nsCOMPtr<mozIDOMWindowProxy> targetOpener = targetWindow->GetOpener();
-  nsCOMPtr<nsIWebNavigation> openerWebNav(do_GetInterface(targetOpener));
-  nsCOMPtr<nsIDocShellTreeItem> openerItem(do_QueryInterface(openerWebNav));
-
-  if (!openerItem) {
-    return false;
-  }
-
-  return CanAccessItem(openerItem, aAccessingItem, false);
+  return Cast(accessingDS)
+      ->mBrowsingContext->CanAccess(Cast(targetDS)->mBrowsingContext,
+                                    aConsiderOpener);
 }
 
 static bool ItemIsActive(nsIDocShellTreeItem* aItem) {
@@ -4944,12 +4816,6 @@ nsDocShell::Create() {
 
   NS_ENSURE_TRUE(Preferences::GetRootBranch(), NS_ERROR_FAILURE);
   mCreated = true;
-
-  if (gValidateOrigin == 0xffffffff) {
-    // Check pref to see if we should prevent frameset spoofing
-    gValidateOrigin =
-        Preferences::GetBool("browser.frame.validate_origin", true);
-  }
 
   mUseStrictSecurityChecks = Preferences::GetBool(
       "security.strict_security_checks.enabled", mUseStrictSecurityChecks);
@@ -8620,10 +8486,8 @@ nsresult nsDocShell::CheckLoadingPermissions() {
   // check on load.
   nsresult rv = NS_OK;
 
-  if (!gValidateOrigin || !IsFrame()) {
-    // Origin validation was turned off, or we're not a frame.
-    // Permit all loads.
-
+  if (!IsFrame()) {
+    // We're not a frame. Permit all loads.
     return rv;
   }
 
