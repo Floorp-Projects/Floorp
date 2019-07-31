@@ -985,7 +985,7 @@ bool WebRenderBridgeParent::IsRootWebRenderBridgeParent() const {
 }
 
 void WebRenderBridgeParent::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
+    UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   Api(wr::RenderRoot::Default)->SetCompositionRecorder(std::move(aRecorder));
 }
 

@@ -579,11 +579,11 @@ void WebRenderAPI::Capture() {
 }
 
 void WebRenderAPI::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
+    UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   class SetCompositionRecorderEvent final : public RendererEvent {
    public:
     explicit SetCompositionRecorderEvent(
-        RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder)
+        UniquePtr<layers::WebRenderCompositionRecorder> aRecorder)
         : mRecorder(std::move(aRecorder)) {
       MOZ_COUNT_CTOR(SetCompositionRecorderEvent);
     }
@@ -600,7 +600,7 @@ void WebRenderAPI::SetCompositionRecorder(
     }
 
    private:
-    RefPtr<layers::WebRenderCompositionRecorder> mRecorder;
+    UniquePtr<layers::WebRenderCompositionRecorder> mRecorder;
   };
 
   auto event = MakeUnique<SetCompositionRecorderEvent>(std::move(aRecorder));

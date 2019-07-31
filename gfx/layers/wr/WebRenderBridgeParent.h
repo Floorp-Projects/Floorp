@@ -298,7 +298,7 @@ class WebRenderBridgeParent final
   WRRootId GetWRRootId() const;
 
   void SetCompositionRecorder(
-      RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder);
+      UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
 
   /**
    * Write the frames collected by the |WebRenderCompositionRecorder| to disk.
