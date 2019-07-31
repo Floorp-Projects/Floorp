@@ -30,7 +30,7 @@ add_task(async function setup() {
   is(logins.length, 0, "There are no logins");
 });
 
-add_task(async function fill_generated_password_hidden() {
+add_task(async function test_hidden_by_prefs() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["signon.generation.available", true],
@@ -72,6 +72,47 @@ add_task(async function fill_generated_password_hidden() {
     }
   );
   await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function test_fill_hidden_by_login_saving_disabled() {
+  // test that the generated password option is not present when the user
+  // disabled password saving for the site.
+  Services.logins.setLoginSavingEnabled(TEST_ORIGIN, false);
+
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_ORIGIN + FORM_PAGE_PATH,
+    },
+    async function(browser) {
+      await SimpleTest.promiseFocus(browser.ownerGlobal);
+
+      await openPasswordContextMenu(browser, passwordInputSelector);
+
+      let loginPopup = document.getElementById("fill-login-popup");
+      let generatedPasswordItem = document.getElementById(
+        "fill-login-generated-password"
+      );
+      let generatedPasswordSeparator = document.getElementById(
+        "generated-password-separator"
+      );
+
+      // Check the content of the password manager popup
+      ok(BrowserTestUtils.is_visible(loginPopup), "popup is visible");
+      ok(
+        !BrowserTestUtils.is_visible(generatedPasswordItem),
+        "generated password item is hidden"
+      );
+      ok(
+        !BrowserTestUtils.is_visible(generatedPasswordSeparator),
+        "separator is hidden"
+      );
+
+      CONTEXT_MENU.hidePopup();
+    }
+  );
+
+  Services.logins.setLoginSavingEnabled(TEST_ORIGIN, true);
 });
 
 add_task(async function fill_generated_password_empty_field() {
