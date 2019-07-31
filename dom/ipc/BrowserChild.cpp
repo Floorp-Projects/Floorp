@@ -3321,6 +3321,7 @@ void BrowserChild::PaintWhileInterruptingJS(
     return;
   }
 
+  MOZ_DIAGNOSTIC_ASSERT(nsContentUtils::IsSafeToRunScript());
   nsAutoScriptBlocker scriptBlocker;
   RecvRenderLayers(true /* aEnabled */, aForceRepaint, aEpoch);
 }
