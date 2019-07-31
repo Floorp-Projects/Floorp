@@ -918,8 +918,8 @@ nsresult MediaEncoder::EncodeData() {
       return rv;
     }
     for (const RefPtr<EncodedFrame>& frame : mEncodedAudioFrames) {
-      if (frame->GetFrameType() == EncodedFrame::FrameType::OPUS_AUDIO_FRAME) {
-        frame->SetTimeStamp(frame->GetTimeStamp() + mAudioCodecDelay);
+      if (frame->mFrameType == EncodedFrame::FrameType::OPUS_AUDIO_FRAME) {
+        frame->mTime += mAudioCodecDelay;
       }
     }
   }
