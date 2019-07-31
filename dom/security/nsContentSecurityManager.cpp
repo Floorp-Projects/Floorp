@@ -73,8 +73,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
   NS_ENSURE_SUCCESS(rv, true);
-  bool isDataURI =
-      (NS_SUCCEEDED(uri->SchemeIs("data", &isDataURI)) && isDataURI);
+  bool isDataURI = uri->SchemeIs("data");
   if (!isDataURI) {
     return true;
   }
@@ -139,8 +138,7 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
   if (NS_FAILED(rv) || !newURI) {
     return true;
   }
-  bool isDataURI =
-      (NS_SUCCEEDED(newURI->SchemeIs("data", &isDataURI)) && isDataURI);
+  bool isDataURI = newURI->SchemeIs("data");
   if (!isDataURI) {
     return true;
   }
@@ -244,7 +242,7 @@ nsresult nsContentSecurityManager::CheckFTPSubresourceLoad(
     return NS_OK;
   }
 
-  bool isFtpURI = (NS_SUCCEEDED(uri->SchemeIs("ftp", &isFtpURI)) && isFtpURI);
+  bool isFtpURI = uri->SchemeIs("ftp");
   if (!isFtpURI) {
     return NS_OK;
   }

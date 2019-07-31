@@ -54,18 +54,18 @@ impl<'a> RawtestHarness<'a> {
         self.wrench.renderer.read_pixels_rgba8(window_rect)
     }
 
-    fn compare_pixels(&self, reference: Vec<u8>, test: Vec<u8>, size: FramebufferIntSize) {
+    fn compare_pixels(&self, data1: Vec<u8>, data2: Vec<u8>, size: FramebufferIntSize) {
         let size = DeviceIntSize::new(size.width, size.height);
-        let reference = ReftestImage {
-            data: reference,
+        let image1 = ReftestImage {
+            data: data1,
             size,
         };
-        let test = ReftestImage {
-            data: test,
+        let image2 = ReftestImage {
+            data: data2,
             size,
         };
 
-        match reference.compare(&test) {
+        match image1.compare(&image2) {
             ReftestImageComparison::Equal => {}
             ReftestImageComparison::NotEqual { max_difference, count_different } => {
                 let t = "rawtest";
@@ -78,11 +78,8 @@ impl<'a> RawtestHarness<'a> {
                     "number of differing pixels",
                     count_different
                 );
-                println!("REFTEST   IMAGE 1 (TEST): {}", test.create_data_uri());
-                println!(
-                    "REFTEST   IMAGE 2 (REFERENCE): {}",
-                    reference.create_data_uri()
-                );
+                println!("REFTEST   IMAGE 1: {}", image1.create_data_uri());
+                println!("REFTEST   IMAGE 2: {}", image2.create_data_uri());
                 println!("REFTEST TEST-END | {}", t);
                 panic!();
             }

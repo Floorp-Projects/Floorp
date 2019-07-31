@@ -543,10 +543,11 @@ inline bool IsCheckSloppyOp(JSOp op) {
 
 inline bool IsAtomOp(JSOp op) { return JOF_OPTYPE(op) == JOF_ATOM; }
 
-inline bool IsGetPropPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsGetPropOp(JSOp op) {
   return op == JSOP_LENGTH || op == JSOP_GETPROP || op == JSOP_CALLPROP;
 }
+
+inline bool IsGetPropPC(const jsbytecode* pc) { return IsGetPropOp(JSOp(*pc)); }
 
 inline bool IsHiddenInitOp(JSOp op) {
   return op == JSOP_INITHIDDENPROP || op == JSOP_INITHIDDENELEM ||
@@ -560,24 +561,29 @@ inline bool IsStrictSetPC(jsbytecode* pc) {
          op == JSOP_STRICTSETGNAME || op == JSOP_STRICTSETELEM;
 }
 
-inline bool IsSetPropPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsSetPropOp(JSOp op) {
   return op == JSOP_SETPROP || op == JSOP_STRICTSETPROP || op == JSOP_SETNAME ||
          op == JSOP_STRICTSETNAME || op == JSOP_SETGNAME ||
          op == JSOP_STRICTSETGNAME;
 }
 
-inline bool IsGetElemPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsSetPropPC(const jsbytecode* pc) { return IsSetPropOp(JSOp(*pc)); }
+
+inline bool IsGetElemOp(JSOp op) {
   return op == JSOP_GETELEM || op == JSOP_CALLELEM;
 }
 
-inline bool IsSetElemPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsGetElemPC(const jsbytecode* pc) { return IsGetElemOp(JSOp(*pc)); }
+
+inline bool IsSetElemOp(JSOp op) {
   return op == JSOP_SETELEM || op == JSOP_STRICTSETELEM;
 }
 
-inline bool IsElemPC(jsbytecode* pc) { return CodeSpec[*pc].format & JOF_ELEM; }
+inline bool IsSetElemPC(const jsbytecode* pc) { return IsSetElemOp(JSOp(*pc)); }
+
+inline bool IsElemPC(const jsbytecode* pc) {
+  return CodeSpec[*pc].format & JOF_ELEM;
+}
 
 inline bool IsCallOp(JSOp op) { return CodeSpec[op].format & JOF_INVOKE; }
 
@@ -596,11 +602,14 @@ inline bool IsConstructorCallPC(const jsbytecode* pc) {
   return IsConstructorCallOp(JSOp(*pc));
 }
 
-inline bool IsSpreadCallPC(jsbytecode* pc) {
-  JSOp op = JSOp(*pc);
+inline bool IsSpreadCallOp(JSOp op) {
   return op == JSOP_SPREADCALL || op == JSOP_SPREADNEW ||
          op == JSOP_SPREADSUPERCALL || op == JSOP_SPREADEVAL ||
          op == JSOP_STRICTSPREADEVAL;
+}
+
+inline bool IsSpreadCallPC(const jsbytecode* pc) {
+  return IsSpreadCallOp(JSOp(*pc));
 }
 
 static inline int32_t GetBytecodeInteger(jsbytecode* pc) {

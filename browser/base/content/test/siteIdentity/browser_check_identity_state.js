@@ -408,13 +408,21 @@ async function dataUriTest(secureCheck) {
   let dataURI = "data:text/html,hi";
 
   let newTab = await loadNewTab(dataURI);
-  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  if (secureCheck) {
+    is(getIdentityMode(), "notSecure", "Identity should be not secure");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
 
   gBrowser.selectedTab = oldTab;
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = newTab;
-  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  if (secureCheck) {
+    is(getIdentityMode(), "notSecure", "Identity should be not secure");
+  } else {
+    is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
+  }
 
   gBrowser.removeTab(newTab);
 

@@ -8,7 +8,8 @@
   <head>
     <meta name="viewport" content="width=device-width" />
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
-    <link rel="localization" href="toolkit/certviewer.ftl">
+    <!-- rename to toolkit/certviewer.ftl when exposing to l10n -->
+    <link rel="localization" href="preview/certviewer.ftl">
     <link rel="localization" href="branding/brand.ftl">
     <script defer="defer" src="chrome://global/content/certviewer/pvutils_bundle.js"></script>
     <script defer="defer" src="chrome://global/content/certviewer/asn1js_bundle.js"></script>
@@ -28,15 +29,12 @@
     <title>about:certificate</title>
   </head>
   <body>
-    <certificate-section></certificate-section> 
-
     <template id="certificate-section-template" class="section">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/certificate-section.css">
       <h1 class="title"></h1>
       <div class="certificate-tabs" role="tablist"></div>
       <div class="info-groups"></div>
     </template>
-
 
     <template id="info-item-template">
       <link rel="stylesheet" href="chrome://global/content/certviewer/components/info-item.css">

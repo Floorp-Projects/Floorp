@@ -45,3 +45,13 @@ Object.defineProperty(document, "l10n", {
     },
   },
 });
+
+Object.defineProperty(window, "AboutLoginsUtils", {
+  configurable: true,
+  writable: true,
+  value: {
+    promptForMasterPassword(resolve) {
+      resolve(true);
+    },
+  },
+});

@@ -1316,6 +1316,7 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
       if (textureFactoryIdentifier.mParentBackend ==
           LayersBackend::LAYERS_NONE) {
         DestroyCompositor();
+        lm = nullptr;
       }
     }
 

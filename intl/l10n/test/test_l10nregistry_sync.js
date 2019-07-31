@@ -148,7 +148,7 @@ add_task(function test_has_two_sources() {
 
   equal(bundle0.hasMessage("key"), true);
   let msg = bundle0.getMessage("key");
-  equal(bundle0.format(msg), "platform value");
+  equal(bundle0.formatPattern(msg.value), "platform value");
 
   equal((bundles.next()).done, true);
 
@@ -160,13 +160,13 @@ add_task(function test_has_two_sources() {
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
   let msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "app value");
+  equal(bundle0.formatPattern(msg0.value), "app value");
 
   let bundle1 = (bundles.next()).value;
   equal(bundle1.locales[0], "en-US");
   equal(bundle1.hasMessage("key"), true);
   let msg1 = bundle1.getMessage("key");
-  equal(bundle1.format(msg1), "platform value");
+  equal(bundle1.formatPattern(msg1.value), "platform value");
 
   equal((bundles.next()).done, true);
 
@@ -227,13 +227,13 @@ add_task(function test_override() {
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
   let msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "addon value");
+  equal(bundle0.formatPattern(msg0.value), "addon value");
 
   let bundle1 = (bundles.next()).value;
   equal(bundle1.locales[0], "pl");
   equal(bundle1.hasMessage("key"), true);
   let msg1 = bundle1.getMessage("key");
-  equal(bundle1.format(msg1), "value");
+  equal(bundle1.formatPattern(msg1.value), "value");
 
   equal((bundles.next()).done, true);
 
@@ -259,7 +259,7 @@ add_task(function test_updating() {
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
   let msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "value");
+  equal(bundle0.formatPattern(msg0.value), "value");
 
 
   const newSource = new IndexedFileSource("langpack-pl", ["pl"], "/data/locales/{locale}/", [
@@ -272,7 +272,7 @@ add_task(function test_updating() {
   bundles = L10nRegistry.generateBundlesSync(["pl"], ["test.ftl"]);
   bundle0 = (bundles.next()).value;
   msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "new value");
+  equal(bundle0.formatPattern(msg0.value), "new value");
 
   // cleanup
   L10nRegistry.sources.clear();
@@ -304,13 +304,13 @@ add_task(function test_removing() {
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
   let msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "addon value");
+  equal(bundle0.formatPattern(msg0.value), "addon value");
 
   let bundle1 = (bundles.next()).value;
   equal(bundle1.locales[0], "pl");
   equal(bundle1.hasMessage("key"), true);
   let msg1 = bundle1.getMessage("key");
-  equal(bundle1.format(msg1), "value");
+  equal(bundle1.formatPattern(msg1.value), "value");
 
   equal((bundles.next()).done, true);
 
@@ -326,7 +326,7 @@ add_task(function test_removing() {
   equal(bundle0.locales[0], "pl");
   equal(bundle0.hasMessage("key"), true);
   msg0 = bundle0.getMessage("key");
-  equal(bundle0.format(msg0), "value");
+  equal(bundle0.formatPattern(msg0.value), "value");
 
   equal((bundles.next()).done, true);
 

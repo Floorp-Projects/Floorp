@@ -10,7 +10,6 @@ DIRS += [
 
 DevToolsModules(
     'fluent-react.js',
-    'fluent.js',
     'immutable.js',
     'json5.js',
     'jszip.js',

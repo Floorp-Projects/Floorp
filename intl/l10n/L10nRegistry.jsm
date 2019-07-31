@@ -666,7 +666,7 @@ class FileSource {
       if (data === false) {
         this.cache[fullPath] = false;
       } else {
-        this.cache[fullPath] = FluentResource.fromString(data);
+        this.cache[fullPath] = new FluentResource(data);
       }
 
       return this.cache[fullPath];
@@ -675,7 +675,7 @@ class FileSource {
     // async
     return this.cache[fullPath] = L10nRegistry.load(fullPath).then(
       data => {
-        return this.cache[fullPath] = FluentResource.fromString(data);
+        return this.cache[fullPath] = new FluentResource(data);
       },
       err => {
         this.cache[fullPath] = false;

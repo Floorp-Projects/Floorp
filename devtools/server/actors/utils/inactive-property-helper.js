@@ -486,6 +486,7 @@ class InactivePropertyHelper {
         // avoids extra complexity that will likely not be necessary in most cases.
         "select",
         "svg",
+        "textarea",
         "video",
       ])
     ) {

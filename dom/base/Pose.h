@@ -40,14 +40,14 @@ class Pose : public nsWrapperCache {
   virtual void GetAngularAcceleration(JSContext* aJSContext,
                                       JS::MutableHandle<JSObject*> aRetval,
                                       ErrorResult& aRv) = 0;
+  static void SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
+                              JS::MutableHandle<JSObject*> aRetVal,
+                              JS::Heap<JSObject*>& aObj, float* aVal,
+                              uint32_t aValLength, bool bCreate,
+                              ErrorResult& aRv);
 
  protected:
   virtual ~Pose();
-
-  void SetFloat32Array(JSContext* aJSContext,
-                       JS::MutableHandle<JSObject*> aRetVal,
-                       JS::Heap<JSObject*>& aObj, float* aVal,
-                       uint32_t sizeOfVal, bool bCreate, ErrorResult& aRv);
 
   nsCOMPtr<nsISupports> mParent;
 

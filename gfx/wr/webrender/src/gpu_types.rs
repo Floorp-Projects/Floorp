@@ -105,8 +105,9 @@ pub struct BlurInstance {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingInstance {
-    pub task_address: RenderTaskAddress,
-    pub src_task_address: RenderTaskAddress,
+    pub target_rect: DeviceRect,
+    pub source_rect: DeviceIntRect,
+    pub source_layer: i32,
 }
 
 #[derive(Debug)]

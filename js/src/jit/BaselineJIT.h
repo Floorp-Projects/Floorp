@@ -7,6 +7,7 @@
 #ifndef jit_BaselineJIT_h
 #define jit_BaselineJIT_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "ds/LifoAlloc.h"
@@ -201,10 +202,6 @@ struct BaselineScript final {
   // Code pointer containing the actual method.
   HeapPtr<JitCode*> method_ = nullptr;
 
-  // Early Ion bailouts will enter at this address. This is after frame
-  // construction and before environment chain is initialized.
-  uint32_t bailoutPrologueOffset_;
-
   // Baseline Interpreter can enter Baseline Compiler code at this address. This
   // is right after the warm-up counter check in the prologue.
   uint32_t warmUpCheckPrologueOffset_;
@@ -264,24 +261,19 @@ struct BaselineScript final {
 
   // Use BaselineScript::New to create new instances. It will properly
   // allocate trailing objects.
-  BaselineScript(uint32_t bailoutPrologueOffset,
-                 uint32_t warmUpCheckPrologueOffset,
+  BaselineScript(uint32_t warmUpCheckPrologueOffset,
                  uint32_t profilerEnterToggleOffset,
                  uint32_t profilerExitToggleOffset)
-      : bailoutPrologueOffset_(bailoutPrologueOffset),
-        warmUpCheckPrologueOffset_(warmUpCheckPrologueOffset),
+      : warmUpCheckPrologueOffset_(warmUpCheckPrologueOffset),
         profilerEnterToggleOffset_(profilerEnterToggleOffset),
         profilerExitToggleOffset_(profilerExitToggleOffset) {}
 
  public:
-  static BaselineScript* New(JSScript* jsscript, uint32_t bailoutPrologueOffset,
-                             uint32_t warmUpCheckPrologueOffset,
-                             uint32_t profilerEnterToggleOffset,
-                             uint32_t profilerExitToggleOffset,
-                             size_t retAddrEntries,
-                             size_t pcMappingIndexEntries, size_t pcMappingSize,
-                             size_t resumeEntries,
-                             size_t traceLoggerToggleOffsetEntries);
+  static BaselineScript* New(
+      JSScript* jsscript, uint32_t warmUpCheckPrologueOffset,
+      uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
+      size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
+      size_t resumeEntries, size_t traceLoggerToggleOffsetEntries);
 
   static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(FreeOp* fop, BaselineScript* script);
@@ -300,9 +292,6 @@ struct BaselineScript final {
     return flags_ & HAS_DEBUG_INSTRUMENTATION;
   }
 
-  uint8_t* bailoutPrologueEntryAddr() const {
-    return method_->raw() + bailoutPrologueOffset_;
-  }
   uint8_t* warmUpCheckPrologueAddr() const {
     return method_->raw() + warmUpCheckPrologueOffset_;
   }
@@ -469,55 +458,45 @@ void ToggleBaselineProfiling(JSContext* cx, bool enable);
 void ToggleBaselineTraceLoggerScripts(JSRuntime* runtime, bool enable);
 void ToggleBaselineTraceLoggerEngine(JSRuntime* runtime, bool enable);
 
-struct BaselineBailoutInfo {
+struct alignas(uintptr_t) BaselineBailoutInfo {
   // Pointer into the current C stack, where overwriting will start.
-  uint8_t* incomingStack;
+  uint8_t* incomingStack = nullptr;
 
   // The top and bottom heapspace addresses of the reconstructed stack
   // which will be copied to the bottom.
-  uint8_t* copyStackTop;
-  uint8_t* copyStackBottom;
-
-  // Fields to store the top-of-stack baseline values that are held
-  // in registers.  The setR0 and setR1 fields are flags indicating
-  // whether each one is initialized.
-  uint32_t setR0;
-  Value valueR0;
-  uint32_t setR1;
-  Value valueR1;
+  uint8_t* copyStackTop = nullptr;
+  uint8_t* copyStackBottom = nullptr;
 
   // The value of the frame pointer register on resume.
-  void* resumeFramePtr;
+  void* resumeFramePtr = nullptr;
 
   // The native code address to resume into.
-  void* resumeAddr;
+  void* resumeAddr = nullptr;
 
-  // The bytecode pc where we will resume.
-  jsbytecode* resumePC;
+  // If non-null, we have to type monitor the top stack value for this pc (we
+  // resume right after it).
+  jsbytecode* monitorPC = nullptr;
 
   // The bytecode pc of try block and fault block.
-  jsbytecode* tryPC;
-  jsbytecode* faultPC;
-
-  // If resuming into a TypeMonitor IC chain, this field holds the
-  // address of the first stub in that chain.  If this field is
-  // set, then the actual jitcode resumed into is the jitcode for
-  // the first stub, not the resumeAddr above.  The resumeAddr
-  // above, in this case, is pushed onto the stack so that the
-  // TypeMonitor chain can tail-return into the main jitcode when done.
-  ICStub* monitorStub;
+  jsbytecode* tryPC = nullptr;
+  jsbytecode* faultPC = nullptr;
 
   // Number of baseline frames to push on the stack.
-  uint32_t numFrames;
+  uint32_t numFrames = 0;
 
   // If Ion bailed out on a global script before it could perform the global
   // declaration conflicts check. In such cases the baseline script is
   // resumed at the first pc instead of the prologue, so an extra flag is
   // needed to perform the check.
-  bool checkGlobalDeclarationConflicts;
+  bool checkGlobalDeclarationConflicts = false;
 
   // The bailout kind.
-  BailoutKind bailoutKind;
+  mozilla::Maybe<BailoutKind> bailoutKind = {};
+
+  BaselineBailoutInfo() = default;
+  BaselineBailoutInfo(const BaselineBailoutInfo&) = default;
+
+  void operator=(const BaselineBailoutInfo&) = delete;
 };
 
 MOZ_MUST_USE bool BailoutIonToBaseline(
@@ -532,6 +511,20 @@ static const unsigned BASELINE_MAX_ARGS_LENGTH = 20000;
 
 // Class storing the generated Baseline Interpreter code for the runtime.
 class BaselineInterpreter {
+ public:
+  struct CallVMOffsets {
+    uint32_t debugPrologueOffset = 0;
+    uint32_t debugEpilogueOffset = 0;
+    uint32_t debugAfterYieldOffset = 0;
+  };
+  struct ICReturnOffset {
+    uint32_t offset;
+    JSOp op;
+    ICReturnOffset(uint32_t offset, JSOp op) : offset(offset), op(op) {}
+  };
+  using ICReturnOffsetVector = Vector<ICReturnOffset, 0, SystemAllocPolicy>;
+
+ private:
   // The interpreter code.
   JitCode* code_ = nullptr;
 
@@ -540,6 +533,10 @@ class BaselineInterpreter {
 
   // Like interpretOpOffset_ but skips the debug trap for the current op.
   uint32_t interpretOpNoDebugTrapOffset_ = 0;
+
+  // Early Ion bailouts will enter at this address. This is after frame
+  // construction and environment initialization.
+  uint32_t bailoutPrologueOffset_ = 0;
 
   // The offsets for the toggledJump instructions for profiler instrumentation.
   uint32_t profilerEnterToggleOffset_ = 0;
@@ -556,15 +553,10 @@ class BaselineInterpreter {
   // Offsets of toggled jumps for code coverage.
   CodeOffsetVector codeCoverageOffsets_;
 
- public:
-  // Offsets of some callVMs for BaselineDebugModeOSR.
-  struct CallVMOffsets {
-    uint32_t debugPrologueOffset = 0;
-    uint32_t debugEpilogueOffset = 0;
-    uint32_t debugAfterYieldOffset = 0;
-  };
+  // Offsets of IC calls for IsIonInlinableOp ops, for Ion bailouts.
+  ICReturnOffsetVector icReturnOffsets_;
 
- private:
+  // Offsets of some callVMs for BaselineDebugModeOSR.
   CallVMOffsets callVMOffsets_;
 
   uint8_t* codeAtOffset(uint32_t offset) const {
@@ -581,11 +573,12 @@ class BaselineInterpreter {
 
   void init(JitCode* code, uint32_t interpretOpOffset,
             uint32_t interpretOpNoDebugTrapOffset,
-            uint32_t profilerEnterToggleOffset,
+            uint32_t bailoutPrologueOffset, uint32_t profilerEnterToggleOffset,
             uint32_t profilerExitToggleOffset,
             CodeOffsetVector&& debugInstrumentationOffsets,
             CodeOffsetVector&& debugTrapOffsets,
             CodeOffsetVector&& codeCoverageOffsets,
+            ICReturnOffsetVector&& icReturnOffsets,
             const CallVMOffsets& callVMOffsets);
 
   uint8_t* codeRaw() const { return code_->raw(); }
@@ -599,6 +592,11 @@ class BaselineInterpreter {
   uint8_t* retAddrForDebugAfterYieldCallVM() const {
     return codeAtOffset(callVMOffsets_.debugAfterYieldOffset);
   }
+  uint8_t* bailoutPrologueEntryAddr() const {
+    return codeAtOffset(bailoutPrologueOffset_);
+  }
+
+  uint8_t* retAddrForIC(JSOp op) const;
 
   TrampolinePtr interpretOpAddr() const {
     return TrampolinePtr(codeAtOffset(interpretOpOffset_));

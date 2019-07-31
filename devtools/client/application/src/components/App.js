@@ -30,7 +30,7 @@ class App extends PureComponent {
     const { fluentBundles } = this.props;
 
     return LocalizationProvider(
-      { messages: fluentBundles },
+      { bundles: fluentBundles },
       main({ className: `application` }, WorkersPage({}))
     );
   }

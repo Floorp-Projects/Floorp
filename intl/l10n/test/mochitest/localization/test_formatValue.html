@@ -7,18 +7,18 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { FluentBundle } =
+  const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
-  async function* mockGenerateMessages(locales, resourceIds) {
-    const bundle = new FluentBundle(locales, {
+  async function* mockGenerateMessages(resourceIds) {
+    const bundle = new FluentBundle("en-US", {
       useIsolating: false,
     });
-    bundle.addMessages(`
+    bundle.addResource(new FluentResource(`
 key1 = Value
 key2 = Value { $user }
 key3 = Value { $count }
-    `);
+    `));
     yield bundle;
   }
 
@@ -56,7 +56,7 @@ key3 = Value { $count }
         ok(false, "Missing argument didn't cause an exception.");
       } catch (e) {
         is(e,
-          "[fluent][resolver] errors in mock.ftl/key3: ReferenceError: Unknown variable: count.",
+          "[fluent][resolver] errors in en-US/key3: ReferenceError: Unknown variable: $count.",
           "Missing key causes an exception.");
       }
     }
