@@ -316,10 +316,27 @@ var AboutProtectionsHandler = {
           if (largest < dataToSend[timestamp].total) {
             largest = dataToSend[timestamp].total;
           }
-          dataToSend.largest = largest;
         }
+        dataToSend.largest = largest;
         dataToSend.earliestDate = earliestDate;
         dataToSend.sumEvents = sumEvents;
+
+        let weekdays = Services.intl.getDisplayNames(undefined, {
+          style: "short",
+          keys: [
+            "dates/gregorian/weekdays/sunday",
+            "dates/gregorian/weekdays/monday",
+            "dates/gregorian/weekdays/tuesday",
+            "dates/gregorian/weekdays/wednesday",
+            "dates/gregorian/weekdays/thursday",
+            "dates/gregorian/weekdays/friday",
+            "dates/gregorian/weekdays/saturday",
+            "dates/gregorian/weekdays/sunday",
+          ],
+        });
+        weekdays = Object.values(weekdays.values);
+        dataToSend.weekdays = weekdays;
+
         this.sendMessage(
           aMessage.target,
           "SendContentBlockingRecords",

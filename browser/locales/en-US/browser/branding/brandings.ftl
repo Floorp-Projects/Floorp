@@ -11,5 +11,6 @@
 -facebook-container-brand-name = Facebook Container
 -lockwise-brand-name = Firefox Lockwise
 -monitor-brand-name = Firefox Monitor
+-monitor-brand-short-name = Monitor
 -pocket-brand-name = Pocket
 -send-brand-name = Firefox Send
