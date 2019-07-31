@@ -1832,7 +1832,7 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
     case JSGC_MAX_BYTES:
       return uint32_t(tunables.gcMaxBytes());
     case JSGC_MAX_MALLOC_BYTES:
-      return mallocCounter.maxBytes();
+      return uint32_t(tunables.maxMallocBytes());
     case JSGC_MIN_NURSERY_BYTES:
       MOZ_ASSERT(tunables.gcMinNurseryBytes() < UINT32_MAX);
       return uint32_t(tunables.gcMinNurseryBytes());
@@ -2093,7 +2093,6 @@ extern JS_FRIEND_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
 
 void GCRuntime::setMaxMallocBytes(size_t value, const AutoLockGC& lock) {
   tunables.setMaxMallocBytes(value);
-  mallocCounter.setMax(value, lock);
   for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     zone->setGCMaxMallocBytes(value, lock);
   }
@@ -4707,11 +4706,6 @@ void GCRuntime::updateMemoryCountersOnGCStart() {
   for (GCZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
     zone->updateMemoryCountersOnGCStart();
   }
-
-  // Update the runtime malloc counter only if we are doing a full GC.
-  if (isFull) {
-    mallocCounter.updateOnGCStart();
-  }
 }
 
 template <class ZoneIterT>
@@ -6824,12 +6818,6 @@ void GCRuntime::endSweepPhase(bool destroyingRuntime) {
 
   MOZ_ASSERT_IF(destroyingRuntime, !sweepOnBackgroundThread);
 
-  // Update the runtime malloc counter only if we were doing a full GC.
-  if (isFull) {
-    AutoLockGC lock(rt);
-    mallocCounter.updateOnGCEnd(tunables, lock);
-  }
-
   {
     gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DESTROY);
 
@@ -7498,14 +7486,6 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
     budget.makeUnlimited();
     stats().nonincremental(unsafeReason);
     return resetIncrementalGC(unsafeReason);
-  }
-
-  if (mallocCounter.shouldTriggerGC(tunables) == NonIncrementalTrigger) {
-    budget.makeUnlimited();
-    stats().nonincremental(AbortReason::MallocBytesTrigger);
-    if (isIncrementalGCInProgress() && state() > State::Sweep) {
-      return resetIncrementalGC(AbortReason::MallocBytesTrigger);
-    }
   }
 
   AbortReason resetReason = AbortReason::None;
@@ -8227,8 +8207,9 @@ Realm* js::NewRealm(JSContext* cx, JSPrincipals* principals,
   }
 
   if (!zone) {
-    zoneHolder = cx->make_unique<Zone>(cx->runtime());
+    zoneHolder = MakeUnique<Zone>(cx->runtime());
     if (!zoneHolder) {
+      ReportOutOfMemory(cx);
       return nullptr;
     }
 
@@ -9012,18 +8993,6 @@ static bool GCMaxBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool MallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->runtime()->gc.getMallocBytes()));
-  return true;
-}
-
-static bool MaxMallocGetter(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->runtime()->gc.maxMallocBytesAllocated()));
-  return true;
-}
-
 static bool GCHighFreqGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   args.rval().setBoolean(
@@ -9116,8 +9085,6 @@ JSObject* NewMemoryInfoObject(JSContext* cx) {
     JSNative getter;
   } getters[] = {{"gcBytes", GCBytesGetter},
                  {"gcMaxBytes", GCMaxBytesGetter},
-                 {"mallocBytesRemaining", MallocBytesGetter},
-                 {"maxMalloc", MaxMallocGetter},
                  {"gcIsHighFrequencyMode", GCHighFreqGetter},
                  {"gcNumber", GCNumberGetter},
                  {"majorGCCount", MajorGCCountGetter},

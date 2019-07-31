@@ -1361,6 +1361,6 @@ struct MOZ_RAII AutoSetThreadIsSweeping {
 
 #define CHECK_THREAD(cx)                            \
   MOZ_ASSERT_IF(cx && !cx->isHelperThreadContext(), \
-                CurrentThreadCanAccessRuntime(cx->runtime()))
+                js::CurrentThreadCanAccessRuntime(cx->runtime()))
 
 #endif /* vm_JSContext_h */

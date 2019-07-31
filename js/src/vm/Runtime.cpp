@@ -691,10 +691,6 @@ js::HashNumber JSRuntime::randomHashCode() {
   return HashNumber(randomHashCodeGenerator_->next());
 }
 
-void JSRuntime::updateMallocCounter(size_t nbytes) {
-  gc.updateMallocCounter(nbytes);
-}
-
 JS_FRIEND_API void* JSRuntime::onOutOfMemory(AllocFunction allocFunc,
                                              arena_id_t arena, size_t nbytes,
                                              void* reallocPtr,

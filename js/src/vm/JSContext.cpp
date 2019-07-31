@@ -1464,12 +1464,9 @@ void JSContext::resetJitStackLimit() {
 void JSContext::initJitStackLimit() { resetJitStackLimit(); }
 
 void JSContext::updateMallocCounter(size_t nbytes) {
-  if (!zone()) {
-    runtime()->updateMallocCounter(nbytes);
-    return;
+  if (zone()) {
+    zone()->updateMallocCounter(nbytes);
   }
-
-  zone()->updateMallocCounter(nbytes);
 }
 
 #ifdef JS_CRASH_DIAGNOSTICS
