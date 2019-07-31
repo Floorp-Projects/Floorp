@@ -27,7 +27,7 @@ def define_upstream_artifacts(config, jobs):
         dep_job = job['primary-dependency']
         job['attributes'] = copy_attributes_from_dependent_job(dep_job)
 
-        repack_id = job['extra']['repack_id']
+        repack_ids = job['extra']['repack_ids']
         artifacts_specifications = generate_specifications_of_artifacts_to_sign(
             config,
             job,
@@ -40,6 +40,7 @@ def define_upstream_artifacts(config, jobs):
             'paths': [
                 path_template.format(locale=repack_id)
                 for path_template in spec['artifacts']
+                for repack_id in repack_ids
             ],
             'formats': spec['formats'],
         } for spec in artifacts_specifications]
