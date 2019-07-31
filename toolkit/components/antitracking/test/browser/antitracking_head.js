@@ -345,6 +345,9 @@ this.AntiTracking = {
           options.accessRemoval +
           (typeof options.thirdPartyPage == "string"
             ? " and third party page set to " + options.thirdPartyPage
+            : "") +
+          (typeof options.topPage == "string"
+            ? " and top page set to " + options.topPage
             : "")
       );
 
@@ -377,8 +380,15 @@ this.AntiTracking = {
       };
       win.gBrowser.addProgressListener(listener);
 
+      let topPage;
+      if (typeof options.topPage == "string") {
+        topPage = options.topPage;
+      } else {
+        topPage = TEST_TOP_PAGE;
+      }
+
       info("Creating a new tab");
-      let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
+      let tab = BrowserTestUtils.addTab(win.gBrowser, topPage);
       win.gBrowser.selectedTab = tab;
 
       let browser = win.gBrowser.getBrowserForTab(tab);
