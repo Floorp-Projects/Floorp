@@ -20,7 +20,7 @@ public class TLSSocketFactory extends SSLSocketFactory {
   private static final String LOG_TAG = "TLSSocketFactory";
 
   // Guarded by `this`.
-  private static String[] cipherSuites = GlobalConstants.DEFAULT_CIPHER_SUITES;
+  private static String[] cipherSuites = GlobalConstants.getTlsCipherSuites();
 
   public TLSSocketFactory(SSLContext sslContext) {
     super(sslContext);
@@ -55,7 +55,7 @@ public class TLSSocketFactory extends SSLSocketFactory {
   @Override
   public Socket createSocket(HttpParams params) throws IOException {
     SSLSocket socket = (SSLSocket) super.createSocket(params);
-    socket.setEnabledProtocols(GlobalConstants.DEFAULT_PROTOCOLS);
+    socket.setEnabledProtocols(GlobalConstants.getTlsProtocols());
     setEnabledCipherSuites(socket);
     return socket;
   }

@@ -47,6 +47,7 @@ nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
   mPrincipalIsExplicit = aLoadState.PrincipalIsExplicit();
   mForceAllowDataURI = aLoadState.ForceAllowDataURI();
   mOriginalFrameSrc = aLoadState.OriginalFrameSrc();
+  mIsFormSubmission = aLoadState.IsFormSubmission();
   mLoadType = aLoadState.LoadType();
   mTarget = aLoadState.Target();
   mLoadFlags = aLoadState.LoadFlags();
@@ -458,6 +459,7 @@ DocShellLoadStateInit nsDocShellLoadState::Serialize() {
   loadState.PrincipalIsExplicit() = mPrincipalIsExplicit;
   loadState.ForceAllowDataURI() = mForceAllowDataURI;
   loadState.OriginalFrameSrc() = mOriginalFrameSrc;
+  loadState.IsFormSubmission() = mIsFormSubmission;
   loadState.LoadType() = mLoadType;
   loadState.Target() = mTarget;
   loadState.LoadFlags() = mLoadFlags;

@@ -84,28 +84,30 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   bool ChooseCapability(const NormalizedConstraints& aConstraints,
                         const MediaEnginePrefs& aPrefs,
-                        const nsString& aDeviceId,
+                        const nsString& aDeviceId, const nsString& aGroupId,
                         webrtc::CaptureCapability& aCapability,
                         const DistanceCalculation aCalculate);
 
   uint32_t GetDistance(const webrtc::CaptureCapability& aCandidate,
                        const NormalizedConstraintSet& aConstraints,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const DistanceCalculation aCalculate) const;
 
   uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
                               const NormalizedConstraintSet& aConstraints,
-                              const nsString& aDeviceId) const;
+                              const nsString& aDeviceId,
+                              const nsString& aGroupId) const;
 
   uint32_t GetFeasibilityDistance(const webrtc::CaptureCapability& aCandidate,
                                   const NormalizedConstraintSet& aConstraints,
-                                  const nsString& aDeviceId) const;
+                                  const nsString& aDeviceId,
+                                  const nsString& aGroupId) const;
 
   static void TrimLessFitCandidates(nsTArray<CapabilityCandidate>& aSet);
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId, const nsString& aGroupId) const override;
 
  public:
   MediaEngineRemoteVideoSource(int aIndex, camera::CaptureEngine aCapEngine,
@@ -119,6 +121,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   dom::MediaSourceEnum GetMediaSource() const override;
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+                    const nsString& aGroupId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   nsresult Deallocate() override;
@@ -127,7 +130,7 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
   nsresult FocusOnSelectedSource() override;
   nsresult Stop() override;
@@ -240,7 +243,6 @@ class MediaEngineRemoteVideoSource : public MediaEngineSource,
 
   nsString mDeviceName;
   nsCString mUniqueId;
-  nsString mGroupId;
   Maybe<nsString> mFacingMode;
 
   // Whether init has successfully completed.

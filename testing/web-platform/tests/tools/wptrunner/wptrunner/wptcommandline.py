@@ -269,7 +269,7 @@ scheme host and port.""")
                              help="Defines an extra user preference (overrides those in prefs_root)")
     gecko_group.add_argument("--leak-check", dest="leak_check", action="store_true", default=None,
                              help="Enable leak checking (enabled by default for debug builds, "
-                             "silently ignored for opt)")
+                             "silently ignored for opt, mobile)")
     gecko_group.add_argument("--no-leak-check", dest="leak_check", action="store_false", default=None,
                              help="Disable leak checking")
     gecko_group.add_argument("--stylo-threads", action="store", type=int, default=1,

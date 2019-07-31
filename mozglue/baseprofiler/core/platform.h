@@ -34,7 +34,6 @@
 #include "BaseProfiler.h"
 
 #include "mozilla/Logging.h"
-#include "mozilla/PlatformMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
@@ -82,17 +81,6 @@ namespace mozilla {
 class JSONWriter;
 
 namespace baseprofiler {
-
-// Thin shell around mozglue PlatformMutex, for Base Profiler internal use.
-// Does not preserve behavior in JS record/replay.
-class PSMutex : private mozilla::detail::MutexImpl {
- public:
-  PSMutex()
-      : mozilla::detail::MutexImpl(
-            mozilla::recordreplay::Behavior::DontPreserve) {}
-  void Lock() { mozilla::detail::MutexImpl::lock(); }
-  void Unlock() { mozilla::detail::MutexImpl::unlock(); }
-};
 
 typedef uint8_t* Address;
 

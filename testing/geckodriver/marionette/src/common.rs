@@ -80,6 +80,34 @@ pub struct Timeouts {
     pub script: Option<Option<u64>>,
 }
 
+pub fn to_name<T, S>(data: T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+    T: Serialize,
+{
+    #[derive(Serialize)]
+    struct Wrapper<T> {
+        name: T,
+    }
+
+    Wrapper { name: data }.serialize(serializer)
+}
+
+pub fn from_name<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+    T: std::fmt::Debug,
+{
+    #[derive(Debug, Deserialize)]
+    struct Wrapper<T> {
+        name: T,
+    }
+
+    let w = Wrapper::deserialize(deserializer)?;
+    Ok(w.name)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

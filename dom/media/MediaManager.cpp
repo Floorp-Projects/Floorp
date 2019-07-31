@@ -824,7 +824,7 @@ uint32_t MediaDevice::GetBestFitnessDistance(
   // Forward request to underlying object to interrogate per-mode capabilities.
   // Pass in device's origin-specific id for deviceId constraint comparison.
   const nsString& id = aIsChrome ? mRawID : mID;
-  return mSource->GetBestFitnessDistance(aConstraintSets, id);
+  return mSource->GetBestFitnessDistance(aConstraintSets, id, mGroupID);
 }
 
 NS_IMETHODIMP
@@ -888,7 +888,7 @@ nsresult MediaDevice::Allocate(const MediaTrackConstraints& aConstraints,
                                const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Allocate(aConstraints, aPrefs, mID, aPrincipalInfo,
+  return mSource->Allocate(aConstraints, aPrefs, mID, mGroupID, aPrincipalInfo,
                            aOutBadConstraint);
 }
 
@@ -911,7 +911,8 @@ nsresult MediaDevice::Reconfigure(const MediaTrackConstraints& aConstraints,
                                   const char** aOutBadConstraint) {
   MOZ_ASSERT(MediaManager::IsInMediaThread());
   MOZ_ASSERT(mSource);
-  return mSource->Reconfigure(aConstraints, aPrefs, mID, aOutBadConstraint);
+  return mSource->Reconfigure(aConstraints, aPrefs, mID, mGroupID,
+                              aOutBadConstraint);
 }
 
 nsresult MediaDevice::FocusOnSelectedSource() {
@@ -1664,15 +1665,9 @@ class GetUserMediaRunnableWrapper : public Runnable {
 };
 #endif
 
-// This function tries to guess the group id for a video device
-// based on the device name. If only one audio device's name contains
-// the name of the video device, then, this video device will take
-// the group id of the audio device. Since this is a guess we try
-// to minimize the probability of false positive. If we fail to find
-// a correlation we leave the video group id untouched. In that case the
-// group id will be the video device name.
 /* static */
-void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices) {
+void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices,
+                                            const MediaDeviceSet& aAudios) {
   // Run the logic in a lambda to avoid duplication.
   auto updateGroupIdIfNeeded = [&](RefPtr<MediaDevice>& aVideo,
                                    const MediaDeviceKind aKind) -> bool {
@@ -1687,7 +1682,7 @@ void MediaManager::GuessVideoDeviceGroupIDs(MediaDeviceSet& aDevices) {
     // `newVideoGroupId` is empty. However,
     // that check does not work when the new group id is an empty string.
     bool updateGroupId = false;
-    for (const RefPtr<MediaDevice>& dev : aDevices) {
+    for (const RefPtr<MediaDevice>& dev : aAudios) {
       if (dev->mKind != aKind) {
         continue;
       }
@@ -1813,24 +1808,36 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       realBackend = manager->GetBackend();
     }
 
+    RefPtr<MediaEngine> videoBackend;
+    RefPtr<MediaEngine> audioBackend;
+    Maybe<MediaDeviceSet> micsOfVideoBackend;
+    Maybe<MediaDeviceSet> speakers;
+
     if (hasVideo) {
+      videoBackend = aVideoInputEnumType == DeviceEnumerationType::Fake
+                         ? fakeBackend
+                         : realBackend;
       MediaDeviceSet videos;
       LOG("EnumerateRawDevices Task: Getting video sources with %s backend",
-          aVideoInputEnumType == DeviceEnumerationType::Fake ? "fake" : "real");
-      GetMediaDevices(aVideoInputEnumType == DeviceEnumerationType::Fake
-                          ? fakeBackend
-                          : realBackend,
-                      aWindowId, aVideoInputType, videos, videoLoopDev.get());
+          videoBackend == fakeBackend ? "fake" : "real");
+      GetMediaDevices(videoBackend, aWindowId, aVideoInputType, videos,
+                      videoLoopDev.get());
       aOutDevices->AppendElements(videos);
     }
     if (hasAudio) {
+      audioBackend = aAudioInputEnumType == DeviceEnumerationType::Fake
+                         ? fakeBackend
+                         : realBackend;
       MediaDeviceSet audios;
       LOG("EnumerateRawDevices Task: Getting audio sources with %s backend",
-          aAudioInputEnumType == DeviceEnumerationType::Fake ? "fake" : "real");
-      GetMediaDevices(aAudioInputEnumType == DeviceEnumerationType::Fake
-                          ? fakeBackend
-                          : realBackend,
-                      aWindowId, aAudioInputType, audios, audioLoopDev.get());
+          audioBackend == fakeBackend ? "fake" : "real");
+      GetMediaDevices(audioBackend, aWindowId, aAudioInputType, audios,
+                      audioLoopDev.get());
+      if (aAudioInputType == MediaSourceEnum::Microphone &&
+          audioBackend == videoBackend) {
+        micsOfVideoBackend = Some(MediaDeviceSet());
+        micsOfVideoBackend->AppendElements(audios);
+      }
       aOutDevices->AppendElements(audios);
     }
     if (hasAudioOutput) {
@@ -1838,10 +1845,41 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       MOZ_ASSERT(realBackend);
       realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
                                     MediaSinkEnum::Speaker, &outputs);
+      speakers = Some(MediaDeviceSet());
+      speakers->AppendElements(outputs);
       aOutDevices->AppendElements(outputs);
     }
-    if (hasVideo) {
-      GuessVideoDeviceGroupIDs(*aOutDevices);
+    if (hasVideo && aVideoInputType == MediaSourceEnum::Camera) {
+      MediaDeviceSet audios;
+      LOG("EnumerateRawDevices Task: Getting audio sources with %s backend "
+          "for "
+          "groupId correlation",
+          videoBackend == fakeBackend ? "fake" : "real");
+      // We need to correlate cameras with audio groupIds. We use the backend
+      // of the camera to always do correlation on devices in the same scope.
+      // If we don't do this, video-only getUserMedia will not apply groupId
+      // constraints to the same set of groupIds as gets returned by
+      // enumerateDevices.
+      if (micsOfVideoBackend.isSome()) {
+        // Microphones from the same backend used for the cameras have already
+        // been enumerated. Avoid doing it again.
+        audios.AppendElements(*micsOfVideoBackend);
+      } else {
+        GetMediaDevices(videoBackend, aWindowId, MediaSourceEnum::Microphone,
+                        audios, audioLoopDev.get());
+      }
+      if (videoBackend == realBackend) {
+        // When using the real backend for video, there could also be speakers
+        // to correlate with. There are no fake speakers.
+        if (speakers.isSome()) {
+          // Speakers have already been enumerated. Avoid doing it again.
+          audios.AppendElements(*speakers);
+        } else {
+          realBackend->EnumerateDevices(aWindowId, MediaSourceEnum::Other,
+                                        MediaSinkEnum::Speaker, &audios);
+        }
+      }
+      GuessVideoDeviceGroupIDs(*aOutDevices, audios);
     }
 
     holder->Resolve(false, __func__);

@@ -64,6 +64,17 @@ ProcessId GetProcId(ProcessHandle process) { return process; }
 // entry structure.  Ignores specified exit_code; posix can't force that.
 // Returns true if this is successful, false otherwise.
 bool KillProcess(ProcessHandle process_id, int exit_code, bool wait) {
+  // It's too easy to accidentally kill pid 0 (meaning the caller's
+  // process group) or pid -1 (all other processes killable by this
+  // user), and neither they nor other negative numbers (process
+  // groups) are legitimately used by this function's callers, so
+  // reject them all.
+  if (process_id <= 0) {
+    CHROMIUM_LOG(WARNING) << "base::KillProcess refusing to kill pid "
+                          << process_id;
+    return false;
+  }
+
   bool result = kill(process_id, SIGTERM) == 0;
 
   if (!result && (errno == ESRCH)) {

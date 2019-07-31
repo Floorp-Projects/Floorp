@@ -60,7 +60,7 @@ add_task(async function test_login_item() {
     deleteButton.click();
 
     let confirmDeleteDialog = Cu.waiveXrays(
-      content.document.querySelector("confirm-delete-dialog")
+      content.document.querySelector("confirmation-dialog")
     );
     let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
       ".confirm-button"

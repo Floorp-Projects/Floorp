@@ -471,6 +471,11 @@ class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
     SetHTMLBoolAttr(nsGkAtoms::autofocus, aValue, aRv);
   }
 
+  void GetCapture(nsAString& aValue);
+  void SetCapture(const nsAString& aValue, ErrorResult& aRv) {
+    SetHTMLAttr(nsGkAtoms::capture, aValue, aRv);
+  }
+
   bool DefaultChecked() const {
     return HasAttr(kNameSpaceID_None, nsGkAtoms::checked);
   }

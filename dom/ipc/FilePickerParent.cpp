@@ -241,7 +241,8 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
     const nsString& aDefaultFile, const nsString& aDefaultExtension,
     nsTArray<nsString>&& aFilters, nsTArray<nsString>&& aFilterNames,
     nsTArray<nsString>&& aRawFilters, const nsString& aDisplayDirectory,
-    const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel) {
+    const nsString& aDisplaySpecialDirectory, const nsString& aOkButtonLabel,
+    const int16_t& aCapture) {
   if (!CreateFilePicker()) {
     Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
     return IPC_OK();
@@ -261,6 +262,7 @@ mozilla::ipc::IPCResult FilePickerParent::RecvOpen(
   mFilePicker->SetDefaultExtension(aDefaultExtension);
   mFilePicker->SetFilterIndex(aSelectedType);
   mFilePicker->SetOkButtonLabel(aOkButtonLabel);
+  mFilePicker->SetCapture(aCapture);
 
   if (!aDisplayDirectory.IsEmpty()) {
     nsCOMPtr<nsIFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);

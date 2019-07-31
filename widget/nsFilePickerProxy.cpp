@@ -17,7 +17,8 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsFilePickerProxy, nsIFilePicker)
 
-nsFilePickerProxy::nsFilePickerProxy() : mSelectedType(0), mIPCActive(false) {}
+nsFilePickerProxy::nsFilePickerProxy() 
+    : mSelectedType(0), mCapture(captureNone), mIPCActive(false) {}
 
 nsFilePickerProxy::~nsFilePickerProxy() {}
 
@@ -48,6 +49,18 @@ nsFilePickerProxy::AppendFilter(const nsAString& aTitle,
                                 const nsAString& aFilter) {
   mFilterNames.AppendElement(aTitle);
   mFilters.AppendElement(aFilter);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFilePickerProxy::GetCapture(int16_t* aCapture) {
+  *aCapture = mCapture;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFilePickerProxy::SetCapture(int16_t aCapture) {
+  mCapture = aCapture;
   return NS_OK;
 }
 
@@ -126,7 +139,7 @@ nsFilePickerProxy::Open(nsIFilePickerShownCallback* aCallback) {
 
   SendOpen(mSelectedType, mAddToRecentDocs, mDefault, mDefaultExtension,
            mFilters, mFilterNames, mRawFilters, displayDirectory,
-           mDisplaySpecialDirectory, mOkButtonLabel);
+           mDisplaySpecialDirectory, mOkButtonLabel, mCapture);
 
   return NS_OK;
 }

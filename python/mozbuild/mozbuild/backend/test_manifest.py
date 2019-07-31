@@ -55,14 +55,14 @@ class TestManifestBackend(PartialBackend):
     def consume_finished(self):
         topobjdir = self.environment.topobjdir
 
-        with self._write_file(mozpath.join(topobjdir, 'all-tests.pkl'), mode='rb') as fh:
+        with self._write_file(mozpath.join(topobjdir, 'all-tests.pkl'), readmode='rb') as fh:
             pickle.dump(dict(self.tests_by_path), fh, protocol=2)
 
-        with self._write_file(mozpath.join(topobjdir, 'test-defaults.pkl'), mode='rb') as fh:
+        with self._write_file(mozpath.join(topobjdir, 'test-defaults.pkl'), readmode='rb') as fh:
             pickle.dump(self.manifest_defaults, fh, protocol=2)
 
         path = mozpath.join(topobjdir, 'test-installs.pkl')
-        with self._write_file(path, mode='rb') as fh:
+        with self._write_file(path, readmode='rb') as fh:
             pickle.dump({k: v for k, v in self.installs_by_path.items()
                          if k in self.deferred_installs},
                         fh,

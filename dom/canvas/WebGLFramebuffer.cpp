@@ -840,7 +840,7 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
 
     for (const auto& cur : mAttachments) {
       const auto& imageInfo = cur->GetImageInfo();
-      if (!imageInfo || imageInfo->mHasData)
+      if (!imageInfo || !imageInfo->mUninitializedSlices)
         continue;  // Nothing attached, or already has data.
 
       const auto fnClearBuffer = [&]() {
@@ -880,16 +880,18 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
         const auto& tex = cur->Texture();
         const gl::ScopedFramebuffer scopedFB(gl);
         const gl::ScopedBindFramebuffer scopedBindFB(gl, scopedFB.FB());
-        for (uint32_t z = 0; z < imageInfo->mDepth; z++) {
-          gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
-                                       cur->mAttachmentPoint, tex->mGLName,
-                                       cur->MipLevel(), z);
-          fnClearBuffer();
+        for (const auto z : IntegerRange(imageInfo->mDepth)) {
+          if ((*imageInfo->mUninitializedSlices)[z]) {
+            gl->fFramebufferTextureLayer(LOCAL_GL_FRAMEBUFFER,
+                                         cur->mAttachmentPoint, tex->mGLName,
+                                         cur->MipLevel(), z);
+            fnClearBuffer();
+          }
         }
       } else {
         fnClearBuffer();
       }
-      imageInfo->mHasData = true;
+      imageInfo->mUninitializedSlices = {};
     }
     return;
   }
@@ -900,10 +902,10 @@ void WebGLFramebuffer::ResolveAttachmentData() const {
   const auto fnGather = [&](const WebGLFBAttachPoint& attach,
                             const uint32_t attachClearBits) {
     const auto& imageInfo = attach.GetImageInfo();
-    if (!imageInfo || imageInfo->mHasData) return false;
+    if (!imageInfo || !imageInfo->mUninitializedSlices) return false;
 
     clearBits |= attachClearBits;
-    imageInfo->mHasData = true;  // Just mark it now.
+    imageInfo->mUninitializedSlices = {};  // Just mark it now.
     return true;
   };
 

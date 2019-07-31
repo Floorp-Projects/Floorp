@@ -40,6 +40,7 @@ HOST_SOURCES += [
     'ScopeChecker.cpp',
     'SprintfLiteralChecker.cpp',
     'TrivialCtorDtorChecker.cpp',
+    'TrivialDtorChecker.cpp',
     'VariableUsageHelpers.cpp',
 ]
 

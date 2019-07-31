@@ -447,7 +447,7 @@ static uint64_t ExtractBlockIndex(const BlocksRingBuffer::BlockIndex bi) {
 void TestBlocksRingBufferAPI() {
   printf("TestBlocksRingBufferAPI...\n");
 
-  // Deleter will store about-to-be-deleted value in `lastDestroyed`.
+  // Entry destructor will store about-to-be-cleared value in `lastDestroyed`.
   uint32_t lastDestroyed = 0;
 
   // Create a 16-byte buffer, enough to store up to 3 entries (1 byte size + 4
@@ -669,7 +669,7 @@ void TestBlocksRingBufferAPI() {
     // Push 5 through EntryReserver then EntryWriter, no returns.
     // This will destroy the second entry.
     // Check that the EntryWriter can access bi4 but not bi2.
-    auto bi5 = rb.Put([&](BlocksRingBuffer::EntryReserver aER) {
+    auto bi5_6 = rb.Put([&](BlocksRingBuffer::EntryReserver aER) {
       return aER.Reserve(
           sizeof(uint32_t), [&](BlocksRingBuffer::EntryWriter aEW) {
             aEW.WriteObject(uint32_t(5));
@@ -678,9 +678,11 @@ void TestBlocksRingBufferAPI() {
             MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4)->CurrentBlockIndex() == bi4);
             MOZ_RELEASE_ASSERT(aEW.GetEntryAt(bi4)->ReadObject<uint32_t>() ==
                                4);
-            return aEW.CurrentBlockIndex();
+            return MakePair(aEW.CurrentBlockIndex(), aEW.BlockEndIndex());
           });
     });
+    auto& bi5 = bi5_6.first();
+    auto& bi6 = bi5_6.second();
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15 (16)
     //  [4 |    int(4)    ] [4 |    int(5)    ]E ? S[4 |    int(3)    ]
     VERIFY_START_END_DESTROYED(11, 26, 2);
@@ -705,7 +707,7 @@ void TestBlocksRingBufferAPI() {
     });
     MOZ_RELEASE_ASSERT(count == 5);
 
-    // Delete everything before `4`, this should delete `3`.
+    // Clear everything before `4`, this should destroy `3`.
     rb.ClearBefore(bi4);
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
     // S[4 |    int(4)    ] [4 |    int(5)    ]E ?   ?   ?   ?   ?   ?
@@ -718,14 +720,14 @@ void TestBlocksRingBufferAPI() {
     });
     MOZ_RELEASE_ASSERT(count == 5);
 
-    // Delete everything before `4` again, nothing to delete.
+    // Clear everything before `4` again, nothing to destroy.
     lastDestroyed = 0;
     rb.ClearBefore(bi4);
     VERIFY_START_END_DESTROYED(16, 26, 0);
 
-    // Delete everything, this should delete `4` and `5`, and bring the start
+    // Clear everything, this should destroy `4` and `5`, and bring the start
     // index where the end index currently is.
-    rb.Clear();
+    rb.ClearBefore(bi6);
     //  16  17  18  19  20  21  22  23  24  25  26  11  12  13  14  15
     //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? SE?   ?   ?   ?   ?   ?
     VERIFY_START_END_DESTROYED(26, 26, 5);
@@ -738,18 +740,19 @@ void TestBlocksRingBufferAPI() {
       MOZ_RELEASE_ASSERT(aMaybeReader.isNothing());
     });
 
-    // Delete everything before now-deleted `4`, nothing to delete.
+    // Clear everything before now-cleared `4`, nothing to destroy.
     lastDestroyed = 0;
     rb.ClearBefore(bi4);
     VERIFY_START_END_DESTROYED(26, 26, 0);
 
     // Push `6` directly.
-    MOZ_RELEASE_ASSERT(ExtractBlockIndex(rb.PutObject(uint32_t(6))) == 26);
+    MOZ_RELEASE_ASSERT(rb.PutObject(uint32_t(6)) == bi6);
     //  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31
     //   ?   ?   ?   ?   ?   ?   ?   ?   ?   ? S[4 |    int(6)    ]E ?
     VERIFY_START_END_DESTROYED(26, 31, 0);
 
-    // End of block where rb lives, should call deleter on destruction.
+    // End of block where rb lives, BlocksRingBuffer destructor should call
+    // entry destructor for remaining entries.
   }
   MOZ_RELEASE_ASSERT(lastDestroyed == 6);
 
@@ -775,7 +778,7 @@ void TestBlocksRingBufferAPI() {
 void TestBlocksRingBufferThreading() {
   printf("TestBlocksRingBufferThreading...\n");
 
-  // Deleter will store about-to-be-deleted value in `lastDestroyed`.
+  // Entry destructor will store about-to-be-cleared value in `lastDestroyed`.
   std::atomic<int> lastDestroyed{0};
 
   constexpr uint32_t MBSize = 8192;
@@ -792,8 +795,8 @@ void TestBlocksRingBufferThreading() {
   std::atomic<bool> stopReader{false};
   std::thread reader([&]() {
     for (;;) {
-      Pair<uint64_t, uint64_t> counts = rb.GetPushedAndDeletedCounts();
-      printf("Reader: pushed=%llu deleted=%llu alive=%llu lastDestroyed=%d\n",
+      Pair<uint64_t, uint64_t> counts = rb.GetPushedAndClearedCounts();
+      printf("Reader: pushed=%llu cleared=%llu alive=%llu lastDestroyed=%d\n",
              static_cast<unsigned long long>(counts.first()),
              static_cast<unsigned long long>(counts.second()),
              static_cast<unsigned long long>(counts.first() - counts.second()),
@@ -932,6 +935,39 @@ void TestProfiler() {
       AUTO_BASE_PROFILER_THREAD_SLEEP;
       SleepMilli(1000);
     }
+
+    Maybe<baseprofiler::ProfilerBufferInfo> info =
+        baseprofiler::profiler_get_buffer_info();
+    MOZ_RELEASE_ASSERT(info.isSome());
+    printf("Profiler buffer range: %llu .. %llu (%llu bytes)\n",
+           static_cast<unsigned long long>(info->mRangeStart),
+           static_cast<unsigned long long>(info->mRangeEnd),
+           // sizeof(ProfileBufferEntry) == 9
+           (static_cast<unsigned long long>(info->mRangeEnd) -
+            static_cast<unsigned long long>(info->mRangeStart)) *
+               9);
+    printf("Stats:         min(ns) .. mean(ns) .. max(ns)  [count]\n");
+    printf("- Intervals:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mIntervalsNs.min,
+           info->mIntervalsNs.sum / info->mIntervalsNs.n,
+           info->mIntervalsNs.max, info->mIntervalsNs.n);
+    printf("- Overheads:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mOverheadsNs.min,
+           info->mOverheadsNs.sum / info->mOverheadsNs.n,
+           info->mOverheadsNs.max, info->mOverheadsNs.n);
+    printf("  - Locking:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mLockingsNs.min, info->mLockingsNs.sum / info->mLockingsNs.n,
+           info->mLockingsNs.max, info->mLockingsNs.n);
+    printf("  - Clearning: %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mCleaningsNs.min,
+           info->mCleaningsNs.sum / info->mCleaningsNs.n,
+           info->mCleaningsNs.max, info->mCleaningsNs.n);
+    printf("  - Counters:  %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mCountersNs.min, info->mCountersNs.sum / info->mCountersNs.n,
+           info->mCountersNs.max, info->mCountersNs.n);
+    printf("  - Threads:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+           info->mThreadsNs.min, info->mThreadsNs.sum / info->mThreadsNs.n,
+           info->mThreadsNs.max, info->mThreadsNs.n);
 
     printf("baseprofiler_save_profile_to_file()...\n");
     baseprofiler::profiler_save_profile_to_file("TestProfiler_profile.json");

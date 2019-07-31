@@ -29,6 +29,12 @@ AST_MATCHER(CXXRecordDecl, hasTrivialCtorDtor) {
   return hasCustomAttribute<moz_trivial_ctor_dtor>(&Node);
 }
 
+/// This matcher will match any C++ class that is marked as having a trivial
+/// destructor.
+AST_MATCHER(CXXRecordDecl, hasTrivialDtor) {
+  return hasCustomAttribute<moz_trivial_dtor>(&Node);
+}
+
 AST_MATCHER(CXXConstructExpr, allowsTemporary) {
   return hasCustomAttribute<moz_allow_temporary>(Node.getConstructor());
 }

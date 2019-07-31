@@ -175,6 +175,17 @@ bad_inputs = [
 ''', '`name` value `name_with_no_dot` lacks a \'.\''),
 
     ('''
+- name: pref.is.defined.more.than.once
+  type: bool
+  value: false
+  mirror: never
+- name: pref.is.defined.more.than.once
+  type: int32_t
+  value: 111
+  mirror: always
+''', '`pref.is.defined.more.than.once` pref is defined more than once'),
+
+    ('''
 - name: your.pref
   type: bool
   value: false

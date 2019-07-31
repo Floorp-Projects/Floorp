@@ -212,6 +212,7 @@ struct DocShellLoadStateInit
   nsIPrincipal PrincipalToInherit;
   bool ForceAllowDataURI;
   bool OriginalFrameSrc;
+  bool IsFormSubmission;
   uint32_t LoadType;
   nsString Target;
   nsIURI BaseURI;

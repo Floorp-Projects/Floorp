@@ -34,7 +34,7 @@ runTest(async () => {
    * Use a similar comparison here to verify that it works.
    * Multiple devices of the same device name are not expected in
    * automation. */
-  isnot(audio.groupId, video.groupId,"Not the same groupIds");
+  isnot(audio.groupId, video.groupId, "Not the same groupIds");
   // Change video name to match.
   await pushPrefs(["media.getusermedia.fake-camera-name", audio.label]);
   ({audio, video} = await getDefaultDevices());

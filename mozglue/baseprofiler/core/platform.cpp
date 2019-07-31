@@ -46,6 +46,7 @@
 #  include "mozilla/ArrayUtils.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/AutoProfilerLabel.h"
+#  include "mozilla/BaseProfilerDetail.h"
 #  include "mozilla/Printf.h"
 #  include "mozilla/Services.h"
 #  include "mozilla/StackWalk.h"
@@ -215,10 +216,10 @@ class MOZ_RAII PSAutoLock {
   void operator=(const PSAutoLock&) = delete;
 
  private:
-  static PSMutex gPSMutex;
+  static detail::BaseProfilerMutex gPSMutex;
 };
 
-PSMutex PSAutoLock::gPSMutex;
+detail::BaseProfilerMutex PSAutoLock::gPSMutex;
 
 // Only functions that take a PSLockRef arg can access CorePS's and ActivePS's
 // fields.
@@ -982,8 +983,8 @@ class Registers {
   void Clear() { memset(this, 0, sizeof(*this)); }
 
   // These fields are filled in by
-  // SamplerThread::SuspendAndSampleAndResumeThread() for periodic and
-  // backtrace samples, and by SyncPopulate() for synchronous samples.
+  // Sampler::SuspendAndSampleAndResumeThread() for periodic and backtrace
+  // samples, and by SyncPopulate() for synchronous samples.
   Address mPC;  // Instruction pointer.
   Address mSP;  // Stack pointer.
   Address mFP;  // Frame pointer.
@@ -1884,7 +1885,7 @@ class Sampler {
 // active. It periodically runs through all registered threads, finds those
 // that should be sampled, then pauses and samples them.
 
-class SamplerThread : public Sampler {
+class SamplerThread {
  public:
   // Creates a sampler thread, but doesn't start it.
   SamplerThread(PSLockRef aLock, uint32_t aActivityGeneration,
@@ -1901,6 +1902,9 @@ class SamplerThread : public Sampler {
   // This suspends the calling thread for the given number of microseconds.
   // Best effort timing.
   void SleepMicro(uint32_t aMicroseconds);
+
+  // The sampler used to suspend and sample threads.
+  Sampler mSampler;
 
   // The activity generation, for detecting when the sampler thread must stop.
   const uint32_t mActivityGeneration;
@@ -2009,7 +2013,7 @@ void SamplerThread::Run() {
           }
 
           now = TimeStamp::NowUnfuzzed();
-          SuspendAndSampleAndResumeThread(
+          mSampler.SuspendAndSampleAndResumeThread(
               lock, *registeredThread, [&](const Registers& aRegs) {
                 DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                  now, aRegs);
@@ -2026,16 +2030,10 @@ void SamplerThread::Run() {
 #  endif
         TimeStamp threadsSampled = TimeStamp::NowUnfuzzed();
 
-        buffer.AddEntry(
-            ProfileBufferEntry::ProfilerOverheadTime(delta.ToMilliseconds()));
-        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
-            (lockAcquired - sampleStart).ToMilliseconds()));
-        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
-            (expiredMarkersCleaned - lockAcquired).ToMilliseconds()));
-        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
-            (countersSampled - expiredMarkersCleaned).ToMilliseconds()));
-        buffer.AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(
-            (threadsSampled - countersSampled).ToMilliseconds()));
+        buffer.CollectOverheadStats(delta, lockAcquired - sampleStart,
+                                    expiredMarkersCleaned - lockAcquired,
+                                    countersSampled - expiredMarkersCleaned,
+                                    threadsSampled - countersSampled);
       }
 
       Maybe<double> duration = ActivePS::Duration(lock);
@@ -2615,9 +2613,7 @@ Maybe<ProfilerBufferInfo> profiler_get_buffer_info() {
     return Nothing();
   }
 
-  return Some(ProfilerBufferInfo{ActivePS::Buffer(lock).mRangeStart,
-                                 ActivePS::Buffer(lock).mRangeEnd,
-                                 ActivePS::Capacity(lock).Value()});
+  return Some(ActivePS::Buffer(lock).GetProfilerBufferInfo());
 }
 
 // This basically duplicates AutoProfilerLabel's constructor.

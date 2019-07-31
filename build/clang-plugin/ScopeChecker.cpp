@@ -37,6 +37,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   AllocationVariety Variety = AV_None;
   SourceLocation Loc;
   QualType T;
+  bool IsStaticLocal = false;
 
   if (const ParmVarDecl *D =
           Result.Nodes.getNodeAs<ParmVarDecl>("node")) {
@@ -66,6 +67,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     }
     T = D->getType();
     Loc = D->getBeginLoc();
+    IsStaticLocal = D->isStaticLocal();
   } else if (const CXXNewExpr *E = Result.Nodes.getNodeAs<CXXNewExpr>("node")) {
     // New allocates things on the heap.
     // We don't consider placement new to do anything, as it doesn't actually
@@ -126,6 +128,8 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
   const char *NonHeap = "variable of type %0 is not valid on the heap";
   const char *NonTemporary = "variable of type %0 is not valid in a temporary";
   const char *Temporary = "variable of type %0 is only valid as a temporary";
+  const char *StaticLocal = "variable of type %0 is only valid as a static "
+                            "local";
 
   const char *StackNote =
       "value incorrectly allocated in an automatic variable";
@@ -142,12 +146,18 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     StackClass.reportErrorIfPresent(*this, T, Loc, Stack, GlobalNote);
     HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, GlobalNote);
     TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, GlobalNote);
+    if (!IsStaticLocal) {
+      StaticLocalClass.reportErrorIfPresent(*this, T, Loc, StaticLocal,
+                                            GlobalNote);
+    }
     break;
 
   case AV_Automatic:
     GlobalClass.reportErrorIfPresent(*this, T, Loc, Global, StackNote);
     HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, StackNote);
     TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, StackNote);
+    StaticLocalClass.reportErrorIfPresent(*this, T, Loc, StaticLocal,
+                                          StackNote);
     break;
 
   case AV_Temporary:
@@ -155,6 +165,8 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     HeapClass.reportErrorIfPresent(*this, T, Loc, Heap, TemporaryNote);
     NonTemporaryClass.reportErrorIfPresent(*this, T, Loc, NonTemporary,
                                            TemporaryNote);
+    StaticLocalClass.reportErrorIfPresent(*this, T, Loc, StaticLocal,
+                                          TemporaryNote);
     break;
 
   case AV_Heap:
@@ -162,6 +174,7 @@ void ScopeChecker::check(const MatchFinder::MatchResult &Result) {
     StackClass.reportErrorIfPresent(*this, T, Loc, Stack, HeapNote);
     NonHeapClass.reportErrorIfPresent(*this, T, Loc, NonHeap, HeapNote);
     TemporaryClass.reportErrorIfPresent(*this, T, Loc, Temporary, HeapNote);
+    StaticLocalClass.reportErrorIfPresent(*this, T, Loc, StaticLocal, HeapNote);
     break;
   }
 }
