@@ -42,7 +42,6 @@ FINAL_TARGET_FILES.actors += [
     'SelectParent.jsm',
     'ThumbnailsChild.jsm',
     'UAWidgetsChild.jsm',
-    'UAWidgetsDateTimeBoxChild.jsm',
     'UnselectedTabHoverChild.jsm',
     'WebChannelChild.jsm',
     'WebNavigationChild.jsm',
