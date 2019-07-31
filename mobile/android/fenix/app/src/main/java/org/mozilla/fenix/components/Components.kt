@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import mozilla.components.lib.publicsuffixlist.PublicSuffixList
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -21,4 +22,5 @@ class Components(private val context: Context) {
     val useCases by lazy { UseCases(context, core.sessionManager, core.engine.settings, search.searchEngineManager) }
     val utils by lazy { Utilities(context, core.sessionManager, useCases.sessionUseCases, useCases.searchUseCases) }
     val analytics by lazy { Analytics(context) }
+    val publicSuffixList by lazy { PublicSuffixList(context) }
 }

@@ -37,7 +37,7 @@ fun String.urlToTrimmedHost(context: Context): String {
     return try {
         val host = toUri().hostWithoutCommonPrefixes ?: return this
         runBlocking {
-            context.components.utils.publicSuffixList.stripPublicSuffix(host).await()
+            context.components.publicSuffixList.stripPublicSuffix(host).await()
         }
     } catch (e: MalformedURLException) {
         this
