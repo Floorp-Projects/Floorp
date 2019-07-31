@@ -41,7 +41,6 @@
 
 .header {
   display: flex;
-  align-items: center;
   border-bottom: 1px solid var(--in-content-box-border-color);
   margin-bottom: 40px;
 }
@@ -189,11 +188,6 @@
    * to make the thicker outline corners look smooth */
   -moz-outline-radius: 3px;
   box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
-}
-
-.login-item-favicon {
-  width: 38px;
-  margin-right: 12px;
 }
 
 .breach-alert {
