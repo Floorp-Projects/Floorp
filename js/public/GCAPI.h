@@ -345,6 +345,12 @@ typedef enum JSGCParamKey {
    */
   JSGC_ZONE_ALLOC_DELAY_KB = 33,
 
+  /*
+   * The current size of the nursery.
+   *
+   * read-only.
+   */
+  JSGC_NURSERY_BYTES = 34,
 } JSGCParamKey;
 
 /*
