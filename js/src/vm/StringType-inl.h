@@ -390,7 +390,6 @@ MOZ_ALWAYS_INLINE JSExternalString* JSExternalString::new_(
   }
   str->init(chars, length, fin);
   size_t nbytes = (length + 1) * sizeof(char16_t);
-  cx->updateMallocCounter(nbytes);
 
   MOZ_ASSERT(str->isTenured());
   js::AddCellMemory(str, nbytes, js::MemoryUse::StringContents);

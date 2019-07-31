@@ -94,12 +94,6 @@ JSFlatString* StringBuffer::finishStringInternal(JSContext* cx) {
     return nullptr;
   }
 
-  /*
-   * The allocation was made on a TempAllocPolicy, so account for the string
-   * data on the string's zone.
-   */
-  cx->updateMallocCounter(sizeof(CharT) * len);
-
   return str;
 }
 

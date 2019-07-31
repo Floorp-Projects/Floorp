@@ -285,9 +285,6 @@ namespace TuningDefaults {
 /* JSGC_ALLOCATION_THRESHOLD */
 static const size_t GCZoneAllocThresholdBase = 30 * 1024 * 1024;
 
-/* JSGC_MAX_MALLOC_BYTES */
-static const size_t MaxMallocBytes = 128 * 1024 * 1024;
-
 /*
  * JSGC_MIN_NURSERY_BYTES
  *
@@ -302,15 +299,6 @@ static const float AllocThresholdFactor = 0.9f;
 
 /* JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT */
 static const float AllocThresholdFactorAvoidInterrupt = 0.9f;
-
-/* no parameter */
-static const float MallocThresholdGrowFactor = 1.5f;
-
-/* no parameter */
-static const float MallocThresholdShrinkFactor = 0.9f;
-
-/* no parameter */
-static const size_t MallocThresholdLimit = 1024 * 1024 * 1024;
 
 /* JSGC_ZONE_ALLOC_DELAY_KB */
 static const size_t ZoneAllocDelayBytes = 1024 * 1024;
@@ -1345,7 +1333,6 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
     MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
     MOZ_ALWAYS_TRUE(
         tunables.setParameter(JSGC_MAX_NURSERY_BYTES, maxNurseryBytes, lock));
-    setMaxMallocBytes(TuningDefaults::MaxMallocBytes, lock);
 
     const char* size = getenv("JSGC_MARK_STACK_LIMIT");
     if (size) {
@@ -1442,9 +1429,6 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
   switch (key) {
-    case JSGC_MAX_MALLOC_BYTES:
-      setMaxMallocBytes(value, lock);
-      break;
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = value ? value : SliceBudget::UnlimitedTimeBudget;
       break;
@@ -1627,10 +1611,6 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
   return true;
 }
 
-void GCSchedulingTunables::setMaxMallocBytes(size_t value) {
-  maxMallocBytes_ = std::min(value, TuningDefaults::MallocThresholdLimit);
-}
-
 void GCSchedulingTunables::setHighFrequencyLowLimit(size_t newLimit) {
   highFrequencyLowLimitBytes_ = newLimit;
   if (highFrequencyLowLimitBytes_ >= highFrequencyHighLimitBytes_) {
@@ -1688,7 +1668,6 @@ void GCSchedulingTunables::setMaxEmptyChunkCount(uint32_t value) {
 
 GCSchedulingTunables::GCSchedulingTunables()
     : gcMaxBytes_(0),
-      maxMallocBytes_(TuningDefaults::MaxMallocBytes),
       gcMinNurseryBytes_(TuningDefaults::GCMinNurseryBytes),
       gcMaxNurseryBytes_(0),
       gcZoneAllocThresholdBase_(TuningDefaults::GCZoneAllocThresholdBase),
@@ -1722,9 +1701,6 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
   switch (key) {
-    case JSGC_MAX_MALLOC_BYTES:
-      setMaxMallocBytes(TuningDefaults::MaxMallocBytes, lock);
-      break;
     case JSGC_SLICE_TIME_BUDGET_MS:
       defaultTimeBudgetMS_ = TuningDefaults::DefaultTimeBudgetMS;
       break;
@@ -1831,8 +1807,6 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
   switch (key) {
     case JSGC_MAX_BYTES:
       return uint32_t(tunables.gcMaxBytes());
-    case JSGC_MAX_MALLOC_BYTES:
-      return uint32_t(tunables.maxMallocBytes());
     case JSGC_MIN_NURSERY_BYTES:
       MOZ_ASSERT(tunables.gcMinNurseryBytes() < UINT32_MAX);
       return uint32_t(tunables.gcMinNurseryBytes());
@@ -2091,10 +2065,6 @@ extern JS_FRIEND_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
   cx->runtime()->gc.removeRoot(vp);
 }
 
-void GCRuntime::setMaxMallocBytes(size_t value, const AutoLockGC& lock) {
-  tunables.setMaxMallocBytes(value);
-}
-
 float ZoneThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
   float eagerTriggerFactor = highFrequencyGC
                                  ? HighFrequencyEagerAllocTriggerFactor
@@ -2190,47 +2160,6 @@ void ZoneMallocThreshold::updateAfterGC(size_t lastBytes, size_t baseBytes,
                                         const AutoLockGC& lock) {
   gcTriggerBytes_ =
       computeZoneTriggerBytes(growthFactor, lastBytes, baseBytes, lock);
-}
-
-MemoryCounter::MemoryCounter()
-    : bytes_(0), maxBytes_(0), triggered_(NoTrigger) {}
-
-void MemoryCounter::updateOnGCStart() {
-  // Record the current byte count at the start of GC.
-  bytesAtStartOfGC_ = bytes_;
-}
-
-void MemoryCounter::updateOnGCEnd(const GCSchedulingTunables& tunables,
-                                  const AutoLockGC& lock) {
-  // Update the trigger threshold at the end of GC and adjust the current
-  // byte count to reflect bytes allocated since the start of GC.
-  MOZ_ASSERT(bytes_ >= bytesAtStartOfGC_);
-  if (shouldTriggerGC(tunables)) {
-    maxBytes_ =
-        std::min(TuningDefaults::MallocThresholdLimit,
-                 size_t(maxBytes_ * TuningDefaults::MallocThresholdGrowFactor));
-  } else {
-    maxBytes_ = std::max(
-        tunables.maxMallocBytes(),
-        size_t(maxBytes_ * TuningDefaults::MallocThresholdShrinkFactor));
-  }
-  bytes_ -= bytesAtStartOfGC_;
-  triggered_ = NoTrigger;
-}
-
-void MemoryCounter::setMax(size_t newMax, const AutoLockGC& lock) {
-  maxBytes_ = newMax;
-}
-
-void MemoryCounter::adopt(MemoryCounter& other) {
-  update(other.bytes());
-  other.bytes_ = 0;
-  other.triggered_ = NoTrigger;
-}
-
-void MemoryCounter::recordTrigger(TriggerKind trigger) {
-  MOZ_ASSERT(trigger > triggered_);
-  triggered_ = trigger;
 }
 
 /* Compacting GC */
@@ -7536,15 +7465,6 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       }
     }
 
-    if (zone->shouldTriggerGCForTooMuchMalloc() == NonIncrementalTrigger) {
-      CheckZoneIsScheduled(zone, reason, "malloc bytes");
-      budget.makeUnlimited();
-      stats().nonincremental(AbortReason::MallocBytesTrigger);
-      if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
-        resetReason = AbortReason::MallocBytesTrigger;
-      }
-    }
-
     if (isIncrementalGCInProgress() &&
         zone->isGCScheduled() != zone->wasGCStarted()) {
       budget.makeUnlimited();
@@ -7585,11 +7505,6 @@ static void ScheduleZones(GCRuntime* gc) {
         zone->gcMallocBytes.gcBytes() >=
             zone->gcMallocThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
         zone->gcJitBytes.gcBytes() >= zone->gcJitThreshold.gcTriggerBytes()) {
-      zone->scheduleGC();
-    }
-
-    // This ensures we collect zones that have reached the malloc limit.
-    if (zone->shouldTriggerGCForTooMuchMalloc()) {
       zone->scheduleGC();
     }
   }

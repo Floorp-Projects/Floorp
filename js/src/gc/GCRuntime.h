@@ -372,8 +372,6 @@ class GCRuntime {
   MOZ_MUST_USE bool addBlackRootsTracer(JSTraceDataOp traceOp, void* data);
   void removeBlackRootsTracer(JSTraceDataOp traceOp, void* data);
 
-  void setMaxMallocBytes(size_t value, const AutoLockGC& lock);
-
   void updateMemoryCountersOnGCStart();
 
   void setGCCallback(JSGCCallback callback, void* data);

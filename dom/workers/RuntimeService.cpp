@@ -432,14 +432,6 @@ void LoadJSGCMemoryOptions(const char* aPrefName, void* /* aClosure */) {
       continue;
     }
 
-    matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX "high_water_mark");
-    if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 1)) {
-      int32_t prefValue = GetWorkerPref(matchName, 128);
-      UpdateOtherJSGCMemoryOption(rts, JSGC_MAX_MALLOC_BYTES,
-                                  uint32_t(prefValue) * 1024 * 1024);
-      continue;
-    }
-
     matchName.RebindLiteral(PREF_MEM_OPTIONS_PREFIX
                             "gc_high_frequency_time_limit_ms");
     if (memPrefName == matchName || (gRuntimeServiceDuringInit && index == 2)) {
