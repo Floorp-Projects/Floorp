@@ -21,11 +21,6 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");
 loader.lazyRequireGetter(
   this,
-  "WebConsole",
-  "devtools/client/webconsole/webconsole"
-);
-loader.lazyRequireGetter(
-  this,
   "BrowserConsole",
   "devtools/client/webconsole/browser-console"
 );
@@ -64,27 +59,6 @@ HUDService.prototype = {
    */
   currentContext() {
     return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
-  },
-
-  /**
-   * Open a Web Console for the given target.
-   *
-   * @see devtools/framework/target.js for details about targets.
-   *
-   * @param object target
-   *        The target that the web console will connect to.
-   * @param nsIDOMWindow iframeWindow
-   *        The window where the web console UI is already loaded.
-   * @param nsIDOMWindow chromeWindow
-   *        The window of the web console owner.
-   * @return object
-   *         A promise object for the opening of the new WebConsole instance.
-   */
-  async openWebConsole(target, iframeWindow, chromeWindow) {
-    const hud = new WebConsole(target, iframeWindow, chromeWindow, this);
-    this.consoles.set(hud.hudId, hud);
-    await hud.init();
-    return hud;
   },
 
   /**
