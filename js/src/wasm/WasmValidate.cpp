@@ -395,7 +395,8 @@ bool wasm::EncodeLocalEntries(Encoder& e, const ValTypeVector& locals) {
 }
 
 bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
-                              bool gcTypesEnabled, ValTypeVector* locals) {
+                              bool refTypesEnabled, bool gcTypesEnabled,
+                              ValTypeVector* locals) {
   uint32_t numLocalEntries;
   if (!d.readVarU32(&numLocalEntries)) {
     return d.fail("failed to read number of local entries");
@@ -412,7 +413,7 @@ bool wasm::DecodeLocalEntries(Decoder& d, const TypeDefVector& types,
     }
 
     ValType type;
-    if (!d.readValType(types, gcTypesEnabled, &type)) {
+    if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, &type)) {
       return false;
     }
 
@@ -536,10 +537,16 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
       }
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::TableGet): {
+        if (!env.refTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         uint32_t unusedTableIndex;
         CHECK(iter.readTableGet(&unusedTableIndex, &nothing));
       }
       case uint16_t(Op::TableSet): {
+        if (!env.refTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         uint32_t unusedTableIndex;
         CHECK(iter.readTableSet(&unusedTableIndex, &nothing, &nothing));
       }
@@ -911,15 +918,24 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
           }
 #ifdef ENABLE_WASM_REFTYPES
           case uint32_t(MiscOp::TableFill): {
+            if (!env.refTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableFill(&unusedTableIndex, &nothing, &nothing,
                                      &nothing));
           }
           case uint32_t(MiscOp::TableGrow): {
+            if (!env.refTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableGrow(&unusedTableIndex, &nothing, &nothing));
           }
           case uint32_t(MiscOp::TableSize): {
+            if (!env.refTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
             uint32_t unusedTableIndex;
             CHECK(iter.readTableSize(&unusedTableIndex));
           }
@@ -972,10 +988,16 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #endif
 #ifdef ENABLE_WASM_REFTYPES
       case uint16_t(Op::RefNull): {
+        if (!env.refTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         CHECK(iter.readRefNull());
         break;
       }
       case uint16_t(Op::RefIsNull): {
+        if (!env.refTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         CHECK(iter.readConversion(ValType::AnyRef, ValType::I32, &nothing));
         break;
       }
@@ -1180,7 +1202,8 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
 
   const uint8_t* bodyBegin = d.currentPosition();
 
-  if (!DecodeLocalEntries(d, env.types, env.gcTypesEnabled(), &locals)) {
+  if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
+                          env.gcTypesEnabled(), &locals)) {
     return false;
   }
 
@@ -1263,7 +1286,8 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < numArgs; i++) {
-    if (!d.readValType(env->types.length(), env->gcTypesEnabled(), &args[i])) {
+    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
+                       env->gcTypesEnabled(), &args[i])) {
       return false;
     }
     if (!ValidateTypeState(d, typeState, args[i])) {
@@ -1284,7 +1308,8 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
 
   if (numRets == 1) {
     ValType type;
-    if (!d.readValType(env->types.length(), env->gcTypesEnabled(), &type)) {
+    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
+                       env->gcTypesEnabled(), &type)) {
       return false;
     }
     if (!ValidateTypeState(d, typeState, type)) {
@@ -1334,8 +1359,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
       return d.fail("garbage flag bits");
     }
     fields[i].isMutable = flags & uint8_t(FieldFlags::Mutable);
-    if (!d.readValType(env->types.length(), env->gcTypesEnabled(),
-                       &fields[i].type)) {
+    if (!d.readValType(env->types.length(), env->refTypesEnabled(),
+                       env->gcTypesEnabled(), &fields[i].type)) {
       return false;
     }
     if (!ValidateTypeState(d, typeState, fields[i].type)) {
@@ -1598,7 +1623,7 @@ static bool DecodeLimits(Decoder& d, Limits* limits,
   return true;
 }
 
-static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
+static bool DecodeTableTypeAndLimits(Decoder& d, bool refTypesEnabled,
                                      TableDescVector* tables) {
   uint8_t elementType;
   if (!d.readFixedU8(&elementType)) {
@@ -1610,6 +1635,9 @@ static bool DecodeTableTypeAndLimits(Decoder& d, bool gcTypesEnabled,
     tableKind = TableKind::FuncRef;
 #ifdef ENABLE_WASM_REFTYPES
   } else if (elementType == uint8_t(TypeCode::AnyRef)) {
+    if (!refTypesEnabled) {
+      return d.fail("expected 'funcref' element type");
+    }
     tableKind = TableKind::AnyRef;
 #endif
   } else {
@@ -1661,9 +1689,9 @@ static bool GlobalIsJSCompatible(Decoder& d, ValType type, bool isMutable) {
 }
 
 static bool DecodeGlobalType(Decoder& d, const TypeDefVector& types,
-                             bool gcTypesEnabled, ValType* type,
-                             bool* isMutable) {
-  if (!d.readValType(types, gcTypesEnabled, type)) {
+                             bool refTypesEnabled, bool gcTypesEnabled,
+                             ValType* type, bool* isMutable) {
+  if (!d.readValType(types, refTypesEnabled, gcTypesEnabled, type)) {
     return d.fail("expected global type");
   }
 
@@ -1777,7 +1805,7 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
       break;
     }
     case DefinitionKind::Table: {
-      if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
+      if (!DecodeTableTypeAndLimits(d, env->refTypesEnabled(), &env->tables)) {
         return false;
       }
       env->tables.back().importedOrExported = true;
@@ -1792,8 +1820,8 @@ static bool DecodeImport(Decoder& d, ModuleEnvironment* env) {
     case DefinitionKind::Global: {
       ValType type;
       bool isMutable;
-      if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled(), &type,
-                            &isMutable)) {
+      if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
+                            env->gcTypesEnabled(), &type, &isMutable)) {
         return false;
       }
       if (!GlobalIsJSCompatible(d, type, isMutable)) {
@@ -1902,7 +1930,7 @@ static bool DecodeTableSection(Decoder& d, ModuleEnvironment* env) {
   }
 
   for (uint32_t i = 0; i < numTables; ++i) {
-    if (!DecodeTableTypeAndLimits(d, env->gcTypesEnabled(), &env->tables)) {
+    if (!DecodeTableTypeAndLimits(d, env->refTypesEnabled(), &env->tables)) {
       return false;
     }
   }
@@ -2064,8 +2092,8 @@ static bool DecodeGlobalSection(Decoder& d, ModuleEnvironment* env) {
   for (uint32_t i = 0; i < numDefs; i++) {
     ValType type;
     bool isMutable;
-    if (!DecodeGlobalType(d, env->types, env->gcTypesEnabled(), &type,
-                          &isMutable)) {
+    if (!DecodeGlobalType(d, env->types, env->refTypesEnabled(),
+                          env->gcTypesEnabled(), &type, &isMutable)) {
       return false;
     }
 
@@ -2829,17 +2857,14 @@ bool wasm::Validate(JSContext* cx, const ShareableBytes& bytecode,
                     UniqueChars* error) {
   Decoder d(bytecode.bytes, 0, error);
 
-#ifdef ENABLE_WASM_GC
   bool gcTypesConfigured = HasGcSupport(cx);
-#else
-  bool gcTypesConfigured = false;
-#endif
+  bool refTypesConfigured = HasReftypesSupport(cx);
 
   CompilerEnvironment compilerEnv(CompileMode::Once, Tier::Optimized,
                                   OptimizedBackend::Ion, DebugEnabled::False,
-                                  gcTypesConfigured);
+                                  refTypesConfigured, gcTypesConfigured);
   ModuleEnvironment env(
-      gcTypesConfigured, &compilerEnv,
+      &compilerEnv,
       cx->realm()->creationOptions().getSharedMemoryAndAtomicsEnabled()
           ? Shareable::True
           : Shareable::False);
