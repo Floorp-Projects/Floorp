@@ -162,8 +162,8 @@
  *      maybeGC. The reason for this is that this check is made after the
  *      allocation and we cannot GC with an uninitialized thing in the heap.
  *
- *  11) Do an incremental, zonal GC with reason TOO_MUCH_MALLOC when we have
- *      malloced more than JSGC_MAX_MALLOC_BYTES in a zone since the last GC.
+ *  11) Do an incremental, zonal GC with reason TOO_MUCH_MALLOC when the total amount
+ *      of malloced memory is greater than the malloc trigger limit for the zone.
  *
  *
  * Size Limitation Triggers Explanation
@@ -323,8 +323,6 @@ namespace gc {
 
 struct Cell;
 
-enum TriggerKind { NoTrigger = 0, IncrementalTrigger, NonIncrementalTrigger };
-
 /*
  * Encapsulates all of the GC tunables. These are effectively constant and
  * should only be modified by setParameter.
@@ -336,13 +334,6 @@ class GCSchedulingTunables {
    * Maximum nominal heap before last ditch GC.
    */
   UnprotectedData<size_t> gcMaxBytes_;
-
-  /*
-   * JSGC_MAX_MALLOC_BYTES
-   *
-   * Initial malloc bytes threshold.
-   */
-  UnprotectedData<size_t> maxMallocBytes_;
 
   /*
    * JSGC_MIN_NURSERY_BYTES
@@ -493,7 +484,6 @@ class GCSchedulingTunables {
   GCSchedulingTunables();
 
   size_t gcMaxBytes() const { return gcMaxBytes_; }
-  size_t maxMallocBytes() const { return maxMallocBytes_; }
   size_t gcMinNurseryBytes() const { return gcMinNurseryBytes_; }
   size_t gcMaxNurseryBytes() const { return gcMaxNurseryBytes_; }
   size_t gcZoneAllocThresholdBase() const { return gcZoneAllocThresholdBase_; }
@@ -546,8 +536,6 @@ class GCSchedulingTunables {
                                  const AutoLockGC& lock);
   void resetParameter(JSGCParamKey key, const AutoLockGC& lock);
 
-  void setMaxMallocBytes(size_t value);
-
  private:
   void setHighFrequencyLowLimit(size_t value);
   void setHighFrequencyHighLimit(size_t value);
@@ -579,60 +567,6 @@ class GCSchedulingState {
         tunables.isDynamicHeapGrowthEnabled() && !lastGCTime.IsNull() &&
         lastGCTime + tunables.highFrequencyThreshold() > currentTime;
   }
-};
-
-class MemoryCounter {
-  // Bytes counter to measure memory pressure for GC scheduling. It counts
-  // upwards from zero.
-  mozilla::Atomic<size_t, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      bytes_;
-
-  // GC trigger threshold for memory allocations.
-  size_t maxBytes_;
-
-  // The counter value at the start of a GC.
-  MainThreadData<size_t> bytesAtStartOfGC_;
-
-  // Which kind of GC has been triggered if any.
-  mozilla::Atomic<TriggerKind, mozilla::ReleaseAcquire,
-                  mozilla::recordreplay::Behavior::DontPreserve>
-      triggered_;
-
- public:
-  MemoryCounter();
-
-  size_t bytes() const { return bytes_; }
-  size_t maxBytes() const { return maxBytes_; }
-  TriggerKind triggered() const { return triggered_; }
-
-  void setMax(size_t newMax, const AutoLockGC& lock);
-
-  void update(size_t bytes) { bytes_ += bytes; }
-
-  void adopt(MemoryCounter& other);
-
-  TriggerKind shouldTriggerGC(const GCSchedulingTunables& tunables) const {
-    if (MOZ_LIKELY(bytes_ < maxBytes_ * tunables.allocThresholdFactor())) {
-      return NoTrigger;
-    }
-
-    if (bytes_ < maxBytes_) {
-      return IncrementalTrigger;
-    }
-
-    return NonIncrementalTrigger;
-  }
-
-  bool shouldResetIncrementalGC(const GCSchedulingTunables& tunables) const {
-    return bytes_ > maxBytes_ * tunables.allocThresholdFactorAvoidInterrupt();
-  }
-
-  void recordTrigger(TriggerKind trigger);
-
-  void updateOnGCStart();
-  void updateOnGCEnd(const GCSchedulingTunables& tunables,
-                     const AutoLockGC& lock);
 };
 
 /*

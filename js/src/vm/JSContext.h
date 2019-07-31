@@ -264,11 +264,8 @@ struct JSContext : public JS::RootingContext,
     if (!p) {
       return nullptr;
     }
-    updateMallocCounter(bytes);
     return p;
   }
-
-  void updateMallocCounter(size_t nbytes);
 
   void reportAllocationOverflow() { js::ReportAllocationOverflow(this); }
 

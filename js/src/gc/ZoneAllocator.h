@@ -46,8 +46,6 @@ class ZoneAllocator : public JS::shadow::Zone,
                                    void* reallocPtr = nullptr);
   void reportAllocationOverflow() const;
 
-  void updateMallocCounter(size_t nbytes) {}
-
   void adoptMallocBytes(ZoneAllocator* other) {
     gcMallocBytes.adopt(other->gcMallocBytes);
     gcJitBytes.adopt(other->gcJitBytes);
@@ -59,9 +57,6 @@ class ZoneAllocator : public JS::shadow::Zone,
   void updateMemoryCountersOnGCStart();
   void updateGCThresholds(gc::GCRuntime& gc, JSGCInvocationKind invocationKind,
                           const js::AutoLockGC& lock);
-  js::gc::TriggerKind shouldTriggerGCForTooMuchMalloc() {
-    return gc::NoTrigger;
-  }
 
   // Memory accounting APIs for malloc memory owned by GC cells.
 
@@ -159,22 +154,6 @@ class ZoneAllocator : public JS::shadow::Zone,
       gc::MaybeMallocTriggerZoneGC(rt, this, heap, threshold, reason);
     }
   }
-
-  void updateMemoryCounter(js::gc::MemoryCounter& counter, size_t nbytes) {
-    JSRuntime* rt = runtimeFromAnyThread();
-
-    counter.update(nbytes);
-    auto trigger = counter.shouldTriggerGC(rt->gc.tunables);
-    if (MOZ_LIKELY(trigger == js::gc::NoTrigger) ||
-        trigger <= counter.triggered()) {
-      return;
-    }
-
-    maybeTriggerGCForTooMuchMalloc(counter, trigger);
-  }
-
-  void maybeTriggerGCForTooMuchMalloc(js::gc::MemoryCounter& counter,
-                                      js::gc::TriggerKind trigger);
 
  public:
   // Track GC heap size under this Zone.

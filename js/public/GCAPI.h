@@ -81,14 +81,6 @@ typedef enum JSGCParamKey {
   JSGC_MAX_BYTES = 0,
 
   /**
-   * Initial value for the malloc bytes threshold.
-   *
-   * Pref: javascript.options.mem.high_water_mark
-   * Default: TuningDefaults::MaxMallocBytes
-   */
-  JSGC_MAX_MALLOC_BYTES = 1,
-
-  /**
    * Maximum size of the generational GC nurseries.
    *
    * This will be rounded to the nearest gc::ChunkSize.  The special value 0

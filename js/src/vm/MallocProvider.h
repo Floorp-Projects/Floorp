@@ -206,6 +206,10 @@ struct MallocProvider {
 
  private:
   Client* client() { return static_cast<Client*>(this); }
+
+  // The Default implementation is a no-op which can be overridden by the
+  // client.
+  void updateMallocCounter(size_t nbytes) {}
 };
 
 } /* namespace js */
