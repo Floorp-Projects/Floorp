@@ -1982,7 +1982,7 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
   RootedFunction fun(cx);
 
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-  JSFunction::Flags flags;
+  FunctionFlags flags;
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
@@ -1991,28 +1991,28 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
     case FunctionSyntaxKind::Expression:
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
-                   ? JSFunction::INTERPRETED_LAMBDA
-                   : JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC);
+                   ? FunctionFlags::INTERPRETED_LAMBDA
+                   : FunctionFlags::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC);
       break;
     case FunctionSyntaxKind::Arrow:
-      flags = JSFunction::INTERPRETED_LAMBDA_ARROW;
+      flags = FunctionFlags::INTERPRETED_LAMBDA_ARROW;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Method:
-      flags = JSFunction::INTERPRETED_METHOD;
+      flags = FunctionFlags::INTERPRETED_METHOD;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::ClassConstructor:
     case FunctionSyntaxKind::DerivedClassConstructor:
-      flags = JSFunction::INTERPRETED_CLASS_CONSTRUCTOR;
+      flags = FunctionFlags::INTERPRETED_CLASS_CONSTRUCTOR;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Getter:
-      flags = JSFunction::INTERPRETED_GETTER;
+      flags = FunctionFlags::INTERPRETED_GETTER;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Setter:
-      flags = JSFunction::INTERPRETED_SETTER;
+      flags = FunctionFlags::INTERPRETED_SETTER;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     default:
@@ -2022,8 +2022,8 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
       }
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
-                   ? JSFunction::INTERPRETED_NORMAL
-                   : JSFunction::INTERPRETED_GENERATOR_OR_ASYNC);
+                   ? FunctionFlags::INTERPRETED_NORMAL
+                   : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
 
   fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,

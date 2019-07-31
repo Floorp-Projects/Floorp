@@ -3145,7 +3145,7 @@ bool ASTSerializer::property(ParseNode* pn, MutableHandleValue dst) {
   bool isShorthand = node->isKind(ParseNodeKind::Shorthand);
   bool isMethod =
       valNode->is<FunctionNode>() &&
-      valNode->as<FunctionNode>().funbox()->kind() == JSFunction::Method;
+      valNode->as<FunctionNode>().funbox()->kind() == FunctionFlags::Method;
   RootedValue key(cx), val(cx);
   return propertyName(keyNode, &key) && expression(valNode, &val) &&
          builder.propertyInitializer(key, val, kind, isShorthand, isMethod,

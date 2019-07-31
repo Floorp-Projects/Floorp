@@ -296,7 +296,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       // relazify scripts with inner functions.  See
       // JSFunction::createScriptForLazilyInterpretedFunction.
       MOZ_ASSERT(lazy->numInnerFunctions() == 0);
-      if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
       } else {
@@ -1253,7 +1253,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       lineno = lazy->lineno();
       column = lazy->column();
       immutableFlags = lazy->immutableFlags();
-      if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
       } else {
@@ -4529,13 +4529,13 @@ static JSObject* CloneInnerInterpretedFunction(
   }
 
   gc::AllocKind allocKind = srcFun->getAllocKind();
-  uint16_t flags = srcFun->flags();
+  FunctionFlags flags = srcFun->flags();
   if (srcFun->isSelfHostedBuiltin()) {
     // Functions in the self-hosting compartment are only extended in
     // debug mode. For top-level functions, FUNCTION_EXTENDED gets used by
     // the cloning algorithm. Do the same for inner functions here.
     allocKind = gc::AllocKind::FUNCTION_EXTENDED;
-    flags |= JSFunction::Flags::EXTENDED;
+    flags.setIsExtended();
   }
   RootedAtom atom(cx, srcFun->displayAtom());
   if (atom) {
@@ -4543,8 +4543,8 @@ static JSObject* CloneInnerInterpretedFunction(
   }
   RootedFunction clone(
       cx, NewFunctionWithProto(cx, nullptr, srcFun->nargs(),
-                               JSFunction::Flags(flags), nullptr, atom,
-                               cloneProto, allocKind, TenuredObject));
+                               flags, nullptr, atom, cloneProto,
+                               allocKind, TenuredObject));
   if (!clone) {
     return nullptr;
   }
@@ -4791,7 +4791,7 @@ JSScript* js::CloneScriptIntoFunction(
   }
 
   // Save flags in case we need to undo the early mutations.
-  const int preservedFlags = fun->flags();
+  const FunctionFlags preservedFlags = fun->flags();
   RootedScript dst(cx, detail::CopyScript(cx, src, sourceObject, &scopes));
   if (!dst) {
     fun->setFlags(preservedFlags);

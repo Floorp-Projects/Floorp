@@ -139,7 +139,7 @@ inline JSFunction* CloneFunctionObjectIfNotSingleton(
   fun->atom_.unsafeSet(nullptr);
 
   if (kind == js::gc::AllocKind::FUNCTION_EXTENDED) {
-    fun->setFlags(JSFunction::EXTENDED);
+    fun->setFlags(FunctionFlags::EXTENDED);
     for (js::GCPtrValue& extendedSlot : fun->toExtended()->extendedSlots) {
       extendedSlot.unsafeSet(JS::UndefinedValue());
     }

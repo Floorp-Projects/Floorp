@@ -2330,12 +2330,13 @@ JSProtoKey JS::IdentifyStandardInstanceOrPrototype(JSObject* obj) {
 }
 
 JSProtoKey JS::IdentifyStandardConstructor(JSObject* obj) {
-  // Note that NATIVE_CTOR does not imply that we are a standard constructor,
-  // but the converse is true (at least until we start having self-hosted
-  // constructors for standard classes). This lets us avoid a costly loop for
-  // many functions (which, depending on the call site, may be the common case).
+  // Note that isNativeConstructor does not imply that we are a standard
+  // constructor, but the converse is true (at least until we start having
+  // self-hosted constructors for standard classes). This lets us avoid a costly
+  // loop for many functions (which, depending on the call site, may be the
+  // common case).
   if (!obj->is<JSFunction>() ||
-      !(obj->as<JSFunction>().flags() & JSFunction::NATIVE_CTOR)) {
+      !(obj->as<JSFunction>().flags().isNativeConstructor())) {
     return JSProto_Null;
   }
 

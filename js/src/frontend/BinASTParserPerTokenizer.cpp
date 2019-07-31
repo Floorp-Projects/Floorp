@@ -166,7 +166,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
   // For now, only function declarations and function expression are supported.
   RootedFunction func(cx_, lazyScript_->functionNonDelazifying());
   bool isExpr = func->isLambda();
-  MOZ_ASSERT(func->kind() == JSFunction::FunctionKind::NormalFunction);
+  MOZ_ASSERT(func->kind() == FunctionFlags::FunctionKind::NormalFunction);
 
   // Poison the tokenizer when we leave to ensure that it's not used again by
   // accident.

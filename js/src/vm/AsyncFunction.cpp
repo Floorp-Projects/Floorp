@@ -45,8 +45,9 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
   }
   HandlePropertyName name = cx->names().AsyncFunction;
   RootedObject asyncFunction(
-      cx, NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
-                               JSFunction::NATIVE_CTOR, nullptr, name, proto));
+      cx,
+      NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
+                           FunctionFlags::NATIVE_CTOR, nullptr, name, proto));
   if (!asyncFunction) {
     return false;
   }
