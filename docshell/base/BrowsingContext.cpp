@@ -462,18 +462,21 @@ void BrowsingContext::GetChildren(Children& aChildren) {
 //
 // See
 // https://html.spec.whatwg.org/multipage/browsers.html#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
+BrowsingContext* BrowsingContext::FindWithName(
+    const nsAString& aName, BrowsingContext& aRequestingContext) {
   BrowsingContext* found = nullptr;
   if (aName.IsEmpty()) {
     // You can't find a browsing context with an empty name.
     found = nullptr;
-  } else if (BrowsingContext* special = FindWithSpecialName(aName)) {
+  } else if (BrowsingContext* special =
+                 FindWithSpecialName(aName, aRequestingContext)) {
     found = special;
   } else if (aName.LowerCaseEqualsLiteral("_blank")) {
     // Just return null. Caller must handle creating a new window with
     // a blank name.
     found = nullptr;
-  } else if (BrowsingContext* child = FindWithNameInSubtree(aName, this)) {
+  } else if (BrowsingContext* child =
+                 FindWithNameInSubtree(aName, aRequestingContext)) {
     found = child;
   } else {
     BrowsingContext* current = this;
@@ -486,7 +489,8 @@ BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
         // We've reached the root of the tree, consider browsing
         // contexts in the same browsing context group.
         siblings = &mGroup->Toplevels();
-      } else if (parent->NameEquals(aName) && CanAccess(parent) &&
+      } else if (parent->NameEquals(aName) &&
+                 aRequestingContext.CanAccess(parent) &&
                  parent->IsTargetable()) {
         found = parent;
         break;
@@ -500,7 +504,7 @@ BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
         }
 
         if (BrowsingContext* relative =
-                sibling->FindWithNameInSubtree(aName, this)) {
+                sibling->FindWithNameInSubtree(aName, aRequestingContext)) {
           found = relative;
           // Breaks the outer loop
           parent = nullptr;
@@ -514,19 +518,21 @@ BrowsingContext* BrowsingContext::FindWithName(const nsAString& aName) {
 
   // Helpers should perform access control checks, which means that we
   // only need to assert that we can access found.
-  MOZ_DIAGNOSTIC_ASSERT(!found || CanAccess(found));
+  MOZ_DIAGNOSTIC_ASSERT(!found || aRequestingContext.CanAccess(found));
 
   return found;
 }
 
-BrowsingContext* BrowsingContext::FindChildWithName(const nsAString& aName) {
+BrowsingContext* BrowsingContext::FindChildWithName(
+    const nsAString& aName, BrowsingContext& aRequestingContext) {
   if (aName.IsEmpty()) {
     // You can't find a browsing context with the empty name.
     return nullptr;
   }
 
   for (BrowsingContext* child : mChildren) {
-    if (child->NameEquals(aName) && CanAccess(child) && child->IsTargetable()) {
+    if (child->NameEquals(aName) && aRequestingContext.CanAccess(child) &&
+        child->IsTargetable()) {
       return child;
     }
   }
@@ -534,7 +540,8 @@ BrowsingContext* BrowsingContext::FindChildWithName(const nsAString& aName) {
   return nullptr;
 }
 
-BrowsingContext* BrowsingContext::FindWithSpecialName(const nsAString& aName) {
+BrowsingContext* BrowsingContext::FindWithSpecialName(
+    const nsAString& aName, BrowsingContext& aRequestingContext) {
   // TODO(farre): Neither BrowsingContext nor nsDocShell checks if the
   // browsing context pointed to by a special name is active. Should
   // it be? See Bug 1527913.
@@ -543,23 +550,25 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(const nsAString& aName) {
   }
 
   if (aName.LowerCaseEqualsLiteral("_parent")) {
-    return mParent && CanAccess(mParent.get()) ? mParent.get() : this;
+    return mParent && aRequestingContext.CanAccess(mParent.get())
+               ? mParent.get()
+               : this;
   }
 
   if (aName.LowerCaseEqualsLiteral("_top")) {
     BrowsingContext* top = Top();
 
-    return CanAccess(top) ? top : nullptr;
+    return aRequestingContext.CanAccess(top) ? top : nullptr;
   }
 
   return nullptr;
 }
 
 BrowsingContext* BrowsingContext::FindWithNameInSubtree(
-    const nsAString& aName, BrowsingContext* aRequestingContext) {
+    const nsAString& aName, BrowsingContext& aRequestingContext) {
   MOZ_DIAGNOSTIC_ASSERT(!aName.IsEmpty());
 
-  if (NameEquals(aName) && aRequestingContext->CanAccess(this) &&
+  if (NameEquals(aName) && aRequestingContext.CanAccess(this) &&
       IsTargetable()) {
     return this;
   }

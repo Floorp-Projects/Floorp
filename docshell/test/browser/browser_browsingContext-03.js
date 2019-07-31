@@ -138,7 +138,10 @@ add_task(async function() {
                 null,
                 false
               );
-              let browsingContext = browsingContexts[i].findWithName("target");
+              let browsingContext = browsingContexts[i].findWithName(
+                "target",
+                browsingContexts[i]
+              );
               is(
                 docShell ? docShell.browsingContext : null,
                 browsingContext,
@@ -155,7 +158,10 @@ add_task(async function() {
                 null,
                 false
               );
-              let browsingContext = browsingContexts[i].findWithName(target);
+              let browsingContext = browsingContexts[i].findWithName(
+                target,
+                browsingContexts[i]
+              );
               is(
                 docShell ? docShell.browsingContext : null,
                 browsingContext,

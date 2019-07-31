@@ -100,7 +100,7 @@ add_task(async function() {
           function reachable(start, targets) {
             for (let target of targets) {
               is(
-                bc(start).findWithName(target.name),
+                bc(start).findWithName(target.name, bc(start)),
                 bc(target),
                 [bc(start).name, "can reach", target.name].join(" ")
               );
@@ -109,7 +109,7 @@ add_task(async function() {
 
           function unreachable(start, target) {
             is(
-              bc(start).findWithName(target.name),
+              bc(start).findWithName(target.name, bc(start)),
               null,
               [bc(start).name, "can't reach", target.name].join(" ")
             );
