@@ -12,28 +12,28 @@ registerCleanupFunction(() => {
 
 async function testPrincipal(options, globalPrincipal, debuggeeHasXrays) {
   const { debuggee } = options;
-  let global, subsumes, isOpaque, globalIsInvisible;
   // Create a global object with the specified security principal.
   // If none is specified, use the debuggee.
   if (globalPrincipal === undefined) {
-    global = debuggee;
-    subsumes = true;
-    isOpaque = false;
-    globalIsInvisible = false;
-    await test(options, { global, subsumes, isOpaque, globalIsInvisible });
+    await test(options, {
+      global: debuggee,
+      subsumes: true,
+      isOpaque: false,
+      globalIsInvisible: false,
+    });
     return;
   }
 
   const debuggeePrincipal = Cu.getObjectPrincipal(debuggee);
-  const sameOrigin = debuggeePrincipal === globalPrincipal;
-  subsumes = sameOrigin || debuggeePrincipal === systemPrincipal;
+  const sameOrigin = debuggeePrincipal.origin === globalPrincipal.origin;
+  const subsumes = debuggeePrincipal.subsumes(globalPrincipal);
   for (const globalHasXrays of [true, false]) {
-    isOpaque =
+    const isOpaque =
       subsumes &&
       globalPrincipal !== systemPrincipal &&
       ((sameOrigin && debuggeeHasXrays) || globalHasXrays);
-    for (globalIsInvisible of [true, false]) {
-      global = Cu.Sandbox(globalPrincipal, {
+    for (const globalIsInvisible of [true, false]) {
+      let global = Cu.Sandbox(globalPrincipal, {
         wantXrays: globalHasXrays,
         invisibleToDebugger: globalIsInvisible,
       });
@@ -278,6 +278,10 @@ function check_prototype(
   }
 }
 
+function createNullPrincipal() {
+  return Cc["@mozilla.org/nullprincipal;1"].createInstance(Ci.nsIPrincipal);
+}
+
 async function run_tests_in_principal(
   options,
   debuggeePrincipal,
@@ -297,52 +301,21 @@ async function run_tests_in_principal(
   await testPrincipal(options, systemPrincipal, debuggeeHasXrays);
 
   // Test objects created in a cross-origin null principal new global.
-  await testPrincipal(options, null, debuggeeHasXrays);
+  await testPrincipal(options, createNullPrincipal(), debuggeeHasXrays);
 
-  if (debuggeePrincipal.isNullPrincipal) {
-    // Test objects created in a same-origin null principal new global.
-    await testPrincipal(
-      options,
-      Cu.getObjectPrincipal(debuggee),
-      debuggeeHasXrays
-    );
+  if (debuggeePrincipal != systemPrincipal) {
+    // Test objects created in a same-origin principal new global.
+    await testPrincipal(options, debuggeePrincipal, debuggeeHasXrays);
   }
 }
 
-// threadClientTest uses systemPrincipal by default, but let's be explicit here.
-add_task(
-  threadClientTest(
-    options => {
-      return run_tests_in_principal(options, systemPrincipal, true);
-    },
-    { principal: systemPrincipal, wantXrays: true }
-  )
-);
-add_task(
-  threadClientTest(
-    options => {
-      return run_tests_in_principal(options, systemPrincipal, false);
-    },
-    { principal: systemPrincipal, wantXrays: false }
-  )
-);
-
-const nullPrincipal = Cc["@mozilla.org/nullprincipal;1"].createInstance(
-  Ci.nsIPrincipal
-);
-add_task(
-  threadClientTest(
-    options => {
-      return run_tests_in_principal(options, nullPrincipal, true);
-    },
-    { principal: nullPrincipal, wantXrays: true }
-  )
-);
-add_task(
-  threadClientTest(
-    options => {
-      return run_tests_in_principal(options, nullPrincipal, false);
-    },
-    { principal: nullPrincipal, wantXrays: false }
-  )
-);
+for (const principal of [systemPrincipal, createNullPrincipal()]) {
+  for (const wantXrays of [true, false]) {
+    add_task(
+      threadClientTest(
+        options => run_tests_in_principal(options, principal, wantXrays),
+        { principal, wantXrays }
+      )
+    );
+  }
+}
