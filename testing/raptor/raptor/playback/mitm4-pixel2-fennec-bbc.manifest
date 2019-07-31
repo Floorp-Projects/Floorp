@@ -1,0 +1,11 @@
+[
+  {
+    "size": 2576346,
+    "visibility": "public",
+    "digest": "4373aa9e43a708b568ce86e447e4bfd52a4960f8dc80052768481a20f94d70ac601d55aafca7987fb887398e0f1e4051320e34ec009638e408b25c0ca1d896c8",
+    "algorithm": "sha512",
+    "filename": "mitm4-pixel2-fennec-bbc.zip",
+    "unpack": true
+  }
+]
+

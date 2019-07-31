@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2900087,
+    "visibility": "public",
+    "digest": "10b6160b719419f49763188bf2ffed506f6e5a59a3b7910c7c4223b39db5e5d03e8adeb62860d1f09c0b10ed501b6cd40245ab148171798f12ce63b1e660512c",
+    "algorithm": "sha512",
+    "filename": "mitm4-pixel2-fennec-amazon-search.zip",
+    "unpack": true
+  }
+]
