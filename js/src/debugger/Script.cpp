@@ -325,6 +325,25 @@ bool DebuggerScript::getStartLine(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+struct DebuggerScript::GetStartColumnMatcher {
+  using ReturnType = uint32_t;
+
+  ReturnType match(HandleScript script) { return script->column(); }
+  ReturnType match(Handle<LazyScript*> lazyScript) {
+    return lazyScript->column();
+  }
+  ReturnType match(Handle<WasmInstanceObject*> wasmInstance) { return 0; }
+};
+
+/* static */
+bool DebuggerScript::getStartColumn(JSContext* cx, unsigned argc, Value* vp) {
+  THIS_DEBUGSCRIPT_REFERENT(cx, argc, vp, "(get startColumn)", args, obj,
+                            referent);
+  GetStartColumnMatcher matcher;
+  args.rval().setNumber(referent.match(matcher));
+  return true;
+}
+
 struct DebuggerScript::GetLineCountMatcher {
   JSContext* cx_;
   double totalLines;
@@ -2119,6 +2138,7 @@ const JSPropertySpec DebuggerScript::properties_[] = {
     JS_PSG("displayName", getDisplayName, 0),
     JS_PSG("url", getUrl, 0),
     JS_PSG("startLine", getStartLine, 0),
+    JS_PSG("startColumn", getStartColumn, 0),
     JS_PSG("lineCount", getLineCount, 0),
     JS_PSG("source", getSource, 0),
     JS_PSG("sourceStart", getSourceStart, 0),

@@ -151,6 +151,31 @@ from its prototype:
     which this script's code starts, within the file or document named by
     `url`.
 
+`startColumn`
+:   **If the instance refers to a `JSScript`**, the zero-indexed number of the
+    column at which this script's code starts, within the file or document
+    named by `url`.  For functions, this is the start of the function's
+    arguments:
+    ```language-js
+    function f() { ... }
+    //        ^ start (column 10)
+    let g = x => x*x;
+    //      ^ start (column 8)
+    let h = (x) => x*x;
+    //      ^ start (column 8)
+    ```
+    For default class constructors, it is the start of the `class` keyword:
+    ```language-js
+    let MyClass = class { };
+    //            ^ start (column 14)
+    ```
+    For scripts from other sources, such as `eval` or the `Function`
+    constructor, it is typically 0:
+    ```language-js
+    let f = new Function("  console.log('hello world');");
+    //                    ^ start (column 0, from the string's perspective)
+    ```
+
 `lineCount`
 :   **If the instance refers to a `JSScript`**, the number of lines this
     script's code occupies, within the file or document named by `url`.
