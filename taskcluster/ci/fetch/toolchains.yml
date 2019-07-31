@@ -356,3 +356,10 @@ llvm-mingw:
         type: git
         repo: https://github.com/mstorsjo/llvm-mingw
         revision: c3a16814bd26aa6702e1e5b482a3d9044bb0f725
+
+android-rs-glue:
+    description: android-rs-glue source code
+    fetch:
+        type: git
+        repo: https://github.com/staktrace/android-rs-glue
+        revision: 486491e81819c3346d364a93fc1f3c0206d3ece0
