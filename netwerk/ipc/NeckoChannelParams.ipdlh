@@ -139,6 +139,7 @@ struct LoadInfoArgs
   bool                        documentHasUserInteracted;
   bool                        documentHasLoaded;
   nsString                    cspNonce;
+  bool                        skipContentSniffing;
   bool                        isFromProcessingFrameAttributes;
   CookieSettingsArgs cookieSettings;
   uint32_t                    requestBlockingReason;
@@ -171,6 +172,12 @@ struct ParentLoadInfoForwarderArgs
   // The service worker may synthesize a Response with a particular
   // tainting value.
   uint32_t tainting;
+
+  
+  // This flag is used for any browsing context where we should not sniff
+  // the content type. E.g if an iframe has the XCTO nosniff header, then
+  // that flag is set to true so we skip content sniffing for that browsing
+  bool skipContentSniffing;
 
   // We must also note that the tainting value was explicitly set
   // by the service worker.
