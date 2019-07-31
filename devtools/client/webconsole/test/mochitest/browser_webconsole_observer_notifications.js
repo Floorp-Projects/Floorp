@@ -30,18 +30,10 @@ function setupObserver() {
 
       switch (topic) {
         case "web-console-created":
-          ok(
-            HUDService.getHudReferenceById(subject.data),
-            "We have a hud reference"
-          );
           Services.obs.removeObserver(observer, "web-console-created");
           created = true;
           break;
         case "web-console-destroyed":
-          ok(
-            !HUDService.getHudReferenceById(subject.data),
-            "We do not have a hud reference"
-          );
           Services.obs.removeObserver(observer, "web-console-destroyed");
           destroyed = true;
           break;

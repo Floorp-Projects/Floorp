@@ -8,9 +8,8 @@
 
 loader.lazyRequireGetter(
   this,
-  "HUDService",
-  "devtools/client/webconsole/hudservice",
-  true
+  "WebConsole",
+  "devtools/client/webconsole/webconsole"
 );
 loader.lazyGetter(this, "EventEmitter", () =>
   require("devtools/shared/event-emitter")
@@ -68,11 +67,13 @@ WebConsolePanel.prototype = {
       const chromeWindow = iframe.ownerDocument.defaultView;
 
       // Open the Web Console.
-      this.hud = await HUDService.openWebConsole(
+      this.hud = new WebConsole(
         this.target,
         webConsoleUIWindow,
-        chromeWindow
+        chromeWindow,
+        this
       );
+      await this.hud.init();
 
       // Pipe 'reloaded' event from WebConsoleUI to WebConsolePanel.
       // These events are listened by the Toolbox.
