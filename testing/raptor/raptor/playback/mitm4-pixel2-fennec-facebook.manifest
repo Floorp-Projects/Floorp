@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2099923,
+    "visibility": "public",
+    "digest": "c685d119d2b8d1101c3328a2d23533598a32ce75d1b01c5576e98f058a3c3edc0ea515c62ea43d0c9342803e8c53548f9d2cad3109360dde398d30d030e8d05a",
+    "algorithm": "sha512",
+    "filename": "mitm4-pixel2-fennec-facebook.zip",
+    "unpack": true
+  }
+]
