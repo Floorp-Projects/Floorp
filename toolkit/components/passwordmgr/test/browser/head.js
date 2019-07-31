@@ -15,6 +15,7 @@ registerCleanupFunction(
 
     Services.logins.removeAllLogins();
     clearHttpAuths();
+    Services.telemetry.clearEvents();
 
     let recipeParent = LoginTestUtils.recipes.getRecipeParent();
     if (!recipeParent) {

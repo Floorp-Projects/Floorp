@@ -204,12 +204,11 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     username: "someusername",
     password: newPassword,
   });
-  ok(
-    LMP._generatedPasswordsByPrincipalOrigin.get(
-      "https://www.example.com^userContextId=6"
-    ).edited,
-    "Cached edited state should be true"
+  let generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+    "https://www.example.com^userContextId=6"
   );
+  ok(generatedPW.edited, "Cached edited boolean should be true");
+  equal(generatedPW.value, newPassword, "Cached password should be updated");
 
   info(
     "Simulate a second edit to check that the telemetry event for the first edit is not recorded twice"
@@ -221,12 +220,11 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
     username: "someusername",
     password: newerPassword,
   });
-  ok(
-    LMP._generatedPasswordsByPrincipalOrigin.get(
-      "https://www.example.com^userContextId=6"
-    ).edited,
-    "Cached edited state should remain true"
+  generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+    "https://www.example.com^userContextId=6"
   );
+  ok(generatedPW.edited, "Cached edited state should remain true");
+  equal(generatedPW.value, newerPassword, "Cached password should be updated");
 
   info("Check that expected telemetry event was recorded");
   const snapshot = Services.telemetry.snapshotEvents(
@@ -256,6 +254,99 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
   restorePrompter();
   LMP._generatedPasswordsByPrincipalOrigin.clear();
   Services.logins.removeAllLogins();
+  Services.telemetry.clearEvents();
+});
+
+add_task(async function test_onGeneratedPasswordFilledOrEdited_editToEmpty() {
+  startTestConditions(99);
+  let { generatedPassword } = stubGeneratedPasswordForBrowsingContextId(99);
+  let { fakePromptToChangePassword, restorePrompter } = stubPrompter();
+
+  let storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
+  );
+
+  equal(
+    Services.logins.getAllLogins().length,
+    0,
+    "Should have no saved logins at the start of the test"
+  );
+
+  LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    password: generatedPassword,
+    username: "someusername",
+  });
+
+  let [login] = await storageChangedPromised;
+  let expected = new LoginInfo(
+    "https://www.example.com",
+    "https://www.mozilla.org",
+    null,
+    "", // verify we don't include the username when auto-saving a login
+    generatedPassword
+  );
+
+  ok(login.equals(expected), "Check added login");
+  ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+  ok(
+    fakePromptToChangePassword.calledOnce,
+    "Checking promptToChangePassword was called"
+  );
+  ok(
+    fakePromptToChangePassword.getCall(0).args[2],
+    "promptToChangePassword had a truthy 'dismissed' argument"
+  );
+  ok(
+    fakePromptToChangePassword.getCall(0).args[3],
+    "promptToChangePassword had a truthy 'notifySaved' argument"
+  );
+
+  info("Edit the password to be empty");
+  const newPassword = "";
+  await LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    username: "someusername",
+    password: newPassword,
+  });
+  let generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+    "https://www.example.com^userContextId=6"
+  );
+  ok(!generatedPW.edited, "Cached edited boolean should be false");
+  equal(
+    generatedPW.value,
+    generatedPassword,
+    "Cached password shouldn't be updated"
+  );
+
+  info("Check that edited telemetry event was not recorded");
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    false
+  );
+  const telemetryProps = Object.freeze({
+    category: "pwmgr",
+    method: "filled_field_edited",
+    object: "generatedpassword",
+  });
+  const results = snapshot.parent.filter(([time, category, method, object]) => {
+    return (
+      category === telemetryProps.category &&
+      method === telemetryProps.method &&
+      object === telemetryProps.object
+    );
+  });
+
+  equal(results.length, 0, "No telemetry event for generated password editing");
+
+  LMP._browsingContextGlobal.get.restore();
+  restorePrompter();
+  LMP._generatedPasswordsByPrincipalOrigin.clear();
+  Services.logins.removeAllLogins();
+  Services.telemetry.clearEvents();
 });
 
 add_task(
