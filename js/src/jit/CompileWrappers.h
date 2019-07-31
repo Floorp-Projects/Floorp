@@ -81,7 +81,7 @@ class CompileZone {
 
   uint32_t* addressOfNurseryAllocCount();
 
-  bool nurseryExists();
+  bool nurseryEnabled();
   bool canNurseryAllocateStrings();
   void setMinorGCShouldCancelIonCompilations();
 };
