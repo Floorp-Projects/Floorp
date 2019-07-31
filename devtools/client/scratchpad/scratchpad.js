@@ -560,7 +560,7 @@ var Scratchpad = {
 
     if (response.error) {
       throw new Error(response.error);
-    } else if (response.exception !== null) {
+    } else if (response.exception != null) {
       return [string, response];
     } else {
       return [string, undefined, response.result];
