@@ -28,6 +28,16 @@ permalink: /changelog/
 * **service-glean**
   * Fixed a bug in`TimeSpanMetricType` that prevented multiple consecutive `start()`/`stop()` calls. This resulted in the `glean.baseline.duration` being missing from most [`baseline`](https://mozilla.github.io/glean/book/user/pings/baseline.html) pings.
 
+# 6.0.2
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.1...v6.0.2)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v6.0.2/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v6.0.2/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v6.0.2/buildSrc/src/main/java/Config.kt)
+
+* **service-glean**
+  * Fixed a bug in`TimeSpanMetricType` that prevented multiple consecutive `start()`/`stop()` calls. This resulted in the `glean.baseline.duration` being missing from most [`baseline`](https://mozilla.github.io/glean/book/user/pings/baseline.html) pings.
+
 # 6.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.0...v6.0.1)
