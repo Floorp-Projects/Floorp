@@ -3334,6 +3334,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                 actortype = md.actorDecl().bareType(self.side)
 
                 if managed.isRefcounted():
+                    if not self.receivesMessage(md):
+                        continue
+
                     actortype.ptr = False
                     actortype = _alreadyaddrefed(actortype)
 
