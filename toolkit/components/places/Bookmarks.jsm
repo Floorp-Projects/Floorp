@@ -3014,8 +3014,7 @@ function validateBookmarkObject(name, input, behavior) {
  *        notification instead of sending one notification for every URL.
  */
 var updateFrecency = async function(db, urls, collapseNotifications = false) {
-  let urlQuery = 'hash("' + urls.map(url => url.href).join('"), hash("') + '")';
-
+  let hrefs = urls.map(url => url.href);
   let frecencyClause = "CALCULATE_FRECENCY(id)";
   if (!collapseNotifications) {
     frecencyClause =
@@ -3028,8 +3027,8 @@ var updateFrecency = async function(db, urls, collapseNotifications = false) {
     `UPDATE moz_places
      SET hidden = (url_hash BETWEEN hash("place", "prefix_lo") AND hash("place", "prefix_hi")),
          frecency = ${frecencyClause}
-     WHERE url_hash IN ( ${urlQuery} )
-    `
+     WHERE url_hash IN (${sqlBindPlaceholders(hrefs, "hash(", ")")})`,
+    hrefs
   );
 
   // Trigger frecency updates for all affected origins.
@@ -3075,9 +3074,11 @@ var removeOrphanAnnotations = async function(db) {
  */
 var removeAnnotationsForItems = async function(db, items) {
   // Remove the annotations.
-  let ids = sqlList(items.map(item => item._id));
+  let itemIds = items.map(item => item._id);
   await db.executeCached(
-    `DELETE FROM moz_items_annos WHERE item_id IN (${ids})`
+    `DELETE FROM moz_items_annos
+     WHERE item_id IN (${sqlBindPlaceholders(itemIds)})`,
+    itemIds
   );
   await db.executeCached(
     `DELETE FROM moz_anno_attributes
@@ -3401,9 +3402,13 @@ function* chunkArray(array, chunkLength) {
 }
 
 /**
- * Convert a list of strings or numbers to its SQL
- * representation as a string.
+ * Generates a list of "?" SQL bindings based on input array length.
+ * @param {array} values an array of values.
+ * @param {string} [prefix] a string to prefix to the placeholder.
+ * @param {string} [suffix] a string to suffix to the placeholder.
+ * @returns {string} placeholders is a string made of question marks and commas,
+ *          one per value.
  */
-function sqlList(list) {
-  return list.map(JSON.stringify).join();
+function sqlBindPlaceholders(values, prefix = "", suffix = "") {
+  return new Array(values.length).fill(prefix + "?" + suffix).join(",");
 }
