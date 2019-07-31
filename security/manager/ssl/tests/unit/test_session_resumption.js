@@ -258,7 +258,7 @@ function add_origin_attributes_test(
 }
 
 function run_test() {
-  add_tls_server_setup("BadCertServer", "bad_certs");
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
   add_resume_ev_test();
   add_resume_non_ev_test();
   add_resume_non_ev_with_override_test();

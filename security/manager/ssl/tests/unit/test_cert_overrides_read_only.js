@@ -89,7 +89,7 @@ function run_test() {
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
   // Specifying false as the last argument means we don't try to add the default
   // test root CA (which would fail).
-  add_tls_server_setup("BadCertServer", "bad_certs", false);
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs", false);
 
   let fakeOCSPResponder = new HttpServer();
   fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {

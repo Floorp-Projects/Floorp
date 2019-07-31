@@ -18,13 +18,13 @@
 using namespace mozilla;
 using namespace mozilla::test;
 
-struct BadCertHost {
+struct BadCertAndPinningHost {
   const char* mHostName;
   const char* mCertName;
 };
 
 // Hostname, cert nickname pairs.
-const BadCertHost sBadCertHosts[] = {
+const BadCertAndPinningHost sBadCertAndPinningHosts[] = {
     {"expired.example.com", "expired-ee"},
     {"notyetvalid.example.com", "notYetValid"},
     {"before-epoch.example.com", "beforeEpoch"},
@@ -105,8 +105,8 @@ int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
 
 int32_t DoSNISocketConfig(PRFileDesc* aFd, const SECItem* aSrvNameArr,
                           uint32_t aSrvNameArrSize, void* aArg) {
-  const BadCertHost* host =
-      GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sBadCertHosts);
+  const BadCertAndPinningHost* host =
+      GetHostForSNI(aSrvNameArr, aSrvNameArrSize, sBadCertAndPinningHosts);
   if (!host) {
     // No static cert <-> hostname mapping found. This happens when we use a
     // collection of certificates in a given directory and build a cert DB at

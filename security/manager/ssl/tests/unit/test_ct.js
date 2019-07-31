@@ -28,7 +28,7 @@ registerCleanupFunction(() => {
 
 function run_test() {
   Services.prefs.setIntPref("security.pki.certificate_transparency.mode", 1);
-  add_tls_server_setup("BadCertServer", "test_ct");
+  add_tls_server_setup("BadCertAndPinningServer", "test_ct");
   // These certificates have a validity period of 800 days, which is a little
   // over 2 years and 2 months. This gets rounded down to 2 years (since it's
   // less than 2 years and 3 months). Our policy requires N + 1 embedded SCTs,
