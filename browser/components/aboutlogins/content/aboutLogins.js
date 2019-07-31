@@ -47,6 +47,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       gElements.loginItem.loginRemoved(event.detail.value);
       break;
     }
+    case "SendFavicons": {
+      gElements.loginList.addFavicons(event.detail.value);
+      break;
+    }
     case "SyncState": {
       gElements.fxAccountsButton.updateState(event.detail.value);
       break;
