@@ -1824,6 +1824,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.gcMaxNurseryBytes());
     case JSGC_BYTES:
       return uint32_t(heapSize.gcBytes());
+    case JSGC_NURSERY_BYTES:
+      return nursery().capacity();
     case JSGC_NUMBER:
       return uint32_t(number);
     case JSGC_MODE:

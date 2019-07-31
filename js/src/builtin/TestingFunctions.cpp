@@ -498,6 +498,7 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("minNurseryBytes", JSGC_MIN_NURSERY_BYTES, true)                         \
   _("maxNurseryBytes", JSGC_MAX_NURSERY_BYTES, true)                         \
   _("gcBytes", JSGC_BYTES, false)                                            \
+  _("nurseryBytes", JSGC_NURSERY_BYTES, false)                               \
   _("gcNumber", JSGC_NUMBER, false)                                          \
   _("mode", JSGC_MODE, true)                                                 \
   _("unusedChunks", JSGC_UNUSED_CHUNKS, false)                               \
