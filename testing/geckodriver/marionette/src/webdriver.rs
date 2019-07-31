@@ -36,6 +36,8 @@ pub enum Command {
         deserialize_with = "from_cookie"
     )]
     AddCookie(Cookie),
+    #[serde(rename = "WebDriver:CloseWindow")]
+    CloseWindow,
     #[serde(
         rename = "WebDriver:DeleteCookie",
         serialize_with = "to_name",
@@ -48,10 +50,16 @@ pub enum Command {
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
     FindElements(Locator),
+    #[serde(rename = "WebDriver:FullscreenWindow")]
+    FullscreenWindow,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
+    #[serde(rename = "WebDriver:MaximizeWindow")]
+    MaximizeWindow,
+    #[serde(rename = "WebDriver:MinimizeWindow")]
+    MinimizeWindow,
     #[serde(rename = "WebDriver:NewWindow")]
     NewWindow(NewWindow),
     #[serde(rename = "WebDriver:SetTimeouts")]
