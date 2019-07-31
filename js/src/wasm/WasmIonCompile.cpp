@@ -4172,7 +4172,8 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& env, LifoAlloc& lifo,
     if (!locals.appendAll(argTys)) {
       return false;
     }
-    if (!DecodeLocalEntries(d, env.types, env.gcTypesEnabled(), &locals)) {
+    if (!DecodeLocalEntries(d, env.types, env.refTypesEnabled(),
+                            env.gcTypesEnabled(), &locals)) {
       return false;
     }
 

@@ -435,12 +435,14 @@ CompilerEnvironment::CompilerEnvironment(const CompileArgs& args)
 CompilerEnvironment::CompilerEnvironment(CompileMode mode, Tier tier,
                                          OptimizedBackend optimizedBackend,
                                          DebugEnabled debugEnabled,
+                                         bool refTypesConfigured,
                                          bool gcTypesConfigured)
     : state_(InitialWithModeTierDebug),
       mode_(mode),
       tier_(tier),
       optimizedBackend_(optimizedBackend),
       debug_(debugEnabled),
+      refTypes_(refTypesConfigured),
       gcTypes_(gcTypesConfigured) {}
 
 void CompilerEnvironment::computeParameters(bool gcFeatureOptIn) {
@@ -495,6 +497,7 @@ void CompilerEnvironment::computeParameters(Decoder& d, bool gcFeatureOptIn) {
 
   debug_ = debugEnabled ? DebugEnabled::True : DebugEnabled::False;
   gcTypes_ = gcEnabled;
+  refTypes_ = !craneliftEnabled;
   state_ = Computed;
 }
 
@@ -565,9 +568,9 @@ SharedModule wasm::CompileBuffer(const CompileArgs& args,
   Decoder d(bytecode.bytes, 0, error, warnings);
 
   CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment env(
-      args.gcEnabled, &compilerEnv,
-      args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
+  ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
+                                          ? Shareable::True
+                                          : Shareable::False);
   if (!DecodeModuleEnvironment(d, &env)) {
     return nullptr;
   }
@@ -594,17 +597,18 @@ void wasm::CompileTier2(const CompileArgs& args, const Bytes& bytecode,
   Decoder d(bytecode, 0, &error);
 
   bool gcTypesConfigured = false;  // No optimized backend support yet
+  bool refTypesConfigured = !args.craneliftEnabled;
   OptimizedBackend optimizedBackend = args.craneliftEnabled
                                           ? OptimizedBackend::Cranelift
                                           : OptimizedBackend::Ion;
 
   CompilerEnvironment compilerEnv(CompileMode::Tier2, Tier::Optimized,
                                   optimizedBackend, DebugEnabled::False,
-                                  gcTypesConfigured);
+                                  refTypesConfigured, gcTypesConfigured);
 
-  ModuleEnvironment env(
-      gcTypesConfigured, &compilerEnv,
-      args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
+  ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
+                                          ? Shareable::True
+                                          : Shareable::False);
   if (!DecodeModuleEnvironment(d, &env)) {
     return;
   }
@@ -712,9 +716,9 @@ SharedModule wasm::CompileStreaming(
     const Atomic<bool>& cancelled, UniqueChars* error,
     UniqueCharsVector* warnings) {
   CompilerEnvironment compilerEnv(args);
-  ModuleEnvironment env(
-      args.gcEnabled, &compilerEnv,
-      args.sharedMemoryEnabled ? Shareable::True : Shareable::False);
+  ModuleEnvironment env(&compilerEnv, args.sharedMemoryEnabled
+                                          ? Shareable::True
+                                          : Shareable::False);
 
   {
     Decoder d(envBytes, 0, error, warnings);
