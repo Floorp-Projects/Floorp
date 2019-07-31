@@ -111,7 +111,7 @@ class WebConsole {
    *         A promise for the initialization.
    */
   init() {
-    return this.ui.init().then(() => this);
+    return this.ui.init();
   }
 
   /**
