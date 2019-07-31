@@ -235,7 +235,7 @@ struct SelfHostedLazyScript {
 
 }  // namespace js
 
-struct JSRuntime : public js::MallocProvider<JSRuntime> {
+struct JSRuntime {
  private:
   friend class js::Activation;
   friend class js::ActivationIterator;
@@ -527,7 +527,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
 #ifdef DEBUG
   bool currentThreadHasScriptDataAccess() const {
     if (!hasHelperThreadZones()) {
-      return CurrentThreadCanAccessRuntime(this) &&
+      return js::CurrentThreadCanAccessRuntime(this) &&
              activeThreadHasScriptDataAccess;
     }
 
@@ -535,7 +535,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   }
 
   bool currentThreadHasAtomsTableAccess() const {
-    return CurrentThreadCanAccessRuntime(this) &&
+    return js::CurrentThreadCanAccessRuntime(this) &&
            atoms_->mainThreadHasAllLocks();
   }
 #endif
@@ -853,16 +853,6 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   JSRuntime* thisFromCtor() { return this; }
 
  public:
-  /*
-   * Call this after allocating memory held by GC things, to update memory
-   * pressure counters or report the OOM error if necessary. If oomError and
-   * cx is not null the function also reports OOM error.
-   *
-   * The function must be called outside the GC lock and in case of OOM error
-   * the caller must ensure that no deadlock possible during OOM reporting.
-   */
-  void updateMallocCounter(size_t nbytes);
-
   void reportAllocationOverflow() { js::ReportAllocationOverflow(nullptr); }
 
   /*

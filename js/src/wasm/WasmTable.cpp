@@ -308,14 +308,11 @@ uint32_t Table::grow(uint32_t delta, JSContext* cx) {
 
   MOZ_ASSERT(movingGrowable());
 
-  JSRuntime* rt =
-      cx->runtime();  // Use JSRuntime's MallocProvider to avoid throwing.
-
   switch (kind_) {
     case TableKind::FuncRef: {
       // Note that realloc does not release functions_'s pointee on failure
       // which is exactly what we need here.
-      FunctionTableElem* newFunctions = rt->pod_realloc<FunctionTableElem>(
+      FunctionTableElem* newFunctions = js_pod_realloc<FunctionTableElem>(
           functions_.get(), length_, newLength.value());
       if (!newFunctions) {
         return -1;
