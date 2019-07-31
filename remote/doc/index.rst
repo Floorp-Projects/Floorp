@@ -43,9 +43,9 @@ Developers
 Bugs
 ====
 
-Bugs are tracked under the `Remote Protocol`_ product.
+Bugs are tracked under the `Remote Protocol product`_.
 
-.. _Remote Protocol: https://bugzilla.mozilla.org/describecomponents.cgi?product=Remote%20Protocol
+.. _Remote Protocol product: https://bugzilla.mozilla.org/describecomponents.cgi?product=Remote%20Protocol
 
 
 Communication
