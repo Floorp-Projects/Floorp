@@ -347,7 +347,7 @@ class FunctionCompiler {
 
     RootedFunction fun(
         cx_,
-        NewScriptedFunction(cx_, 0, JSFunction::INTERPRETED_NORMAL,
+        NewScriptedFunction(cx_, 0, FunctionFlags::INTERPRETED_NORMAL,
                             nameIsIdentifier_ ? HandleAtom(nameAtom_) : nullptr,
                             /* proto = */ nullptr, gc::AllocKind::FUNCTION,
                             TenuredObject, enclosingEnv));

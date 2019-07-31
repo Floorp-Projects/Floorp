@@ -506,7 +506,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   } else {
     declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
                   funbox->function()->kind() ==
-                      JSFunction::FunctionKind::ClassConstructor;
+                      FunctionFlags::FunctionKind::ClassConstructor;
   }
 
   if (declareThis) {
