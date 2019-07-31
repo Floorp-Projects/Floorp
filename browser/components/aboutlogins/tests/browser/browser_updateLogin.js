@@ -19,7 +19,8 @@ add_task(async function test_show_logins() {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
-        loginList._logins.length == 1 && loginList._logins[0].guid == loginGuid
+        loginList._loginGuidsSortedOrder.length == 1 &&
+        loginList._loginGuidsSortedOrder[0] == loginGuid
       );
     }, "Waiting for login to be displayed");
     ok(loginFound, "Stored logins should be displayed upon loading the page");
