@@ -61,8 +61,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
-  nsPIDOMWindowInner* GetParentObject() { return GetOwner(); }
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaRecorder, DOMEventTargetHelper)
 
