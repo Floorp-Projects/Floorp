@@ -1224,6 +1224,10 @@ pref("privacy.restrict3rdpartystorage.partitionedHosts", "accounts.google.com/o/
 // before granting the storage access permission.
 pref("privacy.restrict3rdpartystorage.userInteractionRequiredForHosts", "");
 
+// The url decoration tokens used to for stripping document referrers based on.
+// A list separated by spaces.  This pref isn't meant to be changed by users.
+pref("privacy.restrict3rdpartystorage.url_decorations", "");
+
 // Excessive reporting of blocked popups can be a DOS vector,
 // by overloading the main process as popups get blocked and when
 // users try to restore all popups, which is the most visible
