@@ -647,16 +647,20 @@ void JitCodeHeader::init(JitCode* jitCode) {
 }
 
 template <AllowGC allowGC>
-JitCode* JitCode::New(JSContext* cx, uint8_t* code, uint32_t bufferSize,
+JitCode* JitCode::New(JSContext* cx, uint8_t* code, uint32_t totalSize,
                       uint32_t headerSize, ExecutablePool* pool,
                       CodeKind kind) {
   JitCode* codeObj = Allocate<JitCode, allowGC>(cx);
   if (!codeObj) {
-    pool->release(headerSize + bufferSize, kind);
+    pool->release(totalSize, kind);
     return nullptr;
   }
 
+  uint32_t bufferSize = totalSize - headerSize;
   new (codeObj) JitCode(code, bufferSize, headerSize, pool, kind);
+
+  cx->zone()->incJitMemory(totalSize);
+
   return codeObj;
 }
 
@@ -742,6 +746,8 @@ void JitCode::finalize(FreeOp* fop) {
   if (!PerfEnabled()) {
     pool_->release(headerSize_ + bufferSize_, CodeKind(kind_));
   }
+
+  zone()->decJitMemory(headerSize_ + bufferSize_);
 
   pool_ = nullptr;
 }
