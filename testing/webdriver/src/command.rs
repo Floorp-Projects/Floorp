@@ -318,6 +318,11 @@ impl<U: WebDriverExtensionRoute> WebDriverMessage<U> {
                 WebDriverCommand::DeleteCookie(name)
             }
             Route::PerformActions => {
+                try_opt!(
+                    params.get("id"),
+                    ErrorStatus::InvalidArgument,
+                    "Missing id parameter"
+                );
                 WebDriverCommand::PerformActions(serde_json::from_str(raw_body)?)
             }
             Route::ReleaseActions => WebDriverCommand::ReleaseActions,
