@@ -67,6 +67,11 @@ const LOG_PARTIAL_SUCCESS = "partial_log_success" + COMPARE_LOG_SUFFIX;
 const LOG_PARTIAL_FAILURE = "partial_log_failure" + COMPARE_LOG_SUFFIX;
 const LOG_REPLACE_SUCCESS = "replace_log_success";
 
+// xpcshell tests need this preference set to true for Cu.isInAutomation to be
+// true.
+const PREF_IS_IN_AUTOMATION =
+  "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
+
 const USE_EXECV = AppConstants.platform == "linux";
 
 const URL_HOST = "http://localhost";
@@ -1131,6 +1136,7 @@ function doTestFinish() {
  * Sets the most commonly used preferences used by tests
  */
 function setDefaultPrefs() {
+  Services.prefs.setBoolPref(PREF_IS_IN_AUTOMATION, true);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DISABLEDFORTESTING, false);
   if (gDebugTest) {
     // Enable Update logging
