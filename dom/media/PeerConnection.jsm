@@ -2117,29 +2117,6 @@ class PeerConnectionObserver {
     if (pc.iceConnectionState === iceConnectionState) {
       return;
     }
-    if (pc.iceConnectionState === "new") {
-      var checking_histogram = Services.telemetry.getHistogramById(
-        "WEBRTC_ICE_CHECKING_RATE"
-      );
-      if (iceConnectionState === "checking") {
-        checking_histogram.add(true);
-      } else if (iceConnectionState === "failed") {
-        checking_histogram.add(false);
-      }
-    } else if (pc.iceConnectionState === "checking") {
-      var success_histogram = Services.telemetry.getHistogramById(
-        "WEBRTC_ICE_SUCCESS_RATE"
-      );
-      if (
-        iceConnectionState === "completed" ||
-        iceConnectionState === "connected"
-      ) {
-        success_histogram.add(true);
-        pc._pcTelemetry.recordConnected();
-      } else if (iceConnectionState === "failed") {
-        success_histogram.add(false);
-      }
-    }
 
     if (iceConnectionState === "failed") {
       if (!pc._hasStunServer) {

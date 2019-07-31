@@ -1041,9 +1041,6 @@ static void StoreLongTermICEStatisticsImpl_m(nsresult result,
 
 void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     PeerConnectionImpl& aPc) {
-  Telemetry::Accumulate(Telemetry::WEBRTC_ICE_FINAL_CONNECTION_STATE,
-                        static_cast<uint32_t>(aPc.IceConnectionState()));
-
   if (aPc.IceConnectionState() == RTCIceConnectionState::New) {
     // ICE has not started; we won't have any remote candidates, so recording
     // statistics on gathered candidates is pointless.

@@ -44,7 +44,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include "nr_socket_proxy_config.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 
@@ -266,7 +265,6 @@ NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
     : connection_state_(ICE_CTX_INIT),
       gathering_state_(ICE_CTX_GATHER_INIT),
       name_(name),
-      offerer_(false),
       ice_controlling_set_(false),
       streams_(),
       ctx_(nullptr),
@@ -735,40 +733,6 @@ NrIceStats NrIceCtx::Destroy() {
     stats.turn_438s = ctx_->stats.turn_438s;
   }
 
-  if (!ice_start_time_.IsNull()) {
-    TimeDuration time_delta = TimeStamp::Now() - ice_start_time_;
-    ice_start_time_ = TimeStamp();  // null out
-
-    if (offerer_) {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_OFFERER_ABORT_TIME,
-                            time_delta.ToMilliseconds());
-    } else {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ANSWERER_ABORT_TIME,
-                            time_delta.ToMilliseconds());
-    }
-
-    unsigned char rate_limit_bit_pattern = 0;
-    if (!mozilla::nr_socket_short_term_violation_time().IsNull() &&
-        mozilla::nr_socket_short_term_violation_time() >= ice_start_time_) {
-      rate_limit_bit_pattern |= 1;
-    }
-    if (!mozilla::nr_socket_long_term_violation_time().IsNull() &&
-        mozilla::nr_socket_long_term_violation_time() >= ice_start_time_) {
-      rate_limit_bit_pattern |= 2;
-    }
-
-    if (connection_state_ == ICE_CTX_FAILED) {
-      Telemetry::Accumulate(
-          Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE,
-          rate_limit_bit_pattern);
-    } else if (connection_state_ == ICE_CTX_CONNECTED ||
-               connection_state_ == ICE_CTX_COMPLETED) {
-      Telemetry::Accumulate(
-          Telemetry::WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS,
-          rate_limit_bit_pattern);
-    }
-  }
-
   if (peer_) {
     nr_ice_peer_ctx_destroy(&peer_);
   }
@@ -899,7 +863,6 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
 
   SetCtxFlags(default_route_only, proxy_only);
 
-  TimeStamp start = TimeStamp::Now();
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
   // finished.
@@ -907,18 +870,11 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
 
   if (!r) {
     SetGatheringState(ICE_CTX_GATHER_COMPLETE);
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_SUCCESS, start);
   } else if (r != R_WOULDBLOCK) {
     MOZ_MTLOG(ML_ERROR, "ICE FAILED: Couldn't gather ICE candidates for '"
                             << name_ << "', error=" << r);
     SetConnectionState(ICE_CTX_FAILED);
-    Telemetry::AccumulateTimeDelta(
-        Telemetry::WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_FAILURE, start);
     return NS_ERROR_FAILURE;
-  } else {
-    Telemetry::AccumulateTimeDelta(Telemetry::WEBRTC_ICE_NR_ICE_GATHER_TIME,
-                                   start);
   }
 
   return NS_OK;
@@ -983,15 +939,12 @@ bool NrIceCtx::HasStreamsToConnect() const {
   return false;
 }
 
-nsresult NrIceCtx::StartChecks(bool offerer) {
+nsresult NrIceCtx::StartChecks() {
   int r;
   if (!HasStreamsToConnect()) {
     // Nothing to do
     return NS_OK;
   }
-
-  offerer_ = offerer;
-  ice_start_time_ = TimeStamp::Now();
 
   r = nr_ice_peer_ctx_pair_candidates(peer_);
   if (r) {
@@ -1049,44 +1002,6 @@ void NrIceCtx::UpdateNetworkState(bool online) {
 
 void NrIceCtx::SetConnectionState(ConnectionState state) {
   if (state == connection_state_) return;
-
-  if (!ice_start_time_.IsNull() && (state > ICE_CTX_CHECKING)) {
-    TimeDuration time_delta = TimeStamp::Now() - ice_start_time_;
-    ice_start_time_ = TimeStamp();
-
-    switch (state) {
-      case ICE_CTX_INIT:
-      case ICE_CTX_CHECKING:
-        MOZ_CRASH();
-        break;
-      case ICE_CTX_CONNECTED:
-      case ICE_CTX_COMPLETED:
-        if (offerer_) {
-          Telemetry::Accumulate(Telemetry::WEBRTC_ICE_OFFERER_SUCCESS_TIME,
-                                time_delta.ToMilliseconds());
-        } else {
-          Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ANSWERER_SUCCESS_TIME,
-                                time_delta.ToMilliseconds());
-        }
-        break;
-      case ICE_CTX_FAILED:
-        if (offerer_) {
-          Telemetry::Accumulate(Telemetry::WEBRTC_ICE_OFFERER_FAILURE_TIME,
-                                time_delta.ToMilliseconds());
-        } else {
-          Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ANSWERER_FAILURE_TIME,
-                                time_delta.ToMilliseconds());
-        }
-        break;
-      case ICE_CTX_DISCONNECTED:
-        // We get this every time an ICE disconnect gets reported.
-        // Do we want a Telemetry probe counting how often this happens?
-        break;
-      case ICE_CTX_CLOSED:
-        // This doesn't seem to be used...
-        break;
-    }
-  }
 
   MOZ_MTLOG(ML_INFO, "NrIceCtx(" << name_ << "): state " << connection_state_
                                  << "->" << state);

@@ -629,8 +629,6 @@ class PeerConnectionImpl final
 
   bool mHaveConfiguredCodecs;
 
-  unsigned int mAddCandidateErrorCount;
-
   bool mTrickle;
 
   bool mPrivateWindow;
