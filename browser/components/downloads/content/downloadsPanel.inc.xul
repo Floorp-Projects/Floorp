@@ -39,6 +39,7 @@
      panel can also be displayed without an anchor. -->
 <panel id="downloadsPanel"
        aria-label="&downloads.title;"
+       class="panel-no-padding"
        role="group"
        type="arrow"
        orient="vertical"

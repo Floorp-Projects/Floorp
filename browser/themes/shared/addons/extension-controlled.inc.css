@@ -1,7 +1,3 @@
-#extension-notification-panel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
 .extension-controlled-notification > .popup-notification-body-container > .popup-notification-body {
   width: 30em;
 }

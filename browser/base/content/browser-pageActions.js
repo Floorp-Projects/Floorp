@@ -321,14 +321,13 @@ var BrowserPageActions = {
   _makeActivatedActionPanelForAction(action) {
     let panelNode = document.createXULElement("panel");
     panelNode.id = this._activatedActionPanelID;
-    panelNode.classList.add("cui-widget-panel");
+    panelNode.classList.add("cui-widget-panel", "panel-no-padding");
     panelNode.setAttribute("actionID", action.id);
     panelNode.setAttribute("role", "group");
     panelNode.setAttribute("type", "arrow");
     panelNode.setAttribute("flip", "slide");
     panelNode.setAttribute("noautofocus", "true");
     panelNode.setAttribute("tabspecific", "true");
-    panelNode.setAttribute("photon", "true");
 
     let panelViewNode = null;
     let iframeNode = null;
