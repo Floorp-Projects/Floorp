@@ -5247,9 +5247,9 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        ScriptSourceObject& sourceObject, LazyScriptData* data,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
-                       uint32_t lineno, uint32_t column)
+                       uint32_t toStringEnd, uint32_t lineno, uint32_t column)
     : BaseScript(stubEntry, &sourceObject, sourceStart, sourceEnd,
-                 toStringStart, sourceEnd),
+                 toStringStart, toStringEnd),
       script_(nullptr),
       function_(fun),
       lazyData_(data) {
@@ -5305,7 +5305,8 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
                                   HandleScriptSourceObject sourceObject,
                                   uint32_t immutableFlags, uint32_t sourceStart,
                                   uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t lineno, uint32_t column) {
+                                  uint32_t toStringEnd, uint32_t lineno,
+                                  uint32_t column) {
   cx->check(fun);
 
   MOZ_ASSERT(sourceObject);
@@ -5334,9 +5335,9 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  return new (res)
-      LazyScript(fun, stubEntry, *sourceObject, data.release(), immutableFlags,
-                 sourceStart, sourceEnd, toStringStart, lineno, column);
+  return new (res) LazyScript(fun, stubEntry, *sourceObject, data.release(),
+                              immutableFlags, sourceStart, sourceEnd,
+                              toStringStart, toStringEnd, lineno, column);
 }
 
 /* static */
@@ -5345,8 +5346,9 @@ LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
                                const frontend::AtomVector& closedOverBindings,
                                Handle<GCVector<JSFunction*, 8>> innerFunctions,
                                uint32_t sourceStart, uint32_t sourceEnd,
-                               uint32_t toStringStart, uint32_t lineno,
-                               uint32_t column, frontend::ParseGoal parseGoal) {
+                               uint32_t toStringStart, uint32_t toStringEnd,
+                               uint32_t lineno, uint32_t column,
+                               frontend::ParseGoal parseGoal) {
   uint32_t immutableFlags = 0;
   if (parseGoal == frontend::ParseGoal::Module) {
     immutableFlags |= uint32_t(ImmutableFlags::IsModule);
@@ -5355,7 +5357,7 @@ LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
   LazyScript* res = LazyScript::CreateRaw(
       cx, closedOverBindings.length(), innerFunctions.length(), fun,
       sourceObject, immutableFlags, sourceStart, sourceEnd, toStringStart,
-      lineno, column);
+      toStringEnd, lineno, column);
   if (!res) {
     return nullptr;
   }
@@ -5385,12 +5387,11 @@ LazyScript* LazyScript::CreateForXDR(
     uint32_t toStringEnd, uint32_t lineno, uint32_t column) {
   LazyScript* res = LazyScript::CreateRaw(
       cx, numClosedOverBindings, numInnerFunctions, fun, sourceObject,
-      immutableFlags, sourceStart, sourceEnd, toStringStart, lineno, column);
+      immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd, lineno,
+      column);
   if (!res) {
     return nullptr;
   }
-
-  res->setToStringEnd(toStringEnd);
 
   // Set the enclosing scope of the lazy function. This value should only be
   // set if we have a non-lazy enclosing script at this point.
