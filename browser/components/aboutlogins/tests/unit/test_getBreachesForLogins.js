@@ -22,6 +22,7 @@ const TEST_BREACHES = [
     Domain: "breached.com",
     Name: "Breached",
     PwnCount: 1643100,
+    DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
     _status: "synced",
     id: "047940fe-d2fd-4314-b636-b4a952ee0043",
     last_modified: "1541615610052",
@@ -33,8 +34,21 @@ const TEST_BREACHES = [
     Domain: "breached-subdomain.host.com",
     Name: "Only a Sub-Domain was Breached",
     PwnCount: 2754200,
+    DataClasses: ["Email addresses", "Usernames", "Passwords", "IP addresses"],
     _status: "synced",
     id: "047940fe-d2fd-4314-b636-b4a952ee0044",
+    last_modified: "1541615610052",
+    schema: "1541615609018",
+  },
+  {
+    AddedDate: "2018-12-20T23:56:26Z",
+    BreachDate: "2018-12-16",
+    Domain: "breached-site-without-passwords.com",
+    Name: "Breached Site without passwords",
+    PwnCount: 987654,
+    DataClasses: ["Email addresses", "Usernames", "IP addresses"],
+    _status: "synced",
+    id: "047940fe-d2fd-4314-b636-b4a952ee0045",
     last_modified: "1541615610052",
     schema: "1541615609018",
   },
@@ -67,6 +81,15 @@ const BREACHED_SUBDOMAIN_LOGIN = LoginTestUtils.testData.formLogin({
   password: "password",
   timePasswordChanged: new Date("2018-12-15").getTime(),
 });
+const LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS = LoginTestUtils.testData.formLogin(
+  {
+    origin: "https://breached-site-without-passwords.com",
+    formActionOrigin: "https://breached-site-without-passwords.com",
+    username: "username",
+    password: "password",
+    timePasswordChanged: new Date("2018-12-15").getTime(),
+  }
+);
 
 add_task(async function test_getBreachesForLogins_notBreachedLogin() {
   Services.logins.addLogin(NOT_BREACHED_LOGIN);
@@ -123,3 +146,20 @@ add_task(async function test_getBreachesForLogins_breachedSubdomain() {
     "Should be 1 breached login: " + BREACHED_SUBDOMAIN_LOGIN.origin
   );
 });
+
+add_task(
+  async function test_getBreachesForLogins_breachedSiteWithoutPasswords() {
+    Services.logins.addLogin(LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS);
+
+    const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+      [LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS],
+      TEST_BREACHES
+    );
+    Assert.strictEqual(
+      breachesByLoginGUID.size,
+      0,
+      "Should be 0 breached login: " +
+        LOGIN_FOR_BREACHED_SITE_WITHOUT_PASSWORDS.origin
+    );
+  }
+);

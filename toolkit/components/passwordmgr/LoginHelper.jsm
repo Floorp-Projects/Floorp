@@ -1148,6 +1148,8 @@ this.LoginHelper = {
         }
         if (
           Services.eTLD.hasRootDomain(loginURI.host, breach.Domain) &&
+          breach.hasOwnProperty("DataClasses") &&
+          breach.DataClasses.includes("Passwords") &&
           login.timePasswordChanged < new Date(breach.BreachDate).getTime()
         ) {
           let breachAlertURL = new URL(breach.Name, baseBreachAlertURL);
