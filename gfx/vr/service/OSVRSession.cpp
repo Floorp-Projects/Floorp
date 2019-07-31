@@ -346,7 +346,9 @@ bool OSVRSession::InitState(mozilla::gfx::VRSystemState& aSystemState) {
       (int)VRDisplayCapabilityFlags::Cap_Orientation |
       (int)VRDisplayCapabilityFlags::Cap_Position |
       (int)VRDisplayCapabilityFlags::Cap_External |
-      (int)VRDisplayCapabilityFlags::Cap_Present);
+      (int)VRDisplayCapabilityFlags::Cap_Present |
+      (int)VRDisplayCapabilityFlags::Cap_ImmersiveVR);
+  state.blendMode = VRDisplayBlendMode::Opaque;
   state.reportsDroppedFrames = false;
 
   // XXX OSVR display topology allows for more than one viewer

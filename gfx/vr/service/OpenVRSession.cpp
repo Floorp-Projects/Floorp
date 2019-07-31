@@ -894,7 +894,9 @@ bool OpenVRSession::InitState(VRSystemState& aSystemState) {
       (int)VRDisplayCapabilityFlags::Cap_Position |
       (int)VRDisplayCapabilityFlags::Cap_External |
       (int)VRDisplayCapabilityFlags::Cap_Present |
-      (int)VRDisplayCapabilityFlags::Cap_StageParameters);
+      (int)VRDisplayCapabilityFlags::Cap_StageParameters |
+      (int)VRDisplayCapabilityFlags::Cap_ImmersiveVR);
+  state.blendMode = VRDisplayBlendMode::Opaque;
   state.reportsDroppedFrames = true;
 
   ::vr::ETrackedPropertyError err;
