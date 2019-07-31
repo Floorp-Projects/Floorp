@@ -8,6 +8,9 @@ const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 const { LoginManagerParent: LMP } = ChromeUtils.import(
   "resource://gre/modules/LoginManagerParent.jsm"
 );
+const { LoginManagerPrompter } = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerPrompter.jsm"
+);
 const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
@@ -101,6 +104,31 @@ function stubGeneratedPasswordForBrowsingContextId(id) {
     stub,
     generatedPassword,
   };
+}
+
+function checkEditTelemetryRecorded(expectedCount, msg) {
+  info("Check that expected telemetry event was recorded");
+  const snapshot = Services.telemetry.snapshotEvents(
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
+    false
+  );
+  const telemetryProps = Object.freeze({
+    category: "pwmgr",
+    method: "filled_field_edited",
+    object: "generatedpassword",
+  });
+  const results = snapshot.parent.filter(([time, category, method, object]) => {
+    return (
+      category === telemetryProps.category &&
+      method === telemetryProps.method &&
+      object === telemetryProps.object
+    );
+  });
+  equal(
+    results.length,
+    expectedCount,
+    "Check count of pwmgr.filled_field_edited for generatedpassword: " + msg
+  );
 }
 
 function startTestConditions(contextId) {
@@ -198,6 +226,10 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
 
   info("Edit the password");
   const newPassword = generatedPassword + "🔥";
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
   await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
@@ -209,11 +241,24 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
   );
   ok(generatedPW.edited, "Cached edited boolean should be true");
   equal(generatedPW.value, newPassword, "Cached password should be updated");
+  let [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  expected.password = newPassword;
+  ok(login.equals(expected), "Check updated login");
+  equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have 1 saved login still"
+  );
 
   info(
     "Simulate a second edit to check that the telemetry event for the first edit is not recorded twice"
   );
   const newerPassword = newPassword + "🦊";
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
   await LMP._onGeneratedPasswordFilledOrEdited({
     browsingContextId: 99,
     formActionOrigin: "https://www.mozilla.org",
@@ -225,30 +270,17 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited() {
   );
   ok(generatedPW.edited, "Cached edited state should remain true");
   equal(generatedPW.value, newerPassword, "Cached password should be updated");
-
-  info("Check that expected telemetry event was recorded");
-  const snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    false
-  );
-  const telemetryProps = Object.freeze({
-    category: "pwmgr",
-    method: "filled_field_edited",
-    object: "generatedpassword",
-  });
-  const results = snapshot.parent.filter(([time, category, method, object]) => {
-    return (
-      category === telemetryProps.category &&
-      method === telemetryProps.method &&
-      object === telemetryProps.object
-    );
-  });
-
+  [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  expected.password = newerPassword;
+  ok(login.equals(expected), "Check updated login");
   equal(
-    results.length,
+    Services.logins.getAllLogins().length,
     1,
-    "Found telemetry event for generated password editing"
+    "Should have 1 saved login still"
   );
+
+  checkEditTelemetryRecorded(1, "with auto-save");
 
   LMP._browsingContextGlobal.get.restore();
   restorePrompter();
@@ -322,25 +354,126 @@ add_task(async function test_onGeneratedPasswordFilledOrEdited_editToEmpty() {
     "Cached password shouldn't be updated"
   );
 
-  info("Check that edited telemetry event was not recorded");
-  const snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-    false
+  checkEditTelemetryRecorded(0, "Blanking doesn't count as an edit");
+
+  LMP._browsingContextGlobal.get.restore();
+  restorePrompter();
+  LMP._generatedPasswordsByPrincipalOrigin.clear();
+  Services.logins.removeAllLogins();
+  Services.telemetry.clearEvents();
+});
+
+add_task(async function test_addUsernameBeforeAutoSaveEdit() {
+  startTestConditions(99);
+  let { generatedPassword } = stubGeneratedPasswordForBrowsingContextId(99);
+  let { fakePromptToChangePassword, restorePrompter } = stubPrompter();
+
+  let storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "addLogin"
   );
-  const telemetryProps = Object.freeze({
-    category: "pwmgr",
-    method: "filled_field_edited",
-    object: "generatedpassword",
-  });
-  const results = snapshot.parent.filter(([time, category, method, object]) => {
-    return (
-      category === telemetryProps.category &&
-      method === telemetryProps.method &&
-      object === telemetryProps.object
-    );
+
+  equal(
+    Services.logins.getAllLogins().length,
+    0,
+    "Should have no saved logins at the start of the test"
+  );
+
+  LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    password: generatedPassword,
+    username: "someusername",
   });
 
-  equal(results.length, 0, "No telemetry event for generated password editing");
+  let [login] = await storageChangedPromised;
+  let expected = new LoginInfo(
+    "https://www.example.com",
+    "https://www.mozilla.org",
+    null,
+    "", // verify we don't include the username when auto-saving a login
+    generatedPassword
+  );
+
+  ok(login.equals(expected), "Check added login");
+  ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+  ok(
+    fakePromptToChangePassword.calledOnce,
+    "Checking promptToChangePassword was called"
+  );
+  ok(
+    fakePromptToChangePassword.getCall(0).args[2],
+    "promptToChangePassword had a truthy 'dismissed' argument"
+  );
+  ok(
+    fakePromptToChangePassword.getCall(0).args[3],
+    "promptToChangePassword had a truthy 'notifySaved' argument"
+  );
+
+  info("Add a username in storage");
+  let loginWithUsername = login.clone();
+  loginWithUsername.username = "added_username";
+  LoginManagerPrompter.prototype._updateLogin(login, loginWithUsername);
+
+  info("Edit the password");
+  const newPassword = generatedPassword + "🔥";
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
+  await LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    username: "someusername",
+    password: newPassword,
+  });
+  let generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+    "https://www.example.com^userContextId=6"
+  );
+  ok(generatedPW.edited, "Cached edited boolean should be true");
+  equal(generatedPW.value, newPassword, "Cached password should be updated");
+  let [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  loginWithUsername.password = newPassword;
+  assertLoginProperties(login, loginWithUsername);
+  ok(login.matches(loginWithUsername, false), "Check updated login");
+  equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have 1 saved login still"
+  );
+
+  info(
+    "Simulate a second edit to check that the telemetry event for the first edit is not recorded twice"
+  );
+  const newerPassword = newPassword + "🦊";
+  storageChangedPromised = TestUtils.topicObserved(
+    "passwordmgr-storage-changed",
+    (_, data) => data == "modifyLogin"
+  );
+  await LMP._onGeneratedPasswordFilledOrEdited({
+    browsingContextId: 99,
+    formActionOrigin: "https://www.mozilla.org",
+    username: "someusername",
+    password: newerPassword,
+  });
+  generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+    "https://www.example.com^userContextId=6"
+  );
+  ok(generatedPW.edited, "Cached edited state should remain true");
+  equal(generatedPW.value, newerPassword, "Cached password should be updated");
+  [dataArray] = await storageChangedPromised;
+  login = dataArray.queryElementAt(1, Ci.nsILoginInfo);
+  loginWithUsername.password = newerPassword;
+  assertLoginProperties(login, loginWithUsername);
+  ok(login.matches(loginWithUsername, false), "Check updated login");
+  equal(
+    Services.logins.getAllLogins().length,
+    1,
+    "Should have 1 saved login still"
+  );
+
+  checkEditTelemetryRecorded(1, "with auto-save");
 
   LMP._browsingContextGlobal.get.restore();
   restorePrompter();
@@ -386,7 +519,7 @@ add_task(
       password: "qweqweq",
     });
     info("Adding initial login: " + JSON.stringify(login0Props));
-    await LoginTestUtils.addLogin(login0Props);
+    let expected = await LoginTestUtils.addLogin(login0Props);
 
     info(
       "Saved initial login: " +
@@ -423,6 +556,30 @@ add_task(
       !fakePromptToChangePassword.getCall(0).args[3],
       "promptToChangePassword had a falsey 'notifySaved' argument"
     );
+
+    info("Edit the password");
+    const newPassword = password1 + "🔥";
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      username: "someusername",
+      password: newPassword,
+    });
+    let generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+      "https://www.example.com^userContextId=6"
+    );
+    ok(generatedPW.edited, "Cached edited boolean should be true");
+    equal(generatedPW.storageGUID, null, "Should have no storageGUID");
+    equal(generatedPW.value, newPassword, "Cached password should be updated");
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+    ok(Services.logins.getAllLogins()[0].equals(expected), "Ensure no changes");
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should have 1 saved login still"
+    );
+
+    checkEditTelemetryRecorded(1, "Updating cache, not storage (no auto-save)");
 
     LMP._browsingContextGlobal.get.restore();
     restorePrompter();
