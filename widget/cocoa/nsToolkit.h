@@ -30,8 +30,8 @@ class nsToolkit {
   static nsresult SwizzleMethods(Class aClass, SEL orgMethod, SEL posedMethod,
                                  bool classMethods = false);
 
-  void RegisterForAllProcessMouseEvents();
-  void UnregisterAllProcessMouseEventHandlers();
+  void MonitorAllProcessMouseEvents();
+  void StopMonitoringAllProcessMouseEvents();
 
  protected:
   nsresult RegisterForSleepWakeNotifications();
@@ -43,8 +43,7 @@ class nsToolkit {
   CFRunLoopSourceRef mSleepWakeNotificationRLS;
   io_object_t mPowerNotifier;
 
-  CFMachPortRef mEventTapPort;
-  CFRunLoopSourceRef mEventTapRLS;
+  id mAllProcessMouseMonitor;
 };
 
 #endif  // nsToolkit_h_
