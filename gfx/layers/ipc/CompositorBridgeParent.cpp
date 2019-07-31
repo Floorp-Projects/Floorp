@@ -322,6 +322,7 @@ CompositorBridgeParent::CompositorBridgeParent(
       mVsyncRate(aVsyncRate),
       mPendingTransaction{0},
       mPaused(false),
+      mHaveCompositionRecorder(false),
       mUseExternalSurfaceSize(aUseExternalSurfaceSize),
       mEGLSurfaceSize(aSurfaceSize),
       mOptions(aOptions),
@@ -2613,36 +2614,36 @@ int32_t RecordContentFrameTime(
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) {
-  if (mCompositionRecorder) {
+  if (mHaveCompositionRecorder) {
     aResolve(false);
     return IPC_OK();
   }
 
   if (mLayerManager) {
-    mCompositionRecorder = new CompositionRecorder(aRecordingStart);
-    mLayerManager->SetCompositionRecorder(do_AddRef(mCompositionRecorder));
+    mLayerManager->SetCompositionRecorder(
+        MakeAndAddRef<CompositionRecorder>(aRecordingStart));
   } else if (mWrBridge) {
     RefPtr<WebRenderCompositionRecorder> recorder =
         new WebRenderCompositionRecorder(aRecordingStart,
                                          mWrBridge->PipelineId());
-    mCompositionRecorder = recorder;
     mWrBridge->SetCompositionRecorder(std::move(recorder));
   }
 
+  mHaveCompositionRecorder = true;
   aResolve(true);
+
   return IPC_OK();
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
     bool* aOutSuccess) {
-  if (!mCompositionRecorder) {
+  if (!mHaveCompositionRecorder) {
     *aOutSuccess = false;
     return IPC_OK();
   }
 
   if (mLayerManager) {
-    mLayerManager->SetCompositionRecorder(nullptr);
-    mCompositionRecorder->WriteCollectedFrames();
+    mLayerManager->WriteCollectedFrames();
   } else if (mWrBridge) {
     // If we are using WebRender, the |RenderThread| will have a handle to this
     // |WebRenderCompositionRecorder|, which it will release once the frames
@@ -2650,8 +2651,9 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
     mWrBridge->WriteCollectedFrames();
   }
 
-  mCompositionRecorder = nullptr;
+  mHaveCompositionRecorder = false;
   *aOutSuccess = true;
+
   return IPC_OK();
 }
 

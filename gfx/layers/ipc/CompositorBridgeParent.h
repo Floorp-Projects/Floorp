@@ -757,6 +757,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   TimeStamp mFwdTime;
 
   bool mPaused;
+  bool mHaveCompositionRecorder;
 
   bool mUseExternalSurfaceSize;
   gfx::IntSize mEGLSurfaceSize;
@@ -782,7 +783,6 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   // mSelfRef is cleared in DeferredDestroy which is scheduled by ActorDestroy.
   RefPtr<CompositorBridgeParent> mSelfRef;
   RefPtr<CompositorAnimationStorage> mAnimationStorage;
-  RefPtr<CompositionRecorder> mCompositionRecorder;
 
   TimeDuration mPaintTime;
 
