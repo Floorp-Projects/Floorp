@@ -2093,9 +2093,6 @@ extern JS_FRIEND_API void js::RemoveRawValueRoot(JSContext* cx, Value* vp) {
 
 void GCRuntime::setMaxMallocBytes(size_t value, const AutoLockGC& lock) {
   tunables.setMaxMallocBytes(value);
-  for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
-    zone->setGCMaxMallocBytes(value, lock);
-  }
 }
 
 float ZoneThreshold::eagerAllocTrigger(bool highFrequencyGC) const {
@@ -7905,7 +7902,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
 #ifdef DEBUG
   if (!isIncrementalGCInProgress()) {
     for (ZonesIter zone(rt, WithAtoms); zone.done(); zone.next()) {
-      MOZ_ASSERT(!zone->gcMallocCounter.triggered());
       MOZ_ASSERT(!zone->jitCodeCounter.triggered());
     }
   }
@@ -9041,13 +9037,13 @@ static bool ZoneGCAllocTriggerGetter(JSContext* cx, unsigned argc, Value* vp) {
 
 static bool ZoneMallocBytesGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->GCMallocBytes()));
+  args.rval().setNumber(double(cx->zone()->gcMallocBytes.gcBytes()));
   return true;
 }
 
 static bool ZoneMaxMallocGetter(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  args.rval().setNumber(double(cx->zone()->GCMaxMallocBytes()));
+  args.rval().setNumber(double(cx->zone()->gcMallocThreshold.gcTriggerBytes()));
   return true;
 }
 

@@ -35,7 +35,6 @@ ZoneAllocator::ZoneAllocator(JSRuntime* rt)
       gcMallocBytes(nullptr) {
   AutoLockGC lock(rt);
   updateGCThresholds(rt->gc, GC_NORMAL, lock);
-  setGCMaxMallocBytes(rt->gc.tunables.maxMallocBytes(), lock);
   jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
 
@@ -58,14 +57,12 @@ void ZoneAllocator::fixupAfterMovingGC() {
 void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   zoneSize.updateOnGCStart();
   gcMallocBytes.updateOnGCStart();
-  gcMallocCounter.updateOnGCStart();
   jitCodeCounter.updateOnGCStart();
 }
 
 void js::ZoneAllocator::updateMemoryCountersOnGCEnd(
     const js::AutoLockGC& lock) {
   auto& gc = runtimeFromAnyThread()->gc;
-  gcMallocCounter.updateOnGCEnd(gc.tunables, lock);
   jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
 }
 
@@ -83,8 +80,7 @@ void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
 
 js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
   auto& gc = runtimeFromAnyThread()->gc;
-  return std::max(gcMallocCounter.shouldTriggerGC(gc.tunables),
-                  jitCodeCounter.shouldTriggerGC(gc.tunables));
+  return jitCodeCounter.shouldTriggerGC(gc.tunables);
 }
 
 void ZoneAllocPolicy::decMemory(size_t nbytes) {
