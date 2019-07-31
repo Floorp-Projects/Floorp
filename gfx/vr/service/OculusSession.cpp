@@ -1012,6 +1012,8 @@ bool OculusSession::InitState(VRSystemState& aSystemState) {
   state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_External;
   state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_MountDetection;
   state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_Present;
+  state.capabilityFlags |= VRDisplayCapabilityFlags::Cap_ImmersiveVR;
+  state.blendMode = VRDisplayBlendMode::Opaque;
   state.reportsDroppedFrames = true;
 
   mFOVPort[VRDisplayState::Eye_Left] = desc.DefaultEyeFov[ovrEye_Left];
