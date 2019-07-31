@@ -305,6 +305,21 @@ var gPrivacyPane = {
   },
 
   /**
+   * Hide the "Change Block List" link for trackers/tracking content in the
+   * custom Content Blocking/ETP panel. By default, it will not be visible.
+   */
+  _showCustomBlockList() {
+    let prefValue = Services.prefs.getBoolPref(
+      "browser.contentblocking.customBlockList.preferences.ui.enabled"
+    );
+    if (!prefValue) {
+      document.getElementById("changeBlockListLink").style.display = "none";
+    } else {
+      setEventListener("changeBlockListLink", "click", this.showBlockLists);
+    }
+  },
+
+  /**
    * Set up handlers for showing and hiding controlling extension info
    * for tracking protection.
    */
@@ -358,6 +373,7 @@ var gPrivacyPane = {
     /* Initialize Content Blocking */
     this.initContentBlocking();
 
+    this._showCustomBlockList();
     this.trackingProtectionReadPrefs();
     this.networkCookieBehaviorReadPrefs();
     this._initTrackingProtectionExtensionControl();
