@@ -5,15 +5,11 @@
 package mozilla.components.feature.media.service
 
 import android.app.Service
-import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.AudioFocusRequest
-import android.media.AudioManager
-import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import mozilla.components.feature.media.ext.toPlaybackState
+import mozilla.components.feature.media.focus.AudioFocus
 import mozilla.components.feature.media.notification.MediaNotification
 import mozilla.components.feature.media.notification.MediaNotificationFeature
 import mozilla.components.feature.media.session.MediaSessionCallback
@@ -31,6 +27,7 @@ internal class MediaService : Service() {
     private val logger = Logger("MediaService")
     private val notification = MediaNotification(this)
     private val mediaSession by lazy { MediaSessionCompat(this, "MozacMedia") }
+    private val audioFocus = AudioFocus(this)
 
     override fun onCreate() {
         super.onCreate()
@@ -62,7 +59,7 @@ internal class MediaService : Service() {
         }
 
         if (state is MediaState.Playing) {
-            requestAudioFocus(this)
+            audioFocus.request(state)
         }
 
         updateMediaSession()
@@ -87,26 +84,4 @@ internal class MediaService : Service() {
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
-}
-
-private fun requestAudioFocus(context: Context) {
-    // This implementation currently only request focus and does not manage audio focus correctly.
-    // See: https://github.com/mozilla-mobile/android-components/issues/3935
-
-    val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-        @Suppress("DEPRECATION")
-        audioManager.requestAudioFocus({}, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN)
-    } else {
-        audioManager.requestAudioFocus(
-            AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
-                )
-                .build())
-    }
 }

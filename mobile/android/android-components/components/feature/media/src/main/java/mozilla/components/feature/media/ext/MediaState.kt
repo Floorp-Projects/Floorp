@@ -45,3 +45,21 @@ internal fun MediaState.toPlaybackState(): PlaybackStateCompat {
             1.0f)
         .build()
 }
+
+/**
+ * If this state is [MediaState.Playing] then pause all playing [Media].
+ */
+internal fun MediaState.pauseIfPlaying() {
+    if (this is MediaState.Playing) {
+        media.pause()
+    }
+}
+
+/**
+ * If this state is [MediaState.Paused] then resume playing all paused media.
+ */
+internal fun MediaState.playIfPaused() {
+    if (this is MediaState.Paused) {
+        media.play()
+    }
+}
