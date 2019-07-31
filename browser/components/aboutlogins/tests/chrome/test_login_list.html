@@ -277,6 +277,12 @@ add_task(async function test_login_added_filtered() {
 });
 
 add_task(async function test_sorted_list() {
+  function dispatchChangeEvent(target) {
+    let event = document.createEvent("UIEvent");
+    event.initEvent("change", true, true);
+    target.dispatchEvent(event);
+  }
+
   // Clear the filter
   window.dispatchEvent(new CustomEvent("AboutLoginsFilterLogins", {
     detail: "",
@@ -287,27 +293,49 @@ add_task(async function test_sorted_list() {
     detail: {},
   }));
 
+  // make sure that the logins have distinct orderings based on sort order
+  let [guid1, guid2, guid3] = gLoginList._loginGuidsSortedOrder;
+  gLoginList._logins[guid1].login.timeLastUsed = 0;
+  gLoginList._logins[guid2].login.timeLastUsed = 1;
+  gLoginList._logins[guid3].login.timeLastUsed = 2;
+  gLoginList._logins[guid1].login.title = "a";
+  gLoginList._logins[guid2].login.title = "b";
+  gLoginList._logins[guid3].login.title = "c";
+  gLoginList._logins[guid1].login.timePasswordChanged = 1;
+  gLoginList._logins[guid2].login.timePasswordChanged = 2;
+  gLoginList._logins[guid3].login.timePasswordChanged = 0;
+
   // sort by last used
-  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 1;
+  let loginSort = gLoginList.shadowRoot.getElementById("login-sort");
+  loginSort.selectedIndex = 1;
+  dispatchChangeEvent(loginSort);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
   is(loginListItems.length, 3, "The list should contain the three stored logins");
-  let timeUsed = loginListItems[0]._login.timeLastUsed;
+  let timeUsed1 = loginListItems[0]._login.timeLastUsed;
   let timeUsed2 = loginListItems[1]._login.timeLastUsed;
-  is(timeUsed2 > timeUsed, true, "Last used login should be displayed at top of list");
+  let timeUsed3 = loginListItems[2]._login.timeLastUsed;
+  is(timeUsed1 > timeUsed2, true, "Logins sorted by timeLastUsed. First: " + timeUsed1 + "; Second: " + timeUsed2);
+  is(timeUsed2 > timeUsed3, true, "Logins sorted by timeLastUsed. Second: " + timeUsed2 + "; Third: " + timeUsed3);
 
-  // sort by name
-  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 0;
+  // sort by title
+  loginSort.selectedIndex = 0;
+  dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  let title = loginListItems[0]._login.title;
+  let title1 = loginListItems[0]._login.title;
   let title2 = loginListItems[1]._login.title;
-  is(title.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
+  let title3 = loginListItems[2]._login.title;
+  is(title1.localeCompare(title2), -1, "Logins sorted by title. First: " + title1 + "; Second: " + title2);
+  is(title2.localeCompare(title3), -1, "Logins sorted by title. Second: " + title2 + "; Third: " + title3);
 
   // sort by last changed
-  gLoginList.shadowRoot.getElementById("login-sort").selectedIndex = 2;
+  loginSort.selectedIndex = 2;
+  dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  let pwChanged = loginListItems[0]._login.timePasswordChanged;
+  let pwChanged1 = loginListItems[0]._login.timePasswordChanged;
   let pwChanged2 = loginListItems[1]._login.timePasswordChanged;
-  is(pwChanged2 > pwChanged, true, "Login with most recently changed password should be displayed at top of list");
+  let pwChanged3 = loginListItems[2]._login.timePasswordChanged;
+  is(pwChanged1 > pwChanged2, true, "Logins sorted by timePasswordChanged. First: " + pwChanged1 + "; Second: " + pwChanged2);
+  is(pwChanged2 > pwChanged3, true, "Logins sorted by timePasswordChanged. Second: " + pwChanged2 + "; Third: " + pwChanged3);
 });
 </script>
 
