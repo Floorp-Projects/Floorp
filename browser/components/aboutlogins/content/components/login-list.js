@@ -15,7 +15,11 @@ const sortFnOptions = {
 export default class LoginList extends HTMLElement {
   constructor() {
     super();
-    this._logins = [];
+    // An array of login GUIDs, stored in sorted order.
+    this._loginGuidsSortedOrder = [];
+    // A map of login GUID -> login. Will eventually store
+    // login GUID -> {login, listItem}.
+    this._logins = {};
     this._filter = "";
     this._selectedGuid = null;
     this._blankLoginListItem = LoginListItemFactory.create({});
@@ -70,7 +74,7 @@ export default class LoginList extends HTMLElement {
       this._blankLoginListItem.remove();
     }
 
-    if (!this._logins.length) {
+    if (!this._loginGuidsSortedOrder.length) {
       document.l10n.setAttributes(this._count, "login-list-count", {
         count: 0,
       });
@@ -84,8 +88,9 @@ export default class LoginList extends HTMLElement {
 
     let fragment = document.createDocumentFragment();
     let chunkSize = 5;
-    for (let i = 0; i < this._logins.length; i++) {
-      let login = this._logins[i];
+    for (let i = 0; i < this._loginGuidsSortedOrder.length; i++) {
+      let guid = this._loginGuidsSortedOrder[i];
+      let { login } = this._logins[guid];
       let listItem = LoginListItemFactory.create(login);
       if (login.guid == this._selectedGuid) {
         this._setListItemAsSelected(listItem);
@@ -139,13 +144,12 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "change": {
-        const sort = this._sortSelect.value;
-        this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
+        this._applySort();
         this.render();
         break;
       }
       case "AboutLoginsClearSelection": {
-        if (!this._logins.length) {
+        if (!this._loginGuidsSortedOrder.length) {
           return;
         }
         window.dispatchEvent(
@@ -191,16 +195,16 @@ export default class LoginList extends HTMLElement {
    * @param {login[]} logins An array of logins used for displaying in the list.
    */
   setLogins(logins) {
-    this._logins = logins;
-    const sort = this._sortSelect.value;
-    this._logins = this._logins.sort((a, b) => sortFnOptions[sort](a, b));
-
+    this._loginGuidsSortedOrder = [];
+    this._logins = logins.reduce((map, login) => {
+      this._loginGuidsSortedOrder.push(login.guid);
+      map[login.guid] = { login };
+      return map;
+    }, {});
+    this._applySort();
     this.render();
 
-    if (
-      !this._selectedGuid ||
-      !this._logins.findIndex(login => login.guid == this._selectedGuid) != -1
-    ) {
+    if (!this._selectedGuid || !this._logins[this._selectedGuid]) {
       // Select the first visible login after any possible filter is applied.
       let firstVisibleListItem = this._list.querySelector(
         ".login-list-item[data-guid]:not([hidden])"
@@ -229,7 +233,9 @@ export default class LoginList extends HTMLElement {
    * @param {login} login A login that was added to storage.
    */
   loginAdded(login) {
-    this._logins.push(login);
+    this._logins[login.guid] = { login };
+    this._loginGuidsSortedOrder.push(login.guid);
+    this._applySort();
     this.render();
   }
 
@@ -238,12 +244,8 @@ export default class LoginList extends HTMLElement {
    *                       will get updated.
    */
   loginModified(login) {
-    for (let i = 0; i < this._logins.length; i++) {
-      if (this._logins[i].guid == login.guid) {
-        this._logins[i] = login;
-        break;
-      }
-    }
+    this._logins[login.guid] = { login };
+    this._applySort();
     this.render();
   }
 
@@ -253,7 +255,11 @@ export default class LoginList extends HTMLElement {
    *                      representation of nsILoginInfo/nsILoginMetaInfo.
    */
   loginRemoved(login) {
-    this._logins = this._logins.filter(l => l.guid != login.guid);
+    delete this._logins[login.guid];
+    this._loginGuidsSortedOrder = this._loginGuidsSortedOrder.filter(guid => {
+      return guid != login.guid;
+    });
+
     this.render();
   }
 
@@ -264,19 +270,27 @@ export default class LoginList extends HTMLElement {
   _applyFilter() {
     let matchingLoginGuids;
     if (this._filter) {
-      matchingLoginGuids = this._logins
-        .filter(login => {
-          return (
-            login.origin.toLocaleLowerCase().includes(this._filter) ||
-            login.username.toLocaleLowerCase().includes(this._filter)
-          );
-        })
-        .map(login => login.guid);
+      matchingLoginGuids = this._loginGuidsSortedOrder.filter(guid => {
+        let { login } = this._logins[guid];
+        return (
+          login.origin.toLocaleLowerCase().includes(this._filter) ||
+          login.username.toLocaleLowerCase().includes(this._filter)
+        );
+      });
     } else {
-      matchingLoginGuids = this._logins.map(login => login.guid);
+      matchingLoginGuids = [...this._loginGuidsSortedOrder];
     }
 
     return matchingLoginGuids;
+  }
+
+  _applySort() {
+    const sort = this._sortSelect.value;
+    this._loginGuidsSortedOrder = this._loginGuidsSortedOrder.sort((a, b) => {
+      let loginA = this._logins[a].login;
+      let loginB = this._logins[b].login;
+      return sortFnOptions[sort](loginA, loginB);
+    });
   }
 
   _handleKeyboardNav(event) {

@@ -43,7 +43,7 @@ add_task(async function test_query_parameter_filter() {
   await ContentTask.spawn(browser, vanillaLogins, async logins => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
-      return loginList._logins.length == 2;
+      return loginList._loginGuidsSortedOrder.length == 2;
     }, "Waiting for logins to be cached");
 
     let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
