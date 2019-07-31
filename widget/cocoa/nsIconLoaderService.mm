@@ -143,7 +143,10 @@ nsIconLoaderService::Notify(imgIRequest* aRequest, int32_t aType, const nsIntRec
       return rv;
     }
 
-    rv = mCompletionHandler->OnComplete(mNativeIconImage);
+    NSImage* newImage = mNativeIconImage;
+    mNativeIconImage = nil;
+    rv = mCompletionHandler->OnComplete(newImage);
+
     return rv;
   }
 
