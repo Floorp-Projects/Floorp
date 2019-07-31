@@ -38,7 +38,7 @@ CallOrNewEmitter::CallOrNewEmitter(BytecodeEmitter* bce, JSOp op,
   MOZ_ASSERT(isCall() || isNew() || isSuperCall());
 }
 
-bool CallOrNewEmitter::emitNameCallee(JSAtom* name) {
+bool CallOrNewEmitter::emitNameCallee(Handle<JSAtom*> name) {
   MOZ_ASSERT(state_ == State::Start);
 
   NameOpEmitter noe(
