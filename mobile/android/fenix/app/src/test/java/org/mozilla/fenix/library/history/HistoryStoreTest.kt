@@ -13,16 +13,6 @@ class HistoryStoreTest {
     private val historyItem = HistoryItem(0, "title", "url", 0.toLong())
     private val newHistoryItem = HistoryItem(1, "title", "url", 0.toLong())
 
-//    @Test
-//    fun enterEditMode() = runBlocking {
-//        val initialState = emptyDefaultState()
-//        val store = HistoryStore(initialState)
-//
-//        store.dispatch(HistoryAction.EnterEditMode(historyItem)).join()
-//        assertNotSame(initialState, store.state)
-//        assertEquals(store.state.mode, HistoryState.Mode.Editing(listOf(historyItem)))
-//    }
-
     @Test
     fun exitEditMode() = runBlocking {
         val initialState = oneItemEditState()
@@ -35,14 +25,14 @@ class HistoryStoreTest {
 
     @Test
     fun itemAddedForRemoval() = runBlocking {
-        val initialState = oneItemEditState()
+        val initialState = emptyDefaultState()
         val store = HistoryStore(initialState)
 
         store.dispatch(HistoryAction.AddItemForRemoval(newHistoryItem)).join()
         assertNotSame(initialState, store.state)
         assertEquals(
             store.state.mode,
-            HistoryState.Mode.Editing(setOf(historyItem, newHistoryItem))
+            HistoryState.Mode.Editing(setOf(newHistoryItem))
         )
     }
 
