@@ -87,7 +87,9 @@ void VRMockDisplay::Create() {
                           VRDisplayCapabilityFlags::Cap_External |
                           VRDisplayCapabilityFlags::Cap_Present |
                           VRDisplayCapabilityFlags::Cap_StageParameters |
-                          VRDisplayCapabilityFlags::Cap_MountDetection;
+                          VRDisplayCapabilityFlags::Cap_MountDetection |
+                          VRDisplayCapabilityFlags::Cap_ImmersiveVR;
+  state.blendMode = VRDisplayBlendMode::Opaque;
 
   // 1836 x 2040 resolution is arbitrary and can be overridden.
   // This default resolution was chosen to be within range of a
