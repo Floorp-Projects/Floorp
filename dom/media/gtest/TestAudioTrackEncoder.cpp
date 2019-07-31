@@ -223,12 +223,12 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
 
   encoder.AppendAudioSegment(std::move(segment));
 
-  EncodedFrameContainer container;
-  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(container)));
+  nsTArray<RefPtr<EncodedFrame>> frames;
+  EXPECT_TRUE(NS_SUCCEEDED(encoder.GetEncodedTrack(frames)));
 
   // Verify that encoded data is 5 seconds long.
   uint64_t totalDuration = 0;
-  for (auto& frame : container.GetEncodedFrames()) {
+  for (auto& frame : frames) {
     totalDuration += frame->GetDuration();
   }
   // 44100 as used above gets resampled to 48000 for opus.

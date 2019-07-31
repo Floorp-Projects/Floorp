@@ -3,39 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef EncodedFrameContainer_H_
-#define EncodedFrameContainer_H_
+#ifndef EncodedFrame_h_
+#define EncodedFrame_h_
 
-#include "nsTArray.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 
-class EncodedFrame;
-
-/*
- * This container is used to carry video or audio encoded data from encoder to
- * muxer. The media data object is created by encoder and recycle by the
- * destructor. Only allow to store audio or video encoded data in EncodedData.
- */
-class EncodedFrameContainer {
- public:
-  // Append encoded frame data
-  void AppendEncodedFrame(EncodedFrame* aEncodedFrame) {
-    mEncodedFrames.AppendElement(aEncodedFrame);
-  }
-  // Retrieve all of the encoded frames
-  const nsTArray<RefPtr<EncodedFrame> >& GetEncodedFrames() const {
-    return mEncodedFrames;
-  }
-
- private:
-  // This container is used to store the video or audio encoded packets.
-  // Muxer should check mFrameType and get the encoded data type from
-  // mEncodedFrames.
-  nsTArray<RefPtr<EncodedFrame> > mEncodedFrames;
-};
-
-// Represent one encoded frame
+// Represent an encoded frame emitted by an encoder
 class EncodedFrame final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodedFrame)
  public:
@@ -44,18 +19,7 @@ class EncodedFrame final {
     VP8_I_FRAME,       // VP8 intraframe
     VP8_P_FRAME,       // VP8 predicted frame
     OPUS_AUDIO_FRAME,  // Opus audio frame
-    VORBIS_AUDIO_FRAME,
-    AVC_I_FRAME,
-    AVC_P_FRAME,
-    AVC_B_FRAME,
-    AVC_CSD,  // AVC codec specific data
-    AAC_AUDIO_FRAME,
-    AAC_CSD,  // AAC codec specific data
-    AMR_AUDIO_CSD,
-    AMR_AUDIO_FRAME,
-    EVRC_AUDIO_CSD,
-    EVRC_AUDIO_FRAME,
-    UNKNOWN  // FrameType not set
+    UNKNOWN            // FrameType not set
   };
   void SwapInFrameData(nsTArray<uint8_t>& aData) {
     mFrameData.SwapElements(aData);
@@ -94,4 +58,4 @@ class EncodedFrame final {
 
 }  // namespace mozilla
 
-#endif
+#endif  // EncodedFrame_h_

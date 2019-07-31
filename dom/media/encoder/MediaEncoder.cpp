@@ -902,30 +902,20 @@ nsresult MediaEncoder::EncodeData() {
   }
 
   if (mVideoEncoder && !mVideoEncoder->IsEncodingComplete()) {
-    EncodedFrameContainer encodedVideoData;
-    nsresult rv = mVideoEncoder->GetEncodedTrack(encodedVideoData);
+    nsresult rv = mVideoEncoder->GetEncodedTrack(mEncodedVideoFrames);
     if (NS_FAILED(rv)) {
       // Encoding might be canceled.
       LOG(LogLevel::Error, ("Failed to get encoded data from video encoder."));
       return rv;
     }
-    for (const RefPtr<EncodedFrame>& frame :
-         encodedVideoData.GetEncodedFrames()) {
-      mEncodedVideoFrames.AppendElement(frame);
-    }
   }
 
   if (mAudioEncoder && !mAudioEncoder->IsEncodingComplete()) {
-    EncodedFrameContainer encodedAudioData;
-    nsresult rv = mAudioEncoder->GetEncodedTrack(encodedAudioData);
+    nsresult rv = mAudioEncoder->GetEncodedTrack(mEncodedAudioFrames);
     if (NS_FAILED(rv)) {
       // Encoding might be canceled.
       LOG(LogLevel::Error, ("Failed to get encoded data from audio encoder."));
       return rv;
-    }
-    for (const RefPtr<EncodedFrame>& frame :
-         encodedAudioData.GetEncodedFrames()) {
-      mEncodedAudioFrames.AppendElement(frame);
     }
   }
 
@@ -943,16 +933,11 @@ nsresult MediaEncoder::WriteEncodedDataToMuxer() {
   }
 
   if (mVideoEncoder) {
-    EncodedFrameContainer encodedVideoData;
-    for (const RefPtr<EncodedFrame>& frame : mEncodedVideoFrames) {
-      encodedVideoData.AppendEncodedFrame(frame);
-    }
-    mEncodedVideoFrames.Clear();
-
     nsresult rv = mWriter->WriteEncodedTrack(
-        encodedVideoData, mVideoEncoder->IsEncodingComplete()
-                              ? ContainerWriter::END_OF_STREAM
-                              : 0);
+        mEncodedVideoFrames, mVideoEncoder->IsEncodingComplete()
+                                 ? ContainerWriter::END_OF_STREAM
+                                 : 0);
+    mEncodedVideoFrames.Clear();
     if (NS_FAILED(rv)) {
       LOG(LogLevel::Error,
           ("Failed to write encoded video track to the muxer."));
@@ -961,16 +946,11 @@ nsresult MediaEncoder::WriteEncodedDataToMuxer() {
   }
 
   if (mAudioEncoder) {
-    EncodedFrameContainer encodedAudioData;
-    for (const RefPtr<EncodedFrame>& frame : mEncodedAudioFrames) {
-      encodedAudioData.AppendEncodedFrame(frame);
-    }
-    mEncodedAudioFrames.Clear();
-
     nsresult rv = mWriter->WriteEncodedTrack(
-        encodedAudioData, mAudioEncoder->IsEncodingComplete()
-                              ? ContainerWriter::END_OF_STREAM
-                              : 0);
+        mEncodedAudioFrames, mAudioEncoder->IsEncodingComplete()
+                                 ? ContainerWriter::END_OF_STREAM
+                                 : 0);
+    mEncodedAudioFrames.Clear();
     if (NS_FAILED(rv)) {
       LOG(LogLevel::Error,
           ("Failed to write encoded audio track to the muxer."));
