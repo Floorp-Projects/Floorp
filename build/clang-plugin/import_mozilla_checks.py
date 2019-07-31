@@ -104,8 +104,11 @@ def write_third_party_paths(mozilla_path, module_path):
 def do_import(mozilla_path, clang_tidy_path):
     module = 'mozilla'
     module_path = os.path.join(clang_tidy_path, module)
-    if not os.path.isdir(module_path):
-        os.mkdir(module_path)
+    try:
+        os.makedirs(module_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
     copy_dir_contents(mozilla_path, module_path)
     write_third_party_paths(mozilla_path, module_path)
