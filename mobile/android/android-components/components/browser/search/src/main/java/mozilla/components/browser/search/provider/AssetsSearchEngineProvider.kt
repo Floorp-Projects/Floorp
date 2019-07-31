@@ -58,8 +58,9 @@ class AssetsSearchEngineProvider(
         val searchOrder = localizedConfiguration.searchOrder
         val orderedList = searchOrder
             .mapNotNull { name ->
-                searchEngines.find { it.name == name }
+                searchEngines.filter { it.name == name }
             }
+            .flatten()
 
         val unorderedRest = searchEngines
             .filter {

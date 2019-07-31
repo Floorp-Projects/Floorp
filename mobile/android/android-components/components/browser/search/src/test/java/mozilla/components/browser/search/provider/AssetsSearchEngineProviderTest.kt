@@ -246,6 +246,43 @@ class AssetsSearchEngineProviderTest {
         }
     }
 
+    @Test
+    fun `provider loads additional identifiers if search order specified`() {
+        val usProvider = object : SearchLocalizationProvider() {
+            override val country: String = "US"
+            override val language = "en"
+            override val region: String? = null
+        }
+
+        // Loading "en-US" without additional identifiers. This will
+        // contain google-b-m, but not google.
+        runBlocking {
+            val searchEngineProvider = AssetsSearchEngineProvider(usProvider)
+            val engines = searchEngineProvider.loadSearchEngines(testContext)
+            val searchEngines = engines.list
+
+            assertEquals(6, searchEngines.size)
+            assertContainsNotSearchEngine("google", searchEngines)
+        }
+
+        // Load "en-US" with "google" added. Apps may add custom search plugins
+        // and reuse existing plugin names to make their own product-specific
+        // decision on which engine to use. So we need to return them all by
+        // default i.e. the presence of a search order should not prevent us
+        // from returning the custom engines.
+        // See: https://github.com/mozilla-mobile/firefox-tv/pull/1876/
+        runBlocking {
+            val provider = AssetsSearchEngineProvider(
+                    usProvider,
+                    additionalIdentifiers = listOf("google"))
+            val engines = provider.loadSearchEngines(testContext)
+            val searchEngines = engines.list
+
+            assertEquals(7, searchEngines.size)
+            assertContainsSearchEngine("google", searchEngines)
+        }
+    }
+
     private fun assertContainsSearchEngine(identifier: String, searchEngines: List<SearchEngine>) {
         searchEngines.forEach {
             if (identifier == it.identifier) {
