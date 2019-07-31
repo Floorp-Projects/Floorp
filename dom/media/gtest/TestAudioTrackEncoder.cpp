@@ -229,7 +229,7 @@ TEST(OpusAudioTrackEncoder, FrameEncode)
   // Verify that encoded data is 5 seconds long.
   uint64_t totalDuration = 0;
   for (auto& frame : frames) {
-    totalDuration += frame->GetDuration();
+    totalDuration += frame->mDuration;
   }
   // 44100 as used above gets resampled to 48000 for opus.
   const uint64_t five = 48000 * 5;
