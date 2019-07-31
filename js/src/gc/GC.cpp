@@ -3444,6 +3444,7 @@ static bool RecordReplayCheckCanGC(JS::GCReason reason) {
     case JS::GCReason::ALLOC_TRIGGER:
     case JS::GCReason::DELAYED_ATOMS_GC:
     case JS::GCReason::TOO_MUCH_WASM_MEMORY:
+    case JS::GCReason::TOO_MUCH_JIT_CODE:
       return false;
 
     default:
@@ -3533,37 +3534,54 @@ void GCRuntime::maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes) {
   }
 }
 
-void js::gc::MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc) {
-  rt->gc.maybeMallocTriggerZoneGC(Zone::from(zoneAlloc));
+void js::gc::MaybeMallocTriggerZoneGC(JSRuntime* rt, ZoneAllocator* zoneAlloc,
+                                      const HeapSize& heap,
+                                      const ZoneThreshold& threshold,
+                                      JS::GCReason reason) {
+  rt->gc.maybeMallocTriggerZoneGC(Zone::from(zoneAlloc), heap, threshold,
+                                  reason);
 }
 
 void GCRuntime::maybeMallocTriggerZoneGC(Zone* zone) {
+  if (maybeMallocTriggerZoneGC(zone, zone->gcMallocBytes,
+                               zone->gcMallocThreshold,
+                               JS::GCReason::TOO_MUCH_MALLOC)) {
+    return;
+  }
+
+  maybeMallocTriggerZoneGC(zone, zone->gcJitBytes, zone->gcJitThreshold,
+                           JS::GCReason::TOO_MUCH_JIT_CODE);
+}
+
+bool GCRuntime::maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
+                                         const ZoneThreshold& threshold,
+                                         JS::GCReason reason) {
   if (!CurrentThreadCanAccessRuntime(rt)) {
     // Zones in use by a helper thread can't be collected.
     MOZ_ASSERT(zone->usedByHelperThread() || zone->isAtomsZone());
-    return;
+    return false;
   }
 
   MOZ_ASSERT(!JS::RuntimeHeapIsCollecting());
 
-  size_t usedBytes = zone->gcMallocBytes.gcBytes();
-  size_t thresholdBytes = zone->gcMallocThreshold.gcTriggerBytes();
+  size_t usedBytes = heap.gcBytes();
+  size_t thresholdBytes = threshold.gcTriggerBytes();
   if (usedBytes >= thresholdBytes) {
     // The threshold has been surpassed, immediately trigger a GC, which
     // will be done non-incrementally.
-    triggerZoneGC(zone, JS::GCReason::TOO_MUCH_MALLOC, usedBytes,
-                  thresholdBytes);
-    return;
+    triggerZoneGC(zone, reason, usedBytes, thresholdBytes);
+    return true;
   }
 
   float zoneGCThresholdFactor = tunables.allocThresholdFactor();
   size_t igcThresholdBytes = thresholdBytes * zoneGCThresholdFactor;
   if (usedBytes >= igcThresholdBytes) {
     // Start or continue an in progress incremental GC.
-    triggerZoneGC(zone, JS::GCReason::INCREMENTAL_MALLOC_TRIGGER, usedBytes,
-                  igcThresholdBytes);
-    return;
+    triggerZoneGC(zone, reason, usedBytes, igcThresholdBytes);
+    return true;
   }
+
+  return false;
 }
 
 bool GCRuntime::triggerZoneGC(Zone* zone, JS::GCReason reason, size_t used,
@@ -6056,7 +6074,6 @@ IncrementalProgress GCRuntime::endSweepingSweepGroup(FreeOp* fop,
     AutoLockGC lock(rt);
     zone->changeGCState(Zone::Sweep, Zone::Finished);
     zone->updateGCThresholds(*this, invocationKind, lock);
-    zone->updateMemoryCountersOnGCEnd(lock);
     zone->arenas.unmarkPreMarkedFreeCells();
   }
 
@@ -7510,6 +7527,15 @@ GCRuntime::IncrementalResult GCRuntime::budgetIncrementalGC(
       }
     }
 
+    if (zone->gcJitBytes.gcBytes() >= zone->gcJitThreshold.gcTriggerBytes()) {
+      CheckZoneIsScheduled(zone, reason, "JIT code bytes");
+      budget.makeUnlimited();
+      stats().nonincremental(AbortReason::JitCodeBytesTrigger);
+      if (zone->wasGCStarted() && zone->gcState() > Zone::Sweep) {
+        resetReason = AbortReason::JitCodeBytesTrigger;
+      }
+    }
+
     if (zone->shouldTriggerGCForTooMuchMalloc() == NonIncrementalTrigger) {
       CheckZoneIsScheduled(zone, reason, "malloc bytes");
       budget.makeUnlimited();
@@ -7555,11 +7581,10 @@ static void ScheduleZones(GCRuntime* gc) {
     // This is a heuristic to reduce the total number of collections.
     bool inHighFrequencyMode = gc->schedulingState.inHighFrequencyGCMode();
     if (zone->zoneSize.gcBytes() >=
-        zone->threshold.eagerAllocTrigger(inHighFrequencyMode)) {
-      zone->scheduleGC();
-    }
-    if (zone->gcMallocBytes.gcBytes() >=
-        zone->gcMallocThreshold.eagerAllocTrigger(inHighFrequencyMode)) {
+            zone->threshold.eagerAllocTrigger(inHighFrequencyMode) ||
+        zone->gcMallocBytes.gcBytes() >=
+            zone->gcMallocThreshold.eagerAllocTrigger(inHighFrequencyMode) ||
+        zone->gcJitBytes.gcBytes() >= zone->gcJitThreshold.gcTriggerBytes()) {
       zone->scheduleGC();
     }
 
@@ -7729,6 +7754,7 @@ static bool IsDeterministicGCReason(JS::GCReason reason) {
     case JS::GCReason::LAST_DITCH:
     case JS::GCReason::TOO_MUCH_MALLOC:
     case JS::GCReason::TOO_MUCH_WASM_MEMORY:
+    case JS::GCReason::TOO_MUCH_JIT_CODE:
     case JS::GCReason::ALLOC_TRIGGER:
     case JS::GCReason::DEBUG_GC:
     case JS::GCReason::CC_FORCED:
@@ -7898,14 +7924,6 @@ void GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget,
       gckind = Some(invocationKind);
     }
   } while (repeat);
-
-#ifdef DEBUG
-  if (!isIncrementalGCInProgress()) {
-    for (ZonesIter zone(rt, WithAtoms); zone.done(); zone.next()) {
-      MOZ_ASSERT(!zone->jitCodeCounter.triggered());
-    }
-  }
-#endif
 
   if (reason == JS::GCReason::COMPARTMENT_REVIVED) {
     maybeDoCycleCollection();

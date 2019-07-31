@@ -217,8 +217,6 @@ void* ExecutableAllocator::alloc(JSContext* cx, size_t n,
   void* result = (*poolp)->alloc(n, type);
   MOZ_ASSERT(result);
 
-  cx->zone()->updateJitCodeMallocBytes(n);
-
   return result;
 }
 

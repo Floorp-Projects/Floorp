@@ -50,8 +50,8 @@ JitCode* Linker::newCode(JSContext* cx, CodeKind kind) {
   codeStart = (uint8_t*)AlignBytes((uintptr_t)codeStart, CodeAlignment);
   MOZ_ASSERT(codeStart + masm.bytesNeeded() <= result + bytesNeeded);
   uint32_t headerSize = codeStart - result;
-  JitCode* code = JitCode::New<NoGC>(cx, codeStart, bytesNeeded - headerSize,
-                                     headerSize, pool, kind);
+  JitCode* code =
+      JitCode::New<NoGC>(cx, codeStart, bytesNeeded, headerSize, pool, kind);
   if (!code) {
     return fail(cx);
   }

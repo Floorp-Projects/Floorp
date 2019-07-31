@@ -266,6 +266,9 @@ class GCRuntime {
   void maybeAllocTriggerZoneGC(Zone* zone, size_t nbytes = 0);
   // Check whether to trigger a zone GC after malloc memory.
   void maybeMallocTriggerZoneGC(Zone* zone);
+  bool maybeMallocTriggerZoneGC(Zone* zone, const HeapSize& heap,
+                                const ZoneThreshold& threshold,
+                                JS::GCReason reason);
   // The return value indicates if we were able to do the GC.
   bool triggerZoneGC(Zone* zone, JS::GCReason reason, size_t usedBytes,
                      size_t thresholdBytes);
