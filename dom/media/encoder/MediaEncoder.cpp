@@ -917,6 +917,11 @@ nsresult MediaEncoder::EncodeData() {
       LOG(LogLevel::Error, ("Failed to get encoded data from audio encoder."));
       return rv;
     }
+    for (const RefPtr<EncodedFrame>& frame : mEncodedAudioFrames) {
+      if (frame->GetFrameType() == EncodedFrame::FrameType::OPUS_AUDIO_FRAME) {
+        frame->SetTimeStamp(frame->GetTimeStamp() + mAudioCodecDelay);
+      }
+    }
   }
 
   return NS_OK;
@@ -976,6 +981,17 @@ nsresult MediaEncoder::CopyMetadataToMuxer(TrackEncoder* aTrackEncoder) {
     LOG(LogLevel::Error, ("metadata == null"));
     SetError();
     return NS_ERROR_ABORT;
+  }
+
+  // In the case of Opus we need to calculate the codec delay based on the
+  // pre-skip. For more information see:
+  // https://tools.ietf.org/html/rfc7845#section-4.2
+  if (meta->GetKind() == TrackMetadataBase::MetadataKind::METADATA_OPUS) {
+    // Calculate offset in microseconds
+    OpusMetadata* opusMeta = static_cast<OpusMetadata*>(meta.get());
+    mAudioCodecDelay = static_cast<uint64_t>(
+        LittleEndian::readUint16(opusMeta->mIdHeader.Elements() + 10) *
+        PR_USEC_PER_SEC / 48000);
   }
 
   nsresult rv = mWriter->SetMetadata(meta);
