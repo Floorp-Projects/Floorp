@@ -2122,6 +2122,14 @@
 
       sendToChildren(this.browsingContext, false);
     }
+
+    enterModalState() {
+      this.sendMessageToActor("EnterModalState", {}, "BrowserElement", true);
+    }
+
+    leaveModalState() {
+      this.sendMessageToActor("LeaveModalState", {}, "BrowserElement", true);
+    }
   }
 
   MozXULElement.implementCustomInterface(MozBrowser, [Ci.nsIBrowser]);
