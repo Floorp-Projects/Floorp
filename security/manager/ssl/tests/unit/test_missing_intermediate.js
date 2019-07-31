@@ -44,14 +44,14 @@ registerCleanupFunction(() => {
 });
 
 function run_test() {
-  add_tls_server_setup("BadCertServer", "bad_certs");
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
   // If we don't know about the intermediate, we'll get an unknown issuer error.
   add_connection_test(
     "ee-from-missing-intermediate.example.com",
     SEC_ERROR_UNKNOWN_ISSUER
   );
 
-  // Make BadCertServer aware of the intermediate.
+  // Make BadCertAndPinningServer aware of the intermediate.
   add_test(() => {
     // NB: missing-intermediate.der won't be regenerated when
     // missing-intermediate.pem is. Hopefully by that time we can just use

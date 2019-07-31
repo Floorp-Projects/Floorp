@@ -22,7 +22,7 @@ function shouldNotBeImminentlyDistrusted(aTransportSecurityInfo) {
 
 do_get_profile();
 
-add_tls_server_setup("BadCertServer", "bad_certs");
+add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
 
 add_connection_test(
   "imminently-distrusted.example.com",

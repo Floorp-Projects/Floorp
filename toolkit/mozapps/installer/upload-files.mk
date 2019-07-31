@@ -274,7 +274,7 @@ NO_PKG_FILES += \
 	shlibsign* \
 	certutil* \
 	pk12util* \
-	BadCertServer* \
+	BadCertAndPinningServer* \
 	OCSPStaplingServer* \
 	SymantecSanctionsServer* \
 	GenerateOCSPResponse* \

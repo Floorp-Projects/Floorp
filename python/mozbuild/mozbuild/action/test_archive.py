@@ -32,7 +32,7 @@ import buildconfig
 STAGE = mozpath.join(buildconfig.topobjdir, 'dist', 'test-stage')
 
 TEST_HARNESS_BINS = [
-    'BadCertServer',
+    'BadCertAndPinningServer',
     'GenerateOCSPResponse',
     'OCSPStaplingServer',
     'SymantecSanctionsServer',
