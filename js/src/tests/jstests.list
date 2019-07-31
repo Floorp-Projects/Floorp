@@ -42,6 +42,8 @@ skip script test262/built-ins/Promise/reject-function-name.js
 skip script test262/built-ins/Promise/resolve-function-name.js
 skip script test262/built-ins/Promise/executor-function-name.js
 skip script test262/built-ins/Promise/all/resolve-element-function-name.js
+skip script test262/built-ins/Promise/allSettled/resolve-element-function-name.js
+skip script test262/built-ins/Promise/allSettled/reject-element-function-name.js
 
 
 #########################################################################
@@ -148,23 +150,6 @@ skip-if(!xulRuntime.shell) script test262/language/global-code/decl-var.js
 
 # %ThrowTypeError% should be anonymous
 skip script test262/built-ins/ThrowTypeError/name.js
-
-# BigInt typed arrays -- BigInt64Array, BigUint64Array -- aren't implemented
-# yet -- bug 1456569.
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-returns-throws.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-use-default-ctor.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-throws.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-invocation.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-returns-another-instance.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-inherited.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor-length-throws.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-returns-throws.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-custom-ctor.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-species-abrupt.js
-skip script test262/built-ins/TypedArray/prototype/map/BigInt/speciesctor-get-ctor-abrupt.js
 
 # Anonymous functions have own name property in SpiderMonkey
 skip script test262/language/expressions/assignment/fn-name-lhs-cover.js
@@ -435,7 +420,6 @@ skip script test262/language/statements/for-await-of/ticks-with-async-iter-resol
 skip script test262/language/statements/for-await-of/ticks-with-sync-iter-resolved-promise-and-constructor-lookup.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1321616
-skip script test262/annexB/built-ins/Function/createdynfn-html-close-comment-params.js
 skip script test262/annexB/built-ins/Function/createdynfn-no-line-terminator-html-close-comment-body.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1462745
@@ -448,14 +432,6 @@ skip script test262/built-ins/RegExp/prototype/sticky/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/ignoreCase/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/unicode/cross-realm.js
 skip script test262/built-ins/RegExp/prototype/source/cross-realm.js
-
-# The Intl spec recently changed from canonicalizing locales using RFC 5646 to
-# using UTS 35.  This still needs to be implemented in bug 1522070.  See also
-# <https://github.com/tc39/ecma402/commit/77cd7634e6aef828b0d0a4d97dece622c5f8e01f>.
-skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
-
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
-skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1545038
 # All of these tests pass except with --more-compartments.
@@ -484,6 +460,19 @@ skip script test262/built-ins/Proxy/construct/return-not-object-throws-boolean-r
 skip script test262/intl402/DateTimeFormat/numbering-system-calendar-options.js
 skip script test262/intl402/NumberFormat/numbering-system-options.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1570245
+skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
+skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/en-us-numeric-auto.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
+skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
+
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1568619
+skip script test262/language/literals/bigint/non-octal-like-invalid-09n.js
+skip script test262/language/literals/bigint/non-octal-like-invalid-0008n.js
+skip script test262/language/literals/bigint/non-octal-like-invalid-08n.js
+skip script test262/language/literals/bigint/non-octal-like-invalid-012348n.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -497,60 +486,5 @@ skip script test262/harness/detachArrayBuffer.js
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# zh-Hans-CN and zh are supported by ICU, but the test requires that ICU also
-# explicitly supports zh-Hans. That isn't the case and it rather looks like the
-# shouldn't require that zh-Hans is explicitly supported without a fallback to
-# zh.
-skip script test262/intl402/fallback-locales-are-supported.js
-
-# https://github.com/tc39/test262/pull/2097
-#
-# "zh-hak-CN" no longer allowed, because it contains an extlang subtag.
-skip script test262/intl402/language-tags-canonicalized.js
-skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
-
-# Irregular grandfathered tags no longer allowed: "i-klingon"
-skip script test262/intl402/language-tags-valid.js
-
-# Irregular grandfathered tags no longer allowed: "en-GB-oed"
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
-skip script test262/intl402/RelativeTimeFormat/constructor/constructor/locales-valid.js
-
-# Privateuse-only tags no longer allowed: "x-u-foo"
-skip script test262/intl402/Intl/getCanonicalLocales/weird-cases.js
-
-# https://github.com/tc39/test262/issues/2205
-skip script test262/intl402/RelativeTimeFormat/prototype/format/en-us-numeric-auto.js
-
-# Test requires minimumFractionDigits and maximumFractionDigits options to exist.
-skip script test262/intl402/PluralRules/prototype/resolvedOptions/order.js
-
-# https://github.com/tc39/test262/pull/2210
-skip script test262/built-ins/Promise/all/invoke-resolve-get-error-close.js
-skip script test262/built-ins/Promise/race/invoke-resolve-get-error-close.js
-
-# Regular grandfathered tags canonicalized differently in CLDR.
-skip script test262/intl402/Intl/getCanonicalLocales/grandfathered.js
-skip script test262/intl402/Locale/likely-subtags-grandfathered.js
-
-# Deprecated variant subtag mappings are no longer supported.
-skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
-skip script test262/intl402/Locale/constructor-non-iana-canon.js
-
-# 3-digit region subtags are canonicalised.
-skip script test262/intl402/Locale/constructor-options-region-valid.js
-
-# Variant subtags are sorted in alphabetical order.
-skip script test262/intl402/Locale/constructor-tag.js
-
-# "u-kf" now returns "" for the "caseFirst" property.
-skip script test262/intl402/Locale/getters.js
-
-# Test requires signDisplay option to not exist.
-skip script test262/intl402/NumberFormat/prototype/resolvedOptions/order.js
-
-# https://github.com/tc39/test262/pull/2240
-skip script test262/intl402/NumberFormat/currencyDisplay-unit.js
-
-# "fractionalSecondDigits" should only be present in the resolved options when part of the pattern
+# See review notes for https://github.com/tc39/ecma402/pull/347
 skip script test262/intl402/DateTimeFormat/constructor-options-fractionalSecondDigits-valid.js
