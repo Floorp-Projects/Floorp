@@ -1708,10 +1708,10 @@ raptor-scn-power-idle-bg-fenix:
     target:
         by-test-platform:
             android-hw.*-aarch64.*/.*:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.aarch64
+                index: project.mobile.fenix.v2.performance-test.latest.aarch64
                 name: target.apk
             default:
-                index: project.mobile.fenix.v2.branch.master.latest.raptor.arm
+                index: project.mobile.fenix.v2.performance-test.latest.arm
                 name: target.apk
     tier: 3
     max-run-time: 1800
@@ -1719,7 +1719,7 @@ raptor-scn-power-idle-bg-fenix:
         extra-options:
             - --test=raptor-scn-power-idle-bg
             - --app=fenix
-            - --binary-path=org.mozilla.fenix.raptor
+            - --binary-path=org.mozilla.fenix.performancetest
             - --power-test
             - --host HOST_IP
             - --activity=org.mozilla.fenix.IntentReceiverActivity
