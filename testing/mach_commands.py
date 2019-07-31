@@ -1151,6 +1151,133 @@ class TestInfoCommand(MachCommandBase):
         else:
             print("No tasks found.")
 
+    @SubCommand('test-info', 'report',
+                description='Generate a json report of test manifests and/or tests '
+                            'categorized by Bugzilla component and optionally filtered '
+                            'by path, component, and/or manifest annotations.')
+    @CommandArgument('--components', default=None,
+                     help='Comma-separated list of Bugzilla components.'
+                          ' eg. Testing::General,Core::WebVR')
+    @CommandArgument('paths', nargs=argparse.REMAINDER,
+                     help='File system paths of interest.')
+    @CommandArgument('--show-manifests', action='store_true',
+                     help='Include test manifests in report.')
+    @CommandArgument('--show-tests', action='store_true',
+                     help='Include individual tests in report.')
+    @CommandArgument('--filter-values',
+                     help='Comma-separated list of values to filter on; '
+                          'displayed tests contain all specified values.')
+    @CommandArgument('--filter-keys',
+                     help='Comma-separated list of test keys to filter on, '
+                          'like "skip-if"; only these fields will be searched '
+                          'for filter-values.')
+    @CommandArgument('--output-file',
+                     help='Path to report file.')
+    def test_report(self, components, paths, show_manifests, show_tests,
+                    filter_values, filter_keys, output_file):
+        import mozpack.path as mozpath
+        from moztest.resolve import TestResolver
+
+        def matches_filters(test):
+            '''
+               Return True if all of the requested filter_values are found in this test;
+               if filter_keys are specified, restrict search to those test keys.
+            '''
+            for value in filter_values:
+                value_found = False
+                for key in test:
+                    if not filter_keys or key in filter_keys:
+                        if value in test[key]:
+                            value_found = True
+                            break
+                if not value_found:
+                    return False
+            return True
+
+        if not show_manifests and not show_tests:
+            show_manifests = True
+        by_component = {}
+        if components:
+            components = components.split(',')
+        if filter_keys:
+            filter_keys = filter_keys.split(',')
+        if filter_values:
+            filter_values = filter_values.split(',')
+        else:
+            filter_values = []
+
+        print("Finding tests...")
+        resolver = self._spawn(TestResolver)
+        tests = list(resolver.resolve_tests(paths=paths))
+        if show_manifests:
+            by_component['manifests'] = {}
+            manifest_paths = set()
+            for t in tests:
+                manifest_paths.add(t['manifest'])
+            print("{} tests, {} manifests".format(len(tests), len(manifest_paths)))
+            manifest_paths = list(manifest_paths)
+            manifest_paths.sort()
+            for manifest_path in manifest_paths:
+                relpath = mozpath.relpath(manifest_path, self.topsrcdir)
+                print("  {}".format(relpath))
+                if mozpath.commonprefix((manifest_path, self.topsrcdir)) != self.topsrcdir:
+                    continue
+                reader = self.mozbuild_reader(config_mode='empty')
+                manifest_info = None
+                for info_path, info in reader.files_info([manifest_path]).items():
+                    bug_component = info.get('BUG_COMPONENT')
+                    key = "{}::{}".format(bug_component.product, bug_component.component)
+                    if (info_path == relpath) and ((not components) or (key in components)):
+                        manifest_info = {
+                            'manifest': relpath,
+                            'tests': 0,
+                            'skipped': 0
+                        }
+                        if key in by_component['manifests']:
+                            by_component['manifests'][key].append(manifest_info)
+                        else:
+                            by_component['manifests'][key] = [manifest_info]
+                        break
+                if manifest_info:
+                    for t in tests:
+                        if t['manifest'] == manifest_path:
+                            manifest_info['tests'] += 1
+                            if t.get('skip-if'):
+                                manifest_info['skipped'] += 1
+            for key in by_component['manifests']:
+                by_component['manifests'][key].sort()
+
+        if show_tests:
+            by_component['tests'] = {}
+            for t in tests:
+                reader = self.mozbuild_reader(config_mode='empty')
+                if not matches_filters(t):
+                    continue
+                relpath = t.get('srcdir_relpath')
+                for info_path, info in reader.files_info([relpath]).items():
+                    bug_component = info.get('BUG_COMPONENT')
+                    key = "{}::{}".format(bug_component.product, bug_component.component)
+                    if (info_path == relpath) and ((not components) or (key in components)):
+                        test_info = {'test': relpath}
+                        for test_key in ['skip-if', 'fail-if']:
+                            value = t.get(test_key)
+                            if value:
+                                test_info[test_key] = value
+                        if key in by_component['tests']:
+                            by_component['tests'][key].append(test_info)
+                        else:
+                            by_component['tests'][key] = [test_info]
+                        break
+            for key in by_component['tests']:
+                by_component['tests'][key].sort()
+
+        json_report = json.dumps(by_component, indent=2, sort_keys=True)
+        if output_file:
+            with open(output_file, 'w') as f:
+                f.write(json_report)
+        else:
+            print(json_report)
+
 
 @CommandProvider
 class RustTests(MachCommandBase):
