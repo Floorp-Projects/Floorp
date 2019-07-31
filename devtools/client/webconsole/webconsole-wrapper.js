@@ -181,7 +181,7 @@ class WebConsoleWrapper {
 
           return {
             frameActor: grip.actor,
-            client: this.hud.lookupConsoleClient(grip.thread),
+            client: state.target.activeConsole,
           };
         },
 
