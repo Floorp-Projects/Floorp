@@ -14,7 +14,7 @@ import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.toolbar.BrowserToolbar
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
-import mozilla.components.support.ktx.android.content.res.pxToDp
+import mozilla.components.support.ktx.android.util.dpToPx
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.search.SearchState
@@ -66,7 +66,7 @@ class ToolbarView(
         view.apply {
             editMode()
 
-            elevation = resources.pxToDp(TOOLBAR_ELEVATION_IN_DP).toFloat()
+            elevation = TOOLBAR_ELEVATION_IN_DP.dpToPx(resources.displayMetrics).toFloat()
 
             setOnUrlCommitListener {
                 interactor.onUrlCommitted(it)

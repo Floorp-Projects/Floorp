@@ -43,7 +43,6 @@ class CollectionCreationUIView(
     actionEmitter,
     changesObservable
 ) {
-
     override val view = LayoutInflater.from(container.context)
         .inflate(R.layout.component_collection_creation, container, true)
 

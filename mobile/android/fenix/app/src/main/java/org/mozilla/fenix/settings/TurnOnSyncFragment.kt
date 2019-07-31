@@ -66,7 +66,6 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             // We could auto-close this tab once we get to the end of the authentication process?
             // Via an interceptor, perhaps.
             requireComponents.analytics.metrics.track(Event.SyncAuthSignIn)
-            true
         }
     }
 
@@ -75,8 +74,6 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
             val directions = TurnOnSyncFragmentDirections.actionTurnOnSyncFragmentToPairFragment()
             Navigation.findNavController(view!!).navigate(directions)
             requireComponents.analytics.metrics.track(Event.SyncAuthScanPairing)
-
-            true
         }
     }
 

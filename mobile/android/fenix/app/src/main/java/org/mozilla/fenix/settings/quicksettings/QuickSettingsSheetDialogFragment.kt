@@ -245,7 +245,7 @@ class QuickSettingsSheetDialogFragment : AppCompatDialogFragment() {
     private val sessionObserver = object : Session.Observer {
         override fun onUrlChanged(session: Session, url: String) {
             lifecycleScope.launch(Dispatchers.IO) {
-                val host = session.url.toUri()?.host
+                val host = session.url.toUri().host
                 val sitePermissions: SitePermissions? = host?.let {
                     val storage = requireContext().components.core.permissionStorage
                     storage.findSitePermissionsBy(it)
