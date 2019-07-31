@@ -347,7 +347,6 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // Initialize an event loop stack. This can't be done in the constructor,
     // because this.conn is not yet initialized by the actor pool at that time.
     this._nestedEventLoops = new EventLoopStack({
-      connection: this.conn,
       thread: this,
     });
 
@@ -1208,14 +1207,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // only allow resumption in a LIFO order.
     if (
       this._nestedEventLoops.size &&
-      this._nestedEventLoops.lastPausedUrl &&
-      (this._nestedEventLoops.lastPausedUrl !== this._parent.url ||
-        this._nestedEventLoops.lastConnection !== this.conn)
+      this._nestedEventLoops.lastPausedThreadActor &&
+      this._nestedEventLoops.lastPausedThreadActor !== this
     ) {
       return {
         error: "wrongOrder",
         message: "trying to resume in the wrong order.",
-        lastPausedUrl: this._nestedEventLoops.lastPausedUrl,
       };
     }
 
