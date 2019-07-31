@@ -1526,6 +1526,10 @@ void WebRenderCommandBuilder::DoGroupingForDisplayList(
                              untransformedPaintRect, scale.width, scale.height,
                              group.mAppUnitsPerDevPixel, residualOffset))
                          .Intersect(group.mLayerBounds);
+  // XXX: Make the paint rect relative to the layer bounds. After we include
+  // mLayerBounds.TopLeft() in the blob image we want to stop doing this
+  // adjustment.
+  group.mPaintRect = group.mPaintRect - group.mLayerBounds.TopLeft();
 
   g.mTransform = Matrix::Scaling(scale.width, scale.height)
                      .PostTranslate(residualOffset.x, residualOffset.y);
