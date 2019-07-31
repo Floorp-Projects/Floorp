@@ -766,7 +766,7 @@ void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
   mPresShellId = mPresShell->GetPresShellId();
 }
 
-bool nsComputedDOMStyle::NeedsToFlush() const {
+bool nsComputedDOMStyle::NeedsToFlushStyle() const {
   // We always compute styles from the element's owner document.
   if (ElementNeedsRestyle(mElement, mPseudo)) {
     return true;
@@ -800,7 +800,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   //  * https://github.com/w3c/csswg-drafts/issues/1548
 
   // If the property we are computing relies on layout, then we must flush.
-  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlush();
+  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlushStyle();
   if (needsToFlush) {
     // Flush _before_ getting the presshell, since that could create a new
     // presshell.  Also note that we want to flush the style on the document

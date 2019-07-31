@@ -338,8 +338,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   bool GetFrameBorderRectHeight(nscoord& aHeight);
 
   // Find out if we can safely skip flushing (i.e. pending restyles do not
-  // affect mElement).
-  bool NeedsToFlush() const;
+  // affect our element).
+  bool NeedsToFlushStyle() const;
 
   static ComputedStyleMap* GetComputedStyleMap();
 
