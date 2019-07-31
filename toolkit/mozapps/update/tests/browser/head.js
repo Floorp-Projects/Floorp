@@ -74,6 +74,7 @@ add_task(async function setupTestCommon() {
   });
 
   setUpdateTimerPrefs();
+  reloadUpdateManagerData(true);
   removeUpdateFiles(true);
   UpdateListener.reset();
   AppMenuNotifications.removeNotification(/.*/);
