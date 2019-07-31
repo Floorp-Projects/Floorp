@@ -545,11 +545,10 @@ function openTabPrompt(domWin, tabPrompt, args) {
 }
 
 function openRemotePrompt(domWin, args) {
-  let docShell = domWin.docShell;
-  let messageManager = docShell
-    .QueryInterface(Ci.nsIInterfaceRequestor)
-    .getInterface(Ci.nsIBrowserChild).messageManager;
+  let windowGlobal = domWin.getWindowGlobalChild();
+  let actor = windowGlobal.getActor("Prompt");
 
+  let docShell = domWin.docShell;
   let inPermitUnload =
     docShell.contentViewer && docShell.contentViewer.inPermitUnload;
   let eventDetail = Cu.cloneInto(
@@ -563,19 +562,12 @@ function openRemotePrompt(domWin, args) {
     eventDetail
   );
 
-  // If domWin is reloaded while we're showing a remote modal
-  // dialog, it is possible to detach domWin from its tree, and make
-  // it impossible to reach its scriptable top,
-  // a.k.a. window.top. To prevent this, make sure to enter/exit
-  // modal state beginning from top.
-  let winUtils = domWin.top.windowUtils;
-  winUtils.enterModalState();
-  let closed = false;
+  let windowUtils = domWin.windowUtils;
+  windowUtils.enterModalState();
 
-  let frameMM = docShell.messageManager;
-
-  // It should be hard or impossible to cause a window to create multiple
-  // prompts, but just in case, give our prompt an ID.
+  // It is technically possible for multiple prompts to be sent from a single
+  // BrowsingContext. See bug 1266353. We use a randomly generated UUID to
+  // differentiate between the different prompts.
   let id =
     "id" +
     Cc["@mozilla.org/uuid-generator;1"]
@@ -583,32 +575,10 @@ function openRemotePrompt(domWin, args) {
       .generateUUID()
       .toString();
 
-  messageManager.addMessageListener("Prompt:Close", function listener(message) {
-    if (message.data._remoteId !== id) {
-      return;
-    }
+  let frameMM = docShell.messageManager;
+  let closed = false;
 
-    messageManager.removeMessageListener("Prompt:Close", listener);
-    frameMM.removeEventListener("pagehide", pagehide, true);
-
-    winUtils.leaveModalState();
-    PromptUtils.fireDialogEvent(domWin, "DOMModalDialogClosed");
-
-    // Copy the response from the closed prompt into our args, it will be
-    // read by our caller.
-    if (message.data) {
-      for (let key in message.data) {
-        args[key] = message.data[key];
-      }
-    }
-
-    // Exit our nested event loop when we unwind.
-    closed = true;
-  });
-
-  frameMM.addEventListener("pagehide", pagehide, true);
-  function pagehide(e) {
-    // Check whether the event relates to our window or its ancestors
+  let onPageHide = e => {
     let window = domWin;
     let eventWindow = e.target.defaultView;
     while (window != eventWindow && window.parent != window) {
@@ -617,21 +587,41 @@ function openRemotePrompt(domWin, args) {
     if (window != eventWindow) {
       return;
     }
-    frameMM.removeEventListener("pagehide", pagehide, true);
-    messageManager.sendAsyncMessage("Prompt:ForceClose", { _remoteId: id });
+
+    actor.sendAsyncMessage("Prompt:ForceClose", { _remoteId: id });
+    closed = true;
+  };
+
+  frameMM.addEventListener("pagehide", onPageHide, true);
+
+  try {
+    let promptPrincipal = domWin.document.nodePrincipal;
+    args.promptPrincipal = promptPrincipal;
+    args.inPermitUnload = inPermitUnload;
+    args._remoteId = id;
+
+    let promise = actor.sendQuery("Prompt:Open", args);
+    promise.then(returnedArgs => {
+      // Copy the response from the closed prompt into our args, it will be
+      // read by our caller.
+      if (returnedArgs) {
+        if (returnedArgs._remoteId !== id) {
+          return;
+        }
+
+        for (let key in returnedArgs) {
+          args[key] = returnedArgs[key];
+        }
+      }
+      closed = true;
+    });
+
+    Services.tm.spinEventLoopUntilOrShutdown(() => closed);
+  } finally {
+    frameMM.removeEventListener("pagehide", onPageHide, true);
+    windowUtils.leaveModalState();
+    PromptUtils.fireDialogEvent(domWin, "DOMModalDialogClosed");
   }
-
-  let topPrincipal = domWin.top.document.nodePrincipal;
-  let promptPrincipal = domWin.document.nodePrincipal;
-  args.promptPrincipal = promptPrincipal;
-  args.showAlertOrigin = topPrincipal.equals(promptPrincipal);
-  args.inPermitUnload = inPermitUnload;
-
-  args._remoteId = id;
-
-  messageManager.sendAsyncMessage("Prompt:Open", args, {});
-
-  Services.tm.spinEventLoopUntilOrShutdown(() => closed);
 }
 
 function ModalPrompter(domWin) {
