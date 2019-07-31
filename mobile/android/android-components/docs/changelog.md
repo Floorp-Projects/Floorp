@@ -25,6 +25,9 @@ permalink: /changelog/
      val windowFeature = WindowFeature(components.sessionManager)
   ```
   
+* **service-glean**
+  * Fixed a bug in`TimeSpanMetricType` that prevented multiple consecutive `start()`/`stop()` calls. This resulted in the `glean.baseline.duration` being missing from most [`baseline`](https://mozilla.github.io/glean/book/user/pings/baseline.html) pings.
+
 # 6.0.1
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.0...v6.0.1)

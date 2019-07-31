@@ -6,6 +6,7 @@ package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
+import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.utils.getAdjustedTime
@@ -93,41 +94,13 @@ internal open class TimespansStorageEngineImplementation(
     }
 
     /**
-     * Add the elapsed time to the time currently stored in the metric.
-     *
-     * @param metricData the metric information for the timespan
-     * @param timeUnit the time unit we want the data in when snapshotting
-     * @param elapsedNanos the time to record, in nanoseconds
-     */
-    @Synchronized
-    fun sum(
-        metricData: CommonMetricData,
-        timeUnit: TimeUnit,
-        elapsedNanos: Long
-    ) {
-        // Look for the start time: if it's there, commit the timespan.
-        val timespanName = metricData.identifier
-
-        // Store the time unit: we'll need it when snapshotting.
-        timeUnitsMap[timespanName] = timeUnit
-
-        // Use a custom combiner to sum the new timespan to the one already stored. We
-        // can't adjust the time unit before storing so that we still allow for values
-        // lower than the desired time unit to accumulate.
-        super.recordMetric(metricData, elapsedNanos, timeUnit) { currentValue, newValue ->
-            currentValue?.let {
-                it + newValue
-            } ?: newValue
-        }
-    }
-
-    /**
      * Set the elapsed time explicitly.
      *
      * @param metricData the metric information for the timespan
      * @param timeUnit the time unit we want the data in when snapshotting
      * @param elapsedNanos the time to record, in nanoseconds
      */
+    @Suppress("LongMethod")
     @Synchronized
     fun set(
         metricData: CommonMetricData,
@@ -140,8 +113,19 @@ internal open class TimespansStorageEngineImplementation(
         // Store the time unit: we'll need it when snapshotting.
         timeUnitsMap[timespanName] = timeUnit
 
-        super.recordMetric(metricData, elapsedNanos, timeUnit) { _, newValue ->
-            newValue
+        super.recordMetric(metricData, elapsedNanos, timeUnit) { oldValue, newValue ->
+            oldValue?.let {
+                // Report an error if we attempt to set a value and we already
+                // have one.
+                ErrorRecording.recordError(
+                    metricData,
+                    ErrorRecording.ErrorType.InvalidValue,
+                    "Timespan value already recorded. New value discarded.",
+                    logger
+                )
+                // Do not overwrite the old value.
+                it
+            } ?: newValue
         }
     }
 

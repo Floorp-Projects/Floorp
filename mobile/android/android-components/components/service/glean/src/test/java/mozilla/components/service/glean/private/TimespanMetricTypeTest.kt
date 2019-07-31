@@ -8,6 +8,7 @@ import mozilla.components.service.glean.timing.TimingManager
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.runner.RunWith
@@ -85,6 +86,36 @@ class TimespanMetricTypeTest {
         // Check that data was not recorded.
         assertFalse("The API should not record a counter if metric is cancelled",
             metric.testHasValue())
+        assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
+    }
+
+    @Test
+    fun `The API must correctly clear the timer state on stop()`() {
+        // Define a timespan metric, which will be stored in "store1"
+        val metric = TimespanMetricType(
+            disabled = false,
+            category = "telemetry",
+            lifetime = Lifetime.Application,
+            name = "timespan_metric",
+            sendInPings = listOf("store1"),
+            timeUnit = TimeUnit.Millisecond
+        )
+
+        // Record a timespan.
+        TimingManager.getElapsedNanos = { 0 }
+        metric.start()
+        TimingManager.getElapsedNanos = { 5000000 }
+        metric.stop()
+
+        // Attempt to record again.
+        TimingManager.getElapsedNanos = { 0 }
+        metric.start()
+        TimingManager.getElapsedNanos = { 10000000 }
+        metric.stop()
+
+        // Check only the first chunk was recorded.
+        assertEquals(5, metric.testGetValue())
+        // And that an attempt to record the second time was tracked.
         assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 
@@ -170,7 +201,7 @@ class TimespanMetricTypeTest {
 
     @Test
     fun `test setRawNanos`() {
-        val timespanNanos = 1200000000L
+        val timespanNanos = 6 * 1000000000L
 
         val metric = TimespanMetricType(
             false,
@@ -178,35 +209,35 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan",
             listOf("store1"),
-            timeUnit = TimeUnit.Nanosecond
+            timeUnit = TimeUnit.Second
         )
 
         metric.setRawNanos(timespanNanos)
-        assertEquals(timespanNanos, metric.testGetValue())
+        assertEquals(6, metric.testGetValue())
     }
 
     @Test
     fun `test setRawNanos followed by other API`() {
-        val timespanNanos = 1200000000L
+        val timespanNanos = 6 * 1000000000L
 
         val metric = TimespanMetricType(
             false,
             "telemetry",
             Lifetime.Ping,
-            "explicit_timespan",
+            "explicit_timespan_1",
             listOf("store1"),
-            timeUnit = TimeUnit.Nanosecond
+            timeUnit = TimeUnit.Second
         )
 
         metric.setRawNanos(timespanNanos)
-        assertEquals(timespanNanos, metric.testGetValue())
+        assertEquals(6, metric.testGetValue())
 
         TimingManager.getElapsedNanos = { 0 }
         metric.start()
         TimingManager.getElapsedNanos = { 50 }
         metric.stop()
         val value = metric.testGetValue()
-        assertTrue(timespanNanos < value)
+        assertEquals(6, value)
     }
 
     @Test
@@ -219,7 +250,7 @@ class TimespanMetricTypeTest {
             Lifetime.Ping,
             "explicit_timespan_1",
             listOf("store1"),
-            timeUnit = TimeUnit.Nanosecond
+            timeUnit = TimeUnit.Second
         )
 
         metric.start()
@@ -233,24 +264,22 @@ class TimespanMetricTypeTest {
 
     @Test
     fun `setRawNanos does nothing when timer is running`() {
+        val timespanNanos = 1000000000L
+
         val metric = TimespanMetricType(
             false,
             "telemetry",
             Lifetime.Ping,
             "explicit_timespan",
             listOf("store1"),
-            timeUnit = TimeUnit.Nanosecond
+            timeUnit = TimeUnit.Second
         )
 
-        TimingManager.getElapsedNanos = { 0 }
         metric.start()
-
-        metric.setRawNanos(1000)
-
-        TimingManager.getElapsedNanos = { 50 }
+        metric.setRawNanos(timespanNanos)
         metric.stop()
 
-        assertEquals(50, metric.testGetValue())
+        assertNotEquals(timespanNanos, metric.testGetValue())
         assertEquals(1, testGetNumRecordedErrors(metric, ErrorType.InvalidValue))
     }
 }

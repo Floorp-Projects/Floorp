@@ -60,7 +60,7 @@ data class TimespanMetricType(
 
     /**
      * Stop tracking time for the provided metric.
-     * Add the elapsed time to the time currently stored in the metric. This will record
+     * Sets the metric to the elapsed time.This will record
      * an error if no [start] was called.
      */
     fun stop() {
@@ -82,7 +82,10 @@ data class TimespanMetricType(
             TimingManager.stop(this, id)?.let { elapsedNanos ->
                 @Suppress("EXPERIMENTAL_API_USAGE")
                 Dispatchers.API.launch {
-                    TimespansStorageEngine.sum(this@TimespanMetricType, timeUnit, elapsedNanos)
+                    TimespansStorageEngine.set(this@TimespanMetricType, timeUnit, elapsedNanos)
+
+                    // Reset the timerId.
+                    timerId = null
                 }
             }
         }
