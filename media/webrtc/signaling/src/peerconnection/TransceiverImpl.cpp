@@ -242,6 +242,15 @@ nsresult TransceiverImpl::UpdateConduit() {
   return NS_OK;
 }
 
+void TransceiverImpl::SetReceiveTrackMuted(bool aMuted) {
+  if (!mReceiveTrack) {
+    return;
+  }
+
+  // This sets the muted state for mReceiveTrack and all its clones.
+  static_cast<RemoteTrackSource&>(mReceiveTrack->GetSource()).SetMuted(aMuted);
+}
+
 nsresult TransceiverImpl::UpdatePrincipal(nsIPrincipal* aPrincipal) {
   if (mJsepTransceiver->IsStopped()) {
     return NS_OK;
