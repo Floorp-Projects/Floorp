@@ -10,7 +10,7 @@ set -x
 hfplus_version=540.1.linux3
 md5sum=0435afc389b919027b69616ad1b05709
 filename=diskdev_cmds-${hfplus_version}.tar.gz
-make_flags="-j$(getconf _NPROCESSORS_ONLN)"
+make_flags="-j$(nproc)"
 
 root_dir="$1"
 if [ -z "$root_dir" -o ! -d "$root_dir" ]; then
