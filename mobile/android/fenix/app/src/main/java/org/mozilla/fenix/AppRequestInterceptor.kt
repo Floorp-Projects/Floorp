@@ -9,7 +9,6 @@ import mozilla.components.browser.errorpages.ErrorPages
 import mozilla.components.browser.errorpages.ErrorType
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
-import org.mozilla.fenix.browser.UserAgentRewriter
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
@@ -24,8 +23,6 @@ class AppRequestInterceptor(private val context: Context) : RequestInterceptor {
         } catch (e: MalformedURLException) {
             uri
         }
-
-        UserAgentRewriter.maybeRewriteUserAgent(session, host)
 
         adjustTrackingProtection(host, context, session)
         // Accounts uses interception to check for a "success URL" in the sign-in flow to finalize authentication.
