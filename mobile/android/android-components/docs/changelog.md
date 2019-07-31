@@ -15,6 +15,9 @@ permalink: /changelog/
 * **browser-engine-gecko-nightly**
   * Now supports window requests. A new tab will be opened for `target="_blank"` links and `window.open` calls.
 
+* **browser-icons**
+  * Handles low-memory scenarios by reducing memory footprint.
+
 * **feature-app-links**
   * Fixed [#3944](https://github.com/mozilla-mobile/android-components/issues/3944) causing third-party apps being opened when links with a `javascript` scheme are clicked.
 

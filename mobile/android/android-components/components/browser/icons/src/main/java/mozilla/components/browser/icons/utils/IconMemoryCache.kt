@@ -6,7 +6,6 @@ package mozilla.components.browser.icons.utils
 
 import android.graphics.Bitmap
 import android.util.LruCache
-import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.icons.loader.MemoryIconLoader.LoaderMemoryCache
@@ -45,7 +44,6 @@ class IconMemoryCache : ProcessorMemoryCache, LoaderMemoryCache, MemoryIconPrepa
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     internal fun clear() {
         iconResourcesCache.evictAll()
         iconBitmapCache.evictAll()

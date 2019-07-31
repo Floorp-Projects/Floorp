@@ -199,6 +199,10 @@ class BrowserIcons(
             view.get()?.setTag(R.id.mozac_browser_icons_tag_job, null)
         }
     }
+
+    fun onLowMemory() {
+        sharedMemoryCache.clear()
+    }
 }
 
 private fun prepare(context: Context, preparers: List<IconPreprarer>, request: IconRequest): IconRequest =

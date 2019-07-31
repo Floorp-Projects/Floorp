@@ -68,5 +68,6 @@ open class BrowserActivity : AppCompatActivity(), ComponentCallbacks2 {
 
     override fun onTrimMemory(level: Int) {
         components.sessionManager.onLowMemory()
+        components.icons.onLowMemory()
     }
 }
