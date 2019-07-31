@@ -763,6 +763,15 @@ Toolbox.prototype = {
 
       await promise.all([splitConsolePromise, framesPromise]);
 
+      // Request the actor to restore the focus to the content page once the
+      // target is detached. This typically happens when the console closes.
+      // We restore the focus as it may have been stolen by the console input.
+      await this.target.reconfigure({
+        options: {
+          restoreFocus: true,
+        },
+      });
+
       // Lazily connect to the profiler here and don't wait for it to complete,
       // used to intercept console.profile calls before the performance tools are open.
       const performanceFrontConnection = this.initPerformance();
