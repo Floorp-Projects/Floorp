@@ -12565,14 +12565,14 @@
   },
   "COOKIE_BEHAVIOR": {
     "record_in_processes": ["main"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "expires_in_version": "70",
+    "products": ["firefox"],
+    "expires_in_version": "never",
     "releaseChannelCollection": "opt-out",
     "kind": "enumerated",
     "n_values": 15,
     "description": "Records the cookie behavior pref at startup.",
     "alert_emails": ["jhofmann@mozilla.com", "pdol@mozilla.com", "seceng-telemetry@mozilla.com"],
-    "bug_numbers": [1484251]
+    "bug_numbers": [1484251, 1561384]
   },
   "TRACKING_PROTECTION_ENABLED": {
     "record_in_processes": ["main"],
