@@ -108,7 +108,7 @@ class MenuButtonTest {
             BrowserMenuHighlightableItem(
                 label = "Test",
                 imageResource = 0,
-                highlight = BrowserMenuHighlightableItem.Highlight(0, colorResource),
+                highlight = BrowserMenuHighlightableItem.Highlight(0, colorResource, colorResource),
                 isHighlighted = { isHighlighted }
             )
         )))

@@ -80,7 +80,7 @@ internal class MenuButton(
         val highlightColorResource: Int? = menuBuilder?.items?.let { items ->
             items.forEach { item ->
                 if (item is BrowserMenuHighlightableItem && item.isHighlighted()) {
-                    return@let item.highlight.backgroundResource
+                    return@let item.highlight.colorResource
                 }
             }
             null

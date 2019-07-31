@@ -16,6 +16,7 @@ import mozilla.components.browser.icons.BrowserIcons
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuCheckbox
 import mozilla.components.browser.menu.item.BrowserMenuDivider
+import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
@@ -131,6 +132,12 @@ open class DefaultComponents(private val applicationContext: Context) {
     private val menuItems by lazy {
         val items = mutableListOf(
             menuToolbar,
+                BrowserMenuHighlightableItem("Highlight", R.drawable.mozac_ic_share, android.R.color.black, highlight =
+                BrowserMenuHighlightableItem.Highlight(
+                    R.drawable.mozac_ic_stop, R.drawable.background_with_ripple, android.R.color.holo_green_dark
+                )) {
+                    Toast.makeText(applicationContext, "Highlight", Toast.LENGTH_SHORT).show()
+                },
             BrowserMenuImageText("Share", R.drawable.mozac_ic_share, android.R.color.black) {
                 Toast.makeText(applicationContext, "Share", Toast.LENGTH_SHORT).show()
             },

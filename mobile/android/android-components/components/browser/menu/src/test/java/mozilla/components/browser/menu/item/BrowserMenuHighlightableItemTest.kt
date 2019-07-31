@@ -36,7 +36,7 @@ class BrowserMenuHighlightableItemTest {
             android.R.drawable.ic_menu_report_image,
             android.R.color.black,
             android.R.color.black,
-            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
         ) {
             onClickWasPress = true
         }
@@ -54,7 +54,7 @@ class BrowserMenuHighlightableItemTest {
             android.R.drawable.ic_menu_report_image,
             android.R.color.black,
             android.R.color.black,
-            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+            BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
         )
 
         val view = inflate(item)
@@ -78,7 +78,7 @@ class BrowserMenuHighlightableItemTest {
         val item = BrowserMenuHighlightableItem(
             "label",
             android.R.drawable.ic_menu_report_image,
-            highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, android.R.color.holo_red_light)
+            highlight = BrowserMenuHighlightableItem.Highlight(android.R.drawable.ic_menu_report_image, R.color.photonRed50, R.color.photonRed50)
         )
 
         val view = inflate(item)

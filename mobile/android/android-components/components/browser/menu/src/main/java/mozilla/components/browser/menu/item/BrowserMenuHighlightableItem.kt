@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.menu.item
 
+import android.util.TypedValue
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
@@ -11,7 +12,7 @@ import androidx.appcompat.widget.AppCompatImageView
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.R
 
-private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0)
+private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0)
 
 /**
  * A menu item for displaying text with an image icon and a highlight state which sets the
@@ -90,6 +91,7 @@ class BrowserMenuHighlightableItem(
         }
     }
 
+    @Suppress("LongMethod")
     private fun updateHighlight(view: View, isHighlighted: Boolean) {
         val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
 
@@ -100,7 +102,14 @@ class BrowserMenuHighlightableItem(
                 visibility = View.VISIBLE
             }
         } else {
-            view.background = null
+            val selectableItemBackground = TypedValue()
+            view.context.theme.resolveAttribute(
+                    android.R.attr.selectableItemBackground,
+                    selectableItemBackground,
+                    true
+            )
+
+            view.setBackgroundResource(selectableItemBackground.resourceId)
             with(highlightImageView) {
                 setImageResource(0)
                 visibility = View.GONE
@@ -111,7 +120,9 @@ class BrowserMenuHighlightableItem(
     class Highlight(
         @DrawableRes
         val imageResource: Int,
+        @DrawableRes
+        val backgroundResource: Int,
         @ColorRes
-        val backgroundResource: Int
+        val colorResource: Int
     )
 }

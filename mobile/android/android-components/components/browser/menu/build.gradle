@@ -24,6 +24,7 @@ android {
 dependencies {
     implementation project(':support-base')
     implementation project(':support-ktx')
+    implementation project(':ui-colors')
 
     implementation Dependencies.androidx_appcompat
     implementation Dependencies.androidx_core_ktx
