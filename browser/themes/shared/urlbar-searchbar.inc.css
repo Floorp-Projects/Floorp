@@ -243,13 +243,8 @@
   min-height: 11px;
 }
 
-#pageActionActivatedActionPanel[actionID="pocket"] > .panel-arrowcontainer > .panel-arrowcontent {
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-#pageActionActivatedActionPanel[actionID="pocket"] > .panel-arrowcontainer > .panel-arrowbox > .panel-arrow {
-  fill: #fbfbfb;
+#pageActionActivatedActionPanel[actionID="pocket"] {
+  --arrowpanel-background: #fbfbfb;
 }
 
 /* URL bar and page action buttons */

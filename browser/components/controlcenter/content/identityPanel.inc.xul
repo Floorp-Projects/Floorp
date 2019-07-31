@@ -3,9 +3,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <panel id="identity-popup"
+       class="panel-no-padding"
        type="arrow"
        hidden="true"
-       photon="true"
        role="alertdialog"
        aria-labelledby="identity-popup-mainView-panel-header-span"
        onpopupshown="gIdentityHandler.onPopupShown(event);"

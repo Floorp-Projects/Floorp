@@ -932,11 +932,6 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 
 %include browser-aero.css
 
-.browser-extension-panel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-  overflow: hidden;
-}
-
 @media (-moz-os-version: windows-win7) {
   .cui-widget-panelview[id^=PanelUI-webext-] {
     border-radius: 4px;

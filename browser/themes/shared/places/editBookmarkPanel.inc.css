@@ -4,10 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-#editBookmarkPanel > .panel-arrowcontainer > .panel-arrowcontent {
-  padding: 0;
-}
-
 #editBookmarkPanelTitle {
   margin-inline-start: 32px;
 }
