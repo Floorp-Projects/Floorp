@@ -12,6 +12,8 @@ object FeatureFlags {
     private val nightly by lazy { BuildConfig.BUILD_TYPE == "nightly" || BuildConfig.BUILD_TYPE == "nightlyLegacy" }
     // A convenience flag for debug builds.
     private val debug by lazy { BuildConfig.BUILD_TYPE == "debug" }
+    // A convenience flag for enabling in all builds (a feature that can still be toggled off).
+    private val all = production or beta or nightly or debug
 
     /**
      * Send Tab is a feature to lets you send a url/tab from a desktop to device and vice versa.
@@ -22,7 +24,7 @@ object FeatureFlags {
      * This flag is temporarily also used for the push service that is requires it to.
      * See: https://github.com/mozilla-mobile/fenix/issues/4063
      */
-    val sendTabEnabled = nightly || debug
+    val sendTabEnabled = all
 
     /**
      * Pull-to-refresh allows you to pull the web content down far enough to have the page to
