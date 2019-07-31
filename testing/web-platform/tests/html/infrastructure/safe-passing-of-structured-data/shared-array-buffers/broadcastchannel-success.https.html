@@ -6,6 +6,7 @@
 <link rel="author" title="Domenic Denicola" href="mailto:d@domenic.me">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/common/utils.js"></script> <!-- Use token() to allow running tests in parallel -->
 
 <div id="log"></div>
 
@@ -13,23 +14,19 @@
 "use strict";
 
 promise_test(t => {
+  const channelName = token();
   return Promise.all([
-    createIFrame("resources/broadcastchannel-iframe.html"),
-    createIFrame("resources/broadcastchannel-iframe.html"),
-    createIFrame("resources/broadcastchannel-iframe.html")
+    createIFrame(`resources/broadcastchannel-iframe.html?channel=${channelName}&index=0`),
+    createIFrame(`resources/broadcastchannel-iframe.html?channel=${channelName}&index=1`),
+    createIFrame(`resources/broadcastchannel-iframe.html?channel=${channelName}&index=2`)
   ]).then(() => {
     const sab = new SharedArrayBuffer(3);
     const view = new Uint8Array(sab);
-    const channel = new BroadcastChannel("channel name");
+    const channel = new BroadcastChannel(channelName);
 
     return new Promise(resolve => {
       let soFar = 0;
-      channel.onmessage = t.step_func(({ data: { sab: broadcastSAB, i } }) => {
-        if (broadcastSAB) {
-          // We only care about "broadcasts" from the workers.
-          return;
-        }
-
+      channel.onmessage = t.step_func(({ data: { i } }) => {
         assert_in_array(i, [0, 1, 2], "Any message events must come from expected sources");
         ++soFar;
 

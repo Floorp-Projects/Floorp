@@ -12,11 +12,13 @@ from mozbuild.shellutil import quote as shell_quote
 from taskgraph.util.schema import Schema
 from voluptuous import Optional, Required, Any
 
-from taskgraph.transforms.job import run_job_using
+from taskgraph.transforms.job import (
+    configure_taskdesc_for_run,
+    run_job_using,
+)
 from taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
     docker_worker_add_tooltool,
-    generic_worker_hg_commands,
     support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
@@ -69,7 +71,7 @@ toolchain_run_schema = Schema({
 
 
 def get_digest_data(config, run, taskdesc):
-    files = list(run.get('resources', []))
+    files = list(run.pop('resources', []))
     # This file
     files.append('taskcluster/taskgraph/transforms/job/toolchain.py')
     # The script
@@ -189,7 +191,7 @@ def docker_worker_toolchain(config, job, taskdesc):
 def windows_toolchain(config, job, taskdesc):
     run = job['run']
 
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
 
     worker['artifacts'] = [{
         'path': r'public\build',
@@ -201,7 +203,6 @@ def windows_toolchain(config, job, taskdesc):
     # all sorts of problems with toolchain tasks, disable them until
     # tasks are ready.
     run['use-caches'] = False
-    support_vcs_checkout(config, job, taskdesc, sparse=('sparse-profile' in run))
 
     env = worker['env']
     env.update({
@@ -209,16 +210,6 @@ def windows_toolchain(config, job, taskdesc):
         'MOZ_SCM_LEVEL': config.params['level'],
         'MOZ_AUTOMATION': '1',
     })
-
-    sparse_profile = run.get('sparse-profile')
-    if sparse_profile:
-        sparse_profile = 'build/sparse-profiles/{}'.format(run['sparse-profile'])
-
-    hg_command = generic_worker_hg_commands(
-        'https://hg.mozilla.org/mozilla-unified',
-        env['GECKO_HEAD_REPOSITORY'],
-        env['GECKO_HEAD_REV'],
-        r'.\build\src', sparse_profile=sparse_profile)[0]
 
     # Use `mach` to invoke python scripts so in-tree libraries are available.
     if run['script'].endswith('.py'):
@@ -228,18 +219,10 @@ def windows_toolchain(config, job, taskdesc):
     if args:
         args = ' ' + shell_quote(*args)
 
-    bash = r'c:\mozilla-build\msys\bin\bash'
-    worker['command'] = [
-        hg_command,
-        # do something intelligent.
-        r'{} build/src/taskcluster/scripts/misc/{}{}'.format(
-            bash, run['script'], args)
-    ]
-
     attributes = taskdesc.setdefault('attributes', {})
-    attributes['toolchain-artifact'] = run['toolchain-artifact']
+    attributes['toolchain-artifact'] = run.pop('toolchain-artifact')
     if 'toolchain-alias' in run:
-        attributes['toolchain-alias'] = run['toolchain-alias']
+        attributes['toolchain-alias'] = run.pop('toolchain-alias')
 
     if not taskgraph.fast:
         name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
@@ -248,3 +231,14 @@ def windows_toolchain(config, job, taskdesc):
             'name': name,
             'digest-data': get_digest_data(config, run, taskdesc),
         }
+
+    bash = r'c:\mozilla-build\msys\bin\bash'
+
+    run['using'] = 'run-task'
+    run['command'] = [
+        # do something intelligent.
+        r'{} build/src/taskcluster/scripts/misc/{}{}'.format(
+            bash, run.pop('script'), args)
+    ]
+    run.pop('arguments', None)
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
