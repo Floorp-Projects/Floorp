@@ -7,6 +7,8 @@
 "use strict";
 
 /* global XPCNativeWrapper evalWithDebugger */
+const { ActorClassWithSpec, Actor } = require("devtools/shared/protocol");
+const { webconsoleSpec } = require("devtools/shared/specs/webconsole");
 
 const Services = require("Services");
 const { Cc, Ci, Cu } = require("chrome");
@@ -179,49 +181,50 @@ function isObject(value) {
  * @param object [parentActor]
  *        Optional, the parent actor.
  */
-function WebConsoleActor(connection, parentActor) {
-  this.conn = connection;
-  this.parentActor = parentActor;
+const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
+  initialize: function(connection, parentActor) {
+    Actor.prototype.initialize.call(this, connection);
+    this.conn = connection;
+    this.parentActor = parentActor;
 
-  this._actorPool = new ActorPool(this.conn);
-  this.conn.addActorPool(this._actorPool);
+    this._actorPool = new ActorPool(this.conn);
+    this.conn.addActorPool(this._actorPool);
 
-  this._prefs = {};
+    this._prefs = {};
+    this.dbg = this.parentActor.makeDebugger();
 
-  this.dbg = this.parentActor.makeDebugger();
+    this._gripDepth = 0;
+    this._listeners = new Set();
+    this._lastConsoleInputEvaluation = undefined;
 
-  this._gripDepth = 0;
-  this._listeners = new Set();
-  this._lastConsoleInputEvaluation = undefined;
-
-  this.objectGrip = this.objectGrip.bind(this);
-  this._onWillNavigate = this._onWillNavigate.bind(this);
-  this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(this);
-  EventEmitter.on(
-    this.parentActor,
-    "changed-toplevel-document",
-    this._onChangedToplevelDocument
-  );
-  this._onObserverNotification = this._onObserverNotification.bind(this);
-  if (this.parentActor.isRootActor) {
-    Services.obs.addObserver(
-      this._onObserverNotification,
-      "last-pb-context-exited"
+    this.objectGrip = this.objectGrip.bind(this);
+    this._onWillNavigate = this._onWillNavigate.bind(this);
+    this._onChangedToplevelDocument = this._onChangedToplevelDocument.bind(
+      this
     );
-  }
+    EventEmitter.on(
+      this.parentActor,
+      "changed-toplevel-document",
+      this._onChangedToplevelDocument
+    );
+    this._onObserverNotification = this._onObserverNotification.bind(this);
+    if (this.parentActor.isRootActor) {
+      Services.obs.addObserver(
+        this._onObserverNotification,
+        "last-pb-context-exited"
+      );
+    }
 
-  this.traits = {
-    transferredResponseSize: true,
-    selectedObjectActor: true, // 44+
-    fetchCacheDescriptor: true,
-  };
+    this.traits = {
+      transferredResponseSize: true,
+      selectedObjectActor: true, // 44+
+      fetchCacheDescriptor: true,
+    };
 
-  if (this.dbg.replaying && !isWorker) {
-    this.dbg.onConsoleMessage = this.onReplayingMessage.bind(this);
-  }
-}
-
-WebConsoleActor.prototype = {
+    if (this.dbg.replaying && !isWorker) {
+      this.dbg.onConsoleMessage = this.onReplayingMessage.bind(this);
+    }
+  },
   /**
    * Debugger instance.
    *
@@ -445,6 +448,9 @@ WebConsoleActor.prototype = {
    * Destroy the current WebConsoleActor instance.
    */
   destroy() {
+    this.stopListeners();
+    Actor.prototype.destroy.call(this);
+
     EventEmitter.off(
       this.parentActor,
       "changed-toplevel-document",
@@ -464,7 +470,6 @@ WebConsoleActor.prototype = {
       this.dbg.onConsoleMessage = null;
     }
 
-    this.stopListeners({ listeners: null });
     this._actorPool = null;
     this._webConsoleCommandsCache = null;
     this._lastConsoleInputEvaluation = null;
@@ -658,19 +663,18 @@ WebConsoleActor.prototype = {
   /**
    * Handler for the "startListeners" request.
    *
-   * @param object request
-   *        The JSON request object received from the Web Console client.
+   * @param array events
+   *        An array of events to start sent by the Web Console client.
    * @return object
-   *         The response object which holds the startedListeners array.
+   *        The response object which holds the startedListeners array.
    */
   /* eslint-disable complexity */
-  startListeners: async function(request) {
+  startListeners: async function(events) {
     const startedListeners = [];
     const window = !this.parentActor.isRootActor ? this.window : null;
 
-    while (request.listeners.length > 0) {
-      const listener = request.listeners.shift();
-      switch (listener) {
+    for (const event of events) {
+      switch (event) {
         case "PageError":
           // Workers don't support this message type yet
           if (isWorker) {
@@ -683,7 +687,7 @@ WebConsoleActor.prototype = {
             );
             this.consoleServiceListener.init();
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
         case "ConsoleAPI":
           if (!this.consoleAPIListener) {
@@ -696,7 +700,7 @@ WebConsoleActor.prototype = {
             );
             this.consoleAPIListener.init();
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
         case "NetworkActivity":
           // Workers don't support this message type
@@ -772,7 +776,7 @@ WebConsoleActor.prototype = {
             );
             this.stackTraceCollector.init();
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
         case "FileActivity":
           // Workers don't support this message type
@@ -789,7 +793,7 @@ WebConsoleActor.prototype = {
             this.consoleProgressListener.startMonitor(
               this.consoleProgressListener.MONITOR_FILE_ACTIVITY
             );
-            startedListeners.push(listener);
+            startedListeners.push(event);
           }
           break;
         case "ReflowActivity":
@@ -803,7 +807,7 @@ WebConsoleActor.prototype = {
               this
             );
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
         case "ContentProcessMessages":
           // Workers don't support this message type
@@ -813,7 +817,7 @@ WebConsoleActor.prototype = {
           if (!this.contentProcessListener) {
             this.contentProcessListener = new ContentProcessListener(this);
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
         case "DocumentEvents":
           // Workers don't support this message type
@@ -823,7 +827,7 @@ WebConsoleActor.prototype = {
           if (!this.documentEventsListener) {
             this.documentEventsListener = new DocumentEventsListener(this);
           }
-          startedListeners.push(listener);
+          startedListeners.push(event);
           break;
       }
     }
@@ -842,18 +846,18 @@ WebConsoleActor.prototype = {
   /**
    * Handler for the "stopListeners" request.
    *
-   * @param object request
-   *        The JSON request object received from the Web Console client.
+   * @param array events
+   *        An array of events to stop sent by the Web Console client.
    * @return object
-   *         The response packet to send to the client: holds the
-   *         stoppedListeners array.
+   *        The response packet to send to the client: holds the
+   *        stoppedListeners array.
    */
-  stopListeners: function(request) {
+  stopListeners: function(events) {
     const stoppedListeners = [];
 
     // If no specific listeners are requested to be detached, we stop all
     // listeners.
-    const toDetach = request.listeners || [
+    const eventsToDetach = events || [
       "PageError",
       "ConsoleAPI",
       "NetworkActivity",
@@ -863,22 +867,21 @@ WebConsoleActor.prototype = {
       "DocumentEvents",
     ];
 
-    while (toDetach.length > 0) {
-      const listener = toDetach.shift();
-      switch (listener) {
+    for (const event of eventsToDetach) {
+      switch (event) {
         case "PageError":
           if (this.consoleServiceListener) {
             this.consoleServiceListener.destroy();
             this.consoleServiceListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "ConsoleAPI":
           if (this.consoleAPIListener) {
             this.consoleAPIListener.destroy();
             this.consoleAPIListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "NetworkActivity":
           if (this.netmonitors) {
@@ -893,7 +896,7 @@ WebConsoleActor.prototype = {
             this.stackTraceCollector.destroy();
             this.stackTraceCollector = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "FileActivity":
           if (this.consoleProgressListener) {
@@ -902,28 +905,28 @@ WebConsoleActor.prototype = {
             );
             this.consoleProgressListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "ReflowActivity":
           if (this.consoleReflowListener) {
             this.consoleReflowListener.destroy();
             this.consoleReflowListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "ContentProcessMessages":
           if (this.contentProcessListener) {
             this.contentProcessListener.destroy();
             this.contentProcessListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
         case "DocumentEvents":
           if (this.documentEventsListener) {
             this.documentEventsListener.destroy();
             this.documentEventsListener = null;
           }
-          stoppedListeners.push(listener);
+          stoppedListeners.push(event);
           break;
       }
     }
@@ -938,15 +941,14 @@ WebConsoleActor.prototype = {
    * Handler for the "getCachedMessages" request. This method sends the cached
    * error messages and the window.console API calls to the client.
    *
-   * @param object request
-   *        The JSON request object received from the Web Console client.
+   * @param array messageTypes
+   *        An array of message types sent by the Web Console client.
    * @return object
    *         The response packet to send to the client: it holds the cached
    *         messages array.
    */
-  getCachedMessages: function(request) {
-    const types = request.messageTypes;
-    if (!types) {
+  getCachedMessages: function(messageTypes) {
+    if (!messageTypes) {
       return {
         error: "missingParameter",
         message: "The messageTypes parameter is missing.",
@@ -960,8 +962,8 @@ WebConsoleActor.prototype = {
       replayingMessages = this.dbg.findAllConsoleMessages();
     }
 
-    while (types.length > 0) {
-      const type = types.shift();
+    while (messageTypes.length > 0) {
+      const type = messageTypes.shift();
       switch (type) {
         case "ConsoleAPI": {
           replayingMessages.forEach(msg => {
@@ -1046,7 +1048,6 @@ WebConsoleActor.prototype = {
    * JavaScript string and sends back a packet with a unique ID.
    * The result will be returned later as an unsolicited `evaluationResult`,
    * that can be associated back to this request via the `resultID` field.
-   * Cannot be async, see Comment two on Bug #1452920
    *
    * @param object request
    *        The JSON request object received from the Web Console client.
@@ -1055,30 +1056,22 @@ WebConsoleActor.prototype = {
    *         `resultID` field.
    */
   evaluateJSAsync: async function(request) {
-    // We want to be able to run console commands without waiting
-    // for the first to return (see Bug 1088861).
-
-    // First, send a response packet with the id only.
-    const resultID = Date.now();
-    this.conn.send({
-      from: this.actorID,
-      resultID: resultID,
-    });
-
     try {
-      // Then, execute the script that may pause.
+      // Execute the script that may pause.
       let response = this.evaluateJS(request);
-      response.resultID = resultID;
-
       // Wait for any potential returned Promise.
       response = await this._maybeWaitForResponseResult(response);
-      // Finally, send an unsolicited evaluationResult packet with the normal return value
-      this.conn.sendActorEvent(this.actorID, "evaluationResult", response);
+      // Finally, emit an unsolicited evaluationResult packet with the evaluation result.
+      this.emit("evaluationResult", {
+        from: this.actorID,
+        type: "evaluationResult",
+        resultID: request.resultID,
+        ...response,
+      });
+      return;
     } catch (e) {
-      DevToolsUtils.reportException(
-        "evaluateJSAsync",
-        Error(`Encountered error while waiting for Helper Result: ${e}`)
-      );
+      const message = `Encountered error while waiting for Helper Result: ${e}`;
+      DevToolsUtils.reportException("evaluateJSAsync", Error(message));
     }
   },
 
@@ -1335,13 +1328,26 @@ WebConsoleActor.prototype = {
   /**
    * The Autocomplete request handler.
    *
-   * @param object request
+   * @param string text
    *        The request message - what input to autocomplete.
+   * @param number cursor
+   *        The cursor position at the moment of starting autocomplete.
+   * @param string frameActor
+   *        The frameactor id of the current paused frame.
+   * @param string selectedNodeActor
+   *        The actor id of the currently selected node.
+   * @param array authorizedEvaluations
+   *        Array of the properties access which can be executed by the engine.
    * @return object
    *         The response message - matched properties.
    */
-  autocomplete: function(request) {
-    const frameActorId = request.frameActor;
+  autocomplete: function(
+    text,
+    cursor,
+    frameActorId,
+    selectedNodeActor,
+    authorizedEvaluations
+  ) {
     let dbgObject = null;
     let environment = null;
     let hadDebuggee = false;
@@ -1349,7 +1355,7 @@ WebConsoleActor.prototype = {
     let matchProp;
     let isElementAccess;
 
-    const reqText = request.text.substr(0, request.cursor);
+    const reqText = text.substr(0, cursor);
 
     if (isCommand(reqText)) {
       const commandsCache = this._getWebConsoleCommandsCache();
@@ -1385,11 +1391,11 @@ WebConsoleActor.prototype = {
       const result = JSPropertyProvider({
         dbgObject,
         environment,
-        inputValue: request.text,
-        cursor: request.cursor,
+        inputValue: text,
+        cursor,
         webconsoleActor: this,
-        selectedNodeActor: request.selectedNodeActor,
-        authorizedEvaluations: request.authorizedEvaluations,
+        selectedNodeActor,
+        authorizedEvaluations,
       });
 
       if (!hadDebuggee && dbgObject) {
@@ -1499,14 +1505,14 @@ WebConsoleActor.prototype = {
   /**
    * The "getPreferences" request handler.
    *
-   * @param object request
-   *        The request message - which preferences need to be retrieved.
+   * @param array preferences
+   *        The preferences that need to be retrieved.
    * @return object
    *         The response message - a { key: value } object map.
    */
-  getPreferences: function(request) {
+  getPreferences: function(preferences) {
     const prefs = Object.create(null);
-    for (const key of request.preferences) {
+    for (const key of preferences) {
       prefs[key] = this._prefs[key];
     }
     return { preferences: prefs };
@@ -1515,12 +1521,12 @@ WebConsoleActor.prototype = {
   /**
    * The "setPreferences" request handler.
    *
-   * @param object request
-   *        The request message - which preferences need to be updated.
+   * @param object preferences
+   *        The preferences that need to be updated.
    */
-  setPreferences: function(request) {
-    for (const key in request.preferences) {
-      this._prefs[key] = request.preferences[key];
+  setPreferences: function(preferences) {
+    for (const key in preferences) {
+      this._prefs[key] = preferences[key];
 
       if (this.netmonitors) {
         if (key == "NetworkMonitor.saveRequestAndResponseBodies") {
@@ -1538,7 +1544,7 @@ WebConsoleActor.prototype = {
         }
       }
     }
-    return { updated: Object.keys(request.preferences) };
+    return { updated: Object.keys(preferences) };
   },
 
   // End of request handlers.
@@ -1835,10 +1841,10 @@ WebConsoleActor.prototype = {
   /**
    * Send a new HTTP request from the target's window.
    *
-   * @param object message
-   *        Object with 'request' - the HTTP request details.
+   * @param object request
+   *        The details of the HTTP request.
    */
-  async sendHTTPRequest({ request }) {
+  async sendHTTPRequest(request) {
     const { url, method, headers, body, cause } = request;
     // Set the loadingNode and loadGroup to the target document - otherwise the
     // request won't show up in the opened netmonitor.
@@ -1922,7 +1928,7 @@ WebConsoleActor.prototype = {
    * @param object filter
    *   An object containing a `url` key with a URL to block.
    */
-  async blockRequest({ filter }) {
+  async blockRequest(filter) {
     if (this.netmonitors) {
       for (const { messageManager } of this.netmonitors) {
         messageManager.sendAsyncMessage("debug:block-request", {
@@ -1944,7 +1950,7 @@ WebConsoleActor.prototype = {
    * @param object filter
    *   An object containing a `url` key with a URL to unblock.
    */
-  async unblockRequest({ filter }) {
+  async unblockRequest(filter) {
     if (this.netmonitors) {
       for (const { messageManager } of this.netmonitors) {
         messageManager.sendAsyncMessage("debug:unblock-request", {
@@ -2084,30 +2090,15 @@ WebConsoleActor.prototype = {
 
     // Unregister existing listener on the previous document
     // (pass a copy of the array as it will shift from it)
-    this.stopListeners({ listeners: listeners.slice() });
+    this.stopListeners(listeners.slice());
 
     // This method is called after this.window is changed,
     // so we register new listener on this new window
-    this.startListeners({ listeners: listeners });
+    this.startListeners(listeners);
 
     // Also reset the cached top level chrome window being targeted
     this._lastChromeWindow = null;
   },
-};
-
-WebConsoleActor.prototype.requestTypes = {
-  startListeners: WebConsoleActor.prototype.startListeners,
-  stopListeners: WebConsoleActor.prototype.stopListeners,
-  getCachedMessages: WebConsoleActor.prototype.getCachedMessages,
-  evaluateJS: WebConsoleActor.prototype.evaluateJS,
-  evaluateJSAsync: WebConsoleActor.prototype.evaluateJSAsync,
-  autocomplete: WebConsoleActor.prototype.autocomplete,
-  clearMessagesCache: WebConsoleActor.prototype.clearMessagesCache,
-  getPreferences: WebConsoleActor.prototype.getPreferences,
-  setPreferences: WebConsoleActor.prototype.setPreferences,
-  sendHTTPRequest: WebConsoleActor.prototype.sendHTTPRequest,
-  blockRequest: WebConsoleActor.prototype.blockRequest,
-  unblockRequest: WebConsoleActor.prototype.unblockRequest,
-};
+});
 
 exports.WebConsoleActor = WebConsoleActor;
