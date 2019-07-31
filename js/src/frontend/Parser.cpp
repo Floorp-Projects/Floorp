@@ -1969,10 +1969,15 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
 JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
                              FunctionSyntaxKind kind,
                              GeneratorKind generatorKind,
-                             FunctionAsyncKind asyncKind, HandleObject proto,
+                             FunctionAsyncKind asyncKind,
                              bool isSelfHosting /* = false */,
                              bool inFunctionBox /* = false */) {
   MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, atom != nullptr);
+
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+    return nullptr;
+  }
 
   RootedFunction fun(cx);
 
@@ -2035,9 +2040,8 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
 
 JSFunction* ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                                     GeneratorKind generatorKind,
-                                    FunctionAsyncKind asyncKind,
-                                    HandleObject proto /* = nullptr */) {
-  return AllocNewFunction(cx_, atom, kind, generatorKind, asyncKind, proto,
+                                    FunctionAsyncKind asyncKind) {
+  return AllocNewFunction(cx_, atom, kind, generatorKind, asyncKind,
                           options().selfHostingMode, pc_->isFunctionBox());
 }
 
@@ -2601,12 +2605,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     return funNode;
   }
 
-  RootedObject proto(cx_);
-  if (!GetFunctionPrototype(cx_, generatorKind, asyncKind, &proto)) {
-    return null();
-  }
   RootedFunction fun(
-      cx_, newFunction(funName, kind, generatorKind, asyncKind, proto));
+      cx_, newFunction(funName, kind, generatorKind, asyncKind));
   if (!fun) {
     return null();
   }
