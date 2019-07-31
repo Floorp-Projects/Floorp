@@ -24,8 +24,9 @@ class InspectAction extends PureComponent {
   static get propTypes() {
     return {
       dispatch: PropTypes.func.isRequired,
-      target: Types.debugTarget.isRequired,
       disabled: PropTypes.bool,
+      target: Types.debugTarget.isRequired,
+      title: Types.string,
     };
   }
 
@@ -35,7 +36,7 @@ class InspectAction extends PureComponent {
   }
 
   render() {
-    const { disabled } = this.props;
+    const { disabled, title } = this.props;
 
     return Localized(
       {
@@ -46,6 +47,7 @@ class InspectAction extends PureComponent {
           onClick: e => this.inspect(),
           className: "default-button  qa-debug-target-inspect-button",
           disabled,
+          title,
         },
         "Inspect"
       )
