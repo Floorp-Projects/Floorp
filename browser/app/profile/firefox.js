@@ -1621,7 +1621,7 @@ pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-
 
 pref("browser.contentblocking.introCount", 0);
 
-pref("browser.contentblocking.maxIntroCount", 5);
+pref("browser.contentblocking.maxIntroCount", 0);
 // 1800 = 30 min in seconds
 pref("browser.contentblocking.introDelaySeconds", 1800);
 
