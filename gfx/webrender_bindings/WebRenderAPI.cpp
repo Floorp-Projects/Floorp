@@ -606,6 +606,25 @@ void WebRenderAPI::SetCompositionRecorder(
   auto event = MakeUnique<SetCompositionRecorderEvent>(std::move(aRecorder));
   RunOnRenderThread(std::move(event));
 }
+
+void WebRenderAPI::WriteCollectedFrames() {
+  class WriteCollectedFramesEvent final : public RendererEvent {
+   public:
+    explicit WriteCollectedFramesEvent() {
+      MOZ_COUNT_CTOR(WriteCollectedFramesEvent);
+    }
+
+    ~WriteCollectedFramesEvent() { MOZ_COUNT_DTOR(WriteCollectedFramesEvent); }
+
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+      aRenderThread.WriteCollectedFramesForWindow(aWindowId);
+    }
+  };
+
+  auto event = MakeUnique<WriteCollectedFramesEvent>();
+  RunOnRenderThread(std::move(event));
+}
+
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
 
 void TransactionBuilder::Notify(wr::Checkpoint aWhen,

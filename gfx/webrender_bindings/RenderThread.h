@@ -271,6 +271,8 @@ class RenderThread final {
       wr::WindowId aWindowId,
       RefPtr<layers::WebRenderCompositionRecorder>&& aCompositionRecorder);
 
+  void WriteCollectedFramesForWindow(wr::WindowId aWindowId);
+
  private:
   explicit RenderThread(base::Thread* aThread);
 
