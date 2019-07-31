@@ -1295,15 +1295,6 @@ if CONFIG['MOZ_ENABLE_LIBPROXY']:
         'proxy.h',
     ]
 
-if CONFIG['MOZ_ENABLE_CONTENTMANAGER']:
-    system_headers += [
-        'QtSparql/qsparqlconnection.h',
-        'QtSparql/qsparqlquery.h',
-        'QtSparql/qsparqlresult.h',
-        'SelectMultipleContentItemsPage.h',
-        'SelectSingleContentItemPage.h',
-    ]
-
 if CONFIG['MOZ_SYSTEM_LIBVPX']:
     system_headers += [
         'vpx_mem/vpx_mem.h',
