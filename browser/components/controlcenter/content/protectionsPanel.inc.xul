@@ -54,6 +54,14 @@
               <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection3.label;</label>
               <label flex="1" id="protections-popup-tracking-protection-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
+            <toolbarbutton id="protections-popup-category-socialblock"
+                           onclick="gProtectionsHandler.showSocialblockerSubview();"
+                           class="protections-popup-category" align="center">
+              <image class="protections-popup-category-icon socialblock-icon"/>
+              <label flex="1"
+              class="protections-popup-category-label">&contentBlocking.socialblock.label;</label>
+              <label flex="1" id="protections-popup-socialblock-state-label" class="protections-popup-category-state-label"/>
+            </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cookies"
                            onclick="gProtectionsHandler.showCookiesSubview();"
                            class="protections-popup-category" align="center">
@@ -153,6 +161,24 @@
         </hbox>
         <vbox class="panel-footer">
           <button id="protections-popup-trackersView-settings-button"
+                  label="&contentBlocking.manageSettings.label;"
+                  accesskey="&contentBlocking.manageSettings.accesskey;"
+                  oncommand="gProtectionsHandler.openPreferences();"/>
+        </vbox>
+    </panelview>
+
+    <!-- Social Block SubView -->
+    <panelview id="protections-popup-socialblockView"
+               role="document"
+               title="&contentBlocking.socialblockView.label;"
+               descriptionheightworkaround="true">
+        <vbox id="protections-popup-socialblockView-heading">
+          <description>&contentBlocking.socialblockView.description;</description>
+        </vbox>
+        <vbox id="protections-popup-socialblockView-list" class="protections-popup-list">
+        </vbox>
+        <vbox class="panel-footer">
+          <button id="protections-popup-socialblockView-settings-button"
                   label="&contentBlocking.manageSettings.label;"
                   accesskey="&contentBlocking.manageSettings.accesskey;"
                   oncommand="gProtectionsHandler.openPreferences();"/>
