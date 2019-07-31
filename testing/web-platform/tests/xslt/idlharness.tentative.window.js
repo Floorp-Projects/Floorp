@@ -4,7 +4,7 @@
 'use strict';
 
 idl_test(
-  ['xslt'],
+  ['xslt.tentative'],
   ['html'],
   async idlArray => {
     idlArray.add_objects({
