@@ -10854,14 +10854,16 @@ nsFrameList nsCSSFrameConstructor::CreateColumnSpanSiblings(
   nsIContent* const content = aInitialBlock->GetContent();
   nsContainerFrame* const parentFrame = aInitialBlock->GetParent();
 
-  aInitialBlock->SetProperty(nsIFrame::HasColumnSpanSiblings(), true);
-
   nsFrameList siblings;
   nsContainerFrame* lastNonColumnSpanWrapper = aInitialBlock;
   do {
     MOZ_ASSERT(aChildList.NotEmpty(), "Why call this if child list is empty?");
     MOZ_ASSERT(aChildList.FirstChild()->IsColumnSpan(),
                "Must have the child starting with column-span!");
+
+    // Tag every non-column-span wrapper except the last one.
+    lastNonColumnSpanWrapper->SetProperty(nsIFrame::HasColumnSpanSiblings(),
+                                          true);
 
     // Grab the consecutive column-span kids, and reparent them into a
     // block frame.

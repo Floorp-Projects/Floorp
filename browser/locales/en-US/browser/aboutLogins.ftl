@@ -9,6 +9,9 @@ login-filter =
 
 create-login-button = Create New Login
 
+fxaccounts-sign-in-text = Get your passwords on your other devices
+fxaccounts-sign-in-button = Sign in to { -sync-brand-short-name }
+
 ## The ⋯ menu that is in the top corner of the page
 
 menu =
@@ -77,11 +80,27 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
+## Dialogs
+
+confirmation-dialog-cancel-button = Cancel
+confirmation-dialog-dismiss-button =
+  .title = Cancel
+
+enable-password-sync-notification-message =
+  { PLATFORM() ->
+      [windows] Want your logins everywhere you use { -brand-short-name }? Go to your { -sync-brand-short-name } Options and select the Logins checkbox.
+     *[other] Want your logins everywhere you use { -brand-short-name }? Go to your { -sync-brand-short-name } Preferences and select the Logins checkbox.
+  }
+enable-password-sync-preferences-button =
+  .label =
+    { PLATFORM() ->
+        [windows] Visit { -sync-brand-short-name } Options
+       *[other] Visit { -sync-brand-short-name } Preferences
+    }
+  .accesskey = V
+
 confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
-confirm-delete-dialog-dismiss-button =
-  .title = Cancel
-confirm-delete-dialog-cancel-button = Cancel
 confirm-delete-dialog-confirm-button = Delete
 
 ## Breach Alert notification

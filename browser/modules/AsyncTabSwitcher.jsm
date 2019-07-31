@@ -1117,35 +1117,38 @@ class AsyncTabSwitcher {
       return;
     }
     this._processing = true;
-    this.preActions();
+    try {
+      this.preActions();
 
-    switch (event.type) {
-      case "MozLayerTreeReady":
-        this.onLayersReady(event.originalTarget);
-        break;
-      case "MozAfterPaint":
-        this.onPaint(event);
-        break;
-      case "MozLayerTreeCleared":
-        this.onLayersCleared(event.originalTarget);
-        break;
-      case "TabRemotenessChange":
-        this.onRemotenessChange(event.target);
-        break;
-      case "sizemodechange":
-      case "occlusionstatechange":
-        this.onSizeModeOrOcclusionStateChange();
-        break;
-      case "SwapDocShells":
-        this.onSwapDocShells(event.originalTarget, event.detail);
-        break;
-      case "EndSwapDocShells":
-        this.onEndSwapDocShells(event.originalTarget, event.detail);
-        break;
+      switch (event.type) {
+        case "MozLayerTreeReady":
+          this.onLayersReady(event.originalTarget);
+          break;
+        case "MozAfterPaint":
+          this.onPaint(event);
+          break;
+        case "MozLayerTreeCleared":
+          this.onLayersCleared(event.originalTarget);
+          break;
+        case "TabRemotenessChange":
+          this.onRemotenessChange(event.target);
+          break;
+        case "sizemodechange":
+        case "occlusionstatechange":
+          this.onSizeModeOrOcclusionStateChange();
+          break;
+        case "SwapDocShells":
+          this.onSwapDocShells(event.originalTarget, event.detail);
+          break;
+        case "EndSwapDocShells":
+          this.onEndSwapDocShells(event.originalTarget, event.detail);
+          break;
+      }
+
+      this.postActions();
+    } finally {
+      this._processing = false;
     }
-
-    this.postActions();
-    this._processing = false;
   }
 
   /*

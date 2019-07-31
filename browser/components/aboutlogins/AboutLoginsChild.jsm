@@ -132,6 +132,14 @@ class AboutLoginsChild extends ActorChild {
         }
         break;
       }
+      case "AboutLoginsSyncEnable": {
+        this.mm.sendAsyncMessage("AboutLogins:SyncEnable");
+        break;
+      }
+      case "AboutLoginsSyncOptions": {
+        this.mm.sendAsyncMessage("AboutLogins:SyncOptions");
+        break;
+      }
       case "AboutLoginsUpdateLogin": {
         this.mm.sendAsyncMessage("AboutLogins:UpdateLogin", {
           login: event.detail,
@@ -146,9 +154,6 @@ class AboutLoginsChild extends ActorChild {
       case "AboutLogins:AllLogins":
         this.sendToContent("AllLogins", message.data);
         break;
-      case "AboutLogins:UpdateBreaches":
-        this.sendToContent("UpdateBreaches", message.data);
-        break;
       case "AboutLogins:LoginAdded":
         this.sendToContent("LoginAdded", message.data);
         break;
@@ -162,6 +167,11 @@ class AboutLoginsChild extends ActorChild {
         if (masterPasswordPromise) {
           masterPasswordPromise.resolve(message.data);
         }
+      case "AboutLogins:SyncState":
+        this.sendToContent("SyncState", message.data);
+        break;
+      case "AboutLogins:UpdateBreaches":
+        this.sendToContent("UpdateBreaches", message.data);
         break;
     }
   }

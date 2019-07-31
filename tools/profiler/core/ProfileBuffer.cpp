@@ -108,6 +108,46 @@ size_t ProfileBuffer::SizeOfIncludingThis(
   return n;
 }
 
+void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
+                                         TimeDuration aLocking,
+                                         TimeDuration aCleaning,
+                                         TimeDuration aCounters,
+                                         TimeDuration aThreads) {
+  double time = aSamplingTime.ToMilliseconds() * 1000.0;
+  if (mFirstSamplingTimeNs == 0.0) {
+    mFirstSamplingTimeNs = time;
+  } else {
+    // Note that we'll have 1 fewer interval than other numbers (because
+    // we need both ends of an interval to know its duration). The final
+    // difference should be insignificant over the expected many thousands
+    // of iterations.
+    mIntervalsNs.Count(time - mLastSamplingTimeNs);
+  }
+  mLastSamplingTimeNs = time;
+  double locking = aLocking.ToMilliseconds() * 1000.0;
+  double cleaning = aCleaning.ToMilliseconds() * 1000.0;
+  double counters = aCounters.ToMilliseconds() * 1000.0;
+  double threads = aThreads.ToMilliseconds() * 1000.0;
+
+  mOverheadsNs.Count(locking + cleaning + counters + threads);
+  mLockingsNs.Count(locking);
+  mCleaningsNs.Count(cleaning);
+  mCountersNs.Count(counters);
+  mThreadsNs.Count(threads);
+
+  AddEntry(ProfileBufferEntry::ProfilerOverheadTime(time));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(locking));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(cleaning));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(counters));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(threads));
+}
+
+ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
+  return {mRangeStart,  mRangeEnd,    mEntryIndexMask.MaskValue() + 1,
+          mIntervalsNs, mOverheadsNs, mLockingsNs,
+          mCleaningsNs, mCountersNs,  mThreadsNs};
+}
+
 /* ProfileBufferCollector */
 
 static bool IsChromeJSScript(JSScript* aScript) {

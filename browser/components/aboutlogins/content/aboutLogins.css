@@ -25,6 +25,7 @@ login-filter {
   align-self: center;
 }
 
+fxaccounts-button,
 menu-button {
   margin-inline-start: 18px;
 }

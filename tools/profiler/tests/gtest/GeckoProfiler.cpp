@@ -545,6 +545,35 @@ TEST(GeckoProfiler, Markers)
   ASSERT_TRUE(!strstr(profile.get(), longstr.get()));
   ASSERT_TRUE(strstr(profile.get(), "(too long)"));
 
+  Maybe<ProfilerBufferInfo> info = profiler_get_buffer_info();
+  MOZ_RELEASE_ASSERT(info.isSome());
+  printf("Profiler buffer range: %llu .. %llu (%llu bytes)\n",
+         static_cast<unsigned long long>(info->mRangeStart),
+         static_cast<unsigned long long>(info->mRangeEnd),
+         // sizeof(ProfileBufferEntry) == 9
+         (static_cast<unsigned long long>(info->mRangeEnd) -
+          static_cast<unsigned long long>(info->mRangeStart)) *
+             9);
+  printf("Stats:         min(ns) .. mean(ns) .. max(ns)  [count]\n");
+  printf("- Intervals:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mIntervalsNs.min, info->mIntervalsNs.sum / info->mIntervalsNs.n,
+         info->mIntervalsNs.max, info->mIntervalsNs.n);
+  printf("- Overheads:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mOverheadsNs.min, info->mOverheadsNs.sum / info->mOverheadsNs.n,
+         info->mOverheadsNs.max, info->mOverheadsNs.n);
+  printf("  - Locking:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mLockingsNs.min, info->mLockingsNs.sum / info->mLockingsNs.n,
+         info->mLockingsNs.max, info->mLockingsNs.n);
+  printf("  - Clearning: %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mCleaningsNs.min, info->mCleaningsNs.sum / info->mCleaningsNs.n,
+         info->mCleaningsNs.max, info->mCleaningsNs.n);
+  printf("  - Counters:  %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mCountersNs.min, info->mCountersNs.sum / info->mCountersNs.n,
+         info->mCountersNs.max, info->mCountersNs.n);
+  printf("  - Threads:   %7.1f .. %7.1f  .. %7.1f  [%u]\n",
+         info->mThreadsNs.min, info->mThreadsNs.sum / info->mThreadsNs.n,
+         info->mThreadsNs.max, info->mThreadsNs.n);
+
   profiler_stop();
 
   // The GTestMarkerPayloads should have been destroyed.

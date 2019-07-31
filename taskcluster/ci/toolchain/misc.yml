@@ -33,6 +33,9 @@ linux64-llvm-dsymutil:
         toolchain-artifact: public/build/llvm-dsymutil.tar.xz
     toolchains:
         - linux64-gcc-6
+    fetches:
+        fetch:
+            - llvm-for-dsymutil
 
 linux64-binutils:
     description: "Binutils toolchain build"
@@ -69,6 +72,9 @@ linux64-libdmg:
     run:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
+    fetches:
+        fetch:
+            - libdmg-hfsplus
 
 linux64-mar-tools:
     description: "mar-tools toolchain build"
@@ -107,6 +113,9 @@ linux64-tup:
         - try
     toolchains:
         - linux64-gcc-6
+    fetches:
+        fetch:
+            - tup
 
 linux64-upx:
     description: "UPX build"
