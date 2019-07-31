@@ -828,6 +828,13 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
     return;
   }
 
+  // We don't return styles for disconnected elements anymore, so don't go
+  // through the trouble of flushing or what not.
+  if (!mElement->IsInComposedDoc()) {
+    ClearComputedStyle();
+    return;
+  }
+
   // TODO(emilio): We may want to handle a few special-cases here:
   //
   //  * https://github.com/w3c/csswg-drafts/issues/1964
