@@ -200,8 +200,8 @@ class HostLayerManager : public LayerManager {
     mCompositorBridgeID = aID;
   }
 
-  void SetCompositionRecorder(already_AddRefed<CompositionRecorder> aRecorder) {
-    mCompositionRecorder = aRecorder;
+  void SetCompositionRecorder(UniquePtr<CompositionRecorder> aRecorder) {
+    mCompositionRecorder = std::move(aRecorder);
   }
 
   /**
@@ -224,7 +224,7 @@ class HostLayerManager : public LayerManager {
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;
   TimeStamp mRenderStartTime;
-  RefPtr<CompositionRecorder> mCompositionRecorder = nullptr;
+  UniquePtr<CompositionRecorder> mCompositionRecorder = nullptr;
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;
