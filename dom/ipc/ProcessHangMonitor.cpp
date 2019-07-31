@@ -356,6 +356,13 @@ bool HangMonitorChild::InterruptCallback() {
     return true;
   }
 
+  // Don't start painting if we're not in a good place to run script. We run
+  // chrome script during layout and such, and it wouldn't be good to interrupt
+  // painting code from there.
+  if (!nsContentUtils::IsSafeToRunScript()) {
+    return true;
+  }
+
   bool paintWhileInterruptingJS;
   bool paintWhileInterruptingJSForce;
   TabId paintWhileInterruptingJSTab;
