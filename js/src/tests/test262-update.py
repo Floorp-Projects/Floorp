@@ -30,7 +30,6 @@ UNSUPPORTED_FEATURES = set([
     "regexp-lookbehind",
     "regexp-named-groups",
     "regexp-unicode-property-escapes",
-    "global",
     "export-star-as-namespace-from-module",
     "Intl.DateTimeFormat-quarter",
     "Intl.DateTimeFormat-datetimestyle",
@@ -38,20 +37,18 @@ UNSUPPORTED_FEATURES = set([
     "Intl.DateTimeFormat-formatRange",
     "Intl.ListFormat",
     "Intl.Segmenter",
-    "Promise.allSettled",
+    "WeakRef",
+    "FinalizationGroup",
 ])
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
-    "BigInt": "!this.hasOwnProperty('BigInt')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
-    # Syntax is a bit weird, because this string cannot have spaces in it
-    "class-fields-public":
-        "(function(){try{eval('c=class{x;}');return(false);}catch{return(true);}})()",
     "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set([
     "Intl.NumberFormat-unified",
     "Intl.DateTimeFormat-fractionalSecondDigits",
+    "Promise.allSettled",
 ])
 
 
