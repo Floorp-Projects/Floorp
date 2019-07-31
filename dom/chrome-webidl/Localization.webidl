@@ -40,11 +40,11 @@ dictionary L10nMessage {
 };
 
 /**
- * A callback function which takes a list of locales and a list
- * of localization resources and produces an iterator over
- * FluentBundle objects used for localization with fallbacks.
+ * A callback function which takes a list of localization resources
+ * and produces an iterator over FluentBundle objects used for
+ * localization with fallbacks.
  */
-callback GenerateMessages = Promise<any> (sequence<DOMString> aAppLocales, sequence<DOMString> aResourceIds);
+callback GenerateMessages = Promise<any> (sequence<DOMString> aResourceIds);
 
 /**
  * Localization is an implementation of the Fluent Localization API.
