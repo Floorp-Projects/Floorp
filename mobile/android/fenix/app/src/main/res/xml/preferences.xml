@@ -55,7 +55,7 @@
         android:title="@string/preferences_category_privacy"
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
-            android:icon="@drawable/ic_tracking_protection"
+            android:icon="@drawable/ic_tracking_protection_enabled"
             android:key="@string/pref_key_tracking_protection_settings"
             android:title="@string/preferences_tracking_protection" />
         <androidx.preference.Preference

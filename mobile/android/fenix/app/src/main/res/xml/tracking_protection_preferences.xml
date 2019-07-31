@@ -5,7 +5,7 @@
 <androidx.preference.PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
     <SwitchPreference
         android:defaultValue="true"
-        android:icon="@drawable/ic_tracking_protection"
+        android:icon="@drawable/ic_tracking_protection_enabled"
         android:key="@string/pref_key_tracking_protection"
         android:summary="@string/preferences_tracking_protection_description"
         android:title="@string/preferences_tracking_protection" />
