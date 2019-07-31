@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- #4137 - Adds pagination to the history view
 - #3695 - Made search suggestions for other tabs clickable
 
 ## [1.1.0 and earlier] - 2019-07-23
