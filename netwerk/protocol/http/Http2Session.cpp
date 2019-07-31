@@ -2622,6 +2622,7 @@ nsresult Http2Session::RecvAltSvc(Http2Session* self) {
     }
 
     if (NS_FAILED(self->SetInputFrameDataStream(self->mInputFrameID)) ||
+        !self->mInputFrameDataStream ||
         !self->mInputFrameDataStream->Transaction() ||
         !self->mInputFrameDataStream->Transaction()->RequestHead()) {
       LOG3(
