@@ -9,12 +9,18 @@ with Files('**'):
 
 XPIDL_SOURCES += [
     'nsITrackingDBService.idl',
+    'nsIURLDecorationAnnotationsService.idl',
 ]
 
 XPIDL_MODULE = 'toolkit_antitracking'
 
+EXTRA_COMPONENTS += [
+    'antitracking.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'TrackingDBService.jsm',
+    'URLDecorationAnnotationsService.jsm',
 ]
 
 XPCOM_MANIFESTS += [
