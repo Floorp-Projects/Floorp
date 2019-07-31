@@ -2612,7 +2612,12 @@ int32_t RecordContentFrameTime(
 }
 
 mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
-    const TimeStamp& aRecordingStart) {
+    const TimeStamp& aRecordingStart, BeginRecordingResolver&& aResolve) {
+  if (mCompositionRecorder) {
+    aResolve(false);
+    return IPC_OK();
+  }
+
   if (mLayerManager) {
     mCompositionRecorder = new CompositionRecorder(aRecordingStart);
     mLayerManager->SetCompositionRecorder(do_AddRef(mCompositionRecorder));
@@ -2624,10 +2629,17 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvBeginRecording(
     mWrBridge->SetCompositionRecorder(std::move(recorder));
   }
 
+  aResolve(true);
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording() {
+mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording(
+    bool* aOutSuccess) {
+  if (!mCompositionRecorder) {
+    *aOutSuccess = false;
+    return IPC_OK();
+  }
+
   if (mLayerManager) {
     mLayerManager->SetCompositionRecorder(nullptr);
   }
@@ -2638,6 +2650,7 @@ mozilla::ipc::IPCResult CompositorBridgeParent::RecvEndRecording() {
 
   mCompositionRecorder->WriteCollectedFrames();
   mCompositionRecorder = nullptr;
+  *aOutSuccess = true;
   return IPC_OK();
 }
 
