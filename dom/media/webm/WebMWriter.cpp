@@ -19,17 +19,16 @@ WebMWriter::~WebMWriter() {
   // Out-of-line dtor so mEbmlComposer nsAutoPtr can delete a complete type.
 }
 
-nsresult WebMWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                                       uint32_t aFlags) {
+nsresult WebMWriter::WriteEncodedTrack(
+    const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::WriteEncodedTrack", OTHER);
-  for (uint32_t i = 0; i < aData.GetEncodedFrames().Length(); i++) {
-    mEbmlComposer->WriteSimpleBlock(
-        aData.GetEncodedFrames().ElementAt(i).get());
+  for (uint32_t i = 0; i < aData.Length(); i++) {
+    mEbmlComposer->WriteSimpleBlock(aData.ElementAt(i).get());
   }
   return NS_OK;
 }
 
-nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+nsresult WebMWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                       uint32_t aFlags) {
   AUTO_PROFILER_LABEL("WebMWriter::GetContainerData", OTHER);
   mEbmlComposer->ExtractBuffer(aOutputBufs, aFlags);

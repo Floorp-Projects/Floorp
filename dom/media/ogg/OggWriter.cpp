@@ -46,22 +46,20 @@ nsresult OggWriter::Init() {
   return (rc == 0) ? NS_OK : NS_ERROR_NOT_INITIALIZED;
 }
 
-nsresult OggWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
-                                      uint32_t aFlags) {
+nsresult OggWriter::WriteEncodedTrack(
+    const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("OggWriter::WriteEncodedTrack", OTHER);
 
-  uint32_t len = aData.GetEncodedFrames().Length();
+  uint32_t len = aData.Length();
   for (uint32_t i = 0; i < len; i++) {
-    if (aData.GetEncodedFrames()[i]->GetFrameType() !=
-        EncodedFrame::OPUS_AUDIO_FRAME) {
+    if (aData[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }
 
     // only pass END_OF_STREAM on the last frame!
     nsresult rv = WriteEncodedData(
-        aData.GetEncodedFrames()[i]->GetFrameData(),
-        aData.GetEncodedFrames()[i]->GetDuration(),
+        aData[i]->GetFrameData(), aData[i]->GetDuration(),
         i < len - 1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) : aFlags);
     if (NS_FAILED(rv)) {
       LOG("%p Failed to WriteEncodedTrack!", this);
@@ -111,7 +109,7 @@ nsresult OggWriter::WriteEncodedData(const nsTArray<uint8_t>& aBuffer,
   return NS_OK;
 }
 
-void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs) {
+void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t>>* aOutputBufs) {
   aOutputBufs->AppendElement();
   aOutputBufs->LastElement().SetLength(mOggPage.header_len + mOggPage.body_len);
   memcpy(aOutputBufs->LastElement().Elements(), mOggPage.header,
@@ -120,7 +118,7 @@ void OggWriter::ProduceOggPage(nsTArray<nsTArray<uint8_t> >* aOutputBufs) {
          mOggPage.body, mOggPage.body_len);
 }
 
-nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                      uint32_t aFlags) {
   int rc = -1;
   AUTO_PROFILER_LABEL("OggWriter::GetContainerData", OTHER);

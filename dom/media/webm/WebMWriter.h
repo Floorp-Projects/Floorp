@@ -46,14 +46,16 @@ class WebMWriter : public ContainerWriter {
   explicit WebMWriter(uint32_t aTrackTypes);
   virtual ~WebMWriter();
 
-  // WriteEncodedTrack inserts raw packets into WebM stream.
-  nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
+  // WriteEncodedTrack inserts raw packets into WebM stream. Does not accept
+  // any flags: any specified will be ignored. Writing is finalized via
+  // flushing via GetContainerData().
+  nsresult WriteEncodedTrack(const nsTArray<RefPtr<EncodedFrame>>& aData,
                              uint32_t aFlags = 0) override;
 
   // GetContainerData outputs multiplexing data.
   // aFlags indicates the muxer should enter into finished stage and flush out
   // queue data.
-  nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+  nsresult GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                             uint32_t aFlags = 0) override;
 
   // Assign metadata into muxer
