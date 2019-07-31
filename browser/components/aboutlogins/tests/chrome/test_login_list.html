@@ -227,7 +227,9 @@ add_task(async function test_login_modified() {
 });
 
 add_task(async function test_login_added() {
-  let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
+  info("selected sort: " + gLoginList.shadowRoot.getElementById("login-sort").selectedIndex);
+
+  let newLogin = Object.assign({}, TEST_LOGIN_1, {title: "example2.example.com", guid: "111222"});
   gLoginList.loginAdded(newLogin);
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
@@ -260,7 +262,7 @@ add_task(async function test_login_added_filtered() {
   }));
   is(JSON.parse(countSpan.getAttribute("data-l10n-args")).count, 1, "Count should match result amount");
 
-  let newLogin = Object.assign({}, TEST_LOGIN_1, {username: "user22", guid: "111222"});
+  let newLogin = Object.assign({}, TEST_LOGIN_1, {title: "example2.example.com", username: "user22", guid: "111222"});
   gLoginList.loginAdded(newLogin);
   await asyncElementRendered();
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item");
