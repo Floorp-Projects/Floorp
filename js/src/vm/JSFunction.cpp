@@ -1662,10 +1662,9 @@ bool JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx,
 
     // Try to insert the newly compiled script into the lazy script cache.
     if (canRelazify) {
-      // A script's starting column isn't set by the bytecode emitter, so
-      // specify this from the lazy script so that if an identical lazy
-      // script is encountered later a match can be determined.
-      script->setColumn(lazy->column());
+      // If an identical lazy script is encountered later a match can be
+      // determined based on line and column number.
+      MOZ_ASSERT(lazy->column() == script->column());
 
       // Remember the lazy script on the compiled script, so it can be
       // stored on the function again in case of re-lazification.

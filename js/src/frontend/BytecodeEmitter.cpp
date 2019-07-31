@@ -94,17 +94,19 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
-    Handle<LazyScript*> lazyScript, uint32_t lineNum, EmitterMode emitterMode,
+    Handle<LazyScript*> lazyScript, uint32_t line, uint32_t column,
+    EmitterMode emitterMode,
     FieldInitializers fieldInitializers /* = FieldInitializers::Invalid() */)
     : sc(sc),
       cx(sc->cx_),
       parent(parent),
       script(cx, script),
       lazyScript(cx, lazyScript),
-      bytecodeSection_(cx, lineNum),
+      bytecodeSection_(cx, line),
       perScriptData_(cx),
       fieldInitializers_(fieldInitializers),
-      firstLine(lineNum),
+      firstLine(line),
+      firstColumn(column),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
@@ -117,10 +119,10 @@ BytecodeEmitter::BytecodeEmitter(
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  BCEParserHandle* handle, SharedContext* sc,
                                  HandleScript script,
-                                 Handle<LazyScript*> lazyScript,
-                                 uint32_t lineNum, EmitterMode emitterMode,
+                                 Handle<LazyScript*> lazyScript, uint32_t line,
+                                 uint32_t column, EmitterMode emitterMode,
                                  FieldInitializers fieldInitializers)
-    : BytecodeEmitter(parent, sc, script, lazyScript, lineNum, emitterMode,
+    : BytecodeEmitter(parent, sc, script, lazyScript, line, column, emitterMode,
                       fieldInitializers) {
   parser = handle;
   instrumentationKinds = parser->options().instrumentationKinds;
@@ -129,10 +131,10 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
 BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent,
                                  const EitherParser& parser, SharedContext* sc,
                                  HandleScript script,
-                                 Handle<LazyScript*> lazyScript,
-                                 uint32_t lineNum, EmitterMode emitterMode,
+                                 Handle<LazyScript*> lazyScript, uint32_t line,
+                                 uint32_t column, EmitterMode emitterMode,
                                  FieldInitializers fieldInitializers)
-    : BytecodeEmitter(parent, sc, script, lazyScript, lineNum, emitterMode,
+    : BytecodeEmitter(parent, sc, script, lazyScript, line, column, emitterMode,
                       fieldInitializers) {
   ep_.emplace(parser);
   this->parser = ep_.ptr();
@@ -145,6 +147,11 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
 }
 
 bool BytecodeEmitter::init() { return perScriptData_.init(cx); }
+
+bool BytecodeEmitter::init(TokenPos bodyPosition) {
+  initFromBodyPosition(bodyPosition);
+  return init();
+}
 
 template <typename T>
 T* BytecodeEmitter::findInnermostNestableControl() const {
@@ -5764,10 +5771,14 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
       fieldInitializers = setupFieldInitializers(classContentsIfConstructor);
     }
 
+    uint32_t innerScriptLine, innerScriptColumn;
+    parser->errorReporter().lineAndColumnAt(funNode->pn_pos.begin,
+                                            &innerScriptLine,
+                                            &innerScriptColumn);
     BytecodeEmitter bce2(this, parser, funbox, innerScript,
-                         /* lazyScript = */ nullptr, funNode->pn_pos,
-                         nestedMode, fieldInitializers);
-    if (!bce2.init()) {
+                         /* lazyScript = */ nullptr, innerScriptLine,
+                         innerScriptColumn, nestedMode, fieldInitializers);
+    if (!bce2.init(funNode->pn_pos)) {
       return false;
     }
 

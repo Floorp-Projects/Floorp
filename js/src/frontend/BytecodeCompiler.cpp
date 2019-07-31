@@ -460,7 +460,8 @@ bool BytecodeCompiler::emplaceEmitter(Maybe<BytecodeEmitter>& emitter,
                                                  ? BytecodeEmitter::SelfHosting
                                                  : BytecodeEmitter::Normal;
   emitter.emplace(/* parent = */ nullptr, parser, sharedContext, script,
-                  /* lazyScript = */ nullptr, options.lineno, emitterMode);
+                  /* lazyScript = */ nullptr, options.lineno, options.column,
+                  emitterMode);
   return emitter->init();
 }
 
@@ -746,7 +747,7 @@ JSScript* frontend::CompileGlobalBinASTScript(
 
   sourceObj->source()->setBinASTSourceMetadata(metadata);
 
-  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0);
+  BytecodeEmitter bce(nullptr, &parser, &globalsc, script, nullptr, 0, 0);
 
   if (!bce.init()) {
     return nullptr;
@@ -968,9 +969,9 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
   }
 
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
-                      lazy, pn->pn_pos, BytecodeEmitter::LazyFunction,
-                      fieldInitializers);
-  if (!bce.init()) {
+                      lazy, lazy->lineno(), lazy->column(),
+                      BytecodeEmitter::LazyFunction, fieldInitializers);
+  if (!bce.init(pn->pn_pos)) {
     return false;
   }
 
@@ -1051,10 +1052,11 @@ bool frontend::CompileLazyBinASTFunction(JSContext* cx,
 
   FunctionNode* pn = parsed.unwrap();
 
-  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy, pn->pn_pos,
+  BytecodeEmitter bce(nullptr, &parser, pn->funbox(), script, lazy,
+                      lazy->lineno(), lazy->column(),
                       BytecodeEmitter::LazyFunction);
 
-  if (!bce.init()) {
+  if (!bce.init(pn->pn_pos)) {
     return false;
   }
 
