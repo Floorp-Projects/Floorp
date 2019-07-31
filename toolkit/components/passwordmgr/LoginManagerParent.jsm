@@ -691,6 +691,18 @@ this.LoginManagerParent = {
       );
       return;
     }
+
+    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
+      // No UI should be shown to offer generation in thie case but a user may
+      // disable saving for the site after already filling one and they may then
+      // edit it.
+      log(
+        "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
+        formOrigin
+      );
+      return;
+    }
+
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
@@ -747,14 +759,6 @@ this.LoginManagerParent = {
       );
       log("autocomplete_field telemetry event recorded");
       generatedPW.filled = true;
-    }
-
-    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
-      log(
-        "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
-        formOrigin
-      );
-      autoSaveLogin = false;
     }
 
     // Check if we already have a login saved for this site since we don't want to overwrite it in
