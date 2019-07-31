@@ -274,7 +274,7 @@ macosx1014-64-shippable/opt:
     test-sets:
         - macosx1014-64-tests
         - macosx64-talos
-        # - desktop-screenshot-capture
+        - desktop-screenshot-capture
         - awsy
         - raptor-chromium
         - raptor-firefox
@@ -307,11 +307,6 @@ macosx1014-64-ccov/debug:
     build-platform: macosx64-ccov/debug
     test-sets:
         - macosx1014-64-tests
-
-macosx1010-64-shippable/opt:
-    build-platform: macosx64-shippable/opt
-    test-sets:
-        - desktop-screenshot-capture
 
 ##
 # Android platforms (matching /android-em.*/)
