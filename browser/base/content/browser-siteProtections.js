@@ -1136,9 +1136,10 @@ var gProtectionsHandler = {
     openPreferences("privacy-trackingprotection", { origin });
   },
 
-  openProtections() {
+  openProtections(relatedToCurrent = false) {
     switchToTabHavingURI("about:protections", true, {
       replaceQueryString: true,
+      relatedToCurrent,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
@@ -1483,7 +1484,7 @@ var gProtectionsHandler = {
     this._protectionPopupTrackersCounterDescription.textContent =
       // gNavigatorBundle.getFormattedString(
       //   "protections.trackers_counter", [cnt]);
-      `Trackers blocked this week: ${trackerCount.toLocaleString()}`;
+      `${trackerCount.toLocaleString()} Blocked`;
   },
 
   /**
