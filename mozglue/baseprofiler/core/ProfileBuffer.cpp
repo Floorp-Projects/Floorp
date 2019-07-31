@@ -109,6 +109,52 @@ size_t ProfileBuffer::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   return n;
 }
 
+void ProfileBuffer::CollectOverheadStats(TimeDuration aSamplingTime,
+                                         TimeDuration aLocking,
+                                         TimeDuration aCleaning,
+                                         TimeDuration aCounters,
+                                         TimeDuration aThreads) {
+  double timeNs = aSamplingTime.ToMilliseconds() * 1000.0;
+  if (mFirstSamplingTimeNs == 0.0) {
+    mFirstSamplingTimeNs = timeNs;
+  } else {
+    // Note that we'll have 1 fewer interval than other numbers (because
+    // we need both ends of an interval to know its duration). The final
+    // difference should be insignificant over the expected many thousands
+    // of iterations.
+    mIntervalsNs.Count(timeNs - mLastSamplingTimeNs);
+  }
+  mLastSamplingTimeNs = timeNs;
+  // Time to take the lock before sampling.
+  double lockingNs = aLocking.ToMilliseconds() * 1000.0;
+  // Time to discard expired markers.
+  double cleaningNs = aCleaning.ToMilliseconds() * 1000.0;
+  // Time to gather all counters.
+  double countersNs = aCounters.ToMilliseconds() * 1000.0;
+  // Time to sample all threads.
+  double threadsNs = aThreads.ToMilliseconds() * 1000.0;
+
+  // Add to our gathered stats.
+  mOverheadsNs.Count(lockingNs + cleaningNs + countersNs + threadsNs);
+  mLockingsNs.Count(lockingNs);
+  mCleaningsNs.Count(cleaningNs);
+  mCountersNs.Count(countersNs);
+  mThreadsNs.Count(threadsNs);
+
+  // Record details in buffer.
+  AddEntry(ProfileBufferEntry::ProfilerOverheadTime(timeNs));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(lockingNs));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(cleaningNs));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(countersNs));
+  AddEntry(ProfileBufferEntry::ProfilerOverheadDuration(threadsNs));
+}
+
+ProfilerBufferInfo ProfileBuffer::GetProfilerBufferInfo() const {
+  return {mRangeStart,  mRangeEnd,    mEntryIndexMask.MaskValue() + 1,
+          mIntervalsNs, mOverheadsNs, mLockingsNs,
+          mCleaningsNs, mCountersNs,  mThreadsNs};
+}
+
 /* ProfileBufferCollector */
 
 void ProfileBufferCollector::CollectNativeLeafAddr(void* aAddr) {
