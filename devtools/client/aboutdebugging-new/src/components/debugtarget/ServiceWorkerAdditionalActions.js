@@ -24,6 +24,36 @@ const Types = require("../../types/index");
 const { SERVICE_WORKER_STATUSES } = require("../../constants");
 
 /**
+ * The main purpose of this component is to expose a meaningful prop
+ * disabledTitle that can be used with fluent localization.
+ */
+class _ActionButton extends PureComponent {
+  static get propTypes() {
+    return {
+      children: PropTypes.node,
+      className: PropTypes.string.isRequired,
+      disabled: PropTypes.bool.isRequired,
+      disabledTitle: PropTypes.string,
+      onClick: PropTypes.func.isRequired,
+    };
+  }
+
+  render() {
+    const { className, disabled, disabledTitle, onClick } = this.props;
+    return dom.button(
+      {
+        className,
+        disabled,
+        onClick: e => onClick(),
+        title: disabled && disabledTitle ? disabledTitle : undefined,
+      },
+      this.props.children
+    );
+  }
+}
+const ActionButtonFactory = createFactory(_ActionButton);
+
+/**
  * This component displays buttons for service worker.
  */
 class ServiceWorkerAdditionalActions extends PureComponent {
@@ -57,9 +87,12 @@ class ServiceWorkerAdditionalActions extends PureComponent {
     return Localized(
       {
         id: labelId,
+        attrs: {
+          disabledTitle: !!disabled,
+        },
         key,
       },
-      dom.button(
+      ActionButtonFactory(
         {
           className,
           disabled,
@@ -75,7 +108,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
       className: "default-button default-button--micro qa-push-button",
       disabled: !this.props.runtimeDetails.canDebugServiceWorkers,
       key: "service-worker-push-button",
-      labelId: "about-debugging-worker-action-push",
+      labelId: "about-debugging-worker-action-push2",
       onClick: this.push.bind(this),
     });
   }
@@ -85,7 +118,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
       className: "default-button default-button--micro qa-start-button",
       disabled: !this.props.runtimeDetails.canDebugServiceWorkers,
       key: "service-worker-start-button",
-      labelId: "about-debugging-worker-action-start",
+      labelId: "about-debugging-worker-action-start2",
       onClick: this.start.bind(this),
     });
   }
