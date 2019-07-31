@@ -920,6 +920,14 @@ description#identity-popup-content-verifier,
 
 #protections-popup-trackers-blocked-counter-box {
   margin-inline-end: calc(4px + 1em);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+
+#protections-popup-trackers-blocked-counter-box[showing] {
+  visibility: visible;
+  opacity: 1;
 }
 
 #protections-popup-trackers-blocked-counter-description {
