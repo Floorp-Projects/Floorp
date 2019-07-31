@@ -2158,8 +2158,8 @@ exports.ChromeDebuggerActor = ChromeDebuggerActor;
  */
 var oldReportError = reportError;
 this.reportError = function(error, prefix = "") {
-  assert(error instanceof Error, "Must pass Error objects to reportError");
-  const msg = prefix + error.message + ":\n" + error.stack;
+  const message = error.message ? error.message : String(error);
+  const msg = prefix + message + ":\n" + error.stack;
   oldReportError(msg);
   dumpn(msg);
 };
