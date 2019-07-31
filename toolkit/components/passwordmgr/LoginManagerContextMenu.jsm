@@ -36,14 +36,14 @@ this.LoginManagerContextMenu = {
    *        An identifier generated for the input element via ContentDOMReference.
    * @param {xul:browser} browser
    *        The browser for the document the context menu was open on.
-   * @param {nsIURI} documentURI
-   *        The URI of the document that the context menu was activated from.
-   *        This isn't the same as the browser's top-level document URI
+   * @param {string} formOrigin
+   *        The origin of the document that the context menu was activated from.
+   *        This isn't the same as the browser's top-level document origin
    *        when subframes are involved.
    * @returns {DocumentFragment} a document fragment with all the login items.
    */
-  addLoginsToMenu(inputElementIdentifier, browser, documentURI) {
-    let foundLogins = this._findLogins(documentURI);
+  addLoginsToMenu(inputElementIdentifier, browser, formOrigin) {
+    let foundLogins = this._findLogins(formOrigin);
 
     if (!foundLogins.length) {
       return null;
@@ -77,7 +77,7 @@ this.LoginManagerContextMenu = {
             login,
             inputElementIdentifier,
             browser,
-            documentURI
+            formOrigin
           );
         }.bind(this, login)
       );
@@ -130,18 +130,18 @@ this.LoginManagerContextMenu = {
   },
 
   /**
-   * Find logins for the current URI.
+   * Find logins for the specified origin..
    *
-   * @param {nsIURI} documentURI
-   *        URI object with the origin of the logins we want to find.
+   * @param {string} formOrigin
+   *        Origin of the logins we want to find that has be sanitized by `getLoginOrigin`.
    *        This isn't the same as the browser's top-level document URI
    *        when subframes are involved.
    *
    * @returns {nsILoginInfo[]} a login list
    */
-  _findLogins(documentURI) {
+  _findLogins(formOrigin) {
     let searchParams = {
-      origin: documentURI.displayPrePath,
+      origin: formOrigin,
       schemeUpgrades: LoginHelper.schemeUpgrades,
     };
     let logins = LoginHelper.searchLoginsWithObject(searchParams);
@@ -150,7 +150,7 @@ this.LoginManagerContextMenu = {
       logins,
       ["username", "password"],
       resolveBy,
-      documentURI.displayPrePath
+      formOrigin
     );
 
     // Sort logins in alphabetical order and by date.
@@ -204,16 +204,17 @@ this.LoginManagerContextMenu = {
    *        An identifier generated for the input element via ContentDOMReference.
    * @param {xul:browser} browser
    *        The target tab browser.
-   * @param {nsIURI} documentURI
-   *        URI of the document owning the form we want to fill.
+   * @param {string} formOrigin
+   *        Origin of the document we're filling after sanitization via
+   *        `getLoginOrigin`.
    *        This isn't the same as the browser's top-level
-   *        document URI when subframes are involved.
+   *        origin when subframes are involved.
    */
-  _fillTargetField(login, inputElementIdentifier, browser, documentURI) {
+  _fillTargetField(login, inputElementIdentifier, browser, formOrigin) {
     LoginManagerParent.fillForm({
       browser,
       inputElementIdentifier,
-      loginFormOrigin: documentURI.displayPrePath,
+      loginFormOrigin: formOrigin,
       login,
     }).catch(Cu.reportError);
   },
