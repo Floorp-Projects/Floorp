@@ -166,9 +166,9 @@ class UrlbarResult {
    * @returns {array} An array [payload, payloadHighlights].
    */
   static payloadAndSimpleHighlights(tokens, payloadInfo) {
-    // Convert string values in payloadInfo to [value, false] arrays.
+    // Convert scalar values in payloadInfo to [value, false] arrays.
     for (let [name, info] of Object.entries(payloadInfo)) {
-      if (typeof info == "string") {
+      if (!Array.isArray(info)) {
         payloadInfo[name] = [info, false];
       }
     }
