@@ -13,12 +13,20 @@ add_task(async function() {
   info("Focus after console is opened");
   ok(isInputFocused(hud), "input node is focused after console is opened");
 
+  await ContentTask.spawn(gBrowser.selectedBrowser, {}, function() {
+    this.onFocus = new Promise(resolve => {
+      content.addEventListener("focus", resolve, { once: true });
+    });
+  });
+
   info("Closing console");
   await closeConsole();
+
   const isFocused = await ContentTask.spawn(
     gBrowser.selectedBrowser,
     {},
-    function() {
+    async function() {
+      await this.onFocus;
       return Services.focus.focusedWindow == content;
     }
   );
