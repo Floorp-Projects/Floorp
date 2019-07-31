@@ -14,6 +14,8 @@ import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.media.state.MockMedia
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
@@ -24,6 +26,12 @@ import org.robolectric.Robolectric
 
 @RunWith(AndroidJUnit4::class)
 class MediaServiceTest {
+    @Before
+    @After
+    fun setUp() {
+        MediaStateMachine.stop()
+    }
+
     @Test
     fun `Playing state starts service in foreground`() {
         val media = MockMedia(Media.PlaybackState.UNKNOWN)
@@ -32,10 +40,9 @@ class MediaServiceTest {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
         }
 
-        val stateMachine = MediaStateMachine(sessionManager)
-        stateMachine.start()
+        MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(mock(), stateMachine)
+        val feature = MediaNotificationFeature(mock())
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
@@ -57,10 +64,9 @@ class MediaServiceTest {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
         }
 
-        val stateMachine = MediaStateMachine(sessionManager)
-        stateMachine.start()
+        MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(mock(), stateMachine)
+        val feature = MediaNotificationFeature(mock())
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING

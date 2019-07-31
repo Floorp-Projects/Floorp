@@ -11,9 +11,9 @@ import android.support.v4.media.session.MediaSessionCompat
 import mozilla.components.feature.media.ext.toPlaybackState
 import mozilla.components.feature.media.focus.AudioFocus
 import mozilla.components.feature.media.notification.MediaNotification
-import mozilla.components.feature.media.notification.MediaNotificationFeature
 import mozilla.components.feature.media.session.MediaSessionCallback
 import mozilla.components.feature.media.state.MediaState
+import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.support.base.ids.NotificationIds
 import mozilla.components.support.base.log.logger.Logger
 
@@ -50,9 +50,7 @@ internal class MediaService : Service() {
     }
 
     private fun processCurrentState() {
-        // The current state is currently hold by the notification feature. We should either turn
-        // this into a generic media feature of keep the state somewhere else.
-        val state = MediaNotificationFeature.getState()
+        val state = MediaStateMachine.state
         if (state == MediaState.None) {
             shutdown()
             return
@@ -62,14 +60,12 @@ internal class MediaService : Service() {
             audioFocus.request(state)
         }
 
-        updateMediaSession()
+        updateMediaSession(state)
         updateNotification(state)
     }
 
-    private fun updateMediaSession() {
-        mediaSession.setPlaybackState(MediaNotificationFeature
-            .getState()
-            .toPlaybackState())
+    private fun updateMediaSession(state: MediaState) {
+        mediaSession.setPlaybackState(state.toPlaybackState())
         mediaSession.isActive = true
     }
 

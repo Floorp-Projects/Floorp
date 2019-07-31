@@ -9,7 +9,6 @@ import android.content.Intent
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
-import java.lang.ref.WeakReference
 
 /**
  * Feature for displaying an ongoing notification (keeping the app process alive) while web content is playing media.
@@ -17,8 +16,7 @@ import java.lang.ref.WeakReference
  * This feature should get initialized globally once on app start.
  */
 class MediaNotificationFeature(
-    private val context: Context,
-    private val stateMachine: MediaStateMachine
+    private val context: Context
 ) {
     private var serviceRunning = false
 
@@ -26,12 +24,10 @@ class MediaNotificationFeature(
      * Enables the feature.
      */
     fun enable() {
-        stateMachine.register(MediaObserver(this))
+        MediaStateMachine.register(MediaObserver(this))
     }
 
-    internal fun startMediaService(state: MediaState) {
-        lastState = WeakReference(state)
-
+    internal fun startMediaService() {
         context.startService(Intent(context, MediaService::class.java))
 
         serviceRunning = true
@@ -39,17 +35,7 @@ class MediaNotificationFeature(
 
     internal fun stopMediaService() {
         if (serviceRunning) {
-            lastState.clear()
-
             context.stopService(Intent(context, MediaService::class.java))
-        }
-    }
-
-    companion object {
-        private var lastState = WeakReference<MediaState>(null)
-
-        internal fun getState(): MediaState {
-            return lastState.get() ?: MediaState.None
         }
     }
 }
@@ -59,7 +45,7 @@ internal class MediaObserver(
 ) : MediaStateMachine.Observer {
     override fun onStateChanged(state: MediaState) {
         if (state is MediaState.Playing || state is MediaState.Paused) {
-            feature.startMediaService(state)
+            feature.startMediaService()
         } else if (state is MediaState.None) {
             feature.stopMediaService()
         }

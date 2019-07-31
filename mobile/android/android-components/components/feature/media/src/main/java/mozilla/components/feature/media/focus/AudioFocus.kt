@@ -13,8 +13,8 @@ import mozilla.components.feature.media.ext.getMedia
 import mozilla.components.feature.media.ext.pause
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
-import mozilla.components.feature.media.notification.MediaNotificationFeature
 import mozilla.components.feature.media.state.MediaState
+import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -28,10 +28,6 @@ internal class AudioFocus(
     private val logger = Logger("AudioFocus")
     private var playDelayed = false
     private var resumeOnFocusGain = false
-
-    internal var getState: () -> MediaState = {
-        MediaNotificationFeature.getState()
-    }
 
     @Synchronized
     fun request(state: MediaState) {
@@ -65,7 +61,7 @@ internal class AudioFocus(
     @Synchronized
     @Suppress("LongMethod")
     override fun onAudioFocusChange(focusChange: Int) {
-        val state = getState()
+        val state = MediaStateMachine.state
 
         when (focusChange) {
             AudioManager.AUDIOFOCUS_GAIN -> {

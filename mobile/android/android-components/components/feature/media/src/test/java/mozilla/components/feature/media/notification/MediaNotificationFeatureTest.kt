@@ -12,21 +12,28 @@ import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.media.state.MockMedia
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 
 class MediaNotificationFeatureTest {
+    @Before
+    @After
+    fun setUp() {
+        MediaStateMachine.stop()
+    }
+
     @Test
     fun `Media playing in Session starts service`() {
         val context: Context = mock()
         val sessionManager = SessionManager(engine = mock())
 
-        val stateMachine = MediaStateMachine(sessionManager)
-        stateMachine.start()
+        MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context, stateMachine)
+        val feature = MediaNotificationFeature(context)
         feature.enable()
 
         // A session gets added
@@ -57,10 +64,9 @@ class MediaNotificationFeatureTest {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
         }
 
-        val stateMachine = MediaStateMachine(sessionManager)
-        stateMachine.start()
+        MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context, stateMachine)
+        val feature = MediaNotificationFeature(context)
         feature.enable()
 
         reset(context)
@@ -80,10 +86,9 @@ class MediaNotificationFeatureTest {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
         }
 
-        val stateMachine = MediaStateMachine(sessionManager)
-        stateMachine.start()
+        MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context, stateMachine)
+        val feature = MediaNotificationFeature(context)
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING

@@ -4,6 +4,8 @@
 
 package mozilla.components.feature.media.state
 
+import androidx.annotation.VisibleForTesting
+import androidx.annotation.VisibleForTesting.PRIVATE
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.utils.AllSessionsObserver
@@ -18,22 +20,25 @@ import mozilla.components.support.base.observer.ObserverRegistry
  *
  * Other components can subscribe to the state machine to get notified about [MediaState] changes.
  */
-class MediaStateMachine(
-    sessionManager: SessionManager,
-    delegate: Observable<Observer> = ObserverRegistry()
-) : Observable<MediaStateMachine.Observer> by delegate {
+object MediaStateMachine : Observable<MediaStateMachine.Observer> by ObserverRegistry() {
     private val logger = Logger("MediaStateMachine")
-    private val observer = AllSessionsObserver(sessionManager,
-        MediaSessionObserver(this)
-    )
-    private var state: MediaState =
-        MediaState.None
+    private var observer: AllSessionsObserver? = null
+
+    /**
+     * The current [MediaState].
+     */
+    var state: MediaState = MediaState.None
+        @VisibleForTesting(otherwise = PRIVATE)
+        internal set
 
     /**
      * Start observing [Session] and their [Media] and create an aggregated [MediaState] that can be observed.
      */
-    fun start() {
-        observer.start()
+    fun start(sessionManager: SessionManager) {
+        observer = AllSessionsObserver(
+            sessionManager,
+            MediaSessionObserver(this)
+        ).also { it.start() }
     }
 
     /**
@@ -42,13 +47,9 @@ class MediaStateMachine(
      * The [MediaState] will be reset to [MediaState.None]
      */
     fun stop() {
-        observer.stop()
+        observer?.stop()
+        state = MediaState.None
     }
-
-    /**
-     * Get the current [MediaState].
-     */
-    fun getState() = state
 
     @Synchronized
     internal fun transitionTo(state: MediaState) {
@@ -124,7 +125,7 @@ private class MediaSessionObserver(
 
     @Suppress("ReturnCount")
     private fun determineNewState(): MediaState {
-        val currentState = stateMachine.getState()
+        val currentState = stateMachine.state
 
         // If we are in "playing" state and there's still media playing for this session then stay in this state and
         // just update the list of media.

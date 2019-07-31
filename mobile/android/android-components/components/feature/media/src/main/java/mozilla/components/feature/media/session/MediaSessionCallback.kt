@@ -5,10 +5,9 @@
 package mozilla.components.feature.media.session
 
 import android.support.v4.media.session.MediaSessionCompat
-import mozilla.components.feature.media.ext.getMedia
-import mozilla.components.feature.media.ext.pause
-import mozilla.components.feature.media.ext.play
-import mozilla.components.feature.media.notification.MediaNotificationFeature
+import mozilla.components.feature.media.ext.pauseIfPlaying
+import mozilla.components.feature.media.ext.playIfPaused
+import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.support.base.log.logger.Logger
 
 internal class MediaSessionCallback : MediaSessionCompat.Callback() {
@@ -17,18 +16,16 @@ internal class MediaSessionCallback : MediaSessionCompat.Callback() {
     override fun onPlay() {
         logger.debug("play()")
 
-        MediaNotificationFeature
-            .getState()
-            .getMedia()
-            .play()
+        MediaStateMachine
+            .state
+            .playIfPaused()
     }
 
     override fun onPause() {
         logger.debug("pause()")
 
-        MediaNotificationFeature
-            .getState()
-            .getMedia()
-            .pause()
+        MediaStateMachine
+            .state
+            .pauseIfPlaying()
     }
 }

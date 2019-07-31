@@ -90,12 +90,11 @@ open class DefaultComponents(private val applicationContext: Context) {
 
             RecordingDevicesNotificationFeature(applicationContext, sessionManager = this)
                 .enable()
-            val stateMachine = MediaStateMachine(sessionManager = this)
 
-            MediaNotificationFeature(applicationContext, stateMachine)
+            MediaNotificationFeature(applicationContext)
                 .enable()
 
-            stateMachine.start()
+            MediaStateMachine.start(this)
         }
     }
 
