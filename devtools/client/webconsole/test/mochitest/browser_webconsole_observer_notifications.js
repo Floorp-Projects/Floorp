@@ -19,6 +19,8 @@ add_task(async function() {
 
   await closeTabAndToolbox(gBrowser.selectedTab);
   await waitFor(() => destroyed);
+
+  ok("We received both created and destroyed events");
 });
 
 function setupObserver() {
