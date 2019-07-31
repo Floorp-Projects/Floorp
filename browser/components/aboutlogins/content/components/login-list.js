@@ -88,6 +88,16 @@ export default class LoginList extends HTMLElement {
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
     this._blankLoginListItem.hidden = this._selectedGuid != null;
+
+    // Re-arrange the login-list-items according to their sort
+    for (let i = this._loginGuidsSortedOrder.length - 1; i >= 0; i--) {
+      let guid = this._loginGuidsSortedOrder[i];
+      let { listItem } = this._logins[guid];
+      this._list.insertBefore(
+        listItem,
+        this._blankLoginListItem.nextElementSibling
+      );
+    }
   }
 
   handleEvent(event) {
