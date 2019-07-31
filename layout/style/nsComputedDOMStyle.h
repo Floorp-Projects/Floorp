@@ -406,7 +406,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   bool mResolvedComputedStyle;
 
 #ifdef DEBUG
-  bool mFlushedPendingReflows;
+  bool mFlushedPendingReflows = false;
 #endif
 
   friend struct ComputedStyleMap;
