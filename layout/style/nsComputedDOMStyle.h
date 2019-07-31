@@ -340,6 +340,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   // Find out if we can safely skip flushing (i.e. pending restyles do not
   // affect our element).
   bool NeedsToFlushStyle() const;
+  nsIFrame* GetOuterFrame() const;
 
   static ComputedStyleMap* GetComputedStyleMap();
 

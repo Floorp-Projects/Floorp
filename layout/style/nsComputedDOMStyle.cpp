@@ -787,6 +787,40 @@ bool nsComputedDOMStyle::NeedsToFlushStyle() const {
   return false;
 }
 
+static nsIFrame* StyleFrame(nsIFrame* aOuterFrame) {
+  MOZ_ASSERT(aOuterFrame);
+  if (!aOuterFrame->IsTableWrapperFrame()) {
+    return aOuterFrame;
+  }
+  // If the frame is a table wrapper frame then we should get the style from the
+  // inner table frame.
+  nsIFrame* inner = aOuterFrame->PrincipalChildList().FirstChild();
+  NS_ASSERTION(inner, "table wrapper must have an inner");
+  NS_ASSERTION(!inner->GetNextSibling(),
+               "table wrapper frames should have just one child, the inner "
+               "table");
+  return inner;
+}
+
+nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
+  if (!mPseudo) {
+    return mElement->GetPrimaryFrame();
+  }
+  nsAtom* property = nullptr;
+  if (mPseudo == nsCSSPseudoElements::before()) {
+    property = nsGkAtoms::beforePseudoProperty;
+  } else if (mPseudo == nsCSSPseudoElements::after()) {
+    property = nsGkAtoms::afterPseudoProperty;
+  } else if (mPseudo == nsCSSPseudoElements::marker()) {
+    property = nsGkAtoms::markerPseudoProperty;
+  }
+  if (!property) {
+    return nullptr;
+  }
+  auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
+  return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
+}
+
 void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
   if (!document) {
@@ -862,38 +896,10 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   // check is needed due to bug 135040 (to avoid using
   // mPrimaryFrame). Remove it once that's fixed.
   if (mStyleType == eAll && !mElement->IsHTMLElement(nsGkAtoms::area)) {
-    mOuterFrame = nullptr;
-
-    if (!mPseudo) {
-      mOuterFrame = mElement->GetPrimaryFrame();
-    } else {
-      nsAtom* property = nullptr;
-      if (mPseudo == nsCSSPseudoElements::before()) {
-        property = nsGkAtoms::beforePseudoProperty;
-      } else if (mPseudo == nsCSSPseudoElements::after()) {
-        property = nsGkAtoms::afterPseudoProperty;
-      } else if (mPseudo == nsCSSPseudoElements::marker()) {
-        property = nsGkAtoms::markerPseudoProperty;
-      }
-      if (property) {
-        auto* pseudo = static_cast<Element*>(mElement->GetProperty(property));
-        mOuterFrame = pseudo ? pseudo->GetPrimaryFrame() : nullptr;
-      }
-    }
-
+    mOuterFrame = GetOuterFrame();
     mInnerFrame = mOuterFrame;
     if (mOuterFrame) {
-      LayoutFrameType type = mOuterFrame->Type();
-      if (type == LayoutFrameType::TableWrapper) {
-        // If the frame is a table wrapper frame then we should get the style
-        // from the inner table frame.
-        mInnerFrame = mOuterFrame->PrincipalChildList().FirstChild();
-        NS_ASSERTION(mInnerFrame, "table wrapper must have an inner");
-        NS_ASSERTION(!mInnerFrame->GetNextSibling(),
-                     "table wrapper frames should have just one child, "
-                     "the inner table");
-      }
-
+      mInnerFrame = StyleFrame(mOuterFrame);
       SetFrameComputedStyle(mInnerFrame->Style(), currentGeneration);
       NS_ASSERTION(mComputedStyle, "Frame without style?");
     }
