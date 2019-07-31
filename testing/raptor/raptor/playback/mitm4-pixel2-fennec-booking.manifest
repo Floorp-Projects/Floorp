@@ -1,0 +1,10 @@
+[
+  {
+    "size": 2555939,
+    "visibility": "public",
+    "digest": "3edd6c0177ef6b57ec7a77390652baf5131b6abba14ff74ed2cb80a87a6e847ab9bd9905b020dd70f1b5ed73d5af5b6965d064164bfaa3ac0ca54fa28b87397e",
+    "algorithm": "sha512",
+    "filename": "mitm4-pixel2-fennec-booking.zip",
+    "unpack": true
+  }
+]

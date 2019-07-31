@@ -1,9 +1,0 @@
-[
-    {
-        "filename": "raptor-tp6-5.zip",
-        "size": 27670268,
-        "digest": "4a52cb6770062231f9f283ab42ac53634d91677146b4d91931f508de22bff262512775d0c93d80730287000907e438d467136768883691c3e20c1e6a8f475a03",
-        "algorithm": "sha512",
-        "unpack": true
-    }
-]
