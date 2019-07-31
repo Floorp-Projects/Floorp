@@ -140,7 +140,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   nsMargin GetAdjustedValuesForBoxSizing();
 
   // This indicates error by leaving mComputedStyle null.
-  void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
+  void UpdateCurrentStyleSources(nsCSSPropertyID);
   void ClearCurrentStyleSources();
 
   // Helper functions called by UpdateCurrentStyleSources.
@@ -340,6 +340,12 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   // Find out if we can safely skip flushing (i.e. pending restyles do not
   // affect our element).
   bool NeedsToFlushStyle() const;
+  // Find out if we need to flush layout of the document, depending on the
+  // property that was requested.
+  bool NeedsToFlushLayout(nsCSSPropertyID) const;
+  // Flushes the given document, which must be our document, and potentially the
+  // mElement's document.
+  void Flush(Document&, mozilla::FlushType);
   nsIFrame* GetOuterFrame() const;
 
   static ComputedStyleMap* GetComputedStyleMap();

@@ -187,11 +187,6 @@ struct ComputedStyleMap {
     nsCSSPropertyID mProperty;
     ComputeMethod mGetter;
 
-    bool IsLayoutFlushNeeded() const {
-      return nsCSSProps::PropHasFlags(mProperty,
-                                      CSSPropFlags::GetCSNeedsLayoutFlush);
-    }
-
     bool IsEnabled() const {
       return nsCSSProps::IsEnabled(mProperty, CSSEnabledState::ForAllContent);
     }
@@ -387,7 +382,7 @@ void nsComputedDOMStyle::SetCssText(const nsAString& aCssText,
 uint32_t nsComputedDOMStyle::Length() {
   // Make sure we have up to date style so that we can include custom
   // properties.
-  UpdateCurrentStyleSources(false);
+  UpdateCurrentStyleSources(eCSSPropertyExtra_variable);
   if (!mComputedStyle) {
     return 0;
   }
@@ -417,8 +412,7 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     }
   }
 
-  const bool layoutFlushIsNeeded = entry && entry->IsLayoutFlushNeeded();
-  UpdateCurrentStyleSources(layoutFlushIsNeeded);
+  UpdateCurrentStyleSources(prop);
   if (!mComputedStyle) {
     return NS_OK;
   }
@@ -437,10 +431,12 @@ nsComputedDOMStyle::GetPropertyValue(const nsAString& aPropertyName,
     MOZ_ASSERT(entry);
     MOZ_ASSERT(entry->mGetter == &nsComputedDOMStyle::DummyGetter);
 
+    DebugOnly<nsCSSPropertyID> logicalProp = prop;
+
     prop = Servo_ResolveLogicalProperty(prop, mComputedStyle);
     entry = GetComputedStyleMap()->FindEntryForProperty(prop);
 
-    MOZ_ASSERT(layoutFlushIsNeeded == entry->IsLayoutFlushNeeded(),
+    MOZ_ASSERT(NeedsToFlushLayout(logicalProp) == NeedsToFlushLayout(prop),
                "Logical and physical property don't agree on whether layout is "
                "needed");
   }
@@ -706,7 +702,7 @@ void nsComputedDOMStyle::GetCSSImageURLs(const nsAString& aPropertyName,
     return;
   }
 
-  UpdateCurrentStyleSources(false);
+  UpdateCurrentStyleSources(prop);
 
   if (!mComputedStyle) {
     return;
@@ -802,6 +798,30 @@ static nsIFrame* StyleFrame(nsIFrame* aOuterFrame) {
   return inner;
 }
 
+bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
+  MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN);
+  // TODO: Based on the frame's StyleFrame() and it's style, avoid the flush in
+  // more cases.
+  return aPropID != eCSSPropertyExtra_variable &&
+         nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::GetCSNeedsLayoutFlush);
+}
+
+void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
+  MOZ_ASSERT(mElement->IsInComposedDoc());
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
+    MOZ_ASSERT(document == &aDocument);
+  }
+#endif
+
+  aDocument.FlushPendingNotifications(aFlushType);
+  if (MOZ_UNLIKELY(&aDocument != mElement->OwnerDoc())) {
+    mElement->OwnerDoc()->FlushPendingNotifications(aFlushType);
+  }
+}
+
 nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
   if (!mPseudo) {
     return mElement->GetPrimaryFrame();
@@ -821,7 +841,7 @@ nsIFrame* nsComputedDOMStyle::GetOuterFrame() const {
   return pseudo ? pseudo->GetPrimaryFrame() : nullptr;
 }
 
-void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
+void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
   nsCOMPtr<Document> document = do_QueryReferent(mDocumentWeak);
   if (!document) {
     ClearComputedStyle();
@@ -830,39 +850,32 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
 
   // We don't return styles for disconnected elements anymore, so don't go
   // through the trouble of flushing or what not.
+  //
+  // TODO(emilio): We may want to return earlier for elements outside of the
+  // flat tree too: https://github.com/w3c/csswg-drafts/issues/1964
   if (!mElement->IsInComposedDoc()) {
     ClearComputedStyle();
     return;
   }
 
-  // TODO(emilio): We may want to handle a few special-cases here:
-  //
-  //  * https://github.com/w3c/csswg-drafts/issues/1964
-  //  * https://github.com/w3c/csswg-drafts/issues/1548
-
-  // If the property we are computing relies on layout, then we must flush.
-  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlushStyle();
-  if (needsToFlush) {
-    // Flush _before_ getting the presshell, since that could create a new
-    // presshell.  Also note that we want to flush the style on the document
-    // we're computing style in, not on the document mElement is in -- the two
-    // may be different.
-    document->FlushPendingNotifications(aNeedsLayoutFlush ? FlushType::Layout
-                                                          : FlushType::Style);
+  bool didFlush = false;
+  if (NeedsToFlushStyle()) {
+    didFlush = true;
+    // We look at the frame in NeedsToFlushLayout, so flush frames, not only
+    // styles.
+    Flush(*document, FlushType::Frames);
   }
 
+  if (NeedsToFlushLayout(aPropID)) {
+    didFlush = true;
+    Flush(*document, FlushType::Layout);
 #ifdef DEBUG
-  mFlushedPendingReflows = aNeedsLayoutFlush;
+    mFlushedPendingReflows = true;
 #endif
-
-  RefPtr<PresShell> presShellForContent =
-      nsContentUtils::GetPresShellForContent(mElement);
-  if (presShellForContent && presShellForContent->GetDocument() != document) {
-    presShellForContent->GetDocument()->FlushPendingNotifications(
-        FlushType::Style);
-    if (presShellForContent->IsDestroying()) {
-      presShellForContent = nullptr;
-    }
+  } else {
+#ifdef DEBUG
+    mFlushedPendingReflows = false;
+#endif
   }
 
   mPresShell = document->GetPresShell();
@@ -883,21 +896,14 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   uint64_t currentGeneration =
       mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration();
 
-  if (mComputedStyle) {
-    // We can't rely on the undisplayed restyle generation if mElement is
-    // out-of-document, since that generation is not incremented for DOM changes
-    // on out-of-document elements.
-    //
-    // So we always need to update the style to ensure it it up-to-date.
-    if (mComputedStyleGeneration == currentGeneration &&
-        mPresShellId == mPresShell->GetPresShellId() &&
-        mElement->IsInComposedDoc()) {
-      // Our cached style is still valid.
-      return;
-    }
-    // We've processed some restyles, so the cached style might be out of date.
-    mComputedStyle = nullptr;
+  if (mComputedStyle &&
+      mComputedStyleGeneration == currentGeneration &&
+      mPresShellId == mPresShell->GetPresShellId()) {
+    // Our cached style is still valid.
+    return;
   }
+
+  mComputedStyle = nullptr;
 
   // XXX the !mElement->IsHTMLElement(nsGkAtoms::area)
   // check is needed due to bug 135040 (to avoid using
@@ -913,10 +919,11 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   }
 
   if (!mComputedStyle || MustReresolveStyle(mComputedStyle)) {
+    PresShell* presShellForContent = mElement->OwnerDoc()->GetPresShell();
     // Need to resolve a style.
     RefPtr<ComputedStyle> resolvedComputedStyle = DoGetComputedStyleNoFlush(
         mElement, mPseudo,
-        presShellForContent ? presShellForContent.get() : mPresShell,
+        presShellForContent ? presShellForContent : mPresShell,
         mStyleType);
     if (!resolvedComputedStyle) {
       ClearComputedStyle();
@@ -927,7 +934,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
     // will flush, since we flushed style at the top of this function.
     // We don't need to check this if we only flushed the parent.
     NS_ASSERTION(
-        !needsToFlush ||
+        !didFlush ||
             currentGeneration ==
                 mPresShell->GetPresContext()->GetUndisplayedRestyleGeneration(),
         "why should we have flushed style again?");
@@ -997,7 +1004,7 @@ void nsComputedDOMStyle::IndexedGetter(uint32_t aIndex, bool& aFound,
 
   // Custom properties are exposed with indexed properties just after all
   // of the built-in properties.
-  UpdateCurrentStyleSources(false);
+  UpdateCurrentStyleSources(eCSSPropertyExtra_variable);
   if (!mComputedStyle) {
     aFound = false;
     return;
