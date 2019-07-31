@@ -192,6 +192,9 @@ class SearchOneOffs {
    */
   set view(val) {
     this._view = val;
+    if (val && val.isOpen) {
+      this._rebuild();
+    }
     return val;
   }
 
