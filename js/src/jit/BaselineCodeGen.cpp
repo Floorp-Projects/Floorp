@@ -4460,8 +4460,9 @@ bool BaselineInterpreterCodeGen::emit_JSOP_NEWTARGET() {
 
   Label notArrow;
   masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
-  masm.branchFunctionKind(Assembler::NotEqual, JSFunction::FunctionKind::Arrow,
-                          scratch1, scratch2, &notArrow);
+  masm.branchFunctionKind(Assembler::NotEqual,
+                          FunctionFlags::FunctionKind::Arrow, scratch1,
+                          scratch2, &notArrow);
   {
     // Case 2: arrow function.
     masm.pushValue(
@@ -5741,7 +5742,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SUPERFUN() {
 
   // Use VMCall if not constructor
   masm.load16ZeroExtend(Address(proto, JSFunction::offsetOfFlags()), scratch);
-  masm.branchTest32(Assembler::Zero, scratch, Imm32(JSFunction::CONSTRUCTOR),
+  masm.branchTest32(Assembler::Zero, scratch, Imm32(FunctionFlags::CONSTRUCTOR),
                     &needVMCall);
 
   // Valid constructor

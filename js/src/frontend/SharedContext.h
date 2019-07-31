@@ -397,7 +397,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool isInterpreted_ : 1;
   bool isInterpretedLazy_ : 1;
 
-  JSFunction::FunctionKind kind_;
+  FunctionFlags::FunctionKind kind_;
   JSAtom* explicitName_;
 
   uint16_t nargs_;
@@ -545,7 +545,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
     setIsInterpretedLazy(function()->isInterpretedLazy());
   }
 
-  JSFunction::FunctionKind kind() { return kind_; }
+  FunctionFlags::FunctionKind kind() { return kind_; }
 
   JSAtom* explicitName() const { return explicitName_; }
 
