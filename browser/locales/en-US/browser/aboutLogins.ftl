@@ -9,6 +9,12 @@ login-filter =
 
 create-login-button = Create New Login
 
+# This string is used as alternative text for favicon images.
+# Variables:
+#   $title (String) - The title of the website associated with the favicon.
+login-favicon =
+  .alt = Favicon for { $title }
+
 fxaccounts-sign-in-text = Get your passwords on your other devices
 fxaccounts-sign-in-button = Sign in to { -sync-brand-short-name }
 

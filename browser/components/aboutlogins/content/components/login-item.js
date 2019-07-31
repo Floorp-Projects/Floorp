@@ -54,6 +54,7 @@ export default class LoginItem extends HTMLElement {
     this._saveChangesButton = this.shadowRoot.querySelector(
       ".save-changes-button"
     );
+    this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -74,6 +75,7 @@ export default class LoginItem extends HTMLElement {
     this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
+    window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
   }
 
@@ -96,6 +98,17 @@ export default class LoginItem extends HTMLElement {
     document.l10n.setAttributes(this._timeUsed, "login-item-time-used", {
       timeUsed: this._login.timeLastUsed || "",
     });
+
+    if (this._login.faviconDataURI) {
+      this._favicon.src = this._login.faviconDataURI;
+      document.l10n.setAttributes(this._favicon, "login-favicon", {
+        title: this._login.title,
+      });
+    } else {
+      // reset the src and alt attributes if the currently selected favicon doesn't have a favicon
+      this._favicon.src = "chrome://mozapps/skin/places/defaultFavicon.svg";
+      this._favicon.alt = "";
+    }
 
     this._title.textContent = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
@@ -122,6 +135,10 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "AboutLoginsInitialLoginSelected": {
+        this.setLogin(event.detail, { skipFocusChange: true });
+        break;
+      }
+      case "AboutLoginsLoadInitialFavicon": {
         this.setLogin(event.detail, { skipFocusChange: true });
         break;
       }
