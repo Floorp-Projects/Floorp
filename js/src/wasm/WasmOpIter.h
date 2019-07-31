@@ -764,7 +764,7 @@ inline bool OpIter<Policy>::readBlockType(ExprType* type) {
     case uint8_t(ExprType::FuncRef):
     case uint8_t(ExprType::AnyRef):
 #ifdef ENABLE_WASM_REFTYPES
-      known = true;
+      known = env_.refTypesEnabled();
 #endif
       break;
     case uint8_t(ExprType::Ref):
@@ -1481,7 +1481,8 @@ inline bool OpIter<Policy>::readRefNull() {
 
 template <typename Policy>
 inline bool OpIter<Policy>::readValType(ValType* type) {
-  return d_.readValType(env_.types, env_.gcTypesEnabled(), type);
+  return d_.readValType(env_.types, env_.refTypesEnabled(),
+                        env_.gcTypesEnabled(), type);
 }
 
 template <typename Policy>
