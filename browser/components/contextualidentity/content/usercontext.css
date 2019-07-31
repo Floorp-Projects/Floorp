@@ -119,6 +119,10 @@
   background: linear-gradient(to right, transparent 30%, var(--identity-tab-color) 30%, var(--identity-tab-color) 70%, transparent 70%);
 }
 
+.userContext-icon-inprefs {
+  margin-right: 10px;
+}
+
 .userContext-icon,
 .menuitem-iconic[data-usercontextid] > .menu-iconic-left > .menu-iconic-icon,
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
