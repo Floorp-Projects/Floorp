@@ -1385,17 +1385,18 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
   MOZ_ASSERT(minNurseryBytes >= ArenaSize);
+  const size_t maxNurseryBytes = roundSize(tunables().gcMaxNurseryBytes());
+  MOZ_ASSERT(maxNurseryBytes >= ArenaSize);
 
   // If one of these conditions is true then we always shrink or grow the
   // nursery. This way the thresholds still have an effect even if the goal
   // seeking says the current size is ideal.
   size_t lowLimit = Max(minNurseryBytes, capacity() / 2);
   size_t highLimit =
-      Min((CheckedInt<size_t>(chunkCountLimit()) * ChunkSize).value(),
-          (CheckedInt<size_t>(capacity()) * 2).value());
+      Min(maxNurseryBytes, (CheckedInt<size_t>(capacity()) * 2).value());
   newCapacity = roundSize(mozilla::Clamp(newCapacity, lowLimit, highLimit));
 
-  if (maxChunkCount() < chunkCountLimit() && promotionRate > GrowThreshold &&
+  if (capacity() < maxNurseryBytes && promotionRate > GrowThreshold &&
       newCapacity > capacity()) {
     growAllocableSpace(newCapacity);
   } else if (capacity() >= minNurseryBytes + SubChunkStep &&
@@ -1420,31 +1421,14 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
 #endif
 
   MOZ_ASSERT(tunables().gcMaxNurseryBytes() >= ArenaSize);
-  CheckedInt<unsigned> newMaxNurseryChunksChecked =
-      (JS_ROUND(CheckedInt<size_t>(tunables().gcMaxNurseryBytes()), ChunkSize) /
-       ChunkSize)
-          .toChecked<unsigned>();
-  if (!newMaxNurseryChunksChecked.isValid()) {
-    // The above calculation probably overflowed (I don't think it can
-    // underflow).
-    newMaxNurseryChunksChecked = 1;
-  }
-  unsigned newMaxNurseryChunks = newMaxNurseryChunksChecked.value();
-  if (newMaxNurseryChunks == 0) {
-    // The above code rounded down, but don't round down all the way to zero.
-    newMaxNurseryChunks = 1;
-  }
-  if (newMaxNurseryChunks != chunkCountLimit_) {
-    chunkCountLimit_ = newMaxNurseryChunks;
+  const size_t newMaxNurseryBytes = roundSize(tunables().gcMaxNurseryBytes());
+  MOZ_ASSERT(newMaxNurseryBytes >= ArenaSize);
+
+  if (capacity_ > newMaxNurseryBytes) {
     // The configured maximum nursery size is changing.
-    if (JS_HOWMANY(capacity_, gc::ChunkSize) > newMaxNurseryChunks) {
-      // We need to shrink the nursery.
-      static_assert(NurseryChunkUsableSize < ChunkSize,
-                    "Usable size must be smaller than total size or this "
-                    "calculation might overflow");
-      shrinkAllocableSpace(newMaxNurseryChunks * ChunkSize);
-      return true;
-    }
+    // We need to shrink the nursery.
+    shrinkAllocableSpace(newMaxNurseryBytes);
+    return true;
   }
 
   const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
