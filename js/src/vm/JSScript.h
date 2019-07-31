@@ -3268,14 +3268,13 @@ class LazyScript : public BaseScript {
 
   // Create a LazyScript and initialize closedOverBindings and innerFunctions
   // with the provided vectors.
-  static LazyScript* Create(JSContext* cx, HandleFunction fun,
-                            HandleScriptSourceObject sourceObject,
-                            const frontend::AtomVector& closedOverBindings,
-                            Handle<GCVector<JSFunction*, 8>> innerFunctions,
-                            uint32_t sourceStart, uint32_t sourceEnd,
-                            uint32_t toStringStart, uint32_t toStringEnd,
-                            uint32_t lineno, uint32_t column,
-                            frontend::ParseGoal parseGoal);
+  static LazyScript* Create(
+      JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
+      const frontend::AtomVector& closedOverBindings,
+      Vector<const js::frontend::FunctionBox*, 8>& innerFunctionBoxes,
+      uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+      uint32_t toStringEnd, uint32_t lineno, uint32_t column,
+      frontend::ParseGoal parseGoal);
 
   // Create a LazyScript and initialize the closedOverBindings and the
   // innerFunctions with dummy values to be replaced in a later initialization
