@@ -761,7 +761,8 @@ bool ClassEmitter::prepareForFieldInitializers(size_t numFields) {
   // .initializers is a variable that stores an array of lambdas containing
   // code (the initializer) for each field. Upon an object's construction,
   // these lambdas will be called, defining the values.
-  initializersAssignment_.emplace(bce_, bce_->cx->names().dotInitializers,
+  initializersAssignment_.emplace(bce_,
+                                  bce_->cx->names().dotInitializers.toHandle(),
                                   NameOpEmitter::Kind::Initialize);
   if (!initializersAssignment_->prepareForRhs()) {
     return false;

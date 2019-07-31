@@ -16,15 +16,13 @@
 using namespace js;
 using namespace js::frontend;
 
-NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, JSAtom* name, Kind kind)
-    : bce_(bce),
-      kind_(kind),
-      name_(bce_->cx, name),
-      loc_(bce_->lookupName(name_)) {}
+NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name,
+                             Kind kind)
+    : bce_(bce), kind_(kind), name_(name), loc_(bce_->lookupName(name_)) {}
 
-NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, JSAtom* name,
+NameOpEmitter::NameOpEmitter(BytecodeEmitter* bce, Handle<JSAtom*> name,
                              const NameLocation& loc, Kind kind)
-    : bce_(bce), kind_(kind), name_(bce_->cx, name), loc_(loc) {}
+    : bce_(bce), kind_(kind), name_(name), loc_(loc) {}
 
 bool NameOpEmitter::emitGet() {
   MOZ_ASSERT(state_ == State::Start);
