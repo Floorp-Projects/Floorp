@@ -394,12 +394,10 @@ static constexpr float LowFrequencyEagerAllocTriggerFactor = 0.9f;
  * Don't allow heap growth factors to be set so low that collections could
  * reduce the trigger threshold.
  */
-static constexpr float MinHighFrequencyHeapGrowthFactor =
+static constexpr float MinHeapGrowthFactor =
     1.0f /
-    Min(HighFrequencyEagerAllocTriggerFactor, MinAllocationThresholdFactor);
-static constexpr float MinLowFrequencyHeapGrowthFactor =
-    1.0f /
-    Min(LowFrequencyEagerAllocTriggerFactor, MinAllocationThresholdFactor);
+    Min(HighFrequencyEagerAllocTriggerFactor,
+        Min(LowFrequencyEagerAllocTriggerFactor, MinAllocationThresholdFactor));
 
 /* Increase the IGC marking slice time if we are in highFrequencyGC mode. */
 static constexpr int IGC_MARK_SLICE_MULTIPLIER = 2;
@@ -1520,8 +1518,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: {
       float newGrowth = value / 100.0f;
-      if (newGrowth < MinHighFrequencyHeapGrowthFactor ||
-          newGrowth > MaxHeapGrowthFactor) {
+      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
       setHighFrequencyHeapGrowthMax(newGrowth);
@@ -1529,8 +1526,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: {
       float newGrowth = value / 100.0f;
-      if (newGrowth < MinHighFrequencyHeapGrowthFactor ||
-          newGrowth > MaxHeapGrowthFactor) {
+      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
       setHighFrequencyHeapGrowthMin(newGrowth);
@@ -1538,8 +1534,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
     }
     case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
       float newGrowth = value / 100.0f;
-      if (newGrowth < MinLowFrequencyHeapGrowthFactor ||
-          newGrowth > MaxHeapGrowthFactor) {
+      if (newGrowth < MinHeapGrowthFactor || newGrowth > MaxHeapGrowthFactor) {
         return false;
       }
       setLowFrequencyHeapGrowth(newGrowth);
@@ -1640,7 +1635,7 @@ void GCSchedulingTunables::setHighFrequencyHeapGrowthMin(float value) {
   if (highFrequencyHeapGrowthMin_ > highFrequencyHeapGrowthMax_) {
     highFrequencyHeapGrowthMax_ = highFrequencyHeapGrowthMin_;
   }
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHighFrequencyHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHeapGrowthFactor);
   MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
 }
 
@@ -1649,13 +1644,13 @@ void GCSchedulingTunables::setHighFrequencyHeapGrowthMax(float value) {
   if (highFrequencyHeapGrowthMax_ < highFrequencyHeapGrowthMin_) {
     highFrequencyHeapGrowthMin_ = highFrequencyHeapGrowthMax_;
   }
-  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHighFrequencyHeapGrowthFactor);
+  MOZ_ASSERT(highFrequencyHeapGrowthMin_ >= MinHeapGrowthFactor);
   MOZ_ASSERT(highFrequencyHeapGrowthMin_ <= highFrequencyHeapGrowthMax_);
 }
 
 void GCSchedulingTunables::setLowFrequencyHeapGrowth(float value) {
   lowFrequencyHeapGrowth_ = value;
-  MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinLowFrequencyHeapGrowthFactor);
+  MOZ_ASSERT(lowFrequencyHeapGrowth_ >= MinHeapGrowthFactor);
 }
 
 void GCSchedulingTunables::setMinEmptyChunkCount(uint32_t value) {
