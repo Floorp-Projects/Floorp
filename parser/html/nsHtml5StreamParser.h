@@ -594,6 +594,11 @@ class nsHtml5StreamParser final : public nsICharsetDetectionObserver {
    * Whether the parser is doing a normal parse, view source or plain text.
    */
   eParserMode mMode;
+
+  /**
+   * Whether the parser should not sniff the content type.
+   */
+  bool mSkipContentSniffing;
 };
 
 #endif  // nsHtml5StreamParser_h
