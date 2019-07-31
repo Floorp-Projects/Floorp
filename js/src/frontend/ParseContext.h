@@ -443,8 +443,10 @@ class ParseContext : public Nestable<ParseContext> {
   PooledVectorPtr<AtomVector> closedOverBindingsForLazy_;
 
  public:
-  // All inner functions in this context. Only used when syntax parsing.
-  Rooted<GCVector<JSFunction*, 8>> innerFunctionsForLazy;
+  // All inner FunctionBoxes in this context. Only used when syntax parsing.
+  // The FunctionBoxes are traced as part of the TraceList on the parser,
+  // (see TraceListNode::TraceList)
+  Vector<const FunctionBox*, 8> innerFunctionBoxesForLazy;
 
   // In a function context, points to a Directive struct that can be updated
   // to reflect new directives encountered in the Directive Prologue that

@@ -1690,7 +1690,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // LazyScript. Do a full parse.
   if (pc_->closedOverBindingsForLazy().length() >=
           LazyScript::NumClosedOverBindingsLimit ||
-      pc_->innerFunctionsForLazy.length() >=
+      pc_->innerFunctionBoxesForLazy.length() >=
           LazyScript::NumInnerFunctionsLimit) {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -1701,9 +1701,9 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   RootedFunction fun(cx_, funbox->function());
   LazyScript* lazy = LazyScript::Create(
       cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
-      pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
-      funbox->toStringStart, funbox->toStringEnd, funbox->startLine, funbox->startColumn,
-      parseGoal());
+      pc_->innerFunctionBoxesForLazy, funbox->bufStart, funbox->bufEnd,
+      funbox->toStringStart, funbox->toStringEnd, funbox->startLine,
+      funbox->startColumn, parseGoal());
   if (!lazy) {
     return false;
   }
@@ -2099,10 +2099,10 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
   // the inner function so that if the outer function is eventually parsed
   // we do not need any further parsing or processing of the inner function.
   //
-  // Append the inner function here unconditionally; the vector is only used
+  // Append the inner functionbox here unconditionally; the vector is only used
   // if the Parser using outerpc is a syntax parsing. See
   // GeneralParser<SyntaxParseHandler>::finishFunction.
-  if (!outerpc->innerFunctionsForLazy.append(pc_->functionBox()->function())) {
+  if (!outerpc->innerFunctionBoxesForLazy.append(pc_->functionBox())) {
     return false;
   }
 

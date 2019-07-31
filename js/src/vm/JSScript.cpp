@@ -5341,21 +5341,20 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
 }
 
 /* static */
-LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
-                               HandleScriptSourceObject sourceObject,
-                               const frontend::AtomVector& closedOverBindings,
-                               Handle<GCVector<JSFunction*, 8>> innerFunctions,
-                               uint32_t sourceStart, uint32_t sourceEnd,
-                               uint32_t toStringStart, uint32_t toStringEnd,
-                               uint32_t lineno, uint32_t column,
-                               frontend::ParseGoal parseGoal) {
+LazyScript* LazyScript::Create(
+    JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
+    const frontend::AtomVector& closedOverBindings,
+    Vector<const js::frontend::FunctionBox*, 8>& innerFunctionBoxes,
+    uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+    uint32_t toStringEnd, uint32_t lineno, uint32_t column,
+    frontend::ParseGoal parseGoal) {
   uint32_t immutableFlags = 0;
   if (parseGoal == frontend::ParseGoal::Module) {
     immutableFlags |= uint32_t(ImmutableFlags::IsModule);
   }
 
   LazyScript* res = LazyScript::CreateRaw(
-      cx, closedOverBindings.length(), innerFunctions.length(), fun,
+      cx, closedOverBindings.length(), innerFunctionBoxes.length(), fun,
       sourceObject, immutableFlags, sourceStart, sourceEnd, toStringStart,
       toStringEnd, lineno, column);
   if (!res) {
@@ -5369,7 +5368,7 @@ LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
 
   mozilla::Span<GCPtrFunction> resInnerFunctions = res->innerFunctions();
   for (size_t i = 0; i < res->numInnerFunctions(); i++) {
-    resInnerFunctions[i].init(innerFunctions[i]);
+    resInnerFunctions[i].init(innerFunctionBoxes[i]->function());
     if (resInnerFunctions[i]->isInterpretedLazy()) {
       resInnerFunctions[i]->lazyScript()->setEnclosingLazyScript(res);
     }
