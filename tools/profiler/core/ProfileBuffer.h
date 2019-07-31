@@ -106,6 +106,14 @@ class ProfileBuffer final {
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
+  void CollectOverheadStats(mozilla::TimeDuration aSamplingTime,
+                            mozilla::TimeDuration aLocking,
+                            mozilla::TimeDuration aCleaning,
+                            mozilla::TimeDuration aCounters,
+                            mozilla::TimeDuration aThreads);
+
+  ProfilerBufferInfo GetProfilerBufferInfo() const;
+
  private:
   // The storage that backs our buffer. Holds capacity entries.
   // All accesses to entries in mEntries need to go through GetEntry(), which
@@ -137,6 +145,16 @@ class ProfileBuffer final {
 
   // Markers that marker entries in the buffer might refer to.
   ProfilerMarkerLinkedList mStoredMarkers;
+
+ private:
+  double mFirstSamplingTimeNs = 0.0;
+  double mLastSamplingTimeNs = 0.0;
+  ProfilerStats mIntervalsNs;
+  ProfilerStats mOverheadsNs;
+  ProfilerStats mLockingsNs;
+  ProfilerStats mCleaningsNs;
+  ProfilerStats mCountersNs;
+  ProfilerStats mThreadsNs;
 };
 
 /**
