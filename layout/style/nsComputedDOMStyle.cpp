@@ -308,10 +308,6 @@ nsComputedDOMStyle::nsComputedDOMStyle(dom::Element* aElement,
       mStyleType(aStyleType),
       mExposeVisitedStyle(false),
       mResolvedComputedStyle(false)
-#ifdef DEBUG
-      ,
-      mFlushedPendingReflows(false)
-#endif
 {
   MOZ_ASSERT(aElement);
   MOZ_ASSERT(aDocument);
