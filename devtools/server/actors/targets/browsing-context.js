@@ -1135,6 +1135,9 @@ const browsingContextTargetPrototype = {
         options.serviceWorkersTestingEnabled
       );
     }
+    if (typeof options.restoreFocus == "boolean") {
+      this._restoreFocus = options.restoreFocus;
+    }
 
     // Reload if:
     //  - there's an explicit `performReload` flag and it's true
@@ -1157,6 +1160,9 @@ const browsingContextTargetPrototype = {
     this._setCacheDisabled(false);
     this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
+    if (this._restoreFocus) {
+      this.window.focus();
+    }
   },
 
   /**
