@@ -5,11 +5,11 @@
 
 // Test very basic CDP features.
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
+const TEST_DOC = toDataURL("default-test-page");
 
 add_task(async function testCDP() {
   // Open a test page, to prevent debugging the random default page
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_DOC);
 
   // Start the CDP server
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
@@ -22,7 +22,7 @@ add_task(async function testCDP() {
     target(list) {
       // Ensure debugging the right target, i.e. the one for our test tab.
       return list.find(target => {
-        return target.url == TEST_URI;
+        return target.url == TEST_DOC;
       });
     },
   });
@@ -66,8 +66,7 @@ add_task(async function testCDP() {
   const navigatedWithinDocument = Page.navigatedWithinDocument();
   const loadEventFired = Page.loadEventFired();
   await Page.navigate({
-    url:
-      "data:text/html;charset=utf-8,test-page<script>console.log('foo');</script><script>'</script>",
+    url: toDataURL(`<script>console.log("foo")</script>`),
   });
   ok(true, "A new page has been loaded");
 

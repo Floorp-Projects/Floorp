@@ -5,14 +5,13 @@
 
 // Test the Network.requestWillBeSent event
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 const PAGE_URI =
   "http://example.com/browser/remote/test/browser/doc_network_requestWillBeSent.html";
 const JS_URI =
   "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupTestForUri(toDataURL("default-test-page"));
 
   const { Page, Network } = client;
 
