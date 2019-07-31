@@ -311,6 +311,15 @@ this.FxAccountsWebChannel.prototype = {
             Accounts.getFirefoxAccount()
               .then(account => {
                 if (!account) {
+                  // This is how way we can determine if we're logging-in or signin-up.
+                  // A choice of what to sync is only presented to the user during signup.
+                  // A more robust approach is tracked in https://github.com/mozilla/fxa/issues/1998
+                  if ("offeredSyncEngines" in data) {
+                    data.action = "signup";
+                  } else {
+                    data.action = "signin";
+                  }
+
                   return Accounts.createFirefoxAccountFromJSON(data).then(
                     success => {
                       if (!success) {
@@ -326,6 +335,10 @@ this.FxAccountsWebChannel.prototype = {
                     }
                   );
                 }
+
+                // If we already had an Android Account, which means we're re-connecting to an existing account.
+                data.action = "reconnect";
+
                 return Accounts.updateFirefoxAccountFromJSON(data).then(
                   success => {
                     if (!success) {
@@ -367,6 +380,10 @@ this.FxAccountsWebChannel.prototype = {
                     "Can't change password of non-existent Firefox Account!"
                   );
                 }
+
+                // Make sure to differentiate this action from other actions that send a 'updateFirefoxAccountFromJSON' message.
+                data.action = "passwordChange";
+
                 return Accounts.updateFirefoxAccountFromJSON(data);
               })
               .then(success => {
