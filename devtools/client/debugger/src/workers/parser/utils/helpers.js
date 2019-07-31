@@ -122,14 +122,12 @@ export function getVariables(dec: Node) {
     // e.g. const [{a, b }] = 2
     return dec.id.elements
       .filter(element => element)
-      .map(element => {
-        return {
-          name: t.isAssignmentPattern(element)
-            ? element.left.name
-            : element.name || (element.argument && element.argument.name),
-          location: element.loc,
-        };
-      })
+      .map(element => ({
+        name: t.isAssignmentPattern(element)
+          ? element.left.name
+          : element.name || (element.argument && element.argument.name),
+        location: element.loc,
+      }))
       .filter(({ name }) => name);
   }
 

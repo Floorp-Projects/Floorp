@@ -229,12 +229,11 @@ export class ConditionalPanel extends PureComponent<Props> {
 
 const mapStateToProps = state => {
   const location = getConditionalPanelLocation(state);
-  const log = getLogPointStatus(state);
   return {
     cx: getContext(state),
     breakpoint: getBreakpointForLocation(state, location),
     location,
-    log,
+    log: getLogPointStatus(state),
   };
 };
 

@@ -34,7 +34,7 @@ export class Workers extends Component<Props> {
         onClick={() => openWorkerToolbox(thread)}
       >
         <div className="icon">
-          <AccessibleImage className={"worker"} />
+          <AccessibleImage className="worker" />
         </div>
         <div className="label">{getDisplayName(thread)}</div>
       </div>
