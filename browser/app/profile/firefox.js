@@ -1600,6 +1600,12 @@ pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 // One value from each section must be included in the browser.contentblocking.features.strict pref.
 pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp");
 
+// Hide the "Change Block List" link for trackers/tracking content in the custom
+// Content Blocking/ETP panel. By default, it will not be visible. There is also
+// an UI migration in place to set this pref to true if a user has a custom block
+// lists enabled.
+pref("browser.contentblocking.customBlockList.preferences.ui.enabled", false);
+
 pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-issues.herokuapp.com/new");
 
 // Enable Protections report's Lockwise card by default.
