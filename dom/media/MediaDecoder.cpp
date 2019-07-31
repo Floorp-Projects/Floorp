@@ -237,12 +237,12 @@ RefPtr<GenericPromise> MediaDecoder::SetSink(AudioDeviceInfo* aSink) {
   return GetStateMachine()->InvokeSetSink(aSink);
 }
 
-void MediaDecoder::AddOutputStream(DOMMediaStream* aStream) {
+void MediaDecoder::AddOutputStream(DOMMediaStream* aStream,
+                                   MediaStreamGraphImpl* aGraph) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
-  mDecoderStateMachine->EnsureOutputStreamManager(
-      aStream->GetInputStream()->Graph());
+  mDecoderStateMachine->EnsureOutputStreamManager(aGraph);
   if (mInfo) {
     mDecoderStateMachine->EnsureOutputStreamManagerHasTracks(*mInfo);
   }
@@ -254,20 +254,6 @@ void MediaDecoder::RemoveOutputStream(DOMMediaStream* aStream) {
   MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
   AbstractThread::AutoEnter context(AbstractMainThread());
   mDecoderStateMachine->RemoveOutputStream(aStream);
-}
-
-void MediaDecoder::SetNextOutputStreamTrackID(TrackID aNextTrackID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  mDecoderStateMachine->SetNextOutputStreamTrackID(aNextTrackID);
-}
-
-TrackID MediaDecoder::GetNextOutputStreamTrackID() {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(mDecoderStateMachine, "Must be called after Load().");
-  AbstractThread::AutoEnter context(AbstractMainThread());
-  return mDecoderStateMachine->GetNextOutputStreamTrackID();
 }
 
 void MediaDecoder::SetOutputStreamPrincipal(nsIPrincipal* aPrincipal) {

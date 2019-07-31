@@ -14,9 +14,20 @@ namespace dom {
 
 AudioTrack::AudioTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
                        const nsAString& aKind, const nsAString& aLabel,
-                       const nsAString& aLanguage, bool aEnabled)
+                       const nsAString& aLanguage, bool aEnabled,
+                       AudioStreamTrack* aStreamTrack)
     : MediaTrack(aOwnerGlobal, aId, aKind, aLabel, aLanguage),
-      mEnabled(aEnabled) {}
+      mEnabled(aEnabled),
+      mAudioStreamTrack(aStreamTrack) {}
+
+AudioTrack::~AudioTrack() = default;
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(AudioTrack, MediaTrack, mAudioStreamTrack)
+
+NS_IMPL_ADDREF_INHERITED(AudioTrack, MediaTrack)
+NS_IMPL_RELEASE_INHERITED(AudioTrack, MediaTrack)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(AudioTrack)
+NS_INTERFACE_MAP_END_INHERITING(MediaTrack)
 
 JSObject* AudioTrack::WrapObject(JSContext* aCx,
                                  JS::Handle<JSObject*> aGivenProto) {

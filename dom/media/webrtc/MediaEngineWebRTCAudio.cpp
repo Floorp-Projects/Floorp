@@ -495,8 +495,7 @@ void MediaEngineWebRTCMicrophoneSource::SetTrack(
 
   AudioSegment* segment = new AudioSegment();
 
-  mStream->AddAudioTrack(mTrackID, mStream->GraphRate(), segment,
-                         SourceMediaStream::ADDTRACK_QUEUED);
+  mStream->AddAudioTrack(mTrackID, mStream->GraphRate(), segment);
 
   mInputProcessing = new AudioInputProcessing(mDeviceMaxChannelCount, mStream,
                                               mTrackID, mPrincipal);

@@ -28,7 +28,8 @@ class nsPIDOMWindowInner;
 
 namespace mozilla {
 class AsyncLogger;
-};
+class AudioCaptureStream;
+};  // namespace mozilla
 
 extern mozilla::AsyncLogger gMSGTraceLogger;
 
@@ -365,17 +366,8 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   void RunAfterPendingUpdates(already_AddRefed<nsIRunnable> aRunnable);
 
   // Signal that the client is done with this MediaStream. It will be deleted
-  // later. Do not mix usage of Destroy() with RegisterUser()/UnregisterUser().
-  // That will cause the MediaStream to be destroyed twice, which will cause
-  // some assertions to fail.
+  // later.
   virtual void Destroy();
-  // Signal that a client is using this MediaStream. Useful to not have to
-  // explicitly manage ownership (responsibility to Destroy()) when there are
-  // multiple clients using a MediaStream.
-  void RegisterUser();
-  // Signal that a client no longer needs this MediaStream. When the number of
-  // clients using this MediaStream reaches 0, it will be destroyed.
-  void UnregisterUser();
 
   // Returns the main-thread's view of how much data has been processed by
   // this stream.
@@ -618,7 +610,6 @@ class MediaStream : public mozilla::LinkedListElement<MediaStream> {
   bool mMainThreadFinished;
   bool mFinishedNotificationSent;
   bool mMainThreadDestroyed;
-  int mNrOfMainThreadUsers;
 
   // Our media stream graph.  null if destroyed on the graph thread.
   MediaStreamGraphImpl* mGraph;
@@ -1226,7 +1217,7 @@ class MediaStreamGraph {
   /**
    * Create a stream that will mix all its audio input.
    */
-  ProcessedMediaStream* CreateAudioCaptureStream(TrackID aTrackId);
+  AudioCaptureStream* CreateAudioCaptureStream(TrackID aTrackId);
 
   /**
    * Add a new stream to the graph.  Main thread.

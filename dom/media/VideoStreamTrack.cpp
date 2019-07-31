@@ -14,12 +14,12 @@
 namespace mozilla {
 namespace dom {
 
-VideoStreamTrack::VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                                   TrackID aInputTrackID,
+VideoStreamTrack::VideoStreamTrack(nsPIDOMWindowInner* aWindow,
+                                   MediaStream* aInputStream, TrackID aTrackID,
                                    MediaStreamTrackSource* aSource,
                                    const MediaTrackConstraints& aConstraints)
-    : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aSource,
-                       aConstraints) {}
+    : MediaStreamTrack(aWindow, aInputStream, aTrackID, aSource, aConstraints) {
+}
 
 void VideoStreamTrack::Destroy() {
   mVideoOutputs.Clear();
@@ -27,6 +27,9 @@ void VideoStreamTrack::Destroy() {
 }
 
 void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
+  if (Ended()) {
+    return;
+  }
   auto output = MakeRefPtr<VideoOutput>(
       aSink, nsGlobalWindowInner::Cast(GetParentObject())
                  ->AbstractMainThreadFor(TaskCategory::Other));
@@ -34,6 +37,9 @@ void VideoStreamTrack::AddVideoOutput(VideoFrameContainer* aSink) {
 }
 
 void VideoStreamTrack::AddVideoOutput(VideoOutput* aOutput) {
+  if (Ended()) {
+    return;
+  }
   for (const auto& output : mVideoOutputs) {
     if (output == aOutput) {
       MOZ_ASSERT_UNREACHABLE("A VideoOutput was already added");

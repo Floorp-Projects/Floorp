@@ -54,14 +54,17 @@ class MediaDecoder;
 class MediaInputPort;
 class MediaStream;
 class MediaStreamGraph;
+class MediaStreamGraphImpl;
+class MediaStreamWindowCapturer;
 class VideoFrameContainer;
 namespace dom {
 class MediaKeys;
 class TextTrack;
 class TimeRanges;
 class WakeLock;
-class MediaTrack;
 class MediaStreamTrack;
+class MediaStreamTrackSource;
+class MediaTrack;
 class VideoStreamTrack;
 }  // namespace dom
 }  // namespace mozilla
@@ -98,7 +101,7 @@ enum class StreamCaptureBehavior : uint8_t {
 
 class HTMLMediaElement : public nsGenericHTMLElement,
                          public MediaDecoderOwner,
-                         public PrincipalChangeObserver<DOMMediaStream>,
+                         public PrincipalChangeObserver<MediaStreamTrack>,
                          public SupportsWeakPtr<HTMLMediaElement>,
                          public nsStubMutationObserver {
  public:
@@ -229,8 +232,8 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    */
   void NotifyOwnerDocumentActivityChanged();
 
-  // From PrincipalChangeObserver<DOMMediaStream>.
-  void PrincipalChanged(DOMMediaStream* aStream) override;
+  // From PrincipalChangeObserver<MediaStreamTrack>.
+  void PrincipalChanged(MediaStreamTrack* aTrack) override;
 
   void UpdateSrcStreamVideoPrincipal(const PrincipalHandle& aPrincipalHandle);
 
@@ -296,8 +299,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
 
   void GetEMEInfo(dom::EMEDebugInfo& aInfo);
 
-  class StreamCaptureTrackSource;
-
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
   virtual void UpdateMediaSize(const nsIntSize& aSize);
@@ -336,13 +337,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * AudioTrack is disabled or a VideoTrack is unselected.
    */
   void NotifyMediaTrackDisabled(MediaTrack* aTrack);
-
-  /**
-   * Called when a captured MediaStreamTrack is stopped so we can clean up its
-   * MediaInputPort.
-   */
-  void NotifyOutputTrackStopped(DOMMediaStream* aOwningStream,
-                                TrackID aDestinationTrackID);
 
   /**
    * Returns the current load ID. Asynchronous events store the ID that was
@@ -391,13 +385,6 @@ class HTMLMediaElement : public nsGenericHTMLElement,
    * increasing during playback.
    */
   void FireTimeUpdate(bool aPeriodic) final;
-
-  /**
-   * This will return null if mSrcStream is null, or if mSrcStream is not
-   * null but its GetPlaybackStream() returns null --- which can happen during
-   * cycle collection unlinking!
-   */
-  MediaStream* GetSrcMediaStream() const;
 
   // WebIDL
 
@@ -752,13 +739,24 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   class ChannelLoader;
   class ErrorSink;
   class MediaLoadListener;
+  class MediaStreamRenderer;
   class MediaStreamTrackListener;
   class FirstFrameListener;
   class ShutdownObserver;
+  class StreamCaptureTrackSource;
 
   MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
   void SetDecoder(MediaDecoder* aDecoder);
+
+  struct SharedDummyStream {
+    NS_INLINE_DECL_REFCOUNTING(SharedDummyStream)
+    explicit SharedDummyStream(MediaStream* aStream);
+    const RefPtr<MediaStream> mStream;
+
+   private:
+    ~SharedDummyStream();
+  };
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
@@ -767,14 +765,18 @@ class HTMLMediaElement : public nsGenericHTMLElement,
     ~OutputMediaStream();
 
     RefPtr<DOMMediaStream> mStream;
-    TrackID mNextAvailableTrackID;
+    RefPtr<MediaStreamGraphImpl> mGraph;
+    // Dummy stream to keep mGraph from shutting down when MediaDecoder shuts
+    // down. Shared across all OutputMediaStreams as one stream is enough to
+    // keep the graph alive.
+    RefPtr<SharedDummyStream> mGraphKeepAliveDummyStream;
     bool mFinishWhenEnded;
     bool mCapturingAudioOnly;
     bool mCapturingDecoder;
     bool mCapturingMediaStream;
 
     // The following members are keeping state for a captured MediaStream.
-    nsTArray<Pair<nsString, RefPtr<MediaInputPort>>> mTrackPorts;
+    nsTArray<Pair<nsString, RefPtr<MediaStreamTrackSource>>> mTracks;
   };
 
   void PlayInternal(bool aHandlingUserInput);
@@ -1331,30 +1333,24 @@ class HTMLMediaElement : public nsGenericHTMLElement,
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<DOMMediaStream> mSrcStream;
 
+  // The MediaStreamRenderer handles rendering of our selected video track, and
+  // enabled audio tracks, while mSrcStream is set.
+  RefPtr<MediaStreamRenderer> mMediaStreamRenderer;
+
   // True once mSrcStream's initial set of tracks are known.
   bool mSrcStreamTracksAvailable = false;
-
-  // While mPaused is true and mSrcStream is set, this is the value to use for
-  // CurrentTime(). Otherwise this is Nothing.
-  Maybe<GraphTime> mSrcStreamPausedGraphTime;
-
-  // The offset in GraphTime at which this media element started playing the
-  // playback stream of mSrcStream.
-  GraphTime mSrcStreamGraphTimeOffset = 0;
 
   // True once PlaybackEnded() is called and we're playing a MediaStream.
   // Reset to false if we start playing mSrcStream again.
   bool mSrcStreamPlaybackEnded = false;
 
-  // Holds a reference to the stream connecting this stream to the capture sink.
-  RefPtr<MediaInputPort> mCaptureStreamPort;
+  // Holds a reference to the stream connecting this stream to the window
+  // capture sink.
+  UniquePtr<MediaStreamWindowCapturer> mStreamWindowCapturer;
 
   // Holds references to the DOM wrappers for the MediaStreams that we're
   // writing to.
   nsTArray<OutputMediaStream> mOutputStreams;
-
-  // The next track id to use for a captured MediaDecoder.
-  TrackID mNextAvailableMediaDecoderOutputTrackID = 1;
 
   // Holds a reference to the first-frame-getting track listener attached to
   // mSelectedVideoStreamTrack.
