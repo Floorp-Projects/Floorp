@@ -244,7 +244,6 @@ bool js::Nursery::init(AutoLockGCBgAlloc& lock) {
   }
 
   capacity_ = roundSize(tunables().gcMinNurseryBytes());
-  MOZ_ASSERT(capacity_ >= ArenaSize);
   if (!allocateNextChunk(0, lock)) {
     capacity_ = 0;
     return false;
@@ -303,7 +302,6 @@ void js::Nursery::enable() {
       capacity_ = 0;
       return;
     }
-    MOZ_ASSERT(capacity_ >= ArenaSize);
   }
 
   setCurrentChunk(0);
@@ -1442,6 +1440,7 @@ size_t js::Nursery::roundSize(size_t size) {
     size = Min(JS_ROUND(size, SubChunkStep),
                JS_ROUNDDOWN(NurseryChunkUsableSize, SubChunkStep));
   }
+  MOZ_ASSERT(size >= ArenaSize);
   return size;
 }
 
@@ -1530,7 +1529,6 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 
   size_t oldCapacity = capacity_;
   capacity_ = newCapacity;
-  MOZ_ASSERT(capacity_ >= ArenaSize);
 
   setCurrentEnd();
 
