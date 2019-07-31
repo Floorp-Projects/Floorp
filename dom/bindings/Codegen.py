@@ -15907,7 +15907,7 @@ class CGJSImplMethod(CGJSImplMember):
             initCall = fill(
                 """
                 // Wrap the object before calling __Init so that __DOM_IMPL__ is available.
-                JS::Rooted<JSObject*> scopeObj(cx, globalHolder->GetGlobalJSObject());
+                JS::Rooted<JSObject*> scopeObj(cx, global.Get());
                 MOZ_ASSERT(js::IsObjectInContextCompartment(scopeObj, cx));
                 JS::Rooted<JS::Value> wrappedVal(cx);
                 if (!GetOrCreateDOMReflector(cx, impl, &wrappedVal, aGivenProto)) {
@@ -15930,17 +15930,11 @@ class CGJSImplMethod(CGJSImplMember):
 def genConstructorBody(descriptor, initCall=""):
     return fill(
         """
-        JS::Rooted<JSObject*> jsImplObj(cx);
-        nsCOMPtr<nsIGlobalObject> globalHolder =
-          ConstructJSImplementation("${contractId}", global, &jsImplObj, aRv);
+        RefPtr<${implClass}> impl =
+          ConstructJSImplementation<${implClass}>("${contractId}", global, aRv);
         if (aRv.Failed()) {
           return nullptr;
         }
-        // We should be getting the implementation object for the relevant
-        // contract here, which should never be a cross-compartment wrapper.
-        JS::Rooted<JSObject*> jsImplGlobal(cx, JS::GetNonCCWObjectGlobal(jsImplObj));
-        // Build the C++ implementation.
-        RefPtr<${implClass}> impl = new ${implClass}(jsImplObj, jsImplGlobal, globalHolder);
         $*{initCall}
         return impl.forget();
         """,
