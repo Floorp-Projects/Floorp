@@ -33,14 +33,14 @@
              data-l10n-attrs="style"/>
       <html:input id="name" type="text" data-l10n-id="containers-name-text" oninput="gContainersManager.checkForm();" />
     </hbox>
-    <hbox align="center" id="iconWrapper">
-      <label id="iconLabel" control="icon"
-             data-l10n-id="containers-icon-label"
-             data-l10n-attrs="style"/>
-    </hbox>
     <hbox align="center" id="colorWrapper">
       <label id="colorLabel" control="color"
              data-l10n-id="containers-color-label"
+             data-l10n-attrs="style"/>
+    </hbox>
+    <hbox align="center" id="iconWrapper">
+      <label id="iconLabel" control="icon"
+             data-l10n-id="containers-icon-label"
              data-l10n-attrs="style"/>
     </hbox>
   </vbox>
