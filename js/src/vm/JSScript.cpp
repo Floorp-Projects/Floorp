@@ -5344,10 +5344,9 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
 LazyScript* LazyScript::Create(
     JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
     const frontend::AtomVector& closedOverBindings,
-    Vector<const js::frontend::FunctionBox*, 8>& innerFunctionBoxes,
-    uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
-    uint32_t toStringEnd, uint32_t lineno, uint32_t column,
-    frontend::ParseGoal parseGoal) {
+    const frontend::FunctionBoxVector& innerFunctionBoxes, uint32_t sourceStart,
+    uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
+    uint32_t lineno, uint32_t column, frontend::ParseGoal parseGoal) {
   uint32_t immutableFlags = 0;
   if (parseGoal == frontend::ParseGoal::Module) {
     immutableFlags |= uint32_t(ImmutableFlags::IsModule);

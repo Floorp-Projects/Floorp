@@ -248,6 +248,7 @@ class ParseContext : public Nestable<ParseContext> {
     // FunctionBoxes in this scope that need to be considered for Annex
     // B.3.3 semantics. This is checked on Scope exit, as by then we have
     // all the declared names and would know if Annex B.3.3 is applicable.
+    using FunctionBoxVector = Vector<FunctionBox*, 24, SystemAllocPolicy>;
     PooledVectorPtr<FunctionBoxVector> possibleAnnexBFunctionBoxes_;
 
     // Monotonically increasing id.
@@ -446,7 +447,7 @@ class ParseContext : public Nestable<ParseContext> {
   // All inner FunctionBoxes in this context. Only used when syntax parsing.
   // The FunctionBoxes are traced as part of the TraceList on the parser,
   // (see TraceListNode::TraceList)
-  Vector<const FunctionBox*, 8> innerFunctionBoxesForLazy;
+  FunctionBoxVector innerFunctionBoxesForLazy;
 
   // In a function context, points to a Directive struct that can be updated
   // to reflect new directives encountered in the Directive Prologue that
