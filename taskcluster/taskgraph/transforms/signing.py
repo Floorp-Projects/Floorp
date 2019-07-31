@@ -62,6 +62,9 @@ signing_description_schema = schema.extend({
     # Optional control for how long a task may run (aka maxRunTime)
     Optional('max-run-time'): int,
     Optional('extra'): {basestring: object},
+
+    # Max number of partner repacks per chunk
+    Optional('repacks-per-chunk'): int,
 })
 
 
