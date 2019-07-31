@@ -925,15 +925,19 @@ async function setupTestFromUrl(url) {
  * @param Object options
  *        Optional arguments to tweak test environment
  *        - JSPrincipal principal
- *          Principal to use for the debuggee.
+ *          Principal to use for the debuggee. Defaults to systemPrincipal.
  *        - boolean doNotRunWorker
- *          If true, do not run this tests in worker debugger context.
+ *          If true, do not run this tests in worker debugger context. Defaults to false.
+ *        - bool wantXrays
+ *          Whether the debuggee wants Xray vision with respect to same-origin objects
+ *          outside the sandbox. Defaults to true.
  */
 function threadClientTest(test, options = {}) {
-  let { principal, doNotRunWorker } = options;
-  if (!principal) {
-    principal = systemPrincipal;
-  }
+  const {
+    principal = systemPrincipal,
+    doNotRunWorker = false,
+    wantXrays = true,
+  } = options;
 
   async function runThreadClientTestWithServer(server, test) {
     // Setup a server and connect a client to it.
@@ -942,7 +946,7 @@ function threadClientTest(test, options = {}) {
     // Create a custom debuggee and register it to the server.
     // We are using a custom Sandbox as debuggee. Create a new zone because
     // debugger and debuggee must be in different compartments.
-    const debuggee = Cu.Sandbox(principal, { freshZone: true });
+    const debuggee = Cu.Sandbox(principal, { freshZone: true, wantXrays });
     const scriptName = "debuggee.js";
     debuggee.__name = scriptName;
     server.addTestGlobal(debuggee);
