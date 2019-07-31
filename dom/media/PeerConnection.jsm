@@ -1576,23 +1576,21 @@ class RTCPeerConnection {
   _processTrackAdditionsAndRemovals() {
     const removeList = [];
     const addList = [];
-    const muteTracks = [];
+    const muteTransceiverReceiveTracks = [];
     const trackEventInits = [];
 
     for (const transceiver of this._transceivers) {
       transceiver.receiver.processTrackAdditionsAndRemovals(transceiver, {
         removeList,
         addList,
-        muteTracks,
+        muteTransceiverReceiveTracks,
         trackEventInits,
       });
     }
 
-    muteTracks.forEach(track => {
+    muteTransceiverReceiveTracks.forEach(transceiver => {
       // Check this as late as possible, in case JS has messed with this state.
-      if (!track.muted) {
-        track.mutedChanged(true);
-      }
+      transceiver.setReceiveTrackMuted(true);
     });
 
     for (const { stream, track } of removeList) {
@@ -2552,7 +2550,7 @@ class RTCRtpReceiver {
 
   processTrackAdditionsAndRemovals(
     transceiver,
-    { removeList, addList, muteTracks, trackEventInits }
+    { removeList, addList, muteTransceiverReceiveTracks, trackEventInits }
   ) {
     const receiver = this.__DOM_IMPL__;
     const track = this.track;
@@ -2572,7 +2570,7 @@ class RTCRtpReceiver {
         // New track, set in case streamsAdded is empty
         needsTrackEvent = true;
       } else {
-        muteTracks.push(track);
+        muteTransceiverReceiveTracks.push(this._transceiverImpl);
       }
     }
 

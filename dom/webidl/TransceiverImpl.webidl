@@ -17,6 +17,7 @@
 [ChromeOnly]
 interface TransceiverImpl {
   MediaStreamTrack getReceiveTrack();
+  void setReceiveTrackMuted(boolean muted);
   [Throws]
   void syncWithJS(RTCRtpTransceiver transceiver);
 };

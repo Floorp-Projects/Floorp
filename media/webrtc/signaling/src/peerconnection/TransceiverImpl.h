@@ -92,6 +92,7 @@ class TransceiverImpl : public nsISupports {
   bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aReflector);
   already_AddRefed<dom::MediaStreamTrack> GetReceiveTrack();
+  void SetReceiveTrackMuted(bool aMuted);
   void SyncWithJS(dom::RTCRtpTransceiver& aJsTransceiver, ErrorResult& aRv);
 
   void InsertDTMFTone(int tone, uint32_t duration);

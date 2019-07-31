@@ -23,8 +23,9 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
       const dom::MediaTrackConstraints& aConstraints,
       dom::CallerType aCallerType) override {
     return ApplyConstraintsPromise::CreateAndReject(
-        MakeRefPtr<MediaMgrError>(MediaStreamError::Name::OverconstrainedError,
-                                  NS_LITERAL_STRING("")),
+        MakeRefPtr<MediaMgrError>(
+            dom::MediaStreamError::Name::OverconstrainedError,
+            NS_LITERAL_STRING("")),
         __func__);
   }
 
@@ -41,6 +42,7 @@ class RemoteTrackSource : public dom::MediaStreamTrackSource {
     mPrincipal = aPrincipal;
     PrincipalChanged();
   }
+  void SetMuted(bool aMuted) { MutedChanged(aMuted); }
 
  protected:
   virtual ~RemoteTrackSource() {}

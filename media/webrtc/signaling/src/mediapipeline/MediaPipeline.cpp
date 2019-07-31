@@ -23,6 +23,7 @@
 #include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "MediaStreamTrack.h"
+#include "RemoteTrackSource.h"
 #include "RtpLogger.h"
 #include "VideoFrameConverter.h"
 #include "VideoSegment.h"
@@ -1164,7 +1165,8 @@ void MediaPipelineTransmit::PipelineListener::NewData(
 class GenericReceiveListener : public MediaStreamTrackListener {
  public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
-      : mTrack(aTrack),
+      : mTrack(new nsMainThreadPtrHolder<dom::MediaStreamTrack>(
+            "GenericReceiveListener::mTrack", aTrack)),
         mTrackId(aTrack->GetInputTrackId()),
         mSource(mTrack->GetInputStream()->AsSourceStream()),
         mPrincipalHandle(PRINCIPAL_HANDLE_NONE),
@@ -1173,10 +1175,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
     MOZ_RELEASE_ASSERT(mSource, "Must be used with a SourceMediaStream");
   }
 
-  virtual ~GenericReceiveListener() {
-    NS_ReleaseOnMainThreadSystemGroup("GenericReceiveListener::track_",
-                                      mTrack.forget());
-  }
+  virtual ~GenericReceiveListener() = default;
 
   void AddTrackToSource(uint32_t aRate = 0) {
     MOZ_ASSERT((aRate != 0 && mTrack->AsAudioStreamTrack()) ||
@@ -1226,8 +1225,8 @@ class GenericReceiveListener : public MediaStreamTrackListener {
   }
 
   void OnRtpReceived_m() {
-    if (mListening && mTrack->Muted()) {
-      mTrack->MutedChanged(false);
+    if (mListening) {
+      static_cast<RemoteTrackSource&>(mTrack->GetSource()).SetMuted(false);
     }
   }
 
@@ -1268,7 +1267,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
   }
 
  protected:
-  RefPtr<dom::MediaStreamTrack> mTrack;
+  const nsMainThreadPtrHandle<dom::MediaStreamTrack> mTrack;
   const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSource;
   PrincipalHandle mPrincipalHandle;
