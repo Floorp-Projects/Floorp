@@ -35,27 +35,39 @@ def symlink(source, link_name):
 
 def check_run(args):
     print >> sys.stderr, ' '.join(args)
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    # CMake `message(STATUS)` messages, as appearing in failed source code
-    # compiles, appear on stdout, so we only capture that.
-    (out, _) = p.communicate()
-    r = p.returncode
-    if r != 0:
-        cmake_output_re = re.compile("See also \"(.*/CMakeOutput.log)\"")
-        cmake_error_re = re.compile("See also \"(.*/CMakeError.log)\"")
-        output_match = cmake_output_re.search(out)
-        error_match = cmake_error_re.search(out)
+    if args[0] == 'cmake':
+        # CMake `message(STATUS)` messages, as appearing in failed source code
+        # compiles, appear on stdout, so we only capture that.
+        p = subprocess.Popen(args, stdout=subprocess.PIPE)
+        lines = []
+        for line in p.stdout:
+            lines.append(line)
+            sys.stdout.write(line)
+            sys.stdout.flush()
+        r = p.wait()
+        if r != 0:
+            cmake_output_re = re.compile("See also \"(.*/CMakeOutput.log)\"")
+            cmake_error_re = re.compile("See also \"(.*/CMakeError.log)\"")
 
-        print >> sys.stderr, out
+            def find_first_match(re):
+                for l in lines:
+                    match = re.search(l)
+                    if match:
+                        return match
 
-        def dump_file(log):
-            with open(log, 'rb') as f:
-                print >> sys.stderr, "\nContents of", log, "follow\n"
-                print >> sys.stderr, f.read()
-        if output_match:
-            dump_file(output_match.group(1))
-        if error_match:
-            dump_file(error_match.group(1))
+            output_match = find_first_match(cmake_output_re)
+            error_match = find_first_match(cmake_error_re)
+
+            def dump_file(log):
+                with open(log, 'rb') as f:
+                    print >> sys.stderr, "\nContents of", log, "follow\n"
+                    print >> sys.stderr, f.read()
+            if output_match:
+                dump_file(output_match.group(1))
+            if error_match:
+                dump_file(error_match.group(1))
+    else:
+        r = subprocess.call(args)
     assert r == 0
 
 
@@ -96,7 +108,7 @@ def build_package(package_build_dir, cmake_args):
         shutil.rmtree(package_build_dir + "/CMakeFiles")
 
     run_in(package_build_dir, ["cmake"] + cmake_args)
-    run_in(package_build_dir, ["ninja", "install"])
+    run_in(package_build_dir, ["ninja", "install", "-v"])
 
 
 @contextmanager
