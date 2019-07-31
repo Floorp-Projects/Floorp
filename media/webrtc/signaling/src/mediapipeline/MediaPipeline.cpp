@@ -1165,31 +1165,32 @@ void MediaPipelineTransmit::PipelineListener::NewData(
 class GenericReceiveListener : public MediaStreamTrackListener {
  public:
   explicit GenericReceiveListener(dom::MediaStreamTrack* aTrack)
-      : mTrack(new nsMainThreadPtrHolder<dom::MediaStreamTrack>(
-            "GenericReceiveListener::mTrack", aTrack)),
-        mTrackId(aTrack->GetInputTrackId()),
-        mSource(mTrack->GetInputStream()->AsSourceStream()),
+      : mTrackSource(new nsMainThreadPtrHolder<RemoteTrackSource>(
+            "GenericReceiveListener::mTrackSource",
+            &static_cast<RemoteTrackSource&>(aTrack->GetSource()))),
+        mTrackId(aTrack->GetTrackID()),
+        mSource(mTrackSource->mStream),
+        mIsAudio(aTrack->AsAudioStreamTrack()),
         mPrincipalHandle(PRINCIPAL_HANDLE_NONE),
         mListening(false),
         mMaybeTrackNeedsUnmute(true) {
-    MOZ_RELEASE_ASSERT(mSource, "Must be used with a SourceMediaStream");
+    MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+    MOZ_DIAGNOSTIC_ASSERT(mSource, "Must be used with a SourceMediaStream");
   }
 
   virtual ~GenericReceiveListener() = default;
 
   void AddTrackToSource(uint32_t aRate = 0) {
-    MOZ_ASSERT((aRate != 0 && mTrack->AsAudioStreamTrack()) ||
-               mTrack->AsVideoStreamTrack());
+    MOZ_ASSERT_IF(mIsAudio, aRate != 0);
 
-    if (mTrack->AsAudioStreamTrack()) {
+    if (mIsAudio) {
       mSource->AddAudioTrack(mTrackId, aRate, new AudioSegment());
-    } else if (mTrack->AsVideoStreamTrack()) {
+    } else {
       mSource->AddTrack(mTrackId, new VideoSegment());
     }
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
-            ("GenericReceiveListener added %s track %d (%p) to stream %p",
-             mTrack->AsAudioStreamTrack() ? "audio" : "video", mTrackId,
-             mTrack.get(), mSource.get()));
+            ("GenericReceiveListener added %s track %d to stream %p",
+             mIsAudio ? "audio" : "video", mTrackId, mSource.get()));
 
     mSource->AddTrackListener(this, mTrackId);
   }
@@ -1200,7 +1201,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
     }
     mListening = true;
     mMaybeTrackNeedsUnmute = true;
-    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
+    if (mIsAudio && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, true);
     }
   }
@@ -1210,7 +1211,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
       return;
     }
     mListening = false;
-    if (mTrack->AsAudioStreamTrack() && !mSource->IsDestroyed()) {
+    if (mIsAudio && !mSource->IsDestroyed()) {
       mSource->SetPullingEnabled(mTrackId, false);
     }
   }
@@ -1226,7 +1227,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
 
   void OnRtpReceived_m() {
     if (mListening) {
-      static_cast<RemoteTrackSource&>(mTrack->GetSource()).SetMuted(false);
+      mTrackSource->SetMuted(false);
     }
   }
 
@@ -1234,9 +1235,16 @@ class GenericReceiveListener : public MediaStreamTrackListener {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("GenericReceiveListener ending track"));
 
-    // This breaks the cycle with the SourceMediaStream
-    mSource->RemoveTrackListener(this, mTrackId);
-    mSource->EndTrack(mTrackId);
+    if (!mSource->IsDestroyed()) {
+      // This breaks the cycle with the SourceMediaStream
+      mSource->RemoveTrackListener(this, mTrackId);
+      mSource->EndTrack(mTrackId);
+      mSource->Destroy();
+    }
+
+    NS_DispatchToMainThread(NewRunnableMethod("RemoteTrackSource::ForceEnded",
+                                              mTrackSource.get(),
+                                              &RemoteTrackSource::ForceEnded));
   }
 
   // Must be called on the main thread
@@ -1257,7 +1265,7 @@ class GenericReceiveListener : public MediaStreamTrackListener {
       PrincipalHandle mPrincipalHandle;
     };
 
-    mTrack->GraphImpl()->AppendMessage(
+    mSource->GraphImpl()->AppendMessage(
         MakeUnique<Message>(this, aPrincipalHandle));
   }
 
@@ -1267,9 +1275,10 @@ class GenericReceiveListener : public MediaStreamTrackListener {
   }
 
  protected:
-  const nsMainThreadPtrHandle<dom::MediaStreamTrack> mTrack;
+  const nsMainThreadPtrHandle<RemoteTrackSource> mTrackSource;
   const TrackID mTrackId;
   const RefPtr<SourceMediaStream> mSource;
+  const bool mIsAudio;
   PrincipalHandle mPrincipalHandle;
   bool mListening;
   Atomic<bool> mMaybeTrackNeedsUnmute;
@@ -1290,12 +1299,11 @@ class MediaPipelineReceiveAudio::PipelineListener
   PipelineListener(dom::MediaStreamTrack* aTrack,
                    const RefPtr<MediaSessionConduit>& aConduit)
       : GenericReceiveListener(aTrack),
-        mConduit(aConduit)
+        mConduit(aConduit),
         // AudioSession conduit only supports 16, 32, 44.1 and 48kHz
         // This is an artificial limitation, it would however require more
         // changes to support any rates. If the sampling rate is not-supported,
         // we will use 48kHz instead.
-        ,
         mRate(static_cast<AudioSessionConduit*>(mConduit.get())
                       ->IsSamplingFreqSupported(mSource->GraphRate())
                   ? mSource->GraphRate()

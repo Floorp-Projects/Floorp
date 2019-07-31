@@ -16,10 +16,8 @@
 #  include "MediaPromiseDefs.h"
 #  include "MediaResource.h"
 #  include "MediaStatistics.h"
-#  include "MediaStreamGraph.h"
 #  include "SeekTarget.h"
 #  include "TimeUnits.h"
-#  include "TrackID.h"
 #  include "mozilla/Atomics.h"
 #  include "mozilla/CDMProxy.h"
 #  include "mozilla/MozPromise.h"
@@ -33,6 +31,7 @@
 #  include "nsISupports.h"
 #  include "nsITimer.h"
 
+class AudioDeviceInfo;
 class nsIPrincipal;
 
 namespace mozilla {
@@ -48,6 +47,7 @@ class VideoFrameContainer;
 class MediaFormatReader;
 class MediaDecoderStateMachine;
 struct MediaPlaybackEvent;
+class MediaStreamGraphImpl;
 
 enum class Visibility : uint8_t;
 
@@ -175,16 +175,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   // Add an output stream. All decoder output will be sent to the stream.
   // The stream is initially blocked. The decoder is responsible for unblocking
   // it while it is playing back.
-  void AddOutputStream(DOMMediaStream* aStream);
+  void AddOutputStream(DOMMediaStream* aStream, MediaStreamGraphImpl* aGraph);
   // Remove an output stream added with AddOutputStream.
   void RemoveOutputStream(DOMMediaStream* aStream);
-
-  // Set the TrackID to be used as the initial id by the next DecodedStream
-  // sink.
-  void SetNextOutputStreamTrackID(TrackID aNextTrackID);
-  // Get the next TrackID to be allocated by DecodedStream,
-  // or the last set TrackID if there is no DecodedStream sink.
-  TrackID GetNextOutputStreamTrackID();
 
   // Update the principal for any output streams and their tracks.
   void SetOutputStreamPrincipal(nsIPrincipal* aPrincipal);

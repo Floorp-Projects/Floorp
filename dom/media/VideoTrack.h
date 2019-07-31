@@ -20,7 +20,7 @@ class VideoTrack : public MediaTrack {
   VideoTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
              const nsAString& aKind, const nsAString& aLabel,
              const nsAString& aLanguage,
-             VideoStreamTrack* aStreamTarck = nullptr);
+             VideoStreamTrack* aStreamTrack = nullptr);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(VideoTrack, MediaTrack)

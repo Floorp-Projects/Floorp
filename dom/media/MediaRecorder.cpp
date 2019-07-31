@@ -799,7 +799,7 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
 
     LOG(LogLevel::Debug,
         ("Session.MediaTracksReady track type = (%d)", trackTypes));
-    InitEncoder(trackTypes, mMediaStream->GraphRate());
+    InitEncoder(trackTypes, tracks[0]->Graph()->GraphRate());
   }
 
   void ConnectMediaStreamTrack(MediaStreamTrack& aTrack) {
@@ -1309,12 +1309,12 @@ void MediaRecorder::Start(const Optional<uint32_t>& aTimeSlice,
   if (!tracks.IsEmpty()) {
     // If there are tracks already available that we're not allowed
     // to record, we should throw a security error.
+    RefPtr<nsIPrincipal> streamPrincipal = mDOMStream->GetPrincipal();
     bool subsumes = false;
     nsPIDOMWindowInner* window;
     Document* doc;
     if (!(window = GetOwner()) || !(doc = window->GetExtantDoc()) ||
-        NS_FAILED(doc->NodePrincipal()->Subsumes(mDOMStream->GetPrincipal(),
-                                                 &subsumes)) ||
+        NS_FAILED(doc->NodePrincipal()->Subsumes(streamPrincipal, &subsumes)) ||
         !subsumes) {
       aResult.Throw(NS_ERROR_DOM_SECURITY_ERR);
       return;

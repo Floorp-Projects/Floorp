@@ -52,7 +52,6 @@ class MediaStreamAudioDestinationNode final : public AudioNode {
   ~MediaStreamAudioDestinationNode() = default;
 
   RefPtr<DOMMediaStream> mDOMStream;
-  RefPtr<MediaInputPort> mPort;
 };
 
 }  // namespace dom

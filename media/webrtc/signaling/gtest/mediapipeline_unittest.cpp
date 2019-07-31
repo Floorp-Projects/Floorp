@@ -11,7 +11,6 @@
 
 #include "AudioSegment.h"
 #include "AudioStreamTrack.h"
-#include "DOMMediaStream.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
 #include "MediaPipeline.h"
@@ -38,19 +37,6 @@ static MtransportTestUtils* test_utils;
 
 namespace {
 
-class FakeSourceMediaStream : public mozilla::SourceMediaStream {
- public:
-  FakeSourceMediaStream() : SourceMediaStream() {}
-
-  virtual ~FakeSourceMediaStream() override { mMainThreadDestroyed = true; }
-
-  virtual StreamTime AppendToTrack(
-      TrackID aID, MediaSegment* aSegment,
-      MediaSegment* aRawSegment = nullptr) override {
-    return aSegment->GetDuration();
-  }
-};
-
 class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
  public:
   FakeMediaStreamTrackSource() : MediaStreamTrackSource(nullptr, nsString()) {}
@@ -69,8 +55,7 @@ class FakeMediaStreamTrackSource : public mozilla::dom::MediaStreamTrackSource {
 class FakeAudioStreamTrack : public mozilla::dom::AudioStreamTrack {
  public:
   FakeAudioStreamTrack()
-      : AudioStreamTrack(new DOMMediaStream(nullptr), 0, 1,
-                         new FakeMediaStreamTrackSource()),
+      : AudioStreamTrack(nullptr, nullptr, 0, new FakeMediaStreamTrackSource()),
         mMutex("Fake AudioStreamTrack"),
         mStop(false),
         mCount(0) {

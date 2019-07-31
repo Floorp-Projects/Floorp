@@ -14,13 +14,14 @@ class DOMMediaStream;
 
 namespace dom {
 
+class AudioStreamTrack;
+class AudioTrack;
+class AudioTrackList;
 class HTMLMediaElement;
 class MediaTrack;
-class AudioTrackList;
-class VideoTrackList;
-class AudioTrack;
-class VideoTrack;
 class VideoStreamTrack;
+class VideoTrack;
+class VideoTrackList;
 
 /**
  * Base class of AudioTrackList and VideoTrackList. The AudioTrackList and
@@ -53,10 +54,13 @@ class MediaTrackList : public DOMEventTargetHelper {
 
   void RemoveTracks();
 
+  // For the case of src of HTMLMediaElement is non-MediaStream, leave the
+  // aAudioTrack as default(nullptr).
   static already_AddRefed<AudioTrack> CreateAudioTrack(
       nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
       const nsAString& aKind, const nsAString& aLabel,
-      const nsAString& aLanguage, bool aEnabled);
+      const nsAString& aLanguage, bool aEnabled,
+      AudioStreamTrack* aAudioTrack = nullptr);
 
   // For the case of src of HTMLMediaElement is non-MediaStream, leave the
   // aVideoTrack as default(nullptr).

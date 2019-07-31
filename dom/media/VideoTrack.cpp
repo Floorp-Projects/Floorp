@@ -16,12 +16,12 @@ namespace dom {
 VideoTrack::VideoTrack(nsIGlobalObject* aOwnerGlobal, const nsAString& aId,
                        const nsAString& aKind, const nsAString& aLabel,
                        const nsAString& aLanguage,
-                       VideoStreamTrack* aStreamTarck)
+                       VideoStreamTrack* aStreamTrack)
     : MediaTrack(aOwnerGlobal, aId, aKind, aLabel, aLanguage),
       mSelected(false),
-      mVideoStreamTrack(aStreamTarck) {}
+      mVideoStreamTrack(aStreamTrack) {}
 
-VideoTrack::~VideoTrack() {}
+VideoTrack::~VideoTrack() = default;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(VideoTrack, MediaTrack, mVideoStreamTrack)
 

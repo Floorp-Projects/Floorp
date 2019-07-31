@@ -251,8 +251,7 @@ void MediaEngineDefaultVideoSource::SetTrack(
   mStream = aStream;
   mTrackID = aTrackID;
   mPrincipalHandle = aPrincipal;
-  aStream->AddTrack(aTrackID, new VideoSegment(),
-                    SourceMediaStream::ADDTRACK_QUEUED);
+  aStream->AddTrack(aTrackID, new VideoSegment());
 }
 
 nsresult MediaEngineDefaultVideoSource::Start() {
@@ -497,8 +496,7 @@ void MediaEngineDefaultAudioSource::SetTrack(
   mStream = aStream;
   mTrackID = aTrackID;
   mPrincipalHandle = aPrincipal;
-  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment(),
-                         SourceMediaStream::ADDTRACK_QUEUED);
+  aStream->AddAudioTrack(aTrackID, aStream->GraphRate(), new AudioSegment());
 }
 
 nsresult MediaEngineDefaultAudioSource::Start() {
