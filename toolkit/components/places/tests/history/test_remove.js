@@ -331,3 +331,17 @@ add_task(async function test_remove_backslash() {
     "The page should not be found"
   );
 });
+
+add_task(async function test_url_with_apices() {
+  // Apices may confuse code and cause injection if mishandled.
+  // The ideal test would be with a javascript url, because it would not be
+  // encoded by URL(), unfortunately it would also not be added to history.
+  const url = `http://mozilla.org/\u0022\u0027`;
+  await PlacesTestUtils.addVisits(url);
+  Assert.ok(await PlacesUtils.history.remove(url), "A page should be removed");
+  Assert.deepEqual(
+    await PlacesUtils.history.fetch(url),
+    null,
+    "The page should not be found"
+  );
+});
