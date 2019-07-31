@@ -8,6 +8,7 @@ const EMPTY_TAB = "about:blank";
 const META_KEY = AppConstants.platform == "macosx" ? "metaKey" : "ctrlKey";
 const ENTER = new KeyboardEvent("keydown", {});
 const ALT_ENTER = new KeyboardEvent("keydown", { altKey: true });
+const ALTGR_ENTER = new KeyboardEvent("keydown", { modifierAltGraph: true });
 const CLICK = new MouseEvent("click", { button: 0 });
 const META_CLICK = new MouseEvent("click", { button: 0, [META_KEY]: true });
 const MIDDLE_CLICK = new MouseEvent("click", { button: 1 });
@@ -29,6 +30,11 @@ add_task(async function openInTab() {
       pref: false,
       event: ALT_ENTER,
       desc: "Alt+Enter, non-empty tab, default prefs",
+    },
+    {
+      pref: false,
+      event: ALTGR_ENTER,
+      desc: "AltGr+Enter, non-empty tab, default prefs",
     },
     {
       pref: false,
@@ -101,6 +107,11 @@ add_task(async function reuseEmptyTab() {
       event: ALT_ENTER,
       desc: "Alt+Enter, empty tab, default prefs",
     },
+    {
+      pref: false,
+      event: ALTGR_ENTER,
+      desc: "AltGr+Enter, empty tab, default prefs",
+    },
     { pref: true, event: ENTER, desc: "Enter, empty tab, openInTab" },
     { pref: true, event: CLICK, desc: "Normal click, empty tab, openInTab" },
   ]) {
@@ -145,6 +156,12 @@ add_task(async function openInCurrentTab() {
       url: NON_EMPTY_TAB,
       event: ALT_ENTER,
       desc: "Alt+Enter, non-empty tab, openInTab",
+    },
+    {
+      pref: true,
+      url: NON_EMPTY_TAB,
+      event: ALTGR_ENTER,
+      desc: "AltGr+Enter, non-empty tab, openInTab",
     },
     {
       pref: true,
