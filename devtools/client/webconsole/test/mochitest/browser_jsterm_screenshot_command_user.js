@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html,<meta charset=utf8><script>
   function screenshot() {
-    console.log(\"screen\");
+    console.log(\"user screenshot function\");
   }
 </script>`;
 
@@ -33,7 +33,7 @@ async function testCommand(hud) {
 // command should not overwrite the screenshot function
 async function testUserScreenshotFunction(hud) {
   const command = `screenshot()`;
-  const onMessage = waitForMessage(hud, "screen");
+  const onMessage = waitForMessage(hud, "user screenshot function");
   hud.jsterm.execute(command);
   await onMessage;
   ok(

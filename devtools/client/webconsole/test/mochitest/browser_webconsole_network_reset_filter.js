@@ -40,9 +40,19 @@ add_task(async function() {
   info("Open the testscript.js request in the network monitor");
   await openMessageInNetmonitor(toolbox, hud, url, shortUrl);
 
+  const netmonitor = toolbox.getCurrentPanel();
+
+  info(
+    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+  );
+  await waitUntil(() =>
+    netmonitor.panelWin.document.querySelector(
+      "#headers-panel .headers-overview"
+    )
+  );
+
   info("Filter out the current request");
-  const panel = toolbox.getCurrentPanel();
-  const { store, windowRequire } = panel.panelWin;
+  const { store, windowRequire } = netmonitor.panelWin;
   const Actions = windowRequire("devtools/client/netmonitor/src/actions/index");
   store.dispatch(Actions.toggleRequestFilterType("js"));
 
@@ -52,4 +62,13 @@ add_task(async function() {
 
   info("Open the testscript.js request again in the network monitor");
   await openMessageInNetmonitor(toolbox, hud, url, shortUrl);
+
+  info(
+    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+  );
+  await waitUntil(() =>
+    netmonitor.panelWin.document.querySelector(
+      "#headers-panel .headers-overview"
+    )
+  );
 });

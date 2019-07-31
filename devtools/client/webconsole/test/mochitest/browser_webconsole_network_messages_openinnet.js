@@ -35,6 +35,21 @@ add_task(async function task() {
 
   await openMessageInNetmonitor(toolbox, hud, documentUrl);
 
+  info(
+    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+  );
+  const netmonitor = toolbox.getCurrentPanel();
+  await waitUntil(() =>
+    netmonitor.panelWin.document.querySelector(
+      "#headers-panel .headers-overview"
+    )
+  );
+
+  info(
+    "Wait for the event timings request which do not necessarily update the UI as timings may be undefined for cached requests"
+  );
+  await waitForRequestData(netmonitor.panelWin.store, ["eventTimings"], 0);
+
   // Go back to console.
   await toolbox.selectTool("webconsole");
   info("console panel open again.");
@@ -46,4 +61,37 @@ add_task(async function task() {
 
   const jsonUrl = TEST_PATH + JSON_TEST_URL;
   await openMessageInNetmonitor(toolbox, hud, jsonUrl);
+
+  info(
+    "Wait for the netmonitor headers panel to appear as it spawn RDP requests"
+  );
+  await waitUntil(() =>
+    netmonitor.panelWin.document.querySelector(
+      "#headers-panel .headers-overview"
+    )
+  );
+
+  info(
+    "Wait for the event timings request which do not necessarily update the UI as timings may be undefined for cached requests"
+  );
+  await waitForRequestData(netmonitor.panelWin.store, ["eventTimings"], 1);
 });
+
+const {
+  getSortedRequests,
+} = require("devtools/client/netmonitor/src/selectors/index");
+
+function waitForRequestData(store, fields, i) {
+  return waitUntil(() => {
+    const item = getSortedRequests(store.getState()).get(i);
+    if (!item) {
+      return false;
+    }
+    for (const field of fields) {
+      if (!item[field]) {
+        return false;
+      }
+    }
+    return true;
+  });
+}

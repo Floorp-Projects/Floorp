@@ -19,12 +19,18 @@ async function performTests() {
   const jsterm = hud.jsterm;
 
   // Check that an evaluated null produces "null". See Bug 650780.
-  let onMessage = waitForMessage(hud, `null`);
+  let onMessage = waitForMessages({
+    hud,
+    messages: [{ text: "null" }, { text: "null" }],
+  });
   jsterm.execute("null");
   let message = await onMessage;
   ok(message, "`null` returned the expected value");
 
-  onMessage = waitForMessage(hud, "undefined");
+  onMessage = waitForMessages({
+    hud,
+    messages: [{ text: "undefined" }, { text: "undefined" }],
+  });
   jsterm.execute("undefined");
   message = await onMessage;
   ok(message, "`undefined` returned the expected value");
