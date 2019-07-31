@@ -51,5 +51,5 @@ pref(layout.css.column-span.enabled,true) == first-line-first-letter.html first-
 default-preferences pref(layout.css.column-span.enabled,true)
 == min-width-2.html min-width-2-ref.html
 == column-balancing-nested-001.html column-balancing-nested-001-ref.html
-fails == zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html # bug 1565665
+== zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html
 default-preferences
