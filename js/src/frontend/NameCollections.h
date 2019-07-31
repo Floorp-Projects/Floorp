@@ -166,8 +166,6 @@ class InlineTablePool
   }
 };
 
-using FunctionBoxVector = Vector<FunctionBox*, 24, SystemAllocPolicy>;
-
 template <typename RepresentativeVector>
 class VectorPool : public CollectionPool<RepresentativeVector,
                                          VectorPool<RepresentativeVector>> {
