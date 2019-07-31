@@ -769,7 +769,7 @@ ConnectionData.prototype = Object.freeze({
 
     if (Array.isArray(params)) {
       // It's an array of separate params.
-      if (params.length && typeof params[0] == "object") {
+      if (params.length && typeof params[0] == "object" && params[0] !== null) {
         let paramsArray = statement.newBindingParamsArray();
         for (let p of params) {
           let bindings = paramsArray.newBindingParams();
