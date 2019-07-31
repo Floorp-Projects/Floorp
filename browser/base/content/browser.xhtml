@@ -849,7 +849,9 @@
               <box id="tracking-protection-icon-container" align="center"
                    role="button"
                    onclick="gProtectionsHandler.handleProtectionsButtonEvent(event);"
-                   onkeypress="gProtectionsHandler.handleProtectionsButtonEvent(event);">
+                   onkeypress="gProtectionsHandler.handleProtectionsButtonEvent(event);"
+                   onmouseover="gProtectionsHandler.onTrackingProtectionIconHoveredOrFocused();"
+                   onfocus="gProtectionsHandler.onTrackingProtectionIconHoveredOrFocused();">
                 <box id="tracking-protection-icon-box" animationsenabled="true">
                   <image id="tracking-protection-icon"/>
                   <box id="tracking-protection-icon-animatable-box" flex="1">
