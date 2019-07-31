@@ -1,0 +1,85 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test the fxaccounts-button component
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test the fxaccounts-button component</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
+  <script src="aboutlogins_common.js"></script>
+
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <p id="display">
+  </p>
+<div id="content" style="display: none">
+  <iframe id="templateFrame" src="chrome://browser/content/aboutlogins/aboutLogins.html"
+          sandbox="allow-same-origin"></iframe>
+</div>
+<pre id="test">
+</pre>
+<script>
+/** Test the fxaccounts-button component **/
+
+let gFxAccountsButton;
+add_task(async function setup() {
+  let templateFrame = document.getElementById("templateFrame");
+  let displayEl = document.getElementById("display");
+  importDependencies(templateFrame, displayEl);
+
+  gFxAccountsButton = document.createElement("fxaccounts-button");
+  displayEl.appendChild(gFxAccountsButton);
+});
+
+add_task(async function test_default_state() {
+  ok(gFxAccountsButton, "FxAccountsButton exists");
+  ok(!isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-out-view")),
+    "logged-out-view view is visible by default");
+  ok(isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-in-view")),
+    "logged-in-view view is hidden by default");
+});
+
+add_task(async function test_logged_in_without_login_syncing() {
+  gFxAccountsButton.updateState({
+    loggedIn: true,
+    loginSyncingEnabled: false,
+  });
+
+  ok(isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-out-view")),
+    "logged-out-view view is hidden");
+  ok(!isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-in-view")),
+    "logged-in-view view is visible");
+});
+
+add_task(async function test_logged_in_without_login_syncing() {
+  const TEST_EMAIL = "test@example.com";
+  const TEST_AVATAR_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==";
+
+  gFxAccountsButton.updateState({
+    loggedIn: true,
+    loginSyncingEnabled: true,
+    email: TEST_EMAIL,
+    avatarURL: TEST_AVATAR_URL,
+  });
+
+  ok(isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-out-view")),
+    "logged-out-view view is hidden");
+  ok(!isHidden(gFxAccountsButton.shadowRoot.querySelector(".logged-in-view")),
+    "logged-in-view view is visible");
+  is(gFxAccountsButton.shadowRoot.querySelector(".fxaccount-email").textContent,
+    TEST_EMAIL,
+    "email should be shown");
+  info(gFxAccountsButton.shadowRoot.querySelector(".fxaccounts-avatar-button").outerHTML);
+  is(gFxAccountsButton.shadowRoot.querySelector(".fxaccounts-avatar-button").style.getPropertyValue("--avatar-url"),
+    `url(${TEST_AVATAR_URL})`,
+    "--avatar-url should be set");
+});
+
+</script>
+
+</body>
+</html>

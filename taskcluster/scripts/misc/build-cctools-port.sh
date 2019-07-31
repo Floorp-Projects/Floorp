@@ -11,37 +11,16 @@ set -x -e -v
 WORKSPACE=$HOME/workspace
 UPLOAD_DIR=$HOME/artifacts
 
-# Repository info
-: CROSSTOOL_PORT_REPOSITORY    ${CROSSTOOL_PORT_REPOSITORY:=https://github.com/tpoechtrager/cctools-port}
-: CROSSTOOL_PORT_REV           ${CROSSTOOL_PORT_REV:=3f979bbcd7ee29d79fb93f829edf3d1d16441147}
-: LIBTAPI_REPOSITORY           ${LIBTAPI_REPOSITORY:=https://github.com/tpoechtrager/apple-libtapi}
-: LIBTAPI_REV                  ${LIBTAPI_REV:=3efb201881e7a76a21e0554906cf306432539cef}
-
 # Set some crosstools-port and libtapi directories
-CROSSTOOLS_SOURCE_DIR=$WORKSPACE/crosstools-port
+CROSSTOOLS_SOURCE_DIR=$MOZ_FETCHES_DIR/cctools-port
 CROSSTOOLS_CCTOOLS_DIR=$CROSSTOOLS_SOURCE_DIR/cctools
 CROSSTOOLS_BUILD_DIR=$WORKSPACE/cctools
-LIBTAPI_SOURCE_DIR=$WORKSPACE/apple-libtapi
+LIBTAPI_SOURCE_DIR=$MOZ_FETCHES_DIR/apple-libtapi
 LIBTAPI_BUILD_DIR=$WORKSPACE/libtapi-build
 CLANG_DIR=$WORKSPACE/build/src/clang
 
 # Create our directories
 mkdir -p $CROSSTOOLS_BUILD_DIR $LIBTAPI_BUILD_DIR
-
-# Check for checkouts first to make interactive usage on taskcluster nicer.
-if [ ! -d $CROSSTOOLS_SOURCE_DIR ]; then
-    git clone --no-checkout $CROSSTOOL_PORT_REPOSITORY $CROSSTOOLS_SOURCE_DIR
-fi
-cd $CROSSTOOLS_SOURCE_DIR
-git checkout $CROSSTOOL_PORT_REV
-echo "Building cctools from commit hash `git rev-parse $CROSSTOOL_PORT_REV`..."
-
-if [ ! -d $LIBTAPI_SOURCE_DIR ]; then
-    git clone --no-checkout $LIBTAPI_REPOSITORY $LIBTAPI_SOURCE_DIR
-fi
-cd $LIBTAPI_SOURCE_DIR
-git checkout $LIBTAPI_REV
-echo "Building libtapi from commit hash `git rev-parse $LIBTAPI_REV`..."
 
 # Fetch clang from tooltool
 cd $WORKSPACE/build/src

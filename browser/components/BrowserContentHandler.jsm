@@ -231,20 +231,18 @@ function openBrowserWindow(
   forcePrivate = false
 ) {
   let chromeURL = AppConstants.BROWSER_CHROME_URL;
+  const isStartup =
+    cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH;
 
   let args;
   if (!urlOrUrlList) {
     // Just pass in the defaultArgs directly. We'll use system principal on the other end.
-    args = [gBrowserContentHandler.defaultArgs];
+    args = [gBrowserContentHandler.getArgs(isStartup)];
   } else {
     let pService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
       Ci.nsIToolkitProfileService
     );
-    if (
-      cmdLine &&
-      cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH &&
-      pService.createdAlternateProfile
-    ) {
+    if (isStartup && pService.createdAlternateProfile) {
       let url = getNewInstallPage();
       if (Array.isArray(urlOrUrlList)) {
         urlOrUrlList.unshift(url);
@@ -295,7 +293,7 @@ function openBrowserWindow(
     }
   }
 
-  if (cmdLine && cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+  if (isStartup) {
     let win = Services.wm.getMostRecentWindow("navigator:blank");
     if (win) {
       // Remove the windowtype of our blank window so that we don't close it
@@ -603,6 +601,10 @@ nsBrowserContentHandler.prototype = {
   /* nsIBrowserHandler */
 
   get defaultArgs() {
+    return this.getArgs();
+  },
+
+  getArgs(isStartup = false) {
     var prefb = Services.prefs;
 
     if (!gFirstWindow) {
@@ -686,6 +688,24 @@ nsBrowserContentHandler.prototype = {
     // formatURLPref might return "about:blank" if getting the pref fails
     if (overridePage == "about:blank") {
       overridePage = "";
+    }
+
+    // Allow showing a one-time startup override if we're not showing one
+    const ONCE_PREF = "browser.startup.homepage_override.once";
+    if (isStartup && overridePage == "" && prefb.prefHasUserValue(ONCE_PREF)) {
+      try {
+        // Show if we haven't passed the expiration or there's no expiration
+        const { expire, url } = JSON.parse(
+          Services.urlFormatter.formatURLPref(ONCE_PREF)
+        );
+        if (!(Date.now() > expire) && typeof url == "string") {
+          overridePage = url;
+        }
+      } catch (ex) {
+        // Invalid json pref, so ignore (and clear below)
+      } finally {
+        prefb.clearUserPref(ONCE_PREF);
+      }
     }
 
     if (!additionalPage) {

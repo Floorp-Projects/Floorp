@@ -22,6 +22,7 @@
 #include "jit/MIRGenerator.h"
 #include "jit/MIRGraph.h"
 #include "jit/OptimizationTracking.h"
+#include "jit/TIOracle.h"
 
 namespace js {
 
@@ -1008,6 +1009,8 @@ class IonBuilder : public MIRGenerator,
     backgroundCodegen_ = codegen;
   }
 
+  TIOracle& tiOracle() { return tiOracle_; }
+
   CompilerConstraintList* constraints() { return constraints_; }
 
   bool isInlineBuilder() const { return callerBuilder_ != nullptr; }
@@ -1039,6 +1042,8 @@ class IonBuilder : public MIRGenerator,
 
   // Constraints for recording dependencies on type information.
   CompilerConstraintList* constraints_;
+
+  TIOracle tiOracle_;
 
   TemporaryTypeSet* thisTypes;
   TemporaryTypeSet* argTypes;

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-export default class ConfirmDeleteDialog extends HTMLElement {
+export default class ConfirmationDialog extends HTMLElement {
   constructor() {
     super();
     this._promise = null;
@@ -12,7 +12,7 @@ export default class ConfirmDeleteDialog extends HTMLElement {
     if (this.shadowRoot) {
       return;
     }
-    let template = document.querySelector("#confirm-delete-dialog-template");
+    let template = document.querySelector("#confirmation-dialog-template");
     let shadowRoot = this.attachShadow({ mode: "open" });
     document.l10n.connectRoot(shadowRoot);
     shadowRoot.appendChild(template.content.cloneNode(true));
@@ -55,8 +55,12 @@ export default class ConfirmDeleteDialog extends HTMLElement {
     this.hidden = true;
   }
 
-  show() {
+  show({ title, message, confirmButtonLabel }) {
     this.hidden = false;
+
+    document.l10n.setAttributes(this._title, title);
+    document.l10n.setAttributes(this._message, message);
+    document.l10n.setAttributes(this._confirmButton, confirmButtonLabel);
 
     this._cancelButton.addEventListener("click", this);
     this._confirmButton.addEventListener("click", this);
@@ -86,4 +90,4 @@ export default class ConfirmDeleteDialog extends HTMLElement {
     this.hide();
   }
 }
-customElements.define("confirm-delete-dialog", ConfirmDeleteDialog);
+customElements.define("confirmation-dialog", ConfirmationDialog);

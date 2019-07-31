@@ -386,6 +386,16 @@ bool LaunchApp(const CommandLine& cl, const LaunchOptions& options,
 }
 
 bool KillProcess(ProcessHandle process, int exit_code, bool wait) {
+  // INVALID_HANDLE_VALUE is not actually an invalid handle value, but
+  // instead is the value returned by GetCurrentProcess().  nullptr,
+  // in contrast, *is* an invalid handle value.  Both values are too
+  // easy to accidentally try to kill, and neither is legitimately
+  // used by this function's callers, so reject them.
+  if (!process || process == INVALID_HANDLE_VALUE) {
+    CHROMIUM_LOG(WARNING)
+        << "base::KillProcess refusing to terminate process handle " << process;
+    return false;
+  }
   bool result = (TerminateProcess(process, exit_code) != FALSE);
   if (result && wait) {
     // The process may not end immediately due to pending I/O

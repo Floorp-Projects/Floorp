@@ -167,12 +167,22 @@ class MissingSignatureError extends Error {
   }
 }
 
+class UnknownCollectionError extends Error {
+  constructor(cid) {
+    super(`Unknown Collection "${cid}"`);
+    this.name = "UnknownCollectionError";
+  }
+}
+
 class RemoteSettingsClient extends EventEmitter {
   static get InvalidSignatureError() {
     return InvalidSignatureError;
   }
   static get MissingSignatureError() {
     return MissingSignatureError;
+  }
+  static get UnknownCollectionError() {
+    return UnknownCollectionError;
   }
 
   constructor(
@@ -341,7 +351,7 @@ class RemoteSettingsClient extends EventEmitter {
       },
     });
     if (changes.length === 0) {
-      throw new Error(`Unknown collection "${this.identifier}"`);
+      throw new RemoteSettingsClient.UnknownCollectionError(this.identifier);
     }
     // According to API, there will be one only (fail if not).
     const [{ last_modified: expectedTimestamp }] = changes;

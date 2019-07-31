@@ -70,5 +70,6 @@ extern CustomTypeAnnotation NonHeapClass;
 extern CustomTypeAnnotation HeapClass;
 extern CustomTypeAnnotation NonTemporaryClass;
 extern CustomTypeAnnotation TemporaryClass;
+extern CustomTypeAnnotation StaticLocalClass;
 
 #endif

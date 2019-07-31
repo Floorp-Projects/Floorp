@@ -26,6 +26,9 @@ pref("geckoview.logging", "Warn");
 pref("geckoview.logging", "Debug");
 #endif
 
+// Enable capture attribute for file input.
+pref("dom.capture.enabled", true);
+
 // Disable Web Push until we get it working
 pref("dom.push.enabled", false);
 

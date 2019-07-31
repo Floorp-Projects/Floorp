@@ -975,6 +975,7 @@ FilePickerDelegate.prototype = {
     };
     this._mode = aMode;
     this._mimeTypes = [];
+    this._capture = 0;
   },
 
   get mode() {
@@ -991,6 +992,7 @@ FilePickerDelegate.prototype = {
 
   open: function(aFilePickerShownCallback) {
     this._msg.mimeTypes = this._mimeTypes;
+    this._msg.capture = this._capture;
     this._prompt.asyncShowPrompt(this._msg, result => {
       // OK: result
       // Cancel: !result
@@ -1090,6 +1092,14 @@ FilePickerDelegate.prototype = {
   },
 
   set okButtonLabel(aValue) {},
+
+  get capture() {
+    return this._capture;
+  },
+
+  set capture(aValue) {
+    this._capture = aValue;
+  },
 };
 
 function ColorPickerDelegate() {}

@@ -96,6 +96,7 @@ UNIFIED_SOURCES += [
     'Sink.cpp',
     'Snapshots.cpp',
     'StupidAllocator.cpp',
+    'TIOracle.cpp',
     'TypedObjectPrediction.cpp',
     'TypePolicy.cpp',
     'ValueNumbering.cpp',

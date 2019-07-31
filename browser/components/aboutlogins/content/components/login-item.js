@@ -260,23 +260,41 @@ export default class LoginItem extends HTMLElement {
   }
 
   /**
+   * Shows a confirmation dialog.
+   * @param {string} type The type of confirmation dialog to display.
+   * @param {boolean} onConfirm Optional, the function to execute when the confirm button is clicked.
+   */
+  showConfirmationDialog(type, onConfirm = () => {}) {
+    const dialog = document.querySelector("confirmation-dialog");
+    let options;
+    switch (type) {
+      case "delete": {
+        options = {
+          title: "confirm-delete-dialog-title",
+          message: "confirm-delete-dialog-message",
+          confirmButtonLabel: "confirm-delete-dialog-confirm-button",
+        };
+      }
+    }
+    let dialogPromise = dialog.show(options);
+    dialogPromise.then(onConfirm, () => {});
+    return dialogPromise;
+  }
+
+  /**
    * Toggles the confirm delete dialog, completing the deletion if the user
    * agrees.
    */
   confirmDelete() {
-    const dialog = document.querySelector("confirm-delete-dialog");
-    dialog.show().then(
-      () => {
-        document.dispatchEvent(
-          new CustomEvent("AboutLoginsDeleteLogin", {
-            bubbles: true,
-            detail: this._login,
-          })
-        );
-        recordTelemetryEvent({ object: "existing_login", method: "delete" });
-      },
-      () => {}
-    );
+    this.showConfirmationDialog("delete", () => {
+      document.dispatchEvent(
+        new CustomEvent("AboutLoginsDeleteLogin", {
+          bubbles: true,
+          detail: this._login,
+        })
+      );
+      recordTelemetryEvent({ object: "existing_login", method: "delete" });
+    });
   }
 
   /**

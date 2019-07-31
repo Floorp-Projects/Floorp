@@ -159,7 +159,7 @@ add_task(async function test_telemetry_events() {
     let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
     deleteButton.click();
     let confirmDeleteDialog = content.document.querySelector(
-      "confirm-delete-dialog"
+      "confirmation-dialog"
     );
     let confirmDeleteButton = confirmDeleteDialog.shadowRoot.querySelector(
       ".confirm-button"

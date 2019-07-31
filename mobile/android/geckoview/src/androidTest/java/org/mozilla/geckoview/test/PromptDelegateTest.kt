@@ -240,11 +240,11 @@ class PromptDelegateTest : BaseSessionTest() {
 
         sessionRule.waitUntilCalled(object : Callbacks.PromptDelegate {
             @AssertCalled(count = 1)
-            override fun onFilePrompt(session: GeckoSession, title: String?, type: Int, mimeTypes: Array<out String>?, callback: GeckoSession.PromptDelegate.FileCallback) {
+            override fun onFilePrompt(session: GeckoSession, title: String?, type: Int, mimeTypes: Array<out String>?, capture: Int, callback: GeckoSession.PromptDelegate.FileCallback) {
                 assertThat("Length of mimeTypes should match", 2, equalTo(mimeTypes!!.size))
                 assertThat("First accept attribute should match", "image/*", equalTo(mimeTypes[0]))
                 assertThat("Second accept attribute should match", ".pdf", equalTo(mimeTypes[1]))
-                // TODO: Test capture attribute when implemented.
+                assertThat("Capture attribute should match", GeckoSession.PromptDelegate.CAPTURE_TYPE_USER, equalTo(capture))
             }
         })
     }

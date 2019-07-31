@@ -44,10 +44,7 @@ static io_connect_t gRootPort = MACH_PORT_NULL;
 nsToolkit* nsToolkit::gToolkit = nullptr;
 
 nsToolkit::nsToolkit()
-    : mSleepWakeNotificationRLS(nullptr),
-      mPowerNotifier{0},
-      mEventTapPort(nullptr),
-      mEventTapRLS(nullptr) {
+    : mSleepWakeNotificationRLS(nullptr), mPowerNotifier{0}, mAllProcessMouseMonitor(nil) {
   MOZ_COUNT_CTOR(nsToolkit);
   RegisterForSleepWakeNotifications();
 }
@@ -55,7 +52,7 @@ nsToolkit::nsToolkit()
 nsToolkit::~nsToolkit() {
   MOZ_COUNT_DTOR(nsToolkit);
   RemoveSleepWakeNotifications();
-  UnregisterAllProcessMouseEventHandlers();
+  StopMonitoringAllProcessMouseEvents();
 }
 
 void nsToolkit::PostSleepWakeNotification(const char* aNotification) {
@@ -129,50 +126,6 @@ void nsToolkit::RemoveSleepWakeNotifications() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// Converts aPoint from the CoreGraphics "global display coordinate" system
-// (which includes all displays/screens and has a top-left origin) to its
-// (presumed) Cocoa counterpart (assumed to be the same as the "screen
-// coordinates" system), which has a bottom-left origin.
-static NSPoint ConvertCGGlobalToCocoaScreen(CGPoint aPoint) {
-  NSPoint cocoaPoint;
-  cocoaPoint.x = aPoint.x;
-  cocoaPoint.y = nsCocoaUtils::FlippedScreenY(aPoint.y);
-  return cocoaPoint;
-}
-
-// Since our event tap is "listen only", events arrive here a little after
-// they've already been processed.
-static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef event,
-                                   void* refcon) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
-
-  if ((type == kCGEventTapDisabledByUserInput) || (type == kCGEventTapDisabledByTimeout))
-    return event;
-  if ([NSApp isActive]) return event;
-
-  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
-  NS_ENSURE_TRUE(rollupListener, event);
-  nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-  if (!rollupWidget) return event;
-
-  // Don't bother with rightMouseDown events here -- because of the delay,
-  // we'll end up closing browser context menus that we just opened.  Since
-  // these events usually raise a context menu, we'll handle them by hooking
-  // the @"com.apple.HIToolbox.beginMenuTrackingNotification" distributed
-  // notification (in nsAppShell.mm's AppShellDelegate).
-  if (type == kCGEventRightMouseDown) return event;
-  NSWindow* ctxMenuWindow = (NSWindow*)rollupWidget->GetNativeData(NS_NATIVE_WINDOW);
-  if (!ctxMenuWindow) return event;
-  NSPoint screenLocation = ConvertCGGlobalToCocoaScreen(CGEventGetLocation(event));
-  // Don't roll up the rollup widget if our mouseDown happens over it (doing
-  // so would break the corresponding context menu).
-  if (NSPointInRect(screenLocation, [ctxMenuWindow frame])) return event;
-  rollupListener->Rollup(0, false, nullptr, nullptr);
-  return event;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(NULL);
-}
-
 // Cocoa Firefox's use of custom context menus requires that we explicitly
 // handle mouse events from other processes that the OS handles
 // "automatically" for native context menus -- mouseMoved events so that
@@ -180,61 +133,64 @@ static CGEventRef EventTapCallback(CGEventTapProxy proxy, CGEventType type, CGEv
 // focus (bmo bug 368077), and mouseDown events so that our browser can
 // dismiss a context menu when a mouseDown happens in another process (bmo
 // bug 339945).
-void nsToolkit::RegisterForAllProcessMouseEvents() {
+void nsToolkit::MonitorAllProcessMouseEvents() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (getenv("MOZ_NO_OSX_EVENT_TAPS")) return;
 
     // Don't do this for apps that use native context menus.
 #ifdef MOZ_USE_NATIVE_POPUP_WINDOWS
   return;
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 
-  if (!mEventTapRLS) {
-    // Using an event tap for mouseDown events (instead of installing a
-    // handler for them on the EventMonitor target) works around an Apple
-    // bug that causes OS menus (like the Clock menu) not to work properly
-    // on OS X 10.4.X and below (bmo bug 381448).
-    // We install our event tap "listen only" to get around yet another Apple
-    // bug -- when we install it as an event filter on any kind of mouseDown
-    // event, that kind of event stops working in the main menu, and usually
-    // mouse event processing stops working in all apps in the current login
-    // session (so the entire OS appears to be hung)!  The downside of
-    // installing listen-only is that events arrive at our handler slightly
-    // after they've already been processed.
-    mEventTapPort = CGEventTapCreate(
-        kCGSessionEventTap, kCGHeadInsertEventTap, kCGEventTapOptionListenOnly,
-        CGEventMaskBit(kCGEventLeftMouseDown) | CGEventMaskBit(kCGEventRightMouseDown) |
-            CGEventMaskBit(kCGEventOtherMouseDown),
-        EventTapCallback, nullptr);
-    if (!mEventTapPort) return;
-    mEventTapRLS = CFMachPortCreateRunLoopSource(nullptr, mEventTapPort, 0);
-    if (!mEventTapRLS) {
-      CFRelease(mEventTapPort);
-      mEventTapPort = nullptr;
-      return;
-    }
-    CFRunLoopAddSource(CFRunLoopGetCurrent(), mEventTapRLS, kCFRunLoopDefaultMode);
+  if (getenv("MOZ_NO_GLOBAL_MOUSE_MONITOR")) return;
+
+  if (mAllProcessMouseMonitor == nil) {
+    mAllProcessMouseMonitor = [NSEvent
+        addGlobalMonitorForEventsMatchingMask:NSLeftMouseDownMask | NSOtherMouseDownMask
+                                      handler:^(NSEvent* evt) {
+                                        if ([NSApp isActive]) {
+                                          return;
+                                        }
+
+                                        nsIRollupListener* rollupListener =
+                                            nsBaseWidget::GetActiveRollupListener();
+                                        if (!rollupListener) {
+                                          return;
+                                        }
+
+                                        nsCOMPtr<nsIWidget> rollupWidget =
+                                            rollupListener->GetRollupWidget();
+                                        if (!rollupWidget) {
+                                          return;
+                                        }
+
+                                        NSWindow* ctxMenuWindow =
+                                            (NSWindow*)rollupWidget->GetNativeData(
+                                                NS_NATIVE_WINDOW);
+                                        if (!ctxMenuWindow) {
+                                          return;
+                                        }
+
+                                        // Don't roll up the rollup widget if our mouseDown happens
+                                        // over it (doing so would break the corresponding context
+                                        // menu).
+                                        NSPoint screenLocation = [NSEvent mouseLocation];
+                                        if (NSPointInRect(screenLocation, [ctxMenuWindow frame])) {
+                                          return;
+                                        }
+
+                                        rollupListener->Rollup(0, false, nullptr, nullptr);
+                                      }];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsToolkit::UnregisterAllProcessMouseEventHandlers() {
+void nsToolkit::StopMonitoringAllProcessMouseEvents() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mEventTapRLS) {
-    CFRunLoopRemoveSource(CFRunLoopGetCurrent(), mEventTapRLS, kCFRunLoopDefaultMode);
-    CFRelease(mEventTapRLS);
-    mEventTapRLS = nullptr;
-  }
-  if (mEventTapPort) {
-    // mEventTapPort must be invalidated as well as released.  Otherwise the
-    // event tap doesn't get destroyed until the browser process ends (it
-    // keeps showing up in the list returned by CGGetEventTapList()).
-    CFMachPortInvalidate(mEventTapPort);
-    CFRelease(mEventTapPort);
-    mEventTapPort = nullptr;
+  if (mAllProcessMouseMonitor != nil) {
+    [NSEvent removeMonitor:mAllProcessMouseMonitor];
+    mAllProcessMouseMonitor = nil;
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;

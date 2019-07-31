@@ -81,8 +81,10 @@ const BCH_TESTS = [
 
 add_task(async function test_bug538331() {
   // Reset the startup page pref since it may have been set by other tests
-  // and we will assume it is default.
-  Services.prefs.clearUserPref("browser.startup.page");
+  // and we will assume it is (non-test) default.
+  await SpecialPowers.pushPrefEnv({
+    clear: [["browser.startup.page"]],
+  });
 
   let originalMstone = Services.prefs.getCharPref(PREF_MSTONE);
 

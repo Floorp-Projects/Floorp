@@ -37,6 +37,8 @@ class nsFilePickerProxy : public nsBaseFilePicker,
                   int16_t aMode) override;
   NS_IMETHOD AppendFilter(const nsAString& aTitle,
                           const nsAString& aFilter) override;
+  NS_IMETHOD GetCapture(int16_t* aCapture) override;
+  NS_IMETHOD SetCapture(int16_t aCapture) override;
   NS_IMETHOD GetDefaultString(nsAString& aDefaultString) override;
   NS_IMETHOD SetDefaultString(const nsAString& aDefaultString) override;
   NS_IMETHOD GetDefaultExtension(nsAString& aDefaultExtension) override;
@@ -71,6 +73,7 @@ class nsFilePickerProxy : public nsBaseFilePicker,
   nsString mFile;
   nsString mDefault;
   nsString mDefaultExtension;
+  int16_t mCapture;
 
   bool mIPCActive;
 

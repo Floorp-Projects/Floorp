@@ -162,7 +162,7 @@ class VisualStudioBackend(CommonBackend):
 
         # Write out a shared property file with common variables.
         props_path = os.path.join(out_proj_dir, 'mozilla.props')
-        with self._write_file(props_path, mode='rb') as fh:
+        with self._write_file(props_path, readmode='rb') as fh:
             self._write_props(fh)
 
         # Generate some wrapper scripts that allow us to invoke mach inside
@@ -171,15 +171,15 @@ class VisualStudioBackend(CommonBackend):
         # to buffer output from within Visual Studio (surely this is
         # configurable) and the default execution policy of PowerShell doesn't
         # allow custom scripts to be executed.
-        with self._write_file(os.path.join(out_dir, 'mach.bat'), mode='rb') as fh:
+        with self._write_file(os.path.join(out_dir, 'mach.bat'), readmode='rb') as fh:
             self._write_mach_batch(fh)
 
-        with self._write_file(os.path.join(out_dir, 'mach.ps1'), mode='rb') as fh:
+        with self._write_file(os.path.join(out_dir, 'mach.ps1'), readmode='rb') as fh:
             self._write_mach_powershell(fh)
 
         # Write out a solution file to tie it all together.
         solution_path = os.path.join(out_dir, 'mozilla.sln')
-        with self._write_file(solution_path, mode='rb') as fh:
+        with self._write_file(solution_path, readmode='rb') as fh:
             self._write_solution(fh, projects)
 
     def _write_projects_for_sources(self, sources, prefix, out_dir):
@@ -461,11 +461,11 @@ class VisualStudioBackend(CommonBackend):
         root = '%s.vcxproj' % basename
         project_id = get_id(basename.encode('utf-8'))
 
-        with self._write_file(os.path.join(out_dir, root), mode='rb') as fh:
+        with self._write_file(os.path.join(out_dir, root), readmode='rb') as fh:
             project_id, name = VisualStudioBackend.write_vs_project(
                 fh, self._version, project_id, name, **kwargs)
 
-        with self._write_file(os.path.join(out_dir, '%s.user' % root), mode='rb') as fh:
+        with self._write_file(os.path.join(out_dir, '%s.user' % root), readmode='rb') as fh:
             fh.write('<?xml version="1.0" encoding="utf-8"?>\r\n')
             fh.write('<Project ToolsVersion="4.0" xmlns="%s">\r\n' %
                      MSBUILD_NAMESPACE)

@@ -711,7 +711,7 @@ final class BasicGeckoViewPrompt implements GeckoSession.PromptDelegate {
 
     @TargetApi(19)
     public void onFilePrompt(GeckoSession session, String title, int type,
-                              String[] mimeTypes, FileCallback callback)
+                              String[] mimeTypes, int capture, FileCallback callback)
     {
         final Activity activity = mActivity;
         if (activity == null) {

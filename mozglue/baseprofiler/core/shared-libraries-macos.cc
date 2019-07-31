@@ -59,10 +59,11 @@ class MOZ_RAII SharedLibrariesLock {
   void operator=(const SharedLibrariesLock&) = delete;
 
  private:
-  static mozilla::baseprofiler::PSMutex sSharedLibrariesMutex;
+  static mozilla::baseprofiler::detail::BaseProfilerMutex sSharedLibrariesMutex;
 };
 
-mozilla::baseprofiler::PSMutex SharedLibrariesLock::sSharedLibrariesMutex;
+mozilla::baseprofiler::detail::BaseProfilerMutex
+    SharedLibrariesLock::sSharedLibrariesMutex;
 
 static void SharedLibraryAddImage(const struct mach_header* mh,
                                   intptr_t vmaddr_slide) {

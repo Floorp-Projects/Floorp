@@ -192,8 +192,10 @@ void WebGLRenderbuffer::RenderbufferStorage(uint32_t samples,
   mContext->OnDataAllocCall();
 
   const uint32_t depth = 1;
-  const bool hasData = false;
-  mImageInfo = {usage, width, height, depth, hasData, uint8_t(samples)};
+  auto uninitializedSlices = Some(std::vector<bool>(depth, true));
+  mImageInfo = {
+      usage,           width, height, depth, std::move(uninitializedSlices),
+      uint8_t(samples)};
   InvalidateCaches();
 }
 

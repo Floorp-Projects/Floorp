@@ -4,10 +4,18 @@ use serde_json::Value;
 use crate::common::{Cookie, Timeouts, WebElement};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct NewWindow {
+    handle: String,
+    #[serde(rename = "type")]
+    type_hint: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MarionetteResult {
     #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
     Null,
+    NewWindow(NewWindow),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     String(String),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
@@ -79,6 +87,16 @@ mod tests {
             &MarionetteResult::Cookies(data),
             json!([{"name":"foo","value":"bar","path":"/common","domain":"web-platform.test","secure":false,"httpOnly":false}]),
         );
+    }
+
+    #[test]
+    fn test_new_window_response() {
+        let data = NewWindow {
+            handle: "6442450945".into(),
+            type_hint: "tab".into(),
+        };
+        let json = json!({"handle": "6442450945", "type": "tab"});
+        assert_ser_de(&MarionetteResult::NewWindow(data), json);
     }
 
     #[test]

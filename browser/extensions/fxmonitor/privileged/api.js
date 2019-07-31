@@ -73,8 +73,11 @@ this.FirefoxMonitor = {
 
   kEnabledPref: "extensions.fxmonitor.enabled",
 
+  // This is here for documentation, will be redefined to a pref getter
+  // using XPCOMUtils.defineLazyPreferenceGetter in delayedInit().
   // Telemetry event recording is enabled by default.
   // If this pref exists and is true-y, it's disabled.
+  telemetryDisabled: null,
   kTelemetryDisabledPref: "extensions.fxmonitor.telemetryDisabled",
 
   kNotificationID: "fxmonitor",
@@ -197,9 +200,6 @@ this.FirefoxMonitor = {
       },
     });
 
-    let telemetryEnabled = !Preferences.get(this.kTelemetryDisabledPref);
-    Services.telemetry.setEventRecordingEnabled("fxmonitor", telemetryEnabled);
-
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "FirefoxMonitorURL",
@@ -211,6 +211,13 @@ this.FirefoxMonitor = {
       this,
       "firstAlertShown",
       this.kFirstAlertShownPref,
+      false
+    );
+
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "telemetryDisabled",
+      this.kTelemetryDisabledPref,
       false
     );
 
@@ -528,11 +535,7 @@ this.FirefoxMonitor = {
                 browser
               )
             );
-          Services.telemetry.recordEvent(
-            "fxmonitor",
-            "interaction",
-            "doorhanger_removed"
-          );
+          this.recordEvent("doorhanger_removed");
           break;
       }
     };
@@ -552,13 +555,17 @@ this.FirefoxMonitor = {
       }
     );
 
-    Services.telemetry.recordEvent(
-      "fxmonitor",
-      "interaction",
-      "doorhanger_shown"
-    );
+    this.recordEvent("doorhanger_shown");
 
     this.notificationsByWindow.get(win).add(n);
+  },
+
+  recordEvent(aEventName) {
+    if (this.telemetryDisabled) {
+      return;
+    }
+
+    Services.telemetry.recordEvent("fxmonitor", "interaction", aEventName);
   },
 };
 
@@ -619,7 +626,7 @@ PanelUI.prototype = {
           {}
         );
 
-        Services.telemetry.recordEvent("fxmonitor", "interaction", "check_btn");
+        FirefoxMonitor.recordEvent("check_btn");
       },
     });
   },
@@ -633,11 +640,7 @@ PanelUI.prototype = {
         label: this.getString("fxmonitor.dismissButton.label"),
         accessKey: this.getString("fxmonitor.dismissButton.accessKey"),
         callback: () => {
-          Services.telemetry.recordEvent(
-            "fxmonitor",
-            "interaction",
-            "dismiss_btn"
-          );
+          FirefoxMonitor.recordEvent("dismiss_btn");
         },
       },
       {
@@ -647,11 +650,7 @@ PanelUI.prototype = {
         accessKey: this.getString("fxmonitor.neverShowButton.accessKey"),
         callback: () => {
           FirefoxMonitor.disable();
-          Services.telemetry.recordEvent(
-            "fxmonitor",
-            "interaction",
-            "never_show_btn"
-          );
+          FirefoxMonitor.recordEvent("never_show_btn");
         },
       },
     ]);

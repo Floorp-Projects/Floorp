@@ -99,12 +99,12 @@ nsString MediaEngineWebRTCMicrophoneSource::GetGroupId() const {
 
 uint32_t MediaEngineWebRTCMicrophoneSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const {
+    const nsString& aDeviceId, const nsString& aGroupId) const {
   uint32_t distance = 0;
 
   for (const auto* cs : aConstraintSets) {
-    distance =
-        MediaConstraintsHelper::GetMinimumFitnessDistance(*cs, aDeviceId);
+    distance = MediaConstraintsHelper::GetMinimumFitnessDistance(*cs, aDeviceId,
+                                                                 aGroupId);
     break;  // distance is read from first entry only
   }
   return distance;
@@ -157,8 +157,8 @@ nsresult MediaEngineWebRTCMicrophoneSource::EvaluateSettings(
 
 nsresult MediaEngineWebRTCMicrophoneSource::Reconfigure(
     const dom::MediaTrackConstraints& aConstraints,
-    const MediaEnginePrefs& aPrefs, const nsString& /* aDeviceId */,
-    const char** aOutBadConstraint) {
+    const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+    const nsString& aGroupId, const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mStream);
 
@@ -392,7 +392,8 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
 nsresult MediaEngineWebRTCMicrophoneSource::Allocate(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const ipc::PrincipalInfo& aPrincipalInfo, const char** aOutBadConstraint) {
+    const nsString& aGroupId, const ipc::PrincipalInfo& aPrincipalInfo,
+    const char** aOutBadConstraint) {
   AssertIsOnOwningThread();
 
   mState = kAllocated;
@@ -1170,13 +1171,13 @@ nsresult MediaEngineWebRTCAudioCaptureSource::Stop() {
 nsresult MediaEngineWebRTCAudioCaptureSource::Reconfigure(
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
-    const char** aOutBadConstraint) {
+    const nsString& aGroupId, const char** aOutBadConstraint) {
   return NS_OK;
 }
 
 uint32_t MediaEngineWebRTCAudioCaptureSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId) const {
+    const nsString& aDeviceId, const nsString& aGroupId) const {
   // There is only one way of capturing audio for now, and it's always adequate.
   return 0;
 }

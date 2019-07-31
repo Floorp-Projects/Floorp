@@ -235,6 +235,7 @@ class NormalizedConstraintSet {
   LongLongRange mBrowserWindow;
   BooleanRange mScrollWithPage;
   StringRange mDeviceId;
+  StringRange mGroupId;
   LongRange mViewportOffsetX, mViewportOffsetY, mViewportWidth, mViewportHeight;
   BooleanRange mEchoCancellation, mNoiseSuppression, mAutoGainControl;
   LongRange mChannelCount;
@@ -265,6 +266,7 @@ class NormalizedConstraintSet {
                             : false,
                         aList),
         mDeviceId(&T::mDeviceId, "deviceId", aOther.mDeviceId, advanced, aList),
+        mGroupId(&T::mGroupId, "groupId", aOther.mGroupId, advanced, aList),
         mViewportOffsetX(&T::mViewportOffsetX, "viewportOffsetX",
                          aOther.mViewportOffsetX, advanced, aList),
         mViewportOffsetY(&T::mViewportOffsetY, "viewportOffsetY",
@@ -323,7 +325,8 @@ class MediaConstraintsHelper {
 
  public:
   static uint32_t GetMinimumFitnessDistance(
-      const NormalizedConstraintSet& aConstraints, const nsString& aDeviceId);
+      const NormalizedConstraintSet& aConstraints, const nsString& aDeviceId,
+      const nsString& aGroupId);
 
   // Apply constrains to a supplied list of devices (removes items from the
   // list)
@@ -338,7 +341,7 @@ class MediaConstraintsHelper {
   static const char* FindBadConstraint(
       const NormalizedConstraints& aConstraints,
       const RefPtr<MediaEngineSource>& aMediaEngineSource,
-      const nsString& aDeviceId);
+      const nsString& aDeviceId, const nsString& aGroupId);
 
   static void LogConstraints(const NormalizedConstraintSet& aConstraints);
 };

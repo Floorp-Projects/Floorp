@@ -1073,7 +1073,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             if re.match(r'[0-9a-fA-F]{16}$', before):
                 orig_basename = after
             path = mozpath.join(distdir, orig_basename)
-            with FileAvoidWrite(path, mode='rb') as fh:
+            with FileAvoidWrite(path, readmode='rb') as fh:
                 shutil.copyfileobj(open(filename, mode='rb'), fh)
             self.log(logging.INFO, 'artifact',
                      {'path': path},
@@ -1109,7 +1109,7 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                 if info.filename.endswith('.ini'):
                     continue
                 n = mozpath.join(distdir, info.filename)
-                fh = FileAvoidWrite(n, mode='rb')
+                fh = FileAvoidWrite(n, readmode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',

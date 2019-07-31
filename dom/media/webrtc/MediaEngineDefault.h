@@ -44,6 +44,7 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+                    const nsString& aGroupId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
@@ -51,14 +52,14 @@ class MediaEngineDefaultVideoSource : public MediaEngineSource {
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
   nsresult Stop() override;
   nsresult Deallocate() override;
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId, const nsString& aGroupId) const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
   bool IsFake() const override { return true; }
@@ -109,6 +110,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
                     const MediaEnginePrefs& aPrefs, const nsString& aDeviceId,
+                    const nsString& aGroupId,
                     const ipc::PrincipalInfo& aPrincipalInfo,
                     const char** aOutBadConstraint) override;
   void SetTrack(const RefPtr<SourceMediaStream>& aStream, TrackID aTrackID,
@@ -116,7 +118,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
   nsresult Start() override;
   nsresult Reconfigure(const dom::MediaTrackConstraints& aConstraints,
                        const MediaEnginePrefs& aPrefs,
-                       const nsString& aDeviceId,
+                       const nsString& aDeviceId, const nsString& aGroupId,
                        const char** aOutBadConstraint) override;
   nsresult Stop() override;
   nsresult Deallocate() override;
@@ -129,7 +131,7 @@ class MediaEngineDefaultAudioSource : public MediaEngineSource {
 
   uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) const override;
+      const nsString& aDeviceId, const nsString& aGroupId) const override;
   void GetSettings(dom::MediaTrackSettings& aOutSettings) const override;
 
  protected:

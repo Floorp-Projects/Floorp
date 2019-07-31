@@ -24,6 +24,7 @@
 #include "jit/JitAllocPolicy.h"
 #include "jit/MacroAssembler.h"
 #include "jit/MOpcodes.h"
+#include "jit/TIOracle.h"
 #include "jit/TypedObjectPrediction.h"
 #include "jit/TypePolicy.h"
 #include "js/HeapAPI.h"
