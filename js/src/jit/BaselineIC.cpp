@@ -1091,11 +1091,9 @@ bool ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx,
   return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
 }
 
-static MOZ_MUST_USE bool TypeMonitorResult(JSContext* cx,
-                                           ICMonitoredFallbackStub* stub,
-                                           BaselineFrame* frame,
-                                           HandleScript script, jsbytecode* pc,
-                                           HandleValue val) {
+bool TypeMonitorResult(JSContext* cx, ICMonitoredFallbackStub* stub,
+                       BaselineFrame* frame, HandleScript script,
+                       jsbytecode* pc, HandleValue val) {
   AutoSweepJitScript sweep(script);
   StackTypeSet* types = script->jitScript()->bytecodeTypes(sweep, script, pc);
   JitScript::MonitorBytecodeType(cx, script, pc, types, val);

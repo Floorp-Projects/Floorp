@@ -816,7 +816,7 @@
                      smoothscroll="false"
                      flatList="true"
                      tooltip="bhTooltip">
-          <html:div id="PanelUI-whatsNew-message-container">
+          <html:div id="PanelUI-whatsNew-message-container" role="document">
             <!-- What's New messages will be rendered here -->
           </html:div>
         </toolbaritem>

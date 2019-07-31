@@ -932,3 +932,34 @@ function getPseudoClassCheckbox(view, pseudo) {
     checkbox => checkbox.value === pseudo
   )[0];
 }
+
+/**
+ * Check that the CSS variable output has the expected class name and data attribute.
+ *
+ * @param {RulesView} view
+ *        The RulesView instance.
+ * @param {String} selector
+ *        Selector name for a rule. (e.g. "div", "div::before" and ".sample" etc);
+ * @param {String} propertyName
+ *        Property name (e.g. "color" and "padding-top" etc);
+ * @param {String} expectedClassName
+ *        The class name the variable should have.
+ * @param {String} expectedDatasetValue
+ *        The variable data attribute value.
+ */
+function checkCSSVariableOutput(
+  view,
+  selector,
+  propertyName,
+  expectedClassName,
+  expectedDatasetValue
+) {
+  const target = getRuleViewProperty(
+    view,
+    selector,
+    propertyName
+  ).valueSpan.querySelector(`.${expectedClassName}`);
+
+  ok(target, "The target element should exist");
+  is(target.dataset.variable, expectedDatasetValue);
+}

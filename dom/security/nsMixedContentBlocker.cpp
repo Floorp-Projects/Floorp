@@ -730,7 +730,6 @@ nsresult nsMixedContentBlocker::ShouldLoad(
 
   // Check the parent scheme. If it is not an HTTPS page then mixed content
   // restrictions do not apply.
-  bool parentIsHttps;
   nsCOMPtr<nsIURI> innerRequestingLocation =
       NS_GetInnermostURI(requestingLocation);
   if (!innerRequestingLocation) {
@@ -739,12 +738,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     return NS_OK;
   }
 
-  nsresult rv = innerRequestingLocation->SchemeIs("https", &parentIsHttps);
-  if (NS_FAILED(rv)) {
-    NS_ERROR("requestingLocation->SchemeIs failed");
-    *aDecision = REJECT_REQUEST;
-    return NS_OK;
-  }
+  bool parentIsHttps = innerRequestingLocation->SchemeIs("https");
   if (!parentIsHttps) {
     *aDecision = ACCEPT;
     return NS_OK;
@@ -762,19 +756,14 @@ nsresult nsMixedContentBlocker::ShouldLoad(
     // innerContentLocation doesn't map to the secure URI flags checked above.
     // Assert this for sanity's sake
 #ifdef DEBUG
-    bool isHttpsScheme = false;
-    rv = innerContentLocation->SchemeIs("https", &isHttpsScheme);
-    NS_ENSURE_SUCCESS(rv, rv);
+    bool isHttpsScheme = innerContentLocation->SchemeIs("https");
     MOZ_ASSERT(!isHttpsScheme);
 #endif
     *aDecision = REJECT_REQUEST;
     return NS_OK;
   }
 
-  bool isHttpScheme = false;
-  rv = innerContentLocation->SchemeIs("http", &isHttpScheme);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  bool isHttpScheme = innerContentLocation->SchemeIs("http");
   if (isHttpScheme && IsPotentiallyTrustworthyOrigin(innerContentLocation)) {
     *aDecision = ACCEPT;
     return NS_OK;
@@ -819,7 +808,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   if (document->GetBlockAllMixedContent(isPreload)) {
     // log a message to the console before returning.
     nsAutoCString spec;
-    rv = aContentLocation->GetSpec(spec);
+    nsresult rv = aContentLocation->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     AutoTArray<nsString, 1> params;
@@ -843,7 +832,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
   bool rootHasSecureConnection = false;
   bool allowMixedContent = false;
   bool isRootDocShell = false;
-  rv = docShell->GetAllowMixedContentAndConnectionData(
+  nsresult rv = docShell->GetAllowMixedContentAndConnectionData(
       &rootHasSecureConnection, &allowMixedContent, &isRootDocShell);
   if (NS_FAILED(rv)) {
     *aDecision = REJECT_REQUEST;
@@ -884,12 +873,7 @@ nsresult nsMixedContentBlocker::ShouldLoad(
         return NS_OK;
       }
 
-      if (NS_FAILED(innerParentURI->SchemeIs("https", &httpsParentExists))) {
-        // if getting the scheme fails, assume there is a https parent and
-        // break.
-        httpsParentExists = true;
-        break;
-      }
+      httpsParentExists = innerParentURI->SchemeIs("https");
 
       // When the parent and the root are the same, we have traversed all the
       // way up the same type docshell tree.  Break out of the while loop.

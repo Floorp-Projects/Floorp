@@ -431,20 +431,20 @@ impl FrameProfileCounters {
 
 #[derive(Clone)]
 pub struct TextureCacheProfileCounters {
-    pub pages_a8_linear: ResourceProfileCounter,
-    pub pages_a16_linear: ResourceProfileCounter,
-    pub pages_rgba8_linear: ResourceProfileCounter,
-    pub pages_rgba8_nearest: ResourceProfileCounter,
+    pub pages_alpha8_linear: ResourceProfileCounter,
+    pub pages_alpha16_linear: ResourceProfileCounter,
+    pub pages_color8_linear: ResourceProfileCounter,
+    pub pages_color8_nearest: ResourceProfileCounter,
     pub pages_picture: ResourceProfileCounter,
 }
 
 impl TextureCacheProfileCounters {
     pub fn new() -> Self {
         TextureCacheProfileCounters {
-            pages_a8_linear: ResourceProfileCounter::new("Texture A8 cached pages"),
-            pages_a16_linear: ResourceProfileCounter::new("Texture A16 cached pages"),
-            pages_rgba8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)"),
-            pages_rgba8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)"),
+            pages_alpha8_linear: ResourceProfileCounter::new("Texture A8 cached pages"),
+            pages_alpha16_linear: ResourceProfileCounter::new("Texture A16 cached pages"),
+            pages_color8_linear: ResourceProfileCounter::new("Texture RGBA8 cached pages (L)"),
+            pages_color8_nearest: ResourceProfileCounter::new("Texture RGBA8 cached pages (N)"),
             pages_picture: ResourceProfileCounter::new("Picture cached pages"),
         }
     }
@@ -1227,9 +1227,9 @@ impl Profiler {
 
         Profiler::draw_counters(
             &[
-                &backend_profile.resources.texture_cache.pages_a8_linear,
-                &backend_profile.resources.texture_cache.pages_rgba8_linear,
-                &backend_profile.resources.texture_cache.pages_rgba8_nearest,
+                &backend_profile.resources.texture_cache.pages_alpha8_linear,
+                &backend_profile.resources.texture_cache.pages_color8_linear,
+                &backend_profile.resources.texture_cache.pages_color8_nearest,
                 &backend_profile.ipc.display_lists,
             ],
             debug_renderer,

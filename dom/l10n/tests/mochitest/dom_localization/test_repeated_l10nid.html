@@ -7,16 +7,16 @@
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
   <script type="application/javascript">
   "use strict";
-  const { FluentBundle } =
+  const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
   async function* mockGenerateMessages(locales, resourceIds) {
     const bundle = new FluentBundle(locales);
-    bundle.addMessages(`
+    bundle.addResource(new FluentResource(`
 key1 = Translation For Key 1
 
 key2 = Visit <a data-l10n-name="link">this link<a/>.
-    `);
+    `));
     yield bundle;
   }
 

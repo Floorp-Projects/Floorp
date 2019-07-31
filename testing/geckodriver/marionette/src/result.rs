@@ -1,19 +1,20 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::Value;
 
-use crate::common::{Timeouts, WebElement};
+use crate::common::{Cookie, Timeouts, WebElement};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MarionetteResult {
+    #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
+    Null,
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     String(String),
-    Timeouts(Timeouts),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     WebElement(WebElement),
     WebElements(Vec<WebElement>),
-    #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
-    Null,
+    Cookies(Vec<Cookie>),
+    Timeouts(Timeouts),
 }
 
 fn to_value<T, S>(data: T, serializer: S) -> Result<S::Ok, S::Error>
@@ -63,6 +64,24 @@ mod tests {
     use serde_json::json;
 
     #[test]
+    fn test_cookies_response() {
+        let mut data = Vec::new();
+        data.push(Cookie {
+            name: "foo".into(),
+            value: "bar".into(),
+            path: Some("/common".into()),
+            domain: Some("web-platform.test".into()),
+            secure: false,
+            http_only: false,
+            expiry: None,
+        });
+        assert_ser_de(
+            &MarionetteResult::Cookies(data),
+            json!([{"name":"foo","value":"bar","path":"/common","domain":"web-platform.test","secure":false,"httpOnly":false}]),
+        );
+    }
+
+    #[test]
     fn test_web_element_response() {
         let data = WebElement {
             element: "foo".into(),
@@ -91,9 +110,9 @@ mod tests {
     #[test]
     fn test_timeouts_response() {
         let data = Timeouts {
-            implicit: 1000,
-            page_load: 200000,
-            script: Some(60000),
+            implicit: Some(1000),
+            page_load: Some(200000),
+            script: Some(Some(60000)),
         };
         assert_ser_de(
             &MarionetteResult::Timeouts(data),

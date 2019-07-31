@@ -120,7 +120,7 @@ class MainFrame extends Component {
     const isAuditing = auditing.length > 0;
 
     return LocalizationProvider(
-      { messages: fluentBundles },
+      { bundles: fluentBundles },
       div(
         { className: "mainFrame", role: "presentation" },
         Toolbar({ accessibility, walker }),

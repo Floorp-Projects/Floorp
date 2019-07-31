@@ -59,3 +59,7 @@ with Files("en-US/chrome/plugins.properties"):
     BUG_COMPONENT = ("Core", "Plug-ins")
 
 JAR_MANIFESTS += ['jar.mn']
+
+RESOURCE_FILES.locale.layout += [
+    'en-US/chrome/layout/HtmlForm.properties',
+]

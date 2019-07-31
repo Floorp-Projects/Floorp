@@ -10,12 +10,12 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
-  const { FluentBundle } =
+  const { FluentBundle, FluentResource } =
     ChromeUtils.import("resource://gre/modules/Fluent.jsm");
 
   async function * generateMessages(locales, resourceIds) {
     const bundle = new FluentBundle(locales);
-    bundle.addMessages(`
+    bundle.addResource(new FluentResource(`
 file-menu =
     .label = File
     .accesskey = F
@@ -23,7 +23,7 @@ new-tab =
     .label = New Tab
     .accesskey = N
 container = Some text with an <image data-l10n-name="foo"> inside it.
-`);
+`));
     yield bundle;
   }
 

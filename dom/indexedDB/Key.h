@@ -108,7 +108,7 @@ class Key {
 
   double ToFloat() const {
     Assert(IsFloat());
-    const unsigned char* pos = BufferStart();
+    const EncodedDataType* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
     Assert(pos >= BufferEnd());
     return res;
@@ -116,7 +116,7 @@ class Key {
 
   double ToDateMsec() const {
     Assert(IsDate());
-    const unsigned char* pos = BufferStart();
+    const EncodedDataType* pos = BufferStart();
     double res = DecodeNumber(pos, BufferEnd());
     Assert(pos >= BufferEnd());
     return res;
@@ -124,7 +124,7 @@ class Key {
 
   void ToString(nsString& aString) const {
     Assert(IsString());
-    const unsigned char* pos = BufferStart();
+    const EncodedDataType* pos = BufferStart();
     DecodeString(pos, BufferEnd(), aString);
     Assert(pos >= BufferEnd());
   }
@@ -252,12 +252,15 @@ class Key {
  private:
   class MOZ_STACK_CLASS ArrayValueEncoder;
 
-  const unsigned char* BufferStart() const {
-    return reinterpret_cast<const unsigned char*>(mBuffer.BeginReading());
+  using EncodedDataType = unsigned char;
+
+  const EncodedDataType* BufferStart() const {
+    // TODO it would be nicer if mBuffer was also using EncodedDataType
+    return reinterpret_cast<const EncodedDataType*>(mBuffer.BeginReading());
   }
 
-  const unsigned char* BufferEnd() const {
-    return reinterpret_cast<const unsigned char*>(mBuffer.EndReading());
+  const EncodedDataType* BufferEnd() const {
+    return reinterpret_cast<const EncodedDataType*>(mBuffer.EndReading());
   }
 
   // Encoding helper. Trims trailing zeros off of mBuffer as a post-processing
@@ -303,27 +306,52 @@ class Key {
                                                          ErrorResult& aRv);
 
   // Decoding functions. aPos points into mBuffer and is adjusted to point
-  // past the consumed value.
-  static nsresult DecodeJSVal(const unsigned char*& aPos,
-                              const unsigned char* aEnd, JSContext* aCx,
+  // past the consumed value. (Note: this may be beyond aEnd).
+  static nsresult DecodeJSVal(const EncodedDataType*& aPos,
+                              const EncodedDataType* aEnd, JSContext* aCx,
                               JS::MutableHandle<JS::Value> aVal);
 
-  static void DecodeString(const unsigned char*& aPos,
-                           const unsigned char* aEnd, nsString& aString);
+  static void DecodeString(const EncodedDataType*& aPos,
+                           const EncodedDataType* aEnd, nsString& aString);
 
-  static double DecodeNumber(const unsigned char*& aPos,
-                             const unsigned char* aEnd);
+  static double DecodeNumber(const EncodedDataType*& aPos,
+                             const EncodedDataType* aEnd);
 
-  static JSObject* DecodeBinary(const unsigned char*& aPos,
-                                const unsigned char* aEnd, JSContext* aCx);
+  static JSObject* DecodeBinary(const EncodedDataType*& aPos,
+                                const EncodedDataType* aEnd, JSContext* aCx);
+
+  // Returns the size of the decoded data for stringy (string or binary),
+  // excluding a null terminator.
+  // On return, aOutSectionEnd points to the last byte behind the current
+  // encoded section, i.e. either aEnd, or the eTerminator.
+  // T is the base type for the decoded data.
+  template <typename T>
+  static uint32_t CalcDecodedStringySize(
+      const EncodedDataType* aBegin, const EncodedDataType* aEnd,
+      const EncodedDataType** aOutEncodedSectionEnd);
+
+  static uint32_t LengthOfEncodedBinary(const EncodedDataType* aPos,
+                                        const EncodedDataType* aEnd);
+
+  template <typename T>
+  static void DecodeAsStringy(const EncodedDataType* aEncodedSectionBegin,
+                              const EncodedDataType* aEncodedSectionEnd,
+                              uint32_t aDecodedLength, T* aOut);
+
+  template <EncodedDataType TypeMask, typename T, typename AcquireBuffer,
+            typename AcquireEmpty>
+  static void DecodeStringy(const EncodedDataType*& aPos,
+                            const EncodedDataType* aEnd,
+                            const AcquireBuffer& acquireBuffer,
+                            const AcquireEmpty& acquireEmpty);
 
   IDBResult<void, IDBSpecialValue::Invalid> EncodeJSValInternal(
       JSContext* aCx, JS::Handle<JS::Value> aVal, uint8_t aTypeOffset,
       uint16_t aRecursionDepth, ErrorResult& aRv);
 
-  static nsresult DecodeJSValInternal(const unsigned char*& aPos,
-                                      const unsigned char* aEnd, JSContext* aCx,
-                                      uint8_t aTypeOffset,
+  static nsresult DecodeJSValInternal(const EncodedDataType*& aPos,
+                                      const EncodedDataType* aEnd,
+                                      JSContext* aCx, uint8_t aTypeOffset,
                                       JS::MutableHandle<JS::Value> aVal,
                                       uint16_t aRecursionDepth);
 

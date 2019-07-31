@@ -902,7 +902,7 @@ void nsContentSink::PrefetchDNS(const nsAString& aHref) {
       uri->GetHost(host);
       CopyUTF8toUTF16(host, hostname);
     }
-    uri->SchemeIs("https", &isHttps);
+    isHttps = uri->SchemeIs("https");
   }
 
   if (!hostname.IsEmpty() && nsHTMLDNSPrefetch::IsAllowed(mDocument)) {

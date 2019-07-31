@@ -9,6 +9,9 @@
         "brkitr_tree": {
             "filterType": "exclude"
         },
+        "confusables": {
+            "filterType": "exclude"
+        },
         "conversion_mappings": {
             "whitelist": [
                 "ibm-37_P100-1995",
@@ -18,6 +21,12 @@
         "lang_tree": {
             "filterType": "exclude"
         },
+        "misc": {
+            "blacklist": [
+                "currencyNumericCodes",
+                "genderList"
+            ]
+        },
         "rbnf_tree": {
             "filterType": "locale",
             "whitelist": [ "ja" ]
@@ -25,7 +34,13 @@
         "region_tree": {
             "filterType": "exclude"
         },
+        "stringprep": {
+            "filterType": "exclude"
+        },
         "translit": {
+            "filterType": "exclude"
+        },
+        "unames": {
             "filterType": "exclude"
         }
     },
@@ -97,6 +112,84 @@
                 "+/*/speed/mile-per-hour",
 
                 "-/*/dnam"
+            ]
+        },
+        {
+            "categories": [
+                "coll_tree",
+                "curr_tree",
+                "locales_tree",
+                "rbnf_tree",
+                "unit_tree",
+                "zone_tree"
+            ],
+            "rules": [
+                "-/Version"
+            ]
+        },
+        {
+            "categories": [
+                "coll_tree"
+            ],
+            "rules": [
+                "-/collations/*/Version"
+            ]
+        },
+        {
+            "categories": [
+                "curr_tree"
+            ],
+            "rules": [
+                "-/Currencies%formal",
+                "-/Currencies%variant"
+            ]
+        },
+        {
+            "categories": [
+                "coll_tree"
+            ],
+            "rules": [
+                "-/UCARules",
+                "-/collations/*/Sequence"
+            ]
+        },
+        {
+            "categories": [
+                "locales_tree"
+            ],
+            "rules": [
+                "-/AuxExemplarCharacters",
+                "-/Ellipsis",
+                "-/ExemplarCharacters",
+                "-/ExemplarCharactersIndex",
+                "-/ExemplarCharactersNumbers",
+                "-/ExemplarCharactersPunctuation",
+                "-/MoreInformation",
+                "-/NumberElements/minimalPairs",
+                "-/characterLabel",
+                "-/delimiters",
+                "-/fields/mon",
+                "-/fields/mon-narrow",
+                "-/fields/mon-short",
+                "-/fields/tue",
+                "-/fields/tue-narrow",
+                "-/fields/tue-short",
+                "-/fields/wed",
+                "-/fields/wed-narrow",
+                "-/fields/wed-short",
+                "-/fields/thu",
+                "-/fields/thu-narrow",
+                "-/fields/thu-short",
+                "-/fields/fri",
+                "-/fields/fri-narrow",
+                "-/fields/fri-short",
+                "-/fields/sat",
+                "-/fields/sat-narrow",
+                "-/fields/sat-short",
+                "-/fields/sun",
+                "-/fields/sun-narrow",
+                "-/fields/sun-short",
+                "-/measurementSystemNames"
             ]
         }
     ]

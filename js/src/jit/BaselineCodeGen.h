@@ -285,6 +285,9 @@ class BaselineCodeGen {
 
   NonAssertingLabel postBarrierSlot_;
 
+  // Prologue code where we resume for Ion prologue bailouts.
+  NonAssertingLabel bailoutPrologue_;
+
   CodeOffset profilerEnterFrameToggleOffset_;
   CodeOffset profilerExitFrameToggleOffset_;
 
@@ -683,8 +686,14 @@ class BaselineInterpreterHandler {
   Label codeCoverageAtPrologueLabel_;
   Label codeCoverageAtPCLabel_;
 
+  // Offsets of IC calls for IsIonInlinableOp ops, for Ion bailouts.
+  BaselineInterpreter::ICReturnOffsetVector icReturnOffsets_;
+
   // Offsets of some callVMs for BaselineDebugModeOSR.
   BaselineInterpreter::CallVMOffsets callVMOffsets_;
+
+  // The current JSOp we are emitting interpreter code for.
+  mozilla::Maybe<JSOp> currentOp_;
 
  public:
   using FrameInfoT = InterpreterFrameInfo;
@@ -703,6 +712,14 @@ class BaselineInterpreterHandler {
     return debugInstrumentationOffsets_;
   }
   CodeOffsetVector& codeCoverageOffsets() { return codeCoverageOffsets_; }
+
+  BaselineInterpreter::ICReturnOffsetVector& icReturnOffsets() {
+    return icReturnOffsets_;
+  }
+
+  void setCurrentOp(JSOp op) { currentOp_.emplace(op); }
+  void resetCurrentOp() { currentOp_.reset(); }
+  mozilla::Maybe<JSOp> currentOp() const { return currentOp_; }
 
   // Interpreter doesn't know the script and pc statically.
   jsbytecode* maybePC() const { return nullptr; }
