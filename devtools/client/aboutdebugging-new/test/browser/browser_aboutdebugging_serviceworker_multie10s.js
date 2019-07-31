@@ -73,10 +73,16 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
   let targetElement = findDebugTargetByText(SERVICE_WORKER, document);
   let pushButton = targetElement.querySelector(".qa-push-button");
   ok(!pushButton.disabled, "Push button is not disabled");
+  ok(!pushButton.hasAttribute("title"), "Push button has no title attribute");
+
   let inspectButton = targetElement.querySelector(
     ".qa-debug-target-inspect-button"
   );
   ok(!inspectButton.disabled, "Inspect button is not disabled");
+  ok(
+    !inspectButton.hasAttribute("title"),
+    "Inspect button has no title attribute"
+  );
 
   // enable multi e10s
   info("Enabling multi e10s");
@@ -94,6 +100,13 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
     ".qa-debug-target-inspect-button"
   );
   ok(inspectButton.disabled, "Inspect button is disabled");
+  ok(inspectButton.hasAttribute("title"), "Button has a title attribute");
+
+  checkButtonTitle(
+    inspectButton,
+    "Service Worker inspection is currently disabled"
+  );
+  checkButtonTitle(pushButton, "Service Worker push is currently disabled");
 
   info("Unregister the service worker");
   await unregisterServiceWorker(swTab, "pushServiceWorkerRegistration");
@@ -104,4 +117,9 @@ async function testDebuggingSW(enableMultiE10sFn, disableMultiE10sFn) {
   info("Remove browser tabs");
   await removeTab(swTab);
   await removeTab(tab);
+}
+
+function checkButtonTitle(button, expectedTitle) {
+  const title = button.getAttribute("title");
+  ok(title.includes(expectedTitle), "Button has the expected title");
 }
