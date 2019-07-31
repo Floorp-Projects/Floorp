@@ -80,10 +80,11 @@ HUDService.prototype = {
    * @return object
    *         A promise object for the opening of the new WebConsole instance.
    */
-  openWebConsole(target, iframeWindow, chromeWindow) {
+  async openWebConsole(target, iframeWindow, chromeWindow) {
     const hud = new WebConsole(target, iframeWindow, chromeWindow, this);
     this.consoles.set(hud.hudId, hud);
-    return hud.init();
+    await hud.init();
+    return hud;
   },
 
   /**
@@ -99,11 +100,12 @@ HUDService.prototype = {
    * @return object
    *         A promise object for the opening of the new BrowserConsole instance.
    */
-  openBrowserConsole(target, win, fissionSupport = false) {
+  async openBrowserConsole(target, win, fissionSupport = false) {
     const hud = new BrowserConsole(target, win, win, this, fissionSupport);
     this._browserConsoleID = hud.hudId;
     this.consoles.set(hud.hudId, hud);
-    return hud.init();
+    await hud.init();
+    return hud;
   },
 
   /**
