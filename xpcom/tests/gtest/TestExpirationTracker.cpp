@@ -132,7 +132,8 @@ class Tracker : public nsExpirationTracker<Object, K> {
              lowerBoundMS, upperBoundMS);
     }
     if (timeDiffMS < lowerBoundMS || timeDiffMS > upperBoundMS) {
-      EXPECT_TRUE(timeDiffMS < periodMS && aObj->mExpired);
+      EXPECT_LT(timeDiffMS, periodMS);
+      EXPECT_TRUE(aObj->mExpired);
     }
     aObj->Touch();
     aObj->mExpired = true;
