@@ -755,6 +755,13 @@ class ZoneMallocThreshold : public ZoneThreshold {
                                         const AutoLockGC& lock);
 };
 
+// A fixed threshold that determines when we need to do a zone GC based on
+// allocated JIT code.
+class ZoneFixedThreshold : public ZoneThreshold {
+ public:
+  explicit ZoneFixedThreshold(size_t bytes) { gcTriggerBytes_ = bytes; }
+};
+
 #ifdef DEBUG
 
 // Counts memory associated with GC things in a zone.

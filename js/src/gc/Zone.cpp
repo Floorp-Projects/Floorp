@@ -32,10 +32,11 @@ Zone* const Zone::NotOnList = reinterpret_cast<Zone*>(1);
 ZoneAllocator::ZoneAllocator(JSRuntime* rt)
     : JS::shadow::Zone(rt, &rt->gc.marker),
       zoneSize(&rt->gc.heapSize),
-      gcMallocBytes(nullptr) {
+      gcMallocBytes(nullptr),
+      gcJitBytes(nullptr),
+      gcJitThreshold(jit::MaxCodeBytesPerProcess * 0.8) {
   AutoLockGC lock(rt);
   updateGCThresholds(rt->gc, GC_NORMAL, lock);
-  jitCodeCounter.setMax(jit::MaxCodeBytesPerProcess * 0.8, lock);
 }
 
 ZoneAllocator::~ZoneAllocator() {
@@ -44,6 +45,7 @@ ZoneAllocator::~ZoneAllocator() {
     gcMallocTracker.checkEmptyOnDestroy();
     MOZ_ASSERT(zoneSize.gcBytes() == 0);
     MOZ_ASSERT(gcMallocBytes.gcBytes() == 0);
+    MOZ_ASSERT(gcJitBytes.gcBytes() == 0);
   }
 #endif
 }
@@ -57,13 +59,6 @@ void ZoneAllocator::fixupAfterMovingGC() {
 void js::ZoneAllocator::updateMemoryCountersOnGCStart() {
   zoneSize.updateOnGCStart();
   gcMallocBytes.updateOnGCStart();
-  jitCodeCounter.updateOnGCStart();
-}
-
-void js::ZoneAllocator::updateMemoryCountersOnGCEnd(
-    const js::AutoLockGC& lock) {
-  auto& gc = runtimeFromAnyThread()->gc;
-  jitCodeCounter.updateOnGCEnd(gc.tunables, lock);
 }
 
 void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
@@ -76,11 +71,6 @@ void js::ZoneAllocator::updateGCThresholds(GCRuntime& gc,
   gcMallocThreshold.updateAfterGC(gcMallocBytes.retainedBytes(),
                                   gc.tunables.mallocThresholdBase(),
                                   gc.tunables.mallocGrowthFactor(), lock);
-}
-
-js::gc::TriggerKind js::ZoneAllocator::shouldTriggerGCForTooMuchMalloc() {
-  auto& gc = runtimeFromAnyThread()->gc;
-  return jitCodeCounter.shouldTriggerGC(gc.tunables);
 }
 
 void ZoneAllocPolicy::decMemory(size_t nbytes) {

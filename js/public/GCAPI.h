@@ -456,7 +456,7 @@ namespace JS {
   D(PREPARE_FOR_TRACING, 26)               \
   D(INCREMENTAL_ALLOC_TRIGGER, 27)         \
   D(FULL_CELL_PTR_STR_BUFFER, 28)          \
-  D(INCREMENTAL_MALLOC_TRIGGER, 29)        \
+  D(TOO_MUCH_JIT_CODE, 29)                 \
                                            \
   /* These are reserved for future use. */ \
   D(RESERVED6, 30)                         \

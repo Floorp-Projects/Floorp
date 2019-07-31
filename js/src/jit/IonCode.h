@@ -132,7 +132,7 @@ class JitCode : public gc::TenuredCell {
   // object can be allocated, nullptr is returned. On failure, |pool| is
   // automatically released, so the code may be freed.
   template <AllowGC allowGC>
-  static JitCode* New(JSContext* cx, uint8_t* code, uint32_t bufferSize,
+  static JitCode* New(JSContext* cx, uint8_t* code, uint32_t totalSize,
                       uint32_t headerSize, ExecutablePool* pool, CodeKind kind);
 
  public:
