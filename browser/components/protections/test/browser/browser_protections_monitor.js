@@ -63,7 +63,7 @@ add_task(async function() {
   await reloadTab(tab);
 
   info("Check that the correct content is displayed for users with no logins.");
-  await checkNoLoginsContentIsDisplayed(tab, "Sign up for Monitor");
+  await checkNoLoginsContentIsDisplayed(tab, "monitor-sign-up");
 
   info(
     "Check that the correct content is displayed for users with monitor data."
@@ -158,7 +158,7 @@ add_task(async function() {
   );
   AboutProtectionsHandler.getLoginData = mockGetLoginData;
   await reloadTab(tab);
-  await checkNoLoginsContentIsDisplayed(tab, "Turn on Monitor");
+  await checkNoLoginsContentIsDisplayed(tab);
 
   info("Disable showing the Monitor card.");
   Services.prefs.setBoolPref(
@@ -194,35 +194,32 @@ add_task(async function() {
 });
 
 async function checkNoLoginsContentIsDisplayed(tab, expectedLinkContent) {
-  await ContentTask.spawn(
-    tab.linkedBrowser,
-    { linkText: expectedLinkContent },
-    async function({ linkText }) {
-      await ContentTaskUtils.waitForCondition(() => {
-        const noLogins = content.document.querySelector(
-          ".monitor-card.no-logins"
-        );
-        return ContentTaskUtils.is_visible(noLogins);
-      }, "Monitor card for user with no logins is shown.");
+  await ContentTask.spawn(tab.linkedBrowser, null, async function() {
+    await ContentTaskUtils.waitForCondition(() => {
+      const noLogins = content.document.querySelector(
+        ".monitor-card.no-logins"
+      );
+      return ContentTaskUtils.is_visible(noLogins);
+    }, "Monitor card for user with no logins is shown.");
 
-      const noLoginsHeaderContent = content.document.querySelector(
-        "#monitor-header-content span"
-      );
-      const cardBody = content.document.querySelector(
-        ".monitor-card .card-body"
-      );
-      const link = content.document.getElementById("sign-up-for-monitor-link");
+    const noLoginsHeaderContent = content.document.querySelector(
+      "#monitor-header-content span"
+    );
+    const cardBody = content.document.querySelector(".monitor-card .card-body");
 
-      ok(
-        ContentTaskUtils.is_hidden(cardBody),
-        "Card body is hidden for users with no logins."
-      );
-      is(
-        noLoginsHeaderContent.textContent,
-        "Check Firefox Monitor to see if you've been part of a data breach and get alerts about new breaches.",
-        "Header content for user with no logins is correct"
-      );
-      is(link.textContent, linkText, "Text content for link is correct");
-    }
-  );
+    ok(
+      ContentTaskUtils.is_hidden(cardBody),
+      "Card body is hidden for users with no logins."
+    );
+    is(
+      noLoginsHeaderContent.getAttribute("data-l10n-id"),
+      "monitor-header-content",
+      "Header content for user with no logins is correct"
+    );
+    is(
+      noLoginsHeaderContent.getAttribute("data-l10n-id"),
+      "monitor-header-content",
+      "Header content for user with no logins is correct"
+    );
+  });
 }

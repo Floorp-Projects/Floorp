@@ -53,14 +53,15 @@ export default class LockwiseCard {
     container.classList.remove("hidden");
 
     if (isLoggedIn) {
-      title.textContent = "Firefox Lockwise";
-      headerContent.textContent =
-        "Securely store and sync your passwords to all your devices.";
+      title.setAttribute("data-l10n-id", "lockwise-title-logged-in");
+      headerContent.setAttribute(
+        "data-l10n-id",
+        "lockwise-header-content-logged-in"
+      );
       this.renderContentForLoggedInUser(container, numLogins, numSyncedDevices);
     } else {
-      title.textContent = "Never forget a password again";
-      headerContent.textContent =
-        "Firefox Lockwise securely stores your passwords in your browser.";
+      title.setAttribute("data-l10n-id", "lockwise-title");
+      headerContent.setAttribute("data-l10n-id", "lockwise-header-content");
     }
   }
 
@@ -81,6 +82,18 @@ export default class LockwiseCard {
     );
     numberOfLoginsBlock.textContent = storedLogins;
 
+    const lockwisePasswordsStored = this.doc.getElementById(
+      "lockwise-passwords-stored"
+    );
+    lockwisePasswordsStored.setAttribute(
+      "data-l10n-args",
+      JSON.stringify({ count: storedLogins })
+    );
+    lockwisePasswordsStored.setAttribute(
+      "data-l10n-id",
+      "lockwise-passwords-stored"
+    );
+
     // Set the text for the number of synced devices.
     const syncedDevicesBlock = container.querySelector(
       ".number-of-synced-devices.block"
@@ -89,11 +102,15 @@ export default class LockwiseCard {
 
     const syncedDevicesText = container.querySelector(".synced-devices-text");
     const textEl = syncedDevicesText.querySelector("span");
-    textEl.textContent =
-      syncedDevices > 0
-        ? `Syncing to ${syncedDevices} other devices.`
-        : "Not syncing to other devices.";
-
+    if (syncedDevices) {
+      textEl.setAttribute(
+        "data-l10n-args",
+        JSON.stringify({ count: syncedDevices })
+      );
+      textEl.setAttribute("data-l10n-id", "lockwise-sync-status");
+    } else {
+      textEl.setAttribute("data-l10n-id", "lockwise-sync-not-syncing");
+    }
     // Display the link for enabling sync if no synced devices are detected.
     if (syncedDevices === 0) {
       const syncLink = syncedDevicesText.querySelector("a");
