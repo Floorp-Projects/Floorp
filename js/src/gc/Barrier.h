@@ -844,7 +844,7 @@ static inline void BarrieredSetPair(Zone* zone, HeapPtr<T1*>& v1, T1* val1,
  * class!
  */
 template <typename T>
-class ImmutableTenuredPtr {
+class MOZ_HEAP_CLASS ImmutableTenuredPtr {
   T value;
 
  public:
