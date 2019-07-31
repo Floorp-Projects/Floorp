@@ -401,8 +401,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
    */
   JSFunction* newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                           GeneratorKind generatorKind,
-                          FunctionAsyncKind asyncKind,
-                          HandleObject proto = nullptr);
+                          FunctionAsyncKind asyncKind);
 
   // A Parser::Mark is the extension of the LifoAlloc::Mark to the entire
   // Parser's state. Note: clients must still take care that any ParseContext
@@ -1899,7 +1898,7 @@ mozilla::Maybe<LexicalScope::Data*> NewLexicalScopeData(
 JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
                              FunctionSyntaxKind kind,
                              GeneratorKind generatorKind,
-                             FunctionAsyncKind asyncKind, HandleObject proto,
+                             FunctionAsyncKind asyncKind,
                              bool isSelfHosting = false,
                              bool inFunctionBox = false);
 

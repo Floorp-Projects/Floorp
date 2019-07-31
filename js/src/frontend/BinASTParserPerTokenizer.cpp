@@ -263,7 +263,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   RootedFunction fun(cx_);
   BINJS_TRY_VAR(fun, !pc_ ? lazyScript_->functionNonDelazifying()
                           : AllocNewFunction(cx_, atom, syntax, generatorKind,
-                                             functionAsyncKind, nullptr));
+                                             functionAsyncKind));
   MOZ_ASSERT_IF(pc_, fun->explicitName() == atom);
 
   mozilla::Maybe<Directives> directives;
