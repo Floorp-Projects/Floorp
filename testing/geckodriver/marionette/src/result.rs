@@ -11,11 +11,21 @@ pub struct NewWindow {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WindowRect {
+    pub x: i32,
+    pub y: i32,
+    pub width: i32,
+    pub height: i32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum MarionetteResult {
     #[serde(deserialize_with = "from_value", serialize_with = "to_empty_value")]
     Null,
     NewWindow(NewWindow),
+    WindowRect(WindowRect),
+    Strings(Vec<String>),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
     String(String),
     #[serde(deserialize_with = "from_value", serialize_with = "to_value")]
@@ -147,7 +157,27 @@ mod tests {
     }
 
     #[test]
+    fn test_strings_response() {
+        assert_ser_de(
+            &MarionetteResult::Strings(vec!["2147483649".to_string()]),
+            json!(["2147483649"]),
+        );
+    }
+
+    #[test]
     fn test_null_response() {
         assert_ser_de(&MarionetteResult::Null, json!({ "value": null }));
+    }
+
+    #[test]
+    fn test_window_rect_response() {
+        let data = WindowRect {
+            x: 100,
+            y: 100,
+            width: 800,
+            height: 600,
+        };
+        let json = json!({"x": 100, "y": 100, "width": 800, "height": 600});
+        assert_ser_de(&MarionetteResult::WindowRect(data), json);
     }
 }

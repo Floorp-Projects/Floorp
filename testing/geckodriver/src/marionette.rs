@@ -800,6 +800,7 @@ fn try_convert_to_marionette_message(
         AddCookie(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::AddCookie(
             x.to_marionette()?,
         ))),
+        CloseWindow => Some(Command::WebDriver(MarionetteWebDriverCommand::CloseWindow)),
         DeleteCookie(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::DeleteCookie(x.clone()),
         )),
@@ -812,10 +813,19 @@ fn try_convert_to_marionette_message(
         FindElements(ref x) => Some(Command::WebDriver(
             MarionetteWebDriverCommand::FindElements(x.to_marionette()?),
         )),
+        FullscreenWindow => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::FullscreenWindow,
+        )),
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
+        MaximizeWindow => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::MaximizeWindow,
+        )),
+        MinimizeWindow => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::MinimizeWindow,
+        )),
         NewWindow(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::NewWindow(
             x.to_marionette()?,
         ))),
@@ -878,7 +888,6 @@ impl MarionetteCommand {
                     // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
                     (Some("WebDriver:AcceptDialog"), None)
                 }
-                CloseWindow => (Some("WebDriver:CloseWindow"), None),
                 DeleteSession => {
                     let mut body = Map::new();
                     body.insert(
@@ -930,7 +939,6 @@ impl MarionetteCommand {
                     data.insert("element".to_string(), Value::String(e.to_string()));
                     (Some("WebDriver:FindElements"), Some(Ok(data)))
                 }
-                FullscreenWindow => (Some("WebDriver:FullscreenWindow"), None),
                 Get(ref x) => (Some("WebDriver:Navigate"), Some(x.to_marionette())),
                 GetAlertText => (Some("WebDriver:GetAlertText"), None),
                 GetActiveElement => (Some("WebDriver:GetActiveElement"), None),
@@ -975,8 +983,6 @@ impl MarionetteCommand {
                 ),
                 IsEnabled(ref x) => (Some("WebDriver:IsElementEnabled"), Some(x.to_marionette())),
                 IsSelected(ref x) => (Some("WebDriver:IsElementSelected"), Some(x.to_marionette())),
-                MaximizeWindow => (Some("WebDriver:MaximizeWindow"), None),
-                MinimizeWindow => (Some("WebDriver:MinimizeWindow"), None),
                 NewSession(_) => {
                     let caps = capabilities
                         .expect("Tried to create new session without processing capabilities");
