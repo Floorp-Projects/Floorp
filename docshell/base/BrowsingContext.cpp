@@ -529,11 +529,47 @@ BrowsingContext* BrowsingContext::FindWithNameInSubtree(
   return nullptr;
 }
 
-bool BrowsingContext::CanAccess(BrowsingContext* aContext) {
-  // TODO(farre): Bouncing this to nsDocShell::CanAccessItem is
-  // temporary, we should implement a replacement for this in
-  // BrowsingContext. See Bug 151590.
-  return aContext && nsDocShell::CanAccessItem(aContext->mDocShell, mDocShell);
+// For historical context, see:
+//
+// Bug 13871:   Prevent frameset spoofing
+// Bug 103638:  Targets with same name in different windows open in wrong
+//              window with javascript
+// Bug 408052:  Adopt "ancestor" frame navigation policy
+// Bug 1570207: Refactor logic to rely on BrowsingContextGroups to enforce
+//              origin attribute isolation.
+bool BrowsingContext::CanAccess(BrowsingContext* aTarget,
+                                bool aConsiderOpener) {
+  MOZ_ASSERT(
+      mDocShell,
+      "CanAccess() may only be called in the process of the accessing window");
+  MOZ_ASSERT(aTarget, "Must have a target");
+
+  MOZ_DIAGNOSTIC_ASSERT(
+      Group() == aTarget->Group(),
+      "A BrowsingContext should never see a context from a different group");
+
+  // A frame can navigate itself and its own root.
+  if (aTarget == this || aTarget == Top()) {
+    return true;
+  }
+
+  // A frame can navigate any frame with a same-origin ancestor.
+  for (BrowsingContext* bc = aTarget; bc; bc = bc->GetParent()) {
+    if (bc->mDocShell &&
+        nsDocShell::ValidateOrigin(mDocShell, bc->mDocShell)) {
+      return true;
+    }
+  }
+
+  // If the target is a top-level document, a frame can navigate it if it can
+  // navigate its opener.
+  if (aConsiderOpener && !aTarget->GetParent()) {
+    if (RefPtr<BrowsingContext> opener = aTarget->GetOpener()) {
+      return CanAccess(opener, false);
+    }
+  }
+
+  return false;
 }
 
 BrowsingContext::~BrowsingContext() {
