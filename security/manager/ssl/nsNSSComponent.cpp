@@ -1571,10 +1571,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
 #ifndef ANDROID
   PRErrorCode savedPRErrorCode1;
 #endif  // ifndef ANDROID
-  PKCS11DBConfig safeModeDBConfig =
-      safeMode ? PKCS11DBConfig::DoNotLoadModules : PKCS11DBConfig::LoadModules;
-  SECStatus srv = ::mozilla::psm::InitializeNSS(
-      profilePath, NSSDBConfig::ReadWrite, safeModeDBConfig);
+  SECStatus srv = ::mozilla::psm::InitializeNSS(profilePath, false, !safeMode);
   if (srv == SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r/w mode"));
 #ifndef ANDROID
@@ -1587,8 +1584,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
   PRErrorCode savedPRErrorCode2;
 #endif  // ifndef ANDROID
   // That failed. Try read-only mode.
-  srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
-                                      safeModeDBConfig);
+  srv = ::mozilla::psm::InitializeNSS(profilePath, true, !safeMode);
   if (srv == SECSuccess) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized NSS in r-o mode"));
     return NS_OK;
@@ -1615,8 +1611,7 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
     // problem, but for some reason the combination of read-only and no-moddb
     // flags causes NSS initialization to fail, so unfortunately we have to use
     // read-write mode.
-    srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadWrite,
-                                        PKCS11DBConfig::DoNotLoadModules);
+    srv = ::mozilla::psm::InitializeNSS(profilePath, false, false);
     if (srv == SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("FIPS may be the problem"));
       // Unload NSS so we can attempt to fix this situation for the user.
@@ -1642,14 +1637,12 @@ static nsresult InitializeNSSWithFallbacks(const nsACString& profilePath,
 #  endif
         return rv;
       }
-      srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadWrite,
-                                          PKCS11DBConfig::LoadModules);
+      srv = ::mozilla::psm::InitializeNSS(profilePath, false, true);
       if (srv == SECSuccess) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r/w mode"));
         return NS_OK;
       }
-      srv = ::mozilla::psm::InitializeNSS(profilePath, NSSDBConfig::ReadOnly,
-                                          PKCS11DBConfig::LoadModules);
+      srv = ::mozilla::psm::InitializeNSS(profilePath, true, true);
       if (srv == SECSuccess) {
         MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("initialized in r-o mode"));
         return NS_OK;
