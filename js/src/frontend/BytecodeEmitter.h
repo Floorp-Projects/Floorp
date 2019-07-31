@@ -519,9 +519,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitArgOp(JSOp op, uint16_t slot);
   MOZ_MUST_USE bool emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec);
 
-  MOZ_MUST_USE bool emitGetNameAtLocation(JSAtom* name,
+  MOZ_MUST_USE bool emitGetNameAtLocation(Handle<JSAtom*> name,
                                           const NameLocation& loc);
-  MOZ_MUST_USE bool emitGetName(JSAtom* name) {
+  MOZ_MUST_USE bool emitGetNameAtLocation(ImmutablePropertyNamePtr name,
+                                          const NameLocation& loc) {
+    return emitGetNameAtLocation(name.toHandle(), loc);
+  }
+  MOZ_MUST_USE bool emitGetName(Handle<JSAtom*> name) {
+    return emitGetNameAtLocation(name, lookupName(name));
+  }
+  MOZ_MUST_USE bool emitGetName(ImmutablePropertyNamePtr name) {
     return emitGetNameAtLocation(name, lookupName(name));
   }
   MOZ_MUST_USE bool emitGetName(NameNode* name);
@@ -745,7 +752,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitFunctionFormalParameters(ListNode* paramsBody);
   MOZ_MUST_USE bool emitInitializeFunctionSpecialNames();
   MOZ_MUST_USE bool emitLexicalInitialization(NameNode* name);
-  MOZ_MUST_USE bool emitLexicalInitialization(JSAtom* name);
+  MOZ_MUST_USE bool emitLexicalInitialization(Handle<JSAtom*> name);
 
   // Emit bytecode for the spread operator.
   //

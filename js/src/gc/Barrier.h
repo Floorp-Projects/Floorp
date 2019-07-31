@@ -851,7 +851,13 @@ class ImmutableTenuredPtr {
   operator T() const { return value; }
   T operator->() const { return value; }
 
-  operator Handle<T>() const { return Handle<T>::fromMarkedLocation(&value); }
+  // `ImmutableTenuredPtr<T>` is implicitly convertible to `Handle<T>`.
+  //
+  // In case you need to convert to `Handle<U>` where `U` is base class of `T`,
+  // convert this to `Handle<T>` by `toHandle()` and then use implicit
+  // conversion from `Handle<T>` to `Handle<U>`.
+  operator Handle<T>() const { return toHandle(); }
+  Handle<T> toHandle() const { return Handle<T>::fromMarkedLocation(&value); }
 
   void init(T ptr) {
     MOZ_ASSERT(ptr->isTenured());
