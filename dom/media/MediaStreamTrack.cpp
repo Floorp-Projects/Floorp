@@ -450,7 +450,6 @@ void MediaStreamTrack::MutedChanged(bool aNewState) {
    */
 
   if (mMuted == aNewState) {
-    MOZ_ASSERT_UNREACHABLE("Muted state didn't actually change");
     return;
   }
 
