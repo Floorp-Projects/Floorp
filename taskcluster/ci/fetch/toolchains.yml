@@ -328,3 +328,10 @@ openssl-1.1.0g:
         url: https://www.openssl.org/source/openssl-1.1.0g.tar.gz
         sha256: de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af
         size: 5404748
+
+fxc2:
+    description: fxc2 source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/fxc2
+        revision: 63ad74b7faa7033f2c1be9cc1cd0225241a1a9a5
