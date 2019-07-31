@@ -10,13 +10,6 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/ContentBlockingAllowList.jsm"
 );
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "TrackingDBService",
-  "@mozilla.org/tracking-db-service;1",
-  "nsITrackingDBService"
-);
-
 var Fingerprinting = {
   PREF_ENABLED: "privacy.trackingprotection.fingerprinting.enabled",
   reportBreakageLabel: "fingerprinting",
@@ -980,27 +973,21 @@ var gProtectionsHandler = {
       "protections-popup-tp-switch"
     ));
   },
-  get _protectionsPopupSettingsButton() {
-    delete this._protectionsPopupSettingsButton;
-    return (this._protectionsPopupSettingsButton = document.getElementById(
+  get _protectionPopupSettingsButton() {
+    delete this._protectionPopupSettingsButton;
+    return (this._protectionPopupSettingsButton = document.getElementById(
       "protections-popup-settings-button"
     ));
   },
-  get _protectionsPopupFooter() {
-    delete this._protectionsPopupFooter;
-    return (this._protectionsPopupFooter = document.getElementById(
+  get _protectionPopupFooter() {
+    delete this._protectionPopupFooter;
+    return (this._protectionPopupFooter = document.getElementById(
       "protections-popup-footer"
     ));
   },
-  get _protectionsPopupTrackersCounterBox() {
-    delete this._protectionsPopupTrackersCounterBox;
-    return (this._protectionsPopupTrackersCounterBox = document.getElementById(
-      "protections-popup-trackers-blocked-counter-box"
-    ));
-  },
-  get _protectionsPopupTrackersCounterDescription() {
-    delete this._protectionsPopupTrackersCounterDescription;
-    return (this._protectionsPopupTrackersCounterDescription = document.getElementById(
+  get _protectionPopupTrackersCounterDescription() {
+    delete this._protectionPopupTrackersCounterDescription;
+    return (this._protectionPopupTrackersCounterDescription = document.getElementById(
       "protections-popup-trackers-blocked-counter-description"
     ));
   },
@@ -1130,12 +1117,6 @@ var gProtectionsHandler = {
 
     this.appMenuLabel.setAttribute("value", this.strings.appMenuTitle);
     this.appMenuLabel.setAttribute("tooltiptext", this.strings.appMenuTooltip);
-
-    // Set the tooltip for the blocked tracker counter.
-    this.maybeUpdateEarliestRecordedDateTooltip();
-
-    // Add an observer to observe that the history has been cleared.
-    Services.obs.addObserver(this, "browser:purge-session-history");
   },
 
   uninit() {
@@ -1155,10 +1136,9 @@ var gProtectionsHandler = {
     openPreferences("privacy-trackingprotection", { origin });
   },
 
-  openProtections(relatedToCurrent = false) {
+  openProtections() {
     switchToTabHavingURI("about:protections", true, {
       replaceQueryString: true,
-      relatedToCurrent,
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
     });
   },
@@ -1236,12 +1216,6 @@ var gProtectionsHandler = {
     if (event.target == this._protectionsPopup) {
       window.removeEventListener("focus", this, true);
       gIdentityHandler._trackingProtectionIconContainer.removeAttribute("open");
-
-      // Hide the tracker counter when the popup get hidden.
-      this._protectionsPopupTrackersCounterBox.toggleAttribute(
-        "showing",
-        false
-      );
     }
   },
 
@@ -1254,25 +1228,6 @@ var gProtectionsHandler = {
       // Open the full protections panel.
       this.showProtectionsPopup({ event });
     }
-  },
-
-  async onTrackingProtectionIconHoveredOrFocused() {
-    // We would try to pre-fetch the data whenever the shield icon is hovered or
-    // focused. We check focus event here due to the keyboard navigation.
-    if (this._updatingFooter) {
-      return;
-    }
-    this._updatingFooter = true;
-
-    // Get the tracker count and set it to the counter in the footer.
-    const trackerCount = await TrackingDBService.sumAllEvents();
-    this.setTrackersBlockedCounter(trackerCount);
-
-    // Try to get the earliest recorded date in case that there was no record
-    // during the initiation but new records come after that.
-    await this.maybeUpdateEarliestRecordedDateTooltip();
-
-    this._updatingFooter = false;
   },
 
   // This triggers from top level location changes.
@@ -1429,17 +1384,6 @@ var gProtectionsHandler = {
     }
   },
 
-  observe(subject, topic, data) {
-    switch (topic) {
-      case "browser:purge-session-history":
-        // We need to update the earliest recorded date if history has been
-        // cleared.
-        this._hasEarliestRecord = false;
-        this.maybeUpdateEarliestRecordedDateTooltip();
-        break;
-    }
-  },
-
   refreshProtectionsPopup() {
     let host = gIdentityHandler.getHostForDisplay();
 
@@ -1472,8 +1416,11 @@ var gProtectionsHandler = {
       !currentlyEnabled
     );
 
-    // Update the tooltip of the blocked tracker counter.
-    this.maybeUpdateEarliestRecordedDateTooltip();
+    // Set the counter of the 'Trackers blocked This Week'.
+    // We need to get the statistics of trackers. So far, we haven't implemented
+    // this yet. So we use a fake number here. Should be resolved in
+    // Bug 1555231.
+    this.setTrackersBlockedCounter(244051);
   },
 
   disableForCurrentPage() {
@@ -1533,19 +1480,10 @@ var gProtectionsHandler = {
   },
 
   setTrackersBlockedCounter(trackerCount) {
-    let forms = gNavigatorBundle.getString(
-      "protections.footer.blockedTrackerCounter.description"
-    );
-    this._protectionsPopupTrackersCounterDescription.textContent = PluralForm.get(
-      trackerCount,
-      forms
-    ).replace("#1", trackerCount);
-
-    // Show the counter if the number of tracker is not zero.
-    this._protectionsPopupTrackersCounterBox.toggleAttribute(
-      "showing",
-      trackerCount != 0
-    );
+    this._protectionPopupTrackersCounterDescription.textContent =
+      // gNavigatorBundle.getFormattedString(
+      //   "protections.trackers_counter", [cnt]);
+      `Trackers blocked this week: ${trackerCount.toLocaleString()}`;
   },
 
   /**
@@ -1748,36 +1686,5 @@ var gProtectionsHandler = {
   onSendReportClicked() {
     this._protectionsPopup.hidePopup();
     this.submitBreakageReport(this.reportURI);
-  },
-
-  async maybeUpdateEarliestRecordedDateTooltip() {
-    if (this._hasEarliestRecord) {
-      return;
-    }
-
-    let date = await TrackingDBService.getEarliestRecordedDate();
-
-    // If there is no record for any blocked tracker, we don't have to do anything
-    // since the tracker counter won't be shown.
-    if (!date) {
-      return;
-    }
-    this._hasEarliestRecord = true;
-
-    const dateLocaleStr = new Date(date).toLocaleDateString("default", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
-
-    const tooltipStr = gNavigatorBundle.getFormattedString(
-      "protections.footer.blockedTrackerCounter.tooltip",
-      [dateLocaleStr]
-    );
-
-    this._protectionsPopupTrackersCounterDescription.setAttribute(
-      "tooltiptext",
-      tooltipStr
-    );
   },
 };

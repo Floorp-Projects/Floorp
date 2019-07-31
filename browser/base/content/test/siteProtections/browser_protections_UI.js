@@ -130,7 +130,7 @@ add_task(async function testSettingsButton() {
     gBrowser,
     "about:preferences#privacy"
   );
-  gProtectionsHandler._protectionsPopupSettingsButton.click();
+  gProtectionsHandler._protectionPopupSettingsButton.click();
 
   // The protection popup should be hidden after clicking settings button.
   await popuphiddenPromise;
@@ -144,9 +144,9 @@ add_task(async function testSettingsButton() {
 });
 
 /**
- * A test for the 'Show Full Report' button in the footer section.
+ * A test for the 'Show Full Report' button in the footer seciton.
  */
-add_task(async function testShowFullReportButton() {
+add_task(async function testShowFullReportLink() {
   // Open a tab and its protection panel.
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
@@ -162,11 +162,11 @@ add_task(async function testShowFullReportButton() {
     gBrowser,
     "about:protections"
   );
-  let showFullReportButton = document.getElementById(
-    "protections-popup-show-report-button"
+  let showFullReportLink = document.getElementById(
+    "protections-popup-show-full-report-link"
   );
 
-  showFullReportButton.click();
+  showFullReportLink.click();
 
   // The protection popup should be hidden after clicking the link.
   await popuphiddenPromise;
