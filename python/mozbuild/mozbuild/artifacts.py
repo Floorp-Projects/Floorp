@@ -113,7 +113,7 @@ class ArtifactJob(object):
     # dest_prefix is the prefix to be added that will yield the final path relative
     # to dist/.
     test_artifact_patterns = {
-        ('bin/BadCertServer', ('bin', 'bin')),
+        ('bin/BadCertAndPinningServer', ('bin', 'bin')),
         ('bin/GenerateOCSPResponse', ('bin', 'bin')),
         ('bin/OCSPStaplingServer', ('bin', 'bin')),
         ('bin/SymantecSanctionsServer', ('bin', 'bin')),
@@ -554,7 +554,7 @@ class WinArtifactJob(ArtifactJob):
 
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
-        ('bin/BadCertServer.exe', ('bin', 'bin')),
+        ('bin/BadCertAndPinningServer.exe', ('bin', 'bin')),
         ('bin/GenerateOCSPResponse.exe', ('bin', 'bin')),
         ('bin/OCSPStaplingServer.exe', ('bin', 'bin')),
         ('bin/SymantecSanctionsServer.exe', ('bin', 'bin')),

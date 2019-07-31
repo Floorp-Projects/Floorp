@@ -50,7 +50,7 @@ function add_override_bits_mismatch_test(
 
 function run_test() {
   Services.prefs.setIntPref("security.OCSP.enabled", 1);
-  add_tls_server_setup("BadCertServer", "bad_certs");
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
 
   let fakeOCSPResponder = new HttpServer();
   fakeOCSPResponder.registerPrefixHandler("/", function(request, response) {

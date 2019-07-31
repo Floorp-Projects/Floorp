@@ -398,7 +398,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
                     "ssltunnel",
                     "certutil",
                     "pk12util",
-                    "BadCertServer",
+                    "BadCertAndPinningServer",
                     "OCSPStaplingServer",
                     "GenerateOCSPResponse",
                     "SymantecSanctionsServer"]
