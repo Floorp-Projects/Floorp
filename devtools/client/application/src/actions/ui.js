@@ -4,8 +4,15 @@
 
 "use strict";
 
-const workers = require("./workers");
-const page = require("./page");
-const ui = require("./ui");
+const { UPDATE_SELECTED_PAGE } = require("../constants");
 
-Object.assign(exports, workers, page, ui);
+function updateSelectedPage(selectedPage) {
+  return {
+    type: UPDATE_SELECTED_PAGE,
+    selectedPage,
+  };
+}
+
+module.exports = {
+  updateSelectedPage,
+};
