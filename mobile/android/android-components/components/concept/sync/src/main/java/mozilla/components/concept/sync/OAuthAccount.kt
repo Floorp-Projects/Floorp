@@ -56,24 +56,24 @@ interface AccountObserver {
     /**
      * Account just got logged out.
      */
-    fun onLoggedOut()
+    fun onLoggedOut() = Unit
 
     /**
      * Account was successfully authenticated.
      * @param account An authenticated instance of a [OAuthAccount].
      */
-    fun onAuthenticated(account: OAuthAccount)
+    fun onAuthenticated(account: OAuthAccount) = Unit
 
     /**
      * Account's profile is now available.
      * @param profile A fresh version of account's [Profile].
      */
-    fun onProfileUpdated(profile: Profile)
+    fun onProfileUpdated(profile: Profile) = Unit
 
     /**
      * Account needs to be re-authenticated (e.g. due to a password change).
      */
-    fun onAuthenticationProblems()
+    fun onAuthenticationProblems() = Unit
 }
 
 data class Avatar(
