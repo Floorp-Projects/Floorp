@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Bundle
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.browser.customtabs.TrustedWebUtils
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
 import mozilla.components.support.test.mock
@@ -33,6 +34,19 @@ class CustomTabConfigHelperTest {
         val customTabsIntent = CustomTabsIntent.Builder().build()
         assertTrue(isCustomTabIntent(customTabsIntent.intent))
         assertFalse(isCustomTabIntent(mock<Intent>()))
+    }
+
+    @Test
+    fun isTrustedWebActivityIntent() {
+        val customTabsIntent = CustomTabsIntent.Builder().build().intent
+        val trustedWebActivityIntent = Intent(customTabsIntent)
+            .putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
+        assertTrue(isTrustedWebActivityIntent(trustedWebActivityIntent))
+        assertFalse(isTrustedWebActivityIntent(customTabsIntent))
+        assertFalse(isTrustedWebActivityIntent(mock<Intent>()))
+        assertFalse(isTrustedWebActivityIntent(
+            Intent().putExtra(TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, true)
+        ))
     }
 
     @Test

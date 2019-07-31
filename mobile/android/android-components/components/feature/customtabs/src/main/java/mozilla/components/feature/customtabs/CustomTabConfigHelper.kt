@@ -29,6 +29,7 @@ import androidx.browser.customtabs.CustomTabsIntent.KEY_PENDING_INTENT
 import androidx.browser.customtabs.CustomTabsIntent.NO_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.SHOW_PAGE_TITLE
 import androidx.browser.customtabs.CustomTabsIntent.TOOLBAR_ACTION_BUTTON_ID
+import androidx.browser.customtabs.TrustedWebUtils.EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY
 import mozilla.components.browser.session.tab.CustomTabActionButtonConfig
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.browser.session.tab.CustomTabConfig.Companion.EXTRA_NAVIGATION_BAR_COLOR
@@ -50,10 +51,27 @@ fun isCustomTabIntent(intent: Intent) = isCustomTabIntent(intent.toSafeIntent())
 /**
  * Checks if the provided intent is a custom tab intent.
  *
- * @param intent the intent to check, wrapped as a SafeIntent.
+ * @param safeIntent the intent to check, wrapped as a SafeIntent.
  * @return true if the intent is a custom tab intent, otherwise false.
  */
 fun isCustomTabIntent(safeIntent: SafeIntent) = safeIntent.hasExtra(EXTRA_SESSION)
+
+/**
+ * Checks if the provided intent is a trusted web activity intent.
+ *
+ * @param intent the intent to check.
+ * @return true if the intent is a trusted web activity intent, otherwise false.
+ */
+fun isTrustedWebActivityIntent(intent: Intent) = isTrustedWebActivityIntent(intent.toSafeIntent())
+
+/**
+ * Checks if the provided intent is a trusted web activity intent.
+ *
+ * @param safeIntent the intent to check, wrapped as a SafeIntent.
+ * @return true if the intent is a trusted web activity intent, otherwise false.
+ */
+fun isTrustedWebActivityIntent(safeIntent: SafeIntent) = isCustomTabIntent(safeIntent) &&
+    safeIntent.getBooleanExtra(EXTRA_LAUNCH_AS_TRUSTED_WEB_ACTIVITY, false)
 
 /**
  * Creates a [CustomTabConfig] instance based on the provided intent.

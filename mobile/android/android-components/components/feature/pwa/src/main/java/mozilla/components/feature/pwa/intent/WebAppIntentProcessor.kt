@@ -27,7 +27,7 @@ class WebAppIntentProcessor(
 ) : IntentProcessor {
 
     /**
-     * Returns true this intent should launch a progressive web app.
+     * Returns true if this intent should launch a progressive web app.
      */
     override fun matches(intent: Intent) =
         intent.toSafeIntent().action == ACTION_VIEW_PWA
