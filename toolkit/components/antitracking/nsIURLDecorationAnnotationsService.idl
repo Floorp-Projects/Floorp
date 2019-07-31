@@ -1,0 +1,27 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * A service that monitors updates to the anti-tracking URL decoration
+ * annotations from remote settings.
+ */
+[scriptable, uuid(937d0c66-6821-4e3f-9e04-50dbc2b2b476)]
+interface nsIURLDecorationAnnotationsService : nsISupports
+{
+  /**
+   * Ensures that the list is updated and resolves the returned promise when
+   * the update is finished.
+   *
+   * The new list will be written to a space-separated list of tokens inside
+   * the following string preference:
+   *   privacy.restrict3rdpartystorage.url_decorations
+   *
+   * This preference will be kept up to date with future list updates from
+   * the remote settings server.  This preference cannot be modified by any
+   * external component and is managed by this service.
+   */
+  Promise ensureUpdated();
+};
