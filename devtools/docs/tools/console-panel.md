@@ -9,58 +9,58 @@ on the following diagram.
 
 <figure class="hero">
   <pre class="diagram">
-┌───────────────────────────────────┐                         ┌───────────────────────────────────┐
-│             DevTools              │                         │          WebConsolePanel          │
-│  [client/framework/devtools.js]   │            ┌ ─ ─ ─ ─ ─ ─│            [panel.js]             │
-└───────────────────────────────────┘                         └───────────────────────────────────┘
-                  │                              │                              │
-                                                                                │
-        openBrowserConsole()             openWebConsole()                       │
-                                                                                │
-                  │                              │                              │
-                                                 ▼                              │
-                  │            ┌───────────────────────────────────┐            │
-                               │            HUDService             │            │
-                  └ ─ ─ ─ ─ ─ ▶│          [hudservice.js]          │          {hud}
-                               └───────────────────────────────────┘            │
-                                                 │                              │
-                                                 │                              │
-                                                 │                              │
-                                                 │                              │
-                               ┌─────────────{consoles}────────────┐            │
-                               │                                   │            │
-                               │                                   │            │
-                               │                                   │            │
-                               ▼ n                                 ▼ n          ▼ 1
-                  ┌────────────────────────┐                       ┌────────────────────────┐
-                  │     BrowserConsole     │                       │       WebConsole       │
-                  │  [browser-console.js]  │─ ─ ─ ─ ─extends─ ─ ─ ▶│    [webconsole.js]     │
-                  └────────────────────────┘                       └────────────────────────┘
-                                                                                │
-                                                                              {ui}
-                                                                                │
-                                                                                ▼ 1
-                                                                   ┌────────────────────────┐                     ┌─────────────────────────────────┐
-                                                                   │      WebConsoleUI      │                    1│    WebConsoleConnectionProxy    │
-                                                                   │   [webconsole-ui.js]   │─────{proxy}────────▶│[webconsole-connection-proxy.js] │
-                                                                   └────────────────────────┘                     └─────────────────────────────────┘
-                                                                                │                                                  │
-                                                                                │
-                                                                           {wrapper}                                               │
-                                                                                │
-                                                                                │                                                  │
-                                                                                ▼ 1
-                                                                   ┌────────────────────────┐                                      │
-                                                                   │   WebConsoleWrapper    │
-                                                                   │[webconsole-wrapper.js] │◀ ─ ─ ─ ─ ─ ─ calls methods from─ ─ ─ ┘
-                                                                   └────────────────────────┘
-                                                                                │
-                                                                            <renders>
-                                                                                │
-                                                                                ▼
-                                                                   ┌────────────────────────┐
-                                                                   │          App           │
-                                                                   └────────────────────────┘
+┌───────────────────────────────────┐          ┌───────────────────────────────────┐
+│             DevTools              │          │          WebConsolePanel          │
+│  [client/framework/devtools.js]   │          │            [panel.js]             │
+└───────────────────────────────────┘          └───────────────────────────────────┘
+                  │                                               │
+                                                                  │
+        openBrowserConsole() or                                   │
+        toggleBrowserConsole()                                    │
+                  │                                               │
+                  ▼                                               │
+┌───────────────────────────────────┐                             │
+│            HUDService             │                             │
+│          [hudservice.js]          │                           {hud}
+└───────────────────────────────────┘                             │
+                  │                                               │
+                  │                                               │
+                  │                                               │
+          {_browserConsole}                                       │
+                  │                                               │
+                  │                                               │
+                  │                                               │
+                  │                                               │
+                  ▼ 0..1                                          ▼ 1
+      ┌────────────────────────┐                       ┌────────────────────────┐
+      │     BrowserConsole     │                       │       WebConsole       │
+      │  [browser-console.js]  │─ ─ ─ ─ ─extends─ ─ ─ ▶│    [webconsole.js]     │
+      └────────────────────────┘                       └────────────────────────┘
+                                                                  │
+                                                                {ui}
+                                                                  │
+                                                                  ▼ 1
+                                                     ┌────────────────────────┐                     ┌─────────────────────────────────┐
+                                                     │      WebConsoleUI      │                    1│    WebConsoleConnectionProxy    │
+                                                     │   [webconsole-ui.js]   │─────{proxy}────────▶│[webconsole-connection-proxy.js] │
+                                                     └────────────────────────┘                     └─────────────────────────────────┘
+                                                                  │                                                  │
+                                                                  │
+                                                             {wrapper}                                               │
+                                                                  │
+                                                                  │                                                  │
+                                                                  ▼ 1
+                                                     ┌────────────────────────┐                                      │
+                                                     │   WebConsoleWrapper    │
+                                                     │[webconsole-wrapper.js] │◀ ─ ─ ─ ─ ─ ─ calls methods from─ ─ ─ ┘
+                                                     └────────────────────────┘
+                                                                  │
+                                                              <renders>
+                                                                  │
+                                                                  ▼
+                                                     ┌────────────────────────┐
+                                                     │          App           │
+                                                     └────────────────────────┘
     </pre>
   <figcaption>Elements between curly bracket on arrows represent the property name of the reference (for example, the WebConsolePanel as a `hud` property that is a reference to the WebConsole instance)</figcaption>
 </figure>

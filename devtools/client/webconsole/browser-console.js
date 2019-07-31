@@ -8,6 +8,12 @@ var Services = require("Services");
 var WebConsole = require("devtools/client/webconsole/webconsole");
 
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
+loader.lazyRequireGetter(
+  this,
+  "HUDService",
+  "devtools/client/webconsole/hudservice",
+  true
+);
 
 /**
  * A BrowserConsole instance is an interactive console initialized *per target*
@@ -40,7 +46,7 @@ class BrowserConsole extends WebConsole {
     hudService,
     fissionSupport = false
   ) {
-    super(target, iframeWindow, chromeWindow, hudService, true, fissionSupport);
+    super(target, iframeWindow, chromeWindow, true, fissionSupport);
 
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
@@ -59,7 +65,7 @@ class BrowserConsole extends WebConsole {
     }
 
     // Only add the shutdown observer if we've opened a Browser Console window.
-    ShutdownObserver.init(this.hudService);
+    ShutdownObserver.init();
 
     const window = this.iframeWindow;
 
@@ -99,7 +105,6 @@ class BrowserConsole extends WebConsole {
 
       await super.destroy();
       await this.target.destroy();
-      this.hudService._browserConsoleID = null;
       this.chromeWindow.close();
     })();
 
@@ -114,7 +119,7 @@ class BrowserConsole extends WebConsole {
 var ShutdownObserver = {
   _initialized: false,
 
-  init(hudService) {
+  init() {
     if (this._initialized) {
       return;
     }
@@ -122,12 +127,11 @@ var ShutdownObserver = {
     Services.obs.addObserver(this, "quit-application-granted");
 
     this._initialized = true;
-    this.hudService = hudService;
   },
 
   observe(message, topic) {
     if (topic == "quit-application-granted") {
-      this.hudService.storeBrowserConsoleSessionState();
+      HUDService.storeBrowserConsoleSessionState();
       this.uninit();
     }
   },
