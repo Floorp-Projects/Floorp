@@ -35,7 +35,6 @@ testGetParam("unusedChunks");
 testGetParam("totalChunks");
 
 testChangeParam("maxBytes");
-testChangeParam("maxMallocBytes");
 testChangeParam("mode");
 testChangeParam("sliceTimeBudgetMS");
 testChangeParam("markStackLimit");

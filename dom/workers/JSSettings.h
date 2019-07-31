@@ -27,7 +27,6 @@ struct JSSettings {
   enum {
     // All the GC parameters that we support.
     JSSettings_JSGC_MAX_BYTES = 0,
-    JSSettings_JSGC_MAX_MALLOC_BYTES,
     JSSettings_JSGC_HIGH_FREQUENCY_TIME_LIMIT,
     JSSettings_JSGC_LOW_FREQUENCY_HEAP_GROWTH,
     JSSettings_JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN,

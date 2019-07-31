@@ -2503,10 +2503,6 @@ void nsJSContext::EnsureStatics() {
 
   // Set these global xpconnect options...
   Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackMB,
-                                       "javascript.options.mem.high_water_mark",
-                                       (void*)JSGC_MAX_MALLOC_BYTES);
-
-  Preferences::RegisterCallbackAndCall(SetMemoryPrefChangedCallbackMB,
                                        "javascript.options.mem.max",
                                        (void*)JSGC_MAX_BYTES);
   Preferences::RegisterCallbackAndCall(SetMemoryNurseryPrefChangedCallback,

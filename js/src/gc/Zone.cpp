@@ -557,29 +557,6 @@ void ZoneAllocator::reportAllocationOverflow() const {
   js::ReportAllocationOverflow(nullptr);
 }
 
-void ZoneAllocator::maybeTriggerGCForTooMuchMalloc(
-    js::gc::MemoryCounter& counter, TriggerKind trigger) {
-  JSRuntime* rt = runtimeFromAnyThread();
-
-  if (!js::CurrentThreadCanAccessRuntime(rt)) {
-    return;
-  }
-
-  auto zone = JS::Zone::from(this);
-  bool wouldInterruptGC =
-      rt->gc.isIncrementalGCInProgress() && !zone->isCollecting();
-  if (wouldInterruptGC && !counter.shouldResetIncrementalGC(rt->gc.tunables)) {
-    return;
-  }
-
-  if (!rt->gc.triggerZoneGC(zone, JS::GCReason::TOO_MUCH_MALLOC,
-                            counter.bytes(), counter.maxBytes())) {
-    return;
-  }
-
-  counter.recordTrigger(trigger);
-}
-
 #ifdef DEBUG
 
 void MemoryTracker::adopt(MemoryTracker& other) {

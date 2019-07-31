@@ -1857,8 +1857,6 @@ class ScriptSource::LoadSourceMatcher {
       return false;
     }
 
-    cx_->updateMallocCounter(length * sizeof(Unit));
-
     return true;
   }
 
