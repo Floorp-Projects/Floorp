@@ -299,7 +299,7 @@ async function run_tests_in_principal(
   // Test objects created in a cross-origin null principal new global.
   await testPrincipal(options, null, debuggeeHasXrays);
 
-  if (debuggeePrincipal === null) {
+  if (debuggeePrincipal.isNullPrincipal) {
     // Test objects created in a same-origin null principal new global.
     await testPrincipal(
       options,
