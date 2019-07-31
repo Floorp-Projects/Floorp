@@ -3,8 +3,6 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 // Test the Target closeTarget method and the targetDestroyed event.
 add_task(async function() {
   info("Start the CDP server");
@@ -31,7 +29,10 @@ add_task(async function() {
 
   info("Create a new tab and wait for the target to be created");
   const otherTargetCreated = Target.targetCreated();
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_URI);
+  const tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    toDataURL("")
+  );
   const { targetInfo } = await otherTargetCreated;
   is(targetInfo.type, "page");
 

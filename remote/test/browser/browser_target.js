@@ -86,7 +86,7 @@ add_task(async function() {
     id,
     method: "Page.navigate",
     params: {
-      url: "data:text/html;charset=utf-8,new-page",
+      url: toDataURL("new-page"),
     },
   });
   await Target.sendMessageToTarget({ sessionId, message });
