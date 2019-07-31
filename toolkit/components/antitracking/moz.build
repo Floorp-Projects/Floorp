@@ -31,12 +31,14 @@ EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
+    'URLDecorationStripper.h',
 ]
 
 UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
+    'URLDecorationStripper.cpp',
 ]
 
 EXTRA_JS_MODULES += [
