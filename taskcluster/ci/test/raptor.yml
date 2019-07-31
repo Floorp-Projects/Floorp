@@ -2259,6 +2259,9 @@ raptor-youtube-playback-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=org.mozilla.geckoview_example.GeckoViewActivity
+            # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
+            # - --test-url-params is dynamically added from setup_raptor transform depending
+            # on platform and project
 
 raptor-youtube-playback-fenix:
     description: "Raptor YouTube Playback on Fenix"
@@ -2282,6 +2285,9 @@ raptor-youtube-playback-fenix:
             - --app=fenix
             - --binary-path=org.mozilla.fenix.performancetest
             - --activity=org.mozilla.fenix.IntentReceiverActivity
+            # Bug 1558456 - Stop tracking youtube-playback-test on motoG5 for >1080p cases
+            # - --test-url-params is dynamically added from setup_raptor transform depending
+            # on platform and project
 
 raptor-tp6-1-firefox-cold:
     description: "Raptor tp6-1 cold page-load on Firefox"
