@@ -1431,13 +1431,13 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
     return true;
   }
 
-  const size_t minNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
-  MOZ_ASSERT(minNurseryBytes >= ArenaSize);
+  const size_t newMinNurseryBytes = roundSize(tunables().gcMinNurseryBytes());
+  MOZ_ASSERT(newMinNurseryBytes >= ArenaSize);
 
-  if (minNurseryBytes > capacity()) {
+  if (newMinNurseryBytes > capacity()) {
     // the configured minimum nursery size is changing, so grow the nursery.
-    MOZ_ASSERT(minNurseryBytes <= roundSize(tunables().gcMaxNurseryBytes()));
-    growAllocableSpace(minNurseryBytes);
+    MOZ_ASSERT(newMinNurseryBytes <= roundSize(tunables().gcMaxNurseryBytes()));
+    growAllocableSpace(newMinNurseryBytes);
     return true;
   }
 
