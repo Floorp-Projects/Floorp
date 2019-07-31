@@ -1444,7 +1444,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   return false;
 }
 
-size_t js::Nursery::roundSize(size_t size) const {
+size_t js::Nursery::roundSize(size_t size) {
   if (size >= ChunkSize) {
     size = JS_ROUND(size, ChunkSize);
   } else {
