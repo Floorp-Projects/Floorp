@@ -53,8 +53,7 @@ ol {
 }
 
 .login-list-item {
-  display: flex;
-  align-items: center;
+  display: block;
   padding: 10px;
   padding-inline-end: 18px;
   padding-inline-start: 14px;
@@ -90,11 +89,6 @@ ol {
   max-width: 50ch;
   text-overflow: ellipsis;
   overflow: hidden;
-}
-
-.favicon {
-  width: 16px;
-  margin-right: 14px;
 }
 
 .username {

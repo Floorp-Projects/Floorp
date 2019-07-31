@@ -17,7 +17,7 @@ export default class LoginListItemFactory {
     let listItem = loginListItem.querySelector("li");
     let title = loginListItem.querySelector(".title");
     let username = loginListItem.querySelector(".username");
-    let favicon = loginListItem.querySelector(".favicon");
+
     listItem.setAttribute("role", "option");
 
     if (!login.guid) {
@@ -43,13 +43,6 @@ export default class LoginListItemFactory {
         username,
         "login-list-item-subtitle-missing-username"
       );
-    }
-
-    if (login.faviconDataURI) {
-      favicon.src = login.faviconDataURI;
-      document.l10n.setAttributes(favicon, "login-favicon", {
-        title: login.title,
-      });
     }
 
     return listItem;
