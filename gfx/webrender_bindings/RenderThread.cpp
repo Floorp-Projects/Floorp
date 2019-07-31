@@ -267,6 +267,21 @@ void RenderThread::SetCompositionRecorderForWindow(
   mCompositionRecorders[aWindowId] = std::move(aCompositionRecorder);
 }
 
+void RenderThread::WriteCollectedFramesForWindow(wr::WindowId aWindowId) {
+  MOZ_ASSERT(IsInRenderThread());
+  MOZ_ASSERT(GetRenderer(aWindowId));
+
+  auto it = mCompositionRecorders.find(aWindowId);
+  MOZ_DIAGNOSTIC_ASSERT(
+      it != mCompositionRecorders.end(),
+      "Attempted to write frames from a window that was not recording.");
+  if (it != mCompositionRecorders.end()) {
+    it->second->WriteCollectedFrames();
+
+    mCompositionRecorders.erase(it);
+  }
+}
+
 void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
   if (mHasShutdown) {
     return;
