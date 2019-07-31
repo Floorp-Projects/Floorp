@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.paging.PagedList
 import androidx.paging.LivePagedListBuilder
@@ -12,13 +13,20 @@ import org.mozilla.fenix.components.history.PagedHistoryProvider
 
 class HistoryViewModel(historyProvider: PagedHistoryProvider) : ViewModel() {
     var history: LiveData<PagedList<HistoryItem>>
+    var userHasHistory = MutableLiveData(true)
     private val datasource: LiveData<HistoryDataSource>
 
     init {
         val historyDataSourceFactory = HistoryDataSourceFactory(historyProvider)
-        datasource = historyDataSourceFactory.datasourceLiveData
+        datasource = historyDataSourceFactory.datasource
 
-        history = LivePagedListBuilder(historyDataSourceFactory, PAGE_SIZE).build()
+        history = LivePagedListBuilder(historyDataSourceFactory, PAGE_SIZE)
+            .setBoundaryCallback(object : PagedList.BoundaryCallback<HistoryItem>() {
+                override fun onZeroItemsLoaded() {
+                    userHasHistory.value = false
+                }
+            })
+            .build()
     }
 
     fun invalidate() {

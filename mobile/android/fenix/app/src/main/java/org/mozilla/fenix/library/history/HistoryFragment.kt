@@ -82,6 +82,10 @@ class HistoryFragment : Fragment(), BackHandler {
             requireComponents.core.historyStorage.createSynchronousPagedHistoryProvider()
         )
 
+        viewModel.userHasHistory.observe(this, Observer {
+            historyView.updateEmptyState(it)
+        })
+
         requireComponents.analytics.metrics.track(Event.HistoryOpened)
 
         setHasOptionsMenu(true)

@@ -4,66 +4,107 @@
 
 package org.mozilla.fenix.library.history
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HistoryInteractorTest {
 
     @Test
-    fun onHistoryItemOpened() {
+    fun onPressHistoryItemInNormalMode() {
         var historyItemReceived: HistoryItem? = null
         val historyItem = HistoryItem(0, "title", "url", 0.toLong())
+        val store: HistoryStore = mockk()
+        val state: HistoryState = mockk()
+        every { store.state } returns state
+        every { state.mode } returns HistoryState.Mode.Normal
+
         val interactor = HistoryInteractor(
-            mockk(),
+            store,
             { historyItemReceived = it },
             mockk(),
             mockk(),
             mockk()
         )
-        interactor.onHistoryItemOpened(historyItem)
+
+        interactor.onItemPress(historyItem)
         assertEquals(historyItem, historyItemReceived)
     }
 
     @Test
-    fun onEnterEditMode() {
+    fun onPressHistoryItemInEditMode() {
+        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
         val store: HistoryStore = mockk(relaxed = true)
-        val newHistoryItem: HistoryItem = mockk(relaxed = true)
-        val interactor =
-            HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        interactor.onEnterEditMode(newHistoryItem)
-        verify { store.dispatch(HistoryAction.EnterEditMode(newHistoryItem)) }
+        val state: HistoryState = mockk()
+        every { store.state } returns state
+        every { state.mode } returns HistoryState.Mode.Editing(setOf())
+
+        val interactor = HistoryInteractor(
+            store,
+            { },
+            mockk(),
+            mockk(),
+            mockk()
+        )
+
+        interactor.onItemPress(historyItem)
+
+        verify {
+            store.dispatch(HistoryAction.AddItemForRemoval(historyItem))
+        }
     }
 
     @Test
-    fun onBackPressed() {
+    fun onPressSelectedHistoryItemInEditMode() {
+        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
         val store: HistoryStore = mockk(relaxed = true)
-        val interactor =
-            HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        interactor.onBackPressed()
-        verify { store.dispatch(HistoryAction.ExitEditMode) }
+        val state: HistoryState = mockk()
+        every { store.state } returns state
+        every { state.mode } returns HistoryState.Mode.Editing(setOf(historyItem))
+
+        val interactor = HistoryInteractor(
+            store,
+            { },
+            mockk(),
+            mockk(),
+            mockk()
+        )
+
+        interactor.onItemPress(historyItem)
+
+        verify {
+            store.dispatch(HistoryAction.RemoveItemForRemoval(historyItem))
+        }
     }
 
     @Test
-    fun onItemAddedForRemoval() {
+    fun onBackPressedInNormalMode() {
         val store: HistoryStore = mockk(relaxed = true)
-        val newHistoryItem: HistoryItem = mockk(relaxed = true)
+        val state: HistoryState = mockk()
+        every { store.state } returns state
+        every { state.mode } returns HistoryState.Mode.Normal
 
-        val interactor =
-            HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        interactor.onItemAddedForRemoval(newHistoryItem)
-        verify { store.dispatch(HistoryAction.AddItemForRemoval(newHistoryItem)) }
+        val interactor = HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
+        assertFalse(interactor.onBackPressed())
     }
 
     @Test
-    fun onItemRemovedForRemoval() {
+    fun onBackPressedInEditMode() {
         val store: HistoryStore = mockk(relaxed = true)
-        val newHistoryItem: HistoryItem = mockk(relaxed = true)
-        val interactor =
-            HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
-        interactor.onItemRemovedForRemoval(newHistoryItem)
-        verify { store.dispatch(HistoryAction.RemoveItemForRemoval(newHistoryItem)) }
+        val state: HistoryState = mockk()
+        every { store.state } returns state
+        every { state.mode } returns HistoryState.Mode.Editing(setOf())
+
+        val interactor = HistoryInteractor(store, mockk(), mockk(), mockk(), mockk())
+        assertTrue(interactor.onBackPressed())
+
+        verify {
+            store.dispatch(HistoryAction.ExitEditMode)
+        }
     }
 
     @Test
@@ -96,7 +137,7 @@ class HistoryInteractorTest {
 
     @Test
     fun onDeleteOne() {
-        var itemsToDelete: List<HistoryItem>? = null
+        var itemsToDelete: Set<HistoryItem>? = null
         val historyItem = HistoryItem(0, "title", "url", 0.toLong())
         val interactor =
             HistoryInteractor(
@@ -107,12 +148,12 @@ class HistoryInteractorTest {
                 { itemsToDelete = it }
             )
         interactor.onDeleteOne(historyItem)
-        assertEquals(itemsToDelete, listOf(historyItem))
+        assertEquals(itemsToDelete, setOf(historyItem))
     }
 
     @Test
     fun onDeleteSome() {
-        var itemsToDelete: List<HistoryItem>? = null
+        var itemsToDelete: Set<HistoryItem>? = null
         val historyItem = HistoryItem(0, "title", "url", 0.toLong())
         val newHistoryItem = HistoryItem(1, "title", "url", 0.toLong())
         val interactor =
@@ -123,7 +164,7 @@ class HistoryInteractorTest {
                 mockk(),
                 { itemsToDelete = it }
             )
-        interactor.onDeleteSome(listOf(historyItem, newHistoryItem))
-        assertEquals(itemsToDelete, listOf(historyItem, newHistoryItem))
+        interactor.onDeleteSome(setOf(historyItem, newHistoryItem))
+        assertEquals(itemsToDelete, setOf(historyItem, newHistoryItem))
     }
 }

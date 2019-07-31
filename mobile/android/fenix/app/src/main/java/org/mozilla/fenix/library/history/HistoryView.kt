@@ -14,10 +14,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
 import kotlinx.android.extensions.LayoutContainer
+import kotlinx.android.synthetic.main.component_history.*
 import kotlinx.android.synthetic.main.component_history.view.*
+import kotlinx.android.synthetic.main.component_history.view.history_list
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
@@ -132,6 +135,11 @@ class HistoryView(
         mode = state.mode
     }
 
+    fun updateEmptyState(userHasHistory: Boolean) {
+        history_list.isVisible = userHasHistory
+        history_empty_view.isVisible = !userHasHistory
+    }
+
     private fun setUIForSelectingMode(selectedItemSize: Int) {
         activity?.title =
             context.getString(R.string.history_multi_select_title, selectedItemSize)
@@ -143,8 +151,6 @@ class HistoryView(
 
     private fun setUIForNormalMode() {
         activity?.title = context.getString(R.string.library_history)
-//        history_list?.isVisible = !isEmpty
-//        history_empty_view.isVisible = isEmpty
         setToolbarColors(
             context!!.getColorResFromAttr(R.attr.primaryText),
             context.getColorResFromAttr(R.attr.foundation)
