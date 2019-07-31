@@ -923,8 +923,11 @@ function check_resolve() {
 }
 
 function test_extra_protocols() {
+  // dweb://
   let url = gIoService.newURI("dweb://example.com/test");
   Assert.equal(url.host, "example.com");
+
+  // dat://
   url = gIoService.newURI(
     "dat://41f8a987cfeba80a037e51cc8357d513b62514de36f2f9b3d3eeec7a8fb3b5a5/"
   );
@@ -934,6 +937,37 @@ function test_extra_protocols() {
   );
   url = gIoService.newURI("dat://example.com/test");
   Assert.equal(url.host, "example.com");
+
+  // ipfs://
+  url = gIoService.newURI(
+    "ipfs://bafybeiccfclkdtucu6y4yc5cpr6y3yuinr67svmii46v5cfcrkp47ihehy/frontend/license.txt"
+  );
+  Assert.equal(url.scheme, "ipfs");
+  Assert.equal(
+    url.host,
+    "bafybeiccfclkdtucu6y4yc5cpr6y3yuinr67svmii46v5cfcrkp47ihehy"
+  );
+  Assert.equal(url.filePath, "/frontend/license.txt");
+
+  // ipns://
+  url = gIoService.newURI("ipns://peerdium.gozala.io/index.html");
+  Assert.equal(url.scheme, "ipns");
+  Assert.equal(url.host, "peerdium.gozala.io");
+  Assert.equal(url.filePath, "/index.html");
+
+  // ssb://
+  url = gIoService.newURI("ssb://scuttlebutt.nz/index.html");
+  Assert.equal(url.scheme, "ssb");
+  Assert.equal(url.host, "scuttlebutt.nz");
+  Assert.equal(url.filePath, "/index.html");
+
+  // wtp://
+  url = gIoService.newURI(
+    "wtp://951ead31d09e4049fc1f21f137e233dd0589fcbd/blog/vim-tips/"
+  );
+  Assert.equal(url.scheme, "wtp");
+  Assert.equal(url.host, "951ead31d09e4049fc1f21f137e233dd0589fcbd");
+  Assert.equal(url.filePath, "/blog/vim-tips/");
 }
 
 // TEST MAIN FUNCTION
