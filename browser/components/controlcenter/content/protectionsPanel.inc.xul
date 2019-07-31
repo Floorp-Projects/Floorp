@@ -49,7 +49,8 @@
           <vbox id="protections-popup-category-list">
             <toolbarbutton id="protections-popup-category-tracking-protection"
                            onclick="gProtectionsHandler.showTrackersSubview();"
-                           class="protections-popup-category" align="center">
+                           class="protections-popup-category" align="center"
+                           wrap="true">
               <image class="protections-popup-category-icon tracking-protection-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.trackingProtection3.label;</label>
               <label flex="1" id="protections-popup-tracking-protection-state-label" class="protections-popup-category-state-label"/>
@@ -64,7 +65,8 @@
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cookies"
                            onclick="gProtectionsHandler.showCookiesSubview();"
-                           class="protections-popup-category" align="center">
+                           class="protections-popup-category" align="center"
+                           wrap="true">
               <image class="protections-popup-category-icon thirdpartycookies-icon"/>
               <label flex="1" id="protections-popup-category-label-default"
                      class="protections-popup-category-label">&contentBlocking.cookies.label;</label>
@@ -72,14 +74,16 @@
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-cryptominers"
                            onclick="gProtectionsHandler.showCryptominersSubview();"
-                           class="protections-popup-category" align="center">
+                           class="protections-popup-category" align="center"
+                           wrap="true">
               <image class="protections-popup-category-icon cryptominers-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.cryptominers.label;</label>
               <label flex="1" id="protections-popup-cryptominers-state-label" class="protections-popup-category-state-label"/>
             </toolbarbutton>
             <toolbarbutton id="protections-popup-category-fingerprinters"
                            onclick="gProtectionsHandler.showFingerprintersSubview();"
-                           class="protections-popup-category" align="center">
+                           class="protections-popup-category" align="center"
+                           wrap="true">
               <image class="protections-popup-category-icon fingerprinters-icon"/>
               <label flex="1" class="protections-popup-category-label">&contentBlocking.fingerprinters.label;</label>
               <label flex="1" id="protections-popup-fingerprinters-state-label" class="protections-popup-category-state-label"/>
