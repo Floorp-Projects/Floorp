@@ -1,0 +1,14 @@
+<!doctype html>
+<title>Cursor aliases compute to the unprefixed keyword</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div></div>
+<script>
+test(function() {
+  let div = document.querySelector("div");
+  for (const kw of ["grab", "grabbing", "zoom-in", "zoom-out"]) {
+    div.style.cursor = "-moz-" + kw;
+    assert_equals(getComputedStyle(div).cursor, kw);
+  }
+}, "-moz- prefixed cursor keywords compute to its unprefixed version");
+</script>

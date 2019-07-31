@@ -3926,8 +3926,6 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
   NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   sMouseOverDocument = mDocument.get();
 
-  nsCursor c;
-
   NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
   if (aLockCursor) {
     if (StyleCursorKind::Auto != aCursor) {
@@ -3937,8 +3935,8 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
       mLockCursor = kInvalidCursorKind;
     }
   }
+  nsCursor c;
   switch (aCursor) {
-    default:
     case StyleCursorKind::Auto:
     case StyleCursorKind::Default:
       c = eCursor_standard;
@@ -4044,6 +4042,10 @@ nsresult EventStateManager::SetCursor(StyleCursorKind aCursor,
       break;
     case StyleCursorKind::None:
       c = eCursor_none;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown cursor kind");
+      c = eCursor_standard;
       break;
   }
 
