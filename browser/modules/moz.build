@@ -157,7 +157,6 @@ EXTRA_JS_MODULES += [
     'PingCentre.jsm',
     'ProcessHangMonitor.jsm',
     'ReaderParent.jsm',
-    'RemotePrompt.jsm',
     'Sanitizer.jsm',
     'SelectionChangedMenulist.jsm',
     'SiteDataManager.jsm',
