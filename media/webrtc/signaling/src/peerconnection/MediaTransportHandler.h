@@ -101,7 +101,7 @@ class MediaTransportHandler {
   virtual void RemoveTransportsExcept(
       const std::set<std::string>& aTransportIds) = 0;
 
-  virtual void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+  virtual void StartIceChecks(bool aIsControlling,
                               const std::vector<std::string>& aIceOptions) = 0;
 
   virtual void SendPacket(const std::string& aTransportId,

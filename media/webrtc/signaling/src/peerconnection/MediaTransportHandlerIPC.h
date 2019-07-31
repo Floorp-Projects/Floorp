@@ -59,7 +59,7 @@ class MediaTransportHandlerIPC : public MediaTransportHandler {
   void RemoveTransportsExcept(
       const std::set<std::string>& aTransportIds) override;
 
-  void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+  void StartIceChecks(bool aIsControlling,
                       const std::vector<std::string>& aIceOptions) override;
 
   void SendPacket(const std::string& aTransportId,

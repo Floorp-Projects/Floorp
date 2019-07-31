@@ -9929,72 +9929,6 @@
     "n_values": 17,
     "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
   },
-  "WEBRTC_DTLS_CLIENT_SUCCESS_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that DTLS succeeded."
-  },
-  "WEBRTC_DTLS_CLIENT_ABORT_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
-  },
-  "WEBRTC_DTLS_CLIENT_FAILURE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a client DTLS handshake to complete, given that it failed."
-  },
-  "WEBRTC_DTLS_SERVER_SUCCESS_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that DTLS succeeded."
-  },
-  "WEBRTC_DTLS_SERVER_ABORT_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to be aborted due to some external factor (eg; PeerConnection torn down)."
-  },
-  "WEBRTC_DTLS_SERVER_FAILURE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-dtls-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1336182],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for a server DTLS handshake to complete, given that it failed."
-  },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -10024,188 +9958,6 @@
     "kind": "categorical",
     "labels": ["Unknown", "Dtls_version_1_0", "Dtls_version_1_2", "Dtls_version_1_3"],
     "description": "The DTLS protocol version (as label) negotiated for a RTCPeerConnection."
-  },
-  "WEBRTC_ICE_FINAL_CONNECTION_STATE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 7,
-    "description": "The ICE connection state when the PC was closed"
-  },
-  "WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived when ICE was not in a failure state (ie; a candidate that we could do something with, hence 'on time')"
-  },
-  "WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) that a trickle candidate took to arrive after the start of ICE, given that it arrived after ICE failed."
-  },
-  "WEBRTC_ICE_OFFERER_SUCCESS_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that ICE succeeded."
-  },
-  "WEBRTC_ICE_OFFERER_ABORT_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the offerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
-  },
-  "WEBRTC_ICE_OFFERER_FAILURE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the offerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
-  },
-  "WEBRTC_ICE_ANSWERER_SUCCESS_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that ICE succeeded."
-  },
-  "WEBRTC_ICE_ANSWERER_ABORT_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the answerer to abort ICE due to some external factor (eg; PeerConnection torn down). Does not count cases where StartChecks() was never called."
-  },
-  "WEBRTC_ICE_ANSWERER_FAILURE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1342523],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for the answerer to complete ICE, given that it failed. Does not count cases where StartChecks() was never called."
-  },
-  "WEBRTC_ICE_NR_ICE_GATHER_TIME": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering did not succeed/fail immediately during the call."
-  },
-  "WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_FAILURE": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering failed immediately during the call."
-  },
-  "WEBRTC_ICE_NR_ICE_GATHER_TIME_IMMEDIATE_SUCCESS": {
-    "record_in_processes": ["content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com", "bcampen@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "60",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took to call nr_ice_gather, given that gathering succeeded immediately during the call."
-  },
-  "WEBRTC_ICE_SUCCESS_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for ICE to complete, given that ICE succeeded."
-  },
-  "WEBRTC_ICE_FAILURE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 20,
-    "description": "The length of time (in milliseconds) it took for ICE to complete, given that it failed."
-  },
-  "WEBRTC_ICE_SUCCESS_RATE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "boolean",
-    "description": "The number of failed ICE Connections (0) vs. number of successful ICE connections (1)."
-  },
-  "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_SUCCESS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "For each successful PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
-  },
-  "WEBRTC_STUN_RATE_LIMIT_EXCEEDED_BY_TYPE_GIVEN_FAILURE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 4,
-    "description": "For each failed PeerConnection, bit 0 indicates the short-duration rate limit was reached, bit 1 indicates the long-duration rate limit was reached"
   },
   "WEBRTC_AVSYNC_WHEN_AUDIO_LAGS_VIDEO_MS": {
     "record_in_processes": ["main", "content"],
@@ -10526,38 +10278,6 @@
     "kind": "count",
     "description": "The number of calls made during a session."
   },
-  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "linear",
-    "high": 30,
-    "n_buckets": 29,
-    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE succeeded."
-  },
-  "WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1319268],
-    "expires_in_version": "62",
-    "kind": "linear",
-    "high": 30,
-    "n_buckets": 29,
-    "description": "The number of times AddIceCandidate failed on a given PeerConnection, given that ICE failed."
-  },
-  "WEBRTC_GET_USER_MEDIA_SECURE_ORIGIN": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "60",
-    "kind": "enumerated",
-    "n_values": 15,
-    "description": "Origins for getUserMedia calls (0=other, 1=HTTPS, 2=file, 3=app, 4=localhost, 5=loop, 6=privileged)",
-    "releaseChannelCollection": "opt-out"
-  },
   "WEBRTC_GET_USER_MEDIA_TYPE": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -10684,15 +10404,6 @@
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Was DataChannels negotiated"
-  },
-  "WEBRTC_RTCP_MUX": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "bug_numbers": [1402221],
-    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
-    "expires_in_version": "62",
-    "kind": "boolean",
-    "description": "Was RTCP-MUX negotiated for a track"
   },
   "WEBRTC_CALL_TYPE": {
     "record_in_processes": ["main", "content"],
@@ -14196,15 +13907,6 @@
     "kind": "enumerated",
     "n_values": 50,
     "description": "Compression ratio of WOFF2 data (%)"
-  },
-  "WEBRTC_ICE_CHECKING_RATE": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec", "geckoview"],
-    "alert_emails": ["webrtc-ice-telemetry-alerts@mozilla.com, nohlmeier@mozilla.com"],
-    "bug_numbers": [1188391,1319268],
-    "expires_in_version": "62",
-    "kind": "boolean",
-    "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
   },
   "ALERTS_SERVICE_DND_ENABLED": {
     "record_in_processes": ["main", "content"],

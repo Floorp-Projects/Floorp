@@ -757,7 +757,7 @@ class IceTestPeer : public sigslot::has_slots<> {
       ice_ctx_->SetControlling(offerer_ ? NrIceCtx::ICE_CONTROLLING
                                         : NrIceCtx::ICE_CONTROLLED);
       // Now start checks
-      res = ice_ctx_->StartChecks(offerer_);
+      res = ice_ctx_->StartChecks();
       ASSERT_TRUE(NS_SUCCEEDED(res));
     }
   }
@@ -952,7 +952,7 @@ class IceTestPeer : public sigslot::has_slots<> {
         NS_DISPATCH_SYNC);
     // Now start checks
     test_utils_->sts_target()->Dispatch(
-        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartChecks, offerer_),
+        WrapRunnableRet(&res, ice_ctx_, &NrIceCtx::StartChecks),
         NS_DISPATCH_SYNC);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }

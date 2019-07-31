@@ -44,7 +44,6 @@ class MediaTransportParent : public dom::PMediaTransportParent {
   mozilla::ipc::IPCResult RecvRemoveTransportsExcept(
       const StringVector& transportIds);
   mozilla::ipc::IPCResult RecvStartIceChecks(const bool& isControlling,
-                                             const bool& isOfferer,
                                              const StringVector& iceOptions);
   mozilla::ipc::IPCResult RecvSendPacket(const string& transportId,
                                          const MediaPacket& packet);

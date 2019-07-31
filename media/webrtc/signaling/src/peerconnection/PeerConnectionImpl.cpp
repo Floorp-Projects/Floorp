@@ -308,7 +308,6 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
       mIceRestartCount(0),
       mIceRollbackCount(0),
       mHaveConfiguredCodecs(false),
-      mAddCandidateErrorCount(0),
       mTrickle(true)  // TODO(ekr@rtfm.com): Use pref
       ,
       mPrivateWindow(false),
@@ -1508,20 +1507,6 @@ PeerConnectionImpl::AddIceCandidate(
 
   CSFLogDebug(LOGTAG, "AddIceCandidate: %s %s", aCandidate, aUfrag);
 
-  // When remote candidates are added before our ICE ctx is up and running
-  // (the transition to New is async through STS, so this is not impossible),
-  // we won't record them as trickle candidates. Is this what we want?
-  if (!mIceStartTime.IsNull()) {
-    TimeDuration timeDelta = TimeStamp::Now() - mIceStartTime;
-    if (mIceConnectionState == RTCIceConnectionState::Failed) {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_LATE_TRICKLE_ARRIVAL_TIME,
-                            timeDelta.ToMilliseconds());
-    } else {
-      Telemetry::Accumulate(Telemetry::WEBRTC_ICE_ON_TIME_TRICKLE_ARRIVAL_TIME,
-                            timeDelta.ToMilliseconds());
-    }
-  }
-
   std::string transportId;
   Maybe<unsigned short> level;
   if (!aLevel.IsNull()) {
@@ -1540,7 +1525,6 @@ PeerConnectionImpl::AddIceCandidate(
     }
     mPCObserver->OnAddIceCandidateSuccess(rv);
   } else {
-    ++mAddCandidateErrorCount;
     std::string errorString = mJsepSession->GetLastError();
 
     CSFLogError(LOGTAG,
@@ -2412,20 +2396,6 @@ void PeerConnectionImpl::SendLocalIceCandidateToContent(
                               ObString(ufrag.c_str()), rv);
 }
 
-static bool isDone(RTCIceConnectionState state) {
-  return state != RTCIceConnectionState::Checking &&
-         state != RTCIceConnectionState::New;
-}
-
-static bool isSucceeded(RTCIceConnectionState state) {
-  return state == RTCIceConnectionState::Connected ||
-         state == RTCIceConnectionState::Completed;
-}
-
-static bool isFailed(RTCIceConnectionState state) {
-  return state == RTCIceConnectionState::Failed;
-}
-
 void PeerConnectionImpl::IceConnectionStateChange(
     dom::RTCIceConnectionState domState) {
   PC_AUTO_ENTER_API_CALL_VOID_RETURN(false);
@@ -2436,18 +2406,6 @@ void PeerConnectionImpl::IceConnectionStateChange(
     // no work to be done since the states are the same.
     // this can happen during ICE rollback situations.
     return;
-  }
-
-  if (!isDone(mIceConnectionState) && isDone(domState)) {
-    if (isSucceeded(domState)) {
-      Telemetry::Accumulate(
-          Telemetry::WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_SUCCESS,
-          mAddCandidateErrorCount);
-    } else if (isFailed(domState)) {
-      Telemetry::Accumulate(
-          Telemetry::WEBRTC_ICE_ADD_CANDIDATE_ERRORS_GIVEN_FAILURE,
-          mAddCandidateErrorCount);
-    }
   }
 
   mIceConnectionState = domState;
