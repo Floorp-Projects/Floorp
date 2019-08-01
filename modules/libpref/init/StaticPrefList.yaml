@@ -5847,6 +5847,16 @@
   value: 2000
   mirror: always
 
+- name: toolkit.telemetry.isGeckoViewMode
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: toolkit.telemetry.geckoview.streaming
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------

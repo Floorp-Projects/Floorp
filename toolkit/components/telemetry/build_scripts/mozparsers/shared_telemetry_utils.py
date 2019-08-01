@@ -28,6 +28,7 @@ SUPPORTED_PRODUCTS = {
     'firefox': 'Firefox',
     'fennec': 'Fennec',
     'geckoview': 'Geckoview',
+    'geckoview_streaming': 'GeckoviewStreaming',
 }
 
 SUPPORTED_OPERATING_SYSTEMS = [
