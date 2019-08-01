@@ -61,8 +61,8 @@ void Pose::SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
                            JS::Heap<JSObject*>& aObj, float* aVal,
                            uint32_t aValLength, bool bCreate,
                            ErrorResult& aRv) {
-  if (!bCreate) {
-    aRetVal.set(aObj);
+  if (!bCreate || !aVal) {
+    aRetVal.set(nullptr);
     return;
   }
 
