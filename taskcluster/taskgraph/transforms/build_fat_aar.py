@@ -5,10 +5,8 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import copy
-import os
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.transforms.job import get_default_moz_fetches_dir
 from taskgraph.util.declarative_artifacts import get_geckoview_upstream_artifacts
 from taskgraph.util.taskcluster import get_artifact_prefix
 
@@ -52,9 +50,7 @@ def set_fetches_and_locations(config, jobs):
 
             aar_file_name = aar_location.split('/')[-1]
             env_var = MOZ_ANDROID_FAT_AAR_ENV_MAP[platform]
-            job['worker']['env'][env_var] = os.path.join(
-                get_default_moz_fetches_dir(job), aar_file_name
-            )
+            job['worker']['env'][env_var] = aar_file_name
 
         job['dependencies'] = dependencies
 
