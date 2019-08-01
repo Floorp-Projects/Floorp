@@ -749,8 +749,8 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       channelURI->GetSpec(channelSpec);
     }
 
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("doContentSecurityCheck {\n"));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("doContentSecurityCheck {\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  channelURI: %s\n", channelSpec.get()));
 
     // Log HTTP-specific things
@@ -758,7 +758,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       nsresult rv;
       rv = httpChannel->GetRequestMethod(channelMethod);
       if (!NS_FAILED(rv)) {
-        MOZ_LOG(sCSMLog, LogLevel::Debug,
+        MOZ_LOG(sCSMLog, LogLevel::Verbose,
                 ("  HTTP Method: %s\n", channelMethod.get()));
       }
     }
@@ -772,7 +772,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
                  NS_LITERAL_STRING("principalToInherit"));
 
     // Log Redirect Chain
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  RedirectChain:\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  RedirectChain:\n"));
     for (nsIRedirectHistoryEntry* redirectHistoryEntry :
          aLoadInfo->RedirectChain()) {
       nsCOMPtr<nsIPrincipal> principal;
@@ -780,16 +780,16 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       LogPrincipal(principal, NS_LITERAL_STRING("->"));
     }
 
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  internalContentPolicyType: %d\n",
              aLoadInfo->InternalContentPolicyType()));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  externalContentPolicyType: %d\n",
              aLoadInfo->GetExternalContentPolicyType()));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  upgradeInsecureRequests: %s\n",
              aLoadInfo->GetUpgradeInsecureRequests() ? "true" : "false"));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  initalSecurityChecksDone: %s\n",
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
 
@@ -808,9 +808,9 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     }
 
     // Security Flags
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  securityFlags: "));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  securityFlags: "));
     LogSecurityFlags(aLoadInfo->GetSecurityFlags());
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("}\n\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("}\n\n"));
   }
 }
 
@@ -919,7 +919,7 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     nsIChannel* aChannel, nsCOMPtr<nsIStreamListener>& aInAndOutListener) {
   NS_ENSURE_ARG(aChannel);
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Debug))) {
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Verbose))) {
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 
