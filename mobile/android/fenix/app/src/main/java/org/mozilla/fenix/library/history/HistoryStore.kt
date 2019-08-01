@@ -41,9 +41,11 @@ sealed class HistoryAction : Action {
  */
 data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : State {
     sealed class Mode {
+        open val selectedItems = emptySet<HistoryItem>()
+
         object Normal : Mode()
-        data class Editing(val selectedItems: Set<HistoryItem>) : Mode()
         object Deleting : Mode()
+        data class Editing(override val selectedItems: Set<HistoryItem>) : Mode()
     }
 }
 
@@ -52,24 +54,13 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : State {
  */
 fun historyStateReducer(state: HistoryState, action: HistoryAction): HistoryState {
     return when (action) {
-        is HistoryAction.AddItemForRemoval -> {
-            val mode = state.mode
-            if (mode is HistoryState.Mode.Editing) {
-                val items = mode.selectedItems + setOf(action.item)
-                state.copy(mode = HistoryState.Mode.Editing(items))
-            } else {
-                state.copy(mode = HistoryState.Mode.Editing(setOf(action.item)))
-            }
-        }
+        is HistoryAction.AddItemForRemoval ->
+            state.copy(mode = HistoryState.Mode.Editing(state.mode.selectedItems + action.item))
         is HistoryAction.RemoveItemForRemoval -> {
-            var mode = state.mode
-
-            if (mode is HistoryState.Mode.Editing) {
-                val items = mode.selectedItems.minus(action.item)
-                state.copy(mode = HistoryState.Mode.Editing(items))
-            } else {
-                state
-            }
+            val selected = state.mode.selectedItems - action.item
+            state.copy(
+                mode = if (selected.isEmpty()) HistoryState.Mode.Normal else HistoryState.Mode.Editing(selected)
+            )
         }
         is HistoryAction.ExitEditMode -> state.copy(mode = HistoryState.Mode.Normal)
         is HistoryAction.EnterDeletionMode -> state.copy(mode = HistoryState.Mode.Deleting)

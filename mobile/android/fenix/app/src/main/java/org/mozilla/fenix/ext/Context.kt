@@ -17,7 +17,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
 import androidx.annotation.ColorInt
-import androidx.annotation.ColorRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -101,13 +100,8 @@ fun Context.getRootView(): View? =
     asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as? ViewGroup
 
 /**
- * Returns the color resource corresponding to the attribute.
- */
-@ColorRes
-fun Context.getColorResFromAttr(@AttrRes attr: Int) = ThemeManager.resolveAttribute(attr, this)
-
-/**
  * Returns the color int corresponding to the attribute.
  */
 @ColorInt
-fun Context.getColorFromAttr(@AttrRes attr: Int) = ContextCompat.getColor(this, getColorResFromAttr(attr))
+fun Context.getColorFromAttr(@AttrRes attr: Int) =
+    ContextCompat.getColor(this, ThemeManager.resolveAttribute(attr, this))

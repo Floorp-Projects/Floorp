@@ -11,28 +11,43 @@ import android.graphics.PorterDuffColorFilter
 import android.view.ViewGroup
 import android.widget.ActionMenuView
 import android.widget.ImageButton
-import androidx.annotation.ColorRes
+import androidx.annotation.ColorInt
 import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
 import androidx.core.view.forEach
+import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.asActivity
+import org.mozilla.fenix.ext.getColorFromAttr
 
 open class LibraryPageView(
-    container: ViewGroup
-) {
-    protected val context: Context = container.context
+    override val containerView: ViewGroup
+) : LayoutContainer {
+    protected val context: Context inline get() = containerView.context
     protected val activity = context.asActivity()
+
+    protected fun setUiForNormalMode(title: String?) {
+        activity?.title = title
+        setToolbarColors(
+            ContextCompat.getColor(context, R.color.white_color),
+            context.getColorFromAttr(R.attr.accentHighContrast)
+        )
+    }
+
+    protected fun setUiForSelectingMode(title: String?) {
+        activity?.title = title
+        setToolbarColors(
+            context.getColorFromAttr(R.attr.primaryText),
+            context.getColorFromAttr(R.attr.foundation)
+        )
+    }
 
     /**
      * Adjust the colors of the [Toolbar] on the top of the screen.
      */
-    protected fun setToolbarColors(@ColorRes foregroundRes: Int, @ColorRes backgroundRes: Int) {
+    private fun setToolbarColors(@ColorInt foreground: Int, @ColorInt background: Int) {
         val toolbar = activity?.findViewById<Toolbar>(R.id.navigationToolbar)
-
-        val foreground = ContextCompat.getColor(context, foregroundRes)
-        val background = ContextCompat.getColor(context, backgroundRes)
 
         toolbar?.apply {
             setBackgroundColor(background)

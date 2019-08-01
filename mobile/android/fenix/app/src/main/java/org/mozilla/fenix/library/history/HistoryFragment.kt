@@ -17,10 +17,8 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
@@ -37,10 +35,11 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.share.ShareTab
 
 @SuppressWarnings("TooManyFunctions")
-class HistoryFragment : Fragment(), BackHandler {
+class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     private lateinit var historyStore: HistoryStore
     private lateinit var historyView: HistoryView
     private lateinit var historyInteractor: HistoryInteractor
@@ -71,6 +70,8 @@ class HistoryFragment : Fragment(), BackHandler {
         return view
     }
 
+    override val selectedItems get() = historyStore.state.mode.selectedItems
+
     private fun invalidateOptionsMenu() {
         activity?.invalidateOptionsMenu()
     }
@@ -91,7 +92,7 @@ class HistoryFragment : Fragment(), BackHandler {
         setHasOptionsMenu(true)
     }
 
-    fun deleteHistoryItems(items: Set<HistoryItem>) {
+    private fun deleteHistoryItems(items: Set<HistoryItem>) {
         lifecycleScope.launch {
             val storage = context?.components?.core?.historyStorage
             for (item in items) {
@@ -126,10 +127,8 @@ class HistoryFragment : Fragment(), BackHandler {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         val mode = historyStore.state.mode
         when (mode) {
-            HistoryState.Mode.Normal ->
-                R.menu.library_menu
-            is HistoryState.Mode.Editing ->
-                R.menu.history_select_multi
+            HistoryState.Mode.Normal -> R.menu.library_menu
+            is HistoryState.Mode.Editing -> R.menu.history_select_multi
             else -> null
         }?.let { inflater.inflate(it, menu) }
 
@@ -146,11 +145,10 @@ class HistoryFragment : Fragment(), BackHandler {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.share_history_multi_select -> {
-            val selectedHistory =
-                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: setOf()
+            val selectedHistory = historyStore.state.mode.selectedItems
             when {
                 selectedHistory.size == 1 ->
-                    share(selectedHistory.first().url)
+                    share(url = selectedHistory.first().url)
                 selectedHistory.size > 1 -> {
                     val shareTabs = selectedHistory.map { ShareTab(it.url, it.title) }
                     share(tabs = shareTabs)
@@ -159,36 +157,25 @@ class HistoryFragment : Fragment(), BackHandler {
             true
         }
         R.id.libraryClose -> {
-            Navigation.findNavController(requireActivity(), R.id.container)
-                .popBackStack(R.id.libraryFragment, true)
+            close()
             true
         }
         R.id.delete_history_multi_select -> {
-            val components = context?.applicationContext?.components!!
-            val selectedHistory =
-                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: setOf()
+            val components = context?.components!!
 
             lifecycleScope.launch(Main) {
-                deleteSelectedHistory(selectedHistory, components)
+                deleteSelectedHistory(historyStore.state.mode.selectedItems, components)
                 viewModel.invalidate()
                 historyStore.dispatch(HistoryAction.ExitDeletionMode)
             }
             true
         }
         R.id.open_history_in_new_tabs_multi_select -> {
-            val selectedHistory =
-                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: setOf()
-            requireComponents.useCases.tabsUseCases.addTab.let { useCase ->
-                for (selectedItem in selectedHistory) {
-                    requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
-                    useCase.invoke(selectedItem.url)
-                }
+            openItemsInNewTab { selectedItem ->
+                requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
+                selectedItem.url
             }
 
-            (activity as HomeActivity).apply {
-                browsingModeManager.mode = BrowsingModeManager.Mode.Normal
-                supportActionBar?.hide()
-            }
             nav(
                 R.id.historyFragment,
                 HistoryFragmentDirections.actionHistoryFragmentToHomeFragment()
@@ -196,13 +183,9 @@ class HistoryFragment : Fragment(), BackHandler {
             true
         }
         R.id.open_history_in_private_tabs_multi_select -> {
-            val selectedHistory =
-                (historyStore.state.mode as? HistoryState.Mode.Editing)?.selectedItems ?: setOf()
-            requireComponents.useCases.tabsUseCases.addPrivateTab.let { useCase ->
-                for (selectedItem in selectedHistory) {
-                    requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
-                    useCase.invoke(selectedItem.url)
-                }
+            openItemsInNewTab(private = true) { selectedItem ->
+                requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
+                selectedItem.url
             }
 
             (activity as HomeActivity).apply {
@@ -220,7 +203,7 @@ class HistoryFragment : Fragment(), BackHandler {
 
     override fun onBackPressed(): Boolean = historyView.onBackPressed()
 
-    fun openItem(item: HistoryItem) {
+    private fun openItem(item: HistoryItem) {
         requireComponents.analytics.metrics.track(Event.HistoryItemOpened)
         (activity as HomeActivity).openToBrowserAndLoad(
             searchTermOrURL = item.url,

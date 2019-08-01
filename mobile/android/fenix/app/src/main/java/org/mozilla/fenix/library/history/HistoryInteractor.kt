@@ -16,8 +16,7 @@ class HistoryInteractor(
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
 ) : HistoryViewInteractor {
     override fun onItemPress(item: HistoryItem) {
-        val mode = store.state.mode
-        when (mode) {
+        when (val mode = store.state.mode) {
             is HistoryState.Mode.Normal -> openToBrowser(item)
             is HistoryState.Mode.Editing -> {
                 val isSelected = mode.selectedItems.contains(item)
@@ -32,9 +31,7 @@ class HistoryInteractor(
     }
 
     override fun onItemLongPress(item: HistoryItem) {
-        val isSelected = (store.state.mode as? HistoryState.Mode.Editing)?.let {
-            it.selectedItems.contains(item)
-        } ?: false
+        val isSelected = store.state.mode.selectedItems.contains(item)
 
         if (isSelected) {
             store.dispatch(HistoryAction.RemoveItemForRemoval(item))

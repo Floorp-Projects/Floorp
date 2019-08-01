@@ -22,8 +22,10 @@ class BookmarkStore(
  */
 data class BookmarkState(val tree: BookmarkNode?, val mode: Mode = Mode.Normal) : State {
     sealed class Mode {
+        open val selectedItems = emptySet<BookmarkNode>()
+
         object Normal : Mode()
-        data class Selecting(val selectedItems: Set<BookmarkNode>) : Mode()
+        data class Selecting(override val selectedItems: Set<BookmarkNode>) : Mode()
     }
 }
 
@@ -46,32 +48,22 @@ sealed class BookmarkAction : Action {
 fun bookmarkStateReducer(state: BookmarkState, action: BookmarkAction): BookmarkState {
     return when (action) {
         is BookmarkAction.Change -> {
-            val mode =
-                if (state.mode is BookmarkState.Mode.Selecting) {
-                    val items = state.mode.selectedItems.filter {
-                        it in action.tree
-                    }.toSet()
-                    if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items)
-                } else state.mode
-            state.copy(tree = action.tree, mode = mode)
+            val items = state.mode.selectedItems.filter { it in action.tree }
+            state.copy(
+                tree = action.tree,
+                mode = if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items.toSet())
+            )
         }
-        is BookmarkAction.Select -> {
-            val selectedItems = if (state.mode is BookmarkState.Mode.Selecting) {
-                state.mode.selectedItems + action.item
-            } else setOf(action.item)
-            state.copy(mode = BookmarkState.Mode.Selecting(selectedItems))
-        }
+        is BookmarkAction.Select ->
+            state.copy(mode = BookmarkState.Mode.Selecting(state.mode.selectedItems + action.item))
         is BookmarkAction.Deselect -> {
-            val selectedItems = if (state.mode is BookmarkState.Mode.Selecting) {
-                state.mode.selectedItems - action.item
-            } else setOf()
-            val mode =
-                if (selectedItems.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(selectedItems)
-            state.copy(mode = mode)
+            val items = state.mode.selectedItems - action.item
+            state.copy(
+                mode = if (items.isEmpty()) BookmarkState.Mode.Normal else BookmarkState.Mode.Selecting(items)
+            )
         }
-        BookmarkAction.DeselectAll -> {
+        BookmarkAction.DeselectAll ->
             state.copy(mode = BookmarkState.Mode.Normal)
-        }
     }
 }
 

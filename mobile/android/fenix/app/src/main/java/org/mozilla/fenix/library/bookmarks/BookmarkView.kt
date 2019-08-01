@@ -5,16 +5,13 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import kotlinx.android.extensions.LayoutContainer
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.getColorResFromAttr
 import org.mozilla.fenix.library.LibraryPageView
 
 /**
@@ -129,21 +126,19 @@ interface BookmarkViewInteractor {
 }
 
 class BookmarkView(
-    private val container: ViewGroup,
+    container: ViewGroup,
     val interactor: BookmarkViewInteractor
-) : LibraryPageView(container), LayoutContainer, BackHandler {
+) : LibraryPageView(container), BackHandler {
 
-    override val containerView: View?
-        get() = container
+    val view: LinearLayout = LayoutInflater.from(container.context)
+        .inflate(R.layout.component_bookmark, container, true)
+        .findViewById(R.id.bookmarks_wrapper)
 
     var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
         private set
     var tree: BookmarkNode? = null
         private set
     private var canGoBack = false
-
-    val view: LinearLayout = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_bookmark, container, true) as LinearLayout
 
     private val bookmarkAdapter: BookmarkAdapter
 
@@ -155,17 +150,19 @@ class BookmarkView(
     }
 
     fun update(state: BookmarkState) {
-        canGoBack = !(listOf(null, BookmarkRoot.Root.id).contains(state.tree?.guid))
-        if (state.tree != tree) {
-            tree = state.tree
-        }
+        canGoBack = BookmarkRoot.Root.matches(state.tree)
+        tree = state.tree
         if (state.mode != mode) {
             mode = state.mode
             interactor.switchMode(mode)
         }
-        when (val modeCopy = state.mode) {
-            is BookmarkState.Mode.Normal -> setUIForNormalMode(state.tree)
-            is BookmarkState.Mode.Selecting -> setUIForSelectingMode(state.tree, modeCopy)
+
+        bookmarkAdapter.updateData(state.tree, mode)
+        when (state.mode) {
+            is BookmarkState.Mode.Normal ->
+                setUiForNormalMode(state.tree)
+            is BookmarkState.Mode.Selecting ->
+                setUiForSelectingMode(context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size))
         }
     }
 
@@ -183,34 +180,16 @@ class BookmarkView(
         }
     }
 
-    fun getSelected(): Set<BookmarkNode> = bookmarkAdapter.selected
-
-    private fun setUIForSelectingMode(
-        root: BookmarkNode?,
-        mode: BookmarkState.Mode.Selecting
-    ) {
-        bookmarkAdapter.updateData(root, mode)
-        activity?.title =
-            context.getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
-        setToolbarColors(
-            R.color.white_color,
-            context.getColorResFromAttr(R.attr.accentHighContrast)
+    private fun setUiForNormalMode(root: BookmarkNode?) {
+        super.setUiForNormalMode(
+            if (BookmarkRoot.Mobile.matches(root)) context.getString(R.string.library_bookmarks) else root?.title
         )
     }
 
-    private fun setUIForNormalMode(root: BookmarkNode?) {
-        bookmarkAdapter.updateData(root, BookmarkState.Mode.Normal)
-        setTitle(root)
-        setToolbarColors(
-            context.getColorResFromAttr(R.attr.primaryText),
-            context.getColorResFromAttr(R.attr.foundation)
-        )
-    }
-
-    private fun setTitle(root: BookmarkNode?) {
-        activity?.title = when (root?.guid) {
-            BookmarkRoot.Mobile.id, null -> context.getString(R.string.library_bookmarks)
-            else -> root.title
-        }
+    /**
+     * Returns true if [root] matches the bookmark root ID.
+     */
+    private fun BookmarkRoot.matches(root: BookmarkNode?): Boolean {
+        return root == null || id == root.guid
     }
 }

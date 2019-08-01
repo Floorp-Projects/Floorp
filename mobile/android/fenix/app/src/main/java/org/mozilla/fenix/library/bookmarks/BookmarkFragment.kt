@@ -15,7 +15,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -34,8 +33,6 @@ import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
-import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter
 import org.mozilla.fenix.components.StoreProvider
@@ -47,10 +44,11 @@ import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.setRootTitles
 import org.mozilla.fenix.ext.urlToTrimmedHost
 import org.mozilla.fenix.ext.withOptionalDesktopFolders
+import org.mozilla.fenix.library.LibraryPageFragment
 import org.mozilla.fenix.utils.allowUndo
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
+class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, AccountObserver {
 
     private lateinit var bookmarkStore: BookmarkStore
     private lateinit var bookmarkView: BookmarkView
@@ -74,6 +72,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
 
     private val metrics
         get() = context?.components?.analytics?.metrics
+
+    override val selectedItems get() = bookmarkStore.state.mode.selectedItems
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
@@ -173,8 +173,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.libraryClose -> {
-                navigation
-                    .popBackStack(R.id.libraryFragment, true)
+                close()
                 true
             }
             R.id.add_bookmark_folder -> {
@@ -186,20 +185,21 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
                 true
             }
             R.id.open_bookmarks_in_new_tabs_multi_select -> {
-                getSelectedBookmarks().forEach { node ->
-                    node.url?.let {
-                        context?.components?.useCases?.tabsUseCases?.addTab?.invoke(it)
-                    }
-                }
+                openItemsInNewTab { node -> node.url }
 
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
-                (activity as HomeActivity).supportActionBar?.hide()
                 nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 metrics?.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
+            R.id.open_bookmarks_in_private_tabs_multi_select -> {
+                openItemsInNewTab(private = true) { node -> node.url }
+
+                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                metrics?.track(Event.OpenedBookmarksInPrivateTabs)
+                true
+            }
             R.id.edit_bookmark_multi_select -> {
-                val bookmark = getSelectedBookmarks().first()
+                val bookmark = bookmarkStore.state.mode.selectedItems.first()
                 nav(
                     R.id.bookmarkFragment,
                     BookmarkFragmentDirections
@@ -207,21 +207,8 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
                 )
                 true
             }
-            R.id.open_bookmarks_in_private_tabs_multi_select -> {
-                getSelectedBookmarks().forEach { node ->
-                    node.url?.let {
-                        context?.components?.useCases?.tabsUseCases?.addPrivateTab?.invoke(it)
-                    }
-                }
-
-                (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
-                (activity as HomeActivity).supportActionBar?.hide()
-                nav(R.id.bookmarkFragment, BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
-                metrics?.track(Event.OpenedBookmarksInPrivateTabs)
-                true
-            }
             R.id.delete_bookmarks_multi_select -> {
-                deleteMulti(getSelectedBookmarks())
+                deleteMulti(bookmarkStore.state.mode.selectedItems)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -247,8 +234,6 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
     override fun onProfileUpdated(profile: Profile) {
     }
 
-    private fun getSelectedBookmarks() = bookmarkView.getSelected()
-
     private suspend fun refreshBookmarks() {
         context?.bookmarkStorage()?.getTree(bookmarkStore.state.tree!!.guid, false).withOptionalDesktopFolders(context)
             ?.let { node ->
@@ -265,7 +250,7 @@ class BookmarkFragment : Fragment(), BackHandler, AccountObserver {
         super.onPause()
     }
 
-    private suspend fun deleteSelectedBookmarks(selected: Set<BookmarkNode> = getSelectedBookmarks()) {
+    private suspend fun deleteSelectedBookmarks(selected: Set<BookmarkNode>) {
         selected.forEach {
             context?.bookmarkStorage()?.deleteNode(it.guid)
         }
