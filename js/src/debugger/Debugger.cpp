@@ -438,13 +438,20 @@ JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
 JS_STATIC_ASSERT(unsigned(DebuggerFrame::OWNER_SLOT) ==
                  unsigned(DebuggerEnvironment::OWNER_SLOT));
 
+#ifdef DEBUG
+/* static */
+bool Debugger::isChildJSObject(JSObject* obj) {
+  return obj->getClass() == &DebuggerFrame::class_ ||
+         obj->getClass() == &DebuggerScript::class_ ||
+         obj->getClass() == &DebuggerSource_class ||
+         obj->getClass() == &DebuggerObject::class_ ||
+         obj->getClass() == &DebuggerEnvironment::class_;
+}
+#endif
+
 /* static */
 Debugger* Debugger::fromChildJSObject(JSObject* obj) {
-  MOZ_ASSERT(obj->getClass() == &DebuggerFrame::class_ ||
-             obj->getClass() == &DebuggerScript::class_ ||
-             obj->getClass() == &DebuggerSource_class ||
-             obj->getClass() == &DebuggerObject::class_ ||
-             obj->getClass() == &DebuggerEnvironment::class_);
+  MOZ_ASSERT(isChildJSObject(obj));
   JSObject* dbgobj = &obj->as<NativeObject>()
                           .getReservedSlot(JSSLOT_DEBUGOBJECT_OWNER)
                           .toObject();
@@ -1137,14 +1144,6 @@ bool Debugger::wrapEnvironment(JSContext* cx, Handle<Env*> env,
       return false;
     }
 
-    CrossCompartmentKey key(
-        CrossCompartmentKey::DebuggeeEnvironment(object, env));
-    if (!object->compartment()->putWrapper(cx, key, ObjectValue(*envobj))) {
-      NukeDebuggerWrapper(envobj);
-      environments.remove(env);
-      return false;
-    }
-
     result.set(envobj);
   }
 
@@ -1232,16 +1231,6 @@ bool Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
     if (!p.add(cx, objects, obj, dobj)) {
       NukeDebuggerWrapper(dobj);
       return false;
-    }
-
-    if (obj->compartment() != object->compartment()) {
-      CrossCompartmentKey key(CrossCompartmentKey::DebuggeeObject(object, obj));
-      if (!object->compartment()->putWrapper(cx, key, ObjectValue(*dobj))) {
-        NukeDebuggerWrapper(dobj);
-        objects.remove(obj);
-        ReportOutOfMemory(cx);
-        return false;
-      }
     }
 
     result.set(dobj);
@@ -3489,6 +3478,80 @@ void DebugAPI::traceCrossCompartmentEdges(JSTracer* trc) {
   }
 }
 
+static inline DebuggerSourceReferent GetSourceReferent(JSObject* obj);
+
+#ifdef DEBUG
+
+static bool RuntimeHasDebugger(JSRuntime* rt, Debugger* dbg) {
+  for (Debugger* d : rt->debuggerList()) {
+    if (d == dbg) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* static */
+bool DebugAPI::edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
+                                       JS::GCCellPtr dst) {
+  if (!Debugger::isChildJSObject(src)) {
+    return false;
+  }
+
+  Debugger* dbg = Debugger::fromChildJSObject(src);
+  MOZ_ASSERT(RuntimeHasDebugger(rt, dbg));
+
+  if (src->is<DebuggerFrame>()) {
+    if (dst.is<JSScript>()) {
+      // The generatorFrames map is not keyed on the associated JSScript. Get
+      // the key from the source object and check everything matches.
+      DebuggerFrame* frame = &src->as<DebuggerFrame>();
+      AbstractGeneratorObject* genObj = &frame->unwrappedGenerator();
+      return frame->generatorScript() == &dst.as<JSScript>() &&
+             dbg->generatorFrames.hasEntry(genObj, src);
+    }
+    return dst.is<JSObject>() &&
+           dbg->generatorFrames.hasEntry(&dst.as<JSObject>(), src);
+  }
+  if (src->is<DebuggerObject>()) {
+    return dst.is<JSObject>() &&
+           dbg->objects.hasEntry(&dst.as<JSObject>(), src);
+  }
+  if (src->is<DebuggerEnvironment>()) {
+    return dst.is<JSObject>() &&
+           dbg->environments.hasEntry(&dst.as<JSObject>(), src);
+  }
+  if (src->is<DebuggerScript>()) {
+    return src->as<DebuggerScript>().getReferent().match(
+        [=](JSScript* script) {
+          return dst.is<JSScript>() && script == &dst.as<JSScript>() &&
+                 dbg->scripts.hasEntry(script, src);
+        },
+        [=](LazyScript* lazy) {
+          return dst.is<LazyScript>() && lazy == &dst.as<LazyScript>() &&
+                 dbg->lazyScripts.hasEntry(lazy, src);
+        },
+        [=](WasmInstanceObject* instance) {
+          return dst.is<JSObject>() && instance == &dst.as<JSObject>() &&
+                 dbg->wasmInstanceScripts.hasEntry(instance, src);
+        });
+  }
+  if (src->getClass() == &DebuggerSource_class) {
+    return GetSourceReferent(src).match(
+        [=](ScriptSourceObject* sso) {
+          return dst.is<JSObject>() && sso == &dst.as<JSObject>() &&
+                 dbg->sources.hasEntry(sso, src);
+        },
+        [=](WasmInstanceObject* instance) {
+          return dst.is<JSObject>() && instance == &dst.as<JSObject>() &&
+                 dbg->wasmInstanceSources.hasEntry(instance, src);
+        });
+  }
+  MOZ_ASSERT_UNREACHABLE("Unhandled cross-compartment edge");
+}
+
+#endif
+
 /*
  * This method has two tasks:
  *   1. Mark Debugger objects that are unreachable except for debugger hooks
@@ -4696,8 +4759,6 @@ void Debugger::removeDebuggeeGlobal(FreeOp* fop, GlobalObject* global,
     global->realm()->updateDebuggerObservesCoverage();
   }
 }
-
-static inline DebuggerSourceReferent GetSourceReferent(JSObject* obj);
 
 class MOZ_STACK_CLASS Debugger::QueryBase {
  protected:
@@ -6014,7 +6075,6 @@ DebuggerScript* Debugger::newDebuggerScript(
 template <typename Wrapper, typename ReferentVariant, typename Referent,
           typename Map>
 Wrapper* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
-                                       Handle<CrossCompartmentKey> key,
                                        Handle<ReferentVariant> referent) {
   cx->check(object);
 
@@ -6030,13 +6090,6 @@ Wrapper* Debugger::wrapVariantReferent(JSContext* cx, Map& map,
 
     if (!p.add(cx, map, untaggedReferent, wrapper)) {
       NukeDebuggerWrapper(wrapper);
-      return nullptr;
-    }
-
-    if (!object->compartment()->putWrapper(cx, key, ObjectValue(*wrapper))) {
-      NukeDebuggerWrapper(wrapper);
-      map.remove(untaggedReferent);
-      ReportOutOfMemory(cx);
       return nullptr;
     }
   }
@@ -6064,37 +6117,27 @@ DebuggerScript* Debugger::wrapVariantReferent(
       Rooted<LazyScript*> lazyScript(cx, untaggedReferent->maybeLazyScript());
       Rooted<DebuggerScriptReferent> lazyScriptReferent(cx, lazyScript.get());
 
-      Rooted<CrossCompartmentKey> key(cx,
-                                      CrossCompartmentKey(object, lazyScript));
       obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
                                 LazyScript*, LazyScriptWeakMap>(
-          cx, lazyScripts, key, lazyScriptReferent);
+          cx, lazyScripts, lazyScriptReferent);
       MOZ_ASSERT_IF(obj, obj->getReferent() == lazyScriptReferent);
       return obj;
     } else {
       // If the JSScript doesn't have corresponding LazyScript, the script
       // is not lazifiable, and we can safely use JSScript as referent.
-      Rooted<CrossCompartmentKey> key(
-          cx, CrossCompartmentKey(object, untaggedReferent));
       obj =
           wrapVariantReferent<DebuggerScript, DebuggerScriptReferent, JSScript*,
-                              ScriptWeakMap>(cx, scripts, key, referent);
+                              ScriptWeakMap>(cx, scripts, referent);
     }
   } else if (referent.is<LazyScript*>()) {
-    Handle<LazyScript*> untaggedReferent = referent.template as<LazyScript*>();
-    Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey(object, untaggedReferent));
     obj =
         wrapVariantReferent<DebuggerScript, DebuggerScriptReferent, LazyScript*,
-                            LazyScriptWeakMap>(cx, lazyScripts, key, referent);
+                            LazyScriptWeakMap>(cx, lazyScripts, referent);
   } else {
-    Handle<WasmInstanceObject*> untaggedReferent =
         referent.template as<WasmInstanceObject*>();
-    Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey::DebuggeeWasmScript(object, untaggedReferent));
-    obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
-                              WasmInstanceObject*, WasmInstanceWeakMap>(
-        cx, wasmInstanceScripts, key, referent);
+        obj = wrapVariantReferent<DebuggerScript, DebuggerScriptReferent,
+                                  WasmInstanceObject*, WasmInstanceWeakMap>(
+            cx, wasmInstanceScripts, referent);
   }
   MOZ_ASSERT_IF(obj, obj->getReferent() == referent);
   return obj;
@@ -6408,21 +6451,13 @@ JSObject* Debugger::wrapVariantReferent(
     JSContext* cx, Handle<DebuggerSourceReferent> referent) {
   JSObject* obj;
   if (referent.is<ScriptSourceObject*>()) {
-    Handle<ScriptSourceObject*> untaggedReferent =
-        referent.template as<ScriptSourceObject*>();
-    Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
     obj = wrapVariantReferent<NativeObject, DebuggerSourceReferent,
-                              ScriptSourceObject*, SourceWeakMap>(
-        cx, sources, key, referent);
+                              ScriptSourceObject*, SourceWeakMap>(cx, sources,
+                                                                  referent);
   } else {
-    Handle<WasmInstanceObject*> untaggedReferent =
-        referent.template as<WasmInstanceObject*>();
-    Rooted<CrossCompartmentKey> key(
-        cx, CrossCompartmentKey::DebuggeeSource(object, untaggedReferent));
     obj = wrapVariantReferent<NativeObject, DebuggerSourceReferent,
                               WasmInstanceObject*, WasmInstanceWeakMap>(
-        cx, wasmInstanceSources, key, referent);
+        cx, wasmInstanceSources, referent);
   }
   MOZ_ASSERT_IF(obj, GetSourceReferent(obj) == referent);
   return obj;

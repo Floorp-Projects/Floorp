@@ -114,6 +114,11 @@ class DebugAPI {
   static void checkDebugScriptAfterMovingGC(DebugScript* ds);
 #endif
 
+#ifdef DEBUG
+  static bool edgeIsInDebuggerWeakmap(JSRuntime* rt, JSObject* src,
+                                      JS::GCCellPtr dst);
+#endif
+
   /*** Methods for querying script breakpoint state. **************************/
 
   // Query information about whether any debuggers are observing a script.
