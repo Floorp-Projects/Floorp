@@ -503,6 +503,7 @@ class CellWithLengthAndFlags : public BaseCell {
 
   void setFlagBit(uint32_t flag) { flags_ |= uintptr_t(flag); }
   void clearFlagBit(uint32_t flag) { flags_ &= ~uintptr_t(flag); }
+  void toggleFlagBit(uint32_t flag) { flags_ ^= uintptr_t(flag); }
 
   void setLengthAndFlags(uint32_t len, uint32_t flags) {
 #if JS_BITS_PER_WORD == 32

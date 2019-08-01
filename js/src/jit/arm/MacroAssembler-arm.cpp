@@ -3445,8 +3445,7 @@ Assembler::Condition MacroAssemblerARMCompat::testBigIntTruthy(
   ScratchRegisterScope scratch(asMasm());
   SecondScratchRegisterScope scratch2(asMasm());
 
-  ma_dtr(IsLoad, bi, Imm32(BigInt::offsetOfLengthSignAndReservedBits()),
-         scratch, scratch2);
+  ma_dtr(IsLoad, bi, Imm32(BigInt::offsetOfDigitLength()), scratch, scratch2);
   as_cmp(scratch, Imm8(0));
   return truthy ? Assembler::NotEqual : Assembler::Equal;
 }
