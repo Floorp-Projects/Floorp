@@ -102,22 +102,28 @@ async_test(t => {
     });
 }, 'showToast closes after user specified 50ms');
 
-// type
-test(() => {
-    const toast = showToast('Message', {type: 'warning'});
-    assert_equals(toast.type, 'warning');
-    assert_equals(toast.getAttribute('type'), 'warning');
-}, 'passing a valid type option to showToast sets the type property and attribute');
+async_test(t => {
+    const toast = showToast('message', {duration: Infinity});
+
+    t.step_timeout(() => {
+        assertToastShown(toast);
+        t.done();
+    }, 50);
+
+    t.add_cleanup(function() {
+        toast.remove();
+    });
+}, 'passing Infinity as the duration leaves the toast open for at least 50ms');
 
 test(() => {
-    const toast = showToast('Message', {type: 'test'});
-    assert_equals(toast.type, '');
-    assert_equals(toast.getAttribute('type'), 'test');
-}, 'passing an invalid type option to showToast sets the type attribute, but not the property');
+    assert_throws(new RangeError(), () => {
+        const toast = showToast('Message', {duration: 0});
+    });
+}, 'setting the duration to 0 throws a RangeError');
 
 test(() => {
-    const toast = showToast('Message');
-    assert_equals(toast.type, '');
-    assert_false(toast.hasAttribute('type'));
-}, 'passing nothing as the type option to showToast does not set the type attribute or property');
+    assert_throws(new RangeError(), () => {
+        const toast = showToast('Message', {duration: -5});
+    });
+}, 'setting the duration to a negative number throws a RangeError');
 </script>
