@@ -11,6 +11,7 @@
 
 #include "mozilla/BinarySearch.h"
 
+#include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"
 #include "vm/TypeInference.h"
 
@@ -42,7 +43,7 @@ template <typename TYPESET>
                                                       uint32_t* bytecodeMap,
                                                       uint32_t* hint,
                                                       TYPESET* typeArray) {
-  MOZ_ASSERT(CodeSpec[*pc].format & JOF_TYPESET);
+  MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
   uint32_t offset = script->pcToOffset(pc);
 
   // See if this pc is the next typeset opcode after the last one looked up.
