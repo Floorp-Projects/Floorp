@@ -759,3 +759,26 @@ def target_tasks_codereview(full_task_graph, parameters, graph_config):
 def target_tasks_nothing(full_task_graph, parameters, graph_config):
     """Select nothing, for DONTBUILD pushes"""
     return []
+
+
+@_target_task('raptor_tp6m')
+def target_tasks_raptor_tp6m(full_task_graph, parameters, graph_config):
+    """
+    Select tasks required for running raptor cold page-load tests on fenix and refbrow
+    """
+    def filter(task):
+        platform = task.attributes.get('build_platform')
+        attributes = task.attributes
+
+        if platform and 'android' not in platform:
+            return False
+        if attributes.get('unittest_suite') != 'raptor':
+            return False
+        try_name = attributes.get('raptor_try_name')
+        if '-cold' in try_name and 'pgo' in platform:
+            if '-1-refbrow-' in try_name:
+                return True
+            if '-1-fenix-' in try_name:
+                return True
+
+    return [l for l, t in full_task_graph.tasks.iteritems() if filter(t)]

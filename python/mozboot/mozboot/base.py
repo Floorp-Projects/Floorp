@@ -801,7 +801,7 @@ class BaseBootstrapper(object):
 
         if 'JAVA_HOME' in os.environ:
             extra_search_dirs += (os.path.join(os.environ['JAVA_HOME'], 'bin'),)
-        java = self.which('java', extra_search_dirs)
+        java = self.which('java', *extra_search_dirs)
 
         if not java:
             raise Exception('You need to have Java version 1.8 installed. '

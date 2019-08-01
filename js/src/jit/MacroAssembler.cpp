@@ -2870,11 +2870,12 @@ void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
                                                        Label* label) {
   // First, ensure it's a scripted function. It is fine if it is still lazy.
   branchTestFunctionFlags(
-      fun, JSFunction::INTERPRETED | JSFunction::INTERPRETED_LAZY,
+      fun, FunctionFlags::INTERPRETED | FunctionFlags::INTERPRETED_LAZY,
       Assembler::Zero, label);
 
   // Check if the CONSTRUCTOR bit is set.
-  branchTestFunctionFlags(fun, JSFunction::CONSTRUCTOR, Assembler::Zero, label);
+  branchTestFunctionFlags(fun, FunctionFlags::CONSTRUCTOR, Assembler::Zero,
+                          label);
 }
 
 void MacroAssembler::branchTestObjGroupNoSpectreMitigations(

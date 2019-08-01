@@ -19,7 +19,8 @@ add_task(async function test_show_logins() {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
-        loginList._logins.length == 1 && loginList._logins[0].guid == loginGuid
+        loginList._loginGuidsSortedOrder.length == 1 &&
+        loginList._loginGuidsSortedOrder[0] == loginGuid
       );
     }, "Waiting for login to be displayed");
     ok(loginFound, "Stored logins should be displayed upon loading the page");
@@ -103,9 +104,10 @@ add_task(async function test_login_item() {
       );
       await ContentTaskUtils.waitForCondition(() => {
         loginListItem = Cu.waiveXrays(
-          loginList.shadowRoot.querySelector(".login-list-item")
+          loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
         );
         return (
+          loginListItem._login &&
           loginListItem._login.username == usernameInput.value &&
           loginListItem._login.password == passwordInput.value
         );
@@ -131,8 +133,8 @@ add_task(async function test_login_item() {
       confirmDeleteButton.click();
 
       await ContentTaskUtils.waitForCondition(() => {
-        loginListItem = Cu.waiveXrays(
-          loginList.shadowRoot.querySelector(".login-list-item")
+        loginListItem = loginList.shadowRoot.querySelector(
+          ".login-list-item[data-guid]"
         );
         return !loginListItem;
       }, "Waiting for login to be removed from list");

@@ -6,6 +6,7 @@ requestLongerTimeout(2);
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
 
 function waitForTelemetryEventCount(count) {
+  info("waiting for telemetry event count of " + count);
   return TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
@@ -77,7 +78,7 @@ add_task(async function test_telemetry_events() {
 
   let promiseNewTab = BrowserTestUtils.waitForNewTab(
     gBrowser,
-    TEST_LOGIN1.origin
+    TEST_LOGIN2.origin
   );
   await ContentTask.spawn(gBrowser.selectedBrowser, null, async function() {
     let loginItem = content.document.querySelector("login-item");
@@ -87,7 +88,7 @@ add_task(async function test_telemetry_events() {
     openSiteButton.click();
   });
   let newTab = await promiseNewTab;
-  ok(true, "New tab opened to " + TEST_LOGIN1.origin);
+  ok(true, "New tab opened to " + TEST_LOGIN2.origin);
   BrowserTestUtils.removeTab(newTab);
   await waitForTelemetryEventCount(4);
 

@@ -755,6 +755,10 @@ size_t VideoTrackEncoder::SizeOfExcludingThis(
 
 void VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval) {
   MOZ_ASSERT(!mWorkerThread || mWorkerThread->IsCurrentThreadIn());
+  if (aKeyFrameInterval == 0) {
+    mKeyFrameInterval = DEFAULT_KEYFRAME_INTERVAL_MS;
+    return;
+  }
   mKeyFrameInterval = std::min(aKeyFrameInterval, DEFAULT_KEYFRAME_INTERVAL_MS);
 }
 

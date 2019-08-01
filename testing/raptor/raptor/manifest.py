@@ -5,6 +5,8 @@ from __future__ import absolute_import
 
 import json
 import os
+from urlparse import parse_qs, urlsplit, urlunsplit
+from urllib import urlencode, unquote
 
 from logger.logger import RaptorLogger
 from manifestparser import TestManifest
@@ -123,6 +125,32 @@ def validate_test_ini(test_details):
                 valid_settings = False
 
     return valid_settings
+
+
+def add_test_url_params(url, extra_params):
+    # add extra parameters to the test_url query string
+    # the values that already exist are re-written
+
+    # urlsplit returns a result as a tuple like (scheme, netloc, path, query, fragment)
+    parsed_url = urlsplit(url)
+
+    parsed_query_params = parse_qs(parsed_url.query)
+    parsed_extra_params = parse_qs(extra_params)
+
+    for name, value in parsed_extra_params.items():
+        # overwrite the old value
+        parsed_query_params[name] = value
+
+    final_query_string = unquote(urlencode(parsed_query_params, doseq=True))
+
+    # reconstruct test_url with the changed query string
+    return urlunsplit((
+        parsed_url.scheme,
+        parsed_url.netloc,
+        parsed_url.path,
+        final_query_string,
+        parsed_url.fragment
+    ))
 
 
 def write_test_settings_json(args, test_details, oskey):
@@ -346,6 +374,15 @@ def get_raptor_test_list(args, oskey):
 
         # either warm or cold-mode, initialize the starting current 'browser-cycle'
         next_test['browser_cycle'] = 1
+
+        # if --test-url-params was provided on the command line, add the params to the test_url
+        # provided in the INI
+        if args.test_url_params is not None:
+            initial_test_url = next_test['test_url']
+            next_test['test_url'] = add_test_url_params(initial_test_url, args.test_url_params)
+            LOG.info("adding extra test_url params (%s) as specified on cmd line "
+                     "to the current test_url (%s), resulting: %s" %
+                     (args.test_url_params, initial_test_url, next_test['test_url']))
 
         if next_test.get('use_live_sites', "false") == "true":
             # when using live sites we want to turn off playback

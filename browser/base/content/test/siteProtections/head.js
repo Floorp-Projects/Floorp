@@ -17,6 +17,10 @@ async function openProtectionsPanel(toast) {
   let shieldIconContainer = document.getElementById(
     "tracking-protection-icon-container"
   );
+
+  // Focus to the icon container in order to fetch tracker count.
+  shieldIconContainer.focus();
+
   if (!toast) {
     EventUtils.synthesizeMouseAtCenter(shieldIconContainer, {});
   } else {

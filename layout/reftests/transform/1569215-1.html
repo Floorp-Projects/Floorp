@@ -1,0 +1,28 @@
+<style>
+path {
+  stroke: #000;
+  fill: none;
+}
+
+#pp {
+  animation: flyR 5s infinite;
+}
+
+@keyframes flyR {
+  from {
+    transform: translate(9px);
+  }
+
+  50% {
+    transform: translate(4.5px);
+  }
+
+  to {
+    transform: translate(0px);
+  }
+}
+</style>
+
+<svg width="500" height="500" viewBox="105 125 20 20">
+  <path id="pp" d="m 95,130 h 36" />
+</svg>

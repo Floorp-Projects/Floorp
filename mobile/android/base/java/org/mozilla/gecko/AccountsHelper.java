@@ -92,6 +92,7 @@ public class AccountsHelper implements BundleEventListener {
             AndroidFxAccount fxAccount = null;
             try {
                 final GeckoBundle json = message.getBundle("json");
+                final String action = json.getString("action");
                 final String email = json.getString("email");
                 final String uid = json.getString("uid");
                 final boolean verified = json.getBoolean("verified", false);
@@ -137,6 +138,15 @@ public class AccountsHelper implements BundleEventListener {
                         Log.e(LOGTAG, "Got exception storing selected engines; ignoring.", e);
                     }
                 }
+
+                // We could be either signing-up for an account, or logging into one.
+                // Send a correct telemetry event.
+                if (action.equals("signin")) {
+                    MmaDelegate.track(MmaDelegate.USER_SIGNED_IN_TO_FXA);
+                } else if (action.equals("signup")) {
+                    MmaDelegate.track(MmaDelegate.USER_SIGNED_UP_FOR_FXA);
+                }
+
             } catch (URISyntaxException | GeneralSecurityException |
                      UnsupportedEncodingException e) {
                 Log.w(LOGTAG, "Got exception creating Firefox Account from JSON; ignoring.", e);
@@ -146,8 +156,6 @@ public class AccountsHelper implements BundleEventListener {
                     return;
                 }
             }
-
-            MmaDelegate.track(MmaDelegate.USER_SIGNED_IN_TO_FXA);
 
             if (callback != null) {
                 callback.sendSuccess(fxAccount != null);
@@ -163,6 +171,7 @@ public class AccountsHelper implements BundleEventListener {
             }
 
             final GeckoBundle json = message.getBundle("json");
+            final String action = json.getString("action");
             final String email = json.getString("email");
             final String uid = json.getString("uid");
 
@@ -204,7 +213,11 @@ public class AccountsHelper implements BundleEventListener {
             // upload a fresh client record.
             fxAccount.requestImmediateSync(null, null, false);
 
-            MmaDelegate.track(MmaDelegate.USER_SIGNED_IN_TO_FXA);
+            // 'UpdateFirefoxAccountFromJSON' message will be sent during a password change as well
+            // during a reconnect, so we need to ensure we don't fire-off false sign-in telemtry events.
+            if (!action.equals("passwordChange")) {
+                MmaDelegate.track(MmaDelegate.USER_RECONNECTED_TO_FXA);
+            }
 
             if (callback != null) {
                 callback.sendSuccess(true);

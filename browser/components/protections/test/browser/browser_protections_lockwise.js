@@ -121,7 +121,11 @@ add_task(async function() {
       0,
       "Zero synced devices are displayed."
     );
-    is(syncedDevicesStatusText.textContent, "Not syncing to other devices.");
+    is(
+      syncedDevicesStatusText.getAttribute("data-l10n-id"),
+      "lockwise-sync-not-syncing",
+      "Not syncing to other devices."
+    );
   });
 
   info(
@@ -160,16 +164,12 @@ add_task(async function() {
     const numberOfSyncedDevices = content.document.querySelector(
       ".number-of-synced-devices.block"
     );
-    const syncedDevicesStatusText = content.document.querySelector(
-      ".synced-devices-text span"
-    );
 
     is(
       numberOfSyncedDevices.textContent,
       5,
       "Five synced devices should be displayed"
     );
-    is(syncedDevicesStatusText.textContent, "Syncing to 5 other devices.");
   });
 
   info("Disable showing the Lockwise card.");

@@ -192,9 +192,8 @@
 #identity-popup-securityView-body > description,
 #identity-popup-permissions-content > description,
 #protections-popup-content > description,
-.protections-popup-settings-label,
-#protections-popup-footer > description,
-#protections-popup-footer > label {
+.protections-popup-footer-button-label,
+#protections-popup-trackers-blocked-counter-description {
   font-size: 110%;
   margin: 0;
 }
@@ -433,13 +432,17 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category:-moz-focusring,
 .protections-popup-category:hover,
-#protections-popup-settings-button:hover {
+.protections-popup-footer-button:-moz-focusring,
+.protections-popup-footer-button:hover,
+#protections-popup-show-report-stack:hover > .protections-popup-footer-button {
   border-radius: 2px;
   background-color: var(--arrowpanel-dimmed);
   outline: none;
 }
 
-.protections-popup-category:hover:active {
+.protections-popup-category:hover:active,
+.protections-popup-footer-button:hover:active,
+#protections-popup-show-report-stack:hover:active > .protections-popup-footer-button {
   background-color: var(--arrowpanel-dimmed-further);
 }
 
@@ -718,7 +721,8 @@ description#identity-popup-content-verifier,
 .protections-popup-category-state-label,
 .identity-popup-permission-label,
 .identity-popup-permission-state-label,
-.protections-popup-settings-label {
+.protections-popup-footer-button-label,
+#protections-popup-trackers-blocked-counter-description {
   /* We need to align the action buttons and permission icons with the text.
      This is tricky because the icon height is defined in pixels, while the
      font height can vary with platform and system settings, and at least on
@@ -733,7 +737,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category-label,
 .identity-popup-permission-label,
-.protections-popup-settings-label {
+.protections-popup-footer-button-label {
   margin-inline-start: 1em;
 }
 
@@ -889,39 +893,49 @@ description#identity-popup-content-verifier,
   border-top: 1px solid var(--panel-separator-color);
 }
 
-#protections-popup-settings-section {
-  padding: 4px;
-  -moz-context-properties: fill, fill-opacity;
+/* Protection popup footer categories */
+
+.protections-popup-footer-button {
+  min-height: 24px;
+  padding-inline-start: 2em;
+  margin: 0;
 }
 
-#protections-popup-settings-button {
-  /* We need to align the setting button with the labels in the tp switch
-     section. So we add 6px to offset the margin of labels. */
-  padding-inline-start: calc(1em + 6px);
-  min-height: 37px;
-}
-
-.protection-settings-icon {
+.protection-popup-footer-icon {
   width: 16px;
   height: 16px;
+}
+
+.protections-popup-settings-icon {
   list-style-image: url(chrome://browser/skin/settings.svg);
 }
 
+.protections-popup-show-report-icon {
+  list-style-image: url(chrome://browser/skin/controlcenter/dashboard.svg);
+}
+
 #protections-popup-footer {
-  background-color: var(--arrowpanel-dimmed);
-  border-top: 1px solid var(--panel-separator-color);
-  min-height: 40px;
-  -moz-box-align: center;
-  /* The horizontal padding aligns the content of footer with other sections in
-     the protections panel */
-  padding: 4px calc(1em + 4px);
+  padding: 6px 0;
+}
+
+#protections-popup-trackers-blocked-counter-box {
+  margin-inline-end: calc(4px + 1em);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 200ms linear;
+}
+
+#protections-popup-trackers-blocked-counter-box[showing] {
+  visibility: visible;
+  opacity: 1;
 }
 
 #protections-popup-trackers-blocked-counter-description {
-  font-weight: 600;
-  /* This padding is added to align the counter text with the beginning of texts
-     in other sections. */
-  padding-inline-start: 6px;
+  color: #737373;
+}
+
+:root[lwt-popup-brighttext] #protections-popup-trackers-blocked-counter-description {
+  color: #f9f9fa;
 }
 
 #protections-popup-tp-switch[showdotindicator]::after {

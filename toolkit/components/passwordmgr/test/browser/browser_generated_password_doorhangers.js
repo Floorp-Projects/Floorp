@@ -234,7 +234,7 @@ async function openAndVerifyDoorhanger(browser, type, expected) {
   );
   is(
     passwordValue.length,
-    LoginTestUtils.generation.LENGTH,
+    expected.passwordLength || LoginTestUtils.generation.LENGTH,
     "Doorhanger password field has generated 15-char value"
   );
   is(
@@ -504,6 +504,94 @@ add_task(async function contextfill_generated_password_saved_empty_username() {
       notif && notif.remove();
     }
   );
+});
+
+add_task(async function autocomplete_generated_password_edited_no_auto_save() {
+  // confirm behavior when filling a generated password via autocomplete
+  // when there is an existing saved login with a "" username and then editing
+  // the password and autocompleting again.
+  await setup_withOneLogin("", "xyzpassword");
+  await openFormInNewTab(
+    TEST_ORIGIN + FORM_PAGE_PATH,
+    {
+      password: {
+        selector: passwordInputSelector,
+        expectedValue: "xyzpassword",
+        setValue: "",
+      },
+      username: { selector: usernameInputSelector, expectedValue: "" },
+    },
+    async function taskFn(browser) {
+      let [savedLogin] = Services.logins.getAllLogins();
+      let storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "modifyLogin"
+      );
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+      await waitForDoorhanger(browser, "password-change");
+      info("Waiting to openAndVerifyDoorhanger");
+      let notif = await openAndVerifyDoorhanger(browser, "password-change", {
+        dismissed: true,
+        anchorExtraAttr: "",
+        usernameValue: "",
+        passwordLength: LoginTestUtils.generation.LENGTH,
+      });
+      await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+      info("Waiting to verifyGeneratedPasswordWasFilled");
+      await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
+
+      await BrowserTestUtils.sendChar("!", browser);
+      await BrowserTestUtils.sendChar("@", browser);
+      await BrowserTestUtils.synthesizeKey("KEY_Tab", undefined, browser);
+
+      await waitForDoorhanger(browser, "password-change");
+      info("Waiting to openAndVerifyDoorhanger");
+      notif = await openAndVerifyDoorhanger(browser, "password-change", {
+        dismissed: true,
+        anchorExtraAttr: "",
+        usernameValue: "",
+        passwordLength: LoginTestUtils.generation.LENGTH + 2,
+      });
+      await clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
+
+      verifyLogins({
+        count: 1,
+        loginProperties: [
+          {
+            timesUsed: savedLogin.timesUsed,
+            username: "",
+            password: "xyzpassword",
+          },
+        ],
+      });
+
+      info("waiting for submitForm");
+      await submitForm(browser);
+      notif = await openAndVerifyDoorhanger(browser, "password-change", {
+        dismissed: false,
+        anchorExtraAttr: "",
+        usernameValue: "",
+        passwordLength: LoginTestUtils.generation.LENGTH + 2,
+      });
+
+      await clickDoorhangerButton(notif, CHANGE_BUTTON);
+      info("Waiting for modifyLogin");
+      await storageChangedPromise;
+      verifyLogins({
+        count: 1,
+        loginProperties: [
+          {
+            timesUsed: savedLogin.timesUsed + 1,
+            username: "",
+          },
+        ],
+      });
+      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
+      notif && notif.remove();
+    }
+  );
+
+  LMP._generatedPasswordsByPrincipalOrigin.clear();
 });
 
 add_task(async function contextmenu_fill_generated_password_and_set_username() {

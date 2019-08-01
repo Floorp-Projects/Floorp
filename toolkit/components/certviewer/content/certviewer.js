@@ -13,12 +13,13 @@ let gElements = {};
 document.addEventListener("DOMContentLoaded", async e => {
   gElements.certificateSection = document.querySelector("certificate-section");
   let url = new URL(document.URL);
-  let certInfo = url.searchParams.get("cert");
-  if (!certInfo) {
+  let certInfo = url.searchParams.getAll("cert");
+  if (certInfo.length === 0) {
     await render(true);
     return;
   }
-  await buildChain(decodeURIComponent(certInfo));
+  certInfo = certInfo.map(cert => decodeURIComponent(cert));
+  await buildChain(certInfo);
 });
 
 export const updateSelectedItem = (() => {
@@ -234,29 +235,33 @@ const render = async error => {
   return Promise.resolve();
 };
 
-const buildChain = async certBase64 => {
-  let certDER;
-  try {
-    certDER = pemToDER(certBase64);
-  } catch (err) {
-    await render(true);
-    return;
-  }
-
-  if (certDER == null) {
-    await render(true);
-    return;
-  }
-
-  let cert;
-  try {
-    cert = await parse(certDER);
-  } catch (err) {
-    await render(true);
-    return;
-  }
-  // Depends on https://bugzilla.mozilla.org/show_bug.cgi?id=1567561
-  let adjustedCerts = adjustCertInformation(cert);
-  console.log(adjustedCerts); // to avoid lint error
-  await render(false);
+const buildChain = async chain => {
+  await Promise.all(
+    chain
+      .map(cert => {
+        try {
+          return pemToDER(cert);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      })
+      .map(cert => {
+        try {
+          return parse(cert);
+        } catch (err) {
+          return Promise.reject(err);
+        }
+      })
+  )
+    .then(certs => {
+      if (certs.length === 0) {
+        return Promise.reject();
+      }
+      let adjustedCerts = certs.map(cert => adjustCertInformation(cert));
+      console.log(adjustedCerts);
+      return render(false);
+    })
+    .catch(err => {
+      render(true);
+    });
 };

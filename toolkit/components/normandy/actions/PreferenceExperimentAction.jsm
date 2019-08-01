@@ -47,7 +47,7 @@ var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
  */
 class PreferenceExperimentAction extends BaseAction {
   get schema() {
-    return ActionSchemas["multiple-preference-experiment"];
+    return ActionSchemas["multi-preference-experiment"];
   }
 
   constructor() {

@@ -103,7 +103,7 @@ class MediaTransportHandlerSTS : public MediaTransportHandler,
   void RemoveTransportsExcept(
       const std::set<std::string>& aTransportIds) override;
 
-  void StartIceChecks(bool aIsControlling, bool aIsOfferer,
+  void StartIceChecks(bool aIsControlling,
                       const std::vector<std::string>& aIceOptions) override;
 
   void AddIceCandidate(const std::string& aTransportId,
@@ -689,8 +689,7 @@ void MediaTransportHandlerSTS::StartIceGathering(
 }
 
 void MediaTransportHandlerSTS::StartIceChecks(
-    bool aIsControlling, bool aIsOfferer,
-    const std::vector<std::string>& aIceOptions) {
+    bool aIsControlling, const std::vector<std::string>& aIceOptions) {
   mInitPromise->Then(
       mStsThread, __func__,
       [=, self = RefPtr<MediaTransportHandlerSTS>(this)]() {
@@ -709,7 +708,7 @@ void MediaTransportHandlerSTS::StartIceChecks(
           return;
         }
 
-        rv = mIceCtx->StartChecks(aIsOfferer);
+        rv = mIceCtx->StartChecks();
         if (NS_FAILED(rv)) {
           CSFLogError(LOGTAG, "%s: couldn't start checks", __FUNCTION__);
           return;

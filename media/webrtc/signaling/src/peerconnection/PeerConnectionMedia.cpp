@@ -272,9 +272,9 @@ void PeerConnectionMedia::StartIceChecks(const JsepSession& aSession) {
     }
   }
 
-  nsCOMPtr<nsIRunnable> runnable(WrapRunnable(
-      mTransportHandler, &MediaTransportHandler::StartIceChecks,
-      aSession.IsIceControlling(), aSession.IsOfferer(), attributes));
+  nsCOMPtr<nsIRunnable> runnable(
+      WrapRunnable(mTransportHandler, &MediaTransportHandler::StartIceChecks,
+                   aSession.IsIceControlling(), attributes));
 
   PerformOrEnqueueIceCtxOperation(runnable);
 }

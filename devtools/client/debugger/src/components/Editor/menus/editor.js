@@ -51,17 +51,15 @@ export const continueToHereItem = (
 const copyToClipboardItem = (
   selectedContent: SourceContent,
   editorActions: EditorItemActions
-) => {
-  return {
-    id: "node-menu-copy-to-clipboard",
-    label: L10N.getStr("copyToClipboard.label"),
-    accesskey: L10N.getStr("copyToClipboard.accesskey"),
-    disabled: false,
-    click: () =>
-      selectedContent.type === "text" &&
-      copyToTheClipboard(selectedContent.value),
-  };
-};
+) => ({
+  id: "node-menu-copy-to-clipboard",
+  label: L10N.getStr("copyToClipboard.label"),
+  accesskey: L10N.getStr("copyToClipboard.accesskey"),
+  disabled: false,
+  click: () =>
+    selectedContent.type === "text" &&
+    copyToTheClipboard(selectedContent.value),
+});
 
 const copySourceItem = (
   selectedSource: Source,
@@ -158,14 +156,12 @@ const downloadFileItem = (
   selectedSource: Source,
   selectedContent: SourceContent,
   editorActions: EditorItemActions
-) => {
-  return {
-    id: "node-menu-download-file",
-    label: L10N.getStr("downloadFile.label"),
-    accesskey: L10N.getStr("downloadFile.accesskey"),
-    click: () => downloadFile(selectedContent, getFilename(selectedSource)),
-  };
-};
+) => ({
+  id: "node-menu-download-file",
+  label: L10N.getStr("downloadFile.label"),
+  accesskey: L10N.getStr("downloadFile.accesskey"),
+  click: () => downloadFile(selectedContent, getFilename(selectedSource)),
+});
 
 export function editorMenuItems({
   cx,

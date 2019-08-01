@@ -81,13 +81,13 @@ add_task(async function test_create_login() {
           content.document.querySelector("login-list")
         );
         let loginFound = await ContentTaskUtils.waitForCondition(() => {
-          return loginList._logins.length == aExpectedCount;
+          return loginList._loginGuidsSortedOrder.length == aExpectedCount;
         }, "Waiting for login to be displayed");
         ok(loginFound, "Expected number of logins found in login-list");
 
         let loginListItem = [
           ...loginList.shadowRoot.querySelectorAll(".login-list-item"),
-        ].find(l => l._login.origin == aOriginTuple[1]);
+        ].find(l => l._login && l._login.origin == aOriginTuple[1]);
         ok(
           !!loginListItem,
           `Stored login should only include the origin of the URL provided during creation (${
@@ -141,7 +141,9 @@ add_task(async function test_create_login() {
       let loginList = Cu.waiveXrays(
         content.document.querySelector("login-list")
       );
-      let login = loginList._logins.find(l => l.origin == aOriginTuple[1]);
+      let login = Object.values(loginList._logins).find(
+        obj => obj.login.origin == aOriginTuple[1]
+      ).login;
       ok(
         !!login,
         "Stored login should only include the origin of the URL provided during creation"

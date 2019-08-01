@@ -1690,7 +1690,7 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // LazyScript. Do a full parse.
   if (pc_->closedOverBindingsForLazy().length() >=
           LazyScript::NumClosedOverBindingsLimit ||
-      pc_->innerFunctionsForLazy.length() >=
+      pc_->innerFunctionBoxesForLazy.length() >=
           LazyScript::NumInnerFunctionsLimit) {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -1701,9 +1701,9 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   RootedFunction fun(cx_, funbox->function());
   LazyScript* lazy = LazyScript::Create(
       cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
-      pc_->innerFunctionsForLazy, funbox->bufStart, funbox->bufEnd,
-      funbox->toStringStart, funbox->startLine, funbox->startColumn,
-      parseGoal());
+      pc_->innerFunctionBoxesForLazy, funbox->bufStart, funbox->bufEnd,
+      funbox->toStringStart, funbox->toStringEnd, funbox->startLine,
+      funbox->startColumn, parseGoal());
   if (!lazy) {
     return false;
   }
@@ -1969,15 +1969,20 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
 JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
                              FunctionSyntaxKind kind,
                              GeneratorKind generatorKind,
-                             FunctionAsyncKind asyncKind, HandleObject proto,
+                             FunctionAsyncKind asyncKind,
                              bool isSelfHosting /* = false */,
                              bool inFunctionBox /* = false */) {
   MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, atom != nullptr);
 
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+    return nullptr;
+  }
+
   RootedFunction fun(cx);
 
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-  JSFunction::Flags flags;
+  FunctionFlags flags;
   bool isExtendedUnclonedSelfHostedFunctionName =
       isSelfHosting && atom && IsExtendedUnclonedSelfHostedFunctionName(atom);
   MOZ_ASSERT_IF(isExtendedUnclonedSelfHostedFunctionName, !inFunctionBox);
@@ -1986,28 +1991,28 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
     case FunctionSyntaxKind::Expression:
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
-                   ? JSFunction::INTERPRETED_LAMBDA
-                   : JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC);
+                   ? FunctionFlags::INTERPRETED_LAMBDA
+                   : FunctionFlags::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC);
       break;
     case FunctionSyntaxKind::Arrow:
-      flags = JSFunction::INTERPRETED_LAMBDA_ARROW;
+      flags = FunctionFlags::INTERPRETED_LAMBDA_ARROW;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Method:
-      flags = JSFunction::INTERPRETED_METHOD;
+      flags = FunctionFlags::INTERPRETED_METHOD;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::ClassConstructor:
     case FunctionSyntaxKind::DerivedClassConstructor:
-      flags = JSFunction::INTERPRETED_CLASS_CONSTRUCTOR;
+      flags = FunctionFlags::INTERPRETED_CLASS_CONSTRUCTOR;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Getter:
-      flags = JSFunction::INTERPRETED_GETTER;
+      flags = FunctionFlags::INTERPRETED_GETTER;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     case FunctionSyntaxKind::Setter:
-      flags = JSFunction::INTERPRETED_SETTER;
+      flags = FunctionFlags::INTERPRETED_SETTER;
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
       break;
     default:
@@ -2017,8 +2022,8 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
       }
       flags = (generatorKind == GeneratorKind::NotGenerator &&
                        asyncKind == FunctionAsyncKind::SyncFunction
-                   ? JSFunction::INTERPRETED_NORMAL
-                   : JSFunction::INTERPRETED_GENERATOR_OR_ASYNC);
+                   ? FunctionFlags::INTERPRETED_NORMAL
+                   : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
 
   fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,
@@ -2035,9 +2040,8 @@ JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
 
 JSFunction* ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                                     GeneratorKind generatorKind,
-                                    FunctionAsyncKind asyncKind,
-                                    HandleObject proto /* = nullptr */) {
-  return AllocNewFunction(cx_, atom, kind, generatorKind, asyncKind, proto,
+                                    FunctionAsyncKind asyncKind) {
+  return AllocNewFunction(cx_, atom, kind, generatorKind, asyncKind,
                           options().selfHostingMode, pc_->isFunctionBox());
 }
 
@@ -2099,10 +2103,10 @@ bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
   // the inner function so that if the outer function is eventually parsed
   // we do not need any further parsing or processing of the inner function.
   //
-  // Append the inner function here unconditionally; the vector is only used
+  // Append the inner functionbox here unconditionally; the vector is only used
   // if the Parser using outerpc is a syntax parsing. See
   // GeneralParser<SyntaxParseHandler>::finishFunction.
-  if (!outerpc->innerFunctionsForLazy.append(pc_->functionBox()->function())) {
+  if (!outerpc->innerFunctionBoxesForLazy.append(pc_->functionBox())) {
     return false;
   }
 
@@ -2601,12 +2605,8 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
     return funNode;
   }
 
-  RootedObject proto(cx_);
-  if (!GetFunctionPrototype(cx_, generatorKind, asyncKind, &proto)) {
-    return null();
-  }
   RootedFunction fun(
-      cx_, newFunction(funName, kind, generatorKind, asyncKind, proto));
+      cx_, newFunction(funName, kind, generatorKind, asyncKind));
   if (!fun) {
     return null();
   }

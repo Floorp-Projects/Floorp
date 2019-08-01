@@ -281,7 +281,7 @@ bool GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global) {
   }
   HandlePropertyName name = cx->names().GeneratorFunction;
   RootedObject genFunction(
-      cx, NewFunctionWithProto(cx, Generator, 1, JSFunction::NATIVE_CTOR,
+      cx, NewFunctionWithProto(cx, Generator, 1, FunctionFlags::NATIVE_CTOR,
                                nullptr, name, proto, gc::AllocKind::FUNCTION,
                                SingletonObject));
   if (!genFunction) {

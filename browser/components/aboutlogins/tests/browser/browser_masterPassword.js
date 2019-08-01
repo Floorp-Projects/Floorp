@@ -33,9 +33,9 @@ function waitForLoginCountToReach(browser, loginCount) {
   return ContentTask.spawn(browser, loginCount, async expectedLoginCount => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     await ContentTaskUtils.waitForCondition(() => {
-      return loginList._logins.length == expectedLoginCount;
+      return loginList._loginGuidsSortedOrder.length == expectedLoginCount;
     });
-    return loginList._logins.length;
+    return loginList._loginGuidsSortedOrder.length;
   });
 }
 

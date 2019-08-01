@@ -36,6 +36,7 @@ add_task(async function startup() {
   // engine from over the network.
   let engine = await Services.search.addEngineWithDetails("Test engine", {
     template: "http://example.com/?s=%S",
+    alias: "@testengine",
   });
   Services.search.defaultEngine = engine;
 
@@ -289,6 +290,186 @@ add_task(async function test_onProviderResultsRequested() {
   let actualResults = context.results.map(r => ({
     type: r.type,
     source: r.source,
+    title: r.title,
+    heuristic: r.heuristic,
+  }));
+
+  Assert.deepEqual(actualResults, expectedResults);
+
+  await ext.unload();
+});
+
+// Extensions can specify search engines using engine names, aliases, and URLs.
+add_task(async function test_onProviderResultsRequested_searchEngines() {
+  let ext = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["urlbar"],
+    },
+    isPrivileged: true,
+    incognitoOverride: "spanning",
+    background() {
+      browser.urlbar.onBehaviorRequested.addListener(query => {
+        return "restricting";
+      }, "test");
+      browser.urlbar.onResultsRequested.addListener(query => {
+        return [
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              engine: "Test engine",
+              suggestion: "engine specified",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              keyword: "@testengine",
+              suggestion: "keyword specified",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              url: "http://example.com/?s",
+              suggestion: "url specified",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              engine: "Test engine",
+              keyword: "@testengine",
+              url: "http://example.com/?s",
+              suggestion: "engine, keyword, and url specified",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              keyword: "@testengine",
+              url: "http://example.com/?s",
+              suggestion: "keyword and url specified",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              suggestion: "no engine",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              engine: "bogus",
+              suggestion: "no matching engine",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              keyword: "@bogus",
+              suggestion: "no matching keyword",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              url: "http://bogus-no-search-engine.com/",
+              suggestion: "no matching url",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              url: "bogus",
+              suggestion: "invalid url",
+            },
+          },
+          {
+            type: "search",
+            source: "search",
+            payload: {
+              url: "foo:bar",
+              suggestion: "url with no hostname",
+            },
+          },
+        ];
+      }, "test");
+    },
+  });
+  await ext.startup();
+
+  // Run a query.
+  let context = new UrlbarQueryContext({
+    allowAutofill: false,
+    isPrivate: false,
+    maxResults: 10,
+    searchString: "test",
+  });
+  let controller = new UrlbarController({
+    browserWindow: {
+      location: {
+        href: AppConstants.BROWSER_CHROME_URL,
+      },
+    },
+  });
+  await controller.startQuery(context);
+
+  // Check the results.  The first several are valid and should include "Test
+  // engine" as the engine.  The others don't specify an engine and are
+  // therefore invalid, so they should be ignored.
+  let expectedResults = [
+    {
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engine: "Test engine",
+      title: "engine specified",
+      heuristic: false,
+    },
+    {
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engine: "Test engine",
+      title: "keyword specified",
+      heuristic: false,
+    },
+    {
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engine: "Test engine",
+      title: "url specified",
+      heuristic: false,
+    },
+    {
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engine: "Test engine",
+      title: "engine, keyword, and url specified",
+      heuristic: false,
+    },
+    {
+      type: UrlbarUtils.RESULT_TYPE.SEARCH,
+      source: UrlbarUtils.RESULT_SOURCE.SEARCH,
+      engine: "Test engine",
+      title: "keyword and url specified",
+      heuristic: false,
+    },
+  ];
+
+  let actualResults = context.results.map(r => ({
+    type: r.type,
+    source: r.source,
+    engine: r.payload.engine || null,
     title: r.title,
     heuristic: r.heuristic,
   }));

@@ -469,6 +469,13 @@ this.LoginManagerParent = {
     generatedPW = {
       edited: false,
       filled: false,
+      /**
+       * GUID of a login that was already saved for this generated password that
+       * will be automatically updated with password changes. This shouldn't be
+       * an existing saved login for the site unless the user chose to
+       * merge/overwrite via a doorhanger.
+       */
+      storageGUID: null,
       value: PasswordGenerator.generatePassword(),
     };
     this._generatedPasswordsByPrincipalOrigin.set(
@@ -675,7 +682,7 @@ this.LoginManagerParent = {
     browsingContextId,
     formActionOrigin,
     openerTopWindowID,
-    password: passwordInField,
+    password,
     username = "",
   }) {
     log("_onGeneratedPasswordFilledOrEdited");
@@ -691,17 +698,32 @@ this.LoginManagerParent = {
       );
       return;
     }
+
+    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
+      // No UI should be shown to offer generation in thie case but a user may
+      // disable saving for the site after already filling one and they may then
+      // edit it.
+      log(
+        "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
+        formOrigin
+      );
+      return;
+    }
+
     let framePrincipalOrigin =
       browsingContext.currentWindowGlobal.documentPrincipal.origin;
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
-    let password = generatedPW.value;
-    if (!passwordInField) {
+    if (!password) {
       log("_onGeneratedPasswordFilledOrEdited: The password field is empty");
       return;
     }
-    if (passwordInField != password) {
+
+    let autoSaveLogin = true;
+    let loginToChange = null;
+
+    if (password != generatedPW.value) {
       // The user edited the field after generation to a non-empty value.
       log("The field containing the generated password has changed");
 
@@ -715,7 +737,22 @@ this.LoginManagerParent = {
         log("filled_field_edited telemetry event recorded");
         generatedPW.edited = true;
       }
-      return;
+
+      // The edit was to a login that was auto-saved.
+      // Note that it could have been saved in a totally different tab in the session.
+      if (generatedPW.storageGUID) {
+        let existingLogins = LoginHelper.searchLoginsWithObject({
+          guid: generatedPW.storageGUID,
+        });
+
+        if (existingLogins.length) {
+          loginToChange = existingLogins[0];
+        }
+        // The generated password login may have been deleted in the meantime.
+        // Proceed to maybe save a new login below.
+      }
+
+      generatedPW.value = password;
     }
 
     let formLogin = new LoginInfo(
@@ -723,7 +760,7 @@ this.LoginManagerParent = {
       formActionOrigin,
       null,
       username,
-      password
+      generatedPW.value
     );
 
     let formLoginWithoutUsername = new LoginInfo(
@@ -731,14 +768,16 @@ this.LoginManagerParent = {
       formActionOrigin,
       null,
       "",
-      password
+      generatedPW.value
     );
-
-    let autoSaveLogin = true;
-    let loginToChange = null;
 
     // This will throw if we can't look up the entry in the password/origin map
     if (!generatedPW.filled) {
+      if (generatedPW.storageGUID) {
+        throw new Error(
+          "Generated password was saved in storage without being filled first"
+        );
+      }
       // record first use of this generated password
       Services.telemetry.recordEvent(
         "pwmgr",
@@ -749,47 +788,64 @@ this.LoginManagerParent = {
       generatedPW.filled = true;
     }
 
-    if (!Services.logins.getLoginSavingEnabled(formOrigin)) {
-      log(
-        "_onGeneratedPasswordFilledOrEdited: saving is disabled for:",
-        formOrigin
+    if (!loginToChange) {
+      // Check if we already have a login saved for this site since we don't want to overwrite it in
+      // case the user still needs their old password to successfully complete a password change.
+      // An empty formActionOrigin is used as a wildcard to not restrict to action matches.
+      let logins = this._searchAndDedupeLogins(formOrigin, {
+        acceptDifferentSubdomains: false,
+        httpRealm: null,
+        ignoreActionAndRealm: false,
+      });
+
+      let matchedLogin = logins.find(login =>
+        formLoginWithoutUsername.matches(login, true)
       );
-      autoSaveLogin = false;
-    }
-
-    // Check if we already have a login saved for this site since we don't want to overwrite it in
-    // case the user still needs their old password to successfully complete a password change.
-    // An empty formActionOrigin is used as a wildcard to not restrict to action matches.
-    let logins = this._searchAndDedupeLogins(formOrigin, {
-      acceptDifferentSubdomains: false,
-      httpRealm: null,
-      ignoreActionAndRealm: false,
-    });
-
-    let matchedLogin = logins.find(login =>
-      formLoginWithoutUsername.matches(login, true)
-    );
-    if (matchedLogin) {
-      autoSaveLogin = false;
-      if (matchedLogin.password == formLoginWithoutUsername.password) {
-        // This login is already saved so show no new UI.
-        log("_onGeneratedPasswordFilledOrEdited: Matching login already saved");
-        return;
+      if (matchedLogin) {
+        autoSaveLogin = false;
+        if (matchedLogin.password == formLoginWithoutUsername.password) {
+          // This login is already saved so show no new UI.
+          log(
+            "_onGeneratedPasswordFilledOrEdited: Matching login already saved"
+          );
+          return;
+        }
+        // We're updating a previously-saved login
+        loginToChange = matchedLogin;
+        log(
+          "_onGeneratedPasswordFilledOrEdited: Login with empty username already saved for this site"
+        );
       }
-      // We're updating a previously-saved login
-      loginToChange = matchedLogin;
-      log(
-        "_onGeneratedPasswordFilledOrEdited: Login with empty username already saved for this site"
-      );
     }
 
     if (autoSaveLogin) {
-      log(
-        "_onGeneratedPasswordFilledOrEdited: auto-saving new login with empty username"
-      );
-      loginToChange = Services.logins.addLogin(formLoginWithoutUsername);
+      if (loginToChange) {
+        log(
+          "_onGeneratedPasswordFilledOrEdited: auto-updating login with generated password"
+        );
+
+        Services.logins.modifyLogin(
+          loginToChange,
+          LoginHelper.newPropertyBag({
+            password,
+          })
+        );
+        // Update `loginToChange` with the new password if modifyLogin didn't
+        // throw so that the prompts later uses the new password.
+        loginToChange.password = password;
+      } else {
+        log(
+          "_onGeneratedPasswordFilledOrEdited: auto-saving new login with empty username"
+        );
+        loginToChange = Services.logins.addLogin(formLoginWithoutUsername);
+        // Remember the GUID where we saved the generated password so we can update
+        // the login if the user later edits the generated password.
+        generatedPW.storageGUID = loginToChange.guid;
+      }
     } else {
-      log("_onGeneratedPasswordFilledOrEdited: not auto-saving this login");
+      log(
+        "_onGeneratedPasswordFilledOrEdited: not auto-saving/updating this login"
+      );
     }
     let browser = browsingContext.top.embedderElement;
     let prompter = this._getPrompter(browser, openerTopWindowID);

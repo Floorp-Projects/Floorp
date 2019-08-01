@@ -310,6 +310,24 @@ this.FxAccountsWebChannel.prototype = {
             // succeed or get an error.
             Accounts.getFirefoxAccount()
               .then(account => {
+                // "action" will be introduced in https://github.com/mozilla/fxa/issues/1998.
+                // We're both backwards and forwards compatible here, falling back on heuristics
+                // if its missing, and passing it along otherwise.
+                // WebChannel "login data" payload docs at the time this comment was written:
+                // https://github.com/mozilla/fxa/blob/8701348cdd79dbdc9879b2b4a55a23a135a32bc1/packages/fxa-content-server/docs/relier-communication-protocols/fx-webchannel.md#loginData
+                if (!data.hasOwnProperty("action")) {
+                  // This is how way we can determine if we're logging-in or signing-up.
+                  // Currently, a choice of what to sync (CWTS) is only presented to the user during signup.
+                  // This is likely to change in the future - we will offer CWTS to first-time Sync users as well.
+                  // Once those changes occur, "action" is expected to be present in the webchannel message data,
+                  // letting us avoid this codepath.
+                  if ("offeredSyncEngines" in data) {
+                    data.action = "signup";
+                  } else {
+                    data.action = "signin";
+                  }
+                }
+
                 if (!account) {
                   return Accounts.createFirefoxAccountFromJSON(data).then(
                     success => {
@@ -326,6 +344,13 @@ this.FxAccountsWebChannel.prototype = {
                     }
                   );
                 }
+
+                // At this point, we're reconnectig to an existing account (due to a password change, or a device disconnect).
+                // As far as `action` parameter is concerned that we pass along in `data`, this is considered a `signin`.
+                // Receiving native code is expected to differentiate between a "signin" and a "reconnect" by looking
+                // at account presence.
+                // We also send `updateFirefoxAccountFromJSON` in case of a password change, and in that case "action"
+                // is explicitely set to "passwordChange".
                 return Accounts.updateFirefoxAccountFromJSON(data).then(
                   success => {
                     if (!success) {
@@ -367,6 +392,19 @@ this.FxAccountsWebChannel.prototype = {
                     "Can't change password of non-existent Firefox Account!"
                   );
                 }
+
+                // "action" will be introduced in https://github.com/mozilla/fxa/issues/1998.
+                // In case it's missing, hard-code it below. Once "action" parameter is added
+                // for COMMAND_CHANGE_PASSWORD payload, it's expected to be the same.
+                if (!data.hasOwnProperty("action")) {
+                  data.action = "passwordChange";
+                } else if (data.action != "passwordChange") {
+                  throw new Error(
+                    "Expected 'action' to be 'passwordChange', but saw " +
+                      data.action
+                  );
+                }
+
                 return Accounts.updateFirefoxAccountFromJSON(data);
               })
               .then(success => {

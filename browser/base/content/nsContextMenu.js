@@ -1021,15 +1021,18 @@ nsContextMenu.prototype = {
     }
 
     let documentURI = gContextMenuContentData.documentURIObject;
+    let formOrigin = LoginHelper.getLoginOrigin(documentURI.spec);
     let fragment = LoginManagerContextMenu.addLoginsToMenu(
       this.targetIdentifier,
       this.browser,
-      documentURI
+      formOrigin
     );
     let isGeneratedPasswordEnabled =
       LoginHelper.generationAvailable && LoginHelper.generationEnabled;
     let canFillGeneratedPassword =
-      this.onPassword && isGeneratedPasswordEnabled;
+      this.onPassword &&
+      isGeneratedPasswordEnabled &&
+      Services.logins.getLoginSavingEnabled(formOrigin);
 
     this.showItem("fill-login-no-logins", !fragment);
     this.showItem("fill-login-generated-password", canFillGeneratedPassword);

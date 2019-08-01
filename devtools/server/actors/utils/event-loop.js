@@ -7,8 +7,6 @@
 "use strict";
 
 const xpcInspector = require("xpcInspector");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { dumpn } = DevToolsUtils;
 
 /**
  * Manages pushing event loops and automatically pops and exits them in the
@@ -16,19 +14,9 @@ const { dumpn } = DevToolsUtils;
  *
  * @param ThreadActor thread
  *        The thread actor instance that owns this EventLoopStack.
- * @param DebuggerServerConnection connection
- *        The remote protocol connection associated with this event loop stack.
- * @param Object hooks
- *        An object with the following properties:
- *          - url: The URL string of the debuggee we are spinning an event loop
- *                 for.
- *          - preNest: function called before entering a nested event loop
- *          - postNest: function called after exiting a nested event loop
  */
-function EventLoopStack({ thread, connection, hooks }) {
-  this._hooks = hooks;
+function EventLoopStack({ thread }) {
   this._thread = thread;
-  this._connection = connection;
 }
 
 EventLoopStack.prototype = {
@@ -40,28 +28,13 @@ EventLoopStack.prototype = {
   },
 
   /**
-   * The URL of the debuggee who pushed the event loop on top of the stack.
+   * The thread actor of the debuggee who pushed the event loop on top of the stack.
    */
-  get lastPausedUrl() {
-    let url = null;
+  get lastPausedThreadActor() {
     if (this.size > 0) {
-      try {
-        url = xpcInspector.lastNestRequestor.url;
-      } catch (e) {
-        // The tab's URL getter may throw if the tab is destroyed by the time
-        // this code runs, but we don't really care at this point.
-        dumpn(e);
-      }
+      return xpcInspector.lastNestRequestor.thread;
     }
-    return url;
-  },
-
-  /**
-   * The DebuggerServerConnection of the debugger who pushed the event loop on
-   * top of the stack
-   */
-  get lastConnection() {
-    return xpcInspector.lastNestRequestor._connection;
+    return null;
   },
 
   /**
@@ -72,8 +45,6 @@ EventLoopStack.prototype = {
   push: function() {
     return new EventLoop({
       thread: this._thread,
-      connection: this._connection,
-      hooks: this._hooks,
     });
   },
 };
@@ -84,16 +55,9 @@ EventLoopStack.prototype = {
  *
  * @param ThreadActor thread
  *        The thread actor that is creating this nested event loop.
- * @param DebuggerServerConnection connection
- *        The remote protocol connection associated with this event loop.
- * @param Object hooks
- *        The same hooks object passed into EventLoopStack during its
- *        initialization.
  */
-function EventLoop({ thread, connection, hooks }) {
+function EventLoop({ thread }) {
   this._thread = thread;
-  this._hooks = hooks;
-  this._connection = connection;
 
   this.enter = this.enter.bind(this);
   this.resolve = this.resolve.bind(this);
@@ -102,15 +66,15 @@ function EventLoop({ thread, connection, hooks }) {
 EventLoop.prototype = {
   entered: false,
   resolved: false,
-  get url() {
-    return this._hooks.url;
+  get thread() {
+    return this._thread;
   },
 
   /**
    * Enter this nested event loop.
    */
   enter: function() {
-    const nestData = this._hooks.preNest ? this._hooks.preNest() : null;
+    const preNestData = this.preNest();
 
     this.entered = true;
     xpcInspector.enterNestedEventLoop(this);
@@ -123,9 +87,7 @@ EventLoop.prototype = {
       }
     }
 
-    if (this._hooks.postNest) {
-      this._hooks.postNest(nestData);
-    }
+    this.postNest(preNestData);
   },
 
   /**
@@ -151,6 +113,55 @@ EventLoop.prototype = {
       return true;
     }
     return false;
+  },
+
+  /**
+   * Retrieve the list of all DOM Windows debugged by the current thread actor.
+   */
+  getAllWindowDebuggees() {
+    return (
+      this._thread.dbg
+        .getDebuggees()
+        .filter(debuggee => {
+          // Select only debuggee that relates to windows
+          // e.g. ignore sandboxes, jsm and such
+          return debuggee.class == "Window";
+        })
+        .map(debuggee => {
+          // Retrieve the JS reference for these windows
+          return debuggee.unsafeDereference();
+        })
+        // Ignore iframes as they will be paused automatically when pausing their
+        // owner top level document
+        .filter(window => window.top === window)
+    );
+  },
+
+  /**
+   * Prepare to enter a nested event loop by disabling debuggee events.
+   */
+  preNest() {
+    const windows = [];
+    // Disable events in all open windows.
+    for (const window of this.getAllWindowDebuggees()) {
+      const { windowUtils } = window;
+      windowUtils.suppressEventHandling(true);
+      windowUtils.suspendTimeouts();
+      windows.push(window);
+    }
+    return windows;
+  },
+
+  /**
+   * Prepare to exit a nested event loop by enabling debuggee events.
+   */
+  postNest(pausedWindows) {
+    // Enable events in all open windows.
+    for (const window of pausedWindows) {
+      const { windowUtils } = window;
+      windowUtils.resumeTimeouts();
+      windowUtils.suppressEventHandling(false);
+    }
   },
 };
 

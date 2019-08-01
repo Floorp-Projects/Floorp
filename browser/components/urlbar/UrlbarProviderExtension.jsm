@@ -15,6 +15,9 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 XPCOMUtils.defineLazyModuleGetters(this, {
+  PlacesSearchAutocompleteProvider:
+    "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm",
+  Services: "resource://gre/modules/Services.jsm",
   SkippableTimer: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvider: "resource:///modules/UrlbarUtils.jsm",
   UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.jsm",
@@ -189,13 +192,12 @@ class UrlbarProviderExtension extends UrlbarProvider {
     let extResults = await this._notifyListener("resultsRequested", context);
     if (extResults) {
       for (let extResult of extResults) {
-        let result;
-        try {
-          result = this._makeUrlbarResult(context, extResult);
-        } catch (err) {
-          continue;
+        let result = await this._makeUrlbarResult(context, extResult).catch(
+          Cu.reportError
+        );
+        if (result) {
+          addCallback(this, result);
         }
-        addCallback(this, result);
       }
     }
   }
@@ -261,7 +263,41 @@ class UrlbarProviderExtension extends UrlbarProvider {
    * @returns {UrlbarResult}
    *   The UrlbarResult object.
    */
-  _makeUrlbarResult(context, extResult) {
+  async _makeUrlbarResult(context, extResult) {
+    // If the result is a search result, make sure its payload has a valid
+    // `engine` property, which is the name of an engine, and which we use later
+    // on to look up the nsISearchEngine.  We allow the extension to specify the
+    // engine by its name, alias, or domain.  Prefer aliases over domains since
+    // one domain can have many engines.
+    if (extResult.type == "search") {
+      let engine;
+      if (extResult.payload.engine) {
+        // Validate the engine name by looking it up.
+        engine = Services.search.getEngineByName(extResult.payload.engine);
+      } else if (extResult.payload.keyword) {
+        // Look up the engine by its alias.
+        engine = await PlacesSearchAutocompleteProvider.engineForAlias(
+          extResult.payload.keyword
+        );
+      } else if (extResult.payload.url) {
+        // Look up the engine by its domain.
+        let host;
+        try {
+          host = new URL(extResult.payload.url).hostname;
+        } catch (err) {}
+        if (host) {
+          engine = await PlacesSearchAutocompleteProvider.engineForDomainPrefix(
+            host
+          );
+        }
+      }
+      if (!engine) {
+        // No engine found.
+        throw new Error("Invalid or missing engine specified by extension");
+      }
+      extResult.payload.engine = engine.name;
+    }
+
     return new UrlbarResult(
       UrlbarProviderExtension.RESULT_TYPES[extResult.type],
       UrlbarProviderExtension.SOURCE_TYPES[extResult.source],

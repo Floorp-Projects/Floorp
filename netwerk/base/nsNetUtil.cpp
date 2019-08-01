@@ -1841,7 +1841,13 @@ nsresult NS_NewURI(nsIURI** aURI, const nsACString& aSpec,
         .Finalize(aURI);
   }
 
-  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat")) {
+  // web-extensions can add custom protocol implementations with standard URLs
+  // that have notion of hostname, authority and relative URLs. Below we
+  // manually check agains set of known protocols schemes until more general
+  // solution is in place (See Bug 1569733)
+  if (scheme.EqualsLiteral("dweb") || scheme.EqualsLiteral("dat") ||
+      scheme.EqualsLiteral("ipfs") || scheme.EqualsLiteral("ipns") ||
+      scheme.EqualsLiteral("ssb") || scheme.EqualsLiteral("wtp")) {
     return NewStandardURI(aSpec, aCharset, aBaseURI, -1, aURI);
   }
 
@@ -2690,6 +2696,15 @@ nsresult NS_GenerateHostPort(const nsCString& host, int32_t port,
 void NS_SniffContent(const char* aSnifferType, nsIRequest* aRequest,
                      const uint8_t* aData, uint32_t aLength,
                      nsACString& aSniffedType) {
+  // In case XCTO nosniff was present, we could just skip sniffing here
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+  if (channel) {
+    nsCOMPtr<nsILoadInfo> loadInfo = channel->LoadInfo();
+    if (loadInfo->GetSkipContentSniffing()) {
+      aSniffedType.Truncate();
+      return;
+    }
+  }
   typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
   extern ContentSnifferCache* gNetSniffers;
   extern ContentSnifferCache* gDataSniffers;

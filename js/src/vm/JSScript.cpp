@@ -296,7 +296,7 @@ static XDRResult XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun,
       // relazify scripts with inner functions.  See
       // JSFunction::createScriptForLazilyInterpretedFunction.
       MOZ_ASSERT(lazy->numInnerFunctions() == 0);
-      if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
       } else {
@@ -1253,7 +1253,7 @@ XDRResult js::XDRLazyScript(XDRState<mode>* xdr, HandleScope enclosingScope,
       lineno = lazy->lineno();
       column = lazy->column();
       immutableFlags = lazy->immutableFlags();
-      if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         numFieldInitializers =
             (uint32_t)lazy->getFieldInitializers().numFieldInitializers;
       } else {
@@ -4529,13 +4529,13 @@ static JSObject* CloneInnerInterpretedFunction(
   }
 
   gc::AllocKind allocKind = srcFun->getAllocKind();
-  uint16_t flags = srcFun->flags();
+  FunctionFlags flags = srcFun->flags();
   if (srcFun->isSelfHostedBuiltin()) {
     // Functions in the self-hosting compartment are only extended in
     // debug mode. For top-level functions, FUNCTION_EXTENDED gets used by
     // the cloning algorithm. Do the same for inner functions here.
     allocKind = gc::AllocKind::FUNCTION_EXTENDED;
-    flags |= JSFunction::Flags::EXTENDED;
+    flags.setIsExtended();
   }
   RootedAtom atom(cx, srcFun->displayAtom());
   if (atom) {
@@ -4543,8 +4543,8 @@ static JSObject* CloneInnerInterpretedFunction(
   }
   RootedFunction clone(
       cx, NewFunctionWithProto(cx, nullptr, srcFun->nargs(),
-                               JSFunction::Flags(flags), nullptr, atom,
-                               cloneProto, allocKind, TenuredObject));
+                               flags, nullptr, atom, cloneProto,
+                               allocKind, TenuredObject));
   if (!clone) {
     return nullptr;
   }
@@ -4791,7 +4791,7 @@ JSScript* js::CloneScriptIntoFunction(
   }
 
   // Save flags in case we need to undo the early mutations.
-  const int preservedFlags = fun->flags();
+  const FunctionFlags preservedFlags = fun->flags();
   RootedScript dst(cx, detail::CopyScript(cx, src, sourceObject, &scopes));
   if (!dst) {
     fun->setFlags(preservedFlags);
@@ -5247,9 +5247,9 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        ScriptSourceObject& sourceObject, LazyScriptData* data,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
-                       uint32_t lineno, uint32_t column)
+                       uint32_t toStringEnd, uint32_t lineno, uint32_t column)
     : BaseScript(stubEntry, &sourceObject, sourceStart, sourceEnd,
-                 toStringStart, sourceEnd),
+                 toStringStart, toStringEnd),
       script_(nullptr),
       function_(fun),
       lazyData_(data) {
@@ -5305,7 +5305,8 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
                                   HandleScriptSourceObject sourceObject,
                                   uint32_t immutableFlags, uint32_t sourceStart,
                                   uint32_t sourceEnd, uint32_t toStringStart,
-                                  uint32_t lineno, uint32_t column) {
+                                  uint32_t toStringEnd, uint32_t lineno,
+                                  uint32_t column) {
   cx->check(fun);
 
   MOZ_ASSERT(sourceObject);
@@ -5334,28 +5335,27 @@ LazyScript* LazyScript::CreateRaw(JSContext* cx, uint32_t numClosedOverBindings,
   uint8_t* stubEntry = nullptr;
 #endif
 
-  return new (res)
-      LazyScript(fun, stubEntry, *sourceObject, data.release(), immutableFlags,
-                 sourceStart, sourceEnd, toStringStart, lineno, column);
+  return new (res) LazyScript(fun, stubEntry, *sourceObject, data.release(),
+                              immutableFlags, sourceStart, sourceEnd,
+                              toStringStart, toStringEnd, lineno, column);
 }
 
 /* static */
-LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
-                               HandleScriptSourceObject sourceObject,
-                               const frontend::AtomVector& closedOverBindings,
-                               Handle<GCVector<JSFunction*, 8>> innerFunctions,
-                               uint32_t sourceStart, uint32_t sourceEnd,
-                               uint32_t toStringStart, uint32_t lineno,
-                               uint32_t column, frontend::ParseGoal parseGoal) {
+LazyScript* LazyScript::Create(
+    JSContext* cx, HandleFunction fun, HandleScriptSourceObject sourceObject,
+    const frontend::AtomVector& closedOverBindings,
+    const frontend::FunctionBoxVector& innerFunctionBoxes, uint32_t sourceStart,
+    uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd,
+    uint32_t lineno, uint32_t column, frontend::ParseGoal parseGoal) {
   uint32_t immutableFlags = 0;
   if (parseGoal == frontend::ParseGoal::Module) {
     immutableFlags |= uint32_t(ImmutableFlags::IsModule);
   }
 
   LazyScript* res = LazyScript::CreateRaw(
-      cx, closedOverBindings.length(), innerFunctions.length(), fun,
+      cx, closedOverBindings.length(), innerFunctionBoxes.length(), fun,
       sourceObject, immutableFlags, sourceStart, sourceEnd, toStringStart,
-      lineno, column);
+      toStringEnd, lineno, column);
   if (!res) {
     return nullptr;
   }
@@ -5367,7 +5367,7 @@ LazyScript* LazyScript::Create(JSContext* cx, HandleFunction fun,
 
   mozilla::Span<GCPtrFunction> resInnerFunctions = res->innerFunctions();
   for (size_t i = 0; i < res->numInnerFunctions(); i++) {
-    resInnerFunctions[i].init(innerFunctions[i]);
+    resInnerFunctions[i].init(innerFunctionBoxes[i]->function());
     if (resInnerFunctions[i]->isInterpretedLazy()) {
       resInnerFunctions[i]->lazyScript()->setEnclosingLazyScript(res);
     }
@@ -5385,12 +5385,11 @@ LazyScript* LazyScript::CreateForXDR(
     uint32_t toStringEnd, uint32_t lineno, uint32_t column) {
   LazyScript* res = LazyScript::CreateRaw(
       cx, numClosedOverBindings, numInnerFunctions, fun, sourceObject,
-      immutableFlags, sourceStart, sourceEnd, toStringStart, lineno, column);
+      immutableFlags, sourceStart, sourceEnd, toStringStart, toStringEnd, lineno,
+      column);
   if (!res) {
     return nullptr;
   }
-
-  res->setToStringEnd(toStringEnd);
 
   // Set the enclosing scope of the lazy function. This value should only be
   // set if we have a non-lazy enclosing script at this point.

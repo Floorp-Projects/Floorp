@@ -132,7 +132,7 @@ void js::ThrowTypeErrorBehavior(JSContext* cx) {
 
 static bool IsSloppyNormalFunction(JSFunction* fun) {
   // FunctionDeclaration or FunctionExpression in sloppy mode.
-  if (fun->kind() == JSFunction::NormalFunction) {
+  if (fun->kind() == FunctionFlags::NormalFunction) {
     if (fun->isBuiltin() || fun->isBoundFunction()) {
       return false;
     }
@@ -146,7 +146,7 @@ static bool IsSloppyNormalFunction(JSFunction* fun) {
   }
 
   // Or asm.js function in sloppy mode.
-  if (fun->kind() == JSFunction::AsmJS) {
+  if (fun->kind() == FunctionFlags::AsmJS) {
     return !IsAsmJSStrictModeModuleOrFunction(fun);
   }
 
@@ -582,7 +582,7 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
 
     atom = fun->displayAtom();
     flagsword =
-        (fun->nargs() << 16) | (fun->flags() & ~JSFunction::NO_XDR_FLAGS);
+        (fun->nargs() << 16) | (fun->flags().toRaw() & ~FunctionFlags::NO_XDR_FLAGS);
 
     // The environment of any function which is not reused will always be
     // null, it is later defined when a function is cloned or reused to
@@ -618,10 +618,10 @@ XDRResult js::XDRInterpretedFunction(XDRState<mode>* xdr,
     }
 
     gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
-    if (uint16_t(flagsword) & JSFunction::EXTENDED) {
+    if (uint16_t(flagsword) & FunctionFlags::EXTENDED) {
       allocKind = gc::AllocKind::FUNCTION_EXTENDED;
     }
-    fun = NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
+    fun = NewFunctionWithProto(cx, nullptr, 0, FunctionFlags::INTERPRETED,
                                /* enclosingDynamicScope = */ nullptr, nullptr,
                                proto, allocKind, TenuredObject);
     if (!fun) {
@@ -796,7 +796,7 @@ static JSObject* CreateFunctionConstructor(JSContext* cx, JSProtoKey key) {
 
   RootedObject functionCtor(
       cx, NewFunctionWithProto(
-              cx, Function, 1, JSFunction::NATIVE_CTOR, nullptr,
+              cx, Function, 1, FunctionFlags::NATIVE_CTOR, nullptr,
               HandlePropertyName(cx->names().Function), functionProto,
               gc::AllocKind::FUNCTION, SingletonObject));
   if (!functionCtor) {
@@ -817,10 +817,10 @@ static JSObject* CreateFunctionPrototype(JSContext* cx, JSProtoKey key) {
 
   RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
 
-  return NewFunctionWithProto(cx, FunctionPrototype, 0, JSFunction::NATIVE_FUN,
-                              nullptr, HandlePropertyName(cx->names().empty),
-                              objectProto, gc::AllocKind::FUNCTION,
-                              SingletonObject);
+  return NewFunctionWithProto(
+      cx, FunctionPrototype, 0, FunctionFlags::NATIVE_FUN, nullptr,
+      HandlePropertyName(cx->names().empty), objectProto,
+      gc::AllocKind::FUNCTION, SingletonObject);
 }
 
 JSString* js::FunctionToStringCache::lookup(JSScript* script) const {
@@ -941,8 +941,8 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     // performance reasons, so only append the name if we're confident it
     // can be matched as the 'PropertyName' grammar production.
     if (fun->explicitName() && !fun->isBoundFunction() &&
-        (fun->kind() == JSFunction::NormalFunction ||
-         fun->kind() == JSFunction::ClassConstructor)) {
+        (fun->kind() == FunctionFlags::NormalFunction ||
+         fun->kind() == FunctionFlags::ClassConstructor)) {
       if (!out.append(' ')) {
         return nullptr;
       }
@@ -1741,8 +1741,8 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
 
   JSScript* script = nonLazyScript();
 
-  flags_ &= ~INTERPRETED;
-  flags_ |= INTERPRETED_LAZY;
+  flags_.clearInterpreted();
+  flags_.setInterpretedLazy();
   LazyScript* lazy = script->maybeLazyScript();
   if (lazy) {
     u.scripted.s.lazy_ = lazy;
@@ -1909,10 +1909,10 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
 
   // Step 30-37 (reordered).
   RootedObject globalLexical(cx, &global->lexicalEnvironment());
-  JSFunction::Flags flags =
+  FunctionFlags flags =
       (isGenerator || isAsync)
-          ? JSFunction::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC
-          : JSFunction::INTERPRETED_LAMBDA;
+          ? FunctionFlags::INTERPRETED_LAMBDA_GENERATOR_OR_ASYNC
+          : FunctionFlags::INTERPRETED_LAMBDA;
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
   RootedFunction fun(
       cx,
@@ -2044,7 +2044,7 @@ bool JSFunction::needsNamedLambdaEnvironment() const {
 }
 
 JSFunction* js::NewScriptedFunction(
-    JSContext* cx, unsigned nargs, JSFunction::Flags flags, HandleAtom atom,
+    JSContext* cx, unsigned nargs, FunctionFlags flags, HandleAtom atom,
     HandleObject proto /* = nullptr */,
     gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
     NewObjectKind newKind /* = GenericObject */,
@@ -2081,7 +2081,7 @@ static bool NewFunctionEnvironmentIsWellFormed(JSContext* cx,
 #endif
 
 JSFunction* js::NewFunctionWithProto(
-    JSContext* cx, Native native, unsigned nargs, JSFunction::Flags flags,
+    JSContext* cx, Native native, unsigned nargs, FunctionFlags flags,
     HandleObject enclosingEnv, HandleAtom atom, HandleObject proto,
     gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
     NewObjectKind newKind /* = GenericObject */) {
@@ -2097,7 +2097,7 @@ JSFunction* js::NewFunctionWithProto(
   }
 
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    flags = JSFunction::Flags(flags | JSFunction::EXTENDED);
+    flags.setIsExtended();
   }
 
   /* Initialize all function members. */
@@ -2193,19 +2193,21 @@ static inline JSFunction* NewFunctionClone(JSContext* cx, HandleFunction fun,
     return nullptr;
   }
 
-  // JSFunction::HAS_INFERRED_NAME can be set at compile-time and at
+  // FunctionFlags::HAS_INFERRED_NAME can be set at compile-time and at
   // runtime. In the latter case we should actually clear the flag before
   // cloning the function, but since we can't differentiate between both
   // cases here, we'll end up with a momentarily incorrect function name.
   // This will be fixed up in SetFunctionName(), which should happen through
   // JSOP_SETFUNNAME directly after JSOP_LAMBDA.
-  constexpr uint16_t NonCloneableFlags = JSFunction::EXTENDED |
-                                         JSFunction::RESOLVED_LENGTH |
-                                         JSFunction::RESOLVED_NAME;
+  constexpr uint16_t NonCloneableFlags = FunctionFlags::EXTENDED |
+                                         FunctionFlags::RESOLVED_LENGTH |
+                                         FunctionFlags::RESOLVED_NAME;
 
-  uint16_t flags = fun->flags() & ~NonCloneableFlags;
+  FunctionFlags flags = fun->flags();
+  flags.clearFlags(NonCloneableFlags);
+
   if (allocKind == gc::AllocKind::FUNCTION_EXTENDED) {
-    flags |= JSFunction::EXTENDED;
+    flags.setIsExtended();
   }
 
   clone->setArgCount(fun->nargs());
