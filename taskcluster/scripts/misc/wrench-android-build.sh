@@ -3,9 +3,8 @@ set -x -e -v
 
 MODE=${1?"First argument must be debug|release"}
 
-pushd "${GECKO_PATH}"
-./mach artifact toolchain -v $MOZ_TOOLCHAINS
-mv wrench-deps/{vendor,.cargo,cargo-apk} gfx/wr
+pushd "${MOZ_FETCHES_DIR}"
+mv wrench-deps/{vendor,.cargo,cargo-apk} ${GECKO_PATH}/gfx/wr
 popd
 
 pushd "${GECKO_PATH}/gfx/wr/wrench"
@@ -14,8 +13,8 @@ pushd "${GECKO_PATH}/gfx/wr/wrench"
 cat > build.gradle.inc <<END
 buildscript {
     repositories {
-        maven{ url uri('file:${GECKO_PATH}/android-gradle-dependencies/google') }
-        maven{ url uri('file:${GECKO_PATH}/android-gradle-dependencies/jcenter') }
+        maven{ url uri('file:${MOZ_FETCHES_DIR}/android-gradle-dependencies/google') }
+        maven{ url uri('file:${MOZ_FETCHES_DIR}/android-gradle-dependencies/jcenter') }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.4.2'
@@ -23,17 +22,17 @@ buildscript {
 }
 allprojects {
     repositories {
-        maven{ url uri('file:${GECKO_PATH}/android-gradle-dependencies/google') }
-        maven{ url uri('file:${GECKO_PATH}/android-gradle-dependencies/jcenter') }
+        maven{ url uri('file:${MOZ_FETCHES_DIR}/android-gradle-dependencies/google') }
+        maven{ url uri('file:${MOZ_FETCHES_DIR}/android-gradle-dependencies/jcenter') }
     }
 }
 END
 # These things come from the toolchain dependencies of the job that invokes
 # this script (webrender-wrench-android-build).
-export PATH="${PATH}:${GECKO_PATH}/rustc/bin"
-export ANDROID_HOME="${GECKO_PATH}/android-sdk-linux"
-export NDK_HOME="${GECKO_PATH}/android-ndk"
-export CARGO_APK_GRADLE_COMMAND="${GECKO_PATH}/android-gradle-dependencies/gradle-dist/bin/gradle"
+export PATH="${PATH}:${MOZ_FETCHES_DIR}/rustc/bin"
+export ANDROID_HOME="${MOZ_FETCHES_DIR}/android-sdk-linux"
+export NDK_HOME="${MOZ_FETCHES_DIR}/android-ndk"
+export CARGO_APK_GRADLE_COMMAND="${MOZ_FETCHES_DIR}/android-gradle-dependencies/gradle-dist/bin/gradle"
 export CARGO_APK_BUILD_GRADLE_INC="${PWD}/build.gradle.inc"
 
 if [ "$MODE" == "debug" ]; then
