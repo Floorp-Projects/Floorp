@@ -134,13 +134,10 @@ nsContentSink::~nsContentSink() {
     mDocument->RemoveObserver(this);
   }
 }
-int32_t nsContentSink::sInteractiveTime;
 int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  Preferences::AddIntVarCache(&sInteractiveTime,
-                              "content.sink.interactive_time", 750000);
   Preferences::AddIntVarCache(&sInitialPerfTime,
                               "content.sink.initial_perf_time", 2000000);
   Preferences::AddIntVarCache(&sEnablePerfMode, "content.sink.enable_perf_mode",
@@ -1498,7 +1495,8 @@ nsresult nsContentSink::WillParseImpl(void) {
     bool newDynLower =
         mDocument->IsInBackgroundWindow() ||
         ((currentTime - mBeginLoadTime) > uint32_t(sInitialPerfTime) &&
-         (currentTime - lastEventTime) < uint32_t(sInteractiveTime));
+         (currentTime - lastEventTime) <
+             StaticPrefs::content_sink_interactive_time());
 
     if (mDynamicLowerValue != newDynLower) {
       FavorPerformanceHint(!newDynLower, 0);
