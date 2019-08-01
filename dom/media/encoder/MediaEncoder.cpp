@@ -821,28 +821,15 @@ nsresult MediaEncoder::GetEncodedData(
   nsresult rv;
   LOG(LogLevel::Verbose,
       ("GetEncodedData TimeStamp = %f", GetEncodeTimeStamp()));
-  EncodedFrameContainer encodedData;
 
-  if (mVideoEncoder) {
-    // We're most likely to actually wait for a video frame, so do that first
-    // to minimize capture offset/lipsync issues.
-    rv = WriteEncodedDataToMuxer(mVideoEncoder);
-    LOG(LogLevel::Verbose,
-        ("Video encoded TimeStamp = %f", GetEncodeTimeStamp()));
-    if (NS_FAILED(rv)) {
-      LOG(LogLevel::Warning, ("Failed to write encoded video data to muxer"));
-      return rv;
-    }
+  rv = EncodeData();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  if (mAudioEncoder) {
-    rv = WriteEncodedDataToMuxer(mAudioEncoder);
-    LOG(LogLevel::Verbose,
-        ("Audio encoded TimeStamp = %f", GetEncodeTimeStamp()));
-    if (NS_FAILED(rv)) {
-      LOG(LogLevel::Warning, ("Failed to write encoded audio data to muxer"));
-      return rv;
-    }
+  rv = WriteEncodedDataToMuxer();
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
   // In audio only or video only case, let unavailable track's flag to be
@@ -904,37 +891,94 @@ void MediaEncoder::Shutdown() {
   }
 }
 
-nsresult MediaEncoder::WriteEncodedDataToMuxer(TrackEncoder* aTrackEncoder) {
+nsresult MediaEncoder::EncodeData() {
+  AUTO_PROFILER_LABEL("MediaEncoder::EncodeData", OTHER);
+
+  MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
+
+  if (!mVideoEncoder && !mAudioEncoder) {
+    MOZ_ASSERT_UNREACHABLE("Must have atleast one encoder");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  if (mVideoEncoder && !mVideoEncoder->IsEncodingComplete()) {
+    EncodedFrameContainer encodedVideoData;
+    nsresult rv = mVideoEncoder->GetEncodedTrack(encodedVideoData);
+    if (NS_FAILED(rv)) {
+      // Encoding might be canceled.
+      LOG(LogLevel::Error, ("Failed to get encoded data from video encoder."));
+      return rv;
+    }
+    for (const RefPtr<EncodedFrame>& frame :
+         encodedVideoData.GetEncodedFrames()) {
+      mEncodedVideoFrames.AppendElement(frame);
+    }
+  }
+
+  if (mAudioEncoder && !mAudioEncoder->IsEncodingComplete()) {
+    EncodedFrameContainer encodedAudioData;
+    nsresult rv = mAudioEncoder->GetEncodedTrack(encodedAudioData);
+    if (NS_FAILED(rv)) {
+      // Encoding might be canceled.
+      LOG(LogLevel::Error, ("Failed to get encoded data from audio encoder."));
+      return rv;
+    }
+    for (const RefPtr<EncodedFrame>& frame :
+         encodedAudioData.GetEncodedFrames()) {
+      mEncodedAudioFrames.AppendElement(frame);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult MediaEncoder::WriteEncodedDataToMuxer() {
   AUTO_PROFILER_LABEL("MediaEncoder::WriteEncodedDataToMuxer", OTHER);
 
   MOZ_ASSERT(mEncoderThread->IsCurrentThreadIn());
 
-  if (!aTrackEncoder) {
-    NS_ERROR("No track encoder to get data from");
-    return NS_ERROR_FAILURE;
+  if (!mVideoEncoder && !mAudioEncoder) {
+    MOZ_ASSERT_UNREACHABLE("Must have atleast one encoder");
+    return NS_ERROR_UNEXPECTED;
   }
 
-  if (aTrackEncoder->IsEncodingComplete()) {
-    return NS_OK;
+  if (mVideoEncoder) {
+    EncodedFrameContainer encodedVideoData;
+    for (const RefPtr<EncodedFrame>& frame : mEncodedVideoFrames) {
+      encodedVideoData.AppendEncodedFrame(frame);
+    }
+    mEncodedVideoFrames.Clear();
+
+    nsresult rv = mWriter->WriteEncodedTrack(
+        encodedVideoData, mVideoEncoder->IsEncodingComplete()
+                              ? ContainerWriter::END_OF_STREAM
+                              : 0);
+    if (NS_FAILED(rv)) {
+      LOG(LogLevel::Error,
+          ("Failed to write encoded video track to the muxer."));
+      return rv;
+    }
   }
 
-  EncodedFrameContainer encodedData;
-  nsresult rv = aTrackEncoder->GetEncodedTrack(encodedData);
-  if (NS_FAILED(rv)) {
-    // Encoding might be canceled.
-    LOG(LogLevel::Error, ("Failed to get encoded data from encoder."));
-    SetError();
-    return rv;
+  if (mAudioEncoder) {
+    EncodedFrameContainer encodedAudioData;
+    for (const RefPtr<EncodedFrame>& frame : mEncodedAudioFrames) {
+      encodedAudioData.AppendEncodedFrame(frame);
+    }
+    mEncodedAudioFrames.Clear();
+
+    nsresult rv = mWriter->WriteEncodedTrack(
+        encodedAudioData, mAudioEncoder->IsEncodingComplete()
+                              ? ContainerWriter::END_OF_STREAM
+                              : 0);
+    if (NS_FAILED(rv)) {
+      LOG(LogLevel::Error,
+          ("Failed to write encoded audio track to the muxer."));
+      return rv;
+    }
   }
-  rv = mWriter->WriteEncodedTrack(
-      encodedData,
-      aTrackEncoder->IsEncodingComplete() ? ContainerWriter::END_OF_STREAM : 0);
-  if (NS_FAILED(rv)) {
-    LOG(LogLevel::Error,
-        ("Failed to write encoded track to the media container."));
-    SetError();
-  }
-  return rv;
+
+  return NS_OK;
 }
 
 nsresult MediaEncoder::CopyMetadataToMuxer(TrackEncoder* aTrackEncoder) {
