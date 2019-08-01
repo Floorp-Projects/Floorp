@@ -15,7 +15,7 @@ class ReferrerPolicyConfig(object):
     def __init__(self):
         self.selection_pattern = '%(delivery_type)s/' + \
                                  '%(origin)s/' + \
-                                 '%(source_protocol)s-%(target_protocol)s/' + \
+                                 '%(source_protocol)s/' + \
                                  '%(subresource)s/' + \
                                  '%(redirection)s/'
 
@@ -23,7 +23,7 @@ class ReferrerPolicyConfig(object):
                                       '%(name)s.%(source_protocol)s.html'
 
         self.test_description_template = '''The referrer URL is %(expectation)s when a
-document served over %(source_protocol)s requires an %(target_protocol)s
+document served over %(source_protocol)s requires a
 sub-resource via %(subresource)s using the %(delivery_type)s
 delivery method with %(redirection)s and when
 the target request is %(origin)s.'''
