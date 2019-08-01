@@ -118,8 +118,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   bool LinkContextIsOurDocument(const nsAString& aAnchor);
   bool Decode5987Format(nsAString& aEncoded);
 
-  static void InitializeStatics();
-
  protected:
   nsContentSink();
   virtual ~nsContentSink();
@@ -338,9 +336,6 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
-
-  // Should we switch between perf-mode and interactive-mode
-  static int32_t sEnablePerfMode;
 };
 
 #endif  // _nsContentSink_h_

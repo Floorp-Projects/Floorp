@@ -134,12 +134,6 @@ nsContentSink::~nsContentSink() {
     mDocument->RemoveObserver(this);
   }
 }
-int32_t nsContentSink::sEnablePerfMode;
-
-void nsContentSink::InitializeStatics() {
-  Preferences::AddIntVarCache(&sEnablePerfMode, "content.sink.enable_perf_mode",
-                              0);
-}
 
 nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
                              nsISupports* aContainer, nsIChannel* aChannel) {
@@ -173,8 +167,8 @@ nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
 
   mBackoffCount = StaticPrefs::content_notify_backoffcount();
 
-  if (sEnablePerfMode != 0) {
-    mDynamicLowerValue = sEnablePerfMode == 1;
+  if (StaticPrefs::content_sink_enable_perf_mode() != 0) {
+    mDynamicLowerValue = StaticPrefs::content_sink_enable_perf_mode() == 1;
     FavorPerformanceHint(!mDynamicLowerValue, 0);
   }
 
@@ -1483,7 +1477,7 @@ nsresult nsContentSink::WillParseImpl(void) {
 
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
-  if (sEnablePerfMode == 0) {
+  if (StaticPrefs::content_sink_enable_perf_mode() == 0) {
     nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     uint32_t lastEventTime;
