@@ -312,7 +312,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   NS_DECL_NSIWEBBROWSERPRINT
 #endif
 
-  typedef void (*CallChildFunc)(nsIContentViewer* aViewer, void* aClosure);
+  typedef void (*CallChildFunc)(nsDocumentViewer* aViewer, void* aClosure);
   void CallChildren(CallChildFunc aFunc, void* aClosure);
 
   // nsIDocumentViewerPrint Printing Methods
@@ -2681,14 +2681,14 @@ void nsDocumentViewer::CallChildren(CallChildFunc aFunc, void* aClosure) {
         nsCOMPtr<nsIContentViewer> childCV;
         childAsShell->GetContentViewer(getter_AddRefs(childCV));
         if (childCV) {
-          (*aFunc)(childCV, aClosure);
+          (*aFunc)(static_cast<nsDocumentViewer*>(childCV.get()), aClosure);
         }
       }
     }
   }
 }
 
-static void ChangeChildPaintingEnabled(nsIContentViewer* aChild,
+static void ChangeChildPaintingEnabled(nsDocumentViewer* aChild,
                                        void* aClosure) {
   bool* enablePainting = (bool*)aClosure;
   if (*enablePainting) {
@@ -2702,17 +2702,17 @@ struct ZoomInfo {
   float mZoom;
 };
 
-static void SetChildTextZoom(nsIContentViewer* aChild, void* aClosure) {
+static void SetChildTextZoom(nsDocumentViewer* aChild, void* aClosure) {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*)aClosure;
   aChild->SetTextZoom(ZoomInfo->mZoom);
 }
 
-static void SetChildFullZoom(nsIContentViewer* aChild, void* aClosure) {
+static void SetChildFullZoom(nsDocumentViewer* aChild, void* aClosure) {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*)aClosure;
   aChild->SetFullZoom(ZoomInfo->mZoom);
 }
 
-static void SetChildOverrideDPPX(nsIContentViewer* aChild, void* aClosure) {
+static void SetChildOverrideDPPX(nsDocumentViewer* aChild, void* aClosure) {
   struct ZoomInfo* ZoomInfo = (struct ZoomInfo*)aClosure;
   aChild->SetOverrideDPPX(ZoomInfo->mZoom);
 }
@@ -2931,7 +2931,7 @@ nsDocumentViewer::GetOverrideDPPX(float* aDPPX) {
   return NS_OK;
 }
 
-static void SetChildAuthorStyleDisabled(nsIContentViewer* aChild,
+static void SetChildAuthorStyleDisabled(nsDocumentViewer* aChild,
                                         void* aClosure) {
   bool styleDisabled = *static_cast<bool*>(aClosure);
   aChild->SetAuthorStyleDisabled(styleDisabled);
@@ -2966,7 +2966,7 @@ static bool ExtResourceEmulateMedium(Document* aDocument, void* aClosure) {
   return true;
 }
 
-static void ChildEmulateMedium(nsIContentViewer* aChild, void* aClosure) {
+static void ChildEmulateMedium(nsDocumentViewer* aChild, void* aClosure) {
   const nsAString* mediaType = static_cast<nsAString*>(aClosure);
   aChild->EmulateMedium(*mediaType);
 }
@@ -3030,7 +3030,7 @@ NS_IMETHODIMP nsDocumentViewer::GetForceCharacterSet(
 NS_IMETHODIMP_(const Encoding*)
 nsDocumentViewer::GetForceCharset() { return mForceCharacterSet; }
 
-static void SetChildForceCharacterSet(nsIContentViewer* aChild,
+static void SetChildForceCharacterSet(nsDocumentViewer* aChild,
                                       void* aClosure) {
   auto encoding = static_cast<const Encoding*>(aClosure);
   aChild->SetForceCharset(encoding);
@@ -3089,7 +3089,7 @@ NS_IMETHODIMP nsDocumentViewer::GetHintCharacterSetSource(
   return NS_OK;
 }
 
-static void SetChildHintCharacterSetSource(nsIContentViewer* aChild,
+static void SetChildHintCharacterSetSource(nsDocumentViewer* aChild,
                                            void* aClosure) {
   aChild->SetHintCharacterSetSource(NS_PTR_TO_INT32(aClosure));
 }
@@ -3103,7 +3103,7 @@ nsDocumentViewer::SetHintCharacterSetSource(int32_t aHintCharacterSetSource) {
   return NS_OK;
 }
 
-static void SetChildHintCharacterSet(nsIContentViewer* aChild, void* aClosure) {
+static void SetChildHintCharacterSet(nsDocumentViewer* aChild, void* aClosure) {
   auto encoding = static_cast<const Encoding*>(aClosure);
   aChild->SetHintCharset(encoding);
 }
@@ -3130,7 +3130,7 @@ nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
   CallChildren(SetChildHintCharacterSet, (void*)aEncoding);
 }
 
-static void AppendChildSubtree(nsIContentViewer* aChild, void* aClosure) {
+static void AppendChildSubtree(nsDocumentViewer* aChild, void* aClosure) {
   nsTArray<nsCOMPtr<nsIContentViewer>>& array =
       *static_cast<nsTArray<nsCOMPtr<nsIContentViewer>>*>(aClosure);
   aChild->AppendSubtree(array);
