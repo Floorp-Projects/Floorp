@@ -5829,6 +5829,15 @@
   value: 3
   mirror: always
 
+# Sending each remote accumulation immediately places undue strain on the IPC
+# subsystem. Batch the remote accumulations for a period of time before sending
+# them all at once. This value was chosen as a balance between data timeliness
+# and performance (see bug 1218576).
+- name: toolkit.telemetry.ipcBatchTimeout
+  type: uint32_t
+  value: 2000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "ui."
 #---------------------------------------------------------------------------
