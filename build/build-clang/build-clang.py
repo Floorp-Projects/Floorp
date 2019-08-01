@@ -1,7 +1,10 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Only necessary for flake8 to be happy...
+from __future__ import print_function
 
 import os
 import os.path
@@ -18,7 +21,7 @@ import sys
 from contextlib import contextmanager
 from distutils.dir_util import copy_tree
 
-from mozfile import which
+from shutil import which
 
 URL_REPO = "https://github.com/llvm/llvm-project"
 
@@ -34,7 +37,7 @@ def symlink(source, link_name):
 
 
 def check_run(args):
-    print >> sys.stderr, ' '.join(args)
+    print(' '.join(args), file=sys.stderr)
     if args[0] == 'cmake':
         # CMake `message(STATUS)` messages, as appearing in failed source code
         # compiles, appear on stdout, so we only capture that.
@@ -42,7 +45,7 @@ def check_run(args):
         lines = []
         for line in p.stdout:
             lines.append(line)
-            sys.stdout.write(line)
+            sys.stdout.write(line.decode())
             sys.stdout.flush()
         r = p.wait()
         if r != 0:
@@ -60,8 +63,8 @@ def check_run(args):
 
             def dump_file(log):
                 with open(log, 'rb') as f:
-                    print >> sys.stderr, "\nContents of", log, "follow\n"
-                    print >> sys.stderr, f.read()
+                    print("\nContents of", log, "follow\n", file=sys.stderr)
+                    print(f.read(), file=sys.stderr)
             if output_match:
                 dump_file(output_match.group(1))
             if error_match:
@@ -73,10 +76,10 @@ def check_run(args):
 
 def run_in(path, args):
     d = os.getcwd()
-    print >> sys.stderr, 'cd "%s"' % path
+    print('cd "%s"' % path, file=sys.stderr)
     os.chdir(path)
     check_run(args)
-    print >> sys.stderr, 'cd "%s"' % d
+    print('cd "%s"' % d, file=sys.stderr)
     os.chdir(d)
 
 
@@ -174,7 +177,7 @@ def install_libgcc(gcc_dir, clang_dir, is_final_stage):
     out = subprocess.check_output([os.path.join(gcc_bin_dir, "gcc"),
                                    '-print-libgcc-file-name'])
 
-    libgcc_dir = os.path.dirname(out.rstrip())
+    libgcc_dir = os.path.dirname(out.decode().rstrip())
     clang_lib_dir = os.path.join(clang_dir, "lib", "gcc",
                                  "x86_64-unknown-linux-gnu",
                                  os.path.basename(libgcc_dir))
@@ -352,7 +355,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
 
         android_link_flags = "-fuse-ld=lld"
 
-        for target, cfg in android_targets.iteritems():
+        for target, cfg in android_targets.items():
             sysroot_dir = cfg["ndk_sysroot"]
             android_gcc_dir = cfg["ndk_toolchain"]
             android_include_dirs = cfg["ndk_includes"]
@@ -669,7 +672,7 @@ if __name__ == "__main__":
     if "android_targets" in config:
         android_targets = config["android_targets"]
         for attr in ("ndk_toolchain", "ndk_sysroot", "ndk_includes", "api_level"):
-            for target, cfg in android_targets.iteritems():
+            for target, cfg in android_targets.items():
                 if attr not in cfg:
                     raise ValueError("must specify '%s' as a key for android target: %s" %
                                      (attr, target))
@@ -678,7 +681,7 @@ if __name__ == "__main__":
         extra_targets = config["extra_targets"]
         if not isinstance(extra_targets, list):
             raise ValueError("extra_targets must be a list")
-        if not all(isinstance(t, (str, unicode)) for t in extra_targets):
+        if not all(isinstance(t, str) for t in extra_targets):
             raise ValueError("members of extra_targets should be strings")
     if is_linux() and gcc_dir is None:
         raise ValueError("Config file needs to set gcc_dir")

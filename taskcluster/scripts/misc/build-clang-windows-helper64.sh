@@ -39,20 +39,12 @@ export PATH="$(pwd)/cmd:${PATH}"
 export PATH="$(cd cmake && pwd)/bin:${PATH}"
 export PATH="$(cd ninja && pwd)/bin:${PATH}"
 
-# We use |mach python| to set up a virtualenv automatically for us.  We create
-# a dummy mozconfig, because the default machinery for config.guess-choosing
-# of the objdir doesn't work very well.
-MOZCONFIG="$(pwd)/mozconfig"
-cat > ${MOZCONFIG} <<EOF
-mk_add_options MOZ_OBJDIR=$(pwd)/objdir
-EOF
-
 # gets a bit too verbose here
 set +x
 
 BUILD_CLANG_DIR=build/src/build/build-clang
 cd ${BUILD_CLANG_DIR}
-MOZCONFIG=${MOZCONFIG} ../../mach python ./build-clang.py -c ./${1}
+python3 ./build-clang.py -c ./${1}
 cd -
 
 
