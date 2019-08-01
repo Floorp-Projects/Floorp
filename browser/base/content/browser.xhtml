@@ -70,7 +70,13 @@
         sizemode="normal"
         retargetdocumentfocus="urlbar-input"
         persist="screenX screenY width height sizemode"
-        >
+        data-l10n-sync="true">
+
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="browser/menubar.ftl"/>
+</linkset>
 
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
