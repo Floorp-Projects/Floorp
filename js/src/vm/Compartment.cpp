@@ -55,7 +55,6 @@ void Compartment::checkWrapperMapAfterMovingGC() {
   for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
     auto checkGCThing = [](auto tp) { CheckGCThingAfterMovingGC(*tp); };
     e.front().mutableKey().applyToWrapped(checkGCThing);
-    e.front().mutableKey().applyToDebugger(checkGCThing);
 
     WrapperMap::Ptr ptr = crossCompartmentWrappers.lookup(e.front().key());
     MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
@@ -470,13 +469,11 @@ void Compartment::sweepCrossCompartmentWrappers() {
 void CrossCompartmentKey::trace(JSTracer* trc) {
   applyToWrapped(
       [trc](auto tp) { TraceRoot(trc, tp, "CrossCompartmentKey::wrapped"); });
-  applyToDebugger(
-      [trc](auto tp) { TraceRoot(trc, tp, "CrossCompartmentKey::debugger"); });
 }
 
 bool CrossCompartmentKey::needsSweep() {
   auto needsSweep = [](auto tp) { return IsAboutToBeFinalizedUnbarriered(tp); };
-  return applyToWrapped(needsSweep) || applyToDebugger(needsSweep);
+  return applyToWrapped(needsSweep);
 }
 
 /* static */
