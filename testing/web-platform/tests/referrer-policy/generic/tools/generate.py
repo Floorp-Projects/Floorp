@@ -15,15 +15,15 @@ class ReferrerPolicyConfig(object):
     def __init__(self):
         self.selection_pattern = '%(delivery_type)s/' + \
                                  '%(origin)s/' + \
-                                 '%(source_protocol)s/' + \
+                                 '%(source_scheme)s/' + \
                                  '%(subresource)s/' + \
                                  '%(redirection)s/'
 
         self.test_file_path_pattern = '%(spec_name)s/' + self.selection_pattern + \
-                                      '%(name)s.%(source_protocol)s.html'
+                                      '%(name)s.%(source_scheme)s.html'
 
         self.test_description_template = '''The referrer URL is %(expectation)s when a
-document served over %(source_protocol)s requires a
+document served over %(source_scheme)s requires a
 sub-resource via %(subresource)s using the %(delivery_type)s
 delivery method with %(redirection)s and when
 the target request is %(origin)s.'''
