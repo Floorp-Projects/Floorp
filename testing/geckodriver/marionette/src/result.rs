@@ -122,13 +122,14 @@ mod tests {
 
     #[test]
     fn test_web_elements_response() {
-        let mut data = Vec::new();
-        data.push(WebElement {
-            element: "foo".into(),
-        });
-        data.push(WebElement {
-            element: "bar".into(),
-        });
+        let data = vec![
+            WebElement {
+                element: "foo".into(),
+            },
+            WebElement {
+                element: "bar".into(),
+            },
+        ];
         assert_ser_de(
             &MarionetteResult::WebElements(data),
             json!([{ELEMENT_KEY: "foo"}, {ELEMENT_KEY: "bar"}]),
