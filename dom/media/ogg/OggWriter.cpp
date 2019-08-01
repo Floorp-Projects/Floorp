@@ -52,14 +52,14 @@ nsresult OggWriter::WriteEncodedTrack(
 
   uint32_t len = aData.Length();
   for (uint32_t i = 0; i < len; i++) {
-    if (aData[i]->GetFrameType() != EncodedFrame::OPUS_AUDIO_FRAME) {
+    if (aData[i]->mFrameType != EncodedFrame::OPUS_AUDIO_FRAME) {
       LOG("[OggWriter] wrong encoded data type!");
       return NS_ERROR_FAILURE;
     }
 
     // only pass END_OF_STREAM on the last frame!
     nsresult rv = WriteEncodedData(
-        aData[i]->GetFrameData(), aData[i]->GetDuration(),
+        aData[i]->GetFrameData(), aData[i]->mDuration,
         i < len - 1 ? (aFlags & ~ContainerWriter::END_OF_STREAM) : aFlags);
     if (NS_FAILED(rv)) {
       LOG("%p Failed to WriteEncodedTrack!", this);

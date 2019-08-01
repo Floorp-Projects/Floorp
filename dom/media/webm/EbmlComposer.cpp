@@ -115,7 +115,7 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
   EbmlGlobal ebml;
   ebml.offset = 0;
 
-  auto frameType = aFrame->GetFrameType();
+  auto frameType = aFrame->mFrameType;
   const bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
   const bool isVP8PFrame = (frameType == EncodedFrame::FrameType::VP8_P_FRAME);
   const bool isOpus = (frameType == EncodedFrame::FrameType::OPUS_AUDIO_FRAME);
@@ -129,8 +129,7 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     return;
   }
 
-  int64_t timeCode =
-      aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
+  int64_t timeCode = aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
 
   if (!mHasVideo && timeCode >= FLUSH_AUDIO_ONLY_AFTER_MS) {
     MOZ_ASSERT(mHasAudio);
@@ -155,12 +154,11 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     mClusterHeaderIndex = mClusters.Length() - 1;
     mClusterLengthLoc = ebmlLoc.offset;
     // if timeCode didn't under/overflow before, it shouldn't after this
-    mClusterTimecode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC;
+    mClusterTimecode = aFrame->mTime / PR_USEC_PER_MSEC;
     Ebml_SerializeUnsigned(&ebml, Timecode, mClusterTimecode);
 
     // Can't under-/overflow now
-    timeCode =
-        aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
+    timeCode = aFrame->mTime / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
 
     mWritingCluster = true;
   }
