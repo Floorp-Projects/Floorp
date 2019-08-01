@@ -38,6 +38,9 @@ import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEGATIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_NEUTRAL
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.BUTTON_TYPE_POSITIVE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.ButtonCallback
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_ANY
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_ENVIRONMENT
+import org.mozilla.geckoview.GeckoSession.PromptDelegate.CAPTURE_TYPE_USER
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MENU
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_MULTIPLE
 import org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice.CHOICE_TYPE_SINGLE
@@ -114,11 +117,13 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
+    @Suppress("LongMethod")
     override fun onFilePrompt(
         session: GeckoSession,
         title: String?,
         selectionType: Int,
         mimeTypes: Array<out String>?,
+        capture: Int,
         callback: FileCallback
     ) {
 
@@ -132,7 +137,12 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
         val isMultipleFilesSelection = selectionType == GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE
 
-        val captureMode = PromptRequest.File.FacingMode.NONE
+        val captureMode = when (capture) {
+            CAPTURE_TYPE_ANY -> PromptRequest.File.FacingMode.ANY
+            CAPTURE_TYPE_USER -> PromptRequest.File.FacingMode.FRONT_CAMERA
+            CAPTURE_TYPE_ENVIRONMENT -> PromptRequest.File.FacingMode.BACK_CAMERA
+            else -> PromptRequest.File.FacingMode.NONE
+        }
 
         val onSelectSingle: (Context, Uri) -> Unit = { context, uri ->
             callback.confirm(context, uri.toFileUri(context))

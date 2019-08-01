@@ -20,8 +20,8 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.support.ktx.kotlin.toDate
 import mozilla.components.support.test.mock
-import org.junit.Assert
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -662,7 +662,14 @@ class GeckoPromptDelegateTest {
             }
         })
 
-        promptDelegate.onFilePrompt(mock(), "title", GeckoSession.PromptDelegate.FILE_TYPE_SINGLE, emptyArray(), callback)
+        promptDelegate.onFilePrompt(
+            mock(),
+            "title",
+            GeckoSession.PromptDelegate.FILE_TYPE_SINGLE,
+            emptyArray(),
+            GeckoSession.PromptDelegate.CAPTURE_TYPE_NONE,
+            callback
+        )
         assertTrue(request is PromptRequest.File)
 
         val filePickerRequest = request as PromptRequest.File
@@ -677,14 +684,20 @@ class GeckoPromptDelegateTest {
         assertTrue(onDismissWasCalled)
 
         assertTrue(filePickerRequest.mimeTypes.isEmpty())
-        Assert.assertFalse(filePickerRequest.isMultipleFilesSelection)
+        assertFalse(filePickerRequest.isMultipleFilesSelection)
+        assertEquals(PromptRequest.File.FacingMode.NONE, filePickerRequest.captureMode)
 
         promptDelegate.onFilePrompt(
-            mock(), "title",
-            GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE, emptyArray(), callback
+            mock(),
+            "title",
+            GeckoSession.PromptDelegate.FILE_TYPE_MULTIPLE,
+            emptyArray(),
+            GeckoSession.PromptDelegate.CAPTURE_TYPE_USER,
+            callback
         )
 
         assertTrue((request as PromptRequest.File).isMultipleFilesSelection)
+        assertEquals(PromptRequest.File.FacingMode.FRONT_CAMERA, (request as PromptRequest.File).captureMode)
     }
 
     @Test
