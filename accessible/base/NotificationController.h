@@ -191,8 +191,8 @@ class NotificationController final : public EventQueue,
   /**
    * Pend accessible tree update for content insertion.
    */
-  void ScheduleContentInsertion(nsIContent* aStartChildNode,
-                                nsIContent* aEndChildNode);
+  void ScheduleContentInsertion(Accessible* aContainer,
+                                nsTArray<nsCOMPtr<nsIContent>>& aInsertions);
 
   /**
    * Pend an accessible subtree relocation.
