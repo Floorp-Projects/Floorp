@@ -173,6 +173,9 @@ class RefTestCase(object):
         self.test_reflect_stringify = None
         # bool: True => test is module code
         self.is_module = False
+        # bool: True => test is asynchronous and runs additional code after completing the first
+        # turn of the event loop.
+        self.is_async = False
         # bool: True => run test, False => don't run
         self.enable = True
         # str?: Optional error type
