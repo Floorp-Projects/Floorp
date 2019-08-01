@@ -3686,6 +3686,12 @@ void Debugger::detachAllDebuggersFromGlobal(FreeOp* fop, GlobalObject* global) {
   }
 }
 
+static inline bool SweepZonesInSameGroup(Zone* a, Zone* b) {
+  // Ensure two zones are swept in the same sweep group by adding an edge
+  // between them in each direction.
+  return a->addSweepGroupEdgeTo(b) && b->addSweepGroupEdgeTo(a);
+}
+
 /* static */
 bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
   // Ensure that debuggers and their debuggees are finalized in the same group
@@ -3704,10 +3710,35 @@ bool DebugAPI::findSweepGroupEdges(JSRuntime* rt) {
         continue;
       }
 
-      if (!debuggerZone->addSweepGroupEdgeTo(debuggeeZone) ||
-          !debuggeeZone->addSweepGroupEdgeTo(debuggerZone)) {
+      if (SweepZonesInSameGroup(debuggerZone, debuggeeZone)) {
         return false;
       }
+    }
+
+    dbg->generatorFrames.findSweepGroupEdges(debuggerZone);
+    dbg->scripts.findSweepGroupEdges(debuggerZone);
+    dbg->lazyScripts.findSweepGroupEdges(debuggerZone);
+    dbg->sources.findSweepGroupEdges(debuggerZone);
+    dbg->objects.findSweepGroupEdges(debuggerZone);
+    dbg->environments.findSweepGroupEdges(debuggerZone);
+    dbg->wasmInstanceScripts.findSweepGroupEdges(debuggerZone);
+    dbg->wasmInstanceSources.findSweepGroupEdges(debuggerZone);
+  }
+
+  return true;
+}
+
+template <class UnbarrieredKey, bool InvisibleKeysOk>
+bool DebuggerWeakMap<UnbarrieredKey, InvisibleKeysOk>::findSweepGroupEdges(
+    JS::Zone* debuggerZone) {
+  MOZ_ASSERT(debuggerZone->isGCMarking());
+  for (Enum e(*this); !e.empty(); e.popFront()) {
+    MOZ_ASSERT(e.front().value()->zone() == debuggerZone);
+
+    Zone* keyZone = e.front().key()->zone();
+    if (keyZone->isGCMarking() &&
+        !SweepZonesInSameGroup(debuggerZone, keyZone)) {
+      return false;
     }
   }
 
