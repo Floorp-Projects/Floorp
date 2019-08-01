@@ -69,11 +69,11 @@
     font-weight: lighter;
   }
 
-  html[dir=ltr] th {
+  html[dir="ltr"] th {
     text-align: left;
   }
 
-  html[dir=rtl] th {
+  html[dir="rtl"] th {
     text-align: right;
   }
 }
@@ -91,7 +91,9 @@
     background-color: #f5f5f5;
   }
 
-  table, tr, p {
+  table,
+  tr,
+  p {
     display: block;
     background: #fff;
   }

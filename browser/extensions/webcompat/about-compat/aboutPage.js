@@ -28,7 +28,7 @@ this.aboutPage = class extends ExtensionAPI {
 
     resProto.setSubstitution(
       ResourceSubstitution,
-      Services.io.newURI("chrome/res/", null, rootURI)
+      Services.io.newURI("about-compat/", null, rootURI)
     );
 
     Services.ppmm.loadProcessScript(ProcessScriptURL, true);
