@@ -227,6 +227,27 @@ class BrowserFragment : Fragment(), BackHandler {
             browserToolbarView.view.setOnSiteSecurityClickedListener {
                 showQuickSettingsDialog()
             }
+
+            customTabSessionId?.let { customTabSessionId ->
+                customTabsIntegration.set(
+                    feature = CustomTabsIntegration(
+                        requireContext(),
+                        requireComponents.core.sessionManager,
+                        toolbar,
+                        customTabSessionId,
+                        activity,
+                        view.nestedScrollQuickAction,
+                        view.swipeRefresh,
+                        onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) }
+                    ),
+                    owner = this,
+                    view = view)
+            }
+
+            consumeFrom(browserStore) {
+                quickActionSheetView.update(it)
+                browserToolbarView.update(it)
+            }
         }
 
         contextMenuFeature.set(
@@ -404,27 +425,6 @@ class BrowserFragment : Fragment(), BackHandler {
             owner = this,
             view = view
         )
-
-        customTabSessionId?.let {
-            customTabsIntegration.set(
-                feature = CustomTabsIntegration(
-                    requireContext(),
-                    requireComponents.core.sessionManager,
-                    toolbar,
-                    it,
-                    activity,
-                    view.nestedScrollQuickAction,
-                    view.swipeRefresh,
-                    onItemTapped = { browserInteractor.onBrowserToolbarMenuItemTapped(it) }
-                ),
-                owner = this,
-                view = view)
-        }
-
-        consumeFrom(browserStore) {
-            quickActionSheetView.update(it)
-            browserToolbarView.update(it)
-        }
     }
 
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
