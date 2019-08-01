@@ -413,35 +413,9 @@ void NotificationController::ScheduleChildDocBinding(DocAccessible* aDocument) {
 }
 
 void NotificationController::ScheduleContentInsertion(
-    nsIContent* aStartChildNode, nsIContent* aEndChildNode) {
-  // The frame constructor guarantees that only ranges with the same parent
-  // arrive here in presence of dynamic changes to the page, see
-  // nsCSSFrameConstructor::IssueSingleInsertNotifications' callers.
-  nsINode* parent = aStartChildNode->GetFlattenedTreeParentNode();
-  if (!parent) {
-    return;
-  }
-
-  Accessible* container = mDocument->AccessibleOrTrueContainer(parent);
-  if (!container) {
-    return;
-  }
-
-  AutoTArray<nsCOMPtr<nsIContent>, 10> list;
-  for (nsIContent* node = aStartChildNode; node != aEndChildNode;
-       node = node->GetNextSibling()) {
-    MOZ_ASSERT(parent == node->GetFlattenedTreeParentNode());
-    // Notification triggers for content insertion even if no content was
-    // actually inserted (like if the content is display: none). Try to catch
-    // this case early.
-    if (node->GetPrimaryFrame() ||
-        (node->IsElement() && node->AsElement()->IsDisplayContents())) {
-      list.AppendElement(node);
-    }
-  }
-
-  if (!list.IsEmpty()) {
-    mContentInsertions.LookupOrAdd(container)->AppendElements(list);
+    Accessible* aContainer, nsTArray<nsCOMPtr<nsIContent>>& aInsertions) {
+  if (!aInsertions.IsEmpty()) {
+    mContentInsertions.LookupOrAdd(aContainer)->AppendElements(aInsertions);
     ScheduleProcessing();
   }
 }
