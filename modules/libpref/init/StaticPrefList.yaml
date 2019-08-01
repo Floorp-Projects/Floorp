@@ -1028,6 +1028,12 @@
 # endif
   mirror: always
 
+# How often to probe for pending events. 1 = every token.
+- name: content.sink.event_probe_rate
+  type: int32_t
+  value: 1
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
