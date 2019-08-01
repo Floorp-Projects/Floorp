@@ -13,6 +13,6 @@ pub use self::service_task::{MonitorDownloadTask, StartDownloadTask};
 
 mod request_task;
 pub use self::request_task::{
-    CancelTask, ChangeMonitorIntervalTask, CompleteTask, Priority, ResumeTask, SetPriorityTask,
-    SuspendTask,
+    CancelTask, ChangeMonitorIntervalTask, CompleteTask, Priority, ResumeTask,
+    SetNoProgressTimeoutTask, SetPriorityTask, SuspendTask,
 };
