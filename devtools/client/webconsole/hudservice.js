@@ -75,7 +75,7 @@ HUDService.prototype = {
     }
 
     const fissionSupport = Services.prefs.getBoolPref(
-      "devtools.browserconsole.fission",
+      "devtools.browsertoolbox.fission",
       false
     );
 

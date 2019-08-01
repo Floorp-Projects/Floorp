@@ -18,6 +18,11 @@ pref("devtools.toolbox.splitconsoleEnabled", false);
 pref("devtools.toolbox.splitconsoleHeight", 100);
 pref("devtools.toolbox.tabsOrder", "");
 
+// The fission pref is enabling the "Omniscient Browser Toolbox", which will make it
+// possible to debug anything in Firefox (See Bug 1570639 for more information).
+// ⚠ This is a work in progress. Expect weirdness when the pref is flipped on ⚠
+pref("devtools.browsertoolbox.fission", false);
+
 // Toolbox Button preferences
 pref("devtools.command-button-pick.enabled", true);
 pref("devtools.command-button-frames.enabled", true);
@@ -248,9 +253,6 @@ pref("devtools.webconsole.filter.netxhr", false);
 
 // Webconsole autocomplete preference
 pref("devtools.webconsole.input.autocomplete",true);
-
-// Browser console fission support
-pref("devtools.browserconsole.fission", false);
 
 // Browser console filters
 pref("devtools.browserconsole.filter.error", true);
