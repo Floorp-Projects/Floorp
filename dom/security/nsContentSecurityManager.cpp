@@ -44,7 +44,23 @@ static nsLiteralCString evalAllowlist[] = {
     NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
     // Test-only utility
     NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
+
+    // The Browser Toolbox/Console
+    NS_LITERAL_CSTRING("debugger"),
+
+    // The following files are NOT supposed to stay on this whitelist.
+    // Bug numbers indicate planned removal of each file.
+
+    // Bug 1498560
+    NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
 };
+
+// We also permit two specific idioms in eval()-like contexts. We'd like to
+// elminate these too; but there are in-the-wild Mozilla privileged extensions
+// that use them.
+static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
+static NS_NAMED_LITERAL_STRING(sAllowedEval2,
+                               "function anonymous(\n) {\nreturn this\n}");
 
 /* static */
 bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
@@ -172,13 +188,38 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
 
 /* static */
 void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
-    nsIPrincipal* subjectPrincipal, JSContext* cx) {
-  if (!subjectPrincipal->IsSystemPrincipal()) {
+    JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
+  if (!aSubjectPrincipal->IsSystemPrincipal()) {
     return;
   }
 
   // Use static pref for performance reasons.
   if (StaticPrefs::security_allow_eval_with_system_principal()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because allowing pref is "
+             "enabled"));
+    return;
+  }
+
+  // This preferences is a file used for autoconfiguration of Firefox
+  // by administrators. It has also been (ab)used by the userChromeJS
+  // project to run legacy-style 'extensions', some of which use eval,
+  // all of which run in the System Principal context.
+  nsAutoString configPref;
+  Preferences::GetString("general.config.filename", configPref);
+  if (!configPref.IsEmpty()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because of "
+             "general.config.filename"));
+    return;
+  }
+
+  // We permit these two common idioms to get access to the global JS object
+  if (!aScript.IsEmpty() &&
+      (aScript == sAllowedEval1 || aScript == sAllowedEval2)) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because a key string is "
+             "provided"));
     return;
   }
 
@@ -204,8 +245,20 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     fileName = fileName_;
   }
 
-  MOZ_CRASH_UNSAFE_PRINTF("do not use eval with system privileges: %s",
-                          fileName.get());
+#ifdef DEBUG
+  MOZ_CRASH_UNSAFE_PRINTF(
+      "Blocking eval() with SystemPrincipal from file %s and script provided "
+      "%s",
+      fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
+#else
+  MOZ_LOG(sCSMLog, LogLevel::Debug,
+          ("Blocking eval() with SystemPrincipal from file %s and script "
+           "provided %s",
+           fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
+#endif
+
+  // In the future, we will change this function to return false and abort JS
+  // execution without crashing the process. For now, just collect data.
 }
 
 /* static */
