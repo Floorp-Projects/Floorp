@@ -8,19 +8,17 @@ PROJECT=grcov
 # This script is for building rust-size
 case "$(uname -s)" in
 Linux)
-    WORKSPACE=$HOME/workspace
     COMPRESS_EXT=xz
     ;;
 MINGW*)
-    WORKSPACE=$PWD
-    UPLOAD_DIR=$WORKSPACE/public/build
+    UPLOAD_DIR=$PWD/public/build
     COMPRESS_EXT=bz2
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
     ;;
 esac
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
@@ -29,7 +27,7 @@ if [ -e Cargo.toml ]; then
   mv Cargo.toml Cargo.toml.back
 fi
 
-PATH="$PWD/rustc/bin:$PATH"
+PATH="$(cd $GECKO_PATH && pwd)/rustc/bin:$PATH"
 
 pushd $MOZ_FETCHES_DIR/$PROJECT
 

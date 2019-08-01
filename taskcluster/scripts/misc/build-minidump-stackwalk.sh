@@ -3,10 +3,9 @@ set -x -e -v
 
 # This script is for building minidump_stackwalk
 
-WORKSPACE=$HOME/workspace
 COMPRESS_EXT=xz
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
@@ -20,7 +19,7 @@ case "$1" in
 macosx64)
     TOOLCHAINS="cctools rustc clang"
     echo ac_add_options --target=x86_64-apple-darwin >> .mozconfig
-    echo ac_add_options --with-macos-sdk=$WORKSPACE/build/src/MacOSX10.11.sdk >> .mozconfig
+    echo ac_add_options --with-macos-sdk=$GECKO_PATH/MacOSX10.11.sdk >> .mozconfig
     ;;
 mingw32)
     TOOLCHAINS="binutils rustc clang"
@@ -35,7 +34,7 @@ mingw32)
 esac
 
 for t in $TOOLCHAINS; do
-    PATH="$WORKSPACE/build/src/$t/bin:$PATH"
+    PATH="$GECKO_PATH/$t/bin:$PATH"
 done
 
 ./mach build -v

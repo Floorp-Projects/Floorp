@@ -4,15 +4,14 @@ set -x -e -v
 # This script is for building clang for Mac OS X targets on a Linux host,
 # including native Mac OS X Compiler-RT libraries and llvm-symbolizer.
 WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # these variables are used in build-clang.py
-export CROSS_CCTOOLS_PATH=$HOME_DIR/src/cctools
-export CROSS_SYSROOT=$HOME_DIR/src/MacOSX10.11.sdk
+export CROSS_CCTOOLS_PATH=$GECKO_PATH/cctools
+export CROSS_SYSROOT=$GECKO_PATH/MacOSX10.11.sdk
 export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 
 # gets a bit too verbose here
@@ -27,9 +26,9 @@ python3 ./build-clang.py -c clang-8-macosx64.json --skip-tar
 (
 cd "$WORKSPACE/moz-toolchain/build/stage1"
 # Need the macosx64 native llvm-symbolizer since this gets shipped with sanitizer builds
-mv clang/bin/llvm-symbolizer $HOME_DIR/src/clang/bin/
-cp --remove-destination -lr $HOME_DIR/src/clang/* clang/
-tar -c -J -f $HOME_DIR/src/build/build-clang/clang.tar.xz clang
+mv clang/bin/llvm-symbolizer $GECKO_PATH/clang/bin/
+cp --remove-destination -lr $GECKO_PATH/clang/* clang/
+tar -c -J -f $GECKO_PATH/build/build-clang/clang.tar.xz clang
 )
 
 set -x

@@ -6,15 +6,13 @@ set -x -e -v
 # exports those dependencies as a tarball. This avoids having to download
 # these dependencies on every test job that uses `wrench`.
 
-WORKSPACE=$HOME/workspace
-SRCDIR=$WORKSPACE/build/src
 UPLOAD_DIR=$HOME/artifacts
 
-cd $WORKSPACE
-. $SRCDIR/taskcluster/scripts/misc/tooltool-download.sh
-export PATH=$PATH:$SRCDIR/rustc/bin
+cd $GECKO_PATH
+. taskcluster/scripts/misc/tooltool-download.sh
+export PATH=$PATH:$GECKO_PATH/rustc/bin
 cargo install --version 0.1.23 cargo-vendor
-cd $SRCDIR/gfx/wr/
+cd gfx/wr/
 mkdir .cargo
 cargo vendor --relative-path --sync ./Cargo.lock > .cargo/config
 mkdir wrench-deps

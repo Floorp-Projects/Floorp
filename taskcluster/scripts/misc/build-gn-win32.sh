@@ -3,14 +3,13 @@ set -e -v
 
 # This script is for building GN on Windows.
 
-WORKSPACE=$PWD
-UPLOAD_DIR=$WORKSPACE/public/build
+UPLOAD_DIR=$PWD/public/build
 COMPRESS_EXT=bz2
 
-export PATH="$WORKSPACE/build/src/ninja/bin:$PATH"
-export PATH="$WORKSPACE/build/src/mingw64/bin:$PATH"
+cd $GECKO_PATH
 
-cd $WORKSPACE/build/src
+export PATH="$GECKO_PATH/ninja/bin:$PATH"
+export PATH="$GECKO_PATH/mingw64/bin:$PATH"
 
 . taskcluster/scripts/misc/vs-setup.sh
 . taskcluster/scripts/misc/tooltool-download.sh

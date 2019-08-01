@@ -3,14 +3,11 @@ set -x -e -v
 
 # This script is for building clang for Linux.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-export PATH="$WORKSPACE/build/src/binutils/bin:$PATH"
+export PATH="$GECKO_PATH/binutils/bin:$PATH"
 
 # gets a bit too verbose here
 set +x
