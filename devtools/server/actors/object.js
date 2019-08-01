@@ -113,28 +113,28 @@ const proto = {
     const g = {
       type: "object",
       actor: this.actorID,
-      class: this.obj.class,
     };
 
-    const unwrapped = DevToolsUtils.unwrap(this.obj);
-
     // Unsafe objects must be treated carefully.
-    if (!DevToolsUtils.isSafeDebuggerObject(this.obj)) {
-      if (DevToolsUtils.isCPOW(this.obj)) {
-        // Cross-process object wrappers can't be accessed.
-        g.class = "CPOW: " + g.class;
-      } else if (unwrapped === undefined) {
-        // Objects belonging to an invisible-to-debugger compartment might be proxies,
-        // so just in case they shouldn't be accessed.
-        g.class = "InvisibleToDebugger: " + g.class;
-      } else if (unwrapped.isProxy) {
-        // Proxy objects can run traps when accessed, so just create a preview with
-        // the target and the handler.
-        g.class = "Proxy";
-        this.hooks.incrementGripDepth();
-        previewers.Proxy[0](this, g, null);
-        this.hooks.decrementGripDepth();
-      }
+    if (DevToolsUtils.isCPOW(this.obj)) {
+      // Cross-process object wrappers can't be accessed.
+      g.class = "CPOW";
+      return g;
+    }
+    const unwrapped = DevToolsUtils.unwrap(this.obj);
+    if (unwrapped === undefined) {
+      // Objects belonging to an invisible-to-debugger compartment might be proxies,
+      // so just in case they shouldn't be accessed.
+      g.class = "InvisibleToDebugger: " + this.obj.class;
+      return g;
+    }
+    if (unwrapped && unwrapped.isProxy) {
+      // Proxy objects can run traps when accessed, so just create a preview with
+      // the target and the handler.
+      g.class = "Proxy";
+      this.hooks.incrementGripDepth();
+      previewers.Proxy[0](this, g, null);
+      this.hooks.decrementGripDepth();
       return g;
     }
 
@@ -143,6 +143,8 @@ const proto = {
     // Change the displayed class, but when creating the preview use the original one.
     if (unwrapped === null) {
       g.class = "Restricted";
+    } else {
+      g.class = this.obj.class;
     }
 
     this.hooks.incrementGripDepth();
