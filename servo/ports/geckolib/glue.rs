@@ -6040,15 +6040,7 @@ pub unsafe extern "C" fn Servo_GetPropertyValue(
     prop: nsCSSPropertyID,
     value: *mut nsAString,
 ) {
-    use style::properties::PropertyFlags;
-
     if let Ok(longhand) = LonghandId::from_nscsspropertyid(prop) {
-        debug_assert!(
-            !longhand
-                .flags()
-                .contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
-            "We're not supposed to serialize layout-dependent properties"
-        );
         style
             .get_longhand_property_value(longhand, &mut CssWriter::new(&mut *value))
             .unwrap();
@@ -6067,12 +6059,6 @@ pub unsafe extern "C" fn Servo_GetPropertyValue(
             !longhand.is_logical(),
             "This won't quite do the right thing if we want to serialize \
              logical shorthands"
-        );
-        debug_assert!(
-            !longhand
-                .flags()
-                .contains(PropertyFlags::GETCS_NEEDS_LAYOUT_FLUSH),
-            "Layout-dependent properties shouldn't get here"
         );
         let animated = AnimationValue::from_computed_values(longhand, style).expect(
             "Somebody tried to serialize a shorthand with \
