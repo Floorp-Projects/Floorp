@@ -32,14 +32,10 @@ async function performTests() {
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
   info("Populate $_ by executing a command");
-  await executeAndWaitForMessage(
-    hud,
-    `Object.create(null, Object.getOwnPropertyDescriptors({
+  await jsterm.execute(`Object.create(null, Object.getOwnPropertyDescriptors({
     x: 1,
     y: "hello"
-  }))`,
-    `Object { x: 1, y: "hello" }`
-  );
+  }))`);
 
   await setInputValueForAutocompletion(hud, "$_.");
   checkInputCompletionValue(hud, "   x", "'$_.' completion (completeNode)");

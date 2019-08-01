@@ -23,8 +23,8 @@ function getSplitConsole(dbg) {
 
 async function evaluate(dbg, expression) {
   const { toolbox } = dbg;
-  const { hud } = toolbox.getPanel("webconsole");
-  const msg = await evaluateExpressionInConsole(hud, expression);
+  let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
+  const msg = await jsterm.execute(expression);
   return msg.innerText;
 }
 

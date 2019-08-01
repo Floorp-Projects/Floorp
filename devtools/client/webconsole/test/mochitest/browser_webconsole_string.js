@@ -30,17 +30,11 @@ add_task(async function() {
   await receivedMessages;
 
   info("evaluating a string constant");
-  const msg = await executeAndWaitForMessage(
-    hud,
-    '"string\\nconstant"',
-    "constant",
-    ".result"
-  );
-  const body = msg.node.querySelector(".message-body");
+  const jsterm = hud.jsterm;
+  await jsterm.execute('"string\\nconstant"');
+  const msg = await waitFor(() => findMessage(hud, "constant"));
+  const body = msg.querySelector(".message-body");
   // On the other hand, a string constant result should be quoted, but
   // newlines should be let through.
-  ok(
-    body.textContent.includes('"string\nconstant"'),
-    `found expected text - "${body.textContent}"`
-  );
+  ok(body.textContent.includes('"string\nconstant"'), "found expected text");
 });

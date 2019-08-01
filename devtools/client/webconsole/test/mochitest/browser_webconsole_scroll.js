@@ -77,7 +77,9 @@ add_task(async function() {
   is(outputContainer.scrollTop, 0, "The console stayed scrolled to the top");
 
   info("Evaluate a command to check that the console scrolls to the bottom");
-  await executeAndWaitForMessage(hud, "21 + 21", "42", ".result");
+  onMessage = waitForMessage(hud, "42");
+  ui.jsterm.execute("21 + 21");
+  await onMessage;
   ok(hasVerticalOverflow(outputContainer), "There is a vertical overflow");
   ok(
     isScrolledToBottom(outputContainer),
@@ -101,15 +103,12 @@ add_task(async function() {
   info(
     "Evaluate an Error object to check that the console scrolls to the bottom"
   );
-  message = await executeAndWaitForMessage(
-    hud,
-    `
+  onMessage = waitForMessage(hud, "myErrorObject", ".message.result");
+  ui.jsterm.execute(`
     x = new Error("myErrorObject");
     x.stack = "a@b/c.js:1:2\\nd@e/f.js:3:4";
-    x;`,
-    "myErrorObject",
-    ".result"
-  );
+    x;`);
+  message = await onMessage;
   ok(
     isScrolledToBottom(outputContainer),
     "The console is scrolled to the bottom"

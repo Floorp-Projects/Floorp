@@ -16,39 +16,28 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
-  let message = await executeAndWaitForMessage(
-    hud,
-    "pprint({b:2, a:1})",
-    `"  b: 2\n  a: 1"`,
-    ".result"
-  );
+  let onMessage = waitForMessage(hud, `"  b: 2\n  a: 1"`);
+  jsterm.execute("pprint({b:2, a:1})");
+  let message = await onMessage;
   ok(message, "`pprint()` worked");
 
   // check that pprint(window) does not throw (see Bug 608358).
-  message = await executeAndWaitForMessage(
-    hud,
-    "pprint(window)",
-    `window:`,
-    ".result"
-  );
+  onMessage = waitForMessage(hud, `window:`);
+  jsterm.execute("pprint(window)");
+  message = await onMessage;
   ok(message, "`pprint(window)` worked");
 
   // check that calling pprint with a string does not throw (See Bug 614561).
-  message = await executeAndWaitForMessage(
-    hud,
-    "pprint('hi')",
-    `"  0: \\"h\\"\n  1: \\"i\\""`,
-    ".result"
-  );
+  onMessage = waitForMessage(hud, `"  0: \\"h\\"\n  1: \\"i\\""`);
+  jsterm.execute("pprint('hi')");
+  message = await onMessage;
   ok(message, "`pprint('hi')` worked");
 
   // check that pprint(function) shows function source (See Bug 618344).
-  message = await executeAndWaitForMessage(
-    hud,
-    "pprint(function() { var someCanaryValue = 42; })",
-    `"function() { var someCanaryValue = 42; }`,
-    ".result"
-  );
+  onMessage = waitForMessage(hud, `"function() { var someCanaryValue = 42; }`);
+  jsterm.execute("pprint(function() { var someCanaryValue = 42; })");
+  message = await onMessage;
   ok(message, "`pprint(function)` shows function source");
 }

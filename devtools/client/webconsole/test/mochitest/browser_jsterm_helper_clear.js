@@ -26,7 +26,7 @@ async function performTests() {
   const onCleared = waitFor(
     () => hud.ui.outputNode.querySelector(".message") === null
   );
-  execute(hud, "clear()");
+  hud.jsterm.execute("clear()");
   await onCleared;
   ok(true, "Console was cleared");
 }

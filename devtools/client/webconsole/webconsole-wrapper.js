@@ -204,6 +204,10 @@ class WebConsoleWrapper {
           return webConsoleUI.jsterm && webConsoleUI.jsterm.focus();
         },
 
+        evaluateInput: expression => {
+          return webConsoleUI.jsterm && webConsoleUI.jsterm.execute(expression);
+        },
+
         requestEvaluation: (string, options) => {
           return webConsoleUI.webConsoleClient.evaluateJSAsync(string, options);
         },
@@ -226,9 +230,6 @@ class WebConsoleWrapper {
           }
           return webConsoleUI.jsterm.completeNode;
         },
-        getMappedExpression: this.hud.getMappedExpression.bind(this.hud),
-        getPanelWindow: () => webConsoleUI.window,
-        inspectObjectActor: webConsoleUI.inspectObjectActor.bind(webConsoleUI),
       };
 
       // Set `openContextMenu` this way so, `serviceContainer` variable
@@ -650,14 +651,6 @@ class WebConsoleWrapper {
 
   dispatchClearHistory() {
     store.dispatch(actions.clearHistory());
-  }
-
-  /**
-   *
-   * @param {String} expression: The expression to evaluate
-   */
-  dispatchEvaluateExpression(expression) {
-    store.dispatch(actions.evaluateExpression(expression));
   }
 
   /**

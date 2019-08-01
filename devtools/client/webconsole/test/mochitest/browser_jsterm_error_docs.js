@@ -16,6 +16,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   // Check that errors with entries in errordocs.js display links next to their messages.
   const ErrorDocs = require("devtools/server/actors/errordocs");
@@ -34,11 +35,9 @@ async function performTests() {
     const title = errorUrl.split("?")[0];
 
     hud.ui.clearOutput();
-    const { node } = await executeAndWaitForMessage(
-      hud,
-      expression,
-      "RangeError:"
-    );
+    const onMessage = waitForMessage(hud, "RangeError:");
+    jsterm.execute(expression);
+    const { node } = await onMessage;
     const learnMoreLink = node.querySelector(".learn-more-link");
     ok(
       learnMoreLink,

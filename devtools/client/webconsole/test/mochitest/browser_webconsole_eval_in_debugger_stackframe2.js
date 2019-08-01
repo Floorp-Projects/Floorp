@@ -16,6 +16,7 @@ const TEST_URI =
 add_task(async function() {
   info("open the console");
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   info("open the debugger");
   await openDebugger();
@@ -31,7 +32,7 @@ add_task(async function() {
   onFirstCallMessageReceived.then(message => {
     firstCallEvaluationResult = message;
   });
-  execute(hud, "firstCall()");
+  jsterm.execute("firstCall()");
 
   info("Waiting for a frame to be added");
   await waitForPaused(dbg);
@@ -40,17 +41,16 @@ add_task(async function() {
   await openConsole();
 
   info("Executing basic command while paused");
-  await executeAndWaitForMessage(hud, "1 + 2", "3", ".result");
-  ok(true, "`1 + 2` was evaluated whith debugger paused");
+  let onMessageReceived = waitForMessage(hud, "3");
+  jsterm.execute("1 + 2");
+  let message = await onMessageReceived;
+  ok(message, "`1 + 2` was evaluated whith debugger paused");
 
   info("Executing command using scoped variables while paused");
-  await executeAndWaitForMessage(
-    hud,
-    "foo + foo2",
-    `"globalFooBug783499foo2SecondCall"`,
-    ".result"
-  );
-  ok(true, "`foo + foo2` was evaluated as expected with debugger paused");
+  onMessageReceived = waitForMessage(hud, `"globalFooBug783499foo2SecondCall"`);
+  jsterm.execute("foo + foo2");
+  message = await onMessageReceived;
+  ok(message, "`foo + foo2` was evaluated as expected with debugger paused");
 
   info(
     "Checking the first command, which is the last to resolve since it paused"
@@ -63,7 +63,7 @@ add_task(async function() {
   info("Resuming the thread");
   dbg.actions.resume(dbg.selectors.getThreadContext());
 
-  await onFirstCallMessageReceived;
+  message = await onFirstCallMessageReceived;
   ok(
     firstCallEvaluationResult !== unresolvedSymbol,
     "firstCall() returned correct value"

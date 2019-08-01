@@ -90,8 +90,7 @@ async function performTests() {
   checkInputCompletionValue(hud, "    ment", "'docu' completion");
 
   let onAutocompletUpdated = jsterm.once("autocomplete-updated");
-  EventUtils.synthesizeKey("KEY_Enter");
-  await onAutocompletUpdated;
+  await jsterm.execute();
   checkInputCompletionValue(hud, "", "clear completion on execute()");
 
   // Test multi-line completion works. We can't use setInputValueForAutocompletion because

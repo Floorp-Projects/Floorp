@@ -15,25 +15,22 @@ const TEST_URI =
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
-  execute(hud, "throwErrorObject()");
+  hud.jsterm.execute("throwErrorObject()");
   await checkMessageStack(hud, "ThrowErrorObject", [6, 1]);
 
-  execute(hud, "throwValue(40 + 2)");
+  hud.jsterm.execute("throwValue(40 + 2)");
   await checkMessageStack(hud, "42", [14, 10, 1]);
 
-  execute(
-    hud,
-    `
+  hud.jsterm.execute(`
     a = () => {throw "bloop"};
     b =  () => a();
     c =  () => b();
     d =  () => c();
     d();
-  `
-  );
+  `);
   await checkMessageStack(hud, "Error: bloop", [2, 3, 4, 5, 6]);
 
-  execute(hud, `1 + @`);
+  hud.jsterm.execute(`1 + @`);
   const messageNode = await waitFor(() =>
     findMessage(hud, "illegal character")
   );

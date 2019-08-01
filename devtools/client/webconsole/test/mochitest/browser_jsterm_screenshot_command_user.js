@@ -7,7 +7,7 @@
 
 const TEST_URI = `data:text/html,<meta charset=utf8><script>
   function screenshot() {
-    console.log("contextScreen");
+    console.log(\"user screenshot function\");
   }
 </script>`;
 
@@ -23,11 +23,9 @@ add_task(async function() {
 
 async function testCommand(hud) {
   const command = `:screenshot --clipboard`;
-  await executeAndWaitForMessage(
-    hud,
-    command,
-    "Screenshot copied to clipboard."
-  );
+  const onMessage = waitForMessage(hud, "Screenshot copied to clipboard.");
+  hud.jsterm.execute(command);
+  await onMessage;
   ok(true, ":screenshot was executed as expected");
 }
 
@@ -35,7 +33,9 @@ async function testCommand(hud) {
 // command should not overwrite the screenshot function
 async function testUserScreenshotFunction(hud) {
   const command = `screenshot()`;
-  await executeAndWaitForMessage(hud, command, "contextScreen");
+  const onMessage = waitForMessage(hud, "user screenshot function");
+  hud.jsterm.execute(command);
+  await onMessage;
   ok(
     true,
     "content screenshot function is not overidden and was executed as expected"

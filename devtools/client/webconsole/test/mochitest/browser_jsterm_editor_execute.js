@@ -23,9 +23,10 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   const expression = `x = 10`;
   setInputValue(hud, expression);
-  await executeAndWaitForMessage(hud, undefined, "", ".result");
+  await jsterm.execute();
   is(getInputValue(hud), expression, "input line is not cleared after submit");
 }

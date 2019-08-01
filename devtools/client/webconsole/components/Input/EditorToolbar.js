@@ -23,14 +23,14 @@ const {
 class EditorToolbar extends Component {
   static get propTypes() {
     return {
+      webConsoleUI: PropTypes.object.isRequired,
       editorMode: PropTypes.bool,
       dispatch: PropTypes.func.isRequired,
-      webConsoleUI: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { editorMode, dispatch, webConsoleUI } = this.props;
+    const { editorMode, webConsoleUI, dispatch } = this.props;
 
     if (!editorMode) {
       return null;
@@ -48,7 +48,7 @@ class EditorToolbar extends Component {
             "webconsole.editor.toolbar.executeButton.tooltip",
             [isMacOS ? "Cmd + Enter" : "Ctrl + Enter"]
           ),
-          onClick: () => dispatch(actions.evaluateExpression()),
+          onClick: () => webConsoleUI.jsterm.execute(),
         },
         l10n.getStr("webconsole.editor.toolbar.executeButton.label")
       ),
