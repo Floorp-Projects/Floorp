@@ -21,10 +21,12 @@ add_task(async function() {
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
+  const jsterm = hud.jsterm;
+
   info("Test `inspect(window)`");
   // Add a global value so we can check it later.
-  execute(hud, "testProp = 'testValue'");
-  execute(hud, "inspect(window)");
+  await jsterm.execute("testProp = 'testValue'");
+  await jsterm.execute("inspect(window)");
 
   const inspectWindowNode = await waitFor(() =>
     findInspectResultMessage(hud.ui.outputNode, 1)
@@ -69,7 +71,7 @@ async function performTests() {
 
   /* Check that a primitive value can be inspected, too */
   info("Test `inspect(1)`");
-  execute(hud, "inspect(1)");
+  await jsterm.execute("inspect(1)");
 
   const inspectPrimitiveNode = await waitFor(() =>
     findInspectResultMessage(hud.ui.outputNode, 2)

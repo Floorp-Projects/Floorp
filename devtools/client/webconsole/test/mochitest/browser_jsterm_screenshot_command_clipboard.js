@@ -37,7 +37,9 @@ async function performTests() {
 
 async function testClipboard(hud) {
   const command = `:screenshot --clipboard ${dpr}`;
-  await executeScreenshotClipboardCommand(hud, command);
+  const onMessage = waitForMessage(hud, "Screenshot copied to clipboard.");
+  hud.jsterm.execute(command);
+  await onMessage;
   const contentSize = await getContentSize();
   const imgSize = await getImageSizeFromClipboard();
 
@@ -55,7 +57,9 @@ async function testClipboard(hud) {
 
 async function testFullpageClipboard(hud) {
   const command = `:screenshot --fullpage --clipboard ${dpr}`;
-  await executeScreenshotClipboardCommand(hud, command);
+  const onMessage = waitForMessage(hud, "Screenshot copied to clipboard.");
+  hud.jsterm.execute(command);
+  await onMessage;
   const contentSize = await getContentSize();
   const imgSize = await getImageSizeFromClipboard();
 
@@ -73,8 +77,12 @@ async function testFullpageClipboard(hud) {
 
 async function testSelectorClipboard(hud) {
   const command = `:screenshot --selector "img#testImage" --clipboard ${dpr}`;
-  await executeScreenshotClipboardCommand(hud, command);
-
+  const messageReceived = waitForMessage(
+    hud,
+    "Screenshot copied to clipboard."
+  );
+  hud.jsterm.execute(command);
+  await messageReceived;
   const imgSize1 = await getImageSizeFromClipboard();
   await ContentTask.spawn(gBrowser.selectedBrowser, imgSize1, function(
     imgSize
@@ -95,7 +103,9 @@ async function testSelectorClipboard(hud) {
 
 async function testFullpageClipboardScrollbar(hud) {
   const command = `:screenshot --fullpage --clipboard ${dpr}`;
-  await executeScreenshotClipboardCommand(hud, command);
+  const onMessage = waitForMessage(hud, "Screenshot copied to clipboard.");
+  hud.jsterm.execute(command);
+  await onMessage;
   const contentSize = await getContentSize();
   const scrollbarSize = await getScrollbarSize();
   const imgSize = await getImageSizeFromClipboard();
@@ -115,21 +125,6 @@ async function testFullpageClipboardScrollbar(hud) {
       contentSize.scrollMinY -
       scrollbarSize.height,
     "Scroll Fullpage Clipboard: Image height matches page size minus scrollbar size"
-  );
-}
-
-/**
- * Executes the command string and returns a Promise that resolves when the message
- * saying that the screenshot was copied to clipboard is rendered in the console.
- *
- * @param {WebConsole} hud
- * @param {String} command
- */
-function executeScreenshotClipboardCommand(hud, command) {
-  return executeAndWaitForMessage(
-    hud,
-    command,
-    "Screenshot copied to clipboard."
   );
 }
 

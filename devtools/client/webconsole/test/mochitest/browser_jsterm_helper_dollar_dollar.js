@@ -26,36 +26,25 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const jsterm = hud.jsterm;
 
-  let message = await executeAndWaitForMessage(
-    hud,
-    "$$('main')",
-    "Array [ main ]",
-    ".result"
-  );
+  let onMessage = waitForMessage(hud, "Array [ main ]");
+  jsterm.execute("$$('main')");
+  let message = await onMessage;
   ok(message, "`$$('main')` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$$('main > ul > li')",
-    "Array [ li, li ]",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "Array [ li, li ]");
+  jsterm.execute("$$('main > ul > li')");
+  message = await onMessage;
   ok(message, "`$$('main > ul > li')` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$$('main > ul > li').map(el => el.tagName).join(' - ')",
-    "LI - LI",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "LI - LI");
+  jsterm.execute("$$('main > ul > li').map(el => el.tagName).join(' - ')");
+  message = await onMessage;
   ok(message, "`$$` result can be used right away");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$$('div')",
-    "Array []",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "Array []");
+  jsterm.execute("$$('div')");
+  message = await onMessage;
   ok(message, "`$$('div')` returns an empty array");
 }

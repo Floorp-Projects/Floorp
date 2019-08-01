@@ -87,12 +87,11 @@ function toolboxTestScript(toolbox, devtoolsTab) {
     .selectTool("webconsole")
     .then(async console => {
       const { hud } = console;
+      const { jsterm } = hud;
       const onMessage = waitFor(() => {
         return findMessages(hud, "Background page function called").length > 0;
       });
-      hud.ui.wrapper.dispatchEvaluateExpression(
-        "myWebExtensionAddonFunction()"
-      );
+      await jsterm.execute("myWebExtensionAddonFunction()");
       await onMessage;
       await removeTab(devtoolsTab);
     })

@@ -26,31 +26,25 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const jsterm = hud.jsterm;
 
-  let message = await executeAndWaitForMessage(
-    hud,
-    "$('main')",
-    "<main>",
-    ".result"
-  );
+  let onMessage = waitForMessage(hud, "<main>");
+  jsterm.execute("$('main')");
+  let message = await onMessage;
   ok(message, "`$('main')` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$('main > ul > li')",
-    "<li>",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "<li>");
+  jsterm.execute("$('main > ul > li')");
+  message = await onMessage;
   ok(message, "`$('main > ul > li')` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "$('main > ul > li').tagName",
-    "LI",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "LI");
+  jsterm.execute("$('main > ul > li').tagName");
+  message = await onMessage;
   ok(message, "`$` result can be used right away");
 
-  message = await executeAndWaitForMessage(hud, "$('div')", "null", ".result");
+  onMessage = waitForMessage(hud, "null");
+  jsterm.execute("$('div')");
+  message = await onMessage;
   ok(message, "`$('div')` does return null");
 }

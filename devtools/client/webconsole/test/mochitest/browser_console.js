@@ -77,11 +77,10 @@ async function testMessages(hud) {
   });
 
   // Test eval.
-  execute(hud, "document.location.href");
+  hud.jsterm.execute("document.location.href");
 
   // Test eval frame script
-  execute(
-    hud,
+  hud.jsterm.execute(
     `gBrowser.selectedBrowser.messageManager.loadFrameScript(` +
       `'data:application/javascript,console.log("framescript-message")', false);` +
       `"framescript-eval";`

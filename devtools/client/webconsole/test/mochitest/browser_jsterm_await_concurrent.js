@@ -22,6 +22,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   hud.ui.clearOutput();
   const delays = [3000, 500, 9000, 6000];
@@ -37,7 +38,7 @@ async function performTests() {
     ".message.result"
   );
   for (const input of inputs) {
-    execute(hud, input);
+    jsterm.execute(input);
   }
   await onMessage;
 

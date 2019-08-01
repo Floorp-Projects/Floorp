@@ -23,6 +23,7 @@ async function performTests() {
   // Force the split console to be closed.
   await pushPref("devtools.toolbox.splitconsoleEnabled", false);
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   const pauseExpression = `(() => {
     var foo = ["bar"];
@@ -30,7 +31,7 @@ async function performTests() {
     debugger;
     return "pauseExpression-res";
   })()`;
-  execute(hud, pauseExpression);
+  jsterm.execute(pauseExpression);
 
   // wait for the debugger to be opened and paused.
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
@@ -51,11 +52,11 @@ async function performTests() {
     `[ "res", "bar" ]`,
     ".message.result"
   );
-  execute(hud, awaitExpression);
+  jsterm.execute(awaitExpression);
   // We send an evaluation just after the await one to ensure the await evaluation was
   // done. We can't await on the previous execution because it waits for the result to
   // be send, which won't happen until we resume the debugger.
-  await executeAndWaitForMessage(hud, `"smoke"`, `"smoke"`, ".result");
+  await jsterm.execute(`"smoke"`);
 
   // Give the engine some time to evaluate the await expression before resuming.
   await waitForTick();

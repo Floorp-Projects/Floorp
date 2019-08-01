@@ -19,12 +19,15 @@ add_task(async function() {
 
   const hud = await openNewTabAndConsole(TEST_URI1);
 
-  await executeAndWaitForMessage(
+  let onMessages = waitForMessages({
     hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+    messages: [{ text: "window.location.href" }, { text: TEST_URI1 }],
+  });
+
+  hud.jsterm.execute("window.location.href");
+
+  info("wait for window.location.href");
+  await onMessages;
 
   // load second url
   BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
@@ -32,14 +35,16 @@ add_task(async function() {
 
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
-  info("wait for window.location.href after page navigation");
-  hud.ui.clearOutput();
-  await executeAndWaitForMessage(
+  onMessages = waitForMessages({
     hud,
-    "window.location.href",
-    TEST_URI2,
-    ".result"
-  );
+    messages: [{ text: "window.location.href" }, { text: TEST_URI2 }],
+  });
+
+  hud.ui.clearOutput();
+  hud.jsterm.execute("window.location.href");
+
+  info("wait for window.location.href after page navigation");
+  await onMessages;
 
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 
@@ -54,12 +59,16 @@ add_task(async function() {
   await cleared;
 
   info("Messages cleared after navigation; checking location");
-  await executeAndWaitForMessage(
+
+  onMessages = waitForMessages({
     hud,
-    "window.location.href",
-    TEST_URI1,
-    ".result"
-  );
+    messages: [{ text: "window.location.href" }, { text: TEST_URI1 }],
+  });
+
+  hud.jsterm.execute("window.location.href");
+
+  info("wait for window.location.href after goBack()");
+  await onMessages;
 
   ok(!findMessage(hud, "Permission denied"), "no permission denied errors");
 });

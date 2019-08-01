@@ -25,7 +25,7 @@ async function testHistory() {
 
   for (const command of COMMANDS) {
     info(`Executing command ${command}`);
-    await executeAndWaitForMessage(hud, command, "", ".result");
+    await jsterm.execute(command);
   }
 
   for (let x = COMMANDS.length - 1; x != -1; x--) {

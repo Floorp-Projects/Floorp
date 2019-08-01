@@ -71,13 +71,11 @@ async function performTests() {
 }
 
 async function logObject(hud) {
+  const { jsterm } = hud;
   const prop = "browser_console_hide_jsterm_test";
-  const { node } = await executeAndWaitForMessage(
-    hud,
-    `new Object({ ${prop}: true })`,
-    prop,
-    ".result"
-  );
+  const onMessage = waitForMessage(hud, prop, ".result");
+  jsterm.execute(`new Object({ ${prop}: true })`);
+  const { node } = await onMessage;
   return node.querySelector(".tree");
 }
 

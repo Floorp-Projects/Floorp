@@ -139,10 +139,10 @@ async function waitForWorkerClose(workerTargetFront) {
   info("Worker did close.");
 }
 
-// Return a promise with a reference to webconsole, opening the split
+// Return a promise with a reference to jsterm, opening the split
 // console if necessary.  This cleans up the split console pref so
 // it won't pollute other tests.
-async function getSplitConsole(toolbox, win) {
+function getSplitConsole(toolbox, win) {
   if (!win) {
     win = toolbox.win;
   }
@@ -151,32 +151,12 @@ async function getSplitConsole(toolbox, win) {
     EventUtils.synthesizeKey("VK_ESCAPE", {}, win);
   }
 
-  await toolbox.getPanelWhenReady("webconsole");
-  ok(toolbox.splitConsole, "Split console is shown.");
-  return toolbox.getPanel("webconsole");
-}
-
-function executeAndWaitForMessage(
-  webconsole,
-  expression,
-  expectedTextContent,
-  className = "result"
-) {
-  const { ui } = webconsole.hud;
   return new Promise(resolve => {
-    const onNewMessages = messages => {
-      for (const message of messages) {
-        if (
-          message.node.classList.contains(className) &&
-          message.node.textContent.includes(expectedTextContent)
-        ) {
-          ui.off("new-messages", onNewMessages);
-          resolve(message.node);
-        }
-      }
-    };
-    ui.on("new-messages", onNewMessages);
-    ui.wrapper.dispatchEvaluateExpression(expression);
+    toolbox.getPanelWhenReady("webconsole").then(() => {
+      ok(toolbox.splitConsole, "Split console is shown.");
+      const jsterm = toolbox.getPanel("webconsole").hud.jsterm;
+      resolve(jsterm);
+    });
   });
 }
 

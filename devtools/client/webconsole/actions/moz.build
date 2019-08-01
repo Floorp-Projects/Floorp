@@ -8,7 +8,6 @@ DevToolsModules(
     'filters.js',
     'history.js',
     'index.js',
-    'input.js',
     'messages.js',
     'notifications.js',
     'ui.js',

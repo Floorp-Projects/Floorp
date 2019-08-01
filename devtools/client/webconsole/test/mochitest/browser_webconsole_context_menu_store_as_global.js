@@ -109,11 +109,8 @@ async function storeAsVariable(hud, msg, type, varIdx, equalTo) {
 
   is(getInputValue(hud), "temp" + varIdx, "Input was set");
 
-  await executeAndWaitForMessage(
-    hud,
-    `temp${varIdx} === ${equalTo}`,
-    true,
-    ".result"
+  const equal = await hud.jsterm.requestEvaluation(
+    "temp" + varIdx + " === " + equalTo
   );
-  ok(true, "Correct variable assigned into console.");
+  is(equal.result, true, "Correct variable assigned into console.");
 }

@@ -30,11 +30,15 @@ async function evalInConsoleAtPoint(
 }
 
 async function assertConsoleEval(dbg, statements) {
-  const { hud } = await dbg.toolbox.selectTool("webconsole");
+  const jsterm = (await dbg.toolbox.selectTool("webconsole")).hud.jsterm;
 
   for (const [index, statement] of statements.entries()) {
-    await dbg.client.evaluate(`window.TEST_RESULT = false;`);
-    await evaluateExpressionInConsole(hud, `TEST_RESULT = ${statement};`);
+    await dbg.client.evaluate(`
+      window.TEST_RESULT = false;
+    `);
+    await jsterm.execute(`
+      TEST_RESULT = ${statement};
+    `);
 
     const result = await dbg.client.evaluate(`window.TEST_RESULT`);
     is(result.result, true, `'${statement}' evaluates to true`);
@@ -67,7 +71,7 @@ add_task(async function() {
       `aNamed2 === "a-named2"`,
       `aDefault3 === "a-default3"`,
       `anAliased3 === "an-original3"`,
-      `aNamed3 === "a-named3"`,
+      `aNamed3 === "a-named3"`
     ]
   );
 

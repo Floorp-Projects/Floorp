@@ -14,16 +14,20 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   await openDebugger();
   const toolbox = gDevTools.getToolbox(hud.target);
   const dbg = createDebuggerContext(toolbox);
 
-  execute(hud, "pauseInWorker(42)");
+  jsterm.execute("pauseInWorker(42)");
 
   await waitForPaused(dbg);
   await openConsole();
 
-  await executeAndWaitForMessage(hud, "data", "42", ".result");
+  const onMessage = waitForMessage(hud, "42");
+  jsterm.execute("data");
+  await onMessage;
+
   ok(true, "Evaluated console message in worker thread");
 });

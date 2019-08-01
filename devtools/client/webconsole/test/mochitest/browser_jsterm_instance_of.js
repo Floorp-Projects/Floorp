@@ -17,28 +17,20 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
-  let message = await executeAndWaitForMessage(
-    hud,
-    "[] instanceof Array",
-    "true",
-    ".result"
-  );
+  let onMessage = waitForMessage(hud, "true");
+  jsterm.execute("[] instanceof Array");
+  let message = await onMessage;
   ok(message, "`instanceof Array` is correct");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "({}) instanceof Object",
-    "true",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "true");
+  jsterm.execute("({}) instanceof Object");
+  message = await onMessage;
   ok(message, "`instanceof Object` is correct");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "({}) instanceof Array",
-    "false",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "false");
+  jsterm.execute("({}) instanceof Array");
+  message = await onMessage;
   ok(message, "`instanceof Array` has expected result");
 }

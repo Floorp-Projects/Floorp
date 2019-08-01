@@ -24,29 +24,21 @@ async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   info("Check that declaring a let variable does not create a global property");
-  await executeAndWaitForMessage(
-    hud,
-    `let bazA = await new Promise(r => setTimeout(() => r("local-bazA"), 10))`,
-    "local-bazA",
-    ".result"
+  await hud.jsterm.execute(
+    `let bazA = await new Promise(r => setTimeout(() => r("local-bazA"), 10))`
   );
   await checkVariable(hud, "bazA");
 
   info(
     "Check that declaring a const variable does not create a global property"
   );
-  await executeAndWaitForMessage(
-    hud,
-    `const bazB = await new Promise(r => setTimeout(() => r("local-bazB"), 10))`,
-    "local-bazB",
-    ".result"
+  await hud.jsterm.execute(
+    `const bazB = await new Promise(r => setTimeout(() => r("local-bazB"), 10))`
   );
   await checkVariable(hud, "bazB");
 
   info("Check that complex variable declarations work as expected");
-  await executeAndWaitForMessage(
-    hud,
-    `
+  await hud.jsterm.execute(`
     let bazC = "local-bazC", bazD, bazE = "local-bazE";
     bazD = await new Promise(r => setTimeout(() => r("local-bazD"), 10));
     let {
@@ -67,10 +59,7 @@ async function performTests() {
           e: ["local-bazI"]
         }
       }
-    });`,
-    "",
-    ".result"
-  );
+    });`);
   await checkVariable(hud, "bazC");
   await checkVariable(hud, "bazD");
   await checkVariable(hud, "bazE");
@@ -83,13 +72,8 @@ async function performTests() {
 }
 
 async function checkVariable(hud, varName) {
-  await executeAndWaitForMessage(
-    hud,
-    `window.${varName}`,
-    `undefined`,
-    ".result"
-  );
+  await executeAndWaitForMessage(hud, `window.${varName}`, `undefined`);
   ok(true, `The ${varName} assignment did not create a global variable`);
-  await executeAndWaitForMessage(hud, varName, `"local-${varName}"`, ".result");
+  await executeAndWaitForMessage(hud, varName, `"local-${varName}"`);
   ok(true, `"${varName}" has the expected value`);
 }
