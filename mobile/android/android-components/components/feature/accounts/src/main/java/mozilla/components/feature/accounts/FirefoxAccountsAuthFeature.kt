@@ -4,39 +4,45 @@
 
 package mozilla.components.feature.accounts
 
+import android.content.Context
 import android.net.Uri
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.request.RequestInterceptor
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import kotlin.coroutines.CoroutineContext
 
 /**
  * Ties together an account manager with a session manager/tabs implementation, facilitating an
  * authentication flow.
+ * @property accountManager [FxaAccountManager].
+ * @property redirectUrl This is the url that will be reached at the final authentication state.
+ * @property coroutineContext The context which will be used to execute network requests necessary
+ * to initiate authentication. Note that [onBeginAuthentication] will be executed using this context.
+ * @property onBeginAuthentication A lambda function that receives the authentication url.
+ * Executed on [coroutineContext].
  */
 class FirefoxAccountsAuthFeature(
     private val accountManager: FxaAccountManager,
-    private val tabsUseCases: TabsUseCases,
     private val redirectUrl: String,
-    private val coroutineContext: CoroutineContext = Dispatchers.Main
+    private val coroutineContext: CoroutineContext = Dispatchers.IO,
+    private val onBeginAuthentication: (Context, String) -> Unit = { _, _ -> }
 ) {
-    fun beginAuthentication() {
-        beginAuthenticationAsync {
+    fun beginAuthentication(context: Context) {
+        beginAuthenticationAsync(context) {
             accountManager.beginAuthenticationAsync().await()
         }
     }
 
-    fun beginPairingAuthentication(pairingUrl: String) {
-        beginAuthenticationAsync {
+    fun beginPairingAuthentication(context: Context, pairingUrl: String) {
+        beginAuthenticationAsync(context) {
             accountManager.beginAuthenticationAsync(pairingUrl).await()
         }
     }
 
-    private fun beginAuthenticationAsync(beginAuthentication: suspend () -> String?) {
+    private fun beginAuthenticationAsync(context: Context, beginAuthentication: suspend () -> String?) {
         CoroutineScope(coroutineContext).launch {
             // FIXME return a fallback URL provided by Config...
             // https://github.com/mozilla-mobile/android-components/issues/2496
@@ -48,7 +54,8 @@ class FirefoxAccountsAuthFeature(
             // UI to the user.
             // It's possible that the underlying problem will go away by the time the tab actually
             // loads, resulting in a confusing experience.
-            tabsUseCases.addTab.invoke(authUrl)
+
+            onBeginAuthentication(context, authUrl)
         }
     }
 

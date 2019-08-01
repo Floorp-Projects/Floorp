@@ -15,6 +15,24 @@ permalink: /changelog/
 * **browser-menu**
   * `BrowserMenuHighlightableItem` now has a ripple effect and includes an example of how to pass in a drawable properly to also include a ripple when highlighted
 
+* **feature-accounts**
+    * ⚠️ **This is a breaking change**:
+    * The `FirefoxAccountsAuthFeature` no longer needs an `TabsUseCases`, instead is taking a lambda to
+      allow applications to decide which action should be taken. This fixes [#2438](https://github.com/mozilla-mobile/android-components/issues/2438) and [#3272](https://github.com/mozilla-mobile/android-components/issues/3272).
+
+    ```kotlin
+     val feature = FirefoxAccountsAuthFeature(
+         accountManager,
+         redirectUrl
+     ) { context, authUrl ->
+        // passed-in context allows easily opening new activities for handling urls.
+        tabsUseCases.addTab(authUrl)
+     }
+     
+     // ... elsewhere, in the UI code, handling click on button "Sign In":
+     components.feature.beginAuthentication(activityContext)
+    ```
+
 * **browser-engine-gecko-nightly**
   * Now supports window requests. A new tab will be opened for `target="_blank"` links and `window.open` calls.
 

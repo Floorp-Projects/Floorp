@@ -10,7 +10,6 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.DeviceType
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.test.any
@@ -21,10 +20,9 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.service.fxa.DeviceConfig
+import org.junit.Assert.assertEquals
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -44,67 +42,86 @@ class TestableFxaAccountManager(
 
 @RunWith(AndroidJUnit4::class)
 class FirefoxAccountsAuthFeatureTest {
+    class TestOnBeginAuthentication : (Context, String) -> Unit {
+        var url: String? = null
+
+        override fun invoke(context: Context, authUrl: String) {
+            url = authUrl
+        }
+    }
 
     @Test
     fun `begin authentication`() {
         val manager = prepareAccountManagerForSuccessfulAuthentication()
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+        val authLabmda = TestOnBeginAuthentication()
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
-            feature.beginAuthentication()
+            val feature = FirefoxAccountsAuthFeature(
+                manager,
+                "somePath",
+                this.coroutineContext,
+                authLabmda
+            )
+            feature.beginAuthentication(testContext)
         }
 
-        verify(mockAddTab, times(1)).invoke("auth://url")
+        assertEquals("auth://url", authLabmda.url)
     }
 
     @Test
     fun `begin pairing authentication`() {
         val manager = prepareAccountManagerForSuccessfulAuthentication()
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+        val authLabmda = TestOnBeginAuthentication()
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
-            feature.beginPairingAuthentication("auth://pair")
+            val feature = FirefoxAccountsAuthFeature(
+                manager,
+                "somePath",
+                this.coroutineContext,
+                authLabmda
+            )
+            feature.beginPairingAuthentication(testContext, "auth://pair")
         }
 
-        verify(mockAddTab, times(1)).invoke("auth://url")
+        assertEquals("auth://url", authLabmda.url)
     }
 
     @Test
     fun `begin authentication with errors`() {
         val manager = prepareAccountManagerForFailedAuthentication()
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+        val authLambda = TestOnBeginAuthentication()
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
-            feature.beginAuthentication()
+            val feature = FirefoxAccountsAuthFeature(
+                manager,
+                "somePath",
+                this.coroutineContext,
+                authLambda
+            )
+            feature.beginAuthentication(testContext)
         }
 
         // Fallback url is invoked.
-        verify(mockAddTab, times(1)).invoke("https://accounts.firefox.com/signin")
+        assertEquals("https://accounts.firefox.com/signin", authLambda.url)
     }
 
     @Test
     fun `begin pairing authentication with errors`() {
         val manager = prepareAccountManagerForFailedAuthentication()
-        val mockAddTab: TabsUseCases.AddNewTabUseCase = mock()
-        val mockTabs: TabsUseCases = mock()
-        `when`(mockTabs.addTab).thenReturn(mockAddTab)
+        val authLambda = TestOnBeginAuthentication()
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
-            feature.beginPairingAuthentication("auth://pair")
+            val feature = FirefoxAccountsAuthFeature(
+                manager,
+                "somePath",
+                this.coroutineContext,
+                authLambda
+            )
+            feature.beginPairingAuthentication(testContext, "auth://pair")
         }
 
         // Fallback url is invoked.
-        verify(mockAddTab, times(1)).invoke("https://accounts.firefox.com/signin")
+        assertEquals("https://accounts.firefox.com/signin", authLambda.url)
     }
 
     private fun prepareAccountManagerForSuccessfulAuthentication(): TestableFxaAccountManager {
