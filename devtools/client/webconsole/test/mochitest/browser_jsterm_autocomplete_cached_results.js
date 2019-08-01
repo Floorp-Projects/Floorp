@@ -112,12 +112,15 @@ async function performTests() {
   );
 
   info("Ensure filtering from the cache does work");
-  await jsterm.execute(`
+  execute(
+    hud,
+    `
     window.testObject = Object.create(null);
     window.testObject.zz = "zz";
     window.testObject.zzz = "zzz";
     window.testObject.zzzz = "zzzz";
-  `);
+  `
+  );
   await jstermComplete("window.testObject.");
   await jstermComplete("window.testObject.z");
   is(

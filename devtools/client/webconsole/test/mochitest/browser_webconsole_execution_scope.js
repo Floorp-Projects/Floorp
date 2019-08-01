@@ -13,7 +13,6 @@ const TEST_URI =
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
   hud.ui.clearOutput();
 
   const onInputMessage = waitForMessage(
@@ -26,7 +25,7 @@ add_task(async function() {
     TEST_URI,
     ".message.result"
   );
-  jsterm.execute("window.location.href;");
+  execute(hud, "window.location.href;");
 
   let message = await onInputMessage;
   ok(message, "Input message is displayed with the expected class");

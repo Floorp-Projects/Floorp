@@ -89,7 +89,12 @@ async function testHistory() {
   // Set input value separately from execute so UP arrow accurately navigates
   // history.
   setInputValue(hud3, '"hello from third tab"');
-  await hud3.jsterm.execute();
+  await executeAndWaitForMessage(
+    hud3,
+    '"hello from third tab"',
+    '"hello from third tab"',
+    ".result"
+  );
 
   state1 = hud1.ui.wrapper.getStore().getState();
   is(
@@ -153,12 +158,9 @@ async function testHistory() {
  *  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
  */
 async function populateInputHistory(hud) {
-  const jsterm = hud.jsterm;
-
   for (let i = 0; i < INPUT_HISTORY_COUNT; i++) {
-    // Set input value separately from execute so UP arrow accurately navigates history.
-    setInputValue(hud, i.toString());
-    await jsterm.execute();
+    const input = i.toString();
+    await executeAndWaitForMessage(hud, input, input, ".result");
   }
 }
 
