@@ -126,7 +126,23 @@ export default class LoginItem extends HTMLElement {
         break;
       }
       case "AboutLoginsLoginSelected": {
-        this.setLogin(event.detail);
+        let login = event.detail;
+        if (this.hasPendingChanges()) {
+          event.preventDefault();
+          this.showConfirmationDialog("discard-changes", () => {
+            // Clear any pending changes
+            this.setLogin(login);
+
+            window.dispatchEvent(
+              new CustomEvent("AboutLoginsLoginSelected", {
+                detail: login,
+                cancelable: true,
+              })
+            );
+          });
+        } else {
+          this.setLogin(login);
+        }
         break;
       }
       case "blur": {
@@ -153,7 +169,13 @@ export default class LoginItem extends HTMLElement {
         if (classList.contains("cancel-button")) {
           let wasExistingLogin = !!this._login.guid;
           if (wasExistingLogin) {
-            this.setLogin(this._login);
+            if (this.hasPendingChanges()) {
+              this.showConfirmationDialog("discard-changes", () => {
+                this.setLogin(this._login);
+              });
+            } else {
+              this.setLogin(this._login);
+            }
           } else {
             window.dispatchEvent(new CustomEvent("AboutLoginsClearSelection"));
           }
@@ -274,6 +296,15 @@ export default class LoginItem extends HTMLElement {
           message: "confirm-delete-dialog-message",
           confirmButtonLabel: "confirm-delete-dialog-confirm-button",
         };
+        break;
+      }
+      case "discard-changes": {
+        options = {
+          title: "confirm-discard-changes-dialog-title",
+          message: "confirm-discard-changes-dialog-message",
+          confirmButtonLabel: "confirm-discard-changes-dialog-confirm-button",
+        };
+        break;
       }
     }
     let dialogPromise = dialog.show(options);
@@ -295,6 +326,17 @@ export default class LoginItem extends HTMLElement {
       );
       recordTelemetryEvent({ object: "existing_login", method: "delete" });
     });
+  }
+
+  hasPendingChanges() {
+    let { origin = "", username = "", password = "" } = this._login || {};
+
+    let valuesChanged = !window.AboutLoginsUtils.doLoginsMatch(
+      { origin, username, password },
+      this._loginFromForm()
+    );
+
+    return this.dataset.editing && valuesChanged;
   }
 
   /**

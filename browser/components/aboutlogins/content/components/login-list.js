@@ -118,6 +118,7 @@ export default class LoginList extends HTMLElement {
           new CustomEvent("AboutLoginsLoginSelected", {
             bubbles: true,
             composed: true,
+            cancelable: true, // allow calling preventDefault() on event
             detail: listItem._login,
           })
         );
@@ -137,6 +138,7 @@ export default class LoginList extends HTMLElement {
         window.dispatchEvent(
           new CustomEvent("AboutLoginsLoginSelected", {
             detail: this._logins[0],
+            cancelable: true,
           })
         );
         break;
@@ -152,7 +154,7 @@ export default class LoginList extends HTMLElement {
         break;
       }
       case "AboutLoginsLoginSelected": {
-        if (this._selectedGuid == event.detail.guid) {
+        if (event.defaultPrevented || this._selectedGuid == event.detail.guid) {
           return;
         }
 

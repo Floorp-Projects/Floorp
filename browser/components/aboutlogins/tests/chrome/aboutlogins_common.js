@@ -59,5 +59,12 @@ Object.defineProperty(window, "AboutLoginsUtils", {
     promptForMasterPassword(resolve) {
       resolve(true);
     },
+    doLoginsMatch(login1, login2) {
+      return (
+        login1.origin == login2.origin &&
+        login1.username == login2.username &&
+        login1.password == login2.password
+      );
+    },
   },
 });
