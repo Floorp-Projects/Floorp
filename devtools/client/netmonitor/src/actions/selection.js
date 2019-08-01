@@ -64,7 +64,7 @@ function selectDelta(delta) {
 
     const newIndex = Math.min(Math.max(0, selIndex + delta), requests.size - 1);
     const newItem = requests.get(newIndex);
-    dispatch(selectRequest(newItem.id));
+    dispatch(selectRequest(newItem.id, newItem.channelId));
   };
 }
 
