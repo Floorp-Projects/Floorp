@@ -105,6 +105,7 @@ interface nsIBits : nsISupports
   const long ERROR_ACTION_COMPLETE                                        = 8;
   const long ERROR_ACTION_SUSPEND                                         = 9;
   const long ERROR_ACTION_RESUME                                          = 10;
+  const long ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT                         = 11;
 
   /**
    * nsBitsErrorStage values
@@ -174,8 +175,9 @@ interface nsIBits : nsISupports
    *        Specifies what proxy to use when downloading. Valid values are
    *        listed below.
    * @param noProgressTimeoutSecs
-   *        The number of seconds BITS tries to transfer the file after a transient
-   *        error occurs, reset whenever there is download progress.
+   *        The number of seconds for the "no progress" timeout. After there has
+   *        been no download progress for this long, BITS will not retry the job
+   *        following a transient error, producing instead a permanent error.
    * @param monitorIntervalMs
    *        The number of milliseconds between download status notifications.
    * @param observer
@@ -349,6 +351,19 @@ interface nsIBitsRequest : nsIRequest
    *        The callback function used to relay success or failure.
    */
   void setPriorityLow(in nsIBitsCallback callback);
+
+  /**
+   * Sets the BITS "no progress" timeout for the job.
+   *
+   * @param timeoutSecs
+   *        The new number of seconds for the timeout. After there has been
+   *        no progress for this long, BITS will not retry the job following
+   *        a transient error, producing instead a permanent error.
+   * @param callback
+   *        The callback function used to relay success or failure.
+   */
+  void setNoProgressTimeout(in unsigned long timeoutSecs,
+                             in nsIBitsCallback callback);
 
   /*
    * Completes the download, moving it out of the BITS system and onto the

@@ -14,8 +14,8 @@ use super::{
     },
     monitor::MonitorRunnable,
     task::{
-        CancelTask, ChangeMonitorIntervalTask, CompleteTask, Priority, ResumeTask, SetPriorityTask,
-        SuspendTask,
+        CancelTask, ChangeMonitorIntervalTask, CompleteTask, Priority, ResumeTask,
+        SetNoProgressTimeoutTask, SetPriorityTask, SuspendTask,
     },
     BitsService, BitsTaskError,
 };
@@ -543,6 +543,37 @@ impl BitsRequest {
             task,
             "BitsRequest::set_priority",
             Action::SetPriority,
+        )
+    }
+
+    nsIBitsRequest_method!(
+        [Action::SetNoProgressTimeout]
+        set_no_progress_timeout => SetNoProgressTimeout(timeout_secs: u32)
+    );
+    fn set_no_progress_timeout(
+        &self,
+        timeout_secs: u32,
+        callback: &nsIBitsCallback,
+    ) -> Result<(), BitsTaskError> {
+        if self.request_has_transferred() {
+            return Err(BitsTaskError::new(
+                TransferAlreadyComplete,
+                Action::SetNoProgressTimeout,
+                Pretask,
+            ));
+        }
+
+        let task: Box<SetNoProgressTimeoutTask> = Box::new(SetNoProgressTimeoutTask::new(
+            RefPtr::new(self),
+            self.bits_id.clone(),
+            timeout_secs,
+            RefPtr::new(callback),
+        ));
+
+        self.bits_service.dispatch_runnable_to_command_thread(
+            task,
+            "BitsRequest::set_no_progress_timeout",
+            Action::SetNoProgressTimeout,
         )
     }
 

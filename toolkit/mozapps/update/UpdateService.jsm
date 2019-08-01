@@ -108,7 +108,10 @@ const STATE_FAILED = "failed";
 
 // BITS will keep retrying a download after transient errors, unless this much
 // time has passed since there has been download progress.
-const BITS_NO_PROGRESS_TIMEOUT_SECS = 3600; // 1 hour
+// Similarly to ...POLL_RATE_MS below, we are much more aggressive when the user
+// is watching the download progress.
+const BITS_IDLE_NO_PROGRESS_TIMEOUT_SECS = 3600; // 1 hour
+const BITS_ACTIVE_NO_PROGRESS_TIMEOUT_SECS = 5;
 
 // These value control how frequently we get updates from the BITS client on
 // the progress made downloading. The difference between the two is that the
@@ -4583,6 +4586,7 @@ Downloader.prototype = {
       this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
       this._request.start(this, null);
     } else {
+      let noProgressTimeout = BITS_IDLE_NO_PROGRESS_TIMEOUT_SECS;
       let monitorInterval = BITS_IDLE_POLL_RATE_MS;
       this._bitsActiveNotifications = false;
       // The monitor's timeout should be much greater than the longest monitor
@@ -4591,6 +4595,7 @@ Downloader.prototype = {
       // unnecessary fallback to nsIIncrementalDownload.
       let monitorTimeout = Math.max(10 * monitorInterval, 10 * 60 * 1000);
       if (this.hasDownloadListeners) {
+        noProgressTimeout = BITS_ACTIVE_NO_PROGRESS_TIMEOUT_SECS;
         monitorInterval = BITS_ACTIVE_POLL_RATE_MS;
         this._bitsActiveNotifications = true;
       }
@@ -4632,7 +4637,7 @@ Downloader.prototype = {
           this._patch.URL,
           FILE_UPDATE_MAR,
           Ci.nsIBits.PROXY_PRECONFIG,
-          BITS_NO_PROGRESS_TIMEOUT_SECS,
+          noProgressTimeout,
           monitorInterval,
           this,
           null
@@ -4792,15 +4797,26 @@ Downloader.prototype = {
           "notifications"
       );
       this._bitsActiveNotifications = true;
-      await this._request
-        .changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS)
-        .catch(error => {
-          LOG(
-            "Downloader:_maybeStartActiveNotifications - Failed to increase " +
-              "status update frequency. Error: " +
-              error
-          );
-        });
+      await Promise.all([
+        this._request
+          .setNoProgressTimeout(BITS_ACTIVE_NO_PROGRESS_TIMEOUT_SECS)
+          .catch(error => {
+            LOG(
+              "Downloader:_maybeStartActiveNotifications - Failed to set " +
+                "no progress timeout. Error: " +
+                error
+            );
+          }),
+        this._request
+          .changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS)
+          .catch(error => {
+            LOG(
+              "Downloader:_maybeStartActiveNotifications - Failed to increase " +
+                "status update frequency. Error: " +
+                error
+            );
+          }),
+      ]);
     }
   },
 
@@ -4820,15 +4836,26 @@ Downloader.prototype = {
           "notifications"
       );
       this._bitsActiveNotifications = false;
-      await this._request
-        .changeMonitorInterval(BITS_IDLE_POLL_RATE_MS)
-        .catch(error => {
-          LOG(
-            "Downloader:_maybeStopActiveNotifications - Failed to decrease " +
-              "status update frequency: " +
-              error
-          );
-        });
+      await Promise.all([
+        this._request
+          .setNoProgressTimeout(BITS_IDLE_NO_PROGRESS_TIMEOUT_SECS)
+          .catch(error => {
+            LOG(
+              "Downloader:_maybeStopActiveNotifications - Failed to set " +
+                "no progress timeout: " +
+                error
+            );
+          }),
+        this._request
+          .changeMonitorInterval(BITS_IDLE_POLL_RATE_MS)
+          .catch(error => {
+            LOG(
+              "Downloader:_maybeStopActiveNotifications - Failed to decrease " +
+                "status update frequency: " +
+                error
+            );
+          }),
+      ]);
     }
   },
 

@@ -5,7 +5,8 @@ use super::action::Action;
 use bits_client::{
     bits_protocol::{
         CancelJobFailure, CompleteJobFailure, HResultMessage, MonitorJobFailure, ResumeJobFailure,
-        SetJobPriorityFailure, SetUpdateIntervalFailure, StartJobFailure, SuspendJobFailure,
+        SetJobPriorityFailure, SetNoProgressTimeoutFailure, SetUpdateIntervalFailure,
+        StartJobFailure, SuspendJobFailure,
     },
     PipeError,
 };
@@ -506,6 +507,53 @@ impl From<SetJobPriorityFailure> for BitsTaskError {
                 error_code: error_code.into(),
             },
             SetJobPriorityFailure::Other(message) => BitsTaskError {
+                error_type: ErrorType::OtherBitsClientError,
+                error_action,
+                error_stage,
+                error_code: ErrorCode::Message(nsCString::from(message)),
+            },
+        }
+    }
+}
+
+impl From<SetNoProgressTimeoutFailure> for BitsTaskError {
+    fn from(error: SetNoProgressTimeoutFailure) -> Self {
+        use self::SetNoProgressTimeoutFailure::*;
+
+        let error_stage = ErrorStage::BitsClient;
+        let error_action = Action::SetNoProgressTimeout;
+        match error {
+            NotFound => BitsTaskError {
+                error_type: ErrorType::BitsJobNotFound,
+                error_action,
+                error_stage,
+                error_code: ErrorCode::None,
+            },
+            GetJob(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToGetBitsJob,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            ApplySettings(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToApplyBitsJobSettings,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            ConnectBcm(error_code) => BitsTaskError {
+                error_type: ErrorType::FailedToConnectToBcm,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            OtherBITS(error_code) => BitsTaskError {
+                error_type: ErrorType::OtherBitsError,
+                error_action,
+                error_stage,
+                error_code: error_code.into(),
+            },
+            Other(message) => BitsTaskError {
                 error_type: ErrorType::OtherBitsClientError,
                 error_action,
                 error_stage,

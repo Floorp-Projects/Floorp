@@ -22,6 +22,7 @@ pub enum Action {
     Cancel,
     SetMonitorInterval,
     SetPriority,
+    SetNoProgressTimeout,
     Resume,
     Suspend,
 }
@@ -35,6 +36,7 @@ impl Action {
             Action::Cancel => "cancelling download",
             Action::SetMonitorInterval => "changing monitor interval",
             Action::SetPriority => "setting download priority",
+            Action::SetNoProgressTimeout => "setting no progress timeout",
             Action::Resume => "resuming download",
             Action::Suspend => "suspending download",
         }
@@ -48,6 +50,7 @@ impl Action {
             Action::Cancel => nsIBits::ERROR_ACTION_CANCEL,
             Action::SetMonitorInterval => nsIBits::ERROR_ACTION_CHANGE_MONITOR_INTERVAL,
             Action::SetPriority => nsIBits::ERROR_ACTION_SET_PRIORITY,
+            Action::SetNoProgressTimeout => nsIBits::ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT,
             Action::Resume => nsIBits::ERROR_ACTION_RESUME,
             Action::Suspend => nsIBits::ERROR_ACTION_SUSPEND,
         };
@@ -86,6 +89,7 @@ pub enum RequestAction {
     Cancel,
     SetMonitorInterval,
     SetPriority,
+    SetNoProgressTimeout,
     Resume,
     Suspend,
 }
@@ -97,6 +101,7 @@ impl From<RequestAction> for Action {
             RequestAction::Cancel => Action::Cancel,
             RequestAction::SetMonitorInterval => Action::SetMonitorInterval,
             RequestAction::SetPriority => Action::SetPriority,
+            RequestAction::SetNoProgressTimeout => Action::SetNoProgressTimeout,
             RequestAction::Resume => Action::Resume,
             RequestAction::Suspend => Action::Suspend,
         }

@@ -496,6 +496,27 @@ class BitsRequest {
   }
 
   /**
+   * This function wraps nsIBitsRequest::setNoProgressTimeout.
+   *
+   * Instead of taking a callback, the function is asynchronous.
+   * This method either resolves with no data, or rejects with a BitsError.
+   */
+  async setNoProgressTimeout(timeoutSecs) {
+    if (!this._request) {
+      throw new BitsError(
+        Ci.nsIBits.ERROR_TYPE_USE_AFTER_REQUEST_SHUTDOWN,
+        Ci.nsIBits.ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT,
+        Ci.nsIBits.ERROR_STAGE_PRETASK,
+        Ci.nsIBits.ERROR_CODE_TYPE_NONE
+      );
+    }
+    let action = gBits.ERROR_ACTION_SET_NO_PROGRESS_TIMEOUT;
+    return requestPromise(action, callback => {
+      this._request.setNoProgressTimeout(timeoutSecs, callback);
+    });
+  }
+
+  /**
    * This function wraps nsIBitsRequest::complete.
    *
    * Instead of taking a callback, the function is asynchronous.
