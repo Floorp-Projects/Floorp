@@ -3852,3 +3852,62 @@ nsChangeHint nsStyleEffects::CalcDifference(
 
   return hint;
 }
+
+static bool TransformOperationHasPercent(const StyleTransformOperation& aOp) {
+  switch (aOp.tag) {
+    case StyleTransformOperation::Tag::TranslateX:
+      return aOp.AsTranslateX().HasPercent();
+    case StyleTransformOperation::Tag::TranslateY:
+      return aOp.AsTranslateY().HasPercent();
+    case StyleTransformOperation::Tag::TranslateZ:
+      return false;
+    case StyleTransformOperation::Tag::Translate3D: {
+      auto& translate = aOp.AsTranslate3D();
+      // NOTE(emilio): z translation is a `<length>`, so can't have percentages.
+      return translate._0.HasPercent() || translate._1.HasPercent();
+    }
+    case StyleTransformOperation::Tag::Translate: {
+      auto& translate = aOp.AsTranslate();
+      return translate._0.HasPercent() || translate._1.HasPercent();
+    }
+    case StyleTransformOperation::Tag::AccumulateMatrix: {
+      auto& accum = aOp.AsAccumulateMatrix();
+      return accum.from_list.HasPercent() || accum.to_list.HasPercent();
+    }
+    case StyleTransformOperation::Tag::InterpolateMatrix: {
+      auto& interpolate = aOp.AsInterpolateMatrix();
+      return interpolate.from_list.HasPercent() ||
+             interpolate.to_list.HasPercent();
+    }
+    case StyleTransformOperation::Tag::Perspective:
+    case StyleTransformOperation::Tag::RotateX:
+    case StyleTransformOperation::Tag::RotateY:
+    case StyleTransformOperation::Tag::RotateZ:
+    case StyleTransformOperation::Tag::Rotate:
+    case StyleTransformOperation::Tag::Rotate3D:
+    case StyleTransformOperation::Tag::SkewX:
+    case StyleTransformOperation::Tag::SkewY:
+    case StyleTransformOperation::Tag::Skew:
+    case StyleTransformOperation::Tag::ScaleX:
+    case StyleTransformOperation::Tag::ScaleY:
+    case StyleTransformOperation::Tag::ScaleZ:
+    case StyleTransformOperation::Tag::Scale:
+    case StyleTransformOperation::Tag::Scale3D:
+    case StyleTransformOperation::Tag::Matrix:
+    case StyleTransformOperation::Tag::Matrix3D:
+      return false;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unknown transform operation");
+      return false;
+  }
+}
+
+template <>
+bool StyleTransform::HasPercent() const {
+  for (const auto& op : Operations()) {
+    if (TransformOperationHasPercent(op)) {
+      return true;
+    }
+  }
+  return false;
+}

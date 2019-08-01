@@ -285,6 +285,7 @@ renaming_overrides_prefixing = true
 """
 
 "GenericPosition" = """
+  inline bool HasPercent() const;
   inline bool DependsOnPositioningAreaSize() const;
   static inline StyleGenericPosition FromPercentage(float);
 """
@@ -499,9 +500,14 @@ renaming_overrides_prefixing = true
   inline nsDependentCSubstring AsString() const;
 """
 
+"GenericTransformOrigin" = """
+  inline bool HasPercent() const;
+"""
+
 "GenericTransform" = """
   inline Span<const T> Operations() const;
   inline bool IsNone() const;
+  bool HasPercent() const;
 """
 
 "GenericTransformOperation" = """
