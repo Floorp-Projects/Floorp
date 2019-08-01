@@ -17,26 +17,6 @@ namespace mozilla {
 
 using dom::URLParams;
 
-bool OriginAttributes::sFirstPartyIsolation = false;
-bool OriginAttributes::sRestrictedOpenerAccess = false;
-bool OriginAttributes::sBlockPostMessageForFPI = false;
-
-void OriginAttributes::InitPrefs() {
-  MOZ_ASSERT(NS_IsMainThread());
-  static bool sInited = false;
-  if (!sInited) {
-    sInited = true;
-    Preferences::AddBoolVarCache(&sFirstPartyIsolation,
-                                 "privacy.firstparty.isolate");
-    Preferences::AddBoolVarCache(
-        &sRestrictedOpenerAccess,
-        "privacy.firstparty.isolate.restrict_opener_access");
-    Preferences::AddBoolVarCache(
-        &sBlockPostMessageForFPI,
-        "privacy.firstparty.isolate.block_post_message");
-  }
-}
-
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
                                            nsIURI* aURI, bool aForced) {
   bool isFirstPartyEnabled = IsFirstPartyEnabled();

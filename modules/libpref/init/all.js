@@ -1153,12 +1153,6 @@ pref("privacy.popups.maxReported", 100);
 #ifdef NIGHTLY_BUILD
 pref("privacy.trackingprotection.origin_telemetry.enabled", true);
 #endif
-// First Party Isolation (double keying), disabled by default
-pref("privacy.firstparty.isolate",                        false);
-// If false, two windows in the same domain with different first party domains
-// (top level URLs) can access resources through window.opener.
-// This pref is effective only when "privacy.firstparty.isolate" is true.
-pref("privacy.firstparty.isolate.restrict_opener_access", true);
 // We automatically decline canvas permission requests if they are not initiated
 // from user input. Just in case that breaks something, we allow the user to revert
 // this behavior with this obscure pref. We do not intend to support this long term.
