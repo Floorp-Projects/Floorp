@@ -8,11 +8,14 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src 'none'; object-src 'none'; script-src resource: chrome:; img-src data: blob: https://firefoxusercontent.com;"/>
     <title data-l10n-id="about-logins-page-title"></title>
+    <link rel="localization" href="branding/brand.ftl">
     <link rel="localization" href="browser/branding/sync-brand.ftl">
+    <link rel="localization" href="browser/branding/brandings.ftl">
     <link rel="localization" href="browser/aboutLogins.ftl">
     <script type="module" src="chrome://browser/content/aboutlogins/components/confirmation-dialog.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/fxaccounts-button.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-filter.js"></script>
+    <script type="module" src="chrome://browser/content/aboutlogins/components/login-intro.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-item.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list.js"></script>
     <script type="module" src="chrome://browser/content/aboutlogins/components/login-list-item.js"></script>
@@ -32,6 +35,7 @@
     </header>
     <login-list></login-list>
     <login-item></login-item>
+    <login-intro></login-intro>
     <confirmation-dialog hidden></confirmation-dialog>
 
     <template id="confirmation-dialog-template">
@@ -83,8 +87,14 @@
         </label>
         <span class="count" data-l10n-id="login-list-count" data-l10n-args='{"count": 0}'></span>
       </div>
-      <ol role="listbox" tabindex="0" data-l10n-id="login-list">
-      </ol>
+      <!-- This container is to work around bug 1569292 -->
+      <div class="container">
+        <ol role="listbox" tabindex="0" data-l10n-id="login-list"></ol>
+        <div class="intro">
+          <p data-l10n-id="login-list-intro-title"></p>
+          <span data-l10n-id="login-list-intro-description"></span>
+        </div>
+      </div>
       <button class="create-login-button" data-l10n-id="create-login-button"></button>
     </template>
 
@@ -93,6 +103,25 @@
         <span class="title"></span>
         <span class="username"></span>
       </li>
+    </template>
+
+    <template id="login-intro-template">
+      <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/common.css">
+      <link rel="stylesheet" href="chrome://browser/content/aboutlogins/components/login-intro.css">
+
+      <img class="illustration" src="chrome://browser/content/aboutlogins/icons/intro-illustration.svg"/>
+      <h1 class="heading" data-l10n-id="login-intro-heading"></h1>
+      <section>
+        <p class="description" data-l10n-id="login-intro-description"></p>
+        <ul>
+          <li data-l10n-id="login-intro-instruction-fxa"></li>
+          <li data-l10n-id="login-intro-instruction-fxa-settings"></li>
+          <li data-l10n-id="login-intro-instruction-faq">
+            <a data-l10n-name="faq" class="intro-faq-link" href="#"></a>
+          </li>
+        </ul>
+      </section>
     </template>
 
     <template id="login-item-template">
@@ -171,8 +200,8 @@
         <button role="menuitem" class="menuitem-button menuitem-feedback ghost-button" data-event-name="AboutLoginsOpenFeedback" data-l10n-id="menu-menuitem-feedback"></button>
         <button role="menuitem" class="menuitem-button menuitem-faq ghost-button" data-event-name="AboutLoginsOpenFAQ" data-l10n-id="menu-menuitem-faq"></button>
         <hr role="separator" class="menuitem-separator"></hr>
-        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-android ghost-button" data-event-name="AboutLoginsOpenMobileAndroid" data-l10n-id="menu-menuitem-download-android"></button>
-        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-ios ghost-button" data-event-name="AboutLoginsOpenMobileIos" data-l10n-id="menu-menuitem-download-iphone"></button>
+        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-android ghost-button" data-event-name="AboutLoginsOpenMobileAndroid" data-l10n-id="menu-menuitem-android-app"></button>
+        <button role="menuitem" class="menuitem-button menuitem-mobile menuitem-mobile-ios ghost-button" data-event-name="AboutLoginsOpenMobileIos" data-l10n-id="menu-menuitem-iphone-app"></button>
       </ul>
     </template>
   </body>
