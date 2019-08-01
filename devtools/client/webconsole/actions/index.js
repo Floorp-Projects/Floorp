@@ -9,6 +9,7 @@
 const actionModules = [
   require("./autocomplete"),
   require("./filters"),
+  require("./input"),
   require("./messages"),
   require("./ui"),
   require("./notifications"),
