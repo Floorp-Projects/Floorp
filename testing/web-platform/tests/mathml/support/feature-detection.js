@@ -67,6 +67,58 @@ var MathMLFeatureDetection = {
         return this._has_mfrac;
     },
 
+    has_msqrt: function() {
+        if (!this.hasOwnProperty("_has_msqrt")) {
+            document.body.insertAdjacentHTML("beforeend", "<math>\
+<mrow style='font-size: 20px !important'>\
+  <mtext>A</mtext>\
+</mrow>\
+<msqrt style='font-size: 20px !important'>\
+  <mtext>A</mtext>\
+</msqrt>\
+</math>");
+            var math = document.body.lastElementChild;
+            // The radical symbol will make msqrt wider than mrow, if the former is supported.
+            this._has_msqrt =
+                math.lastElementChild.getBoundingClientRect().width -
+                math.firstElementChild.getBoundingClientRect().width > 5;
+            document.body.removeChild(math);
+        }
+        return this._has_msqrt;
+    },
+
+    has_menclose: function() {
+        if (!this.hasOwnProperty("_has_menclose")) {
+            document.body.insertAdjacentHTML("beforeend", "<math>\
+<mrow style='font-size: 20px !important'>\
+  <mrow>\
+    <mrow>\
+      <mrow>\
+        <mtext>A</mtext>\
+      </mrow>\
+    </mrow>\
+  </mrow>\
+</mrow>\
+<menclose notation='box' style='font-size: 20px !important'>\
+  <menclose notation='box'>\
+    <menclose notation='box'>\
+      <menclose notation='box'>\
+        <mtext>A</mtext>\
+      </menclose>\
+    </menclose>\
+  </menclose>\
+</menclose>\
+</math>");
+            var math = document.body.lastElementChild;
+            // The boxes will make menclose wider than mrow, if the former is supported.
+            this._has_menclose =
+                math.lastElementChild.getBoundingClientRect().width -
+                math.firstElementChild.getBoundingClientRect().width > 5;
+            document.body.removeChild(math);
+        }
+        return this._has_menclose;
+    },
+
     has_dir: function() {
         if (!this.hasOwnProperty("_has_dir")) {
             document.body.insertAdjacentHTML("beforeend", "<math style='direction: ltr !important;'>\
