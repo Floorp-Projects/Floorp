@@ -1966,10 +1966,21 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
-FunctionCreationData GenerateFunctionCreationData(
-    HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
-    FunctionAsyncKind asyncKind, bool isSelfHosting /* = false */,
-    bool inFunctionBox /* = false */) {
+JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
+                             FunctionSyntaxKind kind,
+                             GeneratorKind generatorKind,
+                             FunctionAsyncKind asyncKind,
+                             bool isSelfHosting /* = false */,
+                             bool inFunctionBox /* = false */) {
+  MOZ_ASSERT_IF(kind == FunctionSyntaxKind::Statement, atom != nullptr);
+
+  RootedObject proto(cx);
+  if (!GetFunctionPrototype(cx, generatorKind, asyncKind, &proto)) {
+    return nullptr;
+  }
+
+  RootedFunction fun(cx);
+
   gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
   FunctionFlags flags;
   bool isExtendedUnclonedSelfHostedFunctionName =
@@ -2015,35 +2026,12 @@ FunctionCreationData GenerateFunctionCreationData(
                    : FunctionFlags::INTERPRETED_GENERATOR_OR_ASYNC);
   }
 
-  return FunctionCreationData{atom,      kind,  generatorKind, asyncKind,
-                              allocKind, flags, isSelfHosting};
-}
-
-HandleAtom FunctionCreationData::getAtom(JSContext* cx) const {
-  // We can create a handle here because atoms are traced
-  // by FunctionCreationData.
-  return HandleAtom::fromMarkedLocation(&atom);
-}
-
-JSFunction* AllocNewFunction(JSContext* cx,
-                             Handle<FunctionCreationData> dataHandle) {
-  // FunctionCreationData don't move, so it is safe to grab a reference
-  // out of the handle.
-  const FunctionCreationData& data = dataHandle.get();
-
-  RootedObject proto(cx);
-  if (!GetFunctionPrototype(cx, data.generatorKind, data.asyncKind, &proto)) {
-    return nullptr;
-  }
-  RootedFunction fun(cx);
-
-
-  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr, data.getAtom(cx), proto,
-                             data.allocKind, TenuredObject);
+  fun = NewFunctionWithProto(cx, nullptr, 0, flags, nullptr, atom, proto,
+                             allocKind, TenuredObject);
   if (!fun) {
     return nullptr;
   }
-  if (data.isSelfHosting) {
+  if (isSelfHosting) {
     fun->setIsSelfHostedBuiltin();
     MOZ_ASSERT(!fun->isInterpretedLazy());
   }
@@ -2053,11 +2041,8 @@ JSFunction* AllocNewFunction(JSContext* cx,
 JSFunction* ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
                                     GeneratorKind generatorKind,
                                     FunctionAsyncKind asyncKind) {
-  Rooted<FunctionCreationData> fcd(
-      cx_, GenerateFunctionCreationData(atom, kind, generatorKind, asyncKind,
-                                        options().selfHostingMode,
-                                        pc_->isFunctionBox()));
-  return AllocNewFunction(cx_, fcd);
+  return AllocNewFunction(cx_, atom, kind, generatorKind, asyncKind,
+                          options().selfHostingMode, pc_->isFunctionBox());
 }
 
 template <class ParseHandler, typename Unit>
