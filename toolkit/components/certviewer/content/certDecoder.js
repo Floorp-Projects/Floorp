@@ -280,6 +280,7 @@ const getSCTs = (x509, criticalExtensions) => {
   if (scts) {
     scts = Object.keys(scts.timestamps).map(x => {
       let logId = scts.timestamps[x].logID.toLowerCase();
+      let sctsTimestamp = scts.timestamps[x].timestamp;
       return {
         logId: hashify(logId),
         name: ctLogNames.hasOwnProperty(logId) ? ctLogNames[logId] : undefined,
@@ -287,9 +288,8 @@ const getSCTs = (x509, criticalExtensions) => {
           "sha",
           "SHA-"
         )} ${scts.timestamps[x].signatureAlgorithm.toUpperCase()}`,
-        timestamp: `${scts.timestamps[
-          x
-        ].timestamp.toLocaleString()} (${getTimeZone()})`,
+        timestamp: `${sctsTimestamp.toLocaleString()} (${getTimeZone()})`,
+        timestampUTC: sctsTimestamp.toUTCString(),
         version: scts.timestamps[x].version + 1,
       };
     });
@@ -541,7 +541,9 @@ export const parse = async certificate => {
     },
     issuer: parseSubsidiary(x509.issuer.typesAndValues),
     notBefore: `${x509.notBefore.value.toLocaleString()} (${timeZone})`,
+    notBeforeUTC: x509.notBefore.value.toUTCString(),
     notAfter: `${x509.notAfter.value.toLocaleString()} (${timeZone})`,
+    notAfterUTC: x509.notAfter.value.toUTCString(),
     subject: parseSubsidiary(x509.subject.typesAndValues),
     serialNumber: hashify(getObjPath(x509, "serialNumber.valueBlock.valueHex")),
     signature: {
