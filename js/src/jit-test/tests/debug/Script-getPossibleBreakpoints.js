@@ -6,7 +6,7 @@ assertBreakpoints(`
 
 // ExpressionStatement with calls
 assertBreakpoints(`
-  /*S*/a();
+  /*S*/a/*B*/();
   /*S*/obj./*B*/prop();
 `);
 
@@ -14,10 +14,7 @@ assertBreakpoints(`
 assertBreakpoints(`
   "45";
   /*S*/"45" + /*B*/a();
-  /*S*/b() + "45";
-  /*S*/"45" + /*B*/a() + /*B*/b();
-  /*S*/b() + "45" + /*B*/a();
-  /*S*/b() + /*B*/a() + "45";
+  /*S*/b/*B*/() + "45";
 
   /*S*/"45" + o./*B*/a();
   /*S*/o./*B*/b() + "45";
@@ -31,10 +28,10 @@ assertBreakpoints(`
   var foo1 = /*S*/"" + o.a + "" + /*B*/b(),
       foo2 = /*S*/"45",
       foo3 = /*S*/"45" + /*B*/a(),
-      foo4 = /*S*/b() + "45",
+      foo4 = /*S*/b/*B*/() + "45",
       foo5 = /*S*/"45" + /*B*/a() + /*B*/b(),
-      foo6 = /*S*/b() + "45" + /*B*/a(),
-      foo7 = /*S*/b() + /*B*/a() + "45",
+      foo6 = /*S*/b/*B*/() + "45" + /*B*/a(),
+      foo7 = /*S*/b/*B*/() + /*B*/a() + "45",
       foo8 = /*S*/"45" + o./*B*/a(),
       foo9 = /*S*/o./*B*/b() + "45",
       foo10 = /*S*/"45" + o./*B*/a() + o./*B*/b(),
@@ -47,10 +44,10 @@ assertBreakpoints(`
   let foo1 = /*S*/"" + o.a + "" + /*B*/b(),
       foo2 = /*S*/"45",
       foo3 = /*S*/"45" + /*B*/a(),
-      foo4 = /*S*/b() + "45",
+      foo4 = /*S*/b/*B*/() + "45",
       foo5 = /*S*/"45" + /*B*/a() + /*B*/b(),
-      foo6 = /*S*/b() + "45" + /*B*/a(),
-      foo7 = /*S*/b() + /*B*/a() + "45",
+      foo6 = /*S*/b/*B*/() + "45" + /*B*/a(),
+      foo7 = /*S*/b/*B*/() + /*B*/a() + "45",
       foo8 = /*S*/"45" + o./*B*/a(),
       foo9 = /*S*/o./*B*/b() + "45",
       foo10 = /*S*/"45" + o./*B*/a() + o./*B*/b(),
@@ -63,10 +60,10 @@ assertBreakpoints(`
   const foo1 = /*S*/"" + o.a + "" + /*B*/b(),
         foo2 = /*S*/"45",
         foo3 = /*S*/"45" + /*B*/a(),
-        foo4 = /*S*/b() + "45",
+        foo4 = /*S*/b/*B*/() + "45",
         foo5 = /*S*/"45" + /*B*/a() + /*B*/b(),
-        foo6 = /*S*/b() + "45" + /*B*/a(),
-        foo7 = /*S*/b() + /*B*/a() + "45",
+        foo6 = /*S*/b/*B*/() + "45" + /*B*/a(),
+        foo7 = /*S*/b/*B*/() + /*B*/a() + "45",
         foo8 = /*S*/"45" + o./*B*/a(),
         foo9 = /*S*/o./*B*/b() + "45",
         foo10 = /*S*/"45" + o./*B*/a() + o./*B*/b(),
@@ -79,13 +76,13 @@ assertBreakpoints(`
   ;
   ;
   ;
-  /*S*/a();
+  /*S*/a/*B*/();
 `);
 
 // IfStatement
 assertBreakpoints(`
   if (/*S*/a) {}
-  if (/*S*/a()) {}
+  if (/*S*/a/*B*/()) {}
   if (/*S*/obj.prop) {}
   if (/*S*/obj./*B*/prop()) {}
   if (/*S*/"42" + a) {}
@@ -97,82 +94,82 @@ assertBreakpoints(`
 // DoWhile
 assertBreakpoints(`
   do {
-    /*S*/fn();
+    /*S*/fn/*B*/();
   } while(/*S*/a)
   do {
-    /*S*/fn();
+    /*S*/fn/*B*/();
   } while(/*S*/"42" + /*B*/a());
 `);
 
 // While
 assertBreakpoints(`
   while(/*S*/a) {
-    /*S*/fn();
+    /*S*/fn/*B*/();
   }
   while(/*S*/"42" + /*B*/a()) {
-    /*S*/fn();
+    /*S*/fn/*B*/();
   }
 `);
 
 // ForExpr
 assertBreakpoints(`
-  for (/*S*/b = 42; /*S*/c; /*S*/d) /*S*/fn();
+  for (/*S*/b = 42; /*S*/c; /*S*/d) /*S*/fn/*B*/();
 `);
 
 // ForVar
 assertBreakpoints(`
-  for (var b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn();
+  for (var b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn/*B*/();
 `);
 
 // ForLet
 assertBreakpoints(`
-  for (let b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn();
+  for (let b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn/*B*/();
 `);
 
 // ForConst
 assertBreakpoints(`
-  for (const b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn();
+  for (const b = /*S*/42; /*S*/c; /*S*/d) /*S*/fn/*B*/();
 `);
 
 // ForInExpr
 assertBreakpoints(`
-  for (b in /*S*/d) /*S*/fn();
+  for (b in /*S*/d) /*S*/fn/*B*/();
 `);
 // ForInVar
 assertBreakpoints(`
-  for (var b in /*S*/d) /*S*/fn();
+  for (var b in /*S*/d) /*S*/fn/*B*/();
 `);
 // ForInLet
 assertBreakpoints(`
-  for (let b in /*S*/d) /*S*/fn();
+  for (let b in /*S*/d) /*S*/fn/*B*/();
 `);
 // ForInConst
 assertBreakpoints(`
-  for (const b in /*S*/d) /*S*/fn();
+  for (const b in /*S*/d) /*S*/fn/*B*/();
 `);
 
 // ForOfExpr
 assertBreakpoints(`
-  for (b of /*S*/d) /*S*/fn();
+  for (b of /*S*/d) /*S*/fn/*B*/();
 `);
 // ForOfVar
 assertBreakpoints(`
-  for (var b of /*S*/d) /*S*/fn();
+  for (var b of /*S*/d) /*S*/fn/*B*/();
 `);
 // ForOfLet
 assertBreakpoints(`
-  for (let b of /*S*/d) /*S*/fn();
+  for (let b of /*S*/d) /*S*/fn/*B*/();
 `);
 // ForOfConst
 assertBreakpoints(`
-  for (const b of /*S*/d) /*S*/fn();
+  for (const b of /*S*/d) /*S*/fn/*B*/();
 `);
 
 // SwitchStatement
 assertBreakpoints(`
   switch (/*S*/d) {
     case 42:
-      /*S*/fn();
+      /*S*/fn/*B*/();
   }
 `);
 
@@ -198,7 +195,7 @@ assertBreakpoints(`
 // WithStatement
 assertBreakpoints(`
   with (/*S*/a) {
-    /*S*/fn();
+    /*S*/fn/*B*/();
   }
 `);
 
@@ -217,7 +214,7 @@ assertBreakpoints(`
 // BlockStatent wrapper
 assertBreakpoints(`
   {
-    /*S*/a();
+    /*S*/a/*B*/();
   }
 `);
 
@@ -232,7 +229,7 @@ assertBreakpoints(`
   /*S*/void /*B*/a();
 `);
 assertBreakpoints(`
-  /*S*/a() + /*B*/b();
+  /*S*/a/*B*/() + /*B*/b();
 `);
 assertBreakpoints(`
   for (
@@ -250,11 +247,11 @@ assertBreakpoints(`
       (yield console./*B*/log('mid', /*B*/b())),
       (console./*B*/log('after', /*B*/a()))
     );
-    var foo2 = /*S*/a() + /*B*/b();
+    var foo2 = /*S*/a/*B*/() + /*B*/b();
     /*S*/console./*B*/log(foo);
   /*B*/}
   var i = /*S*/0;
-  for (var foo of /*S*/gen()) {
+  for (var foo of /*S*/gen/*B*/()) {
     /*S*/console./*B*/log(i++);
   }
 `);
@@ -303,17 +300,17 @@ assertBreakpoints(`
   function fn2(
     [a, b] = (/*B*/a(), /*B*/b())
   ) {
-    /*S*/a();
-    /*S*/b();
+    /*S*/a/*B*/();
+    /*S*/b/*B*/();
   /*B*/}
 
-  ({ a, b } = (/*S*/a(), /*B*/b()));
+  ({ a, b } = (/*S*/a/*B*/(), /*B*/b()));
 `);
 assertBreakpoints(`
   /*S*/o.a + "42" + /*B*/a() + /*B*/b();
 `);
 assertBreakpoints(`
-  /*S*/a();
+  /*S*/a/*B*/();
   /*S*/o./*B*/a(/*B*/b());
 `);
 assertBreakpoints(`
@@ -341,7 +338,7 @@ assertBreakpoints(`
 function assertBreakpoints(expected) {
   const input = expected.replace(/\/\*[BS]\*\//g, "");
 
-  var global = newGlobal({newCompartment: true});
+  var global = newGlobal({ newCompartment: true });
   var dbg = Debugger(global);
   dbg.onDebuggerStatement = function(frame) {
     const fScript = frame.environment.parent.getVariable("f").script;
@@ -382,7 +379,12 @@ function annotateOffsets(code, positions) {
   for (const { lineNumber, columnNumber, isStepStart } of positions) {
     const offset = offsetLookup(lineNumber, columnNumber);
 
-    output = "/*" + (isStepStart ? "S" : "B") + "*/" + code.slice(offset, last) + output;
+    output =
+      "/*" +
+      (isStepStart ? "S" : "B") +
+      "*/" +
+      code.slice(offset, last) +
+      output;
     last = offset;
   }
   return code.slice(0, last) + output;
