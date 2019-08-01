@@ -2172,13 +2172,17 @@ bool Notification::CreateWorkerRef() {
 class CheckLoadRunnable final : public WorkerMainThreadRunnable {
   nsresult mRv;
   nsCString mScope;
+  ServiceWorkerRegistrationDescriptor mDescriptor;
 
  public:
-  explicit CheckLoadRunnable(WorkerPrivate* aWorker, const nsACString& aScope)
+  explicit CheckLoadRunnable(
+      WorkerPrivate* aWorker, const nsACString& aScope,
+      const ServiceWorkerRegistrationDescriptor& aDescriptor)
       : WorkerMainThreadRunnable(
             aWorker, NS_LITERAL_CSTRING("Notification :: Check Load")),
         mRv(NS_ERROR_DOM_SECURITY_ERR),
-        mScope(aScope) {}
+        mScope(aScope),
+        mDescriptor(aDescriptor) {}
 
   bool MainThreadRun() override {
     nsIPrincipal* principal = mWorkerPrivate->GetPrincipal();
@@ -2188,21 +2192,10 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable {
       return true;
     }
 
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    if (!swm) {
-      // browser shutdown began
-      mRv = NS_ERROR_FAILURE;
-      return true;
-    }
+    auto activeWorker = mDescriptor.GetActive();
 
-    RefPtr<ServiceWorkerRegistrationInfo> registration =
-        swm->GetRegistration(principal, mScope);
-
-    // This is coming from a ServiceWorkerRegistration.
-    MOZ_ASSERT(registration);
-
-    if (!registration->GetActive() ||
-        registration->GetActive()->ID() != mWorkerPrivate->ServiceWorkerID()) {
+    if (!activeWorker ||
+        activeWorker.ref().Id() != mWorkerPrivate->ServiceWorkerID()) {
       mRv = NS_ERROR_NOT_AVAILABLE;
     }
 
@@ -2216,7 +2209,7 @@ class CheckLoadRunnable final : public WorkerMainThreadRunnable {
 already_AddRefed<Promise> Notification::ShowPersistentNotification(
     JSContext* aCx, nsIGlobalObject* aGlobal, const nsAString& aScope,
     const nsAString& aTitle, const NotificationOptions& aOptions,
-    ErrorResult& aRv) {
+    const ServiceWorkerRegistrationDescriptor& aDescriptor, ErrorResult& aRv) {
   MOZ_ASSERT(aGlobal);
 
   // Validate scope.
@@ -2247,8 +2240,9 @@ already_AddRefed<Promise> Notification::ShowPersistentNotification(
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
-    RefPtr<CheckLoadRunnable> loadChecker =
-        new CheckLoadRunnable(worker, NS_ConvertUTF16toUTF8(aScope));
+
+    RefPtr<CheckLoadRunnable> loadChecker = new CheckLoadRunnable(
+        worker, NS_ConvertUTF16toUTF8(aScope), aDescriptor);
     loadChecker->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return nullptr;

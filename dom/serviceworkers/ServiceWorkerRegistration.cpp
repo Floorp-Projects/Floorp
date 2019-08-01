@@ -288,7 +288,7 @@ already_AddRefed<Promise> ServiceWorkerRegistration::ShowNotification(
   }
 
   RefPtr<Promise> p = Notification::ShowPersistentNotification(
-      aCx, global, scope, aTitle, aOptions, aRv);
+      aCx, global, scope, aTitle, aOptions, mDescriptor, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
