@@ -884,8 +884,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared {
   }
   Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
     Register bi = value.payloadReg();
-    cmpPtr(Operand(bi, BigInt::offsetOfLengthSignAndReservedBits()),
-           ImmWord(0));
+    cmp32(Operand(bi, BigInt::offsetOfDigitLength()), Imm32(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
 

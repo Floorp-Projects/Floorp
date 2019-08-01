@@ -1787,14 +1787,12 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
   Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
     vixl::UseScratchRegisterScope temps(this);
     const Register scratch = temps.AcquireX().asUnsized();
-    const ARMRegister scratch64(scratch, 64);
 
     MOZ_ASSERT(value.valueReg() != scratch);
 
     unboxBigInt(value, scratch);
-    Ldr(scratch64,
-        MemOperand(scratch64, BigInt::offsetOfLengthSignAndReservedBits()));
-    Cmp(scratch64, Operand(0));
+    load32(Address(scratch, BigInt::offsetOfDigitLength()), scratch);
+    cmp32(scratch, Imm32(0));
     return truthy ? Condition::NonZero : Condition::Zero;
   }
   Condition testInt32(Condition cond, const BaseIndex& src) {

@@ -577,9 +577,8 @@ void MacroAssembler::branchTestBigIntTruthy(bool b, const ValueOperand& value,
                                             Label* label) {
   SecondScratchRegisterScope scratch2(*this);
   unboxBigInt(value, scratch2);
-  loadPtr(Address(scratch2, BigInt::offsetOfLengthSignAndReservedBits()),
-          scratch2);
-  ma_b(scratch2, ImmWord(0), label, b ? NotEqual : Equal);
+  load32(Address(scratch2, BigInt::offsetOfDigitLength()), scratch2);
+  ma_b(scratch2, Imm32(0), label, b ? NotEqual : Equal);
 }
 
 void MacroAssembler::branchTestNull(Condition cond, const ValueOperand& value,
