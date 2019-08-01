@@ -50,6 +50,9 @@
             <div class="category" id="category-rcwn">
                 <span class="category-name" data-l10n-id="rcwn"/>
             </div>
+            <div class="category" id="category-networkid">
+                <span class="category-name" data-l10n-id="networkid"/>
+            </div>
         </div>
         <div class="main-content">
             <div class="header">
@@ -239,6 +242,25 @@
               <input type="text" name="log-modules" id="log-modules" value="timestamp,sync,nsHttp:5,cache2:5,nsSocketTransport:5,nsHostResolver:5"></input>
               <button id="set-log-modules-button" data-l10n-id="set-log-modules"/>
             </div>
+          </div>
+
+          <div id="networkid" class="tab" hidden="true">
+              <table>
+                  <thead>
+                      <tr>
+                          <th data-l10n-id="networkid-isUp"/>
+                          <th data-l10n-id="networkid-statusKnown"/>
+                          <th data-l10n-id="networkid-id"/>
+                      </tr>
+                  </thead>
+                  <tbody id="networkid_content">
+                      <tr>
+                          <td id="networkid_isUp"> </td>
+                          <td id="networkid_statusKnown"> </td>
+                          <td id="networkid_id"> </td>
+                      </tr>
+                  </tbody>
+              </table>
           </div>
 
         </div>
