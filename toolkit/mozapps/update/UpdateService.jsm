@@ -106,6 +106,10 @@ const STATE_SUCCEEDED = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED = "failed";
 
+// BITS will keep retrying a download after transient errors, unless this much
+// time has passed since there has been download progress.
+const BITS_NO_PROGRESS_TIMEOUT_SECS = 3600; // 1 hour
+
 // These value control how frequently we get updates from the BITS client on
 // the progress made downloading. The difference between the two is that the
 // active interval is the one used when the user is watching. The idle interval
@@ -4628,6 +4632,7 @@ Downloader.prototype = {
           this._patch.URL,
           FILE_UPDATE_MAR,
           Ci.nsIBits.PROXY_PRECONFIG,
+          BITS_NO_PROGRESS_TIMEOUT_SECS,
           monitorInterval,
           this,
           null
