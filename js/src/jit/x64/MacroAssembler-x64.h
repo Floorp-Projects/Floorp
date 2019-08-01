@@ -577,9 +577,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   void loadPtr(const BaseIndex& src, Register dest) {
     movq(Operand(src), dest);
   }
-  void loadPrivate(const Address& src, Register dest) {
-    loadPtr(src, dest);
-  }
+  void loadPrivate(const Address& src, Register dest) { loadPtr(src, dest); }
   void load32(AbsoluteAddress address, Register dest) {
     if (X86Encoding::IsAddressImmediate(address.addr)) {
       movl(Operand(address), dest);
@@ -951,8 +949,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared {
   Condition testBigIntTruthy(bool truthy, const ValueOperand& value) {
     ScratchRegisterScope scratch(asMasm());
     unboxBigInt(value, scratch);
-    cmpPtr(Operand(scratch, BigInt::offsetOfLengthSignAndReservedBits()),
-           ImmWord(0));
+    cmp32(Operand(scratch, BigInt::offsetOfDigitLength()), Imm32(0));
     return truthy ? Assembler::NotEqual : Assembler::Equal;
   }
 
