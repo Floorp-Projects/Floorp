@@ -34,10 +34,10 @@ NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
 
 static mozilla::LazyLogModule sCSMLog("CSMLog");
 
-// This whitelist contains files that are permanently allowed to use eval()-like
+// This allowlist contains files that are permanently allowed to use eval()-like
 // functions. It is supposed to be restricted to files that are exclusively used
 // in testing contexts.
-static nsLiteralCString evalWhitelist[] = {
+static nsLiteralCString evalAllowlist[] = {
     // Test-only third-party library
     NS_LITERAL_CSTRING("resource://testing-common/sinon-7.2.7.js"),
     // Test-only third-party library
@@ -195,8 +195,8 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
       fileName_.SetLength(fileNameIndex);
     }
 
-    for (const nsLiteralCString& whitelistEntry : evalWhitelist) {
-      if (fileName_.Equals(whitelistEntry)) {
+    for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
+      if (fileName_.Equals(allowlistEntry)) {
         return;
       }
     }
