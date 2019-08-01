@@ -401,12 +401,6 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     JSContext* cx, JS::HandleValue aValue) {
   MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
-#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
-  nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
-  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(subjectPrincipal,
-                                                              cx);
-#endif
-
   // Get the window, if any, corresponding to the current global
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   if (nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(cx)) {
@@ -429,24 +423,35 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   bool reportViolation = false;
   nsresult rv = csp->GetAllowsEval(&reportViolation, &evalOK);
 
-  if (NS_FAILED(rv)) {
-    NS_WARNING("CSP: failed to get allowsEval");
-    return true;  // fail open to not break sites.
-  }
-
-  if (reportViolation) {
+  // A little convoluted. We want the scriptSample for a) reporting a violation
+  // or b) passing it to AssertEvalNotUsingSystemPrincipal. So do the work to
+  // get it if either of those cases is true.
+  nsAutoJSString scriptSample;
+  nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
+  if (reportViolation || subjectPrincipal->IsSystemPrincipal()) {
     JS::Rooted<JSString*> jsString(cx, JS::ToString(cx, aValue));
     if (NS_WARN_IF(!jsString)) {
       JS_ClearPendingException(cx);
       return false;
     }
 
-    nsAutoJSString scriptSample;
     if (NS_WARN_IF(!scriptSample.init(cx, jsString))) {
       JS_ClearPendingException(cx);
       return false;
     }
+  }
 
+#if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
+  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
+      cx, subjectPrincipal, scriptSample);
+#endif
+
+  if (NS_FAILED(rv)) {
+    NS_WARNING("CSP: failed to get allowsEval");
+    return true;  // fail open to not break sites.
+  }
+
+  if (reportViolation) {
     JS::AutoFilename scriptFilename;
     nsAutoString fileName;
     unsigned lineNum = 0;
