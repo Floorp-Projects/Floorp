@@ -135,7 +135,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'TOOLS_DISABLE': 'true',
         'MOZ_AUTOMATION': '1',
         'MOZ_FETCHES_DIR': workspace,
         'GECKO_PATH': gecko_path,
