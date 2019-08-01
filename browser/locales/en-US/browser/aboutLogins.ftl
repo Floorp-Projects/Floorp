@@ -25,8 +25,8 @@ menu-menuitem-preferences =
   }
 menu-menuitem-feedback = Send Feedback
 menu-menuitem-faq = Frequently Asked Questions
-menu-menuitem-android-app = { -lockwise-brand-short-name } for Android
-menu-menuitem-iphone-app = { -lockwise-brand-short-name } for iPhone and iPad
+menu-menuitem-download-android = Lockwise for Android
+menu-menuitem-download-iphone = Lockwise for iPhone and iPad
 
 ## Login List
 
@@ -41,19 +41,9 @@ login-list-sort-label-text = Sort by:
 login-list-name-option = Name (A-Z)
 login-list-last-changed-option = Last Modified
 login-list-last-used-option = Last Used
-login-list-intro-title = No logins found
-login-list-intro-description = When you save a password in { -brand-product-name }, it will show up here.
 login-list-item-title-new-login = New Login
 login-list-item-subtitle-new-login = Enter your login credentials
 login-list-item-subtitle-missing-username = (no username)
-
-## Introduction screen
-
-login-intro-heading = Looking for your saved logins? Set up { -sync-brand-short-name }.
-login-intro-description = If you saved your logins to { -brand-product-name } on a different device, here’s how to get them here:
-login-intro-instruction-fxa = Create or sign in to your { -fxaccount-brand-name } on the device where your logins are saved
-login-intro-instruction-fxa-settings = Make sure you’ve selected the Logins checkbox in { -sync-brand-short-name } Settings
-login-intro-instruction-faq = Visit { -lockwise-brand-short-name } <a data-l10n-name="faq">frequently asked questions</a> for more help
 
 ## Login
 

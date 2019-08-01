@@ -25,83 +25,50 @@ add_task(async function test_show_logins() {
         loginList._loginGuidsSortedOrder.includes(logins[1].guid)
       );
     }, "Waiting for logins to be displayed");
-    ok(
-      !content.document.body.classList.contains("no-logins"),
-      "Should no longer be in no logins view"
-    );
     ok(loginFound, "Newly added logins should be added to the page");
   });
 });
 
 add_task(async function test_login_item() {
   let browser = gBrowser.selectedBrowser;
-
-  function waitForDelete() {
-    return new Promise(resolve => {
-      browser.messageManager.addMessageListener(
+  let deleteLoginMessageReceived = false;
+  browser.messageManager.addMessageListener(
+    "AboutLogins:DeleteLogin",
+    function onMsg() {
+      deleteLoginMessageReceived = true;
+      browser.messageManager.removeMessageListener(
         "AboutLogins:DeleteLogin",
-        function onMsg() {
-          resolve(true);
-          browser.messageManager.removeMessageListener(
-            "AboutLogins:DeleteLogin",
-            onMsg
-          );
-        }
+        onMsg
       );
-    });
-  }
-
-  function deleteFirstLogin() {
-    return ContentTask.spawn(browser, null, async () => {
-      let loginList = content.document.querySelector("login-list");
-      let loginListItem = loginList.shadowRoot.querySelector(
-        ".login-list-item[data-guid]:not([hidden])"
-      );
-      info("Clicking on the first login");
-      loginListItem.click();
-
-      let loginItem = Cu.waiveXrays(
-        content.document.querySelector("login-item")
-      );
-      let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
-        return loginItem._login.guid == loginListItem.dataset.guid;
-      }, "Waiting for login item to get populated");
-      ok(loginItemPopulated, "The login item should get populated");
-
-      let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
-      deleteButton.click();
-
-      let confirmDeleteDialog = Cu.waiveXrays(
-        content.document.querySelector("confirmation-dialog")
-      );
-      let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
-        ".confirm-button"
-      );
-      confirmButton.click();
-    });
-  }
-
-  let onDeletePromise = waitForDelete();
-
-  await deleteFirstLogin();
-  await onDeletePromise;
-
-  onDeletePromise = waitForDelete();
-
-  await ContentTask.spawn(browser, null, async () => {
-    ok(
-      !content.document.body.classList.contains("no-logins"),
-      "Should not be in no logins view as there is still one login"
+    }
+  );
+  await ContentTask.spawn(browser, [TEST_LOGIN1, TEST_LOGIN2], async logins => {
+    let loginList = content.document.querySelector("login-list");
+    let loginListItem = loginList.shadowRoot.querySelector(
+      ".login-list-item[data-guid]"
     );
-  });
+    info("Clicking on the first login");
+    loginListItem.click();
 
-  await deleteFirstLogin();
-  await onDeletePromise;
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let loginItemPopulated = await ContentTaskUtils.waitForCondition(() => {
+      return loginItem._login.guid == loginListItem.dataset.guid;
+    }, "Waiting for login item to get populated");
+    ok(loginItemPopulated, "The login item should get populated");
 
-  await ContentTask.spawn(browser, null, async () => {
-    ok(
-      content.document.body.classList.contains("no-logins"),
-      "Should be in no logins view as all logins got deleted"
+    let deleteButton = loginItem.shadowRoot.querySelector(".delete-button");
+    deleteButton.click();
+
+    let confirmDeleteDialog = Cu.waiveXrays(
+      content.document.querySelector("confirmation-dialog")
     );
+    let confirmButton = confirmDeleteDialog.shadowRoot.querySelector(
+      ".confirm-button"
+    );
+    confirmButton.click();
   });
+  ok(
+    deleteLoginMessageReceived,
+    "Clicking the delete button should send the AboutLogins:DeleteLogin messsage"
+  );
 });
