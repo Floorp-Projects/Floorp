@@ -27,7 +27,6 @@ class HistoryStore(initialState: HistoryState) :
  * Actions to dispatch through the `HistoryStore` to modify `HistoryState` through the reducer.
  */
 sealed class HistoryAction : Action {
-    data class Change(val list: List<HistoryItem>) : HistoryAction()
     object ExitEditMode : HistoryAction()
     data class AddItemForRemoval(val item: HistoryItem) : HistoryAction()
     data class RemoveItemForRemoval(val item: HistoryItem) : HistoryAction()
@@ -53,7 +52,6 @@ data class HistoryState(val items: List<HistoryItem>, val mode: Mode) : State {
  */
 fun historyStateReducer(state: HistoryState, action: HistoryAction): HistoryState {
     return when (action) {
-        is HistoryAction.Change -> state.copy(mode = HistoryState.Mode.Normal, items = action.list)
         is HistoryAction.AddItemForRemoval -> {
             val mode = state.mode
             if (mode is HistoryState.Mode.Editing) {

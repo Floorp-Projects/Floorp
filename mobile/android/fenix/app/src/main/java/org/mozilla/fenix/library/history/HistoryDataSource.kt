@@ -12,7 +12,11 @@ import org.mozilla.fenix.ext.getHostFromUrl
 class HistoryDataSource(
     private val historyProvider: PagedHistoryProvider
 ) : ItemKeyedDataSource<Int, HistoryItem>() {
-    override fun getKey(item: HistoryItem): Int = item.id
+
+    // Because the pagination is not based off of they key
+    // we want to start at 1, not 0 to be able to send the correct offset
+    // to the `historyProvider.getHistory` call.
+    override fun getKey(item: HistoryItem): Int = item.id + 1
 
     override fun loadInitial(
         params: LoadInitialParams<Int>,
@@ -43,9 +47,7 @@ class HistoryDataSource(
                     ?: visit.url.getHostFromUrl()
                     ?: visit.url
 
-                // We want IDs to start at 1, not 0 to be able to send the correct offset
-                // to the `historyProvider.getHistory` call.
-                HistoryItem(offset + id + 1, title, visit.url, visit.visitTime)
+                HistoryItem(offset + id, title, visit.url, visit.visitTime)
             }
         }
     }
