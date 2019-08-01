@@ -15,16 +15,16 @@ ln -s "${GECKO_PATH}/mach" "${TOOLS_DIR}"
 source "${GECKO_PATH}/taskcluster/scripts/misc/tooltool-download.sh"
 
 MACOS_SYSROOT="${TOOLS_DIR}/MacOSX10.11.sdk"
-CLANGDIR="${TOOLS_DIR}/clang"
+CLANGDIR="${MOZ_FETCHES_DIR}/clang"
 
 # Deploy the wrench dependencies
-mv ${TOOLS_DIR}/wrench-deps/{vendor,.cargo} "${GECKO_PATH}/gfx/wr/"
+mv ${MOZ_FETCHES_DIR}/wrench-deps/{vendor,.cargo} "${GECKO_PATH}/gfx/wr/"
 
 # Building wrench with the `headless` feature also builds the osmesa-src crate,
 # which includes building C++ code. We have to do a bunch of shenanigans
 # to make this cross-compile properly.
 
-pushd "${TOOLS_DIR}/cctools/bin"
+pushd "${MOZ_FETCHES_DIR}/cctools/bin"
 
 # Add a pkg-config cross-compile wrapper. Without this, the configure script
 # will use pkg-config from the host, which will find host libraries that are
@@ -47,7 +47,7 @@ popd
 # reason we need to add clang/bin to the path here, we should be able to
 # instead set LLVM_CONFIG=no to disable llvmpipe, but that might impact
 # other parts of the build.
-export PATH="${TOOLS_DIR}/rustc/bin:${TOOLS_DIR}/cctools/bin:${TOOLS_DIR}/llvm-dsymutil/bin:${PATH}"
+export PATH="${MOZ_FETCHES_DIR}/rustc/bin:${MOZ_FETCHES_DIR}/cctools/bin:${MOZ_FETCHES_DIR}/llvm-dsymutil/bin:${PATH}"
 
 # The x86_64-darwin11-ld linker from cctools requires libraries provided
 # by clang, so we need to set LD_LIBRARY_PATH for that to work.
@@ -59,7 +59,7 @@ export ZLIB_CFLAGS="-I${MACOS_SYSROOT}/usr/include"
 export ZLIB_LIBS="-L${MACOS_SYSROOT}/usr/lib -lz"
 
 # Set up compiler and flags for cross-compile
-LDPATH="${TOOLS_DIR}/cctools/bin/${TARGET_TRIPLE}-ld"
+LDPATH="${MOZ_FETCHES_DIR}/cctools/bin/${TARGET_TRIPLE}-ld"
 export CC="${CLANGDIR}/bin/clang"
 export CFLAGS="-fuse-ld=${LDPATH} -target ${TARGET_TRIPLE} -mmacosx-version-min=10.7 --rtlib=compiler-rt --sysroot ${MACOS_SYSROOT}"
 export CXX="${CLANGDIR}/bin/clang++"
