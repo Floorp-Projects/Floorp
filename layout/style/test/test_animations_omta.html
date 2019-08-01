@@ -2715,6 +2715,36 @@ addAsyncAnimTest(async function() {
   done_div();
 });
 
+// Multiple transform-like properties animation. The motion-path shouldn't be
+// overridden by other transform animations. So, in this case, we should fall
+// back transform animations to main thread if offset-path presents.
+// FIXME: Bug 1429305: Run animations of motion path on the compositor thread.
+addAsyncAnimTest(async function() {
+  new_div("translate: 0px; " +
+          "offset-path: path('M50 0v100');" +
+          "transform: translateX(0px); " +
+          "transition: all 10s linear");
+  await waitForPaintsFlushed();
+
+  gDiv.style.translate = "0px 100px";
+  gDiv.style.transform = "translateX(-100px)";
+  await waitForPaintsFlushed();
+
+  omta_is("translate", "0px" , RunningOn.MainThread,
+          "translate transition doesn't run on compositor thread");
+  omta_is("transform", { tx: 0 }, RunningOn.MainThread,
+          "transform transition doesn't run on compositor thread");
+
+  advance_clock(5000);
+
+  omta_is("translate", "0px 50px" , RunningOn.MainThread,
+          "translate on main thread at 5s");
+  omta_is("transform", { tx: -50 }, RunningOn.MainThread,
+          "transform on main thread at 5s");
+
+  done_div();
+});
+
 
 </script>
 </html>

@@ -1142,6 +1142,77 @@ promise_test(async t => {
    'compositor because one of the transform-like property is overridden ' +
    'by an !important rule');
 
+// FIXME: Bug 1429305: Run animations of motion path on the compositor thread.
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation = div.animate({ translate: ['0px', '100px'],
+                                  rotate: ['0deg', '45deg'],
+                                  transform: ['translate(0px)',
+                                              'translate(100px)'] },
+                                100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation,
+    'Animation is running on the compositor');
+
+  div.style.offsetPath = 'path("M50 0v100")';
+  getComputedStyle(div).offsetPath;
+
+  await waitForPaints();
+
+  const properties = animation.effect.getProperties();
+  properties.forEach(property => {
+    assert_false(property.runningOnCompositor,
+                 property.property + ' is not running on the compositor');
+  });
+}, 'Multiple transform-like properties animation does not runs on the ' +
+   'compositor because the motion path exists');
+
+// FIXME: Bug 1429305: Run animations of motion path on the compositor thread.
+promise_test(async t => {
+  const div = addDiv(t);
+  const animation1 = div.animate({ opacity: ['0.0', '1.0'] },
+                                 100 * MS_PER_SEC);
+  const animation2 = div.animate({ transform: ['translate(0px)',
+                                               'translate(100px)'] },
+                                 100 * MS_PER_SEC);
+
+  await waitForAnimationReadyToRestyle(animation1);
+  await waitForAnimationReadyToRestyle(animation2);
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation1,
+    'Opacity animation is running on the compositor');
+  assert_animation_is_running_on_compositor(animation2,
+    'Transform animation is running on the compositor');
+
+  div.style.offsetPath = 'path("M50 0v100")';
+  getComputedStyle(div).offsetPath;
+
+  await waitForPaints();
+
+  assert_animation_is_running_on_compositor(animation1,
+    'Opacity animation is still running on the compositor');
+  assert_animation_is_not_running_on_compositor(animation2,
+    'Transform animation is not running on the compositor');
+
+  const properties1 = animation1.effect.getProperties();
+  properties1.forEach(property => {
+    assert_true(property.runningOnCompositor,
+                property.property + ' is running on the compositor');
+  });
+
+  const properties2 = animation2.effect.getProperties();
+  properties2.forEach(property => {
+    assert_false(property.runningOnCompositor,
+                 property.property + ' is not running on the compositor');
+  });
+}, 'Opacity animation still runs on the compositor even if the motion path ' +
+   'exists, but transform animation is not running on the compositor in this ' +
+   'case');
+
 promise_test(async t => {
   const div = addDiv(t);
   const animation = div.animate({ rotate: ['0deg', '45deg'],
