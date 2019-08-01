@@ -919,7 +919,7 @@ Accessible* nsAccessibilityService::CreateAccessible(nsINode* aNode,
   if (!frame || !frame->StyleVisibility()->IsVisible()) {
     // display:contents element doesn't have a frame, but retains the semantics.
     // All its children are unaffected.
-    if (content->IsElement() && content->AsElement()->IsDisplayContents()) {
+    if (nsCoreUtils::IsDisplayContents(content)) {
       const HTMLMarkupMapInfo* markupMap =
           mHTMLMarkupMap.Get(content->NodeInfo()->NameAtom());
       if (markupMap && markupMap->new_func) {
