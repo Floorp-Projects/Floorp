@@ -17,7 +17,7 @@ class MixedContentConfig(object):
                                  '%(delivery_type)s/' + \
                                  '%(delivery_value)s/' + \
                                  '%(origin)s/' + \
-                                 '%(context_nesting)s/' + \
+                                 'top-level/' + \
                                  '%(redirection)s/'
 
         self.test_file_path_pattern = self.selection_pattern + \
@@ -28,7 +28,7 @@ class MixedContentConfig(object):
 delivery_value: %(delivery_value)s
 origin: %(origin)s
 source_scheme: %(source_protocol)s
-context_nesting: %(context_nesting)s
+context_nesting: top-level
 redirection: %(redirection)s
 subresource: %(subresource)s
 expectation: %(expectation)s

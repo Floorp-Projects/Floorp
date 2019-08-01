@@ -12,7 +12,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "opt-in",
-          "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
             "blockable": [],
@@ -27,7 +26,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": null,
-          "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
             "blockable": [],
@@ -50,7 +48,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "opt-in",
-          "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
             "blockable": "*",
@@ -65,7 +62,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": null,
-          "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
             "blockable": "*",
@@ -80,7 +76,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
-          "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
             "blockable": "websocket-request",
@@ -103,7 +98,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
-          "context_nesting": "top-level",
           "redirection": ["no-redirect", "keep-scheme-redirect"],
           "subresource": {
             "blockable": "*",
@@ -118,7 +112,6 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
-          "context_nesting": "top-level",
           "redirection": ["no-redirect", "keep-scheme-redirect"],
           "subresource": {
             "blockable": "websocket-request",
@@ -140,7 +133,6 @@
       "source_protocol": "*",
       "delivery_type": "http-rp",
       "delivery_value": null,
-      "context_nesting": "*",
       "redirection": "*",
       "subresource": {
         "blockable": "*",
@@ -155,7 +147,6 @@
       "source_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
-      "context_nesting": "*",
       "redirection": "*",
       "subresource": {
         "blockable": [
@@ -172,7 +163,6 @@
       "source_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
-      "context_nesting": "*",
       "redirection": "*",
       "subresource": {
         "blockable": [
@@ -194,7 +184,6 @@
       "source_protocol": "*",
       "delivery_type": "meta",
       "delivery_value": "opt-in",
-      "context_nesting": "*",
       "redirection": ["keep-scheme-redirect", "swap-scheme-redirect"],
       "subresource": {
         "blockable": "*",
@@ -226,10 +215,6 @@
       "no-redirect",
       "keep-scheme-redirect",
       "swap-scheme-redirect"
-    ],
-    "context_nesting": [
-      "top-level",
-      "sub-level"
     ],
     "origin": [
       "same-host-https",
