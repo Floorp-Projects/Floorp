@@ -101,4 +101,23 @@ async_test(t => {
         toast.remove();
     });
 }, 'showToast closes after user specified 50ms');
+
+// type
+test(() => {
+    const toast = showToast('Message', {type: 'warning'});
+    assert_equals(toast.type, 'warning');
+    assert_equals(toast.getAttribute('type'), 'warning');
+}, 'passing a valid type option to showToast sets the type property and attribute');
+
+test(() => {
+    const toast = showToast('Message', {type: 'test'});
+    assert_equals(toast.type, '');
+    assert_equals(toast.getAttribute('type'), 'test');
+}, 'passing an invalid type option to showToast sets the type attribute, but not the property');
+
+test(() => {
+    const toast = showToast('Message');
+    assert_equals(toast.type, '');
+    assert_false(toast.hasAttribute('type'));
+}, 'passing nothing as the type option to showToast does not set the type attribute or property');
 </script>
