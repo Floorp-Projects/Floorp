@@ -185,7 +185,8 @@ static const DllBlockInfo gBlockedInprocDlls[] = {
  * This is the blocklist for known "bad" remote clients that instantiate a11y.
  */
 static const char* gBlockedRemoteClients[] = {
-    "tbnotifier.exe"  // Ask.com Toolbar, bug 1453876
+    "tbnotifier.exe",  // Ask.com Toolbar, bug 1453876
+    "flow.exe"         // Conexant Flow causes performance issues, bug 1569712
 };
 
 /**
