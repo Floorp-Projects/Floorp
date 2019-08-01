@@ -47,7 +47,7 @@ private fun normalModeAdapterItems(
 
         // If the collection is expanded, we want to add all of its tabs beneath it in the adapter
         collections.map {
-            AdapterItem.CollectionItem(it, expandedCollections.contains(it.id))
+            AdapterItem.CollectionItem(it, expandedCollections.contains(it.id), tabs.isNotEmpty())
         }.forEach {
             items.add(it)
             if (it.expanded) {

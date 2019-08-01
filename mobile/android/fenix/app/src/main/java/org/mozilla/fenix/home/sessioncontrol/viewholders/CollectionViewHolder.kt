@@ -34,10 +34,11 @@ class CollectionViewHolder(
 
     private lateinit var collection: TabCollection
     private var expanded = false
+    private var sessionHasOpenTabs = false
     private var collectionMenu: CollectionItemMenu
 
     init {
-        collectionMenu = CollectionItemMenu(view.context) {
+        collectionMenu = CollectionItemMenu(view.context, sessionHasOpenTabs) {
             when (it) {
                 is CollectionItemMenu.Item.DeleteCollection -> actionEmitter.onNext(CollectionAction.Delete(collection))
                 is CollectionItemMenu.Item.AddTab -> actionEmitter.onNext(CollectionAction.AddTab(collection))
@@ -68,9 +69,11 @@ class CollectionViewHolder(
         }
     }
 
-    fun bindSession(collection: TabCollection, expanded: Boolean) {
+    fun bindSession(collection: TabCollection, expanded: Boolean, sessionHasOpenTabs: Boolean) {
         this.collection = collection
         this.expanded = expanded
+        this.sessionHasOpenTabs = sessionHasOpenTabs
+        collectionMenu.sessionHasOpenTabs = sessionHasOpenTabs
         updateCollectionUI()
     }
 
@@ -114,6 +117,7 @@ class CollectionViewHolder(
 
 class CollectionItemMenu(
     private val context: Context,
+    var sessionHasOpenTabs: Boolean,
     private val onItemTapped: (Item) -> Unit = {}
 ) {
     sealed class Item {
@@ -137,7 +141,7 @@ class CollectionItemMenu(
                 context.getString(R.string.add_tab)
             ) {
                 onItemTapped.invoke(Item.AddTab)
-            },
+            }.apply { visible = { sessionHasOpenTabs } },
             SimpleBrowserMenuItem(
                 context.getString(R.string.collection_rename)
             ) {
