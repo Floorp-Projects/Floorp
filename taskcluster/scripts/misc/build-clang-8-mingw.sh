@@ -22,7 +22,6 @@ else
 fi
 
 WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 
 TOOLCHAIN_DIR=$WORKSPACE/moz-toolchain
 INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
@@ -35,7 +34,7 @@ make_flags="-j$(nproc)"
 # so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
 default_win32_winnt=0x601
 
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 patch_file="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"

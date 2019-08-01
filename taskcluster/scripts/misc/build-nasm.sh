@@ -1,17 +1,16 @@
 #!/bin/bash
 set -x -e -v
 
-WORKSPACE=$HOME/workspace
 COMPRESS_EXT=bz2
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-cd $WORKSPACE/build/nasm-*
+cd $MOZ_FETCHES_DIR/nasm-*
 case "$1" in
     win64)
-        export PATH="$WORKSPACE/build/src/clang/bin:$PATH"
+        export PATH="$GECKO_PATH/clang/bin:$PATH"
         ./configure CC=x86_64-w64-mingw32-clang AR=llvm-ar RANLIB=llvm-ranlib --host=x86_64-w64-mingw32
         EXE=.exe
         ;;

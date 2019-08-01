@@ -5,12 +5,10 @@ TARGET="$1"
 
 case "$(uname -s)" in
 Linux)
-    WORKSPACE=$HOME/workspace
     COMPRESS_EXT=xz
     ;;
 MINGW*)
-    WORKSPACE=$PWD
-    UPLOAD_DIR=$WORKSPACE/public/build
+    UPLOAD_DIR=$PWD/public/build
     COMPRESS_EXT=bz2
 
     . $GECKO_PATH/taskcluster/scripts/misc/vs-setup.sh
@@ -19,28 +17,28 @@ MINGW*)
     ;;
 esac
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # OSX cross builds are a bit harder
 if [ "$TARGET" == "x86_64-apple-darwin" ]; then
-  export PATH="$PWD/llvm-dsymutil/bin:$PATH"
-  export PATH="$PWD/cctools/bin:$PATH"
+  export PATH="$GECKO_PATH/llvm-dsymutil/bin:$PATH"
+  export PATH="$GECKO_PATH/cctools/bin:$PATH"
   cat >cross-linker <<EOF
-exec $PWD/clang/bin/clang -v \
-  -fuse-ld=$PWD/cctools/bin/x86_64-apple-darwin-ld \
+exec $GECKO_PATH/clang/bin/clang -v \
+  -fuse-ld=$GECKO_PATH/cctools/bin/x86_64-apple-darwin-ld \
   -mmacosx-version-min=10.11 \
   -target $TARGET \
-  -B $PWD/cctools/bin \
-  -isysroot $PWD/MacOSX10.11.sdk \
+  -B $GECKO_PATH/cctools/bin \
+  -isysroot $GECKO_PATH/MacOSX10.11.sdk \
   "\$@"
 EOF
   chmod +x cross-linker
   export RUSTFLAGS="-C linker=$PWD/cross-linker"
 fi
 
-export PATH="$PWD/rustc/bin:$PATH"
+export PATH="$(cd $GECKO_PATH && pwd)/rustc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR/cbindgen
 

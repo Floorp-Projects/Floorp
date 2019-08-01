@@ -2,7 +2,6 @@
 set -x -e -v
 
 WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/upx
 
 mkdir -p $INSTALL_DIR/bin
