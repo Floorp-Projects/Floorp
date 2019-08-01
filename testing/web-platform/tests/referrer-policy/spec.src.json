@@ -446,6 +446,8 @@
     }
   ],
 
+  "delivery_key": "referrerPolicy",
+
   "excluded_tests":[
     {
       "name": "cross-origin-workers",
