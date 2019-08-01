@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/ary-init-iter-get-err.case
 // - src/dstr-binding-for-await/error/for-await-of-async-gen-var.template

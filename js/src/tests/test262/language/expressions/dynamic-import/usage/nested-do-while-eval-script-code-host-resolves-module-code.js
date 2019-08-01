@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-script-code-host-resolves-module-code.case
 // - src/dynamic-import/default/nested-do-while.template

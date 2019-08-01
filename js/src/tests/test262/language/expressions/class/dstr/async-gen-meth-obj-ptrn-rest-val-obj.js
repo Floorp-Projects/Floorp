@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-rest-val-obj.case
 // - src/dstr-binding/default/cls-expr-async-gen-meth.template

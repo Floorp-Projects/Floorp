@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/ary-ptrn-rest-id-elision.case
 // - src/dstr-binding-for-await/default/for-await-of-async-func-let.template

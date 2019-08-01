@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/function-forms/dflt-params-ref-self.case
 // - src/function-forms/error/async-arrow-function.template

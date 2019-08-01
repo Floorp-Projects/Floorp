@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/obj-ptrn-rest-skip-non-enumerable.case
 // - src/dstr-binding-for-await/default/for-await-of-async-gen-var.template

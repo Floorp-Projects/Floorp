@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/obj-init-undefined.case
 // - src/dstr-binding-for-await/error/for-await-of-async-gen-let.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/function-forms/params-trailing-comma-single.case
 // - src/function-forms/default/cls-decl-async-meth-static.template

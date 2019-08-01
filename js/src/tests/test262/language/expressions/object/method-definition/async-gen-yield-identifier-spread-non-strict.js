@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-identifier-spread-non-strict.case
 // - src/async-generators/non-strict/async-obj-method.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment-for-await/obj-prop-elem-target-yield-ident-valid.case
 // - src/dstr-assignment-for-await/async-function/async-func-decl.template

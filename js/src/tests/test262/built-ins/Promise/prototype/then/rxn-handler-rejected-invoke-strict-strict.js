@@ -1,3 +1,4 @@
+// |reftest| async
 'use strict';
 // Copyright 2014 Cubane Canada, Inc.  All rights reserved.
 // See LICENSE for details.

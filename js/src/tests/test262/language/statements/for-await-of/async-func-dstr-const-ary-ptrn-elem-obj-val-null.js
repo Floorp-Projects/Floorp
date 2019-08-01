@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/ary-ptrn-elem-obj-val-null.case
 // - src/dstr-binding-for-await/error/for-await-of-async-func-const.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // Copyright 2017 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

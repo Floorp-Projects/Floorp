@@ -1,4 +1,3 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/nested-imports.case
 // - src/dynamic-import/syntax/valid/top-level.template

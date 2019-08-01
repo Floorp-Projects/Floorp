@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/arguments/args-trailing-comma-spread-operator.case
 // - src/arguments/default/async-gen-meth.template

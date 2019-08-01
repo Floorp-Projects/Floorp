@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-next-non-object-ignores-then.case
 // - src/async-generators/default/async-obj-method.template
