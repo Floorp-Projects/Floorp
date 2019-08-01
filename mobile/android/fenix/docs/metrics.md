@@ -888,6 +888,32 @@ tabs_selected: The number of tabs added to the collection
         <td></td>  
         <td>2020-03-01</td>  
     </tr>  
+    <tr>  
+        <td>add_tab_button</td>  
+        <td>event</td>  
+        <td> A user tapped the "add tab" button in the three dot menu of collections</td>  
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4358">link</a></td>  
+        <td></td>  
+        <td>2020-03-01</td>  
+    </tr>  
+    <tr>  
+        <td>long_press</td>  
+        <td>event</td>  
+        <td> A user long pressed on a tab, triggering the collection creation screen</td>  
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4358">link</a></td>  
+        <td></td>  
+        <td>2020-03-01</td>  
+    </tr> 
+    <tr>  
+        <td>save_button</td>  
+        <td>event</td>  
+        <td>A user pressed the "save to collection" button on either the home or browser screen, triggering the
+                  collection creation screen to open (tab_select_opened)</td>  
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/3935">link</a></td>  
+        <td>from_screen: A string representing the screen from which the user pressed the save button. Either `browser` or `home`
+        </td> 
+        <td>2020-03-01</td>  
+    </tr>   
 </table>  
 </pre> 
 

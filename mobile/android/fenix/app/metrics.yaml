@@ -1052,3 +1052,42 @@ collections:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"
+  add_tab_button:
+    type: event
+    description: >
+      A user tapped the "add tab" button in the three dot menu of collections
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4358
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  long_press:
+    type: event
+    description: >
+      A user long pressed on a tab, triggering the collection creation screen
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4358
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  save_button:
+    type: event
+    description: >
+      A user pressed the "save to collection" button on either the home or browser screen, triggering the
+      collection creation screen to open (tab_select_opened)
+    bugs:
+      - 969
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4358
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+    extra_keys:
+      from_screen:
+        description: >
+          A string representing the screen from which the user pressed the save button.
+          Either `browser` or `home`

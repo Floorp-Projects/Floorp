@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.save_tab_group_button.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.TabAction
 import org.mozilla.fenix.home.sessioncontrol.onNext
@@ -20,11 +22,15 @@ class SaveTabGroupViewHolder(
 
     init {
         view.save_tab_group_button.setOnClickListener {
+            view.context.components.analytics.metrics
+                .track(Event.CollectionSaveButtonPressed(TELEMETRY_HOME_IDENITIFIER))
+
             actionEmitter.onNext(TabAction.SaveTabGroup(selectedTabSessionId = null))
         }
     }
 
     companion object {
+        const val TELEMETRY_HOME_IDENITIFIER = "home"
         const val LAYOUT_ID = R.layout.save_tab_group_button
     }
 }

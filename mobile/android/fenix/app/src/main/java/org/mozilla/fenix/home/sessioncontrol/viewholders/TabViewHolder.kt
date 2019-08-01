@@ -16,6 +16,7 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.support.ktx.android.util.dpToFloat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
@@ -48,6 +49,7 @@ class TabViewHolder(
         }
 
         item_tab.setOnLongClickListener {
+            view.context.components.analytics.metrics.track(Event.CollectionTabLongPressed)
             actionEmitter.onNext(TabAction.SaveTabGroup(tab?.sessionId!!))
             true
         }

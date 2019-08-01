@@ -464,6 +464,7 @@ class HomeFragment : Fragment(), AccountObserver {
                 createDeleteCollectionPrompt(action.collection)
             }
             is CollectionAction.AddTab -> {
+                requireComponents.analytics.metrics.track(Event.CollectionAddTabPressed)
                 showCollectionCreationFragment(
                     selectedTabCollection = action.collection,
                     step = SaveCollectionStep.SelectTabs
@@ -841,6 +842,7 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val FADE_ANIM_DURATION = 150L
         private const val ANIM_SNACKBAR_DELAY = 100L
         private const val ACCESSIBILITY_FOCUS_DELAY = 2000L
+        private const val TELEMETRY_HOME_IDENITIFIER = "home"
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f

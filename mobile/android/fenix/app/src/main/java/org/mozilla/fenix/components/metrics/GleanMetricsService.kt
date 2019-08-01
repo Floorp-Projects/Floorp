@@ -265,6 +265,16 @@ private val Event.wrapper
         is Event.CollectionTabSelectOpened -> EventWrapper<NoExtraKeys>(
             { Collections.tabSelectOpened.record(it) }
         )
+        is Event.CollectionTabLongPressed -> EventWrapper<NoExtraKeys>(
+            { Collections.longPress.record(it) }
+        )
+        is Event.CollectionSaveButtonPressed -> EventWrapper(
+            { Collections.saveButton.record(it) },
+            { Collections.saveButtonKeys.valueOf(it) }
+        )
+        is Event.CollectionAddTabPressed -> EventWrapper<NoExtraKeys>(
+            { Collections.addTabButton.record(it) }
+        )
 
         // Don't track other events with Glean
         else -> null
