@@ -135,7 +135,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_AUTOMATION': '1',
         'MOZ_FETCHES_DIR': workspace,
         'GECKO_PATH': gecko_path,
     })
@@ -207,7 +206,6 @@ def windows_toolchain(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_AUTOMATION': '1',
     })
 
     # Use `mach` to invoke python scripts so in-tree libraries are available.
