@@ -5852,6 +5852,11 @@
   value: false
   mirror: always
 
+- name: toolkit.telemetry.geckoview.batchDurationMS
+  type: uint32_t
+  value: 5000
+  mirror: always
+
 - name: toolkit.telemetry.geckoview.streaming
   type: RelaxedAtomicBool
   value: false

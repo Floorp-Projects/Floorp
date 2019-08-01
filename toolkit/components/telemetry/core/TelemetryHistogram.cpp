@@ -8,6 +8,7 @@
 
 #include <limits>
 #include "base/histogram.h"
+#include "geckoview/streaming/GeckoViewStreamingTelemetry.h"
 #include "ipc/TelemetryIPCAccumulator.h"
 #include "jsapi.h"
 #include "jsfriendapi.h"
@@ -42,6 +43,7 @@ using mozilla::Telemetry::KeyedHistogramAccumulation;
 using mozilla::Telemetry::ProcessID;
 using mozilla::Telemetry::Common::CanRecordDataset;
 using mozilla::Telemetry::Common::CanRecordProduct;
+using mozilla::Telemetry::Common::GetCurrentProduct;
 using mozilla::Telemetry::Common::GetIDForProcessName;
 using mozilla::Telemetry::Common::GetNameForProcessID;
 using mozilla::Telemetry::Common::IsExpiredVersion;
@@ -691,6 +693,12 @@ nsresult internal_HistogramAdd(const StaticMutexAutoLock& aLock,
 
   // Don't record if the current platform is not enabled
   if (!CanRecordProduct(gHistogramInfos[id].products)) {
+    return NS_OK;
+  }
+
+  if (GetCurrentProduct() == SupportedProduct::GeckoviewStreaming) {
+    GeckoViewStreamingTelemetry::HistogramAccumulate(
+        nsDependentCString(gHistogramInfos[id].name()), value);
     return NS_OK;
   }
 
