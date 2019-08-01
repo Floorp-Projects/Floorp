@@ -100,6 +100,7 @@ public final class GeckoRuntime implements Parcelable {
     public static final String EXTRA_CRASH_FATAL = "fatal";
 
     private final class LifecycleListener implements LifecycleObserver {
+        private boolean mPaused = false;
         public LifecycleListener() {
         }
 
@@ -116,6 +117,11 @@ public final class GeckoRuntime implements Parcelable {
         @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
         void onResume() {
             Log.d(LOGTAG, "Lifecycle: onResume");
+            if (mPaused) {
+                // Do not trigger the first onResume event because it breaks nsAppShell::sPauseCount counter thresholds.
+                GeckoThread.onResume();
+            }
+            mPaused = false;
             // Monitor network status and send change notifications to Gecko
             // while active.
             GeckoNetworkManager.getInstance().start(GeckoAppShell.getApplicationContext());
@@ -124,8 +130,10 @@ public final class GeckoRuntime implements Parcelable {
         @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         void onPause() {
             Log.d(LOGTAG, "Lifecycle: onPause");
+            mPaused = true;
             // Stop monitoring network status while inactive.
             GeckoNetworkManager.getInstance().stop();
+            GeckoThread.onPause();
         }
     }
 
