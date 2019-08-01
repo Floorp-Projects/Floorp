@@ -13,15 +13,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_create_login() {
-  let browser = gBrowser.selectedBrowser;
-
-  await ContentTask.spawn(browser, null, async () => {
-    ok(
-      content.document.body.classList.contains("no-logins"),
-      "Should initially be in no logins view"
-    );
-  });
-
   let testCases = [
     ["ftp://ftp.example.com/", "ftp://ftp.example.com"],
     ["https://example.com/foo", "https://example.com"],
@@ -41,6 +32,7 @@ add_task(async function test_create_login() {
       (_, data) => data == "addLogin"
     );
 
+    let browser = gBrowser.selectedBrowser;
     await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
       let createButton = content.document
         .querySelector("login-list")
@@ -85,10 +77,6 @@ add_task(async function test_create_login() {
       browser,
       { expectedCount, originTuple },
       async ({ expectedCount: aExpectedCount, originTuple: aOriginTuple }) => {
-        ok(
-          !content.document.body.classList.contains("no-logins"),
-          "Should no longer be in no logins view"
-        );
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
