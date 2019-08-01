@@ -76,9 +76,10 @@ def validate(spec_json, details):
     """ Validates the json specification for generating tests. """
 
     details['object'] = spec_json
-    assert_contains_only_fields(
-        spec_json,
-        ["specification", "test_expansion_schema", "excluded_tests"])
+    assert_contains_only_fields(spec_json, [
+        "specification", "delivery_key", "test_expansion_schema",
+        "excluded_tests"
+    ])
     assert_non_empty_list(spec_json, "specification")
     assert_non_empty_dict(spec_json, "test_expansion_schema")
     assert_non_empty_list(spec_json, "excluded_tests")

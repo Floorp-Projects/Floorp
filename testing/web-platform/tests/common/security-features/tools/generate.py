@@ -168,6 +168,7 @@ def generate_test_source_files(config, spec_json, target):
             expansion = expand_pattern(expansion_pattern,
                                        test_expansion_schema)
             for selection in permute_expansion(expansion, artifact_order):
+                selection['delivery_key'] = spec_json['delivery_key']
                 selection_path = config.selection_pattern % selection
                 if not selection_path in exclusion_dict:
                     if selection_path in output_dict:
