@@ -268,7 +268,9 @@ class nsContentSink : public nsICSSLoaderObserver,
 
   void DoProcessLinkHeader();
 
-  void StopDeflecting() { mDeflectedCount = sPerfDeflectCount; }
+  void StopDeflecting() {
+    mDeflectedCount = mozilla::StaticPrefs::content_sink_perf_deflect_count();
+  }
 
  protected:
   RefPtr<Document> mDocument;
@@ -337,9 +339,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
 
-  // How many times to deflect in interactive/perf modes
-  static int32_t sInteractiveDeflectCount;
-  static int32_t sPerfDeflectCount;
   // 0 = don't check for pending events
   // 1 = don't deflect if there are pending events
   // 2 = bail if there are pending events

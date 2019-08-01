@@ -1003,6 +1003,18 @@
   value: true
   mirror: always
 
+# How many times to deflect in interactive mode.
+- name: content.sink.interactive_deflect_count
+  type: int32_t
+  value: 0
+  mirror: always
+
+# How many times to deflect in perf mode.
+- name: content.sink.perf_deflect_count
+  type: int32_t
+  value: 200
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
