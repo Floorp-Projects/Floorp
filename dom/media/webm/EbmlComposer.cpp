@@ -55,14 +55,15 @@ void EbmlComposer::GenerateHeader() {
           if (mCodecPrivateData.Length() > 0) {
             // Extract the pre-skip from mCodecPrivateData
             // then convert it to nanoseconds.
-            // Details in OpusTrackEncoder.cpp.
-            mCodecDelay = (uint64_t)LittleEndian::readUint16(
-                              mCodecPrivateData.Elements() + 10) *
-                          PR_NSEC_PER_SEC / 48000;
+            // For more details see
+            // https://tools.ietf.org/html/rfc7845#section-4.2
+            uint64_t codecDelay = (uint64_t)LittleEndian::readUint16(
+                                      mCodecPrivateData.Elements() + 10) *
+                                  PR_NSEC_PER_SEC / 48000;
             // Fixed 80ms, convert into nanoseconds.
             uint64_t seekPreRoll = 80 * PR_NSEC_PER_MSEC;
             writeAudioTrack(&ebml, 0x2, 0x0, "A_OPUS", mSampleFreq, mChannels,
-                            mCodecDelay, seekPreRoll,
+                            codecDelay, seekPreRoll,
                             mCodecPrivateData.Elements(),
                             mCodecPrivateData.Length());
           }
@@ -130,9 +131,6 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
 
   int64_t timeCode =
       aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
-  if (isOpus) {
-    timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
-  }
 
   if (!mHasVideo && timeCode >= FLUSH_AUDIO_ONLY_AFTER_MS) {
     MOZ_ASSERT(mHasAudio);
@@ -163,9 +161,6 @@ void EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame) {
     // Can't under-/overflow now
     timeCode =
         aFrame->GetTimeStamp() / ((int)PR_USEC_PER_MSEC) - mClusterTimecode;
-    if (isOpus) {
-      timeCode += mCodecDelay / PR_NSEC_PER_MSEC;
-    }
 
     mWritingCluster = true;
   }
