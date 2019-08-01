@@ -27,6 +27,7 @@
 #include "mozilla/Logging.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsThreadUtils.h"
+#include "mozilla/StaticPrefs_content.h"
 
 class nsIURI;
 class nsIChannel;
@@ -336,8 +337,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
 
-  // Do we notify based on time?
-  static bool sNotifyOnTimer;
   // Back off timer notification after count.
   static int32_t sBackoffCount;
   // Notification interval in microseconds

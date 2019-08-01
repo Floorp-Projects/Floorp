@@ -23,7 +23,7 @@
 # Please follow the existing prefs naming convention when considering adding a
 # new pref, and don't create a new pref group unless it's appropriate and there
 # are likely to be multiple prefs within that group. (If you do, you'll need to
-# update the `groups` variable in modules/libpref/moz.build.)
+# update the `pref_groups` variable in modules/libpref/moz.build.)
 #
 # Definitions
 # -----------
@@ -973,6 +973,16 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 #endif
+
+#---------------------------------------------------------------------------
+# Prefs starting with "content."
+#---------------------------------------------------------------------------
+
+# Do we notify based on time?
+- name: content.notify.ontimer
+  type: bool
+  value: true
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "device."

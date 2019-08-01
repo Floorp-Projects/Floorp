@@ -32,6 +32,7 @@ pref_groups = [
     'canvas',
     'channelclassifier',
     'clipboard',
+    'content',
     'device',
     'devtools',
     'dom',
