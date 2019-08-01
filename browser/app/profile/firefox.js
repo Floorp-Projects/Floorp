@@ -1566,8 +1566,6 @@ pref("privacy.trackingprotection.fingerprinting.enabled", true);
 // Enable cryptomining blocking by default for all channels, only on desktop.
 pref("privacy.trackingprotection.cryptomining.enabled", true);
 
-pref("browser.contentblocking.allowlist.storage.enabled", true);
-
 pref("browser.contentblocking.database.enabled", true);
 
 pref("dom.storage_access.enabled", true);
