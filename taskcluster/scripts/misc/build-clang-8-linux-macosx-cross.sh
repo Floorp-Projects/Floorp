@@ -17,8 +17,7 @@ export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 # gets a bit too verbose here
 set +x
 
-cd build/build-clang
-python3 ./build-clang.py -c clang-8-macosx64.json --skip-tar
+python3 build/build-clang/build-clang.py -c $1 --skip-tar
 
 # We now have a native macosx64 toolchain.
 # What we want is a native linux64 toolchain which can target macosx64 and use the sanitizer dylibs.
@@ -28,7 +27,7 @@ cd "$WORKSPACE/moz-toolchain/build/stage1"
 # Need the macosx64 native llvm-symbolizer since this gets shipped with sanitizer builds
 mv clang/bin/llvm-symbolizer $GECKO_PATH/clang/bin/
 cp --remove-destination -lr $GECKO_PATH/clang/* clang/
-tar -c -J -f $GECKO_PATH/build/build-clang/clang.tar.xz clang
+tar -c -J -f $GECKO_PATH/clang.tar.xz clang
 )
 
 set -x

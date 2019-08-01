@@ -33,14 +33,11 @@ export PATH="$(cd ninja && pwd)/bin:${PATH}"
 # gets a bit too verbose here
 set +x
 
-BUILD_CLANG_DIR=build/build-clang
-cd ${BUILD_CLANG_DIR}
-python3 ./build-clang.py -c ./${1}
-cd -
+python3 build/build-clang/build-clang.py -c ${1}
 
 
 set -x
 
 # Put a tarball in the artifacts dir
 mkdir -p ${UPLOAD_PATH}
-cp ${BUILD_CLANG_DIR}/clang*.tar.* ${UPLOAD_PATH}
+cp clang*.tar.* ${UPLOAD_PATH}
