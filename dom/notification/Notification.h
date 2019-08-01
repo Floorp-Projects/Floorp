@@ -208,7 +208,7 @@ class Notification : public DOMEventTargetHelper,
   static already_AddRefed<Promise> ShowPersistentNotification(
       JSContext* aCx, nsIGlobalObject* aGlobal, const nsAString& aScope,
       const nsAString& aTitle, const NotificationOptions& aOptions,
-      ErrorResult& aRv);
+      const ServiceWorkerRegistrationDescriptor& aDescriptor, ErrorResult& aRv);
 
   void Close();
 
