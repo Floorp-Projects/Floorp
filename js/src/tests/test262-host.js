@@ -231,6 +231,11 @@ function $DONE(failure) {
         reportFailure(failure);
     else
         reportCompare(0, 0);
+
+    if (typeof jsTestDriverEnd === "function") {
+        gDelayTestDriverEnd = false;
+        jsTestDriverEnd();
+    }
 }
 
 // Some tests in test262 leave promise rejections unhandled.

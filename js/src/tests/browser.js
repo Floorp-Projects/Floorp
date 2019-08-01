@@ -504,6 +504,10 @@
     // Finally output the driver-end script to advance to the next test.
     scripts.push({src: "js-test-driver-end.js", module: false});
 
+    if (properties.async) {
+      gDelayTestDriverEnd = true;
+    }
+
     if (!moduleTest) {
       for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].src;
@@ -555,6 +559,8 @@
       appendScript(0);
     }
   }
+
+  global.gDelayTestDriverEnd = false;
 
   function jsTestDriverEnd() {
     // gDelayTestDriverEnd is used to delay collection of the test result and
@@ -639,7 +645,5 @@
   jsTestDriverBrowserInit();
 
 })(this);
-
-var gDelayTestDriverEnd = false;
 
 var gPageCompleted;
