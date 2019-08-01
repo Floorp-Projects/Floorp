@@ -48,6 +48,7 @@ class SearchStoreTest {
     private fun emptyDefaultState(): SearchState = SearchState(
         query = "",
         searchEngineSource = mockk(),
+        defaultEngineSource = mockk(),
         showShortcutEnginePicker = false,
         showSuggestions = false,
         showVisitedSitesBookmarks = false,

@@ -67,15 +67,17 @@ class SearchFragment : Fragment(), BackHandler {
 
         val view = inflater.inflate(R.layout.fragment_search, container, false)
         val url = session?.url ?: ""
+        val currentSearchEngine = SearchEngineSource.Default(
+            requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+        )
 
         searchStore = StoreProvider.get(this) {
             SearchStore(
                 SearchState(
                     query = url,
-                    showShortcutEnginePicker = true,
-                    searchEngineSource = SearchEngineSource.Default(
-                        requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
-                    ),
+                    showShortcutEnginePicker = false,
+                    searchEngineSource = currentSearchEngine,
+                    defaultEngineSource = currentSearchEngine,
                     showSuggestions = Settings.getInstance(requireContext()).showSearchSuggestions,
                     showVisitedSitesBookmarks = Settings.getInstance(requireContext()).shouldShowVisitedSitesBookmarks,
                     session = session
@@ -182,6 +184,16 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onResume() {
         super.onResume()
+
+        // The user has the option to go to 'Shortcuts' -> 'Search engine settings' to modify the default search engine.
+        // When returning from that settings screen we need to update it to account for any changes.
+        val currentDefaultEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+        if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
+            searchStore.dispatch(
+                SearchAction.SelectNewDefaultSearchEngine
+                    (currentDefaultEngine)
+            )
+        }
 
         if (!permissionDidUpdate) {
             toolbarView.view.requestFocus()
