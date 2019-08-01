@@ -15,6 +15,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/NSPRLogModulesParser.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/WindowsVersion.h"
@@ -509,6 +510,14 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
     mPolicy->SetLockdownDefaultDacl();
   }
 
+  if (aSandboxLevel > 4) {
+    result = mPolicy->SetAlternateDesktop(false);
+    if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
+      LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
+            ::GetLastError());
+    }
+  }
+
   sandbox::MitigationFlags mitigations =
       sandbox::MITIGATION_BOTTOM_UP_ASLR | sandbox::MITIGATION_HEAP_TERMINATE |
       sandbox::MITIGATION_SEHOP | sandbox::MITIGATION_DEP_NO_ATL_THUNK |
@@ -522,14 +531,6 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
   }
 #endif
 
-  if (aSandboxLevel > 4) {
-    result = mPolicy->SetAlternateDesktop(false);
-    if (NS_WARN_IF(result != sandbox::SBOX_ALL_OK)) {
-      LOG_W("SetAlternateDesktop failed, result: %i, last error: %x", result,
-            ::GetLastError());
-    }
-  }
-
   if (aSandboxLevel > 3) {
     // If we're running from a network drive then we can't block loading from
     // remote locations. Strangely using MITIGATION_IMAGE_LOAD_NO_LOW_LABEL in
@@ -538,6 +539,18 @@ void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
       mitigations |= sandbox::MITIGATION_IMAGE_LOAD_NO_REMOTE |
                      sandbox::MITIGATION_IMAGE_LOAD_NO_LOW_LABEL;
     }
+  }
+
+  // On Windows 7, where Win32k lockdown is not supported, the Chromium
+  // sandbox does something weird that breaks COM instantiation.
+  if (StaticPrefs::security_sandbox_content_win32k_disable() &&
+      IsWin8OrLater()) {
+    mitigations |= sandbox::MITIGATION_WIN32K_DISABLE;
+    result =
+        mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_WIN32K_LOCKDOWN,
+                         sandbox::TargetPolicy::FAKE_USER_GDI_INIT, nullptr);
+    MOZ_RELEASE_ASSERT(sandbox::SBOX_ALL_OK == result,
+                       "Failed to set FAKE_USER_GDI_INIT policy.");
   }
 
   result = mPolicy->SetProcessMitigations(mitigations);
