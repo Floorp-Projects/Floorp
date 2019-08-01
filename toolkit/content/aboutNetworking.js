@@ -28,6 +28,7 @@ const gRequestNetworkingData = {
   dnslookuptool: () => {},
   logging: () => {},
   rcwn: gDashboard.requestRcwnStats,
+  networkid: displayNetworkID,
 };
 const gDashboardCallbacks = {
   http: displayHttp,
@@ -175,6 +176,16 @@ function displayRcwnStats(data) {
         data.perfStats[typeIndex][perfStatFieldNames[statFieldIndex]];
     }
   }
+}
+
+function displayNetworkID() {
+  let linkIsUp = gNetLinkSvc.isLinkUp;
+  let linkStatusKnown = gNetLinkSvc.linkStatusKnown;
+  let networkID = gNetLinkSvc.networkID;
+
+  document.getElementById("networkid_isUp").innerText = linkIsUp;
+  document.getElementById("networkid_statusKnown").innerText = linkStatusKnown;
+  document.getElementById("networkid_id").innerText = networkID;
 }
 
 function requestAllNetworkingData() {
