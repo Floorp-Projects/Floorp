@@ -642,6 +642,17 @@ inline bool StyleTrackBreadth::HasPercent() const {
   return IsBreadth() && AsBreadth().HasPercent();
 }
 
+// Implemented in nsStyleStructs.cpp
+template <>
+bool StyleTransform::HasPercent() const;
+
+template <>
+inline bool StyleTransformOrigin::HasPercent() const {
+  // NOTE(emilio): `depth` is just a `<length>` so doesn't have a percentage at
+  // all.
+  return horizontal.HasPercent() || vertical.HasPercent();
+}
+
 }  // namespace mozilla
 
 #endif
