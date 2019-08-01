@@ -987,6 +987,17 @@ void nsPresContext::SetOverrideDPPX(float aDPPX) {
   MediaFeatureValuesChanged({MediaFeatureChangeReason::ResolutionChange});
 }
 
+void nsPresContext::SetOverridePrefersColorScheme(
+    const Maybe<StylePrefersColorScheme>& aOverride) {
+  if (GetOverridePrefersColorScheme() == aOverride) {
+    return;
+  }
+  mMediaEmulationData.mPrefersColorScheme = aOverride;
+  // This is a bit of a lie, but it's the code-path that gets taken for regular
+  // system metrics changes via ThemeChanged().
+  MediaFeatureValuesChanged({MediaFeatureChangeReason::SystemMetricsChange});
+}
+
 gfxSize nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged) {
   if (aChanged) {
     *aChanged = false;
