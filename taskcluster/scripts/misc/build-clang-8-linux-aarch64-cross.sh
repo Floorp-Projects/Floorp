@@ -12,8 +12,7 @@ export PATH="$GECKO_PATH/binutils/bin:$PATH"
 # gets a bit too verbose here
 set +x
 
-cd build/build-clang
-python3 ./build-clang.py -c clang-8-linux64-aarch64-cross.json
+python3 build/build-clang/build-clang.py -c $1
 
 set -x
 
