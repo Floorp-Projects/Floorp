@@ -116,6 +116,7 @@ VRManager::VRManager()
       mLastSubmittedFrameId(0),
       mLastStartedFrame(0),
       mEnumerationCompleted(false),
+      mAppPaused(false),
       mShmem(nullptr),
       mHapticPulseRemaining{},
       mDisplayInfo{},
@@ -142,6 +143,12 @@ VRManager::VRManager()
   // created, so default to false.
   mVRProcessEnabled = false;
 #endif  // !defined(MOZ_WIDGET_ANDROID)
+
+  nsCOMPtr<nsIObserverService> service = services::GetObserverService();
+  if (service) {
+    service->AddObserver(this, "application-background", false);
+    service->AddObserver(this, "application-foreground", false);
+  }
 }
 
 void VRManager::OpenShmem() {
@@ -176,6 +183,13 @@ void VRManager::CloseShmem() {
 VRManager::~VRManager() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(mState == VRManagerState::Disabled);
+
+  nsCOMPtr<nsIObserverService> service = services::GetObserverService();
+  if (service) {
+    service->RemoveObserver(this, "application-background");
+    service->RemoveObserver(this, "application-foreground");
+  }
+
 #if !defined(MOZ_WIDGET_ANDROID)
   mServiceHost->Shutdown();
 #endif
@@ -289,6 +303,12 @@ void VRManager::TaskTimerCallback(nsITimer* aTimer, void* aClosure) {
    */
   VRManager* self = static_cast<VRManager*>(aClosure);
   self->RunTasks();
+
+  if (self->mAppPaused) {
+    // When the apps goes the background (e.g. Android) we should stop the
+    // tasks.
+    self->StopTasks();
+  }
 }
 
 void VRManager::RunTasks() {
@@ -1241,6 +1261,28 @@ void VRManager::CancelCurrentSubmitTask() {
     mCurrentSubmitTask = nullptr;
   }
 }
+
+//-----------------------------------------------------------------------------
+// VRManager::nsIObserver
+//-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+VRManager::Observe(nsISupports* subject, const char* topic,
+                   const char16_t* data) {
+  if (!strcmp(topic, "application-background")) {
+    // StopTasks() is called later in the timer thread based on this flag to
+    // avoid threading issues.
+    mAppPaused = true;
+  } else if (!strcmp(topic, "application-foreground") && mAppPaused) {
+    mAppPaused = false;
+    // When the apps goes the foreground (e.g. Android) we should restart the
+    // tasks.
+    StartTasks();
+  }
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(VRManager, nsIObserver)
 
 }  // namespace gfx
 }  // namespace mozilla
