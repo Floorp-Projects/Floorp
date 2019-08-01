@@ -339,8 +339,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
 
-  // How often to probe for pending events. 1=every token
-  static int32_t sEventProbeRate;
   // How long to stay off the event loop in interactive/perf modes
   static int32_t sInteractiveParseTime;
   static int32_t sPerfParseTime;
