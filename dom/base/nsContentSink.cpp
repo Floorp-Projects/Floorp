@@ -54,7 +54,6 @@
 #include "nsSandboxFlags.h"
 #include "Link.h"
 #include "HTMLLinkElement.h"
-
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
@@ -136,7 +135,6 @@ nsContentSink::~nsContentSink() {
   }
 }
 
-bool nsContentSink::sNotifyOnTimer;
 int32_t nsContentSink::sBackoffCount;
 int32_t nsContentSink::sNotificationInterval;
 int32_t nsContentSink::sInteractiveDeflectCount;
@@ -150,7 +148,6 @@ int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  Preferences::AddBoolVarCache(&sNotifyOnTimer, "content.notify.ontimer", true);
   // -1 means never.
   Preferences::AddIntVarCache(&sBackoffCount, "content.notify.backoffcount",
                               -1);
@@ -1271,8 +1268,8 @@ nsContentSink::Notify(nsITimer* timer) {
 }
 
 bool nsContentSink::IsTimeToNotify() {
-  if (!sNotifyOnTimer || !mLayoutStarted || !mBackoffCount ||
-      mInMonolithicContainer) {
+  if (!StaticPrefs::content_notify_ontimer() || !mLayoutStarted ||
+      !mBackoffCount || mInMonolithicContainer) {
     return false;
   }
 
@@ -1302,7 +1299,7 @@ nsresult nsContentSink::WillInterruptImpl() {
 #ifndef SINK_NO_INCREMENTAL
   if (WaitForPendingSheets()) {
     mDeferredFlushTags = true;
-  } else if (sNotifyOnTimer && mLayoutStarted) {
+  } else if (StaticPrefs::content_notify_ontimer() && mLayoutStarted) {
     if (mBackoffCount && !mInMonolithicContainer) {
       int64_t now = PR_Now();
       int64_t interval = GetNotificationInterval();
