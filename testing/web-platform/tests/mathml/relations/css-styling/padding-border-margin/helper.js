@@ -15,18 +15,21 @@ function measureSpaceAround(id) {
     return spaceBetween(childBox, parentBox);
 }
 
-function compareSpaceWithAndWithoutStyle(tag, style) {
+function compareSpaceWithAndWithoutStyle(tag, style, parentStyle) {
     if (!FragmentHelper.isValidChildOfMrow(tag) ||
         FragmentHelper.isEmpty(tag))
         throw `Invalid argument: ${tag}`;
 
     document.body.insertAdjacentHTML("beforeend", `<div>\
-<math>${MathMLFragments[tag]}</math>\
-<math>${MathMLFragments[tag]}</math>\
+<math><mrow>${MathMLFragments[tag]}</mrow></math>\
+<math><mrow>${MathMLFragments[tag]}</mrow></math>\
 </div>`);
     var div = document.body.lastElementChild;
 
     var styleMath = div.firstElementChild;
+    var styleParent = styleMath.firstElementChild;
+    if (parentStyle)
+        styleParent.setAttribute("style", parentStyle);
     var styleElement = FragmentHelper.element(styleMath);
     styleElement.setAttribute("style", style);
     var styleChild = FragmentHelper.forceNonEmptyElement(styleElement);
