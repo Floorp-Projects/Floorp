@@ -223,10 +223,15 @@ exports.unwrap = function unwrap(obj) {
  * @return boolean
  */
 exports.isSafeDebuggerObject = function(obj) {
+  // CPOW usage is forbidden outside tests (bug 1465911)
+  if (exports.isCPOW(obj)) {
+    return false;
+  }
+
   const unwrapped = exports.unwrap(obj);
 
   // Objects belonging to an invisible-to-debugger compartment might be proxies,
-  // so just in case consider them unsafe. CPOWs are included in this case.
+  // so just in case consider them unsafe.
   if (unwrapped === undefined) {
     return false;
   }
