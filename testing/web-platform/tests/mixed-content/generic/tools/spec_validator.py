@@ -36,7 +36,8 @@ def assert_value_from(obj, field, items):
 
 
 def assert_atom_or_list_items_from(obj, field, items):
-    if isinstance(obj[field], basestring) or isinstance(obj[field], int):
+    if isinstance(obj[field], basestring) or isinstance(
+            obj[field], int) or obj[field] is None:
         assert_value_from(obj, field, items)
         return
 
@@ -125,8 +126,9 @@ def validate(spec_json, details):
     # Validate the test_expansion schema members.
     details['object'] = test_expansion_schema
     assert_contains_only_fields(test_expansion_schema, [
-        'expansion', 'source_scheme', 'opt_in_method', 'context_nesting',
-        'redirection', 'subresource', 'origin', 'expectation'
+        'expansion', 'source_scheme', 'delivery_type', 'delivery_value',
+        'context_nesting', 'redirection', 'subresource', 'origin',
+        'expectation'
     ])
     # Validate excluded tests.
     details['object'] = excluded_tests
