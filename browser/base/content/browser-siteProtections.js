@@ -1076,7 +1076,7 @@ var SocialTracking = {
     let browser = gBrowser.selectedBrowser;
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
-      "tracking-content-report";
+      "social-media-tracking-report";
 
     let mainAction = {
       label: gNavigatorBundle.getString(
