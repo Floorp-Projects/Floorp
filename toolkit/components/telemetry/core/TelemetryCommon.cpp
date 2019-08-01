@@ -8,7 +8,7 @@
 
 #include <cstring>
 #include "mozilla/TimeStamp.h"
-#include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_toolkit.h"
 #include "nsIConsoleService.h"
 #include "nsITelemetry.h"
 #include "nsThreadUtils.h"
@@ -179,25 +179,19 @@ JSString* ToJSString(JSContext* cx, const nsAString& aStr) {
   return JS_NewUCStringCopyN(cx, aStr.Data(), aStr.Length());
 }
 
-// Keep knowledge about the current running product.
-// Defaults to Firefox and is reset on Android on Telemetry initialization.
-SupportedProduct gCurrentProduct = SupportedProduct::Firefox;
-
-void SetCurrentProduct() {
+SupportedProduct GetCurrentProduct() {
 #if defined(MOZ_WIDGET_ANDROID)
-  bool isGeckoview =
-      Preferences::GetBool("toolkit.telemetry.isGeckoViewMode", false);
-  if (isGeckoview) {
-    gCurrentProduct = SupportedProduct::Geckoview;
+  if (mozilla::StaticPrefs::toolkit_telemetry_geckoview_streaming()) {
+    return SupportedProduct::GeckoviewStreaming;
+  } else if (mozilla::StaticPrefs::toolkit_telemetry_isGeckoViewMode()) {
+    return SupportedProduct::Geckoview;
   } else {
-    gCurrentProduct = SupportedProduct::Fennec;
+    return SupportedProduct::Fennec;
   }
 #else
-  gCurrentProduct = SupportedProduct::Firefox;
+  return SupportedProduct::Firefox;
 #endif
 }
-
-SupportedProduct GetCurrentProduct() { return gCurrentProduct; }
 
 }  // namespace Common
 }  // namespace Telemetry

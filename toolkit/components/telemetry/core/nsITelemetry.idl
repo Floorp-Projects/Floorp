@@ -607,12 +607,6 @@ interface nsITelemetry : nsISupports
   void clearEvents();
 
   /**
-   * Reset the current product. This is intended to be only used in Android tests.
-   * It will fail on Desktop.
-   */
-  void resetCurrentProduct();
-
-  /**
    * Get a list of all registered stores.
    *
    * The list is deduplicated, but unordered.
