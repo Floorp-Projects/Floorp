@@ -67,6 +67,20 @@ var MathMLFeatureDetection = {
         return this._has_mfrac;
     },
 
+    has_dir: function() {
+        if (!this.hasOwnProperty("_has_dir")) {
+            document.body.insertAdjacentHTML("beforeend", "<math style='direction: ltr !important;'>\
+<mtext dir='rtl'></mtext>\
+</math>");
+            var math = document.body.lastElementChild;
+            this._has_dir =
+                window.getComputedStyle(math.firstElementChild).
+                getPropertyValue('direction') === 'rtl';
+            document.body.removeChild(math);
+        }
+        return this._has_dir;
+    },
+
     ensure_for_match_reftest: function(has_function) {
         if (!document.querySelector("link[rel='match']"))
             throw "This function must only be used for match reftest";
