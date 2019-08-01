@@ -181,6 +181,10 @@ def _parse_one(testcase, terms, xul_tester):
             # This directive marks the test as module code.
             testcase.is_module = True
             pos += 1
+        elif parts[pos] == 'async':
+            # This directive marks the test as async.
+            testcase.is_async = True
+            pos += 1
         else:
             print('warning: invalid manifest line element "{}"'.format(
                 parts[pos]))
@@ -193,15 +197,17 @@ def _build_manifest_script_entry(script_name, test):
     if test.terms:
         # Remove jsreftest internal terms.
         terms = " ".join([term for term in test.terms.split()
-                          if not (term == "module" or term.startswith("error:"))])
+                          if not (term == "module" or
+                                  term == "async" or
+                                  term.startswith("error:"))])
         if terms:
             line.append(terms)
     if test.error:
         properties.append("error=" + test.error)
     if test.is_module:
-        # XXX: Remove when modules are enabled by default in browser.
-        line.append("pref(dom.moduleScripts.enabled,true)")
         properties.append("module")
+    if test.is_async:
+        properties.append("async")
     line.append("script")
     script = script_name
     if properties:

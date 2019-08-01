@@ -43,7 +43,6 @@ UNSUPPORTED_FEATURES = set([
 FEATURE_CHECK_NEEDED = {
     "Atomics": "!this.hasOwnProperty('Atomics')",
     "SharedArrayBuffer": "!this.hasOwnProperty('SharedArrayBuffer')",
-    "dynamic-import": "!xulRuntime.shell",
 }
 RELEASE_OR_BETA = set([
     "Intl.NumberFormat-unified",
@@ -94,7 +93,7 @@ def tryParseTestFile(test262parser, source, testName):
         return None
 
 
-def createRefTestEntry(skip, skipIf, error, isModule):
+def createRefTestEntry(skip, skipIf, error, isModule, isAsync):
     """
     Returns the |reftest| tuple (terms, comments) from the input arguments. Or a
     tuple of empty strings if no reftest entry is required.
@@ -116,6 +115,9 @@ def createRefTestEntry(skip, skipIf, error, isModule):
 
     if isModule:
         terms.append("module")
+
+    if isAsync:
+        terms.append("async")
 
     return (" ".join(terms), ", ".join(comments))
 
@@ -271,6 +273,11 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     assert not isNegative or type(testRec["negative"]) == dict
     errorType = testRec["negative"]["type"] if isNegative else None
 
+    # Test262 contains tests both marked "negative" and "async". In this case
+    # "negative" is expected to overrule the "async" attribute.
+    if isNegative and isAsync:
+        isAsync = False
+
     # CanBlockIsFalse is set when the test expects that the implementation
     # cannot block on the main thread.
     if "CanBlockIsFalse" in testRec:
@@ -317,7 +324,8 @@ def convertTestFile(test262parser, testSource, testName, includeSet, strictTests
     else:
         testEpilogue = ""
 
-    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule)
+    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule,
+                                           isAsync)
     if raw:
         refTest = ""
         externRefTest = (terms, comments)
@@ -357,8 +365,10 @@ def convertFixtureFile(fixtureSource, fixtureName):
     refTestSkipIf = []
     errorType = None
     isModule = False
+    isAsync = False
 
-    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule)
+    (terms, comments) = createRefTestEntry(refTestSkip, refTestSkipIf, errorType, isModule,
+                                           isAsync)
     refTest = createRefTestLine(terms, comments)
 
     source = createSource(fixtureSource, refTest, "", "")
