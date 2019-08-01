@@ -69,23 +69,42 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "column-rule-width",
 
     # These resolve auto to zero in a few cases, but not all.
-    "max-block-size",
     "max-height",
-    "max-inline-size",
     "max-width",
-    "min-block-size",
     "min-height",
-    "min-inline-size",
     "min-width",
 
     # resistfingerprinting stuff.
     "-moz-osx-font-smoothing",
+
+    # Layout dependent.
+    "width",
+    "height",
+    "line-height",
+    "grid-template-rows",
+    "grid-template-columns",
+    "perspective-origin",
+    "transform-origin",
+    "transform",
+    "top",
+    "right",
+    "bottom",
+    "left",
+    "border-top-width",
+    "border-right-width",
+    "border-bottom-width",
+    "border-left-width",
+    "margin-top",
+    "margin-right",
+    "margin-bottom",
+    "margin-left",
+    "padding-top",
+    "padding-right",
+    "padding-bottom",
+    "padding-left",
 ]
 
 def serialized_by_servo(prop):
-    # If the property requires layout information, no such luck.
-    if "GETCS_NEEDS_LAYOUT_FLUSH" in prop.flags:
-        return False
     if prop.type() == "shorthand":
         # FIXME: Need to serialize a value interpolated with currentcolor
         # properly to be able to use text-decoration, and figure out what to do
@@ -114,8 +133,6 @@ def flags(prop):
         result.append("Internal")
     if prop.enabled_in == "":
         result.append("Inaccessible")
-    if "GETCS_NEEDS_LAYOUT_FLUSH" in prop.flags:
-        result.append("GetCSNeedsLayoutFlush")
     if "CAN_ANIMATE_ON_COMPOSITOR" in prop.flags:
         result.append("CanAnimateOnCompositor")
     if exposed_on_getcs(prop):

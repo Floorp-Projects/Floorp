@@ -16,10 +16,6 @@ enum class CSSPropFlags : uint8_t {
   // attribute mapping.
   Inaccessible = 1 << 0,
 
-  // This property's getComputedStyle implementation requires layout to
-  // be flushed.
-  GetCSNeedsLayoutFlush = 1 << 1,
-
   // The following two flags along with the pref defines where the this
   // property can be used:
   // * If none of the two flags is presented, the pref completely controls
@@ -36,24 +32,24 @@ enum class CSSPropFlags : uint8_t {
   // transitions) these flags are ignored. That is, if the property is disabled
   // by a pref, we will *not* run animations or transitions on it even in
   // UA sheets or chrome.
-  EnabledInUASheets = 1 << 2,
-  EnabledInChrome = 1 << 3,
+  EnabledInUASheets = 1 << 1,
+  EnabledInChrome = 1 << 2,
   EnabledInUASheetsAndChrome = EnabledInUASheets | EnabledInChrome,
   EnabledMask = EnabledInUASheetsAndChrome,
 
   // This property can be animated on the compositor.
-  CanAnimateOnCompositor = 1 << 4,
+  CanAnimateOnCompositor = 1 << 3,
 
   // This property is an internal property that is not represented in
   // the DOM. Properties with this flag are defined in an #ifndef
   // CSS_PROP_LIST_EXCLUDE_INTERNAL section.
-  Internal = 1 << 5,
+  Internal = 1 << 4,
 
   // Whether this property should be serialized by Servo in getComputedStyle.
-  SerializedByServo = 1 << 6,
+  SerializedByServo = 1 << 5,
 
   // Whether this is a logical property.
-  IsLogical = 1 << 7,
+  IsLogical = 1 << 6,
 };
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CSSPropFlags)
