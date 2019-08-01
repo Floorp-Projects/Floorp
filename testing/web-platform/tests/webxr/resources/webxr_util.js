@@ -74,6 +74,7 @@ function xr_session_promise_test(
                               let glLayer = new XRWebGLLayer(session, gl, {
                                 compositionDisabled: session.mode == 'inline'
                               });
+                              glLayer.context = gl;
                               // Session must have a baseLayer or frame requests
                               // will be ignored.
                               session.updateRenderState({
