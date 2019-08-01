@@ -49,7 +49,7 @@ pref(layout.css.column-span.enabled,true) == first-line-first-letter.html first-
 # column-span enabled. These lines can be removed once the pref becomes
 # default-enabled (Bug 1426010).
 default-preferences pref(layout.css.column-span.enabled,true)
-fails == min-width-2.html min-width-2-ref.html # Bug 1548100
+== min-width-2.html min-width-2-ref.html
 == column-balancing-nested-001.html column-balancing-nested-001-ref.html
 fails == zero-height-nondirty-reflow.html zero-height-nondirty-reflow-ref.html # bug 1565665
 default-preferences
