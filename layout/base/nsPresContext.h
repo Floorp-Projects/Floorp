@@ -37,6 +37,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/AppUnits.h"
+#include "mozilla/MediaEmulationData.h"
 #include "prclist.h"
 #include "nsThreadUtils.h"
 #include "nsIMessageManager.h"
@@ -132,6 +133,8 @@ class nsPresContext : public nsISupports,
   using Encoding = mozilla::Encoding;
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
+  using MediaEmulationData = mozilla::MediaEmulationData;
+
   typedef mozilla::ScrollStyles ScrollStyles;
   typedef mozilla::StaticPresData StaticPresData;
   using TransactionId = mozilla::layers::TransactionId;
@@ -305,7 +308,8 @@ class nsPresContext : public nsISupports,
    */
   const nsAtom* Medium() {
     MOZ_ASSERT(mMedium);
-    return mMediaEmulated ? mMediaEmulated.get() : mMedium;
+    return mMediaEmulationData.mMedium ? mMediaEmulationData.mMedium.get()
+                                       : mMedium;
   }
 
   /*
@@ -484,8 +488,8 @@ class nsPresContext : public nsISupports,
   float GetDeviceFullZoom();
   void SetFullZoom(float aZoom);
 
-  float GetOverrideDPPX() { return mOverrideDPPX; }
-  void SetOverrideDPPX(float aDPPX);
+  float GetOverrideDPPX() const { return mMediaEmulationData.mDPPX; }
+  void SetOverrideDPPX(float);
 
   nscoord GetAutoQualityMinFontSize() {
     return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);
@@ -1117,8 +1121,10 @@ class nsPresContext : public nsISupports,
   mozilla::UniquePtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
   const nsStaticAtom* mMedium;
-  RefPtr<nsAtom> mMediaEmulated;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
+  // TODO(emilio): Maybe lazily create and put under a UniquePtr if this grows a
+  // lot?
+  MediaEmulationData mMediaEmulationData;
 
  public:
   // The following are public member variables so that we can use them
@@ -1133,7 +1139,6 @@ class nsPresContext : public nsISupports,
   float mTextZoom;           // Text zoom, defaults to 1.0
   float mEffectiveTextZoom;  // Text zoom * system font scale
   float mFullZoom;           // Page zoom, defaults to 1.0
-  float mOverrideDPPX;       // DPPX overrided, defaults to 0.0
   gfxSize mLastFontInflationScreenSize;
 
   int32_t mCurAppUnitsPerDevPixel;

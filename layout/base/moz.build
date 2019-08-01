@@ -74,6 +74,7 @@ EXPORTS.mozilla += [
     'ArenaObjectID.h',
     'GeckoMVMContext.h',
     'GeometryUtils.h',
+    'MediaEmulationData.h',
     'MVMContext.h',
     'OverflowChangedTracker.h',
     'PresShell.h',
