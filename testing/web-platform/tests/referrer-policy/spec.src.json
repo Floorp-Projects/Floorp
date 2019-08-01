@@ -252,7 +252,7 @@
             "attr-referrer"
           ],
           "delivery_value": "same-origin",
-          "redirection": "swap-origin-redirect",
+          "redirection": "swap-origin",
           "origin": [
             "same-http",
             "same-https"
@@ -356,7 +356,7 @@
             "attr-referrer"
           ],
           "delivery_value": "origin-when-cross-origin",
-          "redirection": "swap-origin-redirect",
+          "redirection": "swap-origin",
           "origin": [
             "same-http",
             "same-https"
@@ -495,7 +495,7 @@
             "attr-referrer"
           ],
           "delivery_value": "strict-origin-when-cross-origin",
-          "redirection": "swap-origin-redirect",
+          "redirection": "swap-origin",
           "origin": "same-http",
           "subresource": "*",
           "expectation": "origin"
@@ -576,7 +576,7 @@
             "attr-referrer"
           ],
           "delivery_value": "strict-origin-when-cross-origin",
-          "redirection": "swap-origin-redirect",
+          "redirection": "swap-origin",
           "origin": "same-https",
           "subresource": "*",
           "expectation": "origin"
@@ -733,7 +733,7 @@
       "source_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
-      "redirection": "swap-origin-redirect",
+      "redirection": "swap-origin",
       "origin": "*",
       "subresource": [
         "worker-request",
@@ -749,8 +749,8 @@
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": [
-        "keep-origin-redirect",
-        "swap-origin-redirect"
+        "keep-origin",
+        "swap-origin"
       ],
       "origin": "*",
       "subresource": [
@@ -805,8 +805,8 @@
     ],
     "redirection": [
       "no-redirect",
-      "keep-origin-redirect",
-      "swap-origin-redirect"
+      "keep-origin",
+      "swap-origin"
     ],
     "subresource": [
       "iframe-tag",

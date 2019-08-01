@@ -18,8 +18,8 @@
             "optionally-blockable": "*"
           },
           "origin": [
-            "cross-origin-http",
-            "same-host-http"
+            "cross-http",
+            "same-http"
           ],
           "expectation": "blocked"
         },
@@ -35,8 +35,8 @@
             "optionally-blockable": "*"
           },
           "origin": [
-            "cross-origin-http",
-            "same-host-http"
+            "cross-http",
+            "same-http"
           ],
           "expectation": "allowed"
         }
@@ -60,8 +60,8 @@
             "optionally-blockable": []
           },
           "origin": [
-            "cross-origin-http",
-            "same-host-http"
+            "cross-http",
+            "same-http"
           ],
           "expectation": "blocked"
         },
@@ -77,8 +77,8 @@
             "optionally-blockable": []
           },
           "origin": [
-            "cross-origin-http",
-            "same-host-http"
+            "cross-http",
+            "same-http"
           ],
           "expectation": "blocked"
         },
@@ -94,8 +94,8 @@
             "optionally-blockable": []
           },
           "origin": [
-            "cross-origin-ws",
-            "same-host-ws"
+            "cross-ws",
+            "same-ws"
           ],
           "expectation": "blocked"
         }
@@ -115,14 +115,14 @@
           "delivery_value": "*",
           "redirection": [
             "no-redirect",
-            "keep-scheme-redirect"
+            "keep-scheme"
           ],
           "subresource": {
             "blockable": "*",
             "optionally-blockable": "*"
           },
           "origin": [
-            "same-host-https"
+            "same-https"
           ],
           "expectation": "allowed"
         },
@@ -134,14 +134,14 @@
           "delivery_value": "*",
           "redirection": [
             "no-redirect",
-            "keep-scheme-redirect"
+            "keep-scheme"
           ],
           "subresource": {
             "blockable": "websocket-request",
             "optionally-blockable": []
           },
           "origin": [
-            "same-host-wss"
+            "same-wss"
           ],
           "expectation": "allowed"
         }
@@ -194,10 +194,10 @@
         "optionally-blockable": []
       },
       "origin": [
-        "same-host-https",
-        "same-host-http",
-        "cross-origin-https",
-        "cross-origin-http"
+        "same-https",
+        "same-http",
+        "cross-https",
+        "cross-http"
       ],
       "expectation": "*"
     },
@@ -208,8 +208,8 @@
       "delivery_type": "meta",
       "delivery_value": "opt-in",
       "redirection": [
-        "keep-scheme-redirect",
-        "swap-scheme-redirect"
+        "keep-scheme",
+        "swap-scheme"
       ],
       "subresource": {
         "blockable": "*",
@@ -238,18 +238,18 @@
     ],
     "redirection": [
       "no-redirect",
-      "keep-scheme-redirect",
-      "swap-scheme-redirect"
+      "keep-scheme",
+      "swap-scheme"
     ],
     "origin": [
-      "same-host-https",
-      "same-host-http",
-      "cross-origin-https",
-      "cross-origin-http",
-      "same-host-wss",
-      "same-host-ws",
-      "cross-origin-wss",
-      "cross-origin-ws"
+      "same-https",
+      "same-http",
+      "cross-https",
+      "cross-http",
+      "same-wss",
+      "same-ws",
+      "cross-wss",
+      "cross-ws"
     ],
     "subresource": {
       "blockable": [
