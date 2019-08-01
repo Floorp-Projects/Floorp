@@ -9,8 +9,11 @@ function checkElementInternal(entry, expectedUrl, expectedIdentifier, expectedID
   assert_equals(entry.id, expectedID);
   assert_greater_than_equal(entry.renderTime, beforeRender);
   assert_greater_than_equal(performance.now(), entry.renderTime);
-  if (expectedElement !== null)
+  if (expectedElement !== null) {
     assert_equals(entry.element, expectedElement);
+    assert_equals(entry.identifier, expectedElement.elementTiming);
+    assert_equals(entry.id, expectedElement.id);
+  }
 }
 
 // Checks that this is an ElementTiming entry with url |expectedUrl|. It also
