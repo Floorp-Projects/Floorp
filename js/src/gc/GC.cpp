@@ -5058,23 +5058,10 @@ bool Compartment::findSweepGroupEdges() {
       continue;
     }
 
-    // Ensure that debuggers and their debuggees are finalized in the same group
-    // by adding edges in both directions if we find a debugger wrapper.
-    // (Additional edges are added by DebugAPI::findSweepGroupEdges.)
-    if (key.isDebuggerKey()) {
-      if (!source->addSweepGroupEdgeTo(target) ||
-          !target->addSweepGroupEdgeTo(source)) {
-        return false;
-      }
-      continue;
-    }
-
-    // Otherwise add an edge to the wrapped object's zone to ensure that the
-    // wrapper zone is not still being marked when we start sweeping the wrapped
-    // zone.
-
-    // As an optimization, if the wrapped object is already marked black there
-    // is no danger of later marking and we can skip this.
+    // Add an edge to the wrapped object's zone to ensure that the wrapper zone
+    // is not still being marked when we start sweeping the wrapped zone. As an
+    // optimization, if the wrapped object is already marked black there is no
+    // danger of later marking and we can skip this.
     if (key.is<JSObject*>() &&
         key.as<JSObject*>()->asTenured().isMarkedBlack()) {
       continue;
