@@ -656,8 +656,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   if (parentWindow) {
     parentDocShell = parentWindow->GetDocShell();
     if (parentDocShell) {
-      nsCOMPtr<nsIDocShell> foundDocShell = do_QueryInterface(newDocShellItem);
-      if (parentDocShell->IsSandboxedFrom(foundDocShell)) {
+      if (parentDocShell->IsSandboxedFrom(
+              newDocShellItem->GetBrowsingContext())) {
         return NS_ERROR_DOM_INVALID_ACCESS_ERR;
       }
     }
