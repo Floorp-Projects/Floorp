@@ -26,7 +26,12 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BookmarkFolderViewHolder {
-        val view = LibrarySiteItemView(parent.context)
+        val view = LibrarySiteItemView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
 
         return BookmarkFolderViewHolder(view)
     }
