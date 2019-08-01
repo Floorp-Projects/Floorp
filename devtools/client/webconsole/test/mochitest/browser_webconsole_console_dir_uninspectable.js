@@ -15,20 +15,24 @@ const SECOND_LOG_MESSAGE = "fooBug773466b";
 
 add_task(async function() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
 
   info("Logging a first message to make sure everything is working");
-  let onLogMessage = waitForMessage(hud, FIRST_LOG_MESSAGE);
-  jsterm.execute(`console.log("${FIRST_LOG_MESSAGE}")`);
-  await onLogMessage;
+  await executeAndWaitForMessage(
+    hud,
+    `console.log("${FIRST_LOG_MESSAGE}")`,
+    FIRST_LOG_MESSAGE,
+    ".message.log"
+  );
 
   info("console.dir on an uninspectable object");
-  const onDirMessage = waitForMessage(hud, "Object {  }");
-  jsterm.execute("console.dir(Object.create(null))");
-  await onDirMessage;
+  await executeAndWaitForMessage(
+    hud,
+    "console.dir(Object.create(null))",
+    "Object {  }"
+  );
 
   info("Logging a second message to make sure the console is not broken");
-  onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
+  const onLogMessage = waitForMessage(hud, SECOND_LOG_MESSAGE);
   // Logging from content to make sure the console API is working.
   ContentTask.spawn(gBrowser.selectedBrowser, SECOND_LOG_MESSAGE, string => {
     content.console.log(string);

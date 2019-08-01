@@ -344,11 +344,8 @@ class MarkupContextMenu {
    */
   _showDOMProperties() {
     this.toolbox.openSplitConsole().then(() => {
-      const panel = this.toolbox.getPanel("webconsole");
-      const jsterm = panel.hud.jsterm;
-
-      jsterm.execute("inspect($0)");
-      jsterm.focus();
+      const { hud } = this.toolbox.getPanel("webconsole");
+      hud.ui.wrapper.dispatchEvaluateExpression("inspect($0)");
     });
   }
 

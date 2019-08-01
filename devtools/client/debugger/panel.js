@@ -80,9 +80,8 @@ DebuggerPanel.prototype = {
   },
 
   openConsoleAndEvaluate: async function(input) {
-    const webconsolePanel = await this.toolbox.selectTool("webconsole");
-    const jsterm = webconsolePanel.hud.jsterm;
-    jsterm.execute(input);
+    const { hud } = await this.toolbox.selectTool("webconsole");
+    hud.ui.wrapper.dispatchEvaluateExpression(input);
   },
 
   openElementInInspector: async function(grip) {

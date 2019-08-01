@@ -31,11 +31,12 @@ add_task(async function() {
   await gDevTools.showToolbox(target, "webconsole");
 
   info("Test logging and inspecting objects while on a breakpoint.");
-  const jsterm = hud.jsterm;
-
-  const onMessage = waitForMessage(hud, '{ testProp2: "testValue2" }');
-  jsterm.execute("fooObj");
-  const message = await onMessage;
+  const message = await executeAndWaitForMessage(
+    hud,
+    "fooObj",
+    '{ testProp2: "testValue2" }',
+    ".result"
+  );
 
   const objectInspectors = [...message.node.querySelectorAll(".tree")];
   is(objectInspectors.length, 1, "There should be one object inspector");
