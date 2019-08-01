@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -34,9 +34,8 @@ def copy_dir_contents(src, dest):
 
 
 def write_cmake(module_path):
-    names = map(lambda f: '  ' + os.path.basename(f),
-                glob.glob("%s/*.cpp" % module_path))
-    with open(os.path.join(module_path, 'CMakeLists.txt'), 'wb') as f:
+    names = ['  ' + os.path.basename(f) for f in glob.glob("%s/*.cpp" % module_path)]
+    with open(os.path.join(module_path, 'CMakeLists.txt'), 'w') as f:
         f.write("""set(LLVM_LINK_COMPONENTS support)
 
 add_definitions( -DCLANG_TIDY )
@@ -76,13 +75,13 @@ def add_item_to_cmake_section(cmake_path, section, library):
     libs.append(library)
     libs = sorted(libs, key=lambda s: s.lower())
 
-    with open(cmake_path, 'wb') as f:
+    with open(cmake_path, 'w') as f:
         seen_target_libs = False
         for line in lines:
             if line.find(section) > -1:
                 seen_target_libs = True
                 f.write(line)
-                f.writelines(map(lambda p: '  ' + p + '\n', libs))
+                f.writelines(['  ' + p + '\n' for p in libs])
                 continue
             elif seen_target_libs:
                 if line.find(')') > -1:

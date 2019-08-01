@@ -288,8 +288,7 @@ prepare
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-mingw.json --skip-tar
+python3 ./build-clang.py -c clang-8-mingw.json --skip-tar
 
 set -x
 

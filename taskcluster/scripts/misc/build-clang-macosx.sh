@@ -18,8 +18,7 @@ export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-macosx64.json
+python3 ./build-clang.py -c clang-8-macosx64.json
 
 set -x
 
