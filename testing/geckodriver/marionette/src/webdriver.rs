@@ -29,6 +29,18 @@ pub struct NewWindow {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct WindowRect {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub x: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub y: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<i32>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
     #[serde(
         rename = "WebDriver:AddCookie",
@@ -56,6 +68,12 @@ pub enum Command {
     GetCookies,
     #[serde(rename = "WebDriver:GetTimeouts")]
     GetTimeouts,
+    #[serde(rename = "WebDriver:GetWindowHandle")]
+    GetWindowHandle,
+    #[serde(rename = "WebDriver:GetWindowHandles")]
+    GetWindowHandles,
+    #[serde(rename = "WebDriver:GetWindowRect")]
+    GetWindowRect,
     #[serde(rename = "WebDriver:MaximizeWindow")]
     MaximizeWindow,
     #[serde(rename = "WebDriver:MinimizeWindow")]
@@ -64,6 +82,8 @@ pub enum Command {
     NewWindow(NewWindow),
     #[serde(rename = "WebDriver:SetTimeouts")]
     SetTimeouts(Timeouts),
+    #[serde(rename = "WebDriver:SetWindowRect")]
+    SetWindowRect(WindowRect),
 }
 
 #[cfg(test)]
@@ -123,6 +143,17 @@ mod tests {
             type_hint: Some("foo".into()),
         };
         assert_ser_de(&data, json!({ "type": "foo" }));
+    }
+
+    #[test]
+    fn test_json_window_rect() {
+        let data = WindowRect {
+            x: Some(123),
+            y: None,
+            width: None,
+            height: None,
+        };
+        assert_ser_de(&data, json!({"x": 123}));
     }
 
     #[test]

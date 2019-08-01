@@ -9,6 +9,7 @@ use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Locator as MarionetteLocator,
     NewWindow as MarionetteNewWindow, Selector as MarionetteSelector,
+    WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
@@ -819,6 +820,15 @@ fn try_convert_to_marionette_message(
         GetCookies | GetNamedCookie(_) => {
             Some(Command::WebDriver(MarionetteWebDriverCommand::GetCookies))
         }
+        GetWindowHandle => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetWindowHandle,
+        )),
+        GetWindowHandles => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetWindowHandles,
+        )),
+        GetWindowRect => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::GetWindowRect,
+        )),
         GetTimeouts => Some(Command::WebDriver(MarionetteWebDriverCommand::GetTimeouts)),
         MaximizeWindow => Some(Command::WebDriver(
             MarionetteWebDriverCommand::MaximizeWindow,
@@ -832,6 +842,9 @@ fn try_convert_to_marionette_message(
         SetTimeouts(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::SetTimeouts(
             x.to_marionette()?,
         ))),
+        SetWindowRect(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::SetWindowRect(x.to_marionette()?),
+        )),
         _ => None,
     })
 }
@@ -972,9 +985,6 @@ impl MarionetteCommand {
                 }
                 GetPageSource => (Some("WebDriver:GetPageSource"), None),
                 GetTitle => (Some("WebDriver:GetTitle"), None),
-                GetWindowHandle => (Some("WebDriver:GetWindowHandle"), None),
-                GetWindowHandles => (Some("WebDriver:GetWindowHandles"), None),
-                GetWindowRect => (Some("WebDriver:GetWindowRect"), None),
                 GoBack => (Some("WebDriver:Back"), None),
                 GoForward => (Some("WebDriver:Forward"), None),
                 IsDisplayed(ref x) => (
@@ -1013,7 +1023,6 @@ impl MarionetteCommand {
                     );
                     (Some("WebDriver:SendAlertText"), Some(Ok(data)))
                 }
-                SetWindowRect(ref x) => (Some("WebDriver:SetWindowRect"), Some(x.to_marionette())),
                 SwitchToFrame(ref x) => (Some("WebDriver:SwitchToFrame"), Some(x.to_marionette())),
                 SwitchToParentFrame => (Some("WebDriver:SwitchToParentFrame"), None),
                 SwitchToWindow(ref x) => {
@@ -1591,14 +1600,14 @@ impl ToMarionette<Map<String, Value>> for WebElement {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for WindowRectParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionetteWindowRect> for WindowRectParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteWindowRect> {
+        Ok(MarionetteWindowRect {
+            x: self.x.clone(),
+            y: self.y.clone(),
+            width: self.width.clone(),
+            height: self.height.clone(),
+        })
     }
 }
 
