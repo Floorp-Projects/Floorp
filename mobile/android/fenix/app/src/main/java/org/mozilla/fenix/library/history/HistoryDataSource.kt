@@ -43,7 +43,9 @@ class HistoryDataSource(
                     ?: visit.url.getHostFromUrl()
                     ?: visit.url
 
-                HistoryItem(offset + id, title, visit.url, visit.visitTime)
+                // We want IDs to start at 1, not 0 to be able to send the correct offset
+                // to the `historyProvider.getHistory` call.
+                HistoryItem(offset + id + 1, title, visit.url, visit.visitTime)
             }
         }
     }
