@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/function-forms/dflt-params-abrupt.case
 // - src/function-forms/error/cls-expr-async-meth.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment-for-await/array-elem-nested-array-undefined-own.case
 // - src/dstr-assignment-for-await/default/async-func-decl.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/class-elements/computed-symbol-names.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-method.template

@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private is not supported
+// |reftest| skip async -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/class-elements/prod-private-async-generator.case
 // - src/class-elements/private-methods/cls-expr.template

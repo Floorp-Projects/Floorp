@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/obj-ptrn-id-init-skipped.case
 // - src/dstr-binding-for-await/default/for-await-of-async-func-var-async.template

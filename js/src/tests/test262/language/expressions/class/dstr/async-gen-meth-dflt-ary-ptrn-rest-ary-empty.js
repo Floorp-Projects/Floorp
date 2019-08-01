@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-ary-empty.case
 // - src/dstr-binding/default/cls-expr-async-gen-meth-dflt.template

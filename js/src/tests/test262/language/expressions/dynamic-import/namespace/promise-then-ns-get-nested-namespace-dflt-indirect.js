@@ -1,4 +1,4 @@
-// |reftest| skip module -- export-star-as-namespace-from-module is not supported
+// |reftest| skip module async -- export-star-as-namespace-from-module is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-get-nested-namespace-dflt-indirect.case
 // - src/dynamic-import/namespace/promise.template

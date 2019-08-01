@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment-for-await/array-rest-iter-nrml-close-skip.case
 // - src/dstr-assignment-for-await/async-generator/async-gen-decl.template

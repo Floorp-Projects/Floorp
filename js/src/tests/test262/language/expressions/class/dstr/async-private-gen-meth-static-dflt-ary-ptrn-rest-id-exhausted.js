@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| skip async -- class-static-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-rest-id-exhausted.case
 // - src/dstr-binding/default/cls-expr-async-private-gen-meth-static-dflt.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/obj-ptrn-prop-obj-value-null.case
 // - src/dstr-binding-for-await/error/for-await-of-async-func-var.template

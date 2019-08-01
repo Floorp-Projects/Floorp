@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) error:SyntaxError -- dynamic-import is not enabled unconditionally
+// |reftest| error:SyntaxError
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/not-extensible-args.case
 // - src/dynamic-import/syntax/invalid/nested-do-while.template

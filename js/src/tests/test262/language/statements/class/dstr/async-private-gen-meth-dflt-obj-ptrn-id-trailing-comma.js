@@ -1,4 +1,4 @@
-// |reftest| skip -- class-methods-private is not supported
+// |reftest| skip async -- class-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-id-trailing-comma.case
 // - src/dstr-binding/default/cls-decl-async-private-gen-meth-dflt.template

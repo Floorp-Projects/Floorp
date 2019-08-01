@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-rqstd-abrupt-urierror.case
 // - src/dynamic-import/catch/nested-async-function-return-await.template

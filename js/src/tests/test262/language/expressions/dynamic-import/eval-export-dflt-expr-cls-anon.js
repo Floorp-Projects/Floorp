@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) module -- dynamic-import is not enabled unconditionally
+// |reftest| module async
 // Copyright (C) 2018 Rick Waldron. All rights reserved.
 // Copyright (C) 2016 the V8 project authors. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.

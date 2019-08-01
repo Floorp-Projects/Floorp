@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/class-elements/string-literal-names.case
 // - src/class-elements/productions/cls-expr-after-same-line-static-async-method.template

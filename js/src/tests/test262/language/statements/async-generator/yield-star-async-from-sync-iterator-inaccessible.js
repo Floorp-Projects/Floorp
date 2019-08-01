@@ -1,3 +1,4 @@
+// |reftest| async
 // Copyright (C) 2019 André Bargull. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

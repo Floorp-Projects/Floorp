@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment-for-await/array-elem-put-prop-ref-user-err.case
 // - src/dstr-assignment-for-await/default/async-gen-decl.template

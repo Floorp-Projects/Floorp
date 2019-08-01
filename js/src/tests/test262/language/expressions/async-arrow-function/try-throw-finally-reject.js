@@ -1,3 +1,4 @@
+// |reftest| async
 // Copyright 2017 Caitlin Potter. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 

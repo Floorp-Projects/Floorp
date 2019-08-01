@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) module -- dynamic-import is not enabled unconditionally
+// |reftest| module async
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-script-code-target.case
 // - src/dynamic-import/catch/top-level.template
