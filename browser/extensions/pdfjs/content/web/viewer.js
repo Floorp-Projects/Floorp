@@ -575,7 +575,11 @@ let PDFViewerApplication = {
       eventBus
     });
     pdfLinkService.setHistory(this.pdfHistory);
-    this.findBar = new _pdf_find_bar.PDFFindBar(appConfig.findBar, eventBus, this.l10n);
+
+    if (!this.supportsIntegratedFind) {
+      this.findBar = new _pdf_find_bar.PDFFindBar(appConfig.findBar, eventBus, this.l10n);
+    }
+
     this.pdfDocumentProperties = new _pdf_document_properties.PDFDocumentProperties(appConfig.documentProperties, this.overlayManager, eventBus, this.l10n);
     this.pdfCursorTools = new _pdf_cursor_tools.PDFCursorTools({
       container,
@@ -806,7 +810,11 @@ let PDFViewerApplication = {
     this.pdfSidebar.reset();
     this.pdfOutlineViewer.reset();
     this.pdfAttachmentViewer.reset();
-    this.findBar.reset();
+
+    if (this.findBar) {
+      this.findBar.reset();
+    }
+
     this.toolbar.reset();
     this.secondaryToolbar.reset();
 
@@ -2015,19 +2023,16 @@ function setZoomDisabledTimeout() {
 }
 
 function webViewerWheel(evt) {
-  let pdfViewer = PDFViewerApplication.pdfViewer;
+  const {
+    pdfViewer,
+    supportedMouseWheelZoomModifierKeys
+  } = PDFViewerApplication;
 
   if (pdfViewer.isInPresentationMode) {
     return;
   }
 
-  if (evt.ctrlKey || evt.metaKey) {
-    let support = PDFViewerApplication.supportedMouseWheelZoomModifierKeys;
-
-    if (evt.ctrlKey && !support.ctrlKey || evt.metaKey && !support.metaKey) {
-      return;
-    }
-
+  if (evt.ctrlKey && supportedMouseWheelZoomModifierKeys.ctrlKey || evt.metaKey && supportedMouseWheelZoomModifierKeys.metaKey) {
     evt.preventDefault();
 
     if (zoomDisabledTimeout || document.visibilityState === 'hidden') {
