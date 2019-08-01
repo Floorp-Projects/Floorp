@@ -69,7 +69,9 @@ const adjustCertInformation = cert => {
     sectionTitle: "Validity",
     sectionItems: [
       createEntryItem("Not Before", cert.notBefore),
+      createEntryItem("Not Before UTC", cert.notBeforeUTC),
       createEntryItem("Not After", cert.notAfter),
+      createEntryItem("Not After UTC", cert.notAfterUTC),
     ],
     Critical: false,
   });
