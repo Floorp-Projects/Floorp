@@ -943,39 +943,99 @@ nsresult MediaEncoder::WriteEncodedDataToMuxer() {
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (mVideoEncoder) {
-    nsTArray<RefPtr<EncodedFrame>> videoFrames;
-    while (mEncodedVideoFrames.GetSize() > 0) {
-      videoFrames.AppendElement(mEncodedVideoFrames.PopFront());
+  // If we have a single encoder we don't have to worry about interleaving
+  if ((mVideoEncoder && !mAudioEncoder) || (mAudioEncoder && !mVideoEncoder)) {
+    TrackEncoder* encoder = mAudioEncoder
+                                ? static_cast<TrackEncoder*>(mAudioEncoder)
+                                : static_cast<TrackEncoder*>(mVideoEncoder);
+    MediaQueue<EncodedFrame>* encodedFramesQueue =
+        mAudioEncoder ? &mEncodedAudioFrames : &mEncodedVideoFrames;
+    nsTArray<RefPtr<EncodedFrame>> frames;
+    while (encodedFramesQueue->GetSize() > 0) {
+      frames.AppendElement(encodedFramesQueue->PopFront());
     }
     nsresult rv = mWriter->WriteEncodedTrack(
-        videoFrames, mVideoEncoder->IsEncodingComplete()
-                         ? ContainerWriter::END_OF_STREAM
-                         : 0);
+        frames,
+        encoder->IsEncodingComplete() ? ContainerWriter::END_OF_STREAM : 0);
     if (NS_FAILED(rv)) {
       LOG(LogLevel::Error,
           ("Failed to write encoded video track to the muxer."));
       return rv;
     }
+
+    // Done with single encoder case.
+    return NS_OK;
   }
 
-  if (mAudioEncoder) {
-    nsTArray<RefPtr<EncodedFrame>> audioFrames;
+  // If we reach here we have both video and audio encoders, so we interleave
+  // the frames.
+  nsTArray<RefPtr<EncodedFrame>> frames;
+  RefPtr<EncodedFrame> videoFrame;
+  RefPtr<EncodedFrame> audioFrame;
+  // The times at which we expect our next video and audio frames. These are
+  // based on the time + duration (GetEndTime()) of the last seen frames.
+  // Assumes that the encoders write the correct duration for frames.
+  uint64_t expectedNextVideoTime = 0;
+  uint64_t expectedNextAudioTime = 0;
+  // Interleave frames until we're out of audio or video
+  while (mEncodedVideoFrames.GetSize() > 0 &&
+         mEncodedAudioFrames.GetSize() > 0) {
+    videoFrame = mEncodedVideoFrames.PeekFront();
+    audioFrame = mEncodedAudioFrames.PeekFront();
+    // For any expected time our frames should occur at or after that time.
+    MOZ_ASSERT(videoFrame->mTime >= expectedNextVideoTime);
+    MOZ_ASSERT(audioFrame->mTime >= expectedNextAudioTime);
+    if (videoFrame->mTime <= audioFrame->mTime) {
+      expectedNextVideoTime = videoFrame->GetEndTime();
+      RefPtr<EncodedFrame> frame = mEncodedVideoFrames.PopFront();
+      frames.AppendElement(frame);
+    } else {
+      expectedNextAudioTime = audioFrame->GetEndTime();
+      RefPtr<EncodedFrame> frame = mEncodedAudioFrames.PopFront();
+      frames.AppendElement(frame);
+    }
+  }
+
+  // If we're out of audio we still may be able to add more video...
+  if (mEncodedAudioFrames.GetSize() == 0) {
+    while (mEncodedVideoFrames.GetSize() > 0) {
+      videoFrame = mEncodedVideoFrames.PeekFront();
+      // If audio encoding is not complete and if the video frame would come
+      // after our next audio frame we cannot safely add it.
+      if (!mAudioEncoder->IsEncodingComplete() &&
+          videoFrame->mTime > expectedNextAudioTime) {
+        break;
+      }
+      frames.AppendElement(mEncodedVideoFrames.PopFront());
+    }
+  }
+
+  // If we're out of video we still may be able to add more audio...
+  if (mEncodedVideoFrames.GetSize() == 0) {
     while (mEncodedAudioFrames.GetSize() > 0) {
-      audioFrames.AppendElement(mEncodedAudioFrames.PopFront());
-    }
-    nsresult rv = mWriter->WriteEncodedTrack(
-        audioFrames, mAudioEncoder->IsEncodingComplete()
-                         ? ContainerWriter::END_OF_STREAM
-                         : 0);
-    if (NS_FAILED(rv)) {
-      LOG(LogLevel::Error,
-          ("Failed to write encoded audio track to the muxer."));
-      return rv;
+      audioFrame = mEncodedAudioFrames.PeekFront();
+      // If video encoding is not complete and if the audio frame would come
+      // after our next video frame we cannot safely add it.
+      if (!mVideoEncoder->IsEncodingComplete() &&
+          audioFrame->mTime > expectedNextVideoTime) {
+        break;
+      }
+      frames.AppendElement(mEncodedAudioFrames.PopFront());
     }
   }
 
-  return NS_OK;
+  // If encoding is complete for both encoders we should signal end of stream,
+  // otherwise we keep going.
+  uint32_t flags =
+      mVideoEncoder->IsEncodingComplete() && mAudioEncoder->IsEncodingComplete()
+          ? ContainerWriter::END_OF_STREAM
+          : 0;
+  nsresult rv = mWriter->WriteEncodedTrack(frames, flags);
+  if (NS_FAILED(rv)) {
+    LOG(LogLevel::Error, ("Error! Fail to write encoded video + audio track "
+                          "to the media container."));
+  }
+  return rv;
 }
 
 nsresult MediaEncoder::CopyMetadataToMuxer(TrackEncoder* aTrackEncoder) {
