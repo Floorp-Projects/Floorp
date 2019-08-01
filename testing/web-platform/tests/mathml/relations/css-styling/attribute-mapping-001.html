@@ -34,13 +34,19 @@
           }, `dir on the ${tag} element is mapped to CSS direction`)
 
           test(function() {
-              assert_equals(style.getPropertyValue("color"), "rgb(0, 0, 255)", "no attribute");
+              assert_equals(style.getPropertyValue("color"),
+                            tag === "merror" ?
+                            "rgb(255, 0, 0)" : "rgb(0, 0, 255)",
+                            "no attribute");
               element.setAttribute("mathcolor", "black");
               assert_equals(style.getPropertyValue("color"), "rgb(0, 0, 0)", "attribute specified");
           }, `mathcolor on the ${tag} element is mapped to CSS color`);
 
           test(function() {
-              assert_equals(style.getPropertyValue("background-color"), "rgba(0, 0, 0, 0)", "no attribute");
+              assert_equals(style.getPropertyValue("background-color"),
+                            tag === "merror" ?
+                            "rgb(255, 255, 224)" : "rgba(0, 0, 0, 0)",
+                            "no attribute");
               element.setAttribute("mathbackground", "lightblue");
               assert_equals(style.getPropertyValue("background-color"), "rgb(173, 216, 230)", "attribute specified");
           }, `mathbackground on the ${tag} element is mapped to CSS background-color`);
