@@ -36,5 +36,10 @@
                 <button id="errorTryAgain" onclick="window.history.back() ">%backButton%</button>
             </div>
         </div>
+        <script>
+            if (window.history.length == 1) {
+                document.getElementById('errorTryAgain').style.visibility = 'hidden';
+            }
+        </script>
     </body>
 </html>
