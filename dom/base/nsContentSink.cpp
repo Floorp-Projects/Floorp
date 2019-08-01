@@ -135,7 +135,6 @@ nsContentSink::~nsContentSink() {
   }
 }
 
-int32_t nsContentSink::sBackoffCount;
 int32_t nsContentSink::sNotificationInterval;
 int32_t nsContentSink::sInteractiveDeflectCount;
 int32_t nsContentSink::sPerfDeflectCount;
@@ -148,9 +147,6 @@ int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  // -1 means never.
-  Preferences::AddIntVarCache(&sBackoffCount, "content.notify.backoffcount",
-                              -1);
   // The gNotificationInterval has a dramatic effect on how long it
   // takes to initially display content for slow connections.
   // The current value provides good
@@ -210,7 +206,7 @@ nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
 
   mNodeInfoManager = aDoc->NodeInfoManager();
 
-  mBackoffCount = sBackoffCount;
+  mBackoffCount = StaticPrefs::content_notify_backoffcount();
 
   if (sEnablePerfMode != 0) {
     mDynamicLowerValue = sEnablePerfMode == 1;
