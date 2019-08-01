@@ -248,6 +248,10 @@ StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     return StylePrefersColorScheme::Light;
   }
   if (nsPresContext* pc = aDocument->GetPresContext()) {
+    if (auto devtoolsOverride = pc->GetOverridePrefersColorScheme()) {
+      return *devtoolsOverride;
+    }
+
     if (pc->IsPrintingOrPrintPreview()) {
       return StylePrefersColorScheme::Light;
     }
