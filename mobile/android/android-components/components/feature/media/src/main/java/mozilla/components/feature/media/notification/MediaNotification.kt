@@ -13,8 +13,8 @@ import androidx.annotation.DrawableRes
 import androidx.core.app.NotificationCompat
 import mozilla.components.browser.session.Session
 import mozilla.components.feature.media.R
+import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
-import java.lang.IllegalArgumentException
 
 private const val NOTIFICATION_CHANNEL_ID = "Media"
 
@@ -33,7 +33,7 @@ internal class MediaNotification(
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
-        val data = state.toNotificationData()
+        val data = state.toNotificationData(context)
 
         return NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(data.icon)
@@ -41,26 +41,46 @@ internal class MediaNotification(
             .setContentText(data.description)
             .setContentIntent(pendingIntent)
             .setLargeIcon(data.largeIcon)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(data.action)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(mediaSession.sessionToken))
+                .setMediaSession(mediaSession.sessionToken)
+                .setShowActionsInCompactView(0))
             .build()
     }
 }
 
-private fun MediaState.toNotificationData(): NotificationData {
+@Suppress("LongMethod")
+private fun MediaState.toNotificationData(context: Context): NotificationData {
     return when (this) {
         is MediaState.Playing -> NotificationData(
             title = session.titleOrUrl,
             description = session.url,
             icon = R.drawable.mozac_feature_media_playing,
-            largeIcon = session.icon
+            largeIcon = session.icon,
+            action = NotificationCompat.Action.Builder(
+                R.drawable.mozac_feature_media_action_pause,
+                context.getString(R.string.mozac_feature_media_notification_action_pause),
+                PendingIntent.getService(
+                    context,
+                    0,
+                    MediaService.pauseIntent(context),
+                    0)
+            ).build()
         )
         is MediaState.Paused -> NotificationData(
             title = session.titleOrUrl,
             description = session.url,
             icon = R.drawable.mozac_feature_media_paused,
-            largeIcon = session.icon
+            largeIcon = session.icon,
+            action = NotificationCompat.Action.Builder(
+                R.drawable.mozac_feature_media_action_play,
+                context.getString(R.string.mozac_feature_media_notification_action_play),
+                PendingIntent.getService(
+                    context,
+                    0,
+                    MediaService.playIntent(context),
+                    0)
+            ).build()
         )
         else -> throw IllegalArgumentException("Cannot create notification for state: $this")
     }
@@ -73,5 +93,6 @@ private data class NotificationData(
     val title: String,
     val description: String,
     @DrawableRes val icon: Int,
-    val largeIcon: Bitmap? = null
+    val largeIcon: Bitmap? = null,
+    val action: NotificationCompat.Action
 )

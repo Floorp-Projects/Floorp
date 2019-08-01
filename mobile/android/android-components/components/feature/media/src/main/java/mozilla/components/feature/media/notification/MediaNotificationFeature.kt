@@ -5,7 +5,6 @@
 package mozilla.components.feature.media.notification
 
 import android.content.Context
-import android.content.Intent
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
@@ -28,14 +27,13 @@ class MediaNotificationFeature(
     }
 
     internal fun startMediaService() {
-        context.startService(Intent(context, MediaService::class.java))
-
+        MediaService.updateState(context)
         serviceRunning = true
     }
 
     internal fun stopMediaService() {
         if (serviceRunning) {
-            context.stopService(Intent(context, MediaService::class.java))
+            MediaService.updateState(context)
         }
     }
 }

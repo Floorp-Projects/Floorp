@@ -23,28 +23,28 @@ internal fun MediaState.getMedia(): List<Media> {
 /**
  * Turns the [MediaState] into a [PlaybackStateCompat] to be used with a `MediaSession`.
  */
-internal fun MediaState.toPlaybackState(): PlaybackStateCompat {
-    val state = when (this) {
-        is MediaState.Playing -> PlaybackStateCompat.STATE_PLAYING
-        is MediaState.Paused -> PlaybackState.STATE_PAUSED
-        is MediaState.None -> PlaybackState.STATE_NONE
-    }
-
-    return PlaybackStateCompat.Builder()
+internal fun MediaState.toPlaybackState() =
+    PlaybackStateCompat.Builder()
         .setActions(
             PlaybackStateCompat.ACTION_PLAY_PAUSE or
                 PlaybackStateCompat.ACTION_PLAY or
                 PlaybackStateCompat.ACTION_PAUSE)
         .setState(
-            state,
+            when (this) {
+                is MediaState.Playing -> PlaybackStateCompat.STATE_PLAYING
+                is MediaState.Paused -> PlaybackState.STATE_PAUSED
+                is MediaState.None -> PlaybackState.STATE_NONE
+            },
             // Time state not exposed yet:
             // https://github.com/mozilla-mobile/android-components/issues/2458
             PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-            // Playback speed not exposed yet:
-            // https://github.com/mozilla-mobile/android-components/issues/2459
-            1.0f)
+            when (this) {
+                // The actual playback speed is not exposed yet:
+                // https://github.com/mozilla-mobile/android-components/issues/2459
+                is MediaState.Playing -> 1.0f
+                else -> 0.0f
+            })
         .build()
-}
 
 /**
  * If this state is [MediaState.Playing] then pause all playing [Media].

@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.media.service
 
-import android.content.Intent
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -14,6 +13,7 @@ import mozilla.components.feature.media.state.MediaStateMachine
 import mozilla.components.feature.media.state.MockMedia
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -51,7 +51,7 @@ class MediaServiceTest {
             .create()
             .get())
 
-        service.onStartCommand(Intent(), 0, 0)
+        service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
 
         verify(service).startForeground(ArgumentMatchers.anyInt(), any())
     }
@@ -75,13 +75,13 @@ class MediaServiceTest {
             .create()
             .get())
 
-        service.onStartCommand(Intent(), 0, 0)
+        service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
 
         verify(service, never()).stopSelf()
 
         media.playbackState = Media.PlaybackState.ENDED
 
-        service.onStartCommand(Intent(), 0, 0)
+        service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
 
         verify(service).stopSelf()
     }
