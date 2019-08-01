@@ -5720,6 +5720,15 @@
   value: true
   mirror: always
 
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
+# Whether win32k is disabled for content processes.
+# true means win32k system calls are not permitted.
+- name: security.sandbox.content.win32k-disable
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
+
 # Hardware Origin-bound Second Factor Support
 - name: security.webauth.webauthn
   type: bool
