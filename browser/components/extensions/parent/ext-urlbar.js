@@ -21,6 +21,13 @@ ExtensionPreferencesManager.addSetting("openViewOnFocus", {
   },
 });
 
+ExtensionPreferencesManager.addSetting("engagementTelemetry", {
+  prefNames: ["browser.urlbar.eventTelemetry.enabled"],
+  setCallback(value) {
+    return { [this.prefNames[0]]: value };
+  },
+});
+
 this.urlbar = class extends ExtensionAPI {
   getAPI(context) {
     return {
@@ -86,6 +93,12 @@ this.urlbar = class extends ExtensionAPI {
           context.extension.id,
           "openViewOnFocus",
           () => UrlbarPrefs.get("openViewOnFocus")
+        ),
+
+        engagementTelemetry: getSettingsAPI(
+          context.extension.id,
+          "engagementTelemetry",
+          () => UrlbarPrefs.get("eventTelemetry.enabled")
         ),
       },
     };
