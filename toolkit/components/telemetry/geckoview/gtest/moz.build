@@ -20,6 +20,12 @@ UNIFIED_SOURCES = [
     'TestGeckoView.cpp',
 ]
 
+# GeckoView Streaming Telemetry is only available on Android.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+  UNIFIED_SOURCES += [
+    'TestGeckoViewStreaming.cpp',
+  ]
+
 # We need the following line otherwise including
 # "TelemetryHistogram.h" in tests will fail due to
 # missing headers.
