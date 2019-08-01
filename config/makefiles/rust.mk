@@ -132,7 +132,11 @@ export MOZ_TOPOBJDIR=$(topobjdir)
 target_rust_ltoable := force-cargo-library-build
 target_rust_nonltoable := force-cargo-test-run force-cargo-library-check $(foreach b,build check,force-cargo-program-$(b))
 
-$(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST),-Clinker-plugin-lto)
+ifdef MOZ_PGO_RUST
+rust_pgo_flags := $(if $(MOZ_PROFILE_GENERATE),-C profile-generate=$(topobjdir)) $(if $(MOZ_PROFILE_USE),-C profile-use=$(topobjdir)/merged.profdata)
+endif
+
+$(target_rust_ltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS) $(if $(MOZ_LTO_RUST),-Clinker-plugin-lto) $(rust_pgo_flags)
 $(target_rust_nonltoable): RUSTFLAGS:=$(rustflags_override) $(RUSTFLAGS)
 
 TARGET_RECIPES := $(target_rust_ltoable) $(target_rust_nonltoable)
