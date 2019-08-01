@@ -579,11 +579,11 @@ void WebRenderAPI::Capture() {
 }
 
 void WebRenderAPI::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
+    UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   class SetCompositionRecorderEvent final : public RendererEvent {
    public:
     explicit SetCompositionRecorderEvent(
-        RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder)
+        UniquePtr<layers::WebRenderCompositionRecorder> aRecorder)
         : mRecorder(std::move(aRecorder)) {
       MOZ_COUNT_CTOR(SetCompositionRecorderEvent);
     }
@@ -600,12 +600,31 @@ void WebRenderAPI::SetCompositionRecorder(
     }
 
    private:
-    RefPtr<layers::WebRenderCompositionRecorder> mRecorder;
+    UniquePtr<layers::WebRenderCompositionRecorder> mRecorder;
   };
 
   auto event = MakeUnique<SetCompositionRecorderEvent>(std::move(aRecorder));
   RunOnRenderThread(std::move(event));
 }
+
+void WebRenderAPI::WriteCollectedFrames() {
+  class WriteCollectedFramesEvent final : public RendererEvent {
+   public:
+    explicit WriteCollectedFramesEvent() {
+      MOZ_COUNT_CTOR(WriteCollectedFramesEvent);
+    }
+
+    ~WriteCollectedFramesEvent() { MOZ_COUNT_DTOR(WriteCollectedFramesEvent); }
+
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+      aRenderThread.WriteCollectedFramesForWindow(aWindowId);
+    }
+  };
+
+  auto event = MakeUnique<WriteCollectedFramesEvent>();
+  RunOnRenderThread(std::move(event));
+}
+
 void TransactionBuilder::Clear() { wr_resource_updates_clear(mTxn); }
 
 void TransactionBuilder::Notify(wr::Checkpoint aWhen,

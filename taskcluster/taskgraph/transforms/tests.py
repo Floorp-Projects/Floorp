@@ -664,6 +664,43 @@ def setup_raptor(config, tests):
         if test['require-signed-extensions']:
             extra_options.append('--is-release-build')
 
+        # add urlparams based on platform, test names and projects
+        testurlparams_by_platform_and_project = {
+            "android-hw-g5": [
+                {
+                    "branches": [],  # For all branches
+                    "testnames": ["youtube-playback"],
+                    "urlparams": [
+                        # param used for excluding youtube-playback tests from executing
+                        # it excludes the tests with videos >1080p
+                        "exclude=1,2,9,10,17,18,21,22,26,28,30,32,39,40,47,"
+                        "48,55,56,63,64,71,72,79,80,83,84,89,90,95,96",
+                    ]
+                },
+            ]
+        }
+
+        for platform, testurlparams_by_project_definitions \
+                in testurlparams_by_platform_and_project.items():
+
+            if test['test-platform'].startswith(platform):
+                # For every platform it may have several definitions
+                for testurlparams_by_project in testurlparams_by_project_definitions:
+                    # The test should contain at least one defined testname
+                    if any(
+                        testname in test['test-name']
+                        for testname in testurlparams_by_project['testnames']
+                    ):
+                        branches = testurlparams_by_project['branches']
+                        if (
+                            branches == [] or
+                            config.params.get('project') in branches or
+                            config.params.is_try() and 'try' in branches
+                        ):
+                            params_query = '&'.join(testurlparams_by_project['urlparams'])
+                            add_extra_params_option = "--test-url-params={}".format(params_query)
+                            extra_options.append(add_extra_params_option)
+
         yield test
 
 

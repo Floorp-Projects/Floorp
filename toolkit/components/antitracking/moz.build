@@ -9,12 +9,18 @@ with Files('**'):
 
 XPIDL_SOURCES += [
     'nsITrackingDBService.idl',
+    'nsIURLDecorationAnnotationsService.idl',
 ]
 
 XPIDL_MODULE = 'toolkit_antitracking'
 
+EXTRA_COMPONENTS += [
+    'antitracking.manifest',
+]
+
 EXTRA_JS_MODULES += [
     'TrackingDBService.jsm',
+    'URLDecorationAnnotationsService.jsm',
 ]
 
 XPCOM_MANIFESTS += [
@@ -25,12 +31,14 @@ EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
     'StorageAccess.h',
     'StoragePrincipalHelper.h',
+    'URLDecorationStripper.h',
 ]
 
 UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
     'StorageAccess.cpp',
     'StoragePrincipalHelper.cpp',
+    'URLDecorationStripper.cpp',
 ]
 
 EXTRA_JS_MODULES += [

@@ -63,13 +63,11 @@ class ColumnBreakpoints extends Component<Props> {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    cx: getContext(state),
-    selectedSource: getSelectedSource(state),
-    columnBreakpoints: visibleColumnBreakpoints(state),
-  };
-};
+const mapStateToProps = state => ({
+  cx: getContext(state),
+  selectedSource: getSelectedSource(state),
+  columnBreakpoints: visibleColumnBreakpoints(state),
+});
 
 export default connect(
   mapStateToProps,

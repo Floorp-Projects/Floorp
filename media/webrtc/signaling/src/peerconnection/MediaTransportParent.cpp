@@ -184,9 +184,8 @@ mozilla::ipc::IPCResult MediaTransportParent::RecvRemoveTransportsExcept(
 }
 
 mozilla::ipc::IPCResult MediaTransportParent::RecvStartIceChecks(
-    const bool& isControlling, const bool& isOfferer,
-    const StringVector& iceOptions) {
-  mImpl->mHandler->StartIceChecks(isControlling, isOfferer, iceOptions);
+    const bool& isControlling, const StringVector& iceOptions) {
+  mImpl->mHandler->StartIceChecks(isControlling, iceOptions);
   return ipc::IPCResult::Ok();
 }
 

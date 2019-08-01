@@ -43,9 +43,7 @@ class SourceIcon extends PureComponent<Props> {
   }
 }
 
-export default connect((state, props) => {
-  return {
-    symbols: getSymbols(state, props.source),
-    framework: getFramework(getTabs(state), props.source.url),
-  };
-})(SourceIcon);
+export default connect((state, props) => ({
+  symbols: getSymbols(state, props.source),
+  framework: getFramework(getTabs(state), props.source.url),
+}))(SourceIcon);

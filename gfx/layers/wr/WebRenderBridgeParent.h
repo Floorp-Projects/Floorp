@@ -282,8 +282,8 @@ class WebRenderBridgeParent final
       const TimeStamp& aTxnStartTime);
 
   /**
-   * See MaybeHandleDeferredPipelineData - this is the implementation of that for
-   * a single pipeline.
+   * See MaybeHandleDeferredPipelineData - this is the implementation of that
+   * for a single pipeline.
    */
   bool MaybeHandleDeferredPipelineDataForPipeline(
       wr::RenderRoot aRenderRoot, wr::PipelineId aPipelineId,
@@ -298,7 +298,14 @@ class WebRenderBridgeParent final
   WRRootId GetWRRootId() const;
 
   void SetCompositionRecorder(
-      RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder);
+      UniquePtr<layers::WebRenderCompositionRecorder> aRecorder);
+
+  /**
+   * Write the frames collected by the |WebRenderCompositionRecorder| to disk.
+   *
+   * If there is not currently a recorder, this is a no-op.
+   */
+  void WriteCollectedFrames();
 
  private:
   class ScheduleSharedSurfaceRelease;

@@ -7,7 +7,9 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Security-Policy" content="default-src chrome: blob:">
+    <link rel="localization" href="browser/branding/brandings.ftl"/>
     <link rel="localization" href="branding/brand.ftl"/>
+    <link rel="localization" href="browser/branding/sync-brand.ftl">
     <!-- rename to browser/protections.ftl when exposing to l10n -->
     <link rel="localization" href="preview/protections.ftl">
     <link rel="stylesheet" href="chrome://global/skin/in-content/common.css">
@@ -16,22 +18,18 @@
     <script type="module" src="chrome://browser/content/protections.js"></script>
     <script type="module" src="chrome://browser/content/lockwise-card.js"></script>
     <script type="module" src="chrome://browser/content/monitor-card.js"></script>
-    <title>Protection Report</title>
+    <title data-l10n-id="protection-report-page-title"></title>
   </head>
 
   <body>
     <div id="report-content">
-      <h2 id="report-title">Privacy Protections</h2>
+      <h2 id="report-title" data-l10n-id="protection-report-content-title"></h2>
       <div class="card card-no-hover etp-card">
         <div class="card-header">
           <div class="icon"></div>
           <div class="wrapper">
-            <h3 class="card-title">
-              Enhanced Tracking Protection
-            </h3>
-            <p class="content">
-              Trackers follow you around online to collect information about your browsing habits and interests. Firefox blocks many of these trackers and other malicious scripts.
-            </p>
+            <h3 class="card-title" data-l10n-id="etp-card-title"></h3>
+            <p class="content" data-l10n-id="etp-card-content"></p>
             <p id="protection-details"></p>
           </div>
         </div>
@@ -57,24 +55,24 @@
                 <label for="tab-cryptominer" data-type="cryptominer"></label>
 
                 <div id="social" class="tab-content">
-                  <p class="content-title">Social Media Trackers</p>
-                  <p>Social media like, post, and comment buttons on other websites can track you — even if you don’t use them. Logging in to sites using your Facebook or Twitter account is another way they can track what you do on those sites. We remove these trackers so Facebook and Twitter see less of what you do online.</p>
+                  <p class="content-title" data-l10n-id="social-tab-title"></p>
+                  <p data-l10n-id="social-tab-contant"></p>
                 </div>
                 <div id="cookie" class="tab-content">
-                  <p class="content-title">Cross-Site Tracking Cookies</p>
-                  <p>Cross-site tracking cookies follow you from site to site to collect data about your browsing habits. Advertisers and analytics companies gather this data to create a profile of your interests across many sites. Blocking them reduces the number of personalized ads that follow you around.</p>
+                  <p class="content-title" data-l10n-id="cookie-tab-title"></p>
+                  <p data-l10n-id="cookie-tab-content"></p>
                 </div>
                 <div id="tracker" class="tab-content">
-                  <p class="content-title">Tracking Content</p>
-                  <p>Websites may load outside ads, videos, and other content that contain hidden trackers. Blocking tracking content can make websites load faster, but some buttons, forms, and login fields might not work.</p>
+                  <p class="content-title" data-l10n-id="tracker-tab-title"></p>
+                  <p data-l10n-id="tracker-tab-content"></p>
                 </div>
                 <div id="fingerprinter" class="tab-content">
-                  <p class="content-title">Fingerprinters</p>
-                  <p>Fingerprinting is a form of online tracking that’s different from your real fingerprints. Companies use it to create a unique profile of you using data about your browser, device, and other settings. We block ad trackers from fingerprinting your device.</p>
+                  <p class="content-title" data-l10n-id="fingerprinter-tab-title"></p>
+                  <p data-l10n-id="fingerprinter-tab-content"></p>
                 </div>
                 <div id="cryptominer" class="tab-content">
-                  <p class="content-title">Cryptominers</p>
-                  <p>Some websites host hidden malware that secretly uses your system’s computing power to mine cryptocurrency, or digital money. It drains your battery, slows down your computer, and increases your energy bill. We block known cryptominers from using your computing resources to make money.</p>
+                  <p class="content-title" data-l10n-id="cryptominer-tab-title"></p>
+                  <p data-l10n-id="cryptominer-tab-content"></p>
                 </div>
               </div>
             </div>
@@ -87,18 +85,14 @@
           <div class="card-header">
             <div class="icon"></div>
             <div class="wrapper">
-              <h3 id="monitor-title" class="card-title">
-                Look out for data breaches
-              </h3>
+              <h3 id="monitor-title" class="card-title" data-l10n-id="monitor-title"></h3>
               <p id="monitor-header-content" class="content">
                 <span>
                   <!-- Insert Monitor header content here. -->
                 </span>
-                <a href="">How it works</a>
+                <a href="" data-l10n-id="monitor-link"></a>
               </p>
-              <span class="inline-text-icon monitor-scanned-text">
-                Automatically scanned today
-              </span>
+              <span class="inline-text-icon monitor-scanned-text" data-l10n-id="auto-scan"></span>
             </div>
             <a target="_blank" id="sign-up-for-monitor-link">
               <!-- Insert Monitor link content here. -->
@@ -114,7 +108,7 @@
                       <!-- Display number of stored emails here. -->
                     </span>
                   </span>
-                  <span class="info-text">Email addresses being monitored</span>
+                  <span id="info-monitored-addresses" class="info-text"></span>
                 </div>
                 <div class="monitor-block breaches">
                   <span class="monitor-stat">
@@ -123,7 +117,7 @@
                       <!-- Display number of known breaches here. -->
                     </span>
                   </span>
-                  <span class="info-text">Known data breaches have exposed your information</span>
+                  <span id="info-known-breaches" class="info-text"></span>
                 </div>
                 <div class="monitor-block passwords">
                   <span class="monitor-stat">
@@ -132,19 +126,17 @@
                         <!-- Display number of exposed passwords here. -->
                       </span>
                   </span>
-                  <span class="info-text">Passwords exposed across all breaches</span>
+                  <span id="info-exposed-passwords" class="info-text"></span>
                 </div>
-                <div class="monitor-view-full-report">
-                  <span>View full report on</span>
-                  <a href="">Firefox Monitor</a>
+                <div class="monitor-view-full-report" data-l10n-id="full-report-link">
+                    <a data-l10n-name="monitor-inline-link" href=""></a>
                 </div>
                 <div class="monitor-breached-passwords hidden">
                   <span data-type="breached-lockwise-passwords" class="number-of-breaches block">
                     <!-- Display number of exposed stored passwords here. -->
                   </span>
-                  <span>
-                    Passwords saved in Firefox may have been exposed in a data breach. Change these passwords to protect your accounts.
-                    <a href="">View Saved Logins</a>
+                  <span id="password-warning">
+                    <a href="" data-l10n-name="lockwise-link"></a>
                   </span>
                 </div>
               </div>
@@ -163,24 +155,23 @@
               <!-- Insert Lockwise header content here. -->
             </p>
           </div>
-          <button id="open-about-logins-button" class="primary">Open in Firefox</button>
+          <button id="open-about-logins-button" class="primary" data-l10n-id="open-about-logins-button"></button>
         </div>
         <div class="card-body">
           <div id="lockwise-body-content" class="body-wrapper">
             <div class="no-logins hidden">
                 <div class="lockwise-mobile-app-icon"></div>
-                <span>
-                  Get the <a target="_blank" href="https://lockwise.firefox.com/">Firefox Lockwise</a>
-                  app to take your passwords everywhere.
+                <span data-l10n-id="lockwise-no-logins-content">
+                  <a data-l10n-name="lockwise-inline-link" href=""></a>
                 </span>
             </div>
             <div class="has-logins hidden">
               <span class="number-of-logins block">
                 <!-- Display number of stored logins here. -->
               </span>
-              <span class="inline-text-icon passwords-stored-text">
-                Passwords stored securely.
-                <a href="">How it works</a>
+              <span id="lockwise-passwords-stored" class="inline-text-icon passwords-stored-text">
+                 <!-- Display message for stored logins here. -->
+                <a data-l10n-name="lockwise-how-it-works" href=""></a>
               </span>
               <span class="number-of-synced-devices block">
                 <!-- Display number of synced devices here. -->
@@ -189,10 +180,9 @@
                 <span>
                   <!-- Display message for status of synced devices here. -->
                 </span>
-                <a class="hidden" href="" title="Go to sync preferences">Turn on sync…</a>
+                <a class="hidden" href="" data-l10n-id="turn-on-sync"></a>
               </span>
             </div>
-           </div>
           </div>
         </div>
       </section>

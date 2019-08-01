@@ -1057,15 +1057,11 @@ void TransportLayerDtls::SetState(State state, const char* file,
         MOZ_ASSERT(false);
         break;
       case TS_CONNECTING:
-        handshake_started_ = TimeStamp::Now();
         break;
       case TS_OPEN:
       case TS_CLOSED:
       case TS_ERROR:
         timer_->Cancel();
-        if (state_ == TS_CONNECTING) {
-          RecordHandshakeCompletionTelemetry(state);
-        }
         break;
     }
   }
@@ -1456,41 +1452,6 @@ void TransportLayerDtls::TimerCallback(nsITimer* timer, void* arg) {
   MOZ_MTLOG(ML_DEBUG, "DTLS timer expired");
 
   dtls->Handshake();
-}
-
-void TransportLayerDtls::RecordHandshakeCompletionTelemetry(
-    TransportLayer::State endState) {
-  int32_t delta = (TimeStamp::Now() - handshake_started_).ToMilliseconds();
-
-  switch (endState) {
-    case TransportLayer::State::TS_OPEN:
-      if (role_ == TransportLayerDtls::CLIENT) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CLIENT_SUCCESS_TIME,
-                              delta);
-      } else {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_SERVER_SUCCESS_TIME,
-                              delta);
-      }
-      return;
-    case TransportLayer::State::TS_ERROR:
-      if (role_ == TransportLayerDtls::CLIENT) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CLIENT_FAILURE_TIME,
-                              delta);
-      } else {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_SERVER_FAILURE_TIME,
-                              delta);
-      }
-      return;
-    case TransportLayer::State::TS_CLOSED:
-      if (role_ == TransportLayerDtls::CLIENT) {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_CLIENT_ABORT_TIME, delta);
-      } else {
-        Telemetry::Accumulate(Telemetry::WEBRTC_DTLS_SERVER_ABORT_TIME, delta);
-      }
-      return;
-    default:
-      MOZ_ASSERT(false);
-  }
 }
 
 void TransportLayerDtls::RecordTlsTelemetry() {

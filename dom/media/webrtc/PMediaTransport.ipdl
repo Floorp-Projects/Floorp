@@ -76,7 +76,6 @@ parent:
   async RemoveTransportsExcept(StringVector transportIds);
 
   async StartIceChecks(bool isControlling,
-                       bool isOfferer,
                        StringVector iceOptions);
 
   async SendPacket(string transportId, MediaPacket packet);

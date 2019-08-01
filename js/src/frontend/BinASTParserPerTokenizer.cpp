@@ -166,7 +166,7 @@ JS::Result<FunctionNode*> BinASTParserPerTokenizer<Tok>::parseLazyFunction(
   // For now, only function declarations and function expression are supported.
   RootedFunction func(cx_, lazyScript_->functionNonDelazifying());
   bool isExpr = func->isLambda();
-  MOZ_ASSERT(func->kind() == JSFunction::FunctionKind::NormalFunction);
+  MOZ_ASSERT(func->kind() == FunctionFlags::FunctionKind::NormalFunction);
 
   // Poison the tokenizer when we leave to ensure that it's not used again by
   // accident.
@@ -263,7 +263,7 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
   RootedFunction fun(cx_);
   BINJS_TRY_VAR(fun, !pc_ ? lazyScript_->functionNonDelazifying()
                           : AllocNewFunction(cx_, atom, syntax, generatorKind,
-                                             functionAsyncKind, nullptr));
+                                             functionAsyncKind));
   MOZ_ASSERT_IF(pc_, fun->explicitName() == atom);
 
   mozilla::Maybe<Directives> directives;
@@ -389,11 +389,12 @@ JS::Result<Ok> BinASTParserPerTokenizer<Tok>::finishLazyFunction(
   funbox->setArgCount(nargs);
   funbox->synchronizeArgCount();
 
-  BINJS_TRY_DECL(
-      lazy, LazyScript::Create(cx_, fun, sourceObject_,
-                               pc_->closedOverBindingsForLazy(),
-                               pc_->innerFunctionsForLazy, start, end, start, 0,
-                               start, ParseGoal::Script));
+  BINJS_TRY_DECL(lazy, LazyScript::Create(cx_, fun, sourceObject_,
+                                          pc_->closedOverBindingsForLazy(),
+                                          pc_->innerFunctionBoxesForLazy,
+                                          start, end, start, end,
+                                          /* lineno = */ 0, start,
+                                          ParseGoal::Script));
 
   if (funbox->strict()) {
     lazy->setStrict();

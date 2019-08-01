@@ -218,10 +218,16 @@ nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
 //
 
 nsresult nsMenuItemIconX::OnComplete(NSImage* aImage) {
-  if (!(mNativeMenuItem || aImage)) {
-    [aImage release];
-    [mNativeMenuItem setImage:nil];
+  if (!mNativeMenuItem) {
+    if (aImage) {
+      [aImage release];
+    }
     return NS_ERROR_FAILURE;
+  }
+
+  if (!aImage) {
+    [mNativeMenuItem setImage:nil];
+    return NS_OK;
   }
 
   [mNativeMenuItem setImage:aImage];

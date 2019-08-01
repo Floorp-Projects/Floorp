@@ -115,6 +115,7 @@
 #include "mozilla/PreloadedStyleSheet.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
+#include "mozilla/ResultExtensions.h"
 
 #ifdef XP_WIN
 #  undef GetClassName
@@ -4103,12 +4104,58 @@ NS_IMETHODIMP
 nsDOMWindowUtils::SetCompositionRecording(bool aValue) {
   if (CompositorBridgeChild* cbc = GetCompositorBridge()) {
     if (aValue) {
-      cbc->SendBeginRecording(TimeStamp::Now());
+      RefPtr<nsDOMWindowUtils> self = this;
+      cbc->SendBeginRecording(TimeStamp::Now())
+          ->Then(
+              GetCurrentThreadSerialEventTarget(), __func__,
+              [self](const bool& aSuccess) {
+                if (!aSuccess) {
+                  self->ReportErrorMessageForWindow(
+                      NS_LITERAL_STRING(
+                          "The composition recorder is already running."),
+                      "DOM", true);
+                }
+              },
+              [self](const mozilla::ipc::ResponseRejectReason&) {
+                self->ReportErrorMessageForWindow(
+                    NS_LITERAL_STRING(
+                        "Could not start the composition recorder."),
+                    "DOM", true);
+              });
     } else {
-      cbc->SendEndRecording();
+      bool success = false;
+      if (!cbc->SendEndRecording(&success)) {
+        ReportErrorMessageForWindow(
+            NS_LITERAL_STRING("Could not stop the composition recorder."),
+            "DOM", true);
+      } else if (!success) {
+        ReportErrorMessageForWindow(
+            NS_LITERAL_STRING("The composition recorder is not running."),
+            "DOM", true);
+      }
     }
   }
+
   return NS_OK;
+}
+
+void nsDOMWindowUtils::ReportErrorMessageForWindow(
+    const nsAString& aErrorMessage, const char* aClassification,
+    bool aFromChrome) {
+  bool isPrivateWindow = false;
+
+  if (nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(mWindow)) {
+    if (nsIPrincipal* principal =
+            nsGlobalWindowOuter::Cast(window)->GetPrincipal()) {
+      uint32_t privateBrowsingId = 0;
+
+      if (NS_SUCCEEDED(principal->GetPrivateBrowsingId(&privateBrowsingId))) {
+        isPrivateWindow = !!privateBrowsingId;
+      }
+    }
+  }
+  nsContentUtils::LogSimpleConsoleError(aErrorMessage, aClassification,
+                                        isPrivateWindow, aFromChrome);
 }
 
 NS_IMETHODIMP

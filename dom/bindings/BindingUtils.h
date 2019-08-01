@@ -26,6 +26,7 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/dom/PrototypeList.h"
 #include "mozilla/dom/RootedDictionary.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/SegmentedVector.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Likely.h"
@@ -2468,9 +2469,35 @@ void ConstructJSImplementation(const char* aContractId,
                                JS::MutableHandle<JSObject*> aObject,
                                ErrorResult& aRv);
 
-already_AddRefed<nsIGlobalObject> ConstructJSImplementation(
-    const char* aContractId, const GlobalObject& aGlobal,
-    JS::MutableHandle<JSObject*> aObject, ErrorResult& aRv);
+template <typename T>
+already_AddRefed<T> ConstructJSImplementation(const char* aContractId,
+                                              nsIGlobalObject* aGlobal,
+                                              ErrorResult& aRv) {
+  JS::RootingContext* cx = RootingCx();
+  JS::Rooted<JSObject*> jsImplObj(cx);
+  ConstructJSImplementation(aContractId, aGlobal, &jsImplObj, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  MOZ_RELEASE_ASSERT(!js::IsWrapper(jsImplObj));
+  JS::Rooted<JSObject*> jsImplGlobal(cx, JS::GetNonCCWObjectGlobal(jsImplObj));
+  RefPtr<T> newObj = new T(jsImplObj, jsImplGlobal, aGlobal);
+  return newObj.forget();
+}
+
+template <typename T>
+already_AddRefed<T> ConstructJSImplementation(const char* aContractId,
+                                              const GlobalObject& aGlobal,
+                                              ErrorResult& aRv) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  return ConstructJSImplementation<T>(aContractId, global, aRv);
+}
 
 /**
  * Convert an nsCString to jsval, returning true on success.

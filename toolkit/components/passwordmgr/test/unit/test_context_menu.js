@@ -88,13 +88,13 @@ function createLoginsFragment(url, content, elementQuery) {
     ownerDocument: document,
   };
 
-  let URI = Services.io.newURI(url);
+  let formOrigin = LoginHelper.getLoginOrigin(url);
   return {
     document,
     fragment: LoginManagerContextMenu.addLoginsToMenu(
       inputElement,
       browser,
-      URI
+      formOrigin
     ),
   };
 }

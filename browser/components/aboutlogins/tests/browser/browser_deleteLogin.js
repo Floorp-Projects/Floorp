@@ -20,9 +20,9 @@ add_task(async function test_show_logins() {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     let loginFound = await ContentTaskUtils.waitForCondition(() => {
       return (
-        loginList._logins.length == 2 &&
-        loginList._logins[0].guid == logins[0].guid &&
-        loginList._logins[1].guid == logins[1].guid
+        loginList._loginGuidsSortedOrder.length == 2 &&
+        loginList._loginGuidsSortedOrder.includes(logins[0].guid) &&
+        loginList._loginGuidsSortedOrder.includes(logins[1].guid)
       );
     }, "Waiting for logins to be displayed");
     ok(loginFound, "Newly added logins should be added to the page");

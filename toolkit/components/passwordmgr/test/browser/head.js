@@ -1,6 +1,9 @@
 const DIRECTORY_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
 ChromeUtils.import("resource://gre/modules/LoginHelper.jsm", this);
+const { LoginManagerParent: LMP } = ChromeUtils.import(
+  "resource://gre/modules/LoginManagerParent.jsm"
+);
 ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/ContentTaskUtils.jsm", this);
 ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm", this);
@@ -15,6 +18,8 @@ registerCleanupFunction(
 
     Services.logins.removeAllLogins();
     clearHttpAuths();
+    Services.telemetry.clearEvents();
+    LMP._generatedPasswordsByPrincipalOrigin.clear();
 
     let recipeParent = LoginTestUtils.recipes.getRecipeParent();
     if (!recipeParent) {

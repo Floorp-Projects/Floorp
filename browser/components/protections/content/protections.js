@@ -14,7 +14,6 @@ document.addEventListener("DOMContentLoaded", e => {
     from: weekAgoInMs,
     to: todayInMs,
   });
-
   let dataTypes = [
     "cryptominer",
     "fingerprinter",
@@ -22,7 +21,6 @@ document.addEventListener("DOMContentLoaded", e => {
     "cookie",
     "social",
   ];
-  let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   let protectionDetails = document.getElementById("protection-details");
   protectionDetails.addEventListener("click", () => {
@@ -77,12 +75,11 @@ document.addEventListener("DOMContentLoaded", e => {
       cryptominer: 0,
     };
 
+    let date = new Date();
     let graph = document.getElementById("graph");
-    for (let i = weekdays.length - 1; i >= 0; i--) {
-      // Start 7 days ago and count down to today.
-      let date = new Date();
-      date.setDate(date.getDate() - i);
+    for (let i = 0; i <= 6; i++) {
       let dateString = date.toISOString().split("T")[0];
+
       let bar = document.createElement("div");
       bar.className = "graph-bar";
       if (data[dateString]) {
@@ -109,7 +106,7 @@ document.addEventListener("DOMContentLoaded", e => {
         // There were no content blocking events on this day.
         bar.classList.add("empty");
       }
-      graph.appendChild(bar);
+      graph.prepend(bar);
       let weekSummary = document.getElementById("graph-week-summary");
       weekSummary.setAttribute(
         "data-l10n-args",
@@ -117,6 +114,7 @@ document.addEventListener("DOMContentLoaded", e => {
       );
       weekSummary.setAttribute("data-l10n-id", "graph-week-summary");
 
+      // Set the total number of each type of tracker on the tabs
       for (let type of dataTypes) {
         document.querySelector(`label[data-type=${type}]`).textContent =
           weekTypeCounts[type];
@@ -125,11 +123,12 @@ document.addEventListener("DOMContentLoaded", e => {
       let label = document.createElement("span");
       label.className = "column-label";
       if (i == 6) {
-        label.textContent = "Today";
+        label.setAttribute("data-l10n-id", "graph-today");
       } else {
-        label.textContent = weekdays[(i + 1 + new Date().getDay()) % 7];
+        label.textContent = data.weekdays[(i + 1 + new Date().getDay()) % 7];
       }
-      graph.prepend(label);
+      graph.append(label);
+      date.setDate(date.getDate() - 1);
     }
 
     addListeners();

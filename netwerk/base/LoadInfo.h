@@ -154,7 +154,8 @@ class LoadInfo final : public nsILoadInfo {
            bool aIsPreflight, bool aLoadTriggeredFromExternal,
            bool aServiceWorkerTaintingSynthesized,
            bool aDocumentHasUserInteracted, bool aDocumentHasLoaded,
-           const nsAString& aCspNonce, uint32_t aRequestBlockingReason);
+           const nsAString& aCspNonce, bool aSkipContentSniffing,
+           uint32_t aRequestBlockingReason);
   LoadInfo(const LoadInfo& rhs);
 
   NS_IMETHOD GetRedirects(JSContext* aCx,
@@ -246,6 +247,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mDocumentHasUserInteracted;
   bool mDocumentHasLoaded;
   nsString mCspNonce;
+  bool mSkipContentSniffing;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.

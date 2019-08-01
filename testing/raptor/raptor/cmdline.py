@@ -128,6 +128,8 @@ def create_parser(mach_interface=False):
     add_arg('--browser-cycles', dest="browser_cycles", type=int,
             help="The number of times a cold load test is repeated (for cold load tests only, "
             "where the browser is shutdown and restarted between test iterations)")
+    add_arg('--test-url-params', dest='test_url_params',
+            help="Parameters to add to the test_url query string")
     add_arg('--print-tests', action=_PrintTests,
             help="Print all available Raptor tests")
     add_arg('--debug-mode', dest="debug_mode", action="store_true",

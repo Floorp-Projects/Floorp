@@ -50,24 +50,20 @@ class RecordedFrame {
  * memory until |WriteCollectedFrames| is called.
  */
 class CompositionRecorder {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositionRecorder)
-
  public:
   explicit CompositionRecorder(TimeStamp aRecordingStart);
 
   /**
    * Record a composited frame.
    */
-  virtual void RecordFrame(RecordedFrame* aFrame);
+  void RecordFrame(RecordedFrame* aFrame);
 
   /**
    * Write out the collected frames as a series of timestamped images.
    */
-  virtual void WriteCollectedFrames();
+  void WriteCollectedFrames();
 
  protected:
-  virtual ~CompositionRecorder() = default;
-
   void ClearCollectedFrames();
 
  private:

@@ -233,7 +233,7 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       varScope_(nullptr),
       positionalFormalParameterNames_(cx->frontendCollectionPool()),
       closedOverBindingsForLazy_(cx->frontendCollectionPool()),
-      innerFunctionsForLazy(cx, GCVector<JSFunction*, 8>(cx)),
+      innerFunctionBoxesForLazy(cx),
       newDirectives(newDirectives),
       lastYieldOffset(NoYieldOffset),
       lastAwaitOffset(NoAwaitOffset),
@@ -506,7 +506,7 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   } else {
     declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
                   funbox->function()->kind() ==
-                      JSFunction::FunctionKind::ClassConstructor;
+                      FunctionFlags::FunctionKind::ClassConstructor;
   }
 
   if (declareThis) {

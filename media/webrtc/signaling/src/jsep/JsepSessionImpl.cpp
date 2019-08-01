@@ -1050,11 +1050,6 @@ nsresult JsepSessionImpl::MakeNegotiatedTransceiver(
     MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: RTCP-MUX is off");
   }
 
-  if (local.GetMediaType() != SdpMediaSection::kApplication) {
-    Telemetry::Accumulate(Telemetry::WEBRTC_RTCP_MUX,
-                          transceiver->mTransport.mComponents == 1);
-  }
-
   return NS_OK;
 }
 

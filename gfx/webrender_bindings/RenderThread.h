@@ -269,7 +269,9 @@ class RenderThread final {
 
   void SetCompositionRecorderForWindow(
       wr::WindowId aWindowId,
-      RefPtr<layers::WebRenderCompositionRecorder>&& aCompositionRecorder);
+      UniquePtr<layers::WebRenderCompositionRecorder> aCompositionRecorder);
+
+  void WriteCollectedFramesForWindow(wr::WindowId aWindowId);
 
  private:
   explicit RenderThread(base::Thread* aThread);
@@ -295,7 +297,7 @@ class RenderThread final {
   RefPtr<gl::GLContext> mSharedGL;
 
   std::map<wr::WindowId, UniquePtr<RendererOGL>> mRenderers;
-  std::map<wr::WindowId, RefPtr<layers::WebRenderCompositionRecorder>>
+  std::map<wr::WindowId, UniquePtr<layers::WebRenderCompositionRecorder>>
       mCompositionRecorders;
 
   struct WindowInfo {

@@ -327,8 +327,13 @@ class NameLocation {
   }
 };
 
-// This type is declared here for LazyScript::Create.
+// These types are declared here for LazyScript::Create.
 using AtomVector = Vector<JSAtom*, 24, SystemAllocPolicy>;
+
+class FunctionBox;
+// FunctionBoxes stored in this type are required to be rooted
+// by the parser
+using FunctionBoxVector = Vector<const FunctionBox*, 8>;
 
 }  // namespace frontend
 }  // namespace js

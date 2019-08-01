@@ -2575,24 +2575,6 @@ bool GetContentGlobalForJSImplementedObject(JSContext* cx,
   return true;
 }
 
-already_AddRefed<nsIGlobalObject> ConstructJSImplementation(
-    const char* aContractId, const GlobalObject& aGlobal,
-    JS::MutableHandle<JSObject*> aObject, ErrorResult& aRv) {
-  // Get the global object to use as a parent and for initialization.
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
-  if (!global) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  ConstructJSImplementation(aContractId, global, aObject, aRv);
-
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  return global.forget();
-}
-
 void ConstructJSImplementation(const char* aContractId,
                                nsIGlobalObject* aGlobal,
                                JS::MutableHandle<JSObject*> aObject,

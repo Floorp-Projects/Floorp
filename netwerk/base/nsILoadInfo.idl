@@ -413,6 +413,15 @@ interface nsILoadInfo : nsISupports
    */
   [infallible] readonly attribute unsigned long securityMode;
 
+
+  /**
+   * This flag is used for any browsing context where we should not sniff
+   * the content type. E.g if an iframe has the XCTO nosniff header, then
+   * that flag is set to true so we skip content sniffing for that browsing
+   * context.
+   */
+  [infallible] attribute boolean skipContentSniffing;
+  
   /**
    * True if this request is embedded in a context that can't be third-party
    * (i.e. an iframe embedded in a cross-origin parent window). If this is

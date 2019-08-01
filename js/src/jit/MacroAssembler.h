@@ -1307,8 +1307,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchIfInterpreted(Register fun, bool isConstructing,
                                   Label* label);
 
-  inline void branchFunctionKind(Condition cond, JSFunction::FunctionKind kind,
-                                 Register fun, Register scratch, Label* label);
+  inline void branchFunctionKind(Condition cond,
+                                 FunctionFlags::FunctionKind kind, Register fun,
+                                 Register scratch, Label* label);
 
   void branchIfNotInterpretedConstructor(Register fun, Register scratch,
                                          Label* label);
