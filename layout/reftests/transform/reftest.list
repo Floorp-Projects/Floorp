@@ -149,3 +149,4 @@ fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 13
 == invalidate-svg-scale-1.html invalidate-svg-scale-1-ref.html
 # Bug 1526847
 pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
+== 1569215-1.html 1569215-1-ref.html
