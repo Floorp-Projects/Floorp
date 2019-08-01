@@ -209,6 +209,23 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   bool HasOpener() const;
 
+  /**
+   * When a new browsing context is opened by a sandboxed document, it needs to
+   * keep track of the browsing context that opened it, so that it can be
+   * navigated by it.  This is the "one permitted sandboxed navigator".
+   */
+  already_AddRefed<BrowsingContext> GetOnePermittedSandboxedNavigator() const {
+    return Get(mOnePermittedSandboxedNavigatorId);
+  }
+  void SetOnePermittedSandboxedNavigator(BrowsingContext* aNavigator) {
+    if (mOnePermittedSandboxedNavigatorId) {
+      MOZ_ASSERT(false,
+                 "One Permitted Sandboxed Navigator should only be set once.");
+    } else {
+      SetOnePermittedSandboxedNavigatorId(aNavigator ? aNavigator->Id() : 0);
+    }
+  }
+
   void GetChildren(Children& aChildren);
 
   BrowsingContextGroup* Group() { return mGroup; }

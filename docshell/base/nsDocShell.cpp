@@ -3054,10 +3054,10 @@ bool nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell) {
 
   // aTargetDocShell is top level, are we the "one permitted sandboxed
   // navigator", i.e. did we open aTargetDocShell?
-  nsCOMPtr<nsIDocShell> permittedNavigator;
-  aTargetDocShell->GetOnePermittedSandboxedNavigator(
-      getter_AddRefs(permittedNavigator));
-  if (permittedNavigator == this) {
+  RefPtr<BrowsingContext> permittedNavigator(
+      aTargetDocShell->GetBrowsingContext()
+          ->GetOnePermittedSandboxedNavigator());
+  if (permittedNavigator == mBrowsingContext) {
     return false;
   }
 
@@ -4967,8 +4967,6 @@ nsDocShell::Destroy() {
 
   mChromeEventHandler = nullptr;
 
-  mOnePermittedSandboxedNavigator = nullptr;
-
   // required to break ref cycle
   mSecurityUI = nullptr;
 
@@ -5364,34 +5362,6 @@ nsDocShell::SetSandboxFlags(uint32_t aSandboxFlags) {
 NS_IMETHODIMP
 nsDocShell::GetSandboxFlags(uint32_t* aSandboxFlags) {
   *aSandboxFlags = mSandboxFlags;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetOnePermittedSandboxedNavigator(
-    nsIDocShell* aSandboxedNavigator) {
-  if (mOnePermittedSandboxedNavigator) {
-    NS_ERROR("One Permitted Sandboxed Navigator should only be set once.");
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(!mIsBeingDestroyed);
-
-  mOnePermittedSandboxedNavigator = do_GetWeakReference(aSandboxedNavigator);
-  NS_ASSERTION(
-      mOnePermittedSandboxedNavigator,
-      "One Permitted Sandboxed Navigator must support weak references.");
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetOnePermittedSandboxedNavigator(
-    nsIDocShell** aSandboxedNavigator) {
-  NS_ENSURE_ARG_POINTER(aSandboxedNavigator);
-  nsCOMPtr<nsIDocShell> permittedNavigator =
-      do_QueryReferent(mOnePermittedSandboxedNavigator);
-  permittedNavigator.forget(aSandboxedNavigator);
   return NS_OK;
 }
 
