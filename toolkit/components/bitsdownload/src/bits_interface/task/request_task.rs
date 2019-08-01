@@ -382,3 +382,44 @@ impl SetPriorityTask {
         Ok(())
     }
 }
+
+pub struct SetNoProgressTimeoutTask(RequestTask<u32>);
+
+impl Task for SetNoProgressTimeoutTask {
+    fn run(&self) {
+        self.0.run();
+    }
+
+    fn done(&self) -> Result<(), nsresult> {
+        self.0.done()
+    }
+}
+
+impl SetNoProgressTimeoutTask {
+    pub fn new(
+        request: RefPtr<BitsRequest>,
+        id: Guid,
+        timeout_secs: u32,
+        callback: RefPtr<nsIBitsCallback>,
+    ) -> SetNoProgressTimeoutTask {
+        SetNoProgressTimeoutTask(RequestTask::new(
+            request,
+            id,
+            RequestAction::SetNoProgressTimeout,
+            timeout_secs,
+            SetNoProgressTimeoutTask::run_fn,
+            None,
+            Some(callback),
+            CallbackExpected,
+        ))
+    }
+
+    fn run_fn(id: Guid, timeout_secs: &u32, client: &mut BitsClient) -> Result<(), BitsTaskError> {
+        client
+            .set_no_progress_timeout(id, *timeout_secs)
+            .map_err(|pipe_error| {
+                BitsTaskError::from_pipe(Action::SetNoProgressTimeout, pipe_error)
+            })??;
+        Ok(())
+    }
+}
