@@ -204,9 +204,10 @@ void JitScript::ensureProfileString(JSContext* cx, JSScript* script) {
     return;
   }
 
+  AutoEnterOOMUnsafeRegion oomUnsafe;
   profileString_ = cx->runtime()->geckoProfiler().profileString(cx, script);
   if (!profileString_) {
-    MOZ_CRASH("Failed to allocate profile string");
+    oomUnsafe.crash("Failed to allocate profile string");
   }
 }
 
