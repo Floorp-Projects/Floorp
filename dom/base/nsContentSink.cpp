@@ -135,7 +135,6 @@ nsContentSink::~nsContentSink() {
   }
 }
 
-int32_t nsContentSink::sNotificationInterval;
 int32_t nsContentSink::sInteractiveDeflectCount;
 int32_t nsContentSink::sPerfDeflectCount;
 int32_t nsContentSink::sPendingEventMode;
@@ -147,15 +146,6 @@ int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  // The gNotificationInterval has a dramatic effect on how long it
-  // takes to initially display content for slow connections.
-  // The current value provides good
-  // incremental display of content without causing an increase
-  // in page load time. If this value is set below 1/10 of second
-  // it starts to impact page load performance.
-  // see bugzilla bug 72138 for more info.
-  Preferences::AddIntVarCache(&sNotificationInterval, "content.notify.interval",
-                              120000);
   Preferences::AddIntVarCache(&sInteractiveDeflectCount,
                               "content.sink.interactive_deflect_count", 0);
   Preferences::AddIntVarCache(&sPerfDeflectCount,
