@@ -40,6 +40,7 @@ extensions = [
     'sphinx.ext.todo',
     'mozbuild.sphinx',
     'sphinx_js',
+    'sphinxcontrib.mermaid',
 ]
 
 # JSDoc must run successfully for dirs specified, so running
