@@ -13,6 +13,7 @@ import sys
 import attr
 
 from .. import GECKO
+from .treeherder import join_symbol
 
 logger = logging.getLogger(__name__)
 base_path = os.path.join(GECKO, 'taskcluster', 'docs')
@@ -93,15 +94,26 @@ def verify_task_graph_symbol(task, taskgraph, scratch_pad, graph_config):
             treeherder = extra["treeherder"]
 
             collection_keys = tuple(sorted(treeherder.get('collection', {}).keys()))
+            if len(collection_keys) != 1:
+                raise Exception(
+                    "Task {} can't be in multiple treeherder collections "
+                    "(the part of the platform after `/`): {}"
+                    .format(task.label, collection_keys)
+                )
             platform = treeherder.get('machine', {}).get('platform')
             group_symbol = treeherder.get('groupSymbol')
             symbol = treeherder.get('symbol')
 
-            key = (collection_keys, platform, group_symbol, symbol)
+            key = (platform, collection_keys[0], group_symbol, symbol)
             if key in scratch_pad:
                 raise Exception(
-                    "conflict between `{}`:`{}` for values `{}`"
-                    .format(task.label, scratch_pad[key], key)
+                    "Duplicate treeherder platform and symbol in tasks "
+                    "`{}`and `{}`: {} {}".format(
+                        task.label,
+                        scratch_pad[key],
+                        "{}/{}".format(platform, collection_keys[0]),
+                        join_symbol(group_symbol, symbol),
+                    )
                 )
             else:
                 scratch_pad[key] = task.label
