@@ -24,9 +24,12 @@ add_task(async function testNormalExecution() {
     WORKER_URL
   );
 
-  const hud = await getSplitConsole(toolbox);
-  await executeAndWaitForMessage(hud, "this.location.toString()", WORKER_URL);
-  ok(true, "Evaluating the global's location works");
+  const jsterm = await getSplitConsole(toolbox);
+  const executed = await jsterm.execute("this.location.toString()");
+  ok(
+    executed.textContent.includes(WORKER_URL),
+    "Evaluating the global's location works"
+  );
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);

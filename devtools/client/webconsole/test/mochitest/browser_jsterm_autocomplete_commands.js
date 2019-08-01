@@ -45,9 +45,7 @@ async function performTests() {
     "completion node has expected :screenshot value"
   );
 
-  onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("KEY_Tab");
-  await onAutocompleUpdated;
   is(
     getInputValue(hud),
     ":screenshot",
@@ -57,7 +55,7 @@ async function performTests() {
   ok(!autocompletePopup.isOpen, "popup is closed after Tab");
 
   info("Test :hel completion");
-  await setInputValue(hud, ":he");
+  setInputValue(hud, ":he");
   onAutocompleUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("l");
 

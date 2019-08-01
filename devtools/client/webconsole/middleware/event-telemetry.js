@@ -8,7 +8,6 @@ const {
   FILTER_TEXT_SET,
   FILTER_TOGGLE,
   DEFAULT_FILTERS_RESET,
-  EVALUATE_EXPRESSION,
   MESSAGES_ADD,
   PERSIST_TOGGLE,
 } = require("devtools/client/webconsole/constants");
@@ -51,13 +50,6 @@ function eventTelemetryMiddleware(telemetry, sessionId, store) {
           session_id: sessionId,
         }
       );
-    } else if (action.type === EVALUATE_EXPRESSION) {
-      // Send telemetry event. If we are in the browser toolbox we send -1 as the
-      // toolbox session id.
-      telemetry.recordEvent("execute_js", "webconsole", null, {
-        lines: action.expression.split(/\n/).length,
-        session_id: sessionId,
-      });
     }
 
     return res;

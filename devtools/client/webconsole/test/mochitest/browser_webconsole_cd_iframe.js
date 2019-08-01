@@ -18,24 +18,24 @@ add_task(async function() {
   await executeWindowTest(hud, "parent");
 
   info("cd() into the iframe using a selector");
-  execute(hud, `cd("iframe")`);
+  await hud.jsterm.execute(`cd("iframe")`);
   await executeWindowTest(hud, "child");
 
   info("cd() out of the iframe, reset to default window");
-  execute(hud, "cd()");
+  await hud.jsterm.execute("cd()");
   await executeWindowTest(hud, "parent");
 
   info("cd() into the iframe using an iframe DOM element");
-  execute(hud, `cd($("iframe"))`);
+  await hud.jsterm.execute(`cd($("iframe"))`);
   await executeWindowTest(hud, "child");
 
   info("cd(window.parent)");
-  execute(hud, "cd(window.parent)");
+  await hud.jsterm.execute("cd(window.parent)");
   await executeWindowTest(hud, "parent");
 
   info("call cd() with unexpected arguments");
   let onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
-  execute(hud, "cd(document)");
+  hud.jsterm.execute("cd(document)");
   let cdErrorMessage = await onCdErrorMessage;
   ok(
     cdErrorMessage.node.classList.contains("error"),
@@ -43,7 +43,7 @@ add_task(async function() {
   );
 
   onCdErrorMessage = waitForMessage(hud, "Cannot cd()");
-  execute(hud, `cd("p")`);
+  hud.jsterm.execute(`cd("p")`);
   cdErrorMessage = await onCdErrorMessage;
   ok(
     cdErrorMessage.node.classList.contains("error"),
@@ -68,9 +68,9 @@ async function executeWindowTest(hud, iframeRole) {
     ],
   });
 
-  execute(hud, `document.title`);
-  execute(hud, `"p: " + document.querySelector("p").textContent`);
-  execute(hud, `"obj: " + window.foobar`);
+  hud.jsterm.execute(`document.title`);
+  hud.jsterm.execute(`"p: " + document.querySelector("p").textContent`);
+  hud.jsterm.execute(`"obj: " + window.foobar`);
 
   const messages = await onMessages;
   ok(

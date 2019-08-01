@@ -38,7 +38,9 @@ async function testFile(hud) {
   // Test capture to file
   const file = FileUtils.getFile("TmpD", ["TestScreenshotFile.png"]);
   const command = `:screenshot ${file.path} ${dpr}`;
-  await executeAndWaitForMessage(hud, command, `Saved to ${file.path}`);
+  const onMessage = waitForMessage(hud, `Saved to ${file.path}`);
+  hud.jsterm.execute(command);
+  await onMessage;
 
   ok(file.exists(), "Screenshot file exists");
 

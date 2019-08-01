@@ -17,28 +17,20 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const jsterm = hud.jsterm;
 
-  let message = await executeAndWaitForMessage(
-    hud,
-    "keys({a: 2, b:1})",
-    `Array [ "a", "b" ]`,
-    ".result"
-  );
+  let onMessage = waitForMessage(hud, `Array [ "a", "b" ]`);
+  jsterm.execute("keys({a: 2, b:1})");
+  let message = await onMessage;
   ok(message, "`keys()` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "values({a: 2, b:1})",
-    "Array [ 2, 1 ]",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "Array [ 2, 1 ]");
+  jsterm.execute("values({a: 2, b:1})");
+  message = await onMessage;
   ok(message, "`values()` worked");
 
-  message = await executeAndWaitForMessage(
-    hud,
-    "keys(window)",
-    "Array",
-    ".result"
-  );
+  onMessage = waitForMessage(hud, "Array");
+  jsterm.execute("keys(window)");
+  message = await onMessage;
   ok(message, "`keys(window)` worked");
 }

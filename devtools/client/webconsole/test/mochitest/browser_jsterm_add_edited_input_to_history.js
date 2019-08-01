@@ -22,6 +22,7 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
+  const { jsterm } = hud;
 
   ok(!getInputValue(hud), "console input is empty");
   checkInputCursorPosition(hud, 0, "Cursor is at expected position");
@@ -32,8 +33,7 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(getInputValue(hud), '"first item"', "null test history down");
 
-  EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "first item", ".result"));
+  await jsterm.execute();
   is(getInputValue(hud), "", "cleared input line after submit");
 
   setInputValue(hud, '"editing input 1"');
@@ -47,9 +47,7 @@ async function performTests() {
   );
 
   setInputValue(hud, '"second item"');
-  EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "second item", ".result"));
-
+  await jsterm.execute();
   setInputValue(hud, '"editing input 2"');
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(getInputValue(hud), '"second item"', "test history up");
@@ -67,14 +65,8 @@ async function performTests() {
   // Appending the same value again should not impact the history.
   // Let's also use some spaces around to check that the input value
   // is properly trimmed.
-  setInputValue(hud, '"second item"');
-  EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "second item", ".result"));
-
-  setInputValue(hud, '"second item"    ');
-  EventUtils.synthesizeKey("KEY_Enter");
-  await waitFor(() => findMessage(hud, "second item", ".result"));
-
+  await jsterm.execute('"second item"');
+  await jsterm.execute('  "second item"    ');
   EventUtils.synthesizeKey("KEY_ArrowUp");
   is(
     getInputValue(hud),
