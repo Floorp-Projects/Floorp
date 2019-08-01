@@ -44,7 +44,7 @@ the target request is %(origin)s.'''
 
     def handleDelivery(self, selection, spec):
         delivery_type = selection['delivery_type']
-        delivery_value = spec['referrer_policy']
+        delivery_value = selection['delivery_value']
 
         meta = ''
         headers = []
