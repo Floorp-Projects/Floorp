@@ -1058,6 +1058,15 @@
   value: 2000000
   mirror: always
 
+# Should we switch between perf-mode and interactive-mode?
+# 0 = Switch
+# 1 = Interactive mode
+# 2 = Perf mode
+- name: content.sink.enable_perf_mode
+  type: int32_t
+  value: 0
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
