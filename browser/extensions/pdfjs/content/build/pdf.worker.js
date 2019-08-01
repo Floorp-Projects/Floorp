@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.3.45';
-const pdfjsBuild = '71d9f5f8';
+const pdfjsVersion = '2.3.57';
+const pdfjsBuild = 'd909b86b';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -240,7 +240,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.3.45';
+    let workerVersion = '2.3.57';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -5884,7 +5884,7 @@ class Parser {
   }
 
   shift() {
-    if ((0, _primitives.isCmd)(this.buf2, 'ID')) {
+    if (this.buf2 instanceof _primitives.Cmd && this.buf2.cmd === 'ID') {
       this.buf1 = this.buf2;
       this.buf2 = null;
     } else {
@@ -23027,7 +23027,7 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
       while (true) {
         var obj = this.parser.getObj();
 
-        if ((0, _primitives.isCmd)(obj)) {
+        if (obj instanceof _primitives.Cmd) {
           var cmd = obj.cmd;
           var opSpec = this.opMap[cmd];
 
@@ -23084,7 +23084,7 @@ var EvaluatorPreprocessor = function EvaluatorPreprocessorClosure() {
           return true;
         }
 
-        if ((0, _primitives.isEOF)(obj)) {
+        if (obj === _primitives.EOF) {
           return false;
         }
 
@@ -30876,6 +30876,7 @@ var getGlyphsUnicode = getLookupTableFactory(function (t) {
  t['feicoptic'] = 0x03E5;
  t['female'] = 0x2640;
  t['ff'] = 0xFB00;
+ t['f_f'] = 0xFB00;
  t['ffi'] = 0xFB03;
  t['ffl'] = 0xFB04;
  t['fi'] = 0xFB01;
