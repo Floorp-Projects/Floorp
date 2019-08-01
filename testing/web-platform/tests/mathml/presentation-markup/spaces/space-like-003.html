@@ -10,6 +10,7 @@
 <meta name="assert" content="Verify definition of space-like elements">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/mathml/support/feature-detection.js"></script>
 <style>
   /* Default spacing of operator 'X' is 0.2777777777777778em so quite different
      from the measured/specified 0em and 1em. */
@@ -47,6 +48,7 @@
 
       Array.from(document.querySelectorAll(".testedElement")).forEach(el => {
           test(function() {
+              assert_true(MathMLFeatureDetection.has_operator_spacing());
               assert_approx_equals(spaceBefore(el), 0, epsilon);
               assert_approx_equals(spaceAfter(el), 2 * emToPx, epsilon);
           }, `${el.tagName} is not space-like`);
