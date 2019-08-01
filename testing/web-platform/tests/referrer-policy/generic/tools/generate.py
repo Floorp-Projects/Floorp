@@ -22,7 +22,7 @@ class ReferrerPolicyConfig(object):
         self.test_file_path_pattern = '%(spec_name)s/' + self.selection_pattern + \
                                       '%(name)s.%(source_protocol)s.html'
 
-        self.test_description_template = '''The referrer URL is %(referrer_url)s when a
+        self.test_description_template = '''The referrer URL is %(expectation)s when a
 document served over %(source_protocol)s requires an %(target_protocol)s
 sub-resource via %(subresource)s using the %(delivery_method)s
 delivery method with %(redirection)s and when
