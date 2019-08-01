@@ -49,8 +49,8 @@ prepare() {
   mkdir -p $TOOLCHAIN_DIR
   touch $TOOLCHAIN_DIR/.build-clang
 
-  mkdir -p $SRC_DIR
-  pushd $SRC_DIR
+  mkdir -p $TOOLCHAIN_DIR
+  pushd $TOOLCHAIN_DIR
 
   git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
   pushd mingw-w64
@@ -99,32 +99,34 @@ EOF
 build_mingw() {
   mkdir mingw-w64-headers
   pushd mingw-w64-headers
-  $SRC_DIR/mingw-w64/mingw-w64-headers/configure --host=$machine-w64-mingw32 \
-                                                 --enable-sdk=all \
-                                                 --enable-idl \
-                                                 --with-default-msvcrt=ucrt \
-                                                 --with-default-win32-winnt=$default_win32_winnt \
-                                                 --prefix=$CROSS_PREFIX_DIR
+  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-headers/configure \
+    --host=$machine-w64-mingw32 \
+    --enable-sdk=all \
+    --enable-idl \
+    --with-default-msvcrt=ucrt \
+    --with-default-win32-winnt=$default_win32_winnt \
+    --prefix=$CROSS_PREFIX_DIR
   make $make_flags install
   popd
 
   mkdir mingw-w64-crt
   pushd mingw-w64-crt
-  $SRC_DIR/mingw-w64/mingw-w64-crt/configure --host=$machine-w64-mingw32 \
-                                             $crt_flags \
-                                             --with-default-msvcrt=ucrt \
-                                             CC="$CC" \
-                                             AR=llvm-ar \
-                                             RANLIB=llvm-ranlib \
-                                             DLLTOOL=llvm-dlltool \
-                                             --prefix=$CROSS_PREFIX_DIR
+  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-crt/configure \
+    --host=$machine-w64-mingw32 \
+    $crt_flags \
+    --with-default-msvcrt=ucrt \
+    CC="$CC" \
+    AR=llvm-ar \
+    RANLIB=llvm-ranlib \
+    DLLTOOL=llvm-dlltool \
+    --prefix=$CROSS_PREFIX_DIR
   make $make_flags
   make $make_flags install
   popd
 
   mkdir widl
   pushd widl
-  $SRC_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=$machine-w64-mingw32 --prefix=$INSTALL_DIR
+  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=$machine-w64-mingw32 --prefix=$INSTALL_DIR
   make $make_flags
   make $make_flags install
   popd
@@ -193,7 +195,7 @@ build_libcxx() {
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$SRC_DIR/libcxx/include -DPSAPI_VERSION=2" \
       -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
-      $SRC_DIR/libunwind
+      $TOOLCHAIN_DIR/libunwind
   make $make_flags
   make $make_flags install
   popd
@@ -275,7 +277,7 @@ build_utils() {
   ln -s llvm-strip $machine-w64-mingw32-strip
   ln -s llvm-readobj $machine-w64-mingw32-readobj
   ln -s llvm-objcopy $machine-w64-mingw32-objcopy
-  ./clang $SRC_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
+  ./clang $TOOLCHAIN_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
   popd
 }
 
