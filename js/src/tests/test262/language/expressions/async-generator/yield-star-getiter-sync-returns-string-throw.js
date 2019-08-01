@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-getiter-sync-returns-string-throw.case
 // - src/async-generators/default/async-expression.template

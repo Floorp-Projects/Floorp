@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-rest-getter.case
 // - src/dstr-binding/default/async-gen-func-decl.template

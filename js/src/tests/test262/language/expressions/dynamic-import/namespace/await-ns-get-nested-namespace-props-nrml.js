@@ -1,4 +1,4 @@
-// |reftest| skip -- export-star-as-namespace-from-module is not supported
+// |reftest| skip async -- export-star-as-namespace-from-module is not supported
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/ns-get-nested-namespace-props-nrml.case
 // - src/dynamic-import/namespace/await.template

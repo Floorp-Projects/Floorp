@@ -1,4 +1,4 @@
-// |reftest| skip -- class-static-methods-private is not supported
+// |reftest| skip async -- class-static-methods-private is not supported
 // This file was procedurally generated from the following sources:
 // - src/async-generators/yield-star-next-not-callable-number-throw.case
 // - src/async-generators/default/async-class-expr-static-private-method.template

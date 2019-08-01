@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/arguments/args-trailing-comma-single-args.case
 // - src/arguments/default/async-gen-named-func-expr.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/obj-ptrn-prop-id-trailing-comma.case
 // - src/dstr-binding-for-await/default/for-await-of-async-func-let-async.template

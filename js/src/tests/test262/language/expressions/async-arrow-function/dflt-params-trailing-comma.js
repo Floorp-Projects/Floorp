@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/function-forms/dflt-params-trailing-comma.case
 // - src/function-forms/default/async-arrow-function.template

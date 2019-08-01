@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-assignment-for-await/obj-prop-elem-init-evaluation.case
 // - src/dstr-assignment-for-await/default/async-func-decl.template

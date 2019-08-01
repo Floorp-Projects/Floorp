@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/obj-ptrn-prop-id-trailing-comma.case
 // - src/dstr-binding/default/cls-expr-async-gen-meth-dflt.template

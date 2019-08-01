@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding/ary-ptrn-elem-obj-id.case
 // - src/dstr-binding/default/async-gen-func-named-expr.template

@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dstr-binding-for-await/ary-ptrn-rest-id-iter-close.case
 // - src/dstr-binding-for-await/iter-close/for-await-of-async-func-const.template

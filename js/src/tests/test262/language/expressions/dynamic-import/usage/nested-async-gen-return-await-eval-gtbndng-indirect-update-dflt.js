@@ -1,4 +1,4 @@
-// |reftest| skip-if(!xulRuntime.shell) -- dynamic-import is not enabled unconditionally
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/dynamic-import/eval-gtbndng-indirect-update-dflt.case
 // - src/dynamic-import/default/nested-async-generator-return-await.template

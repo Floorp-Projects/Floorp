@@ -1,3 +1,4 @@
+// |reftest| async
 // This file was procedurally generated from the following sources:
 // - src/class-elements/rs-field-identifier-initializer.case
 // - src/class-elements/productions/cls-decl-after-same-line-async-gen.template
