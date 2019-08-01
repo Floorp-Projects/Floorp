@@ -1,0 +1,45 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Emulation of color-scheme (bug 1570721)</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<style>
+@media (prefers-color-scheme: light) {
+  #test { color: rgb(0, 1, 0); }
+}
+@media (prefers-color-scheme: dark) {
+  #test { color: rgb(0, 2, 0); }
+}
+@media (prefers-color-scheme: no-preference) {
+  #test { color: rgb(0, 3, 0); }
+}
+</style>
+<div id="test"></div>
+<script>
+function colorId() {
+  // Gets the middle number of the rgb(0, x, 0) color.
+  let color = getComputedStyle(document.getElementById("test")).color;
+  let id = parseInt(color.split(",")[1], 10);
+  ok(id == 1 || id == 2 || id == 3, "Bogus color?");
+  return id;
+}
+
+{
+  let cv = SpecialPowers.wrap(window).docShell.contentViewer;
+  ok('emulatePrefersColorScheme' in cv, "API should exist");
+
+  let originalColor = colorId();
+
+  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_LIGHT);
+  is(colorId(), 1, "Light emulation works");
+
+  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_DARK);
+  is(colorId(), 2, "Dark emulation works");
+
+  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_NO_PREFERENCE);
+  is(colorId(), 3, "No preference emulation works");
+
+  cv.emulatePrefersColorScheme(cv.PREFERS_COLOR_SCHEME_NONE);
+  is(colorId(), originalColor, "Clearing the override works");
+}
+</script>

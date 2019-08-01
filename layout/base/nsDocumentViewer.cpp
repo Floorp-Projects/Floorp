@@ -335,6 +335,9 @@ class nsDocumentViewer final : public nsIContentViewer,
 
   void EmulateMediumInternal(nsAtom*);
 
+  using ColorSchemeOverride = Maybe<StylePrefersColorScheme>;
+  void EmulatePrefersColorSchemeInternal(const ColorSchemeOverride&);
+
  protected:
   virtual ~nsDocumentViewer();
 
@@ -2953,6 +2956,42 @@ NS_IMETHODIMP
 nsDocumentViewer::StopEmulatingMedium() {
   EmulateMediumInternal(nullptr);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocumentViewer::EmulatePrefersColorScheme(PrefersColorScheme aScheme) {
+  auto ToStyle = [](PrefersColorScheme aScheme) -> ColorSchemeOverride {
+    switch (aScheme) {
+      case PREFERS_COLOR_SCHEME_LIGHT:
+        return Some(StylePrefersColorScheme::Light);
+      case PREFERS_COLOR_SCHEME_DARK:
+        return Some(StylePrefersColorScheme::Dark);
+      case PREFERS_COLOR_SCHEME_NO_PREFERENCE:
+        return Some(StylePrefersColorScheme::NoPreference);
+      case PREFERS_COLOR_SCHEME_NONE:
+        return Nothing();
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown prefers color scheme value?");
+        return Nothing();
+    };
+  };
+
+  EmulatePrefersColorSchemeInternal(ToStyle(aScheme));
+  return NS_OK;
+}
+
+void nsDocumentViewer::EmulatePrefersColorSchemeInternal(
+    const ColorSchemeOverride& aOverride) {
+  PropagateToPresContextsHelper(
+      [](nsDocumentViewer* aChild, void* aClosure) {
+        aChild->EmulatePrefersColorSchemeInternal(
+            *static_cast<const ColorSchemeOverride*>(aClosure));
+      },
+      [](nsPresContext* aPc, void* aClosure) {
+        aPc->SetOverridePrefersColorScheme(
+            *static_cast<const ColorSchemeOverride*>(aClosure));
+      },
+      const_cast<ColorSchemeOverride*>(&aOverride));
 }
 
 NS_IMETHODIMP nsDocumentViewer::GetForceCharacterSet(
