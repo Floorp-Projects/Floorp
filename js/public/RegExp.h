@@ -51,11 +51,9 @@ extern JS_PUBLIC_API bool ExecuteRegExp(JSContext* cx, Handle<JSObject*> obj,
 
 /* RegExp interface for clients without a global object. */
 
-extern JS_PUBLIC_API bool ExecuteRegExpNoStatics(JSContext* cx,
-                                                 Handle<JSObject*> reobj,
-                                                 char16_t* chars, size_t length,
-                                                 size_t* indexp, bool test,
-                                                 MutableHandle<Value> rval);
+extern JS_PUBLIC_API bool ExecuteRegExpNoStatics(
+    JSContext* cx, Handle<JSObject*> reobj, const char16_t* chars,
+    size_t length, size_t* indexp, bool test, MutableHandle<Value> rval);
 
 /**
  * On success, returns true, setting |*isRegExp| to true if |obj| is a RegExp
