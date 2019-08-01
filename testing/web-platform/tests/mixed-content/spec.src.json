@@ -10,7 +10,8 @@
           "name": "opt-in-blocks",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": ["http-csp", "meta-csp"],
+          "delivery_type": "*",
+          "delivery_value": "opt-in",
           "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
@@ -24,7 +25,8 @@
           "name": "no-opt-in-allows",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": "no-opt-in",
+          "delivery_type": "*",
+          "delivery_value": null,
           "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
@@ -46,7 +48,8 @@
           "name": "opt-in-blocks",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": ["http-csp", "meta-csp"],
+          "delivery_type": "*",
+          "delivery_value": "opt-in",
           "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
@@ -60,7 +63,8 @@
           "name": "no-opt-in-blocks",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": "no-opt-in",
+          "delivery_type": "*",
+          "delivery_value": null,
           "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
@@ -74,7 +78,8 @@
           "name": "ws-downgrade-blocks",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": ["no-opt-in", "http-csp", "meta-csp"],
+          "delivery_type": "*",
+          "delivery_value": "*",
           "context_nesting": "top-level",
           "redirection": "*",
           "subresource": {
@@ -96,7 +101,8 @@
           "name": "allowed",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": "*",
+          "delivery_type": "*",
+          "delivery_value": "*",
           "context_nesting": "top-level",
           "redirection": ["no-redirect", "keep-scheme-redirect"],
           "subresource": {
@@ -110,7 +116,8 @@
           "name": "websocket-allowed",
           "expansion": "default",
           "source_scheme": "https",
-          "opt_in_method": "*",
+          "delivery_type": "*",
+          "delivery_value": "*",
           "context_nesting": "top-level",
           "redirection": ["no-redirect", "keep-scheme-redirect"],
           "subresource": {
@@ -128,10 +135,26 @@
 
   "excluded_tests": [
     {
+      "name": "Skip-redundant-no-opt-in",
+      "expansion": "*",
+      "source_scheme": "*",
+      "delivery_type": "http-rp",
+      "delivery_value": null,
+      "context_nesting": "*",
+      "redirection": "*",
+      "subresource": {
+        "blockable": "*",
+        "optionally-blockable": "*"
+      },
+      "origin": "*",
+      "expectation": "*"
+    },
+    {
       "name": "Redundant-subresources",
       "expansion": "*",
       "source_scheme": "*",
-      "opt_in_method": "*",
+      "delivery_type": "*",
+      "delivery_value": "*",
       "context_nesting": "*",
       "redirection": "*",
       "subresource": {
@@ -147,7 +170,8 @@
       "name": "Skip-origins-not-applicable-to-websockets",
       "expansion": "*",
       "source_scheme": "*",
-      "opt_in_method": "*",
+      "delivery_type": "*",
+      "delivery_value": "*",
       "context_nesting": "*",
       "redirection": "*",
       "subresource": {
@@ -165,27 +189,11 @@
       "expectation": "*"
     },
     {
-      "name": "TODO-opt-in-method-img-cross-origin",
-      "expansion": "*",
-      "source_scheme": "*",
-      "opt_in_method": "img-crossorigin",
-      "context_nesting": "*",
-      "redirection": "*",
-      "subresource": {
-        "blockable": "*",
-        "optionally-blockable": "*"
-      },
-      "origin": "*",
-      "expectation": "*"
-    },
-    {
       "name": "Skip-redundant-for-opt-in-method",
       "expansion": "*",
       "source_scheme": "*",
-      "opt_in_method":  [
-        "meta-csp",
-        "img-crossorigin"
-      ],
+      "delivery_type": "meta",
+      "delivery_value": "opt-in",
       "context_nesting": "*",
       "redirection": ["keep-scheme-redirect", "swap-scheme-redirect"],
       "subresource": {
@@ -206,11 +214,13 @@
       "http",
       "https"
     ],
-    "opt_in_method": [
-      "no-opt-in",
-      "http-csp",
-      "meta-csp",
-      "img-crossorigin"
+    "delivery_type": [
+      "http-rp",
+      "meta"
+    ],
+    "delivery_value": [
+      null,
+      "opt-in"
     ],
     "redirection": [
       "no-redirect",

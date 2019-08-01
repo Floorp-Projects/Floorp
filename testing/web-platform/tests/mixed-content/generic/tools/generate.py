@@ -14,7 +14,8 @@ import generate
 class MixedContentConfig(object):
     def __init__(self):
         self.selection_pattern = '%(subresource)s/' + \
-                                 '%(opt_in_method)s/' + \
+                                 '%(delivery_type)s/' + \
+                                 '%(delivery_value)s/' + \
                                  '%(origin)s/' + \
                                  '%(context_nesting)s/' + \
                                  '%(redirection)s/'
@@ -23,7 +24,8 @@ class MixedContentConfig(object):
                                       '%(spec_name)s/' + \
                                       '%(name)s.%(source_scheme)s.html'
 
-        self.test_description_template = '''opt_in_method: %(opt_in_method)s
+        self.test_description_template = '''delivery_type: %(delivery_type)s
+delivery_value: %(delivery_value)s
 origin: %(origin)s
 source_scheme: %(source_scheme)s
 context_nesting: %(context_nesting)s
@@ -47,21 +49,21 @@ expectation: %(expectation)s
             os.path.join(script_directory, '..', '..'))
 
     def handleDelivery(self, selection, spec):
-        opt_in_method = selection['opt_in_method']
+        delivery_type = selection['delivery_type']
+        delivery_value = selection['delivery_value']
 
         meta = ''
         headers = []
 
-        # TODO(kristijanburnik): Implement the opt-in-method here.
-        if opt_in_method == 'meta-csp':
-            meta = '<meta http-equiv="Content-Security-Policy" ' + \
-                   'content="block-all-mixed-content">'
-        elif opt_in_method == 'http-csp':
-            headers.append("Content-Security-Policy: block-all-mixed-content")
-        elif opt_in_method == 'no-opt-in':
-            pass
-        else:
-            raise ValueError("Invalid opt_in_method %s" % opt_in_method)
+        if delivery_value is not None:
+            if delivery_type == 'meta':
+                meta = '<meta http-equiv="Content-Security-Policy" ' + \
+                       'content="block-all-mixed-content">'
+            elif delivery_type == 'http-rp':
+                headers.append(
+                    "Content-Security-Policy: block-all-mixed-content")
+            else:
+                raise ValueError("Invalid delivery_type %s" % delivery_type)
 
         return {"meta": meta, "headers": headers}
 
