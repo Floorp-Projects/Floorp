@@ -22,7 +22,9 @@
           var style = window.getComputedStyle(element);
 
           test(function() {
-              assert_equals(style.getPropertyValue("text-transform"), "none", "no attribute");
+              assert_equals(style.getPropertyValue("text-transform"),
+                            tag === "mi" ? "math-auto" : "none",
+                            "no attribute");
               element.setAttribute("mathvariant", "fraktur");
               assert_equals(style.getPropertyValue("text-transform"), "math-fraktur", "attribute specified");
           }, `mathvariant on the ${tag} element is mapped to CSS text-transform`)
