@@ -16,7 +16,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "upgrade-protocol",
@@ -27,7 +27,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "downgrade-protocol",
@@ -38,7 +38,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         },
         {
           "name": "secure-protocol",
@@ -49,7 +49,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         }
       ]
     },
@@ -69,7 +69,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         }
       ]
     },
@@ -89,7 +89,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "upgrade-protocol",
@@ -100,7 +100,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "downgrade-protocol",
@@ -111,7 +111,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         },
         {
           "name": "secure-protocol",
@@ -122,7 +122,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         }
       ]
     },
@@ -142,7 +142,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         }
       ]
     },
@@ -162,7 +162,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-origin-secure-default",
@@ -173,7 +173,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-origin-insecure",
@@ -184,7 +184,7 @@
           "redirection": "swap-origin-redirect",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         },
         {
           "name": "cross-origin",
@@ -195,7 +195,7 @@
           "redirection": "*",
           "origin": "cross-origin",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         }
       ]
     },
@@ -215,7 +215,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-origin-secure-default",
@@ -226,7 +226,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-origin-upgrade",
@@ -237,7 +237,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "same-origin-downgrade",
@@ -248,7 +248,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "same-origin-insecure",
@@ -259,7 +259,7 @@
           "redirection": "swap-origin-redirect",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "cross-origin",
@@ -270,7 +270,7 @@
           "redirection": "*",
           "origin": "cross-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         }
       ]
     },
@@ -290,7 +290,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "upgrade-protocol",
@@ -301,7 +301,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "downgrade-protocol",
@@ -312,7 +312,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         },
         {
           "name": "secure-protocol",
@@ -323,7 +323,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         }
       ]
     },
@@ -343,7 +343,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-insecure",
@@ -354,7 +354,7 @@
           "redirection": "swap-origin-redirect",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "cross-insecure",
@@ -365,7 +365,7 @@
           "redirection": "*",
           "origin": "cross-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "upgrade-protocol",
@@ -376,7 +376,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "downgrade-protocol",
@@ -387,7 +387,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "omitted"
+          "expectation": "omitted"
         },
         {
           "name": "same-secure",
@@ -398,7 +398,7 @@
           "redirection": "*",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         },
         {
           "name": "same-secure",
@@ -409,7 +409,7 @@
           "redirection": "swap-origin-redirect",
           "origin": "same-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         },
         {
           "name": "cross-secure",
@@ -420,7 +420,7 @@
           "redirection": "*",
           "origin": "cross-origin",
           "subresource": "*",
-          "referrer_url": "origin"
+          "expectation": "origin"
         }
       ]
     },
@@ -440,7 +440,7 @@
           "redirection": "*",
           "origin": "*",
           "subresource": "*",
-          "referrer_url": "stripped-referrer"
+          "expectation": "stripped-referrer"
         }
       ]
     }
@@ -462,7 +462,7 @@
         "module-worker",
         "shared-worker"
       ],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "upgraded-protocol-workers",
@@ -477,7 +477,7 @@
         "module-worker",
         "shared-worker"
       ],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "mixed-content-insecure-subresources",
@@ -488,7 +488,7 @@
       "redirection": "*",
       "origin": "*",
       "subresource": "*",
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "elements-not-supporting-attr-referrer",
@@ -505,7 +505,7 @@
         "shared-worker",
         "fetch-request"
       ],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "elements-not-supporting-rel-noreferrer",
@@ -526,7 +526,7 @@
         "fetch-request",
         "area-tag"
       ],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "area-tag",
@@ -537,7 +537,7 @@
       "redirection": "*",
       "origin": "*",
       "subresource": "area-tag",
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "worker-requests-with-swap-origin-redirect",
@@ -552,7 +552,7 @@
         "module-worker",
         "shared-worker"
       ],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "overhead-for-redirection",
@@ -563,7 +563,7 @@
       "redirection": ["keep-origin-redirect", "swap-origin-redirect"],
       "origin": "*",
       "subresource": ["a-tag", "area-tag"],
-      "referrer_url": "*"
+      "expectation": "*"
     },
     {
       "name": "source-https-unsupported-by-web-platform-tests-runners",
@@ -574,7 +574,7 @@
       "redirection": "*",
       "origin": "*",
       "subresource": "*",
-      "referrer_url": "*"
+      "expectation": "*"
     }
   ],
 
@@ -637,7 +637,7 @@
       "fetch-request"
     ],
 
-    "referrer_url": [
+    "expectation": [
       "omitted",
       "origin",
       "stripped-referrer"
