@@ -1433,7 +1433,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidatorShared {
   MOZ_MUST_USE bool initDummyFunction() {
     // This flows into FunctionBox, so must be tenured.
     dummyFunction_ = NewScriptedFunction(
-        cx_, 0, JSFunction::INTERPRETED, nullptr,
+        cx_, 0, FunctionFlags::INTERPRETED, nullptr,
         /* proto = */ nullptr, gc::AllocKind::FUNCTION, TenuredObject);
     if (!dummyFunction_) {
       return false;
@@ -6905,7 +6905,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
   }
 
   RootedFunction fun(
-      cx, NewScriptedFunction(cx, 0, JSFunction::INTERPRETED_NORMAL, name,
+      cx, NewScriptedFunction(cx, 0, FunctionFlags::INTERPRETED_NORMAL, name,
                               /* proto = */ nullptr, gc::AllocKind::FUNCTION,
                               TenuredObject));
   if (!fun) {
@@ -6982,8 +6982,8 @@ static JSFunction* NewAsmJSModuleFunction(JSContext* cx, JSFunction* origFun,
                                           HandleObject moduleObj) {
   RootedAtom name(cx, origFun->explicitName());
 
-  JSFunction::Flags flags = origFun->isLambda() ? JSFunction::ASMJS_LAMBDA_CTOR
-                                                : JSFunction::ASMJS_CTOR;
+  FunctionFlags flags = origFun->isLambda() ? FunctionFlags::ASMJS_LAMBDA_CTOR
+                                            : FunctionFlags::ASMJS_CTOR;
   JSFunction* moduleFun = NewNativeConstructor(
       cx, InstantiateAsmJS, origFun->nargs(), name,
       gc::AllocKind::FUNCTION_EXTENDED, TenuredObject, flags);
@@ -7147,7 +7147,7 @@ bool js::IsAsmJSModule(JSFunction* fun) {
 }
 
 bool js::IsAsmJSFunction(JSFunction* fun) {
-  return fun->kind() == JSFunction::AsmJS;
+  return fun->kind() == FunctionFlags::AsmJS;
 }
 
 bool js::IsAsmJSStrictModeModuleOrFunction(JSFunction* fun) {

@@ -384,7 +384,6 @@ void WebRenderBridgeParent::RemoveDeferredPipeline(wr::PipelineId aPipelineId) {
   }
 }
 
-
 /* static */
 WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
     const wr::PipelineId& aPipelineId) {
@@ -415,11 +414,8 @@ bool WebRenderBridgeParent::HandleDeferredPipelineData(
           wr::Epoch wrEpoch = GetNextWrEpoch();
           bool validTransaction = data.mIdNamespace == mIdNamespace;
 
-          if (!ProcessRenderRootDisplayListData(data,
-                                                wrEpoch,
-                                                aTxnStartTime,
-                                                validTransaction,
-                                                false)){
+          if (!ProcessRenderRootDisplayListData(data, wrEpoch, aTxnStartTime,
+                                                validTransaction, false)) {
             return false;
           }
 
@@ -521,12 +517,10 @@ bool WebRenderBridgeParent::MaybeHandleDeferredPipelineData(
                                                     aTxnStartTime)) {
       return false;
     }
-
   }
 
   return true;
 }
-
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
     TextureFactoryIdentifier* aTextureFactoryIdentifier,
@@ -991,8 +985,12 @@ bool WebRenderBridgeParent::IsRootWebRenderBridgeParent() const {
 }
 
 void WebRenderBridgeParent::SetCompositionRecorder(
-    RefPtr<layers::WebRenderCompositionRecorder>&& aRecorder) {
+    UniquePtr<layers::WebRenderCompositionRecorder> aRecorder) {
   Api(wr::RenderRoot::Default)->SetCompositionRecorder(std::move(aRecorder));
+}
+
+void WebRenderBridgeParent::WriteCollectedFrames() {
+  Api(wr::RenderRoot::Default)->WriteCollectedFrames();
 }
 
 CompositorBridgeParent* WebRenderBridgeParent::GetRootCompositorBridgeParent()
@@ -1165,10 +1163,8 @@ bool WebRenderBridgeParent::SetDisplayList(
 }
 
 bool WebRenderBridgeParent::ProcessRenderRootDisplayListData(
-    RenderRootDisplayListData& aDisplayList,
-    wr::Epoch aWrEpoch,
-    const TimeStamp& aTxnStartTime,
-    bool aValidTransaction,
+    RenderRootDisplayListData& aDisplayList, wr::Epoch aWrEpoch,
+    const TimeStamp& aTxnStartTime, bool aValidTransaction,
     bool aObserveLayersUpdate) {
   wr::TransactionBuilder txn;
   Maybe<wr::AutoTransactionSender> sender;
@@ -1276,7 +1272,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     // Only non-root WRBPs will ever have an unresolved mRenderRoot
     MOZ_ASSERT(!IsRootWebRenderBridgeParent());
     if (aDisplayLists.Length() != 1) {
-      return IPC_FAIL(this, "Well-behaved content processes must only send a DL for a single renderRoot");
+      return IPC_FAIL(this,
+                      "Well-behaved content processes must only send a DL for "
+                      "a single renderRoot");
     }
     PushDeferredPipelineData(AsVariant(std::move(aDisplayLists[0])));
     aDisplayLists.Clear();
@@ -1284,10 +1282,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
 
   for (auto& displayList : aDisplayLists) {
     if (IsRootWebRenderBridgeParent()) {
-      if (!MaybeHandleDeferredPipelineData(
-              displayList.mRenderRoot,
-              displayList.mRemotePipelineIds,
-              aTxnStartTime)) {
+      if (!MaybeHandleDeferredPipelineData(displayList.mRenderRoot,
+                                           displayList.mRemotePipelineIds,
+                                           aTxnStartTime)) {
         return IPC_FAIL(this, "Failed processing deferred pipeline data");
       }
     } else {
@@ -1309,12 +1306,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
   bool observeLayersUpdate = ShouldParentObserveEpoch();
 
   for (auto& displayList : aDisplayLists) {
-    if (!ProcessRenderRootDisplayListData(
-            displayList,
-            wrEpoch,
-            aTxnStartTime,
-            validTransaction,
-            observeLayersUpdate)) {
+    if (!ProcessRenderRootDisplayListData(displayList, wrEpoch, aTxnStartTime,
+                                          validTransaction,
+                                          observeLayersUpdate)) {
       return IPC_FAIL(this, "Failed to process RenderRootDisplayListData.");
     }
   }
@@ -1456,7 +1450,9 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
     // Only non-root WRBPs will ever have an unresolved mRenderRoot
     MOZ_ASSERT(!IsRootWebRenderBridgeParent());
     if (aRenderRootUpdates.Length() != 1) {
-      return IPC_FAIL(this, "Well-behaved content processes must only send a DL for a single renderRoot");
+      return IPC_FAIL(this,
+                      "Well-behaved content processes must only send a DL for "
+                      "a single renderRoot");
     }
     PushDeferredPipelineData(AsVariant(std::move(aRenderRootUpdates[0])));
     aRenderRootUpdates.Clear();

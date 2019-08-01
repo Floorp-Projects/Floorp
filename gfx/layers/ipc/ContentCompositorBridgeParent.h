@@ -87,10 +87,16 @@ class ContentCompositorBridgeParent final : public CompositorBridgeParentBase {
   mozilla::ipc::IPCResult RecvAllPluginsCaptured() override { return IPC_OK(); }
 
   mozilla::ipc::IPCResult RecvBeginRecording(
-      const TimeStamp& aRecordingStart) override {
+      const TimeStamp& aRecordingStart,
+      BeginRecordingResolver&& aResolve) override {
+    aResolve(false);
     return IPC_OK();
   }
-  mozilla::ipc::IPCResult RecvEndRecording() override { return IPC_OK(); }
+
+  mozilla::ipc::IPCResult RecvEndRecording(bool* aOutSuccess) override {
+    *aOutSuccess = false;
+    return IPC_OK();
+  }
 
   mozilla::ipc::IPCResult RecvGetFrameUniformity(
       FrameUniformityData* aOutData) override {

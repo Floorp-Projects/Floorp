@@ -1330,53 +1330,63 @@ impl ClipItem {
         prim_world_rect: &WorldRect,
         world_rect: &WorldRect,
     ) -> ClipResult {
-        let (clip_rect, inner_rect) = match *self {
-            ClipItem::Rectangle(size, ClipMode::Clip) => {
+        let visible_rect = match prim_world_rect.intersection(world_rect) {
+            Some(rect) => rect,
+            None => return ClipResult::Reject,
+        };
+
+        let (clip_rect, inner_rect, mode) = match *self {
+            ClipItem::Rectangle(size, mode) => {
                 let clip_rect = LayoutRect::new(local_pos, size);
-                (clip_rect, Some(clip_rect))
+                (clip_rect, Some(clip_rect), mode)
             }
-            ClipItem::RoundedRectangle(size, ref radius, ClipMode::Clip) => {
+            ClipItem::RoundedRectangle(size, ref radius, mode) => {
                 let clip_rect = LayoutRect::new(local_pos, size);
                 let inner_clip_rect = extract_inner_rect_safe(&clip_rect, radius);
-                (clip_rect, inner_clip_rect)
+                (clip_rect, inner_clip_rect, mode)
             }
-            ClipItem::Rectangle(_, ClipMode::ClipOut) |
-            ClipItem::RoundedRectangle(_, _, ClipMode::ClipOut) |
-            ClipItem::Image { .. } |
+            ClipItem::Image { size, repeat: false, .. } => {
+                let clip_rect = LayoutRect::new(local_pos, size);
+                (clip_rect, None, ClipMode::Clip)
+            }
+            ClipItem::Image { repeat: true, .. } |
             ClipItem::BoxShadow(..) => {
-                return ClipResult::Partial
+                return ClipResult::Partial;
             }
         };
 
-        let inner_clip_rect = inner_rect.and_then(|ref inner_rect| {
+        if let Some(inner_clip_rect) = inner_rect.and_then(|ref inner_rect| {
             project_inner_rect(transform, inner_rect)
-        });
-
-        if let Some(inner_clip_rect) = inner_clip_rect {
-            match prim_world_rect.intersection(world_rect) {
-                Some(ref rect) if inner_clip_rect.contains_rect(rect) =>
-                    return ClipResult::Accept,
-                Some(_) => (),
-                None => return ClipResult::Reject,
+        }) {
+            if inner_clip_rect.contains_rect(&visible_rect) {
+                return match mode {
+                    ClipMode::Clip => ClipResult::Accept,
+                    ClipMode::ClipOut => ClipResult::Reject,
+                };
             }
         }
 
-        let outer_clip_rect = match project_rect(
-            transform,
-            &clip_rect,
-            world_rect,
-        ) {
-            Some(outer_clip_rect) => outer_clip_rect,
-            None => return ClipResult::Partial,
-        };
+        match mode {
+            ClipMode::Clip => {
+                let outer_clip_rect = match project_rect(
+                    transform,
+                    &clip_rect,
+                    world_rect,
+                ) {
+                    Some(outer_clip_rect) => outer_clip_rect,
+                    None => return ClipResult::Partial,
+                };
 
-        match outer_clip_rect.intersection(prim_world_rect) {
-            Some(..) => {
-                ClipResult::Partial
+                match outer_clip_rect.intersection(prim_world_rect) {
+                    Some(..) => {
+                        ClipResult::Partial
+                    }
+                    None => {
+                        ClipResult::Reject
+                    }
+                }
             }
-            None => {
-                ClipResult::Reject
-            }
+            ClipMode::ClipOut => ClipResult::Partial,
         }
     }
 

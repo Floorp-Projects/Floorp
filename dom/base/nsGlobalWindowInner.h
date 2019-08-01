@@ -653,8 +653,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   void GetSidebar(mozilla::dom::OwningExternalOrWindowProxy& aResult,
                   mozilla::ErrorResult& aRv);
-  already_AddRefed<mozilla::dom::External> GetExternal(
-      mozilla::ErrorResult& aRv);
+  mozilla::dom::External* GetExternal(mozilla::ErrorResult& aRv);
 
   mozilla::dom::Worklet* GetPaintWorklet(mozilla::ErrorResult& aRv);
 
@@ -946,7 +945,7 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
 
   bool ShouldReportForServiceWorkerScope(const nsAString& aScope);
 
-  already_AddRefed<mozilla::dom::InstallTriggerImpl> GetInstallTrigger();
+  mozilla::dom::InstallTriggerImpl* GetInstallTrigger();
 
   nsIDOMWindowUtils* GetWindowUtils(mozilla::ErrorResult& aRv);
 

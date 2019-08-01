@@ -29,10 +29,10 @@
 #ifdef XP_MACOSX
 #  include "gfxPlatformMac.h"
 #endif
-#include "gfxRect.h"                    // for gfxRect
-#include "gfxUtils.h"                   // for frame color util
-#include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/RefPtr.h"             // for RefPtr, already_AddRefed
+#include "gfxRect.h"             // for gfxRect
+#include "gfxUtils.h"            // for frame color util
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc
+#include "mozilla/RefPtr.h"      // for RefPtr, already_AddRefed
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget
@@ -128,6 +128,13 @@ void HostLayerManager::RecordPaintTimes(const PaintTiming& aTiming) {
 
 void HostLayerManager::RecordUpdateTime(float aValue) {
   mDiagnostics->RecordUpdateTime(aValue);
+}
+
+void HostLayerManager::WriteCollectedFrames() {
+  if (mCompositionRecorder) {
+    mCompositionRecorder->WriteCollectedFrames();
+    mCompositionRecorder = nullptr;
+  }
 }
 
 /**

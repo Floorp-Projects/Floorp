@@ -162,6 +162,11 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             "help": "The number of times a cold load test is repeated (for cold load tests only, "
                     "where the browser is shutdown and restarted between test iterations)"
         }],
+        [["--test-url-params"], {
+            "action": "store",
+            "dest": "test_url_params",
+            "help": "Parameters to add to the test_url query string"
+        }],
         [["--host"], {
             "dest": "host",
             "help": "Hostname from which to serve urls (default: 127.0.0.1). "
@@ -285,6 +290,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.gecko_profile_interval = self.config.get('gecko_profile_interval')
         self.gecko_profile_entries = self.config.get('gecko_profile_entries')
         self.test_packages_url = self.config.get('test_packages_url')
+        self.test_url_params = self.config.get('test_url_params')
         self.host = self.config.get('host')
         if self.host == 'HOST_IP':
             self.host = os.environ['HOST_IP']
@@ -412,6 +418,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             kw_options['symbolsPath'] = self.symbols_path
         if self.config.get('obj_path', None) is not None:
             kw_options['obj-path'] = self.config['obj_path']
+        if self.test_url_params:
+            kw_options['test-url-params'] = self.test_url_params
+
         kw_options.update(kw)
         if self.host:
             kw_options['host'] = self.host

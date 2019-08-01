@@ -472,7 +472,7 @@ static const JSFunctionSpec async_generator_methods[] = {
   // 25.3.1 The AsyncGeneratorFunction Constructor
   RootedObject asyncGenFunction(
       cx, NewFunctionWithProto(cx, AsyncGeneratorConstructor, 1,
-                               JSFunction::NATIVE_CTOR, nullptr, name, proto,
+                               FunctionFlags::NATIVE_CTOR, nullptr, name, proto,
                                gc::AllocKind::FUNCTION, SingletonObject));
   if (!asyncGenFunction) {
     return false;

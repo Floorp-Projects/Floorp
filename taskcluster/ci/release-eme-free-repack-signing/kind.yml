@@ -23,3 +23,4 @@ job-template:
     shipping-phase: promote
     depname: release-eme-free-repack
     max-run-time: 3600
+    repacks-per-chunk: 5

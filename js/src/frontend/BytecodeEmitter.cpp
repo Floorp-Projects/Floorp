@@ -2530,7 +2530,7 @@ bool BytecodeEmitter::emitFunctionScript(FunctionNode* funNode,
                                 parser->errorReporter(), funbox);
 
   MOZ_ASSERT((fieldInitializers_.valid) ==
-             (funbox->kind() == JSFunction::FunctionKind::ClassConstructor));
+             (funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor));
 
   setScriptStartOffsetIfUnset(paramsBody->pn_pos.begin);
 
@@ -5696,7 +5696,7 @@ MOZ_NEVER_INLINE bool BytecodeEmitter::emitFunction(
   RootedFunction fun(cx, funbox->function());
 
   MOZ_ASSERT((classContentsIfConstructor != nullptr) ==
-             (funbox->kind() == JSFunction::FunctionKind::ClassConstructor));
+             (funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor));
 
   //                [stack]
 
@@ -8130,7 +8130,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (BytecodeEmitter* current = this; current; current = current->parent) {
     if (current->sc->isFunctionBox()) {
       FunctionBox* box = current->sc->asFunctionBox();
-      if (box->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (box->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         const FieldInitializers& fieldInitializers =
             current->getFieldInitializers();
         MOZ_ASSERT(fieldInitializers.valid);
@@ -8142,7 +8142,7 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   for (ScopeIter si(innermostScope()); si; si++) {
     if (si.scope()->is<FunctionScope>()) {
       JSFunction* fun = si.scope()->as<FunctionScope>().canonicalFunction();
-      if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+      if (fun->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
         const FieldInitializers& fieldInitializers =
             fun->isInterpretedLazy()
                 ? fun->lazyScript()->getFieldInitializers()

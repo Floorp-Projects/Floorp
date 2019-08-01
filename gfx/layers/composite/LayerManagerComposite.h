@@ -183,6 +183,7 @@ class HostLayerManager : public LayerManager {
       mCompositeUntilTime = TimeStamp();
     }
   }
+
   void CompositeUntil(TimeStamp aTimeStamp) {
     if (mCompositeUntilTime.IsNull() || mCompositeUntilTime < aTimeStamp) {
       mCompositeUntilTime = aTimeStamp;
@@ -199,9 +200,16 @@ class HostLayerManager : public LayerManager {
     mCompositorBridgeID = aID;
   }
 
-  void SetCompositionRecorder(already_AddRefed<CompositionRecorder> aRecorder) {
-    mCompositionRecorder = aRecorder;
+  void SetCompositionRecorder(UniquePtr<CompositionRecorder> aRecorder) {
+    mCompositionRecorder = std::move(aRecorder);
   }
+
+  /**
+   * Write the frames collected by the |CompositionRecorder| to disk.
+   *
+   * If there is not currently a |CompositionRecorder|, this is a no-op.
+   */
+  void WriteCollectedFrames();
 
  protected:
   bool mDebugOverlayWantsNextFrame;
@@ -216,7 +224,7 @@ class HostLayerManager : public LayerManager {
   bool mWindowOverlayChanged;
   TimeDuration mLastPaintTime;
   TimeStamp mRenderStartTime;
-  RefPtr<CompositionRecorder> mCompositionRecorder = nullptr;
+  UniquePtr<CompositionRecorder> mCompositionRecorder = nullptr;
 
   // Render time for the current composition.
   TimeStamp mCompositionTime;

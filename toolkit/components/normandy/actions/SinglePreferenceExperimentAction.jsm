@@ -39,7 +39,7 @@ class SinglePreferenceExperimentAction extends PreferenceExperimentAction {
     } = recipe.arguments;
 
     const newArguments = {
-      // The multiple-preference-experiment schema requires a string
+      // The multi-preference-experiment schema requires a string
       // name/description, which are necessary in the wire format, but
       // experiment objects can have null for these fields. Add some
       // filler fields here and remove them after validation.
@@ -61,7 +61,7 @@ class SinglePreferenceExperimentAction extends PreferenceExperimentAction {
       }),
     };
 
-    const multiprefSchema = ActionSchemas["multiple-preference-experiment"];
+    const multiprefSchema = ActionSchemas["multi-preference-experiment"];
 
     let [
       valid,

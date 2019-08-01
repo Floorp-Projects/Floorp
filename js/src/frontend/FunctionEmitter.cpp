@@ -484,7 +484,7 @@ bool FunctionScriptEmitter::prepareForBody() {
     }
   }
 
-  if (funbox_->kind() == JSFunction::FunctionKind::ClassConstructor) {
+  if (funbox_->kind() == FunctionFlags::FunctionKind::ClassConstructor) {
     if (!funbox_->isDerivedClassConstructor()) {
       if (!bce_->emitInitializeInstanceFields()) {
         //          [stack]

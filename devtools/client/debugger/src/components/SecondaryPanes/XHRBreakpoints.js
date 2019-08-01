@@ -338,7 +338,7 @@ class XHRBreakpoints extends Component<Props, State> {
     return (
       <select
         value={this.state.inputMethod}
-        className={"xhr-input-method"}
+        className="xhr-input-method"
         onChange={this.handleMethodChange}
         onMouseDown={this.onMouseDown}
         onKeyDown={this.handleTab}
@@ -358,12 +358,10 @@ class XHRBreakpoints extends Component<Props, State> {
   }
 }
 
-const mapStateToProps = state => {
-  return {
-    xhrBreakpoints: getXHRBreakpoints(state),
-    shouldPauseOnAny: shouldPauseOnAnyXHR(state),
-  };
-};
+const mapStateToProps = state => ({
+  xhrBreakpoints: getXHRBreakpoints(state),
+  shouldPauseOnAny: shouldPauseOnAnyXHR(state),
+});
 
 export default connect(
   mapStateToProps,
