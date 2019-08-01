@@ -126,9 +126,8 @@ def validate(spec_json, details):
     # Validate the test_expansion schema members.
     details['object'] = test_expansion_schema
     assert_contains_only_fields(test_expansion_schema, [
-        'expansion', 'delivery_type', 'delivery_value', 'redirection',
-        'origin', 'source_protocol', 'target_protocol', 'subresource',
-        'expectation'
+        'expansion', 'source_protocol', 'delivery_type', 'delivery_value',
+        'redirection', 'subresource', 'origin', 'expectation'
     ])
     # Validate excluded tests.
     details['object'] = excluded_tests
