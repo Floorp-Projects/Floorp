@@ -1046,6 +1046,12 @@
   value: 360000
   mirror: always
 
+#  How long to be in interactive mode after an event.
+- name: content.sink.interactive_time
+  type: uint32_t
+  value: 750000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
