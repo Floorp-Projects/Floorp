@@ -1,8 +1,8 @@
 [
   {
-    "size": 919507,
+    "size": 2882418,
     "visibility": "public",
-    "digest": "1e987882c6b9a46e7096b2d132b9e803f502aaada2dcdd067a16dc394739a00f9812c1e9f1caec6a4cb690a727dc8e41f770a82c91fb20d962b9ab8228f9b9e2",
+    "digest": "5bbeff53d2bb3d92155324bac95c6d5ec324994a67767da51c1d0bf32f7757c7ec8f1e60ab4faa5d2f516854353886c8cc01ed9c66df2629f7c5d081ca49ec20",
     "algorithm": "sha512",
     "filename": "mitm4-pixel2-fennec-ebay-kleinanzeigen.zip",
     "unpack": true
