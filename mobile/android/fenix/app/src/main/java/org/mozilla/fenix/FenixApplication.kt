@@ -62,6 +62,9 @@ open class FenixApplication : Application() {
             return
         }
 
+        // Make sure the engine is initialized and ready to use.
+        components.core.engine.warmUp()
+
         // We want to call this function as early as possible, but only once and
         // on the main process, as it uses Gecko to fetch experiments from the server.
         experimentLoader = loadExperiments()
