@@ -323,6 +323,8 @@ class nsCoreUtils {
    * Notify accessible event observers of an event.
    */
   static void DispatchAccEvent(RefPtr<nsIAccessibleEvent> aEvent);
+
+  static bool IsDisplayContents(nsIContent* aContent);
 };
 
 #endif
