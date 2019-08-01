@@ -9,7 +9,7 @@
         {
           "name": "opt-in-blocks",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "opt-in",
           "context_nesting": "top-level",
@@ -24,7 +24,7 @@
         {
           "name": "no-opt-in-allows",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": null,
           "context_nesting": "top-level",
@@ -47,7 +47,7 @@
         {
           "name": "opt-in-blocks",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "opt-in",
           "context_nesting": "top-level",
@@ -62,7 +62,7 @@
         {
           "name": "no-opt-in-blocks",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": null,
           "context_nesting": "top-level",
@@ -77,7 +77,7 @@
         {
           "name": "ws-downgrade-blocks",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
           "context_nesting": "top-level",
@@ -100,7 +100,7 @@
         {
           "name": "allowed",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
           "context_nesting": "top-level",
@@ -115,7 +115,7 @@
         {
           "name": "websocket-allowed",
           "expansion": "default",
-          "source_scheme": "https",
+          "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
           "context_nesting": "top-level",
@@ -137,7 +137,7 @@
     {
       "name": "Skip-redundant-no-opt-in",
       "expansion": "*",
-      "source_scheme": "*",
+      "source_protocol": "*",
       "delivery_type": "http-rp",
       "delivery_value": null,
       "context_nesting": "*",
@@ -152,7 +152,7 @@
     {
       "name": "Redundant-subresources",
       "expansion": "*",
-      "source_scheme": "*",
+      "source_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "context_nesting": "*",
@@ -169,7 +169,7 @@
     {
       "name": "Skip-origins-not-applicable-to-websockets",
       "expansion": "*",
-      "source_scheme": "*",
+      "source_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "context_nesting": "*",
@@ -191,7 +191,7 @@
     {
       "name": "Skip-redundant-for-opt-in-method",
       "expansion": "*",
-      "source_scheme": "*",
+      "source_protocol": "*",
       "delivery_type": "meta",
       "delivery_value": "opt-in",
       "context_nesting": "*",
@@ -210,7 +210,7 @@
       "default",
       "override"
     ],
-    "source_scheme": [
+    "source_protocol": [
       "http",
       "https"
     ],

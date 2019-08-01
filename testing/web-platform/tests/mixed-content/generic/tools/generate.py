@@ -22,12 +22,12 @@ class MixedContentConfig(object):
 
         self.test_file_path_pattern = self.selection_pattern + \
                                       '%(spec_name)s/' + \
-                                      '%(name)s.%(source_scheme)s.html'
+                                      '%(name)s.%(source_protocol)s.html'
 
         self.test_description_template = '''delivery_type: %(delivery_type)s
 delivery_value: %(delivery_value)s
 origin: %(origin)s
-source_scheme: %(source_scheme)s
+source_scheme: %(source_protocol)s
 context_nesting: %(context_nesting)s
 redirection: %(redirection)s
 subresource: %(subresource)s
