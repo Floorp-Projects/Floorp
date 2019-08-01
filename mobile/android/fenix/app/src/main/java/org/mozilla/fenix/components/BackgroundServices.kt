@@ -55,9 +55,16 @@ class BackgroundServices(
         const val REDIRECT_URL = "https://accounts.firefox.com/oauth/success/$CLIENT_ID"
     }
 
+    private val defaultDeviceName = context.getString(
+        R.string.default_device_name,
+        context.getString(R.string.app_name),
+        Build.MANUFACTURER,
+        Build.MODEL
+    )
+
     private val serverConfig = ServerConfig.release(CLIENT_ID, REDIRECT_URL)
     private val deviceConfig = DeviceConfig(
-        name = Build.MANUFACTURER + " " + Build.MODEL,
+        name = defaultDeviceName,
         type = DeviceType.MOBILE,
 
         // NB: flipping this flag back and worth is currently not well supported and may need hand-holding.
@@ -111,13 +118,6 @@ class BackgroundServices(
             }
         }
     }
-
-    private val defaultDeviceName = context.getString(
-        R.string.default_device_name,
-        context.getString(R.string.app_name),
-        Build.MANUFACTURER,
-        Build.MODEL
-    )
 
     /**
      * When we login/logout of FxA, we need to update our push subscriptions to match the newly
