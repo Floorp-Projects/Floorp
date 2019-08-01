@@ -215,7 +215,7 @@ public class AccountsHelper implements BundleEventListener {
 
             // 'UpdateFirefoxAccountFromJSON' message will be sent during a password change as well
             // during a reconnect, so we need to ensure we don't fire-off false sign-in telemtry events.
-            if (action.equals("reconnect")) {
+            if (!action.equals("passwordChange")) {
                 MmaDelegate.track(MmaDelegate.USER_RECONNECTED_TO_FXA);
             }
 
