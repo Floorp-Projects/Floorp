@@ -909,7 +909,7 @@ ICEStats.prototype = {
       type = `${c.candidateType}-${c.relayProtocol}`;
     }
 
-    return `${c.address}:${c.port}/${c.transport}(${type})`;
+    return `${c.address}:${c.port}/${c.protocol}(${type})`;
   },
 };
 
