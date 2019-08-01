@@ -115,7 +115,7 @@ async function testKeyOrder(hud, command, expectedKeys) {
     "Wait for a new .result message with an object inspector to be displayed"
   );
   const resultsCount = findMessages(hud, "", ".result").length;
-  hud.jsterm.execute(command);
+  execute(hud, command);
   const oi = await waitFor(() => {
     const results = findMessages(hud, "", ".result");
     if (results.length == resultsCount + 1) {
