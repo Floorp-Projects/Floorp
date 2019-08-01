@@ -39,6 +39,12 @@ form div {
   line-height: 1em;
 }
 
+/* Reset margins for inputs and textareas, overriding in-content styles */
+#form textarea,
+#form input {
+  margin: 0;
+}
+
 form :-moz-any(label, div) .label-text {
   position: absolute;
   opacity: .5;
