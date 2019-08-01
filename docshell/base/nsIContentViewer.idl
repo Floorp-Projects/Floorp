@@ -327,6 +327,19 @@ interface nsIContentViewer : nsISupports
    */
   void stopEmulatingMedium();
 
+  cenum PrefersColorScheme : 8 {
+    PREFERS_COLOR_SCHEME_LIGHT,
+    PREFERS_COLOR_SCHEME_DARK,
+    PREFERS_COLOR_SCHEME_NO_PREFERENCE,
+    PREFERS_COLOR_SCHEME_NONE, /* This clears the override. */
+  };
+
+  /*
+   * Emulate or stop emulating the prefers color scheme on this page and
+   * subdocuments.
+   */
+  void emulatePrefersColorScheme(in nsIContentViewer_PrefersColorScheme aPrefersColorScheme);
+
   [noscript, notxpcom] Encoding getHintCharset();
   [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
   [noscript, notxpcom] Encoding getForceCharset();
