@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 import json, sys
-from common_paths import *
 
 
 def assert_non_empty_string(obj, field):
