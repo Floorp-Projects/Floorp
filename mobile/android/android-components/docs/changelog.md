@@ -81,6 +81,9 @@ permalink: /changelog/
 * **service-location**
   * 🆕 A new component for accessing Mozilla's and other location services.
 
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `AccountObserver.onAuthenticated` now helps observers distinguish when an account is a new authenticated account one with a second `newAccount` boolean parameter.
+
 * **feature-prompts**
   * Improved month picker UI, now we have the same widget as Fennec.
 
