@@ -22,6 +22,7 @@
 #include "jit/Lowering.h"
 #include "jit/MIRGraph.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/Instrumentation.h"
 #include "vm/Opcodes.h"
@@ -654,7 +655,7 @@ AbortReasonOr<Ok> IonBuilder::analyzeNewLoopTypes(
       last = earlier;
     }
 
-    if (CodeSpec[*last].format & JOF_TYPESET) {
+    if (BytecodeOpHasTypeSet(JSOp(*last))) {
       TemporaryTypeSet* typeSet = bytecodeTypes(last);
       if (!typeSet->empty()) {
         MIRType type = typeSet->getKnownMIRType();
