@@ -2,7 +2,7 @@
 
 # WebAppManifestParser
 
-`class WebAppManifestParser` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L18)
+`class WebAppManifestParser` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L20)
 
 Parser for constructing a [WebAppManifest](../-web-app-manifest/index.md) from JSON.
 

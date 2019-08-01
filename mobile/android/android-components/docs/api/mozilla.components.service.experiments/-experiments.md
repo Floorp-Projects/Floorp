@@ -2,7 +2,7 @@
 
 # Experiments
 
-`object Experiments : `[`ExperimentsInternalAPI`](-experiments-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L363)
+`object Experiments : `[`ExperimentsInternalAPI`](-experiments-internal-a-p-i/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L364)
 
 ### Inherited Functions
 

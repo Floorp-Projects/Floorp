@@ -23,6 +23,7 @@
 | [RequestFailedException](-request-failed-exception.md) | `typealias RequestFailedException = RequestFailedException`<br>This error is emitted if a request to a sync server failed. |
 | [ServerPassword](-server-password.md) | `typealias ServerPassword = ServerPassword`<br>Raw password data that is stored by the storage implementation. |
 | [SyncAuthInvalidException](-sync-auth-invalid-exception.md) | `typealias SyncAuthInvalidException = SyncAuthInvalidException`<br>This indicates that the authentication information (e.g. the [SyncUnlockInfo](-sync-unlock-info.md)) provided to [AsyncLoginsStorage.sync](-async-logins-storage/sync.md) is invalid. This often indicates that it's stale and should be refreshed with FxA (however, care should be taken not to get into a loop refreshing this information). |
+| [SyncTelemetryPing](-sync-telemetry-ping.md) | `typealias SyncTelemetryPing = SyncTelemetryPing`<br>The telemetry ping from a successful sync |
 | [SyncUnlockInfo](-sync-unlock-info.md) | `typealias SyncUnlockInfo = SyncUnlockInfo`<br>This type contains the set of information required to successfully connect to the server and sync. |
 
 ### Functions

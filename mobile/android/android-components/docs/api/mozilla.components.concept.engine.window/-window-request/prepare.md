@@ -2,11 +2,11 @@
 
 # prepare
 
-`abstract fun prepare(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/window/WindowRequest.kt#L27)
+`abstract fun prepare(): `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/window/WindowRequest.kt#L27)
 
-Prepares the provided [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This
-is used to attach state (e.g. a native session) to the engine session.
+Prepares an [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This is used to
+attach state (e.g. a native session or view) to the engine session.
 
-### Parameters
+**Return**
+the prepared and ready-to-use [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md).
 
-`engineSession` - the engine session to prepare.

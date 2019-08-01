@@ -2,7 +2,7 @@
 
 # exitAnimations
 
-`val exitAnimations: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L39)
+`val exitAnimations: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L40)
 
 Bundle containing custom exit animations for the tab.
 

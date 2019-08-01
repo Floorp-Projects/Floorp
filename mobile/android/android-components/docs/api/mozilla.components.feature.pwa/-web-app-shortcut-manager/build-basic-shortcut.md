@@ -2,7 +2,7 @@
 
 # buildBasicShortcut
 
-`fun buildBasicShortcut(context: <ERROR CLASS>, session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`): ShortcutInfoCompat?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L95)
+`fun buildBasicShortcut(context: <ERROR CLASS>, session: `[`Session`](../../mozilla.components.browser.session/-session/index.md)`): ShortcutInfoCompat?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppShortcutManager.kt#L96)
 
 Create a new basic pinned website shortcut using info from the session.
 

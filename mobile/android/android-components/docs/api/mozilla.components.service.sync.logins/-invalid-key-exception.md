@@ -2,7 +2,7 @@
 
 # InvalidKeyException
 
-`typealias InvalidKeyException = InvalidKeyException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L90)
+`typealias InvalidKeyException = InvalidKeyException` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/sync-logins/src/main/java/mozilla/components/service/sync/logins/AsyncLoginsStorage.kt#L96)
 
 This error is emitted in two cases:
 

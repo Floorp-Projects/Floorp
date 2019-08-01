@@ -2,7 +2,7 @@
 
 # Failure
 
-`data class Failure : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L35)
+`data class Failure : `[`Result`](../index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/manifest/WebAppManifestParser.kt#L37)
 
 Parsing the JSON failed.
 

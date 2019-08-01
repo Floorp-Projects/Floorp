@@ -2,7 +2,7 @@
 
 # SystemWindowRequest
 
-`class SystemWindowRequest : `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/window/SystemWindowRequest.kt#L22)
+`class SystemWindowRequest : `[`WindowRequest`](../../mozilla.components.concept.engine.window/-window-request/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/engine-system/src/main/java/mozilla/components/browser/engine/system/window/SystemWindowRequest.kt#L23)
 
 WebView-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md).
 
@@ -10,7 +10,7 @@ WebView-based implementation of [WindowRequest](../../mozilla.components.concept
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `SystemWindowRequest(webView: <ERROR CLASS>, newWebView: <ERROR CLASS>? = null, openAsDialog: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, triggeredByUser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, resultMsg: <ERROR CLASS>? = null)`<br>WebView-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md). |
+| [&lt;init&gt;](-init-.md) | `SystemWindowRequest(webView: <ERROR CLASS>, newEngineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`? = null, newWebView: <ERROR CLASS>? = null, openAsDialog: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, triggeredByUser: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)` = false, resultMsg: <ERROR CLASS>? = null)`<br>WebView-based implementation of [WindowRequest](../../mozilla.components.concept.engine.window/-window-request/index.md). |
 
 ### Properties
 
@@ -24,5 +24,5 @@ WebView-based implementation of [WindowRequest](../../mozilla.components.concept
 
 | Name | Summary |
 |---|---|
-| [prepare](prepare.md) | `fun prepare(engineSession: `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Prepares the provided [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This is used to attach state (e.g. a native session) to the engine session. |
+| [prepare](prepare.md) | `fun prepare(): `[`EngineSession`](../../mozilla.components.concept.engine/-engine-session/index.md)<br>Prepares an [EngineSession](../../mozilla.components.concept.engine/-engine-session/index.md) for the window request. This is used to attach state (e.g. a native session or view) to the engine session. |
 | [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Starts the window request. |

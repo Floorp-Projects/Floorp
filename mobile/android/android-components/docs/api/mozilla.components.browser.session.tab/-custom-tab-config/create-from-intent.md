@@ -2,7 +2,7 @@
 
 # createFromIntent
 
-`fun ~~createFromIntent~~(intent: `[`SafeIntent`](../../mozilla.components.support.utils/-safe-intent/index.md)`, displayMetrics: <ERROR CLASS>? = null): `[`CustomTabConfig`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L122)
+`fun ~~createFromIntent~~(intent: `[`SafeIntent`](../../mozilla.components.support.utils/-safe-intent/index.md)`, displayMetrics: <ERROR CLASS>? = null): `[`CustomTabConfig`](index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L125)
 **Deprecated:** Use createCustomTabConfigFromIntent in feature-customtabs
 
 Creates a CustomTabConfig instance based on the provided intent.

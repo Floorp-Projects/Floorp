@@ -2,7 +2,7 @@
 
 # WebAppLauncherActivity
 
-`class WebAppLauncherActivity : AppCompatActivity, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppLauncherActivity.kt#L27)
+`class WebAppLauncherActivity : AppCompatActivity, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/pwa/src/main/java/mozilla/components/feature/pwa/WebAppLauncherActivity.kt#L28)
 
 This activity is launched by Web App shortcuts on the home screen.
 
@@ -21,12 +21,6 @@ standalone activity.
 |---|---|
 | [onCreate](on-create.md) | `fun onCreate(savedInstanceState: <ERROR CLASS>?): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onDestroy](on-destroy.md) | `fun onDestroy(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-
-### Companion Object Properties
-
-| Name | Summary |
-|---|---|
-| [INTENT_ACTION](-i-n-t-e-n-t_-a-c-t-i-o-n.md) | `const val INTENT_ACTION: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) |
 
 ### Extension Functions
 

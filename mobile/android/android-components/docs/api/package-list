@@ -38,6 +38,7 @@ $dokka.location:mozilla.components.support.ktx.android.util$dpToPx(kotlin.Int, )
 $dokka.location:mozilla.components.support.ktx.java.io$truncateDirectory(java.io.File)mozilla.components.support.ktx.java.io/java.io.-file/truncate-directory.md
 $dokka.location:mozilla.components.support.ktx.kotlin$ELLIPSIS#kotlin.Char.Companionmozilla.components.support.ktx.kotlin/kotlin.-char/-e-l-l-i-p-s-i-s.md
 $dokka.location:mozilla.components.support.ktx.kotlin$containsAtOffset(kotlin.ByteArray, kotlin.Int, kotlin.ByteArray)mozilla.components.support.ktx.kotlin/kotlin.-byte-array/contains-at-offset.md
+$dokka.location:mozilla.components.support.ktx.kotlin$crossProduct(kotlin.collections.Collection((mozilla.components.support.ktx.kotlin.crossProduct.T)), kotlin.collections.Collection((mozilla.components.support.ktx.kotlin.crossProduct.U)), kotlin.Function2((mozilla.components.support.ktx.kotlin.crossProduct.T, mozilla.components.support.ktx.kotlin.crossProduct.U, mozilla.components.support.ktx.kotlin.crossProduct.R)))mozilla.components.support.ktx.kotlin/kotlin.collections.-collection/cross-product.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isEmail(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-email.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isGeoLocation(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-geo-location.md
 $dokka.location:mozilla.components.support.ktx.kotlin$isPhone(kotlin.String)mozilla.components.support.ktx.kotlin/kotlin.-string/is-phone.md
@@ -66,6 +67,7 @@ mozilla.components.browser.engine.gecko.integration
 mozilla.components.browser.engine.gecko.permission
 mozilla.components.browser.engine.gecko.prompt
 mozilla.components.browser.engine.gecko.webextension
+mozilla.components.browser.engine.gecko.window
 mozilla.components.browser.engine.servo
 mozilla.components.browser.engine.system
 mozilla.components.browser.engine.system.matcher
@@ -144,10 +146,13 @@ mozilla.components.feature.prompts
 mozilla.components.feature.push
 mozilla.components.feature.pwa
 mozilla.components.feature.pwa.ext
+mozilla.components.feature.pwa.feature
+mozilla.components.feature.pwa.intent
 mozilla.components.feature.qr
 mozilla.components.feature.readerview
 mozilla.components.feature.readerview.view
 mozilla.components.feature.search
+mozilla.components.feature.sendtab
 mozilla.components.feature.session
 mozilla.components.feature.session.behavior
 mozilla.components.feature.sitepermissions
@@ -156,6 +161,7 @@ mozilla.components.feature.tabs
 mozilla.components.feature.tabs.tabstray
 mozilla.components.feature.tabs.toolbar
 mozilla.components.feature.toolbar
+mozilla.components.feature.webnotifications
 mozilla.components.lib.crash
 mozilla.components.lib.crash.handler
 mozilla.components.lib.crash.prompt
@@ -195,6 +201,7 @@ mozilla.components.service.glean.error
 mozilla.components.service.glean.private
 mozilla.components.service.glean.scheduler
 mozilla.components.service.glean.storages
+mozilla.components.service.glean.testing
 mozilla.components.service.glean.timing
 mozilla.components.service.location
 mozilla.components.service.pocket
@@ -227,6 +234,7 @@ mozilla.components.support.ktx.android.view
 mozilla.components.support.ktx.java.io
 mozilla.components.support.ktx.kotlin
 mozilla.components.support.locale
+mozilla.components.support.rusthttp
 mozilla.components.support.rustlog
 mozilla.components.support.test
 mozilla.components.support.test.ext

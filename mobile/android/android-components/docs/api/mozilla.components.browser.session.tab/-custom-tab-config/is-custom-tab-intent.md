@@ -2,7 +2,7 @@
 
 # isCustomTabIntent
 
-`fun ~~isCustomTabIntent~~(intent: `[`SafeIntent`](../../mozilla.components.support.utils/-safe-intent/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L104)
+`fun ~~isCustomTabIntent~~(intent: `[`SafeIntent`](../../mozilla.components.support.utils/-safe-intent/index.md)`): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/session/src/main/java/mozilla/components/browser/session/tab/CustomTabConfig.kt#L107)
 **Deprecated:** Use isCustomTabIntent in feature-customtabs
 
 Checks if the provided intent is a custom tab intent.
