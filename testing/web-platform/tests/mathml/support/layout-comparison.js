@@ -48,6 +48,15 @@ function compareLayout(element, reference, epsilon) {
     var elementBox = element.getBoundingClientRect();
     var referenceBox = reference.getBoundingClientRect();
     for (var i = 0; i < element.children.length; i++) {
+        var childDisplay = window.
+            getComputedStyle(element.children[i]).getPropertyValue("display");
+        var referenceChildDisplay = window.
+            getComputedStyle(reference.children[i]).getPropertyValue("display");
+        if (referenceChildDisplay !== childDisplay)
+            throw "compareLayout: children of reference should have the same display values.";
+        if (childDisplay === "none")
+            continue;
+
         compareSize(element.children[i], reference.children[i], epsilon);
 
         var childBox = element.children[i].getBoundingClientRect();
