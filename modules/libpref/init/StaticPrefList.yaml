@@ -1015,6 +1015,19 @@
   value: 200
   mirror: always
 
+# Parse mode for handling pending events.
+# 0 = don't check for pending events
+# 1 = don't deflect if there are pending events
+# 2 = bail if there are pending events
+- name: content.sink.pending_event_mode
+  type: int32_t
+# ifdef XP_WIN
+  value: 1
+# else
+  value: 0
+# endif
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
