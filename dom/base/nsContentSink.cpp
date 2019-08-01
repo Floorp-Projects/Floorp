@@ -134,7 +134,6 @@ nsContentSink::~nsContentSink() {
     mDocument->RemoveObserver(this);
   }
 }
-int32_t nsContentSink::sPendingEventMode;
 int32_t nsContentSink::sEventProbeRate;
 int32_t nsContentSink::sInteractiveParseTime;
 int32_t nsContentSink::sPerfParseTime;
@@ -143,8 +142,6 @@ int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  Preferences::AddIntVarCache(&sPendingEventMode,
-                              "content.sink.pending_event_mode", 1);
   Preferences::AddIntVarCache(&sEventProbeRate, "content.sink.event_probe_rate",
                               1);
   Preferences::AddIntVarCache(&sInteractiveParseTime,
@@ -1355,8 +1352,8 @@ nsresult nsContentSink::DidProcessATokenImpl() {
   ++mDeflectedCount;
 
   // Check if there's a pending event
-  if (sPendingEventMode != 0 && !mHasPendingEvent &&
-      (mDeflectedCount % sEventProbeRate) == 0) {
+  if (StaticPrefs::content_sink_pending_event_mode() != 0 &&
+      !mHasPendingEvent && (mDeflectedCount % sEventProbeRate) == 0) {
     nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     nsCOMPtr<nsIWidget> widget;
@@ -1364,7 +1361,7 @@ nsresult nsContentSink::DidProcessATokenImpl() {
     mHasPendingEvent = widget && widget->HasPendingInputEvent();
   }
 
-  if (mHasPendingEvent && sPendingEventMode == 2) {
+  if (mHasPendingEvent && StaticPrefs::content_sink_pending_event_mode() == 2) {
     return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 
