@@ -9,7 +9,7 @@ with Files('*'):
 
 EXPORTS += [
     'ContainerWriter.h',
-    'EncodedFrameContainer.h',
+    'EncodedFrame.h',
     'MediaEncoder.h',
     'OpusTrackEncoder.h',
     'TrackEncoder.h',
