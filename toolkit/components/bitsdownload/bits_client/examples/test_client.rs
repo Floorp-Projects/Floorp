@@ -158,12 +158,16 @@ fn bits_start(
     proxy_usage: BitsProxyUsage,
 ) -> Result {
     //let interval = 10 * 60 * 1000;
+    let no_progress_timeout_secs = 60;
     let interval = 1000;
 
-    let result = client
-        .lock()
-        .unwrap()
-        .start_job(url, save_path, proxy_usage, interval)?;
+    let result = client.lock().unwrap().start_job(
+        url,
+        save_path,
+        proxy_usage,
+        no_progress_timeout_secs,
+        interval,
+    )?;
 
     match result {
         Ok((r, monitor_client)) => {

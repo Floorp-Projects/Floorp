@@ -173,6 +173,9 @@ interface nsIBits : nsISupports
    * @param proxy
    *        Specifies what proxy to use when downloading. Valid values are
    *        listed below.
+   * @param noProgressTimeoutSecs
+   *        The number of seconds BITS tries to transfer the file after a transient
+   *        error occurs, reset whenever there is download progress.
    * @param monitorIntervalMs
    *        The number of milliseconds between download status notifications.
    * @param observer
@@ -195,6 +198,7 @@ interface nsIBits : nsISupports
   void startDownload(in AUTF8String downloadURL,
                      in AUTF8String saveRelativePath,
                      in nsProxyUsage proxy,
+                     in unsigned long noProgressTimeoutSecs,
                      in unsigned long monitorIntervalMs,
                      in nsIRequestObserver observer,
                      in nsISupports context,
