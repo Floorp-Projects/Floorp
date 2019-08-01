@@ -134,17 +134,11 @@ nsContentSink::~nsContentSink() {
     mDocument->RemoveObserver(this);
   }
 }
-int32_t nsContentSink::sInteractiveParseTime;
-int32_t nsContentSink::sPerfParseTime;
 int32_t nsContentSink::sInteractiveTime;
 int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  Preferences::AddIntVarCache(&sInteractiveParseTime,
-                              "content.sink.interactive_parse_time", 3000);
-  Preferences::AddIntVarCache(&sPerfParseTime, "content.sink.perf_parse_time",
-                              360000);
   Preferences::AddIntVarCache(&sInteractiveTime,
                               "content.sink.interactive_time", 750000);
   Preferences::AddIntVarCache(&sInitialPerfTime,
@@ -1516,8 +1510,9 @@ nsresult nsContentSink::WillParseImpl(void) {
   mHasPendingEvent = false;
 
   mCurrentParseEndTime =
-      currentTime +
-      (mDynamicLowerValue ? sInteractiveParseTime : sPerfParseTime);
+      currentTime + (mDynamicLowerValue
+                         ? StaticPrefs::content_sink_interactive_parse_time()
+                         : StaticPrefs::content_sink_perf_parse_time());
 
   return NS_OK;
 }
