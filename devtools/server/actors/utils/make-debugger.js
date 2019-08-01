@@ -81,7 +81,6 @@ module.exports = function makeDebugger({
   };
 
   dbg.onNewGlobalObject = onNewGlobalObject;
-
   dbg.addDebuggees = function() {
     for (const global of findDebuggees(this)) {
       safeAddDebuggee(this, global);
@@ -89,14 +88,14 @@ module.exports = function makeDebugger({
     }
   };
 
-  dbg.enable = () => {
-    dbg.addDebuggees();
-    dbg.onNewGlobalObject = onNewGlobalObject;
-  };
-
   dbg.disable = function() {
     dbg.removeAllDebuggees();
     dbg.onNewGlobalObject = undefined;
+  };
+
+  dbg.enable = function() {
+    dbg.addDebuggees();
+    dbg.onNewGlobalObject = onNewGlobalObject;
   };
 
   return dbg;

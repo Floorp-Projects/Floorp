@@ -71,6 +71,10 @@ function test_source() {
           column: 2,
         },
         {
+          line: 2,
+          column: 8,
+        },
+        {
           line: 3,
           column: 14,
         },
@@ -94,8 +98,9 @@ function test_source() {
 
       response = await sourceFront.getBreakpointPositionsCompressed();
       Assert.ok(!!response);
+
       Assert.deepEqual(response, {
-        2: [2],
+        2: [2, 8],
         3: [14, 17, 24],
         4: [4],
         6: [0],

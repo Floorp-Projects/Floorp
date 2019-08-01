@@ -25,7 +25,7 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
   "category": "content javascript",
   "messageText": "ReferenceError: asdf is not defined",
   "parameters": null,
-  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":null,\"line\":3,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":6,\"columnNumber\":5,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":9,\"columnNumber\":3,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js line 62 > eval\",\"sourceId\":null,\"lineNumber\":10,\"columnNumber\":29,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js\",\"sourceId\":null,\"lineNumber\":63,\"columnNumber\":29,\"functionName\":null}]}",
+  "repeatId": "{\"frame\":{\"source\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":null,\"line\":3,\"column\":5},\"groupId\":null,\"indent\":0,\"level\":\"error\",\"messageText\":\"ReferenceError: asdf is not defined\",\"parameters\":null,\"source\":\"javascript\",\"type\":\"log\",\"userProvidedStyles\":null,\"private\":false,\"stacktrace\":[{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":3,\"columnNumber\":5,\"functionName\":\"bar\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":6,\"columnNumber\":8,\"functionName\":\"foo\"},{\"filename\":\"http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html\",\"sourceId\":\"server1.conn0.child1/source25\",\"lineNumber\":9,\"columnNumber\":6,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js line 62 > eval\",\"sourceId\":null,\"lineNumber\":10,\"columnNumber\":29,\"functionName\":null},{\"filename\":\"resource://testing-common/content-task.js\",\"sourceId\":null,\"lineNumber\":63,\"columnNumber\":29,\"functionName\":null}]}",
   "stacktrace": [
     {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
@@ -38,14 +38,14 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
       "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
       "sourceId": "server1.conn0.child1/source25",
       "lineNumber": 6,
-      "columnNumber": 5,
+      "columnNumber": 8,
       "functionName": "foo"
     },
     {
       "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
       "sourceId": "server1.conn0.child1/source25",
       "lineNumber": 9,
-      "columnNumber": 3,
+      "columnNumber": 6,
       "functionName": null
     },
     {
@@ -333,14 +333,14 @@ stubPackets.set(`ReferenceError: asdf is not defined`, {
         "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
         "sourceId": "server1.conn0.child1/source25",
         "lineNumber": 6,
-        "columnNumber": 5,
+        "columnNumber": 8,
         "functionName": "foo"
       },
       {
         "filename": "http://example.com/browser/devtools/client/webconsole/test/fixtures/stub-generators/test-console-api.html",
         "sourceId": "server1.conn0.child1/source25",
         "lineNumber": 9,
-        "columnNumber": 3,
+        "columnNumber": 6,
         "functionName": null
       },
       {
