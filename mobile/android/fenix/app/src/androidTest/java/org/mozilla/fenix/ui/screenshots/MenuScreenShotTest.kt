@@ -236,7 +236,7 @@ fun addBookmarkFolderButton() = Espresso.onView(Matchers.allOf(ViewMatchers.with
 fun confirmAddFolderButton() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.confirm_add_folder_button))).click()
 fun addFolderName() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.bookmark_add_folder_title_edit)))
         .type("folder")
-fun bookmarkFolderMenu() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.bookmark_overflow))).click()
+fun bookmarkFolderMenu() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.overflow_menu))).click()
 fun editBookmarkFolder() = ClickActions.click { text(R.string.bookmark_menu_edit_button) }
 fun deleteBookmarkFolder() = ClickActions.click { text(R.string.bookmark_menu_delete_button) }
 fun nameCollectionTextBox() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.name_collection_edittext)))
