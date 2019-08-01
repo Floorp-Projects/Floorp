@@ -124,6 +124,8 @@
     }
   ],
 
+  "delivery_key": "mixedContent",
+
   "excluded_tests": [
     {
       "name": "Redundant-subresources",

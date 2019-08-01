@@ -77,8 +77,8 @@ def validate(spec_json, details):
 
     details['object'] = spec_json
     assert_contains_only_fields(spec_json, [
-        "specification", "referrer_policy_schema", "test_expansion_schema",
-        "excluded_tests"
+        "specification", "referrer_policy_schema", "delivery_key",
+        "test_expansion_schema", "excluded_tests"
     ])
     assert_non_empty_list(spec_json, "specification")
     assert_non_empty_list(spec_json, "referrer_policy_schema")
