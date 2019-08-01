@@ -103,6 +103,10 @@ confirm-delete-dialog-title = Delete this login?
 confirm-delete-dialog-message = This action cannot be undone.
 confirm-delete-dialog-confirm-button = Delete
 
+confirm-discard-changes-dialog-title = Discard unsaved changes?
+confirm-discard-changes-dialog-message = All unsaved changes will be lost.
+confirm-discard-changes-dialog-confirm-button = Discard
+
 ## Breach Alert notification
 
 breach-alert-text = Passwords were leaked or stolen from this website since you last updated your login details. Change your password to protect your account.

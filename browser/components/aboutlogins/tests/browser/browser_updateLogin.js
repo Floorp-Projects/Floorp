@@ -64,14 +64,38 @@ add_task(async function test_login_item() {
       usernameInput.value += "-undome";
       passwordInput.value += "-undome";
 
+      let dialog = content.document.querySelector("confirmation-dialog");
+      ok(dialog.hidden, "Confirm dialog should initially be hidden");
+
       let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
       cancelButton.click();
+
+      ok(!dialog.hidden, "Confirm dialog should be visible");
+
+      let confirmDiscardButton = dialog.shadowRoot.querySelector(
+        ".confirm-button"
+      );
+      await content.document.l10n.translateElements([
+        dialog.shadowRoot.querySelector(".title"),
+        dialog.shadowRoot.querySelector(".message"),
+        confirmDiscardButton,
+      ]);
+
+      confirmDiscardButton.click();
+
+      ok(dialog.hidden, "Confirm dialog should be hidden after confirming");
+
       usernameInput = loginItem.shadowRoot.querySelector(
         "input[name='username']"
       );
       passwordInput = loginItem.shadowRoot.querySelector(
         "input[name='password']"
       );
+
+      await ContentTaskUtils.waitForCondition(
+        () => usernameInput.value == login.username
+      );
+
       is(
         usernameInput.value,
         login.username,
