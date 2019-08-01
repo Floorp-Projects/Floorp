@@ -62,6 +62,10 @@ class PictureInPictureToggleChild extends ActorChild {
     this.toggleTesting = Services.prefs.getBoolPref(TOGGLE_TESTING_PREF, false);
   }
 
+  cleanup() {
+    this.removeMouseButtonListeners();
+  }
+
   /**
    * Returns the state for the current document referred to via
    * this.content.document. If no such state exists, creates it, stores it
@@ -134,12 +138,6 @@ class PictureInPictureToggleChild extends ActorChild {
       }
       case "mousemove": {
         this.onMouseMove(event);
-        break;
-      }
-      case "pagehide": {
-        if (event.target.top == event.target) {
-          this.removeMouseButtonListeners();
-        }
         break;
       }
     }
