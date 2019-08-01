@@ -12,8 +12,11 @@ if [ ! -e ${TOOLTOOL_AUTH_FILE} ]; then
     echo cannot find ${TOOLTOOL_AUTH_FILE}
     exit 1
 fi
+UPLOAD_PATH=$PWD/public/build
 
-./build/src/mach artifact toolchain -v --authentication-file="${TOOLTOOL_AUTH_FILE}" --tooltool-manifest "build/src/${TOOLTOOL_MANIFEST}"${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
+cd $GECKO_PATH
+
+./mach artifact toolchain -v --authentication-file="${TOOLTOOL_AUTH_FILE}" --tooltool-manifest "${TOOLTOOL_MANIFEST}"${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}}${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
 
 # Set up all the Visual Studio paths.
 MSVC_DIR=vs2017_15.8.4
@@ -42,7 +45,7 @@ export PATH="$(cd ninja && pwd)/bin:${PATH}"
 # gets a bit too verbose here
 set +x
 
-BUILD_CLANG_DIR=build/src/build/build-clang
+BUILD_CLANG_DIR=build/build-clang
 cd ${BUILD_CLANG_DIR}
 python3 ./build-clang.py -c ./${1}
 cd -
@@ -51,6 +54,5 @@ cd -
 set -x
 
 # Put a tarball in the artifacts dir
-UPLOAD_PATH=public/build
 mkdir -p ${UPLOAD_PATH}
 cp ${BUILD_CLANG_DIR}/clang*.tar.* ${UPLOAD_PATH}
