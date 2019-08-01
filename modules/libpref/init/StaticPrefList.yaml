@@ -4464,11 +4464,6 @@
 #
 # Only enabled on Nightly and early beta, at least for now.
 #
-# NOTE(emilio): If / when removing this pref, the GETCS_NEEDS_LAYOUT_FLUSH flag
-# should be removed from line-height (and we should let -moz-block-height
-# compute to the keyword as well, which shouldn't be observable anyway since
-# it's an internal value).
-#
 # It'd be nice to make numbers compute also to themselves, but it looks like
 # everybody agrees on turning them into pixels, see the discussion starting
 # from [1].
