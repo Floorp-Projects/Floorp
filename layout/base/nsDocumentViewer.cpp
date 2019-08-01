@@ -318,6 +318,8 @@ class nsDocumentViewer final : public nsIContentViewer,
   // nsIDocumentViewerPrint Printing Methods
   NS_DECL_NSIDOCUMENTVIEWERPRINT
 
+  void EmulateMediumInternal(nsAtom*);
+
  protected:
   virtual ~nsDocumentViewer();
 
@@ -2957,61 +2959,42 @@ nsDocumentViewer::GetAuthorStyleDisabled(bool* aStyleDisabled) {
 }
 
 static bool ExtResourceEmulateMedium(Document* aDocument, void* aClosure) {
-  nsPresContext* ctxt = aDocument->GetPresContext();
-  if (ctxt) {
-    const nsAString* mediaType = static_cast<nsAString*>(aClosure);
-    ctxt->EmulateMedium(*mediaType);
+  if (nsPresContext* pc = aDocument->GetPresContext()) {
+    pc->EmulateMedium(static_cast<nsAtom*>(aClosure));
   }
 
   return true;
 }
 
 static void ChildEmulateMedium(nsDocumentViewer* aChild, void* aClosure) {
-  const nsAString* mediaType = static_cast<nsAString*>(aClosure);
-  aChild->EmulateMedium(*mediaType);
+  aChild->EmulateMediumInternal(static_cast<nsAtom*>(aClosure));
+}
+
+void nsDocumentViewer::EmulateMediumInternal(nsAtom* aMedia) {
+  if (mPresContext) {
+    mPresContext->EmulateMedium(aMedia);
+  }
+
+  CallChildren(ChildEmulateMedium, aMedia);
+
+  if (mDocument) {
+    mDocument->EnumerateExternalResources(ExtResourceEmulateMedium, aMedia);
+  }
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::EmulateMedium(const nsAString& aMediaType) {
-  if (mPresContext) {
-    mPresContext->EmulateMedium(aMediaType);
-  }
-  CallChildren(ChildEmulateMedium, const_cast<nsAString*>(&aMediaType));
+  nsAutoString mediaType;
+  nsContentUtils::ASCIIToLower(aMediaType, mediaType);
+  RefPtr<nsAtom> media = NS_Atomize(mediaType);
 
-  if (mDocument) {
-    mDocument->EnumerateExternalResources(ExtResourceEmulateMedium,
-                                          const_cast<nsAString*>(&aMediaType));
-  }
-
+  EmulateMediumInternal(media);
   return NS_OK;
-}
-
-static bool ExtResourceStopEmulatingMedium(Document* aDocument,
-                                           void* aClosure) {
-  nsPresContext* ctxt = aDocument->GetPresContext();
-  if (ctxt) {
-    ctxt->StopEmulatingMedium();
-  }
-
-  return true;
-}
-
-static void ChildStopEmulatingMedium(nsIContentViewer* aChild, void* aClosure) {
-  aChild->StopEmulatingMedium();
 }
 
 NS_IMETHODIMP
 nsDocumentViewer::StopEmulatingMedium() {
-  if (mPresContext) {
-    mPresContext->StopEmulatingMedium();
-  }
-  CallChildren(ChildStopEmulatingMedium, nullptr);
-
-  if (mDocument) {
-    mDocument->EnumerateExternalResources(ExtResourceStopEmulatingMedium,
-                                          nullptr);
-  }
-
+  EmulateMediumInternal(nullptr);
   return NS_OK;
 }
 

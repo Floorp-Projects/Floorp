@@ -303,21 +303,18 @@ class nsPresContext : public nsISupports,
   /**
    * Get medium of presentation
    */
-  nsAtom* Medium() {
-    if (!mIsEmulatingMedia) return mMedium;
-    return mMediaEmulated;
+  const nsAtom* Medium() {
+    MOZ_ASSERT(mMedium);
+    return mMediaEmulated ? mMediaEmulated.get() : mMedium;
   }
 
   /*
    * Render the document as if being viewed on a device with the specified
    * media type.
+   *
+   * If passed null, it stops emulating.
    */
-  void EmulateMedium(const nsAString& aMediaType);
-
-  /*
-   * Restore the viewer's natural medium
-   */
-  void StopEmulatingMedium();
+  void EmulateMedium(nsAtom* aMediaType);
 
   /** Get a cached integer pref, by its type */
   // *  - initially created for bugs 30910, 61883, 74186, 84398
@@ -1119,8 +1116,7 @@ class nsPresContext : public nsISupports,
   mozilla::UniquePtr<nsAnimationManager> mAnimationManager;
   mozilla::UniquePtr<mozilla::RestyleManager> mRestyleManager;
   RefPtr<mozilla::CounterStyleManager> mCounterStyleManager;
-  nsAtom* MOZ_UNSAFE_REF(
-      "always a static atom") mMedium;  // initialized by subclass ctors
+  const nsStaticAtom* mMedium;
   RefPtr<nsAtom> mMediaEmulated;
   RefPtr<gfxFontFeatureValueSet> mFontFeatureValuesLookup;
 
@@ -1221,7 +1217,6 @@ class nsPresContext : public nsISupports,
   unsigned mPendingUIResolutionChanged : 1;
   unsigned mPrefChangePendingNeedsReflow : 1;
   unsigned mPostedPrefChangedRunnable : 1;
-  unsigned mIsEmulatingMedia : 1;
 
   // Are we currently drawing an SVG glyph?
   unsigned mIsGlyph : 1;
