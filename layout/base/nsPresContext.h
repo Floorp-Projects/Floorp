@@ -134,6 +134,7 @@ class nsPresContext : public nsISupports,
   template <typename T>
   using NotNull = mozilla::NotNull<T>;
   using MediaEmulationData = mozilla::MediaEmulationData;
+  using StylePrefersColorScheme = mozilla::StylePrefersColorScheme;
 
   typedef mozilla::ScrollStyles ScrollStyles;
   typedef mozilla::StaticPresData StaticPresData;
@@ -490,6 +491,11 @@ class nsPresContext : public nsISupports,
 
   float GetOverrideDPPX() const { return mMediaEmulationData.mDPPX; }
   void SetOverrideDPPX(float);
+
+  Maybe<StylePrefersColorScheme> GetOverridePrefersColorScheme() const {
+    return mMediaEmulationData.mPrefersColorScheme;
+  }
+  void SetOverridePrefersColorScheme(const Maybe<StylePrefersColorScheme>&);
 
   nscoord GetAutoQualityMinFontSize() {
     return DevPixelsToAppUnits(mAutoQualityMinFontSizePixelsPref);

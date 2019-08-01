@@ -11,6 +11,7 @@
 #define mozilla_MediaEmulationData_h
 
 #include "nsAtom.h"
+#include "mozilla/Maybe.h"
 
 namespace mozilla {
 
@@ -19,6 +20,7 @@ struct MediaEmulationData final {
 
   RefPtr<nsAtom> mMedium;
   float mDPPX = 0.0;
+  Maybe<StylePrefersColorScheme> mPrefersColorScheme;
 };
 
 }  // namespace mozilla
