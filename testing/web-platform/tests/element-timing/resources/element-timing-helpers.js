@@ -4,7 +4,13 @@ function checkElementInternal(entry, expectedUrl, expectedIdentifier, expectedID
   assert_equals(entry.entryType, 'element');
   assert_equals(entry.url, expectedUrl);
   assert_equals(entry.identifier, expectedIdentifier);
-  assert_equals(entry.startTime, 0);
+  if (beforeRender != 0) {
+    // In this case, renderTime is not 0.
+    assert_equals(entry.startTime, entry.renderTime);
+  } else {
+    // In this case, renderTime is 0, so compare to loadTime.
+    assert_equals(entry.startTime, entry.loadTime);
+  }
   assert_equals(entry.duration, 0);
   assert_equals(entry.id, expectedID);
   assert_greater_than_equal(entry.renderTime, beforeRender);
