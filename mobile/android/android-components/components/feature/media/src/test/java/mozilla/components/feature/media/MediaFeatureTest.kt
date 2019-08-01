@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package mozilla.components.feature.media.notification
+package mozilla.components.feature.media
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -22,7 +22,7 @@ import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
-class MediaNotificationFeatureTest {
+class MediaFeatureTest {
     @Before
     @After
     fun setUp() {
@@ -36,7 +36,7 @@ class MediaNotificationFeatureTest {
 
         MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context)
+        val feature = MediaFeature(context)
         feature.enable()
 
         // A session gets added
@@ -69,7 +69,7 @@ class MediaNotificationFeatureTest {
 
         MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context)
+        val feature = MediaFeature(context)
         feature.enable()
 
         reset(context)
@@ -91,7 +91,7 @@ class MediaNotificationFeatureTest {
 
         MediaStateMachine.start(sessionManager)
 
-        val feature = MediaNotificationFeature(context)
+        val feature = MediaFeature(context)
         feature.enable()
 
         media.playbackState = Media.PlaybackState.PLAYING
