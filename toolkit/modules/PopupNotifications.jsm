@@ -1877,6 +1877,7 @@ PopupNotifications.prototype = {
         action.callback.call(undefined, {
           checkboxChecked: notificationEl.checkbox.checked,
           source,
+          event,
         });
       } catch (error) {
         Cu.reportError(error);
