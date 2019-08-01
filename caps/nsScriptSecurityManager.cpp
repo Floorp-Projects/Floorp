@@ -7,6 +7,7 @@
 #include "nsScriptSecurityManager.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/StaticPrefs_security.h"
 #include "mozilla/StoragePrincipalHelper.h"
 
 #include "xpcpublic.h"
@@ -886,18 +887,7 @@ nsresult nsScriptSecurityManager::CheckLoadURIFlags(
       }
 
       if (targetScheme.EqualsLiteral("resource")) {
-        // Mochitests that need to load resource:// URIs not declared
-        // content-accessible in manifests should set the preference
-        // "security.all_resource_uri_content_accessible" true.
-        static bool sSecurityPrefCached = false;
-        static bool sAllResourceUriContentAccessible = false;
-        if (!sSecurityPrefCached) {
-          sSecurityPrefCached = true;
-          Preferences::AddBoolVarCache(
-              &sAllResourceUriContentAccessible,
-              "security.all_resource_uri_content_accessible", false);
-        }
-        if (sAllResourceUriContentAccessible) {
+        if (StaticPrefs::security_all_resource_uri_content_accessible()) {
           return NS_OK;
         }
 
