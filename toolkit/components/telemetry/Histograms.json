@@ -8934,6 +8934,18 @@
     "description": "a testing histogram; not meant to be touched",
     "record_into_store": ["main", "sync"]
   },
+  "TELEMETRY_TEST_STREAMING": {
+    "record_in_processes": ["main"],
+    "products": ["geckoview_streaming"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "linear",
+    "low": 1,
+    "high": 2147483646,
+    "n_buckets": 10,
+    "bug_numbers": [1566366],
+    "description": "a testing histogram; not meant to be touched"
+  },
   "STARTUP_CRASH_DETECTED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
