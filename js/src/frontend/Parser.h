@@ -1895,12 +1895,32 @@ mozilla::Maybe<LexicalScope::Data*> NewLexicalScopeData(
     JSContext* context, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc);
 
-JSFunction* AllocNewFunction(JSContext* cx, HandleAtom atom,
-                             FunctionSyntaxKind kind,
-                             GeneratorKind generatorKind,
-                             FunctionAsyncKind asyncKind,
-                             bool isSelfHosting = false,
-                             bool inFunctionBox = false);
+struct FunctionCreationData {
+  // The Parser uses KeepAtoms to prevent GC from collecting atoms
+  JSAtom* atom = nullptr;
+  FunctionSyntaxKind kind = FunctionSyntaxKind::Expression;
+  GeneratorKind generatorKind = GeneratorKind::NotGenerator;
+  FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
+
+  gc::AllocKind allocKind = gc::AllocKind::FUNCTION;
+  FunctionFlags flags = {};
+
+  bool isSelfHosting = false;
+
+  HandleAtom getAtom(JSContext* cx) const;
+
+  void trace(JSTracer* trc) {
+    TraceRoot(trc, &atom, "FunctionCreationData atom");
+  }
+};
+
+FunctionCreationData GenerateFunctionCreationData(
+    HandleAtom atom, FunctionSyntaxKind kind, GeneratorKind generatorKind,
+    FunctionAsyncKind asyncKind, bool isSelfHosting = false,
+    bool inFunctionBox = false);
+
+JSFunction* AllocNewFunction(JSContext* cx,
+                             Handle<FunctionCreationData> dataHandle);
 
 } /* namespace frontend */
 } /* namespace js */
