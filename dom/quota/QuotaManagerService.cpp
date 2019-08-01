@@ -11,6 +11,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Unused.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundParent.h"
@@ -33,9 +34,6 @@ using namespace mozilla::ipc;
 
 namespace {
 
-// Preference that is used to enable testing features.
-const char kTestingPref[] = "dom.quotaManager.testing";
-
 const char kIdleServiceContractId[] = "@mozilla.org/widget/idleservice;1";
 
 // The number of seconds we will wait after receiving the idle-daily
@@ -46,15 +44,6 @@ mozilla::StaticRefPtr<QuotaManagerService> gQuotaManagerService;
 
 mozilla::Atomic<bool> gInitialized(false);
 mozilla::Atomic<bool> gClosed(false);
-mozilla::Atomic<bool> gTestingMode(false);
-
-void TestingPrefChangedCallback(const char* aPrefName, void* aClosure) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aPrefName, kTestingPref));
-  MOZ_ASSERT(!aClosure);
-
-  gTestingMode = Preferences::GetBool(aPrefName);
-}
 
 nsresult CheckedPrincipalToPrincipalInfo(nsIPrincipal* aPrincipal,
                                          PrincipalInfo& aPrincipalInfo) {
@@ -265,9 +254,6 @@ nsresult QuotaManagerService::Init() {
     }
   }
 
-  Preferences::RegisterCallbackAndCall(TestingPrefChangedCallback,
-                                       kTestingPref);
-
   return NS_OK;
 }
 
@@ -277,8 +263,6 @@ void QuotaManagerService::Destroy() {
   if (gInitialized && gClosed.exchange(true)) {
     MOZ_ASSERT(false, "Shutdown more than once?!");
   }
-
-  Preferences::UnregisterCallback(TestingPrefChangedCallback, kTestingPref);
 
   delete this;
 }
@@ -407,7 +391,7 @@ QuotaManagerService::Init(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -431,7 +415,7 @@ QuotaManagerService::InitTemporaryStorage(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -457,7 +441,7 @@ QuotaManagerService::InitStoragesForPrincipal(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -549,7 +533,7 @@ NS_IMETHODIMP
 QuotaManagerService::Clear(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -637,7 +621,7 @@ NS_IMETHODIMP
 QuotaManagerService::Reset(nsIQuotaRequest** _retval) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
@@ -663,7 +647,7 @@ QuotaManagerService::ResetStoragesForPrincipal(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aPrincipal);
 
-  if (NS_WARN_IF(!gTestingMode)) {
+  if (NS_WARN_IF(!StaticPrefs::dom_quotaManager_testing())) {
     return NS_ERROR_UNEXPECTED;
   }
 
