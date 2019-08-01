@@ -5,8 +5,8 @@
 package org.mozilla.fenix.library.bookmarks
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import android.widget.LinearLayout
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -130,9 +130,8 @@ class BookmarkView(
     val interactor: BookmarkViewInteractor
 ) : LibraryPageView(container), BackHandler {
 
-    val view: LinearLayout = LayoutInflater.from(container.context)
+    val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_bookmark, container, true)
-        .findViewById(R.id.bookmarks_wrapper)
 
     var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
         private set

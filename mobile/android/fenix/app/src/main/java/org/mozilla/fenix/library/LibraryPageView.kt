@@ -30,16 +30,16 @@ open class LibraryPageView(
     protected fun setUiForNormalMode(title: String?) {
         activity?.title = title
         setToolbarColors(
-            ContextCompat.getColor(context, R.color.white_color),
-            context.getColorFromAttr(R.attr.accentHighContrast)
+            context.getColorFromAttr(R.attr.primaryText),
+            context.getColorFromAttr(R.attr.foundation)
         )
     }
 
     protected fun setUiForSelectingMode(title: String?) {
         activity?.title = title
         setToolbarColors(
-            context.getColorFromAttr(R.attr.primaryText),
-            context.getColorFromAttr(R.attr.foundation)
+            ContextCompat.getColor(context, R.color.white_color),
+            context.getColorFromAttr(R.attr.accentHighContrast)
         )
     }
 

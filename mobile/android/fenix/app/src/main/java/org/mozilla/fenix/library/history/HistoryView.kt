@@ -5,8 +5,8 @@
 package org.mozilla.fenix.library.history
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.SimpleItemAnimator
@@ -67,9 +67,8 @@ class HistoryView(
     val interactor: HistoryInteractor
 ) : LibraryPageView(container), BackHandler {
 
-    val view: ConstraintLayout = LayoutInflater.from(container.context)
+    val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
-        .findViewById(R.id.history_wrapper)
 
     private var items: List<HistoryItem> = listOf()
     var mode: HistoryState.Mode = HistoryState.Mode.Normal
