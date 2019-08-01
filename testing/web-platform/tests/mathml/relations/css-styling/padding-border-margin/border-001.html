@@ -21,6 +21,10 @@
           assert_approx_equals(s.right, 30, epsilon, "right border");
           assert_approx_equals(s.top, 40, epsilon, "top border");
           assert_approx_equals(s.bottom, 50, epsilon, "bottom border");
+          var b = document.getElementById("mrow-border").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 20 + 50 + 30, epsilon, "element width");
+          assert_approx_equals(b.height, 40 + 50 + 50, epsilon, "element height");
       }, "Border properties on mrow");
 
       test(function() {
@@ -29,6 +33,10 @@
           assert_approx_equals(s.right, 20, epsilon, "right border");
           assert_approx_equals(s.top, 20, epsilon, "top border");
           assert_approx_equals(s.bottom, 20, epsilon, "bottom border");
+          var b = document.getElementById("mrow-border-shorthand").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 20 + 50 + 20, epsilon, "element width");
+          assert_approx_equals(b.height, 20 + 50 + 20, epsilon, "element height");
       }, "Border properties on mrow (shorthand)");
 
       test(function() {
@@ -37,6 +45,10 @@
           assert_approx_equals(s.right, 30, epsilon, "right border");
           assert_approx_equals(s.top, 40, epsilon, "top border");
           assert_approx_equals(s.bottom, 50, epsilon, "bottom border");
+          var b = document.getElementById("mrow-border-logical").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 20 + 50 + 30, epsilon, "element width");
+          assert_approx_equals(b.height, 40 + 50 + 50, epsilon, "element height");
       }, "Border properties on mrow (logical)");
 
       test(function() {
@@ -45,6 +57,10 @@
           assert_approx_equals(s.right, 20, epsilon, "right border");
           assert_approx_equals(s.top, 30, epsilon, "top border");
           assert_approx_equals(s.bottom, 30, epsilon, "bottom border");
+          var b = document.getElementById("mrow-border-logical-shorthand").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 20 + 50 + 20, epsilon, "element width");
+          assert_approx_equals(b.height, 30 + 50 + 30, epsilon, "element height");
       }, "Border properties on mrow (logical, shorthand)");
 
     done();
