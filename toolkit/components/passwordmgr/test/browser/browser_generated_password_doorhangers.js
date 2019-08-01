@@ -443,6 +443,75 @@ add_task(async function autocomplete_generated_password_saved_empty_username() {
   );
 });
 
+add_task(async function ac_gen_pw_saved_empty_un_stored_non_empty_un_in_form() {
+  // confirm behavior when when the form's username field has a non-empty value
+  // and there is an existing saved login with a "" username
+  await setup_withOneLogin("", "xyzpassword");
+  await openFormInNewTab(
+    TEST_ORIGIN + FORM_PAGE_PATH,
+    {
+      password: {
+        selector: passwordInputSelector,
+        expectedValue: "xyzpassword",
+        setValue: "",
+      },
+      username: {
+        selector: usernameInputSelector,
+        expectedValue: "",
+        setValue: "myusername",
+      },
+    },
+    async function taskFn(browser) {
+      let [savedLogin] = Services.logins.getAllLogins();
+      let storageChangedPromise = TestUtils.topicObserved(
+        "passwordmgr-storage-changed",
+        (_, data) => data == "addLogin"
+      );
+      await fillGeneratedPasswordFromACPopup(browser, passwordInputSelector);
+      await waitForDoorhanger(browser, "password-save");
+      info("Waiting to openAndVerifyDoorhanger");
+      await openAndVerifyDoorhanger(browser, "password-save", {
+        dismissed: true,
+        anchorExtraAttr: "",
+        usernameValue: "myusername",
+        passwordLength: LoginTestUtils.generation.LENGTH,
+      });
+      await hideDoorhangerPopup(browser);
+      info("Waiting to verifyGeneratedPasswordWasFilled");
+      await verifyGeneratedPasswordWasFilled(browser, passwordInputSelector);
+
+      info("waiting for submitForm");
+      await submitForm(browser);
+      let notif = await openAndVerifyDoorhanger(browser, "password-save", {
+        dismissed: false,
+        anchorExtraAttr: "",
+        usernameValue: "myusername",
+        passwordLength: LoginTestUtils.generation.LENGTH,
+      });
+
+      await clickDoorhangerButton(notif, REMEMBER_BUTTON);
+      info("Waiting for addLogin");
+      await storageChangedPromise;
+      verifyLogins({
+        count: 2,
+        loginProperties: [
+          {
+            timesUsed: savedLogin.timesUsed,
+            username: "",
+            password: "xyzpassword",
+          },
+          {
+            timesUsed: 1,
+            username: "myusername",
+          },
+        ],
+      });
+      await hideDoorhangerPopup(browser); // make sure the popup is closed for next test
+      notif && notif.remove();
+    }
+  );
+});
+
 add_task(async function contextfill_generated_password_saved_empty_username() {
   // confirm behavior when filling a generated password via context menu
   // when there is an existing saved login with a "" username
