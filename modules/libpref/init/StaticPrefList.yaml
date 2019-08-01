@@ -1052,6 +1052,12 @@
   value: 750000
   mirror: always
 
+# How long to stay in perf mode after initial loading.
+- name: content.sink.initial_perf_time
+  type: uint32_t
+  value: 2000000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "device."
 #---------------------------------------------------------------------------
