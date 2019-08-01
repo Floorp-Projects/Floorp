@@ -6,6 +6,8 @@
 
 /* globals browser */
 
+let availablePatches;
+
 const portToAddon = (function() {
   let port;
 
@@ -69,7 +71,8 @@ Promise.all([
     }
   });
 
-  redraw(info);
+  availablePatches = info;
+  redraw();
 });
 
 function onMessageFromAddon(msg) {
@@ -94,13 +97,17 @@ function onMessageFromAddon(msg) {
   button.disabled = !!msg.toggling;
 }
 
-function redraw(info) {
-  const { overrides, interventions } = info;
-  redrawTable($("#overrides"), overrides);
-  redrawTable($("#interventions"), interventions);
+function redraw() {
+  if (!availablePatches) {
+    return;
+  }
+  const { overrides, interventions } = availablePatches;
+  const showHidden = location.hash === "#all";
+  redrawTable($("#overrides"), overrides, showHidden);
+  redrawTable($("#interventions"), interventions, showHidden);
 }
 
-function redrawTable(table, data) {
+function redrawTable(table, data, showHidden = false) {
   const df = document.createDocumentFragment();
   table.querySelectorAll("tr").forEach(tr => {
     tr.remove();
@@ -128,6 +135,10 @@ function redrawTable(table, data) {
   }
 
   for (const row of data) {
+    if (row.hidden && !showHidden) {
+      continue;
+    }
+
     const tr = document.createElement("tr");
     tr.setAttribute("data-id", row.id);
     df.appendChild(tr);
@@ -156,3 +167,5 @@ function redrawTable(table, data) {
   }
   table.appendChild(df);
 }
+
+window.onhashchange = redraw;
