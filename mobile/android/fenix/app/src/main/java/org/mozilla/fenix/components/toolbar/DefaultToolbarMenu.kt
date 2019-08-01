@@ -116,7 +116,8 @@ class DefaultToolbarMenu(
                 highlight = if (hasAccountProblem) {
                     BrowserMenuHighlightableItem.Highlight(
                         imageResource = R.drawable.ic_alert,
-                        backgroundResource = R.color.sync_error_background_color
+                        backgroundResource = R.drawable.sync_error_background_with_ripple,
+                        colorResource = R.color.sync_error_background_color
                     )
                 } else null
             ) {

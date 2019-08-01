@@ -39,6 +39,7 @@
         android:background="?foundation"
         android:clickable="true"
         android:visibility="gone"
+        android:elevation="5dp"
         app:findInPageNoMatchesTextColor="?attr/destructive"
         mozac:findInPageButtonsTint="?primaryText"
         mozac:findInPageResultCountTextColor="?primaryText" />

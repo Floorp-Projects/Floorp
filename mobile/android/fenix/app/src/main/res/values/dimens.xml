@@ -41,7 +41,7 @@
     <dimen name="bottom_sheet_top_padding">8dp</dimen>
 
     <!-- Browser Toolbar -->
-    <dimen name="browser_toolbar_height">56dp</dimen>
+    <dimen name="browser_toolbar_height">57dp</dimen>
     <dimen name="toolbar_and_qab_height">67dp</dimen>
 
     <!-- SignIn Component -->
