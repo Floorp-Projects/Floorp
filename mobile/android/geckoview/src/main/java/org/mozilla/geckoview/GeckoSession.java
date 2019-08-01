@@ -462,7 +462,6 @@ public class GeckoSession implements Parcelable {
             "GeckoViewContent", this,
             new String[]{
                 "GeckoView:ContentCrash",
-                "GeckoView:ContentKill",
                 "GeckoView:ContextMenu",
                 "GeckoView:DOMTitleChanged",
                 "GeckoView:DOMWindowClose",
@@ -478,12 +477,10 @@ public class GeckoSession implements Parcelable {
                                       final String event,
                                       final GeckoBundle message,
                                       final EventCallback callback) {
+
                 if ("GeckoView:ContentCrash".equals(event)) {
                     close();
                     delegate.onCrash(GeckoSession.this);
-                } else if ("GeckoView:ContentKill".equals(event)) {
-                    close();
-                    delegate.onKill(GeckoSession.this);
                 } else if ("GeckoView:ContextMenu".equals(event)) {
                     final ContentDelegate.ContextElement elem =
                         new ContentDelegate.ContextElement(
@@ -3185,23 +3182,10 @@ public class GeckoSession implements Parcelable {
          * is preserved. Most applications will want to call
          * {@link #loadUri(Uri)} or {@link #restoreState(SessionState)} at this point.
          *
-         * @param session The GeckoSession for which the content process has crashed.
+         * @param session The GeckoSession that crashed.
          */
         @UiThread
         default void onCrash(@NonNull GeckoSession session) {}
-
-        /**
-         * The content process hosting this GeckoSession has been killed. The
-         * GeckoSession is now closed and unusable. You may call
-         * {@link #open(GeckoRuntime)} to recover the session, but no state
-         * is preserved. Most applications will want to call
-         * {@link #loadUri(Uri)} or {@link #restoreState(SessionState)} at this point.
-         *
-         * @param session The GeckoSession for which the content process has been killed.
-         */
-        @UiThread
-        default void onKill(@NonNull GeckoSession session) {}
-
 
         /**
          * Notification that the first content composition has occurred.
