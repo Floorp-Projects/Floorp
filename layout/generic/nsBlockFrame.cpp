@@ -2452,7 +2452,9 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowInput& aState) {
     // FIXME: What about a deltaBCoord or block-size change that forces us to
     // push lines?  Why does that work?
     if (!line->IsDirty() &&
-        aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE &&
+        (aState.mReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE ||
+         // last column can be reflowed unconstrained during column balancing
+         GetPrevInFlow() || GetNextInFlow() || HasPushedFloats()) &&
         (deltaBCoord != 0 || aState.mReflowInput.IsBResize() ||
          aState.mReflowInput.mFlags.mMustReflowPlaceholders) &&
         (line->IsBlock() || line->HasFloats() || line->HadFloatPushed())) {
