@@ -922,7 +922,8 @@ nsresult nsWindowWatcher::OpenWindowInternal(
   // If our parent is sandboxed, set it as the one permitted sandboxed navigator
   // on the new window we're opening.
   if (activeDocsSandboxFlags && parentWindow) {
-    newDocShell->SetOnePermittedSandboxedNavigator(parentWindow->GetDocShell());
+    newDocShell->GetBrowsingContext()->SetOnePermittedSandboxedNavigator(
+        parentWindow->GetBrowsingContext());
   }
 
   // Copy sandbox flags to the new window if activeDocsSandboxFlags says to do
