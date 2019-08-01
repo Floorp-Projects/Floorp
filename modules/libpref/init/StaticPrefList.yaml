@@ -163,6 +163,11 @@
   value: false
   mirror: always
 
+- name: accessibility.AOM.enabled
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "apz."
 # The apz prefs are explained in AsyncPanZoomController.cpp

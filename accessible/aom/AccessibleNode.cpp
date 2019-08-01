@@ -7,6 +7,7 @@
 #include "mozilla/dom/AccessibleNodeBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/DOMStringList.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
@@ -19,15 +20,8 @@ using namespace mozilla::a11y;
 using namespace mozilla::dom;
 
 bool AccessibleNode::IsAOMEnabled(JSContext* aCx, JSObject* /*unused*/) {
-  static bool sPrefCached = false;
-  static bool sPrefCacheValue = false;
-
-  if (!sPrefCached) {
-    sPrefCached = true;
-    Preferences::AddBoolVarCache(&sPrefCacheValue, "accessibility.AOM.enabled");
-  }
-
-  return nsContentUtils::IsSystemCaller(aCx) || sPrefCacheValue;
+  return nsContentUtils::IsSystemCaller(aCx) ||
+         StaticPrefs::accessibility_AOM_enabled();
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(AccessibleNode, mRelationProperties,
