@@ -1517,8 +1517,6 @@ nsresult nsScriptSecurityManager::InitPrefs() {
       PREF_CHANGE_METHOD(nsScriptSecurityManager::ScriptSecurityPrefChanged),
       kObservedPrefs, this);
 
-  OriginAttributes::InitPrefs();
-
   return NS_OK;
 }
 
