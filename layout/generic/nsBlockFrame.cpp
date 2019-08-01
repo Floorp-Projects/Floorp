@@ -3573,8 +3573,6 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
           availSize.BSize(wm) -= aState.BorderPadding().BEnd(wm);
         }
 
-        // Bug 1569701: We need to use GetEffectiveComputedBSize() to get
-        // correct block-size if ColumnSetWrapper is fragmented.
         nscoord contentBSize = aState.mReflowInput.ComputedBSize();
         if (aState.mReflowInput.ComputedMaxBSize() != NS_UNCONSTRAINEDSIZE) {
           contentBSize =
