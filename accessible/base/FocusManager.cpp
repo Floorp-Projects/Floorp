@@ -348,10 +348,14 @@ void FocusManager::ProcessFocusEvent(AccEvent* aEvent) {
   nsEventShell::FireEvent(focusEvent);
   mLastFocus = target;
 
+  if (NS_WARN_IF(target->IsDefunct())) {
+    // target died during nsEventShell::FireEvent.
+    return;
+  }
+
   // Fire scrolling_start event when the document receives the focus if it has
   // an anchor jump. If an accessible within the document receive the focus
   // then null out the anchor jump because it no longer applies.
-  MOZ_ASSERT(!target->IsDefunct());
   DocAccessible* targetDocument = target->Document();
   MOZ_ASSERT(targetDocument);
   Accessible* anchorJump = targetDocument->AnchorJump();
