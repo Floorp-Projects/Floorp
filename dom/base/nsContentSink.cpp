@@ -134,9 +134,6 @@ nsContentSink::~nsContentSink() {
     mDocument->RemoveObserver(this);
   }
 }
-
-int32_t nsContentSink::sInteractiveDeflectCount;
-int32_t nsContentSink::sPerfDeflectCount;
 int32_t nsContentSink::sPendingEventMode;
 int32_t nsContentSink::sEventProbeRate;
 int32_t nsContentSink::sInteractiveParseTime;
@@ -146,10 +143,6 @@ int32_t nsContentSink::sInitialPerfTime;
 int32_t nsContentSink::sEnablePerfMode;
 
 void nsContentSink::InitializeStatics() {
-  Preferences::AddIntVarCache(&sInteractiveDeflectCount,
-                              "content.sink.interactive_deflect_count", 0);
-  Preferences::AddIntVarCache(&sPerfDeflectCount,
-                              "content.sink.perf_deflect_count", 200);
   Preferences::AddIntVarCache(&sPendingEventMode,
                               "content.sink.pending_event_mode", 1);
   Preferences::AddIntVarCache(&sEventProbeRate, "content.sink.event_probe_rate",
@@ -1377,8 +1370,10 @@ nsresult nsContentSink::DidProcessATokenImpl() {
 
   // Have we processed enough tokens to check time?
   if (!mHasPendingEvent &&
-      mDeflectedCount < uint32_t(mDynamicLowerValue ? sInteractiveDeflectCount
-                                                    : sPerfDeflectCount)) {
+      mDeflectedCount <
+          uint32_t(mDynamicLowerValue
+                       ? StaticPrefs::content_sink_interactive_deflect_count()
+                       : StaticPrefs::content_sink_perf_deflect_count())) {
     return NS_OK;
   }
 
