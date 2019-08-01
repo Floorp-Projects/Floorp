@@ -39,6 +39,7 @@ pub enum Command {
     SuspendJob(SuspendJobCommand),
     ResumeJob(ResumeJobCommand),
     SetJobPriority(SetJobPriorityCommand),
+    SetNoProgressTimeout(SetNoProgressTimeoutCommand),
     SetUpdateInterval(SetUpdateIntervalCommand),
     CompleteJob(CompleteJobCommand),
     CancelJob(CancelJobCommand),
@@ -59,6 +60,7 @@ pub struct StartJobCommand {
     pub url: OsString,
     pub save_path: OsString,
     pub proxy_usage: BitsProxyUsage,
+    pub no_progress_timeout_secs: u32,
     pub monitor: Option<MonitorConfig>,
 }
 
@@ -214,6 +216,38 @@ impl CommandType for SetJobPriorityCommand {
 
 #[derive(Clone, Debug, Fail)]
 pub enum SetJobPriorityFailure {
+    #[fail(display = "Job not found")]
+    NotFound,
+    #[fail(display = "Get job: {}", _0)]
+    GetJob(HResultMessage),
+    #[fail(display = "Apply settings to job: {}", _0)]
+    ApplySettings(HResultMessage),
+    #[fail(display = "Connect to BackgroundCopyManager: {}", _0)]
+    ConnectBcm(HResultMessage),
+    #[fail(display = "BITS error: {}", _0)]
+    OtherBITS(HResultMessage),
+    #[fail(display = "Other failure: {}", _0)]
+    Other(String),
+}
+
+// Set No Progress Timeout
+#[doc(hidden)]
+#[derive(Clone, Debug)]
+pub struct SetNoProgressTimeoutCommand {
+    pub guid: Guid,
+    pub timeout_secs: u32,
+}
+
+impl CommandType for SetNoProgressTimeoutCommand {
+    type Success = ();
+    type Failure = SetNoProgressTimeoutFailure;
+    fn wrap(cmd: Self) -> Command {
+        Command::SetNoProgressTimeout(cmd)
+    }
+}
+
+#[derive(Clone, Debug, Fail)]
+pub enum SetNoProgressTimeoutFailure {
     #[fail(display = "Job not found")]
     NotFound,
     #[fail(display = "Get job: {}", _0)]
