@@ -3,10 +3,7 @@ set -x -e -v
 
 # This script is for building infer for Linux.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 # gets a bit too verbose here
 set +x

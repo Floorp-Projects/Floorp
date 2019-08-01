@@ -2,15 +2,13 @@
 set -x -e -v
 
 WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/fxc2
-TOOLTOOL_DIR=$WORKSPACE/build/src
 
 mkdir -p $INSTALL_DIR/bin
 
-cd $TOOLTOOL_DIR
+cd $GECKO_PATH
 . taskcluster/scripts/misc/tooltool-download.sh
-export PATH="$TOOLTOOL_DIR/clang/bin:$PATH"
+export PATH="$GECKO_PATH/clang/bin:$PATH"
 
 # --------------
 

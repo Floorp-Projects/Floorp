@@ -3,10 +3,9 @@ set -x -e -v
 
 # This script is for building mar and mbsdiff
 
-WORKSPACE=$HOME/workspace
 COMPRESS_EXT=xz
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
@@ -17,7 +16,7 @@ echo ac_add_options --enable-project=tools/update-packaging > .mozconfig
 TOOLCHAINS="binutils clang"
 
 for t in $TOOLCHAINS; do
-    PATH="$WORKSPACE/build/src/$t/bin:$PATH"
+    PATH="$GECKO_PATH/$t/bin:$PATH"
 done
 
 ./mach build -v

@@ -2,16 +2,14 @@
 set -x -e -v
 
 # This script is for building clang for Mac OS X on Linux.
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
 # these variables are used in build-clang.py
-export CROSS_CCTOOLS_PATH=$HOME_DIR/src/cctools
-export CROSS_SYSROOT=$HOME_DIR/src/MacOSX10.11.sdk
+export CROSS_CCTOOLS_PATH=$GECKO_PATH/cctools
+export CROSS_SYSROOT=$GECKO_PATH/MacOSX10.11.sdk
 export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 
 # gets a bit too verbose here
