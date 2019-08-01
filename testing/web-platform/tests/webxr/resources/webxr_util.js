@@ -113,7 +113,6 @@ function forEachWebxrObject(callback) {
   callback(window.XRView, 'XRView');
   callback(window.XRViewport, 'XRViewport');
   callback(window.XRViewerPose, 'XRViewerPose');
-  callback(window.XRLayer, 'XRLayer');
   callback(window.XRWebGLLayer, 'XRWebGLLayer');
   callback(window.XRWebGLLayerInit, 'XRWebGLLayerInit');
   callback(window.XRCoordinateSystem, 'XRCoordinateSystem');
