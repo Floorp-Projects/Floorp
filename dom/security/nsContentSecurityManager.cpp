@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsArray.h"
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
 #include "nsDataHandler.h"
@@ -19,6 +20,7 @@
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "nsReadableUtils.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -27,7 +29,14 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 #include "xpcpublic.h"
+
+#include "jsapi.h"
+#include "js/RegExp.h"
+
+using namespace mozilla::Telemetry;
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
                   nsIChannelEventSink)
@@ -186,6 +195,194 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
   return false;
 }
 
+/*
+ * Performs a Regular Expression match, optionally returning the results.
+ *
+ * @param aPattern      The regex pattern
+ * @param aString       The string to compare against
+ * @param aOnlyMatch    Whether we want match results or only a true/false for
+ * the match
+ * @param aMatchResult  Out param for whether or not the pattern matched
+ * @param aRegexResults Out param for the matches of the regex, if requested
+ * @returns nsresult indicating correct function operation or error
+ */
+nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
+                   bool aOnlyMatch, bool& aMatchResult,
+                   nsTArray<nsString>* aRegexResults = nullptr) {
+  aMatchResult = false;
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+
+  JSContext* cx = jsapi.cx();
+  AutoDisableJSInterruptCallback disabler(cx);
+
+  JSAutoRealm ar(cx, xpc::UnprivilegedJunkScope());
+
+  JS::RootedObject regexp(
+      cx, JS::NewUCRegExpObject(cx, aPattern.BeginReading(), aPattern.Length(),
+                                JS::RegExpFlag::Unicode));
+  if (!regexp) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  JS::RootedValue regexResult(cx, JS::NullValue());
+
+  size_t index = 0;
+  if (!JS::ExecuteRegExpNoStatics(cx, regexp, aString.BeginReading(),
+                                  aString.Length(), &index, aOnlyMatch,
+                                  &regexResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (regexResult.isNull()) {
+    // On no match, ExecuteRegExpNoStatics returns Null
+    return NS_OK;
+  }
+  if (aOnlyMatch) {
+    // On match, with aOnlyMatch = true, ExecuteRegExpNoStatics returns boolean
+    // true.
+    MOZ_ASSERT(regexResult.isBoolean() && regexResult.toBoolean());
+    aMatchResult = true;
+    return NS_OK;
+  }
+  if (aRegexResults == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Now we know we have a result, and we need to extract it so we can read it.
+  uint32_t length;
+  JS::RootedObject regexResultObj(cx, &regexResult.toObject());
+  if (!JS_GetArrayLength(cx, regexResultObj, &length)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  MOZ_LOG(sCSMLog, LogLevel::Verbose, ("Regex Matched %i strings", length));
+
+  for (uint32_t i = 0; i < length; i++) {
+    JS::RootedValue element(cx);
+    if (!JS_GetElement(cx, regexResultObj, i, &element)) {
+      return NS_ERROR_NO_CONTENT;
+    }
+
+    nsAutoJSString value;
+    if (!value.init(cx, element)) {
+      return NS_ERROR_NO_CONTENT;
+    }
+
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("Regex Matching: %i: %s", i, NS_ConvertUTF16toUTF8(value).get()));
+    aRegexResults->AppendElement(value);
+  }
+
+  aMatchResult = true;
+  return NS_OK;
+}
+
+/*
+ * Telemetry Events extra data only supports 80 characters, so we optimize the
+ * filename to be smaller and collect more data.
+ */
+nsString OptimizeFileName(const nsAString& aFileName) {
+  nsString optimizedName(aFileName);
+
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("Optimizing FileName: %s", NS_ConvertUTF16toUTF8(optimizedName).get()));
+
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING(".xpi!"),
+                                 NS_LITERAL_STRING("!"));
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING("shield.mozilla.org!"),
+                                 NS_LITERAL_STRING("s!"));
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING("mozilla.org!"),
+                                 NS_LITERAL_STRING("m!"));
+  if (optimizedName.Length() > 80) {
+    optimizedName.Truncate(80);
+  }
+
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("Optimized FileName: %s", NS_ConvertUTF16toUTF8(optimizedName).get()));
+  return optimizedName;
+}
+
+/*
+ * FilenameToEvalType takes a fileName and returns a Pair of strings.
+ * The First entry is a string indicating the type of fileName
+ * The Second entry is a Maybe<string> that can contain additional details to
+ * report.
+ *
+ * The reason we use strings (instead of an int/enum) is because the Telemetry
+ * Events API only accepts strings.
+ *
+ * Function is a static member of the class to enable gtests.
+ */
+
+/* static */
+FilenameType nsContentSecurityManager::FilenameToEvalType(
+    const nsString& fileName) {
+  // These are strings because the Telemetry Events API only accepts strings
+  static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
+  static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
+  static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
+  static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
+  static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
+  static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
+                                  "suspectedUserChromeJS");
+  static NS_NAMED_LITERAL_CSTRING(kOther, "other");
+  static NS_NAMED_LITERAL_CSTRING(kRegexFailure, "regexfailure");
+
+  static NS_NAMED_LITERAL_STRING(kUCJSRegex, "(.+).uc.js\\?*[0-9]*$");
+  static NS_NAMED_LITERAL_STRING(kExtensionRegex, "extensions/(.+)@(.+)!(.+)$");
+  static NS_NAMED_LITERAL_STRING(kSingleFileRegex, "^[a-zA-Z0-9.?]+$");
+
+  // resource:// and chrome://
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("chrome://"))) {
+    return FilenameType(kChromeURI, Some(fileName));
+  }
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("resource://"))) {
+    return FilenameType(kResourceURI, Some(fileName));
+  }
+
+  // Extension
+  bool regexMatch;
+  nsTArray<nsString> regexResults;
+  nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
+                          regexMatch, &regexResults);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    nsCString type =
+        StringEndsWith(regexResults[2], NS_LITERAL_STRING("mozilla.org.xpi"))
+            ? kMozillaExtension
+            : kOtherExtension;
+    auto& extensionNameAndPath =
+        Substring(regexResults[0], ArrayLength("extensions/") - 1);
+    return FilenameType(type, Some(OptimizeFileName(extensionNameAndPath)));
+  }
+
+  // Single File
+  rv = RegexEval(kSingleFileRegex, fileName, /* aOnlyMatch = */ true,
+                 regexMatch);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    return FilenameType(kSingleString, Some(fileName));
+  }
+
+  // Suspected userChromeJS script
+  rv = RegexEval(kUCJSRegex, fileName, /* aOnlyMatch = */ true, regexMatch);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    return FilenameType(kSuspectedUserChromeJS, Nothing());
+  }
+
+  return FilenameType(kOther, Nothing());
+}
+
 /* static */
 void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
@@ -244,6 +441,19 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
 
     fileName = fileName_;
   }
+
+  FilenameType fileNameType =
+      FilenameToEvalType(NS_ConvertUTF8toUTF16(fileName));
+  mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
+  if (fileNameType.second().isSome()) {
+    extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
+        NS_LITERAL_CSTRING("fileinfo"),
+        NS_ConvertUTF16toUTF8(fileNameType.second().value())}});
+  } else {
+    extra = Nothing();
+  }
+  Telemetry::RecordEvent(Telemetry::EventID::Security_Evalusage_Systemcontext,
+                         mozilla::Some(fileNameType.first()), extra);
 
 #ifdef DEBUG
   MOZ_CRASH_UNSAFE_PRINTF(

@@ -1526,8 +1526,9 @@ JS_PUBLIC_API bool JS::ExecuteRegExp(JSContext* cx, HandleObject obj,
 }
 
 JS_PUBLIC_API bool JS::ExecuteRegExpNoStatics(JSContext* cx, HandleObject obj,
-                                              char16_t* chars, size_t length,
-                                              size_t* indexp, bool test,
+                                              const char16_t* chars,
+                                              size_t length, size_t* indexp,
+                                              bool test,
                                               MutableHandleValue rval) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
