@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1564399822770" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1564671502746">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -73,7 +73,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="18.0"/>
+          <versionRange minVersion="18.0" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -149,7 +149,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -223,7 +223,7 @@
       <prefs/>
       <versionRange minVersion="5.0" maxVersion="5.0" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.7a1pre"/>
+          <versionRange minVersion="3.7a1pre" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -329,7 +329,7 @@
       <prefs/>
       <versionRange minVersion="0.1" maxVersion="7.9.20.6" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="8.0a1"/>
+          <versionRange minVersion="8.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -337,7 +337,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="7.5.0.9082" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="43.0a1"/>
+          <versionRange minVersion="43.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -487,7 +487,7 @@
       <prefs/>
       <versionRange minVersion="0.1" maxVersion="1.3.328.4" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.7a1pre"/>
+          <versionRange minVersion="3.7a1pre" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -555,7 +555,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -708,7 +708,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="7.7.34" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="34.0a1"/>
+          <versionRange minVersion="34.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -791,7 +791,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -919,7 +919,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -939,7 +939,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1292,7 +1292,7 @@
       <versionRange minVersion="1.5.7.5" maxVersion="1.5.7.5" severity="1"/>
       <versionRange minVersion="1.0" maxVersion="1.3.1" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.0a1"/>
+          <versionRange minVersion="3.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1345,7 +1345,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1426,7 +1426,7 @@
       <versionRange minVersion="0" maxVersion="15.0.5" severity="1"/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="39.0a1"/>
+          <versionRange minVersion="39.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1634,7 +1634,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="1.0.0.2" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="23.0a1"/>
+          <versionRange minVersion="23.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1670,7 +1670,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="2.1.9.1-signed.1-signed" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="47"/>
+          <versionRange minVersion="47" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1762,7 +1762,7 @@
       <prefs/>
       <versionRange minVersion="1.2" maxVersion="1.2" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.0a1"/>
+          <versionRange minVersion="3.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1790,12 +1790,12 @@
       <prefs/>
       <versionRange minVersion="3.3.1" maxVersion="*" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="5.0a1"/>
+          <versionRange minVersion="5.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
       <versionRange minVersion="0.1" maxVersion="3.3.0.*" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.7a1"/>
+          <versionRange minVersion="3.7a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1831,7 +1831,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="6.9.8" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.7a1pre"/>
+          <versionRange minVersion="3.7a1pre" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -1888,7 +1888,7 @@
       <prefs/>
       <versionRange minVersion="2.0.5" maxVersion="2.0.5" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="3.5.7"/>
+          <versionRange minVersion="3.5.7" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -2012,7 +2012,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="5.0.0.1002" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="52.0a1"/>
+          <versionRange minVersion="52.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -2020,7 +2020,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="6.26.11" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="53.0a1"/>
+          <versionRange minVersion="53.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -2028,7 +2028,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="53.0a1"/>
+          <versionRange minVersion="53.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -2088,7 +2088,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="3.16.1" severity="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="56.0a1"/>
+          <versionRange minVersion="56.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -2096,7 +2096,7 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="2.1.0" severity="3">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="56.0a1"/>
+          <versionRange minVersion="56.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </emItem>
@@ -3329,45 +3329,69 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
+    <emItem blockID="b5e2f528-3a9c-43af-9f6d-98040157a59a" id="/^((web@AppConverter)|(web@SearchManager)|(web@Email2)|(web@DefaultSearch)|(web@AudioConverter)|(web@translations)|(web@Manuals)|(web@HowTo)|(web@Property)|(my@WeatherTab)|(login@EmailAccount)|(web@WebDesign)|(web@Utility)|(web@Ancestry)|(web@Bank)|(web@CrimeReport)|(web@Taxes)|(web@Notepad)|(web@Crypto)|(web@peoplesearch)|(web@Weather)|(web@VideoConverter)|(web@TV)|(web@Transit)|(web@Template)|(web@Sports)|(web@SpeedTest)|(web@Social)|(web@Shopping)|(web@Scrapbook)|(web@Recipes)|(web@Radio)|(web@PhotoEditor)|(web@Photo)|(web@PCTexting)|(web@Packages)|(web@Office)|(web@News)|(web@Movies)|(web@Maps)|(web@Jobs)|(web@Interests)|(web@Games)|(web@Forms)|(web@Flights)|(web@Fitness)|(web@EmailAccount)|(web@Finance)|(web@Email)|(web@eBooks)|(web@DM)|(web@Coupons)|(web@Classifieds)|(web@Calendar)|(web@BrandedTab)|(web@Bible)|(web@Converter))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="26b10e69-d842-40ef-90ce-f96552e269a3" id="/^((nickrr878@gmail\.com)|(\{a06de0b3-b00f-472c-a34e-3a74b64d1747\})|(spar\.team@spar\.team\.com)|(\{59904ffa-b247-41ea-9ac1-2ce0a2da8c98\})|(\{69c49344-90ec-458d-9811-a55878e26bd1\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="176a0ef0-bd71-4b96-a3e3-14c17eaad3dd" id="YouTube@develop.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="47315374-a775-4701-adc3-d0cfb61a44b8" id="@weatherhubpro">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="30d0ec83-70ac-4a03-9239-7af6c4061cde" id="{97ab6723-bc9a-4c5b-a08b-5b162d29ad4f}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5aa0a7da-cf9e-4bac-bbed-1b7625109cc7" id="/^((\{8842eb7c-5f5c-4d33-aabe-81c27ae87dcc\})|(web@1A72D794-697C-11E8-9D8C-1C0018C6383E)|(web@2a366bba-0a94-11e8-ba89-0ed5f89f718b)|(web@2bf1a18d-3240-42ad-9f7d-46017edc432c)|(web@2DC2452E-6999-11E8-A1CA-6C6318C6383E)|(web@2DC2452E-6999-11E8-A1CA-6C6318C63000)|(web@3)|(web@3ab4d660-8caf-412a-84eb-9cf2924f54c7)|(web@4)|(web@5)|(web@48F0D4BC-6FB8-11E8-B36A-905EE70C2B9F)|(web@82FCE0DC-836E-11E8-9E9B-164B9D46D017)|(web@90c91611-b4c8-470a-b251-77bb1f859dba)|(web@899ce5cc-06fc-436e-a59e-93a70eb4c810)|(web@3681a37c-6383-4e94-8076-28496af53983)|(web@7398cc9a-684e-40a4-afe1-b620e1a863b2)|(web@7398cc9a-684e-40a4-afe1-b620e1a86000)|(web@8842eb7c-5f5c-4d33-aabe-81c27ae87dcc)|(web@10722358-d56d-4f5e-a89c-d4534d7c5000)|(web@10722358-d56d-4f5e-a89c-d4534d7c5565)|(web@67887931-77b9-4b1b-baee-9f23a4a384de)|(web@a3ea9864-1034-47b9-a25a-e9cc207a9319)|(web@af1e58bc-4ead-11e8-81fc-065ad97f23a5)|(web@af1e58bc-4ead-11e8-81fc-065ad97f2000)|(web@B7CCDA78-8455-11E8-91A4-ED179E46D017)|(web@ca5a2803-6421-4582-97e1-9e30fe44e100)|(web@ca5a2803-6421-4582-97e1-9e30fe44ee00)|(web@ca5a2803-6421-4582-97e1-9e30fe44eee0)|(web@cacf1377-a1b0-43e6-84bc-c0518922b22c)|(web@e7a72615-19b1-42a5-8e34-ddfa89ce006e)|(web@e7a72615-19b1-42a5-8e34-ddfa89ce0060)|(web@e7a72615-19b1-42a5-8e34-ddfa89ced000)|(web@e7a72615-19b1-42a5-8e34-ddfa89cee000)|(web@e4058a8a-59ca-4ba7-b503-dfcf75639305)|(web@f3ac4769-1d70-444e-aa46-06d0427473b9)|(web@FACD83DA-68CC-11E8-8484-3DA118C6383E)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c000)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c32e)|(web@fd9b3d8a-1178-45ab-92a8-a172d0b7c39e)|(web@ourdom)|(web@oursrchdom)|(web@test)|(web@testss))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
   </emItems>
   <pluginItems>
     <pluginItem blockID="p332">
-      <match exp="libflashplayer\.so" name="filename"/>
-      <match exp="^Shockwave Flash 11.(0|1) r[0-9]{1,3}$" name="description"/>
+      <match name="filename" exp="libflashplayer\.so"/>
+      <match name="description" exp="^Shockwave Flash 11.(0|1) r[0-9]{1,3}$"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange severity="0" vulnerabilitystatus="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="19.0a1"/>
+          <versionRange minVersion="19.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </pluginItem>
     <pluginItem blockID="p330">
-      <match exp="libflashplayer\.so" name="filename"/>
-      <match exp="^Shockwave Flash (([1-9]\.[0-9]+)|(10\.([0-2]|(3 r(([0-9][0-9]?)|1(([0-7][0-9])|8[0-2]))))))( |$)" name="description"/>
+      <match name="filename" exp="libflashplayer\.so"/>
+      <match name="description" exp="^Shockwave Flash (([1-9]\.[0-9]+)|(10\.([0-2]|(3 r(([0-9][0-9]?)|1(([0-7][0-9])|8[0-2]))))))( |$)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange severity="0" vulnerabilitystatus="1">
         <targetApplication id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
-          <versionRange maxVersion="*" minVersion="19.0a1"/>
+          <versionRange minVersion="19.0a1" maxVersion="*"/>
         </targetApplication>
       </versionRange>
     </pluginItem>
     <pluginItem blockID="p1054">
-      <match exp="np32dsw_[0-9]+\.dll" name="filename"/>
+      <match name="filename" exp="np32dsw_[0-9]+\.dll"/>
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="p1055">
-      <match exp="DirectorShockwave\.plugin" name="filename"/>
+      <match name="filename" exp="DirectorShockwave\.plugin"/>
       <infoURL>https://get.adobe.com/shockwave/</infoURL>
       <versionRange maxVersion="12.2.0.162" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="832dc9ff-3314-4df2-abcf-7bd65a645371">
-      <match exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" name="filename"/>
+      <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="32.0.0.207" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
     <pluginItem blockID="49b843cc-a8fc-4ede-be0c-a0da56d0214f" os="Linux">
-      <match exp="libflashplayer\.so" name="filename"/>
+      <match name="filename" exp="libflashplayer\.so"/>
       <infoURL>https://get.adobe.com/flashplayer/</infoURL>
       <versionRange maxVersion="32.0.0.207" minVersion="0" severity="0" vulnerabilitystatus="1"/>
     </pluginItem>
