@@ -585,6 +585,115 @@ add_task(
     restorePrompter();
     LMP._generatedPasswordsByPrincipalOrigin.clear();
     Services.logins.removeAllLogins();
+    Services.telemetry.clearEvents();
+  }
+);
+
+add_task(
+  async function test_onGeneratedPasswordFilledOrEdited_withSavedEmptyUsernameAndUsernameValue() {
+    // Save as the above task but with a non-empty username field value.
+    startTestConditions();
+    let login0Props = Object.assign({}, loginTemplate, {
+      username: "",
+      password: "qweqweq",
+    });
+    info("Adding initial login: " + JSON.stringify(login0Props));
+    let expected = await LoginTestUtils.addLogin(login0Props);
+
+    info(
+      "Saved initial login: " +
+        JSON.stringify(Services.logins.getAllLogins()[0])
+    );
+
+    let {
+      generatedPassword: password1,
+    } = stubGeneratedPasswordForBrowsingContextId(99);
+    let {
+      restorePrompter,
+      fakePromptToChangePassword,
+      fakePromptToSavePassword,
+    } = stubPrompter();
+
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      username: "non-empty-username",
+      password: password1,
+    });
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should just have the previously-saved login with empty username"
+    );
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+
+    ok(LMP._getPrompter.calledOnce, "Checking _getPrompter was called");
+    ok(
+      fakePromptToChangePassword.notCalled,
+      "Checking promptToChangePassword wasn't called"
+    );
+    ok(
+      fakePromptToSavePassword.calledOnce,
+      "Checking promptToSavePassword was called"
+    );
+    ok(
+      fakePromptToSavePassword.getCall(0).args[1],
+      "promptToSavePassword had a truthy 'dismissed' argument"
+    );
+    ok(
+      !fakePromptToSavePassword.getCall(0).args[2],
+      "promptToSavePassword had a falsey 'notifySaved' argument"
+    );
+
+    info("Edit the password");
+    const newPassword = password1 + "🔥";
+    await LMP._onGeneratedPasswordFilledOrEdited({
+      browsingContextId: 99,
+      formActionOrigin: "https://www.mozilla.org",
+      username: "non-empty-username",
+      password: newPassword,
+    });
+    ok(
+      fakePromptToChangePassword.notCalled,
+      "Checking promptToChangePassword wasn't called"
+    );
+    ok(
+      fakePromptToSavePassword.calledTwice,
+      "Checking promptToSavePassword was called again"
+    );
+    ok(
+      fakePromptToSavePassword.getCall(1).args[1],
+      "promptToSavePassword had a truthy 'dismissed' argument"
+    );
+    ok(
+      !fakePromptToSavePassword.getCall(1).args[2],
+      "promptToSavePassword had a falsey 'notifySaved' argument"
+    );
+
+    let generatedPW = LMP._generatedPasswordsByPrincipalOrigin.get(
+      "https://www.example.com^userContextId=6"
+    );
+    ok(generatedPW.edited, "Cached edited boolean should be true");
+    equal(generatedPW.storageGUID, null, "Should have no storageGUID");
+    equal(generatedPW.value, newPassword, "Cached password should be updated");
+    assertLoginProperties(Services.logins.getAllLogins()[0], login0Props);
+    ok(Services.logins.getAllLogins()[0].equals(expected), "Ensure no changes");
+    equal(
+      Services.logins.getAllLogins().length,
+      1,
+      "Should have 1 saved login still"
+    );
+
+    checkEditTelemetryRecorded(
+      1,
+      "Updating cache, not storage (no auto-save) with username in field"
+    );
+
+    LMP._browsingContextGlobal.get.restore();
+    restorePrompter();
+    LMP._generatedPasswordsByPrincipalOrigin.clear();
+    Services.logins.removeAllLogins();
+    Services.telemetry.clearEvents();
   }
 );
 
