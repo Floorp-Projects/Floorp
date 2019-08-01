@@ -337,8 +337,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
 
-  // Back off timer notification after count.
-  static int32_t sBackoffCount;
   // Notification interval in microseconds
   static int32_t sNotificationInterval;
   // How many times to deflect in interactive/perf modes

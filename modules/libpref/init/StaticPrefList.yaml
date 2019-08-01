@@ -978,6 +978,13 @@
 # Prefs starting with "content."
 #---------------------------------------------------------------------------
 
+# Back off timer notification after count.
+# -1 means never.
+- name: content.notify.backoffcount
+  type: int32_t
+  value: -1
+  mirror: always
+
 # Do we notify based on time?
 - name: content.notify.ontimer
   type: bool
