@@ -44,9 +44,10 @@ StackingContextHelper::StackingContextHelper(
 
     int32_t apd = aContainerFrame->PresContext()->AppUnitsPerDevPixel();
     nsRect r = LayoutDevicePixel::ToAppUnits(aBounds, apd);
-    mScale = FrameLayerBuilder::ChooseScale(aContainerFrame, aContainerItem, r,
-                                            1.f, 1.f, mInheritedTransform,
-                                            /* aCanDraw2D = */ true);
+    mScale = FrameLayerBuilder::ChooseScale(
+        aContainerFrame, aContainerItem, r, aParentSC.mScale.width,
+        aParentSC.mScale.height, mInheritedTransform,
+        /* aCanDraw2D = */ true);
 
     if (aParams.mAnimated) {
       mSnappingSurfaceTransform =
