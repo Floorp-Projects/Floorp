@@ -6,14 +6,18 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import androidx.navigation.NavController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import mozilla.components.feature.accounts.FirefoxAccountsAuthFeature
 import mozilla.components.service.fxa.manager.FxaAccountManager
 import mozilla.components.support.ktx.android.content.hasCamera
 import org.mozilla.fenix.Experiments
 import org.mozilla.fenix.NavGraphDirections
-import org.mozilla.fenix.components.features.FirefoxAccountsAuthFeature
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.isInExperiment
+import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.test.Mockable
 
 /**
@@ -27,7 +31,12 @@ class Services(
         FirefoxAccountsAuthFeature(
             accountManager,
             redirectUrl = BackgroundServices.REDIRECT_URL
-        )
+        ) { context, authUrl ->
+            CoroutineScope(Dispatchers.Main).launch {
+                val intent = SupportUtils.createAuthCustomTabIntent(context, authUrl)
+                context.startActivity(intent)
+            }
+        }
     }
 
     /**
