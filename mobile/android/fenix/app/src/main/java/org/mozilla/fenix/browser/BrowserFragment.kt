@@ -52,6 +52,7 @@ import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
+import mozilla.components.support.base.feature.PermissionsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
 import mozilla.components.support.ktx.kotlin.toUri
@@ -95,10 +96,6 @@ class BrowserFragment : Fragment(), BackHandler {
 
     private lateinit var browserToolbarView: BrowserToolbarView
     private lateinit var quickActionSheetView: QuickActionSheetView
-
-    private var tabCollectionObserver: Observer<List<TabCollection>>? = null
-    private var sessionObserver: Session.Observer? = null
-    private var sessionManagerObserver: SessionManager.Observer? = null
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
@@ -470,12 +467,16 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        subscribeToSession()
+        subscribeToSessions()
+        subscribeToTabCollections()
+    }
+
     @SuppressWarnings("ComplexMethod")
     override fun onResume() {
         super.onResume()
-        sessionObserver = subscribeToSession()
-        sessionManagerObserver = subscribeToSessions()
-        tabCollectionObserver = subscribeToTabCollections()
         requireComponents.core.tabCollectionStorage.register(collectionStorageObserver, this)
 
         getSessionById()?.let { updateBookmarkState(it) }
@@ -551,31 +552,13 @@ class BrowserFragment : Fragment(), BackHandler {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        tabCollectionObserver?.let {
-            requireComponents.core.tabCollectionStorage.getCollections().removeObserver(it)
-        }
-        sessionObserver?.let {
-            getSessionById()?.unregister(it)
-        }
-        sessionManagerObserver?.let {
-            requireComponents.core.sessionManager.unregister(it)
-        }
-    }
-
     override fun onBackPressed(): Boolean {
-        return when {
-            findInPageIntegration.onBackPressed() -> true
-            fullScreenFeature.onBackPressed() -> true
-            readerViewFeature.onBackPressed() -> true
-            sessionFeature.onBackPressed() -> true
-            customTabsIntegration.onBackPressed() -> true
-            else -> {
-                removeSessionIfNeeded()
-                false
-            }
-        }
+        return findInPageIntegration.onBackPressed() ||
+            fullScreenFeature.onBackPressed() ||
+            readerViewFeature.onBackPressed() ||
+            sessionFeature.onBackPressed() ||
+            customTabsIntegration.onBackPressed() ||
+            removeSessionIfNeeded()
     }
 
     override fun onPause() {
@@ -583,9 +566,11 @@ class BrowserFragment : Fragment(), BackHandler {
         fullScreenFeature.onBackPressed()
     }
 
-    private fun removeSessionIfNeeded() {
-        val session = getSessionById() ?: return
-        if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
+    private fun removeSessionIfNeeded(): Boolean {
+        getSessionById()?.let { session ->
+            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
+        }
+        return false
     }
 
     override fun onRequestPermissionsResult(
@@ -593,17 +578,13 @@ class BrowserFragment : Fragment(), BackHandler {
         permissions: Array<String>,
         grantResults: IntArray
     ) {
-        when (requestCode) {
-            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.withFeature {
-                it.onPermissionsResult(permissions, grantResults)
-            }
-            REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.withFeature {
-                it.onPermissionsResult(permissions, grantResults)
-            }
-            REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.withFeature {
-                it.onPermissionsResult(permissions, grantResults)
-            }
+        val feature: PermissionsFeature? = when (requestCode) {
+            REQUEST_CODE_DOWNLOAD_PERMISSIONS -> downloadsFeature.get()
+            REQUEST_CODE_PROMPT_PERMISSIONS -> promptsFeature.get()
+            REQUEST_CODE_APP_PERMISSIONS -> sitePermissionsFeature.get()
+            else -> null
         }
+        feature?.onPermissionsResult(permissions, grantResults)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -656,16 +637,15 @@ class BrowserFragment : Fragment(), BackHandler {
 
     private fun getAppropriateLayoutGravity() = if (customTabSessionId != null) Gravity.TOP else Gravity.BOTTOM
 
-    private fun subscribeToTabCollections() =
-        Observer<List<TabCollection>> {
+    private fun subscribeToTabCollections() {
+        requireComponents.core.tabCollectionStorage.getCollections().observe(this, Observer {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
             getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
-        }.also { observer ->
-            requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
-        }
+        })
+    }
 
-    private fun subscribeToSession(): Session.Observer {
-        return object : Session.Observer {
+    private fun subscribeToSession() {
+        val observer = object : Session.Observer {
             override fun onLoadingStateChanged(session: Session, loading: Boolean) {
                 if (!loading) {
                     updateBookmarkState(session)
@@ -677,16 +657,18 @@ class BrowserFragment : Fragment(), BackHandler {
                 updateBookmarkState(session)
                 updateAppLinksState(session)
             }
-        }.also { observer -> getSessionById()?.register(observer, this) }
+        }
+        getSessionById()?.register(observer, this, autoPause = true)
     }
 
-    private fun subscribeToSessions(): SessionManager.Observer {
-        return object : SessionManager.Observer {
+    private fun subscribeToSessions() {
+        val observer = object : SessionManager.Observer {
             override fun onSessionSelected(session: Session) {
                 (activity as HomeActivity).updateThemeForSession(session)
                 updateBookmarkState(session)
             }
-        }.also { requireComponents.core.sessionManager.register(it, this) }
+        }
+        requireComponents.core.sessionManager.register(observer, this, autoPause = true)
     }
 
     private suspend fun findBookmarkedURL(session: Session?): Boolean {
@@ -736,11 +718,6 @@ class BrowserFragment : Fragment(), BackHandler {
                 .setAnchorView(browserToolbarView.view)
                 .show()
         }
-    }
-
-    private fun shareUrl(url: String) {
-        val directions = BrowserFragmentDirections.actionBrowserFragmentToShareFragment(url = url)
-        nav(R.id.browserFragment, directions)
     }
 
     companion object {
