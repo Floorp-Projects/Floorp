@@ -11,6 +11,7 @@
 --editable ../mozbase/mozleak
 --editable ../mozbase/mozlog
 --editable ../mozbase/moznetwork
+--editable ../mozbase/mozpower
 --editable ../mozbase/mozprocess
 --editable ../mozbase/mozprofile
 --editable ../mozbase/mozproxy
