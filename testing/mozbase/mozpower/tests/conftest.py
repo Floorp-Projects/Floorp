@@ -1,14 +1,31 @@
 from __future__ import absolute_import, print_function
 
+import mock
 import os
 import pytest
 import tempfile
+import time
 
+from mozpower.macintelpower import MacIntelPower
 from mozpower.powerbase import PowerBase
 from mozpower.intel_power_gadget import (
     IntelPowerGadget,
     IPGResultsHandler
 )
+
+
+def os_side_effect(*args, **kwargs):
+    """Used as a side effect to os.path.exists when
+    checking if the Intel Power Gadget executable exists.
+    """
+    return True
+
+
+def subprocess_side_effect(*args, **kwargs):
+    """Used as a side effect when running the Intel Power
+    Gadget tool.
+    """
+    time.sleep(1)
 
 
 @pytest.fixture(scope='function')
@@ -51,3 +68,16 @@ def ipg_rh_obj():
         ],
         tmpdir
     )
+
+
+@pytest.fixture(scope='function')
+def macintelpower_obj():
+    """Returns a MacIntelPower object with subprocess.check_output
+    and os.path.exists calls patched with side effects.
+    """
+    with mock.patch('subprocess.check_output') as subprocess_mock:
+        with mock.patch('os.path.exists') as os_mock:
+            subprocess_mock.side_effect = subprocess_side_effect
+            os_mock.side_effect = os_side_effect
+
+            yield MacIntelPower(ipg_measure_duration=2)
