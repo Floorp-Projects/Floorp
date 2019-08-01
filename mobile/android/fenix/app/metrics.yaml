@@ -314,17 +314,6 @@ quick_action_sheet:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2020-03-01"
-  read_tapped:
-    type: event
-    description: >
-      A user tapped the read button
-    bugs:
-    - 1195
-    data_reviews:
-    - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
-    notification_emails:
-    - fenix-core@mozilla.com
-    expires: "2020-03-01"
 
 metrics:
   default_browser:
@@ -927,6 +916,17 @@ reader_mode:
       - 2267
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/3941
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  closed:
+    type: event
+    description: >
+      A user closed reader mode
+    bugs:
+      - 2267
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/4328
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2020-03-01"

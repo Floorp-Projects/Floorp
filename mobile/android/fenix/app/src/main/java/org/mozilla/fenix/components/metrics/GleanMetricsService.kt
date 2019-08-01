@@ -31,6 +31,7 @@ import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.GleanMetrics.Collections
+import org.mozilla.fenix.GleanMetrics.ReaderMode
 import org.mozilla.fenix.GleanMetrics.SyncAccount
 import org.mozilla.fenix.GleanMetrics.SyncAuth
 
@@ -120,9 +121,6 @@ private val Event.wrapper
         )
         is Event.QuickActionSheetDownloadTapped -> EventWrapper<NoExtraKeys>(
             { QuickActionSheet.downloadTapped.record(it) }
-        )
-        is Event.QuickActionSheetReadTapped -> EventWrapper<NoExtraKeys>(
-            { QuickActionSheet.readTapped.record(it) }
         )
         is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
             { BookmarksManagement.openInNewTab.record(it) }
@@ -264,6 +262,12 @@ private val Event.wrapper
         )
         is Event.CollectionTabSelectOpened -> EventWrapper<NoExtraKeys>(
             { Collections.tabSelectOpened.record(it) }
+        )
+        is Event.ReaderModeOpened -> EventWrapper<NoExtraKeys>(
+            { ReaderMode.opened.record(it) }
+        )
+        is Event.ReaderModeAppearanceOpened -> EventWrapper<NoExtraKeys>(
+            { ReaderMode.appearance.record(it) }
         )
         is Event.CollectionTabLongPressed -> EventWrapper<NoExtraKeys>(
             { Collections.longPress.record(it) }

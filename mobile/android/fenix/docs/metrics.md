@@ -314,14 +314,6 @@ tracking_protection</td>
         <td></td>
         <td>2020-03-01</td>
     </tr>
-    <tr>
-        <td>read_tapped</td>
-        <td>event</td>
-        <td>A user tapped the read button</td>
-        <td><a href="https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466">link</a></td>
-        <td></td>
-        <td>2020-03-01</td>
-    </tr>
 </table>
 </pre>
 
@@ -786,6 +778,14 @@ tracking_protection</td>
         <td>event</td>
         <td>A user opened reader mode</td>
         <td><a href="https://github.com/mozilla-mobile/fenix/pull/3941">link</a></td>
+        <td></td>
+        <td>2020-03-01</td>
+    </tr>
+    <tr>
+        <td>opened</td>
+        <td>event</td>
+        <td>A user closed reader mode</td>
+        <td><a href="https://github.com/mozilla-mobile/fenix/pull/4328">link</a></td>
         <td></td>
         <td>2020-03-01</td>
     </tr>
