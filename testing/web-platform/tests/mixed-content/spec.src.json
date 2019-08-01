@@ -17,7 +17,10 @@
             "blockable": [],
             "optionally-blockable": "*"
           },
-          "origin": ["cross-origin-http", "same-host-http"],
+          "origin": [
+            "cross-origin-http",
+            "same-host-http"
+          ],
           "expectation": "blocked"
         },
         {
@@ -31,7 +34,10 @@
             "blockable": [],
             "optionally-blockable": "*"
           },
-          "origin": ["cross-origin-http", "same-host-http"],
+          "origin": [
+            "cross-origin-http",
+            "same-host-http"
+          ],
           "expectation": "allowed"
         }
       ]
@@ -53,7 +59,10 @@
             "blockable": "*",
             "optionally-blockable": []
           },
-          "origin": ["cross-origin-http", "same-host-http"],
+          "origin": [
+            "cross-origin-http",
+            "same-host-http"
+          ],
           "expectation": "blocked"
         },
         {
@@ -67,7 +76,10 @@
             "blockable": "*",
             "optionally-blockable": []
           },
-          "origin": ["cross-origin-http", "same-host-http"],
+          "origin": [
+            "cross-origin-http",
+            "same-host-http"
+          ],
           "expectation": "blocked"
         },
         {
@@ -81,7 +93,10 @@
             "blockable": "websocket-request",
             "optionally-blockable": []
           },
-          "origin": ["cross-origin-ws", "same-host-ws"],
+          "origin": [
+            "cross-origin-ws",
+            "same-host-ws"
+          ],
           "expectation": "blocked"
         }
       ]
@@ -98,12 +113,17 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
-          "redirection": ["no-redirect", "keep-scheme-redirect"],
+          "redirection": [
+            "no-redirect",
+            "keep-scheme-redirect"
+          ],
           "subresource": {
             "blockable": "*",
             "optionally-blockable": "*"
           },
-          "origin": ["same-host-https"],
+          "origin": [
+            "same-host-https"
+          ],
           "expectation": "allowed"
         },
         {
@@ -112,20 +132,23 @@
           "source_protocol": "https",
           "delivery_type": "*",
           "delivery_value": "*",
-          "redirection": ["no-redirect", "keep-scheme-redirect"],
+          "redirection": [
+            "no-redirect",
+            "keep-scheme-redirect"
+          ],
           "subresource": {
             "blockable": "websocket-request",
             "optionally-blockable": []
           },
-          "origin": ["same-host-wss"],
+          "origin": [
+            "same-host-wss"
+          ],
           "expectation": "allowed"
         }
       ]
     }
   ],
-
   "delivery_key": "mixedContent",
-
   "excluded_tests": [
     {
       "name": "Skip-redundant-no-opt-in",
@@ -184,7 +207,10 @@
       "source_protocol": "*",
       "delivery_type": "meta",
       "delivery_value": "opt-in",
-      "redirection": ["keep-scheme-redirect", "swap-scheme-redirect"],
+      "redirection": [
+        "keep-scheme-redirect",
+        "swap-scheme-redirect"
+      ],
       "subresource": {
         "blockable": "*",
         "optionally-blockable": "*"
@@ -193,7 +219,6 @@
       "expectation": "*"
     }
   ],
-
   "test_expansion_schema": {
     "expansion": [
       "default",
