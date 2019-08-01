@@ -10,7 +10,6 @@
           "name": "insecure-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -18,7 +17,10 @@
           ],
           "delivery_value": null,
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -26,7 +28,6 @@
           "name": "upgrade-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -34,7 +35,10 @@
           ],
           "delivery_value": null,
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -42,7 +46,6 @@
           "name": "downgrade-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -50,7 +53,10 @@
           ],
           "delivery_value": null,
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         },
@@ -58,7 +64,6 @@
           "name": "secure-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -66,7 +71,10 @@
           ],
           "delivery_value": null,
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         }
@@ -82,7 +90,6 @@
           "name": "generic",
           "expansion": "default",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -106,7 +113,6 @@
           "name": "insecure-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -114,7 +120,10 @@
           ],
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -122,7 +131,6 @@
           "name": "upgrade-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -130,7 +138,10 @@
           ],
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -138,7 +149,6 @@
           "name": "downgrade-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -146,7 +156,10 @@
           ],
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         },
@@ -154,7 +167,6 @@
           "name": "secure-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -162,7 +174,10 @@
           ],
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "stripped-referrer"
         }
@@ -178,7 +193,6 @@
           "name": "generic",
           "expansion": "default",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -202,7 +216,6 @@
           "name": "same-origin-insecure",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -210,7 +223,7 @@
           ],
           "delivery_value": "same-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-http",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -218,7 +231,6 @@
           "name": "same-origin-secure-default",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -226,7 +238,7 @@
           ],
           "delivery_value": "same-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-https",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -234,7 +246,6 @@
           "name": "same-origin-insecure",
           "expansion": "override",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -242,7 +253,10 @@
           ],
           "delivery_value": "same-origin",
           "redirection": "swap-origin-redirect",
-          "origin": "same-origin",
+          "origin": [
+            "same-http",
+            "same-https"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         },
@@ -250,7 +264,6 @@
           "name": "cross-origin",
           "expansion": "default",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -258,7 +271,10 @@
           ],
           "delivery_value": "same-origin",
           "redirection": "*",
-          "origin": "cross-origin",
+          "origin": [
+            "cross-http",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         }
@@ -274,7 +290,6 @@
           "name": "same-origin-insecure",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -282,7 +297,7 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-http",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -290,7 +305,6 @@
           "name": "same-origin-secure-default",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -298,7 +312,7 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-https",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -306,7 +320,6 @@
           "name": "same-origin-upgrade",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -314,7 +327,7 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-https",
           "subresource": "*",
           "expectation": "origin"
         },
@@ -322,7 +335,6 @@
           "name": "same-origin-downgrade",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -330,7 +342,7 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-http",
           "subresource": "*",
           "expectation": "origin"
         },
@@ -338,7 +350,6 @@
           "name": "same-origin-insecure",
           "expansion": "override",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -346,7 +357,10 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "swap-origin-redirect",
-          "origin": "same-origin",
+          "origin": [
+            "same-http",
+            "same-https"
+          ],
           "subresource": "*",
           "expectation": "origin"
         },
@@ -354,7 +368,6 @@
           "name": "cross-origin",
           "expansion": "default",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -362,7 +375,10 @@
           ],
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
-          "origin": "cross-origin",
+          "origin": [
+            "cross-http",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "origin"
         }
@@ -378,7 +394,6 @@
           "name": "insecure-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -386,7 +401,10 @@
           ],
           "delivery_value": "strict-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "origin"
         },
@@ -394,7 +412,6 @@
           "name": "upgrade-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -402,7 +419,10 @@
           ],
           "delivery_value": "strict-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "origin"
         },
@@ -410,7 +430,6 @@
           "name": "downgrade-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -418,7 +437,10 @@
           ],
           "delivery_value": "strict-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         },
@@ -426,7 +448,6 @@
           "name": "secure-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -434,7 +455,10 @@
           ],
           "delivery_value": "strict-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "origin"
         }
@@ -450,7 +474,6 @@
           "name": "same-insecure",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -458,7 +481,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-http",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -466,7 +489,6 @@
           "name": "same-insecure",
           "expansion": "override",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -474,7 +496,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "swap-origin-redirect",
-          "origin": "same-origin",
+          "origin": "same-http",
           "subresource": "*",
           "expectation": "origin"
         },
@@ -482,7 +504,6 @@
           "name": "cross-insecure",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -490,7 +511,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "cross-origin",
+          "origin": "cross-http",
           "subresource": "*",
           "expectation": "origin"
         },
@@ -498,7 +519,6 @@
           "name": "upgrade-protocol",
           "expansion": "default",
           "source_protocol": "http",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -506,7 +526,10 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-https",
+            "cross-https"
+          ],
           "subresource": "*",
           "expectation": "origin"
         },
@@ -514,7 +537,6 @@
           "name": "downgrade-protocol",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "http",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -522,7 +544,10 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "*",
+          "origin": [
+            "same-http",
+            "cross-http"
+          ],
           "subresource": "*",
           "expectation": "omitted"
         },
@@ -530,7 +555,6 @@
           "name": "same-secure",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -538,7 +562,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "same-origin",
+          "origin": "same-https",
           "subresource": "*",
           "expectation": "stripped-referrer"
         },
@@ -546,7 +570,6 @@
           "name": "same-secure",
           "expansion": "override",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -554,7 +577,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "swap-origin-redirect",
-          "origin": "same-origin",
+          "origin": "same-https",
           "subresource": "*",
           "expectation": "origin"
         },
@@ -562,7 +585,6 @@
           "name": "cross-secure",
           "expansion": "default",
           "source_protocol": "https",
-          "target_protocol": "https",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -570,7 +592,7 @@
           ],
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
-          "origin": "cross-origin",
+          "origin": "cross-https",
           "subresource": "*",
           "expectation": "origin"
         }
@@ -586,7 +608,6 @@
           "name": "generic",
           "expansion": "default",
           "source_protocol": "*",
-          "target_protocol": "*",
           "delivery_type": [
             "http-rp",
             "meta-referrer",
@@ -607,11 +628,13 @@
       "name": "cross-origin-workers",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "redirection": "*",
       "delivery_type": "*",
       "delivery_value": "*",
-      "origin": "cross-origin",
+      "origin": [
+        "cross-http",
+        "cross-https"
+      ],
       "subresource": [
         "worker-request",
         "module-worker",
@@ -623,11 +646,13 @@
       "name": "upgraded-protocol-workers",
       "expansion": "*",
       "source_protocol": "http",
-      "target_protocol": "https",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
-      "origin": "*",
+      "origin": [
+        "same-https",
+        "cross-https"
+      ],
       "subresource": [
         "worker-request",
         "module-worker",
@@ -639,11 +664,13 @@
       "name": "mixed-content-insecure-subresources",
       "expansion": "*",
       "source_protocol": "https",
-      "target_protocol": "http",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
-      "origin": "*",
+      "origin": [
+        "same-http",
+        "cross-http"
+      ],
       "subresource": "*",
       "expectation": "*"
     },
@@ -651,7 +678,6 @@
       "name": "elements-not-supporting-attr-referrer",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "delivery_type": [
         "attr-referrer"
       ],
@@ -671,7 +697,6 @@
       "name": "elements-not-supporting-rel-noreferrer",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "delivery_type": [
         "rel-noreferrer"
       ],
@@ -695,7 +720,6 @@
       "name": "area-tag",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -707,7 +731,6 @@
       "name": "worker-requests-with-swap-origin-redirect",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "swap-origin-redirect",
@@ -723,7 +746,6 @@
       "name": "overhead-for-redirection",
       "expansion": "*",
       "source_protocol": "*",
-      "target_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": [
@@ -741,7 +763,6 @@
       "name": "source-https-unsupported-by-web-platform-tests-runners",
       "expansion": "*",
       "source_protocol": "https",
-      "target_protocol": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -773,14 +794,12 @@
       "unsafe-url"
     ],
     "origin": [
-      "same-origin",
-      "cross-origin"
+      "same-http",
+      "same-https",
+      "cross-http",
+      "cross-https"
     ],
     "source_protocol": [
-      "http",
-      "https"
-    ],
-    "target_protocol": [
       "http",
       "https"
     ],
