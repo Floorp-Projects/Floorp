@@ -11,7 +11,6 @@
 #include "jstypes.h"
 
 #include "ds/InlineTable.h"
-#include "frontend/FunctionCreationData.h"
 #include "frontend/ParseNode.h"
 #include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"

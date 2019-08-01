@@ -261,15 +261,10 @@ JS::Result<FunctionBox*> BinASTParserPerTokenizer<Tok>::buildFunctionBox(
 
   // Allocate the function before walking down the tree.
   RootedFunction fun(cx_);
-  if (pc_) {
-    Rooted<FunctionCreationData> fcd(
-        cx_, GenerateFunctionCreationData(atom, syntax, generatorKind,
-                                          functionAsyncKind));
-    BINJS_TRY_VAR(fun, AllocNewFunction(cx_, fcd));
-    MOZ_ASSERT(fun->explicitName() == atom);
-  } else {
-    BINJS_TRY_VAR(fun, lazyScript_->functionNonDelazifying());
-  }
+  BINJS_TRY_VAR(fun, !pc_ ? lazyScript_->functionNonDelazifying()
+                          : AllocNewFunction(cx_, atom, syntax, generatorKind,
+                                             functionAsyncKind));
+  MOZ_ASSERT_IF(pc_, fun->explicitName() == atom);
 
   mozilla::Maybe<Directives> directives;
   if (pc_) {
