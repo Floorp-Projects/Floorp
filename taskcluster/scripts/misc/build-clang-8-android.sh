@@ -11,8 +11,7 @@ cd $GECKO_PATH
 # gets a bit too verbose here
 set +x
 
-cd build/build-clang
-python3 ./build-clang.py -c clang-8-android.json
+python3 build/build-clang/build-clang.py -c $1
 
 set -x
 

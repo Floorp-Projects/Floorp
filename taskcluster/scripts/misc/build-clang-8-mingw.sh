@@ -265,8 +265,7 @@ prepare
 # gets a bit too verbose here
 set +x
 
-cd build/build-clang
-python3 ./build-clang.py -c clang-8-mingw.json --skip-tar
+python3 build/build-clang/build-clang.py -c $2 --skip-tar
 
 set -x
 
