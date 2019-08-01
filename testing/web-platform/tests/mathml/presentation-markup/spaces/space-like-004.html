@@ -10,6 +10,7 @@
 <meta name="assert" content="Verify definition of space-like elements">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
+<script src="/mathml/support/feature-detection.js"></script>
 <style>
   /* Default spacing of operator 'X' is 0.2777777777777778em so quite different
      from the measured/specified 0em and 1em. */
@@ -48,11 +49,13 @@
       var emToPx = 25;
 
       test(function() {
+          assert_true(MathMLFeatureDetection.has_operator_spacing());
           assert_approx_equals(spaceBefore("complex1"), emToPx, epsilon);
           assert_approx_equals(spaceAfter("complex1"), emToPx, epsilon);
       }, "complex space-like subtree");
 
       test(function() {
+          assert_true(MathMLFeatureDetection.has_operator_spacing());
           assert_approx_equals(spaceBefore("complex2"), 0, epsilon);
           assert_approx_equals(spaceAfter("complex2"), 2 * emToPx, epsilon);
       }, "complex non-space-like subtree");
