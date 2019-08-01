@@ -44,7 +44,7 @@ macosx64-gn:
 
 win32-gn:
     treeherder:
-        symbol: TW32(gn)
+        symbol: TW64(gn)
     worker-type: b-win2012
     worker:
         max-run-time: 3600
