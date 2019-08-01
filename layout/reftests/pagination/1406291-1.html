@@ -1,0 +1,23 @@
+<html class="reftest-paged">
+<title>Testcase, Mozilla bug 1406291</title>
+<style>
+body { margin: 0 }
+table { border-spacing: 0; }
+table, td { margin: 0; padding: 0; }
+</style>
+
+<div style="page-break-after: always;">
+  Only line on first page.
+  <br clear="all" />
+</div>
+
+<div>
+  <table>
+    <tr><td style="padding-top: 1px">
+      <div style="float:left">
+        Line 1 on second page.
+      </div>
+    </td></tr>
+    <tr><td>Line 2 on second page.</td></tr>
+  </table>
+</div>
