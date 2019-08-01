@@ -17,7 +17,7 @@ const TEST_DATA = [
   {
     functionDisplayName: "returnPromise/<",
     line: 21,
-    column: 37,
+    column: 44,
   },
   {
     functionDisplayName: "returnPromise",
@@ -27,7 +27,7 @@ const TEST_DATA = [
   {
     functionDisplayName: "makePromise",
     line: 16,
-    column: 17,
+    column: 30,
   },
 ];
 

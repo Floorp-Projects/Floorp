@@ -207,20 +207,27 @@ class BytecodeSection {
 
   uint32_t currentLine() const { return currentLine_; }
   uint32_t lastColumn() const { return lastColumn_; }
-  void setCurrentLine(uint32_t line) {
+  void setCurrentLine(uint32_t line, uint32_t sourceOffset) {
     currentLine_ = line;
     lastColumn_ = 0;
+    lastSourceOffset_ = sourceOffset;
   }
-  void setLastColumn(uint32_t column) { lastColumn_ = column; }
+
+  void setLastColumn(uint32_t column, uint32_t offset) {
+    lastColumn_ = column;
+    lastSourceOffset_ = offset;
+  }
 
   void updateSeparatorPosition() {
-    lastSeparatorOffet_ = code().length();
+    lastSeparatorCodeOffset_ = code().length();
+    lastSeparatorSourceOffset_ = lastSourceOffset_;
     lastSeparatorLine_ = currentLine_;
     lastSeparatorColumn_ = lastColumn_;
   }
 
   void updateSeparatorPositionIfPresent() {
-    if (lastSeparatorOffet_ == code().length()) {
+    if (lastSeparatorCodeOffset_ == code().length()) {
+      lastSeparatorSourceOffset_ = lastSourceOffset_;
       lastSeparatorLine_ = currentLine_;
       lastSeparatorColumn_ = lastColumn_;
     }
@@ -229,6 +236,10 @@ class BytecodeSection {
   bool isDuplicateLocation() const {
     return lastSeparatorLine_ == currentLine_ &&
            lastSeparatorColumn_ == lastColumn_;
+  }
+
+  bool atSeparator(uint32_t offset) const {
+    return lastSeparatorSourceOffset_ == offset;
   }
 
   // ---- JIT ----
@@ -310,9 +321,13 @@ class BytecodeSection {
   // we can get undefined behavior.
   uint32_t lastColumn_ = 0;
 
+  // The last code unit used for srcnotes.
+  uint32_t lastSourceOffset_ = 0;
+
   // The offset, line and column numbers of the last opcode for the
   // breakpoint for step execution.
-  uint32_t lastSeparatorOffet_ = 0;
+  uint32_t lastSeparatorCodeOffset_ = 0;
+  uint32_t lastSeparatorSourceOffset_ = 0;
   uint32_t lastSeparatorLine_ = 0;
   uint32_t lastSeparatorColumn_ = 0;
 

@@ -32,7 +32,7 @@ try {
     assertEq(firstLine[firstLineSize - 2], "20");
     assertEq(firstLine[firstLineSize - 1], "45");
     assertEq(secondLine[secondLineSize - 2], "22");
-    assertEq(secondLine[secondLineSize - 1], "5");
+    assertEq(secondLine[secondLineSize - 1], "18");
 }
 
 try {
