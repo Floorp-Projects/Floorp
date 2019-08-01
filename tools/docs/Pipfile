@@ -10,9 +10,10 @@ livereload = "~=2.6.0"
 recommonmark = "~=0.4.0"
 scandir = "~=1.9.0"
 singledispatch = "~=3.4.0"
-sphinx = "~=1.8.3"
 sphinx-js = "~=2.1.0"
 sphinx-rtd-theme = "~=0.4.2"
+sphinxcontrib-mermaid = "~=0.3.1"
+sphinx = "~=1.8.5"
 
 [requires]
 python_version = "2.7"
