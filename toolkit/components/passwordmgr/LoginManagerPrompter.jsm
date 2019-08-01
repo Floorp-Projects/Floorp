@@ -959,12 +959,14 @@ LoginManagerPrompter.prototype = {
    *        Options to pass along to PopupNotifications.show().
    * @param {bool} [options.notifySaved = false]
    *        Whether to indicate to the user that the login was already saved.
+   * @param {string} [options.messageStringID = undefined]
+   *        An optional string ID to override the default message.
    */
   _showLoginCaptureDoorhanger(
     login,
     type,
     showOptions = {},
-    { notifySaved = false } = {}
+    { notifySaved = false, messageStringID } = {}
   ) {
     let { browser } = this._getNotifyWindow();
     if (!browser) {
@@ -989,6 +991,10 @@ LoginManagerPrompter.prototype = {
 
     let initialMsgNames =
       type == "password-save" ? saveMsgNames : changeMsgNames;
+
+    if (messageStringID) {
+      changeMsgNames.prompt = messageStringID;
+    }
 
     let brandBundle = Services.strings.createBundle(BRAND_BUNDLE);
     let brandShortName = brandBundle.GetStringFromName("brandShortName");
@@ -1452,6 +1458,19 @@ LoginManagerPrompter.prototype = {
     login.formActionOrigin = aNewLogin.formActionOrigin;
     login.password = aNewLogin.password;
     login.username = aNewLogin.username;
+
+    let messageStringID;
+    if (
+      aOldLogin.username === "" &&
+      login.username !== "" &&
+      login.password == aOldLogin.password
+    ) {
+      // If the saved password matches the password we're prompting with then we
+      // are only prompting to let the user add a username since there was one in
+      // the form. Change the message so the purpose of the prompt is clearer.
+      messageStringID = "updateLoginMsgAddUsername";
+    }
+
     this._showLoginCaptureDoorhanger(
       login,
       "password-change",
@@ -1461,6 +1480,7 @@ LoginManagerPrompter.prototype = {
       },
       {
         notifySaved,
+        messageStringID,
       }
     );
 
