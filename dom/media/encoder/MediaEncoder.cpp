@@ -432,7 +432,14 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
   }
 }
 
-MediaEncoder::~MediaEncoder() { MOZ_ASSERT(mListeners.IsEmpty()); }
+MediaEncoder::~MediaEncoder() {
+  MOZ_ASSERT(mListeners.IsEmpty());
+  MOZ_ASSERT(!mAudioTrack);
+  MOZ_ASSERT(!mVideoTrack);
+  MOZ_ASSERT(!mAudioNode);
+  MOZ_ASSERT(!mInputPort);
+  MOZ_ASSERT(!mPipeStream);
+}
 
 void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
   MediaStreamGraphImpl* graph;
@@ -869,6 +876,8 @@ bool MediaEncoder::IsShutdown() {
 
 void MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
+
+  Stop();
 
   RefPtr<MediaEncoder> self = this;
   nsresult rv = mEncoderThread->Dispatch(NewRunnableFrom([self]() mutable {
