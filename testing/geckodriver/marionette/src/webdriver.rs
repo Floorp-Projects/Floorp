@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 use crate::common::{from_cookie, from_name, to_cookie, to_name, Cookie, Timeouts};
 
@@ -47,6 +48,12 @@ pub struct Keys {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Script {
+    pub script: String,
+    pub args: Option<Vec<Value>>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
     // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
     #[serde(rename = "WebDriver:AcceptDialog")]
@@ -69,6 +76,10 @@ pub enum Command {
     DeleteCookies,
     #[serde(rename = "WebDriver:DismissAlert")]
     DismissAlert,
+    #[serde(rename = "WebDriver:ExecuteAsyncScript")]
+    ExecuteAsyncScript(Script),
+    #[serde(rename = "WebDriver:ExecuteScript")]
+    ExecuteScript(Script),
     #[serde(rename = "WebDriver:FindElement")]
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
@@ -154,7 +165,10 @@ mod tests {
 
     #[test]
     fn test_json_keys() {
-        let data = Keys {text: "Foo".into(), value: vec!["F".into(), "o".into(), "o".into()]};
+        let data = Keys {
+            text: "Foo".into(),
+            value: vec!["F".into(), "o".into(), "o".into()],
+        };
         let json = json!({"text": "Foo", "value": ["F", "o", "o"]});
         assert_ser_de(&data, json);
     }

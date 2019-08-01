@@ -8,7 +8,7 @@ use marionette_rs::common::{
 use marionette_rs::message::{Command, Message, MessageId, Request};
 use marionette_rs::webdriver::{
     Command as MarionetteWebDriverCommand, Keys as MarionetteKeys, Locator as MarionetteLocator,
-    NewWindow as MarionetteNewWindow, Selector as MarionetteSelector,
+    NewWindow as MarionetteNewWindow, Script as MarionetteScript, Selector as MarionetteSelector,
     WindowRect as MarionetteWindowRect,
 };
 use mozprofile::preferences::Pref;
@@ -811,6 +811,12 @@ fn try_convert_to_marionette_message(
             MarionetteWebDriverCommand::DeleteCookies,
         )),
         DismissAlert => Some(Command::WebDriver(MarionetteWebDriverCommand::DismissAlert)),
+        ExecuteAsyncScript(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::ExecuteAsyncScript(x.to_marionette()?),
+        )),
+        ExecuteScript(ref x) => Some(Command::WebDriver(
+            MarionetteWebDriverCommand::ExecuteScript(x.to_marionette()?),
+        )),
         FindElement(ref x) => Some(Command::WebDriver(MarionetteWebDriverCommand::FindElement(
             x.to_marionette()?,
         ))),
@@ -929,11 +935,6 @@ impl MarionetteCommand {
                     );
                     (Some("WebDriver:ElementSendKeys"), Some(Ok(data)))
                 }
-                ExecuteAsyncScript(ref x) => (
-                    Some("WebDriver:ExecuteAsyncScript"),
-                    Some(x.to_marionette()),
-                ),
-                ExecuteScript(ref x) => (Some("WebDriver:ExecuteScript"), Some(x.to_marionette())),
                 FindElementElement(ref e, ref x) => {
                     let mut data = try_opt!(
                         serde_json::to_value(x)?.as_object(),
@@ -1496,14 +1497,12 @@ impl ToMarionette<Map<String, Value>> for GetParameters {
     }
 }
 
-impl ToMarionette<Map<String, Value>> for JavascriptCommandParameters {
-    fn to_marionette(&self) -> WebDriverResult<Map<String, Value>> {
-        Ok(try_opt!(
-            serde_json::to_value(self)?.as_object(),
-            ErrorStatus::UnknownError,
-            "Expected an object"
-        )
-        .clone())
+impl ToMarionette<MarionetteScript> for JavascriptCommandParameters {
+    fn to_marionette(&self) -> WebDriverResult<MarionetteScript> {
+        Ok(MarionetteScript {
+            script: self.script.clone(),
+            args: self.args.clone(),
+        })
     }
 }
 
