@@ -798,12 +798,120 @@ static nsIFrame* StyleFrame(nsIFrame* aOuterFrame) {
   return inner;
 }
 
+static bool IsNonReplacedInline(nsIFrame* aFrame) {
+  return aFrame->StyleDisplay()->mDisplay == StyleDisplay::Inline &&
+    !aFrame->IsFrameOfType(nsIFrame::eReplaced);
+}
+
+static Side SideForPaddingOrMarginOrInsetProperty(nsCSSPropertyID aPropID) {
+  switch (aPropID) {
+    case eCSSProperty_top:
+    case eCSSProperty_margin_top:
+    case eCSSProperty_padding_top:
+      return eSideTop;
+    case eCSSProperty_right:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_padding_right:
+      return eSideRight;
+    case eCSSProperty_bottom:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_padding_bottom:
+      return eSideBottom;
+    case eCSSProperty_left:
+    case eCSSProperty_margin_left:
+    case eCSSProperty_padding_left:
+      return eSideLeft;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected property");
+      return eSideTop;
+  }
+}
+
+static bool PaddingNeedsUsedValue(const LengthPercentage& aValue,
+                                  const ComputedStyle& aStyle) {
+  return !aValue.ConvertsToLength() || aStyle.StyleDisplay()->HasAppearance();
+}
+
 bool nsComputedDOMStyle::NeedsToFlushLayout(nsCSSPropertyID aPropID) const {
   MOZ_ASSERT(aPropID != eCSSProperty_UNKNOWN);
-  // TODO: Based on the frame's StyleFrame() and it's style, avoid the flush in
-  // more cases.
-  return aPropID != eCSSPropertyExtra_variable &&
-         nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::GetCSNeedsLayoutFlush);
+  nsIFrame* outerFrame = GetOuterFrame();
+  if (!outerFrame) {
+    return false;
+  }
+  nsIFrame* frame = StyleFrame(outerFrame);
+  if (aPropID == eCSSPropertyExtra_variable) {
+    return false;
+  }
+
+  auto* style = frame->Style();
+  if (nsCSSProps::PropHasFlags(aPropID, CSSPropFlags::IsLogical)) {
+    aPropID = Servo_ResolveLogicalProperty(aPropID, style);
+  }
+
+  switch (aPropID) {
+    case eCSSProperty_width:
+    case eCSSProperty_height:
+      return !IsNonReplacedInline(frame);
+    case eCSSProperty_line_height:
+      return frame->StyleText()->mLineHeight.IsMozBlockHeight();
+    case eCSSProperty_grid_template_rows:
+    case eCSSProperty_grid_template_columns:
+      return !!nsGridContainerFrame::GetGridContainerFrame(frame);
+    case eCSSProperty_perspective_origin:
+      return style->StyleDisplay()->mPerspectiveOrigin.HasPercent();
+    case eCSSProperty_transform_origin:
+      return style->StyleDisplay()->mTransformOrigin.HasPercent();
+    case eCSSProperty_transform:
+      return style->StyleDisplay()->mTransform.HasPercent();
+    case eCSSProperty_border_top_width:
+    case eCSSProperty_border_bottom_width:
+    case eCSSProperty_border_left_width:
+    case eCSSProperty_border_right_width:
+      // FIXME(emilio): This should return false per spec (bug 1551000), but
+      // themed borders don't make that easy, so for now flush for that case.
+      //
+      // TODO(emilio): If we make GetUsedBorder() stop returning 0 for an
+      // unreflowed frame, or something of that sort, then we can stop flushing
+      // layout for themed frames.
+      return style->StyleDisplay()->HasAppearance();
+    case eCSSProperty_top:
+    case eCSSProperty_right:
+    case eCSSProperty_bottom:
+    case eCSSProperty_left:
+      // Doing better than this is actually hard.
+      return style->StyleDisplay()->mPosition != NS_STYLE_POSITION_STATIC;
+    case eCSSProperty_padding_top:
+    case eCSSProperty_padding_right:
+    case eCSSProperty_padding_bottom:
+    case eCSSProperty_padding_left: {
+      Side side = SideForPaddingOrMarginOrInsetProperty(aPropID);
+      // Theming can override used padding, sigh.
+      //
+      // TODO(emilio): If we make GetUsedPadding() stop returning 0 for an
+      // unreflowed frame, or something of that sort, then we can stop flushing
+      // layout for themed frames.
+      return PaddingNeedsUsedValue(
+             style->StylePadding()->mPadding.Get(side), *style);
+    }
+    case eCSSProperty_margin_top:
+    case eCSSProperty_margin_right:
+    case eCSSProperty_margin_bottom:
+    case eCSSProperty_margin_left: {
+      // NOTE(emilio): We could do the commented out thing below, but it is not
+      // clear whether it's correct. It does change behavior and cause a new
+      // test to _pass_. But it's unclear whether it is the right thing, see:
+      //
+      // https://github.com/w3c/csswg-drafts/issues/2328
+      //
+      // Bug 1570759 tracks maybe changing the behavior here.
+      //
+      // Side side = SideForPaddingOrMarginOrInsetProperty(aPropID);
+      // return !style->StyleMargin()->mMargin.Get(side).ConvertsToLength();
+      return true;
+    }
+    default:
+      return false;
+  }
 }
 
 void nsComputedDOMStyle::Flush(Document& aDocument, FlushType aFlushType) {
@@ -1773,19 +1881,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecorationStyle() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  bool calcHeight = false;
-
-  if (mInnerFrame) {
-    calcHeight = true;
-
-    const nsStyleDisplay* displayData = StyleDisplay();
-    if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
-        !mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-      calcHeight = false;
-    }
-  }
-
-  if (calcHeight) {
+  if (mInnerFrame && !IsNonReplacedInline(mInnerFrame)) {
     AssertFlushedPendingReflows();
     nsMargin adjustedValues = GetAdjustedValuesForBoxSizing();
     val->SetAppUnits(mInnerFrame->GetContentRect().height +
@@ -1800,19 +1896,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetHeight() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  bool calcWidth = false;
-
-  if (mInnerFrame) {
-    calcWidth = true;
-
-    const nsStyleDisplay* displayData = StyleDisplay();
-    if (displayData->mDisplay == mozilla::StyleDisplay::Inline &&
-        !mInnerFrame->IsFrameOfType(nsIFrame::eReplaced)) {
-      calcWidth = false;
-    }
-  }
-
-  if (calcWidth) {
+  if (mInnerFrame && !IsNonReplacedInline(mInnerFrame)) {
     AssertFlushedPendingReflows();
     nsMargin adjustedValues = GetAdjustedValuesForBoxSizing();
     val->SetAppUnits(mInnerFrame->GetContentRect().width +
@@ -1893,8 +1977,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTop() {
 already_AddRefed<CSSValue> nsComputedDOMStyle::GetOffsetWidthFor(
     mozilla::Side aSide) {
   const nsStyleDisplay* display = StyleDisplay();
-
-  AssertFlushedPendingReflows();
 
   uint8_t position = display->mPosition;
   if (!mOuterFrame) {
@@ -2040,11 +2122,11 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
     mozilla::Side aSide) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
-  if (!mInnerFrame) {
-    SetValueToLengthPercentage(val, StylePadding()->mPadding.Get(aSide), true);
+  auto& padding = StylePadding()->mPadding.Get(aSide);
+  if (!mInnerFrame || !PaddingNeedsUsedValue(padding, *mComputedStyle)) {
+    SetValueToLengthPercentage(val, padding, true);
   } else {
     AssertFlushedPendingReflows();
-
     val->SetAppUnits(mInnerFrame->GetUsedPadding().Side(aSide));
   }
 
@@ -2052,8 +2134,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetPaddingWidthFor(
 }
 
 bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
-  AssertFlushedPendingReflows();
-
   nscoord blockHeight = NS_UNCONSTRAINEDSIZE;
   const auto& lh = StyleText()->mLineHeight;
 
@@ -2063,6 +2143,8 @@ bool nsComputedDOMStyle::GetLineHeightCoord(nscoord& aCoord) {
   }
 
   if (lh.IsMozBlockHeight()) {
+    AssertFlushedPendingReflows();
+
     if (!mInnerFrame) {
       return false;
     }
@@ -2102,7 +2184,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetBorderWidthFor(
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
   nscoord width;
-  if (mInnerFrame) {
+  if (mInnerFrame && mComputedStyle->StyleDisplay()->HasAppearance()) {
     AssertFlushedPendingReflows();
     width = mInnerFrame->GetUsedBorder().Side(aSide);
   } else {
@@ -2124,9 +2206,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetMarginWidthFor(
     mozilla::Side aSide) {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
+  auto& margin = StyleMargin()->mMargin.Get(aSide);
   if (!mInnerFrame) {
-    SetValueToLengthPercentageOrAuto(val, StyleMargin()->mMargin.Get(aSide),
-                                     false);
+    SetValueToLengthPercentageOrAuto(val, margin, false);
   } else {
     AssertFlushedPendingReflows();
 
