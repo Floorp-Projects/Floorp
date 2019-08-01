@@ -1619,6 +1619,12 @@
   value: false
   mirror: always
 
+# A pref that is used to enable testing features.
+- name: dom.quotaManager.testing
+  type: SequentiallyConsistentAtomicBool
+  value: false
+  mirror: always
+
 # Is support for Navigator.registerContentHandler enabled?
 - name: dom.registerContentHandler.enabled
   type: bool
