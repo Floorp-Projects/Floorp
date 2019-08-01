@@ -11,7 +11,7 @@ set -x -e -v
 cd $GECKO_PATH
 
 # This will download the rustc, cmake, ninja, MSVC, and wrench-deps artifacts.
-WORKSPACE="$PWD/../../" taskcluster/scripts/misc/tooltool-download.sh
+. taskcluster/scripts/misc/tooltool-download.sh
 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin:$PWD/cmake/bin:$PWD/ninja/bin
 
 # We will be sourcing mozconfig files, which end up calling mk_add_options with
