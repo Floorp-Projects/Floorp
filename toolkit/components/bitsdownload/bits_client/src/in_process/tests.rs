@@ -274,6 +274,7 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), tmp_dir.path().into()).unwrap();
 
+        let no_progress_timeout_secs = 60;
         let interval = 10_000;
         let timeout = 10_000;
 
@@ -282,7 +283,8 @@ test! {
                 server.format_url(name),
                 name.into(),
                 BitsProxyUsage::Preconfig,
-                interval
+                no_progress_timeout_secs,
+                interval,
                 ).unwrap();
 
         // cancel in ~250ms
@@ -321,11 +323,18 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
 
+        let no_progress_timeout_secs = 60;
         let interval = 100;
         let timeout = 10_000;
 
         let (StartJobSuccess {guid}, mut monitor) =
-            client.start_job(server.format_url(name), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
+            client.start_job(
+                server.format_url(name),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
 
         let start = Instant::now();
 
@@ -345,6 +354,10 @@ test! {
                         | BitsJobState::Transferring => {
                             //eprintln!("{:?}", BitsJobState::from(status.state));
                             //eprintln!("{:?}", status);
+
+                            // As long as there is no error, setting the timeout to 0 will not
+                            // fail an active transfer.
+                            client.set_no_progress_timeout(guid.clone(), 0).unwrap();
                         }
                     BitsJobState::Transferred => {
                         client.complete_job(guid.clone()).unwrap();
@@ -390,11 +403,18 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
 
+        let no_progress_timeout_secs = 60;
         let interval = 60_000;
         let timeout = 10_000;
 
         let (_, mut monitor) =
-            client.start_job(server.format_url(name), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
+            client.start_job(
+                server.format_url(name),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
 
         // Start the timer now, the initial job creation may be delayed by BITS service startup.
         let start = Instant::now();
@@ -440,11 +460,18 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
 
+        let no_progress_timeout_secs = 0;
         let interval = 60_000;
         let timeout = 10_000;
 
         let (StartJobSuccess { guid }, mut monitor) =
-            client.start_job(server.format_url(name), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
+            client.start_job(
+                server.format_url(name),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
 
         let start = Instant::now();
 
@@ -479,11 +506,18 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
 
+        let no_progress_timeout_secs = 60;
         let interval = 60_000;
         let timeout = 10_000;
 
         let (_, mut monitor) =
-            client.start_job(server.format_url("error_404"), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
+            client.start_job(
+                server.format_url("error_404"),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
 
         // Start the timer now, the initial job creation may be delayed by BITS service startup.
         let start = Instant::now();
@@ -512,11 +546,18 @@ test! {
 
         let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
 
+        let no_progress_timeout_secs = 60;
         let interval = 1_000;
         let timeout = 10_000;
 
-        let (_, mut monitor) =
-            client.start_job(server.format_url("error_500"), name.into(), BitsProxyUsage::Preconfig, interval).unwrap();
+        let (StartJobSuccess { guid }, mut monitor) =
+            client.start_job(
+                server.format_url("error_500"),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
 
         // Start the timer now, the initial job creation may be delayed by BITS service startup.
         let start = Instant::now();
@@ -529,6 +570,56 @@ test! {
         assert!(start.elapsed() > Duration::from_millis(900));
         assert!(start.elapsed() < Duration::from_millis(9_000));
         assert_eq!(status.state, BitsJobState::TransientError);
+
+        // Lower no progress timeout to 0
+        let set_timeout_at = Instant::now();
+        client.set_no_progress_timeout(guid, 0).unwrap();
+
+        // Should convert the transient error to a permanent error immediately.
+        let status = monitor.get_status(timeout).expect("should get status update").unwrap();
+        assert!(set_timeout_at.elapsed() < Duration::from_millis(500));
+        assert_eq!(status.state, BitsJobState::Error);
+
+        server.shutdown();
+
+        // job will be cancelled by macro
+    }
+}
+
+test! {
+    fn transient_to_permanent_error(name: &str, tmp_dir: &TempDir) {
+        let mut server = mock_http_server(name, HttpServerResponses {
+            body: name.to_owned().into_boxed_str().into_boxed_bytes(),
+            delay: 100,
+        });
+
+        let mut client = InProcessClient::new(format_job_name(name), format_dir_prefix(tmp_dir)).unwrap();
+
+        let no_progress_timeout_secs = 0;
+        let interval = 1_000;
+        let timeout = 10_000;
+
+        let (_, mut monitor) =
+            client.start_job(
+                server.format_url("error_500"),
+                name.into(),
+                BitsProxyUsage::Preconfig,
+                no_progress_timeout_secs,
+                interval,
+                ).unwrap();
+
+        // Start the timer now, the initial job creation may be delayed by BITS service startup.
+        let start = Instant::now();
+
+        // First immediate report
+        monitor.get_status(timeout).expect("should initially be ok").unwrap();
+
+        // 500 is a transient error, but with no_progress_timeout_secs = 0 it should immediately
+        // produce an error notification with the HEAD response in 100ms. Otherwise no status
+        // until 10s interval or timeout.
+        let status = monitor.get_status(timeout).expect("should get status update").unwrap();
+        assert!(start.elapsed() < Duration::from_millis(500));
+        assert_eq!(status.state, BitsJobState::Error);
 
         server.shutdown();
 
