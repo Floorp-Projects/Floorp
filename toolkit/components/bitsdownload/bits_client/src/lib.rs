@@ -115,11 +115,18 @@ impl BitsClient {
         url: ffi::OsString,
         save_path: ffi::OsString,
         proxy_usage: BitsProxyUsage,
+        no_progress_timeout_secs: u32,
         monitor_interval_millis: u32,
     ) -> Result<Result<(StartJobSuccess, BitsMonitorClient), StartJobFailure>, Error> {
         match self {
             InProcess(client) => Ok(client
-                .start_job(url, save_path, proxy_usage, monitor_interval_millis)
+                .start_job(
+                    url,
+                    save_path,
+                    proxy_usage,
+                    no_progress_timeout_secs,
+                    monitor_interval_millis,
+                )
                 .map(|(success, monitor)| (success, BitsMonitorClient::InProcess(monitor)))),
         }
     }
@@ -171,6 +178,17 @@ impl BitsClient {
     ) -> Result<Result<(), SetJobPriorityFailure>, Error> {
         match self {
             InProcess(client) => Ok(client.set_job_priority(guid, foreground)),
+        }
+    }
+
+    /// Set the "no progress timeout" of job `guid`.
+    pub fn set_no_progress_timeout(
+        &mut self,
+        guid: Guid,
+        timeout_secs: u32,
+    ) -> Result<Result<(), SetNoProgressTimeoutFailure>, Error> {
+        match self {
+            InProcess(client) => Ok(client.set_no_progress_timeout(guid, timeout_secs)),
         }
     }
 
