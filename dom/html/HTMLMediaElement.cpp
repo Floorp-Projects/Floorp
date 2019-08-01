@@ -2424,10 +2424,10 @@ void HTMLMediaElement::NotifyMediaTrackDisabled(MediaTrack* aTrack) {
         SetMutedInternal(mMuted | MUTED_BY_AUDIO_TRACK);
       }
     }
-  } else if (VideoTrack* t = aTrack->AsVideoTrack()) {
+  } else if (aTrack->AsVideoTrack()) {
     if (mMediaStreamRenderer) {
       MOZ_DIAGNOSTIC_ASSERT(mSelectedVideoStreamTrack ==
-                            t->GetVideoStreamTrack());
+                            aTrack->AsVideoTrack()->GetVideoStreamTrack());
       if (mFirstFrameListener) {
         mSelectedVideoStreamTrack->RemoveVideoOutput(mFirstFrameListener);
         mFirstFrameListener = nullptr;
