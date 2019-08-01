@@ -251,6 +251,15 @@ IdlArray.prototype.add_dependency_idls = function(raw_idls, options)
         this.includes[k].forEach(v => all_deps.add(v));
     });
     this.partials.forEach(p => all_deps.add(p.name));
+    // Add 'TypeOfType' for each "typedef TypeOfType MyType;" entry.
+    Object.entries(this.members).forEach(([k, v]) => {
+        if (v instanceof IdlTypedef) {
+            let defs = v.idlType.union
+                ? v.idlType.idlType.map(t => t.idlType)
+                : [v.idlType.idlType];
+            defs.forEach(d => all_deps.add(d));
+        }
+    });
 
     // Add the attribute idlTypes of all the nested members of idls.
     const attrDeps = parsedIdls => {
