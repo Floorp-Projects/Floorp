@@ -19,6 +19,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -84,5 +85,39 @@ class MediaServiceTest {
         service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
 
         verify(service).stopSelf()
+    }
+
+    @Test
+    fun `Switching from playing to pause stops serving from being in the foreground`() {
+        val media = MockMedia(Media.PlaybackState.UNKNOWN)
+
+        val sessionManager = SessionManager(engine = mock()).apply {
+            add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
+        }
+
+        MediaStateMachine.start(sessionManager)
+
+        val feature = MediaNotificationFeature(mock())
+        feature.enable()
+
+        media.playbackState = Media.PlaybackState.PLAYING
+
+        val service = spy(Robolectric.buildService(MediaService::class.java)
+            .create()
+            .get())
+
+        verify(service, never()).startForeground(anyInt(), any())
+
+        service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
+
+        verify(service).startForeground(anyInt(), any())
+
+        media.playbackState = Media.PlaybackState.PAUSE
+
+        verify(service, never()).stopForeground(false)
+
+        service.onStartCommand(MediaService.updateStateIntent(testContext), 0, 0)
+
+        verify(service).stopForeground(false)
     }
 }

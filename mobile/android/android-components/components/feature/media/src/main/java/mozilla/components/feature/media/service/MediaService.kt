@@ -11,6 +11,7 @@ import android.content.Intent
 import android.os.IBinder
 import android.support.v4.media.MediaMetadataCompat
 import android.support.v4.media.session.MediaSessionCompat
+import androidx.core.app.NotificationManagerCompat
 import mozilla.components.feature.media.ext.pauseIfPlaying
 import mozilla.components.feature.media.ext.playIfPaused
 import mozilla.components.feature.media.ext.toPlaybackState
@@ -87,7 +88,17 @@ internal class MediaService : Service() {
 
     private fun updateNotification(state: MediaState) {
         val notificationId = NotificationIds.getIdForTag(this, NOTIFICATION_TAG)
-        startForeground(notificationId, notification.create(state, mediaSession))
+
+        val notification = notification.create(state, mediaSession)
+
+        if (state is MediaState.Playing) {
+            startForeground(notificationId, notification)
+        } else {
+            stopForeground(false)
+
+            NotificationManagerCompat.from(this)
+                .notify(notificationId, notification)
+        }
     }
 
     private fun shutdown() {
