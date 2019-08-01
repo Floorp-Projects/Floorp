@@ -1075,6 +1075,33 @@ def split_variants(config, tests):
 
 
 @transforms.add
+def enable_fission_on_central(config, tests):
+    """Enable select fission tasks on mozilla-central."""
+    for test in tests:
+        if test['attributes'].get('unittest_variant') != 'fission':
+            yield test
+            continue
+
+        # Mochitest only (with exceptions)
+        exceptions = ('gpu', 'remote', 'screenshots')
+        if (test['attributes']['unittest_category'] != 'mochitest' or
+                any(s in test['attributes']['unittest_suite'] for s in exceptions)):
+            yield test
+            continue
+
+        # Linux and Windows (except debug) 64 bit only.
+        platform = test['build-attributes']['build_platform']
+        btype = test['build-attributes']['build_type']
+        if not (platform == 'linux64' or (platform == 'win64' and btype != 'debug')):
+            yield test
+            continue
+
+        if not runs_on_central(test):
+            test['run-on-projects'].append('mozilla-central')
+        yield test
+
+
+@transforms.add
 def ensure_spi_disabled_on_all_but_spi(config, tests):
     for test in tests:
         variant = test['attributes'].get('unittest_variant', '')
