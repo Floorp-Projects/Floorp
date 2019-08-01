@@ -1104,7 +1104,6 @@ add_task(
 
     // Fake a geckoview-like environment
     Services.prefs.setBoolPref("toolkit.telemetry.isGeckoViewMode", true);
-    Telemetry.resetCurrentProduct();
 
     // Try to set the mobile and multiproduct scalars
     let expectedValue = 11714;
@@ -1149,6 +1148,5 @@ add_task(
 
     // Reset to original environment
     Services.prefs.clearUserPref("toolkit.telemetry.isGeckoViewMode");
-    Telemetry.resetCurrentProduct();
   }
 );

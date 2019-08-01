@@ -2484,9 +2484,7 @@ void TelemetryHistogram::InitHistogramRecordingEnabled() {
     mozilla::Telemetry::HistogramID id = mozilla::Telemetry::HistogramID(i);
     bool canRecordInProcess =
         CanRecordInProcess(h.record_in_processes, processType);
-    bool canRecordProduct = CanRecordProduct(h.products);
-    internal_SetHistogramRecordingEnabled(
-        locker, id, canRecordInProcess && canRecordProduct);
+    internal_SetHistogramRecordingEnabled(locker, id, canRecordInProcess);
   }
 
   for (auto recordingInitiallyDisabledID : kRecordingInitiallyDisabledIDs) {
