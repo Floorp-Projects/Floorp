@@ -21,6 +21,10 @@
           assert_approx_equals(s.right, 30, epsilon, "right margin");
           assert_approx_equals(s.top, 40, epsilon, "top margin");
           assert_approx_equals(s.bottom, 50, epsilon, "bottom margin");
+          var b = document.getElementById("mrow-margin").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 50, epsilon, "element width");
+          assert_approx_equals(b.height, 50, epsilon, "element height");
       }, "Margin properties on mrow");
 
       test(function() {
@@ -29,6 +33,10 @@
           assert_approx_equals(s.right, 20, epsilon, "right margin");
           assert_approx_equals(s.top, 20, epsilon, "top margin");
           assert_approx_equals(s.bottom, 20, epsilon, "bottom margin");
+          var b = document.getElementById("mrow-margin-shorthand").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 50, epsilon, "element width");
+          assert_approx_equals(b.height, 50, epsilon, "element height");
       }, "Margin properties on mrow (shorthand)");
 
       test(function() {
@@ -37,6 +45,10 @@
           assert_approx_equals(s.right, 30, epsilon, "right margin");
           assert_approx_equals(s.top, 40, epsilon, "top margin");
           assert_approx_equals(s.bottom, 50, epsilon, "bottom margin");
+          var b = document.getElementById("mrow-margin-logical").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 50, epsilon, "element width");
+          assert_approx_equals(b.height, 50, epsilon, "element height");
       }, "Margin properties on mrow (logical)");
 
       test(function() {
@@ -45,6 +57,10 @@
           assert_approx_equals(s.right, 20, epsilon, "right margin");
           assert_approx_equals(s.top, 30, epsilon, "top margin");
           assert_approx_equals(s.bottom, 30, epsilon, "bottom margin");
+          var b = document.getElementById("mrow-margin-logical-shorthand").
+              getBoundingClientRect();
+          assert_approx_equals(b.width, 50, epsilon, "element width");
+          assert_approx_equals(b.height, 50, epsilon, "element height");
       }, "Margin properties on mrow (logical, shorthand)");
 
     done();
