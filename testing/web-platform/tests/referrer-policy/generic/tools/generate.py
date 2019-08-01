@@ -13,7 +13,7 @@ import generate
 
 class ReferrerPolicyConfig(object):
     def __init__(self):
-        self.selection_pattern = '%(delivery_method)s/' + \
+        self.selection_pattern = '%(delivery_type)s/' + \
                                  '%(origin)s/' + \
                                  '%(source_protocol)s-%(target_protocol)s/' + \
                                  '%(subresource)s/' + \
@@ -24,7 +24,7 @@ class ReferrerPolicyConfig(object):
 
         self.test_description_template = '''The referrer URL is %(expectation)s when a
 document served over %(source_protocol)s requires an %(target_protocol)s
-sub-resource via %(subresource)s using the %(delivery_method)s
+sub-resource via %(subresource)s using the %(delivery_type)s
 delivery method with %(redirection)s and when
 the target request is %(origin)s.'''
 
@@ -43,30 +43,30 @@ the target request is %(origin)s.'''
             os.path.join(script_directory, '..', '..'))
 
     def handleDelivery(self, selection, spec):
-        delivery_method = selection['delivery_method']
+        delivery_type = selection['delivery_type']
         delivery_value = spec['referrer_policy']
 
         meta = ''
         headers = []
         if delivery_value != None:
-            if delivery_method == 'meta-referrer':
+            if delivery_type == 'meta-referrer':
                 meta = \
                     '<meta name="referrer" content="%s">' % delivery_value
-            elif delivery_method == 'http-rp':
+            elif delivery_type == 'http-rp':
                 meta = \
                     "<!-- No meta: Referrer policy delivered via HTTP headers. -->"
                 headers.append('Referrer-Policy: ' + '%s' % delivery_value)
                 # TODO(kristijanburnik): Limit to WPT origins.
                 headers.append('Access-Control-Allow-Origin: *')
-            elif delivery_method == 'attr-referrer':
+            elif delivery_type == 'attr-referrer':
                 # attr-referrer is supported by the JS test wrapper.
                 pass
-            elif delivery_method == 'rel-noreferrer':
+            elif delivery_type == 'rel-noreferrer':
                 # rel=noreferrer is supported by the JS test wrapper.
                 pass
             else:
-                raise ValueError('Not implemented delivery_method: ' \
-                                  + delivery_method)
+                raise ValueError('Not implemented delivery_type: ' \
+                                  + delivery_type)
         return {"meta": meta, "headers": headers}
 
 
