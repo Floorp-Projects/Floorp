@@ -9,6 +9,10 @@ const { ExtensionParent } = ChromeUtils.import(
 
 AddonTestUtils.initMochitest(this);
 
+function getAddonCard(doc, id) {
+  return doc.querySelector(`addon-card[addon-id="${id}"]`);
+}
+
 // This test function helps to detect when an addon options browser have been
 // inserted in the about:addons page.
 function waitOptionsBrowserInserted() {
@@ -78,7 +82,7 @@ add_task(async function testInlineOptions() {
   let doc = win.document;
 
   // Make sure we found the right card.
-  let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
+  let card = getAddonCard(doc, id);
   ok(card, "Found the card");
 
   // The preferences option should be visible.
@@ -207,7 +211,7 @@ add_task(async function testCardRerender() {
   let win = await loadInitialView("extension");
   let doc = win.document;
 
-  let card = doc.querySelector(`addon-card[addon-id="${id}"]`);
+  let card = getAddonCard(doc, id);
   let loaded = waitForViewLoad(win);
   card.querySelector('[action="expand"]').click();
   await loaded;
@@ -226,19 +230,36 @@ add_task(async function testCardRerender() {
   is(doc.querySelectorAll("browser").length, 1, "There is 1 browser");
 
   info("Reload the add-on and ensure there's still only one browser");
-  let updated = BrowserTestUtils.waitForEvent(card, "update", () => {
-    // Wait for the update when the add-on name isn't the disabled text.
-    return !card.querySelector(".addon-name").hasAttribute("data-l10n-name");
-  });
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
   card.addon.reload();
   await updated;
 
+  // Since the add-on was disabled, we'll be on the details tab.
+  is(card.details.deck.selectedViewName, "details", "View changed to details");
   is(
     doc.querySelectorAll("inline-options-browser").length,
     1,
     "There is 1 inline-options-browser"
   );
-  is(doc.querySelectorAll("browser").length, 1, "There is 1 browser");
+  is(doc.querySelectorAll("browser").length, 0, "The browser was destroyed");
+
+  // Load the permissions tab again.
+  browserAdded = waitOptionsBrowserInserted();
+  card.querySelector('named-deck-button[name="preferences"]').click();
+  await browserAdded;
+
+  // Switching to preferences will create a new browser element.
+  is(
+    card.details.deck.selectedViewName,
+    "preferences",
+    "View switched to preferences"
+  );
+  is(
+    doc.querySelectorAll("inline-options-browser").length,
+    1,
+    "There is 1 inline-options-browser"
+  );
+  is(doc.querySelectorAll("browser").length, 1, "There is a new browser");
 
   info("Re-rendering card to ensure a second browser isn't added");
   updated = BrowserTestUtils.waitForEvent(card, "update");
@@ -250,7 +271,6 @@ add_task(async function testCardRerender() {
     "details",
     "Rendering reverted to the details view"
   );
-
   is(
     doc.querySelectorAll("inline-options-browser").length,
     1,
@@ -271,4 +291,199 @@ add_task(async function testCardRerender() {
 
   await closeView(win);
   await extension.unload();
+});
+
+add_task(async function testRemovedOnDisable() {
+  let id = "disable@mochi.test";
+  const xpiFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      applications: { gecko: { id } },
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.html": "<h1>Options!</h1>",
+    },
+  });
+  let addon = await AddonManager.installTemporaryAddon(xpiFile);
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  // Opens the prefs page.
+  let loaded = waitForViewLoad(win);
+  getAddonCard(doc, id)
+    .querySelector("[action=preferences]")
+    .click();
+  await loaded;
+
+  let inlineOptions = doc.querySelector("inline-options-browser");
+  ok(inlineOptions, "There's an inline-options-browser element");
+  ok(inlineOptions.querySelector("browser"), "The browser exists");
+
+  let card = getAddonCard(doc, id);
+  let { deck } = card.details;
+  is(deck.selectedViewName, "preferences", "Preferences are the active tab");
+
+  info("Disabling the add-on");
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
+  await addon.disable();
+  await updated;
+
+  is(deck.selectedViewName, "details", "Details are now the active tab");
+  ok(inlineOptions, "There's an inline-options-browser element");
+  ok(!inlineOptions.querySelector("browser"), "The browser has been removed");
+
+  info("Enabling the add-on");
+  updated = BrowserTestUtils.waitForEvent(card, "update");
+  await addon.enable();
+  await updated;
+
+  is(deck.selectedViewName, "details", "Details are still the active tab");
+  ok(inlineOptions, "There's an inline-options-browser element");
+  ok(!inlineOptions.querySelector("browser"), "The browser is not created yet");
+
+  info("Switching to preferences tab");
+  let changed = BrowserTestUtils.waitForEvent(deck, "view-changed");
+  let browserAdded = waitOptionsBrowserInserted();
+  deck.selectedViewName = "preferences";
+  await changed;
+  await browserAdded;
+
+  is(deck.selectedViewName, "preferences", "Preferences are selected");
+  ok(inlineOptions, "There's an inline-options-browser element");
+  ok(inlineOptions.querySelector("browser"), "The browser is re-created");
+
+  await closeView(win);
+  await addon.uninstall();
+});
+
+add_task(async function testUpgradeTemporary() {
+  let id = "upgrade-temporary@mochi.test";
+  async function loadExtension(version) {
+    let extension = ExtensionTestUtils.loadExtension({
+      manifest: {
+        applications: { gecko: { id } },
+        version,
+        options_ui: {
+          page: "options.html",
+        },
+      },
+      files: {
+        "options.html": `
+          <html>
+            <head>
+              <script src="options.js"></script>
+            </head>
+            <body>
+              <p>Version <pre>${version}</pre></p>
+            </body>
+          </html>
+        `,
+        "options.js": () => {
+          browser.test.onMessage.addListener(msg => {
+            if (msg === "get-version") {
+              let version = document.querySelector("pre").textContent;
+              browser.test.sendMessage("version", version);
+            }
+          });
+          browser.test.sendMessage("options-loaded");
+        },
+      },
+      useAddonManager: "temporary",
+    });
+    await extension.startup();
+    return extension;
+  }
+
+  let firstExtension = await loadExtension("1");
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  let card = getAddonCard(doc, id);
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = doc.querySelector("addon-card");
+  let browserAdded = waitOptionsBrowserInserted();
+  card.querySelector('named-deck-button[name="preferences"]').click();
+  await browserAdded;
+
+  await firstExtension.awaitMessage("options-loaded");
+  await firstExtension.sendMessage("get-version");
+  let version = await firstExtension.awaitMessage("version");
+  is(version, "1", "Version 1 page is loaded");
+
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
+  browserAdded = waitOptionsBrowserInserted();
+  let secondExtension = await loadExtension("2");
+  await updated;
+  await browserAdded;
+  await secondExtension.awaitMessage("options-loaded");
+
+  await secondExtension.sendMessage("get-version");
+  version = await secondExtension.awaitMessage("version");
+  is(version, "2", "Version 2 page is loaded");
+  let { deck } = card.details;
+  is(deck.selectedViewName, "preferences", "Preferences are still shown");
+
+  await closeView(win);
+  await firstExtension.unload();
+  await secondExtension.unload();
+});
+
+add_task(async function testReloadExtension() {
+  let id = "reload@mochi.test";
+  let xpiFile = AddonTestUtils.createTempWebExtensionFile({
+    manifest: {
+      applications: { gecko: { id } },
+      options_ui: {
+        page: "options.html",
+      },
+    },
+    files: {
+      "options.html": `
+        <html>
+          <head>
+          </head>
+          <body>
+            <p>Options</p>
+          </body>
+        </html>
+      `,
+    },
+  });
+  let addon = await AddonManager.installTemporaryAddon(xpiFile);
+
+  let win = await loadInitialView("extension");
+  let doc = win.document;
+
+  let card = getAddonCard(doc, id);
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = doc.querySelector("addon-card");
+  let { deck } = card.details;
+  is(deck.selectedViewName, "details", "Details load first");
+
+  let browserAdded = waitOptionsBrowserInserted();
+  card.querySelector('named-deck-button[name="preferences"]').click();
+  await browserAdded;
+
+  is(deck.selectedViewName, "preferences", "Preferences are shown");
+
+  let updated = BrowserTestUtils.waitForEvent(card, "update");
+  browserAdded = waitOptionsBrowserInserted();
+  let addonStarted = AddonTestUtils.promiseWebExtensionStartup(id);
+  await addon.reload();
+  await addonStarted;
+  await updated;
+  await browserAdded;
+  is(deck.selectedViewName, "preferences", "Preferences are still shown");
+
+  await closeView(win);
+  await addon.uninstall();
 });
