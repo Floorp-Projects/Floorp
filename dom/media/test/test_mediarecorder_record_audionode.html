@@ -65,7 +65,9 @@ async function testRecord(source, mimeType) {
 
   const chunks = [];
   let {data} = await new Promise(r => recorder.ondataavailable = r);
-  is(recorder.state, "recording", "Expected to still be recording");
+  if (!isOffline) {
+    is(recorder.state, "recording", "Expected to still be recording");
+  }
   is(data.type, recorder.mimeType, "Blob has recorder mimetype");
   if (mimeType != "") {
     is(data.type, mimeType, "Blob has given mimetype");
