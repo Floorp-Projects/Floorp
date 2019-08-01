@@ -9,7 +9,7 @@
         {
           "name": "insecure-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": null,
           "redirection": "*",
@@ -23,7 +23,7 @@
         {
           "name": "upgrade-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": null,
           "redirection": "*",
@@ -37,7 +37,7 @@
         {
           "name": "downgrade-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": null,
           "redirection": "*",
@@ -51,7 +51,7 @@
         {
           "name": "secure-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": null,
           "redirection": "*",
@@ -73,7 +73,7 @@
         {
           "name": "generic",
           "expansion": "default",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "no-referrer",
           "redirection": "*",
@@ -92,7 +92,7 @@
         {
           "name": "insecure-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
@@ -106,7 +106,7 @@
         {
           "name": "upgrade-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
@@ -120,7 +120,7 @@
         {
           "name": "downgrade-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
@@ -134,7 +134,7 @@
         {
           "name": "secure-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "no-referrer-when-downgrade",
           "redirection": "*",
@@ -156,7 +156,7 @@
         {
           "name": "generic",
           "expansion": "default",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "origin",
           "redirection": "*",
@@ -175,7 +175,7 @@
         {
           "name": "same-origin-insecure",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "same-origin",
           "redirection": "*",
@@ -186,7 +186,7 @@
         {
           "name": "same-origin-secure-default",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "same-origin",
           "redirection": "*",
@@ -197,7 +197,7 @@
         {
           "name": "same-origin-insecure",
           "expansion": "override",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "same-origin",
           "redirection": "swap-origin",
@@ -211,7 +211,7 @@
         {
           "name": "cross-origin",
           "expansion": "default",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "same-origin",
           "redirection": "*",
@@ -233,7 +233,7 @@
         {
           "name": "same-origin-insecure",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
@@ -244,7 +244,7 @@
         {
           "name": "same-origin-secure-default",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
@@ -255,7 +255,7 @@
         {
           "name": "same-origin-upgrade",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
@@ -266,7 +266,7 @@
         {
           "name": "same-origin-downgrade",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
@@ -277,7 +277,7 @@
         {
           "name": "same-origin-insecure",
           "expansion": "override",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "swap-origin",
@@ -291,7 +291,7 @@
         {
           "name": "cross-origin",
           "expansion": "default",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "origin-when-cross-origin",
           "redirection": "*",
@@ -313,7 +313,7 @@
         {
           "name": "insecure-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin",
           "redirection": "*",
@@ -327,7 +327,7 @@
         {
           "name": "upgrade-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin",
           "redirection": "*",
@@ -341,7 +341,7 @@
         {
           "name": "downgrade-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin",
           "redirection": "*",
@@ -355,7 +355,7 @@
         {
           "name": "secure-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin",
           "redirection": "*",
@@ -377,7 +377,7 @@
         {
           "name": "same-insecure",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -388,7 +388,7 @@
         {
           "name": "same-insecure",
           "expansion": "override",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "swap-origin",
@@ -399,7 +399,7 @@
         {
           "name": "cross-insecure",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -410,7 +410,7 @@
         {
           "name": "upgrade-protocol",
           "expansion": "default",
-          "source_protocol": "http",
+          "source_scheme": "http",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -424,7 +424,7 @@
         {
           "name": "downgrade-protocol",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -438,7 +438,7 @@
         {
           "name": "same-secure",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -449,7 +449,7 @@
         {
           "name": "same-secure",
           "expansion": "override",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "swap-origin",
@@ -460,7 +460,7 @@
         {
           "name": "cross-secure",
           "expansion": "default",
-          "source_protocol": "https",
+          "source_scheme": "https",
           "delivery_type": "*",
           "delivery_value": "strict-origin-when-cross-origin",
           "redirection": "*",
@@ -479,7 +479,7 @@
         {
           "name": "generic",
           "expansion": "default",
-          "source_protocol": "*",
+          "source_scheme": "*",
           "delivery_type": "*",
           "delivery_value": "unsafe-url",
           "redirection": "*",
@@ -495,7 +495,7 @@
     {
       "name": "cross-origin-workers",
       "expansion": "*",
-      "source_protocol": "*",
+      "source_scheme": "*",
       "redirection": "*",
       "delivery_type": "*",
       "delivery_value": "*",
@@ -513,7 +513,7 @@
     {
       "name": "upgraded-protocol-workers",
       "expansion": "*",
-      "source_protocol": "http",
+      "source_scheme": "http",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -531,7 +531,7 @@
     {
       "name": "mixed-content-insecure-subresources",
       "expansion": "*",
-      "source_protocol": "https",
+      "source_scheme": "https",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -545,7 +545,7 @@
     {
       "name": "area-tag",
       "expansion": "*",
-      "source_protocol": "*",
+      "source_scheme": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -556,7 +556,7 @@
     {
       "name": "worker-requests-with-swap-origin-redirect",
       "expansion": "*",
-      "source_protocol": "*",
+      "source_scheme": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "swap-origin",
@@ -571,7 +571,7 @@
     {
       "name": "overhead-for-redirection",
       "expansion": "*",
-      "source_protocol": "*",
+      "source_scheme": "*",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": [
@@ -588,7 +588,7 @@
     {
       "name": "source-https-unsupported-by-web-platform-tests-runners",
       "expansion": "*",
-      "source_protocol": "https",
+      "source_scheme": "https",
       "delivery_type": "*",
       "delivery_value": "*",
       "redirection": "*",
@@ -599,7 +599,7 @@
     {
       "name": "<link rel=noreferrer>'s delivery_value should be no-referrer",
       "expansion": "*",
-      "source_protocol": "*",
+      "source_scheme": "*",
       "delivery_type": "rel-noref",
       "delivery_value": [
         null,
@@ -645,7 +645,7 @@
       "cross-http",
       "cross-https"
     ],
-    "source_protocol": [
+    "source_scheme": [
       "http",
       "https"
     ],
