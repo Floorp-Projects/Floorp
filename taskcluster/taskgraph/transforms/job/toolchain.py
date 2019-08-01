@@ -8,6 +8,7 @@ Support for running toolchain-building jobs via dedicated scripts
 from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.shellutil import quote as shell_quote
+from mozpack import path
 
 from taskgraph.util.schema import Schema
 from voluptuous import Optional, Required, Any
@@ -18,8 +19,6 @@ from taskgraph.transforms.job import (
 )
 from taskgraph.transforms.job.common import (
     docker_worker_add_artifacts,
-    docker_worker_add_tooltool,
-    support_vcs_checkout,
 )
 from taskgraph.util.hash import hash_paths
 from taskgraph import GECKO
@@ -113,7 +112,7 @@ toolchain_defaults = {
 def docker_worker_toolchain(config, job, taskdesc):
     run = job['run']
 
-    worker = taskdesc['worker']
+    worker = taskdesc['worker'] = job['worker']
     worker['chain-of-trust'] = True
 
     # If the task doesn't have a docker-image, set a default
@@ -124,8 +123,6 @@ def docker_worker_toolchain(config, job, taskdesc):
     artifacts = worker.setdefault('artifacts', [])
     if not any(artifact.get('name') == 'public/build' for artifact in artifacts):
         docker_worker_add_artifacts(config, job, taskdesc)
-
-    support_vcs_checkout(config, job, taskdesc, sparse=('sparse-profile' in run))
 
     # Toolchain checkouts don't live under {workdir}/checkouts
     workspace = '{workdir}/workspace/build'.format(**run)
@@ -139,41 +136,10 @@ def docker_worker_toolchain(config, job, taskdesc):
         'GECKO_PATH': gecko_path,
     })
 
-    if run['tooltool-downloads']:
-        internal = run['tooltool-downloads'] == 'internal'
-        docker_worker_add_tooltool(config, job, taskdesc, internal=internal)
-
-    # Use `mach` to invoke python scripts so in-tree libraries are available.
-    if run['script'].endswith('.py'):
-        wrapper = '{}/mach python '.format(gecko_path)
-    else:
-        wrapper = ''
-
-    args = run.get('arguments', '')
-    if args:
-        args = ' ' + shell_quote(*args)
-
-    sparse_profile = []
-    if run.get('sparse-profile'):
-        sparse_profile = ['--gecko-sparse-profile=build/sparse-profiles/{}'
-                          .format(run['sparse-profile'])]
-
-    worker['command'] = [
-        '{workdir}/bin/run-task'.format(**run),
-        '--gecko-checkout={}'.format(gecko_path),
-    ] + sparse_profile + [
-        '--',
-        'bash',
-        '-c',
-        'cd {} && '
-        '{}workspace/build/src/taskcluster/scripts/misc/{}{}'.format(
-            run['workdir'], wrapper, run['script'], args)
-    ]
-
     attributes = taskdesc.setdefault('attributes', {})
-    attributes['toolchain-artifact'] = run['toolchain-artifact']
+    attributes['toolchain-artifact'] = run.pop('toolchain-artifact')
     if 'toolchain-alias' in run:
-        attributes['toolchain-alias'] = run['toolchain-alias']
+        attributes['toolchain-alias'] = run.pop('toolchain-alias')
 
     if not taskgraph.fast:
         name = taskdesc['label'].replace('{}-'.format(config.kind), '', 1)
@@ -182,6 +148,22 @@ def docker_worker_toolchain(config, job, taskdesc):
             'name': name,
             'digest-data': get_digest_data(config, run, taskdesc),
         }
+
+    # Use `mach` to invoke python scripts so in-tree libraries are available.
+    if run['script'].endswith('.py'):
+        wrapper = [path.join(gecko_path, 'mach'), 'python']
+    else:
+        wrapper = []
+
+    run['using'] = 'run-task'
+    run['cwd'] = run['workdir']
+    run["command"] = (
+        wrapper
+        + ["workspace/build/src/taskcluster/scripts/misc/{}".format(run.pop("script"))]
+        + run.pop("arguments", [])
+    )
+
+    configure_taskdesc_for_run(config, job, taskdesc, worker['implementation'])
 
 
 @run_job_using("generic-worker", "toolchain-script",
