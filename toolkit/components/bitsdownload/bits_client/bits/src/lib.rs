@@ -338,6 +338,11 @@ impl BitsJob {
         Ok(())
     }
 
+    pub fn set_no_progress_timeout(&mut self, seconds: ULONG) -> Result<()> {
+        unsafe { com_call!(self.0, IBackgroundCopyJob::SetNoProgressTimeout(seconds)) }?;
+        Ok(())
+    }
+
     /// Enable HTTP redirect reporting.
     ///
     /// The default setting is to allow HTTP redirects, but to not report them in any way. With

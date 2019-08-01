@@ -71,6 +71,7 @@ impl InProcessClient {
         url: ffi::OsString,
         save_path: ffi::OsString,
         proxy_usage: BitsProxyUsage,
+        no_progress_timeout_secs: u32,
         monitor_interval_millis: u32,
     ) -> Result<(StartJobSuccess, InProcessMonitor), StartJobFailure> {
         use StartJobFailure::*;
@@ -119,6 +120,7 @@ impl InProcessClient {
         (|| {
             job.set_proxy_usage(proxy_usage)?;
             job.set_minimum_retry_delay(60)?;
+            job.set_no_progress_timeout(no_progress_timeout_secs)?;
             job.set_redirect_report()?;
 
             job.set_priority(BitsJobPriority::Foreground)?;
@@ -198,6 +200,21 @@ impl InProcessClient {
         let bcm;
         get_job!(bcm, &guid, &self.job_name)
             .set_priority(priority)
+            .map_err(|e| ApplySettings(format_error(&bcm, e)))?;
+
+        Ok(())
+    }
+
+    pub fn set_no_progress_timeout(
+        &mut self,
+        guid: Guid,
+        timeout_secs: u32,
+    ) -> Result<(), SetNoProgressTimeoutFailure> {
+        use SetNoProgressTimeoutFailure::*;
+
+        let bcm;
+        get_job!(bcm, &guid, &self.job_name)
+            .set_no_progress_timeout(timeout_secs)
             .map_err(|e| ApplySettings(format_error(&bcm, e)))?;
 
         Ok(())
