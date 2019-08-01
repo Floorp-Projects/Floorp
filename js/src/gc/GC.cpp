@@ -4219,7 +4219,11 @@ class CompartmentCheckTracer final : public JS::CallbackTracer {
   Compartment* compartment;
 };
 
-static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
+static bool InCrossCompartmentMap(JSRuntime* rt, JSObject* src,
+                                  JS::GCCellPtr dst) {
+  // Cross compartment edges are either in the cross compartment map or in a
+  // debugger weakmap.
+
   Compartment* srccomp = src->compartment();
 
   if (dst.is<JSObject>()) {
@@ -4231,17 +4235,8 @@ static bool InCrossCompartmentMap(JSObject* src, JS::GCCellPtr dst) {
     }
   }
 
-  /*
-   * If the cross-compartment edge is caused by the debugger, then we don't
-   * know the right hashtable key, so we have to iterate.
-   */
-  for (Compartment::WrapperEnum e(srccomp); !e.empty(); e.popFront()) {
-    auto& key = e.front().mutableKey();
-    const auto& value = e.front().value();
-    if (key.applyToWrapped([dst](auto tp) { return *tp == dst.asCell(); }) &&
-        ToMarkable(value.unbarrieredGet()) == src) {
-      return true;
-    }
+  if (DebugAPI::edgeIsInDebuggerWeakmap(rt, src, dst)) {
+    return true;
   }
 
   return false;
@@ -4251,9 +4246,10 @@ bool CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
   Compartment* comp =
       MapGCThingTyped(thing, [](auto t) { return t->maybeCompartment(); });
   if (comp && compartment) {
-    MOZ_ASSERT(comp == compartment ||
-               (srcKind == JS::TraceKind::Object &&
-                InCrossCompartmentMap(static_cast<JSObject*>(src), thing)));
+    MOZ_ASSERT(
+        comp == compartment ||
+        (srcKind == JS::TraceKind::Object &&
+         InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), thing)));
   } else {
     TenuredCell* tenured = TenuredCell::fromPointer(thing.asCell());
     Zone* thingZone = tenured->zoneFromAnyThread();

@@ -203,6 +203,14 @@ class WeakMap
                                std::forward<ValueInput>(value));
   }
 
+#ifdef DEBUG
+  template <typename KeyInput, typename ValueInput>
+  bool hasEntry(KeyInput&& key, ValueInput&& value) {
+    Ptr p = Base::lookup(std::forward<KeyInput>(key));
+    return p && p->value() == value;
+  }
+#endif
+
   void markEntry(GCMarker* marker, gc::Cell* markedCell,
                  gc::Cell* origKey) override;
 

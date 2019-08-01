@@ -283,6 +283,9 @@ class DebuggerWeakMap
   using Base::lookupForAdd;
   using Base::remove;
   using Base::trace;
+#ifdef DEBUG
+  using Base::hasEntry;
+#endif
 
   class Enum : public Base::Enum {
    public:
@@ -929,7 +932,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   template <typename Wrapper, typename ReferentVariant, typename Referent,
             typename Map>
   Wrapper* wrapVariantReferent(JSContext* cx, Map& map,
-                               Handle<CrossCompartmentKey> key,
                                Handle<ReferentVariant> referent);
   DebuggerScript* wrapVariantReferent(JSContext* cx,
                                       Handle<DebuggerScriptReferent> referent);
@@ -978,6 +980,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   inline const js::GCPtrNativeObject& toJSObject() const;
   inline js::GCPtrNativeObject& toJSObjectRef();
   static inline Debugger* fromJSObject(const JSObject* obj);
+
+#ifdef DEBUG
+  static bool isChildJSObject(JSObject* obj);
+#endif
   static Debugger* fromChildJSObject(JSObject* obj);
 
   Zone* zone() const { return toJSObject()->zone(); }

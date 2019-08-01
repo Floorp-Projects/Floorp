@@ -192,6 +192,10 @@ class DebuggerFrame : public NativeObject {
   // Debugger.Frame's generator object.
   AbstractGeneratorObject& unwrappedGenerator() const;
 
+#ifdef DEBUG
+  JSScript* generatorScript() const;
+#endif
+
   /*
    * Associate the generator object genObj with this Debugger.Frame. This
    * association allows the Debugger.Frame to track the generator's execution
