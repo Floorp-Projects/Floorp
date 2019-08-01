@@ -339,8 +339,6 @@ class nsContentSink : public nsICSSLoaderObserver,
   nsRevocableEventPtr<nsRunnableMethod<nsContentSink, void, false> >
       mProcessLinkHeaderEvent;
 
-  // How long to be in interactive mode after an event
-  static int32_t sInteractiveTime;
   // How long to stay in perf mode after initial loading
   static int32_t sInitialPerfTime;
   // Should we switch between perf-mode and interactive-mode
