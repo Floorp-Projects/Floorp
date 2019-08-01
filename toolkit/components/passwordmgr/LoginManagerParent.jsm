@@ -686,6 +686,12 @@ this.LoginManagerParent = {
     username = "",
   }) {
     log("_onGeneratedPasswordFilledOrEdited");
+
+    if (!password) {
+      log("_onGeneratedPasswordFilledOrEdited: The password field is empty");
+      return;
+    }
+
     let browsingContext = BrowsingContext.get(browsingContextId);
     let {
       originNoSuffix,
@@ -715,10 +721,6 @@ this.LoginManagerParent = {
     let generatedPW = this._generatedPasswordsByPrincipalOrigin.get(
       framePrincipalOrigin
     );
-    if (!password) {
-      log("_onGeneratedPasswordFilledOrEdited: The password field is empty");
-      return;
-    }
 
     let autoSaveLogin = true;
     let loginToChange = null;
@@ -810,11 +812,16 @@ this.LoginManagerParent = {
           );
           return;
         }
-        // We're updating a previously-saved login
-        loginToChange = matchedLogin;
         log(
           "_onGeneratedPasswordFilledOrEdited: Login with empty username already saved for this site"
         );
+      }
+
+      if (
+        (matchedLogin = logins.find(login => formLogin.matches(login, true)))
+      ) {
+        // We're updating a previously-saved login
+        loginToChange = matchedLogin;
       }
     }
 
