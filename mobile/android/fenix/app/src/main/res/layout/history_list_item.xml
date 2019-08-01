@@ -3,103 +3,38 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_height="wrap_content"
-    android:layout_width="match_parent"
-    android:orientation="vertical">
-    <FrameLayout
-        android:id="@+id/delete_button_wrapper"
-        android:layout_width="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:visibility="gone">
-        <com.google.android.material.button.MaterialButton
+        android:layout_width="match_parent" xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical">
+
+    <com.google.android.material.button.MaterialButton
             android:id="@+id/delete_button"
             style="@style/ThemeIndependentMaterialGreyButtonDestructive"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
             android:text="@string/history_delete_all"
-            app:rippleColor="?secondaryText" />
-    </FrameLayout>
+            app:rippleColor="?secondaryText"
+            android:visibility="gone" />
 
-    <FrameLayout
-        android:id="@+id/header_wrapper"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingStart="20dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp"
-        android:visibility="gone">
-        <TextView
+    <TextView
             android:id="@+id/header_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textSize="17sp"
-            android:textColor="?primaryText"/>
-    </FrameLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/history_layout"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true"
-        android:padding="4dp"
-        android:paddingStart="20dp"
-        android:paddingEnd="0dp">
-
-        <ImageButton
-            android:id="@+id/history_item_overflow"
-            android:layout_width="@dimen/glyph_button_width"
-            android:layout_height="@dimen/glyph_button_height"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/content_description_history_menu"
-            android:src="@drawable/ic_menu"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/history_favicon"
-            android:layout_width="@dimen/history_favicon_width_height"
-            android:layout_height="@dimen/history_favicon_width_height"
-            android:background="@drawable/favicon_background"
-            android:padding="10dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/history_url"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textAlignment="viewStart"
-            android:textColor="?secondaryText"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
-            app:layout_constraintStart_toEndOf="@id/history_favicon"
-            app:layout_constraintTop_toBottomOf="@id/history_title" />
-
-        <TextView
-            android:id="@+id/history_title"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:textAlignment="viewStart"
             android:textColor="?primaryText"
-            android:textSize="18sp"
-            android:layout_marginTop="2dp"
-            app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
-            app:layout_constraintStart_toEndOf="@id/history_favicon"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:paddingStart="20dp"
+            android:paddingEnd="0dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"
+            tools:text="Header"
+            android:visibility="gone" />
+
+    <org.mozilla.fenix.library.LibrarySiteItemView
+            android:id="@+id/history_layout"
+            android:layout_width="match_parent"
+            android:layout_height="56dp" />
 </LinearLayout>
 

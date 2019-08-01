@@ -8,20 +8,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.extensions.LayoutContainer
 import mozilla.appservices.places.BookmarkRoot
-import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
-import org.jetbrains.anko.image
-import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
+import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkFolderViewHolder
+import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkItemViewHolder
+import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkNodeViewHolder
+import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHolder
 
 class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteractor) :
-    RecyclerView.Adapter<BookmarkAdapter.BookmarkNodeViewHolder>() {
+    RecyclerView.Adapter<BookmarkNodeViewHolder>() {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
@@ -105,146 +104,6 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
             mode,
             tree[position] in selected
         )
-    }
-
-    abstract class BookmarkNodeViewHolder(
-        val view: LibrarySiteItemView,
-        val interactor: BookmarkViewInteractor
-    ) :
-        RecyclerView.ViewHolder(view), LayoutContainer {
-
-        override val containerView get() = view
-
-        abstract fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean)
-
-        protected fun setupMenu(item: BookmarkNode) {
-            val bookmarkItemMenu = BookmarkItemMenu(view.context, item) {
-                when (it) {
-                    is BookmarkItemMenu.Item.Edit -> interactor.edit(item)
-                    is BookmarkItemMenu.Item.Select -> interactor.select(item)
-                    is BookmarkItemMenu.Item.Copy -> interactor.copy(item)
-                    is BookmarkItemMenu.Item.Share -> interactor.share(item)
-                    is BookmarkItemMenu.Item.OpenInNewTab -> interactor.openInNewTab(item)
-                    is BookmarkItemMenu.Item.OpenInPrivateTab -> interactor.openInPrivateTab(item)
-                    is BookmarkItemMenu.Item.Delete -> interactor.delete(item)
-                }
-            }
-
-            view.overflowView.setOnClickListener {
-                bookmarkItemMenu.menuBuilder.build(view.context).show(
-                    anchor = it,
-                    orientation = BrowserMenu.Orientation.DOWN
-                )
-            }
-        }
-    }
-
-    class BookmarkItemViewHolder(
-        view: LibrarySiteItemView,
-        interactor: BookmarkViewInteractor
-    ) :
-        BookmarkNodeViewHolder(view, interactor) {
-
-        @Suppress("ComplexMethod")
-        override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
-
-            view.displayAs(LibrarySiteItemView.ItemType.SITE)
-
-            setupMenu(item)
-            view.titleView.text = if (item.title.isNullOrBlank()) item.url else item.title
-            view.urlView.text = item.url
-
-            setClickListeners(mode, item, selected)
-            view.changeSelected(selected)
-            setColorsAndIcons(item.url)
-        }
-
-        private fun setColorsAndIcons(url: String?) {
-            if (url != null && url.startsWith("http")) {
-                view.loadFavicon(url)
-            } else {
-                view.iconView.setImageDrawable(null)
-            }
-        }
-
-        private fun setClickListeners(
-            mode: BookmarkState.Mode,
-            item: BookmarkNode,
-            selected: Boolean
-        ) {
-            view.setOnClickListener {
-                when {
-                    mode == BookmarkState.Mode.Normal -> interactor.open(item)
-                    selected -> interactor.deselect(item)
-                    else -> interactor.select(item)
-                }
-            }
-
-            view.setOnLongClickListener {
-                if (mode == BookmarkState.Mode.Normal) {
-                    interactor.select(item)
-                    true
-                } else false
-            }
-        }
-    }
-
-    class BookmarkFolderViewHolder(
-        view: LibrarySiteItemView,
-        interactor: BookmarkViewInteractor
-    ) :
-        BookmarkNodeViewHolder(view, interactor) {
-
-        override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
-
-            view.displayAs(LibrarySiteItemView.ItemType.FOLDER)
-
-            setClickListeners(mode, item, selected)
-
-            if (!item.inRoots()) {
-                setupMenu(item)
-            } else {
-                view.overflowView.visibility = View.GONE
-            }
-
-            view.changeSelected(selected)
-            view.iconView.image = view.context.getDrawable(R.drawable.ic_folder_icon)?.apply {
-                setTint(ContextCompat.getColor(view.context, R.color.primary_text_light_theme))
-            }
-            view.titleView.text = item.title
-        }
-
-        private fun setClickListeners(
-            mode: BookmarkState.Mode,
-            item: BookmarkNode,
-            selected: Boolean
-        ) {
-            view.setOnClickListener {
-                when {
-                    mode == BookmarkState.Mode.Normal -> interactor.expand(item)
-                    selected -> interactor.deselect(item)
-                    else -> interactor.select(item)
-                }
-            }
-
-            view.setOnLongClickListener {
-                if (mode == BookmarkState.Mode.Normal && !item.inRoots()) {
-                    interactor.select(item)
-                    true
-                } else false
-            }
-        }
-    }
-
-    class BookmarkSeparatorViewHolder(
-        view: LibrarySiteItemView,
-        interactor: BookmarkViewInteractor
-    ) : BookmarkNodeViewHolder(view, interactor) {
-
-        override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
-            view.displayAs(LibrarySiteItemView.ItemType.SEPARATOR)
-            setupMenu(item)
-        }
     }
 }
 

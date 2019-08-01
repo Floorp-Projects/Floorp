@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library
 
 import android.content.Context
+import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -17,9 +18,12 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
 
-class LibrarySiteItemView(
-    context: Context
-) : ConstraintLayout(context) {
+class LibrarySiteItemView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyleAttr: Int = 0,
+    defStyleRes: Int = 0
+) : ConstraintLayout(context, attrs, defStyleAttr, defStyleRes) {
 
     val titleView: TextView get() = title
 
