@@ -3914,6 +3914,13 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
                aState.mPrevBEndMargin.get());
 #endif
       } else {
+        if (!frameReflowStatus.IsFullyComplete()) {
+          // The frame reported an incomplete status, but then it also didn't
+          // fit.  This means we need to reflow it again so that it can
+          // (again) report the incomplete status.
+          frame->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
+        }
+
         if ((aLine == mLines.front() && !GetPrevInFlow()) ||
             ShouldAvoidBreakInside(aState.mReflowInput)) {
           // If it's our very first line *or* we're not at the top of the page
