@@ -32,7 +32,6 @@ linux64-clang-7:
         using: toolchain-script
         script: build-clang-7-linux.sh
         resources:
-            - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-7-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
@@ -47,7 +46,6 @@ linux64-clang-8:
         using: toolchain-script
         script: build-clang-8-linux.sh
         resources:
-            - 'build/build-clang/build-clang.py'
             - 'build/build-clang/clang-8-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang
