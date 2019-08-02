@@ -655,7 +655,12 @@ class FileSource {
       // `true` means that the file is indexed, but hasn't
       // been fetched yet.
       if (this.cache[fullPath] !== true) {
-        return this.cache[fullPath];
+        if (this.cache[fullPath] instanceof Promise && options.sync) {
+          console.warn(`[l10nregistry] Attempting to synchronously load file
+            ${fullPath} while it's being loaded asynchronously.`);
+        } else {
+          return this.cache[fullPath];
+        }
       }
     } else if (this.indexed) {
       return false;
