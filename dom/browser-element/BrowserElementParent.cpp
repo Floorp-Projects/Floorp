@@ -219,8 +219,8 @@ BrowserElementParent::OpenWindowInProcess(BrowsingContext* aOpenerWindow,
                                           nsIURI* aURI, const nsAString& aName,
                                           const nsACString& aFeatures,
                                           bool aForceNoOpener,
-                                          mozIDOMWindowProxy** aReturnWindow) {
-  *aReturnWindow = nullptr;
+                                          BrowsingContext** aReturnBC) {
+  *aReturnBC = nullptr;
 
   // If we call window.open from an <iframe> inside an <iframe mozbrowser>,
   // it's as though the top-level document inside the <iframe mozbrowser>
@@ -267,11 +267,9 @@ BrowserElementParent::OpenWindowInProcess(BrowsingContext* aOpenerWindow,
   nsCOMPtr<nsIDocShell> docshell = frameLoader->GetDocShell(IgnoreErrors());
   NS_ENSURE_TRUE(docshell, BrowserElementParent::OPEN_WINDOW_IGNORED);
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = docshell->GetWindow();
-  window.forget(aReturnWindow);
+  docshell->GetBrowsingContext(aReturnBC);
 
-  return !!*aReturnWindow ? opened
-                          : BrowserElementParent::OPEN_WINDOW_CANCELLED;
+  return *aReturnBC ? opened : BrowserElementParent::OPEN_WINDOW_CANCELLED;
 }
 
 }  // namespace mozilla

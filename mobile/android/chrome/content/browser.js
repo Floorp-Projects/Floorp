@@ -4224,7 +4224,7 @@ nsBrowserAccess.prototype = {
       aTriggeringPrincipal,
       aCsp
     );
-    return browser && browser.contentWindow;
+    return browser && browser.browsingContext;
   },
 
   createContentWindow: function browser_createContentWindow(
@@ -4243,7 +4243,7 @@ nsBrowserAccess.prototype = {
       aTriggeringPrincipal,
       aCsp
     );
-    return browser && browser.contentWindow;
+    return browser && browser.browsingContext;
   },
 
   openURIInFrame: function browser_openURIInFrame(

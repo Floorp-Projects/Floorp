@@ -104,13 +104,15 @@ class ContentChild final : public PContentChild,
     nsCString sourceURL;
   };
 
-  nsresult ProvideWindowCommon(
-      BrowserChild* aTabOpener, mozIDOMWindowProxy* aParent, bool aIframeMoz,
-      uint32_t aChromeFlags, bool aCalledFromJS, bool aPositionSpecified,
-      bool aSizeSpecified, nsIURI* aURI, const nsAString& aName,
-      const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
-      nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-      mozIDOMWindowProxy** aReturn);
+  nsresult ProvideWindowCommon(BrowserChild* aTabOpener,
+                               mozIDOMWindowProxy* aParent, bool aIframeMoz,
+                               uint32_t aChromeFlags, bool aCalledFromJS,
+                               bool aPositionSpecified, bool aSizeSpecified,
+                               nsIURI* aURI, const nsAString& aName,
+                               const nsACString& aFeatures, bool aForceNoOpener,
+                               bool aForceNoReferrer,
+                               nsDocShellLoadState* aLoadState,
+                               bool* aWindowIsNew, BrowsingContext** aReturn);
 
   bool Init(MessageLoop* aIOLoop, base::ProcessId aParentPid,
             const char* aParentBuildID, IPC::Channel* aChannel,
