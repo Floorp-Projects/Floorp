@@ -17,6 +17,7 @@ import {
 import { makeWhyNormal } from "../../../utils/test-mockup";
 
 import { parserWorker } from "../../../test/tests-setup";
+import { features } from "../../../utils/prefs";
 
 const { isStepping } = selectors;
 
@@ -153,6 +154,7 @@ describe("pause", () => {
     });
 
     it("should step over when paused before an await", async () => {
+      features.asyncStepping = true;
       const store = createStore(mockThreadFront);
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
