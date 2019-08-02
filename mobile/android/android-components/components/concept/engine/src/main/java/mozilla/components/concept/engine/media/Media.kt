@@ -27,10 +27,16 @@ abstract class Media(
     abstract val controller: Controller
 
     /**
+     * The [Metadata]
+     */
+    abstract val metadata: Metadata
+
+    /**
      * Interface to be implemented by classes that want to observe a media element.
      */
     interface Observer {
         fun onPlaybackStateChanged(media: Media, playbackState: PlaybackState) = Unit
+        fun onMetadataChanged(media: Media, metadata: Metadata) = Unit
     }
 
     /**
@@ -128,6 +134,15 @@ abstract class Media(
          */
         EMPTIED,
     }
+
+    /**
+     * Metadata associated with [Media].
+     *
+     * @property duration Indicates the duration of the media in seconds.
+     */
+    data class Metadata(
+        val duration: Double = -1.0
+    )
 
     /**
      * Helper method to notify observers.

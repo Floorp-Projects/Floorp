@@ -7,6 +7,7 @@ package mozilla.components.browser.engine.gecko.media
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
+import mozilla.components.test.ReflectionUtils
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -66,5 +67,39 @@ class GeckoMediaTest {
         val media = GeckoMedia(mediaElement)
 
         assertTrue(media.controller is GeckoMediaController)
+    }
+
+    @Test
+    fun `GeckoMedia exposes Metadata`() {
+        val mediaElement: MediaElement = mock()
+
+        val media = GeckoMedia(mediaElement)
+
+        val captor = argumentCaptor<MediaElement.Delegate>()
+        verify(mediaElement).delegate = captor.capture()
+
+        assertEquals(-1.0, media.metadata.duration, 0.0001)
+
+        val delegate = captor.value
+
+        delegate.onMetadataChange(mediaElement, MockedGeckoMetadata(duration = 5.0))
+        assertEquals(5.0, media.metadata.duration, 0.0001)
+
+        delegate.onMetadataChange(mediaElement, MockedGeckoMetadata(duration = 572.0))
+        assertEquals(572.0, media.metadata.duration, 0.0001)
+
+        delegate.onMetadataChange(mediaElement, MockedGeckoMetadata(duration = 0.0))
+        assertEquals(0.0, media.metadata.duration, 0.0001)
+
+        delegate.onMetadataChange(mediaElement, MockedGeckoMetadata(duration = -1.0))
+        assertEquals(-1.0, media.metadata.duration, 0.0001)
+    }
+}
+
+private class MockedGeckoMetadata(
+    duration: Double
+) : MediaElement.Metadata() {
+    init {
+        ReflectionUtils.setField(this, "duration", duration)
     }
 }

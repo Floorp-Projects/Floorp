@@ -75,4 +75,5 @@ class MediaTest {
 
 private class FakeMedia : Media() {
     override val controller: Controller = mock()
+    override val metadata: Metadata = mock()
 }
