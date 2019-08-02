@@ -141,15 +141,6 @@ interface nsILoadContext : nsISupports
   [noscript] void SetRemoteSubframes(in boolean aUseRemoteSubframes);
 
   /**
-   * Returns true iff the load is occurring inside an isolated mozbrowser
-   * element. <xul:browser> is not considered to be a mozbrowser element.
-   * <iframe mozbrowser noisolation> does not count as isolated since
-   * isolation is disabled.  Isolation can only be disabled if the
-   * containing document is chrome.
-   */
-  readonly attribute boolean isInIsolatedMozBrowserElement;
-
-  /**
    * A dictionary of the non-default origin attributes associated with this
    * nsILoadContext.
    */

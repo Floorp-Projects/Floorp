@@ -28,10 +28,6 @@ TabContext::TabContext()
 
 bool TabContext::IsMozBrowserElement() const { return mIsMozBrowserElement; }
 
-bool TabContext::IsIsolatedMozBrowserElement() const {
-  return mOriginAttributes.mInIsolatedMozBrowser;
-}
-
 bool TabContext::IsMozBrowser() const { return IsMozBrowserElement(); }
 
 bool TabContext::IsJSPlugin() const { return mJSPluginID >= 0; }
