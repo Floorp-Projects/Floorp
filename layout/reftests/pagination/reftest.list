@@ -118,7 +118,10 @@ fuzzy-if(cocoaWidget,0-1,0-5000) == 745025-1.html 745025-1-ref.html
 # asserts(3) fails 1108104.html 1108104-ref.html # bug 1067755, 1135556
 == 1166147.html 1166147-ref.html
 == 1321803-1a.html 1321803-1-ref.html
+fails == 1404868-1.html 1404868-1-ref.html
+fails == 1406050-1.html 1406050-1-ref.html
 == 1406291-1.html 1406291-1-ref.html
+fails == 1409585-1.html 1409585-1-ref.html
 == 1411799-1.html 1411799-1-ref.html
 == 1420528-1.html 1420528-1-ref.html
 pref(layout.css.column-span.enabled,true) == 1420528-1.html 1420528-1-ref.html
