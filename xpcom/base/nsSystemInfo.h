@@ -10,6 +10,7 @@
 #include "nsHashPropertyBag.h"
 #include "nsISystemInfo.h"
 #include "mozilla/MozPromise.h"
+#include "mozilla/LazyIdleThread.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #  include "mozilla/dom/PContent.h"
@@ -29,6 +30,9 @@ struct DiskInfo {
 
 typedef mozilla::MozPromise<DiskInfo, nsresult, /* IsExclusive */ false>
     DiskInfoPromise;
+
+typedef mozilla::MozPromise<nsAutoString, nsresult, /* IsExclusive */ false>
+    CountryCodePromise;
 
 class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
  public:
@@ -59,6 +63,9 @@ class nsSystemInfo final : public nsISystemInfo, public nsHashPropertyBag {
   ~nsSystemInfo();
 
   RefPtr<DiskInfoPromise> mDiskInfoPromise;
+  RefPtr<CountryCodePromise> mCountryCodePromise;
+  RefPtr<mozilla::LazyIdleThread> mLazyHelperThread;
+  RefPtr<mozilla::LazyIdleThread> GetHelperThread();
 };
 
 #define NS_SYSTEMINFO_CONTRACTID "@mozilla.org/system-info;1"

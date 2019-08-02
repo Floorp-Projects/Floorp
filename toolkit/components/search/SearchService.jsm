@@ -191,7 +191,7 @@ var ensureKnownRegion = async function(ss) {
 
 // Store the result of the geoip request as well as any other values and
 // telemetry which depend on it.
-function storeRegion(region) {
+async function storeRegion(region) {
   let isTimezoneUS = isUSTimezone();
   // If it's a US region, but not a US timezone, we don't store the value.
   // This works because no region defaults to ZZ (unknown) in nsURLFormatter
@@ -214,7 +214,7 @@ function storeRegion(region) {
   }
   // telemetry to compare our geoip response with platform-specific country data.
   // On Mac and Windows, we can get a country code via sysinfo
-  let platformCC = Services.sysinfo.get("countryCode");
+  let platformCC = await Services.sysinfo.countryCode;
   if (platformCC) {
     let probeUSMismatched, probeNonUSMismatched;
     switch (Services.appinfo.OS) {
@@ -300,7 +300,7 @@ function fetchRegion(ss) {
       // Even if we timed out, we want to save the region and everything
       // related so next startup sees the value and doesn't retry this dance.
       if (result) {
-        storeRegion(result);
+        storeRegion(result).catch(Cu.reportError);
       }
       Services.telemetry
         .getHistogramById("SEARCH_SERVICE_COUNTRY_FETCH_RESULT")

@@ -15,4 +15,11 @@ interface nsISystemInfo : nsISupports
    */
   [implicit_jscontext]
   readonly attribute Promise diskInfo;
+
+  /**
+   * Asynchronously get CountryCode info.
+   * Note: only implemented on macOS and Windows, will return null elsewhere.
+   */
+  [implicit_jscontext]
+  readonly attribute Promise countryCode;
 };

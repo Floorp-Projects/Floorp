@@ -45,7 +45,7 @@ add_task(async function test_location() {
   }
 
   if (probeUSMismatched && probeNonUSMismatched) {
-    let countryCode = Services.sysinfo.get("countryCode");
+    let countryCode = await Services.sysinfo.countryCode;
     print("Platform says the country-code is", countryCode);
     let expectedResult;
     let hid;
