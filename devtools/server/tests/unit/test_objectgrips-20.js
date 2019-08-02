@@ -117,37 +117,37 @@ add_task(
       },
       {
         evaledObject: `(() => {
-      x = [12, 42];
-      x.foo = 90;
-      return x;
-    })()`,
+          x = [12, 42];
+          x.foo = 90;
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 12], ["1", 42]],
         expectedNonIndexedProperties: [["length", 2], ["foo", 90]],
       },
       {
         evaledObject: `(() => {
-      x = [12, 42];
-      x.length = 3;
-      return x;
-    })()`,
+          x = [12, 42];
+          x.length = 3;
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 12], ["1", 42], ["2", undefined]],
         expectedNonIndexedProperties: [["length", 3]],
       },
       {
         evaledObject: `(() => {
-      x = [12, 42];
-      x.length = 1;
-      return x;
-    })()`,
+          x = [12, 42];
+          x.length = 1;
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 12]],
         expectedNonIndexedProperties: [["length", 1]],
       },
       {
         evaledObject: `(() => {
-      x = [, 42,,];
-      x.foo = 90;
-      return x;
-    })()`,
+          x = [, 42,,];
+          x.foo = 90;
+          return x;
+        })()`,
         expectedIndexedProperties: [
           ["0", undefined],
           ["1", 42],
@@ -157,11 +157,11 @@ add_task(
       },
       {
         evaledObject: `(() => {
-      x = Array(2);
-      x.foo = "bar";
-      x.bar = "foo";
-      return x;
-    })()`,
+          x = Array(2);
+          x.foo = "bar";
+          x.bar = "foo";
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", undefined], ["1", undefined]],
         expectedNonIndexedProperties: [
           ["length", 2],
@@ -171,11 +171,11 @@ add_task(
       },
       {
         evaledObject: `(() => {
-      x = new Int8Array(new ArrayBuffer(2));
-      x.foo = "bar";
-      x.bar = "foo";
-      return x;
-    })()`,
+          x = new Int8Array(new ArrayBuffer(2));
+          x.foo = "bar";
+          x.bar = "foo";
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 0], ["1", 0]],
         expectedNonIndexedProperties: [
           ["foo", "bar"],
@@ -188,10 +188,10 @@ add_task(
       },
       {
         evaledObject: `(() => {
-      x = new Int8Array([1, 2]);
-      Object.defineProperty(x, 'length', {value: 0});
-      return x;
-    })()`,
+          x = new Int8Array([1, 2]);
+          Object.defineProperty(x, 'length', {value: 0});
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 1], ["1", 2]],
         expectedNonIndexedProperties: [
           ["length", 0],
@@ -202,17 +202,17 @@ add_task(
       },
       {
         evaledObject: `(() => {
-      x = new Int32Array([1, 2]);
-      Object.setPrototypeOf(x, null);
-      return x;
-    })()`,
+          x = new Int32Array([1, 2]);
+          Object.setPrototypeOf(x, null);
+          return x;
+        })()`,
         expectedIndexedProperties: [["0", 1], ["1", 2]],
         expectedNonIndexedProperties: [],
       },
       {
         evaledObject: `(() => {
-      return new (class extends Int8Array {})([1, 2]);
-    })()`,
+          return new (class extends Int8Array {})([1, 2]);
+        })()`,
         expectedIndexedProperties: [["0", 1], ["1", 2]],
         expectedNonIndexedProperties: [
           ["length", 2],
