@@ -13,7 +13,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
 * **browser-menu**
-  * `BrowserMenuHighlightableItem` now has a ripple effect and includes an example of how to pass in a drawable properly to also include a ripple when highlighted
+  * ⚠️ **This is a breaking change**: `BrowserMenuHighlightableItem` now has a ripple effect and includes an example of how to pass in a drawable properly to also include a ripple when highlighted
 
 * **feature-accounts**
     * ⚠️ **This is a breaking change**:
@@ -44,7 +44,7 @@ permalink: /changelog/
 
 * **feature-session**
   * ⚠️ **This is a breaking change**:
-  * The `WindowFeature` no longer needs and engine can now be created using just:
+  * The `WindowFeature` no longer needs an engine. It can now be created using just:
   ```kotlin
      val windowFeature = WindowFeature(components.sessionManager)
   ```
