@@ -37,7 +37,6 @@ export default class LoginListItemFactory {
       listItem.id = "lli-" + login.guid;
       listItem.dataset.guid = login.guid;
     }
-    listItem._login = login;
     if (title.textContent != login.title) {
       title.textContent = login.title;
     }
