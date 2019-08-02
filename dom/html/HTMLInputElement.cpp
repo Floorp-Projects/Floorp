@@ -1329,6 +1329,25 @@ nsresult HTMLInputElement::AfterSetAttr(int32_t aNameSpaceID, nsAtom* aName,
       mAutocompleteAttrState = nsContentUtils::eAutocompleteAttrState_Unknown;
       mAutocompleteInfoState = nsContentUtils::eAutocompleteAttrState_Unknown;
     }
+
+    if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
+        !IsExperimentalMobileType(mType)) {
+      if (aName == nsGkAtoms::value || aName == nsGkAtoms::readonly ||
+          aName == nsGkAtoms::tabindex || aName == nsGkAtoms::required ||
+          aName == nsGkAtoms::disabled) {
+        // If original target is this and not the inner text control, we should
+        // pass the focus to the inner text control.
+        if (Element* dateTimeBoxElement = GetDateTimeBoxElement()) {
+          AsyncEventDispatcher* dispatcher = new AsyncEventDispatcher(
+              dateTimeBoxElement,
+              aName == nsGkAtoms::value
+                ? NS_LITERAL_STRING("MozDateTimeValueChanged")
+                : NS_LITERAL_STRING("MozDateTimeAttributeChanged"),
+              CanBubble::eNo, ChromeOnlyDispatch::eNo);
+          dispatcher->RunDOMEventWhenSafe();
+        }
+      }
+    }
   }
 
   return nsGenericHTMLFormElementWithState::AfterSetAttr(
@@ -3368,6 +3387,8 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   // Stop the event if the related target's first non-native ancestor is the
   // same as the original target's first non-native ancestor (we are moving
   // inside of the same element).
+  //
+  // FIXME(emilio): Is this still needed now that we use Shadow DOM for this?
   if ((mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) &&
       !IsExperimentalMobileType(mType) && aVisitor.mEvent->IsTrusted() &&
       (aVisitor.mEvent->mMessage == eFocus ||
