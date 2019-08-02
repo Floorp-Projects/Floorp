@@ -34,8 +34,18 @@ login-list {
   grid-area: logins;
 }
 
+:root:not(.no-logins) login-intro,
+login-item[data-editing="true"] + login-intro,
+.no-logins login-item:not([data-editing="true"]) {
+  display: none;
+}
+
+login-intro,
 login-item {
   grid-area: login;
+}
+
+login-item {
   max-width: 800px;
 }
 
