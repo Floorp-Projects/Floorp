@@ -49,6 +49,9 @@ static mozilla::LazyLogModule gResistFingerprintingLog(
 
 #define RESIST_FINGERPRINTING_PREF "privacy.resistFingerprinting"
 #define RFP_TIMER_PREF "privacy.reduceTimerPrecision"
+#define RFP_TIMER_UNCONDITIONAL_PREF \
+  "privacy.reduceTimerPrecision.unconditional"
+#define RFP_TIMER_UNCONDITIONAL_VALUE 20
 #define RFP_TIMER_VALUE_PREF \
   "privacy.resistFingerprinting.reduceTimerPrecision.microseconds"
 #define RFP_TIMER_VALUE_DEFAULT 1000
@@ -474,7 +477,23 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
                                              double aResolutionUSec,
                                              int64_t aContextMixin,
                                              TimerPrecisionType aType) {
-  if (!IsTimerPrecisionReductionEnabled(aType) || aResolutionUSec <= 0) {
+  // This boolean will serve as a flag indicating we are clamping the time
+  // unconditionally. We do this when timer reduction preference is off; but we
+  // still want to apply 20us clamping to al timestamps to avoid leaking
+  // nano-second precision.
+  bool unconditionalClamping = false;
+  if (!IsTimerPrecisionReductionEnabled(aType)) {
+    if (!StaticPrefs::privacy_reduceTimerPrecision_unconditional()) {
+      return aTime;
+    } else {
+      unconditionalClamping = true;
+      aResolutionUSec = RFP_TIMER_UNCONDITIONAL_VALUE;  // 20 microseconds
+      aContextMixin = 0;  // Just clarifies our logging statement at the end,
+                          // otherwise unused
+    }
+  }
+
+  if (aResolutionUSec <= 0) {
     return aTime;
   }
 
@@ -494,13 +513,14 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
   // given a relative timestamp with a mixin of 0 which is incorrect. Anyone
   // running a debug build _probably_ has an accurate clock, and if they don't,
   // they'll hopefully find this message and understand why things are crashing.
-  if (aContextMixin == 0 && aType == TimerPrecisionType::All &&
-      timeAsInt < 1204233985000) {
-    MOZ_LOG(gResistFingerprintingLog, LogLevel::Error,
-            ("About to assert. aTime=%lli<1204233985000 aContextMixin=%" PRId64
-             " aType=%s",
-             timeAsInt, aContextMixin,
-             (aType == TimerPrecisionType::RFPOnly ? "RFPOnly" : "All")));
+  const long long kFeb282008 = 1204233985000;
+  if (!unconditionalClamping && aContextMixin == 0 &&
+      aType == TimerPrecisionType::All && timeAsInt < kFeb282008) {
+    MOZ_LOG(
+        gResistFingerprintingLog, LogLevel::Error,
+        ("About to assert. aTime=%lli<%lli aContextMixin=%" PRId64 " aType=%s",
+         timeAsInt, kFeb282008, aContextMixin,
+         (aType == TimerPrecisionType::RFPOnly ? "RFPOnly" : "All")));
     MOZ_ASSERT(
         false,
         "ReduceTimePrecisionImpl was given a relative time "
@@ -526,7 +546,8 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
       floor(double(timeAsInt) / resolutionAsInt) * resolutionAsInt;
 
   long long midpoint = 0, clampedAndJittered = clamped;
-  if (StaticPrefs::privacy_resistFingerprinting_reduceTimerPrecision_jitter()) {
+  if (!unconditionalClamping &&
+      StaticPrefs::privacy_resistFingerprinting_reduceTimerPrecision_jitter()) {
     if (!NS_FAILED(RandomMidpoint(clamped, resolutionAsInt, aContextMixin,
                                   &midpoint)) &&
         timeAsInt >= clamped + midpoint) {
@@ -539,13 +560,14 @@ double nsRFPService::ReduceTimePrecisionImpl(double aTime, TimeScale aTimeScale,
 
   MOZ_LOG(
       gResistFingerprintingLog, LogLevel::Verbose,
-      ("Given: (%.*f, Scaled: %.*f, Converted: %lli), Rounding with (%lli, "
+      ("Given: (%.*f, Scaled: %.*f, Converted: %lli), Rounding %s with (%lli, "
        "Originally %.*f), "
        "Intermediate: (%lli), Clamped: (%lli) Jitter: (%i Context: %" PRId64
        " Midpoint: %lli) "
        "Final: (%lli Converted: %.*f)",
-       DBL_DIG - 1, aTime, DBL_DIG - 1, timeScaled, timeAsInt, resolutionAsInt,
-       DBL_DIG - 1, aResolutionUSec,
+       DBL_DIG - 1, aTime, DBL_DIG - 1, timeScaled, timeAsInt,
+       (unconditionalClamping ? "unconditionally" : "normally"),
+       resolutionAsInt, DBL_DIG - 1, aResolutionUSec,
        (long long)floor(double(timeAsInt) / resolutionAsInt), clamped,
        StaticPrefs::privacy_resistFingerprinting_reduceTimerPrecision_jitter(),
        aContextMixin, midpoint, clampedAndJittered, DBL_DIG - 1, ret));
@@ -692,8 +714,9 @@ void nsRFPService::GetSpoofedUserAgent(nsACString& userAgent,
 }
 
 static const char* gCallbackPrefs[] = {
-    RESIST_FINGERPRINTING_PREF, RFP_TIMER_PREF, RFP_TIMER_VALUE_PREF,
-    RFP_JITTER_VALUE_PREF,      nullptr,
+    RESIST_FINGERPRINTING_PREF,   RFP_TIMER_PREF,
+    RFP_TIMER_UNCONDITIONAL_PREF, RFP_TIMER_VALUE_PREF,
+    RFP_JITTER_VALUE_PREF,        nullptr,
 };
 
 nsresult nsRFPService::Init() {
@@ -752,6 +775,10 @@ void nsRFPService::UpdateTimers() {
         TimerResolution(),
         StaticPrefs::
             privacy_resistFingerprinting_reduceTimerPrecision_jitter());
+    JS::SetReduceMicrosecondTimePrecisionCallback(
+        nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
+  } else if (StaticPrefs::privacy_reduceTimerPrecision_unconditional()) {
+    JS::SetTimeResolutionUsec(RFP_TIMER_UNCONDITIONAL_VALUE, false);
     JS::SetReduceMicrosecondTimePrecisionCallback(
         nsRFPService::ReduceTimePrecisionAsUSecsWrapper);
   } else if (sInitialized) {
@@ -1039,6 +1066,7 @@ void nsRFPService::PrefChanged(const char* aPref) {
   nsDependentCString pref(aPref);
 
   if (pref.EqualsLiteral(RFP_TIMER_PREF) ||
+      pref.EqualsLiteral(RFP_TIMER_UNCONDITIONAL_PREF) ||
       pref.EqualsLiteral(RFP_TIMER_VALUE_PREF) ||
       pref.EqualsLiteral(RFP_JITTER_VALUE_PREF)) {
     UpdateTimers();
