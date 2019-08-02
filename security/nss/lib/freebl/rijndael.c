@@ -20,18 +20,9 @@
 #include "gcm.h"
 #include "mpi.h"
 
-#if !defined(IS_LITTLE_ENDIAN) && !defined(NSS_X86_OR_X64)
-// not test yet on big endian platform of arm
-#undef USE_HW_AES
-#endif
-
 #ifdef USE_HW_AES
-#ifdef NSS_X86_OR_X64
 #include "intel-aes.h"
-#else
-#include "aes-armv8.h"
 #endif
-#endif /* USE_HW_AES */
 #ifdef INTEL_GCM
 #include "intel-gcm.h"
 #endif /* INTEL_GCM */
@@ -856,11 +847,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
         return SECFailure;
     }
-#if defined(NSS_X86_OR_X64) || defined(USE_HW_AES)
-    use_hw_aes = (aesni_support() || arm_aes_support()) && (keysize % 8) == 0;
-#else
-    use_hw_aes = PR_FALSE;
-#endif
+    use_hw_aes = aesni_support() && (keysize % 8) == 0;
     /* Nb = (block size in bits) / 32 */
     cx->Nb = AES_BLOCK_SIZE / 4;
     /* Nk = (key size in bits) / 32 */
@@ -873,7 +860,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 #ifdef USE_HW_AES
         if (use_hw_aes) {
             cx->worker = (freeblCipherFunc)
-                native_aes_cbc_worker(encrypt, keysize);
+                intel_aes_cbc_worker(encrypt, keysize);
         } else
 #endif
         {
@@ -885,7 +872,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
 #ifdef USE_HW_AES
         if (use_hw_aes) {
             cx->worker = (freeblCipherFunc)
-                native_aes_ecb_worker(encrypt, keysize);
+                intel_aes_ecb_worker(encrypt, keysize);
         } else
 #endif
         {
@@ -901,7 +888,7 @@ aes_InitContext(AESContext *cx, const unsigned char *key, unsigned int keysize,
     }
 #ifdef USE_HW_AES
     if (use_hw_aes) {
-        native_aes_init(encrypt, keysize);
+        intel_aes_init(encrypt, keysize);
     } else
 #endif
     {

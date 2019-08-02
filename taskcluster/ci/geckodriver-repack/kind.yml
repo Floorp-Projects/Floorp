@@ -28,6 +28,7 @@ job-defaults:
         chain-of-trust: true
     run:
         using: run-task
+        checkout: false
 
 jobs:
     linux-nightly/opt:

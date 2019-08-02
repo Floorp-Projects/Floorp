@@ -5,7 +5,6 @@ set -x -e -v
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 
@@ -15,8 +14,7 @@ cd $HOME_DIR/src
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-linux64.json
+python3 ./build-clang.py -c clang-8-linux64.json
 
 set -x
 

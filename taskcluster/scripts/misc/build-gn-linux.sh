@@ -4,7 +4,6 @@ set -e -v
 # This script is for building GN on Linux.
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 export CC=$WORKSPACE/build/src/gcc/bin/gcc
 export CXX=$WORKSPACE/build/src/gcc/bin/g++

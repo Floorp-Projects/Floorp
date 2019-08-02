@@ -4,7 +4,6 @@ set -x -e -v
 # This script is for building hfsplus for Linux.
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 

@@ -7,8 +7,6 @@ job-defaults:
     worker-type: b-linux
     worker:
         max-run-time: 7200
-        env:
-            UPLOAD_DIR: artifacts
     run:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.xz
