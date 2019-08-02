@@ -6,8 +6,13 @@
 
 SOURCES += [
   '/gfx/vr/VRShMem.cpp',
-  'vrhost.cpp'
+  'vrhostapi.cpp'
 ]
+
+if CONFIG['NIGHTLY_BUILD']:
+  SOURCES += [
+    'vrhosttest.cpp'
+  ]
 
 LOCAL_INCLUDES += [
   '/gfx/vr',

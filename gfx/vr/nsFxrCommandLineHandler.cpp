@@ -13,12 +13,17 @@
 #include "nsICommandLine.h"
 #include "nsIWindowWatcher.h"
 #include "mozIDOMWindow.h"
+#include "nsPIDOMWindow.h"
+#include "mozilla/WidgetUtils.h"
+#include "nsIWidget.h"
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
 
 #include "windows.h"
+
+#include "VRShMem.h"
 
 NS_IMPL_ISUPPORTS(nsFxrCommandLineHandler, nsICommandLineHandler)
 
@@ -43,6 +48,39 @@ nsFxrCommandLineHandler::Handle(nsICommandLine* aCmdLine) {
                                 getter_AddRefs(newWindow));
 
     MOZ_ASSERT(result == NS_OK);
+
+    // Send the window's HWND to vrhost through VRShMem
+    mozilla::gfx::VRShMem shmem(nullptr, true, false);
+    if (shmem.JoinShMem()) {
+      mozilla::gfx::VRWindowState windowState = {0};
+      shmem.PullWindowState(windowState);
+
+      nsCOMPtr<nsIWidget> newWidget =
+          mozilla::widget::WidgetUtils::DOMWindowToWidget(
+              nsPIDOMWindowOuter::From(newWindow));
+      HWND hwndWidget = (HWND)newWidget->GetNativeData(NS_NATIVE_WINDOW);
+
+      // The CLH should have populated this first
+      MOZ_ASSERT(windowState.hwndFx == 0);
+      MOZ_ASSERT(windowState.textureFx == nullptr);
+      windowState.hwndFx = (uint64_t)hwndWidget;
+
+      shmem.PushWindowState(windowState);
+
+      // Notify the waiting process that the data is now available
+      HANDLE hSignal = ::OpenEventA(EVENT_ALL_ACCESS,       // dwDesiredAccess
+                                    FALSE,                  // bInheritHandle
+                                    windowState.signalName  // lpName
+      );
+
+      ::SetEvent(hSignal);
+
+      shmem.LeaveShMem();
+
+      ::CloseHandle(hSignal);
+    } else {
+      MOZ_CRASH("failed to start with --fxr");
+    }
   }
 
   return NS_OK;
