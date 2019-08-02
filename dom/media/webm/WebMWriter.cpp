@@ -76,13 +76,13 @@ nsresult WebMWriter::SetMetadata(
   }
 
   // Storing
-  bool hasAudio = false;
-  bool hasVideo = false;
+  DebugOnly<bool> hasAudio = false;
+  DebugOnly<bool> hasVideo = false;
   for (const RefPtr<TrackMetadataBase>& metadata : aMetadata) {
     MOZ_ASSERT(metadata);
 
     if (metadata->GetKind() == TrackMetadataBase::METADATA_VP8) {
-      MOZ_DIAGNOSTIC_ASSERT(!hasVideo);
+      MOZ_ASSERT(!hasVideo);
       VP8Metadata* meta = static_cast<VP8Metadata*>(metadata.get());
       mEbmlComposer->SetVideoConfig(meta->mWidth, meta->mHeight,
                                     meta->mDisplayWidth, meta->mDisplayHeight);
@@ -90,7 +90,7 @@ nsresult WebMWriter::SetMetadata(
     }
 
     if (metadata->GetKind() == TrackMetadataBase::METADATA_VORBIS) {
-      MOZ_DIAGNOSTIC_ASSERT(!hasAudio);
+      MOZ_ASSERT(!hasAudio);
       VorbisMetadata* meta = static_cast<VorbisMetadata*>(metadata.get());
       mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
       mEbmlComposer->SetAudioCodecPrivateData(meta->mData);
@@ -98,7 +98,7 @@ nsresult WebMWriter::SetMetadata(
     }
 
     if (metadata->GetKind() == TrackMetadataBase::METADATA_OPUS) {
-      MOZ_DIAGNOSTIC_ASSERT(!hasAudio);
+      MOZ_ASSERT(!hasAudio);
       OpusMetadata* meta = static_cast<OpusMetadata*>(metadata.get());
       mEbmlComposer->SetAudioConfig(meta->mSamplingFrequency, meta->mChannels);
       mEbmlComposer->SetAudioCodecPrivateData(meta->mIdHeader);
