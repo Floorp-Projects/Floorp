@@ -246,9 +246,6 @@ View (e.g. showing/hiding a panel). It is also responsible for reporting Telemet
     // Used by the View to listen for results.
     addQueryListener(listener);
     removeQueryListener(listener);
-    // Used to indicate the View context changed, so that cached information
-    // about the latest search is no more relevant and can be dropped.
-    viewContextChanged();
   }
 
 
