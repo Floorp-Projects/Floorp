@@ -24,6 +24,8 @@ namespace mozilla {
 template <class T>
 class OwningNonNull;
 template <class T>
+class StaticLocalRefPtr;
+template <class T>
 class StaticRefPtr;
 #if defined(XP_WIN)
 namespace mscom {
@@ -146,6 +148,10 @@ class MOZ_IS_REFPTR RefPtr {
   template <class U>
   MOZ_IMPLICIT RefPtr(const mozilla::OwningNonNull<U>& aOther);
 
+  // Defined in StaticLocalPtr.h
+  template <class U>
+  MOZ_IMPLICIT RefPtr(const mozilla::StaticLocalRefPtr<U>& aOther);
+
   // Defined in StaticPtr.h
   template <class U>
   MOZ_IMPLICIT RefPtr(const mozilla::StaticRefPtr<U>& aOther);
@@ -209,6 +215,10 @@ class MOZ_IS_REFPTR RefPtr {
   // Defined in OwningNonNull.h
   template <class U>
   RefPtr<T>& operator=(const mozilla::OwningNonNull<U>& aOther);
+
+  // Defined in StaticLocalPtr.h
+  template <class U>
+  RefPtr<T>& operator=(const mozilla::StaticLocalRefPtr<U>& aOther);
 
   // Defined in StaticPtr.h
   template <class U>
