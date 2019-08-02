@@ -139,6 +139,7 @@ PRemoteDecoderChild* RemoteDecoderManagerChild::AllocPRemoteDecoderChild(
     const RemoteDecoderInfoIPDL& /* not used */,
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier, bool* aSuccess,
+    nsCString* /* not used */, nsCString* /* not used */,
     nsCString* /* not used */) {
   // RemoteDecoderModule is responsible for creating RemoteDecoderChild
   // classes.
