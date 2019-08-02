@@ -96,6 +96,7 @@ void MediaStreamAudioSourceNode::AttachToTrack(
     const RefPtr<MediaStreamTrack>& aTrack, ErrorResult& aRv) {
   MOZ_ASSERT(!mInputTrack);
   MOZ_ASSERT(aTrack->AsAudioStreamTrack());
+  MOZ_DIAGNOSTIC_ASSERT(!aTrack->Ended());
 
   if (!mStream) {
     return;
@@ -162,8 +163,10 @@ void MediaStreamAudioSourceNode::AttachToRightTrack(
       }
     }
 
-    AttachToTrack(track, aRv);
-    MarkActive();
+    if (!track->Ended()) {
+      AttachToTrack(track, aRv);
+      MarkActive();
+    }
     return;
   }
 
