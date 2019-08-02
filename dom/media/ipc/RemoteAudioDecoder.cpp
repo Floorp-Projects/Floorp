@@ -23,15 +23,11 @@ mozilla::ipc::IPCResult RemoteAudioDecoderChild::RecvOutput(
   const RemoteAudioDataIPDL& aData = aDecodedData.get_RemoteAudioDataIPDL();
 
   AlignedAudioBuffer alignedAudioBuffer;
-  // Use std::min to make sure we can't overrun our buffer in case someone is
-  // fibbing about buffer sizes.
-  alignedAudioBuffer.SetLength(
-      std::min((unsigned long)aData.audioDataBufferSize(),
-               (unsigned long)aData.buffer().Size<AudioDataValue>()));
+  alignedAudioBuffer.SetLength(aData.buffer().Size<AudioDataValue>());
   PodCopy(alignedAudioBuffer.Data(), aData.buffer().get<AudioDataValue>(),
           alignedAudioBuffer.Length());
 
-  Unused << SendDoneWithOutput(std::move(aData.buffer()));
+  DeallocShmem(aData.buffer());
 
   RefPtr<AudioData> audio = new AudioData(
       aData.base().offset(), aData.base().time(), std::move(alignedAudioBuffer),
@@ -114,27 +110,26 @@ MediaResult RemoteAudioDecoderParent::ProcessDecodedData(
                "Decoded audio must output an AlignedAudioBuffer "
                "to be used with RemoteAudioDecoderParent");
 
-    ShmemBuffer buffer = mDecodedFramePool.Get(
-        this, audio->Data().Length() * sizeof(AudioDataValue));
-    if (!buffer.Valid()) {
+    Shmem buffer;
+    if (!AllocShmem(audio->Data().Length() * sizeof(AudioDataValue),
+                    Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
       return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                         "ShmemBuffer::Get failed in "
+                         "AllocShmem failed in "
                          "RemoteAudioDecoderParent::ProcessDecodedData");
     }
-    if (audio->Data().Length() > buffer.Get().Size<AudioDataValue>()) {
+    if (audio->Data().Length() > buffer.Size<AudioDataValue>()) {
       return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                         "ShmemBuffer::Get returned less than requested in "
+                         "AllocShmem returned less than requested in "
                          "RemoteAudioDecoderParent::ProcessDecodedData");
     }
 
-    PodCopy(buffer.Get().get<AudioDataValue>(), audio->Data().Elements(),
+    PodCopy(buffer.get<AudioDataValue>(), audio->Data().Elements(),
             audio->Data().Length());
 
     RemoteAudioDataIPDL output(
         MediaDataIPDL(data->mOffset, data->mTime, data->mTimecode,
                       data->mDuration, data->mKeyframe),
-        audio->mChannels, audio->mRate, audio->mChannelMap,
-        audio->Data().Length(), std::move(buffer.Get()));
+        audio->mChannels, audio->mRate, audio->mChannelMap, std::move(buffer));
 
     Unused << SendOutput(output);
   }
