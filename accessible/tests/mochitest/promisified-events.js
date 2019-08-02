@@ -6,17 +6,16 @@
 
 // This is loaded by head.js, so has the same globals, hence we import the
 // globals from there.
-/* import-globals-from shared-head.js */
-/* import-globals-from ../mochitest/common.js */
+/* import-globals-from common.js */
 
 /* exported EVENT_ANNOUNCEMENT, EVENT_REORDER, EVENT_SCROLLING,
             EVENT_SCROLLING_END, EVENT_SHOW, EVENT_TEXT_INSERTED,
             EVENT_TEXT_REMOVED, EVENT_DOCUMENT_LOAD_COMPLETE, EVENT_HIDE,
-            EVENT_TEXT_CARET_MOVED, EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE,
-            EVENT_STATE_CHANGE, EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE,
-            EVENT_FOCUS, EVENT_DOCUMENT_RELOAD, EVENT_VIRTUALCURSOR_CHANGED,
-            UnexpectedEvents, contentSpawnMutation, waitForEvent, waitForEvents,
-            waitForOrderedEvents */
+            EVENT_TEXT_ATTRIBUTE_CHANGED, EVENT_TEXT_CARET_MOVED,
+            EVENT_DESCRIPTION_CHANGE, EVENT_NAME_CHANGE, EVENT_STATE_CHANGE,
+            EVENT_VALUE_CHANGE, EVENT_TEXT_VALUE_CHANGE, EVENT_FOCUS,
+            EVENT_DOCUMENT_RELOAD, EVENT_VIRTUALCURSOR_CHANGED,
+            UnexpectedEvents, waitForEvent, waitForEvents, waitForOrderedEvents */
 
 const EVENT_ANNOUNCEMENT = nsIAccessibleEvent.EVENT_ANNOUNCEMENT;
 const EVENT_DOCUMENT_LOAD_COMPLETE =
@@ -27,6 +26,8 @@ const EVENT_SCROLLING = nsIAccessibleEvent.EVENT_SCROLLING;
 const EVENT_SCROLLING_END = nsIAccessibleEvent.EVENT_SCROLLING_END;
 const EVENT_SHOW = nsIAccessibleEvent.EVENT_SHOW;
 const EVENT_STATE_CHANGE = nsIAccessibleEvent.EVENT_STATE_CHANGE;
+const EVENT_TEXT_ATTRIBUTE_CHANGED =
+  nsIAccessibleEvent.EVENT_TEXT_ATTRIBUTE_CHANGED;
 const EVENT_TEXT_CARET_MOVED = nsIAccessibleEvent.EVENT_TEXT_CARET_MOVED;
 const EVENT_TEXT_INSERTED = nsIAccessibleEvent.EVENT_TEXT_INSERTED;
 const EVENT_TEXT_REMOVED = nsIAccessibleEvent.EVENT_TEXT_REMOVED;
@@ -38,6 +39,16 @@ const EVENT_FOCUS = nsIAccessibleEvent.EVENT_FOCUS;
 const EVENT_DOCUMENT_RELOAD = nsIAccessibleEvent.EVENT_DOCUMENT_RELOAD;
 const EVENT_VIRTUALCURSOR_CHANGED =
   nsIAccessibleEvent.EVENT_VIRTUALCURSOR_CHANGED;
+
+const EventsLogger = {
+  enabled: false,
+
+  log(msg) {
+    if (this.enabled) {
+      info(msg);
+    }
+  },
+};
 
 /**
  * Describe an event in string format.
@@ -65,24 +76,37 @@ function eventToString(event) {
 }
 
 function matchEvent(event, matchCriteria) {
+  if (!matchCriteria) {
+    return true;
+  }
+
   let acc = event.accessible;
   switch (typeof matchCriteria) {
     case "string":
       let id = getAccessibleDOMNodeID(acc);
       if (id === matchCriteria) {
-        Logger.log(`Event matches DOMNode id: ${id}`);
+        EventsLogger.log(`Event matches DOMNode id: ${id}`);
         return true;
       }
       break;
     case "function":
       if (matchCriteria(event)) {
-        Logger.log(`Lambda function matches event: ${eventToString(event)}`);
+        EventsLogger.log(
+          `Lambda function matches event: ${eventToString(event)}`
+        );
         return true;
       }
       break;
     default:
-      if (acc === matchCriteria) {
-        Logger.log(`Event matches accessible: ${prettyName(acc)}`);
+      if (matchCriteria instanceof nsIAccessible) {
+        if (acc === matchCriteria) {
+          EventsLogger.log(`Event matches accessible: ${prettyName(acc)}`);
+          return true;
+        }
+      } else if (event.DOMNode == matchCriteria) {
+        EventsLogger.log(
+          `Event matches DOM node: ${prettyName(event.DOMNode)}`
+        );
         return true;
       }
   }
@@ -94,15 +118,16 @@ function matchEvent(event, matchCriteria) {
  * A helper function that returns a promise that resolves when an accessible
  * event of the given type with the given target (defined by its id or
  * accessible) is observed.
+ * @param  {Number}                eventType        expected accessible event
+ *                                                  type
  * @param  {String|nsIAccessible|Function}  matchCriteria  expected content
  *                                                         element id
  *                                                         for the event
- * @param  {Number}                eventType        expected accessible event
- *                                                  type
+ * @param  {String}                message          Message to prepend to logging.
  * @return {Promise}                                promise that resolves to an
  *                                                  event
  */
-function waitForEvent(eventType, matchCriteria) {
+function waitForEvent(eventType, matchCriteria, message) {
   return new Promise(resolve => {
     let eventObserver = {
       observe(subject, topic, data) {
@@ -111,10 +136,10 @@ function waitForEvent(eventType, matchCriteria) {
         }
 
         let event = subject.QueryInterface(nsIAccessibleEvent);
-        if (Logger.enabled) {
-          // Avoid calling eventToString if the logger isn't enabled in order
+        if (EventsLogger.enabled) {
+          // Avoid calling eventToString if the EventsLogger isn't enabled in order
           // to avoid an intermittent crash (bug 1307645).
-          Logger.log(eventToString(event));
+          EventsLogger.log(eventToString(event));
         }
 
         // If event type does not match expected type, skip the event.
@@ -123,8 +148,16 @@ function waitForEvent(eventType, matchCriteria) {
         }
 
         if (matchEvent(event, matchCriteria)) {
-          Logger.log(`Correct event type: ${eventTypeToString(eventType)}`);
+          EventsLogger.log(
+            `Correct event type: ${eventTypeToString(eventType)}`
+          );
           Services.obs.removeObserver(this, "accessible-event");
+          ok(
+            true,
+            `${message ? message + ": " : ""}Recieved ${eventTypeToString(
+              eventType
+            )} event`
+          );
           resolve(event);
         }
       },
@@ -168,10 +201,12 @@ class UnexpectedEvents {
 /**
  * A helper function that waits for a sequence of accessible events in
  * specified order.
- * @param {Array} events        a list of events to wait (same format as
- *                              waitForEvent arguments)
+ * @param {Array}   events      a list of events to wait (same format as
+ *                               waitForEvent arguments)
+ * @param {String}  message     Message to prepend to logging.
+ * @param {Boolean} ordered     Events need to be recieved in given order.
  */
-function waitForEvents(events, ordered = false) {
+async function waitForEvents(events, message, ordered = false) {
   let expected = events.expected || events;
   let unexpected = events.unexpected || [];
   // Next expected event index.
@@ -179,61 +214,27 @@ function waitForEvents(events, ordered = false) {
 
   let unexpectedListener = new UnexpectedEvents(unexpected);
 
-  return Promise.all(
+  let results = await Promise.all(
     expected.map((evt, idx) => {
-      let promise = evt instanceof Array ? waitForEvent(...evt) : evt;
-      return promise.then(result => {
-        if (ordered) {
-          is(idx, currentIdx++, `Unexpected event order: ${result}`);
-        }
-        return result;
+      const [eventType, matchCriteria] = evt;
+      return waitForEvent(eventType, matchCriteria, message).then(result => {
+        return [result, idx == currentIdx++];
       });
     })
-  ).then(results => {
-    unexpectedListener.stop();
-    return results;
-  });
-}
-
-function waitForOrderedEvents(events) {
-  return waitForEvents(events, true);
-}
-
-/*
- * This function spawns a content task and awaits expected mutation events from
- * various content changes. It's good at catching events we did *not* expect. We
- * do this advancing the layout refresh to flush the relocations/insertions
- * queue.
- */
-async function contentSpawnMutation(browser, waitFor, func, args = null) {
-  let onReorders = waitForEvents({ expected: waitFor.expected || [] });
-  let unexpectedListener = new UnexpectedEvents(waitFor.unexpected || []);
-
-  function tick() {
-    // 100ms is an arbitrary positive number to advance the clock.
-    // We don't need to advance the clock for a11y mutations, but other
-    // tick listeners may depend on an advancing clock with each refresh.
-    content.windowUtils.advanceTimeAndRefresh(100);
-  }
-
-  // This stops the refreh driver from doing its regular ticks, and leaves
-  // us in control.
-  await ContentTask.spawn(browser, null, tick);
-
-  // Perform the tree mutation.
-  await ContentTask.spawn(browser, args, func);
-
-  // Do one tick to flush our queue (insertions, relocations, etc.)
-  await ContentTask.spawn(browser, null, tick);
-
-  let events = await onReorders;
+  );
 
   unexpectedListener.stop();
 
-  // Go back to normal refresh driver ticks.
-  await ContentTask.spawn(browser, null, function() {
-    content.windowUtils.restoreNormalRefresh();
-  });
+  if (ordered) {
+    ok(
+      results.every(([, isOrdered]) => isOrdered),
+      `${message ? message + ": " : ""}Correct event order`
+    );
+  }
 
-  return events;
+  return results.map(([event]) => event);
+}
+
+function waitForOrderedEvents(events, message) {
+  return waitForEvents(events, message, true);
 }

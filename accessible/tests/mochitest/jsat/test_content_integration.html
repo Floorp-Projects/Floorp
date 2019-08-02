@@ -12,7 +12,7 @@
 
   <script type="application/javascript" src="../common.js"></script>
   <script type="application/javascript" src="../browser.js"></script>
-  <script type="application/javascript" src="../events.js"></script>
+  <script type="application/javascript" src="../promisified-events.js"></script>
   <script type="application/javascript" src="../role.js"></script>
   <script type="application/javascript" src="../states.js"></script>
   <script type="application/javascript" src="../layout.js"></script>
@@ -303,7 +303,7 @@
       // Changing aria-hidden attribute twice and making sure that the event
       // is fired only once when the actual change happens.
       doc.getElementById("back").setAttribute("aria-hidden", true);
-      let onShow = waitForEventPromise(EVENT_SHOW, doc.getElementById("back"));
+      let onShow = waitForEvent(EVENT_SHOW, doc.getElementById("back"));
       doc.getElementById("back").setAttribute("aria-hidden", false);
       await onShow;
 
@@ -328,7 +328,7 @@
       }, AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
       runner.eventTextMatches(evt, ["Traversal Rule test document", "Home", "button"]);
 
-      onShow = waitForEventPromise(EVENT_SHOW, doc.getElementById("iframe"));
+      onShow = waitForEvent(EVENT_SHOW, doc.getElementById("iframe"));
       doc.getElementById("iframe").setAttribute("aria-hidden", false);
       await onShow;
       await runner.clearCursor();
@@ -343,7 +343,7 @@
         AndroidEvents.VIEW_ACCESSIBILITY_FOCUSED);
       runner.eventTextMatches(evt, ["such app", "wow", "heading level 1"]);
 
-      onShow = waitForEventPromise(EVENT_SHOW, doc.getElementById("back"));
+      onShow = waitForEvent(EVENT_SHOW, doc.getElementById("back"));
       doc.getElementById("back").setAttribute("aria-hidden", false);
       await onShow;
       runner.blur();

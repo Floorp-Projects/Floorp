@@ -12,7 +12,7 @@
   <script type="application/javascript"
           src="../attributes.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
     async function doTest() {
@@ -21,7 +21,7 @@
       let editable = document.getElementById("div_after_misspelling");
       // The attr change event gets fired on the last accessible containing a
       // spelling error.
-      let spellDone = waitForEventPromise(EVENT_TEXT_ATTRIBUTE_CHANGED, "div_after_misspelling_div2");
+      let spellDone = waitForEvent(EVENT_TEXT_ATTRIBUTE_CHANGED, "div_after_misspelling_div2");
       editable.focus();
       await spellDone;
       testTextAttrs("div_after_misspelling_div1", 0, {}, {}, 0, 5, true);

@@ -11,12 +11,12 @@
   <script type="application/javascript"
           src="../common.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
     async function setFocus(aNodeToFocus, aExpectedFocus) {
       let expected = aExpectedFocus || aNodeToFocus;
-      let focused = waitForEventPromise(EVENT_FOCUS, expected);
+      let focused = waitForEvent(EVENT_FOCUS, expected);
       info("Focusing " + aNodeToFocus.id);
       aNodeToFocus.focus();
       await focused;
@@ -25,7 +25,7 @@
     }
 
     async function expectFocusAfterRemove(aNodeToRemove, aExpectedFocus) {
-      let focused = waitForEventPromise(EVENT_FOCUS, aExpectedFocus);
+      let focused = waitForEvent(EVENT_FOCUS, aExpectedFocus);
       info("Removing " + aNodeToRemove.id);
       aNodeToRemove.remove();
       await focused;

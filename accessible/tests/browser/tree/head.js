@@ -14,8 +14,11 @@ Services.scriptloader.loadSubScript(
 );
 
 // Loading and common.js from accessible/tests/mochitest/ for all tests, as
-// well as events.js.
-loadScripts({ name: "common.js", dir: MOCHITESTS_DIR }, "events.js");
+// well as promisified-events.js.
+loadScripts(
+  { name: "common.js", dir: MOCHITESTS_DIR },
+  { name: "promisified-events.js", dir: MOCHITESTS_DIR }
+);
 
 /*
  * A test function for comparing the IDs of an accessible's children
