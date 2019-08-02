@@ -161,3 +161,45 @@ add_task(async function test_create_login() {
     });
   }
 });
+
+add_task(async function test_cancel_create_login() {
+  let browser = gBrowser.selectedBrowser;
+  await ContentTask.spawn(browser, null, async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    ok(
+      loginList._selectedGuid,
+      "there should be a selected guid before create mode"
+    );
+    ok(
+      loginList._blankLoginListItem.hidden,
+      "the blank login list item should be hidden before create mode"
+    );
+
+    let createButton = content.document
+      .querySelector("login-list")
+      .shadowRoot.querySelector(".create-login-button");
+    createButton.click();
+
+    ok(
+      !loginList._selectedGuid,
+      "there should be no selected guid when in create mode"
+    );
+    ok(
+      !loginList._blankLoginListItem.hidden,
+      "the blank login list item should be visible in create mode"
+    );
+
+    let loginItem = Cu.waiveXrays(content.document.querySelector("login-item"));
+    let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
+    cancelButton.click();
+
+    ok(
+      loginList._selectedGuid,
+      "there should be a selected guid after canceling create mode"
+    );
+    ok(
+      loginList._blankLoginListItem.hidden,
+      "the blank login list item should be hidden after canceling create mode"
+    );
+  });
+});
