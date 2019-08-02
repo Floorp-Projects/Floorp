@@ -29,7 +29,7 @@ const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
-Services.prefs.setBoolPref("devtools.debugger.log", true);
+Services.prefs.setBoolPref("devtools.debugger.log", false);
 // Enable remote debugging for the relevant tests.
 Services.prefs.setBoolPref("devtools.debugger.remote-enabled", true);
 
