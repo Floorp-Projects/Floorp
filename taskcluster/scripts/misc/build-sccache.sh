@@ -1,8 +1,6 @@
 #!/bin/bash
 set -x -e -v
 
-# 0.2.9 + some changes
-SCCACHE_REVISION=93475f3458f7776c37b08201ae0d83ecac4b8fa2
 TARGET="$1"
 
 # This script is for building sccache
@@ -33,11 +31,7 @@ cd $WORKSPACE/build/src
 
 PATH="$PWD/rustc/bin:$PATH"
 
-git clone https://github.com/mozilla/sccache sccache
-
-cd sccache
-
-git checkout $SCCACHE_REVISION
+cd $MOZ_FETCHES_DIR/sccache
 
 case "$(uname -s)" in
 Linux)
@@ -58,22 +52,10 @@ EOF
         export CC="$WORKSPACE/build/src/clang/bin/clang"
         cargo build --features "all" --verbose --release --target $TARGET
     else
-        # Link openssl statically so we don't have to bother with different sonames
-        # across Linux distributions.  We can't use the system openssl; see the sad
-        # story in https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
-        OPENSSL_TARBALL=openssl-1.1.0g.tar.gz
-
-        curl -L -O https://www.openssl.org/source/$OPENSSL_TARBALL
-        cat >$OPENSSL_TARBALL.sha256sum <<EOF
-de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af  openssl-1.1.0g.tar.gz
-EOF
-        cat $OPENSSL_TARBALL.sha256sum
-        sha256sum -c $OPENSSL_TARBALL.sha256sum
-
-        tar zxf $OPENSSL_TARBALL
-
+        # We can't use the system openssl; see the sad story in
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1163171#c26.
         OPENSSL_BUILD_DIRECTORY=$PWD/ourssl
-        pushd $(basename $OPENSSL_TARBALL .tar.gz)
+        pushd $MOZ_FETCHES_DIR/openssl-1.1.0g
         ./Configure --prefix=$OPENSSL_BUILD_DIRECTORY no-shared linux-x86_64
         make -j `nproc --all`
         # `make install` installs a *ton* of docs that we don't care about.

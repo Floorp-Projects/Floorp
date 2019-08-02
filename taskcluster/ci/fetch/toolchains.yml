@@ -312,3 +312,19 @@ grcov:
         type: git
         repo: https://github.com/marco-c/grcov
         revision: 9214a916805838265764f9c69eaed657ea3db021
+
+sccache:
+    description: sccache source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/sccache
+        # 0.2.9 + some change
+        revision: 93475f3458f7776c37b08201ae0d83ecac4b8fa2
+
+openssl-1.1.0g:
+    description: openssl 1.1.0g source code
+    fetch:
+        type: static-url
+        url: https://www.openssl.org/source/openssl-1.1.0g.tar.gz
+        sha256: de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af
+        size: 5404748
