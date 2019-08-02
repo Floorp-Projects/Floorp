@@ -35,17 +35,24 @@ internal class MediaNotification(
 
         val data = state.toNotificationData(context)
 
-        return NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(data.icon)
             .setContentTitle(data.title)
             .setContentText(data.description)
-            .setContentIntent(pendingIntent)
             .setLargeIcon(data.largeIcon)
             .addAction(data.action)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setMediaSession(mediaSession.sessionToken)
                 .setShowActionsInCompactView(0))
-            .build()
+
+        if (!state.isForExternalApp()) {
+            // We only set a content intent if this media notification is not for an "external app"
+            // like a custom tab. Currently we can't route the user to that particular activity:
+            // https://github.com/mozilla-mobile/android-components/issues/3986
+            builder.setContentIntent(pendingIntent)
+        }
+
+        return builder.build()
     }
 }
 
@@ -95,3 +102,11 @@ private data class NotificationData(
     val largeIcon: Bitmap? = null,
     val action: NotificationCompat.Action
 )
+
+private fun MediaState.isForExternalApp(): Boolean {
+    return when (this) {
+        is MediaState.Playing -> session.isCustomTabSession()
+        is MediaState.Paused -> session.isCustomTabSession()
+        is MediaState.None -> false
+    }
+}
