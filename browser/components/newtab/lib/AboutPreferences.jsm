@@ -4,10 +4,14 @@
 "use strict";
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 const { actionTypes: at } = ChromeUtils.import(
   "resource://activity-stream/common/Actions.jsm"
 );
 
+XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PREFERENCES_LOADED_EVENT = "home-pane-loaded";
 
@@ -108,7 +112,7 @@ this.AboutPreferences = class AboutPreferences {
     return sectionsCopy;
   }
 
-  observe(window) {
+  async observe(window) {
     const discoveryStreamConfig = this.store.getState().DiscoveryStream.config;
     let sections = this.store.getState().Sections;
 
@@ -116,7 +120,7 @@ this.AboutPreferences = class AboutPreferences {
       sections = this.handleDiscoverySettings(sections);
     }
 
-    this.renderPreferences(window, [
+    this.renderPreferences(window, await this.strings, [
       ...PREFS_BEFORE_SECTIONS,
       ...sections,
       ...PREFS_AFTER_SECTIONS,
@@ -124,10 +128,43 @@ this.AboutPreferences = class AboutPreferences {
   }
 
   /**
-   * Render preferences to an about:preferences content window with the provided
-   * preferences structure.
+   * Get strings from a js file that the content page would have loaded. The
+   * file should be a single variable assignment of a JSON/JS object of strings.
    */
-  renderPreferences({ document, Preferences, gHomePane }, prefStructure) {
+  get strings() {
+    return (
+      this._strings ||
+      (this._strings = new Promise(async resolve => {
+        let data = {};
+        try {
+          const locale = Cc[
+            "@mozilla.org/browser/aboutnewtab-service;1"
+          ].getService(Ci.nsIAboutNewTabService).activityStreamLocale;
+          const request = await fetch(
+            `resource://activity-stream/prerendered/${locale}/activity-stream-strings.js`
+          );
+          const text = await request.text();
+          const [json] = text.match(/{[^]*}/);
+          data = JSON.parse(json);
+        } catch (ex) {
+          Cu.reportError(
+            "Failed to load strings for Activity Stream about:preferences"
+          );
+        }
+        resolve(data);
+      }))
+    );
+  }
+
+  /**
+   * Render preferences to an about:preferences content window with the provided
+   * strings and preferences structure.
+   */
+  renderPreferences(
+    { document, Preferences, gHomePane },
+    strings,
+    prefStructure
+  ) {
     // Helper to create a new element and append it
     const createAppend = (tag, parent, options) =>
       parent.appendChild(document.createXULElement(tag, options));
