@@ -8,9 +8,11 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import androidx.core.app.NotificationCompat
 import mozilla.components.feature.media.R
 
-private const val NOTIFICATION_CHANNEL_ID = "Media"
+private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.media.generic"
+private const val LEGACY_NOTIFICATION_CHANNEL_ID = "Media"
 
 internal object MediaNotificationChannel {
     /**
@@ -27,10 +29,15 @@ internal object MediaNotificationChannel {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 context.getString(R.string.mozac_feature_media_notification_channel),
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_LOW
             )
+            channel.setShowBadge(false)
+            channel.lockscreenVisibility = NotificationCompat.VISIBILITY_PUBLIC
 
             notificationManager.createNotificationChannel(channel)
+
+            // We can't just change a channel. So we had to re-create the channel with a new name.
+            notificationManager.deleteNotificationChannel(LEGACY_NOTIFICATION_CHANNEL_ID)
         }
 
         return NOTIFICATION_CHANNEL_ID

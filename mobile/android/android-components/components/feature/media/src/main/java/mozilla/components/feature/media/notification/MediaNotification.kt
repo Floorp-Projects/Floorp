@@ -16,8 +16,6 @@ import mozilla.components.feature.media.R
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
 
-private const val NOTIFICATION_CHANNEL_ID = "Media"
-
 /**
  * Helper to display a notification for web content playing media.
  */
@@ -27,20 +25,23 @@ internal class MediaNotification(
     /**
      * Creates a new [Notification] for the given [state].
      */
+    @Suppress("LongMethod")
     fun create(state: MediaState, mediaSession: MediaSessionCompat): Notification {
-        MediaNotificationChannel.ensureChannelExists(context)
+        val channel = MediaNotificationChannel.ensureChannelExists(context)
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, 0)
 
         val data = state.toNotificationData(context)
 
-        val builder = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+        val builder = NotificationCompat.Builder(context, channel)
             .setSmallIcon(data.icon)
             .setContentTitle(data.title)
             .setContentText(data.description)
             .setLargeIcon(data.largeIcon)
             .addAction(data.action)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setStyle(androidx.media.app.NotificationCompat.MediaStyle()
                 .setMediaSession(mediaSession.sessionToken)
                 .setShowActionsInCompactView(0))
