@@ -41,7 +41,16 @@ pub struct WindowRect {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Keys {
+    pub text: String,
+    pub value: Vec<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Command {
+    // Needs to be updated to "WebDriver:AcceptAlert" for Firefox 63
+    #[serde(rename = "WebDriver:AcceptDialog")]
+    AcceptAlert,
     #[serde(
         rename = "WebDriver:AddCookie",
         serialize_with = "to_cookie",
@@ -58,12 +67,16 @@ pub enum Command {
     DeleteCookie(String),
     #[serde(rename = "WebDriver:DeleteAllCookies")]
     DeleteCookies,
+    #[serde(rename = "WebDriver:DismissAlert")]
+    DismissAlert,
     #[serde(rename = "WebDriver:FindElement")]
     FindElement(Locator),
     #[serde(rename = "WebDriver:FindElements")]
     FindElements(Locator),
     #[serde(rename = "WebDriver:FullscreenWindow")]
     FullscreenWindow,
+    #[serde(rename = "WebDriver:GetAlertText")]
+    GetAlertText,
     #[serde(rename = "WebDriver:GetCookies")]
     GetCookies,
     #[serde(rename = "WebDriver:GetTimeouts")]
@@ -80,6 +93,8 @@ pub enum Command {
     MinimizeWindow,
     #[serde(rename = "WebDriver:NewWindow")]
     NewWindow(NewWindow),
+    #[serde(rename = "WebDriver:SendAlertText")]
+    SendAlertText(Keys),
     #[serde(rename = "WebDriver:SetTimeouts")]
     SetTimeouts(Timeouts),
     #[serde(rename = "WebDriver:SetWindowRect")]
@@ -134,6 +149,13 @@ mod tests {
             value: "link text".into(),
         };
 
+        assert_ser_de(&data, json);
+    }
+
+    #[test]
+    fn test_json_keys() {
+        let data = Keys {text: "Foo".into(), value: vec!["F".into(), "o".into(), "o".into()]};
+        let json = json!({"text": "Foo", "value": ["F", "o", "o"]});
         assert_ser_de(&data, json);
     }
 
