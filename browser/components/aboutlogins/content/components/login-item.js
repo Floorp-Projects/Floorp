@@ -72,9 +72,9 @@ export default class LoginItem extends HTMLElement {
     this._openSiteButton.addEventListener("click", this);
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
-    window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
+    window.addEventListener("AboutLoginsShowBlankLogin", this);
   }
 
   async render() {
@@ -117,10 +117,6 @@ export default class LoginItem extends HTMLElement {
 
   async handleEvent(event) {
     switch (event.type) {
-      case "AboutLoginsCreateLogin": {
-        this.setLogin({});
-        break;
-      }
       case "AboutLoginsInitialLoginSelected": {
         this.setLogin(event.detail, { skipFocusChange: true });
         break;
@@ -143,6 +139,10 @@ export default class LoginItem extends HTMLElement {
         } else {
           this.setLogin(login);
         }
+        break;
+      }
+      case "AboutLoginsShowBlankLogin": {
+        this.setLogin({});
         break;
       }
       case "blur": {
@@ -176,14 +176,19 @@ export default class LoginItem extends HTMLElement {
             } else {
               this.setLogin(this._login);
             }
-          } else {
+          } else if (!this.hasPendingChanges()) {
             window.dispatchEvent(new CustomEvent("AboutLoginsClearSelection"));
+            recordTelemetryEvent({
+              object: "new_login",
+              method: "cancel",
+            });
+          } else {
+            this.showConfirmationDialog("discard-changes", () => {
+              window.dispatchEvent(
+                new CustomEvent("AboutLoginsClearSelection")
+              );
+            });
           }
-
-          recordTelemetryEvent({
-            object: wasExistingLogin ? "existing_login" : "new_login",
-            method: "cancel",
-          });
           return;
         }
         if (
@@ -223,7 +228,14 @@ export default class LoginItem extends HTMLElement {
           return;
         }
         if (classList.contains("delete-button")) {
-          this.confirmDelete();
+          this.showConfirmationDialog("delete", () => {
+            document.dispatchEvent(
+              new CustomEvent("AboutLoginsDeleteLogin", {
+                bubbles: true,
+                detail: this._login,
+              })
+            );
+          });
           return;
         }
         if (classList.contains("edit-button")) {
@@ -307,25 +319,22 @@ export default class LoginItem extends HTMLElement {
         break;
       }
     }
+    let wasExistingLogin = !!this._login.guid;
+    let method = type == "delete" ? "delete" : "cancel";
     let dialogPromise = dialog.show(options);
-    dialogPromise.then(onConfirm, () => {});
+    dialogPromise.then(
+      () => {
+        try {
+          onConfirm();
+        } catch (ex) {}
+        recordTelemetryEvent({
+          object: wasExistingLogin ? "existing_login" : "new_login",
+          method,
+        });
+      },
+      () => {}
+    );
     return dialogPromise;
-  }
-
-  /**
-   * Toggles the confirm delete dialog, completing the deletion if the user
-   * agrees.
-   */
-  confirmDelete() {
-    this.showConfirmationDialog("delete", () => {
-      document.dispatchEvent(
-        new CustomEvent("AboutLoginsDeleteLogin", {
-          bubbles: true,
-          detail: this._login,
-        })
-      );
-      recordTelemetryEvent({ object: "existing_login", method: "delete" });
-    });
   }
 
   hasPendingChanges() {
@@ -381,9 +390,14 @@ export default class LoginItem extends HTMLElement {
       return;
     }
 
-    this._toggleEditing(false);
     this._login = login;
-    this.render();
+    this.dispatchEvent(
+      new CustomEvent("AboutLoginsLoginSelected", {
+        bubbles: true,
+        composed: true,
+        detail: login,
+      })
+    );
   }
 
   /**
@@ -449,7 +463,8 @@ export default class LoginItem extends HTMLElement {
     return {
       username: this._usernameInput.value.trim(),
       password: this._passwordInput.value.trim(),
-      origin: this._originInput.value.trim(),
+      origin:
+        window.AboutLoginsUtils.getLoginOrigin(this._originInput.value) || "",
     };
   }
 

@@ -45,10 +45,10 @@ export default class LoginList extends HTMLElement {
       .getElementById("login-sort")
       .addEventListener("change", this);
     window.addEventListener("AboutLoginsClearSelection", this);
-    window.addEventListener("AboutLoginsCreateLogin", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
+    window.addEventListener("AboutLoginsShowBlankLogin", this);
     this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
     this._createLoginButton.addEventListener("click", this);
@@ -105,7 +105,7 @@ export default class LoginList extends HTMLElement {
     switch (event.type) {
       case "click": {
         if (event.originalTarget == this._createLoginButton) {
-          window.dispatchEvent(new CustomEvent("AboutLoginsCreateLogin"));
+          window.dispatchEvent(new CustomEvent("AboutLoginsShowBlankLogin"));
           recordTelemetryEvent({ object: "new_login", method: "new" });
           return;
         }
@@ -152,11 +152,6 @@ export default class LoginList extends HTMLElement {
         }
         break;
       }
-      case "AboutLoginsCreateLogin": {
-        this._selectedGuid = null;
-        this._setListItemAsSelected(this._blankLoginListItem);
-        break;
-      }
       case "AboutLoginsFilterLogins": {
         this._filter = event.detail.toLocaleLowerCase();
         this.render();
@@ -176,6 +171,11 @@ export default class LoginList extends HTMLElement {
         } else {
           this.render();
         }
+        break;
+      }
+      case "AboutLoginsShowBlankLogin": {
+        this._selectedGuid = null;
+        this._setListItemAsSelected(this._blankLoginListItem);
         break;
       }
       case "keydown": {
@@ -271,10 +271,15 @@ export default class LoginList extends HTMLElement {
       let index = this._loginGuidsSortedOrder.indexOf(login.guid);
       if (this._loginGuidsSortedOrder.length > 1) {
         let newlySelectedIndex = index > 0 ? index - 1 : index + 1;
-        let newlySelectedListItem = this._logins[
+        let newlySelectedLogin = this._logins[
           this._loginGuidsSortedOrder[newlySelectedIndex]
-        ].listItem;
-        this._setListItemAsSelected(newlySelectedListItem);
+        ].login;
+        window.dispatchEvent(
+          new CustomEvent("AboutLoginsLoginSelected", {
+            detail: newlySelectedLogin,
+            cancelable: true,
+          })
+        );
       }
     }
 

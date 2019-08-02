@@ -56,6 +56,9 @@ Object.defineProperty(window, "AboutLoginsUtils", {
   configurable: true,
   writable: true,
   value: {
+    getLoginOrigin(uriString) {
+      return uriString;
+    },
     promptForMasterPassword(resolve) {
       resolve(true);
     },
