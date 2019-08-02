@@ -11,7 +11,8 @@
 
 // This file uses ContentTask & frame scripts, where these are available.
 /* global addEventListener, removeEventListener, sendAsyncMessage,
-          addMessageListener, removeMessageListener, privateNoteIntentionalCrash */
+          addMessageListener, removeMessageListener,
+          privateNoteIntentionalCrash, ContentTaskUtils */
 
 "use strict";
 
@@ -745,6 +746,25 @@ var BrowserTestUtils = {
     ) {
       await this.waitForEvent(browser, "XULFrameLoaderCreated");
     }
+  },
+
+  /**
+   * Maybe create a preloaded browser and ensure it's finished loading.
+   *
+   * @param gBrowser (<xul:tabbrowser>)
+   *        The tabbrowser in which to preload a browser.
+   */
+  async maybeCreatePreloadedBrowser(gBrowser) {
+    let win = gBrowser.ownerGlobal;
+    win.NewTabPagePreloading.maybeCreatePreloadedBrowser(win);
+
+    // We cannot use the regular BrowserTestUtils helper for waiting here, since that
+    // would try to insert the preloaded browser, which would only break things.
+    await ContentTask.spawn(gBrowser.preloadedBrowser, null, async () => {
+      await ContentTaskUtils.waitForCondition(() => {
+        return content.document && content.document.readyState == "complete";
+      });
+    });
   },
 
   /**

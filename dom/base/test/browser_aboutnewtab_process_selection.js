@@ -15,18 +15,6 @@ add_task(async function() {
   });
 });
 
-// Ensure that the preloaded browser exists, and it's finished loading.
-async function ensurePreloaded(gBrowser) {
-  NewTabPagePreloading.maybeCreatePreloadedBrowser(gBrowser.ownerGlobal);
-  // We cannot use the regular BrowserTestUtils helper for waiting here, since that
-  // would try to insert the preloaded browser, which would only break things.
-  await ContentTask.spawn(gBrowser.preloadedBrowser, null, async () => {
-    await ContentTaskUtils.waitForCondition(() => {
-      return content.document && content.document.readyState == "complete";
-    });
-  });
-}
-
 add_task(async function() {
   // This test is only relevant in e10s.
   if (!gMultiProcessBrowser) {
@@ -36,7 +24,7 @@ add_task(async function() {
   ppmm.releaseCachedProcesses();
 
   // Wait for the preloaded browser to load.
-  await ensurePreloaded(gBrowser);
+  await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Store the number of processes (note: +1 for the parent process).
   const { childCount: originalChildCount } = ppmm;
@@ -44,7 +32,7 @@ add_task(async function() {
   // Use the preloaded browser and create another one.
   BrowserOpenTab();
   let tab1 = gBrowser.selectedTab;
-  await ensurePreloaded(gBrowser);
+  await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Check that the process count did not change.
   is(
@@ -56,7 +44,7 @@ add_task(async function() {
   // Let's do another round.
   BrowserOpenTab();
   let tab2 = gBrowser.selectedTab;
-  await ensurePreloaded(gBrowser);
+  await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Check that the process count did not change.
   is(
@@ -102,7 +90,7 @@ add_task(async function() {
 
 add_task(async function preloaded_state_attribute() {
   // Wait for a preloaded browser to exist, use it, and then create another one
-  await ensurePreloaded(gBrowser);
+  await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
   let preloadedTabState = gBrowser.preloadedBrowser.getAttribute(
     "preloadedState"
   );
@@ -113,7 +101,7 @@ add_task(async function preloaded_state_attribute() {
   );
 
   BrowserOpenTab();
-  await ensurePreloaded(gBrowser);
+  await BrowserTestUtils.maybeCreatePreloadedBrowser(gBrowser);
 
   // Now check that the tabs have the correct browser attributes set
   let consumedTabState = gBrowser.selectedBrowser.getAttribute(
