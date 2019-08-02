@@ -161,5 +161,7 @@ pub fn audio_unit_remove_property_listener_with_user_data<T>(
     data: *mut T,
 ) -> OSStatus {
     assert!(!unit.is_null());
-    unsafe { AudioUnitRemovePropertyListenerWithUserData(unit, id, Some(listener), data as *mut c_void) }
+    unsafe {
+        AudioUnitRemovePropertyListenerWithUserData(unit, id, Some(listener), data as *mut c_void)
+    }
 }
