@@ -2004,6 +2004,7 @@ void HTMLMediaElement::AbortExistingLoads() {
   mPendingEncryptedInitData.Reset();
   mWaitingForKey = NOT_WAITING_FOR_KEY;
   mSourcePointer = nullptr;
+  mBlockedAsWithoutMetadata = false;
 
   mTags = nullptr;
   mAudioTrackSilenceStartedTime = 0.0;
@@ -2804,6 +2805,8 @@ double HTMLMediaElement::CurrentTime() const {
 
 void HTMLMediaElement::FastSeek(double aTime, ErrorResult& aRv) {
   LOG(LogLevel::Debug, ("%p FastSeek(%f) called by JS", this, aTime));
+  LOG(LogLevel::Debug, ("Reporting telemetry VIDEO_FASTSEEK_USED"));
+  Telemetry::Accumulate(Telemetry::VIDEO_FASTSEEK_USED, 1);
   RefPtr<Promise> tobeDropped =
       Seek(aTime, SeekTarget::PrevSyncPoint, IgnoreErrors());
 }
@@ -3788,7 +3791,16 @@ void HTMLMediaElement::UpdateHadAudibleAutoplayState() {
     OwnerDoc()->SetDocTreeHadAudibleMedia();
     if (AutoplayPolicy::WouldBeAllowedToPlayIfAutoplayDisabled(*this)) {
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_BE_ALLOWED_COUNT, 1);
+      if (mReadyState >= HAVE_METADATA && !HasAudio()) {
+        ScalarAdd(
+            Telemetry::ScalarID::MEDIA_ALLOWED_AUTOPLAY_NO_AUDIO_TRACK_COUNT,
+            1);
+      }
     } else {
+      if (mReadyState < HAVE_METADATA) {
+        mBlockedAsWithoutMetadata = true;
+        ScalarAdd(Telemetry::ScalarID::MEDIA_BLOCKED_NO_METADATA, 1);
+      }
       ScalarAdd(Telemetry::ScalarID::MEDIA_AUTOPLAY_WOULD_NOT_BE_ALLOWED_COUNT,
                 1);
     }
@@ -4321,6 +4333,9 @@ void HTMLMediaElement::ReportTelemetry() {
       state = STALLED;
     }
   }
+
+  Telemetry::Accumulate(Telemetry::VIDEO_UNLOAD_STATE, state);
+  LOG(LogLevel::Debug, ("%p VIDEO_UNLOAD_STATE = %d", this, state));
 
   FrameStatisticsData data;
 
@@ -5083,6 +5098,12 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                mMediaInfo.mVideo.mDisplay.height > 0),
                "Video resolution must be known on 'loadedmetadata'");
   DispatchAsyncEvent(NS_LITERAL_STRING("loadedmetadata"));
+
+  if (mBlockedAsWithoutMetadata && !HasAudio()) {
+    mBlockedAsWithoutMetadata = false;
+    ScalarAdd(
+        Telemetry::ScalarID::MEDIA_BLOCKED_NO_METADATA_ENDUP_NO_AUDIO_TRACK, 1);
+  }
 
   if (mDecoder && mDecoder->IsTransportSeekable() &&
       mDecoder->IsMediaSeekable()) {
@@ -7068,6 +7089,107 @@ void HTMLMediaElement::NotifyCueDisplayStatesChanged() {
 void HTMLMediaElement::MarkAsContentSource(CallerAPI aAPI) {
   const bool isVisible = mVisibilityState == Visibility::ApproximatelyVisible;
 
+  if (isVisible) {
+    // 0 = ALL_VISIBLE
+    Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 0);
+  } else {
+    // 1 = ALL_INVISIBLE
+    Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 1);
+
+    if (IsInComposedDoc()) {
+      // 0 = ALL_IN_TREE
+      Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT,
+                            0);
+    } else {
+      // 1 = ALL_NOT_IN_TREE
+      Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT,
+                            1);
+    }
+  }
+
+  switch (aAPI) {
+    case CallerAPI::DRAW_IMAGE: {
+      if (isVisible) {
+        // 2 = drawImage_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 2);
+      } else {
+        // 3 = drawImage_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 3);
+
+        if (IsInComposedDoc()) {
+          // 2 = drawImage_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 2);
+        } else {
+          // 3 = drawImage_NOT_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 3);
+        }
+      }
+      break;
+    }
+    case CallerAPI::CREATE_PATTERN: {
+      if (isVisible) {
+        // 4 = createPattern_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 4);
+      } else {
+        // 5 = createPattern_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 5);
+
+        if (IsInComposedDoc()) {
+          // 4 = createPattern_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 4);
+        } else {
+          // 5 = createPattern_NOT_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 5);
+        }
+      }
+      break;
+    }
+    case CallerAPI::CREATE_IMAGEBITMAP: {
+      if (isVisible) {
+        // 6 = createImageBitmap_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 6);
+      } else {
+        // 7 = createImageBitmap_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 7);
+
+        if (IsInComposedDoc()) {
+          // 6 = createImageBitmap_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 6);
+        } else {
+          // 7 = createImageBitmap_NOT_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 7);
+        }
+      }
+      break;
+    }
+    case CallerAPI::CAPTURE_STREAM: {
+      if (isVisible) {
+        // 8 = captureStream_VISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 8);
+      } else {
+        // 9 = captureStream_INVISIBLE
+        Telemetry::Accumulate(Telemetry::VIDEO_AS_CONTENT_SOURCE, 9);
+
+        if (IsInComposedDoc()) {
+          // 8 = captureStream_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 8);
+        } else {
+          // 9 = captureStream_NOT_IN_TREE
+          Telemetry::Accumulate(
+              Telemetry::VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT, 9);
+        }
+      }
+      break;
+    }
+  }
+
   LOG(LogLevel::Debug,
       ("%p Log VIDEO_AS_CONTENT_SOURCE: visibility = %u, API: '%d' and 'All'",
        this, isVisible, static_cast<int>(aAPI)));
@@ -7309,6 +7431,12 @@ void HTMLMediaElement::ReportCanPlayTelemetry() {
                 [thread, aac, h264]() {
                   LOG(LogLevel::Debug,
                       ("MediaTelemetry aac=%d h264=%d", aac, h264));
+                  Telemetry::Accumulate(
+                      Telemetry::HistogramID::VIDEO_CAN_CREATE_AAC_DECODER,
+                      aac);
+                  Telemetry::Accumulate(
+                      Telemetry::HistogramID::VIDEO_CAN_CREATE_H264_DECODER,
+                      h264);
                   thread->AsyncShutdown();
                 }));
           }),

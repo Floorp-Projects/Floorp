@@ -238,6 +238,24 @@
     "bug_numbers": [1172689, 1531034],
     "description": "Recorded when application reputation remote lookup is performed, `true` is recorded if the lookup times out."
   },
+  "AUDIOSTREAM_FIRST_OPEN_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "The length of time (in milliseconds) for the first open of AudioStream."
+  },
+  "AUDIOSTREAM_LATER_OPEN_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "description": "The length of time (in milliseconds) for the subsequent opens of AudioStream."
+  },
   "AUDIOSTREAM_BACKEND_USED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -9620,6 +9638,51 @@
     "n_buckets": 100,
     "description": "The time (in milliseconds) that it took to load a source for the user."
   },
+  "MEDIA_RUST_MP4PARSE_SUCCESS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "bug_numbers": [1220885],
+    "description": "Whether the rust mp4 demuxer successfully parsed a stream segment."
+  },
+  "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 32,
+    "bug_numbers": [1238420],
+    "description": "The error code reported when an MP4 parse attempt has failed.0 = OK, 1 = bad argument, 2 = invalid data, 3 = unsupported, 4 = unexpected end of file, 5 = read error."
+  },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser audio track results match."
+  },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "60",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser video track results match."
+  },
+  "MEDIA_WMF_DECODE_ERROR": {
+    "record_in_processes": ["main", "content", "gpu"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "expires_in_version": "55",
+    "kind": "enumerated",
+    "n_values": 256,
+    "description": "WMF media decoder error or success (0) codes."
+  },
   "MEDIA_OGG_LOADED_IS_CHAINED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -9629,6 +9692,33 @@
     "description": "Whether while playing Ogg audio/video we encountered a chained Ogg. Reported on every audio or video element that loads an Ogg file.",
     "bug_numbers": [1230295]
   },
+  "MEDIA_HLS_CANPLAY_REQUESTED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "boolean",
+    "description": "Reports a true value when a page requests canPlayType for an HTTP Live Streaming media type (or generic m3u playlist).",
+    "bug_numbers": [1262659]
+  },
+  "MEDIA_HLS_DECODER_SUCCESS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "boolean",
+    "description": "Reports whether a decoder for an HTTP Live Streaming media type was created when requested.",
+    "bug_numbers": [1262659]
+  },
+  "MEDIA_EME_SECURE_CONTEXT": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "boolean",
+    "description": "Reports whether a navigator.requestMediaKeySystemAccess() was called in a secure context (i.e. on an origin served over HTTPS) or not.",
+    "bug_numbers": [1360438]
+  },
   "MEDIA_MKV_CANPLAY_REQUESTED": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -9637,6 +9727,16 @@
     "kind": "boolean",
     "description": "Reports a true value when a page requests canPlayType for a matroska media type.",
     "bug_numbers": [1429986]
+  },
+  "MEDIA_EME_REQUEST_DEPRECATED_WARNINGS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "bug_numbers": [1368596],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Counts types of deprecation warnings logged on every successful call to navigator.requestMediaKeySystemAccess(). 0=No warnings logged, 1=MediaEMENoCapabilitiesDeprecatedWarning, 2=MediaEMENoCodecsDeprecatedWarning."
   },
   "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS": {
     "record_in_processes": ["main", "content"],
@@ -9666,6 +9766,38 @@
     "n_values": 5,
     "description": "Counts the number of entries in the sample description box (stsd) for a track in an mp4. Recorded each time we process a track's metadata while parsing mp4s."
   },
+  "MEDIACACHE_WATERMARK_KB": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1366929],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 520000,
+    "n_buckets": 66,
+    "description": "Maximum MediaCache buffer size reached, in KB. Recorded at every MediaCache destruction, i.e., whenever there is no more media data to be downloaded or kept for playback."
+  },
+  "MEDIACACHE_MEMORY_WATERMARK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1377575],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 520000000,
+    "n_buckets": 66,
+    "description": "Maximum memory-backed-MediaCache memory usage reached, in bytes. Recorded at every Firefox shutdown if memory-backed-MediaCache was used."
+  },
+  "MEDIACACHE_BLOCKOWNERS_WATERMARK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1366936],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 32,
+    "description": "Maximum number of owners for each MediaCache block. Recorded at every MediaCache destruction, i.e., whenever there is no more media data to be downloaded or kept for playback."
+  },
   "MEDIACACHESTREAM_LENGTH_KB": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -9676,6 +9808,138 @@
     "high": 520000,
     "n_buckets": 66,
     "description": "MediaCacheStream stream length size in KB; Either known size from the HTTP header if available, or otherwise the size actually downloaded. Recorded at every MediaCacheStream destruction."
+  },
+  "MEDIACACHESTREAM_NOTIFIED_LENGTH": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1371205],
+    "expires_in_version": "60",
+    "kind": "linear",
+    "high": 16777216,
+    "n_buckets": 66,
+    "description": "MediaCacheStream stream notified length size in bytes, from the HTTP header. Recorded when each MediaCacheStream is first notified."
+  },
+  "MEMORYBLOCKCACHE_ERRORS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1371882],
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 16,
+    "description": "Unexpected errors encountered during use of MemoryBlockCache. 0=InitUnderuse, 1=InitAllocation, 2=ReadOverrun, 3=WriteBlockOverflow, 4=WriteBlockCannotGrow, 5=MoveBlockSourceOverrun, 6=MoveBlockDestOverflow, 7=MoveBlockCannotGrow"
+  },
+  "VIDEO_MFT_OUTPUT_NULL_SAMPLES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Does the WMF video decoder return success but null output? 0 = playback successful, 1 = excessive null output but able to decode some frames, 2 = excessive null output and gave up, 3 = null output but recovered, 4 = non-excessive null output without being able to decode frames.",
+    "bug_numbers": [1176071]
+  },
+  "AUDIO_MFT_OUTPUT_NULL_SAMPLES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "count",
+    "description": "How many times the audio MFT decoder returns success but output nothing.",
+    "bug_numbers": [1176071]
+  },
+  "VIDEO_CAN_CREATE_AAC_DECODER": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "68",
+    "kind": "boolean",
+    "description": "Whether at startup we report we can playback MP4 (AAC) audio. This is single value is recorded at every startup.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_CAN_CREATE_H264_DECODER": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "68",
+    "kind": "boolean",
+    "description": "Whether at startup we report we can playback MP4 (H.264) video. This is single value is recorded at every startup.",
+    "releaseChannelCollection": "opt-out"
+  },
+  "VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "The H.264 constraint set flag as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, with the addition of 0 for unknown values."
+  },
+  "VIDEO_CANPLAYTYPE_H264_LEVEL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 51,
+    "description": "The H.264 level (level_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
+  },
+  "VIDEO_CANPLAYTYPE_H264_PROFILE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 244,
+    "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
+  },
+  "DECODER_DOCTOR_INFOBAR_STATS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com","gsquelart@mozilla.com"],
+    "bug_numbers": [1271483, 1337566],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 8,
+    "description": "Counts of various Decoder Doctor notification events. Used to track efficacy of Decoder Doctor at helping users fix problems with their audio/video codecs. Keys are localized string names that identify problem with audio/video codecs that Decoder Doctor attempts to solve; see string values in dom.properties for verbose description of problems being solved. 0=recorded every time the Decoder Doctor notification is shown, 1=recorded the first time in a profile when notification is shown, 2=recorded when 'Learn how' button clicked, 3=recorded when 'Learn how' button first clicked in a profile, 4=recorded when issue solved after infobar has been shown at least once in a profile."
+  },
+  "VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 128,
+    "description": "A bit pattern to collect H.264 constraint set flag from the decoded SPS. Bits 0 through 5 represent constraint_set0_flag through constraint_set5_flag, respectively."
+  },
+  "VIDEO_DECODED_H264_SPS_LEVEL": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 51,
+    "description": "The H.264 level (level_idc) as extracted from the decoded SPS, from levels 1 (10) to 5.2 (51), with the addition of 0 for unknown values."
+  },
+  "VIDEO_DECODED_H264_SPS_PROFILE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 244,
+    "description": "The H.264 profile number (profile_idc) as extracted from the decoded SPS."
+  },
+  "VIDEO_H264_SPS_MAX_NUM_REF_FRAMES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 17,
+    "description": "SPS.max_num_ref_frames indicates how deep the H.264 queue is going to be, and as such the minimum memory usage by the decoder, from 0 to 16. 17 indicates an invalid value."
   },
   "WEBRTC_DTLS_CIPHER": {
     "record_in_processes": ["content"],
@@ -12738,6 +13002,36 @@
     "n_buckets": 100,
     "bug_numbers": [1294349]
   },
+  "VIDEO_AS_CONTENT_SOURCE" : {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "description": "Usage of a {visible / invisible} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_VISIBLE, 1 = ALL_INVISIBLE, 2 = drawImage_VISIBLE, 3 = drawImage_INVISIBLE, 4 = createPattern_VISIBLE, 5 = createPattern_INVISIBLE, 6 = createImageBitmap_VISIBLE, 7 = createImageBitmap_INVISIBLE, 8 = captureStream_VISIBLE, 9 = captureStream_INVISIBLE)",
+    "kind": "enumerated",
+    "n_values": 12,
+    "bug_numbers": [1299718]
+  },
+  "VIDEO_AS_CONTENT_SOURCE_IN_TREE_OR_NOT" : {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "description": "Usage of an invisible {in tree / not in tree} video element as the source of {drawImage(), createPattern(), createImageBitmap() and captureStream()} APIs. (0 = ALL_IN_TREE, 1 = ALL_NOT_IN_TREE, 2 = drawImage_IN_TREE, 3 = drawImage_NOT_IN_TREE, 4 = createPattern_IN_TREE, 5 = createPattern_NOT_IN_TREE, 6 = createImageBitmap_IN_TREE, 7 = createImageBitmap_NOT_IN_TREE, 8 = captureStream_IN_TREE, 9 = captureStream_NOT_IN_TREE)",
+    "kind": "enumerated",
+    "n_values": 12,
+    "bug_numbers": [1337301]
+  },
+  "VIDEO_UNLOAD_STATE": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "HTML Media Element state when unloading. ended = 0, paused = 1, stalled = 2, seeking = 3, other = 4",
+    "bug_numbers": [1261955, 1261955]
+  },
   "VIDEO_VP9_BENCHMARK_FPS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -13685,6 +13979,15 @@
     "labels": ["Used", "RejectedByPolicy", "RequestMismatch", "LoadError", "NotUsed"],
     "description": "Whether a preloaded script was used or the reason it was not used."
   },
+  "VIDEO_FASTSEEK_USED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@mozilla.com"],
+    "expires_in_version": "63",
+    "bug_numbers": [1245982],
+    "kind": "count",
+    "description": "Uses of HTMLMediaElement.fastSeek"
+  },
   "VIDEO_DROPPED_FRAMES_PROPORTION" : {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -13920,6 +14223,16 @@
     "n_values": 10,
     "bug_numbers": [1280644],
     "description": "Number of the use of the subtitles kind track. 0=Subtitles, 1=Captions, 2=Descriptions, 3=Chapters, 4=Metadata, 5=Undefined Error",
+    "releaseChannelCollection": "opt-out"
+  },
+  "WEBVTT_USED_VTT_CUES": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["alwu@mozilla.com"],
+    "expires_in_version": "55",
+    "kind": "count",
+    "bug_numbers": [1280644],
+    "description": "Number of the use of the vtt cues.",
     "releaseChannelCollection": "opt-out"
   },
   "BLINK_FILESYSTEM_USED": {
@@ -14634,6 +14947,90 @@
     "bug_numbers": [1345540],
     "description": "Time (ms) for the APZ handled wheel event spent in handlers."
   },
+  "VFC_INVALIDATE_LOCK_WAIT_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::InvalidateWithFlags spent waiting for a lock."
+  },
+  "VFC_INVALIDATE_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::InvalidateWithFlags spent holding a lock."
+  },
+  "VFC_SETVIDEOSEGMENT_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrames(VideoSegment) spent holding a lock."
+  },
+  "VFC_SETIMAGES_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrames(nsTArray<ImageContainer::NonOwningImage>) spent holding a lock."
+  },
+  "VFC_SETCURRENTFRAME_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::SetCurrentFrame spent holding a lock."
+  },
+  "VFC_CLEARCURRENTFRAME_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::ClearCurrentFrame spent holding a lock."
+  },
+  "VFC_CLEARFUTUREFRAMES_LOCK_HOLD_MS": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jwwang@mozilla.com"],
+    "expires_in_version": "57",
+    "kind": "exponential",
+    "low": 1000,
+    "high": 100000,
+    "n_buckets": 100,
+    "bug_numbers": [1366640],
+    "description": "Time (ms) VideoFrameContainer::ClearFutureFrames spent holding a lock."
+  },
   "IPC_SYNC_RECEIVE_MS": {
     "record_in_processes": ["main", "content", "gpu"],
     "products": ["firefox", "fennec", "geckoview"],
@@ -15083,6 +15480,30 @@
     "n_values":  10,
     "bug_numbers": [1393392],
     "description": "The runtime status, sent when a remote HW video decoder is shutdown, of previously-blacklisted driver: 0:remote HW-decoding and GPU process didn't crash, 1:remote HW-decoding and GPU process crashed. The histogram is keyed by the blacklisted driver name."
+  },
+  "VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_GPU_CRASHED_MS" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 64000,
+    "n_buckets": 100,
+    "bug_numbers": [1393399],
+    "description": "Time in milliseconds to recover a video decoder from a HW video decoder crash, calculated since VideoDecoderChild::ActorDestroy() is called. The data is sent when video decoding is recovered from a GPU crash and the first frame is decoded."
+  },
+  "VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_MFR_NOTIFIED_MS" : {
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec", "geckoview"],
+    "alert_emails": ["jya@mozilla.com", "drno@ohlmeier.org"],
+    "expires_in_version": "63",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 64000,
+    "n_buckets": 100,
+    "bug_numbers": [1393399],
+    "description": "Time in milliseconds to recover a video decoder from a HW video decoder crash, calculated since MFR gets a NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER error. The data is sent when video decoding is recovered from a GPU crash and the first frame is decoded."
   },
   "FORM_FILLING_REQUIRED_TIME_MS": {
     "record_in_processes": ["main"],
