@@ -186,56 +186,47 @@ add_task(
           ["byteOffset", 0],
         ],
       },
+      {
+        evaledObject: `(() => {
+      x = new Int8Array([1, 2]);
+      Object.defineProperty(x, 'length', {value: 0});
+      return x;
+    })()`,
+        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedNonIndexedProperties: [
+          ["length", 0],
+          ["buffer", DO_NOT_CHECK_VALUE],
+          ["byteLength", 2],
+          ["byteOffset", 0],
+        ],
+      },
+      {
+        evaledObject: `(() => {
+      x = new Int32Array([1, 2]);
+      Object.setPrototypeOf(x, null);
+      return x;
+    })()`,
+        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedNonIndexedProperties: [],
+      },
+      {
+        evaledObject: `(() => {
+      return new (class extends Int8Array {})([1, 2]);
+    })()`,
+        expectedIndexedProperties: [["0", 1], ["1", 2]],
+        expectedNonIndexedProperties: [
+          ["length", 2],
+          ["buffer", DO_NOT_CHECK_VALUE],
+          ["byteLength", 2],
+          ["byteOffset", 0],
+        ],
+      },
     ];
 
     for (const test of testCases) {
       await test_object_grip(debuggee, client, threadFront, test);
     }
   })
-);
-
-// These tests are not yet supported in workers.
-add_task(
-  threadFrontTest(
-    async ({ threadFront, debuggee, client }) => {
-      debuggee.eval(
-        function stopMe(arg1) {
-          debugger;
-        }.toString()
-      );
-
-      const testCases = [
-        {
-          evaledObject: `(() => {
-      x = new Int8Array([1, 2]);
-      Object.defineProperty(x, 'length', {value: 0});
-      return x;
-    })()`,
-          expectedIndexedProperties: [["0", 1], ["1", 2]],
-          expectedNonIndexedProperties: [
-            ["length", 0],
-            ["buffer", DO_NOT_CHECK_VALUE],
-            ["byteLength", 2],
-            ["byteOffset", 0],
-          ],
-        },
-        {
-          evaledObject: `(() => {
-      x = new Int32Array([1, 2]);
-      Object.setPrototypeOf(x, null);
-      return x;
-    })()`,
-          expectedIndexedProperties: [["0", 1], ["1", 2]],
-          expectedNonIndexedProperties: [],
-        },
-      ];
-
-      for (const test of testCases) {
-        await test_object_grip(debuggee, client, threadFront, test);
-      }
-    },
-    { doNotRunWorker: true }
-  )
 );
 
 async function test_object_grip(
