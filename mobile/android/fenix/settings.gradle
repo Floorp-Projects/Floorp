@@ -20,7 +20,6 @@ if (localProperties != null) {
 
     if (appServicesLocalPath != null) {
         logger.lifecycle("Local configuration: substituting application-services modules from path: $appServicesLocalPath")
-        // XXX doesn't quite work yet.
         includeBuild(appServicesLocalPath)
     } else {
         logger.lifecycle("Local configuration: application-services substitution path missing. Specify it via '$settingAppServicesPath' setting.")
