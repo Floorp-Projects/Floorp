@@ -140,9 +140,7 @@ void nsHistory::GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
 void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
   nsCOMPtr<nsPIDOMWindowInner> win(do_QueryReferent(mInnerWindow));
   if (!win || !win->HasActiveDocument()) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-
-    return;
+    return aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
   }
 
   if (!aDelta) {
@@ -150,17 +148,12 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
     // "When the go(delta) method is invoked, if delta is zero, the user agent
     // must act as if the location.reload() method was called instead."
     RefPtr<Location> location = win->Location();
-    nsresult rv = location->Reload(false);
-    if (NS_FAILED(rv)) {
-      aRv.Throw(NS_ERROR_FAILURE);
-    }
-    return;
+    return location->Reload(false, aRv);
   }
 
   RefPtr<ChildSHistory> session_history = GetSessionHistory();
   if (!session_history) {
     aRv.Throw(NS_ERROR_FAILURE);
-
     return;
   }
 
