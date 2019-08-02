@@ -2,27 +2,27 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/account_preference_background"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:foreground="?android:attr/selectableItemBackground"
     android:gravity="center_vertical"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:foreground="?android:attr/selectableItemBackground">
+    android:paddingEnd="16dp">
 
     <FrameLayout
         android:id="@+id/icon_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+
         <androidx.preference.internal.PreferenceImageView
             android:id="@android:id/icon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:maxWidth="48dp"
-            app:maxHeight="48dp"/>
+            app:maxHeight="48dp"
+            app:maxWidth="48dp" />
     </FrameLayout>
 
     <RelativeLayout
@@ -30,35 +30,38 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="15dp"
         android:layout_marginEnd="6dp"
+        android:layout_weight="1"
         android:paddingStart="16dp"
         android:paddingTop="16dp"
-        android:paddingBottom="16dp"
-        android:layout_weight="1">
+        android:paddingBottom="16dp">
 
-        <TextView android:id="@+id/displayName"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:textColor="?primaryText"
-                  android:textSize="16sp"
-                  android:ellipsize="marquee"
-                  android:fadingEdge="horizontal"
-                  android:visibility="gone"/>
+        <TextView
+            android:id="@+id/displayName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:textColor="?primaryText"
+            android:textSize="16sp"
+            android:visibility="gone" />
 
-        <TextView android:id="@+id/email"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:layout_below="@id/displayName"
-                  android:layout_alignStart="@id/displayName"
-                  android:textColor="?primaryText"
-                  android:text="@string/preferences_account_default_name"
-                  android:maxLines="4"/>
+        <TextView
+            android:id="@+id/email"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/displayName"
+            android:layout_alignStart="@id/displayName"
+            android:maxLines="4"
+            android:text="@string/preferences_account_default_name"
+            android:textColor="?primaryText" />
 
     </RelativeLayout>
 
-    <LinearLayout android:id="@android:id/widget_frame"
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:gravity="center_vertical"
-                  android:orientation="vertical"/>
+    <LinearLayout
+        android:id="@android:id/widget_frame"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="vertical" />
 
 </LinearLayout>

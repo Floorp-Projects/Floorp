@@ -11,13 +11,15 @@ import android.widget.TextView
 import androidx.preference.Preference
 import androidx.preference.PreferenceViewHolder
 import org.mozilla.fenix.R
+import kotlin.properties.Delegates
 
 class AccountAuthErrorPreference @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     attributeSetId: Int = android.R.attr.preferenceStyle
 ) : Preference(context, attrs, attributeSetId) {
-    var email: String? = null
+    private var emailView: TextView? = null
+    var email: String? by Delegates.observable<String?>(null) { _, _, new -> updateEmailView(new) }
 
     init {
         layoutResource = R.layout.account_auth_error_preference
@@ -25,9 +27,13 @@ class AccountAuthErrorPreference @JvmOverloads constructor(
 
     override fun onBindViewHolder(holder: PreferenceViewHolder) {
         super.onBindViewHolder(holder)
-        val emailView = holder.findViewById(R.id.email) as TextView
-        emailView.text = email.orEmpty()
-        emailView.visibility = when (email.isNullOrEmpty()) {
+        emailView = holder.findViewById(R.id.email) as TextView
+        updateEmailView(email)
+    }
+
+    private fun updateEmailView(email: String?) {
+        emailView?.text = email.orEmpty()
+        emailView?.visibility = when (email.isNullOrEmpty()) {
             true -> View.GONE
             false -> View.VISIBLE
         }
