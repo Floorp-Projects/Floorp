@@ -681,27 +681,24 @@ add_task(async function settings() {
 
 var gDidInitialSetUp = false;
 
-function setUp(aNoEngine) {
-  return (async function() {
-    if (!gDidInitialSetUp) {
-      var { ContentSearch } = ChromeUtils.import(
-        "resource:///modules/ContentSearch.jsm"
-      );
-      let originalOnMessageSearch = ContentSearch._onMessageSearch;
-      let originalOnMessageManageEngines =
-        ContentSearch._onMessageManageEngines;
-      ContentSearch._onMessageSearch = () => {};
-      ContentSearch._onMessageManageEngines = () => {};
-      registerCleanupFunction(() => {
-        ContentSearch._onMessageSearch = originalOnMessageSearch;
-        ContentSearch._onMessageManageEngines = originalOnMessageManageEngines;
-      });
-      await setUpEngines();
-      await promiseTab();
-      gDidInitialSetUp = true;
-    }
-    await msg("focus");
-  })();
+async function setUp(aNoEngine) {
+  if (!gDidInitialSetUp) {
+    var { ContentSearch } = ChromeUtils.import(
+      "resource:///modules/ContentSearch.jsm"
+    );
+    let originalOnMessageSearch = ContentSearch._onMessageSearch;
+    let originalOnMessageManageEngines = ContentSearch._onMessageManageEngines;
+    ContentSearch._onMessageSearch = () => {};
+    ContentSearch._onMessageManageEngines = () => {};
+    registerCleanupFunction(() => {
+      ContentSearch._onMessageSearch = originalOnMessageSearch;
+      ContentSearch._onMessageManageEngines = originalOnMessageManageEngines;
+    });
+    await setUpEngines();
+    await promiseTab();
+    gDidInitialSetUp = true;
+  }
+  await msg("focus");
 }
 
 function msg(type, data = null) {
@@ -790,41 +787,26 @@ async function promiseTab() {
   return deferred.promise;
 }
 
-function promiseMsg(name, type, msgMan) {
-  return new Promise(resolve => {
-    info("Waiting for " + name + " message " + type + "...");
-    msgMan.addMessageListener(name, function onMsg(msgObj) {
-      info("Received " + name + " message " + msgObj.data.type + "\n");
-      if (msgObj.data.type == type) {
-        msgMan.removeMessageListener(name, onMsg);
-        resolve(msgObj);
-      }
-    });
+async function setUpEngines() {
+  info("Removing default search engines");
+  let currentEngineName = (await Services.search.getDefault()).name;
+  let currentEngines = await Services.search.getVisibleEngines();
+  info("Adding test search engines");
+  let rootDir = getRootDirectory(gTestPath);
+  let engine1 = await SearchTestUtils.promiseNewSearchEngine(
+    rootDir + TEST_ENGINE_BASENAME
+  );
+  await SearchTestUtils.promiseNewSearchEngine(
+    rootDir + TEST_ENGINE_2_BASENAME
+  );
+  await Services.search.setDefault(engine1);
+  for (let engine of currentEngines) {
+    await Services.search.removeEngine(engine);
+  }
+  registerCleanupFunction(async () => {
+    Services.search.restoreDefaultEngines();
+    await Services.search.setDefault(
+      Services.search.getEngineByName(currentEngineName)
+    );
   });
-}
-
-function setUpEngines() {
-  return (async function() {
-    info("Removing default search engines");
-    let currentEngineName = (await Services.search.getDefault()).name;
-    let currentEngines = await Services.search.getVisibleEngines();
-    info("Adding test search engines");
-    let rootDir = getRootDirectory(gTestPath);
-    let engine1 = await SearchTestUtils.promiseNewSearchEngine(
-      rootDir + TEST_ENGINE_BASENAME
-    );
-    await SearchTestUtils.promiseNewSearchEngine(
-      rootDir + TEST_ENGINE_2_BASENAME
-    );
-    await Services.search.setDefault(engine1);
-    for (let engine of currentEngines) {
-      await Services.search.removeEngine(engine);
-    }
-    registerCleanupFunction(async () => {
-      Services.search.restoreDefaultEngines();
-      await Services.search.setDefault(
-        Services.search.getEngineByName(currentEngineName)
-      );
-    });
-  })();
 }
