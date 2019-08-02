@@ -594,6 +594,19 @@ class DocAccessible : public HyperTextAccessibleWrap,
    */
   void ARIAActiveDescendantIDMaybeMoved(dom::Element* aElm);
 
+  /**
+   * Traverse content subtree and for each node do one of 3 things:
+   * 1. Check if content node has an accessible that should be removed and
+   *    remove it.
+   * 2. Check if content node has an accessible that needs to be recreated.
+   *    Remove it and schedule it for reinsertion.
+   * 3. Check if content node has no accessible but needs one. Schedule one for
+   *    insertion.
+   *
+   * Returns true if the root node should be reinserted.
+   */
+  bool PruneOrInsertSubtree(nsIContent* aRoot);
+
  protected:
   /**
    * State and property flags, kept by mDocFlags.

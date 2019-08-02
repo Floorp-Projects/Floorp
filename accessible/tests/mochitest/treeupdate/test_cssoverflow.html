@@ -61,42 +61,6 @@
     }
 
     /**
-     * Change scrollbar styles from hidden to auto. That causes us to create a
-     * new accessible for scroll area.
-     */
-    function changeScrollbarStyles(aContainerID, aScrollAreaID) {
-      this.container = getAccessible(aContainerID);
-      this.scrollAreaNode = getNode(aScrollAreaID);
-
-      this.eventSeq = [
-        new invokerChecker(EVENT_SHOW, getAccessible, this.scrollAreaNode),
-        new invokerChecker(EVENT_REORDER, this.container),
-      ];
-
-      this.invoke = function changeScrollbarStyles_invoke() {
-        var accTree =
-          { SECTION: [ // container
-            { SECTION: [] }, // scroll area
-          ] };
-        testAccessibleTree(this.container, accTree);
-
-        this.scrollAreaNode.style.overflow = "auto";
-      };
-
-      this.finalCheck = function changeScrollbarStyles_finalCheck() {
-        var accTree =
-          { SECTION: [ // container
-            { SECTION: [] }, // scroll area
-          ] };
-        testAccessibleTree(this.container, accTree);
-      };
-
-      this.getID = function changeScrollbarStyles_getID() {
-        return "change scrollbar styles " + prettyName(aScrollAreaID);
-      };
-    }
-
-    /**
      * Change scrollbar styles from hidden to auto to make the scroll area focusable.
      * That causes us to create an accessible for it.
      * Make sure the tree stays intact.
@@ -156,7 +120,6 @@
       gQueue = new eventQueue();
 
       gQueue.push(new changeScrollRange("container", "scrollarea"));
-      gQueue.push(new changeScrollbarStyles("container2", "scrollarea2"));
       gQueue.push(new makeFocusableByScrollbarStyles("container3"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();

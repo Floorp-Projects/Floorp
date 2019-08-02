@@ -76,7 +76,12 @@
       gQueue.push(new setAttr("tst2", "title", "title",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst2")));
 
-      gQueue.push(new setAttr_recreate("tst3", "alt", "alt"));
+      // When `alt` attribute is added or removed from a broken img,
+      // the accessible is recreated.
+      gQueue.push(new setAttr_recreate("tst3", "alt", "one"));
+      // When an `alt` attribute is changed, there is a name change event.
+      gQueue.push(new setAttr("tst3", "alt", "two",
+                              new invokerChecker(EVENT_NAME_CHANGE, "tst3")));
       gQueue.push(new setAttr("tst3", "title", "title",
                               new unexpectedInvokerChecker(EVENT_NAME_CHANGE, "tst3")));
 
@@ -104,10 +109,10 @@
   <pre id="test">
   </pre>
 
-  <img id="tst1">
-  <img id="tst2">
+  <img id="tst1" alt="initial" src="../moz.png">
+  <img id="tst2" src="../moz.png">
   <img id="tst3">
-  <img id="tst4">
+  <img id="tst4" src="../moz.png">
 
   <div id="eventdump"></div>
 </body>

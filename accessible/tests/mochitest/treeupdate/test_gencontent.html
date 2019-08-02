@@ -71,16 +71,17 @@
      */
     function addGenContent(aContainerID, aNodeID) {
       this.container = getAccessible(aContainerID);
+      this.nodeAcc = getAccessible(aNodeID);
       this.node = getNode(aNodeID);
 
       this.eventSeq = [
-        new invokerChecker(EVENT_HIDE, this.container.firstChild),
-        new invokerChecker(EVENT_SHOW, getFirstChild, this.container),
-        new invokerChecker(EVENT_REORDER, this.container),
+        new invokerChecker(EVENT_SHOW, getFirstChild, this.nodeAcc),
+        new invokerChecker(EVENT_SHOW, getLastChild, this.nodeAcc),
+        new invokerChecker(EVENT_REORDER, this.nodeAcc),
       ];
 
       this.invoke = function addGenContent_invoke() {
-        this.node.setAttribute("class", "gentext");
+        this.node.classList.add("gentext");
       };
 
       this.finalCheck = function insertNodeHavingGenContent_finalCheck() {
@@ -101,10 +102,46 @@
     }
 
     /**
+     * Remove CSS generated content from the given node contained by container node.
+     */
+    function removeGenContent(aContainerID, aNodeID) {
+      this.container = getAccessible(aContainerID);
+      this.nodeAcc = getAccessible(aNodeID);
+      this.node = getNode(aNodeID);
+
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, this.nodeAcc.lastChild),
+        new invokerChecker(EVENT_HIDE, this.nodeAcc.firstChild),
+        new invokerChecker(EVENT_REORDER, this.nodeAcc),
+      ];
+
+      this.invoke = function removeGenContent_invoke() {
+        this.node.classList.remove("gentext");
+      };
+
+      this.finalCheck = function removeGenContent_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { SECTION: [ // inserted node
+              { TEXT_LEAF: [] }, // primary text
+            ] },
+          ] };
+        testAccessibleTree(this.container, accTree);
+      };
+
+      this.getID = function addGenContent_getID() {
+        return "remove generated content from" + prettyName(aNodeID);
+      };
+    }
+    /**
      * Target getters.
      */
     function getFirstChild(aAcc) {
-      try { return aAcc.getChildAt(0); } catch (e) { return null; }
+      try { return aAcc.firstChild; } catch (e) { return null; }
+    }
+
+    function getLastChild(aAcc) {
+      try { return aAcc.lastChild; } catch (e) { return null; }
     }
 
     // //////////////////////////////////////////////////////////////////////////
@@ -120,6 +157,7 @@
 
       gQueue.push(new insertNodeHavingGenContent("container1"));
       gQueue.push(new addGenContent("container2", "container2_child"));
+      gQueue.push(new removeGenContent("container3", "container3_child"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -144,5 +182,6 @@
 
   <div id="container1"></div>
   <div id="container2"><div id="container2_child">text</div></div>
+  <div id="container3"><div id="container3_child" class="gentext">text</div></div>
 </body>
 </html>

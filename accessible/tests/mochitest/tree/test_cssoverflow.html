@@ -37,7 +37,7 @@
       };
 
       this.check = function focusAnchor_check(aEvent) {
-        todo_is(this.link, aEvent.accessible,
+        is(this.link, aEvent.accessible,
                 "Focus should be fired against new link accessible!");
       };
 
@@ -59,7 +59,7 @@
       };
 
       this.check = function tabAnchor_check(aEvent) {
-        todo_is(this.link, aEvent.accessible,
+        is(this.link, aEvent.accessible,
                    "Focus should be fired against new link accessible!");
       };
 

@@ -7635,9 +7635,11 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
     }
 
 #ifdef ACCESSIBILITY
-    if (nsAccessibilityService* accService =
-            PresShell::GetAccessibilityService()) {
-      accService->ContentRemoved(mPresShell, aChild);
+    if (aFlags != REMOVE_FOR_RECONSTRUCTION) {
+      if (nsAccessibilityService* accService =
+              PresShell::GetAccessibilityService()) {
+        accService->ContentRemoved(mPresShell, aChild);
+      }
     }
 #endif
 
