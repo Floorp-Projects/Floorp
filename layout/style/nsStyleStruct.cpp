@@ -2740,6 +2740,7 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOffsetPath(StyleOffsetPath::None()),
       mOffsetDistance(LengthPercentage::Zero()),
       mOffsetRotate{true, StyleAngle{0.0}},
+      mOffsetAnchor(StylePositionOrAuto::Auto()),
       mTransformOrigin{LengthPercentage::FromPercentage(0.5),
                        LengthPercentage::FromPercentage(0.5),
                        {0.}},
@@ -2805,6 +2806,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mOffsetPath(aSource.mOffsetPath),
       mOffsetDistance(aSource.mOffsetDistance),
       mOffsetRotate(aSource.mOffsetRotate),
+      mOffsetAnchor(aSource.mOffsetAnchor),
       mTransformOrigin(aSource.mTransformOrigin),
       mChildPerspective(aSource.mChildPerspective),
       mPerspectiveOrigin(aSource.mPerspectiveOrigin),
@@ -2848,7 +2850,8 @@ static inline nsChangeHint CompareMotionValues(
     const nsStyleDisplay& aDisplay, const nsStyleDisplay& aNewDisplay) {
   if (aDisplay.mOffsetPath == aNewDisplay.mOffsetPath) {
     if (aDisplay.mOffsetDistance == aNewDisplay.mOffsetDistance &&
-        aDisplay.mOffsetRotate == aNewDisplay.mOffsetRotate) {
+        aDisplay.mOffsetRotate == aNewDisplay.mOffsetRotate &&
+        aDisplay.mOffsetAnchor == aNewDisplay.mOffsetAnchor) {
       return nsChangeHint(0);
     }
 
