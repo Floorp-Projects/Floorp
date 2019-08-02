@@ -7,6 +7,7 @@ package mozilla.components.feature.media.state
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.media.Media
+import mozilla.components.feature.media.MockMedia
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -155,14 +156,4 @@ class MediaStateMachineTest {
         media.playbackState = Media.PlaybackState.PLAYING
         assertEquals(MediaState.None, MediaStateMachine.state)
     }
-}
-
-class MockMedia(
-    initialState: PlaybackState
-) : Media() {
-    init {
-        playbackState = initialState
-    }
-
-    override val controller: Controller = mock()
 }

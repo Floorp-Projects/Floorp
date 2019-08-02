@@ -9,6 +9,11 @@ import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.state.MediaState
 
 /**
+ * The minimum duration (in seconds) for media so that we bother with showing a media notification.
+ */
+private const val MINIMUM_DURATION_SECONDS = 5
+
+/**
  * Gets the list of [Media] associated with this [MediaState].
  */
 internal fun MediaState.getMedia(): List<Media> {
@@ -61,4 +66,18 @@ internal fun MediaState.playIfPaused() {
     if (this is MediaState.Paused) {
         media.play()
     }
+}
+
+internal fun MediaState.hasMediaWithSufficientLongDuration(): Boolean {
+    getMedia().forEach { media ->
+        if (media.metadata.duration < 0) {
+            return true
+        }
+
+        if (media.metadata.duration > MINIMUM_DURATION_SECONDS) {
+            return true
+        }
+    }
+
+    return false
 }

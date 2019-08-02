@@ -9,8 +9,8 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.MediaFeature
+import mozilla.components.feature.media.MockMedia
 import mozilla.components.feature.media.state.MediaStateMachine
-import mozilla.components.feature.media.state.MockMedia
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext

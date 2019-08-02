@@ -10,13 +10,13 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.state.MediaStateMachine
-import mozilla.components.feature.media.state.MockMedia
 import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.verify
@@ -45,6 +45,7 @@ class MediaFeatureTest {
 
         // A media object gets added to the session
         val media = MockMedia(Media.PlaybackState.UNKNOWN)
+        doReturn(30.0).`when`(media.metadata).duration
         session.media = listOf(media)
 
         media.playbackState = Media.PlaybackState.WAITING
@@ -59,9 +60,41 @@ class MediaFeatureTest {
     }
 
     @Test
+    fun `Media with short duration will not start service`() {
+        val context: Context = mock()
+        val sessionManager = SessionManager(engine = mock())
+
+        MediaStateMachine.start(sessionManager)
+
+        val feature = MediaFeature(context)
+        feature.enable()
+
+        // A session gets added
+        val session = Session("https://www.mozilla.org")
+        sessionManager.add(session)
+
+        // A media object gets added to the session
+        val media = MockMedia(Media.PlaybackState.UNKNOWN)
+        doReturn(2.0).`when`(media.metadata).duration
+        session.media = listOf(media)
+
+        media.playbackState = Media.PlaybackState.WAITING
+
+        // So far nothing has happened yet
+        verify(context, never()).startService(any())
+
+        // Media starts playing!
+        media.playbackState = Media.PlaybackState.PLAYING
+
+        // Service still not started since duration is too short
+        verify(context, never()).startService(any())
+    }
+
+    @Test
     fun `Media switching from playing to pause send Intent to service`() {
         val context: Context = mock()
         val media = MockMedia(Media.PlaybackState.PLAYING)
+        doReturn(30.0).`when`(media.metadata).duration
 
         val sessionManager = SessionManager(engine = mock()).apply {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })
@@ -84,6 +117,7 @@ class MediaFeatureTest {
     fun `Media stopping to play will notify service`() {
         val context: Context = mock()
         val media = MockMedia(Media.PlaybackState.UNKNOWN)
+        doReturn(30.0).`when`(media.metadata).duration
 
         val sessionManager = SessionManager(engine = mock()).apply {
             add(Session("https://www.mozilla.org").also { it.media = listOf(media) })

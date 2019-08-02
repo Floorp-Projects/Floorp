@@ -5,6 +5,7 @@
 package mozilla.components.feature.media
 
 import android.content.Context
+import mozilla.components.feature.media.ext.hasMediaWithSufficientLongDuration
 import mozilla.components.feature.media.service.MediaService
 import mozilla.components.feature.media.state.MediaState
 import mozilla.components.feature.media.state.MediaStateMachine
@@ -22,35 +23,46 @@ import mozilla.components.feature.media.state.MediaStateMachine
 class MediaFeature(
     private val context: Context
 ) {
-    private var serviceRunning = false
+    private var serviceStarted = false
+    private var observer = object : MediaStateMachine.Observer {
+        override fun onStateChanged(state: MediaState) {
+            notifyService(state)
+        }
+    }
 
     /**
      * Enables the feature.
      */
     fun enable() {
-        MediaStateMachine.register(MediaObserver(this))
+        MediaStateMachine.register(observer)
+
+        // MediaStateMachine will only notify us about state changes but not pass the current state
+        // to us - which might already be "playing". So let's process the current state now.
+        notifyService(MediaStateMachine.state)
     }
 
-    internal fun startMediaService() {
-        MediaService.updateState(context)
-        serviceRunning = true
-    }
+    @Suppress("LongMethod")
+    private fun notifyService(state: MediaState) {
+        when (state) {
+            is MediaState.Playing -> {
+                if (state.hasMediaWithSufficientLongDuration()) {
+                    MediaService.updateState(context)
+                    serviceStarted = true
+                }
+            }
 
-    internal fun stopMediaService() {
-        if (serviceRunning) {
-            MediaService.updateState(context)
-        }
-    }
-}
+            is MediaState.Paused -> {
+                if (serviceStarted) {
+                    MediaService.updateState(context)
+                }
+            }
 
-internal class MediaObserver(
-    private val feature: MediaFeature
-) : MediaStateMachine.Observer {
-    override fun onStateChanged(state: MediaState) {
-        if (state is MediaState.Playing || state is MediaState.Paused) {
-            feature.startMediaService()
-        } else if (state is MediaState.None) {
-            feature.stopMediaService()
+            is MediaState.None -> {
+                if (serviceStarted) {
+                    MediaService.updateState(context)
+                    serviceStarted = false
+                }
+            }
         }
     }
 }
