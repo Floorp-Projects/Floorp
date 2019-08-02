@@ -8,7 +8,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsIScriptContext.h"
-#include "nsIDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsIWebNavigation.h"
 #include "nsIURIFixup.h"
@@ -25,6 +24,7 @@
 #include "nsITextToSubURI.h"
 #include "nsJSUtils.h"
 #include "nsContentUtils.h"
+#include "nsDocShell.h"
 #include "nsGlobalWindow.h"
 #include "mozilla/Likely.h"
 #include "nsCycleCollectionParticipant.h"
@@ -733,33 +733,31 @@ void Location::SetSearch(const nsAString& aSearch,
 
 nsresult Location::Reload(bool aForceget) {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-  nsCOMPtr<nsPIDOMWindowOuter> window =
-      docShell ? docShell->GetWindow() : nullptr;
-
-  if (StaticPrefs::dom_block_reload_from_resize_event_handler() && window &&
-      window->IsHandlingResizeEvent()) {
-    // location.reload() was called on a window that is handling a
-    // resize event. Sites do this since Netscape 4.x needed it, but
-    // we don't, and it's a horrible experience for nothing. In stead
-    // of reloading the page, just clear style data and reflow the
-    // page since some sites may use this trick to work around gecko
-    // reflow bugs, and this should have the same effect.
-
-    nsCOMPtr<Document> doc = window->GetExtantDoc();
-
-    nsPresContext* pcx;
-    if (doc && (pcx = doc->GetPresContext())) {
-      pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
-                               RestyleHint::RestyleSubtree());
-    }
-
-    return NS_OK;
-  }
-
-  if (!webNav) {
+  if (!docShell) {
     return NS_ERROR_FAILURE;
   }
+
+  if (StaticPrefs::dom_block_reload_from_resize_event_handler()) {
+    nsCOMPtr<nsPIDOMWindowOuter> window = docShell->GetWindow();
+    if (window && window->IsHandlingResizeEvent()) {
+      // location.reload() was called on a window that is handling a
+      // resize event. Sites do this since Netscape 4.x needed it, but
+      // we don't, and it's a horrible experience for nothing. In stead
+      // of reloading the page, just clear style data and reflow the
+      // page since some sites may use this trick to work around gecko
+      // reflow bugs, and this should have the same effect.
+      RefPtr<Document> doc = window->GetExtantDoc();
+
+      nsPresContext* pcx;
+      if (doc && (pcx = doc->GetPresContext())) {
+        pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
+                                 RestyleHint::RestyleSubtree());
+      }
+
+      return NS_OK;
+    }
+  }
+
 
   uint32_t reloadFlags = nsIWebNavigation::LOAD_FLAGS_NONE;
 
@@ -768,7 +766,7 @@ nsresult Location::Reload(bool aForceget) {
                   nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
   }
 
-  nsresult rv = webNav->Reload(reloadFlags);
+  nsresult rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
   if (rv == NS_BINDING_ABORTED) {
     // This happens when we attempt to reload a POST result and the user says
     // no at the "do you want to reload?" prompt.  Don't propagate this one
