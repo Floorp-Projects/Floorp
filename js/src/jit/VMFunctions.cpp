@@ -905,12 +905,9 @@ bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
   // In both cases we have to pop debug scopes.
   ok = DebugAPI::onLeaveFrame(cx, frame, pc, ok);
 
-  // Unwind to the outermost environment and set pc to the end of the
-  // script, regardless of error.
+  // Unwind to the outermost environment.
   EnvironmentIter ei(cx, frame, pc);
   UnwindAllEnvironmentsInFrame(cx, ei);
-  JSScript* script = frame->script();
-  frame->setOverridePc(script->offsetToPC(0));
 
   if (!ok) {
     // Pop this frame by updating packedExitFP, so that the exception
@@ -920,10 +917,6 @@ bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
     return false;
   }
 
-  // Clear the override pc. This is not necessary for correctness: the frame
-  // will return immediately, but this simplifies the check we emit in debug
-  // builds after each callVM, to ensure this flag is not set.
-  frame->clearOverridePc();
   return true;
 }
 
