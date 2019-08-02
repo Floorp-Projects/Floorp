@@ -7,8 +7,6 @@
 #define include_dom_media_ipc_RemoteDecoderParent_h
 #include "mozilla/PRemoteDecoderParent.h"
 
-#include "mozilla/ShmemPool.h"
-
 namespace mozilla {
 
 class RemoteDecoderManagerParent;
@@ -35,7 +33,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
   IPCResult RecvDrain();
   IPCResult RecvShutdown();
   IPCResult RecvSetSeekThreshold(const media::TimeUnit& aTime);
-  IPCResult RecvDoneWithOutput(Shmem&& aOutputShmem);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
@@ -56,7 +53,6 @@ class RemoteDecoderParent : public PRemoteDecoderParent {
 
   // Can only be accessed from the manager thread
   bool mDestroyed = false;
-  ShmemPool mDecodedFramePool;
 };
 
 }  // namespace mozilla

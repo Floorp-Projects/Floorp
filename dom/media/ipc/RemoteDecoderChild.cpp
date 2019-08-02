@@ -11,8 +11,7 @@ namespace mozilla {
 
 RemoteDecoderChild::RemoteDecoderChild(bool aRecreatedOnCrash)
     : mThread(RemoteDecoderManagerChild::GetManagerThread()),
-      mRecreatedOnCrash(aRecreatedOnCrash),
-      mRawFramePool(4) {}
+      mRecreatedOnCrash(aRecreatedOnCrash) {}
 
 RemoteDecoderChild::~RemoteDecoderChild() {
   AssertOnManagerThread();
@@ -81,12 +80,6 @@ mozilla::ipc::IPCResult RemoteDecoderChild::RecvShutdownComplete() {
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult RemoteDecoderChild::RecvDoneWithInput(
-    Shmem&& aInputShmem) {
-  mRawFramePool.Put(ShmemBuffer(aInputShmem));
-  return IPC_OK();
-}
-
 void RemoteDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(mCanSend);
   // If the IPC channel is gone pending promises need to be resolved/rejected.
@@ -129,7 +122,6 @@ void RemoteDecoderChild::ActorDestroy(ActorDestroyReason aWhy) {
     }
   }
   mCanSend = false;
-  mRawFramePool.Cleanup(this);
   RecordShutdownTelemetry(aWhy == AbnormalShutdown);
 }
 
@@ -190,20 +182,18 @@ RefPtr<MediaDataDecoder::DecodePromise> RemoteDecoderChild::Decode(
   // TODO: It would be nice to add an allocator method to
   // MediaDataDecoder so that the demuxer could write directly
   // into shmem rather than requiring a copy here.
-  ShmemBuffer buffer = mRawFramePool.Get(this, aSample->Size());
-  if (!buffer.Valid()) {
+  Shmem buffer;
+  if (!AllocShmem(aSample->Size(), Shmem::SharedMemory::TYPE_BASIC, &buffer)) {
     return MediaDataDecoder::DecodePromise::CreateAndReject(
         NS_ERROR_DOM_MEDIA_DECODE_ERR, __func__);
   }
 
-  memcpy(buffer.Get().get<uint8_t>(), aSample->Data(), aSample->Size());
+  memcpy(buffer.get<uint8_t>(), aSample->Data(), aSample->Size());
 
   MediaRawDataIPDL sample(
       MediaDataIPDL(aSample->mOffset, aSample->mTime, aSample->mTimecode,
                     aSample->mDuration, aSample->mKeyframe),
-      aSample->mEOS, aSample->mDiscardPadding, aSample->Size(),
-      std::move(buffer.Get()));
-
+      aSample->mEOS, aSample->mDiscardPadding, std::move(buffer));
   SendInput(sample);
 
   return mDecodePromise.Ensure(__func__);
