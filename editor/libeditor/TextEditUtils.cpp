@@ -8,6 +8,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
@@ -19,6 +20,8 @@
 #include "nsString.h"
 
 namespace mozilla {
+
+using namespace dom;
 
 /******************************************************************************
  * TextEditUtils
@@ -38,28 +41,6 @@ bool TextEditUtils::IsBody(nsINode* aNode) {
 bool TextEditUtils::IsBreak(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::br);
-}
-
-/**
- * IsMozBR() returns true if aNode is an html br node with |type = _moz|.
- */
-bool TextEditUtils::IsMozBR(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-  return aNode->IsHTMLElement(nsGkAtoms::br) &&
-         aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                         NS_LITERAL_STRING("_moz"),
-                                         eIgnoreCase);
-}
-
-/**
- * HasMozAttr() returns true if aNode has type attribute and its value is
- * |_moz|. (Used to indicate div's and br's we use in mail compose rules)
- */
-bool TextEditUtils::HasMozAttr(nsINode* aNode) {
-  MOZ_ASSERT(aNode);
-  return aNode->IsElement() && aNode->AsElement()->AttrValueIs(
-                                   kNameSpaceID_None, nsGkAtoms::type,
-                                   NS_LITERAL_STRING("_moz"), eIgnoreCase);
 }
 
 /******************************************************************************

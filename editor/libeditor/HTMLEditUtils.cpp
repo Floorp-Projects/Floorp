@@ -213,7 +213,9 @@ bool HTMLEditUtils::IsNamedAnchor(nsINode* aNode) {
 bool HTMLEditUtils::IsMozDiv(nsINode* aNode) {
   MOZ_ASSERT(aNode);
   return aNode->IsHTMLElement(nsGkAtoms::div) &&
-         TextEditUtils::HasMozAttr(aNode);
+         aNode->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                         NS_LITERAL_STRING("_moz"),
+                                         eIgnoreCase);
 }
 
 /**

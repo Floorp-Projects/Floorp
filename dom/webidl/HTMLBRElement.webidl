@@ -29,4 +29,9 @@ partial interface HTMLBRElement {
   // at proper position in empty editor.
   [ChromeOnly]
   readonly attribute boolean isPaddingForEmptyEditor;
+  // Set to true if the <br> element is created by editor for placing caret
+  // at proper position making last empty line in a block element in HTML
+  // editor or <textarea> element visible.
+  [ChromeOnly]
+  readonly attribute boolean isPaddingForEmptyLastLine;
 };

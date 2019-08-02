@@ -301,15 +301,16 @@ class TextEditRules {
   }
 
   /**
-   * Create a moz-<br> element and insert it to aPointToInsert.
+   * Create a padding <br> element for empty last line and insert it to
+   * aPointToInsert.
    *
-   * @param aPointToInsert  The point where the new moz-<br> element will be
+   * @param aPointToInsert  The point where the new padding <br> element will be
    *                        inserted.
    * @return                Returns created <br> element or an error code
    *                        if couldn't create new <br> element.
    */
   MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateMozBR(const EditorDOMPoint& aPointToInsert) {
+  CreatePaddingBRElementForEmptyLastLine(const EditorDOMPoint& aPointToInsert) {
     CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
 #ifdef DEBUG
     // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
@@ -331,7 +332,8 @@ class TextEditRules {
    * text node if:
    * - the editor is text editor
    * - and Selection is collapsed at the end of the text node
-   * - and the text node is followed by moz-<br>.
+   * - and the text node is followed by a padding <br> element for empty last
+   *   line.
    */
   MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
@@ -347,18 +349,19 @@ class TextEditRules {
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
 
   /**
-   * Create a normal <br> element or a moz-<br> element and insert it to
-   * aPointToInsert.
+   * Create a normal <br> element or a padding <br> element for empty last line
+   * and insert it to aPointToInsert.
    *
    * @param aParentToInsert     The point where the new <br> element will be
    *                            inserted.
-   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
-   *                            element.  Otherwise, false.
+   * @param aForPadding         true if the caller wants to create a padding
+   *                            <br> element for empty last line.  Otherwise,
+   *                            false.
    * @return                    Returns created <br> element and error code.
    *                            If it succeeded, never returns nullptr.
    */
   MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBRInternal(const EditorDOMPoint& aPointToInsert, bool aCreateMozBR);
+  CreateBRInternal(const EditorDOMPoint& aPointToInsert, bool aForPadding);
 
  protected:
   /**

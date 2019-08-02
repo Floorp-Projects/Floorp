@@ -32,7 +32,6 @@ STATIC_ATOMS = [
     Atom("_empty", ""),
     Atom("_0", "0"),
     Atom("_1", "1"),
-    Atom("moz", "_moz"),
     Atom("mozframetype", "mozframetype"),
     Atom("_moz_abspos", "_moz_abspos"),
     Atom("_moz_activated", "_moz_activated"),
