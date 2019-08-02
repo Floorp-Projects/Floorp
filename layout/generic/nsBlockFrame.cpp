@@ -3602,6 +3602,13 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
                              availSize.ConvertTo(frame->GetWritingMode(), wm),
                              cbSize);
 
+    if (aLine->MovedFragments()) {
+      // We only need to set this the first reflow, since if we reflow
+      // again (and replace blockReflowInput) we'll be reflowing it
+      // again in the same fragment as the previous time.
+      blockReflowInput->mFlags.mMovedBlockFragments = true;
+    }
+
     nsFloatManager::SavedState floatManagerState;
     nsReflowStatus frameReflowStatus;
     do {
