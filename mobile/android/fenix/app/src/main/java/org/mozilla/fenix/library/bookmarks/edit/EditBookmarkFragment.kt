@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.Navigation
+import androidx.core.view.MenuItemCompat.setContentDescription
 import com.jakewharton.rxbinding3.widget.textChanges
 import com.uber.autodispose.AutoDispose
 import com.uber.autodispose.android.lifecycle.AndroidLifecycleScopeProvider
@@ -146,8 +147,11 @@ class EditBookmarkFragment : Fragment() {
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_edit, menu)
-        menu.findItem(R.id.delete_bookmark_button).icon.colorFilter =
-            PorterDuffColorFilter(context!!.getColorFromAttr(R.attr.primaryText), SRC_IN)
+        menu.findItem(R.id.delete_bookmark_button).apply {
+            icon.colorFilter =
+                PorterDuffColorFilter(context!!.getColorFromAttr(R.attr.primaryText), SRC_IN)
+            setContentDescription(this, getString(R.string.bookmark_menu_delete_button))
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
