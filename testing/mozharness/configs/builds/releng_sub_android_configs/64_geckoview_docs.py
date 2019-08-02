@@ -1,6 +1,6 @@
 config = {
     'stage_platform': 'android-geckoview-docs',
-    'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-16-frontend/nightly',
+    'src_mozconfig': 'mobile/android/config/mozconfigs/android-api-16/nightly-android-lints',
     'multi_locale_config_platform': 'android',
     # geckoview-docs doesn't produce a package. So don't collect package metrics.
     'disable_package_metrics': True,
