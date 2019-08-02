@@ -5750,6 +5750,15 @@
   value: true
   mirror: always
 
+# If privacy.reduceTimerPrecision is false, this pref controls whether or not to
+# clamp all timers at a fixed 20 microsconds. It should always be enabled, and is
+# only specified as a pref to enable an emergency disabling in the event of catastrophic
+# failure
+- name: privacy.reduceTimerPrecision.unconditional
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Dynamically tune the resolution of the timer reduction for both of the two above prefs
 - name: privacy.resistFingerprinting.reduceTimerPrecision.microseconds
   type: RelaxedAtomicUint32

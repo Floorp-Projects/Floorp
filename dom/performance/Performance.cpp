@@ -94,10 +94,7 @@ DOMHighResTimeStamp Performance::Now() {
     return rawTime;
   }
 
-  const double maxResolutionMs = 0.020;
-  DOMHighResTimeStamp minimallyClamped =
-      floor(rawTime / maxResolutionMs) * maxResolutionMs;
-  return nsRFPService::ReduceTimePrecisionAsMSecs(minimallyClamped,
+  return nsRFPService::ReduceTimePrecisionAsMSecs(rawTime,
                                                   GetRandomTimelineSeed());
 }
 
