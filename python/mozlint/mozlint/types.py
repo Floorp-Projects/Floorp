@@ -14,7 +14,7 @@ from mozlog.reader import LogHandler
 from mozpack.files import FileFinder
 
 from . import result
-from .pathutils import filterpaths, findobject
+from .pathutils import expand_exclusions, filterpaths, findobject
 
 
 class BaseType(object):
@@ -134,6 +134,26 @@ class ExternalType(BaseType):
         return func(files, config, **lintargs)
 
 
+class GlobalType(ExternalType):
+    """Linter type that runs an external global linting function just once.
+
+    The function is responsible for properly formatting the results
+    into a list of :class:`~result.Issue` objects.
+    """
+    batch = True
+
+    def _lint(self, files, config, **lintargs):
+        # Global lints are expensive to invoke.  Try to avoid running
+        # them based on extensions and exclusions.
+        try:
+            expand_exclusions(files, config, lintargs['root']).next()
+        except StopIteration:
+            return []
+
+        func = findobject(config['payload'])
+        return func(config, **lintargs)
+
+
 class LintHandler(LogHandler):
     def __init__(self, config):
         self.config = config
@@ -168,6 +188,7 @@ supported_types = {
     'string': StringType(),
     'regex': RegexType(),
     'external': ExternalType(),
+    'global': GlobalType(),
     'structured_log': StructuredLogType()
 }
 """Mapping of type string to an associated instance."""
