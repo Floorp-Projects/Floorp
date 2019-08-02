@@ -58,6 +58,8 @@ llvm_profdata = check_prog('LLVM_PROFDATA', ['llvm-profdata'],
                            paths=toolchain_search_path)
 
 js_option('--enable-profile-generate',
+          nargs='?',
+          choices=('cross',),
           help='Build a PGO instrumented binary')
 
 imply_option('MOZ_PGO',
@@ -70,11 +72,16 @@ set_define('MOZ_PROFILE_GENERATE',
            depends_if('--enable-profile-generate')(lambda _: True))
 
 js_option('--enable-profile-use',
+          nargs='?',
+          choices=('cross',),
           help='Use a generated profile during the build')
 
 js_option('--with-pgo-profile-path',
           help='Path to the directory with unmerged profile data to use during the build',
           nargs=1)
+
+js_option('--enable-cross-pgo',
+          help='Enable PGO on Rust code')
 
 imply_option('MOZ_PGO',
              depends_if('--enable-profile-use')(lambda _: True))
@@ -107,6 +114,37 @@ option('--with-pgo-jarlog',
        nargs=1)
 
 set_config('PGO_JARLOG_PATH', depends_if('--with-pgo-jarlog')(lambda p: p))
+
+
+@depends('MOZ_PGO', '--enable-profile-use', '--enable-profile-generate',
+         c_compiler, rustc_info)
+def moz_pgo_rust(pgo, profile_use, profile_generate, c_compiler, rustc):
+    if not pgo:
+        return
+
+    # Enabling PGO through MOZ_PGO only and not --enable* flags.
+    if not profile_use and not profile_generate:
+        return
+
+    if profile_use and profile_generate:
+        die('Cannot build with --enable-profile-use and --enable-profile-generate.')
+
+    want_cross = (len(profile_use) and profile_use[0] == 'cross') \
+                 or (len(profile_generate) and profile_generate[0] == 'cross')
+
+    if not want_cross:
+        return
+
+    if c_compiler.type == 'gcc':
+        die('Cannot use cross-language PGO with GCC.')
+
+    # PGO is not stable prior to 1.37
+    if rustc.version < Version('1.37'):
+        die('Cannot use cross-language PGO with Rust version %s.' % rustc.version)
+
+    return True
+
+set_config('MOZ_PGO_RUST', moz_pgo_rust)
 
 # LTO
 # ==============================================================
