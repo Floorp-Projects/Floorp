@@ -38,7 +38,6 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
   friend nsIFrame* NS_NewDateTimeControlFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aStyle);
 
-  void ContentStatesChanged(mozilla::EventStates aStates) override;
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsDateTimeControlFrame)
 
@@ -61,36 +60,6 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
   void Reflow(nsPresContext* aPresContext, ReflowOutput& aDesiredSize,
               const ReflowInput& aReflowInput,
               nsReflowStatus& aStatus) override;
-
-  nsresult AttributeChanged(int32_t aNameSpaceID, nsAtom* aAttribute,
-                            int32_t aModType) override;
-
- private:
-  class SyncDisabledStateEvent;
-  friend class SyncDisabledStateEvent;
-  class SyncDisabledStateEvent : public mozilla::Runnable {
-   public:
-    explicit SyncDisabledStateEvent(nsDateTimeControlFrame* aFrame)
-        : mozilla::Runnable("nsDateTimeControlFrame::SyncDisabledStateEvent"),
-          mFrame(aFrame) {}
-
-    NS_IMETHOD Run() override {
-      nsDateTimeControlFrame* frame =
-          static_cast<nsDateTimeControlFrame*>(mFrame.GetFrame());
-      NS_ENSURE_STATE(frame);
-
-      frame->SyncDisabledState();
-      return NS_OK;
-    }
-
-   private:
-    WeakFrame mFrame;
-  };
-
-  /**
-   * Sync the disabled state of the datetimebox children up with our content's.
-   */
-  void SyncDisabledState();
 };
 
 #endif  // nsDateTimeControlFrame_h__
