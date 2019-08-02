@@ -14,117 +14,56 @@
   <script type="application/javascript"
           src="../role.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
 
-    // //////////////////////////////////////////////////////////////////////////
-    // Invokers
+    async function doTest() {
+      let events, msg;
 
-    function recreateAccessible(aID, aWontBeAccessible) {
-      this.node = getNode(aID);
-      this.accessible =
-        isAccessible(this.node) ? getAccessible(this.node) : null;
+      msg = "Assign a 'button' role to a span";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE], [EVENT_SHOW, "span"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("span").setAttribute("role", "button");
+      await events;
 
-      this.eventSeq = [ ];
+      msg = "Remove the 'button' role from a span";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "span"], [EVENT_SHOW], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("span").removeAttribute("role");
+      await events;
 
-      if (this.accessible)
-        this.eventSeq.push(new invokerChecker(EVENT_HIDE,
-                                              this.accessible));
+      msg = "Assign a 'button' role to a div";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "div1"], [EVENT_SHOW, "div1"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("div1").setAttribute("role", "button");
+      await events;
 
-      if (!aWontBeAccessible)
-        this.eventSeq.push(new invokerChecker(EVENT_SHOW, getAccessible,
-                                              this.node));
+      msg = "Add an href to an anchor tag";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "anchor"], [EVENT_SHOW, "anchor"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("anchor").setAttribute("href", "www");
+      await events;
 
-      this.eventSeq.push(new invokerChecker(EVENT_REORDER,
-                                            getContainerAccessible(this.node)));
+      msg = "Set a listbox as multiselectable";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "div3"], [EVENT_SHOW, "div3"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("div3").setAttribute("aria-multiselectable", "true");
+      await events;
 
-      if (this.accessible) {
-        this.unexpectedEventSeq = [
-          new invokerChecker(EVENT_SHOW, this.accessible),
-        ];
-      }
-    }
+      msg = "Change a password field to a text field";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "password"], [EVENT_SHOW, "password"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("password").setAttribute("type", "text");
+      await events;
 
-    function changeAttr(aID, aAttr, aValue) {
-      this.__proto__ = new recreateAccessible(aID);
+      msg = "Change a text field to a password field";
+      events = waitForOrderedEvents(
+        [[EVENT_HIDE, "text"], [EVENT_SHOW, "text"], [EVENT_REORDER, "container"]], msg);
+      document.getElementById("text").setAttribute("type", "password");
+      await events;
 
-      this.invoke = function changeAttr_invoke() {
-        this.node.setAttribute(aAttr, aValue);
-      };
-
-      this.getID = function changeAttr_getID() {
-        return "change " + aAttr + "attribute for " + aID;
-      };
-    }
-
-    function removeAttr(aID, aAttr) {
-      this.__proto__ = new recreateAccessible(aID, true);
-
-      this.invoke = function remvoeAttr_invoke() {
-        this.node.removeAttribute(aAttr);
-      };
-
-      this.getID = function remvoeAttr_getID() {
-        return "remove " + aAttr + "attribute for " + aID;
-      };
-    }
-
-    function changeRole(aID, aHasAccessible) {
-      this.__proto__ = new changeAttr(aID, "role", "button");
-    }
-
-    function removeRole(aID) {
-      this.__proto__ = new removeAttr(aID, "role");
-    }
-
-    function changeHref(aID) {
-      this.__proto__ = new changeAttr(aID, "href", "www");
-    }
-
-    function changeMultiselectable(aID) {
-      this.__proto__ = new changeAttr(aID, "aria-multiselectable", "true");
-    }
-
-    function changeTypeToPassword(aID) {
-      this.__proto__ = new changeAttr(aID, "type", "password");
-    }
-
-    function changeTypeToText(aID) {
-      this.__proto__ = new changeAttr(aID, "type", "text");
-    }
-
-    // //////////////////////////////////////////////////////////////////////////
-    // Test
-
-    // gA11yEventDumpID = "eventdump"; // debug stuff
-    // gA11yEventDumpToConsole = true;
-
-    var gQueue = null;
-
-    function doTest() {
-      gQueue = new eventQueue();
-
-      // make the accessible an inaccessible
-      gQueue.push(new changeRole("span"));
-
-      // make the inaccessible an accessible
-      gQueue.push(new removeRole("span"));
-
-      // recreate an accessible by role change
-      gQueue.push(new changeRole("div1"));
-
-      // recreate an accessible by href change
-      gQueue.push(new changeHref("anchor"));
-
-      // recreate an accessible by aria-multiselectable change
-      gQueue.push(new changeMultiselectable("div3"));
-
-      // recreate an accessible by type
-      gQueue.push(new changeTypeToText("password"));
-      gQueue.push(new changeTypeToPassword("text"));
-
-      gQueue.invoke(); // SimpleTest.finish() will be called in the end
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -144,14 +83,15 @@
   <pre id="test">
   </pre>
 
-  <span id="span">span</span>
-  <div id="div1">div</div>
-  <a id="anchor">anchor</a>
-  <div id="div3" role="listbox">list</div>
+  <div id="container">
+    <span id="span">span</span>
+    <div id="div1">div</div>
+    <a id="anchor">anchor</a>
+    <div id="div3" role="listbox">list</div>
+    <input type="password" id="password"/>
+    <input type="text" id="text"/>
+  </div>
 
   <div id="eventdump"></div>
-
-  <form><input type="password" id="password"/></form>
-  <form><input type="text" id="text"/></form>
 </body>
 </html>

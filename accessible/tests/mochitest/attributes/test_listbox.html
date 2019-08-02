@@ -12,7 +12,7 @@
   <script type="application/javascript"
           src="../attributes.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
     async function doTest() {
@@ -25,7 +25,7 @@
       testGroupAttrs("f", 6, 6);
       // Remove c, reducing the set to 5.
       let listbox = getAccessible("listbox");
-      let updated = waitForEventPromise(EVENT_REORDER, listbox);
+      let updated = waitForEvent(EVENT_REORDER, listbox);
       c.remove();
       await updated;
       testGroupAttrs("a", 1, 5);
@@ -34,7 +34,7 @@
       testGroupAttrs("e", 4, 5);
       testGroupAttrs("f", 5, 5);
       // Now, remove the first element.
-      updated = waitForEventPromise(EVENT_REORDER, listbox);
+      updated = waitForEvent(EVENT_REORDER, listbox);
       a.remove();
       await updated;
       testGroupAttrs("b", 1, 4);
@@ -42,14 +42,14 @@
       testGroupAttrs("e", 3, 4);
       testGroupAttrs("f", 4, 4);
       // Remove the last item.
-      updated = waitForEventPromise(EVENT_REORDER, listbox);
+      updated = waitForEvent(EVENT_REORDER, listbox);
       f.remove();
       await updated;
       testGroupAttrs("b", 1, 3);
       testGroupAttrs("d", 2, 3);
       testGroupAttrs("e", 3, 3);
       // Finally, remove the middle item.
-      updated = waitForEventPromise(EVENT_REORDER, listbox);
+      updated = waitForEvent(EVENT_REORDER, listbox);
       d.remove();
       await updated;
       testGroupAttrs("b", 1, 2);
@@ -76,7 +76,7 @@
     <div id="d" role="option">Option d</div>
     <div id="e" role="option">Option e</div>
     <div id="f" role="option">Option f</div>
-  </div>  
-  
+  </div>
+
 </body>
 </html>
