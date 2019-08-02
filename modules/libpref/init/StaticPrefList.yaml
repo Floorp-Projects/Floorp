@@ -5058,6 +5058,12 @@
 #endif
   mirror: always
 
+# Are video stats enabled? (Disabling can help prevent fingerprinting.)
+- name: media.video_stats.enabled
+  type: bool
+  value: true
+  mirror: always
+
 # Opus
 - name: media.opus.enabled
   type: RelaxedAtomicBool
