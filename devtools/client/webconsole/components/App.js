@@ -300,7 +300,6 @@ class App extends Component {
       key: "reverse-search-input",
       setInputValue: serviceContainer.setInputValue,
       focusInput: serviceContainer.focusInput,
-      evaluateInput: serviceContainer.evaluateInput,
       initialValue: reverseSearchInitialValue,
     });
   }

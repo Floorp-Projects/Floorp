@@ -1742,6 +1742,10 @@ void JSFunction::maybeRelazify(JSRuntime* rt) {
 
   flags_.clearInterpreted();
   flags_.setInterpretedLazy();
+
+  MOZ_ASSERT(!script->isAsync() && !script->isGenerator(),
+             "Generator resume code in the JITs assumes non-lazy function");
+
   LazyScript* lazy = script->maybeLazyScript();
   if (lazy) {
     u.scripted.s.lazy_ = lazy;

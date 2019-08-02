@@ -6,6 +6,7 @@
 
 UNIFIED_SOURCES += [
      'TestCSPParser.cpp',
+     'TestFilenameEvalParser.cpp',
      'TestSecureContext.cpp',
 ]
 

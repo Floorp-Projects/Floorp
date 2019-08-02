@@ -42,12 +42,13 @@ STATIC_ATOMS = [
     Atom("mozdirty", "_moz_dirty"),
     Atom("mozdisallowselectionprint", "mozdisallowselectionprint"),
     Atom("mozdonotsend", "moz-do-not-send"),
+    Atom("mozfwcontainer", "moz-forward-container"),  # Used by MailNews.
     Atom("mozgeneratedcontentbefore", "_moz_generated_content_before"),
     Atom("mozgeneratedcontentafter", "_moz_generated_content_after"),
     Atom("mozgeneratedcontentmarker", "_moz_generated_content_marker"),
     Atom("mozgeneratedcontentimage", "_moz_generated_content_image"),
     Atom("mozquote", "_moz_quote"),
-    Atom("mozsignature", "moz-signature"),
+    Atom("mozsignature", "moz-signature"),  # Used by MailNews.
     Atom("_moz_is_glyph", "-moz-is-glyph"),
     Atom("_moz_original_size", "_moz_original_size"),
     Atom("menuactive", "_moz-menuactive"),

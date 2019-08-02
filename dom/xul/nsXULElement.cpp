@@ -1901,12 +1901,9 @@ nsresult nsXULPrototypeScript::Serialize(
 
 nsresult nsXULPrototypeScript::SerializeOutOfLine(
     nsIObjectOutputStream* aStream, nsXULPrototypeDocument* aProtoDoc) {
-  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
-
-  bool isChrome = false;
-  if (NS_FAILED(mSrcURI->SchemeIs("chrome", &isChrome)) || !isChrome)
+  if (!mSrcURI->SchemeIs("chrome"))
     // Don't cache scripts that don't come from chrome uris.
-    return rv;
+    return NS_ERROR_NOT_IMPLEMENTED;
 
   nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
   if (!cache) return NS_ERROR_OUT_OF_MEMORY;
@@ -1924,7 +1921,7 @@ nsresult nsXULPrototypeScript::SerializeOutOfLine(
   if (exists) return NS_OK;
 
   nsCOMPtr<nsIObjectOutputStream> oos;
-  rv = cache->GetOutputStream(mSrcURI, getter_AddRefs(oos));
+  nsresult rv = cache->GetOutputStream(mSrcURI, getter_AddRefs(oos));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsresult tmp = Serialize(oos, aProtoDoc, nullptr);
@@ -2014,13 +2011,9 @@ nsresult nsXULPrototypeScript::DeserializeOutOfLine(
         rv = Deserialize(objectInput, aProtoDoc, nullptr, nullptr);
 
       if (NS_SUCCEEDED(rv)) {
-        if (useXULCache && mSrcURI) {
-          bool isChrome = false;
-          mSrcURI->SchemeIs("chrome", &isChrome);
-          if (isChrome) {
-            JS::Rooted<JSScript*> script(RootingCx(), GetScriptObject());
-            cache->PutScript(mSrcURI, script);
-          }
+        if (useXULCache && mSrcURI && mSrcURI->SchemeIs("chrome")) {
+          JS::Rooted<JSScript*> script(RootingCx(), GetScriptObject());
+          cache->PutScript(mSrcURI, script);
         }
         cache->FinishInputStream(mSrcURI);
       } else {

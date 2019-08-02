@@ -358,9 +358,7 @@ bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest) {
       aRequest->TriggeringPrincipal()->GetURI(getter_AddRefs(triggeringURI));
   NS_ENSURE_SUCCESS(rv, false);
 
-  bool isAbout =
-      (NS_SUCCEEDED(triggeringURI->SchemeIs("about", &isAbout)) && isAbout);
-  if (!isAbout) {
+  if (!triggeringURI->SchemeIs("about")) {
     return false;
   }
 
@@ -378,9 +376,7 @@ bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest) {
   }
 
   // if the uri to be loaded is not of scheme chrome:, there is nothing to do.
-  bool isChrome =
-      (NS_SUCCEEDED(aRequest->mURI->SchemeIs("chrome", &isChrome)) && isChrome);
-  if (!isChrome) {
+  if (!aRequest->mURI->SchemeIs("chrome")) {
     return false;
   }
 
@@ -3529,22 +3525,8 @@ uint32_t ScriptLoader::NumberOfProcessors() {
 }
 
 static bool IsInternalURIScheme(nsIURI* uri) {
-  bool isWebExt;
-  if (NS_SUCCEEDED(uri->SchemeIs("moz-extension", &isWebExt)) && isWebExt) {
-    return true;
-  }
-
-  bool isResource;
-  if (NS_SUCCEEDED(uri->SchemeIs("resource", &isResource)) && isResource) {
-    return true;
-  }
-
-  bool isChrome;
-  if (NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome) {
-    return true;
-  }
-
-  return false;
+  return uri->SchemeIs("moz-extension") || uri->SchemeIs("resource") ||
+         uri->SchemeIs("chrome");
 }
 
 nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,

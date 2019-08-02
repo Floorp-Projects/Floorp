@@ -6,8 +6,9 @@ use mach::kern_return::{kern_return_t, KERN_SUCCESS};
 use mach::port::mach_port_t;
 use mach::message::mach_msg_type_number_t;
 use mach_sys::*;
-use libc::{pthread_self, pthread_t, mach_timebase_info, mach_timebase_info_data_t};
 use std::mem::size_of;
+use mach::mach_time::{mach_timebase_info_data_t, mach_timebase_info};
+use libc::{pthread_t, pthread_self};
 
 extern "C" {
     fn pthread_mach_thread_np(tid: pthread_t) -> mach_port_t;

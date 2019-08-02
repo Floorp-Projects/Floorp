@@ -16,11 +16,13 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
 
   // check for occurrences of Object XRayWrapper, bug 604430
-  const onMessage = waitForMessage(hud, "HTMLDocument");
-  jsterm.execute("document");
-  const { node } = await onMessage;
+  const { node } = await executeAndWaitForMessage(
+    hud,
+    "document",
+    "HTMLDocument",
+    ".result"
+  );
   is(node.textContent.includes("xray"), false, "document - no XrayWrapper");
 }

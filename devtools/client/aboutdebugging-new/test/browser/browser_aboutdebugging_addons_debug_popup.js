@@ -186,7 +186,6 @@ add_task(async function testWebExtensionsToolboxWebConsole() {
 });
 
 async function toolboxTestScript(toolbox, devtoolsTab) {
-  let jsterm;
   const popupFramePromise = new Promise(resolve => {
     const listener = data => {
       if (data.frames.some(({ url }) => url && url.endsWith("popup.html"))) {
@@ -223,8 +222,8 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
       await clickNoAutoHideMenu();
       dump(`Clicked the menu button\n`);
 
-      jsterm = console.hud.jsterm;
-      jsterm.execute("myWebExtensionShowPopup()");
+      const consoleWrapper = console.hud.ui.wrapper;
+      consoleWrapper.dispatchEvaluateExpression("myWebExtensionShowPopup()");
 
       await Promise.all([
         // Wait the initial frame update (which list the background page).
@@ -265,7 +264,9 @@ async function toolboxTestScript(toolbox, devtoolsTab) {
         wait(1000),
       ]);
       await waitForNavigated;
-      await jsterm.execute("myWebExtensionPopupAddonFunction()");
+      consoleWrapper.dispatchEvaluateExpression(
+        "myWebExtensionPopupAddonFunction()"
+      );
 
       info("Wait for all pending requests to settle on the DebuggerClient");
       await toolbox.target.client.waitForRequestsToSettle();

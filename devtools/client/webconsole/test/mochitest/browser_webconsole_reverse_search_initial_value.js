@@ -30,9 +30,9 @@ async function performTests() {
     `"😎"`,
   ];
 
-  const onLastMessage = waitForMessage(hud, `"😎"`);
+  const onLastMessage = waitForMessage(hud, `"😎"`, ".result");
   for (const input of jstermHistory) {
-    await jsterm.execute(input);
+    execute(hud, input);
   }
   await onLastMessage;
 

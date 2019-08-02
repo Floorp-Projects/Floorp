@@ -191,9 +191,15 @@ class SearchOneOffs {
    * @param {UrlbarView} val
    */
   set view(val) {
+    if (this._view) {
+      this._view.controller.removeQueryListener(this);
+    }
     this._view = val;
-    if (val && val.isOpen) {
-      this._rebuild();
+    if (val) {
+      if (val.isOpen) {
+        this._rebuild();
+      }
+      val.controller.addQueryListener(this);
     }
     return val;
   }
@@ -1369,6 +1375,10 @@ class SearchOneOffs {
   }
 
   _on_popupshowing() {
+    this._rebuild();
+  }
+
+  onViewOpen() {
     this._rebuild();
   }
 }

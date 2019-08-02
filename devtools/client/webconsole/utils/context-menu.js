@@ -164,10 +164,12 @@ function createContextMenu(
           selectedObjectActor: actor,
         };
 
-        webConsoleUI.jsterm.requestEvaluation(evalString, options).then(res => {
-          webConsoleUI.jsterm.focus();
-          webConsoleUI.hud.setInputValue(res.result);
-        });
+        webConsoleUI.webConsoleClient
+          .evaluateJSAsync(evalString, options)
+          .then(res => {
+            webConsoleUI.jsterm.focus();
+            webConsoleUI.hud.setInputValue(res.result);
+          });
       },
     })
   );

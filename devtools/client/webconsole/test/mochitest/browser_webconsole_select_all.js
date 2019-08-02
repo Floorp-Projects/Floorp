@@ -20,16 +20,11 @@ add_task(async function testSelectAll() {
 });
 
 async function testSelectionWhenMovingBetweenBoxes(hud) {
-  const jsterm = hud.jsterm;
-
   // Fill the console with some output.
   hud.ui.clearOutput();
-  await jsterm.execute("1 + 2");
-  await waitFor(() => findMessage(hud, "3"));
-  await jsterm.execute("3 + 4");
-  await waitFor(() => findMessage(hud, "7"));
-  await jsterm.execute("5 + 6");
-  await waitFor(() => findMessage(hud, "11"));
+  await executeAndWaitForMessage(hud, "1 + 2", "3", ".result");
+  await executeAndWaitForMessage(hud, "3 + 4", "7", ".result");
+  await executeAndWaitForMessage(hud, "5 + 6", "11", ".result");
 }
 
 function testBrowserMenuSelectAll(hud) {

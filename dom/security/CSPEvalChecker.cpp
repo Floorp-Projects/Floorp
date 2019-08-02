@@ -33,8 +33,8 @@ nsresult CheckInternal(nsIContentSecurityPolicy* aCSP,
 
 #if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
   JSContext* cx = nsContentUtils::GetCurrentJSContext();
-  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(aSubjectPrincipal,
-                                                              cx);
+  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
+      cx, aSubjectPrincipal, aExpression);
 #endif
 
   // The value is set at any "return", but better to have a default value here.

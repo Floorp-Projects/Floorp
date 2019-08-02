@@ -467,12 +467,6 @@ skip script test262/intl402/RelativeTimeFormat/prototype/formatToParts/en-us-num
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1277801
 skip script test262/built-ins/Object/prototype/toString/symbol-tag-non-str-builtin.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1568619
-skip script test262/language/literals/bigint/non-octal-like-invalid-09n.js
-skip script test262/language/literals/bigint/non-octal-like-invalid-0008n.js
-skip script test262/language/literals/bigint/non-octal-like-invalid-08n.js
-skip script test262/language/literals/bigint/non-octal-like-invalid-012348n.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
