@@ -1190,7 +1190,7 @@ impl TextureCache {
     // placed in the shared texture cache.
     pub fn is_allowed_in_shared_cache(
         &self,
-        _filter: TextureFilter,
+        filter: TextureFilter,
         descriptor: &ImageDescriptor,
     ) -> bool {
         let mut allowed_in_shared_cache = true;
@@ -1200,7 +1200,17 @@ impl TextureCache {
         //           case, add support for storing these in a standalone
         //           texture array.
         if descriptor.size.width > TEXTURE_REGION_DIMENSIONS ||
-           descriptor.size.height > TEXTURE_REGION_DIMENSIONS {
+           descriptor.size.height > TEXTURE_REGION_DIMENSIONS
+        {
+            allowed_in_shared_cache = false;
+        }
+
+        // TODO(gw): For now, alpha formats of the texture cache can only be linearly sampled.
+        //           Nearest sampling gets a standalone texture.
+        //           This is probably rare enough that it can be fixed up later.
+        if filter == TextureFilter::Nearest &&
+           descriptor.format.bytes_per_pixel() <= 2
+        {
             allowed_in_shared_cache = false;
         }
 
