@@ -38,6 +38,9 @@ permalink: /changelog/
 * **service-glean**
   * Fixed a bug in`TimeSpanMetricType` that prevented multiple consecutive `start()`/`stop()` calls. This resulted in the `glean.baseline.duration` being missing from most [`baseline`](https://mozilla.github.io/glean/book/user/pings/baseline.html) pings.
 
+* **service-firefox-accounts**
+  * ⚠️ **This is a breaking change**: `AccountObserver.onAuthenticated` now helps observers distinguish when an account is a new authenticated account one with a second `newAccount` boolean parameter.
+
 # 6.0.2
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.1...v6.0.2)
@@ -80,9 +83,6 @@ permalink: /changelog/
 
 * **service-location**
   * 🆕 A new component for accessing Mozilla's and other location services.
-
-* **service-firefox-accounts**
-  * ⚠️ **This is a breaking change**: `AccountObserver.onAuthenticated` now helps observers distinguish when an account is a new authenticated account one with a second `newAccount` boolean parameter.
 
 * **feature-prompts**
   * Improved month picker UI, now we have the same widget as Fennec.
