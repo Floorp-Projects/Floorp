@@ -158,10 +158,7 @@ nsresult ChannelFromScriptURL(
       principal, uri, true /* aInheritForAboutBlank */,
       false /* aForceInherit */);
 
-  bool isData = false;
-  rv = uri->SchemeIs("data", &isData);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  bool isData = uri->SchemeIs("data");
   bool isURIUniqueOrigin =
       net::nsIOService::IsDataURIUniqueOpaqueOrigin() && isData;
   if (inheritAttrs && !isURIUniqueOrigin) {
