@@ -551,10 +551,17 @@ Matrix4x4 ReadTransforms(const StyleTranslate& aTranslate,
     // Create the equivalent translate and rotate function, according to the
     // order in spec. We combine the translate and then the rotate.
     // https://drafts.fxtf.org/motion-1/#calculating-path-transform
-    result.PreTranslate(aMotion->mTranslate.x, aMotion->mTranslate.y, 0.0);
+    //
+    // Besides, we have to shift the object by the delta between anchor-point
+    // and transform-origin, to make sure we rotate the object according to
+    // anchor-point.
+    result.PreTranslate(aMotion->mTranslate.x + aMotion->mShift.x,
+                        aMotion->mTranslate.y + aMotion->mShift.y, 0.0);
     if (aMotion->mRotate != 0.0) {
       result.RotateZ(aMotion->mRotate);
     }
+    // Shift the origin back to transform-origin.
+    result.PreTranslate(-aMotion->mShift.x, -aMotion->mShift.y, 0.0);
   }
 
   for (const StyleTransformOperation& op : aTransform.Operations()) {
