@@ -1,0 +1,15 @@
+---
+android-test:
+    description: Android test
+    include: ['mobile/android']
+    exclude: []
+    extensions: ['java', 'kt']
+    support-files:
+        - 'mobile/android/**/Makefile.in'
+        - 'mobile/android/config/**'
+        - 'mobile/android/gradle.configure'
+        - 'mobile/android/**/moz.build'
+        - '**/*.gradle'
+    type: global
+    payload: android.lints:test
+    setup: android.lints:setup

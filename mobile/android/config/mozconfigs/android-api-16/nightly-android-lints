@@ -35,3 +35,15 @@ export MOZ_ANDROID_MMA=1
 export MOZ_ANDROID_POCKET=1
 
 . "$topsrcdir/mobile/android/config/mozconfigs/common.override"
+
+# End ../android-api-16/nightly.
+
+# Disable Keyfile Loading (and checks) since.
+# This overrides the settings in the common android mozconfig
+ac_add_options --without-mozilla-api-keyfile
+ac_add_options --without-google-location-service-api-keyfile
+ac_add_options --without-google-safebrowsing-api-keyfile
+# We need dummy Keyfiles in order to enable features we care about.
+ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
+ac_add_options --with-leanplum-sdk-keyfile="$topsrcdir/mobile/android/base/leanplum-sdk-sandbox.token"
+ac_add_options --with-pocket-api-keyfile="$topsrcdir/mobile/android/base/pocket-api-sandbox.token"

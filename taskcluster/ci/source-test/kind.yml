@@ -24,6 +24,7 @@ jobs-from:
     - infer.yml
     - jsshell.yml
     - mozlint.yml
+    - mozlint-android.yml
     - node.yml
     - python.yml
     - webidl.yml
