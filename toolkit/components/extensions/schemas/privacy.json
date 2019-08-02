@@ -29,7 +29,7 @@
       {
         "id": "IPHandlingPolicy",
         "type": "string",
-        "enum": ["default", "default_public_and_private_interfaces", "default_public_interface_only", "disable_non_proxied_udp"],
+        "enum": ["default", "default_public_and_private_interfaces", "default_public_interface_only", "disable_non_proxied_udp", "proxy_only"],
         "description": "The IP handling policy of WebRTC."
       }
     ],

@@ -95,6 +95,7 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
   prefNames: [
     "media.peerconnection.ice.default_address_only",
     "media.peerconnection.ice.no_host",
+    "media.peerconnection.ice.proxy_only_if_behind_proxy",
     "media.peerconnection.ice.proxy_only",
   ],
 
@@ -119,6 +120,12 @@ ExtensionPreferencesManager.addSetting("network.webRTCIPHandlingPolicy", {
         break;
 
       case "disable_non_proxied_udp":
+        prefs["media.peerconnection.ice.default_address_only"] = true;
+        prefs["media.peerconnection.ice.no_host"] = true;
+        prefs["media.peerconnection.ice.proxy_only_if_behind_proxy"] = true;
+        break;
+
+      case "proxy_only":
         prefs["media.peerconnection.ice.proxy_only"] = true;
         break;
     }
@@ -243,14 +250,24 @@ this.privacy = class extends ExtensionAPI {
             "network.webRTCIPHandlingPolicy",
             () => {
               if (Preferences.get("media.peerconnection.ice.proxy_only")) {
-                return "disable_non_proxied_udp";
+                return "proxy_only";
               }
 
               let default_address_only = Preferences.get(
                 "media.peerconnection.ice.default_address_only"
               );
               if (default_address_only) {
-                if (Preferences.get("media.peerconnection.ice.no_host")) {
+                let no_host = Preferences.get(
+                  "media.peerconnection.ice.no_host"
+                );
+                if (no_host) {
+                  if (
+                    Preferences.get(
+                      "media.peerconnection.ice.proxy_only_if_behind_proxy"
+                    )
+                  ) {
+                    return "disable_non_proxied_udp";
+                  }
                   return "default_public_interface_only";
                 }
                 return "default_public_and_private_interfaces";

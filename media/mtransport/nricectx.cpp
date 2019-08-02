@@ -274,7 +274,8 @@ NrIceCtx::NrIceCtx(const std::string& name, Policy policy)
       trickle_(true),
       policy_(policy),
       nat_(nullptr),
-      proxy_config_(nullptr) {}
+      proxy_config_(nullptr),
+      proxy_only_(false) {}
 
 /* static */
 RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name, bool allow_loopback,
@@ -862,6 +863,8 @@ nsresult NrIceCtx::StartGathering(bool default_route_only, bool proxy_only) {
   SetGatheringState(ICE_CTX_GATHER_STARTED);
 
   SetCtxFlags(default_route_only, proxy_only);
+    
+  proxy_only_ = proxy_only;
 
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
@@ -1052,6 +1055,11 @@ int nr_socket_local_create(void* obj, nr_transport_addr* addr,
 
   if (obj) {
     config = static_cast<NrIceCtx*>(obj)->GetProxyConfig();
+    bool ctx_proxy_only = static_cast<NrIceCtx*>(obj)->proxy_only();
+
+    if (ctx_proxy_only && !config) {
+      ABORT(R_FAILED);
+    }
   }
 
   r = NrSocketBase::CreateSocket(addr, &sock, config);
