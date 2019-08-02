@@ -47,9 +47,11 @@ add_task(async function() {
 
   info("Veryify we are inspecting the new document");
   const console = await toolbox.selectTool("webconsole");
-  const { jsterm } = console.hud;
-  const url = await jsterm.execute("document.location.href");
-  // Uses includes as the old console frontend prints a timestamp
+  const { ui } = console.hud;
+  ui.wrapper.dispatchEvaluateExpression("document.location.href");
+  await waitUntil(() => ui.outputNode.querySelector(".result"));
+  const url = ui.outputNode.querySelector(".result");
+
   ok(
     url.textContent.includes(URL_2),
     "The console inspects the second document"

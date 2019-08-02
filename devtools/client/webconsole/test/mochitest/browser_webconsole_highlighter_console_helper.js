@@ -28,21 +28,21 @@ add_task(async function() {
 
   info("Picker mode stopped, <h1> selected, now switching to the console");
   const hud = await openConsole();
-  const { jsterm } = hud;
 
   hud.ui.clearOutput();
 
-  const onEvaluationResult = waitForMessage(hud, "<h1>");
-  jsterm.execute("$0");
-  await onEvaluationResult;
+  await executeAndWaitForMessage(hud, "$0", "<h1>", ".result");
   ok(true, "correct output for $0");
 
   hud.ui.clearOutput();
 
   const newH1Content = "newH1Content";
-  const onAssignmentResult = waitForMessage(hud, "<h1>");
-  jsterm.execute(`$0.textContent = "${newH1Content}";$0`);
-  await onAssignmentResult;
+  await executeAndWaitForMessage(
+    hud,
+    `$0.textContent = "${newH1Content}";$0`,
+    "<h1>",
+    ".result"
+  );
 
   ok(true, "correct output for $0 after setting $0.textContent");
   const { textContent } = await testActor.getNodeInfo("h1");

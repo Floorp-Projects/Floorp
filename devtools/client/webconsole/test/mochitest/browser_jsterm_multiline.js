@@ -94,7 +94,6 @@ async function performTests() {
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
 
   for (const { input, shiftKey } of SHOULD_ENTER_MULTILINE) {
     setInputValue(hud, input);
@@ -114,7 +113,12 @@ async function performTests() {
     is(getInputValue(hud), "", "Input is cleared");
   }
 
-  await jsterm.execute("document.\nlocation.\nhref");
+  await executeAndWaitForMessage(
+    hud,
+    "document.\nlocation.\nhref",
+    TEST_URI,
+    ".result"
+  );
 
   checkEventTelemetry();
 }

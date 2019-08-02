@@ -221,6 +221,16 @@ async function waitForMessage(hud, text, selector) {
 }
 
 /**
+ * Execute an input expression.
+ *
+ * @param {Object} hud : The webconsole.
+ * @param {String} input : The input expression to execute.
+ */
+function execute(hud, input) {
+  return hud.ui.wrapper.dispatchEvaluateExpression(input);
+}
+
+/**
  * Execute an input expression and wait for a message with the expected text (and an
  * optional selector) to be displayed in the output.
  *
@@ -236,7 +246,7 @@ function executeAndWaitForMessage(
   selector = ".message"
 ) {
   const onMessage = waitForMessage(hud, matchingText, selector);
-  hud.jsterm.execute(input);
+  execute(hud, input);
   return onMessage;
 }
 
@@ -501,7 +511,9 @@ function getInputValue(hud) {
  * @param {String} value : The value to set the console input to.
  */
 function setInputValue(hud, value) {
-  return hud.jsterm._setValue(value);
+  const onValueSet = hud.jsterm.once("set-input-value");
+  hud.jsterm._setValue(value);
+  return onValueSet;
 }
 
 /**

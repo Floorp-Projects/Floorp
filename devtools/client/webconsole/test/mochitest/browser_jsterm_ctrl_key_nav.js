@@ -242,8 +242,10 @@ async function testNavWithHistory(hud) {
 
   // submit to history
   for (const value of values) {
+    const onResult = waitForMessage(hud, "", ".result");
     setInputValue(hud, value);
-    await hud.jsterm.execute();
+    EventUtils.synthesizeKey("KEY_Enter");
+    await onResult;
   }
 
   checkInput("|", "caret location at start of empty line");

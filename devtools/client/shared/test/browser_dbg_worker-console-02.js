@@ -24,12 +24,9 @@ add_task(async function testWhilePaused() {
   const workerThreadFront = await workerTargetFront.getFront("thread");
 
   // Execute some basic math to make sure evaluations are working.
-  const jsterm = await getSplitConsole(toolbox);
-  let executed = await jsterm.execute("10000+1");
-  ok(
-    executed.textContent.includes("10001"),
-    "Text for message appeared correct"
-  );
+  const hud = await getSplitConsole(toolbox);
+  await executeAndWaitForMessage(hud, "10000+1", "10001");
+  ok(true, "Text for message appeared correct");
 
   await clickElement(dbg, "pause");
   workerThreadFront.once("willInterrupt").then(() => {
@@ -38,24 +35,27 @@ add_task(async function testWhilePaused() {
   });
   await waitForPaused(dbg);
 
-  const command1 = jsterm.execute("10000+2");
-  const command2 = jsterm.execute("10000+3");
-  const command3 = jsterm.execute("foobar"); // throw an error
+  const command1 = executeAndWaitForMessage(hud, "10000+2", "10002");
+  const command2 = executeAndWaitForMessage(hud, "10000+3", "10003");
+  // throw an error
+  const command3 = executeAndWaitForMessage(
+    hud,
+    "foobar",
+    "ReferenceError: foobar is not defined",
+    "error"
+  );
 
   info("Trying to get the result of command1");
-  executed = await command1;
-  ok(executed.textContent.includes("10002"), "command1 executed successfully");
+  let executed = await command1;
+  ok(executed, "command1 executed successfully");
 
   info("Trying to get the result of command2");
   executed = await command2;
-  ok(executed.textContent.includes("10003"), "command2 executed successfully");
+  ok(executed, "command2 executed successfully");
 
   info("Trying to get the result of command3");
   executed = await command3;
-  ok(
-    executed.textContent.includes("ReferenceError: foobar is not defined"),
-    "command3 executed successfully"
-  );
+  ok(executed, "command3 executed successfully");
 
   await resume(dbg);
 

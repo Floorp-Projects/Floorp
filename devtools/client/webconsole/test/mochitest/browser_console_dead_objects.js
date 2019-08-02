@@ -18,25 +18,23 @@ add_task(async function() {
   const hud = await HUDService.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
-  const jsterm = hud.jsterm;
-
   // Add the reference to the nuked sandbox.
-  await jsterm.execute(
-    "window.nukedSandbox = Cu.Sandbox(null);" + "Cu.nukeSandbox(nukedSandbox);"
+  execute(
+    hud,
+    "window.nukedSandbox = Cu.Sandbox(null); Cu.nukeSandbox(nukedSandbox);"
   );
 
-  await jsterm.execute("nukedSandbox");
-  await waitFor(() => findMessage(hud, "DeadObject", ".objectTitle"));
-
-  jsterm.execute("nukedSandbox.hello");
-  const msg = await waitFor(() => findMessage(hud, "can't access dead object"));
+  await executeAndWaitForMessage(hud, "nukedSandbox", "DeadObject");
+  const msg = await executeAndWaitForMessage(
+    hud,
+    "nukedSandbox.hello",
+    "can't access dead object"
+  );
 
   // Check that the link contains an anchor. We can't click on the link because
-  // clicking links from tests attempts to access an external URL and crashes
-  // Firefox.
-  const anchor = msg.querySelector("a");
+  // clicking links from tests attempts to access an external URL and crashes Firefox.
+  const anchor = msg.node.querySelector("a");
   is(anchor.textContent, "[Learn More]", "Link text is correct");
 
-  await jsterm.execute("delete window.nukedSandbox; 2013-26");
-  await waitFor(() => findMessage(hud, "1987"));
+  await executeAndWaitForMessage(hud, "delete window.nukedSandbox; 1 + 1", "2");
 });

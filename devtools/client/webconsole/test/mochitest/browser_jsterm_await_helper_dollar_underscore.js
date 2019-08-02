@@ -22,7 +22,6 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const { jsterm } = hud;
 
   const executeAndWaitForResultMessage = (input, expectedOutput) =>
     executeAndWaitForMessage(hud, input, expectedOutput, ".result");
@@ -79,7 +78,7 @@ async function performTests() {
     ".message.result"
   );
   for (const input of inputs) {
-    jsterm.execute(input);
+    execute(hud, input);
   }
   await onMessage;
 
