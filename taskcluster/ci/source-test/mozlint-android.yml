@@ -1,0 +1,109 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+
+# Just one TC job that runs all the lints.  There's no real advantage
+# to running them separately, and this way we perform the expensive
+# clone and somewhat expensive compilation of the Android
+# intermediates just once.
+lints:
+    always-target: true
+    attributes:
+        build_platform: android
+        build_type: opt
+        code-review: true
+    description: Android lints
+    platform: lint/opt
+    treeherder:
+        symbol: A(lints)
+        kind: test
+        tier: 1
+    worker-type: t-linux-xlarge
+    worker:
+        docker-image: {in-tree: android-build}
+        env:
+            GRADLE_USER_HOME: /builds/worker/checkouts/gecko/mobile/android/gradle/dotgradle-offline
+            MOZCONFIG: mobile/android/config/mozconfigs/android-api-16/nightly-android-lints
+            MOZ_OBJDIR: obj-firefox
+            PERFHERDER_EXTRA_OPTIONS: android-lints
+            TINDERBOX_OUTPUT: '1'
+        max-run-time: 1800
+        artifacts:
+            - type: file
+              name: public/code-review/mozlint.json
+              path: /builds/worker/mozlint.json
+            - name: public/android/geckoview/api.txt
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/classes/withGeckoBinaries/debug/api.txt
+              type: file
+            - name: public/android/geckoview/apilint-result.json
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/intermediates/classes/withGeckoBinaries/debug/apilint-result.json
+              type: file
+            - name: public/app/unittest
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/tests
+              type: directory
+            - name: public/geckoview/unittest
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/geckoview/reports/tests
+              type: directory
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesDebug.html
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesDebug.html
+              type: file
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesDebug.xml
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesDebug.xml
+              type: file
+            - name: public/android/lint/lint-results-officialWithoutGeckoBinariesDebug_files
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/lint-results-officialWithoutGeckoBinariesDebug_files
+              type: directory
+            - name: public/android/checkstyle/checkstyle.html
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.html
+              type: file
+            - name: public/android/checkstyle/checkstyle.xml
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/checkstyle/checkstyle.xml
+              type: file
+            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.html
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.html
+              type: file
+            - name: public/android/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.xml
+              path: /builds/worker/checkouts/gecko/obj-firefox/gradle/build/mobile/android/app/reports/findbugs/findbugs-officialWithoutGeckoBinariesDebug-output.xml
+              type: file
+    run:
+        using: run-task
+        command: >
+            ln -s $MOZ_FETCHES_DIR/android-gradle-dependencies $GECKO_PATH &&
+            ln -s $MOZ_FETCHES_DIR/android-sdk-linux $GECKO_PATH &&
+            ln -s $MOZ_FETCHES_DIR/node $GECKO_PATH &&
+            cd $GECKO_PATH &&
+            ./mach --log-no-times build &&
+            ./mach --log-no-times lint -f treeherder -f json:/builds/worker/mozlint.json
+            --linter android-api-lint
+            --linter android-checkstyle
+            --linter android-findbugs
+            --linter android-lint
+            --linter android-test
+        tooltool-downloads: internal  # For internal toolchains.
+    fetches:
+        toolchain:
+            # Aliases aren't allowed for toolchains installed by fetch.
+            - linux64-android-gradle-dependencies
+            - linux64-android-sdk-linux-repack
+            - linux64-node
+    when:
+        files-changed:
+            # Source files.
+            - 'mobile/android/**/*.java'
+            - 'mobile/android/**/*.kt'
+            # Resources.
+            - 'mobile/android/**/*.jpeg'
+            - 'mobile/android/**/*.jpg'
+            - 'mobile/android/**/*.png'
+            - 'mobile/android/**/*.svg'
+            - 'mobile/android/**/*.xml'
+            # Build stuff.
+            - 'mobile/android/**/Makefile.in'
+            - 'mobile/android/config/**'
+            - 'mobile/android/gradle.configure'
+            - 'mobile/android/**/moz.build'
+            - '**/*.gradle'
+            # Other misc lint related files.
+            - 'python/mozlint/**'
+            - 'tools/lint/**'

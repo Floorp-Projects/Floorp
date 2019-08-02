@@ -1,0 +1,15 @@
+---
+android-api-lint:
+    description: Android api-lint
+    include: ['mobile/android']
+    exclude: []
+    extensions: ['java', 'kt']
+    support-files:
+        - 'mobile/android/**/Makefile.in'
+        - 'mobile/android/config/**'
+        - 'mobile/android/gradle.configure'
+        - 'mobile/android/**/moz.build'
+        - '**/*.gradle'
+    type: global
+    payload: android.lints:api_lint
+    setup: android.lints:setup
