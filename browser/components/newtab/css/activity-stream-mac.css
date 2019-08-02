@@ -371,19 +371,25 @@ input[type='text'], input[type='search'] {
   .outer-wrapper a {
     color: var(--newtab-link-primary-color); }
 
-main {
+main,
+.below-search-snippet.withButton {
   margin: auto;
-  padding-bottom: 68px;
   width: 274px; }
   @media (min-width: 610px) {
-    main {
+    main,
+    .below-search-snippet.withButton {
       width: 530px; } }
   @media (min-width: 866px) {
-    main {
+    main,
+    .below-search-snippet.withButton {
       width: 786px; } }
   @media (min-width: 1122px) {
-    main {
+    main,
+    .below-search-snippet.withButton {
       width: 1042px; } }
+
+main {
+  padding-bottom: 68px; }
   main section {
     margin-bottom: 20px;
     position: relative; }
@@ -1091,27 +1097,15 @@ main {
     .search-wrapper .search-button:dir(rtl) {
       transform: scaleX(-1); }
 
-.below-search-snippet {
-  margin: 0 auto 16px;
-  width: 224px; }
-  @media (min-width: 610px) {
-    .below-search-snippet {
-      width: 480px; } }
-  @media (min-width: 866px) {
-    .below-search-snippet {
-      width: 736px; } }
-  .ds-outer-wrapper-breakpoint-override .below-search-snippet {
-    width: 736px; }
-
-.non-collapsible-section + .below-search-snippet {
+.non-collapsible-section + .below-search-snippet-wrapper {
   margin-top: -48px; }
 
 @media (max-height: 700px) {
   .search-wrapper {
     padding: 0 0 30px; }
-  .non-collapsible-section + .below-search-snippet {
+  .non-collapsible-section + .below-search-snippet-wrapper {
     margin-top: -14px; }
-  .below-search-snippet {
+  .below-search-snippet-wrapper {
     min-height: 0; } }
 
 .search-handoff-button {
@@ -3183,15 +3177,32 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
     fill: #FFF;
     vertical-align: sub; }
 
+.below-search-snippet {
+  margin: 0 auto 16px; }
+  .below-search-snippet.withButton {
+    padding: 0 25px;
+    margin: auto; }
+    .ds-outer-wrapper-breakpoint-override .below-search-snippet.withButton {
+      padding: 0 50px; }
+    .below-search-snippet.withButton .snippet-hover-wrapper:hover {
+      background-color: var(--newtab-element-hover-color); }
+      .below-search-snippet.withButton .snippet-hover-wrapper:hover .blockButton {
+        display: block; }
+
 .SimpleBelowSearchSnippet {
-  background-color: inherit;
+  background-color: transparent;
   border: 0;
   box-shadow: none;
   position: relative;
+  line-height: 40px;
+  width: 736px;
+  margin: auto;
   z-index: auto; }
+  .SimpleBelowSearchSnippet.active {
+    background-color: var(--newtab-element-hover-color); }
   .SimpleBelowSearchSnippet .innerWrapper {
     align-items: center;
-    background-color: var(--newtab-card-background-color);
+    background-color: transparent;
     border-radius: 4px;
     box-shadow: var(--newtab-card-shadow);
     flex-direction: column;
@@ -3205,7 +3216,6 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
         box-shadow: none;
         flex-direction: row;
         padding: 0;
-        padding-inline-end: 36px;
         text-align: inherit; } }
     .ds-outer-wrapper-breakpoint-override .SimpleBelowSearchSnippet .innerWrapper {
       align-items: flex-start;
@@ -3213,18 +3223,16 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       box-shadow: none;
       flex-direction: row;
       padding: 0;
-      padding-inline-end: 36px;
       text-align: inherit; }
-  .SimpleBelowSearchSnippet.active .innerWrapper {
-    background-color: var(--newtab-element-hover-color); }
   .SimpleBelowSearchSnippet .blockButton {
     display: block;
-    inset-inline-end: 15px;
+    inset-inline-end: 20px;
     opacity: 1;
     top: 24px; }
   .SimpleBelowSearchSnippet .icon {
     height: 32px;
     margin-inline-start: 12px;
+    margin-top: 15px;
     width: 32px; }
     @media (min-width: 610px) {
       .SimpleBelowSearchSnippet .icon {
@@ -3235,7 +3243,30 @@ body[lwt-newtab-brighttext] .scene2Icon .icon-light-theme {
       height: 24px;
       margin-top: 10px;
       width: 24px; }
+  .SimpleBelowSearchSnippet.withButton {
+    line-height: 20px;
+    margin-bottom: 10px; }
+    .SimpleBelowSearchSnippet.withButton .blockButton {
+      display: none;
+      inset-inline-end: -80px;
+      opacity: 1;
+      margin: auto; }
+    .SimpleBelowSearchSnippet.withButton .textContainer {
+      margin: 10px; }
+    .SimpleBelowSearchSnippet.withButton .title {
+      font-size: inherit;
+      margin: 0; }
+    .SimpleBelowSearchSnippet.withButton .title-inline {
+      display: inline; }
+    .SimpleBelowSearchSnippet.withButton .icon {
+      width: 42px;
+      height: 42px;
+      margin-inline-end: 12px;
+      flex-shrink: 0; }
+    .SimpleBelowSearchSnippet.withButton .buttonContainer {
+      margin: auto; }
   .SimpleBelowSearchSnippet .body {
+    display: inline;
     margin: 8px 0 0; }
     @media (min-width: 610px) {
       .SimpleBelowSearchSnippet .body {
