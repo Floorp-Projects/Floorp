@@ -115,7 +115,11 @@ URLSearchParams* URL::SearchParams() {
   return mSearchParams;
 }
 
-bool IsChromeURI(nsIURI* aURI) { return aURI->SchemeIs("chrome"); }
+bool IsChromeURI(nsIURI* aURI) {
+  bool isChrome = false;
+  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome))) return isChrome;
+  return false;
+}
 
 void URL::CreateSearchParamsIfNeeded() {
   if (!mSearchParams) {

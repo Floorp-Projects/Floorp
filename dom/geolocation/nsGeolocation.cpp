@@ -836,10 +836,18 @@ nsresult Geolocation::Init(nsPIDOMWindowInner* aContentDom) {
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (uri) {
+      bool isHttp;
+      rv = uri->SchemeIs("http", &isHttp);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      bool isHttps;
+      rv = uri->SchemeIs("https", &isHttps);
+      NS_ENSURE_SUCCESS(rv, rv);
+
       // Store the protocol to send via telemetry later.
-      if (uri->SchemeIs("http")) {
+      if (isHttp) {
         mProtocolType = ProtocolType::HTTP;
-      } else if (uri->SchemeIs("https")) {
+      } else if (isHttps) {
         mProtocolType = ProtocolType::HTTPS;
       }
     }
