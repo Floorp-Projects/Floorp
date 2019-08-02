@@ -115,8 +115,6 @@ class MediaDelegateTest : BaseSessionTest() {
     }
 
     @Test fun testDeviceRecordingEventAudio() {
-        // disable test on debug Bug 1555656
-        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         mainSession.loadTestPath(HELLO_HTML_PATH)
         mainSession.waitForPageStop()
 
