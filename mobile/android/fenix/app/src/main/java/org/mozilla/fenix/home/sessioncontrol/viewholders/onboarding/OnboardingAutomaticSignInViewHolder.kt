@@ -5,14 +5,15 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders.onboarding
 
 import android.view.View
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.turn_on_sync_button
-import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.header_text
+import kotlinx.android.synthetic.main.onboarding_automatic_signin.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.service.fxa.sharing.ShareableAccount
+import mozilla.components.support.ktx.android.view.putCompoundDrawablesRelativeWithIntrinsicBounds
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.components
@@ -51,6 +52,8 @@ class OnboardingAutomaticSignInViewHolder(private val view: View) : RecyclerView
         view.header_text.text = view.context.getString(
             R.string.onboarding_firefox_account_auto_signin_header_2, account.email
         )
+        val icon = AppCompatResources.getDrawable(view.context, R.drawable.ic_onboarding_avatar_anonymous)
+        view.header_text.putCompoundDrawablesRelativeWithIntrinsicBounds(start = icon)
     }
 
     companion object {

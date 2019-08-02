@@ -16,7 +16,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="14dp"
-        android:drawableStart="@drawable/ic_onboarding_firefox_accounts"
         android:drawablePadding="12dp"
         android:textAppearance="@style/Header16TextStyle"
         android:textColor="@color/onboarding_card_primary_text_dark"
