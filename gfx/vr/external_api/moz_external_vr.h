@@ -430,6 +430,23 @@ struct VRSystemState {
   VRControllerState controllerState[kVRControllerMaxCount];
 };
 
+// Data shared via shmem for running Firefox in a VR windowed environment
+struct VRWindowState {
+  // State from Firefox
+  uint64_t hwndFx;
+  uint32_t widthFx;
+  uint32_t heightFx;
+  VRLayerTextureHandle textureFx;
+
+  // State from VRHost
+  uint32_t dxgiAdapterHost;
+  uint32_t widthHost;
+  uint32_t heightHost;
+
+  // Name of synchronization primitive to signal change to this struct
+  char signalName[32];
+};
+
 struct VRExternalShmem {
   int32_t version;
   int32_t size;
@@ -455,6 +472,9 @@ struct VRExternalShmem {
   int64_t geckoGenerationB;
   int64_t servoGenerationB;
 #endif  // !defined(__ANDROID__)
+#if defined(XP_WIN)
+  VRWindowState windowState;
+#endif
 #ifdef MOZILLA_INTERNAL_API
   void Clear() volatile {
 /**

@@ -43,6 +43,9 @@ class VRShMem final {
       bool& aEnumerationCompleted,
       const std::function<bool()>& aWaitCondition = nullptr);
 
+  void PushWindowState(VRWindowState& aState);
+  void PullWindowState(VRWindowState& aState);
+
   bool HasExternalShmem() const { return mExternalShmem != nullptr; }
   volatile VRExternalShmem* GetExternalShmem() const;
   bool IsDisplayStateShutdown() const;

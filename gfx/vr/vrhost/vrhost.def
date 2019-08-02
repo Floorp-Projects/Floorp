@@ -4,6 +4,10 @@
 
 LIBRARY        vrhost.dll
 
-EXPORTS        SampleExport      PRIVATE
-               TestTheManager      PRIVATE
-               TestTheService      PRIVATE
+EXPORTS        SampleExport         PRIVATE
+               TestTheManager       PRIVATE
+               TestTheService       PRIVATE
+               TestCreateVRWindow   PRIVATE
+
+               CreateVRWindow       PRIVATE
+               CloseVRWindow        PRIVATE
