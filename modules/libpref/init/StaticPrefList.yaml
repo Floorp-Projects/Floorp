@@ -1265,6 +1265,15 @@
   value: false
   mirror: always
 
+- name: dom.disable_window_print
+  type: bool
+#ifdef ANDROID
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: dom.element.transform-getters.enabled
   type: bool
   value: false
