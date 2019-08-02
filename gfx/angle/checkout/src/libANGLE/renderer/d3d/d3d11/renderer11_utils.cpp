@@ -2414,6 +2414,9 @@ angle::WorkaroundsD3D GenerateWorkarounds(const Renderer11DeviceCaps &deviceCaps
         else if (IsBroadwell(adapterDesc.DeviceId) || IsHaswell(adapterDesc.DeviceId))
         {
             workarounds.rewriteUnaryMinusOperator = capsVersion < IntelDriverVersion(4624);
+
+            // Haswell drivers occasionally corrupt (small?) (vertex?) texture data uploads.
+            workarounds.setDataFasterThanImageUpload = false;
         }
     }
 
