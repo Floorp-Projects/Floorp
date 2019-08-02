@@ -162,7 +162,6 @@ class TaskBuilder(object):
                 'tier': 1,
             },
         )
-
    
     def craft_ui_tests_task(self):
         artifacts = {
@@ -203,7 +202,27 @@ class TaskBuilder(object):
             artifacts=artifacts,
             env_vars=env_vars,
         )
- 
+    
+    def craft_upload_apk_nimbledroid_task(self, assemble_task_id):
+        # For GeckoView, upload nightly (it has release config) by default, all Release builds have WV
+        return self._craft_build_ish_task(
+            name="Upload Release APK to Nimbledroid",
+            description='Upload APKs to Nimbledroid for performance measurement and tracking.',
+            command=' && '.join([
+                'curl --location "{}/{}/artifacts/public/target.apk" > target.apk'.format(_DEFAULT_TASK_URL, assemble_task_id),
+                'python automation/taskcluster/upload_apk_nimbledroid.py',
+            ]),
+            treeherder={
+                'jobKind': 'test',
+                'machine': {
+                  'platform': 'android-all',
+                },
+                'symbol': 'compare-locale',
+                'tier': 2,
+            },
+            scopes=["secrets:get:project/mobile/fenix/nimbledroid"],
+            dependencies=[assemble_task_id],
+        )
 
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(

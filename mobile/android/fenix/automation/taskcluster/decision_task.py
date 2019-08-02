@@ -158,6 +158,7 @@ def nightly_to_production_app(is_staging, version_name):
     build_tasks = {}
     signing_tasks = {}
     push_tasks = {}
+    other_tasks = {}
 
     build_task_id = taskcluster.slugId()
     build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, build_type, is_staging, version_name)
@@ -180,7 +181,12 @@ def nightly_to_production_app(is_staging, version_name):
         is_staging=is_staging,
     )
 
-    return (build_tasks, signing_tasks, push_tasks)
+    nimbledroid_task_id = taskcluster.slugId()
+    other_tasks[nimbledroid_task_id] = BUILDER.craft_upload_apk_nimbledroid_task(
+        build_task_id
+    )
+
+    return (build_tasks, signing_tasks, push_tasks, other_tasks)
 
 
 if __name__ == "__main__":
