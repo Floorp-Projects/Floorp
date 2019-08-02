@@ -280,18 +280,6 @@ class TextEditRules {
                                      nsAString* aOutString, int32_t aMaxLength,
                                      bool* aTruncated);
 
-  /**
-   * Create a padding <br> element for empty last line and insert it to
-   * aPointToInsert.
-   *
-   * @param aPointToInsert  The point where the new padding <br> element will be
-   *                        inserted.
-   * @return                Returns created <br> element or an error code
-   *                        if couldn't create new <br> element.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreatePaddingBRElementForEmptyLastLine(const EditorDOMPoint& aPointToInsert);
-
   void UndefineCaretBidiLevel();
 
   nsresult CheckBidiLevelForDeletion(const EditorRawDOMPoint& aSelectionPoint,
