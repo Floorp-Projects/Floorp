@@ -85,9 +85,7 @@ class _BookmarkPanelHub {
     // If we didn't match on a previously cached request then make sure
     // the container is empty
     this._removeContainer(target);
-    const response = await this._handleMessageRequest({
-      triggerId: this._trigger.id,
-    });
+    const response = await this._handleMessageRequest(this._trigger);
 
     return this.onResponse(response, target, win);
   }

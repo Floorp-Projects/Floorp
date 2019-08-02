@@ -269,12 +269,9 @@ export class ASRouterUISurface extends React.PureComponent {
   renderSnippets() {
     if (
       this.state.bundle.template === "onboarding" ||
-      [
-        "fxa_overlay",
-        "return_to_amo_overlay",
-        "trailhead",
-        "whatsnew_panel_message",
-      ].includes(this.state.message.template)
+      this.state.message.template === "fxa_overlay" ||
+      this.state.message.template === "return_to_amo_overlay" ||
+      this.state.message.template === "trailhead"
     ) {
       return null;
     }

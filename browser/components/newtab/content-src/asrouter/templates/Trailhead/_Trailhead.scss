@@ -319,7 +319,6 @@
   opacity: 0;
   transition: opacity 0.4s;
   transition-delay: 0.1s;
-  grid-auto-rows: 1fr;
 
   &.show {
     opacity: 1;
