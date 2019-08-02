@@ -92,17 +92,21 @@ const gClientAuthDialogs = {
     // For mochitests, only the cert at build/pgo/certs/mochitest.client should
     // be selectable, so we do some brief checks to confirm this.
     Assert.notEqual(certList, null, "Cert list should not be null");
-    Assert.equal(certList.length, 1, "Only 1 certificate should be available");
-    let cert = certList.queryElementAt(0, Ci.nsIX509Cert);
-    Assert.notEqual(cert, null, "Cert list should contain an nsIX509Cert");
-    Assert.equal(
-      cert.commonName,
-      "Mochitest client",
-      "Cert CN should be 'Mochitest client'"
-    );
+    Assert.ok(certList.length > 0, "Should have at least one certificate");
+    let index = -1;
+    for (let i = 0; i < certList.length; i++) {
+      let cert = certList.queryElementAt(i, Ci.nsIX509Cert);
+      Assert.notEqual(cert, null, "Cert list should contain an nsIX509Cert");
+      if (cert.commonName === "Mochitest client") {
+        index = i;
+        break;
+      }
+    }
+
+    Assert.notEqual(index, -1, "Should have found 'Mochitest client'");
 
     if (this.state == DialogState.RETURN_CERT_SELECTED) {
-      selectedIndex.value = 0;
+      selectedIndex.value = index;
       return true;
     }
     return false;
@@ -146,13 +150,17 @@ async function testHelper(prefValue, expectedURL, options = undefined) {
     "https://requireclientcert.example.com:443"
   );
 
-  // |loadedURL| will be a string URL if browserLoaded() wins the race, or
-  // |undefined| if waitForErrorPage() wins the race.
-  let loadedURL = await Promise.race([
-    BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser),
-    BrowserTestUtils.waitForErrorPage(win.gBrowser.selectedBrowser),
-  ]);
-  Assert.equal(expectedURL, loadedURL, "Expected and actual URLs should match");
+  await BrowserTestUtils.browserLoaded(
+    win.gBrowser.selectedBrowser,
+    false,
+    "https://requireclientcert.example.com/",
+    true
+  );
+  let loadedURL = win.gBrowser.selectedBrowser.documentURI.spec;
+  Assert.ok(
+    loadedURL.startsWith(expectedURL),
+    "Expected and actual URLs should match"
+  );
   Assert.equal(
     gClientAuthDialogs.chooseCertificateCalled,
     prefValue == "Ask Every Time",
@@ -184,7 +192,10 @@ add_task(async function testCertChosenAutomatically() {
 // an error page is displayed.
 add_task(async function testCertNotChosenByUser() {
   gClientAuthDialogs.state = DialogState.RETURN_CERT_NOT_SELECTED;
-  await testHelper("Ask Every Time", undefined);
+  await testHelper(
+    "Ask Every Time",
+    "about:neterror?e=nssFailure2&u=https%3A//requireclientcert.example.com/"
+  );
   sdr.logoutAndTeardown();
 });
 
