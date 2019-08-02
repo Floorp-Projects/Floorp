@@ -40,9 +40,6 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 
   // We can inherit most TabContext fields for the new BrowserParent actor from
   // our Manager BrowserParent.
-  //
-  // We don't intend to support mozbrowsers with Fission currently, so we set
-  // |aMozBrowserElement| to be false.
   MutableTabContext tabContext;
   tabContext.SetTabContext(false, Manager()->ChromeOuterWindowID(),
                            Manager()->ShowFocusRings(),

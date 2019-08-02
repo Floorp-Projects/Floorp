@@ -422,19 +422,6 @@ nsresult nsGenericHTMLFrameElement::GetReallyIsBrowser(bool* aOut) {
   return NS_OK;
 }
 
-/* [infallible] */
-NS_IMETHODIMP nsGenericHTMLFrameElement::GetIsolated(bool* aOut) {
-  *aOut = true;
-
-  if (!nsContentUtils::IsSystemPrincipal(NodePrincipal())) {
-    return NS_OK;
-  }
-
-  // Isolation is only disabled if the attribute is present
-  *aOut = !HasAttr(kNameSpaceID_None, nsGkAtoms::noisolation);
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsGenericHTMLFrameElement::InitializeBrowserAPI() {
   MOZ_ASSERT(mFrameLoader);

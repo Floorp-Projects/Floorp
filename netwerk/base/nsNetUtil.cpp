@@ -866,14 +866,7 @@ bool NS_LoadGroupMatchesPrincipal(nsILoadGroup* aLoadGroup,
                                 getter_AddRefs(loadContext));
   NS_ENSURE_TRUE(loadContext, false);
 
-  // Verify load context browser flag match the principal
-  bool contextInIsolatedBrowser;
-  nsresult rv =
-      loadContext->GetIsInIsolatedMozBrowserElement(&contextInIsolatedBrowser);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return contextInIsolatedBrowser ==
-         aPrincipal->GetIsInIsolatedMozBrowserElement();
+  return true;
 }
 
 nsresult NS_NewDownloader(nsIStreamListener** result,
@@ -3001,29 +2994,17 @@ nsresult NS_CompareLoadInfoAndLoadContext(nsIChannel* aChannel) {
     return NS_OK;
   }
 
-  bool loadContextIsInBE = false;
-  nsresult rv =
-      loadContext->GetIsInIsolatedMozBrowserElement(&loadContextIsInBE);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
   OriginAttributes originAttrsLoadInfo = loadInfo->GetOriginAttributes();
   OriginAttributes originAttrsLoadContext;
   loadContext->GetOriginAttributes(originAttrsLoadContext);
 
   LOG(
-      ("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d, %d; "
-       "loadContext: %d %d, %d. [channel=%p]",
-       originAttrsLoadInfo.mInIsolatedMozBrowser,
+      ("NS_CompareLoadInfoAndLoadContext - loadInfo: %d, %d; "
+       "loadContext: %d, %d. [channel=%p]",
        originAttrsLoadInfo.mUserContextId,
-       originAttrsLoadInfo.mPrivateBrowsingId, loadContextIsInBE,
+       originAttrsLoadInfo.mPrivateBrowsingId,
        originAttrsLoadContext.mUserContextId,
        originAttrsLoadContext.mPrivateBrowsingId, aChannel));
-
-  MOZ_ASSERT(originAttrsLoadInfo.mInIsolatedMozBrowser == loadContextIsInBE,
-             "The value of InIsolatedMozBrowser in the loadContext and in "
-             "the loadInfo are not the same!");
 
   MOZ_ASSERT(originAttrsLoadInfo.mUserContextId ==
                  originAttrsLoadContext.mUserContextId,

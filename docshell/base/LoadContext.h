@@ -33,8 +33,6 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   NS_DECL_NSILOADCONTEXT
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  // inIsolatedMozBrowser argumentsoverrides that in
-  // SerializedLoadContext provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               dom::Element* aTopFrameElement, OriginAttributes& aAttrs)
       : mTopFrameElement(do_GetWeakReference(aTopFrameElement)),
@@ -49,8 +47,6 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mOriginAttributes(aAttrs) {
   }
 
-  // inIsolatedMozBrowser argument overrides that in
-  // SerializedLoadContext provided by child process.
   LoadContext(const IPC::SerializedLoadContext& aToCopy,
               uint64_t aNestedFrameId, OriginAttributes& aAttrs)
       : mTopFrameElement(nullptr),

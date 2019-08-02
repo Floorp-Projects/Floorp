@@ -459,7 +459,7 @@ struct SFTKItemTemplateStr {
 
 #define SFTK_TOKEN_KRL_HANDLE (SFTK_TOKEN_MAGIC | SFTK_TOKEN_TYPE_CRL | 1)
 /* how big (in bytes) a password/pin we can deal with */
-#define SFTK_MAX_PIN 255
+#define SFTK_MAX_PIN 500
 /* minimum password/pin length (in Unicode characters) in FIPS mode */
 #define FIPS_MIN_PIN 7
 
