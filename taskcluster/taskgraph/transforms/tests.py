@@ -765,7 +765,6 @@ def set_treeherder_machine_platform(config, tests):
         'android-api-16/opt': 'android-em-4-3-armv7-api16/opt',
         'android-api-16-pgo/opt': 'android-em-4-3-armv7-api16/pgo',
         'android-x86/opt': 'android-em-4-2-x86/opt',
-        'android-api-16-gradle/opt': 'android-api-16-gradle/opt',
     }
     for test in tests:
         # For most desktop platforms, the above table is not used for "regular"

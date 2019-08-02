@@ -1,7 +1,0 @@
-. "$topsrcdir/mobile/android/config/mozconfigs/common"
-
-. "$topsrcdir/mobile/android/config/mozconfigs/android-api-16/nightly"
-
-ac_add_options --without-gradle
-
-. "$topsrcdir/mobile/android/config/mozconfigs/common.override"
