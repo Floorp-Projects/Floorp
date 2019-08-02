@@ -80,40 +80,36 @@ add_task(async function test_create_login() {
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
         );
-        let loginFound = await ContentTaskUtils.waitForCondition(() => {
-          return loginList._loginGuidsSortedOrder.length == aExpectedCount;
+        let loginGuid = await ContentTaskUtils.waitForCondition(() => {
+          return loginList._loginGuidsSortedOrder.find(
+            guid => loginList._logins[guid].login.origin == aOriginTuple[1]
+          );
         }, "Waiting for login to be displayed");
-        ok(loginFound, "Expected number of logins found in login-list");
+        ok(loginGuid, "Expected login found in login-list");
 
-        let loginListItem = [
-          ...loginList.shadowRoot.querySelectorAll(".login-list-item"),
-        ].find(l => l._login && l._login.origin == aOriginTuple[1]);
+        let { login, listItem } = loginList._logins[loginGuid];
         ok(
-          !!loginListItem,
+          !!listItem,
           `Stored login should only include the origin of the URL provided during creation (${
             aOriginTuple[1]
           })`
         );
         is(
-          loginListItem._login.username,
+          login.username,
           "testuser1",
           "Stored login should have username provided during creation"
         );
         is(
-          loginListItem._login.password,
+          login.password,
           "testpass1",
           "Stored login should have password provided during creation"
         );
-        loginListItem.click();
+        listItem.click();
 
         let loginItem = Cu.waiveXrays(
           content.document.querySelector("login-item")
         );
-        is(
-          loginItem._login.guid,
-          loginListItem._login.guid,
-          "Login should be selected"
-        );
+        is(loginItem._login.guid, login.guid, "Login should be selected");
         let editButton = loginItem.shadowRoot.querySelector(".edit-button");
         editButton.click();
 

@@ -114,12 +114,13 @@ export default class LoginList extends HTMLElement {
           return;
         }
 
+        let { login } = this._logins[listItem.dataset.guid];
         this.dispatchEvent(
           new CustomEvent("AboutLoginsLoginSelected", {
             bubbles: true,
             composed: true,
             cancelable: true, // allow calling preventDefault() on event
-            detail: listItem._login,
+            detail: login,
           })
         );
 
@@ -199,9 +200,10 @@ export default class LoginList extends HTMLElement {
       if (firstVisibleListItem) {
         this._selectedGuid = firstVisibleListItem.dataset.guid;
         this._setListItemAsSelected(firstVisibleListItem);
+        let { login } = this._logins[this._selectedGuid];
         window.dispatchEvent(
           new CustomEvent("AboutLoginsInitialLoginSelected", {
-            detail: firstVisibleListItem._login,
+            detail: login,
           })
         );
       }
