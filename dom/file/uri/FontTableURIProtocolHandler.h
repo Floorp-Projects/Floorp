@@ -34,8 +34,7 @@ class FontTableURIProtocolHandler final
 };
 
 inline bool IsFontTableURI(nsIURI* aUri) {
-  bool isFont;
-  return NS_SUCCEEDED(aUri->SchemeIs(FONTTABLEURI_SCHEME, &isFont)) && isFont;
+  return aUri->SchemeIs(FONTTABLEURI_SCHEME);
 }
 
 }  // namespace dom

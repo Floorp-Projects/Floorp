@@ -76,8 +76,7 @@ bool IsImageExtractionAllowed(Document* aDocument, JSContext* aCx,
   docURI->GetSpec(docURISpec);
 
   // Allow local files to extract canvas data.
-  bool isFileURL;
-  if (NS_SUCCEEDED(docURI->SchemeIs("file", &isFileURL)) && isFileURL) {
+  if (docURI->SchemeIs("file")) {
     return true;
   }
 

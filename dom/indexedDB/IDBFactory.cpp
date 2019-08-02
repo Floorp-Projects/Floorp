@@ -330,10 +330,7 @@ nsresult IDBFactory::AllowedForWindowInternal(nsPIDOMWindowInner* aWindow,
   MOZ_ALWAYS_SUCCEEDS(principal->GetURI(getter_AddRefs(uri)));
   MOZ_ASSERT(uri);
 
-  bool isAbout = false;
-  MOZ_ALWAYS_SUCCEEDS(uri->SchemeIs("about", &isAbout));
-
-  if (isAbout) {
+  if (uri->SchemeIs("about")) {
     nsCOMPtr<nsIAboutModule> module;
     if (NS_SUCCEEDED(NS_GetAboutModule(uri, getter_AddRefs(module)))) {
       uint32_t flags;
