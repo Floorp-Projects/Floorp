@@ -110,6 +110,7 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_page_load.h"
 #include "PaintWorkletImpl.h"
 
 // Interfaces Needed
@@ -2575,8 +2576,9 @@ void nsGlobalWindowInner::AddDeprioritizedLoadRunner(nsIRunnable* aRunner) {
   MOZ_ASSERT(GetWindowForDeprioritizedLoadRunner() == this);
   RefPtr<DeprioritizedLoadRunner> runner = new DeprioritizedLoadRunner(aRunner);
   mDeprioritizedLoadRunner.insertBack(runner);
-  NS_DispatchToCurrentThreadQueue(runner.forget(), 5000,
-                                  EventQueuePriority::Idle);
+  NS_DispatchToCurrentThreadQueue(
+      runner.forget(), StaticPrefs::page_load_deprioritization_period(),
+      EventQueuePriority::Idle);
 }
 
 // nsISpeechSynthesisGetter

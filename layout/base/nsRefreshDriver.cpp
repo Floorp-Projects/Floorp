@@ -51,6 +51,7 @@
 #include "mozilla/StaticPrefs_apz.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_page_load.h"
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
@@ -601,7 +602,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
               dom::Performance* perf = win->GetPerformance();
               // Limit slower refresh rate to 5 seconds between the
               // first contentful paint and page load.
-              if (perf && perf->Now() < 5000) {
+              if (perf &&
+                  perf->Now() <
+                      StaticPrefs::page_load_deprioritization_period()) {
                 if (mProcessedVsync) {
                   mProcessedVsync = false;
                   // Handle this case similarly to the code above, but just
