@@ -33,6 +33,7 @@
 #include "mozilla/dom/TimeRanges.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 #include "mozilla/dom/VideoStreamTrack.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/Unused.h"
 
 #include <algorithm>
@@ -51,7 +52,6 @@ namespace mozilla {
 namespace dom {
 
 static bool sVideoStatsEnabled;
-static bool sCloneElementVisuallyTesting;
 
 nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
@@ -420,8 +420,6 @@ bool HTMLVideoElement::SetVisualCloneSource(
 void HTMLVideoElement::InitStatics() {
   Preferences::AddBoolVarCache(&sVideoStatsEnabled,
                                "media.video_stats.enabled");
-  Preferences::AddBoolVarCache(&sCloneElementVisuallyTesting,
-                               "media.cloneElementVisually.testing");
 }
 
 /* static */
@@ -486,7 +484,7 @@ void HTMLVideoElement::CloneElementVisually(HTMLVideoElement& aTargetVideo,
 
   aTargetVideo.SetMediaInfo(mMediaInfo);
 
-  if (IsInComposedDoc() && !sCloneElementVisuallyTesting) {
+  if (IsInComposedDoc() && !StaticPrefs::media_cloneElementVisually_testing()) {
     NotifyUAWidgetSetupOrChange();
   }
 
@@ -542,7 +540,7 @@ void HTMLVideoElement::EndCloningVisually() {
   Unused << mVisualCloneTarget->SetVisualCloneSource(nullptr);
   Unused << SetVisualCloneTarget(nullptr);
 
-  if (IsInComposedDoc() && !sCloneElementVisuallyTesting) {
+  if (IsInComposedDoc() && !StaticPrefs::media_cloneElementVisually_testing()) {
     NotifyUAWidgetSetupOrChange();
   }
 }
