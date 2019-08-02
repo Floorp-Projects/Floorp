@@ -1978,6 +1978,11 @@
   value: false
   mirror: always
 
+- name: dom.testing.sync-content-blocking-notifications
+  type: bool
+  value: false
+  mirror: always
+
 # Time (in ms) that it takes to regenerate 1ms.
 - name: dom.timeout.background_budget_regeneration_rate
   type: int32_t
