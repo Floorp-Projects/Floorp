@@ -22,6 +22,19 @@ permalink: /changelog/
   * ⚠️ **This is a breaking change**: The `BrowserToolbar.siteSecurityColor` property has been replaced with the setter `BrowserToolbar.setSiteSecurityColor`.
   * Added `BrowserToolbar.siteSecurityIcons` to use custom security icons with multiple colors in the toolbar.
 
+* **feature-sendtab**
+  * Added a `SendTabFeature` that observes account device events with optional support for push notifications.
+
+  ```kotlin
+  SendTabFeature(
+    context,
+    accountManager,
+    pushFeature, // optional
+    pushService // optional; if you want the service to also be started/stopped based on account changes.
+    onTabsReceiver = { from, tabs -> /* Do cool things here! */ }
+  )
+  ```
+
 # 7.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.2...v7.0.0)
