@@ -106,11 +106,6 @@ class nsWindowWatcher : public nsIWindowWatcher,
                               int32_t aDefault, bool* aPresenceFlag);
   /* Compute the right SizeSpec based on aFeatures */
   static void CalcSizeSpec(const nsACString& aFeatures, SizeSpec& aResult);
-  static nsresult ReadyOpenedDocShellItem(nsIDocShellTreeItem* aOpenedItem,
-                                          nsPIDOMWindowOuter* aParent,
-                                          bool aWindowIsNew,
-                                          bool aForceNoOpener,
-                                          mozIDOMWindowProxy** aOpenedWindow);
   static void SizeOpenedWindow(
       nsIDocShellTreeOwner* aTreeOwner, mozIDOMWindowProxy* aParent,
       bool aIsCallerChrome, const SizeSpec& aSizeSpec,
