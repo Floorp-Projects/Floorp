@@ -153,10 +153,6 @@ class WebConsoleWrapper {
           return debuggerClient.release(actor);
         },
 
-        getWebConsoleClient: () => {
-          return webConsoleUI.webConsoleClient;
-        },
-
         /**
          * Retrieve the FrameActor ID given a frame depth, or the selected one if no
          * frame depth given.
