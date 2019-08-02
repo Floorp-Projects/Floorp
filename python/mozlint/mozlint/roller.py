@@ -165,6 +165,9 @@ class LintRoller(object):
 
             lpaths = list(lpaths) or [os.getcwd()]
             chunk_size = min(self.MAX_PATHS_PER_JOB, int(ceil(len(lpaths) / num_procs))) or 1
+            if linter['type'] == 'global':
+                # Global linters lint the entire tree in one job.
+                chunk_size = len(lpaths) or 1
             assert chunk_size > 0
 
             while lpaths:
