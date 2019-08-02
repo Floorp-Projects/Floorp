@@ -377,6 +377,7 @@ pref("media.peerconnection.ice.stun_client_maximum_transmits", 7);
 pref("media.peerconnection.ice.trickle_grace_period", 5000);
 pref("media.peerconnection.ice.no_host", false);
 pref("media.peerconnection.ice.default_address_only", false);
+pref("media.peerconnection.ice.proxy_only_if_behind_proxy", false);
 pref("media.peerconnection.ice.proxy_only", false);
 pref("media.peerconnection.turn.disable", false);
 

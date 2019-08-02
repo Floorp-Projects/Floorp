@@ -588,12 +588,6 @@ static int nr_ice_component_initialize_tcp(struct nr_ice_ctx_ *ctx,nr_ice_compon
 
         r_log(LOG_ICE,LOG_DEBUG,"nr_ice_component_initialize_tcp creating TURN TCP wrappers");
 
-        if (ctx->turn_tcp_socket_wrapper) {
-          /* The HTTP proxy socket */
-          if((r=nr_socket_wrapper_factory_wrap(ctx->turn_tcp_socket_wrapper, local_sock, &local_sock)))
-            ABORT(r);
-        }
-
         /* The TCP buffered socket */
         if((r=nr_socket_buffered_stun_create(local_sock, NR_STUN_MAX_MESSAGE_SIZE, TURN_TCP_FRAMING, &buffered_sock)))
           ABORT(r);

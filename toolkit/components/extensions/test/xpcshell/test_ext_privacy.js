@@ -274,6 +274,7 @@ add_task(async function test_privacy_other_prefs() {
     "network.webRTCIPHandlingPolicy": {
       "media.peerconnection.ice.default_address_only": false,
       "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only_if_behind_proxy": false,
       "media.peerconnection.ice.proxy_only": false,
     },
     "network.peerConnectionEnabled": {
@@ -388,6 +389,7 @@ add_task(async function test_privacy_other_prefs() {
     {
       "media.peerconnection.ice.default_address_only": true,
       "media.peerconnection.ice.no_host": false,
+      "media.peerconnection.ice.proxy_only_if_behind_proxy": false,
       "media.peerconnection.ice.proxy_only": false,
     }
   );
@@ -397,6 +399,7 @@ add_task(async function test_privacy_other_prefs() {
     {
       "media.peerconnection.ice.default_address_only": true,
       "media.peerconnection.ice.no_host": true,
+      "media.peerconnection.ice.proxy_only_if_behind_proxy": false,
       "media.peerconnection.ice.proxy_only": false,
     }
   );
@@ -404,14 +407,22 @@ add_task(async function test_privacy_other_prefs() {
     "network.webRTCIPHandlingPolicy",
     "disable_non_proxied_udp",
     {
-      "media.peerconnection.ice.default_address_only": false,
-      "media.peerconnection.ice.no_host": false,
-      "media.peerconnection.ice.proxy_only": true,
+      "media.peerconnection.ice.default_address_only": true,
+      "media.peerconnection.ice.no_host": true,
+      "media.peerconnection.ice.proxy_only_if_behind_proxy": true,
+      "media.peerconnection.ice.proxy_only": false,
     }
   );
+  await testSetting("network.webRTCIPHandlingPolicy", "proxy_only", {
+    "media.peerconnection.ice.default_address_only": false,
+    "media.peerconnection.ice.no_host": false,
+    "media.peerconnection.ice.proxy_only_if_behind_proxy": false,
+    "media.peerconnection.ice.proxy_only": true,
+  });
   await testSetting("network.webRTCIPHandlingPolicy", "default", {
     "media.peerconnection.ice.default_address_only": false,
     "media.peerconnection.ice.no_host": false,
+    "media.peerconnection.ice.proxy_only_if_behind_proxy": false,
     "media.peerconnection.ice.proxy_only": false,
   });
 
