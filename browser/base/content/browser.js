@@ -2006,7 +2006,8 @@ var gBrowserInit = {
 
     let safeMode = document.getElementById("helpSafeMode");
     if (Services.appinfo.inSafeMode) {
-      document.l10n.setAttributes(safeMode, "menu-help-safe-mode-with-addons");
+      safeMode.label = safeMode.getAttribute("stoplabel");
+      safeMode.accessKey = safeMode.getAttribute("stopaccesskey");
     }
 
     // BiDi UI
