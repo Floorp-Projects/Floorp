@@ -1450,6 +1450,83 @@ nsresult EditorBase::InsertNodeWithTransaction(
   return rv;
 }
 
+EditorDOMPoint EditorBase::PrepareToInsertBRElement(
+    const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return EditorDOMPoint();
+  }
+
+  if (!aPointToInsert.IsInTextNode()) {
+    return aPointToInsert;
+  }
+
+  if (aPointToInsert.IsStartOfContainer()) {
+    // Insert before the text node.
+    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+    NS_WARNING_ASSERTION(pointInContainer.IsSet(),
+                         "Failed to climb up the DOM tree from text node");
+    return pointInContainer;
+  }
+
+  if (aPointToInsert.IsEndOfContainer()) {
+    // Insert after the text node.
+    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+    if (NS_WARN_IF(!pointInContainer.IsSet())) {
+      return pointInContainer;
+    }
+    DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+                         "Failed to advance offset to after the text node");
+    return pointInContainer;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
+
+  // Unfortunately, we need to split the text node at the offset.
+  ErrorResult error;
+  nsCOMPtr<nsIContent> newLeftNode =
+      SplitNodeWithTransaction(aPointToInsert, error);
+  if (NS_WARN_IF(error.Failed())) {
+    error.SuppressException();
+    return EditorDOMPoint();
+  }
+  Unused << newLeftNode;
+  // Insert new <br> before the right node.
+  EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+  NS_WARNING_ASSERTION(pointInContainer.IsSet(),
+                       "Failed to split the text node");
+  return pointInContainer;
+}
+
+CreateElementResult
+EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
+    const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  EditorDOMPoint pointToInsert = PrepareToInsertBRElement(aPointToInsert);
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+
+  RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
+  if (NS_WARN_IF(!newBRElement)) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+  newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+
+  nsresult rv = InsertNodeWithTransaction(*newBRElement, pointToInsert);
+  if (NS_WARN_IF(Destroyed())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return CreateElementResult(rv);
+  }
+
+  return CreateElementResult(newBRElement.forget());
+}
+
 NS_IMETHODIMP
 EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
   if (NS_WARN_IF(!aNode)) {

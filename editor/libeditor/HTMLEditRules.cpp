@@ -1479,7 +1479,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
         // is it a return?
         if (subStr.Equals(newlineStr)) {
           RefPtr<Element> brElement = MOZ_KnownLive(HTMLEditorRef())
-                                          .InsertBrElementWithTransaction(
+                                          .InsertBRElementWithTransaction(
                                               currentPoint, nsIEditor::eNone);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
@@ -1856,7 +1856,7 @@ EditActionResult HTMLEditRules::WillInsertParagraphSeparator() {
     endOfBlockParent.SetToEndOf(blockParent);
     RefPtr<Element> brElement =
         MOZ_KnownLive(HTMLEditorRef())
-            .InsertBrElementWithTransaction(endOfBlockParent);
+            .InsertBRElementWithTransaction(endOfBlockParent);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -1944,7 +1944,7 @@ nsresult HTMLEditRules::InsertBRElement(const EditorDOMPoint& aPointToBreak) {
   RefPtr<Element> brElement;
   if (IsPlaintextEditor()) {
     brElement = MOZ_KnownLive(HTMLEditorRef())
-                    .InsertBrElementWithTransaction(aPointToBreak);
+                    .InsertBRElementWithTransaction(aPointToBreak);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
@@ -2151,7 +2151,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
       endOfPreviousNodeOfSplitPoint.SetToEndOf(previousNodeOfSplitPoint);
       RefPtr<Element> invisibleBrElement =
           MOZ_KnownLive(HTMLEditorRef())
-              .InsertBrElementWithTransaction(endOfPreviousNodeOfSplitPoint);
+              .InsertBRElementWithTransaction(endOfPreviousNodeOfSplitPoint);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
       }
@@ -2166,7 +2166,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
   EditorDOMPoint pointToInsertBrNode(splitCiteNodeResult.SplitPoint());
   RefPtr<Element> brElement =
       MOZ_KnownLive(HTMLEditorRef())
-          .InsertBrElementWithTransaction(pointToInsertBrNode);
+          .InsertBRElementWithTransaction(pointToInsertBrNode);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
   }
@@ -2217,7 +2217,7 @@ EditActionResult HTMLEditRules::SplitMailCites() {
           // In case we're at the very end.
           wsType == WSType::thisBlock) {
         brElement = MOZ_KnownLive(HTMLEditorRef())
-                        .InsertBrElementWithTransaction(pointToCreateNewBrNode);
+                        .InsertBRElementWithTransaction(pointToCreateNewBrNode);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return EditActionIgnored(NS_ERROR_EDITOR_DESTROYED);
         }
@@ -3247,7 +3247,7 @@ nsresult HTMLEditRules::InsertBRIfNeeded() {
                                       *nsGkAtoms::br)) {
       RefPtr<Element> brElement =
           MOZ_KnownLive(HTMLEditorRef())
-              .InsertBrElementWithTransaction(atStartOfSelection,
+              .InsertBRElementWithTransaction(atStartOfSelection,
                                               nsIEditor::ePrevious);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
@@ -3870,7 +3870,7 @@ nsresult HTMLEditRules::DidDeleteSelection() {
       if (atCiteNode.IsSet() && seenBR) {
         RefPtr<Element> brElement =
             MOZ_KnownLive(HTMLEditorRef())
-                .InsertBrElementWithTransaction(atCiteNode);
+                .InsertBRElementWithTransaction(atCiteNode);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -4534,7 +4534,7 @@ nsresult HTMLEditRules::MakeBasicBlock(nsAtom& blockType) {
       EditorDOMPoint pointToInsertBrNode(splitNodeResult.SplitPoint());
       // Put a <br> element at the split point
       brContent = MOZ_KnownLive(HTMLEditorRef())
-                      .InsertBrElementWithTransaction(pointToInsertBrNode);
+                      .InsertBRElementWithTransaction(pointToInsertBrNode);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -6149,7 +6149,9 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     // Put in a padding <br> element for empty last line so that it won't get
     // deleted.
     CreateElementResult createPaddingBRResult =
-        CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(div, 0));
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertPaddingBRElementForEmptyLastLineWithTransaction(
+                EditorDOMPoint(div, 0));
     if (NS_WARN_IF(createPaddingBRResult.Failed())) {
       return createPaddingBRResult.Rv();
     }
@@ -6450,7 +6452,7 @@ nsresult HTMLEditRules::MaybeDeleteTopMostEmptyAncestor(
       if (!HTMLEditUtils::IsList(atBlockParent.GetContainer())) {
         RefPtr<Element> brElement =
             MOZ_KnownLive(HTMLEditorRef())
-                .InsertBrElementWithTransaction(atBlockParent);
+                .InsertBRElementWithTransaction(atBlockParent);
         if (NS_WARN_IF(!CanHandleEditAction())) {
           return NS_ERROR_EDITOR_DESTROYED;
         }
@@ -7842,7 +7844,9 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
     }
     if (isEmptyNode) {
       CreateElementResult createPaddingBRResult =
-          CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(prevItem, 0));
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertPaddingBRElementForEmptyLastLineWithTransaction(
+                  EditorDOMPoint(prevItem, 0));
       if (NS_WARN_IF(createPaddingBRResult.Failed())) {
         return createPaddingBRResult.Rv();
       }
@@ -7888,7 +7892,7 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
       // Append a <br> to it
       RefPtr<Element> brElement =
           MOZ_KnownLive(HTMLEditorRef())
-              .InsertBrElementWithTransaction(EditorDOMPoint(pNode, 0));
+              .InsertBRElementWithTransaction(EditorDOMPoint(pNode, 0));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8103,7 +8107,7 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     }
 
     brContent = MOZ_KnownLive(HTMLEditorRef())
-                    .InsertBrElementWithTransaction(pointToInsertBR);
+                    .InsertBRElementWithTransaction(pointToInsertBR);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return EditActionResult(NS_ERROR_EDITOR_DESTROYED);
     }
@@ -8311,7 +8315,7 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
       // Append a <br> to it
       RefPtr<Element> brElement =
           MOZ_KnownLive(HTMLEditorRef())
-              .InsertBrElementWithTransaction(EditorDOMPoint(pNode, 0));
+              .InsertBRElementWithTransaction(EditorDOMPoint(pNode, 0));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -8373,7 +8377,9 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
     }
     if (isEmptyNode) {
       CreateElementResult createPaddingBRResult =
-          CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(prevItem, 0));
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertPaddingBRElementForEmptyLastLineWithTransaction(
+                  EditorDOMPoint(prevItem, 0));
       if (NS_WARN_IF(createPaddingBRResult.Failed())) {
         return createPaddingBRResult.Rv();
       }
@@ -9263,7 +9269,8 @@ HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() {
     EditorDOMPoint endOfNode;
     endOfNode.SetToEndOf(node);
     CreateElementResult createPaddingBRResult =
-        CreatePaddingBRElementForEmptyLastLine(endOfNode);
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfNode);
     if (NS_WARN_IF(createPaddingBRResult.Failed())) {
       return createPaddingBRResult.Rv();
     }
@@ -9471,7 +9478,8 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
 
       // we know we can skip the rest of this routine given the cirumstance
       CreateElementResult createPaddingBRResult =
-          CreatePaddingBRElementForEmptyLastLine(point);
+          MOZ_KnownLive(HTMLEditorRef())
+              .InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
       if (NS_WARN_IF(createPaddingBRResult.Failed())) {
         return createPaddingBRResult.Rv();
       }
@@ -9503,7 +9511,8 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
           // the user will see no new line for the break.  Also, things
           // like table cells won't grow in height.
           CreateElementResult createPaddingBRResult =
-              CreatePaddingBRElementForEmptyLastLine(point);
+              MOZ_KnownLive(HTMLEditorRef())
+                  .InsertPaddingBRElementForEmptyLastLineWithTransaction(point);
           if (NS_WARN_IF(createPaddingBRResult.Failed())) {
             return createPaddingBRResult.Rv();
           }
@@ -9783,7 +9792,7 @@ nsresult HTMLEditRules::RemoveEmptyNodesInChangedRange() {
       // but preserve br.
       RefPtr<Element> brElement =
           MOZ_KnownLive(HTMLEditorRef())
-              .InsertBrElementWithTransaction(EditorDOMPoint(delNode));
+              .InsertBRElementWithTransaction(EditorDOMPoint(delNode));
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -10185,7 +10194,9 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
 
   if (aForPadding) {
     CreateElementResult createBRResult =
-        CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(&aNode, 0));
+        MOZ_KnownLive(HTMLEditorRef())
+            .InsertPaddingBRElementForEmptyLastLineWithTransaction(
+                EditorDOMPoint(&aNode, 0));
     NS_WARNING_ASSERTION(createBRResult.Succeeded(),
                          "Failed to create padding <br> element");
     return createBRResult.Rv();
@@ -10193,7 +10204,7 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
 
   RefPtr<Element> brElement =
       MOZ_KnownLive(HTMLEditorRef())
-          .InsertBrElementWithTransaction(EditorDOMPoint(&aNode, 0));
+          .InsertBRElementWithTransaction(EditorDOMPoint(&aNode, 0));
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
@@ -10518,7 +10529,7 @@ nsresult HTMLEditRules::MakeSureElemStartsOrEndsOnCR(nsINode& aNode,
     }
     RefPtr<Element> brElement =
         MOZ_KnownLive(HTMLEditorRef())
-            .InsertBrElementWithTransaction(pointToInsert);
+            .InsertBRElementWithTransaction(pointToInsert);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
