@@ -15,7 +15,7 @@ macosx64/debug:
         tier: 1
     worker-type: b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
     run:
@@ -93,7 +93,7 @@ macosx64-asan-fuzzing/opt:
         symbol: Bof
     worker-type: b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             PERFHERDER_EXTRA_OPTIONS: asan-fuzzing
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
@@ -134,7 +134,7 @@ macosx64-fuzzing/debug:
         symbol: Bf
     worker-type: b-linux
     worker:
-        max-run-time: 3600
+        max-run-time: 5400
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             PERFHERDER_EXTRA_OPTIONS: fuzzing
