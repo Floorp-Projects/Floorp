@@ -1,5 +1,4 @@
 {
-    "llvm_revision": "d0d8eb2e5415b8be29343e3c17a18e49e67b5551",
     "stages": "3",
     "build_libcxx": true,
     "build_type": "Release",

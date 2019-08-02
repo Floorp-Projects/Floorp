@@ -336,3 +336,24 @@ android-rs-glue:
         type: git
         repo: https://github.com/staktrace/android-rs-glue
         revision: 486491e81819c3346d364a93fc1f3c0206d3ece0
+
+clang-4.0:
+    description: clang 4.0 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: 449c3ef93afc7a668eb35e67a83717453e28b25a
+
+clang-7:
+    description: clang 7 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: d0d8eb2e5415b8be29343e3c17a18e49e67b5551
+
+clang-8:
+    description: clang 8 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: d2298e74235598f15594fe2c99bbac870a507c59
