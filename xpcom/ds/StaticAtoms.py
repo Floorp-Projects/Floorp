@@ -43,7 +43,6 @@ STATIC_ATOMS = [
     Atom("mozdirty", "_moz_dirty"),
     Atom("mozdisallowselectionprint", "mozdisallowselectionprint"),
     Atom("mozdonotsend", "moz-do-not-send"),
-    Atom("mozeditorbogusnode", "_moz_editor_bogus_node"),
     Atom("mozgeneratedcontentbefore", "_moz_generated_content_before"),
     Atom("mozgeneratedcontentafter", "_moz_generated_content_after"),
     Atom("mozgeneratedcontentmarker", "_moz_generated_content_marker"),

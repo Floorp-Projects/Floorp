@@ -34,7 +34,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=740784
         synthesizeKey("KEY_Backspace");
         synthesizeKey("z", {accelKey: true});
 
-        // Was the former bogus node changed to a mozBR?
         is(t1.value, "a", "trailing <br> correctly ignored");
 
         SimpleTest.finish();

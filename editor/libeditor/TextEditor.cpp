@@ -1441,12 +1441,13 @@ nsresult TextEditor::IsEmpty(bool* aIsEmpty) const {
 
   *aIsEmpty = true;
 
-  if (mRules->HasBogusNode()) {
+  if (mRules->HasPaddingBRElementForEmptyEditor()) {
     return NS_OK;
   }
 
-  // Even if there is no bogus node, we should be detected as empty editor
-  // if all the children are text nodes and these have no content.
+  // Even if there is no padding <br> element for empty editor, we should be
+  // detected as empty editor if all the children are text nodes and these
+  // have no content.
   Element* rootElement = GetRoot();
   if (!rootElement) {
     // XXX Why don't we return an error in such case??
@@ -1481,7 +1482,8 @@ TextEditor::GetTextLength(int32_t* aCount) {
   // initialize out params
   *aCount = 0;
 
-  // special-case for empty document, to account for the bogus node
+  // special-case for empty document, to account for the padding <br> element
+  // for empty editor.
   bool isEmpty = false;
   nsresult rv = IsEmpty(&isEmpty);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2163,7 +2165,7 @@ nsresult TextEditor::SelectEntireDocument() {
   RefPtr<TextEditRules> rules(mRules);
 
   // If we're empty, don't select all children because that would select the
-  // bogus node.
+  // padding <br> element for empty editor.
   if (rules->DocumentIsEmpty()) {
     nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
     NS_WARNING_ASSERTION(
