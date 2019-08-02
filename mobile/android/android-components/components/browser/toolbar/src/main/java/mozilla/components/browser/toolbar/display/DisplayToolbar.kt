@@ -33,8 +33,6 @@ import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_NO_T
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.ON_TRACKERS_BLOCKED
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_GLOBALLY
 import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection.OFF_FOR_A_SITE
-import mozilla.components.ui.icons.R.drawable.mozac_ic_globe
-import mozilla.components.ui.icons.R.drawable.mozac_ic_lock
 
 /**
  * Sub-component of the browser toolbar responsible for displaying the URL and related controls.
@@ -89,6 +87,58 @@ internal class DisplayToolbar(
             setTrackingProtectionState(siteTrackingProtection)
         }
 
+    private val browserActions: MutableList<ActionWrapper> = mutableListOf()
+    private val pageActions: MutableList<ActionWrapper> = mutableListOf()
+    private val navigationActions: MutableList<ActionWrapper> = mutableListOf()
+
+    // Margin between browser actions.
+    internal var browserActionMargin = 0
+
+    // Location of progress bar
+    internal var progressBarGravity = BOTTOM_PROGRESS_BAR
+
+    // Horizontal margin of URL Box (surrounding URL and page actions).
+    internal var urlBoxMargin = 0
+
+    // An optional view to be drawn behind the URL and page actions.
+    internal var urlBoxView: View? = null
+        set(value) {
+            // Remove previous view from ViewGroup
+            if (field != null) {
+                removeView(field)
+            }
+            // Add new view to ViewGroup (at position 0 to be drawn *before* the URL and page actions)
+            if (value != null) {
+                addView(value, 0)
+            }
+            field = value
+        }
+
+    // Callback to determine whether to open edit mode or not.
+    internal var onUrlClicked: () -> Boolean = { true }
+
+    @ColorInt
+    internal val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
+
+    @ColorInt
+    internal var separatorColor = ContextCompat.getColor(context, R.color.photonGrey80)
+
+    private var currentSiteSecurity = SiteSecurity.INSECURE
+
+    private var siteTrackingProtection = OFF_GLOBALLY
+
+    internal var securityIcons = SiteSecurityIcons.getDefaultSecurityIcons(context, defaultColor)
+        set(value) {
+            field = value
+            setSiteSecurity(currentSiteSecurity)
+        }
+
+    internal var menuViewColor = defaultColor
+        set(value) {
+            field = value
+            menuView.setColorFilter(value)
+        }
+
     internal val trackingProtectionIconView = TrackingProtectionIconView(context).apply {
         isVisible = false
         setImageResource(R.drawable.mozac_tracking_protection_state_list)
@@ -113,7 +163,7 @@ internal class DisplayToolbar(
     internal val siteSecurityIconView = AppCompatImageView(context).apply {
         setPadding(resources.getDimensionPixelSize(R.dimen.mozac_browser_toolbar_icon_padding))
 
-        setImageResource(mozac_ic_globe)
+        setImageDrawable(securityIcons.insecure)
 
         // Avoiding text behind the icon being selectable. If the listener is not set
         // with a value or null text behind the icon can be selectable.
@@ -164,58 +214,6 @@ internal class DisplayToolbar(
             }
         })
     }
-
-    private val browserActions: MutableList<ActionWrapper> = mutableListOf()
-    private val pageActions: MutableList<ActionWrapper> = mutableListOf()
-    private val navigationActions: MutableList<ActionWrapper> = mutableListOf()
-
-    // Margin between browser actions.
-    internal var browserActionMargin = 0
-
-    // Location of progress bar
-    internal var progressBarGravity = BOTTOM_PROGRESS_BAR
-
-    // Horizontal margin of URL Box (surrounding URL and page actions).
-    internal var urlBoxMargin = 0
-
-    // An optional view to be drawn behind the URL and page actions.
-    internal var urlBoxView: View? = null
-        set(value) {
-            // Remove previous view from ViewGroup
-            if (field != null) {
-                removeView(field)
-            }
-            // Add new view to ViewGroup (at position 0 to be drawn *before* the URL and page actions)
-            if (value != null) {
-                addView(value, 0)
-            }
-            field = value
-        }
-
-    // Callback to determine whether to open edit mode or not.
-    internal var onUrlClicked: () -> Boolean = { true }
-
-    private val defaultColor = ContextCompat.getColor(context, R.color.photonWhite)
-
-    @ColorInt
-    internal var separatorColor =
-        ContextCompat.getColor(context, R.color.photonGrey80)
-
-    private var currentSiteSecurity = SiteSecurity.INSECURE
-
-    private var siteTrackingProtection = OFF_GLOBALLY
-
-    internal var securityIconColor = Pair(defaultColor, defaultColor)
-        set(value) {
-            field = value
-            setSiteSecurity(currentSiteSecurity)
-        }
-
-    internal var menuViewColor = defaultColor
-        set(value) {
-            field = value
-            menuView.setColorFilter(value)
-        }
 
     init {
         addView(trackingProtectionIconView)
@@ -307,14 +305,11 @@ internal class DisplayToolbar(
      * Sets the site's security icon as secure if true, else the regular globe.
      */
     fun setSiteSecurity(secure: SiteSecurity) {
-        val (image, color) = when (secure) {
-            SiteSecurity.INSECURE -> Pair(mozac_ic_globe, securityIconColor.first)
-            SiteSecurity.SECURE -> Pair(mozac_ic_lock, securityIconColor.second)
+        val drawable = when (secure) {
+            SiteSecurity.INSECURE -> securityIcons.insecure
+            SiteSecurity.SECURE -> securityIcons.secure
         }
-        siteSecurityIconView.apply {
-            setImageResource(image)
-            setColorFilter(color)
-        }
+        siteSecurityIconView.setImageDrawable(drawable)
 
         currentSiteSecurity = secure
     }

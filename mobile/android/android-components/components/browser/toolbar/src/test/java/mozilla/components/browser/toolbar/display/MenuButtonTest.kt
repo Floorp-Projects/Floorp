@@ -14,6 +14,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.iterator
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
@@ -29,27 +30,26 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
+import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
-import org.robolectric.RobolectricTestRunner
+import org.mockito.MockitoAnnotations.initMocks
 
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 class MenuButtonTest {
 
-    private lateinit var parent: View
+    @Mock private lateinit var parent: View
+    @Mock private lateinit var menuBuilder: BrowserMenuBuilder
+    @Mock private lateinit var menu: BrowserMenu
     private lateinit var menuButton: MenuButton
-    private lateinit var menuBuilder: BrowserMenuBuilder
-    private lateinit var menu: BrowserMenu
 
     @Before
     fun setup() {
-        parent = mock()
+        initMocks(this)
         menuButton = MenuButton(testContext, parent)
-        menuBuilder = mock()
-        menu = mock()
 
         `when`(parent.layoutParams).thenReturn(mock())
         `when`(menuBuilder.build(testContext)).thenReturn(menu)
@@ -129,7 +129,6 @@ class MenuButtonTest {
     private fun extractIcon() =
         menuButton.iterator().asSequence().find { it is AppCompatImageView } as AppCompatImageView
 
-    @Suppress("DEPRECATION")
     private fun mockContextWithColorResource(@ColorRes resId: Int, @ColorInt color: Int): Context {
         val context: Context = spy(testContext)
 
@@ -141,7 +140,9 @@ class MenuButtonTest {
         doReturn(res).`when`(context).resources
 
         doReturn(color).`when`(context).getColor(resId)
+        @Suppress("Deprecation")
         doReturn(color).`when`(res).getColor(resId)
+
         return context
     }
 }

@@ -18,6 +18,10 @@ permalink: /changelog/
 * **browser-engine-gecko-beta**
   * The component now handles situations where the Android system kills the content process (without killing the main app process) in order to reclaim resources. In those situations the component will automatically recover and restore the last known state of those sessions.
 
+* **browser-toolbar**
+  * ⚠️ **This is a breaking change**: The `BrowserToolbar.siteSecurityColor` property has been replaced with the setter `BrowserToolbar.setSiteSecurityColor`.
+  * Added `BrowserToolbar.siteSecurityIcons` to use custom security icons with multiple colors in the toolbar.
+
 # 7.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.2...v7.0.0)

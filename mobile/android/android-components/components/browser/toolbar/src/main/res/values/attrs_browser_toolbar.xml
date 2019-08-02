@@ -8,6 +8,8 @@
     <attr name="browserToolbarHintColor" format="color"/>
     <attr name="browserToolbarTextColor" format="color"/>
     <attr name="browserToolbarTextSize" format="dimension"/>
+    <attr name="browserToolbarSecureIcon" format="reference"/>
+    <attr name="browserToolbarInsecureIcon" format="reference"/>
     <attr name="browserToolbarSecureColor" format="color"/>
     <attr name="browserToolbarInsecureColor" format="color"/>
     <attr name="browserToolbarMenuColor" format="color"/>

@@ -48,6 +48,14 @@ import org.robolectric.Shadows.shadowOf
 class DisplayToolbarTest {
 
     @Test
+    fun `initialized with security icon`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(testContext, toolbar)
+
+        assertNotNull(displayToolbar.siteSecurityIconView.drawable)
+    }
+
+    @Test
     fun `clicking on the URL switches the toolbar to editing mode`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)
@@ -970,26 +978,27 @@ class DisplayToolbarTest {
     }
 
     @Test
-    fun `securityIconColor is set when securityIconColor changes`() {
+    fun `securityIcons is set when securityIcons changes`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(testContext, toolbar)
 
-        displayToolbar.securityIconColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
+        val insecure = testContext.getDrawable(R.drawable.mozac_ic_globe)
+        val secure = testContext.getDrawable(R.drawable.mozac_ic_lock)
+        displayToolbar.securityIcons = SiteSecurityIcons(insecure, secure)
 
-        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.first)
-        assertEquals(R.color.photonBlue40, displayToolbar.securityIconColor.second)
+        assertEquals(insecure, displayToolbar.securityIcons.insecure)
+        assertEquals(secure, displayToolbar.securityIcons.secure)
     }
 
     @Test
-    fun `setSiteSecurity is called when securityIconColor changes`() {
+    fun `setSiteSecurity is called when securityIcons changes`() {
         val toolbar = BrowserToolbar(testContext)
-        toolbar.displayToolbar
 
-        assertNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+        val icons = SiteSecurityIcons(mock(), mock())
+        assertNotEquals(icons, toolbar.displayToolbar.securityIcons)
 
-        toolbar.siteSecurityColor = Pair(R.color.photonBlue40, R.color.photonBlue40)
-
-        assertNotNull(toolbar.displayToolbar.siteSecurityIconView.colorFilter)
+        toolbar.siteSecurityIcons = icons
+        assertEquals(icons, toolbar.displayToolbar.securityIcons)
     }
 
     @Test

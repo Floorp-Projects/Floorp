@@ -6,6 +6,8 @@ package mozilla.components.browser.toolbar
 
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.util.AttributeSet
@@ -22,13 +24,13 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.BrowserToolbar.Companion.ACTION_PADDING_DP
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_OFF_FOR_A_SITE
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
 import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_ON_TRACKERS_BLOCKED
-import mozilla.components.browser.toolbar.display.TrackingProtectionIconView.Companion.DEFAULT_ICON_OFF_FOR_A_SITE
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.Toolbar
-import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.concept.toolbar.Toolbar.SiteSecurity
+import mozilla.components.concept.toolbar.Toolbar.SiteTrackingProtection
 import mozilla.components.support.base.android.Padding
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -904,6 +906,23 @@ class BrowserToolbarTest {
 
         toolbar.displaySiteSecurityIcon = true
         assertEquals(View.VISIBLE, toolbar.displayToolbar.siteSecurityIconView.visibility)
+    }
+
+    @Test
+    fun `siteSecurityColor setter`() {
+        val toolbar = BrowserToolbar(testContext)
+
+        toolbar.setSiteSecurityColor(Color.RED to Color.BLUE)
+        assertEquals(
+            PorterDuffColorFilter(Color.RED, PorterDuff.Mode.SRC_IN),
+            toolbar.displayToolbar.siteSecurityIconView.drawable.colorFilter
+        )
+
+        toolbar.siteSecure = SiteSecurity.SECURE
+        assertEquals(
+            PorterDuffColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN),
+            toolbar.displayToolbar.siteSecurityIconView.drawable.colorFilter
+        )
     }
 
     @Test
