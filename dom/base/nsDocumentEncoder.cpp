@@ -41,6 +41,7 @@
 #include "mozilla/dom/Comment.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/ProcessingInstruction.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
@@ -1727,9 +1728,8 @@ nsCOMPtr<nsINode> nsHTMLCopyEncoder::GetChildAt(nsINode* aParent,
 }
 
 bool nsHTMLCopyEncoder::IsMozBR(Element* aElement) {
-  return aElement->IsHTMLElement(nsGkAtoms::br) &&
-         aElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                               NS_LITERAL_STRING("_moz"), eIgnoreCase);
+  HTMLBRElement* brElement = HTMLBRElement::FromNodeOrNull(aElement);
+  return brElement && brElement->IsPaddingForEmptyLastLine();
 }
 
 nsresult nsHTMLCopyEncoder::GetNodeLocation(nsINode* inChild,

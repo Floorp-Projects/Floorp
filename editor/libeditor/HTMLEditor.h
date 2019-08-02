@@ -841,11 +841,11 @@ class HTMLEditor final : public TextEditor,
    * outIsEmptyNode must be non-null.
    */
   nsresult IsEmptyNode(nsINode* aNode, bool* outIsEmptyBlock,
-                       bool aMozBRDoesntCount = false,
+                       bool aSingleBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
   nsresult IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyBlock,
-                           bool aMozBRDoesntCount, bool aListOrCellNotEmpty,
+                           bool aSingleBRDoesntCount, bool aListOrCellNotEmpty,
                            bool aSafeToAskFrames, bool* aSeenBR);
 
   static bool HasAttributes(Element* aElement) {

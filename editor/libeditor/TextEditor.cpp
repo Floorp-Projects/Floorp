@@ -2185,14 +2185,14 @@ nsresult TextEditor::SelectEntireDocument() {
     childNode = childNode->GetPreviousSibling();
   }
 
-  if (childNode && TextEditUtils::IsMozBR(childNode)) {
+  if (childNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*childNode)) {
     ErrorResult error;
     MOZ_KnownLive(SelectionRefPtr())
         ->SetStartAndEndInLimiter(RawRangeBoundary(rootElement, 0),
                                   EditorRawDOMPoint(childNode), error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Failed to select all children of the editor root "
-                         "element except the moz-<br> element");
+                         "element except the padding <br> element");
     return error.StealNSResult();
   }
 

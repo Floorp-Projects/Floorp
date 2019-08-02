@@ -208,8 +208,6 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
     PushNameSpaceDecl(aTagPrefix, aTagNamespaceURI, aOriginalElement);
   }
 
-  NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
-
   count = aElement->GetAttrCount();
 
   // Now serialize each of the attributes
@@ -252,15 +250,6 @@ bool nsXHTMLContentSerializer::SerializeAttributes(
     bool isJS = false;
 
     if (kNameSpaceID_XHTML == contentNamespaceID) {
-      //
-      // Filter out special case of <br type="_moz"> or <br _moz*>,
-      // used by the editor.  Bug 16988.  Yuck.
-      //
-      if (namespaceID == kNameSpaceID_None && aTagName == nsGkAtoms::br &&
-          attrName == nsGkAtoms::type && StringBeginsWith(valueStr, _mozStr)) {
-        continue;
-      }
-
       if (mIsCopying && mIsFirstChildOfOL && (aTagName == nsGkAtoms::li) &&
           (attrName == nsGkAtoms::value)) {
         // This is handled separately in SerializeLIValueAttribute()

@@ -18,10 +18,10 @@ https://bugzilla.mozilla.org/show_bug.cgi=id=1385905
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(() => {
-  function ensureNoMozBR() {
+  function ensureNoPaddingBR() {
     for (let br of document.querySelectorAll("#editor > div > br")) {
-      isnot(br.getAttribute("type"), "_moz",
-            "mozBR shouldn't be used with this test");
+      ok(!SpecialPowers.wrap(br).isPaddingForEmptyLastLine,
+         "padding <br> element shouldn't be used with this test");
     }
   }
   document.execCommand("defaultparagraphseparator", false, "div");
@@ -35,15 +35,15 @@ SimpleTest.waitForFocus(() => {
   sendString("x");
   is(editor.innerHTML, "<div>x<br></div><div>contents</div>",
      "Typing 'x' at the empty <div> element should just insert 'x' into the <div> element");
-  ensureNoMozBR();
+  ensureNoPaddingBR();
   synthesizeKey("KEY_Enter");
   is(editor.innerHTML, "<div>x</div><div><br></div><div>contents</div>",
      "Typing Enter next to 'x' in the first <div> element should split the <div> element and inserts <br> element to a new <div> element");
-  ensureNoMozBR();
+  ensureNoPaddingBR();
   synthesizeKey("KEY_Enter");
   is(editor.innerHTML, "<div>x</div><div><br></div><div><br></div><div>contents</div>",
      "Typing Enter in the empty <div> should split the <div> element and inserts <br> element to a new <div> element");
-  ensureNoMozBR();
+  ensureNoPaddingBR();
   SimpleTest.finish();
 });
 </script>
