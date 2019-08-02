@@ -1739,9 +1739,6 @@ Document::~Document() {
       if (mDocTreeHadAudibleMedia) {
         ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_MEDIA_COUNT, 1);
       }
-      if (mDocTreeHadPlayRevoked) {
-        ScalarAdd(Telemetry::ScalarID::MEDIA_PAGE_HAD_PLAY_REVOKED_COUNT, 1);
-      }
 
       if (IsHTMLDocument()) {
         switch (GetCompatibilityMode()) {
