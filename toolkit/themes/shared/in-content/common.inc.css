@@ -229,6 +229,7 @@ xul|tab[selected] {
 
 html|button {
   padding: 3px;
+  font: inherit;
 }
 
 /* xul buttons and menulists */
