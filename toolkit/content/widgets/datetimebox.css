@@ -20,11 +20,12 @@
 .datetime-input-edit-wrapper {
   overflow: hidden;
   white-space: nowrap;
+  flex-grow: 1;
 }
 
 .datetime-edit-field {
   display: inline;
-  -moz-user-select: none;
+  user-select: none;
   text-align: center;
   padding: 1px 3px;
   border: 0;
@@ -41,7 +42,7 @@
 
 .datetime-edit-field[disabled="true"],
 .datetime-edit-field[readonly="true"]  {
-  -moz-user-select: none;
+  user-select: none;
 }
 
 .datetime-reset-button {
