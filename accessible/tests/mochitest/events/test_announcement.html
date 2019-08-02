@@ -15,20 +15,20 @@
   <script type="application/javascript"
           src="../states.js"></script>
   <script type="application/javascript"
-          src="../events.js"></script>
+          src="../promisified-events.js"></script>
 
   <script type="application/javascript">
     async function doTests() {
       let acc = getAccessible("display");
 
-      let onAnnounce = waitForEventPromise(EVENT_ANNOUNCEMENT, acc);
+      let onAnnounce = waitForEvent(EVENT_ANNOUNCEMENT, acc);
       acc.announce("please", nsIAccessibleAnnouncementEvent.POLITE);
       let evt = await onAnnounce;
       evt.QueryInterface(nsIAccessibleAnnouncementEvent);
       is(evt.announcement, "please", "announcement matches.");
       is(evt.priority, nsIAccessibleAnnouncementEvent.POLITE, "priority matches");
 
-      onAnnounce = waitForEventPromise(EVENT_ANNOUNCEMENT, acc);
+      onAnnounce = waitForEvent(EVENT_ANNOUNCEMENT, acc);
       acc.announce("do it", nsIAccessibleAnnouncementEvent.ASSERTIVE);
       evt = await onAnnounce;
       evt.QueryInterface(nsIAccessibleAnnouncementEvent);

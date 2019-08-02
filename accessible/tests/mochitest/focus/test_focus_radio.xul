@@ -16,13 +16,13 @@
   <script type="application/javascript"
           src="../states.js" />
   <script type="application/javascript"
-          src="../events.js" />
+          src="../promisified-events.js" />
 
   <script type="application/javascript">
   <![CDATA[
     async function doTests() {
       let radio1 = getAccessible("radio1");
-      let focused = waitForEventPromise(EVENT_FOCUS, radio1);
+      let focused = waitForEvent(EVENT_FOCUS, radio1);
       radio1.takeFocus();
       await focused;
       // radio1 wasn't selected. Ensure that takeFocus didn't change that.
@@ -31,26 +31,27 @@
       // Test focusing another radio in the group while the group is still
       // focused.
       let radio2 = getAccessible("radio2");
-      focused = waitForEventPromise(EVENT_FOCUS, radio2);
+      focused = waitForEvent(EVENT_FOCUS, radio2);
       radio2.takeFocus();
       await focused;
       testStates(radio2, STATE_FOCUSED | STATE_CHECKED);
 
       let groupEl = document.getElementById("radiogroup");
       // Selecting an item also focuses it.
-      focused = waitForEventPromise(EVENT_FOCUS, radio1);
+      focused = waitForEvent(EVENT_FOCUS, radio1);
       groupEl.value = "1";
+      await focused;
       testStates(radio1, STATE_FOCUSED | STATE_CHECKED);
 
       // If an item is already selected but not focused, selecting it again
       // focuses it.
-      focused = waitForEventPromise(EVENT_FOCUS, radio2);
+      focused = waitForEvent(EVENT_FOCUS, radio2);
       radio2.takeFocus();
       await focused;
       testStates(radio2, STATE_FOCUSED, 0, STATE_CHECKED);
       // radio1 is selected but not focused.
       // Select radio1 again, which should focus it.
-      focused = waitForEventPromise(EVENT_FOCUS, radio1);
+      focused = waitForEvent(EVENT_FOCUS, radio1);
       groupEl.value = "1";
       await focused;
       testStates(radio1, STATE_FOCUSED | STATE_CHECKED);

@@ -5,13 +5,13 @@
 "use strict";
 
 /* import-globals-from ../mochitest/common.js */
-/* import-globals-from events.js */
+/* import-globals-from ../mochitest/promisified-events.js */
 
 /* exported Logger, MOCHITESTS_DIR, invokeSetAttribute, invokeFocus,
             invokeSetStyle, getAccessibleDOMNodeID, getAccessibleTagName,
             addAccessibleTask, findAccessibleChildByID, isDefunct,
             CURRENT_CONTENT_DIR, loadScripts, loadFrameScripts, snippetToURL,
-            Cc, Cu, arrayFromChildren, forceGC */
+            Cc, Cu, arrayFromChildren, forceGC, contentSpawnMutation */
 
 /**
  * Current browser test directory path used to load subscripts.
@@ -388,4 +388,43 @@ function forceGC() {
   SpecialPowers.gc();
   SpecialPowers.forceShrinkingGC();
   SpecialPowers.forceCC();
+}
+
+/*
+ * This function spawns a content task and awaits expected mutation events from
+ * various content changes. It's good at catching events we did *not* expect. We
+ * do this advancing the layout refresh to flush the relocations/insertions
+ * queue.
+ */
+async function contentSpawnMutation(browser, waitFor, func, args = null) {
+  let onReorders = waitForEvents({ expected: waitFor.expected || [] });
+  let unexpectedListener = new UnexpectedEvents(waitFor.unexpected || []);
+
+  function tick() {
+    // 100ms is an arbitrary positive number to advance the clock.
+    // We don't need to advance the clock for a11y mutations, but other
+    // tick listeners may depend on an advancing clock with each refresh.
+    content.windowUtils.advanceTimeAndRefresh(100);
+  }
+
+  // This stops the refreh driver from doing its regular ticks, and leaves
+  // us in control.
+  await ContentTask.spawn(browser, null, tick);
+
+  // Perform the tree mutation.
+  await ContentTask.spawn(browser, args, func);
+
+  // Do one tick to flush our queue (insertions, relocations, etc.)
+  await ContentTask.spawn(browser, null, tick);
+
+  let events = await onReorders;
+
+  unexpectedListener.stop();
+
+  // Go back to normal refresh driver ticks.
+  await ContentTask.spawn(browser, null, function() {
+    content.windowUtils.restoreNormalRefresh();
+  });
+
+  return events;
 }
