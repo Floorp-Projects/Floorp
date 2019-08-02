@@ -1585,6 +1585,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOffsetPath mOffsetPath;
   mozilla::LengthPercentage mOffsetDistance;
   mozilla::StyleOffsetRotate mOffsetRotate;
+  mozilla::StylePositionOrAuto mOffsetAnchor;
 
   mozilla::StyleTransformOrigin mTransformOrigin;
   mozilla::StylePerspective mChildPerspective;
