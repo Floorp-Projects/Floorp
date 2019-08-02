@@ -550,9 +550,10 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(
   }
 
   if (aName.LowerCaseEqualsLiteral("_parent")) {
-    return mParent && aRequestingContext.CanAccess(mParent.get())
-               ? mParent.get()
-               : this;
+    if (mParent) {
+      return aRequestingContext.CanAccess(mParent) ? mParent.get() : nullptr;
+    }
+    return this;
   }
 
   if (aName.LowerCaseEqualsLiteral("_top")) {
