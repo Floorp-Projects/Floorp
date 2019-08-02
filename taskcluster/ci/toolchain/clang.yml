@@ -16,7 +16,7 @@ linux64-clang-4.0:
         symbol: TL(clang4.0)
     worker-type: b-linux-large
     run:
-        script: build-clang-4.0-linux.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-4.0-linux64.json'
         resources:
@@ -32,7 +32,7 @@ linux64-clang-7:
         symbol: TL(clang7)
     run:
         using: toolchain-script
-        script: build-clang-7-linux.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-7-linux64.json'
         resources:
@@ -48,7 +48,7 @@ linux64-clang-8:
         symbol: TL(clang8)
     run:
         using: toolchain-script
-        script: build-clang-8-linux.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-8-linux64.json'
         resources:
@@ -116,7 +116,7 @@ linux64-clang-8-android-cross:
         symbol: TL(clang8-android)
     run:
         using: toolchain-script
-        script: build-clang-8-android.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-8-android.json'
         resources:
@@ -138,7 +138,7 @@ linux64-clang-8-aarch64-cross:
         docker-image: {in-tree: toolchain-arm64-build}
     run:
         using: toolchain-script
-        script: build-clang-8-linux-aarch64-cross.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
         resources:
@@ -187,7 +187,7 @@ macosx64-clang:
         - trunk
         - try
     run:
-        script: build-clang-macosx.sh
+        script: build-clang.sh
         tooltool-downloads: internal
         arguments:
             - 'build/build-clang/clang-8-macosx64.json'
@@ -210,7 +210,7 @@ win64-clang-cl:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
     run:
-        script: build-clang64-windows.sh
+        script: build-clang.sh
         arguments:
             - 'build/build-clang/clang-win64.json'
         resources:
