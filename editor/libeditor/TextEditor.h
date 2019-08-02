@@ -167,9 +167,9 @@ class TextEditor : public EditorBase,
                         const nsAString& aValue) override;
 
   /**
-   * IsEmpty() checks whether the editor is empty.  If editor has only bogus
-   * node, returns true.  If editor's root element has non-empty text nodes or
-   * other nodes like <br>, returns false.
+   * IsEmpty() checks whether the editor is empty.  If editor has only padding
+   * <br> element for empty editor, returns true.  If editor's root element has
+   * non-empty text nodes or other nodes like <br>, returns false.
    */
   nsresult IsEmpty(bool* aIsEmpty) const;
   bool IsEmpty() const {

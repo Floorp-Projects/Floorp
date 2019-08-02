@@ -14,9 +14,23 @@
 namespace mozilla {
 namespace dom {
 
+#define BR_ELEMENT_FLAG_BIT(n_) \
+  NODE_FLAG_BIT(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + (n_))
+
+// BR element specific bits
+enum {
+  // NS_PADDING_FOR_EMPTY_EDITOR is set if the <br> element is created by
+  // editor for placing caret at proper position in empty editor.
+  NS_PADDING_FOR_EMPTY_EDITOR = BR_ELEMENT_FLAG_BIT(0),
+};
+
+ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1);
+
 class HTMLBRElement final : public nsGenericHTMLElement {
  public:
   explicit HTMLBRElement(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
+
+  NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLBRElement, br)
 
   virtual bool ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
                               const nsAString& aValue,
@@ -37,6 +51,10 @@ class HTMLBRElement final : public nsGenericHTMLElement {
 
   virtual JSObject* WrapNode(JSContext* aCx,
                              JS::Handle<JSObject*> aGivenProto) override;
+
+  bool IsPaddingForEmptyEditor() const {
+    return HasFlag(NS_PADDING_FOR_EMPTY_EDITOR);
+  }
 
  private:
   virtual ~HTMLBRElement();

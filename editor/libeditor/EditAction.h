@@ -348,9 +348,10 @@ enum class EditAction {
   // eHidePassword indicates that editor hides password with mask characters.
   eHidePassword,
 
-  // eCreateBogusNode indicates that editor wants to create a bogus node after
-  // the editor is modified, asynchronously.
-  eCreateBogusNode,
+  // eCreatePaddingBRElementForEmptyEditor indicates that editor wants to
+  // create a padding <br> element for empty editor after it modifies its
+  // content.
+  eCreatePaddingBRElementForEmptyEditor,
 };
 
 // This is int32_t instead of int16_t because nsIInlineSpellChecker.idl's
@@ -469,8 +470,9 @@ enum class EditSubAction : int32_t {
   eDecreaseZIndex,
   eIncreaseZIndex,
 
-  // eCreateBogusNode indicates to create a bogus <br> node.
-  eCreateBogusNode,
+  // eCreatePaddingBRElementForEmptyEditor indicates to create a padding <br>
+  // element for empty editor.
+  eCreatePaddingBRElementForEmptyEditor,
 };
 
 inline EditorInputType ToInputType(EditAction aEditAction) {
