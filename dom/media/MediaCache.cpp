@@ -301,18 +301,11 @@ class MediaCache {
       LOG("~MediaCache(Global file-backed MediaCache)");
       // This is the file-backed MediaCache, reset the global pointer.
       gMediaCache = nullptr;
-      // Only gather "MEDIACACHE" telemetry for the file-based cache.
       LOG("MediaCache::~MediaCache(this=%p) MEDIACACHE_WATERMARK_KB=%u", this,
           unsigned(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
-      Telemetry::Accumulate(
-          Telemetry::HistogramID::MEDIACACHE_WATERMARK_KB,
-          uint32_t(mIndexWatermark * MediaCache::BLOCK_SIZE / 1024));
       LOG("MediaCache::~MediaCache(this=%p) "
           "MEDIACACHE_BLOCKOWNERS_WATERMARK=%u",
           this, unsigned(mBlockOwnersWatermark));
-      Telemetry::Accumulate(
-          Telemetry::HistogramID::MEDIACACHE_BLOCKOWNERS_WATERMARK,
-          mBlockOwnersWatermark);
     } else {
       LOG("~MediaCache(Memory-backed MediaCache %p)", this);
     }
@@ -2652,8 +2645,6 @@ nsresult MediaCacheStream::Init(int64_t aContentLength) {
     LOG("MediaCacheStream::Init(this=%p) "
         "MEDIACACHESTREAM_NOTIFIED_LENGTH=%" PRIu32,
         this, length);
-    Telemetry::Accumulate(
-        Telemetry::HistogramID::MEDIACACHESTREAM_NOTIFIED_LENGTH, length);
 
     mStreamLength = aContentLength;
   }

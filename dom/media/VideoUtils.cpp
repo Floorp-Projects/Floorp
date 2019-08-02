@@ -450,21 +450,6 @@ bool ExtractH264CodecDetails(const nsAString& aCodec, uint8_t& aProfile,
     aLevel *= 10;
   }
 
-  // We only make sure constraints is above 4 for collection perspective
-  // otherwise collect 0 for unknown.
-  Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_CONSTRAINT_SET_FLAG,
-                        aConstraint >= 4 ? aConstraint : 0);
-  // 244 is the highest meaningful profile value (High 4:4:4 Intra Profile)
-  // that can be represented as single hex byte, otherwise collect 0 for
-  // unknown.
-  Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_PROFILE,
-                        aProfile <= 244 ? aProfile : 0);
-
-  // Make sure aLevel represents a value between levels 1 and 5.2,
-  // otherwise collect 0 for unknown.
-  Telemetry::Accumulate(Telemetry::VIDEO_CANPLAYTYPE_H264_LEVEL,
-                        (aLevel >= 10 && aLevel <= 52) ? aLevel : 0);
-
   return true;
 }
 

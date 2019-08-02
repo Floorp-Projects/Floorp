@@ -198,12 +198,10 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
   mIPDLSelfRef = this;
   bool success = false;
   nsCString errorDescription;
-  nsCString blacklistedD3D11Driver;
-  nsCString blacklistedD3D9Driver;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
-  if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, ToMaybe(aIdentifier), &success,
-          &blacklistedD3D11Driver, &blacklistedD3D9Driver, &errorDescription)) {
+  if (manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
+                                             ToMaybe(aIdentifier), &success,
+                                             &errorDescription)) {
     mCanSend = true;
   }
 
@@ -211,32 +209,8 @@ MediaResult RemoteVideoDecoderChild::InitIPDL(
                  : MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR, errorDescription);
 }
 
-#ifdef XP_WIN
-static void ReportUnblacklistingTelemetry(
-    bool isGPUProcessCrashed, const nsCString& aD3D11BlacklistedDriver,
-    const nsCString& aD3D9BlacklistedDriver) {
-  const nsCString& blacklistedDLL = !aD3D11BlacklistedDriver.IsEmpty()
-                                        ? aD3D11BlacklistedDriver
-                                        : aD3D9BlacklistedDriver;
-
-  if (!blacklistedDLL.IsEmpty()) {
-    Telemetry::Accumulate(
-        Telemetry::VIDEO_UNBLACKINGLISTING_DXVA_DRIVER_RUNTIME_STATUS,
-        blacklistedDLL, isGPUProcessCrashed ? 1 : 0);
-  }
-}
-#endif  // XP_WIN
-
 GpuRemoteVideoDecoderChild::GpuRemoteVideoDecoderChild()
     : RemoteVideoDecoderChild(true) {}
-
-void GpuRemoteVideoDecoderChild::RecordShutdownTelemetry(
-    bool aAbnormalShutdown) {
-#ifdef XP_WIN
-  ReportUnblacklistingTelemetry(aAbnormalShutdown, mBlacklistedD3D11Driver,
-                                mBlacklistedD3D9Driver);
-#endif  // XP_WIN
-}
 
 MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
     const VideoInfo& aVideoInfo, float aFramerate,
@@ -267,10 +241,9 @@ MediaResult GpuRemoteVideoDecoderChild::InitIPDL(
   bool success = false;
   nsCString errorDescription;
   VideoDecoderInfoIPDL decoderInfo(aVideoInfo, aFramerate);
-  if (manager->SendPRemoteDecoderConstructor(
-          this, decoderInfo, aOptions, Some(aIdentifier), &success,
-          &mBlacklistedD3D11Driver, &mBlacklistedD3D9Driver,
-          &errorDescription)) {
+  if (manager->SendPRemoteDecoderConstructor(this, decoderInfo, aOptions,
+                                             Some(aIdentifier), &success,
+                                             &errorDescription)) {
     mCanSend = true;
   }
 
