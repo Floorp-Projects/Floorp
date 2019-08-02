@@ -5,7 +5,6 @@ WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/fxc2
 TOOLTOOL_DIR=$WORKSPACE/build/src
-UPLOAD_DIR=$HOME/artifacts
 
 mkdir -p $INSTALL_DIR/bin
 

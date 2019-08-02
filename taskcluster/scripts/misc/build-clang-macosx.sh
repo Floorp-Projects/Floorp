@@ -4,7 +4,6 @@ set -x -e -v
 # This script is for building clang for Mac OS X on Linux.
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 
@@ -19,8 +18,7 @@ export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-macosx64.json
+python3 ./build-clang.py -c clang-8-macosx64.json
 
 set -x
 

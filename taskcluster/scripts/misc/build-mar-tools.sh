@@ -4,7 +4,6 @@ set -x -e -v
 # This script is for building mar and mbsdiff
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 
 cd $WORKSPACE/build/src

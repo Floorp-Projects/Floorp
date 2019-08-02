@@ -5,7 +5,6 @@ set -x -e -v
 # including native Mac OS X Compiler-RT libraries and llvm-symbolizer.
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 
@@ -20,8 +19,7 @@ export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-macosx64.json --skip-tar
+python3 ./build-clang.py -c clang-8-macosx64.json --skip-tar
 
 # We now have a native macosx64 toolchain.
 # What we want is a native linux64 toolchain which can target macosx64 and use the sanitizer dylibs.

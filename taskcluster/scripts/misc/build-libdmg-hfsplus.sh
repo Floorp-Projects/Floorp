@@ -6,7 +6,6 @@ set -x -e -v
 
 WORKSPACE=$HOME/workspace
 STAGE=$WORKSPACE/dmg
-UPLOAD_DIR=$HOME/artifacts
 
 mkdir -p $UPLOAD_DIR $STAGE
 

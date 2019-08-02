@@ -174,7 +174,6 @@ def mozharness_on_docker_worker_setup(config, job, taskdesc):
         'MH_BUILD_POOL': 'taskcluster',
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_AUTOMATION': '1',
         'PYTHONUNBUFFERED': '1',
     })
 
@@ -267,7 +266,6 @@ def mozharness_on_generic_worker(config, job, taskdesc):
     env.update({
         'MOZ_BUILD_DATE': config.params['moz_build_date'],
         'MOZ_SCM_LEVEL': config.params['level'],
-        'MOZ_AUTOMATION': '1',
         'MH_BRANCH': config.params['project'],
         'MOZ_SOURCE_CHANGESET': get_branch_rev(config),
         'MOZ_SOURCE_REPO': get_branch_repo(config),

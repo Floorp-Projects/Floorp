@@ -4,7 +4,6 @@ set -x -e -v
 # This script is for building minidump_stackwalk
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 
 cd $WORKSPACE/build/src
