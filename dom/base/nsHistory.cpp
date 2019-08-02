@@ -153,7 +153,8 @@ void nsHistory::Go(int32_t aDelta, ErrorResult& aRv) {
       window = docShell->GetWindow();
     }
 
-    if (window && window->IsHandlingResizeEvent()) {
+    if (StaticPrefs::dom_block_reload_from_resize_event_handler() && window &&
+        window->IsHandlingResizeEvent()) {
       // history.go(0) (aka location.reload()) was called on a window
       // that is handling a resize event. Sites do this since Netscape
       // 4.x needed it, but we don't, and it's a horrible experience
