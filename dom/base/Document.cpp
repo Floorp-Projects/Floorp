@@ -34,6 +34,7 @@
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_page_load.h"
 #include "mozilla/StaticPrefs_plugins.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozilla/StaticPrefs_security.h"
@@ -15851,7 +15852,8 @@ bool Document::HasRecentlyStartedForegroundLoads() {
       nsPIDOMWindowInner* win = doc->GetInnerWindow();
       if (win) {
         Performance* perf = win->GetPerformance();
-        if (perf && perf->Now() < 5000) {
+        if (perf &&
+            perf->Now() < StaticPrefs::page_load_deprioritization_period()) {
           return true;
         }
       }
