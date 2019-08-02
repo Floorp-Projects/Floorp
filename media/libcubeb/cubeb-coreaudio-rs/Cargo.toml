@@ -16,3 +16,5 @@ coreaudio-sys-utils = { path = "coreaudio-sys-utils" }
 # the minimal version of cubeb-backend is 0.5.1.
 cubeb-backend = "0.5.3"
 libc = "0.2"
+lazy_static = "1.2"
+mach = "0.3"
