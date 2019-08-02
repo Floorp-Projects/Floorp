@@ -651,9 +651,8 @@ nsresult HTMLFormElement::SubmitSubmission(
   // STATE_STOP.  As a result, we have to make sure that we simply pretend
   // we're not submitting when submitting to a JS URL.  That's kinda bogus, but
   // there we are.
-  bool schemeIsJavaScript = false;
-  if (NS_SUCCEEDED(actionURI->SchemeIs("javascript", &schemeIsJavaScript)) &&
-      schemeIsJavaScript) {
+  bool schemeIsJavaScript = actionURI->SchemeIs("javascript");
+  if (schemeIsJavaScript) {
     mIsSubmitting = false;
   }
 
@@ -758,12 +757,7 @@ nsresult HTMLFormElement::DoSecureToInsecureSubmitCheck(nsIURI* aActionURL,
   if (!principalURI) {
     principalURI = OwnerDoc()->GetDocumentURI();
   }
-  bool formIsHTTPS;
-  rv = principalURI->SchemeIs("https", &formIsHTTPS);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
+  bool formIsHTTPS = principalURI->SchemeIs("https");
   if (!formIsHTTPS) {
     return NS_OK;
   }
@@ -1508,9 +1502,7 @@ nsresult HTMLFormElement::GetActionURL(nsIURI** aActionURL,
   // Potentially the page uses the CSP directive 'upgrade-insecure-requests'. In
   // such a case we have to upgrade the action url from http:// to https://.
   // If the actionURL is not http, then there is nothing to do.
-  bool isHttpScheme = false;
-  rv = actionURL->SchemeIs("http", &isHttpScheme);
-  NS_ENSURE_SUCCESS(rv, rv);
+  bool isHttpScheme = actionURL->SchemeIs("http");
   if (isHttpScheme && document->GetUpgradeInsecureRequests(false)) {
     // let's use the old specification before the upgrade for logging
     AutoTArray<nsString, 2> params;
