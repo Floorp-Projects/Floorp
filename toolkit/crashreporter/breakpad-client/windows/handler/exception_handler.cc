@@ -39,6 +39,10 @@
 #include "windows/handler/exception_handler.h"
 #include "common/windows/guid_string.h"
 
+#ifdef MOZ_PHC
+#include "replace_malloc_bridge.h"
+#endif
+
 namespace google_breakpad {
 
 // This define is new to Windows 10.
@@ -823,6 +827,7 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
   CloseHandle(child_thread_handle);
 
   if (callback) {
+    // nullptr here for phc::AddrInfo* is ok because this is not a crash.
     success = callback(handler.dump_path_c_, handler.next_minidump_id_c_,
                        callback_context, NULL, NULL, nullptr, success);
   }
@@ -830,17 +835,37 @@ bool ExceptionHandler::WriteMinidumpForChild(HANDLE child,
   return success;
 }
 
+#ifdef MOZ_PHC
+static void GetPHCAddrInfo(EXCEPTION_POINTERS* exinfo,
+                           mozilla::phc::AddrInfo* addr_info) {
+  // Is this a crash involving a PHC allocation?
+  PEXCEPTION_RECORD rec = exinfo->ExceptionRecord;
+  if (rec->ExceptionCode == EXCEPTION_ACCESS_VIOLATION) {
+    // rec->ExceptionInformation[0] contains a value indicating what type of
+    // operation it what, and rec->ExceptionInformation[1] contains the
+    // virtual address of the inaccessible data.
+    char* crashAddr = reinterpret_cast<char*>(rec->ExceptionInformation[1]);
+    ReplaceMalloc::IsPHCAllocation(crashAddr, addr_info);
+  }
+}
+#endif
+
 bool ExceptionHandler::WriteMinidumpWithException(
     DWORD requesting_thread_id,
     EXCEPTION_POINTERS* exinfo,
     MDRawAssertionInfo* assertion) {
+    mozilla::phc::AddrInfo addr_info;
+#ifdef MOZ_PHC
+    GetPHCAddrInfo(exinfo, &addr_info);
+#endif
+
   // Give user code a chance to approve or prevent writing a minidump.  If the
   // filter returns false, don't handle the exception at all.  If this method
   // was called as a result of an exception, returning false will cause
   // HandleException to call any previous handler or return
   // EXCEPTION_CONTINUE_SEARCH on the exception thread, allowing it to appear
   // as though this handler were not present at all.
-  if (filter_ && !filter_(callback_context_, exinfo, nullptr, assertion)) {
+  if (filter_ && !filter_(callback_context_, exinfo, &addr_info, assertion)) {
     return false;
   }
 
@@ -861,7 +886,7 @@ bool ExceptionHandler::WriteMinidumpWithException(
     // scenario, the server process ends up creating the dump path and dump
     // id so they are not known to the client.
     success = callback_(dump_path_c_, next_minidump_id_c_, callback_context_,
-                        exinfo, assertion, nullptr, success);
+                        exinfo, assertion, &addr_info, success);
   }
 
   return success;
