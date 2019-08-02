@@ -305,3 +305,10 @@ gn:
         type: git
         repo: https://gn.googlesource.com/gn
         revision: d69a9c3765dee2e650bcccebbadf72c5d42d92b1
+
+grcov:
+    description: grcov source code
+    fetch:
+        type: git
+        repo: https://github.com/marco-c/grcov
+        revision: 9214a916805838265764f9c69eaed657ea3db021

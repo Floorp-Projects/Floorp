@@ -12,6 +12,9 @@ job-defaults:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/grcov.tar.xz
+    fetches:
+        fetch:
+            - grcov
 
 linux64-grcov:
     treeherder:
