@@ -6033,29 +6033,18 @@ bool BaselineCodeGen<Handler>::emitEnterGeneratorCode(Register script,
                                                       Register scratch) {
   Address baselineAddr(script, JSScript::offsetOfBaselineScript());
 
-  auto emitEnterBaseline = [&]() {
-    masm.loadPtr(baselineAddr, script);
-    masm.load32(Address(script, BaselineScript::offsetOfResumeEntriesOffset()),
-                scratch);
-    masm.addPtr(scratch, script);
-    masm.loadPtr(
-        BaseIndex(script, resumeIndex, ScaleFromElemWidth(sizeof(uintptr_t))),
-        scratch);
-    masm.jump(scratch);
-  };
-
-  if (!IsBaselineInterpreterEnabled()) {
-    // We must have a BaselineScript.
-    emitEnterBaseline();
-    return true;
-  }
-
-  // If the Baseline Interpreter is enabled we resume in either the
-  // BaselineScript (if present) or Baseline Interpreter.
+  // Resume in either the BaselineScript (if present) or Baseline Interpreter.
   Label noBaselineScript;
   masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
                  ImmPtr(BASELINE_DISABLED_SCRIPT), &noBaselineScript);
-  emitEnterBaseline();
+  masm.loadPtr(baselineAddr, script);
+  masm.load32(Address(script, BaselineScript::offsetOfResumeEntriesOffset()),
+              scratch);
+  masm.addPtr(scratch, script);
+  masm.loadPtr(
+      BaseIndex(script, resumeIndex, ScaleFromElemWidth(sizeof(uintptr_t))),
+      scratch);
+  masm.jump(scratch);
 
   masm.bind(&noBaselineScript);
 
@@ -6096,25 +6085,22 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
   ValueOperand retVal = regs.takeAnyValue();
   masm.loadValue(frame.addressOfStackValue(-1), retVal);
 
-  // Branch to interpret if the script does not have a JitScript or
-  // BaselineScript (depending on whether the Baseline Interpreter is enabled).
-  // Note that we don't relazify generator scripts, so the function is
+  // Branch to |interpret| to resume the generator in the C++ interpreter if the
+  // script does not have a JitScript. Note that we don't relazify generator
+  // scripts (asserted in JSFunction::maybeRelazify) so the function is
   // guaranteed to be non-lazy.
   Label interpret;
   Register scratch1 = regs.takeAny();
   masm.loadPtr(Address(callee, JSFunction::offsetOfScript()), scratch1);
-  Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
-  if (IsBaselineInterpreterEnabled()) {
-    Address jitScriptAddr(scratch1, JSScript::offsetOfJitScript());
-    masm.branchPtr(Assembler::Equal, jitScriptAddr, ImmPtr(nullptr),
-                   &interpret);
-  } else {
-    masm.branchPtr(Assembler::BelowOrEqual, baselineAddr,
-                   ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
-  }
+  masm.branchPtr(Assembler::Equal,
+                 Address(scratch1, JSScript::offsetOfJitScript()),
+                 ImmPtr(nullptr), &interpret);
 
 #ifdef JS_TRACE_LOGGING
   if (JS::TraceLoggerSupported()) {
+    // TODO (bug 1565788): add Baseline Interpreter support.
+    MOZ_CRASH("Unimplemented Baseline Interpreter TraceLogger support");
+    Address baselineAddr(scratch1, JSScript::offsetOfBaselineScript());
     masm.loadPtr(baselineAddr, scratch1);
     if (!emitTraceLoggerResume(scratch1, regs)) {
       return false;
@@ -6326,8 +6312,8 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
     masm.implicitPop((fun.explicitStackSlots() + 1) * sizeof(void*));
   }
 
-  // Call into the VM to run in the C++ interpreter if there's no JitScript or
-  // BaselineScript.
+  // Call into the VM to resume the generator in the C++ interpreter if there's
+  // no JitScript.
   masm.bind(&interpret);
 
   prepareVMCall();
