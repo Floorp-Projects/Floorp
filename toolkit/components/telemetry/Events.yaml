@@ -511,7 +511,7 @@ normandy:
 
 pwmgr:
   open_management:
-    objects: ["autocomplete", "capturedoorhanger", "contextmenu", "pageinfo", "preferences", "mainmenu"]
+    objects: ["autocomplete", "capturedoorhanger", "contextmenu", "pageinfo", "preferences", "mainmenu", "fxamenu"]
     methods: ["open_management"]
     description: >
       Sent when opening the password management UI.
@@ -598,8 +598,10 @@ fxa_avatar_menu:
       "sync_tabs",
       "sync_tabs_sidebar",
       "toolbar_icon",
-      "unver_sync_settings"
-    ]
+      "unver_sync_settings",
+      "open_monitor",
+      "open_send"
+      ]
     methods: ["click"]
     release_channel_collection: opt-out
     products:
@@ -622,13 +624,17 @@ fxa_app_menu:
     objects: [
       "account_settings",
       "cad",
+      "login",
       "send_tab",
       "sync_now",
       "sync_settings",
       "sync_tabs",
       "sync_tabs_sidebar",
-      "toolbar_icon"
-    ]
+      "toolbar_icon",
+      "unver_sync_settings",
+      "open_monitor",
+      "open_send"
+      ]
     methods: ["click"]
     release_channel_collection: opt-out
     products:
