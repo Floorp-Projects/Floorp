@@ -468,7 +468,7 @@ CVPixelBufferRef AppleVTEncoder::CreateCVPixelBuffer(const Image* aSource) {
       strides[2] = yuv->mCbCrStride;
       MOZ_FALLTHROUGH;
     case 2:
-      addresses[1] = yuv->mCrChannel;
+      addresses[1] = yuv->mCbChannel;
       widths[1] = yuv->mCbCrSize.width;
       heights[1] = yuv->mCbCrSize.height;
       strides[1] = yuv->mCbCrStride;
