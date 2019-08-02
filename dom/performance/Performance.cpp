@@ -278,6 +278,8 @@ void Performance::Measure(const nsAString& aName,
 
   if (aStartMark.WasPassed()) {
     startTime = ResolveTimestampFromName(aStartMark.Value(), aRv);
+    startTime = nsRFPService::ReduceTimePrecisionAsMSecs(
+        startTime, GetRandomTimelineSeed());
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }
@@ -290,6 +292,8 @@ void Performance::Measure(const nsAString& aName,
 
   if (aEndMark.WasPassed()) {
     endTime = ResolveTimestampFromName(aEndMark.Value(), aRv);
+    endTime = nsRFPService::ReduceTimePrecisionAsMSecs(endTime,
+                                                       GetRandomTimelineSeed());
     if (NS_WARN_IF(aRv.Failed())) {
       return;
     }

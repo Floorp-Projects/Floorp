@@ -37,12 +37,7 @@ class PerformanceNavigationTiming final : public PerformanceResourceTiming {
   }
 
   DOMHighResTimeStamp Duration() const override {
-    DOMHighResTimeStamp rawDuration = LoadEventEnd() - StartTime();
-    if (mPerformance->IsSystemPrincipal()) {
-      return rawDuration;
-    }
-    return nsRFPService::ReduceTimePrecisionAsMSecs(
-        rawDuration, mPerformance->GetRandomTimelineSeed());
+    return LoadEventEnd() - StartTime();
   }
 
   DOMHighResTimeStamp StartTime() const override { return 0; }
