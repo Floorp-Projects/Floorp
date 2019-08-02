@@ -281,26 +281,6 @@ class TextEditRules {
                                      bool* aTruncated);
 
   /**
-   * Create a normal <br> element and insert it to aPointToInsert.
-   *
-   * @param aPointToInsert  The point where the new <br> element will be
-   *                        inserted.
-   * @return                Returns created <br> element or an error code
-   *                        if couldn't create new <br> element.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBR(const EditorDOMPoint& aPointToInsert) {
-    CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
-#ifdef DEBUG
-    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
-    if (!CanHandleEditAction()) {
-      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
-    }
-#endif  // #ifdef DEBUG
-    return ret;
-  }
-
-  /**
    * Create a padding <br> element for empty last line and insert it to
    * aPointToInsert.
    *
@@ -310,16 +290,7 @@ class TextEditRules {
    *                        if couldn't create new <br> element.
    */
   MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreatePaddingBRElementForEmptyLastLine(const EditorDOMPoint& aPointToInsert) {
-    CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
-#ifdef DEBUG
-    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
-    if (!CanHandleEditAction()) {
-      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
-    }
-#endif  // #ifdef DEBUG
-    return ret;
-  }
+  CreatePaddingBRElementForEmptyLastLine(const EditorDOMPoint& aPointToInsert);
 
   void UndefineCaretBidiLevel();
 
@@ -347,21 +318,6 @@ class TextEditRules {
 
  private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
-
-  /**
-   * Create a normal <br> element or a padding <br> element for empty last line
-   * and insert it to aPointToInsert.
-   *
-   * @param aParentToInsert     The point where the new <br> element will be
-   *                            inserted.
-   * @param aForPadding         true if the caller wants to create a padding
-   *                            <br> element for empty last line.  Otherwise,
-   *                            false.
-   * @return                    Returns created <br> element and error code.
-   *                            If it succeeded, never returns nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBRInternal(const EditorDOMPoint& aPointToInsert, bool aForPadding);
 
  protected:
   /**

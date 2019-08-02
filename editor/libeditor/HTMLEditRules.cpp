@@ -10183,14 +10183,22 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
     return NS_OK;
   }
 
-  CreateElementResult createBrResult =
-      !aForPadding
-          ? CreateBR(EditorDOMPoint(&aNode, 0))
-          : CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(&aNode, 0));
-  if (NS_WARN_IF(createBrResult.Failed())) {
-    return createBrResult.Rv();
+  if (aForPadding) {
+    CreateElementResult createBRResult =
+        CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(&aNode, 0));
+    NS_WARNING_ASSERTION(createBRResult.Succeeded(),
+                         "Failed to create padding <br> element");
+    return createBRResult.Rv();
   }
-  return NS_OK;
+
+  RefPtr<Element> brElement =
+      MOZ_KnownLive(HTMLEditorRef())
+          .InsertBrElementWithTransaction(EditorDOMPoint(&aNode, 0));
+  if (NS_WARN_IF(!CanHandleEditAction())) {
+    return NS_ERROR_EDITOR_DESTROYED;
+  }
+  NS_WARNING_ASSERTION(brElement, "Failed to create <br> element");
+  return brElement ? NS_OK : NS_ERROR_FAILURE;
 }
 
 void HTMLEditRules::DidCreateNode(Element& aNewElement) {
