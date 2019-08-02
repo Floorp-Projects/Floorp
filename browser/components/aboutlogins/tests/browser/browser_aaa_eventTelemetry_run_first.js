@@ -12,6 +12,7 @@ function waitForTelemetryEventCount(count) {
       Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
       false
     ).content;
+    info("got " + (events && events.length) + " events");
     return events && events.length == count;
   }, "waiting for telemetry event count of: " + count);
 }
