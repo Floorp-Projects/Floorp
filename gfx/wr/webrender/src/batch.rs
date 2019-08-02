@@ -720,9 +720,13 @@ impl BatchBuilder {
 
         let snap_offsets = prim_info.snap_offsets;
         let prim_vis_mask = prim_info.visibility_mask;
+        let clip_task_address = ctx.get_prim_clip_task_address(
+            prim_info.clip_task_index,
+            render_tasks,
+        );
 
         if is_chased {
-            println!("\tbatch {:?} with bound {:?}", prim_rect, bounding_rect);
+            println!("\tbatch {:?} with bound {:?} and clip task {:?}", prim_rect, bounding_rect, clip_task_address);
         }
 
         if !bounding_rect.is_empty() {
@@ -762,11 +766,6 @@ impl BatchBuilder {
                     textures: BatchTextures::no_texture(),
                 };
 
-                let clip_task_address = ctx.get_prim_clip_task_address(
-                    prim_info.clip_task_index,
-                    render_tasks,
-                ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                 self.add_brush_instance_to_batches(
                     batch_key,
                     batch_features,
@@ -774,7 +773,7 @@ impl BatchBuilder {
                     z_id,
                     INVALID_SEGMENT_INDEX,
                     EdgeAaSegmentMask::all(),
-                    clip_task_address,
+                    clip_task_address.unwrap(),
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     0,
@@ -874,11 +873,6 @@ impl BatchBuilder {
                     transform_id,
                 };
 
-                let clip_task_address = ctx.get_prim_clip_task_address(
-                    prim_info.clip_task_index,
-                    render_tasks,
-                ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                 let glyph_keys = &ctx.scratch.glyph_keys[run.glyph_keys_range];
                 let rasterization_space = match run.raster_space {
                     RasterSpace::Screen => RasterizationSpace::Screen,
@@ -892,7 +886,7 @@ impl BatchBuilder {
                         (run.reference_frame_relative_offset.x * 256.0) as i32,
                         (run.reference_frame_relative_offset.y * 256.0) as i32,
                         (raster_scale * 65535.0).round() as i32,
-                        clip_task_address.0 as i32,
+                        clip_task_address.unwrap().0 as i32,
                     ],
                 );
                 let base_instance = GlyphInstance::new(
@@ -1061,11 +1055,6 @@ impl BatchBuilder {
                     textures,
                 };
 
-                let clip_task_address = ctx.get_prim_clip_task_address(
-                    prim_info.clip_task_index,
-                    render_tasks,
-                ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                 self.add_brush_instance_to_batches(
                     batch_key,
                     batch_features,
@@ -1073,7 +1062,7 @@ impl BatchBuilder {
                     z_id,
                     INVALID_SEGMENT_INDEX,
                     EdgeAaSegmentMask::all(),
-                    clip_task_address,
+                    clip_task_address.unwrap(),
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     segment_user_data,
@@ -1107,10 +1096,10 @@ impl BatchBuilder {
                             let pic = &ctx.prim_store.pictures[child_pic_index.0];
 
                             // Get clip task, if set, for the picture primitive.
-                            let clip_task_address = ctx.get_prim_clip_task_address(
+                            let child_clip_task_address = ctx.get_prim_clip_task_address(
                                 child_prim_info.clip_task_index,
                                 render_tasks,
-                            ).unwrap_or(OPAQUE_TASK_ADDRESS);
+                            );
 
                             let prim_header = PrimitiveHeader {
                                 local_rect: pic.snapped_local_rect,
@@ -1145,7 +1134,7 @@ impl BatchBuilder {
                                 uv_rect_address.as_int(),
                                 if raster_config.establishes_raster_root { 1 } else { 0 },
                                 0,
-                                clip_task_address.0 as i32,
+                                child_clip_task_address.unwrap().0 as i32,
                             ]);
 
                             let key = BatchKey::new(
@@ -1180,11 +1169,6 @@ impl BatchBuilder {
                         } else {
                             BrushFlags::empty()
                         };
-
-                        let clip_task_address = ctx.get_prim_clip_task_address(
-                            prim_info.clip_task_index,
-                            render_tasks,
-                        ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
                         let surface = &ctx.surfaces[raster_config.surface_index.0];
                         let surface_task = surface.render_tasks.map(|s| s.root);
@@ -1291,7 +1275,7 @@ impl BatchBuilder {
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
                                             EdgeAaSegmentMask::empty(),
-                                            clip_task_address,
+                                            clip_task_address.unwrap(),
                                             brush_flags,
                                             prim_header_index,
                                             uv_rect_address.as_int(),
@@ -1367,7 +1351,7 @@ impl BatchBuilder {
                                                 z_id,
                                                 INVALID_SEGMENT_INDEX,
                                                 EdgeAaSegmentMask::empty(),
-                                                clip_task_address,
+                                                clip_task_address.unwrap(),
                                                 brush_flags,
                                                 shadow_prim_header_index,
                                                 shadow_uv_rect_address,
@@ -1390,7 +1374,7 @@ impl BatchBuilder {
                                             z_id_content,
                                             INVALID_SEGMENT_INDEX,
                                             EdgeAaSegmentMask::empty(),
-                                            clip_task_address,
+                                            clip_task_address.unwrap(),
                                             brush_flags,
                                             content_prim_header_index,
                                             content_uv_rect_address,
@@ -1471,7 +1455,7 @@ impl BatchBuilder {
                                             z_id,
                                             INVALID_SEGMENT_INDEX,
                                             EdgeAaSegmentMask::empty(),
-                                            clip_task_address,
+                                            clip_task_address.unwrap(),
                                             brush_flags,
                                             prim_header_index,
                                             0,
@@ -1518,7 +1502,7 @@ impl BatchBuilder {
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
                                     EdgeAaSegmentMask::empty(),
-                                    clip_task_address,
+                                    clip_task_address.unwrap(),
                                     brush_flags,
                                     prim_header_index,
                                     0,
@@ -1551,7 +1535,7 @@ impl BatchBuilder {
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
                                     EdgeAaSegmentMask::empty(),
-                                    clip_task_address,
+                                    clip_task_address.unwrap(),
                                     brush_flags,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
@@ -1594,7 +1578,7 @@ impl BatchBuilder {
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
                                     EdgeAaSegmentMask::empty(),
-                                    clip_task_address,
+                                    clip_task_address.unwrap(),
                                     brush_flags,
                                     prim_header_index,
                                     0,
@@ -1697,7 +1681,7 @@ impl BatchBuilder {
                                     z_id,
                                     INVALID_SEGMENT_INDEX,
                                     EdgeAaSegmentMask::empty(),
-                                    clip_task_address,
+                                    clip_task_address.unwrap(),
                                     brush_flags,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
@@ -2076,11 +2060,6 @@ impl BatchBuilder {
                     const VECS_PER_SPECIFIC_BRUSH: usize = 3;
                     let max_tiles_per_header = (MAX_VERTEX_TEXTURE_WIDTH - VECS_PER_SPECIFIC_BRUSH) / VECS_PER_SEGMENT;
 
-                    let clip_task_address = ctx.get_prim_clip_task_address(
-                        prim_info.clip_task_index,
-                        render_tasks,
-                    ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                     // use temporary block storage since we don't know the number of visible tiles beforehand
                     let mut gpu_blocks = Vec::<GpuBlockData>::new();
                     for chunk in image_instance.visible_tiles.chunks(max_tiles_per_header) {
@@ -2124,7 +2103,7 @@ impl BatchBuilder {
                                     z_id,
                                     i as i32,
                                     tile.edge_flags,
-                                    clip_task_address,
+                                    clip_task_address.unwrap(),
                                     BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
@@ -2190,11 +2169,6 @@ impl BatchBuilder {
                         textures,
                     };
 
-                    let clip_task_address = ctx.get_prim_clip_task_address(
-                        prim_info.clip_task_index,
-                        render_tasks,
-                    ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                     self.add_brush_instance_to_batches(
                         batch_key,
                         batch_features,
@@ -2202,7 +2176,7 @@ impl BatchBuilder {
                         z_id,
                         INVALID_SEGMENT_INDEX,
                         EdgeAaSegmentMask::all(),
-                        clip_task_address,
+                        clip_task_address.unwrap(),
                         BrushFlags::PERSPECTIVE_INTERPOLATION,
                         prim_header_index,
                         segment_user_data,
@@ -2254,18 +2228,13 @@ impl BatchBuilder {
                 } else {
                     let visible_tiles = &ctx.scratch.gradient_tiles[gradient.visible_tiles_range];
 
-                    let clip_task_address = ctx.get_prim_clip_task_address(
-                        prim_info.clip_task_index,
-                        render_tasks,
-                    ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                     self.add_gradient_tiles(
                         visible_tiles,
                         &prim_data.stops_handle,
                         BrushBatchKind::LinearGradient,
                         specified_blend_mode,
                         bounding_rect,
-                        clip_task_address,
+                        clip_task_address.unwrap(),
                         gpu_cache,
                         &prim_header,
                         prim_headers,
@@ -2341,18 +2310,13 @@ impl BatchBuilder {
                 } else {
                     let visible_tiles = &ctx.scratch.gradient_tiles[*visible_tiles_range];
 
-                    let clip_task_address = ctx.get_prim_clip_task_address(
-                        prim_info.clip_task_index,
-                        render_tasks,
-                    ).unwrap_or(OPAQUE_TASK_ADDRESS);
-
                     self.add_gradient_tiles(
                         visible_tiles,
                         &prim_data.stops_handle,
                         BrushBatchKind::RadialGradient,
                         specified_blend_mode,
                         bounding_rect,
-                        clip_task_address,
+                        clip_task_address.unwrap(),
                         gpu_cache,
                         &prim_header,
                         prim_headers,
@@ -2507,7 +2471,7 @@ impl BatchBuilder {
                 let clip_task_address = ctx.get_prim_clip_task_address(
                     clip_task_index,
                     render_tasks,
-                ).unwrap_or(OPAQUE_TASK_ADDRESS);
+                ).unwrap();
                 self.add_brush_instance_to_batches(
                     batch_key,
                     features,
