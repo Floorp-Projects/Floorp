@@ -6296,9 +6296,9 @@ bool BaselineCodeGen<Handler>::emitGeneratorResume(
     // self-hosted code, instead of the generator code that we are
     // pretending we are already executing. Instead, we push a
     // dummy return address. In jit::GeneratorThrowOrReturn,
-    // we will set the baseline frame's overridePc. Frame iterators
-    // will use the override pc instead of relying on the return
-    // address.
+    // we will make this an interpreter frame so frame iterators
+    // will use the frame's interpreter pc field instead of relying
+    // on the return address.
 
     // On ARM64, the callee will push a bogus return address. On
     // other architectures, we push a null return address.

@@ -1004,18 +1004,11 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
   jsbytecode* pc = script->offsetToPC(offset);
 
-  // Initialize interpreter frame fields if needed. Doing this here is
-  // simpler than doing it in JIT code.
-  if (!script->hasBaselineScript()) {
-    MOZ_ASSERT(IsBaselineInterpreterEnabled());
-    MOZ_ASSERT(!frame->runningInInterpreter());
-    frame->initInterpFieldsForGeneratorThrowOrReturn(script, pc);
-  }
-
-  // Set the frame's pc to the current resume pc, so that frame iterators
-  // work. This function always returns false, so we're guaranteed to enter
-  // the exception handler where we will clear the pc.
-  frame->setOverridePc(pc);
+  // Always use an interpreter frame so frame iteration can easily recover the
+  // generator's bytecode pc (we don't have a matching RetAddrEntry in the
+  // BaselineScript).
+  MOZ_ASSERT(!frame->runningInInterpreter());
+  frame->initInterpFieldsForGeneratorThrowOrReturn(script, pc);
 
   // In the interpreter, AbstractGeneratorObject::resume marks the generator as
   // running, so we do the same.
