@@ -1758,6 +1758,9 @@ already_AddRefed<Promise> Navigator::RequestMediaKeySystemAccess(
                                                 mWindow->IsSecureContext())
                     .get());
 
+  Telemetry::Accumulate(Telemetry::MEDIA_EME_SECURE_CONTEXT,
+                        mWindow->IsSecureContext());
+
   if (!mWindow->IsSecureContext()) {
     Document* doc = mWindow->GetExtantDoc();
     AutoTArray<nsString, 1> params;

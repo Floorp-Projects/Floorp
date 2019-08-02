@@ -18,6 +18,7 @@
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/SystemGroup.h"
 #include "mozilla/TaskQueue.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "nsIGfxInfo.h"

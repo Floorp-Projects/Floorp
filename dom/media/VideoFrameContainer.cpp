@@ -83,6 +83,7 @@ void VideoFrameContainer::SetCurrentFrame(const gfx::IntSize& aIntrinsicSize,
                                           const TimeStamp& aTargetTime) {
   if (aImage) {
     MutexAutoLock lock(mMutex);
+    AutoTimer<Telemetry::VFC_SETCURRENTFRAME_LOCK_HOLD_MS> lockHold;
     AutoTArray<ImageContainer::NonOwningImage, 1> imageList;
     imageList.AppendElement(
         ImageContainer::NonOwningImage(aImage, aTargetTime, ++mFrameID));
@@ -96,6 +97,7 @@ void VideoFrameContainer::SetCurrentFrames(
     const gfx::IntSize& aIntrinsicSize,
     const nsTArray<ImageContainer::NonOwningImage>& aImages) {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_SETIMAGES_LOCK_HOLD_MS> lockHold;
   SetCurrentFramesLocked(aIntrinsicSize, aImages);
 }
 
@@ -168,6 +170,7 @@ void VideoFrameContainer::SetCurrentFramesLocked(
 
 void VideoFrameContainer::ClearCurrentFrame() {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_CLEARCURRENTFRAME_LOCK_HOLD_MS> lockHold;
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
@@ -180,6 +183,7 @@ void VideoFrameContainer::ClearCurrentFrame() {
 
 void VideoFrameContainer::ClearFutureFrames() {
   MutexAutoLock lock(mMutex);
+  AutoTimer<Telemetry::VFC_CLEARFUTUREFRAMES_LOCK_HOLD_MS> lockHold;
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.

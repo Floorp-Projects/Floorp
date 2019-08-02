@@ -40,7 +40,8 @@ class RemoteDecoderManagerParent final : public PRemoteDecoderManagerParent {
       const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
       const CreateDecoderParams::OptionSet& aOptions,
       const Maybe<layers::TextureFactoryIdentifier>& aIdentifier,
-      bool* aSuccess, nsCString* aErrorDescription);
+      bool* aSuccess, nsCString* aBlacklistedD3D11Driver,
+      nsCString* aBlacklistedD3D9Driver, nsCString* aErrorDescription);
   bool DeallocPRemoteDecoderParent(PRemoteDecoderParent* actor);
 
   mozilla::ipc::IPCResult RecvReadback(const SurfaceDescriptorGPUVideo& aSD,

@@ -117,6 +117,7 @@ TextTrackManager::TextTrackManager(HTMLMediaElement* aMediaElement)
       mTimeMarchesOnDispatched(false),
       mUpdateCueDisplayDispatched(false),
       performedTrackSelection(false),
+      mCueTelemetryReported(false),
       mShutdown(false) {
   nsISupports* parentObject = mMediaElement->OwnerDoc()->GetParentObject();
 
@@ -280,6 +281,7 @@ void TextTrackManager::NotifyCueAdded(TextTrackCue& aCue) {
     mNewCues->AddCue(aCue);
   }
   MaybeRunTimeMarchesOn();
+  ReportTelemetryForCue();
 }
 
 void TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue) {
@@ -849,6 +851,16 @@ void TextTrackManager::ReportTelemetryForTrack(TextTrack* aTextTrack) const {
 
   TextTrackKind kind = aTextTrack->Kind();
   Telemetry::Accumulate(Telemetry::WEBVTT_TRACK_KINDS, uint32_t(kind));
+}
+
+void TextTrackManager::ReportTelemetryForCue() {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNewCues->IsEmpty());
+
+  if (!mCueTelemetryReported) {
+    Telemetry::Accumulate(Telemetry::WEBVTT_USED_VTT_CUES, 1);
+    mCueTelemetryReported = true;
+  }
 }
 
 bool TextTrackManager::IsLoaded() {
