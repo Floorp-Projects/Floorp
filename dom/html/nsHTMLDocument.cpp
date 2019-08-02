@@ -476,8 +476,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     aChannel->GetOriginalURI(getter_AddRefs(uri));
     // Adapted from nsDocShell:
     // GetSpec can be expensive for some URIs, so check the scheme first.
-    bool isAbout = false;
-    if (uri && NS_SUCCEEDED(uri->SchemeIs("about", &isAbout)) && isAbout) {
+    if (uri && uri->SchemeIs("about")) {
       if (uri->GetSpecOrDefault().EqualsLiteral("about:blank")) {
         loadAsHtml5 = false;
       }
@@ -816,9 +815,7 @@ bool nsHTMLDocument::WillIgnoreCharsetOverride() {
   }
   nsIURI* uri = GetOriginalURI();
   if (uri) {
-    bool schemeIs = false;
-    uri->SchemeIs("about", &schemeIs);
-    if (schemeIs) {
+    if (uri->SchemeIs("about")) {
       return true;
     }
     bool isResource;
