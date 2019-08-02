@@ -66,7 +66,7 @@ SEC_GetPassword(FILE *input, FILE *output, char *prompt,
     int infd = fileno(input);
     int isTTY = isatty(infd);
 #endif
-    char phrase[200] = { '\0' }; /* ensure EOF doesn't return junk */
+    char phrase[500] = { '\0' }; /* ensure EOF doesn't return junk */
 
     for (;;) {
         /* Prompt for password */

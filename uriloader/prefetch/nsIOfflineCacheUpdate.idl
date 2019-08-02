@@ -223,9 +223,9 @@ interface nsIOfflineCacheUpdateService : nsISupports {
 
     /**
      * Schedule a cache update for a given offline manifest using app cache
-     * bound to the given appID+inIsolatedMozBrowser flag.  If an existing update
-     * is scheduled or running, that update will be returned. Otherwise a new
-     * update will be scheduled.
+     * bound to the given appID flag.  If an existing update is scheduled or
+     * running, that update will be returned. Otherwise a new update will be
+     * scheduled.
      */
     nsIOfflineCacheUpdate scheduleAppUpdate(in nsIURI aManifestURI,
                                             in nsIURI aDocumentURI,
