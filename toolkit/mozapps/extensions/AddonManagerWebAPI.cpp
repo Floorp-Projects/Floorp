@@ -55,9 +55,7 @@ bool AddonManagerWebAPI::IsValidSite(nsIURI* uri) {
     return false;
   }
 
-  bool isSecure;
-  nsresult rv = uri->SchemeIs("https", &isSecure);
-  if (NS_FAILED(rv) || !isSecure) {
+  if (!uri->SchemeIs("https")) {
     if (!(xpc::IsInAutomation() &&
           Preferences::GetBool("extensions.webapi.testing.http", false))) {
       return false;
@@ -65,7 +63,7 @@ bool AddonManagerWebAPI::IsValidSite(nsIURI* uri) {
   }
 
   nsAutoCString host;
-  rv = uri->GetHost(host);
+  nsresult rv = uri->GetHost(host);
   if (NS_FAILED(rv)) {
     return false;
   }

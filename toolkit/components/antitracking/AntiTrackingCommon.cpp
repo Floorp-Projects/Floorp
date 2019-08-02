@@ -220,10 +220,7 @@ int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
 
   // WebExtensions 3rd party URI always get BEHAVIOR_ACCEPT as cookieBehavior,
   // this is semantically equivalent to the principal having a AddonPolicy().
-  bool is3rdPartyMozExt = false;
-  if (NS_SUCCEEDED(
-          a3rdPartyURI->SchemeIs("moz-extension", &is3rdPartyMozExt)) &&
-      is3rdPartyMozExt) {
+  if (a3rdPartyURI->SchemeIs("moz-extension")) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
