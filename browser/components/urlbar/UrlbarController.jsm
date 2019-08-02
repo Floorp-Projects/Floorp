@@ -218,16 +218,6 @@ class UrlbarController {
   }
 
   /**
-   * When the containing context changes (for example when switching tabs),
-   * clear any caches that connects consecutive searches in the same context.
-   * For example it can be used to clear information used to improve autofill
-   * or save resourced on repeated searches.
-   */
-  viewContextChanged() {
-    this.cancelQuery();
-  }
-
-  /**
    * Checks whether a keyboard event that would normally open the view should
    * instead be handled natively by the input field.
    * On certain platforms, the up and down keys can be used to move the caret,
