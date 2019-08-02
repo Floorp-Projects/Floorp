@@ -2748,8 +2748,11 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // clamped target position can be different from the current position, so
   // we don't take the early exit, but conceptually we still want to avoid
   // updating |mLastScrollOrigin| and clobbering the visual scroll offset.
+  // We only do this if the visual and layout scroll offsets can diverge
+  // in the first place, because it causes various regressions (bug 1543485
+  // tracks a proper fix).
   bool suppressScrollOriginChange = false;
-  if (aPt == curPos) {
+  if (presContext->PresShell()->GetIsViewportOverridden() && aPt == curPos) {
     suppressScrollOriginChange = true;
   }
 
