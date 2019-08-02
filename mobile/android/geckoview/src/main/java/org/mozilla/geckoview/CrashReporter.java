@@ -39,7 +39,6 @@ import java.util.zip.GZIPOutputStream;
 public class CrashReporter {
     private static final String LOGTAG = "GeckoCrashReporter";
     private static final String MINI_DUMP_PATH_KEY = "upload_file_minidump";
-    private static final String MINI_DUMP_SUCCESS_KEY = "minidumpSuccess";
     private static final String PAGE_URL_KEY = "URL";
     private static final String NOTES_KEY = "Notes";
     private static final String SERVER_URL_KEY = "ServerURL";
@@ -103,9 +102,8 @@ public class CrashReporter {
             throws IOException, URISyntaxException {
         final File dumpFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_MINIDUMP_PATH));
         final File extrasFile = new File(intentExtras.getString(GeckoRuntime.EXTRA_EXTRAS_PATH));
-        final boolean success = intentExtras.getBoolean(GeckoRuntime.EXTRA_MINIDUMP_SUCCESS, false);
 
-        return sendCrashReport(context, dumpFile, extrasFile, success, appName);
+        return sendCrashReport(context, dumpFile, extrasFile, appName);
     }
 
     /**
@@ -119,7 +117,6 @@ public class CrashReporter {
      * @param context The current {@link Context}
      * @param minidumpFile A {@link File} referring to the minidump.
      * @param extrasFile A {@link File} referring to the extras file.
-     * @param success A boolean indicating whether the dump was successfully generated.
      * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
@@ -131,7 +128,6 @@ public class CrashReporter {
     public static @NonNull GeckoResult<String> sendCrashReport(@NonNull final Context context,
                                                                @NonNull final File minidumpFile,
                                                                @NonNull final File extrasFile,
-                                                               final boolean success,
                                                                @NonNull final String appName)
             throws IOException, URISyntaxException {
         // Compute the minidump hash and generate the stack traces
@@ -140,7 +136,7 @@ public class CrashReporter {
         // Extract the annotations from the .extra file
         HashMap<String, String> extrasMap = readStringsFromFile(extrasFile.getPath());
 
-        return sendCrashReport(context, minidumpFile, extrasMap, success, appName);
+        return sendCrashReport(context, minidumpFile, extrasMap, appName);
     }
 
     /**
@@ -150,7 +146,6 @@ public class CrashReporter {
      * @param context The current {@link Context}
      * @param minidumpFile A {@link File} referring to the minidump.
      * @param extras A {@link HashMap} with the parsed key-value pairs from the extras file.
-     * @param success A boolean indicating whether the dump was successfully generated.
      * @param appName A human-readable app name.
      * @throws IOException This can be thrown if there was a networking error while sending the report.
      * @throws URISyntaxException This can be thrown if the crash server URI from the extra data was invalid.
@@ -161,7 +156,7 @@ public class CrashReporter {
     @AnyThread
     public static @NonNull GeckoResult<String> sendCrashReport(
         @NonNull final Context context, @NonNull final File minidumpFile,
-        @NonNull final Map<String, String> extras, final boolean success,
+        @NonNull final Map<String, String> extras,
         @NonNull final String appName) throws IOException, URISyntaxException {
         Log.d(LOGTAG, "Sending crash report: " + minidumpFile.getPath());
 
@@ -219,7 +214,6 @@ public class CrashReporter {
                 Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
             }
             sendPart(os, boundary, "Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
-            sendPart(os, boundary, MINI_DUMP_SUCCESS_KEY, success ? "True" : "False");
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
             os.write(("\r\n--" + boundary + "--\r\n").getBytes());
             os.flush();

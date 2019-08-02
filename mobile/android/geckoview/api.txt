@@ -189,8 +189,8 @@ package org.mozilla.geckoview {
     ctor public CrashReporter();
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull Intent, @NonNull String);
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull Bundle, @NonNull String);
-    method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull File, @NonNull File, boolean, @NonNull String);
-    method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull File, @NonNull Map<String,String>, boolean, @NonNull String);
+    method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull File, @NonNull File, @NonNull String);
+    method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull Context, @NonNull File, @NonNull Map<String,String>, @NonNull String);
   }
 
   @UiThread public final class DynamicToolbarAnimator {
@@ -300,7 +300,6 @@ package org.mozilla.geckoview {
     field public static final String EXTRA_CRASH_FATAL = "fatal";
     field public static final String EXTRA_EXTRAS_PATH = "extrasPath";
     field public static final String EXTRA_MINIDUMP_PATH = "minidumpPath";
-    field public static final String EXTRA_MINIDUMP_SUCCESS = "minidumpSuccess";
   }
 
   public static interface GeckoRuntime.Delegate {
