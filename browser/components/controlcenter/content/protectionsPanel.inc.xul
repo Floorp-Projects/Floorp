@@ -96,14 +96,14 @@
         <toolbarbutton id="protections-popup-settings-button"
                        class="protections-popup-footer-button"
                        oncommand="gProtectionsHandler.openPreferences();">
-          <image class="protection-popup-footer-icon protections-popup-settings-icon"/>
+          <image class="protections-popup-footer-icon protections-popup-settings-icon"/>
           <label class="protections-popup-footer-button-label" flex="1">&protections.settings.label;</label>
         </toolbarbutton>
         <stack id="protections-popup-show-report-stack">
           <toolbarbutton id="protections-popup-show-report-button"
                          class="protections-popup-footer-button"
                          oncommand="gProtectionsHandler.openProtections(true);">
-            <image class="protection-popup-footer-icon protections-popup-show-report-icon"/>
+            <image class="protections-popup-footer-icon protections-popup-show-report-icon"/>
             <label class="protections-popup-footer-button-label" flex="1">&protections.report.label;</label>
           </toolbarbutton>
           <hbox id="protections-popup-trackers-blocked-counter-box"
