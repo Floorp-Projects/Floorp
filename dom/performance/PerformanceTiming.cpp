@@ -130,7 +130,10 @@ PerformanceTimingData::PerformanceTimingData(nsITimedChannel* aChannel,
   }
 
   if (uri) {
-    mSecureConnection = uri->SchemeIs("https");
+    nsresult rv = uri->SchemeIs("https", &mSecureConnection);
+    if (NS_FAILED(rv)) {
+      mSecureConnection = false;
+    }
   }
 
   if (aChannel) {

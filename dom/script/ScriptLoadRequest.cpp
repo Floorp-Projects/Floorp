@@ -198,7 +198,12 @@ bool ScriptLoadRequest::ShouldAcceptBinASTEncoding() const {
 #ifdef JS_BUILD_BINAST
   // We accept the BinAST encoding if we're using a secure connection.
 
-  if (!mURI->SchemeIs("https")) {
+  bool isHTTPS = false;
+  nsresult rv = mURI->SchemeIs("https", &isHTTPS);
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+  Unused << rv;
+
+  if (!isHTTPS) {
     return false;
   }
 
