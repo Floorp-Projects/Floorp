@@ -783,6 +783,29 @@ void BrowsingContext::Location(JSContext* aCx,
   }
 }
 
+void BrowsingContext::LoadURI(BrowsingContext* aAccessor,
+                              nsDocShellLoadState* aLoadState) {
+  MOZ_DIAGNOSTIC_ASSERT(!IsDiscarded());
+  MOZ_DIAGNOSTIC_ASSERT(!aAccessor || !aAccessor->IsDiscarded());
+
+  if (mDocShell) {
+    mDocShell->LoadURI(aLoadState);
+  } else if (!aAccessor && XRE_IsParentProcess()) {
+    Unused << Canonical()->GetCurrentWindowGlobal()->SendLoadURIInChild(
+        aLoadState);
+  } else {
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor);
+    MOZ_DIAGNOSTIC_ASSERT(aAccessor->Group() == Group());
+
+    nsCOMPtr<nsPIDOMWindowOuter> win(aAccessor->GetDOMWindow());
+    MOZ_DIAGNOSTIC_ASSERT(win);
+    if (WindowGlobalChild* wgc =
+            win->GetCurrentInnerWindow()->GetWindowGlobalChild()) {
+      wgc->SendLoadURI(this, aLoadState);
+    }
+  }
+}
+
 void BrowsingContext::Close(CallerType aCallerType, ErrorResult& aError) {
   // FIXME We need to set mClosed, but only once we're sending the
   //       DOMWindowClose event (which happens in the process where the
