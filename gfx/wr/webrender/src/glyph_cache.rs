@@ -86,6 +86,31 @@ impl GlyphKeyCache {
         self.user_data.bytes_used = 0;
     }
 
+    fn prune_glyphs(
+        &mut self,
+        excess_bytes_used: usize,
+        texture_cache: &mut TextureCache,
+        render_task_cache: &RenderTaskCache,
+    ) -> usize {
+        let mut pruned = 0;
+        self.retain(|_, entry| {
+            if pruned <= excess_bytes_used {
+                match entry.get_allocated_size(texture_cache, render_task_cache) {
+                    Some(size) => {
+                        pruned += size;
+                        entry.mark_unused(texture_cache);
+                        false
+                    }
+                    None => true,
+                }
+            } else {
+                true
+            }
+        });
+        self.user_data.bytes_used -= pruned;
+        pruned
+    }
+
     pub fn add_glyph(&mut self, key: GlyphKey, value: GlyphCacheEntry) {
         self.insert(key, value);
         self.user_data.bytes_used = Self::DIRTY;
@@ -121,7 +146,7 @@ pub struct GlyphCache {
 
 impl GlyphCache {
     /// The default space usage threshold, in bytes, after which to start pruning away old fonts.
-    pub const DEFAULT_MAX_BYTES_USED: usize = 5 * 1024 * 1024;
+    pub const DEFAULT_MAX_BYTES_USED: usize = 6 * 1024 * 1024;
 
     pub fn new(max_bytes_used: usize) -> Self {
         GlyphCache {
@@ -200,7 +225,11 @@ impl GlyphCache {
 
     /// Check the total space usage of the glyph cache. If it exceeds the maximum usage threshold,
     /// then start clearing the oldest glyphs until below the threshold.
-    fn prune_excess_usage(&mut self, texture_cache: &mut TextureCache) {
+    fn prune_excess_usage(
+        &mut self,
+        texture_cache: &mut TextureCache,
+        render_task_cache: &RenderTaskCache,
+    ) {
         if self.bytes_used < self.max_bytes_used {
             return;
         }
@@ -211,22 +240,32 @@ impl GlyphCache {
         });
         // Clear out the oldest caches until below the threshold.
         for cache in caches {
-            self.bytes_used -= cache.user_data.bytes_used;
-            cache.clear_glyphs(texture_cache);
             if self.bytes_used < self.max_bytes_used {
                 break;
+            }
+            let excess = self.bytes_used - self.max_bytes_used;
+            if excess >= cache.user_data.bytes_used {
+                // If the excess is greater than the cache's size, just clear the whole thing.
+                cache.clear_glyphs(texture_cache);
+                self.bytes_used -= cache.user_data.bytes_used;
+            } else {
+                // Otherwise, just clear as little of the cache as needs to remove the excess
+                // and avoid rematerialization costs.
+                self.bytes_used -= cache.prune_glyphs(excess, texture_cache, render_task_cache);
             }
         }
     }
 
-    pub fn begin_frame(&mut self,
-                       stamp: FrameStamp,
-                       texture_cache: &mut TextureCache,
-                       render_task_cache: &RenderTaskCache,
-                       glyph_rasterizer: &mut GlyphRasterizer) {
+    pub fn begin_frame(
+        &mut self,
+        stamp: FrameStamp,
+        texture_cache: &mut TextureCache,
+        render_task_cache: &RenderTaskCache,
+        glyph_rasterizer: &mut GlyphRasterizer,
+    ) {
         self.current_frame = stamp.frame_id();
         self.clear_evicted(texture_cache, render_task_cache);
-        self.prune_excess_usage(texture_cache);
+        self.prune_excess_usage(texture_cache, render_task_cache);
         // Clearing evicted glyphs and pruning excess usage might have produced empty caches,
         // so get rid of them if possible.
         self.clear_empty_caches(glyph_rasterizer);
