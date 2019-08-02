@@ -3,9 +3,7 @@ set -x -e -v
 
 # This script is for building grcov
 
-OWNER=marco-c
 PROJECT=grcov
-PROJECT_REVISION=9214a916805838265764f9c69eaed657ea3db021
 
 # This script is for building rust-size
 case "$(uname -s)" in
@@ -38,11 +36,7 @@ fi
 
 PATH="$PWD/rustc/bin:$PATH"
 
-git clone -n https://github.com/${OWNER}/${PROJECT} ${PROJECT}
-
-pushd $PROJECT
-
-git checkout $PROJECT_REVISION
+pushd $MOZ_FETCHES_DIR/$PROJECT
 
 cargo build --verbose --release
 
