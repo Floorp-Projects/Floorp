@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.media.ext
 
-import android.media.session.PlaybackState
 import android.support.v4.media.session.PlaybackStateCompat
 import mozilla.components.concept.engine.media.Media
 import mozilla.components.feature.media.state.MediaState
@@ -32,8 +31,8 @@ internal fun MediaState.toPlaybackState() =
         .setState(
             when (this) {
                 is MediaState.Playing -> PlaybackStateCompat.STATE_PLAYING
-                is MediaState.Paused -> PlaybackState.STATE_PAUSED
-                is MediaState.None -> PlaybackState.STATE_NONE
+                is MediaState.Paused -> PlaybackStateCompat.STATE_PAUSED
+                is MediaState.None -> PlaybackStateCompat.STATE_NONE
             },
             // Time state not exposed yet:
             // https://github.com/mozilla-mobile/android-components/issues/2458
