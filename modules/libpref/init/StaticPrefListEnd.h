@@ -11,8 +11,9 @@
 // StaticPrefsListBegin.h in all headers that contribute prefs to the
 // StaticPrefs namespace.
 
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 
 }  // namespace StaticPrefs
 }  // namespace mozilla

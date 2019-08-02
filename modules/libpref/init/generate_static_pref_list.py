@@ -50,12 +50,11 @@ FIRST_LINE = '''\
 
 MIRROR_TEMPLATES = {
     'never': '''\
-PREF("{name}", {typ}, {value})
+NEVER_PREF("{name}", {typ}, {value})
 ''',
 
     'once': '''\
-VARCACHE_PREF(
-  Once,
+ONCE_PREF(
   "{name}",
    {base_id},
    {full_id},
@@ -64,8 +63,7 @@ VARCACHE_PREF(
 ''',
 
     'always': '''\
-VARCACHE_PREF(
-  Always,
+ALWAYS_PREF(
   "{name}",
    {base_id},
    {full_id},
