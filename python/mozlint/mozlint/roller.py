@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import copy
 import os
 import signal
 import sys
@@ -134,7 +135,9 @@ class LintRoller(object):
                 continue
 
             try:
-                res = findobject(linter['setup'])(**self.lintargs)
+                setupargs = copy.deepcopy(self.lintargs)
+                setupargs['name'] = linter['name']
+                res = findobject(linter['setup'])(**setupargs)
             except Exception:
                 traceback.print_exc()
                 res = 1
