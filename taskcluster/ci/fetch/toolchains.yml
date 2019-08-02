@@ -298,3 +298,10 @@ rust-size:
         type: git
         repo: https://github.com/luser/rust-size
         revision: ab659d93b1faba95307df952aefe3fbed3583669
+
+gn:
+    description: GN source code
+    fetch:
+        type: git
+        repo: https://gn.googlesource.com/gn
+        revision: d69a9c3765dee2e650bcccebbadf72c5d42d92b1

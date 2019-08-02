@@ -16,6 +16,9 @@ job-defaults:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/build-gn-common.sh'
         toolchain-artifact: public/build/gn.tar.xz
+    fetches:
+        fetch:
+            - gn
 
 linux64-gn:
     treeherder:
