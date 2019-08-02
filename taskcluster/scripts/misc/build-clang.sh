@@ -30,8 +30,6 @@ case "$JSON_CONFIG" in
   # exists.
   export VSINSTALLDIR="${VSPATH}/"
 
-  # Add git.exe to the path
-  export PATH="$(pwd)/cmd:${PATH}"
   export PATH="$(cd cmake && pwd)/bin:${PATH}"
   export PATH="$(cd ninja && pwd)/bin:${PATH}"
   ;;
@@ -46,7 +44,8 @@ esac
 # gets a bit too verbose here
 set +x
 
-python3 build/build-clang/build-clang.py -c $1
+cd $MOZ_FETCHES_DIR/llvm-project
+python3 $GECKO_PATH/build/build-clang/build-clang.py -c $GECKO_PATH/$1
 
 set -x
 

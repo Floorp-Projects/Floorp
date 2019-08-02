@@ -22,6 +22,9 @@ job-defaults:
     run-on-projects:
         - trunk
         - try
+    fetches:
+        fetch:
+            - clang-8
 
 linux64-clang-tidy:
     index:
