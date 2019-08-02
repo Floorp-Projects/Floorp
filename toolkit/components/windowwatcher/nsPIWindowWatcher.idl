@@ -14,6 +14,7 @@
 class nsDocShellLoadState;
 %}
 
+webidl BrowsingContext;
 interface mozIDOMWindowProxy;
 interface nsIDOMWindow;
 interface nsISimpleEnumerator;
@@ -81,16 +82,16 @@ interface nsPIWindowWatcher : nsISupports
             (which is determined based on the JS stack and the value of
             aParent).  This is not guaranteed, however.
   */
-  mozIDOMWindowProxy openWindow2(in mozIDOMWindowProxy aParent, in string aUrl,
-                                 in string aName, in string aFeatures,
-                                 in boolean aCalledFromScript,
-                                 in boolean aDialog,
-                                 in boolean aNavigate,
-                                 in nsISupports aArgs,
-                                 in boolean aIsPopupSpam,
-                                 in boolean aForceNoOpener,
-                                 in boolean aForceNoReferrer,
-                                 in nsDocShellLoadStatePtr aLoadState);
+  BrowsingContext openWindow2(in mozIDOMWindowProxy aParent, in string aUrl,
+                              in string aName, in string aFeatures,
+                              in boolean aCalledFromScript,
+                              in boolean aDialog,
+                              in boolean aNavigate,
+                              in nsISupports aArgs,
+                              in boolean aIsPopupSpam,
+                              in boolean aForceNoOpener,
+                              in boolean aForceNoReferrer,
+                              in nsDocShellLoadStatePtr aLoadState);
 
   /**
    * Opens a new window so that the window that aOpeningTab belongs to

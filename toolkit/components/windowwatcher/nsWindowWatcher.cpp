@@ -61,6 +61,7 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -287,13 +288,17 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const char* aUrl,
   }
   bool dialog = (argc != 0);
 
-  return OpenWindowInternal(aParent, aUrl, aName, aFeatures,
-                            /* calledFromJS = */ false, dialog,
-                            /* navigate = */ true, argv,
-                            /* aIsPopupSpam = */ false,
-                            /* aForceNoOpener = */ false,
-                            /* aForceNoReferrer = */ false,
-                            /* aLoadState = */ nullptr, aResult);
+  RefPtr<BrowsingContext> bc;
+  MOZ_TRY(OpenWindowInternal(aParent, aUrl, aName, aFeatures,
+                             /* calledFromJS = */ false, dialog,
+                             /* navigate = */ true, argv,
+                             /* aIsPopupSpam = */ false,
+                             /* aForceNoOpener = */ false,
+                             /* aForceNoReferrer = */ false,
+                             /* aLoadState = */ nullptr, getter_AddRefs(bc)));
+  nsCOMPtr<mozIDOMWindowProxy> win(bc->GetDOMWindow());
+  win.forget(aResult);
+  return NS_OK;
 }
 
 struct SizeSpec {
@@ -350,7 +355,7 @@ nsWindowWatcher::OpenWindow2(mozIDOMWindowProxy* aParent, const char* aUrl,
                              bool aIsPopupSpam, bool aForceNoOpener,
                              bool aForceNoReferrer,
                              nsDocShellLoadState* aLoadState,
-                             mozIDOMWindowProxy** aResult) {
+                             BrowsingContext** aResult) {
   nsCOMPtr<nsIArray> argv = ConvertArgsToArray(aArguments);
 
   uint32_t argc = 0;
@@ -577,7 +582,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     const char* aFeatures, bool aCalledFromJS, bool aDialog, bool aNavigate,
     nsIArray* aArgv, bool aIsPopupSpam, bool aForceNoOpener,
     bool aForceNoReferrer, nsDocShellLoadState* aLoadState,
-    mozIDOMWindowProxy** aResult) {
+    BrowsingContext** aResult) {
   MOZ_ASSERT_IF(aForceNoReferrer, aForceNoOpener);
 
   nsresult rv = NS_OK;
@@ -926,11 +931,16 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     newDocShell->SetSandboxFlags(activeDocsSandboxFlags);
   }
 
+  nsCOMPtr<mozIDOMWindowProxy> win;
   rv = ReadyOpenedDocShellItem(newDocShellItem, parentWindow, windowIsNew,
-                               aForceNoOpener, aResult);
+                               aForceNoOpener, getter_AddRefs(win));
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  RefPtr<BrowsingContext> bc(
+      nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
+  bc.forget(aResult);
 
   if (isNewToplevelWindow) {
     nsCOMPtr<nsIDocShellTreeOwner> newTreeOwner;
@@ -940,7 +950,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   if ((aDialog || windowIsModalContentDialog) && aArgv) {
     // Set the args on the new window.
-    nsCOMPtr<nsPIDOMWindowOuter> piwin(do_QueryInterface(*aResult));
+    nsCOMPtr<nsPIDOMWindowOuter> piwin(do_QueryInterface(win));
     NS_ENSURE_TRUE(piwin, NS_ERROR_UNEXPECTED);
 
     rv = piwin->SetArguments(aArgv);
@@ -1009,7 +1019,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     // the JS stack, just use the principal of our parent window.  In those
     // cases we do _not_ set the parent window principal as the owner of the
     // load--since we really don't know who the owner is, just leave it null.
-    nsCOMPtr<nsPIDOMWindowOuter> newWindow = do_QueryInterface(*aResult);
+    nsCOMPtr<nsPIDOMWindowOuter> newWindow = do_QueryInterface(win);
     NS_ASSERTION(newWindow == newDocShell->GetWindow(), "Different windows??");
 
     // The principal of the initial about:blank document gets set up in
@@ -1114,7 +1124,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     nsCOMPtr<nsIObserverService> obsSvc =
         mozilla::services::GetObserverService();
     if (obsSvc) {
-      obsSvc->NotifyObservers(*aResult, "toplevel-window-ready", nullptr);
+      obsSvc->NotifyObservers(win, "toplevel-window-ready", nullptr);
     }
   }
 

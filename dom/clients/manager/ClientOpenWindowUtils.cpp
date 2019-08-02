@@ -9,6 +9,7 @@
 #include "ClientInfo.h"
 #include "ClientState.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/ResultExtensions.h"
 #include "nsContentUtils.h"
 #include "nsFocusManager.h"
 #include "nsIBrowserDOMWindow.h"
@@ -211,8 +212,7 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC) {
       return rv;
     }
 
-    nsCOMPtr<mozIDOMWindowProxy> newWindow;
-    rv = pwwatch->OpenWindow2(
+    MOZ_TRY(pwwatch->OpenWindow2(
         nullptr, spec.get(), nullptr, nullptr, false, false, true, nullptr,
         // Not a spammy popup; we got permission, we swear!
         /* aIsPopupSpam = */ false,
@@ -221,13 +221,7 @@ nsresult OpenWindow(const ClientOpenWindowArgs& aArgs, BrowsingContext** aBC) {
         // window.
         /* aForceNoOpener = */ false,
         /* aForceNoReferrer = */ false,
-        /* aLoadInfp = */ nullptr, getter_AddRefs(newWindow));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-    RefPtr<BrowsingContext> bc(
-        nsPIDOMWindowOuter::From(newWindow)->GetBrowsingContext());
-    bc.forget(aBC);
+        /* aLoadInfp = */ nullptr, aBC));
     MOZ_DIAGNOSTIC_ASSERT(*aBC);
     return NS_OK;
   }
