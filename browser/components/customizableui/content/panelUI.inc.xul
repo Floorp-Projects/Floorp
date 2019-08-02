@@ -238,20 +238,14 @@
                        hidden="true"/>
         <toolbaritem id="appMenu-fxa-status"
                      class="sync-ui-item"
-                     flex="1"
-                     defaultlabel="&fxaSignIn.label;"
-# Despite the name, the tooltip says "Open Sync Preferences" and it is only used when *not* signed in.
-# Bug 1542334 changed the behaviour of the item when signed in so the tooltip was no longer appropriate there.
-                     tooltiptext="&fxaSignedIn.tooltip;"
-                     errorlabel="&fxaSignInError.label;"
-                     unverifiedlabel="&fxaUnverified.label;"
-                     onclick="if (event.which == 1) gSync.onMenuPanelCommand();">
+                     defaultlabel="&fxa.menu.signin.label;"
+                     flex="1">
           <image id="appMenu-fxa-avatar"/>
           <toolbarbutton id="appMenu-fxa-label"
-                         class="subviewbutton subviewbutton-iconic"
-                         label="&fxaSignIn.label;"
-                         fxabrandname="&syncBrand.fxAccount.label;"
-                         closemenu="none"/>
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        label="&fxa.menu.signin.label;"
+                        closemenu="none"
+                        oncommand="gSync.toggleAccountPanel('PanelUI-fxa', this, event)"/>
         </toolbaritem>
         <toolbarseparator class="sync-ui-item"/>
         <toolbaritem>
@@ -712,66 +706,66 @@
       </vbox>
     </panelview>
 
-    <panelview id="PanelUI-fxa" class="PanelUI-subView" descriptionheightworkaround="true">
-      <vbox class="panel-subview-body">
-        <vbox id="PanelUI-fxa-signin">
-          <image class="fxaChooseWhatToSyncDevices"/>
-          <label class="PanelUI-fxa-signin-instruction-callout">&fxa.signin.callout.label;</label>
-          <label class="PanelUI-fxa-signin-instruction-label">&fxa.signin.description.label;</label>
-          <toolbarbutton class="PanelUI-fxa-signin-button"
-                         label="&fxa.signin.button.label;"
-                         oncommand="gSync.openFxAEmailFirstPageFromFxaMenu(this);"/>
-        </vbox>
-        <vbox id="PanelUI-fxa-unverified" class="PanelUI-fxa-unverified-instruction-box">
-          <image class="fxaGraphicMail"/>
-          <label class="PanelUI-fxa-signin-instruction-callout">&fxa.unverified.callout.label;</label>
-          <label class="PanelUI-fxa-signin-instruction-label">&fxa.unverified.description.label;</label>
-          <toolbarbutton class="PanelUI-fxa-signin-button"
-                         label="&fxa.unverified.button.label;"
-                         oncommand="gSync.openPrefsFromFxaMenu('unver_sync_settings', this);"/>
-        </vbox>
-        <vbox id="PanelUI-fxa-menu">
-          <hbox flex="1" align="center" class="fxa-avatar-subpanel">
-            <image role="presentation" id="fxa-menu-avatar"/>
-            <vbox flex="1">
-              <label class="fxa-avatar-subpanel-description" >&fxa.menu.signedInAs.label;</label>
-              <label id="fxa-menu-email"></label>
-            </vbox>
-          </hbox>
-          <toolbarseparator/>
-          <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
-                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                         closemenu="none"
-                         oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
-          <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
-                         class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                         label="&appMenuRemoteTabs.label;"
-                         closemenu="none"
-                         oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
-          <toolbarbutton id="PanelUI-fxa-menu-view-sidebar"
-                         class="subviewbutton subviewbutton-iconic"
-                         label="&appMenuRemoteTabs.sidebar.label;"
-                         oncommand="gSync.showSidebarFromFxaMenu(this);">
-            <observes element="sidebar-box" attribute="positionend"/>
-          </toolbarbutton>
-          <toolbarseparator/>
-          <toolbarbutton class="subviewbutton"
-                         label="&fxa.menu.connectAnotherDevice2.label;"
-                         oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
-          <toolbarbutton class="subviewbutton"
-                         label="&fxa.menu.manageAccount.label;"
-                         oncommand="gSync.openFxAManagePageFromFxaMenu(this);"/>
-          <toolbarbutton class="subviewbutton"
-                         label="&fxa.menu.syncSettings.label;"
-                         oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
-          <toolbarseparator/>
-          <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
-                         label="&syncSyncNowItem.label;"
-                         syncinglabel="&syncSyncNowItemSyncing.label;"
-                         class="subviewbutton subviewbutton-iconic"
-                         oncommand="gSync.doSyncFromFxaMenu(this);"
-                         closemenu="none"/>
-        </vbox>
+    <panelview id="PanelUI-fxa" title="&fxa.menu.account.label;" class="PanelUI-subView" descriptionheightworkaround="true">
+      <vbox id="PanelUI-fxa-menu" class="panel-subview-body">
+        <toolbarbutton id="fxa-manage-account-button" flex="1"
+                       align="center"
+                       class="fxa-menu-header subviewbutton"
+                       oncommand="gSync.clickFxAMenuHeaderButton(this);">
+          <image role="presentation" id="fxa-menu-avatar"/>
+          <vbox flex="1">
+            <label id="fxa-menu-header-title"
+                   defaultLabel="&fxa.menu.signin.label;">&fxa.menu.signin.label;</label>
+            <label id="fxa-menu-header-description"
+                   crop="end"
+                   defaultLabel="&fxa.menu.turnOnSync.label;">&fxa.menu.turnOnSync.label;</label>
+          </vbox>
+        </toolbarbutton>
+        <toolbarseparator/>
+        <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        closemenu="none"
+                        oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
+        <toolbarbutton id="PanelUI-fxa-menu-remotetabs-button"
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        label="&appMenuRemoteTabs.label;"
+                        closemenu="none"
+                        oncommand="gSync.showRemoteTabsFromFxaMenu(this);"/>
+        <!-- The `Connect Another Device` button is disabled by default until the user logs into Sync. -->
+        <toolbarbutton id="PanelUI-fxa-menu-connect-device-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&fxa.menu.connectAnotherDevice2.label;"
+                        disabled="true"
+                        oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
+        <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&fxa.menu.syncSettings.label;"
+                        oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
+        <toolbarseparator/>
+        <toolbarbutton id="PanelUI-fxa-menu-logins-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&logins.label;"
+                        oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'fxamenu' })"/>
+        <toolbarseparator id="fxa-menu-service-separator"/>
+        <toolbarbutton id="PanelUI-fxa-menu-monitor-button"
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        label="&monitorFullName;"
+                        closemenu="none"
+                        oncommand="PanelUI.showSubView('PanelUI-fxa-menu-monitor', this, event)"/>
+        <toolbarbutton id="PanelUI-fxa-menu-send-button"
+                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
+                        label="&sendFullName;"
+                        closemenu="none"
+                        oncommand="PanelUI.showSubView('PanelUI-fxa-menu-send', this, event)"/>
+        <toolbarseparator/>
+        <!-- The `Sync Now` button is disabled by default until the user logs into Sync. -->
+        <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
+                        label="&syncSyncNowItem.label;"
+                        syncinglabel="&syncSyncNowItemSyncing.label;"
+                        disabled="true"
+                        class="subviewbutton subviewbutton-iconic"
+                        oncommand="gSync.doSyncFromFxaMenu(this);"
+                        closemenu="none"/>
       </vbox>
     </panelview>
     <!-- This panelview is used to contain the dynamically created buttons for send tab to devices -->
@@ -780,6 +774,24 @@
         <toolbarbutton id="PanelUI-sendTabToDevice-syncingDevices" class="subviewbutton subviewbutton-iconic pageAction-sendToDevice-notReady"
                        label="&sendToDevice.syncNotReady.label;"
                        disabled="true"/>
+      </vbox>
+    </panelview>
+    <panelview id="PanelUI-fxa-menu-monitor" flex="1" class="PanelUI-subView">
+      <vbox id="PanelUI-fxa-monitor" align="center" class="panel-subview-body">
+        <image class="fxaMonitorLogo" role="presentation"/>
+        <label class="PanelUI-fxa-service-description-label">&fxa.service.monitor.description;</label>
+        <toolbarbutton class="PanelUI-fxa-signin-button"
+                       label="&fxa.service.monitor.launch;"
+                       oncommand="gSync.openMonitorFromFxaMenu(this);"/>
+      </vbox>
+    </panelview>
+    <panelview id="PanelUI-fxa-menu-send" flex="1" class="PanelUI-subView">
+      <vbox id="PanelUI-fxa-send" align="center" class="panel-subview-body">
+        <image class="fxaSendLogo" role="presentation"/>
+        <label class="PanelUI-fxa-service-description-label">&fxa.service.send.description;</label>
+        <toolbarbutton class="PanelUI-fxa-signin-button"
+                       label="&fxa.service.send.launch;"
+                       oncommand="gSync.openSendFromFxaMenu(this);"/>
       </vbox>
     </panelview>
 

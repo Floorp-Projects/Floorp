@@ -105,13 +105,7 @@ var UITour = {
       "accountStatus",
       {
         query: aDocument => {
-          // If the user is logged in, use the avatar element.
-          let fxAFooter = aDocument.getElementById("appMenu-fxa-status");
-          if (fxAFooter.getAttribute("fxastatus")) {
-            return aDocument.getElementById("appMenu-fxa-avatar");
-          }
-
-          // Otherwise use the sync setup icon.
+          // Use the sync setup icon.
           let statusButton = aDocument.getElementById("appMenu-fxa-label");
           return statusButton.icon;
         },

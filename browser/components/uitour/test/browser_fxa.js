@@ -46,8 +46,6 @@ var tests = [
     await showMenuPromise("appMenu");
     await showHighlightPromise("accountStatus");
     let highlight = document.getElementById("UITourHighlightContainer");
-    let expectedTarget = "appMenu-fxa-avatar";
-    is(highlight.anchorNode.id, expectedTarget, "Anchored on avatar");
     is(
       highlight.getAttribute("targetName"),
       "accountStatus",

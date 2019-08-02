@@ -1,0 +1,11 @@
+<!-- LOCALIZATION NOTE:
+	The following feature names must be treated as a brand, and kept in English.
+	They cannot be:
+	- Declined to adapt to grammatical case.
+	- Transliterated.
+	- Translated. -->
+
+<!ENTITY sendShortName "Send">
+<!ENTITY sendFullName "Firefox Send">
+<!ENTITY monitorShortName "Monitor">
+<!ENTITY monitorFullName "Firefox Monitor">

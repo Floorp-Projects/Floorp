@@ -50,6 +50,13 @@ var gSync = {
     ));
   },
 
+  get brandStrings() {
+    delete this.brandStrings;
+    return (this.brandStrings = Services.strings.createBundle(
+      "chrome://branding/locale/brand.properties"
+    ));
+  },
+
   get syncReady() {
     return Cc["@mozilla.org/weave/service;1"].getService().wrappedJSObject
       .ready;
@@ -324,7 +331,11 @@ var gSync = {
     }
   },
 
-  toggleAccountPanel(viewId, aEvent) {
+  toggleAccountPanel(
+    viewId,
+    anchor = document.getElementById("fxa-toolbar-menu-button"),
+    aEvent
+  ) {
     // Don't show the panel if the window is in customization mode.
     if (document.documentElement.hasAttribute("customizing")) {
       return;
@@ -346,7 +357,6 @@ var gSync = {
 
     this.enableSendTabIfValidTab();
 
-    const anchor = document.getElementById("fxa-toolbar-menu-button");
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
     } else {
@@ -363,14 +373,48 @@ var gSync = {
     // state shows an avatar with an email icon and the `verified` state will show
     // the users custom profile image or a filled avatar.
     let stateValue = "not_configured";
-    document.getElementById("PanelUI-fxa").removeAttribute("title");
+
+    const menuHeaderTitleEl = document.getElementById("fxa-menu-header-title");
+    const menuHeaderDescriptionEl = document.getElementById(
+      "fxa-menu-header-description"
+    );
+
+    const cadButtonEl = document.getElementById(
+      "PanelUI-fxa-menu-connect-device-button"
+    );
+    const syncNowButtonEl = document.getElementById(
+      "PanelUI-fxa-menu-syncnow-button"
+    );
+    const fxaMenuPanel = document.getElementById("PanelUI-fxa");
+
+    let headerTitle = menuHeaderTitleEl.getAttribute("defaultLabel");
+    let headerDescription = menuHeaderDescriptionEl.getAttribute(
+      "defaultLabel"
+    );
+
+    const appMenuFxAButtonEl = document.getElementById("appMenu-fxa-label");
+
+    let panelTitle = this.fxaStrings.GetStringFromName("account.title");
+
+    fxaMenuPanel.removeAttribute("title");
+    cadButtonEl.setAttribute("disabled", true);
+    syncNowButtonEl.setAttribute("disabled", true);
+
     if (state.status === UIState.STATUS_NOT_CONFIGURED) {
       mainWindowEl.style.removeProperty("--avatar-image-url");
-    } else if (
-      state.status === UIState.STATUS_LOGIN_FAILED ||
-      state.status === UIState.STATUS_NOT_VERIFIED
-    ) {
+    } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "unverified";
+      headerTitle = this.fxaStrings.formatStringFromName(
+        "account.reconnectToSync",
+        [this.brandStrings.GetStringFromName("syncBrandShortName")]
+      );
+      headerDescription = state.email;
+    } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
+      stateValue = "unverified";
+      headerTitle = this.fxaStrings.GetStringFromName(
+        "account.finishAccountSetup"
+      );
+      headerDescription = state.email;
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
       if (state.avatarURL && !state.avatarIsDefault) {
@@ -392,19 +436,23 @@ var gSync = {
         mainWindowEl.style.removeProperty("--avatar-image-url");
       }
 
-      document.getElementById("fxa-menu-email").value = state.email;
+      cadButtonEl.removeAttribute("disabled");
+      syncNowButtonEl.removeAttribute("disabled");
 
-      let defaultPanelTitle = this.fxaStrings.GetStringFromName(
-        "account.title"
+      headerTitle = state.email;
+      headerDescription = this.fxaStrings.GetStringFromName(
+        "account.manageAccount"
       );
-      document
-        .getElementById("PanelUI-fxa")
-        .setAttribute(
-          "title",
-          state.displayName ? state.displayName : defaultPanelTitle
-        );
+
+      panelTitle = state.displayName ? state.displayName : panelTitle;
     }
     mainWindowEl.setAttribute("fxastatus", stateValue);
+
+    menuHeaderTitleEl.value = headerTitle;
+    menuHeaderDescriptionEl.value = headerDescription;
+    appMenuFxAButtonEl.setAttribute("label", headerTitle);
+
+    fxaMenuPanel.setAttribute("title", panelTitle);
   },
 
   enableSendTabIfValidTab() {
@@ -536,28 +584,6 @@ var gSync = {
     }
   },
 
-  onMenuPanelCommand() {
-    switch (this.appMenuStatus.getAttribute("fxastatus")) {
-      case "signedin":
-        const panel = document.getElementById("appMenu-fxa-status");
-        this.emitFxaToolbarTelemetry("toolbar_icon", panel);
-        PanelUI.showSubView("PanelUI-fxa", panel);
-        break;
-      case "unverified":
-        this.openPrefs("menupanel", "fxaError");
-        PanelUI.hide();
-        break;
-      case "error":
-        this.openSignInAgainPage("menupanel");
-        PanelUI.hide();
-        break;
-      default:
-        this.openPrefs("menupanel", "fxa");
-        PanelUI.hide();
-        break;
-    }
-  },
-
   async openSignInAgainPage(entryPoint) {
     const url = await FxAccounts.config.promiseForceSigninURI(entryPoint);
     switchToTabHavingURI(url, true, {
@@ -594,6 +620,25 @@ var gSync = {
     switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
+  async clickFxAMenuHeaderButton(panel = undefined) {
+    // Depending on the current logged in state of a user,
+    // clicking the FxA header will either open
+    // a sign-in page, account management page, or sync
+    // preferences page.
+    const { status } = UIState.get();
+    switch (status) {
+      case UIState.STATUS_NOT_CONFIGURED:
+        this.openFxAEmailFirstPageFromFxaMenu(panel);
+        break;
+      case UIState.STATUS_LOGIN_FAILED:
+      case UIState.STATUS_NOT_VERIFIED:
+        this.openPrefsFromFxaMenu("sync_settings", panel);
+        break;
+      case UIState.STATUS_SIGNED_IN:
+        this.openFxAManagePageFromFxaMenu(panel);
+    }
+  },
+
   async openFxAEmailFirstPage(entryPoint) {
     const url = await FxAccounts.config.promiseEmailFirstURI(entryPoint);
     switchToTabHavingURI(url, true, { replaceQueryString: true });
@@ -620,6 +665,34 @@ var gSync = {
       entryPoint = "fxa_app_menu";
     }
     this.openFxAManagePage(entryPoint);
+  },
+
+  async openSendFromFxaMenu(panel) {
+    this.emitFxaToolbarTelemetry("open_send", panel);
+    this.launchFxaService(gFxaSendLoginUrl);
+  },
+
+  async openMonitorFromFxaMenu(panel) {
+    this.emitFxaToolbarTelemetry("open_monitor", panel);
+    this.launchFxaService(gFxaMonitorLoginUrl);
+  },
+
+  launchFxaService(serviceUrl, panel) {
+    let entryPoint = "fxa_discoverability_native";
+    if (this.isPanelInsideAppMenu(panel)) {
+      entryPoint = "fxa_app_menu";
+    }
+
+    const url = new URL(serviceUrl);
+    url.searchParams.set("utm_source", Services.appinfo.name.toLowerCase());
+    url.searchParams.set("entrypoint", entryPoint);
+
+    const state = UIState.get();
+    if (state.status == UIState.STATUS_SIGNED_IN) {
+      url.searchParams.set("email", state.email);
+    }
+
+    switchToTabHavingURI(url, true, { replaceQueryString: true });
   },
 
   async sendTabToDevice(url, targets, title) {
