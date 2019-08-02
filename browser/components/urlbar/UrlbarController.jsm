@@ -22,21 +22,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const TELEMETRY_1ST_RESULT = "PLACES_AUTOCOMPLETE_1ST_RESULT_TIME_MS";
 const TELEMETRY_6_FIRST_RESULTS = "PLACES_AUTOCOMPLETE_6_FIRST_RESULTS_TIME_MS";
-const NOTIFICATIONS = {
-  QUERY_STARTED: "onQueryStarted",
-  QUERY_RESULTS: "onQueryResults",
-  QUERY_RESULT_REMOVED: "onQueryResultRemoved",
-  QUERY_CANCELLED: "onQueryCancelled",
-  QUERY_FINISHED: "onQueryFinished",
-  VIEW_OPEN: "onViewOpen",
-  VIEW_CLOSE: "onViewClose",
-};
 
 /**
  * The address bar controller handles queries from the address bar, obtains
  * results and returns them to the UI for display.
  *
- * Listeners may be added to listen for the results. They may support the
+ * Listeners may be added to listen for the results. They must support the
  * following methods which may be called when a query is run:
  *
  * - onQueryStarted(queryContext)
@@ -44,8 +35,6 @@ const NOTIFICATIONS = {
  * - onQueryCancelled(queryContext)
  * - onQueryFinished(queryContext)
  * - onQueryResultRemoved(index)
- * - onViewOpen()
- * - onViewClose()
  */
 class UrlbarController {
   /**
@@ -78,10 +67,6 @@ class UrlbarController {
     this._userSelectionBehavior = "none";
 
     this.engagementEvent = new TelemetryEvent(options.eventTelemetryCategory);
-  }
-
-  get NOTIFICATIONS() {
-    return NOTIFICATIONS;
   }
 
   /**
@@ -128,7 +113,7 @@ class UrlbarController {
     // For proper functionality we must ensure this notification is fired
     // synchronously, as soon as startQuery is invoked, but after any
     // notifications related to the previous query.
-    this.notify(NOTIFICATIONS.QUERY_STARTED, queryContext);
+    this._notify("onQueryStarted", queryContext);
     await this.manager.startQuery(queryContext, this);
     // If the query has been cancelled, onQueryFinished was notified already.
     // Note this._lastQueryContextWrapper may have changed in the meanwhile.
@@ -139,7 +124,7 @@ class UrlbarController {
       contextWrapper.done = true;
       // TODO (Bug 1549936) this is necessary to avoid leaks in PB tests.
       this.manager.cancelQuery(queryContext);
-      this.notify(NOTIFICATIONS.QUERY_FINISHED, queryContext);
+      this._notify("onQueryFinished", queryContext);
     }
     return queryContext;
   }
@@ -160,8 +145,8 @@ class UrlbarController {
     TelemetryStopwatch.cancel(TELEMETRY_1ST_RESULT, queryContext);
     TelemetryStopwatch.cancel(TELEMETRY_6_FIRST_RESULTS, queryContext);
     this.manager.cancelQuery(queryContext);
-    this.notify(NOTIFICATIONS.QUERY_CANCELLED, queryContext);
-    this.notify(NOTIFICATIONS.QUERY_FINISHED, queryContext);
+    this._notify("onQueryCancelled", queryContext);
+    this._notify("onQueryFinished", queryContext);
   }
 
   /**
@@ -190,7 +175,7 @@ class UrlbarController {
       );
     }
 
-    this.notify(NOTIFICATIONS.QUERY_RESULTS, queryContext);
+    this._notify("onQueryResults", queryContext);
     // Update lastResultCount after notifying, so the view can use it.
     queryContext.lastResultCount = queryContext.results.length;
   }
@@ -225,6 +210,7 @@ class UrlbarController {
    */
   viewContextChanged() {
     this.cancelQuery();
+    this._notify("onViewContextChanged");
   }
 
   /**
@@ -575,7 +561,7 @@ class UrlbarController {
     }
 
     queryContext.results.splice(index, 1);
-    this.notify(NOTIFICATIONS.QUERY_RESULT_REMOVED, index);
+    this._notify("onQueryResultRemoved", index);
 
     PlacesUtils.history
       .remove(selectedResult.payload.url)
@@ -584,12 +570,12 @@ class UrlbarController {
   }
 
   /**
-   * Notifies listeners of results.
+   * Internal function to notify listeners of results.
    *
    * @param {string} name Name of the notification.
    * @param {object} params Parameters to pass with the notification.
    */
-  notify(name, ...params) {
+  _notify(name, ...params) {
     for (let listener of this._listeners) {
       // Can't use "in" because some tests proxify these.
       if (typeof listener[name] != "undefined") {
