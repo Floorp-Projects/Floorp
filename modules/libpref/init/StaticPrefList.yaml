@@ -4432,6 +4432,11 @@
   value: true
   mirror: once
 
+- name: layout.reflow.synthMouseMove
+  type: bool
+  value: true
+  mirror: always
+
 # This and code dependent on it should be removed once containerless scrolling looks stable.
 - name: layout.scroll.root-frame-containers
   type: RelaxedAtomicBool
