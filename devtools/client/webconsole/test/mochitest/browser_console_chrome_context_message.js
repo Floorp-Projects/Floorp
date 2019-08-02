@@ -12,17 +12,20 @@ add_task(async function() {
 
   const hud = await HUDService.toggleBrowserConsole();
   await hud.ui.clearOutput();
+  await openNewTabAndConsole(
+    `data:text/html,<script>console.log("hello from content")</script>`
+  );
 
   const expectedMessages = [
     `Cu.reportError`, // bug 1561930
   ];
 
-  const jsterm = hud.jsterm;
-  await jsterm.execute(`Cu.reportError("Cu.reportError");`); // bug 1561930
+  execute(hud, `Cu.reportError("Cu.reportError");`); // bug 1561930
   info("Wait for expected message are shown on browser console");
   await waitFor(() =>
     expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage))
   );
+  await waitFor(() => findMessage(hud, "hello from content"));
 
   ok(true, "Expected messages are displayed in the browser console");
 
@@ -31,14 +34,13 @@ add_task(async function() {
     ".webconsole-filterbar-primary .filter-checkbox"
   );
   checkbox.click();
-  // Wait one second for hiding the content message
-  await jsterm.execute(`await new Promise(res => setTimeout(res, 1000));`);
+  await waitFor(() => !findMessage(hud, "hello from content"));
 
   info("Check the expected messages are still visiable in the browser console");
   for (const expectedMessage of expectedMessages) {
     ok(
       findMessage(hud, expectedMessage),
-      `"${expectedMessage}" should be still visiable`
+      `"${expectedMessage}" should be still visible`
     );
   }
 });

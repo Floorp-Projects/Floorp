@@ -19,11 +19,11 @@ var { Task } = require("devtools/shared/task");
 var asyncStorage = require("devtools/shared/async-storage");
 
 const {
-  getSelectedLocation
+  getSelectedLocation,
 } = require("devtools/client/debugger/src/utils/selected-location");
 
 const {
-  resetSchemaVersion
+  resetSchemaVersion,
 } = require("devtools/client/debugger/src/utils/prefs");
 
 function log(msg, data) {
@@ -57,7 +57,7 @@ function waitForNextDispatch(store, actionType) {
       predicate: action => action.type === actionType,
       run: (dispatch, getState, action) => {
         resolve(action);
-      }
+      },
     });
   });
 }
@@ -93,7 +93,7 @@ function waitForDispatch(dbg, actionType, eventRepeat = 1) {
       },
       run: (dispatch, getState, action) => {
         resolve(action);
-      }
+      },
     });
   });
 }
@@ -211,7 +211,7 @@ function waitForSelectedSource(dbg, url) {
   const {
     getSelectedSourceWithContent,
     hasSymbols,
-    getBreakableLines
+    getBreakableLines,
   } = dbg.selectors;
 
   return waitForState(
@@ -266,7 +266,7 @@ function assertEmptyLines(dbg, lines) {
 
 function getVisibleSelectedFrameLine(dbg) {
   const {
-    selectors: { getVisibleSelectedFrame }
+    selectors: { getVisibleSelectedFrame },
   } = dbg;
   const frame = getVisibleSelectedFrame();
   return frame && frame.location.line;
@@ -782,7 +782,7 @@ function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const source = getSource(sourceId);
   const position = getFirstBreakpointPosition({
     line,
-    sourceId
+    sourceId,
   });
 
   return getSelectedLocation(position, source).column;
@@ -843,7 +843,7 @@ function findBreakpoint(dbg, url, line) {
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {
   const {
-    selectors: { getBreakpoint, getBreakpointCount, getBreakpointsMap }
+    selectors: { getBreakpoint, getBreakpointCount, getBreakpointsMap },
   } = dbg;
 
   await waitForSources(dbg, filename);
@@ -885,7 +885,7 @@ async function invokeWithBreakpoint(
 
   const invokeFailed = await Promise.race([
     waitForPaused(dbg),
-    invokeResult.then(() => new Promise(() => {}), () => true)
+    invokeResult.then(() => new Promise(() => {}), () => true),
   ]);
 
   if (invokeFailed) {
@@ -987,7 +987,7 @@ async function togglePauseOnExceptions(
 
 function waitForActive(dbg) {
   const {
-    selectors: { getIsPaused, getCurrentThread }
+    selectors: { getIsPaused, getCurrentThread },
   } = dbg;
   return waitForState(dbg, state => !getIsPaused(getCurrentThread()), "active");
 }
@@ -1009,7 +1009,7 @@ function invokeInTab(fnc, ...args) {
   info(`Invoking in tab: ${fnc}(${args.map(uneval).join(",")})`);
   return ContentTask.spawn(gBrowser.selectedBrowser, { fnc, args }, function*({
     fnc,
-    args
+    args,
   }) {
     return content.wrappedJSObject[fnc](...args);
   });
@@ -1051,7 +1051,7 @@ const keyMappings = {
   ShiftEnter: { code: "VK_RETURN", modifiers: shiftOrAlt },
   AltEnter: {
     code: "VK_RETURN",
-    modifiers: { altKey: true }
+    modifiers: { altKey: true },
   },
   Up: { code: "VK_UP" },
   Down: { code: "VK_DOWN" },
@@ -1068,8 +1068,8 @@ const keyMappings = {
   stepInKey: { code: "VK_F11", modifiers: { ctrlKey: isLinux } },
   stepOutKey: {
     code: "VK_F11",
-    modifiers: { ctrlKey: isLinux, shiftKey: true }
-  }
+    modifiers: { ctrlKey: isLinux, shiftKey: true },
+  },
 };
 
 /**
@@ -1195,7 +1195,7 @@ const selectors = {
     enableOthers: "#node-menu-enable-others",
     remove: "#node-menu-delete-self",
     removeOthers: "#node-menu-delete-other",
-    removeCondition: "#node-menu-remove-condition"
+    removeCondition: "#node-menu-remove-condition",
   },
   columnBreakpoints: ".column-breakpoint",
   scopes: ".scopes-list",
@@ -1263,7 +1263,7 @@ const selectors = {
   threadsPaneItems: ".workers-pane .worker",
   threadsPaneItem: i => `.workers-pane .worker:nth-child(${i})`,
   threadsPaneItemPause: i => `${selectors.threadsPaneItem(i)} .pause-badge`,
-  CodeMirrorLines: ".CodeMirror-lines"
+  CodeMirrorLines: ".CodeMirror-lines",
 };
 
 function getSelector(elementName, ...args) {
@@ -1512,7 +1512,7 @@ async function hoverAtPos(dbg, { line, ch }) {
     new MouseEvent("mouseover", {
       bubbles: true,
       cancelable: true,
-      view: dbg.win
+      view: dbg.win,
     })
   );
 
@@ -1597,18 +1597,18 @@ async function assertPreviews(dbg, previews) {
         await assertPreviewPopup(dbg, line, column, {
           expression,
           field,
-          value
+          value,
         });
       }
     } else {
       await assertPreviewTextValue(dbg, line, column, {
         expression,
-        text: result
+        text: result,
       });
     }
 
     const { target } = dbg.selectors.getPreview(getContext(dbg));
-    InspectorUtils.removePseudoClassLock(target, ':hover')
+    InspectorUtils.removePseudoClassLock(target, ":hover");
     dbg.actions.clearPreview(getContext(dbg));
   }
 }
@@ -1772,4 +1772,20 @@ async function hasConsoleMessage(dbg, msg) {
     const messages = await findConsoleMessages(dbg, msg);
     return messages.length > 0;
   });
+}
+
+function evaluateExpressionInConsole(hud, expression) {
+  const onResult = new Promise(res => {
+    const onNewMessage = messages => {
+      for (let message of messages) {
+        if (message.node.classList.contains("result")) {
+          hud.ui.off("new-messages", onNewMessage);
+          res(message.node);
+        }
+      }
+    };
+    hud.ui.on("new-messages", onNewMessage);
+  });
+  hud.ui.wrapper.dispatchEvaluateExpression(expression);
+  return onResult;
 }

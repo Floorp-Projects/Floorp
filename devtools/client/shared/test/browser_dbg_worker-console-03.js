@@ -23,34 +23,25 @@ add_task(async function testPausedByConsole() {
   const dbg = await initWorkerDebugger(TAB_URL, WORKER_URL);
   const { client, tab, workerTargetFront, toolbox } = dbg;
 
-  const jsterm = await getSplitConsole(toolbox);
-  let executed = await jsterm.execute("10000+1");
-  ok(
-    executed.textContent.includes("10001"),
-    "Text for message appeared correct"
-  );
+  const console = await getSplitConsole(toolbox);
+  let executed = await executeAndWaitForMessage(console, "10000+1", "10001");
+  ok(executed, "Text for message appeared correct");
 
   await clickElement(dbg, "pause");
 
-  const pausedExecution = jsterm.execute("10000+2");
+  const pausedExecution = executeAndWaitForMessage(console, "10000+2", "10002");
 
   info("Executed a command with 'break on next' active, waiting for pause");
   await waitForPaused(dbg);
 
-  executed = await jsterm.execute("10000+3");
-  ok(
-    executed.textContent.includes("10003"),
-    "Text for message appeared correct"
-  );
+  executed = await executeAndWaitForMessage(console, "10000+3", "10003");
+  ok(executed, "Text for message appeared correct");
 
   info("Waiting for a resume");
   await clickElement(dbg, "resume");
 
   executed = await pausedExecution;
-  ok(
-    executed.textContent.includes("10002"),
-    "Text for message appeared correct"
-  );
+  ok(executed, "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);

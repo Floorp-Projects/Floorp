@@ -26,84 +26,91 @@ add_task(async function() {
 
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
-  const jsterm = hud.jsterm;
 
-  let onMessage = waitForMessage(hud, "Array [ li, li ]");
-  jsterm.execute("$x('.//li')");
-  let message = await onMessage;
+  let message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li')",
+    "Array [ li, li ]"
+  );
   ok(message, "`$x` worked");
 
-  onMessage = waitForMessage(hud, "<li>");
-  jsterm.execute("$x('.//li', document.body)[0]");
-  message = await onMessage;
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body)[0]",
+    "<li>"
+  );
   ok(message, "`$x()` result can be used right away");
 
-  onMessage = waitForMessage(hud, "2");
-  jsterm.execute("$x('count(.//li)', document.body, XPathResult.NUMBER_TYPE)");
-  message = await onMessage;
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('count(.//li)', document.body, XPathResult.NUMBER_TYPE)",
+    "2"
+  );
   ok(message, "$x works as expected with XPathResult.NUMBER_TYPE");
 
-  onMessage = waitForMessage(hud, "First");
-  jsterm.execute("$x('.//li', document.body, XPathResult.STRING_TYPE)");
-  message = await onMessage;
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.STRING_TYPE)",
+    "First"
+  );
   ok(message, "$x works as expected with XPathResult.STRING_TYPE");
 
-  onMessage = waitForMessage(hud, "true");
-  jsterm.execute(
-    "$x('//li[not(@foo)]', document.body, XPathResult.BOOLEAN_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('//li[not(@foo)]', document.body, XPathResult.BOOLEAN_TYPE)",
+    "true"
   );
-  message = await onMessage;
   ok(message, "$x works as expected with XPathResult.BOOLEAN_TYPE");
 
-  onMessage = waitForMessage(hud, "Array [ li, li ]");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.UNORDERED_NODE_ITERATOR_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.UNORDERED_NODE_ITERATOR_TYPE)",
+    "Array [ li, li ]"
   );
-  message = await onMessage;
   ok(
     message,
     "$x works as expected with XPathResult.UNORDERED_NODE_ITERATOR_TYPE"
   );
 
-  onMessage = waitForMessage(hud, "Array [ li, li ]");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.ORDERED_NODE_ITERATOR_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.ORDERED_NODE_ITERATOR_TYPE)",
+    "Array [ li, li ]"
   );
-  message = await onMessage;
   ok(
     message,
     "$x works as expected with XPathResult.ORDERED_NODE_ITERATOR_TYPE"
   );
 
-  onMessage = waitForMessage(hud, "<li>");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.ANY_UNORDERED_NODE_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.ANY_UNORDERED_NODE_TYPE)",
+    "<li>"
   );
-  message = await onMessage;
   ok(message, "$x works as expected with XPathResult.ANY_UNORDERED_NODE_TYPE");
 
-  onMessage = waitForMessage(hud, "<li>");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.FIRST_ORDERED_NODE_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.FIRST_ORDERED_NODE_TYPE)",
+    "<li>"
   );
-  message = await onMessage;
   ok(message, "$x works as expected with XPathResult.FIRST_ORDERED_NODE_TYPE");
 
-  onMessage = waitForMessage(hud, "Array [ li, li ]");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE)",
+    "Array [ li, li ]"
   );
-  message = await onMessage;
   ok(
     message,
     "$x works as expected with XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE"
   );
 
-  onMessage = waitForMessage(hud, "Array [ li, li ]");
-  jsterm.execute(
-    "$x('.//li', document.body, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)"
+  message = await executeAndWaitForMessage(
+    hud,
+    "$x('.//li', document.body, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE)",
+    "Array [ li, li ]"
   );
-  message = await onMessage;
   ok(
     message,
     "$x works as expected with XPathResult.ORDERED_NODE_SNAPSHOT_TYPE"
