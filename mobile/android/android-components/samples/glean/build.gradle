@@ -20,7 +20,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "org.mozilla.samples.glean.GleanTestRunner"
     }
 
     buildTypes {
@@ -51,8 +51,10 @@ dependencies {
     androidTestImplementation Dependencies.androidx_test_runner
     androidTestImplementation Dependencies.androidx_test_rules
     androidTestImplementation Dependencies.androidx_test_junit
+    androidTestImplementation Dependencies.androidx_test_uiautomator
     androidTestImplementation Dependencies.androidx_espresso_core
     androidTestImplementation Dependencies.androidx_work_testing
+    androidTestImplementation Dependencies.testing_mockwebserver
 }
 
 apply from: '../../components/service/glean/scripts/sdk_generator.gradle'

@@ -25,10 +25,14 @@ import org.junit.runner.Description
  * @get:Rule
  * val gleanRule = GleanTestRule(ApplicationProvider.getApplicationContext())
  * ```
+ *
+ * @param context the application context
+ * @param configToUse an optional [Configuration] to initialize the Glean SDK with
  */
 @VisibleForTesting(otherwise = VisibleForTesting.NONE)
 class GleanTestRule(
-    val context: Context
+    val context: Context,
+    val configToUse: Configuration = Configuration()
 ) : TestWatcher() {
     override fun starting(description: Description?) {
         // We're using the WorkManager in a bunch of places, and Glean will crash
@@ -37,7 +41,7 @@ class GleanTestRule(
 
         Glean.resetGlean(
             context = context,
-            config = Configuration(),
+            config = configToUse,
             clearStores = true
         )
     }

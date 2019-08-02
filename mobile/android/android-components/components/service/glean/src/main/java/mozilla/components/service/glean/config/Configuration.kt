@@ -46,13 +46,14 @@ data class Configuration internal constructor(
     // constructor and only initialized with a proper default when calling the primary
     // constructor from the secondary, public one, below.
     constructor(
+        serverEndpoint: String = DEFAULT_TELEMETRY_ENDPOINT,
         connectionTimeout: Long = DEFAULT_CONNECTION_TIMEOUT,
         readTimeout: Long = DEFAULT_READ_TIMEOUT,
         maxEvents: Int = DEFAULT_MAX_EVENTS,
         httpClient: Lazy<Client> = lazy { HttpURLConnectionClient() },
         channel: String? = null
     ) : this (
-        serverEndpoint = DEFAULT_TELEMETRY_ENDPOINT,
+        serverEndpoint = serverEndpoint,
         userAgent = DEFAULT_USER_AGENT,
         connectionTimeout = connectionTimeout,
         readTimeout = readTimeout,
