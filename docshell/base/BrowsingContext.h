@@ -20,6 +20,7 @@
 #include "nsWrapperCache.h"
 #include "nsILoadInfo.h"
 
+class nsDocShellLoadState;
 class nsGlobalWindowOuter;
 class nsIPrincipal;
 class nsOuterWindowProxy;
@@ -178,6 +179,11 @@ class BrowsingContext : public nsWrapperCache, public BrowsingContextBase {
 
   // Restore cached browsing contexts.
   void RestoreChildren(Children&& aChildren, bool aFromIPC = false);
+
+  // Triggers a load in the process which currently owns this BrowsingContext.
+  // aAccessor is the context which initiated the load, and may be null only for
+  // in-process BrowsingContexts.
+  void LoadURI(BrowsingContext* aAccessor, nsDocShellLoadState* aLoadState);
 
   // Determine if the current BrowsingContext was 'cached' by the logic in
   // CacheChildren.
