@@ -50,7 +50,7 @@ class Location final : public nsISupports, public nsWrapperCache {
       return;
     }
 
-    aError = Reload(aForceget);
+    Reload(aForceget, aError);
   }
 
   void GetHref(nsAString& aHref, nsIPrincipal& aSubjectPrincipal,
@@ -128,7 +128,7 @@ class Location final : public nsISupports, public nsWrapperCache {
 
   nsresult ToString(nsAString& aString) { return GetHref(aString); }
 
-  nsresult Reload(bool aForceget);
+  void Reload(bool aForceget, ErrorResult& aRv);
 
  protected:
   virtual ~Location();
