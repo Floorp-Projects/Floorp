@@ -6,7 +6,6 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FIREFOX_VERSION = parseInt(Services.appinfo.version.match(/\d+/), 10);
-const TWO_DAYS = 2 * 24 * 3600 * 1000;
 
 const MESSAGES = () => [
   {
@@ -52,21 +51,6 @@ const MESSAGES = () => [
     trigger: { id: "bookmark-panel" },
   },
   {
-    id: "WNP_THANK_YOU",
-    template: "update_action",
-    content: {
-      action: {
-        id: "moments-wnp",
-        data: {
-          url:
-            "https://www.mozilla.org/%LOCALE%/etc/firefox/retention/thank-you-a/",
-          expireDelta: TWO_DAYS,
-        },
-      },
-    },
-    trigger: { id: "momentsUpdate" },
-  },
-  {
     id: `WHATS_NEW_BADGE_${FIREFOX_VERSION}`,
     template: "toolbar_badge",
     content: {
@@ -97,7 +81,6 @@ const MESSAGES = () => [
       title: "Protection Is Our Focus",
       icon_url:
         "resource://activity-stream/data/content/assets/whatsnew-send-icon.png",
-      icon_alt: "Firefox Send Logo",
       body:
         "The New Enhanced Tracking Protection, gives you the best level of protection and performance. Discover how this version is the safest version of firefox ever made.",
       cta_url: "https://blog.mozilla.org/",

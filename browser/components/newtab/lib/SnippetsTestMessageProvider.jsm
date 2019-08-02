@@ -389,19 +389,6 @@ const MESSAGES = () => [
       block_button_text: "Block",
     },
   },
-  {
-    id: "SPECIAL_SNIPPET_BUTTON_1",
-    template: "simple_below_search_snippet",
-    content: {
-      icon: TEST_ICON,
-      icon_dark_theme: TEST_ICON_BW,
-      button_label: "Find Out Now",
-      button_url: "https://www.mozilla.org/en-US/firefox/accounts",
-      title: "See if you've been part of an online data breach.",
-      text: "Firefox Monitor tells you what hackers already know about you.",
-      block_button_text: "Block",
-    },
-  },
 ];
 
 const SnippetsTestMessageProvider = {
