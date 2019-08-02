@@ -284,17 +284,33 @@ but will likely be added in future versions:
 }
 ```
 
+## Encoding and decoding of `user_prefs`
+
 This encoding mapping was defined in `system-addon/lib/TelemetryFeed.jsm`
 
-| Preference | Encoded value |
-| --- | --- |
-| `showSearch` | 1 |
-| `showTopSites` | 2 |
-| `showTopStories` | 4 |
-| `showHighlights` | 8 |
-| `showSnippets`   | 16 |
-| `showSponsored`  | 32 |
-| `showCFRAddons`  | 64 |
-| `showCFRFeatures` | 128 |
+| Preference | Encoded value (binary) |
+| --- | ---: |
+| `showSearch` | 1 (00000001) |
+| `showTopSites` | 2 (00000010) |
+| `showTopStories` | 4 (00000100) |
+| `showHighlights` | 8 (00001000) |
+| `showSnippets`   | 16 (00010000) |
+| `showSponsored`  | 32 (00100000) |
+| `showCFRAddons`  | 64 (01000000) |
+| `showCFRFeatures` | 128 (10000000) |
 
-Each item above could be combined with other items through bitwise OR operation
+Each item above could be combined with other items through bitwise OR (`|`) operation.
+
+Examples:
+
+* Everything is on, `user_prefs = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 = 255`
+* Everything is off, `user_prefs = 0`
+* Only show search and Top Stories, `user_prefs = 1 | 4 = 5`
+* Everything except Highlights, `user_prefs = 1 | 2 | 4 | 16 | 32 | 64 | 128 = 247`
+
+Likewise, one can use bitwise AND (`&`) for decoding.
+
+* Check if everything is shown, `user_prefs & (1 | 2 | 4 | 8 | 16 | 32 | 64 | 128)` or `user_prefs == 255`
+* Check if everything is off, `user_prefs == 0`
+* Check if search is shown, `user_prefs & 1`
+* Check if both Top Sites and Top Stories are shown, `(user_prefs & 2) && (user_prefs & 4)`, or  `(user_prefs & (2 | 4)) == (2 | 4)`

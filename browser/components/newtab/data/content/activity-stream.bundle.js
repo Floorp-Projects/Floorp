@@ -1746,7 +1746,7 @@ function _extends() { _extends = Object.assign || function (target) { for (var i
 
 const INCOMING_MESSAGE_NAME = "ASRouter:parent-to-child";
 const OUTGOING_MESSAGE_NAME = "ASRouter:child-to-parent";
-const TEMPLATES_ABOVE_PAGE = ["trailhead", "fxa_overlay", "return_to_amo_overlay"];
+const TEMPLATES_ABOVE_PAGE = ["trailhead", "fxa_overlay", "return_to_amo_overlay", "extended_triplets"];
 const FIRST_RUN_TEMPLATES = TEMPLATES_ABOVE_PAGE;
 const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
 const ASRouterUtils = {
@@ -2010,7 +2010,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
       });
     } else {
       ASRouterUtils.sendMessage({
-        type: "SNIPPETS_REQUEST",
+        type: "NEWTAB_MESSAGE_REQUEST",
         data: {
           endpoint
         }
@@ -2072,15 +2072,23 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
     } = this.state;
 
     if (FIRST_RUN_TEMPLATES.includes(message.template)) {
-      return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_FirstRun_FirstRun__WEBPACK_IMPORTED_MODULE_9__["FirstRun"], {
+      return react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_components_ImpressionsWrapper_ImpressionsWrapper__WEBPACK_IMPORTED_MODULE_3__["ImpressionsWrapper"], {
+        id: "FIRST_RUN",
+        message: this.state.message,
+        sendImpression: this.sendImpression,
+        shouldSendImpressionOnUpdate: shouldSendImpressionOnUpdate // This helps with testing
+        ,
+        document: this.props.document
+      }, react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(_templates_FirstRun_FirstRun__WEBPACK_IMPORTED_MODULE_9__["FirstRun"], {
         document: this.props.document,
         message: message,
         sendUserActionTelemetry: this.sendUserActionTelemetry,
         executeAction: ASRouterUtils.executeAction,
         dispatch: this.props.dispatch,
+        onBlock: this.onBlockById(this.state.message.id),
         onDismiss: this.onDismissById(this.state.message.id),
         fxaEndpoint: this.props.fxaEndpoint
-      });
+      }));
     }
 
     return null;
@@ -2099,7 +2107,7 @@ class ASRouterUISurface extends react__WEBPACK_IMPORTED_MODULE_6___default.a.Pur
     const shouldRenderInHeader = TEMPLATES_ABOVE_PAGE.includes(message.template);
     return shouldRenderBelowSearch ? // Render special below search snippets in place;
     react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement("div", {
-      className: "below-search-snippet"
+      className: "below-search-snippet-wrapper"
     }, this.renderSnippets()) : // For onboarding, regular snippets etc. we should render
     // everything in our footer container.
     react_dom__WEBPACK_IMPORTED_MODULE_7___default.a.createPortal(react__WEBPACK_IMPORTED_MODULE_6___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_6___default.a.Fragment, null, this.renderPreviewBanner(), this.renderFirstRun(), this.renderSnippets()), shouldRenderInHeader ? this.headerPortal : this.footerPortal);
@@ -7056,11 +7064,13 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
 
   onSeen(entries) {
     if (this.state) {
-      if (entries.some(entry => entry.isIntersecting)) {
+      const entry = entries.find(e => e.isIntersecting);
+
+      if (entry) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: external_ReactDOM_default.a.findDOMNode(this).clientWidth,
-            containerHeight: external_ReactDOM_default.a.findDOMNode(this).clientHeight
+            containerWidth: entry.boundingClientRect.width,
+            containerHeight: entry.boundingClientRect.height
           });
         }
 
@@ -7081,12 +7091,7 @@ class DSImage_DSImage extends external_React_default.a.PureComponent {
   }
 
   componentDidMount() {
-    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
-      // Assume an image will be eventually seen if it is within 520px of the viewport
-      // This is half the average Desktop vertical screen size:
-      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
-      rootMargin: `540px`
-    });
+    this.observer = new IntersectionObserver(this.onSeen.bind(this));
     this.observer.observe(external_ReactDOM_default.a.findDOMNode(this));
   }
 
@@ -9744,7 +9749,9 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
       className += " has-section-header";
     }
 
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, _extends({}, props, {
+    return external_React_default.a.createElement("div", {
+      className: "snippet-hover-wrapper"
+    }, external_React_default.a.createElement(SnippetBase_SnippetBase, _extends({}, props, {
       className: className,
       textStyle: this.props.textStyle
     }), sectionHeader, external_React_default.a.createElement(ConditionalWrapper, {
@@ -9760,7 +9767,7 @@ class SimpleSnippet_SimpleSnippet extends external_React_default.a.PureComponent
       alt: props.content.icon_alt_text || ICON_ALT_TEXT
     }), external_React_default.a.createElement("div", null, this.renderTitle(), " ", external_React_default.a.createElement("p", {
       className: "body"
-    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", null, this.renderButton())));
+    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", null, this.renderButton()))));
   }
 
 }
@@ -10422,10 +10429,16 @@ function SimpleBelowSearchSnippet_extends() { SimpleBelowSearchSnippet_extends =
 
 
 
+
 const SimpleBelowSearchSnippet_DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png"; // Alt text placeholder in case the prop from the server isn't available
 
 const SimpleBelowSearchSnippet_ICON_ALT_TEXT = "";
 class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_default.a.PureComponent {
+  constructor(props) {
+    super(props);
+    this.onButtonClick = this.onButtonClick.bind(this);
+  }
+
   renderText() {
     const {
       props
@@ -10439,17 +10452,81 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
     });
   }
 
+  renderTitle() {
+    const {
+      title
+    } = this.props.content;
+    return title ? external_React_default.a.createElement("h3", {
+      className: `title ${this._shouldRenderButton() ? "title-inline" : ""}`
+    }, title) : null;
+  }
+
+  onButtonClick() {
+    if (this.props.provider !== "preview") {
+      this.props.sendUserActionTelemetry({
+        event: "CLICK_BUTTON",
+        id: this.props.UISurface
+      });
+    }
+
+    const {
+      button_url
+    } = this.props.content; // If button_url is defined handle it as OPEN_URL action
+
+    const type = this.props.content.button_action || button_url && "OPEN_URL";
+    this.props.onAction({
+      type,
+      data: {
+        args: this.props.content.button_action_args || button_url
+      }
+    });
+
+    if (!this.props.content.do_not_autoblock) {
+      this.props.onBlock();
+    }
+  }
+
+  _shouldRenderButton() {
+    return this.props.content.button_action || this.props.onButtonClick || this.props.content.button_url;
+  }
+
+  renderButton() {
+    const {
+      props
+    } = this;
+
+    if (!this._shouldRenderButton()) {
+      return null;
+    }
+
+    return external_React_default.a.createElement(Button, {
+      onClick: props.onButtonClick || this.onButtonClick,
+      color: props.content.button_color,
+      backgroundColor: props.content.button_background_color
+    }, props.content.button_label);
+  }
+
   render() {
     const {
       props
     } = this;
     let className = "SimpleBelowSearchSnippet";
+    let containerName = "below-search-snippet";
 
     if (props.className) {
       className += ` ${props.className}`;
     }
 
-    return external_React_default.a.createElement(SnippetBase_SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
+    if (this._shouldRenderButton()) {
+      className += " withButton";
+      containerName += " withButton";
+    }
+
+    return external_React_default.a.createElement("div", {
+      className: containerName
+    }, external_React_default.a.createElement("div", {
+      className: "snippet-hover-wrapper"
+    }, external_React_default.a.createElement(SnippetBase_SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
       className: className,
       textStyle: this.props.textStyle
     }), external_React_default.a.createElement("img", {
@@ -10460,9 +10537,13 @@ class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_d
       src: Object(template_utils["safeURI"])(props.content.icon_dark_theme || props.content.icon) || SimpleBelowSearchSnippet_DEFAULT_ICON_PATH,
       className: "icon icon-dark-theme",
       alt: props.content.icon_alt_text || SimpleBelowSearchSnippet_ICON_ALT_TEXT
-    }), external_React_default.a.createElement("div", null, external_React_default.a.createElement("p", {
+    }), external_React_default.a.createElement("div", {
+      className: "textContainer"
+    }, this.renderTitle(), " ", external_React_default.a.createElement("p", {
       className: "body"
-    }, this.renderText()), this.props.extraContent));
+    }, this.renderText()), this.props.extraContent), external_React_default.a.createElement("div", {
+      className: "buttonContainer"
+    }, this.renderButton()))));
   }
 
 }
@@ -13429,7 +13510,11 @@ class FirstRun_FirstRun extends external_React_default.a.PureComponent {
   closeTriplets() {
     this.setState({
       isTripletsContainerVisible: false
-    });
+    }); // TODO: Needs to block ALL extended triplets as well
+
+    if (this.props.message.template === "extended_triplets") {
+      this.props.onBlock();
+    }
   }
 
   render() {
