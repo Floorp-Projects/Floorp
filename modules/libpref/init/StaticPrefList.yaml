@@ -5690,7 +5690,7 @@
   value: false
   mirror: always
 
-# Spoof user locale to English
+# Whether to spoof user locale to English (used as part of Resist Fingerprinting)
 - name: privacy.spoof_english
   type: RelaxedAtomicUint32
   value: 0
@@ -5709,6 +5709,57 @@
 - name: privacy.trackingprotection.lower_network_priority
   type: bool
   value: @IS_NIGHTLY_BUILD@
+  mirror: always
+
+# The resistFingerprinting variables are marked with 'Relaxed' memory ordering.
+# We don't particurally care that threads have a percently consistent view of
+# the values of these prefs. They are not expected to change often, and having
+# an outdated view is not particurally harmful. They will eventually become
+# consistent.
+#
+# The variables will, however, be read often (specifically .microseconds on
+# each timer rounding) so performance is important.
+
+- name: privacy.resistFingerprinting
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+# We automatically decline canvas permission requests if they are not initiated
+# from user input. Just in case that breaks something, we allow the user to revert
+# this behavior with this obscure pref. We do not intend to support this long term.
+# If you do set it, to work around some broken website, please file a bug with
+# information so we can understand why it is needed.
+- name: privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts
+  type: bool
+  value: true
+  mirror: always
+
+# The log level for browser console messages logged in RFPHelper.jsm
+# Change to 'All' and restart to see the messages
+- name: privacy.resistFingerprinting.jsmloglevel
+  type: String
+  value: "Warn"
+  mirror: never
+
+# A subset of Resist Fingerprinting protections focused specifically on timers for testing
+# This affects the Animation API, the performance APIs, Date.getTime, Event.timestamp,
+#   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
+- name: privacy.reduceTimerPrecision
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
+# Dynamically tune the resolution of the timer reduction for both of the two above prefs
+- name: privacy.resistFingerprinting.reduceTimerPrecision.microseconds
+  type: RelaxedAtomicUint32
+  value: 1000
+  mirror: always
+
+# Enable jittering the clock one precision value forward
+- name : privacy.resistFingerprinting.reduceTimerPrecision.jitter
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # Anti-tracking permission expiration
@@ -5738,17 +5789,6 @@
 #else
   value: 0
 #endif
-  mirror: always
-
-# Anti-fingerprinting, disabled by default
-- name: privacy.resistFingerprinting
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-
-- name: privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts
-  type: RelaxedAtomicBool
-  value: false
   mirror: always
 
 - name: privacy.storagePrincipal.enabledForTrackers

@@ -255,9 +255,6 @@ class nsRFPService final : public nsIObserver {
                                     const WidgetKeyboardEvent* aKeyboardEvent,
                                     SpoofingKeyboardCode& aOut);
 
-  static Atomic<bool, Relaxed> sPrivacyResistFingerprinting;
-  static Atomic<bool, Relaxed> sPrivacyTimerPrecisionReduction;
-
   static nsDataHashtable<KeyboardHashKey, const SpoofingKeyboardCode*>*
       sSpoofingKeyboardCodes;
 
