@@ -335,3 +335,24 @@ fxc2:
         type: git
         repo: https://github.com/mozilla/fxc2
         revision: 63ad74b7faa7033f2c1be9cc1cd0225241a1a9a5
+
+mingw-w64:
+    description: mingw-w64 source code
+    fetch:
+        type: git
+        repo: git://git.code.sf.net/p/mingw-w64/mingw-w64
+        revision: 8db8dd5aa1885e7807424a06bd14eebc9c0effd4
+
+libunwind:
+    description: libunwind source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm-mirror/libunwind
+        revision: 6ee92fcc97350ae32db3172a269e9afcc2bab686
+
+llvm-mingw:
+    description: llvm-mingw source code
+    fetch:
+        type: git
+        repo: https://github.com/mstorsjo/llvm-mingw
+        revision: c3a16814bd26aa6702e1e5b482a3d9044bb0f725

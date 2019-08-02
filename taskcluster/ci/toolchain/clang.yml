@@ -69,8 +69,16 @@ linux64-clang-8-mingw-x86:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.xz
+    worker:
+        env:
+            MOZ_FETCHES_DIR: "/builds/worker/workspace/moz-toolchain"
     toolchains:
         - linux64-gcc-6
+    fetches:
+        fetch:
+            - mingw-w64
+            - libunwind
+            - llvm-mingw
 
 linux64-clang-8-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
@@ -87,8 +95,16 @@ linux64-clang-8-mingw-x64:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.xz
+    worker:
+        env:
+            MOZ_FETCHES_DIR: "/builds/worker/workspace/moz-toolchain"
     toolchains:
         - linux64-gcc-6
+    fetches:
+        fetch:
+            - mingw-w64
+            - libunwind
+            - llvm-mingw
 
 linux64-clang-8-android-cross:
     description: "Clang 8 toolchain build"
