@@ -266,6 +266,7 @@ bool AppleVTEncoder::WriteExtraData(MediaRawData* aDst, CMSampleBufferRef aSrc,
     return true;
   }
 
+  aDst->mKeyframe = true;
   CMFormatDescriptionRef desc = CMSampleBufferGetFormatDescription(aSrc);
   if (!desc) {
     VTENC_LOGE("fail to get format description from sample");
