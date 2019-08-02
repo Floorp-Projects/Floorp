@@ -1126,6 +1126,11 @@
   value: true
   mirror: always
 
+- name: dom.allow_XUL_XBL_for_file
+  type: bool
+  value: false
+  mirror: always
+
 # Is support for automatically removing replaced filling animations enabled?
 - name: dom.animations-api.autoremove.enabled
   type: bool
