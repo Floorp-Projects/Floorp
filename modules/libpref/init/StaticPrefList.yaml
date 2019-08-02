@@ -23,7 +23,7 @@
 # Please follow the existing prefs naming convention when considering adding a
 # new pref, and don't create a new pref group unless it's appropriate and there
 # are likely to be multiple prefs within that group. (If you do, you'll need to
-# update the `groups` variable in modules/libpref/moz.build.)
+# update the `pref_groups` variable in modules/libpref/moz.build.)
 #
 # Definitions
 # -----------
@@ -973,6 +973,99 @@
   value: @IS_NOT_RELEASE_OR_BETA@
   mirror: always
 #endif
+
+#---------------------------------------------------------------------------
+# Prefs starting with "content."
+#---------------------------------------------------------------------------
+
+# Back off timer notification after count.
+# -1 means never.
+- name: content.notify.backoffcount
+  type: int32_t
+  value: -1
+  mirror: always
+
+# Notification interval in microseconds.
+# The notification interval has a dramatic effect on how long it takes to
+# initially display content for slow connections. The current value
+# provides good incremental display of content without causing an increase
+# in page load time. If this value is set below 1/10 of a second it starts
+# to impact page load performance.
+# See bugzilla bug 72138 for more info.
+- name: content.notify.interval
+  type: int32_t
+  value: 120000
+  mirror: always
+
+# Do we notify based on time?
+- name: content.notify.ontimer
+  type: bool
+  value: true
+  mirror: always
+
+# How many times to deflect in interactive mode.
+- name: content.sink.interactive_deflect_count
+  type: int32_t
+  value: 0
+  mirror: always
+
+# How many times to deflect in perf mode.
+- name: content.sink.perf_deflect_count
+  type: int32_t
+  value: 200
+  mirror: always
+
+# Parse mode for handling pending events.
+# 0 = don't check for pending events
+# 1 = don't deflect if there are pending events
+# 2 = bail if there are pending events
+- name: content.sink.pending_event_mode
+  type: int32_t
+# ifdef XP_WIN
+  value: 1
+# else
+  value: 0
+# endif
+  mirror: always
+
+# How often to probe for pending events. 1 = every token.
+- name: content.sink.event_probe_rate
+  type: int32_t
+  value: 1
+  mirror: always
+
+# How long to stay off the event loop in interactive mode.
+- name: content.sink.interactive_parse_time
+  type: int32_t
+  value: 3000
+  mirror: always
+
+# How long to stay off the event loop in perf mode.
+- name: content.sink.perf_parse_time
+  type: int32_t
+  value: 360000
+  mirror: always
+
+#  How long to be in interactive mode after an event.
+- name: content.sink.interactive_time
+  type: uint32_t
+  value: 750000
+  mirror: always
+
+# How long to stay in perf mode after initial loading.
+- name: content.sink.initial_perf_time
+  type: uint32_t
+  value: 2000000
+  mirror: always
+
+# Should we switch between perf-mode and interactive-mode?
+# 0 = Switch
+# 1 = Interactive mode
+# 2 = Perf mode
+- name: content.sink.enable_perf_mode
+  type: int32_t
+  value: 0
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "device."

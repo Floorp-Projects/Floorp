@@ -3909,6 +3909,19 @@ bool js::IsPromiseForAsync(JSObject* promise) {
 MOZ_MUST_USE bool js::AsyncFunctionThrown(JSContext* cx,
                                           Handle<PromiseObject*> resultPromise,
                                           HandleValue reason) {
+  if (resultPromise->state() != JS::PromiseState::Pending) {
+    // OOM after resolving promise.
+    // Report a warning and ignore the result.
+    if (!JS_ReportErrorFlagsAndNumberASCII(
+            cx, JSREPORT_WARNING, GetErrorMessage, nullptr,
+            JSMSG_UNHANDLABLE_PROMISE_REJECTION_WARNING)) {
+      if (cx->isExceptionPending()) {
+        cx->clearPendingException();
+      }
+    }
+    return true;
+  }
+
   return RejectPromiseInternal(cx, resultPromise, reason);
 }
 

@@ -41,8 +41,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           editor.cut();
           is(t1.value, "", "initial text was removed");
 
-          // So now we will have emptied the textfield
-          // and the editor will have created a bogus node
+          // So now we will have emptied the textfield and the editor will have
+          // created a padding <br> element for empty editor.
           // Check the transaction is in the undo stack...
           var t1Enabled = {};
           var t1CanUndo = {};
@@ -53,18 +53,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471722
           editor.undo(1);
           is(t1.value, "minefield", "text reinserted");
 
-          // So now, the cut should be in the redo stack,
-          // so executing the redo will clear the text once again
-          // and reinsert the bogus node that was removed after undo.
-          // This will require the editor to figure out that we have a
-          // bogus node again...
+          // So now, the cut should be in the redo stack, so executing the redo
+          // will clear the text once again and reinsert the padding <br>
+          // element for empty editor that was removed after undo.
+          // This will require the editor to figure out that we have a padding
+          // <br> element again...
           var t1CanRedo = {};
           editor.canRedo(t1Enabled, t1CanRedo);
           ok(t1CanRedo.value, "redo is enabled");
           editor.redo(1);
 
-          // Did the editor notice a bogus node reappeared?
-          is(t1.value, "", "editor found bogus node");
+          // Did the editor notice a padding <br> element for empty editor
+          // reappeared?
+          is(t1.value, "", "editor found padding <br> element");
        } catch (e) {
          ok(false, "test failed with error " + e);
        }

@@ -171,7 +171,7 @@ class GlobalHelperThreadState {
   void finish();
   void finishThreads();
 
-  MOZ_MUST_USE bool initializeHelperContexts();
+  MOZ_MUST_USE bool ensureContextListForThreadCount();
   JSContext* getFirstUnusedContext(AutoLockHelperThreadState& locked);
   void destroyHelperContexts(AutoLockHelperThreadState& lock);
 
@@ -492,7 +492,7 @@ bool EnsureHelperThreadsInitialized();
 
 // This allows the JS shell to override GetCPUCount() when passed the
 // --thread-count=N option.
-void SetFakeCPUCount(size_t count);
+bool SetFakeCPUCount(size_t count);
 
 // Get the current helper thread, or null.
 HelperThread* CurrentHelperThread();

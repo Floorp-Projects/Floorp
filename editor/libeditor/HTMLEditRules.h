@@ -94,7 +94,7 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult DidDoAction(EditSubActionInfo& aInfo,
                                nsresult aResult) override;
-  virtual bool DocumentIsEmpty() override;
+  virtual bool DocumentIsEmpty() const override;
 
   /**
    * DocumentModified() is called when editor content is changed.
@@ -193,7 +193,7 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * WillLoadHTML() is called before loading enter document from source.
-   * This removes bogus node if there is.
+   * This removes padding <br> element for empty editor if there is.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillLoadHTML();
 
@@ -277,26 +277,28 @@ class HTMLEditRules : public TextEditRules {
   }
 
   /**
-   * Insert moz-<br> element (<br type="_moz">) into aNode when aNode is a
+   * Insert padding <br> element for empty last line into aNode when aNode is a
    * block and it has no children.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult InsertMozBRIfNeeded(nsINode& aNode) {
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertPaddingBRElementForEmptyLastLineIfNeeded(nsINode& aNode) {
     return InsertBRIfNeededInternal(aNode, true);
   }
 
   /**
-   * Insert a normal <br> element or a moz-<br> element to aNode when
-   * aNode is a block and it has no children.  Use InsertBRIfNeeded() or
-   * InsertMozBRIfNeeded() instead.
+   * Insert a normal <br> element or a padding <br> element for empty last line
+   * to aNode when aNode is a block and it has no children.  Use
+   * InsertBRIfNeeded() or InsertPaddingBRElementForEmptyLastLineIfNeeded()
+   * instead.
    *
-   * @param aNode           Reference to a block parent.
-   * @param aInsertMozBR    true if this should insert a moz-<br> element.
-   *                        Otherwise, i.e., this should insert a normal <br>
-   *                        element, false.
+   * @param aNode               Reference to a block parent.
+   * @param aForPadding         true if this should insert a <br> element for
+   *                            placing caret at empty last line.
+   *                            Otherwise, i.e., this should insert a normal
+   *                            <br> element, false.
    */
-  MOZ_CAN_RUN_SCRIPT
-  MOZ_MUST_USE nsresult InsertBRIfNeededInternal(nsINode& aNode,
-                                                 bool aInsertMozBR);
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  InsertBRIfNeededInternal(nsINode& aNode, bool aForPadding);
 
   /**
    * GetGoodSelPointForNode() finds where at a node you would want to set the
@@ -536,8 +538,8 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * Called after creating a basic block, indenting, outdenting or aligning
-   * contents.  This method inserts moz-<br> element if start container of
-   * Selection needs it.
+   * contents.  This method inserts a padding <br> element for empty last line
+   * if start container of Selection needs it.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult DidMakeBasicBlock();
 

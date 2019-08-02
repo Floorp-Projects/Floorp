@@ -96,6 +96,7 @@ def rustc_info(rustc):
         version=Version(info.get('release', '0')),
         commit=info.get('commit-hash', 'unknown'),
         host=info['host'],
+        llvm_version=Version(info.get('LLVM version', '0')),
     )
 
 set_config('RUSTC_VERSION', depends(rustc_info)(lambda info: str(info.version)))

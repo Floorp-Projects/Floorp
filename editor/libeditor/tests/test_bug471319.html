@@ -30,42 +30,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=471319
         let t1 = SpecialPowers.wrap($("t1"));
 
         // Test 1: Undo on an empty editor - the editor should not forget about
-        // the bogus node
+        // the padding <br> element for empty editor.
         let t1Editor = t1.editor;
 
-        // Did the editor recognize the new bogus node?
+        // Did the editor recognize the new padding <br> element?
         t1Editor.undo(1);
-        ok(!t1.value, "<br> still recognized as bogus node on undo");
+        ok(!t1.value, "<br> still recognized as padding on undo");
 
 
         // Test 2: Redo on an empty editor - the editor should not forget about
-        // the bogus node
+        // the padding <br> element for empty editor.
         let t2 = SpecialPowers.wrap($("t2"));
         let t2Editor = t2.editor;
 
-        // Did the editor recognize the new bogus node?
+        // Did the editor recognize the new padding <br> element?
         t2Editor.redo(1);
-        ok(!t2.value, "<br> still recognized as bogus node on redo");
+        ok(!t2.value, "<br> still recognized as padding on redo");
 
 
         // Test 3: Undoing a batched transaction where both end points of the
-        // transaction are the bogus node - the bogus node should still be
-        // recognized as bogus
+        // transaction are the padding <br> element for empty editor - the
+        // <br> element should still be recognized as padding.
         t1Editor.transactionManager.beginBatch(null);
         t1.value = "mozilla";
         t1.value = "";
         t1Editor.transactionManager.endBatch(false);
         t1Editor.undo(1);
         ok(!t1.value,
-           "recreated <br> from undo transaction recognized as bogus");
+           "recreated <br> from undo transaction recognized as padding");
 
 
         // Test 4: Redoing a batched transaction where both end points of the
-        // transaction are the bogus node - the bogus node should still be
-        // recognized as bogus
+        // transaction are the padding <br> element for empty editor - the
+        // <br> element should still be recognized padding.
         t1Editor.redo(1);
         ok(!t1.value,
-           "recreated <br> from redo transaction recognized as bogus");
+           "recreated <br> from redo transaction recognized as padding");
         SimpleTest.finish();
      }
    </script>
