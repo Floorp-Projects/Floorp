@@ -13,6 +13,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_create_login() {
+  let browser = gBrowser.selectedBrowser;
+  await ContentTask.spawn(browser, null, async () => {
+    let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
+    ok(!loginList._selectedGuid, "should not be a selected guid by default");
+  });
+
   let testCases = [
     ["ftp://ftp.example.com/", "ftp://ftp.example.com"],
     ["https://example.com/foo", "https://example.com"],
@@ -32,7 +38,6 @@ add_task(async function test_create_login() {
       (_, data) => data == "addLogin"
     );
 
-    let browser = gBrowser.selectedBrowser;
     await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
       let createButton = content.document
         .querySelector("login-list")
@@ -87,7 +92,16 @@ add_task(async function test_create_login() {
         }, "Waiting for login to be displayed");
         ok(loginGuid, "Expected login found in login-list");
 
+        let loginItem = Cu.waiveXrays(
+          content.document.querySelector("login-item")
+        );
+        is(loginItem._login.guid, loginGuid, "login-item should match");
+
         let { login, listItem } = loginList._logins[loginGuid];
+        ok(
+          listItem.classList.contains("selected"),
+          "list item should be selected"
+        );
         ok(
           !!listItem,
           `Stored login should only include the origin of the URL provided during creation (${
@@ -104,12 +118,7 @@ add_task(async function test_create_login() {
           "testpass1",
           "Stored login should have password provided during creation"
         );
-        listItem.click();
 
-        let loginItem = Cu.waiveXrays(
-          content.document.querySelector("login-item")
-        );
-        is(loginItem._login.guid, login.guid, "Login should be selected");
         let editButton = loginItem.shadowRoot.querySelector(".edit-button");
         editButton.click();
 
