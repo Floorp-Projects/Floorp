@@ -44,8 +44,8 @@ def add_command(config, tasks):
                 chunked["worker"]["env"] = {}
             chunked["run"] = {
                 'using': 'run-task',
-                'command': 'cd /builds/worker/checkouts/gecko && '
-                           'tools/update-verify/scripts/chunked-verify.sh '
+                'cwd': '{checkout}',
+                'command': 'tools/update-verify/scripts/chunked-verify.sh '
                            '{} {}'.format(
                                total_chunks,
                                this_chunk,

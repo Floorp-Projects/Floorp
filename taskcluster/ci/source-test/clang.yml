@@ -49,9 +49,9 @@ tidy:
     treeherder:
         symbol: clang(tidy)
     run:
+        cwd: '{checkout}'
         command: >-
-            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
-            cd $HOME/checkouts/gecko &&
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
             ./mach --log-no-times static-analysis check --outgoing --output $HOME/clang-tidy.json --format json
 
     worker:
@@ -65,9 +65,9 @@ format:
     treeherder:
         symbol: clang(format)
     run:
+        cwd: '{checkout}'
         command: >-
-            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
-            cd $HOME/checkouts/gecko &&
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
             ./mach --log-no-times clang-format --outgoing --output $HOME/clang-format.json --format json &&
             ./mach --log-no-times clang-format --outgoing --output $HOME/clang-format.diff --format diff
     worker:

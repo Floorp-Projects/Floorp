@@ -11,7 +11,6 @@ PROJECT_REVISION=9214a916805838265764f9c69eaed657ea3db021
 case "$(uname -s)" in
 Linux)
     WORKSPACE=$HOME/workspace
-    UPLOAD_DIR=$HOME/artifacts
     COMPRESS_EXT=xz
     ;;
 MINGW*)
