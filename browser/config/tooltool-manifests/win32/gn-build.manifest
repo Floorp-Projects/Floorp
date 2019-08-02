@@ -14,13 +14,5 @@
     "algorithm": "sha512",
     "filename": "ninja171.zip",
     "unpack": true
-  },
-  {
-    "version": "MinGit-2.13.3-64-bit",
-    "size": 21482885,
-    "digest": "929bb3c07be8487ee519422a312bdbfeec8f4db4b62c49d02f9aad9fd2a66c0ee5fad63d2b06c8744c336dc9d50446fa4457897333ad17ffd783ecabd1e2ddbb",
-    "algorithm": "sha512",
-    "filename": "git.zip",
-    "unpack": true
   }
 ]
