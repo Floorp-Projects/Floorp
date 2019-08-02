@@ -22,6 +22,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/plugins/PluginBridge.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/Unused.h"
 #include "mozilla/WeakPtr.h"
 
@@ -305,11 +306,7 @@ class HangMonitorParent : public PProcessHangMonitorParent,
   nsDataHashtable<nsUint32HashKey, nsString> mBrowserCrashDumpIds;
   Mutex mBrowserCrashDumpHashLock;
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory;
-
-  static bool sShouldPaintWhileInterruptingJS;
 };
-
-bool HangMonitorParent::sShouldPaintWhileInterruptingJS = true;
 
 }  // namespace
 
@@ -717,13 +714,6 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   mReportHangs =
       mozilla::Preferences::GetBool("dom.ipc.reportProcessHangs", false);
-
-  static bool sInited = false;
-  if (!sInited) {
-    sInited = true;
-    Preferences::AddBoolVarCache(&sShouldPaintWhileInterruptingJS,
-                                 "browser.tabs.remote.force-paint", true);
-  }
 }
 
 HangMonitorParent::~HangMonitorParent() {
@@ -775,7 +765,7 @@ void HangMonitorParent::PaintWhileInterruptingJS(
     dom::BrowserParent* aTab, bool aForceRepaint,
     const LayersObserverEpoch& aEpoch) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (sShouldPaintWhileInterruptingJS) {
+  if (StaticPrefs::browser_tabs_remote_force_paint()) {
     TabId id = aTab->GetTabId();
     Dispatch(NewNonOwningRunnableMethod<TabId, bool, LayersObserverEpoch>(
         "HangMonitorParent::PaintWhileInterruptingJSOnThread", this,
