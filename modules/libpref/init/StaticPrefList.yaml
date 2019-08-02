@@ -1900,6 +1900,11 @@
   value: true
   mirror: always
 
+- name: dom.securecontext.whitelist_onions
+  type: bool
+  value: false
+  mirror: always
+
 # This pref enables FeaturePolicy logic and the parsing of 'allow' attribute in
 # HTMLIFrameElement objects.
 - name: dom.security.featurePolicy.enabled

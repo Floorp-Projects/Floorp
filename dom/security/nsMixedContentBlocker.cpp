@@ -36,6 +36,7 @@
 #include "prnetdb.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -387,14 +388,7 @@ bool nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackURL(nsIURI* aURL) {
  * `dom.securecontext.whitelist_onions` is `true`.
  */
 bool nsMixedContentBlocker::IsPotentiallyTrustworthyOnion(nsIURI* aURL) {
-  static bool sInited = false;
-  static bool sWhiteListOnions = false;
-  if (!sInited) {
-    Preferences::AddBoolVarCache(&sWhiteListOnions,
-                                 "dom.securecontext.whitelist_onions");
-    sInited = true;
-  }
-  if (!sWhiteListOnions) {
+  if (!StaticPrefs::dom_securecontext_whitelist_onions()) {
     return false;
   }
 
