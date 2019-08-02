@@ -2598,6 +2598,12 @@
   value: true
   mirror: always
 
+# Time, in milliseconds, to wait for the location provider to spin up.
+- name: geo.timeout
+  type: int32_t
+  value: 6000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "gfx."
 #---------------------------------------------------------------------------

@@ -503,12 +503,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(nsGeolocationService)
 NS_IMPL_RELEASE(nsGeolocationService)
 
-static int32_t sProviderTimeout = 6000;  // Time, in milliseconds, to wait for
-                                         // the location provider to spin up.
-
 nsresult nsGeolocationService::Init() {
-  Preferences::AddIntVarCache(&sProviderTimeout, "geo.timeout",
-                              sProviderTimeout);
   if (!StaticPrefs::geo_enabled()) {
     return NS_ERROR_FAILURE;
   }
@@ -688,7 +683,8 @@ void nsGeolocationService::SetDisconnectTimer() {
     mDisconnectTimer->Cancel();
   }
 
-  mDisconnectTimer->Init(this, sProviderTimeout, nsITimer::TYPE_ONE_SHOT);
+  mDisconnectTimer->Init(this, StaticPrefs::geo_timeout(),
+                         nsITimer::TYPE_ONE_SHOT);
 }
 
 bool nsGeolocationService::HighAccuracyRequested() {
