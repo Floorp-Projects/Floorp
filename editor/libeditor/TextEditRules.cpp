@@ -1375,7 +1375,8 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
     EditorDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
     CreateElementResult createPaddingBRResult =
-        CreatePaddingBRElementForEmptyLastLine(endOfRoot);
+        MOZ_KnownLive(TextEditorRef())
+            .InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfRoot);
     if (NS_WARN_IF(createPaddingBRResult.Failed())) {
       return createPaddingBRResult.Rv();
     }
@@ -1553,29 +1554,6 @@ nsresult TextEditRules::TruncateInsertionIfNeeded(const nsAString* aInString,
     }
   }
   return NS_OK;
-}
-
-CreateElementResult TextEditRules::CreatePaddingBRElementForEmptyLastLine(
-    const EditorDOMPoint& aPointToInsert) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return CreateElementResult(NS_ERROR_FAILURE);
-  }
-
-  RefPtr<Element> brElement =
-      MOZ_KnownLive(TextEditorRef())
-          .InsertBrElementWithTransaction(aPointToInsert);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_WARN_IF(!brElement)) {
-    return CreateElementResult(NS_ERROR_FAILURE);
-  }
-
-  brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
-
-  return CreateElementResult(brElement.forget());
 }
 
 bool TextEditRules::IsPasswordEditor() const {

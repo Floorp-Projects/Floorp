@@ -91,6 +91,10 @@ class TextServicesDocument;
 class TypeInState;
 class WSRunObject;
 
+template <typename NodeType>
+class CreateNodeResultBase;
+typedef CreateNodeResultBase<dom::Element> CreateElementResult;
+
 namespace dom {
 class DataTransfer;
 class DragEvent;
@@ -963,6 +967,18 @@ class EditorBase : public nsIEditor,
    */
   MOZ_CAN_RUN_SCRIPT nsresult InsertNodeWithTransaction(
       nsIContent& aContentToInsert, const EditorDOMPoint& aPointToInsert);
+
+  /**
+   * InsertPaddingBRElementForEmptyLastLineWithTransaction() creates a padding
+   * <br> element with setting flags to NS_PADDING_FOR_EMPTY_LAST_LINE and
+   * inserts it around aPointToInsert.
+   *
+   * @param aPointToInsert      The DOM point where should be <br> node inserted
+   *                            before.
+   */
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE CreateElementResult
+  InsertPaddingBRElementForEmptyLastLineWithTransaction(
+      const EditorDOMPoint& aPointToInsert);
 
   /**
    * ReplaceContainerWithTransaction() creates new element whose name is
@@ -2080,6 +2096,18 @@ class EditorBase : public nsIEditor,
   };
   MOZ_CAN_RUN_SCRIPT
   void NotifyEditorObservers(NotificationForEditorObservers aNotification);
+
+  /**
+   * PrepareToInsertBRElement() returns a point where new <br> element should
+   * be inserted.  If aPointToInsert points middle of a text node, this method
+   * splits the text node and returns the point before right node.
+   *
+   * @param aPointToInsert      Candidate point to insert new <br> element.
+   * @return                    Computed point to insert new <br> element.
+   *                            If something failed, this is unset.
+   */
+  MOZ_CAN_RUN_SCRIPT EditorDOMPoint
+  PrepareToInsertBRElement(const EditorDOMPoint& aPointToInsert);
 
  private:
   nsCOMPtr<nsISelectionController> mSelectionController;
