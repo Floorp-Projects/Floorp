@@ -142,7 +142,7 @@ jobs:
                 - 'wrench-macos-headless.tar.bz2'
         run:
             using: run-task
-            cwd: '{checkout}gfx/wr'
+            cwd: '{checkout}/gfx/wr'
             command: >-
                 export WRENCH_HEADLESS_TARGET=$PWD/wrench-macos-headless/ &&
                 export WRENCH_BINARY=$PWD/wrench-macos/bin/wrench &&
