@@ -2,7 +2,7 @@
 
 # IMAGE_SRC
 
-`IMAGE_SRC` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L88)
+`IMAGE_SRC` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L91)
 
 An "image_src" icon.
 

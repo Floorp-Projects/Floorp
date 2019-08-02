@@ -321,7 +321,7 @@
 | [kotlin.collections.Map](../mozilla.components.support.ktx.kotlin/kotlin.collections.-map/index.md) (extensions in package mozilla.components.support.ktx.kotlin) |  |
 | [mozilla.components.support.android.test.Matchers](../mozilla.components.support.android.test/-matchers/index.md) | A collection of non-domain specific [Matcher](#)s. |
 | [mozilla.components.concept.engine.media.Media](../mozilla.components.concept.engine.media/-media/index.md) | Value type that represents a media element that is present on the currently displayed page in a session. |
-| [mozilla.components.feature.media.notification.MediaNotificationFeature](../mozilla.components.feature.media.notification/-media-notification-feature/index.md) | Feature for displaying an ongoing notification (keeping the app process alive) while web content is playing media. |
+| [mozilla.components.feature.media.MediaFeature](../mozilla.components.feature.media/-media-feature/index.md) | Feature implementation for media playback in web content. This feature takes care of: |
 | [mozilla.components.feature.media.state.MediaState](../mozilla.components.feature.media.state/-media-state/index.md) | Accumulated state of all [Media](../mozilla.components.concept.engine.media/-media/index.md) of all [Session](../mozilla.components.browser.session/-session/index.md)s. |
 | [mozilla.components.feature.media.state.MediaStateMachine](../mozilla.components.feature.media.state/-media-state-machine/index.md) | A state machine that subscribes to all [Session](../mozilla.components.browser.session/-session/index.md) instances and watches changes to their [Media](../mozilla.components.concept.engine.media/-media/index.md) to create an aggregated [MediaState](../mozilla.components.feature.media.state/-media-state/index.md). |
 | [mozilla.components.browser.icons.loader.MemoryIconLoader](../mozilla.components.browser.icons.loader/-memory-icon-loader/index.md) | An [IconLoader](../mozilla.components.browser.icons.loader/-icon-loader/index.md) implementation that loads icons from an in-memory cache. |
@@ -361,6 +361,7 @@
 | [mozilla.components.ui.autocomplete.OnWindowsFocusChangeListener](../mozilla.components.ui.autocomplete/-on-windows-focus-change-listener.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemMeasurement](../org.mozilla.telemetry.measurement/-operating-system-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.OperatingSystemVersionMeasurement](../org.mozilla.telemetry.measurement/-operating-system-version-measurement/index.md) |  |
+| [mozilla.components.feature.customtabs.verify.OriginVerifier](../mozilla.components.feature.customtabs.verify/-origin-verifier/index.md) | Used to verify postMessage origin for a designated package name. |
 | [mozilla.components.support.base.android.Padding](../mozilla.components.support.base.android/-padding/index.md) | A representation of an Android Padding. |
 | [mozilla.components.concept.storage.PageObservation](../mozilla.components.concept.storage/-page-observation/index.md) |  |
 | [mozilla.components.lib.jexl.parser.ParserException](../mozilla.components.lib.jexl.parser/-parser-exception/index.md) |  |

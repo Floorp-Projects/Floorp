@@ -2,7 +2,7 @@
 
 # Request
 
-`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L39)
+`data class Request` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/fetch/src/main/java/mozilla/components/concept/fetch/Request.kt#L40)
 
 The [Request](./index.md) data class represents a resource request to be send by a [Client](../-client/index.md).
 
@@ -29,7 +29,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/Request
 | Name | Summary |
 |---|---|
 | [body](body.md) | `val body: `[`Body`](-body/index.md)`?`<br>An optional body to be send with the request. |
-| [connectTimeout](connect-timeout.md) | `val connectTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>?`<br>A timeout to be used when connecting to the resource.  If the timeout expires before the connection can be established, a java.net.SocketTimeoutException is raised. A timeout of zero is interpreted as an infinite timeout. |
+| [connectTimeout](connect-timeout.md) | `val connectTimeout: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)`, `[`TimeUnit`](https://developer.android.com/reference/java/util/concurrent/TimeUnit.html)`>?`<br>A timeout to be used when connecting to the resource.  If the timeout expires before the connection can be established, a [java.net.SocketTimeoutException](https://developer.android.com/reference/java/net/SocketTimeoutException.html) is raised. A timeout of zero is interpreted as an infinite timeout. |
 | [cookiePolicy](cookie-policy.md) | `val cookiePolicy: `[`CookiePolicy`](-cookie-policy/index.md)<br>A policy to specify whether or not cookies should be sent with the request, defaults to [CookiePolicy.INCLUDE](-cookie-policy/-i-n-c-l-u-d-e.md) |
 | [headers](headers.md) | `val headers: `[`MutableHeaders`](../-mutable-headers/index.md)`?`<br>Optional HTTP headers to be send with the request. |
 | [method](method.md) | `val method: `[`Method`](-method/index.md)<br>The request method (GET, POST, ..) |

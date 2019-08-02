@@ -6,3 +6,6 @@
 
 True if the icon represents as full-bleed icon that can be cropped to other shapes.
 
+### Property
+
+`maskable` - True if the icon represents as full-bleed icon that can be cropped to other shapes.

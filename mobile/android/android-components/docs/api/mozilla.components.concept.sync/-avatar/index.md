@@ -2,7 +2,7 @@
 
 # Avatar
 
-`data class Avatar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L79)
+`data class Avatar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/sync/src/main/java/mozilla/components/concept/sync/OAuthAccount.kt#L80)
 
 ### Constructors
 

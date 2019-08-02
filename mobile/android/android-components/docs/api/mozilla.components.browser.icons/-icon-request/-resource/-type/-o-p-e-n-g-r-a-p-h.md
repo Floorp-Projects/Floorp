@@ -2,7 +2,7 @@
 
 # OPENGRAPH
 
-`OPENGRAPH` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L97)
+`OPENGRAPH` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L100)
 
 An "Open Graph" image.
 

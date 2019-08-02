@@ -2,7 +2,7 @@
 
 # Type
 
-`enum class Type` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L53)
+`enum class Type` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L56)
 
 An icon resource type.
 

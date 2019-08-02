@@ -2,7 +2,7 @@
 
 # MICROSOFT_TILE
 
-`MICROSOFT_TILE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L117)
+`MICROSOFT_TILE` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L120)
 
 A "Microsoft tile" image.
 

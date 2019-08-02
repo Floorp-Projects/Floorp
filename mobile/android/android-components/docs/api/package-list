@@ -133,6 +133,7 @@ mozilla.components.feature.awesomebar
 mozilla.components.feature.awesomebar.provider
 mozilla.components.feature.contextmenu
 mozilla.components.feature.customtabs
+mozilla.components.feature.customtabs.verify
 mozilla.components.feature.downloads
 mozilla.components.feature.downloads.ext
 mozilla.components.feature.downloads.manager
@@ -140,7 +141,6 @@ mozilla.components.feature.findinpage
 mozilla.components.feature.findinpage.view
 mozilla.components.feature.intent
 mozilla.components.feature.media
-mozilla.components.feature.media.notification
 mozilla.components.feature.media.state
 mozilla.components.feature.prompts
 mozilla.components.feature.push

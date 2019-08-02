@@ -2,7 +2,7 @@
 
 # Size
 
-`enum class Size` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L28)
+`enum class Size` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/icons/src/main/java/mozilla/components/browser/icons/IconRequest.kt#L31)
 
 Supported sizes.
 
