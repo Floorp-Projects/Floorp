@@ -3900,10 +3900,7 @@ NSC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
         crv = CKR_PIN_LEN_RANGE;
         goto loser;
     }
-    /* check the length of new pin, unless both old and new passwords
-     * are empty */
-    if ((ulNewLen != 0 || ulOldLen != 0) &&
-        ulNewLen < (CK_ULONG)slot->minimumPinLen) {
+    if (ulNewLen < (CK_ULONG)slot->minimumPinLen) {
         crv = CKR_PIN_LEN_RANGE;
         goto loser;
     }

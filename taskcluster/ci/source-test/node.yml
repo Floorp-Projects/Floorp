@@ -16,10 +16,10 @@ debugger-tests:
     run:
         using: run-task
         cache-dotcache: true
+        cwd: '{checkout}'
         command: >
-            cd /builds/worker/checkouts/gecko/ &&
             npm install &&
-            cd /builds/worker/checkouts/gecko/devtools/client/debugger/ &&
+            cd devtools/client/debugger/ &&
             yarn &&
             node bin/try-runner.js
     when:
@@ -40,10 +40,10 @@ devtools-tests:
     run:
         using: run-task
         cache-dotcache: true
+        cwd: '{checkout}'
         command: >
-            cd /builds/worker/checkouts/gecko/ &&
             npm install &&
-            cd /builds/worker/checkouts/gecko/devtools/client/bin/ &&
+            cd devtools/client/bin/ &&
             node devtools-node-test-runner.js --suite=aboutdebugging-new &&
             node devtools-node-test-runner.js --suite=accessibility &&
             node devtools-node-test-runner.js --suite=application &&
@@ -69,8 +69,8 @@ eslint-plugin-mozilla:
     run:
         using: run-task
         cache-dotcache: true
+        cwd: '{checkout}/tools/lint/eslint/eslint-plugin-mozilla'
         command: >
-            cd /builds/worker/checkouts/gecko/tools/lint/eslint/eslint-plugin-mozilla &&
             cp -r /build/node_modules_eslint-plugin-mozilla node_modules &&
             npm run test
     when:

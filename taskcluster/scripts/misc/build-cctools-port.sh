@@ -9,7 +9,6 @@ set -x -e -v
 # This script is for building cctools (Apple's binutils) for Linux using
 # cctools-port (https://github.com/tpoechtrager/cctools-port).
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 
 # Set some crosstools-port and libtapi directories
 CROSSTOOLS_SOURCE_DIR=$MOZ_FETCHES_DIR/cctools-port
