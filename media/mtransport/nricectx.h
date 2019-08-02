@@ -308,6 +308,8 @@ class NrIceCtx {
 
   void SetCtxFlags(bool default_route_only, bool proxy_only);
 
+  bool proxy_only() const { return proxy_only_; }
+
   // Start ICE gathering
   nsresult StartGathering(bool default_route_only, bool proxy_only);
 
@@ -388,6 +390,7 @@ class NrIceCtx {
   Policy policy_;
   RefPtr<TestNat> nat_;
   std::shared_ptr<NrSocketProxyConfig> proxy_config_;
+  bool proxy_only_;
 };
 
 }  // namespace mozilla
