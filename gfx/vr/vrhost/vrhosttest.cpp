@@ -4,8 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// vrhost.cpp
-// Definition of functions that are exported from this dll
+// vrhosttest.cpp
+// Definition of testing and validation functions that are exported from this
+// dll
 
 #include "vrhostex.h"
 #include "VRShMem.h"
@@ -16,7 +17,7 @@
 static const char s_pszSharedEvent[] = "vrhost_test_event_signal";
 static const DWORD s_dwWFSO_WAIT = 20000;
 
-void SampleExport() { printf("vrhost.cpp hello world"); }
+void SampleExport() { printf("vrhost.cpp hello world\n"); }
 
 // For testing ShMem as Manager and Service:
 // The two processes should output the steps, synchronously, to validate
@@ -33,9 +34,19 @@ void SampleExport() { printf("vrhost.cpp hello world"); }
 //  10 svc: verify data
 //  11 svc: push system
 //  12 svc: send signal
-//  13 mgr: pull system
-//  14 mgr: verify data
-//  15 return
+//  13 svc: wait for signal
+//  14 mgr: pull system
+//  15 mgr: verify data
+//  16 mgr: push window
+//  17 mgr: send signal
+//  18 mgr: wait for signal
+//  19 svc: pull window
+//  20 svc: verify data
+//  21 svc: push window
+//  22 svc: send signal
+//  23 mgr: pull window
+//  24 mgr: verify data
+//  25 return
 // These tests can be run with two instances of vrtesthost.exe, one first
 // running with -testmgr and the second running with -testsvc.
 // TODO: Bug 1563235 - Convert vrtesthost.exe tests into unit tests
@@ -43,6 +54,10 @@ void SampleExport() { printf("vrhost.cpp hello world"); }
 // For testing VRShMem as the Manager (i.e., the one who creates the
 // shmem). The sequence of how it tests with the service is listed above.
 void TestTheManager() {
+  printf("TestTheManager Start\n");
+
+  MOZ_ASSERT(GetLastError() == 0,
+             "TestTheManager should start with no OS errors");
   HANDLE hEvent = ::CreateEventA(nullptr,          // lpEventAttributes
                                  FALSE,            // bManualReset
                                  FALSE,            // bInitialState
@@ -72,14 +87,14 @@ void TestTheManager() {
   printf("08 mgr: wait for signal\n");
   ::WaitForSingleObject(hEvent, s_dwWFSO_WAIT);
 
-  printf("13 mgr: pull system\n");
+  printf("14 mgr: pull system\n");
   mozilla::gfx::VRSystemState state;
   shmem.PullSystemState(state.displayState, state.sensorState,
                         state.controllerState, state.enumerationCompleted,
                         nullptr);
 
   printf(
-      "14 mgr: verify data\n"
+      "15 mgr: verify data\n"
       "\tstate.enumerationCompleted = %d\n"
       "\tstate.displayState.displayName = \"%s\"\n"
       "\tstate.controllerState[1].hand = %hhu\n"
@@ -87,16 +102,48 @@ void TestTheManager() {
       state.enumerationCompleted, state.displayState.displayName,
       state.controllerState[1].hand, state.sensorState.inputFrameID);
 
+  // Test the WindowState functions as the host
+  mozilla::gfx::VRWindowState windowState = {0};
+  strcpy(windowState.signalName, "randomsignalstring");
+  windowState.dxgiAdapterHost = 99;
+  windowState.heightHost = 42;
+  windowState.widthHost = 24;
+
+  printf("16 mgr: push window\n");
+  shmem.PushWindowState(windowState);
+
+  printf("17 mgr: send signal\n");
+  ::SetEvent(hEvent);
+
+  printf("18 mgr: wait for signal\n");
+  ::WaitForSingleObject(hEvent, s_dwWFSO_WAIT);
+
+  printf("23 mgr: pull window\n");
+  shmem.PullWindowState(windowState);
+
+  printf(
+      "24 svc: verify data\n"
+      "\tstate.hwndFx = 0x%llX\n"
+      "\tstate.heightFx = %d\n"
+      "\tstate.widthFx = %d\n"
+      "\tstate.textureHandle = %p\n",
+      windowState.hwndFx, windowState.heightFx, windowState.widthFx,
+      windowState.textureFx);
+
   shmem.CloseShMem();
 
-  printf("mgr complete");
+  printf("TestTheManager complete");
   fflush(nullptr);
 }
 
 // For testing VRShMem as the Service (i.e., the one who consumes the
 // shmem). The sequence of how it tests with the service is listed above.
 void TestTheService() {
-  // Handle created by BeTheManager above.
+  printf("TestTheService Start\n");
+
+  MOZ_ASSERT(GetLastError() == 0,
+             "TestTheService should start with no OS errors");
+  // Handle created by TestTheManager above.
   HANDLE hEvent = ::OpenEventA(EVENT_ALL_ACCESS,  // dwDesiredAccess
                                FALSE,             // bInheritHandle
                                s_pszSharedEvent   // lpName
@@ -138,8 +185,83 @@ void TestTheService() {
   printf("12 svc: send signal\n");
   ::SetEvent(hEvent);
 
+  printf("13 svc: wait for signal\n");
+  ::WaitForSingleObject(hEvent, s_dwWFSO_WAIT);
+
+  // Test the WindowState functions as Firefox
+  printf("19 svc: pull window\n");
+  mozilla::gfx::VRWindowState windowState;
+  shmem.PullWindowState(windowState);
+
+  printf(
+      "20 svc: verify data\n"
+      "\tstate.signalName = \"%s\"\n"
+      "\tstate.dxgiAdapterHost = %d\n"
+      "\tstate.heightHost = %d\n"
+      "\tstate.widthHost = %d\n",
+      windowState.signalName, windowState.dxgiAdapterHost,
+      windowState.heightHost, windowState.widthHost);
+
+  windowState.hwndFx = 0x1234;
+  windowState.heightFx = 1234;
+  windowState.widthFx = 4321;
+  windowState.textureFx = (HANDLE)0x77777;
+
+  printf("21 svc: push window\n");
+  shmem.PushWindowState(windowState);
+
+  printf("22 svc: send signal\n");
+  ::SetEvent(hEvent);
+
   shmem.LeaveShMem();
 
-  printf("svc complete");
+  printf("TestTheService complete");
   fflush(nullptr);
+}
+
+// This function tests the export CreateVRWindow by outputting the return values
+// from the call to the console, as well as testing CloseVRWindow after the data
+// is retrieved.
+void TestCreateVRWindow() {
+  printf("TestCreateVRWindow Start\n");
+
+  // Cache function calls to test real-world export and usage
+  HMODULE hVRHost = ::GetModuleHandleA("vrhost.dll");
+  PFN_CREATEVRWINDOW fnCreate =
+      (PFN_CREATEVRWINDOW)::GetProcAddress(hVRHost, "CreateVRWindow");
+  PFN_CLOSEVRWINDOW fnClose =
+      (PFN_CLOSEVRWINDOW)::GetProcAddress(hVRHost, "CloseVRWindow");
+
+  // Create the VR Window and store data from creation
+  char currentDir[MAX_PATH] = {0};
+  char currentDirProfile[MAX_PATH] = {0};
+  DWORD currentDirLength =
+      ::GetCurrentDirectory(ARRAYSIZE(currentDir), currentDir);
+  currentDir[currentDirLength] = '\\';
+
+  int err = sprintf_s(currentDirProfile, ARRAYSIZE(currentDirProfile),
+                      "%svrhosttest-profile", currentDir);
+  if (err > 0) {
+    printf("Starting Firefox from %s\n", currentDir);
+
+    UINT windowId;
+    HANDLE hTex;
+    UINT width;
+    UINT height;
+    fnCreate(currentDir, currentDirProfile, 0, 100, 200, &windowId, &hTex,
+             &width, &height);
+
+    // Close the Firefox VR Window
+    fnClose(windowId, true);
+
+    // Print output from CreateVRWindow
+    printf(
+        "\n\nTestCreateVRWindow End:\n"
+        "\twindowId = 0x%X\n"
+        "\thTex = 0x%p\n"
+        "\twidth = %d\n"
+        "\theight = %d\n",
+        windowId, hTex, width, height);
+    printf("\n***Note: profile folder created at %s***\n", currentDirProfile);
+  }
 }
