@@ -4099,6 +4099,8 @@ class nsIFrame : public nsQueryFrame {
   void SetMayHaveOpacityAnimation() { mMayHaveOpacityAnimation = true; }
 
   // Returns true if this frame is visible or may have visible descendants.
+  // Note: This function is accurate only on primary frames, because
+  // mAllDescendantsAreInvisible is not updated on continuations.
   bool IsVisibleOrMayHaveVisibleDescendants() const {
     return !mAllDescendantsAreInvisible || StyleVisibility()->IsVisible();
   }
