@@ -18,8 +18,11 @@ job-defaults:
             windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
             windows10-aarch64/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            android-hw-.*/opt: []
             macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
+            # When run-on-projects is [], the task is not run by default
+            # on any branches. To run the tasks on try through mach try fuzzy
+            # --full needs to be supplied.
+            android-hw-.*/opt: []
             android-hw-.*/pgo: ['trunk', 'mozilla-beta']
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
@@ -97,15 +100,6 @@ raptor-tp6-3-firefox:
     variants: ["fission"]
     try-name: raptor-tp6-3-firefox
     treeherder-symbol: Rap(tp6-3)
-    run-on-projects:
-        by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['try', 'mozilla-central']
-            windows10-aarch64/opt: ['try', 'mozilla-central']
-            (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            android-hw-.*/opt: []
-            macosx.*64(?:-qr)?/opt: ['mozilla-central', 'try']
-            android-hw-.*/pgo: ['trunk', 'mozilla-beta']
-            default: ['try', 'trunk', 'mozilla-beta']
     mozharness:
         extra-options:
             - --test=raptor-tp6-3
@@ -1587,11 +1581,11 @@ raptor-speedometer-geckoview:
     run-on-projects:
         by-test-platform:
             android-hw-.*-api-16/opt: []
-            android-hw-.*-aarch64/opt: ['mozilla-central', 'comm-central']
-            android-hw-p2-.*-api-16/pgo: ['mozilla-central', 'comm-central']
+            android-hw-.*-aarch64/opt: ['mozilla-central']
+            android-hw-p2-.*-api-16/pgo: ['mozilla-central']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
-            default: ['mozilla-central', 'comm-central', 'mozilla-beta']
+            default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     mozharness:
         extra-options:
@@ -1790,7 +1784,7 @@ raptor-speedometer-fennec:
         by-test-platform:
             android-hw-.*-api-16/opt: []
             android-hw.*/pgo: ['trunk', 'mozilla-beta']
-            default: ['mozilla-central', 'comm-central', 'mozilla-beta']
+            default: ['mozilla-central', 'mozilla-beta']
     tier: 2
     max-run-time: 900
     mozharness:
@@ -1959,7 +1953,7 @@ raptor-unity-webgl-geckoview:
         by-test-platform:
             android-hw-.*-api-16/opt: []
             android-hw-.*/pgo: ['trunk', 'mozilla-beta']
-            default: ['mozilla-central', 'comm-central', 'mozilla-beta']
+            default: ['mozilla-central', 'mozilla-beta']
     max-run-time: 900
     tier: 3
     mozharness:
@@ -2333,7 +2327,7 @@ raptor-tp6m-1-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-1)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2358,7 +2352,7 @@ raptor-tp6m-2-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-2)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2383,7 +2377,7 @@ raptor-tp6m-3-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-3)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2408,7 +2402,7 @@ raptor-tp6m-4-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-4)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2433,7 +2427,7 @@ raptor-tp6m-5-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-5)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2458,7 +2452,7 @@ raptor-tp6m-6-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-6)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2483,7 +2477,7 @@ raptor-tp6m-7-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-7)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2505,7 +2499,7 @@ raptor-tp6m-8-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-8)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2527,7 +2521,7 @@ raptor-tp6m-9-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-9)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2549,7 +2543,7 @@ raptor-tp6m-10-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-10)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2571,7 +2565,7 @@ raptor-tp6m-11-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-11)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2593,7 +2587,7 @@ raptor-tp6m-12-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-12)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2615,7 +2609,7 @@ raptor-tp6m-13-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-13)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2637,7 +2631,7 @@ raptor-tp6m-14-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-14)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2659,7 +2653,7 @@ raptor-tp6m-15-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-15)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2681,7 +2675,7 @@ raptor-tp6m-16-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-16)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2703,7 +2697,7 @@ raptor-tp6m-17-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-17)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2725,7 +2719,7 @@ raptor-tp6m-18-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-18)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2747,7 +2741,7 @@ raptor-tp6m-19-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-19)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2769,7 +2763,7 @@ raptor-tp6m-20-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-20)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2791,7 +2785,7 @@ raptor-tp6m-21-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-21)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2813,7 +2807,7 @@ raptor-tp6m-22-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-22)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2835,7 +2829,7 @@ raptor-tp6m-23-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-23)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2857,7 +2851,7 @@ raptor-tp6m-24-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-24)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2879,7 +2873,7 @@ raptor-tp6m-25-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-25)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2901,7 +2895,7 @@ raptor-tp6m-26-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-26)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
@@ -2923,7 +2917,7 @@ raptor-tp6m-27-geckoview-cold:
     treeherder-symbol: Rap(tp6m-c-27)
     run-on-projects:
         by-test-platform:
-            android-hw-.*/opt: ['mozilla-central', 'comm-central']
+            android-hw-.*/opt: ['mozilla-central']
             android-hw-p2-.*-api-16/pgo: ['trunk']
             android-hw-p2-.*aarch64.*/pgo: ['trunk', 'mozilla-beta']
             android-hw-g5.*/pgo: ['trunk', 'mozilla-beta']
