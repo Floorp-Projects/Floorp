@@ -31,10 +31,6 @@ SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
-mingw_version=8db8dd5aa1885e7807424a06bd14eebc9c0effd4
-libunwind_version=6ee92fcc97350ae32db3172a269e9afcc2bab686
-llvm_mingw_version=c3a16814bd26aa6702e1e5b482a3d9044bb0f725
-
 # This is default value of _WIN32_WINNT. Gecko configure script explicitly sets this,
 # so this is not used to build Gecko itself. We default to 0x601, which is Windows 7.
 default_win32_winnt=0x601
@@ -48,25 +44,8 @@ prepare() {
   mkdir -p $TOOLCHAIN_DIR
   touch $TOOLCHAIN_DIR/.build-clang
 
-  mkdir -p $TOOLCHAIN_DIR
-  pushd $TOOLCHAIN_DIR
-
-  git clone -n git://git.code.sf.net/p/mingw-w64/mingw-w64
-  pushd mingw-w64
-  git checkout $mingw_version
+  pushd $MOZ_FETCHES_DIR/mingw-w64
   patch -p1 <$patch_file
-  popd
-
-  git clone https://github.com/llvm-mirror/libunwind.git
-  pushd libunwind
-  git checkout $libunwind_version
-  popd
-
-  git clone https://github.com/mstorsjo/llvm-mingw.git
-  pushd llvm-mingw
-  git checkout $llvm_mingw_version
-  popd
-
   popd
 }
 
@@ -98,7 +77,7 @@ EOF
 build_mingw() {
   mkdir mingw-w64-headers
   pushd mingw-w64-headers
-  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-headers/configure \
+  $MOZ_FETCHES_DIR/mingw-w64/mingw-w64-headers/configure \
     --host=$machine-w64-mingw32 \
     --enable-sdk=all \
     --enable-idl \
@@ -110,7 +89,7 @@ build_mingw() {
 
   mkdir mingw-w64-crt
   pushd mingw-w64-crt
-  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-crt/configure \
+  $MOZ_FETCHES_DIR/mingw-w64/mingw-w64-crt/configure \
     --host=$machine-w64-mingw32 \
     $crt_flags \
     --with-default-msvcrt=ucrt \
@@ -125,7 +104,7 @@ build_mingw() {
 
   mkdir widl
   pushd widl
-  $TOOLCHAIN_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=$machine-w64-mingw32 --prefix=$INSTALL_DIR
+  $MOZ_FETCHES_DIR/mingw-w64/mingw-w64-tools/widl/configure --target=$machine-w64-mingw32 --prefix=$INSTALL_DIR
   make $make_flags
   make $make_flags install
   popd
@@ -194,7 +173,7 @@ build_libcxx() {
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$SRC_DIR/libcxx/include -DPSAPI_VERSION=2" \
       -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
-      $TOOLCHAIN_DIR/libunwind
+      $MOZ_FETCHES_DIR/libunwind
   make $make_flags
   make $make_flags install
   popd
@@ -276,7 +255,7 @@ build_utils() {
   ln -s llvm-strip $machine-w64-mingw32-strip
   ln -s llvm-readobj $machine-w64-mingw32-readobj
   ln -s llvm-objcopy $machine-w64-mingw32-objcopy
-  ./clang $TOOLCHAIN_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
+  ./clang $MOZ_FETCHES_DIR/llvm-mingw/wrappers/windres-wrapper.c -O2 -Wl,-s -o $machine-w64-mingw32-windres
   popd
 }
 
