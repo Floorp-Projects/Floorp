@@ -220,10 +220,6 @@ class _ToolbarBadgeHub {
     toolbarButton
       .querySelector(".toolbarbutton-badge")
       .classList.remove("feature-callout");
-    // Remove it from the toolbar icon
-    toolbarButton
-      .querySelector(".toolbarbutton-icon")
-      .classList.remove("feature-callout");
     toolbarButton.removeAttribute("badged");
   }
 
@@ -237,11 +233,6 @@ class _ToolbarBadgeHub {
       toolbarbutton.setAttribute("badged", true);
       toolbarbutton
         .querySelector(".toolbarbutton-badge")
-        .classList.add("feature-callout");
-      // This creates the cut-out effect for the icon where the notification
-      // fits in
-      toolbarbutton
-        .querySelector(".toolbarbutton-icon")
         .classList.add("feature-callout");
 
       // `mousedown` event required because of the `onmousedown` defined on
