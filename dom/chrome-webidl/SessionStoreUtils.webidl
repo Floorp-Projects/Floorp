@@ -160,9 +160,27 @@ dictionary CollectedData
   sequence<object?> children;
 };
 
+dictionary InputElementData {
+  sequence<DOMString> id;
+  sequence<DOMString> type;
+  sequence<long> valueIdx;
+  sequence<long> selectedIndex;
+  sequence<DOMString> selectVal;
+  sequence<DOMString> strVal;
+  sequence<boolean> boolVal;
+};
+
 dictionary UpdateSessionStoreData {
   ByteString docShellCaps;
   boolean isPrivate;
   sequence<ByteString> positions;
   sequence<long> positionDescendants;
+  // The following are for input data
+  InputElementData id;
+  InputElementData xpath;
+  sequence<long> inputDescendants;
+  sequence<long> numId;
+  sequence<long> numXPath;
+  sequence<DOMString> innerHTML;
+  sequence<ByteString> url;
 };

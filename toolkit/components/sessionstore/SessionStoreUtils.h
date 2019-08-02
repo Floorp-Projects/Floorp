@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
+#include "SessionStoreData.h"
 
 class nsIDocument;
 class nsGlobalWindowInner;
@@ -54,6 +55,24 @@ class SessionStoreUtils {
                                     nsGlobalWindowInner& aWindow,
                                     const CollectedData& data);
 
+  /*
+    @param aDocument: DOMDocument instance to obtain form data for.
+    @param aGeneratedCount: the current number of XPath expressions in the
+                            returned object.
+   */
+  template <typename... ArgsT>
+  static void CollectFromTextAreaElement(Document& aDocument,
+                                         uint16_t& aGeneratedCount,
+                                         ArgsT&&... args);
+  template <typename... ArgsT>
+  static void CollectFromInputElement(Document& aDocument,
+                                      uint16_t& aGeneratedCount,
+                                      ArgsT&&... args);
+  template <typename... ArgsT>
+  static void CollectFromSelectElement(Document& aDocument,
+                                       uint16_t& aGeneratedCount,
+                                       ArgsT&&... args);
+
   static void CollectFormData(const GlobalObject& aGlobal,
                               WindowProxyHolder& aWindow,
                               Nullable<CollectedData>& aRetVal);
@@ -69,6 +88,9 @@ class SessionStoreUtils {
   static void RestoreSessionStorage(
       const GlobalObject& aGlobal, nsIDocShell* aDocShell,
       const Record<nsString, Record<nsString, nsString>>& aData);
+
+  static void ComposeInputData(const nsTArray<CollectedInputDataValue>& aData,
+                               InputElementData& ret);
 };
 
 }  // namespace dom

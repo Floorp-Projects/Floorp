@@ -10,6 +10,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIWebProgressListener.h"
+#include "SessionStoreData.h"
 
 class nsITimer;
 
@@ -31,10 +32,16 @@ class ContentSessionStore {
   bool IsScrollPositionChanged() { return mScrollChanged != NO_CHANGE; }
   void GetScrollPositions(nsTArray<nsCString>& aPositions,
                           nsTArray<int32_t>& aPositionDescendants);
+  void SetFormDataChanged() { mFormDataChanged = WITH_CHANGE; }
+  bool IsFormDataChanged() { return mFormDataChanged != NO_CHANGE; }
+  nsTArray<InputFormData> GetInputs(
+      nsTArray<CollectedInputDataValue>& aIdVals,
+      nsTArray<CollectedInputDataValue>& aXPathVals);
   void OnDocumentStart();
   void OnDocumentEnd();
   bool UpdateNeeded() {
-    return mPrivateChanged || mDocCapChanged || IsScrollPositionChanged();
+    return mPrivateChanged || mDocCapChanged || IsScrollPositionChanged() ||
+           IsFormDataChanged();
   }
 
  private:
@@ -48,7 +55,8 @@ class ContentSessionStore {
     NO_CHANGE,
     PAGELOADEDSTART,  // set when the state of document is STATE_START
     WITH_CHANGE,      // set when the change event is observed
-  } mScrollChanged;
+  } mScrollChanged,
+      mFormDataChanged;
   bool mDocCapChanged;
   nsCString mDocCaps;
 };
