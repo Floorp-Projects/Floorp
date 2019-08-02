@@ -245,13 +245,6 @@ WMFAudioMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
 
   if (!sample) {
     LOG("Audio MFTDecoder returned success but null output.");
-    nsCOMPtr<nsIRunnable> task =
-        NS_NewRunnableFunction("WMFAudioMFTManager::Output", []() -> void {
-          LOG("Reporting telemetry AUDIO_MFT_OUTPUT_NULL_SAMPLES");
-          Telemetry::Accumulate(
-              Telemetry::HistogramID::AUDIO_MFT_OUTPUT_NULL_SAMPLES, 1);
-        });
-    SystemGroup::Dispatch(TaskCategory::Other, task.forget());
     return E_FAIL;
   }
 

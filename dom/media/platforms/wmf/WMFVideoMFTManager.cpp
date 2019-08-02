@@ -177,28 +177,6 @@ WMFVideoMFTManager::~WMFVideoMFTManager() {
   if (mDXVA2Manager) {
     DeleteOnMainThread(mDXVA2Manager);
   }
-
-  // Record whether the video decoder successfully decoded, or output null
-  // samples but did/didn't recover.
-  uint32_t telemetry =
-      (mNullOutputCount == 0)
-          ? 0
-          : (mGotValidOutputAfterNullOutput && mGotExcessiveNullOutput)
-                ? 1
-                : mGotExcessiveNullOutput
-                      ? 2
-                      : mGotValidOutputAfterNullOutput ? 3 : 4;
-
-  nsCOMPtr<nsIRunnable> task = NS_NewRunnableFunction(
-      "WMFVideoMFTManager::~WMFVideoMFTManager", [=]() -> void {
-        LOG(nsPrintfCString(
-                "Reporting telemetry VIDEO_MFT_OUTPUT_NULL_SAMPLES=%d",
-                telemetry)
-                .get());
-        Telemetry::Accumulate(
-            Telemetry::HistogramID::VIDEO_MFT_OUTPUT_NULL_SAMPLES, telemetry);
-      });
-  SystemGroup::Dispatch(TaskCategory::Other, task.forget());
 }
 
 const GUID& WMFVideoMFTManager::GetMFTGUID() {

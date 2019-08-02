@@ -212,16 +212,10 @@ PRemoteDecoderParent* RemoteDecoderManagerParent::AllocPRemoteDecoderParent(
     const RemoteDecoderInfoIPDL& aRemoteDecoderInfo,
     const CreateDecoderParams::OptionSet& aOptions,
     const Maybe<layers::TextureFactoryIdentifier>& aIdentifier, bool* aSuccess,
-    nsCString* aBlacklistedD3D11Driver, nsCString* aBlacklistedD3D9Driver,
     nsCString* aErrorDescription) {
   RefPtr<TaskQueue> decodeTaskQueue =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER),
                     "RemoteVideoDecoderParent::mDecodeTaskQueue");
-
-#ifdef XP_WIN
-  *aBlacklistedD3D11Driver = GetFoundD3D11BlacklistedDLL();
-  *aBlacklistedD3D9Driver = GetFoundD3D9BlacklistedDLL();
-#endif  // XP_WIN
 
   if (aRemoteDecoderInfo.type() ==
       RemoteDecoderInfoIPDL::TVideoDecoderInfoIPDL) {
