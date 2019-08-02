@@ -527,18 +527,20 @@ RTPStats.prototype = {
   },
 
   generateRTPStats() {
-    let remoteRtpStats = {};
+    const remoteRtpStatsMap = {};
     let rtpStats = [].concat(
-      this._report.inboundRTPStreamStats || [],
-      this._report.outboundRTPStreamStats || []
+      this._report.inboundRtpStreamStats || [],
+      this._report.outboundRtpStreamStats || []
+    );
+    let remoteRtpStats = [].concat(
+      this._report.remoteInboundRtpStreamStats || [],
+      this._report.remoteOutboundRtpStreamStats || []
     );
 
-    // Generate an id-to-streamStat index for each streamStat that is marked
-    // as a remote. This will be used next to link the remote to its local side.
-    for (let stats of rtpStats) {
-      if (stats.isRemote) {
-        remoteRtpStats[stats.id] = stats;
-      }
+    // Generate an id-to-streamStat index for each remote streamStat. This will
+    // be used next to link the remote to its local side.
+    for (let stats of remoteRtpStats) {
+      remoteRtpStatsMap[stats.id] = stats;
     }
 
     // If a streamStat has a remoteId attribute, create a remoteRtpStats
@@ -546,11 +548,11 @@ RTPStats.prototype = {
     // That is, the index generated above is merged into the returned list.
     for (let stats of rtpStats) {
       if (stats.remoteId) {
-        stats.remoteRtpStats = remoteRtpStats[stats.remoteId];
+        stats.remoteRtpStats = remoteRtpStatsMap[stats.remoteId];
       }
     }
 
-    this._stats = rtpStats;
+    this._stats = rtpStats.concat(remoteRtpStats);
   },
 
   renderCoderStats(stats) {
