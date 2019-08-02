@@ -588,6 +588,24 @@ class HTMLEditor final : public TextEditor,
    ****************************************************************************/
 
   /**
+   * InsertBRElementWithTransaction() creates a <br> element and inserts it
+   * before aPointToInsert.  Then, tries to collapse selection at or after the
+   * new <br> node if aSelect is not eNone.
+   *
+   * @param aPointToInsert      The DOM point where should be <br> node inserted
+   *                            before.
+   * @param aSelect             If eNone, this won't change selection.
+   *                            If eNext, selection will be collapsed after
+   *                            the <br> element.
+   *                            If ePrevious, selection will be collapsed at
+   *                            the <br> element.
+   * @return                    The new <br> node.  If failed to create new
+   *                            <br> node, returns nullptr.
+   */
+  MOZ_CAN_RUN_SCRIPT already_AddRefed<Element> InsertBRElementWithTransaction(
+      const EditorDOMPoint& aPointToInsert, EDirection aSelect = eNone);
+
+  /**
    * DeleteSelectionWithTransaction() removes selected content or content
    * around caret with transactions.
    *
@@ -841,11 +859,11 @@ class HTMLEditor final : public TextEditor,
    * outIsEmptyNode must be non-null.
    */
   nsresult IsEmptyNode(nsINode* aNode, bool* outIsEmptyBlock,
-                       bool aMozBRDoesntCount = false,
+                       bool aSingleBRDoesntCount = false,
                        bool aListOrCellNotEmpty = false,
                        bool aSafeToAskFrames = false);
   nsresult IsEmptyNodeImpl(nsINode* aNode, bool* outIsEmptyBlock,
-                           bool aMozBRDoesntCount, bool aListOrCellNotEmpty,
+                           bool aSingleBRDoesntCount, bool aListOrCellNotEmpty,
                            bool aSafeToAskFrames, bool* aSeenBR);
 
   static bool HasAttributes(Element* aElement) {

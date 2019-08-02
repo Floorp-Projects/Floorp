@@ -19,8 +19,6 @@ class TextEditUtils final {
   // from TextEditRules:
   static bool IsBody(nsINode* aNode);
   static bool IsBreak(nsINode* aNode);
-  static bool IsMozBR(nsINode* aNode);
-  static bool HasMozAttr(nsINode* aNode);
 };
 
 /***************************************************************************

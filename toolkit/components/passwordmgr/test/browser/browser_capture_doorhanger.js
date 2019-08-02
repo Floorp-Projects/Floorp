@@ -314,6 +314,11 @@ add_task(async function test_pwOnlyLoginMatchesForm() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "checking for notification popup");
+    is(
+      notif.message,
+      "Would you like to add a username to the saved password?",
+      "Check message"
+    );
     notif.remove();
   });
 
@@ -389,6 +394,7 @@ add_task(async function test_changeUPLoginOnUPForm_dont() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+    is(notif.message, "Would you like to update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, DONT_CHANGE_BUTTON);
@@ -415,6 +421,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+    is(notif.message, "Would you like to update this login?", "Check message");
 
     await checkDoorhangerUsernamePassword("notifyu1", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -438,7 +445,7 @@ add_task(async function test_changeUPLoginOnUPForm_change() {
 });
 
 add_task(async function test_changePLoginOnUPForm() {
-  info("Check for change-password popup, p-only login on u+p form.");
+  info("Check for change-password popup, p-only login on u+p form (empty u).");
   Services.logins.addLogin(login2);
 
   await testSubmittingLoginForm("subtst_notifications_9.html", async function(
@@ -448,6 +455,7 @@ add_task(async function test_changePLoginOnUPForm() {
     is(fieldValues.password, "pass2", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+    is(notif.message, "Would you like to update this password?", "Check msg");
 
     await checkDoorhangerUsernamePassword("", "pass2");
     clickDoorhangerButton(notif, CHANGE_BUTTON);
@@ -475,6 +483,7 @@ add_task(async function test_changePLoginOnPForm() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-change");
     ok(notif, "got notification popup");
+    is(notif.message, "Would you like to update this password?", "Check msg");
 
     await checkDoorhangerUsernamePassword("", "notifyp1");
     clickDoorhangerButton(notif, CHANGE_BUTTON);

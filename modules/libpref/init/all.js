@@ -1117,11 +1117,6 @@ pref("dom.use_components_shim", false);
 pref("dom.use_components_shim", true);
 #endif // NIGHTLY_BUILD
 
-// Parsing perf prefs. For now just mimic what the old code did.
-#ifndef XP_WIN
-pref("content.sink.pending_event_mode", 0);
-#endif
-
 // Disable popups from plugins by default
 //   0 = openAllowed
 //   1 = openControlled

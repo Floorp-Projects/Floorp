@@ -22,6 +22,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/dom/CharacterData.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/BinarySearch.h"
@@ -1039,9 +1040,12 @@ nsresult nsPlainTextSerializer::DoAddLeaf(nsAtom* aTag) {
   if (aTag == nsGkAtoms::br) {
     // Another egregious editor workaround, see bug 38194:
     // ignore the bogus br tags that the editor sticks here and there.
-    nsAutoString tagAttr;
-    if (NS_FAILED(GetAttributeValue(nsGkAtoms::type, tagAttr)) ||
-        !tagAttr.EqualsLiteral("_moz")) {
+    // FYI: `brElement` may be `nullptr` if the element is <br> element
+    //      of non-HTML element.
+    // XXX Do we need to call `EnsureVerticalSpace()` when the <br> element
+    //     is not an HTML element?
+    HTMLBRElement* brElement = HTMLBRElement::FromNodeOrNull(mElement);
+    if (!brElement || !brElement->IsPaddingForEmptyLastLine()) {
       EnsureVerticalSpace(mEmptyLines + 1);
     }
   } else if (aTag == nsGkAtoms::hr &&

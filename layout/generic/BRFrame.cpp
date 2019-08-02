@@ -7,6 +7,7 @@
 /* rendering object for HTML <br> elements */
 
 #include "mozilla/PresShell.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "gfxContext.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
@@ -247,11 +248,10 @@ nsIFrame::FrameSearchResult BRFrame::PeekOffsetWord(
 
 #ifdef ACCESSIBILITY
 a11y::AccType BRFrame::AccessibleType() {
-  nsIContent* parent = mContent->GetParent();
-  if (parent && parent->IsRootOfNativeAnonymousSubtree() &&
-      parent->GetChildCount() == 1) {
-    // This <br> is the only node in a text control, therefore it is the hacky
-    // "bogus node" used when there is no text in the control
+  dom::HTMLBRElement* brElement = dom::HTMLBRElement::FromNode(mContent);
+  if (brElement->IsPaddingForEmptyEditor()) {
+    // This <br> is a "padding <br> element" used when there is no text in the
+    // editor.
     return a11y::eNoType;
   }
 

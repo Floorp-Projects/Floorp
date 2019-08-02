@@ -54,7 +54,6 @@
 #include "nsSandboxFlags.h"
 #include "Link.h"
 #include "HTMLLinkElement.h"
-
 using namespace mozilla;
 using namespace mozilla::css;
 using namespace mozilla::dom;
@@ -136,53 +135,6 @@ nsContentSink::~nsContentSink() {
   }
 }
 
-bool nsContentSink::sNotifyOnTimer;
-int32_t nsContentSink::sBackoffCount;
-int32_t nsContentSink::sNotificationInterval;
-int32_t nsContentSink::sInteractiveDeflectCount;
-int32_t nsContentSink::sPerfDeflectCount;
-int32_t nsContentSink::sPendingEventMode;
-int32_t nsContentSink::sEventProbeRate;
-int32_t nsContentSink::sInteractiveParseTime;
-int32_t nsContentSink::sPerfParseTime;
-int32_t nsContentSink::sInteractiveTime;
-int32_t nsContentSink::sInitialPerfTime;
-int32_t nsContentSink::sEnablePerfMode;
-
-void nsContentSink::InitializeStatics() {
-  Preferences::AddBoolVarCache(&sNotifyOnTimer, "content.notify.ontimer", true);
-  // -1 means never.
-  Preferences::AddIntVarCache(&sBackoffCount, "content.notify.backoffcount",
-                              -1);
-  // The gNotificationInterval has a dramatic effect on how long it
-  // takes to initially display content for slow connections.
-  // The current value provides good
-  // incremental display of content without causing an increase
-  // in page load time. If this value is set below 1/10 of second
-  // it starts to impact page load performance.
-  // see bugzilla bug 72138 for more info.
-  Preferences::AddIntVarCache(&sNotificationInterval, "content.notify.interval",
-                              120000);
-  Preferences::AddIntVarCache(&sInteractiveDeflectCount,
-                              "content.sink.interactive_deflect_count", 0);
-  Preferences::AddIntVarCache(&sPerfDeflectCount,
-                              "content.sink.perf_deflect_count", 200);
-  Preferences::AddIntVarCache(&sPendingEventMode,
-                              "content.sink.pending_event_mode", 1);
-  Preferences::AddIntVarCache(&sEventProbeRate, "content.sink.event_probe_rate",
-                              1);
-  Preferences::AddIntVarCache(&sInteractiveParseTime,
-                              "content.sink.interactive_parse_time", 3000);
-  Preferences::AddIntVarCache(&sPerfParseTime, "content.sink.perf_parse_time",
-                              360000);
-  Preferences::AddIntVarCache(&sInteractiveTime,
-                              "content.sink.interactive_time", 750000);
-  Preferences::AddIntVarCache(&sInitialPerfTime,
-                              "content.sink.initial_perf_time", 2000000);
-  Preferences::AddIntVarCache(&sEnablePerfMode, "content.sink.enable_perf_mode",
-                              0);
-}
-
 nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
                              nsISupports* aContainer, nsIChannel* aChannel) {
   MOZ_ASSERT(aDoc, "null ptr");
@@ -213,10 +165,10 @@ nsresult nsContentSink::Init(Document* aDoc, nsIURI* aURI,
 
   mNodeInfoManager = aDoc->NodeInfoManager();
 
-  mBackoffCount = sBackoffCount;
+  mBackoffCount = StaticPrefs::content_notify_backoffcount();
 
-  if (sEnablePerfMode != 0) {
-    mDynamicLowerValue = sEnablePerfMode == 1;
+  if (StaticPrefs::content_sink_enable_perf_mode() != 0) {
+    mDynamicLowerValue = StaticPrefs::content_sink_enable_perf_mode() == 1;
     FavorPerformanceHint(!mDynamicLowerValue, 0);
   }
 
@@ -1271,8 +1223,8 @@ nsContentSink::Notify(nsITimer* timer) {
 }
 
 bool nsContentSink::IsTimeToNotify() {
-  if (!sNotifyOnTimer || !mLayoutStarted || !mBackoffCount ||
-      mInMonolithicContainer) {
+  if (!StaticPrefs::content_notify_ontimer() || !mLayoutStarted ||
+      !mBackoffCount || mInMonolithicContainer) {
     return false;
   }
 
@@ -1302,7 +1254,7 @@ nsresult nsContentSink::WillInterruptImpl() {
 #ifndef SINK_NO_INCREMENTAL
   if (WaitForPendingSheets()) {
     mDeferredFlushTags = true;
-  } else if (sNotifyOnTimer && mLayoutStarted) {
+  } else if (StaticPrefs::content_notify_ontimer() && mLayoutStarted) {
     if (mBackoffCount && !mInMonolithicContainer) {
       int64_t now = PR_Now();
       int64_t interval = GetNotificationInterval();
@@ -1379,8 +1331,9 @@ nsresult nsContentSink::DidProcessATokenImpl() {
   ++mDeflectedCount;
 
   // Check if there's a pending event
-  if (sPendingEventMode != 0 && !mHasPendingEvent &&
-      (mDeflectedCount % sEventProbeRate) == 0) {
+  if (StaticPrefs::content_sink_pending_event_mode() != 0 &&
+      !mHasPendingEvent &&
+      (mDeflectedCount % StaticPrefs::content_sink_event_probe_rate()) == 0) {
     nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     nsCOMPtr<nsIWidget> widget;
@@ -1388,14 +1341,16 @@ nsresult nsContentSink::DidProcessATokenImpl() {
     mHasPendingEvent = widget && widget->HasPendingInputEvent();
   }
 
-  if (mHasPendingEvent && sPendingEventMode == 2) {
+  if (mHasPendingEvent && StaticPrefs::content_sink_pending_event_mode() == 2) {
     return NS_ERROR_HTMLPARSER_INTERRUPTED;
   }
 
   // Have we processed enough tokens to check time?
   if (!mHasPendingEvent &&
-      mDeflectedCount < uint32_t(mDynamicLowerValue ? sInteractiveDeflectCount
-                                                    : sPerfDeflectCount)) {
+      mDeflectedCount <
+          uint32_t(mDynamicLowerValue
+                       ? StaticPrefs::content_sink_interactive_deflect_count()
+                       : StaticPrefs::content_sink_perf_deflect_count())) {
     return NS_OK;
   }
 
@@ -1522,7 +1477,7 @@ nsresult nsContentSink::WillParseImpl(void) {
 
   uint32_t currentTime = PR_IntervalToMicroseconds(PR_IntervalNow());
 
-  if (sEnablePerfMode == 0) {
+  if (StaticPrefs::content_sink_enable_perf_mode() == 0) {
     nsViewManager* vm = presShell->GetViewManager();
     NS_ENSURE_TRUE(vm, NS_ERROR_FAILURE);
     uint32_t lastEventTime;
@@ -1530,8 +1485,10 @@ nsresult nsContentSink::WillParseImpl(void) {
 
     bool newDynLower =
         mDocument->IsInBackgroundWindow() ||
-        ((currentTime - mBeginLoadTime) > uint32_t(sInitialPerfTime) &&
-         (currentTime - lastEventTime) < uint32_t(sInteractiveTime));
+        ((currentTime - mBeginLoadTime) >
+             StaticPrefs::content_sink_initial_perf_time() &&
+         (currentTime - lastEventTime) <
+             StaticPrefs::content_sink_interactive_time());
 
     if (mDynamicLowerValue != newDynLower) {
       FavorPerformanceHint(!newDynLower, 0);
@@ -1543,8 +1500,9 @@ nsresult nsContentSink::WillParseImpl(void) {
   mHasPendingEvent = false;
 
   mCurrentParseEndTime =
-      currentTime +
-      (mDynamicLowerValue ? sInteractiveParseTime : sPerfParseTime);
+      currentTime + (mDynamicLowerValue
+                         ? StaticPrefs::content_sink_interactive_parse_time()
+                         : StaticPrefs::content_sink_perf_parse_time());
 
   return NS_OK;
 }

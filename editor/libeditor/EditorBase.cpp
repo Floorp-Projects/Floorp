@@ -1450,6 +1450,83 @@ nsresult EditorBase::InsertNodeWithTransaction(
   return rv;
 }
 
+EditorDOMPoint EditorBase::PrepareToInsertBRElement(
+    const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
+    return EditorDOMPoint();
+  }
+
+  if (!aPointToInsert.IsInTextNode()) {
+    return aPointToInsert;
+  }
+
+  if (aPointToInsert.IsStartOfContainer()) {
+    // Insert before the text node.
+    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+    NS_WARNING_ASSERTION(pointInContainer.IsSet(),
+                         "Failed to climb up the DOM tree from text node");
+    return pointInContainer;
+  }
+
+  if (aPointToInsert.IsEndOfContainer()) {
+    // Insert after the text node.
+    EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+    if (NS_WARN_IF(!pointInContainer.IsSet())) {
+      return pointInContainer;
+    }
+    DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
+    NS_WARNING_ASSERTION(advanced,
+                         "Failed to advance offset to after the text node");
+    return pointInContainer;
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
+
+  // Unfortunately, we need to split the text node at the offset.
+  ErrorResult error;
+  nsCOMPtr<nsIContent> newLeftNode =
+      SplitNodeWithTransaction(aPointToInsert, error);
+  if (NS_WARN_IF(error.Failed())) {
+    error.SuppressException();
+    return EditorDOMPoint();
+  }
+  Unused << newLeftNode;
+  // Insert new <br> before the right node.
+  EditorDOMPoint pointInContainer(aPointToInsert.GetContainer());
+  NS_WARNING_ASSERTION(pointInContainer.IsSet(),
+                       "Failed to split the text node");
+  return pointInContainer;
+}
+
+CreateElementResult
+EditorBase::InsertPaddingBRElementForEmptyLastLineWithTransaction(
+    const EditorDOMPoint& aPointToInsert) {
+  MOZ_ASSERT(IsEditActionDataAvailable());
+
+  EditorDOMPoint pointToInsert = PrepareToInsertBRElement(aPointToInsert);
+  if (NS_WARN_IF(!pointToInsert.IsSet())) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+
+  RefPtr<Element> newBRElement = CreateHTMLContent(nsGkAtoms::br);
+  if (NS_WARN_IF(!newBRElement)) {
+    return CreateElementResult(NS_ERROR_FAILURE);
+  }
+  newBRElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+
+  nsresult rv = InsertNodeWithTransaction(*newBRElement, pointToInsert);
+  if (NS_WARN_IF(Destroyed())) {
+    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
+  }
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return CreateElementResult(rv);
+  }
+
+  return CreateElementResult(newBRElement.forget());
+}
+
 NS_IMETHODIMP
 EditorBase::SplitNode(nsINode* aNode, int32_t aOffset, nsINode** aNewLeftNode) {
   if (NS_WARN_IF(!aNode)) {
@@ -2520,9 +2597,10 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
       return EditorRawDOMPoint(aPoint.GetContainer()->GetFirstChild(), 0);
     }
 
-    // In some other cases, aNode is the anonymous DIV, and offset points to the
-    // terminating mozBR.  In that case, we'll adjust aInOutNode and
-    // aInOutOffset to the preceding text node, if any.
+    // In some other cases, aNode is the anonymous DIV, and offset points to
+    // the terminating padding <br> element for empty last line.  In that case,
+    // we'll adjust aInOutNode and aInOutOffset to the preceding text node,
+    // if any.
     if (!aPoint.IsStartOfContainer()) {
       if (AsHTMLEditor()) {
         // Fall back to a slow path that uses GetChildAt_Deprecated() for
@@ -2551,10 +2629,10 @@ EditorRawDOMPoint EditorBase::FindBetterInsertionPoint(
     }
   }
 
-  // Sometimes, aNode is the mozBR element itself.  In that case, we'll adjust
-  // the insertion point to the previous text node, if one exists, or to the
-  // parent anonymous DIV.
-  if (TextEditUtils::IsMozBR(aPoint.GetContainer()) &&
+  // Sometimes, aNode is the padding <br> element itself.  In that case, we'll
+  // adjust the insertion point to the previous text node, if one exists, or
+  // to the parent anonymous DIV.
+  if (EditorBase::IsPaddingBRElementForEmptyLastLine(*aPoint.GetContainer()) &&
       aPoint.IsStartOfContainer()) {
     nsIContent* previousSibling = aPoint.GetContainer()->GetPreviousSibling();
     if (previousSibling && previousSibling->IsText()) {
@@ -2603,9 +2681,9 @@ nsresult EditorBase::InsertTextWithTransaction(
     return NS_ERROR_INVALID_ARG;
   }
 
-  // In some cases, the node may be the anonymous div elemnt or a mozBR
-  // element.  Let's try to look for better insertion point in the nearest
-  // text node if there is.
+  // In some cases, the node may be the anonymous div element or a padding
+  // <br> element for empty last line.  Let's try to look for better insertion
+  // point in the nearest text node if there is.
   EditorDOMPoint pointToInsert = FindBetterInsertionPoint(aPointToInsert);
 
   // If a neighboring text node already exists, use that

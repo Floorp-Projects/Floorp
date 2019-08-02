@@ -8,13 +8,16 @@
 #define PHC_h
 
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include <stdint.h>
 #include <stdlib.h>
 
 namespace mozilla {
 namespace phc {
 
-// Note: a more compact stack trace representation could be achieved with
+// Note: a stack trace may have no frames due to a collection problem.
+//
+// Also note: a more compact stack trace representation could be achieved with
 // some effort.
 struct StackTrace {
  public:
@@ -70,8 +73,8 @@ class AddrInfo {
 
   // The allocation and free stack traces of the containing PHC allocation, if
   // there is one.
-  StackTrace mAllocStack;
-  StackTrace mFreeStack;
+  mozilla::Maybe<StackTrace> mAllocStack;
+  mozilla::Maybe<StackTrace> mFreeStack;
 
   // Default to no PHC info.
   AddrInfo()

@@ -673,7 +673,11 @@ class BinaryAnnotationWriter : public AnnotationWriter {
 // (not hexadecimal!) addresses, e.g. "12345678,12345679,12345680".
 static void WritePHCStackTrace(AnnotationWriter& aWriter,
                                const Annotation aName,
-                               const phc::StackTrace* aStack) {
+                               const Maybe<phc::StackTrace>& aStack) {
+  if (aStack.isNothing()) {
+    return;
+  }
+
   // 21 is the max length of a 64-bit decimal address entry, including the
   // trailing comma or '\0'. And then we add another 32 just to be safe.
   char addrsString[mozilla::phc::StackTrace::kMaxFrames * 21 + 32];
@@ -727,9 +731,8 @@ static void WritePHCAddrInfo(AnnotationWriter& writer,
     writer.Write(Annotation::PHCUsableSize, usableSizeString);
 
     WritePHCStackTrace(writer, Annotation::PHCAllocStack,
-                       &aAddrInfo->mAllocStack);
-    WritePHCStackTrace(writer, Annotation::PHCFreeStack,
-                       &aAddrInfo->mFreeStack);
+                       aAddrInfo->mAllocStack);
+    WritePHCStackTrace(writer, Annotation::PHCFreeStack, aAddrInfo->mFreeStack);
   }
 }
 #endif
@@ -1352,7 +1355,7 @@ static void FreeBreakpadVM() {
  * Also calls FreeBreakpadVM if appropriate.
  */
 static bool FPEFilter(void* context, EXCEPTION_POINTERS* exinfo,
-                      const phc::AddrInfo* addr_info,
+                      const phc::AddrInfo* addrInfo,
                       MDRawAssertionInfo* assertion) {
   if (!exinfo) {
     mozilla::IOInterposer::Disable();

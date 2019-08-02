@@ -34,6 +34,7 @@
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
 #include "js/GCVector.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSFunction.h"
 #include "vm/Opcodes.h"
 #include "vm/SelfHosting.h"
@@ -224,7 +225,7 @@ bool JitScript::initICEntriesAndBytecodeTypeMap(JSContext* cx,
 
     // Note: if the script is very large there will be more JOF_TYPESET ops
     // than bytecode type sets. See JSScript::MaxBytecodeTypeSets.
-    if ((CodeSpec[op].format & JOF_TYPESET) &&
+    if (BytecodeOpHasTypeSet(op) &&
         typeMapIndex < JSScript::MaxBytecodeTypeSets) {
       typeMap[typeMapIndex] = script->pcToOffset(pc);
       typeMapIndex++;

@@ -26,6 +26,7 @@ class EditSubActionInfo;
 class HTMLEditor;
 class HTMLEditRules;
 namespace dom {
+class HTMLBRElement;
 class Selection;
 }  // namespace dom
 
@@ -100,7 +101,7 @@ class TextEditRules {
    * nodes.  Otherwise, i.e., there is no meaningful content,
    * return true.
    */
-  virtual bool DocumentIsEmpty();
+  virtual bool DocumentIsEmpty() const;
 
   bool DontEchoPassword() const;
 
@@ -130,7 +131,9 @@ class TextEditRules {
    */
   void HandleNewLines(nsString& aString);
 
-  bool HasBogusNode() { return !!mBogusNode; }
+  bool HasPaddingBRElementForEmptyEditor() const {
+    return !!mPaddingBRElementForEmptyEditor;
+  }
 
  protected:
   void InitFields();
@@ -263,9 +266,11 @@ class TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
-   * Creates a bogus <br> node if the root element has no editable content.
+   * Creates a padding <br> element for empty editor if the root element has no
+   * editable content.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  CreatePaddingBRElementForEmptyEditorIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
@@ -274,46 +279,6 @@ class TextEditRules {
   nsresult TruncateInsertionIfNeeded(const nsAString* aInString,
                                      nsAString* aOutString, int32_t aMaxLength,
                                      bool* aTruncated);
-
-  /**
-   * Create a normal <br> element and insert it to aPointToInsert.
-   *
-   * @param aPointToInsert  The point where the new <br> element will be
-   *                        inserted.
-   * @return                Returns created <br> element or an error code
-   *                        if couldn't create new <br> element.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBR(const EditorDOMPoint& aPointToInsert) {
-    CreateElementResult ret = CreateBRInternal(aPointToInsert, false);
-#ifdef DEBUG
-    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
-    if (!CanHandleEditAction()) {
-      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
-    }
-#endif  // #ifdef DEBUG
-    return ret;
-  }
-
-  /**
-   * Create a moz-<br> element and insert it to aPointToInsert.
-   *
-   * @param aPointToInsert  The point where the new moz-<br> element will be
-   *                        inserted.
-   * @return                Returns created <br> element or an error code
-   *                        if couldn't create new <br> element.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateMozBR(const EditorDOMPoint& aPointToInsert) {
-    CreateElementResult ret = CreateBRInternal(aPointToInsert, true);
-#ifdef DEBUG
-    // If editor is destroyed, it must return NS_ERROR_EDITOR_DESTROYED.
-    if (!CanHandleEditAction()) {
-      MOZ_ASSERT(ret.Rv() == NS_ERROR_EDITOR_DESTROYED);
-    }
-#endif  // #ifdef DEBUG
-    return ret;
-  }
 
   void UndefineCaretBidiLevel();
 
@@ -326,7 +291,8 @@ class TextEditRules {
    * text node if:
    * - the editor is text editor
    * - and Selection is collapsed at the end of the text node
-   * - and the text node is followed by moz-<br>.
+   * - and the text node is followed by a padding <br> element for empty last
+   *   line.
    */
   MOZ_MUST_USE nsresult CollapseSelectionToTrailingBRIfNeeded();
 
@@ -340,20 +306,6 @@ class TextEditRules {
 
  private:
   TextEditor* MOZ_NON_OWNING_REF mTextEditor;
-
-  /**
-   * Create a normal <br> element or a moz-<br> element and insert it to
-   * aPointToInsert.
-   *
-   * @param aParentToInsert     The point where the new <br> element will be
-   *                            inserted.
-   * @param aCreateMozBR        true if the caller wants to create a moz-<br>
-   *                            element.  Otherwise, false.
-   * @return                    Returns created <br> element and error code.
-   *                            If it succeeded, never returns nullptr.
-   */
-  MOZ_CAN_RUN_SCRIPT CreateElementResult
-  CreateBRInternal(const EditorDOMPoint& aPointToInsert, bool aCreateMozBR);
 
  protected:
   /**
@@ -436,8 +388,9 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // Magic node acts as placeholder in empty doc.
-  nsCOMPtr<nsIContent> mBogusNode;
+  // mPaddingBRElementForEmptyEditor should be used for placing caret
+  // at proper position when editor is empty.
+  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
   // Cached selected node.
   nsCOMPtr<nsINode> mCachedSelectionNode;
   // Cached selected offset.

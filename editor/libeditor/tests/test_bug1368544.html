@@ -57,7 +57,8 @@ SimpleTest.waitForFocus(() => {
         if (editor.rootElement.childNodes.length > 0) {
           is(editor.rootElement.childNodes.length, 1, "There should be only one <br> node");
           is(editor.rootElement.firstChild.tagName.toLowerCase(), "br", "The node should be a <br> element node");
-          is(editor.rootElement.firstChild.getAttribute("_moz_editor_bogus_node"), null, "The <br> should not be a bogus node");
+          ok(!SpecialPowers.wrap(editor.rootElement.firstChild).isPaddingForEmptyEditor,
+             "The <br> should not be a padding <br> element");
         }
       } else {
         ok(!editor.rootElement.hasChildNodes(),

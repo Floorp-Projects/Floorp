@@ -1547,10 +1547,9 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-#ifdef EARLY_BETA_OR_EARLIER
-// Enable blocking access to storage from tracking resources only in nightly
-// and early beta. By default the value is 0: BEHAVIOR_ACCEPT
+// Enable blocking access to storage from tracking resources by default.
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
+#ifdef EARLY_BETA_OR_EARLIER
 // Enable fingerprinting blocking by default only in nightly and early beta.
 pref("privacy.trackingprotection.fingerprinting.enabled", true);
 #endif
@@ -1740,12 +1739,8 @@ pref("signon.generation.enabled", true);
 pref("signon.schemeUpgrades", true);
 pref("signon.privateBrowsingCapture.enabled", true);
 pref("signon.showAutoCompleteFooter", true);
-#ifdef NIGHTLY_BUILD
 pref("signon.management.page.enabled", true);
 pref("signon.management.overrideURI", "about:logins?filter=%DOMAIN%");
-#else
-pref("signon.management.page.enabled", false);
-#endif
 pref("signon.management.page.breach-alerts.enabled", false);
 #ifdef NIGHTLY_BUILD
 // Bug 1563330 tracks shipping this by default.

@@ -633,6 +633,10 @@ static inline int32_t GetBytecodeInteger(jsbytecode* pc) {
 
 inline bool BytecodeOpHasIC(JSOp op) { return CodeSpec[op].format & JOF_IC; }
 
+inline bool BytecodeOpHasTypeSet(JSOp op) {
+  return CodeSpec[op].format & JOF_TYPESET;
+}
+
 /*
  * Counts accumulated for a single opcode in a script. The counts tracked vary
  * between opcodes, and this structure ensures that counts are accessed in a

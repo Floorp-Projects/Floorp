@@ -16,10 +16,10 @@ bool PHCInfoEq(phc::AddrInfo& aInfo, phc::AddrInfo::Kind aKind, void* aBaseAddr,
   return aInfo.mKind == aKind && aInfo.mBaseAddr == aBaseAddr &&
          aInfo.mUsableSize == aUsableSize &&
          // Proper stack traces will have at least 3 elements.
-         (aHasAllocStack ? (aInfo.mAllocStack.mLength > 2)
-                         : (aInfo.mAllocStack.mLength == 0)) &&
-         (aHasFreeStack ? (aInfo.mFreeStack.mLength > 2)
-                        : (aInfo.mFreeStack.mLength == 0));
+         (aHasAllocStack ? (aInfo.mAllocStack->mLength > 2)
+                         : (aInfo.mAllocStack.isNothing())) &&
+         (aHasFreeStack ? (aInfo.mFreeStack->mLength > 2)
+                        : (aInfo.mFreeStack.isNothing()));
 }
 
 bool JeInfoEq(jemalloc_ptr_info_t& aInfo, PtrInfoTag aTag, void* aAddr,
@@ -70,7 +70,7 @@ TEST(PHC, TestPHCBasics)
   ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p, &phcInfo));
   ASSERT_TRUE(
       PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_EQ(malloc_usable_size(p), 32ul);
+  ASSERT_EQ(moz_malloc_usable_size(p), 32ul);
   jemalloc_ptr_info(p, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
 
@@ -78,7 +78,7 @@ TEST(PHC, TestPHCBasics)
   ASSERT_TRUE(ReplaceMalloc::IsPHCAllocation(p + 10, &phcInfo));
   ASSERT_TRUE(
       PHCInfoEq(phcInfo, phc::AddrInfo::Kind::InUsePage, p, 32ul, true, false));
-  ASSERT_EQ(malloc_usable_size(p), 32ul);
+  ASSERT_EQ(moz_malloc_usable_size(p), 32ul);
   jemalloc_ptr_info(p + 10, &jeInfo);
   ASSERT_TRUE(JeInfoEq(jeInfo, TagLiveAlloc, p, 32, 0));
 
