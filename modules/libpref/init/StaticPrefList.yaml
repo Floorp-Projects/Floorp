@@ -853,6 +853,11 @@
   value: 2048
   mirror: always
 
+- name: browser.tabs.remote.force-paint
+  type: bool
+  value: true
+  mirror: always
+
 # When this pref is enabled document loads with a mismatched
 # Cross-Origin header will fail to load
 - name: browser.tabs.remote.useCrossOriginPolicy
