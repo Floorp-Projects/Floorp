@@ -437,7 +437,8 @@ this.DateTimeInputBaseImplWidget = class {
       child.tabIndex = this.mInputElement.tabIndex;
     }
 
-    this.mResetButton.disabled = this.mInputElement.disabled;
+    this.mResetButton.disabled =
+      this.mInputElement.disabled || this.mInputElement.readOnly;
     this.updateResetButtonVisibility();
   }
 
@@ -1098,6 +1099,7 @@ this.TimeInputImplWidget = class extends DateTimeInputBaseImplWidget {
     this.mMinSecPageUpDownInterval = 10;
 
     this.buildEditFields();
+    this.updateEditAttributes();
 
     if (this.mInputElement.value) {
       this.setFieldsFromInputValue();
