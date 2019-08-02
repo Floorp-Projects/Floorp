@@ -1328,6 +1328,15 @@
   value: false
   mirror: always
 
+# This pref controls whether or not the `protected` dataTransfer state is
+# enabled. If the `protected` dataTransfer stae is disabled, then the
+# DataTransfer will be read-only whenever it should be protected, and will not
+# be disconnected after a drag event is completed.
+- name: dom.events.dataTransfer.protected.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Whether to expose test interfaces of various sorts
 - name: dom.expose_test_interfaces
   type: bool
