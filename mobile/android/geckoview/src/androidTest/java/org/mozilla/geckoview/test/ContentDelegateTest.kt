@@ -4,10 +4,14 @@
 
 package org.mozilla.geckoview.test
 
+import android.app.ActivityManager
+import android.content.Context
 import android.app.assist.AssistStructure
 import android.graphics.SurfaceTexture
 import android.net.Uri
 import android.os.Build
+import android.os.Process
+import org.mozilla.gecko.GeckoAppShell
 import org.mozilla.geckoview.AllowOrDeny
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
@@ -21,6 +25,7 @@ import org.mozilla.geckoview.test.util.Callbacks
 import org.mozilla.geckoview.test.util.UiThreadUtils
 
 import android.os.Looper
+import android.support.annotation.AnyThread
 import android.support.test.InstrumentationRegistry
 import android.support.test.filters.MediumTest
 import android.support.test.filters.SdkSuppress
@@ -107,7 +112,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Session should be closed after a crash",
                            session.isOpen, equalTo(false))
             }
-        });
+        })
 
         // Recover immediately
         mainSession.open()
@@ -168,9 +173,75 @@ class ContentDelegateTest : BaseSessionTest() {
         // individually.
         val remainingSessions = mutableListOf(newSession, mainSession)
         while (remainingSessions.isNotEmpty()) {
+            val onCrashCalled = GeckoResult<Void>()
+            sessionRule.delegateDuringNextWait(object : Callbacks.ContentDelegate {
+                // Slower devices may not catch crashes in a timely manner, so we check to see
+                // if either `onKill` or `onCrash` is called
+                override fun onCrash(session: GeckoSession) {
+                    remainingSessions.remove(session)
+                    onCrashCalled.complete(null)
+                }
+                override fun onKill(session: GeckoSession) {
+                    remainingSessions.remove(session)
+                    onCrashCalled.complete(null)
+                }
+            })
+            sessionRule.waitForResult(onCrashCalled)
+        }
+    }
+
+    @AnyThread
+    fun killContentProcess() {
+        val context = GeckoAppShell.getApplicationContext()
+        val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        for (info in manager.runningAppProcesses) {
+            if (info.processName.endsWith(":tab")) {
+                Process.killProcess(info.pid)
+            }
+        }
+    }
+
+    @IgnoreCrash
+    @ReuseSession(false)
+    @Test fun killContent() {
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
+                equalTo(false))
+
+        killContentProcess()
+        mainSession.waitUntilCalled(object : Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onKill(session: GeckoSession) {
+                assertThat("Session should be closed after being killed",
+                        session.isOpen, equalTo(false))
+            }
+        })
+
+        mainSession.open()
+        mainSession.loadTestPath(HELLO_HTML_PATH)
+        mainSession.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onPageStop(session: GeckoSession, success: Boolean) {
+                assertThat("Page should load successfully", success, equalTo(true))
+            }
+        })
+    }
+
+    @IgnoreCrash
+    @ReuseSession(false)
+    @Test fun killContentMultipleSessions() {
+        assumeThat(sessionRule.env.isMultiprocess, equalTo(true))
+        assumeThat(sessionRule.env.isDebugBuild && sessionRule.env.isX86,
+                equalTo(false))
+
+        val newSession = sessionRule.createOpenSession()
+        killContentProcess()
+
+        val remainingSessions = mutableListOf(newSession, mainSession)
+        while (remainingSessions.isNotEmpty()) {
             sessionRule.waitUntilCalled(object : Callbacks.ContentDelegate {
                 @AssertCalled(count = 1)
-                override fun onCrash(session: GeckoSession) {
+                override fun onKill(session: GeckoSession) {
                     remainingSessions.remove(session)
                 }
             })
