@@ -1144,11 +1144,6 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (browserParent->IsIsolatedMozBrowserElement() !=
-      otherBrowserParent->IsIsolatedMozBrowserElement()) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
   // When we swap docShells, maybe we have to deal with a new page created just
   // for this operation. In this case, the browser code should already have set
   // the correct userContextId attribute value in the owning element, but our
@@ -1547,11 +1542,6 @@ nsresult nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
   PresShell* ourPresShell = ourDoc->GetPresShell();
   PresShell* otherPresShell = otherDoc->GetPresShell();
   if (!ourPresShell || !otherPresShell) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  if (ourDocshell->GetIsIsolatedMozBrowserElement() !=
-      otherDocshell->GetIsIsolatedMozBrowserElement()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1959,24 +1949,6 @@ bool nsFrameLoader::OwnerIsMozBrowserFrame() {
   return browserFrame ? browserFrame->GetReallyIsBrowser() : false;
 }
 
-bool nsFrameLoader::OwnerIsIsolatedMozBrowserFrame() {
-  nsCOMPtr<nsIMozBrowserFrame> browserFrame = do_QueryInterface(mOwnerContent);
-  if (!browserFrame) {
-    return false;
-  }
-
-  if (!OwnerIsMozBrowserFrame()) {
-    return false;
-  }
-
-  bool isolated = browserFrame->GetIsolated();
-  if (isolated) {
-    return true;
-  }
-
-  return false;
-}
-
 bool nsFrameLoader::ShouldUseRemoteProcess() {
   if (PR_GetEnv("MOZ_DISABLE_OOP_TABS") ||
       Preferences::GetBool("dom.ipc.tabs.disabled", false)) {
@@ -2171,9 +2143,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
     MOZ_ASSERT(
         attrs.mUserContextId == oa.mUserContextId,
         "docshell and document should have the same userContextId attribute.");
-    MOZ_ASSERT(attrs.mInIsolatedMozBrowser == oa.mInIsolatedMozBrowser,
-               "docshell and document should have the same "
-               "inIsolatedMozBrowser attribute.");
     MOZ_ASSERT(attrs.mPrivateBrowsingId == oa.mPrivateBrowsingId,
                "docshell and document should have the same privateBrowsingId "
                "attribute.");
@@ -2182,7 +2151,6 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   }
 
   if (OwnerIsMozBrowserFrame()) {
-    attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
     docShell->SetFrameType(nsIDocShell::FRAME_TYPE_BROWSER);
   } else {
     nsCOMPtr<nsIDocShellTreeItem> parentCheck;
@@ -3367,7 +3335,6 @@ void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
 nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                          nsIURI* aURI) {
   OriginAttributes attrs;
-  attrs.mInIsolatedMozBrowser = OwnerIsIsolatedMozBrowserFrame();
   nsresult rv;
 
   // set the userContextId on the attrs before we pass them into
