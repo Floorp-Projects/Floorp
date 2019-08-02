@@ -367,11 +367,18 @@ already_AddRefed<Promise> MediaStreamTrack::ApplyConstraints(
   return promise.forget();
 }
 
-ProcessedMediaStream* MediaStreamTrack::GetStream() const { return mStream; }
+ProcessedMediaStream* MediaStreamTrack::GetStream() const {
+  MOZ_DIAGNOSTIC_ASSERT(!Ended());
+  return mStream;
+}
 
-MediaStreamGraph* MediaStreamTrack::Graph() const { return mStream->Graph(); }
+MediaStreamGraph* MediaStreamTrack::Graph() const {
+  MOZ_DIAGNOSTIC_ASSERT(!Ended());
+  return mStream->Graph();
+}
 
 MediaStreamGraphImpl* MediaStreamTrack::GraphImpl() const {
+  MOZ_DIAGNOSTIC_ASSERT(!Ended());
   return mStream->GraphImpl();
 }
 
@@ -596,6 +603,7 @@ already_AddRefed<MediaInputPort> MediaStreamTrack::ForwardTrackContentsTo(
     ProcessedMediaStream* aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
+  MOZ_DIAGNOSTIC_ASSERT(!Ended());
   RefPtr<MediaInputPort> port =
       aStream->AllocateInputPort(mStream, mTrackID, mTrackID);
   return port.forget();
