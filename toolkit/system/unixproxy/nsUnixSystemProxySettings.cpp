@@ -175,7 +175,10 @@ static nsresult GetProxyFromEnvironment(const nsACString& aScheme,
 
   // Is there a way to specify "socks://" or something in these environment
   // variables? I can't find any documentation.
-  if (!proxyURI->SchemeIs("http")) return NS_ERROR_UNKNOWN_PROTOCOL;
+  bool isHTTP;
+  rv = proxyURI->SchemeIs("http", &isHTTP);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!isHTTP) return NS_ERROR_UNKNOWN_PROTOCOL;
 
   nsAutoCString proxyHost;
   rv = proxyURI->GetHost(proxyHost);

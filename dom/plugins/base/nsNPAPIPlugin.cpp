@@ -965,7 +965,9 @@ bool _evaluate(NPP npp, NPObject* npobj, NPString* script, NPVariant* result) {
     // chrome code anyways.
 
     uri = doc->GetDocumentURI();
-    if (uri && uri->SchemeIs("chrome")) {
+    bool isChrome = false;
+
+    if (uri && NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome) {
       uri->GetSpec(specStr);
       spec = specStr.get();
     } else {

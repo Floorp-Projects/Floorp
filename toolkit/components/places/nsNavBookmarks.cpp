@@ -1919,7 +1919,10 @@ nsNavBookmarks::OnPageChanged(nsIURI* aURI, uint32_t aChangedAttribute,
     changeData.bookmark.type = TYPE_BOOKMARK;
 
     // Favicons may be set to either pure URIs or to folder URIs
-    if (aURI->SchemeIs("place")) {
+    bool isPlaceURI;
+    rv = aURI->SchemeIs("place", &isPlaceURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (isPlaceURI) {
       nsNavHistory* history = nsNavHistory::GetHistoryService();
       NS_ENSURE_TRUE(history, NS_ERROR_OUT_OF_MEMORY);
 

@@ -1647,8 +1647,14 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
       aLoadingPrincipal->GetURI(getter_AddRefs(originURI));
     }
 
-    if (originURI && originURI->SchemeIs("https")) {
-      return NS_ERROR_DOM_SECURITY_ERR;
+    if (originURI) {
+      bool originIsHttps = false;
+      rv = originURI->SchemeIs("https", &originIsHttps);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (originIsHttps) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
     }
   }
 

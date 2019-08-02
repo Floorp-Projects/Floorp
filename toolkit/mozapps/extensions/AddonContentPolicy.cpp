@@ -112,8 +112,10 @@ AddonContentPolicy::ShouldLoad(nsIURI* aContentLocation, nsILoadInfo* aLoadInfo,
   // Only apply this policy to requests from documents loaded from
   // moz-extension URLs, or to resources being loaded from moz-extension URLs.
   bool equals;
-  if (!(aContentLocation->SchemeIs("moz-extension") ||
-        requestOrigin->SchemeIs("moz-extension"))) {
+  if (!((NS_SUCCEEDED(aContentLocation->SchemeIs("moz-extension", &equals)) &&
+         equals) ||
+        (NS_SUCCEEDED(requestOrigin->SchemeIs("moz-extension", &equals)) &&
+         equals))) {
     return NS_OK;
   }
 

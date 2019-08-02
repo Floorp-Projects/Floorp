@@ -317,7 +317,8 @@ bool XMLDocument::Load(const nsAString& aUrl, CallerType aCallerType,
     // We're called from chrome, check to make sure the URI we're
     // about to load is also chrome.
 
-    if (!uri->SchemeIs("chrome")) {
+    bool isChrome = false;
+    if (NS_FAILED(uri->SchemeIs("chrome", &isChrome)) || !isChrome) {
       nsAutoString error;
       error.AssignLiteral(
           "Cross site loading using document.load is no "
