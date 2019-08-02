@@ -13,7 +13,6 @@ import androidx.preference.PreferenceFragmentCompat
 import kotlinx.coroutines.launch
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.nav
@@ -71,13 +70,11 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
     }
 
     // We're told our auth problems have been fixed; close this fragment.
-    override fun onAuthenticated(account: OAuthAccount) {
+    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         lifecycleScope.launch {
             NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
         }
     }
-
-    override fun onAuthenticationProblems() {}
 
     // We're told there are no more auth problems since there is no more account; close this fragment.
     override fun onLoggedOut() {
@@ -85,6 +82,4 @@ class AccountProblemFragment : PreferenceFragmentCompat(), AccountObserver {
             NavHostFragment.findNavController(this@AccountProblemFragment).popBackStack()
         }
     }
-
-    override fun onProfileUpdated(profile: Profile) {}
 }

@@ -29,7 +29,6 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.nav
@@ -125,18 +124,11 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             else -> super.onOptionsItemSelected(item)
         }
     }
-
-    override fun onAuthenticationProblems() {
-    }
-
-    override fun onAuthenticated(account: OAuthAccount) {
+    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         bookmarkInteractor.signedIn()
     }
 
     override fun onLoggedOut() {
         bookmarkInteractor.signedOut()
-    }
-
-    override fun onProfileUpdated(profile: Profile) {
     }
 }

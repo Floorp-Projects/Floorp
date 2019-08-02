@@ -25,7 +25,6 @@ import mozilla.components.service.fxa.DeviceConfig
 import mozilla.components.service.fxa.ServerConfig
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import mozilla.components.feature.push.AutoPushFeature
 import mozilla.components.feature.push.AutoPushSubscription
 import mozilla.components.feature.push.PushConfig
@@ -134,26 +133,16 @@ class BackgroundServices(
      * of the send-tab/push feature: https://github.com/mozilla-mobile/fenix/issues/4063
      */
     private val accountObserver = object : AccountObserver {
-        // We want to update our subscriptions only on a fresh sign in.
-        // See https://github.com/mozilla-mobile/android-components/issues/3964
-        @Suppress("MayBeConst") // linter is wrong
-        val prefFreshSignInKey = "fresh_sign_in"
-
-        override fun onAuthenticationProblems() {}
-        override fun onProfileUpdated(profile: Profile) {}
-
         override fun onLoggedOut() {
             pushService.stop()
 
-            preferences.edit().putBoolean(prefFreshSignInKey, true).apply()
             push.unsubscribeForType(PushType.Services)
         }
 
-        override fun onAuthenticated(account: OAuthAccount) {
+        override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
             pushService.start(context)
 
-            if (preferences.getBoolean(prefFreshSignInKey, true)) {
-                preferences.edit().putBoolean(prefFreshSignInKey, false).apply()
+            if (newAccount) {
                 push.subscribeForType(PushType.Services)
             }
         }

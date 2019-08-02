@@ -16,7 +16,6 @@ import androidx.navigation.fragment.NavHostFragment.findNavController
 import kotlinx.android.synthetic.main.fragment_turn_on_sync.view.*
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -77,13 +76,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
         }
     }
 
-    override fun onAuthenticated(account: OAuthAccount) {
+    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_SHORT)
             .setText(requireContext().getString(R.string.sync_syncing_in_progress))
             .show()
     }
-
-    override fun onAuthenticationProblems() {}
-    override fun onLoggedOut() {}
-    override fun onProfileUpdated(profile: Profile) {}
 }

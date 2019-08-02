@@ -326,7 +326,7 @@ class SettingsFragment : PreferenceFragmentCompat(), AccountObserver {
         Navigation.findNavController(view!!).navigate(directions)
     }
 
-    override fun onAuthenticated(account: OAuthAccount) {
+    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         lifecycleScope.launch {
             context?.let {
                 updateAccountUIState(it, it.components.backgroundServices.accountManager.accountProfile())

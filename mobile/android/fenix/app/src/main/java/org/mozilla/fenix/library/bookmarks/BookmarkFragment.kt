@@ -31,7 +31,6 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
-import mozilla.components.concept.sync.Profile
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
@@ -222,7 +221,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     override fun onBackPressed(): Boolean = bookmarkView.onBackPressed()
 
-    override fun onAuthenticated(account: OAuthAccount) {
+    override fun onAuthenticated(account: OAuthAccount, newAccount: Boolean) {
         bookmarkInteractor.signedIn()
         lifecycleScope.launch {
             refreshBookmarks()
@@ -231,12 +230,6 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
 
     override fun onLoggedOut() {
         bookmarkInteractor.signedOut()
-    }
-
-    override fun onAuthenticationProblems() {
-    }
-
-    override fun onProfileUpdated(profile: Profile) {
     }
 
     private suspend fun refreshBookmarks() {
