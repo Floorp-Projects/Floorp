@@ -406,15 +406,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   bool ShouldUseRemoteProcess();
 
   /**
-   * Is this a frame loader for an isolated <iframe mozbrowser>?
-   *
-   * By default, mozbrowser frames are isolated.  Isolation can be disabled by
-   * setting the frame's noisolation attribute.  Disabling isolation is
-   * only allowed if the containing document is chrome.
-   */
-  bool OwnerIsIsolatedMozBrowserFrame();
-
-  /**
    * Get our owning element's app manifest URL, or return the empty string if
    * our owning element doesn't have an app manifest URL.
    */

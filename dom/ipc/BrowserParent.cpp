@@ -3531,7 +3531,6 @@ class FakeChannel final : public nsIChannel,
   NS_IMETHOD GetUsePrivateBrowsing(bool*) NO_IMPL;
   NS_IMETHOD SetUsePrivateBrowsing(bool) NO_IMPL;
   NS_IMETHOD SetPrivateBrowsing(bool) NO_IMPL;
-  NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool*) NO_IMPL;
   NS_IMETHOD GetScriptableOriginAttributes(JSContext*,
                                            JS::MutableHandleValue) NO_IMPL;
   NS_IMETHOD_(void)
