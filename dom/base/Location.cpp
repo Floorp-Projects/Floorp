@@ -766,7 +766,7 @@ void Location::Reload(bool aForceget, ErrorResult& aRv) {
   }
 
   nsresult rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
-  if (rv != NS_BINDING_ABORTED) {
+  if (NS_FAILED(rv) && rv != NS_BINDING_ABORTED) {
     // NS_BINDING_ABORTED is returned when we attempt to reload a POST result
     // and the user says no at the "do you want to reload?" prompt.  Don't
     // propagate this one back to callers.
