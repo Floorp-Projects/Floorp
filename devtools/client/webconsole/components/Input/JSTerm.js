@@ -210,7 +210,7 @@ class JSTerm extends Component {
             return this.acceptProposedCompletion();
           }
 
-          this.execute();
+          this._execute();
           return null;
         };
 
@@ -243,7 +243,7 @@ class JSTerm extends Component {
               }
 
               if (!this.props.editorMode) {
-                this.execute();
+                this._execute();
                 return null;
               }
               return "CodeMirror.Pass";
@@ -581,14 +581,9 @@ class JSTerm extends Component {
 
   /**
    * Execute a string. Execution happens asynchronously in the content process.
-   *
-   * @param {String} executeString
-   *        The string you want to execute. If this is not provided, the current
-   *        user input is used - taken from |this._getValue()|.
    */
-  execute(executeString) {
-    // attempt to execute the content of the inputNode
-    executeString = executeString || this._getValue();
+  _execute() {
+    const executeString = this._getValue();
     if (!executeString) {
       return;
     }
@@ -597,7 +592,6 @@ class JSTerm extends Component {
       this._setValue("");
     }
     this.clearCompletion();
-
     this.props.evaluateExpression(executeString);
   }
 
@@ -839,7 +833,7 @@ class JSTerm extends Component {
         if (this.hasAutocompletionSuggestion()) {
           this.acceptProposedCompletion();
         } else if (this.props.editorMode) {
-          this.execute();
+          this._execute();
         }
         event.preventDefault();
       }
@@ -852,7 +846,7 @@ class JSTerm extends Component {
         if (this.hasAutocompletionSuggestion()) {
           this.acceptProposedCompletion();
         } else if (this.props.editorMode) {
-          this.execute();
+          this._execute();
         }
         event.preventDefault();
       }
@@ -888,7 +882,7 @@ class JSTerm extends Component {
         if (this.hasAutocompletionSuggestion()) {
           this.acceptProposedCompletion();
         } else if (!props.editorMode) {
-          this.execute();
+          this._execute();
         } else {
           this.insertStringAtCursor("\n");
         }
@@ -1223,7 +1217,6 @@ class JSTerm extends Component {
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
       popup.hidePopup();
     }
-
     this.emit("autocomplete-updated");
   }
 
@@ -1275,8 +1268,8 @@ class JSTerm extends Component {
         });
         this.autocompletePopup.hidePopup();
       }
+      this.emit("autocomplete-updated");
     }
-    this.emit("autocomplete-updated");
   }
 
   /**

@@ -29,7 +29,7 @@ add_task(async function() {
     messages: [{ text: `"a" + "😎"` }, { text: `"a😎"` }],
   });
   for (const input of jstermHistory) {
-    await hud.jsterm.execute(input);
+    execute(hud, input);
   }
   await onLastMessage;
 

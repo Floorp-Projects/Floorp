@@ -653,6 +653,14 @@ class WebConsoleWrapper {
   }
 
   /**
+   *
+   * @param {String} expression: The expression to evaluate
+   */
+  dispatchEvaluateExpression(expression) {
+    store.dispatch(actions.evaluateExpression(expression));
+  }
+
+  /**
    * Returns a Promise that resolves once any async dispatch is finally dispatched.
    */
   waitAsyncDispatches() {

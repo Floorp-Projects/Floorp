@@ -29,22 +29,24 @@ add_task(async function() {
   info(
     "Evaluating an expression resulting in the same error increments the sum"
   );
-  let onMessage = waitForMessage(hud, "window is not a function");
-  hud.jsterm.execute("window()");
-  await onMessage;
+  await executeAndWaitForMessage(hud, "window()", "window is not a function");
   checkErrorDisplayedTelemetry("JSMSG_NOT_FUNCTION", 3);
 
   info(
     "Evaluating an expression resulting in another error is logged in telemetry"
   );
-  onMessage = waitForMessage(hud, "repeat count must be non-negative");
-  hud.jsterm.execute(`"a".repeat(-1)`);
-  await onMessage;
+  await executeAndWaitForMessage(
+    hud,
+    `"a".repeat(-1)`,
+    "repeat count must be non-negative"
+  );
   checkErrorDisplayedTelemetry("JSMSG_NEGATIVE_REPETITION_COUNT", 1);
 
-  onMessage = waitForMessage(hud, "repeat count must be non-negative");
-  hud.jsterm.execute(`"b".repeat(-1)`);
-  await onMessage;
+  await executeAndWaitForMessage(
+    hud,
+    `"b".repeat(-1)`,
+    "repeat count must be non-negative"
+  );
   checkErrorDisplayedTelemetry("JSMSG_NEGATIVE_REPETITION_COUNT", 2);
 });
 

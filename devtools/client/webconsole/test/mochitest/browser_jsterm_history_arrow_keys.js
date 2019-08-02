@@ -40,8 +40,7 @@ async function performTests() {
 
   info("Execute each test value in the console");
   for (const value of TEST_VALUES) {
-    setInputValue(hud, value);
-    await jsterm.execute();
+    await executeAndWaitForMessage(hud, value, "", ".result");
   }
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
