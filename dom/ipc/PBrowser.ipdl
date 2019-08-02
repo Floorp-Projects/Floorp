@@ -88,6 +88,8 @@ using mozilla::dom::EffectsInfo from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::ScrollAxis from "mozilla/PresShellForwards.h";
 using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
+using struct InputFormData from "mozilla/dom/SessionStoreMessageUtils.h";
+using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -609,6 +611,8 @@ parent:
 
     async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
                              nsCString[] aPositions, int32_t[] aPositionDescendants,
+                             InputFormData[] aInputs, CollectedInputDataValue[] aIdVals,
+                             CollectedInputDataValue[] aXPathVals,
                              uint32_t aFlushId, bool aIsFinal, uint32_t aEpoch);
 
 child:
