@@ -20,7 +20,6 @@
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
@@ -46,80 +45,6 @@ mozilla::LazyLogModule gMediaDemuxerLog("MediaDemuxer");
 namespace mozilla {
 
 typedef void* MediaDataDecoderID;
-
-/**
- * This helper class is used to report telemetry of the time used to recover a
- * decoder from GPU crash.
- * It uses MediaDecoderOwnerID to identify which video we're dealing with.
- * It uses MediaDataDecoderID to make sure that the old MediaDataDecoder has
- * been deleted and we're already recovered.
- * It reports two recovery times, one is calculated from GPU crashed (that is,
- * the time when VideoDecoderChild::ActorDestory() is called) and the other is
- * calculated from the MFR is notified with NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER
- * error.
- */
-class GPUProcessCrashTelemetryLogger {
-  struct GPUCrashData {
-    GPUCrashData(MediaDataDecoderID aMediaDataDecoderID,
-                 mozilla::TimeStamp aGPUCrashTime,
-                 mozilla::TimeStamp aErrorNotifiedTime)
-        : mMediaDataDecoderID(aMediaDataDecoderID),
-          mGPUCrashTime(aGPUCrashTime),
-          mErrorNotifiedTime(aErrorNotifiedTime) {
-      MOZ_ASSERT(mMediaDataDecoderID);
-      MOZ_ASSERT(!mGPUCrashTime.IsNull());
-      MOZ_ASSERT(!mErrorNotifiedTime.IsNull());
-    }
-
-    MediaDataDecoderID mMediaDataDecoderID;
-    mozilla::TimeStamp mGPUCrashTime;
-    mozilla::TimeStamp mErrorNotifiedTime;
-  };
-
- public:
-  static void RecordGPUCrashData(MediaDecoderOwnerID aMediaDecoderOwnerID,
-                                 MediaDataDecoderID aMediaDataDecoderID,
-                                 const TimeStamp& aGPUCrashTime,
-                                 const TimeStamp& aErrorNotifiedTime) {
-    MOZ_ASSERT(aMediaDecoderOwnerID);
-    MOZ_ASSERT(aMediaDataDecoderID);
-    MOZ_ASSERT(!aGPUCrashTime.IsNull());
-    MOZ_ASSERT(!aErrorNotifiedTime.IsNull());
-    StaticMutexAutoLock lock(sGPUCrashMapMutex);
-    auto it = sGPUCrashDataMap.find(aMediaDecoderOwnerID);
-    if (it == sGPUCrashDataMap.end()) {
-      sGPUCrashDataMap.insert(std::make_pair(
-          aMediaDecoderOwnerID, GPUCrashData(aMediaDataDecoderID, aGPUCrashTime,
-                                             aErrorNotifiedTime)));
-    }
-  }
-
-  static void ReportTelemetry(MediaDecoderOwnerID aMediaDecoderOwnerID,
-                              MediaDataDecoderID aMediaDataDecoderID) {
-    MOZ_ASSERT(aMediaDecoderOwnerID);
-    MOZ_ASSERT(aMediaDataDecoderID);
-    StaticMutexAutoLock lock(sGPUCrashMapMutex);
-    auto it = sGPUCrashDataMap.find(aMediaDecoderOwnerID);
-    if (it != sGPUCrashDataMap.end() &&
-        it->second.mMediaDataDecoderID != aMediaDataDecoderID) {
-      Telemetry::AccumulateTimeDelta(
-          Telemetry::VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_GPU_CRASHED_MS,
-          it->second.mGPUCrashTime);
-      Telemetry::AccumulateTimeDelta(
-          Telemetry::VIDEO_HW_DECODER_CRASH_RECOVERY_TIME_SINCE_MFR_NOTIFIED_MS,
-          it->second.mErrorNotifiedTime);
-      sGPUCrashDataMap.erase(aMediaDecoderOwnerID);
-    }
-  }
-
- private:
-  static std::map<MediaDecoderOwnerID, GPUCrashData> sGPUCrashDataMap;
-  static StaticMutex sGPUCrashMapMutex;
-};
-
-std::map<MediaDecoderOwnerID, GPUProcessCrashTelemetryLogger::GPUCrashData>
-    GPUProcessCrashTelemetryLogger::sGPUCrashDataMap;
-StaticMutex GPUProcessCrashTelemetryLogger::sGPUCrashMapMutex;
 
 /**
  * This class tracks shutdown promises to ensure all decoders are shut down
@@ -1659,18 +1584,6 @@ void MediaFormatReader::NotifyError(TrackType aTrack,
   auto& decoder = GetDecoderData(aTrack);
   decoder.mError = decoder.HasFatalError() ? decoder.mError : Some(aError);
 
-  // The GPU process had crashed and we receive a
-  // NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER because we were doing HW decoding.
-  // Now, save the related data and we will report the recovery time when a new
-  // decoder is ready.
-  if (aTrack == TrackType::kVideoTrack &&
-      aError == NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER &&
-      !aError.GPUCrashTimeStamp().IsNull()) {
-    GPUProcessCrashTelemetryLogger::RecordGPUCrashData(
-        mMediaDecoderOwnerID, decoder.mDecoder.get(),
-        aError.GPUCrashTimeStamp(), TimeStamp::Now());
-  }
-
   ScheduleUpdate(aTrack);
 }
 
@@ -1862,13 +1775,6 @@ void MediaFormatReader::DecodeDemuxedSamples(TrackType aTrack,
           [self, aTrack, &decoder](MediaDataDecoder::DecodedData&& aResults) {
             decoder.mDecodeRequest.Complete();
             self->NotifyNewOutput(aTrack, std::move(aResults));
-
-            // When we recovered from a GPU crash and get the first decoded
-            // frame, report the recovery time telemetry.
-            if (aTrack == TrackType::kVideoTrack) {
-              GPUProcessCrashTelemetryLogger::ReportTelemetry(
-                  self->mMediaDecoderOwnerID, decoder.mDecoder.get());
-            }
           },
           [self, aTrack, &decoder](const MediaResult& aError) {
             decoder.mDecodeRequest.Complete();
