@@ -8,65 +8,94 @@
                                     !('@mozilla.org/widget/nativemenuservice;1' in Cc))
                                   this.setAttribute('openedwithkey',
                                                     event.target.parentNode.openedWithKey);">
-            <menu id="file-menu" data-l10n-id="menu-file">
+            <menu id="file-menu" label="&fileMenu.label;"
+                  accesskey="&fileMenu.accesskey;">
               <menupopup id="menu_FilePopup"
                          onpopupshowing="updateFileMenuUserContextUIVisibility('menu_newUserContext');
                                          updateFileMenuImportUIVisibility('cmd_importFromAnotherBrowser');">
                 <menuitem id="menu_newNavigatorTab"
+                          label="&tabCmd.label;"
                           command="cmd_newNavigatorTab"
-                          key="key_newNavigatorTab" data-l10n-id="menu-file-new-tab"/>
+                          key="key_newNavigatorTab"
+                          accesskey="&tabCmd.accesskey;"/>
                 <menu id="menu_newUserContext"
-                      hidden="true" data-l10n-id="menu-file-new-container-tab">
+                      label="&newUserContext.label;"
+                      accesskey="&newUserContext.accesskey;"
+                      hidden="true">
                   <menupopup onpopupshowing="return createUserContextMenu(event);" />
                 </menu>
                 <menuitem id="menu_newNavigator"
+                          label="&newNavigatorCmd.label;"
+                          accesskey="&newNavigatorCmd.accesskey;"
                           key="key_newNavigator"
-                          command="cmd_newNavigator" data-l10n-id="menu-file-new-window"/>
+                          command="cmd_newNavigator"/>
                 <menuitem id="menu_newPrivateWindow"
+                          label="&newPrivateWindow.label;"
+                          accesskey="&newPrivateWindow.accesskey;"
                           command="Tools:PrivateBrowsing"
-                          key="key_privatebrowsing" data-l10n-id="menu-file-new-private-window"/>
+                          key="key_privatebrowsing"/>
                 <menuitem id="menu_openLocation"
                           hidden="true"
+                          label="&openLocationCmd.label;"
                           command="Browser:OpenLocation"
-                          key="focusURLBar" data-l10n-id="menu-file-open-location"/>
+                          key="focusURLBar"/>
                 <menuitem id="menu_openFile"
+                          label="&openFileCmd.label;"
                           command="Browser:OpenFile"
-                          key="openFileKb" data-l10n-id="menu-file-open-file"/>
+                          key="openFileKb"
+                          accesskey="&openFileCmd.accesskey;"/>
                 <menuitem id="menu_close"
                           class="show-only-for-keyboard"
+                          label="&closeCmd.label;"
                           key="key_close"
-                          command="cmd_close" data-l10n-id="menu-file-close"/>
+                          accesskey="&closeCmd.accesskey;"
+                          command="cmd_close"/>
                 <menuitem id="menu_closeWindow"
                           class="show-only-for-keyboard"
                           hidden="true"
                           command="cmd_closeWindow"
-                          key="key_closeWindow" data-l10n-id="menu-file-close-window"/>
+                          key="key_closeWindow"
+                          label="&closeWindow.label;"
+                          accesskey="&closeWindow.accesskey;"/>
                 <menuseparator/>
                 <menuitem id="menu_savePage"
+                          label="&savePageCmd.label;"
+                          accesskey="&savePageCmd.accesskey;"
                           key="key_savePage"
-                          command="Browser:SavePage" data-l10n-id="menu-file-save-page"/>
+                          command="Browser:SavePage"/>
                 <menuitem id="menu_sendLink"
-                          command="Browser:SendLink" data-l10n-id="menu-file-email-link"/>
+                          label="&emailPageCmd.label;"
+                          accesskey="&emailPageCmd.accesskey;"
+                          command="Browser:SendLink"/>
                 <menuseparator/>
 #if !defined(MOZ_WIDGET_GTK)
                 <menuitem id="menu_printSetup"
-                          command="cmd_pageSetup" data-l10n-id="menu-file-print-setup"/>
+                          label="&printSetupCmd.label;"
+                          accesskey="&printSetupCmd.accesskey;"
+                          command="cmd_pageSetup"/>
 #endif
 #ifndef XP_MACOSX
                 <menuitem id="menu_printPreview"
-                          command="cmd_printPreview" data-l10n-id="menu-file-print-preview"/>
+                          label="&printPreviewCmd.label;"
+                          accesskey="&printPreviewCmd.accesskey;"
+                          command="cmd_printPreview"/>
 #endif
                 <menuitem id="menu_print"
+                          label="&printCmd.label;"
+                          accesskey="&printCmd.accesskey;"
                           key="printKb"
-                          command="cmd_print" data-l10n-id="menu-file-print"/>
+                          command="cmd_print"/>
                 <menuseparator/>
                 <menuitem id="menu_importFromAnotherBrowser"
-                          command="cmd_importFromAnotherBrowser" data-l10n-id="menu-file-import-from-another-browser"/>
+                          label="&importFromAnotherBrowserCmd.label;"
+                          accesskey="&importFromAnotherBrowserCmd.accesskey;"
+                          command="cmd_importFromAnotherBrowser"/>
                 <menuseparator/>
                 <menuitem id="goOfflineMenuitem"
+                          label="&goOfflineCmd.label;"
+                          accesskey="&goOfflineCmd.accesskey;"
                           type="checkbox"
-                          command="cmd_toggleOfflineStatus" data-l10n-id="menu-file-go-offline"/>
-<!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
+                          command="cmd_toggleOfflineStatus"/>
                 <menuitem id="menu_FileQuitItem"
 #ifdef XP_WIN
                           label="&quitApplicationCmdWin2.label;"
@@ -82,139 +111,194 @@
               </menupopup>
             </menu>
 
-            <menu id="edit-menu" data-l10n-id="menu-edit">
+            <menu id="edit-menu" label="&editMenu.label;"
+                  accesskey="&editMenu.accesskey;">
               <menupopup id="menu_EditPopup"
                          onpopupshowing="updateEditUIVisibility()"
                          onpopuphidden="updateEditUIVisibility()">
                 <menuitem id="menu_undo"
+                          label="&undoCmd.label;"
                           key="key_undo"
-                          command="cmd_undo" data-l10n-id="menu-edit-undo"/>
+                          accesskey="&undoCmd.accesskey;"
+                          command="cmd_undo"/>
                 <menuitem id="menu_redo"
+                          label="&redoCmd.label;"
                           key="key_redo"
-                          command="cmd_redo" data-l10n-id="menu-edit-redo"/>
+                          accesskey="&redoCmd.accesskey;"
+                          command="cmd_redo"/>
                 <menuseparator/>
                 <menuitem id="menu_cut"
+                          label="&cutCmd.label;"
                           key="key_cut"
-                          command="cmd_cut" data-l10n-id="menu-edit-cut"/>
+                          accesskey="&cutCmd.accesskey;"
+                          command="cmd_cut"/>
                 <menuitem id="menu_copy"
+                          label="&copyCmd.label;"
                           key="key_copy"
-                          command="cmd_copy" data-l10n-id="menu-edit-copy"/>
+                          accesskey="&copyCmd.accesskey;"
+                          command="cmd_copy"/>
                 <menuitem id="menu_paste"
+                          label="&pasteCmd.label;"
                           key="key_paste"
-                          command="cmd_paste" data-l10n-id="menu-edit-paste"/>
+                          accesskey="&pasteCmd.accesskey;"
+                          command="cmd_paste"/>
                 <menuitem id="menu_delete"
+                          label="&deleteCmd.label;"
                           key="key_delete"
-                          command="cmd_delete" data-l10n-id="menu-edit-delete"/>
+                          accesskey="&deleteCmd.accesskey;"
+                          command="cmd_delete"/>
                 <menuseparator/>
                 <menuitem id="menu_selectAll"
+                          label="&selectAllCmd.label;"
                           key="key_selectAll"
-                          command="cmd_selectAll" data-l10n-id="menu-edit-select-all"/>
+                          accesskey="&selectAllCmd.accesskey;"
+                          command="cmd_selectAll"/>
                 <menuseparator/>
                 <menuitem id="menu_find"
+                          label="&findOnCmd.label;"
+                          accesskey="&findOnCmd.accesskey;"
                           key="key_find"
-                          command="cmd_find" data-l10n-id="menu-edit-find-on"/>
+                          command="cmd_find"/>
                 <menuitem id="menu_findAgain"
                           class="show-only-for-keyboard"
+                          label="&findAgainCmd.label;"
+                          accesskey="&findAgainCmd.accesskey;"
                           key="key_findAgain"
-                          command="cmd_findAgain" data-l10n-id="menu-edit-find-again"/>
+                          command="cmd_findAgain"/>
                 <menuseparator hidden="true" id="textfieldDirection-separator"/>
                 <menuitem id="textfieldDirection-swap"
                           command="cmd_switchTextDirection"
                           key="key_switchTextDirection"
-                          hidden="true" data-l10n-id="menu-edit-bidi-switch-text-direction"/>
+                          label="&bidiSwitchTextDirectionItem.label;"
+                          accesskey="&bidiSwitchTextDirectionItem.accesskey;"
+                          hidden="true"/>
 #ifdef XP_UNIX
 #ifndef XP_MACOSX
                 <menuseparator/>
                 <menuitem id="menu_preferences"
-                          oncommand="openPreferences(undefined);" data-l10n-id="menu-preferences"/>
+                          label="&preferencesCmdUnix.label;"
+                          accesskey="&preferencesCmdUnix.accesskey;"
+                          oncommand="openPreferences(undefined);"/>
 #endif
 #endif
               </menupopup>
             </menu>
 
-            <menu id="view-menu" data-l10n-id="menu-view">
+            <menu id="view-menu" label="&viewMenu.label;"
+                  accesskey="&viewMenu.accesskey;">
               <menupopup id="menu_viewPopup"
                          onpopupshowing="updateCharacterEncodingMenuState();">
-                <menu id="viewToolbarsMenu" data-l10n-id="menu-view-toolbars-menu">
+                <menu id="viewToolbarsMenu"
+                      label="&viewToolbarsMenu.label;"
+                      accesskey="&viewToolbarsMenu.accesskey;">
                   <menupopup onpopupshowing="onViewToolbarsPopupShowing(event);">
                     <menuseparator/>
                     <menuitem id="menu_customizeToolbars"
-                              command="cmd_CustomizeToolbars" data-l10n-id="menu-view-customize-toolbar"/>
+                              label="&viewCustomizeToolbar.label;"
+                              accesskey="&viewCustomizeToolbar.accesskey;"
+                              command="cmd_CustomizeToolbars"/>
                   </menupopup>
                 </menu>
-                <menu id="viewSidebarMenuMenu" data-l10n-id="menu-view-sidebar">
+                <menu id="viewSidebarMenuMenu"
+                      label="&viewSidebarMenu.label;"
+                      accesskey="&viewSidebarMenu.accesskey;">
                   <menupopup id="viewSidebarMenu">
                     <menuitem id="menu_bookmarksSidebar"
                               type="checkbox"
                               key="viewBookmarksSidebarKb"
-                              oncommand="SidebarUI.toggle('viewBookmarksSidebar');" data-l10n-id="menu-view-bookmarks"/>
+                              oncommand="SidebarUI.toggle('viewBookmarksSidebar');"
+                              label="&bookmarksButton.label;"/>
                     <menuitem id="menu_historySidebar"
                               type="checkbox"
                               key="key_gotoHistory"
-                              oncommand="SidebarUI.toggle('viewHistorySidebar');" data-l10n-id="menu-view-history-button"/>
+                              oncommand="SidebarUI.toggle('viewHistorySidebar');"
+                              label="&historyButton.label;"/>
                     <menuitem id="menu_tabsSidebar"
                               type="checkbox"
                               class="sync-ui-item"
-                              oncommand="SidebarUI.toggle('viewTabsSidebar');" data-l10n-id="menu-view-synced-tabs-sidebar"/>
+                              oncommand="SidebarUI.toggle('viewTabsSidebar');"
+                              label="&syncedTabs.sidebar.label;"/>
                   </menupopup>
                 </menu>
                 <menuseparator/>
-                <menu id="viewFullZoomMenu"
-                      onpopupshowing="FullZoom.updateMenu();" data-l10n-id="menu-view-full-zoom">
+                <menu id="viewFullZoomMenu" label="&fullZoom.label;"
+                      accesskey="&fullZoom.accesskey;"
+                      onpopupshowing="FullZoom.updateMenu();">
                   <menupopup>
                     <menuitem id="menu_zoomEnlarge"
                               key="key_fullZoomEnlarge"
-                              command="cmd_fullZoomEnlarge" data-l10n-id="menu-view-full-zoom-enlarge"/>
+                              label="&fullZoomEnlargeCmd.label;"
+                              accesskey="&fullZoomEnlargeCmd.accesskey;"
+                              command="cmd_fullZoomEnlarge"/>
                     <menuitem id="menu_zoomReduce"
                               key="key_fullZoomReduce"
-                              command="cmd_fullZoomReduce" data-l10n-id="menu-view-full-zoom-reduce"/>
+                              label="&fullZoomReduceCmd.label;"
+                              accesskey="&fullZoomReduceCmd.accesskey;"
+                              command="cmd_fullZoomReduce"/>
                     <menuseparator/>
                     <menuitem id="menu_zoomReset"
                               key="key_fullZoomReset"
-                              command="cmd_fullZoomReset" data-l10n-id="menu-view-full-zoom-reset"/>
+                              label="&fullZoomResetCmd.label;"
+                              accesskey="&fullZoomResetCmd.accesskey;"
+                              command="cmd_fullZoomReset"/>
                     <menuseparator/>
                     <menuitem id="toggle_zoom"
+                              label="&fullZoomToggleCmd.label;"
+                              accesskey="&fullZoomToggleCmd.accesskey;"
                               type="checkbox"
                               command="cmd_fullZoomToggle"
-                              checked="false" data-l10n-id="menu-view-full-zoom-toggle"/>
+                              checked="false"/>
                   </menupopup>
                 </menu>
-                <menu id="pageStyleMenu" data-l10n-id="menu-view-page-style-menu">
+                <menu id="pageStyleMenu" label="&pageStyleMenu.label;"
+                      accesskey="&pageStyleMenu.accesskey;">
                   <menupopup onpopupshowing="gPageStyleMenu.fillPopup(this);">
                     <menuitem id="menu_pageStyleNoStyle"
+                              label="&pageStyleNoStyle.label;"
+                              accesskey="&pageStyleNoStyle.accesskey;"
                               oncommand="gPageStyleMenu.disableStyle();"
-                              type="radio" data-l10n-id="menu-view-page-style-no-style"/>
+                              type="radio"/>
                     <menuitem id="menu_pageStylePersistentOnly"
+                              label="&pageStylePersistentOnly.label;"
+                              accesskey="&pageStylePersistentOnly.accesskey;"
                               oncommand="gPageStyleMenu.switchStyleSheet('');"
                               type="radio"
-                              checked="true" data-l10n-id="menu-view-page-basic-style"/>
+                              checked="true"/>
                     <menuseparator/>
                   </menupopup>
                 </menu>
                 <menu id="charsetMenu"
+                    label="&charsetMenu2.label;"
+                    accesskey="&charsetMenu2.accesskey;"
                     oncommand="BrowserSetForcedCharacterSet(event.target.getAttribute('charset'));"
-                    onpopupshowing="CharsetMenu.build(event.target); UpdateCurrentCharset(this);" data-l10n-id="menu-view-charset">
+                    onpopupshowing="CharsetMenu.build(event.target); UpdateCurrentCharset(this);">
                   <menupopup>
                   </menupopup>
                 </menu>
                 <menuseparator/>
 #ifdef XP_MACOSX
                 <menuitem id="enterFullScreenItem"
-                          key="key_fullScreen" data-l10n-id="menu-view-enter-full-screen">
+                          accesskey="&enterFullScreenCmd.accesskey;"
+                          label="&enterFullScreenCmd.label;"
+                          key="key_fullScreen">
                   <observes element="View:FullScreen" attribute="oncommand"/>
                   <observes element="View:FullScreen" attribute="disabled"/>
                 </menuitem>
                 <menuitem id="exitFullScreenItem"
+                          accesskey="&exitFullScreenCmd.accesskey;"
+                          label="&exitFullScreenCmd.label;"
                           key="key_fullScreen"
-                          hidden="true" data-l10n-id="menu-view-exit-full-screen">
+                          hidden="true">
                   <observes element="View:FullScreen" attribute="oncommand"/>
                   <observes element="View:FullScreen" attribute="disabled"/>
                 </menuitem>
 #else
                 <menuitem id="fullScreenItem"
+                          accesskey="&fullScreenCmd.accesskey;"
+                          label="&fullScreenCmd.label;"
                           key="key_fullScreen"
                           type="checkbox"
-                          observes="View:FullScreen" data-l10n-id="menu-view-full-screen"/>
+                          observes="View:FullScreen"/>
 #endif
                 <menuitem id="menu_readerModeItem"
                           observes="View:ReaderView"
@@ -222,16 +306,22 @@
                           hidden="true"/>
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
+                          accesskey="&showAllTabsCmd.accesskey;"
+                          label="&showAllTabsCmd.label;"
                           command="Browser:ShowAllTabs"
-                          key="key_showAllTabs" data-l10n-id="menu-view-show-all-tabs"/>
+                          key="key_showAllTabs"/>
                 <menuseparator hidden="true" id="documentDirection-separator"/>
                 <menuitem id="documentDirection-swap"
                           hidden="true"
-                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', true);" data-l10n-id="menu-view-bidi-switch-page-direction"/>
+                          label="&bidiSwitchPageDirectionItem.label;"
+                          accesskey="&bidiSwitchPageDirectionItem.accesskey;"
+                          oncommand="gBrowser.selectedBrowser.sendMessageToActor('SwitchDocumentDirection', {}, 'SwitchDocumentDirection', true);"/>
               </menupopup>
             </menu>
 
-            <menu id="history-menu" data-l10n-id="menu-history">
+            <menu id="history-menu"
+                  label="&historyMenu.label;"
+                  accesskey="&historyMenu.accesskey;">
               <menupopup id="goPopup"
 #ifndef XP_MACOSX
                          placespopup="true"
@@ -243,24 +333,30 @@
                          tooltip="bhTooltip"
                          popupsinherittooltip="true">
                 <menuitem id="menu_showAllHistory"
+                          label="&showAllHistoryCmd2.label;"
 #ifndef XP_MACOSX
                           key="showAllHistoryKb"
 #endif
-                          command="Browser:ShowAllHistory" data-l10n-id="menu-history-show-all-history"/>
+                          command="Browser:ShowAllHistory"/>
                 <menuitem id="sanitizeItem"
+                          label="&clearRecentHistory.label;"
                           key="key_sanitize"
-                          command="Tools:Sanitize" data-l10n-id="menu-history-clear-recent-history"/>
+                          command="Tools:Sanitize"/>
                 <menuseparator id="sanitizeSeparator"/>
                 <menuitem id="sync-tabs-menuitem"
+                          label="&syncTabsMenu3.label;"
                           oncommand="gSync.openSyncedTabsPanel();"
-                          hidden="true" data-l10n-id="menu-history-synced-tabs"/>
+                          hidden="true"/>
                 <menuitem id="historyRestoreLastSession"
-                          command="Browser:RestoreLastSession" data-l10n-id="menu-history-restore-last-session"/>
+                          label="&historyRestoreLastSession.label;"
+                          command="Browser:RestoreLastSession"/>
                 <menuitem id="hiddenTabsMenu"
+                          label="&hiddenTabs.label;"
                           oncommand="gTabsPanel.showHiddenTabsPanel();"
-                          hidden="true" data-l10n-id="menu-history-hidden-tabs"/>
+                          hidden="true"/>
                 <menu id="historyUndoMenu"
-                      disabled="true" data-l10n-id="menu-history-undo-menu">
+                      label="&historyUndoMenu.label;"
+                      disabled="true">
                   <menupopup id="historyUndoPopup"
 #ifndef XP_MACOSX
                              placespopup="true"
@@ -268,7 +364,8 @@
                              onpopupshowing="document.getElementById('history-menu')._placesView.populateUndoSubmenu();"/>
                 </menu>
                 <menu id="historyUndoWindowMenu"
-                      disabled="true" data-l10n-id="menu-history-undo-window-menu">
+                      label="&historyUndoWindowMenu.label;"
+                      disabled="true">
                   <menupopup id="historyUndoWindowPopup"
 #ifndef XP_MACOSX
                              placespopup="true"
@@ -281,9 +378,11 @@
             </menu>
 
   <menu id="bookmarksMenu"
+        label="&bookmarksMenu.label;"
+        accesskey="&bookmarksMenu.accesskey;"
         ondragenter="PlacesMenuDNDHandler.onDragEnter(event);"
         ondragover="PlacesMenuDNDHandler.onDragOver(event);"
-        ondrop="PlacesMenuDNDHandler.onDrop(event);" data-l10n-id="menu-bookmarks-menu">
+        ondrop="PlacesMenuDNDHandler.onDrop(event);">
     <menupopup id="bookmarksMenuPopup"
 #ifndef XP_MACOSX
                placespopup="true"
@@ -298,20 +397,23 @@
                                  new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`);"
                tooltip="bhTooltip" popupsinherittooltip="true">
       <menuitem id="bookmarksShowAll"
+                label="&showAllBookmarks2.label;"
                 command="Browser:ShowAllBookmarks"
-                key="manBookmarkKb" data-l10n-id="menu-bookmarks-show-all"/>
+                key="manBookmarkKb"/>
       <menuseparator id="organizeBookmarksSeparator"/>
       <menuitem id="menu_bookmarkThisPage"
                 command="Browser:AddBookmarkAs"
                 key="addBookmarkAsKb"/>
       <menuitem id="menu_bookmarkAllTabs"
+                label="&addCurPagesCmd.label;"
                 class="show-only-for-keyboard"
                 command="Browser:BookmarkAllTabs"
-                key="bookmarkAllTabsKb" data-l10n-id="menu-bookmarks-all-tabs"/>
+                key="bookmarkAllTabsKb"/>
       <menuseparator id="bookmarksToolbarSeparator"/>
       <menu id="bookmarksToolbarFolderMenu"
             class="menu-iconic bookmark-item"
-            container="true" data-l10n-id="menu-bookmarks-toolbar">
+            label="&personalbarCmd.label;"
+            container="true">
         <menupopup id="bookmarksToolbarFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
@@ -322,7 +424,8 @@
       </menu>
       <menu id="menu_unsortedBookmarks"
             class="menu-iconic bookmark-item"
-            container="true" data-l10n-id="menu-bookmarks-other">
+            label="&otherBookmarksCmd.label;"
+            container="true">
         <menupopup id="otherBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
@@ -333,8 +436,9 @@
       </menu>
       <menu id="menu_mobileBookmarks"
             class="menu-iconic bookmark-item"
+            label="&mobileBookmarksCmd.label;"
             hidden="true"
-            container="true" data-l10n-id="menu-bookmarks-mobile">
+            container="true">
         <menupopup id="mobileBookmarksFolderPopup"
 #ifndef XP_MACOSX
                    placespopup="true"
@@ -348,59 +452,81 @@
     </menupopup>
   </menu>
 
-            <menu id="tools-menu" data-l10n-id="menu-tools">
+            <menu id="tools-menu"
+                  label="&toolsMenu.label;"
+                  accesskey="&toolsMenu.accesskey;">
               <menupopup id="menu_ToolsPopup">
               <menuitem id="menu_openDownloads"
+                        label="&downloads.label;"
+                        accesskey="&downloads.accesskey;"
                         key="key_openDownloads"
-                        command="Tools:Downloads" data-l10n-id="menu-tools-downloads"/>
+                        command="Tools:Downloads"/>
               <menuitem id="menu_openAddons"
+                        label="&addons.label;"
+                        accesskey="&addons.accesskey;"
                         key="key_openAddons"
-                        command="Tools:Addons" data-l10n-id="menu-tools-addons"/>
+                        command="Tools:Addons"/>
 
               <!-- only one of sync-setup, sync-unverifieditem, sync-syncnowitem or sync-reauthitem will be showing at once -->
               <menuitem id="sync-setup"
                         class="sync-ui-item"
+                        label="&syncSignIn.label;"
+                        accesskey="&syncSignIn.accesskey;"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-sync-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')"/>
               <menuitem id="sync-unverifieditem"
                         class="sync-ui-item"
+                        label="&syncSignIn.label;"
+                        accesskey="&syncSignIn.accesskey;"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-sync-sign-in"/>
+                        oncommand="gSync.openPrefs('menubar')"/>
               <menuitem id="sync-syncnowitem"
                         class="sync-ui-item"
+                        label="&syncSyncNowItem.label;"
+                        accesskey="&syncSyncNowItem.accesskey;"
                         hidden="true"
-                        oncommand="gSync.doSync(event);" data-l10n-id="menu-tools-sync-now"/>
+                        oncommand="gSync.doSync(event);"/>
               <menuitem id="sync-reauthitem"
                         class="sync-ui-item"
+                        label="&syncReAuthItem.label;"
+                        accesskey="&syncReAuthItem.accesskey;"
                         hidden="true"
-                        oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-sync-re-auth"/>
+                        oncommand="gSync.openSignInAgainPage('menubar');"/>
               <menuseparator id="devToolsSeparator"/>
-              <menu id="webDeveloperMenu" data-l10n-id="menu-tools-web-developer">
+              <menu id="webDeveloperMenu"
+                    label="&webDeveloperMenu.label;"
+                    accesskey="&webDeveloperMenu.accesskey;">
                 <menupopup id="menuWebDeveloperPopup">
                   <menuitem id="menu_pageSource"
+                            label="&pageSourceCmd.label;"
                             key="key_viewSource"
-                            command="View:PageSource" data-l10n-id="menu-tools-page-source"/>
+                            command="View:PageSource"
+                            accesskey="&pageSourceCmd.accesskey;"/>
                 </menupopup>
               </menu>
               <menuitem id="menu_pageInfo"
+                        accesskey="&pageInfoCmd.accesskey;"
+                        label="&pageInfoCmd.label;"
 #ifndef XP_WIN
                         key="key_viewInfo"
 #endif
-                        command="View:PageInfo" data-l10n-id="menu-tools-page-info"/>
+                        command="View:PageInfo"/>
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
-                        oncommand="openPreferences(undefined);" data-l10n-id="menu-preferences"/>
+                        label="&preferencesCmd2.label;"
+                        accesskey="&preferencesCmd2.accesskey;"
+                        oncommand="openPreferences(undefined);"/>
 #endif
 #ifdef MOZ_DEBUG
               <menuitem id="menu_layout_debugger"
-                        data-l10n-id="menu-tools-layout-debugger"
+                        label="&ldbCmd.label;"
+                        accesskey="&ldbCmd.accesskey;"
                         oncommand="toOpenWindowByType('mozapp:layoutdebug',
                                           'chrome://layoutdebug/content/');"/>
 #endif
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->
-<!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
               <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
               <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
               <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
@@ -412,50 +538,72 @@
             </menu>
 #ifdef XP_MACOSX
             <menu id="windowMenu"
+                  label="&windowMenu.label;"
                   onpopupshowing="macWindowMenuDidShow();"
                   onpopuphidden="macWindowMenuDidHide();"
-                   data-l10n-id="menu-window-menu">
+                  >
                 <menupopup id="windowPopup">
                     <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
                     <menuitem command="zoomWindow"/>
+                    <!-- decomment when "BringAllToFront" is implemented
                         <menuseparator/>
-                        <menuitem disabled="true" data-l10n-id="menu-window-bring-all-to-front"/> -->
+                        <menuitem label="&bringAllToFront.label;" disabled="true"/> -->
                     <menuseparator id="sep-window-list"/>
                 </menupopup>
             </menu>
 #endif
             <menu id="helpMenu"
 #ifdef XP_WIN
+                  label="&helpMenuWin.label;"
+                  accesskey="&helpMenuWin.accesskey;"
 #else
+                  label="&helpMenu.label;"
+                  accesskey="&helpMenu.accesskey;"
 #endif
-                   data-l10n-id="menu-help">
+                  >
               <menupopup id="menu_HelpPopup" onpopupshowing="buildHelpMenu();">
                 <menuitem id="menu_openHelp"
                           oncommand="openHelpLink('firefox-help')"
                           onclick="checkForMiddleClick(this, event);"
+                          label="&productHelp2.label;"
+                          accesskey="&productHelp2.accesskey;"
 #ifdef XP_MACOSX
-                          key="key_openHelpMac" data-l10n-id="menu-help-product"/>
+                          key="key_openHelpMac"/>
 #else
                           />
 #endif
                 <menuitem id="menu_openTour"
-                          oncommand="openTourPage();" data-l10n-id="menu-help-show-tour"/>
+                          oncommand="openTourPage();"
+                          label="&helpShowTour2.label;"
+                          accesskey="&helpShowTour2.accesskey;"/>
                 <menuitem id="menu_keyboardShortcuts"
                           oncommand="openHelpLink('keyboard-shortcuts')"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-keyboard-shortcuts"/>
+                          onclick="checkForMiddleClick(this, event);"
+                          label="&helpKeyboardShortcuts.label;"
+                          accesskey="&helpKeyboardShortcuts.accesskey;"/>
                 <menuitem id="troubleShooting"
+                          accesskey="&helpTroubleshootingInfo.accesskey;"
+                          label="&helpTroubleshootingInfo.label;"
                           oncommand="openTroubleshootingPage()"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-troubleshooting-info"/>
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="feedbackPage"
+                          accesskey="&helpFeedbackPage.accesskey;"
+                          label="&helpFeedbackPage.label;"
                           oncommand="openFeedbackPage()"
-                          onclick="checkForMiddleClick(this, event);" data-l10n-id="menu-help-feedback-page"/>
+                          onclick="checkForMiddleClick(this, event);"/>
                 <menuitem id="helpSafeMode"
-                          oncommand="safeModeRestart();" data-l10n-id="menu-help-safe-mode-without-addons"/>
+                          accesskey="&helpSafeMode.accesskey;"
+                          label="&helpSafeMode.label;"
+                          stopaccesskey="&helpSafeMode.stop.accesskey;"
+                          stoplabel="&helpSafeMode.stop.label;"
+                          oncommand="safeModeRestart();"/>
                 <menuitem id="menu_HelpPopup_reportPhishingtoolmenu"
+                          label="&reportDeceptiveSiteMenu.title;"
+                          accesskey="&reportDeceptiveSiteMenu.accesskey;"
                           disabled="true"
                           oncommand="openUILink(gSafeBrowsing.getReportURL('Phish'), event, {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"
-                          hidden="true" data-l10n-id="menu-help-report-deceptive-site"/>
+                          hidden="true"/>
                 <menuitem id="menu_HelpPopup_reportPhishingErrortoolmenu"
                           disabled="true"
                           oncommand="ReportFalseDeceptiveSite();"
@@ -468,7 +616,6 @@
                           oncommand="openUILinkIn(Services.policies.getSupportMenu().URL.href, 'tab', {triggeringPrincipal: Services.scriptSecurityManager.createNullPrincipal({})});"
                           onclick="checkForMiddleClick(this, event);"/>
                 <menuseparator id="aboutSeparator"/>
-                <!-- We need to leave those strings in DTD until bug 1568133 is fixed. -->
                 <menuitem id="aboutName"
                           accesskey="&aboutProduct2.accesskey;"
                           label="&aboutProduct2.label;"
