@@ -47,7 +47,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.prefs-schema-version", prefsSchemaVersion);
   pref("devtools.debugger.skip-pausing", false);
   pref("devtools.debugger.features.workers", true);
-  pref("devtools.debugger.features.async-stepping", true);
+  pref("devtools.debugger.features.async-stepping", false);
   pref("devtools.debugger.features.wasm", true);
   pref("devtools.debugger.features.shortcuts", true);
   pref("devtools.debugger.features.root", true);
