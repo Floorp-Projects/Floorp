@@ -451,7 +451,8 @@ int ExceptionHandler::ThreadEntry(void *arg) {
 }
 
 #ifdef MOZ_PHC
-void GetPHCAddrInfo(siginfo_t* siginfo, mozilla::phc::AddrInfo* addr_info) {
+static void GetPHCAddrInfo(siginfo_t* siginfo,
+                           mozilla::phc::AddrInfo* addr_info) {
   // Is this a crash involving a PHC allocation?
   if (siginfo->si_signo == SIGSEGV || siginfo->si_signo == SIGBUS) {
     ReplaceMalloc::IsPHCAllocation(siginfo->si_addr, addr_info);

@@ -137,21 +137,13 @@ class InfallibleAllocPolicy {
 
 class StackTrace : public phc::StackTrace {
  public:
-  StackTrace() : phc::StackTrace(), mSkipped(false) {}
-
-  bool IsEmpty() const { return mLength == 0 && !mSkipped; }
+  StackTrace() : phc::StackTrace() {}
 
   void Clear() {
     mLength = 0;
-    mSkipped = false;
   }
 
   void Fill();
-
-  void FillSkipped() {
-    mLength = 0;
-    mSkipped = true;
-  }
 
  private:
   static void StackWalkCallback(uint32_t aFrameNumber, void* aPc, void* aSp,
@@ -162,11 +154,6 @@ class StackTrace : public phc::StackTrace {
     st->mLength++;
     MOZ_ASSERT(st->mLength == aFrameNumber);
   }
-
-  // There are some rare cases (see FillSkipped's call sites) where we want to
-  // get a stack trace but cannot do so safely. When this field is set it
-  // indicates such a stack trace.
-  bool mSkipped;
 };
 
 // WARNING WARNING WARNING: this function must only be called when GMut::sMutex
@@ -190,7 +177,6 @@ class StackTrace : public phc::StackTrace {
 //
 void StackTrace::Fill() {
   mLength = 0;
-  mSkipped = false;
 
 #if defined(XP_WIN) && defined(_M_IX86)
   // This avoids MozStackWalk(), which causes unusably slow startup on Win32
@@ -558,16 +544,16 @@ class GMut {
     size_t mUsableSize;
 
     // The allocation stack.
-    // - NeverAllocated: empty.
-    // - InUse: non-empty.
-    // - Freed: non-empty.
-    StackTrace mAllocStack;
+    // - NeverAllocated: Nothing.
+    // - InUse: Some.
+    // - Freed: Some.
+    Maybe<StackTrace> mAllocStack;
 
     // The free stack.
-    // - NeverAllocated: empty.
-    // - InUse: empty.
-    // - Freed: non-empty.
-    StackTrace mFreeStack;
+    // - NeverAllocated: Nothing.
+    // - InUse: Some.
+    // - Freed: Some.
+    Maybe<StackTrace> mFreeStack;
 
     // The time at which the page is available for reuse, as measured against
     // GAtomic::sNow. When the page is in use this value will be kMaxTime.
@@ -620,8 +606,8 @@ class GMut {
     page.mState = PageState::InUse;
     page.mArenaId = aArenaId;
     page.mUsableSize = aUsableSize;
-    page.mAllocStack = aAllocStack;
-    page.mFreeStack.Clear();
+    page.mAllocStack = Some(aAllocStack);
+    page.mFreeStack = Nothing();
     page.mReuseTime = kMaxTime;
   }
 
@@ -641,7 +627,7 @@ class GMut {
     page.mUsableSize = aNewUsableSize;
     // We could just keep the original alloc stack, but the realloc stack is
     // more recent and therefore seems more useful.
-    page.mAllocStack = aAllocStack;
+    page.mAllocStack = Some(aAllocStack);
     // page.mFreeStack is not changed.
     // page.mReuseTime is not changed.
   };
@@ -667,7 +653,7 @@ class GMut {
 
     // page.mAllocStack is left unchanged, for reporting on UAF.
 
-    page.mFreeStack = aFreeStack;
+    page.mFreeStack = Some(aFreeStack);
     page.mReuseTime = GAtomic::Now() + aReuseDelay;
   }
 
@@ -776,8 +762,8 @@ class GMut {
     MOZ_ASSERT(aPage.mState == PageState::InUse);
     // There is nothing to assert about aPage.mArenaId.
     MOZ_ASSERT(aPage.mUsableSize > 0);
-    MOZ_ASSERT(!aPage.mAllocStack.IsEmpty());
-    MOZ_ASSERT(aPage.mFreeStack.IsEmpty());
+    MOZ_ASSERT(aPage.mAllocStack.isSome());
+    MOZ_ASSERT(aPage.mFreeStack.isNothing());
     MOZ_ASSERT(aPage.mReuseTime == kMaxTime);
   }
 
@@ -789,8 +775,8 @@ class GMut {
     MOZ_ASSERT(isFresh || aPage.mState == PageState::Freed);
     MOZ_ASSERT_IF(isFresh, aPage.mArenaId == Nothing());
     MOZ_ASSERT(isFresh == (aPage.mUsableSize == 0));
-    MOZ_ASSERT(isFresh == (aPage.mAllocStack.IsEmpty()));
-    MOZ_ASSERT(isFresh == (aPage.mFreeStack.IsEmpty()));
+    MOZ_ASSERT(isFresh == (aPage.mAllocStack.isNothing()));
+    MOZ_ASSERT(isFresh == (aPage.mFreeStack.isNothing()));
     MOZ_ASSERT(aPage.mReuseTime != kMaxTime);
 #endif
   }
@@ -1023,8 +1009,7 @@ MOZ_ALWAYS_INLINE static void* PageRealloc(const Maybe<arena_id_t>& aArenaId,
   // Get the stack trace *before* locking the mutex.
   StackTrace stack;
   if (GTls::IsDisabledOnCurrentThread()) {
-    // PHC is disabled on this thread. Get a dummy stack.
-    stack.FillSkipped();
+    // PHC is disabled on this thread. Leave the stack empty.
   } else {
     // Disable on this thread *before* getting the stack trace.
     disable.emplace();
@@ -1097,8 +1082,7 @@ MOZ_ALWAYS_INLINE static void PageFree(const Maybe<arena_id_t>& aArenaId,
   // Get the stack trace *before* locking the mutex.
   StackTrace freeStack;
   if (GTls::IsDisabledOnCurrentThread()) {
-    // PHC is disabled on this thread. Get a dummy stack.
-    freeStack.FillSkipped();
+    // PHC is disabled on this thread. Leave the stack empty.
   } else {
     // Disable on this thread *before* getting the stack trace.
     disable.emplace();
@@ -1153,7 +1137,7 @@ static size_t replace_malloc_usable_size(usable_ptr_t aPtr) {
   MutexAutoLock lock(GMut::sMutex);
 
   // Check for malloc_usable_size() of a freed block.
-  gMut->EnsureInUse(lock, aPtr, *i);
+  gMut->EnsureInUse(lock, const_cast<void*>(aPtr), *i);
 
   return gMut->PageUsableSize(lock, *i);
 }
