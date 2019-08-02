@@ -477,16 +477,10 @@ NotificationPermissionRequest::Run() {
     nsCOMPtr<nsIURI> uri;
     mPrincipal->GetURI(getter_AddRefs(uri));
 
-    bool isFile = false;
-    if (uri) {
-      uri->SchemeIs("file", &isFile);
-      if (isFile) {
-        mPermission = NotificationPermission::Granted;
-      }
-    }
-
-    if (!isFile && !StaticPrefs::dom_webnotifications_allowinsecure() &&
-        !mWindow->IsSecureContext()) {
+    if (uri && uri->SchemeIs("file")) {
+      mPermission = NotificationPermission::Granted;
+    } else if (!StaticPrefs::dom_webnotifications_allowinsecure() &&
+               !mWindow->IsSecureContext()) {
       mPermission = NotificationPermission::Denied;
       nsCOMPtr<Document> doc = mWindow->GetExtantDoc();
       if (doc) {
@@ -1623,12 +1617,8 @@ NotificationPermission Notification::GetPermissionInternal(
     // Allow files to show notifications by default.
     nsCOMPtr<nsIURI> uri;
     aPrincipal->GetURI(getter_AddRefs(uri));
-    if (uri) {
-      bool isFile;
-      uri->SchemeIs("file", &isFile);
-      if (isFile) {
-        return NotificationPermission::Granted;
-      }
+    if (uri && uri->SchemeIs("file")) {
+      return NotificationPermission::Granted;
     }
   }
 

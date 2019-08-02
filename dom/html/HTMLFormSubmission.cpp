@@ -245,9 +245,7 @@ nsresult FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
   *aPostDataStream = nullptr;
 
   if (mMethod == NS_FORM_METHOD_POST) {
-    bool isMailto = false;
-    aURI->SchemeIs("mailto", &isMailto);
-    if (isMailto) {
+    if (aURI->SchemeIs("mailto")) {
       nsAutoCString path;
       rv = aURI->GetPathQueryRef(path);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -283,10 +281,7 @@ nsresult FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
   } else {
     // Get the full query string
-    bool schemeIsJavaScript;
-    rv = aURI->SchemeIs("javascript", &schemeIsJavaScript);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (schemeIsJavaScript) {
+    if (aURI->SchemeIs("javascript")) {
       return NS_OK;
     }
 
@@ -666,9 +661,7 @@ nsresult FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
   // XXX HACK We are using the standard URL mechanism to give the body to the
   // mailer instead of passing the post data stream to it, since that sounds
   // hard.
-  bool isMailto = false;
-  aURI->SchemeIs("mailto", &isMailto);
-  if (isMailto) {
+  if (aURI->SchemeIs("mailto")) {
     nsAutoCString path;
     rv = aURI->GetPathQueryRef(path);
     NS_ENSURE_SUCCESS(rv, rv);

@@ -345,12 +345,7 @@ bool nsXBLContentSink::OnOpenContainer(const char16_t** aAtts,
 
     nsIURI* uri = mDocument->GetDocumentURI();
 
-    bool isChrome = false;
-    bool isRes = false;
-
-    uri->SchemeIs("chrome", &isChrome);
-    uri->SchemeIs("resource", &isRes);
-    mIsChromeOrResource = isChrome || isRes;
+    mIsChromeOrResource = uri->SchemeIs("chrome") || uri->SchemeIs("resource");
 
     mState = eXBL_InBindings;
   } else if (aTagName == nsGkAtoms::binding) {
