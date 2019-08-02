@@ -132,7 +132,7 @@ add_task(function test__notify() {
 
   const param = "1234";
 
-  controller._notify("onFake", param);
+  controller.notify("onFake", param);
 
   Assert.equal(
     listener1.onFake.callCount,
@@ -159,7 +159,7 @@ add_task(function test__notify() {
   controller.removeQueryListener(listener1);
 
   // This should succeed without errors.
-  controller._notify("onNewFake");
+  controller.notify("onNewFake");
 
   sandbox.resetHistory();
 });

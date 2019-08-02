@@ -21,9 +21,9 @@ var UrlbarTestUtils = {
    * @returns {Promise} Resolved when done.
    */
   async promiseSearchComplete(win) {
-    return BrowserTestUtils.waitForCondition(
-      () => win.gURLBar.view.isOpen
-    ).then(() => win.gURLBar.lastQueryContextPromise);
+    return this.promisePopupOpen(win, () => {}).then(
+      () => win.gURLBar.lastQueryContextPromise
+    );
   },
 
   /**
@@ -256,7 +256,17 @@ var UrlbarTestUtils = {
       throw new Error("openFn should be supplied to promisePopupOpen");
     }
     await openFn();
-    return BrowserTestUtils.waitForCondition(() => win.gURLBar.view.isOpen);
+    if (win.gURLBar.view.isOpen) {
+      return;
+    }
+    await new Promise(resolve => {
+      win.gURLBar.controller.addQueryListener({
+        onViewOpen() {
+          win.gURLBar.controller.removeQueryListener(this);
+          resolve();
+        },
+      });
+    });
   },
 
   /**
@@ -272,7 +282,17 @@ var UrlbarTestUtils = {
     } else {
       win.gURLBar.view.close();
     }
-    return BrowserTestUtils.waitForCondition(() => !win.gURLBar.view.isOpen);
+    if (!win.gURLBar.view.isOpen) {
+      return;
+    }
+    await new Promise(resolve => {
+      win.gURLBar.controller.addQueryListener({
+        onViewClose() {
+          win.gURLBar.controller.removeQueryListener(this);
+          resolve();
+        },
+      });
+    });
   },
 
   /**
