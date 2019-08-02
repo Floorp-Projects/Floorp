@@ -46,8 +46,9 @@ export default class LoginList extends HTMLElement {
       .addEventListener("change", this);
     window.addEventListener("AboutLoginsClearSelection", this);
     window.addEventListener("AboutLoginsCreateLogin", this);
-    window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsFilterLogins", this);
+    window.addEventListener("AboutLoginsInitialLoginSelected", this);
+    window.addEventListener("AboutLoginsLoginSelected", this);
     this._list.addEventListener("click", this);
     this.addEventListener("keydown", this);
     this._createLoginButton.addEventListener("click", this);
@@ -136,13 +137,19 @@ export default class LoginList extends HTMLElement {
         if (!this._loginGuidsSortedOrder.length) {
           return;
         }
-        let firstLogin = this._logins[this._loginGuidsSortedOrder[0]].login;
-        window.dispatchEvent(
-          new CustomEvent("AboutLoginsLoginSelected", {
-            detail: firstLogin,
-            cancelable: true,
-          })
+        // Select the first visible login after any possible filter is applied.
+        let firstVisibleListItem = this._list.querySelector(
+          ".login-list-item[data-guid]:not([hidden])"
         );
+        if (firstVisibleListItem) {
+          let { login } = this._logins[firstVisibleListItem.dataset.guid];
+          window.dispatchEvent(
+            new CustomEvent("AboutLoginsLoginSelected", {
+              detail: login,
+              cancelable: true,
+            })
+          );
+        }
         break;
       }
       case "AboutLoginsCreateLogin": {
@@ -155,6 +162,7 @@ export default class LoginList extends HTMLElement {
         this.render();
         break;
       }
+      case "AboutLoginsInitialLoginSelected":
       case "AboutLoginsLoginSelected": {
         if (event.defaultPrevented || this._selectedGuid == event.detail.guid) {
           return;
@@ -198,9 +206,7 @@ export default class LoginList extends HTMLElement {
         ".login-list-item[data-guid]:not([hidden])"
       );
       if (firstVisibleListItem) {
-        this._selectedGuid = firstVisibleListItem.dataset.guid;
-        this._setListItemAsSelected(firstVisibleListItem);
-        let { login } = this._logins[this._selectedGuid];
+        let { login } = this._logins[firstVisibleListItem.dataset.guid];
         window.dispatchEvent(
           new CustomEvent("AboutLoginsInitialLoginSelected", {
             detail: login,
