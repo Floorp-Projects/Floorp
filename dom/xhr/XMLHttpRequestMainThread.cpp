@@ -1087,9 +1087,8 @@ void XMLHttpRequestMainThread::GetAllResponseHeaders(
 
   // Don't provide Content-Length for data URIs
   nsCOMPtr<nsIURI> uri;
-  bool isDataURI;
   if (NS_FAILED(mChannel->GetURI(getter_AddRefs(uri))) ||
-      NS_FAILED(uri->SchemeIs("data", &isDataURI)) || !isDataURI) {
+      !uri->SchemeIs("data")) {
     int64_t length;
     if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
       aResponseHeaders.AppendLiteral("Content-Length: ");

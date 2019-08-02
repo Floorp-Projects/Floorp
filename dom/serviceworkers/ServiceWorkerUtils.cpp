@@ -69,10 +69,8 @@ nsresult ServiceWorkerScopeAndScriptAreValid(const ClientInfo& aClientInfo,
   nsCOMPtr<nsIPrincipal> principal = aClientInfo.GetPrincipal();
   NS_ENSURE_TRUE(principal, NS_ERROR_DOM_INVALID_STATE_ERR);
 
-  bool isHttp = false;
-  bool isHttps = false;
-  Unused << aScriptURI->SchemeIs("http", &isHttp);
-  Unused << aScriptURI->SchemeIs("https", &isHttps);
+  bool isHttp = aScriptURI->SchemeIs("http");
+  bool isHttps = aScriptURI->SchemeIs("https");
   NS_ENSURE_TRUE(isHttp || isHttps, NS_ERROR_DOM_SECURITY_ERR);
 
   nsresult rv = CheckForSlashEscapedCharsInPath(aScopeURI);

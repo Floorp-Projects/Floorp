@@ -356,8 +356,7 @@ void nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue() {
           rv = NS_URIChainHasFlags(hrefURI,
                                    nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
                                    &isLocalResource);
-
-          hrefURI->SchemeIs("https", &isHttps);
+          isHttps = hrefURI->SchemeIs("https");
         }
 
         if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource &&
