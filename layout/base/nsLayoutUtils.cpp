@@ -10154,29 +10154,12 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
       (rotate.auto_ ? directionAngle : 0.0) + rotate.angle.ToRadians());
 
   // Compute the offset for motion path translate.
-  // Bug 1559232: the translate parameters will be adjusted more after we
-  // support offset-position.
-  // FIXME: It's possible to refactor the calculation of transform-origin, so we
-  // could calculate from the caller, and reuse the value in nsDisplayList.cpp.
+  // Per the spec, the default offset-anchor is `auto`, and in this case,
+  // we should use transform-origin as the anchor point.
   TransformReferenceBox refBox(aFrame);
-  const auto& transformOrigin = display->mTransformOrigin;
-  const CSSPoint origin = nsStyleTransformMatrix::Convert2DPosition(
+  auto& transformOrigin = display->mTransformOrigin;
+  CSSPoint anchorPoint = nsStyleTransformMatrix::Convert2DPosition(
       transformOrigin.horizontal, transformOrigin.vertical, refBox);
-
-  // Per the spec, the default offset-anchor is `auto`, so initialize the anchor
-  // point to transform-origin.
-  CSSPoint anchorPoint(origin);
-  Point shift;
-  if (!display->mOffsetAnchor.IsAuto()) {
-    const auto& pos = display->mOffsetAnchor.AsPosition();
-    anchorPoint = nsStyleTransformMatrix::Convert2DPosition(
-        pos.horizontal, pos.vertical, refBox);
-    // We need this value to shift the origin from transform-origin to
-    // offset-anchor (and vice versa).
-    // See nsStyleTransformMatrix::ReadTransform for more details.
-    shift = (anchorPoint - origin).ToUnknownPoint();
-  }
-
   // SVG frames (unlike other frames) have a reference box that can be (and
   // typically is) offset from the TopLeft() of the frame.
   // In motion path, we have to make sure the object is aligned with offset-path
@@ -10189,6 +10172,7 @@ Maybe<MotionPathData> nsLayoutUtils::ResolveMotionPath(const nsIFrame* aFrame) {
     anchorPoint.y += CSSPixel::FromAppUnits(aFrame->GetPosition().y);
   }
 
-  return Some(
-      MotionPathData{point - anchorPoint.ToUnknownPoint(), angle, shift});
+  // Bug 1186329: the translate parameters will be adjusted more after we
+  // implement offset-position and offset-anchor.
+  return Some(MotionPathData{point - anchorPoint.ToUnknownPoint(), angle});
 }
