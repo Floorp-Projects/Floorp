@@ -65,7 +65,7 @@ VARCACHE_PREF(
 
     'always': '''\
 VARCACHE_PREF(
-  Live,
+  Always,
   "{name}",
    {base_id},
    {full_id},

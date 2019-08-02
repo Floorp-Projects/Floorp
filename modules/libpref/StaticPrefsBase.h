@@ -64,10 +64,17 @@ struct IsAtomic<std::atomic<T>> : TrueType {};
 
 namespace StaticPrefs {
 
+// Undo X11/X.h's definition of `Always` so we can use it in `MirrorKind`.
+#undef Always
+
 // Enums for the update policy.
-enum class UpdatePolicy {
-  Once,  // Evaluate the preference once, unchanged during the session.
-  Live   // Evaluate the preference and set callback so it stays current/live.
+enum class MirrorKind {
+  // Mirror the pref value once, at startup.
+  Once,
+
+  // Mirror the pref vale always, with live updating. This would be `Always`,
+  // but /usr/include/X11/X.h defines a macro with that name.
+  Always
 };
 
 void MaybeInitOncePrefs();

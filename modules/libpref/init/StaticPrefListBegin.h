@@ -16,14 +16,14 @@ namespace StaticPrefs {
 
 // For a VarCache pref like this:
 //
-//   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
+//   VARCACHE_PREF($MIRROR, "my.pref", my_pref, my_pref, int32_t, 99)
 //
 // we generate an extern variable declaration and three getter
 // declarations/definitions.
 //
 //     extern int32_t sVarCache_my_pref;
 //     inline int32_t my_pref() {
-//       if (UpdatePolicy::$POLICY != UpdatePolicy::Once) {
+//       if (MirrorKind::$MIRROR != MirrorKind::Once) {
 //         return sVarCache_my_pref;
 //       }
 //       MaybeInitOncePrefs();
@@ -39,7 +39,7 @@ namespace StaticPrefs {
 #define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, default_value) \
   extern cpp_type sVarCache_##full_id;                                         \
   inline StripAtomic<cpp_type> full_id() {                                     \
-    if (UpdatePolicy::policy != UpdatePolicy::Once) {                          \
+    if (MirrorKind::policy != MirrorKind::Once) {                              \
       MOZ_DIAGNOSTIC_ASSERT(                                                   \
           IsAtomic<cpp_type>::value || NS_IsMainThread(),                      \
           "Non-atomic static pref '" name                                      \
