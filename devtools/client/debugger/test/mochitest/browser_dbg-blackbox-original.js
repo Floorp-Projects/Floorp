@@ -9,7 +9,7 @@ add_task(async function() {
 
   const {
     selectors: { getBreakpoint, getBreakpointCount },
-    getState
+    getState,
   } = dbg;
 
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
@@ -18,8 +18,25 @@ add_task(async function() {
 
   await selectSource(dbg, sortedSrc);
 
+  // Show the source in source tree in primiany panel for blackBox icon check
+  rightClickElement(dbg, "CodeMirrorLines");
+  selectContextMenuItem(dbg, "#node-menu-show-source");
+  await waitForDispatch(dbg, "SHOW_SOURCE");
+
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg, "BLACKBOX");
+
+  const sourceTab = findElementWithSelector(dbg, ".source-tab.active");
+  ok(
+    sourceTab.querySelector(".img.blackBox"),
+    "Source tab has a blackbox icon"
+  );
+
+  const treeItem = findElementWithSelector(dbg, ".tree-node.focused");
+  ok(
+    treeItem.querySelector(".img.blackBox"),
+    "Source tree item has a blackbox icon"
+  );
 
   // breakpoint at line 38 in sorted
   await addBreakpoint(dbg, sortedSrc, 38);

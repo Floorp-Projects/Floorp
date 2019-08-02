@@ -252,6 +252,10 @@ class SourceTreeItem extends Component<Props, State> {
       return <AccessibleImage className="folder" />;
     }
 
+    if (source && source.isBlackBoxed) {
+      return <AccessibleImage className="blackBox" />;
+    }
+
     if (hasPrettySource) {
       return <AccessibleImage className="prettyPrint" />;
     }
