@@ -4918,6 +4918,12 @@
   value: false
   mirror: always
 
+# This pref disables the reception of RTCP. It is used for testing.
+- name: media.webrtc.net.force_disable_rtcp_reception
+  type: ReleaseAcquireAtomicBool
+  value: false
+  mirror: always
+
 # TextTrack WebVTT Region extension support.
 - name: media.webvtt.regions.enabled
   type: bool
