@@ -109,6 +109,7 @@ include = [
   "MaxSize",
   "FlexBasis",
   "Position",
+  "PositionOrAuto",
   "BackgroundSize",
   "BorderImageSlice",
   "BorderSpacing",
