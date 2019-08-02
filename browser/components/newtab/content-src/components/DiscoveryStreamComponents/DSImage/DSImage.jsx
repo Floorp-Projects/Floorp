@@ -20,13 +20,11 @@ export class DSImage extends React.PureComponent {
 
   onSeen(entries) {
     if (this.state) {
-      const entry = entries.find(e => e.isIntersecting);
-
-      if (entry) {
+      if (entries.some(entry => entry.isIntersecting)) {
         if (this.props.optimize) {
           this.setState({
-            containerWidth: entry.boundingClientRect.width,
-            containerHeight: entry.boundingClientRect.height,
+            containerWidth: ReactDOM.findDOMNode(this).clientWidth,
+            containerHeight: ReactDOM.findDOMNode(this).clientHeight,
           });
         }
 
@@ -50,7 +48,13 @@ export class DSImage extends React.PureComponent {
   }
 
   componentDidMount() {
-    this.observer = new IntersectionObserver(this.onSeen.bind(this));
+    this.observer = new IntersectionObserver(this.onSeen.bind(this), {
+      // Assume an image will be eventually seen if it is within 520px of the viewport
+      // This is half the average Desktop vertical screen size:
+      // http://gs.statcounter.com/screen-resolution-stats/desktop/north-america
+      rootMargin: `540px`,
+    });
+
     this.observer.observe(ReactDOM.findDOMNode(this));
   }
 
