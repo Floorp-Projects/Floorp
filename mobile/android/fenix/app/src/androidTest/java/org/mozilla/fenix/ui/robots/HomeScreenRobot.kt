@@ -119,7 +119,7 @@ private fun assertHomePrivateBrowsingButton() = onView(ViewMatchers.withResource
 private fun assertHomeWordmark() = onView(ViewMatchers.withResourceName("wordmark"))
     .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertHomeToolbar() = onView(ViewMatchers.withResourceName("toolbar"))
-    .check(matches(allOf(withEffectiveVisibility(Visibility.VISIBLE), ViewMatchers.hasFocus())))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 private fun assertOpenTabsHeader() =
     onView(CoreMatchers.allOf(ViewMatchers.withText("Open tabs")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))

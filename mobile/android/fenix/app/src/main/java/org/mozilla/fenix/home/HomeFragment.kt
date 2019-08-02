@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import android.view.accessibility.AccessibilityEvent
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -240,7 +239,7 @@ class HomeFragment : Fragment(), AccountObserver {
         }
         view.toolbar.compoundDrawablePadding =
             (toolbarPaddingDp * Resources.getSystem().displayMetrics.density).roundToInt()
-        view.toolbar.setOnClickListener {
+        view.toolbar_wrapper.setOnClickListener {
             invokePendingDeleteJobs()
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
@@ -253,7 +252,6 @@ class HomeFragment : Fragment(), AccountObserver {
             nav(R.id.homeFragment, directions)
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
-        view.toolbar.requestFocus()
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
@@ -309,8 +307,6 @@ class HomeFragment : Fragment(), AccountObserver {
         (activity as AppCompatActivity).supportActionBar?.hide()
 
         requireComponents.backgroundServices.accountManager.register(this, owner = this)
-
-        focusToolbarForAccessibility()
     }
 
     override fun onStart() {
@@ -820,14 +816,6 @@ class HomeFragment : Fragment(), AccountObserver {
                 }
                 FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(view.context.getString(stringRes)).show()
             }
-        }
-    }
-
-    private fun focusToolbarForAccessibility() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            delay(ACCESSIBILITY_FOCUS_DELAY)
-            toolbar.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_FOCUSED)
-            toolbar.sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED)
         }
     }
 
