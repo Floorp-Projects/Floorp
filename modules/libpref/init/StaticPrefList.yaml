@@ -1097,6 +1097,11 @@
   value: false
   mirror: always
 
+- name: device.sensors.test.events
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "devtools."
 #---------------------------------------------------------------------------
