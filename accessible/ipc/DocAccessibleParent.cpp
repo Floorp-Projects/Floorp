@@ -767,7 +767,12 @@ void DocAccessibleParent::SendParentCOMProxy(Accessible* aOuterDoc) {
 
   RefPtr<IAccessible> nativeAcc;
   aOuterDoc->GetNativeInterface(getter_AddRefs(nativeAcc));
-  MOZ_ASSERT(nativeAcc);
+  if (NS_WARN_IF(!nativeAcc)) {
+    // Couldn't get a COM proxy for the outer doc. That probably means it died,
+    // but the parent process hasn't received a message to remove it from the
+    // ProxyAccessible tree yet.
+    return;
+  }
 
   RefPtr<IDispatch> wrapped(
       mscom::PassthruProxy::Wrap<IDispatch>(WrapNotNull(nativeAcc)));
