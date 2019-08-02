@@ -7,6 +7,7 @@
 const {
   APPEND_TO_HISTORY,
   CLEAR_HISTORY,
+  EVALUATE_EXPRESSION,
 } = require("devtools/client/webconsole/constants");
 
 const historyActions = require("devtools/client/webconsole/actions/history");
@@ -35,7 +36,11 @@ function historyPersistenceMiddleware(store) {
   return next => action => {
     const res = next(action);
 
-    const triggerStoreActions = [APPEND_TO_HISTORY, CLEAR_HISTORY];
+    const triggerStoreActions = [
+      APPEND_TO_HISTORY,
+      CLEAR_HISTORY,
+      EVALUATE_EXPRESSION,
+    ];
 
     // Save the current history entries when modified, but wait till
     // entries from the previous session are loaded.

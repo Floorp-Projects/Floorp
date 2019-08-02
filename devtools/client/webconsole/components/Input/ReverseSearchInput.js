@@ -53,7 +53,6 @@ class ReverseSearchInput extends Component {
       dispatch: PropTypes.func.isRequired,
       setInputValue: PropTypes.func.isRequired,
       focusInput: PropTypes.func.isRequired,
-      evaluateInput: PropTypes.func.isRequired,
       reverseSearchResult: PropTypes.string,
       reverseSearchTotalResults: PropTypes.number,
       reverseSearchResultPosition: PropTypes.number,
@@ -92,10 +91,10 @@ class ReverseSearchInput extends Component {
   }
 
   onEnterKeyboardShortcut(event) {
-    const { dispatch, evaluateInput } = this.props;
+    const { dispatch } = this.props;
     event.stopPropagation();
     dispatch(actions.reverseSearchInputToggle());
-    evaluateInput();
+    dispatch(actions.evaluateExpression());
   }
 
   onEscapeKeyboardShortcut(event) {
