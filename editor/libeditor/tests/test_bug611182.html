@@ -69,7 +69,8 @@ SimpleTest.waitForFocus(function() {
       is(textNode.textContent, "foo bar", "Backspace should work correctly");
 
       var snapshot = snapshotWindow(win, false);
-      ok(compareSnapshots(snapshot, ref, true)[0], "No bogus node should exist in the document");
+      ok(compareSnapshots(snapshot, ref, true)[0],
+         "No padding <br> element should exist in the document");
 
       callback();
     }, {once: true});

@@ -12,3 +12,6 @@ subdir = 'toolkit/crashreporter/breakpad-client/windows/handler'
 objs_handler = [
     '/%s/%s' % (subdir, s) for s in lobjs_handler
 ]
+
+if CONFIG['MOZ_PHC']:
+    DEFINES['MOZ_PHC'] = True

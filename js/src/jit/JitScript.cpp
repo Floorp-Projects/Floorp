@@ -13,6 +13,7 @@
 
 #include "jit/BaselineIC.h"
 #include "jit/BytecodeAnalysis.h"
+#include "vm/BytecodeUtil.h"
 #include "vm/JSScript.h"
 #include "vm/Stack.h"
 #include "vm/TypeInference.h"
@@ -258,7 +259,7 @@ void JitScript::printTypes(JSContext* cx, HandleScript script) {
       fprintf(stderr, "%s", sprinter.string());
     }
 
-    if (CodeSpec[*pc].format & JOF_TYPESET) {
+    if (BytecodeOpHasTypeSet(JSOp(*pc))) {
       StackTypeSet* types = bytecodeTypes(sweep, script, pc);
       fprintf(stderr, "  typeset %u:", unsigned(types - typeArray(sweep)));
       types->print();

@@ -440,105 +440,6 @@ nsresult TextEditor::InsertLineBreakAsAction(nsIPrincipal* aPrincipal) {
   return NS_OK;
 }
 
-already_AddRefed<Element> TextEditor::InsertBrElementWithTransaction(
-    const EditorDOMPoint& aPointToInsert, EDirection aSelect /* = eNone */) {
-  MOZ_ASSERT(IsEditActionDataAvailable());
-
-  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return nullptr;
-  }
-
-  // We need to insert a <br> node.
-  RefPtr<Element> newBRElement;
-  if (aPointToInsert.IsInTextNode()) {
-    EditorDOMPoint pointInContainer;
-    if (aPointToInsert.IsStartOfContainer()) {
-      // Insert before the text node.
-      pointInContainer.Set(aPointToInsert.GetContainer());
-      if (NS_WARN_IF(!pointInContainer.IsSet())) {
-        return nullptr;
-      }
-    } else if (aPointToInsert.IsEndOfContainer()) {
-      // Insert after the text node.
-      pointInContainer.Set(aPointToInsert.GetContainer());
-      if (NS_WARN_IF(!pointInContainer.IsSet())) {
-        return nullptr;
-      }
-      DebugOnly<bool> advanced = pointInContainer.AdvanceOffset();
-      NS_WARNING_ASSERTION(advanced,
-                           "Failed to advance offset to after the text node");
-    } else {
-      MOZ_DIAGNOSTIC_ASSERT(aPointToInsert.IsSetAndValid());
-      // Unfortunately, we need to split the text node at the offset.
-      ErrorResult error;
-      nsCOMPtr<nsIContent> newLeftNode =
-          SplitNodeWithTransaction(aPointToInsert, error);
-      if (NS_WARN_IF(error.Failed())) {
-        error.SuppressException();
-        return nullptr;
-      }
-      Unused << newLeftNode;
-      // Insert new <br> before the right node.
-      pointInContainer.Set(aPointToInsert.GetContainer());
-    }
-    // Create a <br> node.
-    newBRElement = CreateNodeWithTransaction(*nsGkAtoms::br, pointInContainer);
-    if (NS_WARN_IF(!newBRElement)) {
-      return nullptr;
-    }
-  } else {
-    newBRElement = CreateNodeWithTransaction(*nsGkAtoms::br, aPointToInsert);
-    if (NS_WARN_IF(!newBRElement)) {
-      return nullptr;
-    }
-  }
-
-  switch (aSelect) {
-    case eNone:
-      break;
-    case eNext: {
-      SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
-      // Collapse selection after the <br> node.
-      EditorRawDOMPoint afterBRElement(newBRElement);
-      if (afterBRElement.IsSet()) {
-        DebugOnly<bool> advanced = afterBRElement.AdvanceOffset();
-        NS_WARNING_ASSERTION(advanced,
-                             "Failed to advance offset after the <br> element");
-        ErrorResult error;
-        SelectionRefPtr()->Collapse(afterBRElement, error);
-        NS_WARNING_ASSERTION(
-            !error.Failed(),
-            "Failed to collapse selection after the <br> element");
-      } else {
-        NS_WARNING("The <br> node is not in the DOM tree?");
-      }
-      break;
-    }
-    case ePrevious: {
-      SelectionRefPtr()->SetInterlinePosition(true, IgnoreErrors());
-      // Collapse selection at the <br> node.
-      EditorRawDOMPoint atBRElement(newBRElement);
-      if (atBRElement.IsSet()) {
-        ErrorResult error;
-        SelectionRefPtr()->Collapse(atBRElement, error);
-        NS_WARNING_ASSERTION(
-            !error.Failed(),
-            "Failed to collapse selection at the <br> element");
-      } else {
-        NS_WARNING("The <br> node is not in the DOM tree?");
-      }
-      break;
-    }
-    default:
-      NS_WARNING(
-          "aSelect has invalid value, the caller need to set selection "
-          "by itself");
-      break;
-  }
-
-  return newBRElement.forget();
-}
-
 nsresult TextEditor::ExtendSelectionForDelete(nsIEditor::EDirection* aAction) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
@@ -1441,12 +1342,13 @@ nsresult TextEditor::IsEmpty(bool* aIsEmpty) const {
 
   *aIsEmpty = true;
 
-  if (mRules->HasBogusNode()) {
+  if (mRules->HasPaddingBRElementForEmptyEditor()) {
     return NS_OK;
   }
 
-  // Even if there is no bogus node, we should be detected as empty editor
-  // if all the children are text nodes and these have no content.
+  // Even if there is no padding <br> element for empty editor, we should be
+  // detected as empty editor if all the children are text nodes and these
+  // have no content.
   Element* rootElement = GetRoot();
   if (!rootElement) {
     // XXX Why don't we return an error in such case??
@@ -1481,7 +1383,8 @@ TextEditor::GetTextLength(int32_t* aCount) {
   // initialize out params
   *aCount = 0;
 
-  // special-case for empty document, to account for the bogus node
+  // special-case for empty document, to account for the padding <br> element
+  // for empty editor.
   bool isEmpty = false;
   nsresult rv = IsEmpty(&isEmpty);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2163,7 +2066,7 @@ nsresult TextEditor::SelectEntireDocument() {
   RefPtr<TextEditRules> rules(mRules);
 
   // If we're empty, don't select all children because that would select the
-  // bogus node.
+  // padding <br> element for empty editor.
   if (rules->DocumentIsEmpty()) {
     nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
     NS_WARNING_ASSERTION(
@@ -2183,14 +2086,14 @@ nsresult TextEditor::SelectEntireDocument() {
     childNode = childNode->GetPreviousSibling();
   }
 
-  if (childNode && TextEditUtils::IsMozBR(childNode)) {
+  if (childNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*childNode)) {
     ErrorResult error;
     MOZ_KnownLive(SelectionRefPtr())
         ->SetStartAndEndInLimiter(RawRangeBoundary(rootElement, 0),
                                   EditorRawDOMPoint(childNode), error);
     NS_WARNING_ASSERTION(!error.Failed(),
                          "Failed to select all children of the editor root "
-                         "element except the moz-<br> element");
+                         "element except the padding <br> element");
     return error.StealNSResult();
   }
 

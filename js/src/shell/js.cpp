@@ -11254,8 +11254,8 @@ int main(int argc, char** argv, char** envp) {
   if (cpuCount < 0) {
     cpuCount = op.getIntOption("thread-count");  // Legacy name
   }
-  if (cpuCount >= 0) {
-    SetFakeCPUCount(cpuCount);
+  if (cpuCount >= 0 && !SetFakeCPUCount(cpuCount)) {
+      return 1;
   }
 
   size_t nurseryBytes = JS::DefaultNurseryBytes;

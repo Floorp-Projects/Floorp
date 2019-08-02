@@ -242,10 +242,8 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta,
   if (!bytecodeSection().code().growByUninitialized(delta)) {
     return false;
   }
-
-  // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
-  // reserve a type set to store its result.
-  if (CodeSpec[op].format & JOF_TYPESET) {
+  
+  if (BytecodeOpHasTypeSet(op)) {
     bytecodeSection().incrementNumTypeSets();
   }
 

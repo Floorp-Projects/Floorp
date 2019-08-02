@@ -63,7 +63,6 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
 
   nsresult rv;
   nsAutoString valueStr;
-  NS_NAMED_LITERAL_STRING(_mozStr, "_moz");
 
   for (int32_t index = 0; index < count; index++) {
     const nsAttrName* name = aElement->GetAttrNameAt(index);
@@ -77,16 +76,6 @@ bool nsHTMLContentSerializer::SerializeHTMLAttributes(
       continue;
     }
     aElement->GetAttr(namespaceID, attrName, valueStr);
-
-    //
-    // Filter out special case of <br type="_moz"> or <br _moz*>,
-    // used by the editor.  Bug 16988.  Yuck.
-    //
-    if (aTagName == nsGkAtoms::br && aNamespace == kNameSpaceID_XHTML &&
-        attrName == nsGkAtoms::type && namespaceID == kNameSpaceID_None &&
-        StringBeginsWith(valueStr, _mozStr)) {
-      continue;
-    }
 
     if (mIsCopying && mIsFirstChildOfOL && aTagName == nsGkAtoms::li &&
         aNamespace == kNameSpaceID_XHTML && attrName == nsGkAtoms::value &&

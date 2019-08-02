@@ -3444,7 +3444,7 @@ void JitScript::MonitorBytecodeTypeSlow(JSContext* cx, JSScript* script,
 /* static */
 void JitScript::MonitorBytecodeType(JSContext* cx, JSScript* script,
                                     jsbytecode* pc, const js::Value& rval) {
-  MOZ_ASSERT(CodeSpec[*pc].format & JOF_TYPESET);
+  MOZ_ASSERT(BytecodeOpHasTypeSet(JSOp(*pc)));
 
   if (!script->jitScript()) {
     return;

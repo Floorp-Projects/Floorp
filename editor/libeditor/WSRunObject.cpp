@@ -237,7 +237,7 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
 
   RefPtr<Element> newBrElement =
       MOZ_KnownLive(mHTMLEditor)
-          ->InsertBrElementWithTransaction(pointToInsert, aSelect);
+          ->InsertBRElementWithTransaction(pointToInsert, aSelect);
   if (NS_WARN_IF(!newBrElement)) {
     return nullptr;
   }
@@ -1845,7 +1845,7 @@ nsresult WSRunObject::CheckTrailingNBSPOfRun(WSFragment* aRun) {
         // they type 2 spaces.
 
         RefPtr<Element> brElement =
-            htmlEditor->InsertBrElementWithTransaction(aRun->EndPoint());
+            htmlEditor->InsertBRElementWithTransaction(aRun->EndPoint());
         if (NS_WARN_IF(!brElement)) {
           return NS_ERROR_FAILURE;
         }

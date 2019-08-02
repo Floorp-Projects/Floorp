@@ -16,6 +16,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/NodeIterator.h"
 #include "mozilla/dom/Selection.h"
@@ -62,7 +63,7 @@ using namespace dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(TextEditRules)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBogusNode)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
@@ -74,7 +75,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(TextEditRules)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(TextEditRules)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBogusNode)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPaddingBRElementForEmptyEditor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedSelectionNode)
   if (HTMLEditRules* htmlEditRules = tmp->AsHTMLEditRules()) {
     HTMLEditRules* tmp = htmlEditRules;
@@ -103,7 +104,7 @@ TextEditRules::TextEditRules()
 
 void TextEditRules::InitFields() {
   mTextEditor = nullptr;
-  mBogusNode = nullptr;
+  mPaddingBRElementForEmptyEditor = nullptr;
   mCachedSelectionNode = nullptr;
   mCachedSelectionOffset = 0;
   mActionNesting = 0;
@@ -139,7 +140,7 @@ nsresult TextEditRules::Init(TextEditor* aTextEditor) {
 
   // Put in a magic <br> if needed. This method handles null selection,
   // which should never happen anyway
-  nsresult rv = CreateBogusNodeIfNeeded();
+  nsresult rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -243,7 +244,7 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
     }
 
     // detect empty doc
-    rv = CreateBogusNodeIfNeeded();
+    rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -254,8 +255,8 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
       return rv;
     }
 
-    // Collapse the selection to the trailing moz-<br> if it's at the end of
-    // our text node.
+    // Collapse the selection to the trailing padding <br> element for empty
+    // last line if it's at the end of our text node.
     rv = CollapseSelectionToTrailingBRIfNeeded();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -349,7 +350,7 @@ nsresult TextEditRules::DidDoAction(EditSubActionInfo& aInfo,
   }
 }
 
-bool TextEditRules::DocumentIsEmpty() {
+bool TextEditRules::DocumentIsEmpty() const {
   bool retVal = false;
   if (!mTextEditor || NS_FAILED(mTextEditor->IsEmpty(&retVal))) {
     retVal = true;
@@ -378,19 +379,22 @@ nsresult TextEditRules::WillInsert(bool* aCancel) {
   }
 
   // check for the magic content node and delete it if it exists
-  if (!mBogusNode) {
+  if (!mPaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 
-  // A mutation event listener may recreate bogus node again during the
-  // call of DeleteNodeWithTransaction().  So, move it first.
-  nsCOMPtr<nsIContent> bogusNode(std::move(mBogusNode));
-  DebugOnly<nsresult> rv =
-      MOZ_KnownLive(TextEditorRef()).DeleteNodeWithTransaction(*bogusNode);
+  // A mutation event listener may recreate padding <br> element for empty
+  // editor again during the call of DeleteNodeWithTransaction().  So, move
+  // it first.
+  RefPtr<HTMLBRElement> paddingBRElement(
+      std::move(mPaddingBRElementForEmptyEditor));
+  DebugOnly<nsresult> rv = MOZ_KnownLive(TextEditorRef())
+                               .DeleteNodeWithTransaction(*paddingBRElement);
   if (NS_WARN_IF(!CanHandleEditAction())) {
     return NS_ERROR_EDITOR_DESTROYED;
   }
-  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove the bogus node");
+  NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                       "Failed to remove the padding <br> element");
   return NS_OK;
 }
 
@@ -498,8 +502,9 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // we only need to execute the stuff below if we are a plaintext editor.
-  // html editors have a different mechanism for putting in mozBR's
-  // (because there are a bunch more places you have to worry about it in html)
+  // html editors have a different mechanism for putting in padding <br>
+  // element's (because there are a bunch more places you have to worry about
+  // it in html)
   if (!IsPlaintextEditor()) {
     return NS_OK;
   }
@@ -515,7 +520,8 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   }
 
   // If we are at the end of the <textarea> element, we need to set the
-  // selection to stick to the moz-<br> at the end of the <textarea>.
+  // selection to stick to the padding <br> element for empty last line at the
+  // end of the <textarea>.
   EditorRawDOMPoint selectionStartPoint(
       EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
@@ -538,7 +544,7 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   }
 
   nsINode* nextNode = selectionStartPoint.GetContainer()->GetNextSibling();
-  if (!nextNode || !TextEditUtils::IsMozBR(nextNode)) {
+  if (!nextNode || !EditorBase::IsPaddingBRElementForEmptyLastLine(*nextNode)) {
     return NS_OK;
   }
 
@@ -886,28 +892,29 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
   // Additionally, for avoiding odd result, we should check whether we're in
   // usual condition.
   if (IsSingleLineEditor()) {
-    // If we're a single line text editor, i.e., <input>, there is only bogus-
+    // If we're a single line text editor, i.e., <input>, there is only padding
     // <br> element.  Otherwise, there should be only one text node.  But note
-    // that even if there is a bogus node, it's already been removed by
-    // WillInsert().  So, at here, there should be only one text node or no
-    // children.
+    // that even if there is a padding <br> element for empty editor, it's
+    // already been removed by WillInsert().  So, at here, there should be only
+    // one text node or no children.
     if (firstChild &&
         (!EditorBase::IsTextNode(firstChild) || firstChild->GetNextSibling())) {
       return NS_OK;
     }
   } else {
-    // If we're a multiline text editor, i.e., <textarea>, there is a moz-<br>
-    // element followed by scrollbar/resizer elements.  Otherwise, a text node
-    // is followed by them.
+    // If we're a multiline text editor, i.e., <textarea>, there is a padding
+    // <br> element for empty last line followed by scrollbar/resizer elements.
+    // Otherwise, a text node is followed by them.
     if (!firstChild) {
       return NS_OK;
     }
     if (EditorBase::IsTextNode(firstChild)) {
       if (!firstChild->GetNextSibling() ||
-          !TextEditUtils::IsMozBR(firstChild->GetNextSibling())) {
+          !EditorBase::IsPaddingBRElementForEmptyLastLine(
+              *firstChild->GetNextSibling())) {
         return NS_OK;
       }
-    } else if (!TextEditUtils::IsMozBR(firstChild)) {
+    } else if (!EditorBase::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
       return NS_OK;
     }
   }
@@ -1011,8 +1018,9 @@ nsresult TextEditRules::WillDeleteSelection(
   *aCancel = false;
   *aHandled = false;
 
-  // if there is only bogus content, cancel the operation
-  if (mBogusNode) {
+  // if there is only padding <br> element for empty editor, cancel the
+  // operation.
+  if (mPaddingBRElementForEmptyEditor) {
     *aCancel = true;
     return NS_OK;
   }
@@ -1151,10 +1159,10 @@ nsresult TextEditRules::DidUndo(nsresult aResult) {
   // else that might care.  Since undo and redo are relatively rare, it makes
   // sense to take the (small) performance hit here.
   nsIContent* node = TextEditorRef().GetLeftmostChild(rootElement);
-  if (node && TextEditorRef().IsMozEditorBogusNode(node)) {
-    mBogusNode = node;
+  if (node && EditorBase::IsPaddingBRElementForEmptyEditor(*node)) {
+    mPaddingBRElementForEmptyEditor = static_cast<HTMLBRElement*>(node);
   } else {
-    mBogusNode = nullptr;
+    mPaddingBRElementForEmptyEditor = nullptr;
   }
   return aResult;
 }
@@ -1188,16 +1196,16 @@ nsresult TextEditRules::DidRedo(nsresult aResult) {
   uint32_t len = nodeList->Length();
 
   if (len != 1) {
-    // only in the case of one br could there be the bogus node
-    mBogusNode = nullptr;
+    // only in the case of one br could there be the padding <br> element.
+    mPaddingBRElementForEmptyEditor = nullptr;
     return NS_OK;
   }
 
   Element* brElement = nodeList->Item(0);
-  if (TextEditorRef().IsMozEditorBogusNode(brElement)) {
-    mBogusNode = brElement;
+  if (EditorBase::IsPaddingBRElementForEmptyEditor(*brElement)) {
+    mPaddingBRElementForEmptyEditor = static_cast<HTMLBRElement*>(brElement);
   } else {
-    mBogusNode = nullptr;
+    mPaddingBRElementForEmptyEditor = nullptr;
   }
   return NS_OK;
 }
@@ -1221,8 +1229,9 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
     return NS_OK;
   }
 
-  // If there is a bogus node, there's no content.  So output empty string.
-  if (mBogusNode) {
+  // If there is a padding <br> element, there's no content.  So output empty
+  // string.
+  if (mPaddingBRElementForEmptyEditor) {
     aOutString->Truncate();
     *aHandled = true;
     return NS_OK;
@@ -1279,7 +1288,9 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
   bool isTextarea = !isInput;
   if (NS_WARN_IF(isInput && firstChildExceptText) ||
       NS_WARN_IF(isTextarea && !firstChildExceptText) ||
-      NS_WARN_IF(isTextarea && !TextEditUtils::IsMozBR(firstChildExceptText) &&
+      NS_WARN_IF(isTextarea &&
+                 !EditorBase::IsPaddingBRElementForEmptyLastLine(
+                     *firstChildExceptText) &&
                  !firstChildExceptText->IsXULElement(nsGkAtoms::scrollbar))) {
     return NS_OK;
   }
@@ -1302,8 +1313,8 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
 nsresult TextEditRules::RemoveRedundantTrailingBR() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // If the bogus node exists, we have no work to do
-  if (mBogusNode) {
+  // If the passing <br> element exists, we have no work to do.
+  if (mPaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 
@@ -1317,35 +1328,24 @@ nsresult TextEditRules::RemoveRedundantTrailingBR() {
     return NS_ERROR_NULL_POINTER;
   }
 
-  uint32_t childCount = rootElement->GetChildCount();
-  if (childCount > 1) {
+  if (rootElement->GetChildCount() > 1) {
     // The trailing br is redundant if it is the only remaining child node
     return NS_OK;
   }
 
-  RefPtr<nsIContent> child = rootElement->GetFirstChild();
-  if (!child || !child->IsElement()) {
-    return NS_OK;
-  }
-
-  RefPtr<Element> childElement = child->AsElement();
-  if (!TextEditUtils::IsMozBR(childElement)) {
+  RefPtr<HTMLBRElement> brElement =
+      HTMLBRElement::FromNodeOrNull(rootElement->GetFirstChild());
+  if (!brElement ||
+      !EditorBase::IsPaddingBRElementForEmptyLastLine(*brElement)) {
     return NS_OK;
   }
 
   // Rather than deleting this node from the DOM tree we should instead
-  // morph this br into the bogus node
-  childElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
+  // morph this <br> element into the padding <br> element for editor.
+  mPaddingBRElementForEmptyEditor = std::move(brElement);
+  mPaddingBRElementForEmptyEditor->UnsetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+  mPaddingBRElementForEmptyEditor->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
 
-  // set mBogusNode to be this <br>
-  mBogusNode = childElement;
-
-  // give it the bogus node attribute
-  childElement->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-                        kMOZEditorBogusNodeValue, false);
   return NS_OK;
 }
 
@@ -1362,73 +1362,76 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIContent> lastChild = rootElement->GetLastChild();
-  // assuming CreateBogusNodeIfNeeded() has been called first
-  if (NS_WARN_IF(!lastChild)) {
+  // Assuming CreatePaddingBRElementForEmptyEditorIfNeeded() has been
+  // called first.
+  if (NS_WARN_IF(!rootElement->GetLastChild())) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
+  RefPtr<HTMLBRElement> brElement =
+      HTMLBRElement::FromNode(rootElement->GetLastChild());
+  if (!brElement) {
     AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
     EditorDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
-    CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
-    if (NS_WARN_IF(createMozBrResult.Failed())) {
-      return createMozBrResult.Rv();
+    CreateElementResult createPaddingBRResult =
+        MOZ_KnownLive(TextEditorRef())
+            .InsertPaddingBRElementForEmptyLastLineWithTransaction(endOfRoot);
+    if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+      return createPaddingBRResult.Rv();
     }
     return NS_OK;
   }
 
-  // Check to see if the trailing BR is a former bogus node - this will have
-  // stuck around if we previously morphed a trailing node into a bogus node.
-  if (!TextEditorRef().IsMozEditorBogusNode(lastChild)) {
+  // Check to see if the trailing BR is a former padding <br> element for empty
+  // editor - this will have stuck around if we previously morphed a trailing
+  // node into a padding <br> element.
+  if (!brElement->IsPaddingForEmptyEditor()) {
     return NS_OK;
   }
 
-  // Morph it back to a mozBR
-  lastChild->AsElement()->UnsetAttr(kNameSpaceID_None,
-                                    kMOZEditorBogusNodeAttrAtom, false);
-  lastChild->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                                  NS_LITERAL_STRING("_moz"), true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
+  // Morph it back to a padding <br> element for empty last line.
+  brElement->UnsetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
+  brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+
   return NS_OK;
 }
 
-nsresult TextEditRules::CreateBogusNodeIfNeeded() {
+nsresult TextEditRules::CreatePaddingBRElementForEmptyEditorIfNeeded() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  if (mBogusNode) {
+  if (mPaddingBRElementForEmptyEditor) {
     // Let's not create more than one, ok?
     return NS_OK;
   }
 
   // tell rules system to not do any post-processing
   AutoTopLevelEditSubActionNotifier maybeTopLevelEditSubAction(
-      TextEditorRef(), EditSubAction::eCreateBogusNode, nsIEditor::eNone);
+      TextEditorRef(), EditSubAction::eCreatePaddingBRElementForEmptyEditor,
+      nsIEditor::eNone);
 
   RefPtr<Element> rootElement = TextEditorRef().GetRoot();
   if (!rootElement) {
-    // We don't even have a body yet, don't insert any bogus nodes at
+    // We don't even have a body yet, don't insert any padding <br> elements at
     // this point.
     return NS_OK;
   }
 
   // Now we've got the body element. Iterate over the body element's children,
   // looking for editable content. If no editable content is found, insert the
-  // bogus node.
+  // padding <br> element.
   bool isRootEditable = TextEditorRef().IsEditable(rootElement);
   for (nsIContent* rootChild = rootElement->GetFirstChild(); rootChild;
        rootChild = rootChild->GetNextSibling()) {
-    if (TextEditorRef().IsMozEditorBogusNode(rootChild) || !isRootEditable ||
-        TextEditorRef().IsEditable(rootChild) ||
+    if (EditorBase::IsPaddingBRElementForEmptyEditor(*rootChild) ||
+        !isRootEditable || TextEditorRef().IsEditable(rootChild) ||
         TextEditorRef().IsBlockNode(rootChild)) {
       return NS_OK;
     }
   }
 
-  // Skip adding the bogus node if body is read-only.
+  // Skip adding the padding <br> element for empty editor if body
+  // is read-only.
   if (!TextEditorRef().IsModifiableNode(*rootElement)) {
     return NS_OK;
   }
@@ -1443,15 +1446,11 @@ nsresult TextEditRules::CreateBogusNodeIfNeeded() {
     return NS_ERROR_FAILURE;
   }
 
-  // set mBogusNode to be the newly created <br>
-  mBogusNode = newBrElement;
+  mPaddingBRElementForEmptyEditor =
+      static_cast<HTMLBRElement*>(newBrElement.get());
 
   // Give it a special attribute.
-  newBrElement->SetAttr(kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-                        kMOZEditorBogusNodeValue, false);
-  if (NS_WARN_IF(mBogusNode != newBrElement)) {
-    return NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE;
-  }
+  newBrElement->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
 
   // Put the node in the document.
   nsresult rv = MOZ_KnownLive(TextEditorRef())
@@ -1555,44 +1554,6 @@ nsresult TextEditRules::TruncateInsertionIfNeeded(const nsAString* aInString,
     }
   }
   return NS_OK;
-}
-
-CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorDOMPoint& aPointToInsert, bool aCreateMozBR) {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  if (NS_WARN_IF(!aPointToInsert.IsSet())) {
-    return CreateElementResult(NS_ERROR_FAILURE);
-  }
-
-  RefPtr<Element> brElement =
-      MOZ_KnownLive(TextEditorRef())
-          .InsertBrElementWithTransaction(aPointToInsert);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_WARN_IF(!brElement)) {
-    return CreateElementResult(NS_ERROR_FAILURE);
-  }
-
-  // give it special moz attr
-  if (!aCreateMozBR) {
-    return CreateElementResult(brElement.forget());
-  }
-
-  // XXX Why do we need to set this attribute with transaction?
-  nsresult rv = MOZ_KnownLive(TextEditorRef())
-                    .SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
-                                                 NS_LITERAL_STRING("_moz"));
-  // XXX Don't we need to remove the new <br> element from the DOM tree
-  //     in these case?
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return CreateElementResult(NS_ERROR_FAILURE);
-  }
-  return CreateElementResult(brElement.forget());
 }
 
 bool TextEditRules::IsPasswordEditor() const {
