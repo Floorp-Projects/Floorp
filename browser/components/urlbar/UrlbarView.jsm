@@ -200,9 +200,6 @@ class UrlbarView {
    * Closes the view, cancelling the query if necessary.
    */
   close() {
-    if (!this.isOpen) {
-      return;
-    }
     this.controller.cancelQuery();
     this.panel.setAttribute("hidden", "true");
     this.removeAccessibleFocus();
@@ -213,7 +210,6 @@ class UrlbarView {
     this.window.removeEventListener("mousedown", this);
     this.panel.removeEventListener("mousedown", this);
     this.input.textbox.removeEventListener("mousedown", this);
-    this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
   }
 
   // UrlbarController listener methods.
@@ -402,14 +398,16 @@ class UrlbarView {
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
 
+    if (this.oneOffSearchButtons.style.display != "none") {
+      this.oneOffSearchButtons._rebuild();
+    }
+
     this.window.addEventListener("mousedown", this);
     this.panel.addEventListener("mousedown", this);
     this.input.textbox.addEventListener("mousedown", this);
 
     this.window.addEventListener("resize", this);
     this._windowOuterWidth = this.window.outerWidth;
-
-    this.controller.notify(this.controller.NOTIFICATIONS.VIEW_OPEN);
   }
 
   /**

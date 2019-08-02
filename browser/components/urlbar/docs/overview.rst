@@ -331,10 +331,9 @@ Represents the base *View* implementation, communicates with the *Controller*.
     // Invoked when the query is done. This is invoked in any case, even if the
     // query was canceled earlier.
     onQueryFinished(queryContext);
-    // Invoked when the view opens.
-    onViewOpen();
-    // Invoked when the view closes.
-    onViewClose();
+    // Invoked when the view context changed, so that cached information about
+    // the latest search is no more relevant and can be dropped.
+    onViewContextChanged();
   }
 
 
