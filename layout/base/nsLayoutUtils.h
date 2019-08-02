@@ -119,8 +119,6 @@ struct DisplayPortMarginsPropertyData {
 struct MotionPathData {
   gfx::Point mTranslate;
   float mRotate;
-  // The delta value between transform-origin and offset-anchor.
-  gfx::Point mShift;
 };
 
 }  // namespace mozilla
