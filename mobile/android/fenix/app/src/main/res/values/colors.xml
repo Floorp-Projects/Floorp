@@ -203,7 +203,9 @@
 
     <!-- Launcher Icon colors -->
     <color name="default_launcher_background">#FDFDFD</color>
-    <color name="debug_launcher_background">#220033</color>
+    <color name="nightly_launcher_background">#220033</color>
+    <color name="debug_launcher_background">#312A65</color>
+    <color name="ic_launcher_background">@color/default_launcher_background</color>
 
     <!-- Button Colors -->
     <color name="grey_button_color">#E0E0E6</color>
