@@ -5944,6 +5944,12 @@ already_AddRefed<PresShell> Document::CreatePresShell(
     // Gaining a shell causes changes in how media queries are evaluated, so
     // invalidate that.
     aContext->MediaFeatureValuesChanged({MediaFeatureChange::kAllChanges});
+  } else {
+    // Otherwise, we need to at least recompute the initial style now that our
+    // resolution and such may have changed. This is done by
+    // MediaFeatureValuesChanged above otherwise, see
+    // kMediaFeaturesAffectingDefaultStyle.
+    mStyleSet->ClearCachedStyleData();
   }
 
   // Make sure to never paint if we belong to an invisible DocShell.

@@ -1,0 +1,20 @@
+<!doctype html>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<iframe id="frame"></iframe>
+<script>
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ "set": [["layout.css.devPixelsPerPx", "1.25"]] },
+  function() {
+    is(window.devicePixelRatio, 1.25, "devPixelsPerPx should work");
+    const frame = document.getElementById("frame");
+    frame.addEventListener("load", function() {
+      let doc = frame.contentDocument;
+      let win = frame.contentWindow;
+      is(win.devicePixelRatio, 1.25, "devPixelsPerPx should work inside the frame");
+      is(win.getComputedStyle(doc.querySelector("div")).borderTopWidth, "0.8px", "Shouldn't incorrectly round with 60 app units after getting the initial style");
+      SimpleTest.finish();
+    });
+    frame.srcdoc = "<div style='border: 1px solid; display: none;'></div>";
+  });
+</script>
