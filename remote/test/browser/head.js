@@ -128,6 +128,21 @@ async function setupTestForUri(uri) {
   return { client, tab };
 }
 
+/** Creates a data URL for the given source document. */
+function toDataURL(src, doctype = "html") {
+  let doc, mime;
+  switch (doctype) {
+    case "html":
+      mime = "text/html;charset=utf-8";
+      doc = `<!doctype html>\n<meta charset=utf-8>\n${src}`;
+      break;
+    default:
+      throw new Error("Unexpected doctype: " + doctype);
+  }
+
+  return `data:${mime},${encodeURIComponent(doc)}`;
+}
+
 /**
  * Retrieve the value of a property on the content window.
  */
