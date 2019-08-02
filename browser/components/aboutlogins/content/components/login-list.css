@@ -39,6 +39,27 @@
   margin-inline-start: 18px;
 }
 
+.container {
+  display: contents;
+}
+
+:host(.no-logins) ol,
+:host(:not(.no-logins)) .intro {
+  display: none;
+}
+
+.intro {
+  text-align: center;
+  padding: 1em;
+  max-width: 50ch; /* This should be kept in sync with login-list-item username and title max-width */
+  flex-grow: 1;
+  border-bottom: 1px solid var(--in-content-box-border-color);
+}
+
+.intro span {
+  font-size: 0.85em;
+}
+
 ol {
   margin-top: 0;
   margin-bottom: 0;

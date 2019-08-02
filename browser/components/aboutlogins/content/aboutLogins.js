@@ -3,12 +3,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 let gElements = {};
+let numberOfLogins = 0;
 
 document.addEventListener(
   "DOMContentLoaded",
   () => {
     gElements.fxAccountsButton = document.querySelector("fxaccounts-button");
     gElements.loginList = document.querySelector("login-list");
+    gElements.loginIntro = document.querySelector("login-intro");
     gElements.loginItem = document.querySelector("login-item");
     gElements.loginFilter = document.querySelector("login-filter");
 
@@ -26,15 +28,24 @@ document.addEventListener(
   { once: true }
 );
 
+function updateNoLogins() {
+  document.documentElement.classList.toggle("no-logins", numberOfLogins == 0);
+  gElements.loginList.classList.toggle("no-logins", numberOfLogins == 0);
+}
+
 window.addEventListener("AboutLoginsChromeToContent", event => {
   switch (event.detail.messageType) {
     case "AllLogins": {
       gElements.loginList.setLogins(event.detail.value);
+      numberOfLogins = event.detail.value.length;
+      updateNoLogins();
       break;
     }
     case "LoginAdded": {
       gElements.loginList.loginAdded(event.detail.value);
       gElements.loginItem.loginAdded(event.detail.value);
+      numberOfLogins++;
+      updateNoLogins();
       break;
     }
     case "LoginModified": {
@@ -45,6 +56,8 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
     case "LoginRemoved": {
       gElements.loginList.loginRemoved(event.detail.value);
       gElements.loginItem.loginRemoved(event.detail.value);
+      numberOfLogins--;
+      updateNoLogins();
       break;
     }
     case "SyncState": {

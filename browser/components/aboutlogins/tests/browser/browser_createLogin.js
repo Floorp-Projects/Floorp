@@ -17,6 +17,14 @@ add_task(async function test_create_login() {
   await ContentTask.spawn(browser, null, async () => {
     let loginList = Cu.waiveXrays(content.document.querySelector("login-list"));
     ok(!loginList._selectedGuid, "should not be a selected guid by default");
+    ok(
+      content.document.documentElement.classList.contains("no-logins"),
+      "Should initially be in no logins view"
+    );
+    ok(
+      loginList.classList.contains("no-logins"),
+      "login-list should initially be in no logins view"
+    );
   });
 
   let testCases = [
@@ -82,8 +90,16 @@ add_task(async function test_create_login() {
       browser,
       { expectedCount, originTuple },
       async ({ expectedCount: aExpectedCount, originTuple: aOriginTuple }) => {
+        ok(
+          !content.document.documentElement.classList.contains("no-logins"),
+          "Should no longer be in no logins view"
+        );
         let loginList = Cu.waiveXrays(
           content.document.querySelector("login-list")
+        );
+        ok(
+          !loginList.classList.contains("no-logins"),
+          "login-list should no longer be in no logins view"
         );
         let loginGuid = await ContentTaskUtils.waitForCondition(() => {
           return loginList._loginGuidsSortedOrder.find(
