@@ -157,10 +157,14 @@ var AboutProtectionsHandler = {
    */
   async getLoginData() {
     let syncedDevices = [];
-    const hasFxa = await fxAccounts.accountStatus();
+    let hasFxa = false;
 
-    if (hasFxa) {
-      syncedDevices = await fxAccounts.getDeviceList();
+    try {
+      if ((hasFxa = await fxAccounts.accountStatus())) {
+        syncedDevices = await fxAccounts.getDeviceList();
+      }
+    } catch (e) {
+      Cu.reportError("There was an error fetching login data: ", e.message);
     }
 
     return {
@@ -185,57 +189,51 @@ var AboutProtectionsHandler = {
     let monitorData = {};
     let potentiallyBreachedLogins = null;
     let userEmail = null;
-    const hasFxa = await fxAccounts.accountStatus();
+    let token = await this.getMonitorScopedOAuthToken();
 
-    if (hasFxa) {
-      let token = await this.getMonitorScopedOAuthToken();
-
-      if (!token) {
-        return { error: true };
-      }
-
-      try {
+    try {
+      if ((await fxAccounts.accountStatus()) && token) {
         monitorData = await this.fetchUserBreachStats(token);
-      } catch (e) {
-        Cu.reportError(e.message);
-        // If the user's OAuth token is invalid, we clear the cached token and refetch
-        // again. If OAuth token is invalid after the second fetch, then the monitor UI
-        // will simply show the "no logins" UI version.
-        if (e.message === INVALID_OAUTH_TOKEN) {
-          await fxAccounts.removeCachedOAuthToken({ token });
-          token = await await this.getMonitorScopedOAuthToken();
 
-          try {
-            monitorData = await this.fetchUserBreachStats(token);
-          } catch (_) {
-            Cu.reportError(e.message);
-            monitorData.errorMessage = INVALID_OAUTH_TOKEN;
+        // Get the stats for number of potentially breached Lockwise passwords if no master
+        // password is set.
+        if (!LoginHelper.isMasterPasswordSet()) {
+          const logins = await LoginHelper.getAllUserFacingLogins();
+          potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
+            logins
+          );
+
+          // If the user isn't subscribed to Monitor, then send back their email so the
+          // protections report can direct them to the proper OAuth flow on Monitor.
+          if (monitorData.errorMessage) {
+            const { email } = await fxAccounts.getSignedInUser();
+            userEmail = email;
           }
-        } else {
-          monitorData.errorMessage = e.message;
         }
+      } else {
+        // If no account exists, then the user is not logged in with an fxAccount.
+        monitorData = {
+          errorMessage: "No account",
+        };
       }
+    } catch (e) {
+      Cu.reportError(e.message);
+      // If the user's OAuth token is invalid, we clear the cached token and refetch
+      // again. If OAuth token is invalid after the second fetch, then the monitor UI
+      // will simply show the "no logins" UI version.
+      if (e.message === INVALID_OAUTH_TOKEN) {
+        await fxAccounts.removeCachedOAuthToken({ token });
+        token = await this.getMonitorScopedOAuthToken();
 
-      // Get the stats for number of potentially breached Lockwise passwords if no master
-      // password is set.
-      if (!LoginHelper.isMasterPasswordSet()) {
-        const logins = await LoginHelper.getAllUserFacingLogins();
-        potentiallyBreachedLogins = await LoginHelper.getBreachesForLogins(
-          logins
-        );
-
-        // If the user isn't subscribed to Monitor, then send back their email so the
-        // protections report can direct them to the proper OAuth flow on Monitor.
-        if (monitorData.errorMessage) {
-          const { email } = await fxAccounts.getSignedInUser();
-          userEmail = email;
+        try {
+          monitorData = await this.fetchUserBreachStats(token);
+        } catch (_) {
+          Cu.reportError(e.message);
+          monitorData.errorMessage = INVALID_OAUTH_TOKEN;
         }
+      } else {
+        monitorData.errorMessage = e.message || "An error ocurred.";
       }
-    } else {
-      // If no account exists, then the user is not logged in with an fxAccount.
-      monitorData = {
-        errorMessage: "No account",
-      };
     }
 
     return {
