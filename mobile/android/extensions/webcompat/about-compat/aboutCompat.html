@@ -2,17 +2,19 @@
 <html>
 <head>
   <base/>
+
   <!-- If you change this script tag you must update the hash in the extension's
-         `content_security_policy` 'sha256-HbSjs39Y0thRGfO3RHrNzLPKyC/tq6FdIuP3jEBAcJQ=' -->
-  <script>document.head.firstElementChild.href = browser.runtime.getURL("");</script>
+         `content_security_policy` 'sha256-MmZkN2QaIHhfRWPZ8TVRjijTn5Ci1iEabtTEWrt9CCo=' -->
+  <script>/* globals browser */ document.head.firstElementChild.href = browser.runtime.getURL("");</script>
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="aboutCompat.css" />
+  <link rel="stylesheet" href="about-compat/aboutCompat.css" />
   <link rel="stylesheet" media="screen and (pointer:fine), projection" type="text/css"
           href="chrome://global/skin/in-content/common.css"/>
   <link rel="localization" href="toolkit/about/aboutCompat.ftl"/>
   <title data-l10n-id="text-title"></title>
-  <script src="aboutCompat.js"></script>
+  <script src="about-compat/aboutCompat.js"></script>
   </head>
 <body>
   <h2 class="tab active" data-l10n-id="label-overrides"></h2>
