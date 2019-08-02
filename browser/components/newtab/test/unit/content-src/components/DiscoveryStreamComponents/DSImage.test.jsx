@@ -87,9 +87,18 @@ describe("Discovery Stream <DSImage>", () => {
       <DSImage rawSource="https://placekitten.com/g/640/480" />
     );
 
-    img.instance().onSeen([{ isIntersecting: true }]);
+    img.instance().onSeen([
+      {
+        isIntersecting: true,
+        boundingClientRect: {
+          width: 640,
+          height: 480,
+        },
+      },
+    ]);
 
-    assert.property(img.state(), "containerWidth");
+    assert.equal(img.state().containerWidth, 640);
+    assert.equal(img.state().containerHeight, 480);
     assert.propertyVal(img.state(), "isSeen", true);
   });
 
