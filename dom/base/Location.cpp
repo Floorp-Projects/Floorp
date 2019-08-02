@@ -731,10 +731,10 @@ void Location::SetSearch(const nsAString& aSearch,
   SetURI(uri, aSubjectPrincipal, aRv);
 }
 
-nsresult Location::Reload(bool aForceget) {
+void Location::Reload(bool aForceget, ErrorResult& aRv) {
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mDocShell));
   if (!docShell) {
-    return NS_ERROR_FAILURE;
+    return aRv.Throw(NS_ERROR_FAILURE);
   }
 
   if (StaticPrefs::dom_block_reload_from_resize_event_handler()) {
@@ -753,8 +753,7 @@ nsresult Location::Reload(bool aForceget) {
         pcx->RebuildAllStyleData(NS_STYLE_HINT_REFLOW,
                                  RestyleHint::RestyleSubtree());
       }
-
-      return NS_OK;
+      return;
     }
   }
 
@@ -767,14 +766,12 @@ nsresult Location::Reload(bool aForceget) {
   }
 
   nsresult rv = nsDocShell::Cast(docShell)->Reload(reloadFlags);
-  if (rv == NS_BINDING_ABORTED) {
-    // This happens when we attempt to reload a POST result and the user says
-    // no at the "do you want to reload?" prompt.  Don't propagate this one
-    // back to callers.
-    rv = NS_OK;
+  if (rv != NS_BINDING_ABORTED) {
+    // NS_BINDING_ABORTED is returned when we attempt to reload a POST result
+    // and the user says no at the "do you want to reload?" prompt.  Don't
+    // propagate this one back to callers.
+    return aRv.Throw(rv);
   }
-
-  return rv;
 }
 
 void Location::Replace(const nsAString& aUrl, nsIPrincipal& aSubjectPrincipal,
