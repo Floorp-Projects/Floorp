@@ -64,6 +64,9 @@ linux64-hfsplus:
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
     toolchains:
         - linux64-clang-8
+    fetches:
+        fetch:
+            - hfsplus-tools
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"

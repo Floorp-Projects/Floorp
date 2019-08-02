@@ -4,7 +4,6 @@ set -e -v
 # This script is for building tup on Linux.
 
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 COMPRESS_EXT=xz
 export PATH=$WORKSPACE/build/src/gcc/bin:$PATH
 

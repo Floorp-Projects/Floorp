@@ -47,9 +47,9 @@ coverity:
     treeherder:
         symbol: coverity(cvsa)
     run:
+        cwd: '{checkout}'
         command: >-
-            source $HOME/checkouts/gecko/taskcluster/scripts/misc/source-test-clang-setup.sh &&
-            cd $HOME/checkouts/gecko &&
+            source taskcluster/scripts/misc/source-test-clang-setup.sh &&
             ./mach --log-no-times static-analysis check-coverity --outgoing --output $HOME/coverity.json
     scopes:
         - secrets:get:project/relman/coverity

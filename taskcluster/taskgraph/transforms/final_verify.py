@@ -26,9 +26,9 @@ def add_command(config, tasks):
                 )
         task['run'] = {
             'using': 'run-task',
+            'cwd': '{checkout}',
             'command': {
-                'artifact-reference': 'cd /builds/worker/checkouts/gecko && '
-                                      'tools/update-verify/release/final-verification.sh '
+                'artifact-reference': 'tools/update-verify/release/final-verification.sh '
                                       + ' '.join(final_verify_configs),
             },
             'sparse-profile': 'update-verify',
