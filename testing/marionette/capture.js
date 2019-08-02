@@ -148,19 +148,10 @@ capture.canvas = function(
 
   let ctx = canvas.getContext(CONTEXT_2D);
   if (flags === null) {
-    flags = ctx.DRAWWINDOW_DRAW_CARET;
-    // TODO(ato): https://bugzil.la/1377335
-    //
-    // Disabled in bug 1243415 for webplatform-test
-    // failures due to out of view elements.  Needs
-    // https://github.com/w3c/web-platform-tests/issues/4383 fixed.
-    /*
-    ctx.DRAWWINDOW_DRAW_VIEW;
-    */
-    // Bug 1009762 - Crash in [@ mozilla::gl::ReadPixelsIntoDataSurface]
-    /*
-    ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
-    */
+    flags =
+      ctx.DRAWWINDOW_DRAW_CARET |
+      ctx.DRAWWINDOW_DRAW_VIEW |
+      ctx.DRAWWINDOW_USE_WIDGET_LAYERS;
   }
 
   ctx.scale(scale, scale);
