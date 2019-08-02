@@ -1148,23 +1148,6 @@ pref("privacy.popups.maxReported", 100);
 #ifdef NIGHTLY_BUILD
 pref("privacy.trackingprotection.origin_telemetry.enabled", true);
 #endif
-// We automatically decline canvas permission requests if they are not initiated
-// from user input. Just in case that breaks something, we allow the user to revert
-// this behavior with this obscure pref. We do not intend to support this long term.
-// If you do set it, to work around some broken website, please file a bug with
-// information so we can understand why it is needed.
-pref("privacy.resistFingerprinting.autoDeclineNoUserInputCanvasPrompts", true);
-// The log level for browser console messages logged in RFPHelper.jsm
-// Change to 'All' and restart to see the messages
-pref("privacy.resistFingerprinting.jsmloglevel", "Warn");
-// A subset of Resist Fingerprinting protections focused specifically on timers for testing
-// This affects the Animation API, the performance APIs, Date.getTime, Event.timestamp,
-//   File.lastModified, audioContext.currentTime, canvas.captureStream.currentTime
-pref("privacy.reduceTimerPrecision", true);
-// Dynamically tune the resolution of the timer reduction for both of the two above prefs
-pref("privacy.resistFingerprinting.reduceTimerPrecision.microseconds", 1000);
-// Enable jittering the clock one precision value forward
-pref("privacy.resistFingerprinting.reduceTimerPrecision.jitter", true);
 
 pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
