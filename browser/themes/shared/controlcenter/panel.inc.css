@@ -898,7 +898,8 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-.protection-popup-footer-icon {
+.protections-popup-footer-icon {
+  -moz-context-properties: fill;
   width: 16px;
   height: 16px;
 }
