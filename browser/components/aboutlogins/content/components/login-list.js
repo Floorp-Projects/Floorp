@@ -135,9 +135,10 @@ export default class LoginList extends HTMLElement {
         if (!this._loginGuidsSortedOrder.length) {
           return;
         }
+        let firstLogin = this._logins[this._loginGuidsSortedOrder[0]].login;
         window.dispatchEvent(
           new CustomEvent("AboutLoginsLoginSelected", {
-            detail: this._logins[0],
+            detail: firstLogin,
             cancelable: true,
           })
         );
