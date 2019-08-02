@@ -1240,16 +1240,17 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
     return rv;
   }
 
-  // Adjust selection to prevent insertion after a moz-BR.  This next only
-  // works for collapsed selections right now, because selection is a pain to
-  // work with when not collapsed.  (no good way to extend start or end of
-  // selection), so we ignore those types of selections.
+  // Adjust selection to prevent insertion after a padding <br> element for
+  // empty last line.  This next only works for collapsed selections right
+  // now, because selection is a pain to work with when not collapsed.  (no
+  // good way to extend start or end of selection), so we ignore those types
+  // of selections.
   if (!SelectionRefPtr()->IsCollapsed()) {
     return NS_OK;
   }
 
-  // If we are after a mozBR in the same block, then move selection to be
-  // before it
+  // If we are after a padding <br> element for empty last line in the same
+  // block, then move selection to be before it
   nsRange* firstRange = SelectionRefPtr()->GetRangeAt(0);
   if (NS_WARN_IF(!firstRange)) {
     return NS_ERROR_FAILURE;
@@ -1264,15 +1265,16 @@ nsresult HTMLEditRules::WillInsert(bool* aCancel) {
   // Get prior node
   nsCOMPtr<nsIContent> priorNode =
       HTMLEditorRef().GetPreviousEditableHTMLNode(atStartOfSelection);
-  if (priorNode && TextEditUtils::IsMozBR(priorNode)) {
+  if (priorNode && EditorBase::IsPaddingBRElementForEmptyLastLine(*priorNode)) {
     RefPtr<Element> block1 =
         HTMLEditorRef().GetBlock(*atStartOfSelection.GetContainer());
     RefPtr<Element> block2 = HTMLEditorRef().GetBlockNodeParent(priorNode);
 
     if (block1 && block1 == block2) {
-      // If we are here then the selection is right after a mozBR that is in
-      // the same block as the selection.  We need to move the selection start
-      // to be before the mozBR.
+      // If we are here then the selection is right after a padding <br>
+      // element for empty last line that is in the same block as the
+      // selection.  We need to move the selection start to be before the
+      // padding <br> element.
       EditorRawDOMPoint point(priorNode);
       ErrorResult error;
       SelectionRefPtr()->Collapse(point, error);
@@ -4651,8 +4653,8 @@ nsresult HTMLEditRules::DidMakeBasicBlock() {
   if (NS_WARN_IF(!atStartOfSelection.IsSet())) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv =
-      InsertMozBRIfNeeded(MOZ_KnownLive(*atStartOfSelection.Container()));
+  nsresult rv = InsertPaddingBRElementForEmptyLastLineIfNeeded(
+      MOZ_KnownLive(*atStartOfSelection.Container()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -6144,10 +6146,12 @@ nsresult HTMLEditRules::AlignContentsAtSelection(const nsAString& aAlignType) {
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-    // Put in a moz-br so that it won't get deleted
-    CreateElementResult createMozBrResult = CreateMozBR(EditorDOMPoint(div, 0));
-    if (NS_WARN_IF(createMozBrResult.Failed())) {
-      return createMozBrResult.Rv();
+    // Put in a padding <br> element for empty last line so that it won't get
+    // deleted.
+    CreateElementResult createPaddingBRResult =
+        CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(div, 0));
+    if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+      return createPaddingBRResult.Rv();
     }
     EditorRawDOMPoint atStartOfDiv(div, 0);
     // Don't restore the selection
@@ -7826,7 +7830,8 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
   NS_WARNING_ASSERTION(splitHeaderResult.Succeeded(),
                        "Failed to split aHeader");
 
-  // If the previous heading of split point is empty, put a mozbr into it.
+  // If the previous heading of split point is empty, put a padding <br>
+  // element for empty last line into it.
   nsCOMPtr<nsIContent> prevItem = HTMLEditorRef().GetPriorHTMLSibling(&aHeader);
   if (prevItem) {
     MOZ_DIAGNOSTIC_ASSERT(HTMLEditUtils::IsHeader(*prevItem));
@@ -7836,10 +7841,10 @@ nsresult HTMLEditRules::ReturnInHeader(Element& aHeader, nsINode& aNode,
       return rv;
     }
     if (isEmptyNode) {
-      CreateElementResult createMozBrResult =
-          CreateMozBR(EditorDOMPoint(prevItem, 0));
-      if (NS_WARN_IF(createMozBrResult.Failed())) {
-        return createMozBrResult.Rv();
+      CreateElementResult createPaddingBRResult =
+          CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(prevItem, 0));
+      if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+        return createPaddingBRResult.Rv();
       }
     }
   }
@@ -8030,7 +8035,7 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       brContent = HTMLEditorRef().GetPriorHTMLSibling(
           atStartOfSelection.GetContainer());
       if (!brContent || !HTMLEditorRef().IsVisibleBRElement(brContent) ||
-          TextEditUtils::HasMozAttr(brContent)) {
+          EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         brContent = nullptr;
       }
@@ -8040,7 +8045,7 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
       brContent =
           HTMLEditorRef().GetNextHTMLSibling(atStartOfSelection.GetContainer());
       if (!brContent || !HTMLEditorRef().IsVisibleBRElement(brContent) ||
-          TextEditUtils::HasMozAttr(brContent)) {
+          EditorBase::IsPaddingBRElementForEmptyLastLine(*brContent)) {
         pointToInsertBR.Set(atStartOfSelection.GetContainer());
         DebugOnly<bool> advanced = pointToInsertBR.AdvanceOffset();
         NS_WARNING_ASSERTION(advanced,
@@ -8078,11 +8083,11 @@ EditActionResult HTMLEditRules::ReturnInParagraph(Element& aParentDivOrP) {
     nsCOMPtr<nsIContent> nearNode;
     nearNode = HTMLEditorRef().GetPreviousEditableHTMLNode(atStartOfSelection);
     if (!nearNode || !HTMLEditorRef().IsVisibleBRElement(nearNode) ||
-        TextEditUtils::HasMozAttr(nearNode)) {
+        EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
       // is there a BR after it?
       nearNode = HTMLEditorRef().GetNextEditableHTMLNode(atStartOfSelection);
       if (!nearNode || !HTMLEditorRef().IsVisibleBRElement(nearNode) ||
-          TextEditUtils::HasMozAttr(nearNode)) {
+          EditorBase::IsPaddingBRElementForEmptyLastLine(*nearNode)) {
         pointToInsertBR = atStartOfSelection;
         splitAfterNewBR = true;
       }
@@ -8181,11 +8186,11 @@ nsresult HTMLEditRules::SplitParagraph(
   }
 
   // We need to ensure to both paragraphs visible even if they are empty.
-  // However, moz-<br> element isn't useful in this case because moz-<br>
-  // elements will be ignored by PlaintextSerializer.  Additionally,
-  // moz-<br> will be exposed as <br> with Element.innerHTML.  Therefore,
-  // we can use normal <br> elements for placeholder in this case.
-  // Note that Chromium also behaves so.
+  // However, padding <br> element for empty last line isn't useful in this
+  // case because it'll be ignored by PlaintextSerializer.  Additionally,
+  // it'll be exposed as <br> with Element.innerHTML.  Therefore, we can use
+  // normal <br> elements for placeholder in this case.  Note that Chromium
+  // also behaves so.
   rv = InsertBRIfNeeded(MOZ_KnownLive(*splitDivOrPResult.GetPreviousNode()));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -8367,10 +8372,10 @@ nsresult HTMLEditRules::ReturnInListItem(Element& aListItem, nsINode& aNode,
       return rv;
     }
     if (isEmptyNode) {
-      CreateElementResult createMozBrResult =
-          CreateMozBR(EditorDOMPoint(prevItem, 0));
-      if (NS_WARN_IF(createMozBrResult.Failed())) {
-        return createMozBrResult.Rv();
+      CreateElementResult createPaddingBRResult =
+          CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(prevItem, 0));
+      if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+        return createPaddingBRResult.Rv();
       }
     } else {
       rv = HTMLEditorRef().IsEmptyNode(&aListItem, &isEmptyNode, true);
@@ -9249,7 +9254,7 @@ HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() {
   }
   iter.AppendList(functor, nodeArray);
 
-  // Put moz-br's into these empty li's and td's
+  // Put padding <br> elements for empty <li> and <td>.
   for (auto& node : nodeArray) {
     // Need to put br at END of node.  It may have empty containers in it and
     // still pass the "IsEmptyNode" test, and we want the br's to be after
@@ -9257,11 +9262,10 @@ HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() {
     // is in this node.
     EditorDOMPoint endOfNode;
     endOfNode.SetToEndOf(node);
-    // XXX This method should return nsreuslt due to may be destroyed by this
-    //     CreateMozBr() call.
-    CreateElementResult createMozBrResult = CreateMozBR(endOfNode);
-    if (NS_WARN_IF(createMozBrResult.Failed())) {
-      return createMozBrResult.Rv();
+    CreateElementResult createPaddingBRResult =
+        CreatePaddingBRElementForEmptyLastLine(endOfNode);
+    if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+      return createPaddingBRResult.Rv();
     }
   }
   return NS_OK;
@@ -9466,9 +9470,10 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
       }
 
       // we know we can skip the rest of this routine given the cirumstance
-      CreateElementResult createMozBrResult = CreateMozBR(point);
-      if (NS_WARN_IF(createMozBrResult.Failed())) {
-        return createMozBrResult.Rv();
+      CreateElementResult createPaddingBRResult =
+          CreatePaddingBRElementForEmptyLastLine(point);
+      if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+        return createPaddingBRResult.Rv();
       }
       return NS_OK;
     }
@@ -9479,7 +9484,8 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
     return NS_OK;  // we LIKE it when we are in a text node.  that RULZ
   }
 
-  // do we need to insert a special mozBR?  We do if we are:
+  // Do we need to insert a padding <br> element for empty last line?  We do
+  // if we are:
   // 1) prior node is in same block where selection is AND
   // 2) prior node is a br AND
   // 3) that br is not visible
@@ -9496,12 +9502,14 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
           // need to insert special moz BR. Why?  Because if we don't
           // the user will see no new line for the break.  Also, things
           // like table cells won't grow in height.
-          CreateElementResult createMozBrResult = CreateMozBR(point);
-          if (NS_WARN_IF(createMozBrResult.Failed())) {
-            return createMozBrResult.Rv();
+          CreateElementResult createPaddingBRResult =
+              CreatePaddingBRElementForEmptyLastLine(point);
+          if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+            return createPaddingBRResult.Rv();
           }
-          point.Set(createMozBrResult.GetNewNode());
-          // selection stays *before* moz-br, sticking to it
+          point.Set(createPaddingBRResult.GetNewNode());
+          // Selection stays *before* padding <br> element for empty last line,
+          // sticking to it.
           ErrorResult error;
           SelectionRefPtr()->SetInterlinePosition(true, error);
           if (NS_WARN_IF(!CanHandleEditAction())) {
@@ -9522,9 +9530,11 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
         } else {
           nsCOMPtr<nsIContent> nextNode =
               HTMLEditorRef().GetNextEditableHTMLNodeInBlock(*nearNode);
-          if (nextNode && TextEditUtils::IsMozBR(nextNode)) {
-            // selection between br and mozbr.  make it stick to mozbr
-            // so that it will be on blank line.
+          if (nextNode &&
+              EditorBase::IsPaddingBRElementForEmptyLastLine(*nextNode)) {
+            // Selection between a <br> element and a padding <br> element for
+            // empty last line.  Make it stick to the padding <br> element so
+            // that it will be on blank line.
             IgnoredErrorResult ignoredError;
             SelectionRefPtr()->SetInterlinePosition(true, ignoredError);
             NS_WARNING_ASSERTION(!ignoredError.Failed(),
@@ -10157,7 +10167,7 @@ nsresult HTMLEditRules::UpdateDocChangeRange(nsRange* aRange) {
 }
 
 nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
-                                                 bool aInsertMozBR) {
+                                                 bool aForPadding) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (!IsBlockNode(aNode)) {
@@ -10174,8 +10184,9 @@ nsresult HTMLEditRules::InsertBRIfNeededInternal(nsINode& aNode,
   }
 
   CreateElementResult createBrResult =
-      !aInsertMozBR ? CreateBR(EditorDOMPoint(&aNode, 0))
-                    : CreateMozBR(EditorDOMPoint(&aNode, 0));
+      !aForPadding
+          ? CreateBR(EditorDOMPoint(&aNode, 0))
+          : CreatePaddingBRElementForEmptyLastLine(EditorDOMPoint(&aNode, 0));
   if (NS_WARN_IF(createBrResult.Failed())) {
     return createBrResult.Rv();
   }

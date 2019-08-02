@@ -255,8 +255,8 @@ nsresult TextEditRules::AfterEdit(EditSubAction aEditSubAction,
       return rv;
     }
 
-    // Collapse the selection to the trailing moz-<br> if it's at the end of
-    // our text node.
+    // Collapse the selection to the trailing padding <br> element for empty
+    // last line if it's at the end of our text node.
     rv = CollapseSelectionToTrailingBRIfNeeded();
     if (NS_WARN_IF(rv == NS_ERROR_EDITOR_DESTROYED)) {
       return NS_ERROR_EDITOR_DESTROYED;
@@ -502,8 +502,9 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   // we only need to execute the stuff below if we are a plaintext editor.
-  // html editors have a different mechanism for putting in mozBR's
-  // (because there are a bunch more places you have to worry about it in html)
+  // html editors have a different mechanism for putting in padding <br>
+  // element's (because there are a bunch more places you have to worry about
+  // it in html)
   if (!IsPlaintextEditor()) {
     return NS_OK;
   }
@@ -519,7 +520,8 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   }
 
   // If we are at the end of the <textarea> element, we need to set the
-  // selection to stick to the moz-<br> at the end of the <textarea>.
+  // selection to stick to the padding <br> element for empty last line at the
+  // end of the <textarea>.
   EditorRawDOMPoint selectionStartPoint(
       EditorBase::GetStartPoint(*SelectionRefPtr()));
   if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
@@ -542,7 +544,7 @@ nsresult TextEditRules::CollapseSelectionToTrailingBRIfNeeded() {
   }
 
   nsINode* nextNode = selectionStartPoint.GetContainer()->GetNextSibling();
-  if (!nextNode || !TextEditUtils::IsMozBR(nextNode)) {
+  if (!nextNode || !EditorBase::IsPaddingBRElementForEmptyLastLine(*nextNode)) {
     return NS_OK;
   }
 
@@ -900,18 +902,19 @@ nsresult TextEditRules::WillSetText(bool* aCancel, bool* aHandled,
       return NS_OK;
     }
   } else {
-    // If we're a multiline text editor, i.e., <textarea>, there is a moz-<br>
-    // element followed by scrollbar/resizer elements.  Otherwise, a text node
-    // is followed by them.
+    // If we're a multiline text editor, i.e., <textarea>, there is a padding
+    // <br> element for empty last line followed by scrollbar/resizer elements.
+    // Otherwise, a text node is followed by them.
     if (!firstChild) {
       return NS_OK;
     }
     if (EditorBase::IsTextNode(firstChild)) {
       if (!firstChild->GetNextSibling() ||
-          !TextEditUtils::IsMozBR(firstChild->GetNextSibling())) {
+          !EditorBase::IsPaddingBRElementForEmptyLastLine(
+              *firstChild->GetNextSibling())) {
         return NS_OK;
       }
-    } else if (!TextEditUtils::IsMozBR(firstChild)) {
+    } else if (!EditorBase::IsPaddingBRElementForEmptyLastLine(*firstChild)) {
       return NS_OK;
     }
   }
@@ -1285,7 +1288,9 @@ nsresult TextEditRules::WillOutputText(const nsAString* aOutputFormat,
   bool isTextarea = !isInput;
   if (NS_WARN_IF(isInput && firstChildExceptText) ||
       NS_WARN_IF(isTextarea && !firstChildExceptText) ||
-      NS_WARN_IF(isTextarea && !TextEditUtils::IsMozBR(firstChildExceptText) &&
+      NS_WARN_IF(isTextarea &&
+                 !EditorBase::IsPaddingBRElementForEmptyLastLine(
+                     *firstChildExceptText) &&
                  !firstChildExceptText->IsXULElement(nsGkAtoms::scrollbar))) {
     return NS_OK;
   }
@@ -1330,18 +1335,15 @@ nsresult TextEditRules::RemoveRedundantTrailingBR() {
 
   RefPtr<HTMLBRElement> brElement =
       HTMLBRElement::FromNodeOrNull(rootElement->GetFirstChild());
-  if (!brElement || !TextEditUtils::IsMozBR(brElement)) {
+  if (!brElement ||
+      !EditorBase::IsPaddingBRElementForEmptyLastLine(*brElement)) {
     return NS_OK;
   }
 
   // Rather than deleting this node from the DOM tree we should instead
   // morph this <br> element into the padding <br> element for editor.
-  brElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::type, true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-
   mPaddingBRElementForEmptyEditor = std::move(brElement);
+  mPaddingBRElementForEmptyEditor->UnsetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
   mPaddingBRElementForEmptyEditor->SetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
 
   return NS_OK;
@@ -1372,9 +1374,10 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
     AutoTransactionsConserveSelection dontChangeMySelection(TextEditorRef());
     EditorDOMPoint endOfRoot;
     endOfRoot.SetToEndOf(rootElement);
-    CreateElementResult createMozBrResult = CreateMozBR(endOfRoot);
-    if (NS_WARN_IF(createMozBrResult.Failed())) {
-      return createMozBrResult.Rv();
+    CreateElementResult createPaddingBRResult =
+        CreatePaddingBRElementForEmptyLastLine(endOfRoot);
+    if (NS_WARN_IF(createPaddingBRResult.Failed())) {
+      return createPaddingBRResult.Rv();
     }
     return NS_OK;
   }
@@ -1386,13 +1389,10 @@ nsresult TextEditRules::CreateTrailingBRIfNeeded() {
     return NS_OK;
   }
 
-  // Morph it back to a mozBR
+  // Morph it back to a padding <br> element for empty last line.
   brElement->UnsetFlags(NS_PADDING_FOR_EMPTY_EDITOR);
-  brElement->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                     NS_LITERAL_STRING("_moz"), true);
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
+  brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+
   return NS_OK;
 }
 
@@ -1556,7 +1556,7 @@ nsresult TextEditRules::TruncateInsertionIfNeeded(const nsAString* aInString,
 }
 
 CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorDOMPoint& aPointToInsert, bool aCreateMozBR) {
+    const EditorDOMPoint& aPointToInsert, bool aForPadding) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -1573,22 +1573,8 @@ CreateElementResult TextEditRules::CreateBRInternal(
     return CreateElementResult(NS_ERROR_FAILURE);
   }
 
-  // give it special moz attr
-  if (!aCreateMozBR) {
-    return CreateElementResult(brElement.forget());
-  }
-
-  // XXX Why do we need to set this attribute with transaction?
-  nsresult rv = MOZ_KnownLive(TextEditorRef())
-                    .SetAttributeWithTransaction(*brElement, *nsGkAtoms::type,
-                                                 NS_LITERAL_STRING("_moz"));
-  // XXX Don't we need to remove the new <br> element from the DOM tree
-  //     in these case?
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return CreateElementResult(NS_ERROR_EDITOR_DESTROYED);
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return CreateElementResult(NS_ERROR_FAILURE);
+  if (aForPadding) {
+    brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
   }
   return CreateElementResult(brElement.forget());
 }

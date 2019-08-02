@@ -22,9 +22,14 @@ enum {
   // NS_PADDING_FOR_EMPTY_EDITOR is set if the <br> element is created by
   // editor for placing caret at proper position in empty editor.
   NS_PADDING_FOR_EMPTY_EDITOR = BR_ELEMENT_FLAG_BIT(0),
+
+  // NS_PADDING_FOR_EMPTY_LAST_LINE is set if the <br> element is created by
+  // editor for placing caret at proper position for making empty last line
+  // in a block or <textarea> element visible.
+  NS_PADDING_FOR_EMPTY_LAST_LINE = BR_ELEMENT_FLAG_BIT(1),
 };
 
-ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 1);
+ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 2);
 
 class HTMLBRElement final : public nsGenericHTMLElement {
  public:
@@ -54,6 +59,9 @@ class HTMLBRElement final : public nsGenericHTMLElement {
 
   bool IsPaddingForEmptyEditor() const {
     return HasFlag(NS_PADDING_FOR_EMPTY_EDITOR);
+  }
+  bool IsPaddingForEmptyLastLine() const {
+    return HasFlag(NS_PADDING_FOR_EMPTY_LAST_LINE);
   }
 
  private:
