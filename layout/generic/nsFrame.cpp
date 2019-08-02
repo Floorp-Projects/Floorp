@@ -615,24 +615,37 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (aPrevInFlow) {
     mWritingMode = aPrevInFlow->GetWritingMode();
 
-    // Make sure the general flags bits are the same
-    nsFrameState state = aPrevInFlow->GetStateBits();
+    // Copy some state bits from prev-in-flow (the bits that should apply
+    // throughout a continuation chain). The bits are sorted according to their
+    // order in nsFrameStateBits.h.
 
-    // Make bits that are currently off (see constructor) the same:
-    AddStateBits(state &
-                 (NS_FRAME_INDEPENDENT_SELECTION | NS_FRAME_PART_OF_IBSPLIT |
+    // clang-format off
+    AddStateBits(aPrevInFlow->GetStateBits() &
+                 (NS_FRAME_ANONYMOUSCONTENTCREATOR_CONTENT |
+                  NS_FRAME_GENERATED_CONTENT |
+                  NS_FRAME_OUT_OF_FLOW |
+                  NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN |
+                  NS_FRAME_INDEPENDENT_SELECTION |
+                  NS_FRAME_PART_OF_IBSPLIT |
                   NS_FRAME_MAY_BE_TRANSFORMED |
-                  NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN));
+                  NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR));
+    // clang-format on
   } else {
     PresContext()->ConstructedFrame();
   }
   if (GetParent()) {
-    nsFrameState state = GetParent()->GetStateBits();
+    // Copy some state bits from our parent (the bits that should apply
+    // recursively throughout a subtree). The bits are sorted according to their
+    // order in nsFrameStateBits.h.
 
-    // Make bits that are currently off (see constructor) the same:
-    AddStateBits(state & (NS_FRAME_INDEPENDENT_SELECTION |
-                          NS_FRAME_GENERATED_CONTENT | NS_FRAME_IS_SVG_TEXT |
-                          NS_FRAME_IN_POPUP | NS_FRAME_IS_NONDISPLAY));
+    // clang-format off
+    AddStateBits(GetParent()->GetStateBits() &
+                 (NS_FRAME_GENERATED_CONTENT |
+                  NS_FRAME_INDEPENDENT_SELECTION |
+                  NS_FRAME_IS_SVG_TEXT |
+                  NS_FRAME_IN_POPUP |
+                  NS_FRAME_IS_NONDISPLAY));
+    // clang-format on
 
     if (HasAnyStateBits(NS_FRAME_IN_POPUP) && TrackingVisibility()) {
       // Assume all frames in popups are visible.
@@ -642,7 +655,6 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   if (aPrevInFlow) {
     mMayHaveOpacityAnimation = aPrevInFlow->MayHaveOpacityAnimation();
     mMayHaveTransformAnimation = aPrevInFlow->MayHaveTransformAnimation();
-    mState |= aPrevInFlow->mState & NS_FRAME_MAY_BE_TRANSFORMED;
   } else if (mContent) {
     // It's fine to fetch the EffectSet for the style frame here because in the
     // following code we take care of the case where animations may target
