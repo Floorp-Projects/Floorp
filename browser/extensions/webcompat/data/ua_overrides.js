@@ -1,29 +1,35 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+/* globals module */
+
 /**
  * For detailed information on our policies, and a documention on this format
  * and its possibilites, please check the Mozilla-Wiki at
  *
  * https://wiki.mozilla.org/Compatibility/Go_Faster_Addon/Override_Policies_and_Workflows#User_Agent_overrides
  */
-
-"use strict";
-
-/* globals filterOverrides, portsToAboutCompatTabs, UAOverrides */
-
-let UAOverridesEnabled = true;
-
-for (const override of [
+const AVAILABLE_UA_OVERRIDES = [
   {
-    id: "testoverride",
+    id: "testbed-override",
     platform: "all",
-    domain: "webcompat-addon-testcases.schub.io",
-    bug: "1287966",
+    domain: "webcompat-addon-testbed.herokuapp.com",
+    bug: "0000000",
+    hidden: true,
     config: {
-      matches: ["*://webcompat-addon-testcases.schub.io/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36";
+      matches: ["*://webcompat-addon-testbed.herokuapp.com/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.98 Safari/537.36 for WebCompat"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1563839 - rolb.santanderbank.com - Build UA override
      * WebCompat issue #33462 - https://webcompat.com/issues/33462
@@ -37,7 +43,11 @@ for (const override of [
     domain: "rolb.santanderbank.com",
     bug: "1563839",
     config: {
-      matches: ["*://*.santander.co.uk/*", "*://rolb.santanderbank.com/*"],
+      matches: [
+        "*://*.santander.co.uk/*",
+        "*://bob.santanderbank.com/*",
+        "*://rolb.santanderbank.com/*",
+      ],
       uaTransformer: originalUA => {
         return originalUA.replace("Gecko", "like Gecko");
       },
@@ -58,11 +68,15 @@ for (const override of [
     bug: "1480710",
     config: {
       matches: ["*://m.imgur.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.85 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 945963 - tieba.baidu.com serves simplified mobile content to Firefox Android
      * WebCompat issue #18455 - https://webcompat.com/issues/18455
@@ -77,11 +91,12 @@ for (const override of [
     bug: "945963",
     config: {
       matches: ["*://tieba.baidu.com/*", "*://tiebac.baidu.com/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA + " AppleWebKit/537.36 (KHTML, like Gecko)";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1177298 - Write UA overrides for top Japanese Sites
      * (Imported from ua-update.json.in)
@@ -95,11 +110,12 @@ for (const override of [
     bug: "1177298",
     config: {
       matches: ["*://*.lohaco.jp/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 5.0.2; Galaxy Nexus Build/IMM76B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.93 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1177298 - Write UA overrides for top Japanese Sites
      * (Imported from ua-update.json.in)
@@ -113,11 +129,12 @@ for (const override of [
     bug: "1177298",
     config: {
       matches: ["*://*.nhk.or.jp/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA + " AppleWebKit";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1338260 - Add UA override for directTV
      * (Imported from ua-update.json.in)
@@ -131,11 +148,12 @@ for (const override of [
     bug: "1338260",
     config: {
       matches: ["*://*.directv.com/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1385206 - Create UA override for rakuten.co.jp on Firefox Android
      * (Imported from ua-update.json.in)
@@ -148,11 +166,12 @@ for (const override of [
     bug: "1385206",
     config: {
       matches: ["*://*.rakuten.co.jp/*"],
-      uaTransformer: (originalUA) => {
+      uaTransformer: originalUA => {
         return originalUA.replace(/Firefox.+$/, "");
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 969844 - mobile.de sends desktop site to Firefox on Android
      *
@@ -164,11 +183,12 @@ for (const override of [
     bug: "969844",
     config: {
       matches: ["*://*.mobile.de/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509831 - cc.com - Add UA override for CC.com
      * WebCompat issue #329 - https://webcompat.com/issues/329
@@ -183,11 +203,12 @@ for (const override of [
     bug: "1509831",
     config: {
       matches: ["*://*.cc.com/*"],
-      uaTransformer: (_) => {
+      uaTransformer: _ => {
         return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G920F Build/MMB29K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1508516 - cineflix.com.br - Add UA override for cineflix.com.br/m/
      * WebCompat issue #21553 - https://webcompat.com/issues/21553
@@ -202,11 +223,15 @@ for (const override of [
     bug: "1508516",
     config: {
       matches: ["*://*.cineflix.com.br/m/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509852 - redbull.com - Add UA override for redbull.com
      * WebCompat issue #21439 - https://webcompat.com/issues/21439
@@ -221,11 +246,15 @@ for (const override of [
     bug: "1509852",
     config: {
       matches: ["*://*.redbull.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
-  }, {
+  },
+  {
     /*
      * Bug 1509873 - zmags.com - Add UA override for secure.viewer.zmags.com
      * WebCompat issue #21576 - https://webcompat.com/issues/21576
@@ -241,16 +270,53 @@ for (const override of [
     bug: "1509873",
     config: {
       matches: ["*://*.viewer.zmags.com/*"],
-      uaTransformer: (originalUA) => {
-        return UAHelpers.getPrefix(originalUA) + " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36";
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.91 Mobile Safari/537.36"
+        );
       },
     },
   },
-]) {
-  UAOverrides.push(override);
-}
-
-/* globals browser */
+  {
+    /*
+     * Bug 1566253 - posts.google.com - Add UA override for posts.google.com
+     * WebCompat issue #17870 - https://webcompat.com/issues/17870
+     *
+     * posts.google.com displaying "Your browser doesn't support this page".
+     * Spoofing as Chrome works fine.
+     */
+    id: "bug1566253",
+    platform: "android",
+    domain: "posts.google.com",
+    bug: "1566253",
+    config: {
+      matches: ["*://posts.google.com/*"],
+      uaTransformer: _ => {
+        return "Mozilla/5.0 (Linux; Android 6.0.1; SM-G900M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.101 Mobile Safari/537.36";
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1567945 - Create UA override for beeg.com on Firefox Android
+     * WebCompat issue #16648 - https://webcompat.com/issues/16648
+     *
+     * beeg.com is hiding content of a page with video if Firefox exists in UA,
+     * replacing "Firefox" with an empty string makes the page load
+     */
+    id: "bug1567945",
+    platform: "android",
+    domain: "beeg.com",
+    bug: "1567945",
+    config: {
+      matches: ["*://beeg.com/*"],
+      uaTransformer: originalUA => {
+        return originalUA.replace(/Firefox.+$/, "");
+      },
+    },
+  },
+];
 
 const UAHelpers = {
   getPrefix(originalUA) {
@@ -258,77 +324,4 @@ const UAHelpers = {
   },
 };
 
-const ActiveListeners = new Map();
-
-function enableOverride(override) {
-  if (override.active) {
-    return;
-  }
-
-  const {matches, uaTransformer} = override.config;
-  const listener = (details) => {
-    for (var header of details.requestHeaders) {
-      if (header.name.toLowerCase() === "user-agent") {
-        header.value = uaTransformer(header.value);
-      }
-    }
-    return {requestHeaders: details.requestHeaders};
-  };
-
-  browser.webRequest.onBeforeSendHeaders.addListener(
-    listener,
-    {urls: matches},
-    ["blocking", "requestHeaders"]
-  );
-
-  ActiveListeners.set(override, listener);
-  override.active = true;
-}
-
-async function registerUAOverrides() {
-  const platformMatches = ["all"];
-  let platformInfo = await browser.runtime.getPlatformInfo();
-  platformMatches.push(platformInfo.os == "android" ? "android" : "desktop");
-
-  for (const override of UAOverrides) {
-    if (platformMatches.includes(override.platform)) {
-      override.availableOnPlatform = true;
-      enableOverride(override);
-    }
-  }
-  UAOverridesEnabled = true;
-  portsToAboutCompatTabs.broadcast({overridesChanged: filterOverrides(UAOverrides)});
-}
-
-function unregisterUAOverrides() {
-  for (const override of UAOverrides) {
-    disableOverride(override);
-  }
-  UAOverridesEnabled = false;
-  portsToAboutCompatTabs.broadcast({overridesChanged: false});
-}
-
-function disableOverride(override) {
-  if (!override.active) {
-    return;
-  }
-
-  browser.webRequest.onBeforeSendHeaders.removeListener(ActiveListeners.get(override));
-  override.active = false;
-  ActiveListeners.delete(override);
-}
-
-const OVERRIDE_PREF = "perform_ua_overrides";
-function checkOverridePref() {
-  browser.aboutConfigPrefs.getPref(OVERRIDE_PREF).then(value => {
-    if (value === undefined) {
-      browser.aboutConfigPrefs.setPref(OVERRIDE_PREF, true);
-    } else if (value === false) {
-      unregisterUAOverrides();
-    } else {
-      registerUAOverrides();
-    }
-  });
-}
-browser.aboutConfigPrefs.onPrefChange.addListener(checkOverridePref, OVERRIDE_PREF);
-checkOverridePref();
+module.exports = AVAILABLE_UA_OVERRIDES;
