@@ -10,6 +10,12 @@
 # below that are shared with browser.xhtml. When including this file,
 # browser-doctype.inc must also be included.
 
+<linkset>
+  <html:link rel="localization" href="branding/brand.ftl"/>
+  <html:link rel="localization" href="browser/branding/sync-brand.ftl"/>
+  <html:link rel="localization" href="browser/menubar.ftl"/>
+</linkset>
+
 # All JS files which are needed by browser.xhtml and other top level windows to
 # support MacOS specific features *must* go into the global-scripts.inc file so
 # that they can be shared with browser.xhtml.
