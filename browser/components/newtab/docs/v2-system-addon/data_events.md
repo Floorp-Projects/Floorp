@@ -955,6 +955,20 @@ CFR impression ping has two forms, in which the message_id could be of different
 }
 ```
 
+#### Onboarding impression
+```js
+{
+  "client_id": "26288a14-5cc4-d14f-ae0a-bb01ef45be9c",
+  "action": "onboarding_user_event",
+  "impression_id": "n/a",
+  "source": "FIRST_RUN",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "message_id": "EXTENDED_TRIPLETS_1",
+  "event": "IMPRESSION"
+}
+```
+
 ### User interaction pings
 
 This reports the user's interaction with Activity Stream Router.
