@@ -208,14 +208,30 @@ nsresult TextEditRules::BeforeEdit(EditSubAction aEditSubAction,
     // use root instead.
     mCachedSelectionNode = mTextEditor->GetRoot();
     mCachedSelectionOffset = 0;
-  } else {
-    Selection* selection = mTextEditor->GetSelection();
-    if (NS_WARN_IF(!selection)) {
-      return NS_ERROR_FAILURE;
-    }
-    mCachedSelectionNode = selection->GetAnchorNode();
-    mCachedSelectionOffset = selection->AnchorOffset();
+    return NS_OK;
   }
+
+  Selection* selection = mTextEditor->GetSelection();
+  if (NS_WARN_IF(!selection)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aEditSubAction == EditSubAction::eInsertText ||
+      aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
+    // For spell checker, previous selected node should be text node if
+    // possible. If anchor is root of editor, it may become invalid offset
+    // after inserting text.
+    EditorRawDOMPoint point = mTextEditor->FindBetterInsertionPoint(
+        EditorRawDOMPoint(selection->AnchorRef()));
+    if (point.IsSet()) {
+      mCachedSelectionNode = point.GetContainer();
+      mCachedSelectionOffset = point.Offset();
+      return NS_OK;
+    }
+  }
+
+  mCachedSelectionNode = selection->GetAnchorNode();
+  mCachedSelectionOffset = selection->AnchorOffset();
 
   return NS_OK;
 }
