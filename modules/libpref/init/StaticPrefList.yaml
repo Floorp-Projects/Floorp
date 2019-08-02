@@ -5526,6 +5526,18 @@
   value: false
   mirror: always
 
+
+#---------------------------------------------------------------------------
+# Prefs starting with "page_load."
+#---------------------------------------------------------------------------
+
+# Time in milliseconds during which certain tasks are deprioritized during
+# page load.
+- name: page_load.deprioritization_period
+  type: uint32_t
+  value: 5000
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "plain_text."
 #---------------------------------------------------------------------------
