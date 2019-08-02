@@ -7,6 +7,7 @@
 #ifndef GFX_VR_MANAGER_H
 #define GFX_VR_MANAGER_H
 
+#include "nsIObserver.h"
 #include "nsTArray.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
@@ -29,10 +30,11 @@ enum class VRManagerState : uint32_t {
   Active        // VR hardware is active
 };
 
-class VRManager {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(mozilla::gfx::VRManager)
-
+class VRManager : nsIObserver {
  public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
   static void ManagerInit();
   static VRManager* Get();
 
@@ -69,7 +71,7 @@ class VRManager {
 
  private:
   VRManager();
-  ~VRManager();
+  virtual ~VRManager();
   void Destroy();
   void StartTasks();
   void StopTasks();
@@ -139,6 +141,7 @@ class VRManager {
   uint64_t mLastSubmittedFrameId;
   uint64_t mLastStartedFrame;
   bool mEnumerationCompleted;
+  bool mAppPaused;
 
   // Note: mShmem doesn't support RefPtr; thus, do not share this private
   // pointer so that its lifetime can still be controlled by VRManager
