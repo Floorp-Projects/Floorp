@@ -802,6 +802,9 @@ class SystemCairoClipper : public ClipExporter {
   void BeginClip(const Matrix& aTransform) override {
     cairo_matrix_t mat;
     GfxMatrixToCairoMatrix(aTransform, mat);
+    // We also need to remove the scale factor effect from the matrix
+    mat.y0 = mat.y0 / mScaleFactor;
+    mat.x0 = mat.x0 / mScaleFactor;
     cairo_set_matrix(mContext, &mat);
 
     cairo_new_path(mContext);
@@ -867,9 +870,8 @@ static void DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   static auto sCairoSurfaceSetDeviceScalePtr =
       (void (*)(cairo_surface_t*, double, double))dlsym(
           RTLD_DEFAULT, "cairo_surface_set_device_scale");
-  // Support HiDPI widget styles on Wayland only for now.
-  bool useHiDPIWidgets = !isX11Display && (aScaleFactor != 1) &&
-                         (sCairoSurfaceSetDeviceScalePtr != nullptr);
+  bool useHiDPIWidgets =
+      (aScaleFactor != 1) && (sCairoSurfaceSetDeviceScalePtr != nullptr);
 
   Point drawOffsetScaled;
   Point drawOffsetOriginal;
