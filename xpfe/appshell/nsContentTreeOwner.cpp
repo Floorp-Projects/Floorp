@@ -704,7 +704,7 @@ nsContentTreeOwner::ProvideWindow(
     bool aPositionSpecified, bool aSizeSpecified, nsIURI* aURI,
     const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
     bool aForceNoReferrer, nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-    mozIDOMWindowProxy** aReturn) {
+    BrowsingContext** aReturn) {
   NS_ENSURE_ARG_POINTER(aParent);
 
   auto* parentWin = nsPIDOMWindowOuter::From(aParent);

@@ -107,7 +107,7 @@ class BrowserElementParent {
   static OpenWindowResult OpenWindowInProcess(
       mozilla::dom::BrowsingContext* aOpenerWindow, nsIURI* aURI,
       const nsAString& aName, const nsACString& aFeatures, bool aForceNoOpener,
-      mozIDOMWindowProxy** aReturnWindow);
+      mozilla::dom::BrowsingContext** aReturnBC);
 
  private:
   static OpenWindowResult DispatchOpenWindowEvent(

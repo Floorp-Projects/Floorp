@@ -359,7 +359,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       return null;
     }
 
-    return browser.contentWindow;
+    return browser.browsingContext;
   }
 
   // nsIBrowserDOMWindow.
@@ -474,7 +474,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       null,
       null
     );
-    return browser && browser.contentWindow;
+    return browser && browser.browsingContext;
   }
 
   // nsIBrowserDOMWindow.

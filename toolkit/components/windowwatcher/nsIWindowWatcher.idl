@@ -15,7 +15,6 @@ interface nsIWebBrowserChrome;
 interface nsIWindowCreator;
 
 
-
 /**
  * nsIWindowWatcher is the keeper of Gecko/DOM Windows. It maintains
  * a list of open top-level windows, and allows some operations on them.

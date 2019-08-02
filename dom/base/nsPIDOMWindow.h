@@ -1010,7 +1010,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
    */
   virtual nsresult OpenNoNavigate(const nsAString& aUrl, const nsAString& aName,
                                   const nsAString& aOptions,
-                                  nsPIDOMWindowOuter** _retval) = 0;
+                                  mozilla::dom::BrowsingContext** _retval) = 0;
 
   /**
    * Fire a popup blocked event on the document.
@@ -1049,11 +1049,11 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   virtual nsresult Open(const nsAString& aUrl, const nsAString& aName,
                         const nsAString& aOptions,
                         nsDocShellLoadState* aLoadState, bool aForceNoOpener,
-                        nsPIDOMWindowOuter** _retval) = 0;
+                        mozilla::dom::BrowsingContext** _retval) = 0;
   virtual nsresult OpenDialog(const nsAString& aUrl, const nsAString& aName,
                               const nsAString& aOptions,
                               nsISupports* aExtraArgument,
-                              nsPIDOMWindowOuter** _retval) = 0;
+                              mozilla::dom::BrowsingContext** _retval) = 0;
 
   virtual nsresult GetInnerWidth(int32_t* aWidth) = 0;
   virtual nsresult GetInnerHeight(int32_t* aHeight) = 0;

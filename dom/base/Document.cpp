@@ -8709,12 +8709,12 @@ mozilla::dom::Nullable<mozilla::dom::WindowProxyHolder> Document::Open(
     return nullptr;
   }
   RefPtr<nsGlobalWindowOuter> win = nsGlobalWindowOuter::Cast(outer);
-  nsCOMPtr<nsPIDOMWindowOuter> newWindow;
-  rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newWindow));
-  if (!newWindow) {
+  RefPtr<BrowsingContext> newBC;
+  rv = win->OpenJS(aURL, aName, aFeatures, getter_AddRefs(newBC));
+  if (!newBC) {
     return nullptr;
   }
-  return WindowProxyHolder(newWindow->GetBrowsingContext());
+  return WindowProxyHolder(newBC.forget());
 }
 
 Document* Document::Open(const Optional<nsAString>& /* unused */,

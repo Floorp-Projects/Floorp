@@ -55,6 +55,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
+#include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
@@ -903,7 +904,7 @@ BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                             const nsAString& aName, const nsACString& aFeatures,
                             bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-                            mozIDOMWindowProxy** aReturn) {
+                            BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
   // If aParent is inside an <iframe mozbrowser> and this isn't a request to
@@ -926,7 +927,14 @@ BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
     if (openLocation == nsIBrowserDOMWindow::OPEN_CURRENTWINDOW) {
       nsCOMPtr<nsIWebBrowser> browser = do_GetInterface(WebNavigation());
       *aWindowIsNew = false;
-      return browser->GetContentDOMWindow(aReturn);
+
+      nsCOMPtr<mozIDOMWindowProxy> win;
+      MOZ_TRY(browser->GetContentDOMWindow(getter_AddRefs(win)));
+
+      RefPtr<BrowsingContext> bc(
+          nsPIDOMWindowOuter::From(win)->GetBrowsingContext());
+      bc.forget(aReturn);
+      return NS_OK;
     }
   }
 

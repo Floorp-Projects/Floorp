@@ -17,6 +17,7 @@
 class nsDocShellLoadState;
 %}
 
+webidl BrowsingContext;
 interface mozIDOMWindowProxy;
 interface nsIURI;
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
@@ -97,16 +98,16 @@ interface nsIWindowProvider : nsISupports
    * @see nsIWindowWatcher for more information on aFeatures.
    * @see nsIWebBrowserChrome for more information on aChromeFlags.
    */
-  mozIDOMWindowProxy provideWindow(in mozIDOMWindowProxy aParent,
-                                   in unsigned long aChromeFlags,
-                                   in boolean aCalledFromJS,
-                                   in boolean aPositionSpecified,
-                                   in boolean aSizeSpecified,
-                                   in nsIURI aURI,
-                                   in AString aName,
-                                   in AUTF8String aFeatures,
-                                   in boolean aForceNoOpener,
-                                   in boolean aForceNoReferrer,
-                                   in nsDocShellLoadStatePtr aLoadState,
-                                   out boolean aWindowIsNew);
+  BrowsingContext provideWindow(in mozIDOMWindowProxy aParent,
+                                in unsigned long aChromeFlags,
+                                in boolean aCalledFromJS,
+                                in boolean aPositionSpecified,
+                                in boolean aSizeSpecified,
+                                in nsIURI aURI,
+                                in AString aName,
+                                in AUTF8String aFeatures,
+                                in boolean aForceNoOpener,
+                                in boolean aForceNoReferrer,
+                                in nsDocShellLoadStatePtr aLoadState,
+                                out boolean aWindowIsNew);
 };
