@@ -12791,23 +12791,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.motion-path.enabled")) {
     other_values: ["reverse", "0deg", "0rad reverse", "-45deg", "5turn auto"],
     invalid_values: ["none", "10px", "reverse 0deg reverse", "reverse auto"],
   };
-
-  gCSSProperties["offset-anchor"] = {
-    domProp: "offsetAnchor",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: [
-      "left bottom",
-      "center center",
-      "calc(20% + 10px) center",
-      "right 30em",
-      "10px 20%",
-      "left -10px top -20%",
-      "right 10% bottom 20em",
-    ],
-    invalid_values: ["none", "10deg", "left 10% top"],
-  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.clip-path-path.enabled")) {
