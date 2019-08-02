@@ -39,6 +39,10 @@
 #include "nsWindowSizes.h"
 #include "nsWrapperCacheInlines.h"
 
+#if defined(ACCESSIBILITY) && defined(DEBUG)
+#  include "nsAccessibilityService.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 
@@ -545,6 +549,11 @@ void CharacterData::UnbindFromTree(bool aNullParent) {
   }
 
   nsNodeUtils::ParentChainChanged(this);
+
+#if defined(ACCESSIBILITY) && defined(DEBUG)
+  MOZ_ASSERT(!GetAccService() || !GetAccService()->HasAccessible(this),
+             "An accessible for this element still exists!");
+#endif
 }
 
 //----------------------------------------------------------------------

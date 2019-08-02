@@ -168,6 +168,10 @@
 
 #include "DOMMatrix.h"
 
+#if defined(ACCESSIBILITY) && defined(DEBUG)
+#  include "nsAccessibilityService.h"
+#endif
+
 using mozilla::gfx::Matrix4x4;
 
 namespace mozilla {
@@ -1861,6 +1865,11 @@ void Element::UnbindFromTree(bool aNullParent) {
                  "propagated scrollbar styles) - that's dangerous...");
     }
   }
+
+#  ifdef ACCESSIBILITY
+  MOZ_ASSERT(!GetAccService() || !GetAccService()->HasAccessible(this),
+             "An accessible for this element still exists!");
+#  endif
 #endif
 
   // Ensure that CSS transitions don't continue on an element at a

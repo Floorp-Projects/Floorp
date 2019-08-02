@@ -134,15 +134,15 @@
 
     <ruleset id="HTMLInputImage">
       <ruleset ref="HTMLControl:Head"/>
-      <rule attr="alt" type="string" recreated="true"/>
-      <rule attr="value" type="string" recreated="true"/>
+      <rule attr="alt" type="string" textchanged="true"/>
+      <rule attr="value" type="string" textchanged="true"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <ruleset id="HTMLInputImageNoValidSrc" defaultName="Submit Query">
       <ruleset ref="HTMLControl:Head"/>
-      <rule attr="alt" type="string" explict-name="false" recreated="true"/>
-      <rule attr="value" type="string" explict-name="false" recreated="true"/>
+      <rule attr="alt" type="string" explict-name="false" textchanged="true"/>
+      <rule attr="value" type="string" explict-name="false" textchanged="true"/>
     </ruleset>
 
     <ruleset id="HTMLOption">
@@ -154,14 +154,14 @@
 
     <ruleset id="HTMLImg">
       <ruleset ref="ARIA"/>
-      <rule attr="alt" type="string"/>
+      <rule attr="alt" type="string" recreated="true"/>
       <rule attr="title" type="string"/>
     </ruleset>
 
     <ruleset id="HTMLImgEmptyAlt">
       <ruleset ref="ARIA"/>
       <rule attr="title" type="string"/>
-      <rule attr="alt" type="string"/>
+      <rule attr="alt" type="string" recreated="true"/>
     </ruleset>
 
     <ruleset id="HTMLTable">

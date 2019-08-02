@@ -689,7 +689,19 @@ void DocAccessible::AttributeWillChange(dom::Element* aElement,
 }
 
 void DocAccessible::NativeAnonymousChildListChange(nsIContent* aContent,
-                                                   bool aIsRemove) {}
+                                                   bool aIsRemove) {
+  if (aIsRemove) {
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eTree)) {
+      logging::MsgBegin("TREE", "Anonymous content removed; doc: %p", this);
+      logging::Node("node", aContent);
+      logging::MsgEnd();
+    }
+#endif
+
+    ContentRemoved(aContent);
+  }
+}
 
 void DocAccessible::AttributeChanged(dom::Element* aElement,
                                      int32_t aNameSpaceID, nsAtom* aAttribute,
@@ -1287,15 +1299,80 @@ void DocAccessible::ContentInserted(nsIContent* aStartChildNode,
   for (nsIContent* node = aStartChildNode; node != aEndChildNode;
        node = node->GetNextSibling()) {
     MOZ_ASSERT(parent == node->GetFlattenedTreeParentNode());
-    // Notification triggers for content insertion even if no content was
-    // actually inserted (like if the content is display: none). Try to catch
-    // this case early.
-    if (node->GetPrimaryFrame() || nsCoreUtils::IsDisplayContents(node)) {
+    if (PruneOrInsertSubtree(node)) {
       list.AppendElement(node);
     }
   }
 
   mNotificationController->ScheduleContentInsertion(container, list);
+}
+
+bool DocAccessible::PruneOrInsertSubtree(nsIContent* aRoot) {
+  // If we already have an accessible, check if we need to remove it, recreate
+  // it, or keep it in place.
+  Accessible* acc = GetAccessible(aRoot);
+  if (acc) {
+    MOZ_ASSERT(aRoot == acc->GetContent(), "Accessible has differing content!");
+#ifdef A11Y_LOG
+    if (logging::IsEnabled(logging::eTree)) {
+      logging::MsgBegin(
+          "TREE", "inserted content already has accessible; doc: %p", this);
+      logging::Node("content node", aRoot);
+      logging::AccessibleInfo("accessible node", acc);
+      logging::MsgEnd();
+    }
+#endif
+
+    nsIFrame* frame = acc->GetFrame();
+
+    // Accessible has no frame and its not display:contents. Remove it.
+    if (!frame && !nsCoreUtils::IsDisplayContents(aRoot)) {
+      ContentRemoved(acc);
+      return false;
+    }
+
+    // If it's a XULLabel it was probably reframed because a `value` attribute
+    // was added. The accessible creates its text leaf upon construction, so we
+    // need to recreate. Remove it, and schedule for reconstruction.
+    if (acc->IsXULLabel()) {
+      ContentRemoved(acc);
+      return true;
+    }
+
+    // It is a broken image that is being reframed because it either got
+    // or lost an `alt` tag that would rerender this node as text.
+    if (frame && (acc->IsImage() != (frame->AccessibleType() == eImageType))) {
+      ContentRemoved(aRoot);
+      return true;
+    }
+  } else {
+    // If there is no current accessible, and the node has a frame, or is
+    // display:contents, schedule it for insertion.
+    if (aRoot->GetPrimaryFrame() || nsCoreUtils::IsDisplayContents(aRoot)) {
+      return true;
+    }
+  }
+
+  if (Accessible* container = AccessibleOrTrueContainer(aRoot)) {
+    AutoTArray<nsCOMPtr<nsIContent>, 10> list;
+    dom::AllChildrenIterator iter =
+        dom::AllChildrenIterator(aRoot, nsIContent::eAllChildren, true);
+    while (nsIContent* childNode = iter.GetNextChild()) {
+      if (PruneOrInsertSubtree(childNode)) {
+        list.AppendElement(childNode);
+      }
+    }
+
+    if (!list.IsEmpty()) {
+      mNotificationController->ScheduleContentInsertion(container, list);
+    }
+  }
+
+  // If we get here we either already have an accessible we don't want to touch,
+  // or the content does not have a frame and is not display:contents.
+  MOZ_ASSERT(acc || (!aRoot->GetPrimaryFrame() &&
+                     !nsCoreUtils::IsDisplayContents(aRoot)));
+  return false;
 }
 
 void DocAccessible::RecreateAccessible(nsIContent* aContent) {
@@ -1623,6 +1700,12 @@ bool DocAccessible::UpdateAccessibleOnAttrChange(dom::Element* aElement,
     // so invalidate this object. A new one will be created on demand.
     RecreateAccessible(aElement);
 
+    return true;
+  }
+
+  if (aAttribute == nsGkAtoms::type) {
+    // If the input[type] changes, we should recreate the accessible.
+    RecreateAccessible(aElement);
     return true;
   }
 

@@ -9,15 +9,10 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 addAccessibleTask(
   `
-  <div id="container"><div id="scrollarea" style="overflow:auto;"><input>
-  </div></div>
-  <div id="container2"><div id="scrollarea2" style="overflow:hidden;">
-  </div></div>`,
+  <div id="container"><div id="scrollarea" style="overflow:auto;"><input>`,
   async function(browser, accDoc) {
     const id1 = "container";
-    const id2 = "container2";
     const container = findAccessibleChildByID(accDoc, id1);
-    const container2 = findAccessibleChildByID(accDoc, id2);
 
     /* ================= Change scroll range ================================== */
     let tree = {
@@ -60,26 +55,5 @@ addAccessibleTask(
       ],
     };
     testAccessibleTree(container, tree);
-
-    /* ================= Change scrollbar styles ============================== */
-    tree = {
-      SECTION: [
-        // container2
-        { SECTION: [] }, // scroll area because of its ID
-      ],
-    };
-    testAccessibleTree(container2, tree);
-
-    onReorder = waitForEvent(EVENT_REORDER, id2);
-    await invokeSetStyle(browser, "scrollarea2", "overflow", "auto");
-    await onReorder;
-
-    tree = {
-      SECTION: [
-        // container
-        { SECTION: [] }, // scroll area
-      ],
-    };
-    testAccessibleTree(container2, tree);
   }
 );
