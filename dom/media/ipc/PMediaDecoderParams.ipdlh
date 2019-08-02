@@ -24,6 +24,9 @@ struct MediaRawDataIPDL
   MediaDataIPDL base;
   bool eos;
   uint32_t discardPadding;
+  // Pass along buffer size since we're using ShmemPool
+  // and we can receive buffers larger than requested size.
+  int64_t bufferSize;
   Shmem buffer;
 };
 
