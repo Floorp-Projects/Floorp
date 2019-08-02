@@ -25,6 +25,7 @@
 #include "mozilla/dom/RemoteDragStartData.h"
 #include "mozilla/dom/RemoteWebProgress.h"
 #include "mozilla/dom/RemoteWebProgressRequest.h"
+#include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/SessionStoreUtilsBinding.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
@@ -2647,8 +2648,11 @@ void BrowserParent::ReconstructWebProgressAndRequest(
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
     const nsTArray<nsCString>&& aPositions,
-    const nsTArray<int32_t>&& aPositionDescendants, const uint32_t& aFlushId,
-    const bool& aIsFinal, const uint32_t& aEpoch) {
+    const nsTArray<int32_t>&& aPositionDescendants,
+    const nsTArray<InputFormData>& aInputs,
+    const nsTArray<CollectedInputDataValue>& aIdVals,
+    const nsTArray<CollectedInputDataValue>& aXPathVals,
+    const uint32_t& aFlushId, const bool& aIsFinal, const uint32_t& aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
     data.mDocShellCaps.Construct() = aDocShellCaps.value();
@@ -2660,6 +2664,30 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     data.mPositions.Construct().Assign(std::move(aPositions));
     data.mPositionDescendants.Construct().Assign(
         std::move(aPositionDescendants));
+  }
+  if (aIdVals.Length() != 0) {
+    SessionStoreUtils::ComposeInputData(aIdVals, data.mId.Construct());
+  }
+  if (aXPathVals.Length() != 0) {
+    SessionStoreUtils::ComposeInputData(aXPathVals, data.mXpath.Construct());
+  }
+  if (aInputs.Length() != 0) {
+    nsTArray<int> descendants, numId, numXPath;
+    nsTArray<nsString> innerHTML;
+    nsTArray<nsCString> url;
+    for (const InputFormData& input : aInputs) {
+      descendants.AppendElement(input.descendants);
+      numId.AppendElement(input.numId);
+      numXPath.AppendElement(input.numXPath);
+      innerHTML.AppendElement(input.innerHTML);
+      url.AppendElement(input.url);
+    }
+
+    data.mInputDescendants.Construct().Assign(std::move(descendants));
+    data.mNumId.Construct().Assign(std::move(numId));
+    data.mNumXPath.Construct().Assign(std::move(numXPath));
+    data.mInnerHTML.Construct().Assign(std::move(innerHTML));
+    data.mUrl.Construct().Assign(std::move(url));
   }
 
   nsCOMPtr<nsISessionStoreFunctions> funcs =

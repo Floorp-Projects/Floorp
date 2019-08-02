@@ -314,49 +314,6 @@ SessionHistoryListener.prototype.QueryInterface = ChromeUtils.generateQI([
 ]);
 
 /**
- * Listens for changes to input elements. Whenever the value of an input
- * element changes we will re-collect data for the current frame tree and send
- * a message to the parent process.
- *
- * Causes a SessionStore:update message to be sent that contains the form data
- * for all reachable frames.
- *
- * Example:
- *   {
- *     formdata: {url: "http://mozilla.org/", id: {input_id: "input value"}},
- *     children: [
- *       null,
- *       {url: "http://sub.mozilla.org/", id: {input_id: "input value 2"}}
- *     ]
- *   }
- */
-class FormDataListener extends Handler {
-  constructor(store) {
-    super(store);
-
-    SessionStoreUtils.addDynamicFrameFilteredListener(
-      this.mm,
-      "input",
-      this,
-      true
-    );
-    this.stateChangeNotifier.addObserver(this);
-  }
-
-  handleEvent() {
-    this.messageQueue.push("formdata", () => this.collect());
-  }
-
-  onPageLoadStarted() {
-    this.messageQueue.push("formdata", () => null);
-  }
-
-  collect() {
-    return SessionStoreUtils.collectFormData(this.mm.content);
-  }
-}
-
-/**
  * Listens for changes to the DOMSessionStorage. Whenever new keys are added,
  * existing ones removed or changed, or the storage is cleared we will send a
  * message to the parent process containing up-to-date sessionStorage data.
@@ -757,7 +714,6 @@ class ContentSessionStore {
 
     this.handlers = [
       new EventListener(this),
-      new FormDataListener(this),
       new SessionHistoryListener(this),
       new SessionStorageListener(this),
       this.stateChangeNotifier,

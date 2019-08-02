@@ -375,15 +375,189 @@ AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
   return entry;
 }
 
-/*
-  @param aDocument: DOMDocument instance to obtain form data for.
-  @param aGeneratedCount: the current number of XPath expressions in the
-                          returned object.
-  @return aRetVal: Form data encoded in an object.
- */
-static void CollectFromTextAreaElement(Document& aDocument,
+// A helper function to append a element into aXPathVals or aIdVals
+static void AppendEntryToCollectedData(
+    nsINode* aNode, const nsAString& aId, CollectedInputDataValue& aEntry,
+    uint16_t& aNumXPath, uint16_t& aNumId,
+    nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  if (!aId.IsEmpty()) {
+    aEntry.id = aId;
+    aIdVals.AppendElement(aEntry);
+    aNumId++;
+  } else {
+    nsAutoString xpath;
+    aNode->GenerateXPath(xpath);
+    aEntry.id = xpath;
+    aXPathVals.AppendElement(aEntry);
+    aNumXPath++;
+  }
+}
+
+/* for bool value */
+static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
+                                       const bool& aValue,
+                                       uint16_t& aGeneratedCount,
+                                       JSContext* aCx,
+                                       Nullable<CollectedData>& aRetVal) {
+  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+  entry->mValue.SetAsBoolean() = aValue;
+}
+
+/* for bool value */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId, const bool& aValue,
+    uint16_t& aNumXPath, uint16_t& aNumId,
+    nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  CollectedInputDataValue entry;
+  entry.type = NS_LITERAL_STRING("bool");
+  entry.value = AsVariant(aValue);
+  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
+                             aIdVals);
+}
+
+/* for nsString value */
+static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
+                                       const nsString& aValue,
                                        uint16_t& aGeneratedCount,
                                        Nullable<CollectedData>& aRetVal) {
+  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+  entry->mValue.SetAsString() = aValue;
+}
+
+/* for nsString value */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId, const nsString& aValue,
+    uint16_t& aNumXPath, uint16_t& aNumId,
+    nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  CollectedInputDataValue entry;
+  entry.type = NS_LITERAL_STRING("string");
+  entry.value = AsVariant(aValue);
+  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
+                             aIdVals);
+}
+
+/* for single select value */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId,
+    const CollectedNonMultipleSelectValue& aValue, uint16_t& aGeneratedCount,
+    JSContext* aCx, Nullable<CollectedData>& aRetVal) {
+  JS::Rooted<JS::Value> jsval(aCx);
+  if (!ToJSValue(aCx, aValue, &jsval)) {
+    JS_ClearPendingException(aCx);
+    return;
+  }
+  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+  entry->mValue.SetAsObject() = &jsval.toObject();
+}
+
+/* for single select value */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId,
+    const CollectedNonMultipleSelectValue& aValue, uint16_t& aNumXPath,
+    uint16_t& aNumId, nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  CollectedInputDataValue entry;
+  entry.type = NS_LITERAL_STRING("singleSelect");
+  entry.value = AsVariant(aValue);
+  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
+                             aIdVals);
+}
+
+/* special handing for input element with string type */
+static void AppendValueToCollectedData(Document& aDocument, nsINode* aNode,
+                                       const nsAString& aId,
+                                       const nsString& aValue,
+                                       uint16_t& aGeneratedCount,
+                                       JSContext* aCx,
+                                       Nullable<CollectedData>& aRetVal) {
+  if (!aId.IsEmpty()) {
+    // We want to avoid saving data for about:sessionrestore as a string.
+    // Since it's stored in the form as stringified JSON, stringifying
+    // further causes an explosion of escape characters. cf. bug 467409
+    if (aId.EqualsLiteral("sessionData")) {
+      nsAutoCString url;
+      Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
+      if (url.EqualsLiteral("about:sessionrestore") ||
+          url.EqualsLiteral("about:welcomeback")) {
+        JS::Rooted<JS::Value> jsval(aCx);
+        if (JS_ParseJSON(aCx, aValue.get(), aValue.Length(), &jsval) &&
+            jsval.isObject()) {
+          Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+              AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+          entry->mValue.SetAsObject() = &jsval.toObject();
+        } else {
+          JS_ClearPendingException(aCx);
+        }
+        return;
+      }
+    }
+  }
+  AppendValueToCollectedData(aNode, aId, aValue, aGeneratedCount, aRetVal);
+}
+
+static void AppendValueToCollectedData(
+    Document& aDocument, nsINode* aNode, const nsAString& aId,
+    const nsString& aValue, uint16_t& aNumXPath, uint16_t& aNumId,
+    nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  CollectedInputDataValue entry;
+  entry.type = NS_LITERAL_STRING("string");
+  entry.value = AsVariant(aValue);
+  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
+                             aIdVals);
+}
+
+/* for nsTArray<nsString>: file and multipleSelect */
+static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
+                                       const nsAString& aValueType,
+                                       nsTArray<nsString>& aValue,
+                                       uint16_t& aGeneratedCount,
+                                       JSContext* aCx,
+                                       Nullable<CollectedData>& aRetVal) {
+  JS::Rooted<JS::Value> jsval(aCx);
+  if (aValueType.EqualsLiteral("file")) {
+    CollectedFileListValue val;
+    val.mType = aValueType;
+    val.mFileList.SwapElements(aValue);
+    if (!ToJSValue(aCx, val, &jsval)) {
+      JS_ClearPendingException(aCx);
+      return;
+    }
+  } else {
+    if (!ToJSValue(aCx, aValue, &jsval)) {
+      JS_ClearPendingException(aCx);
+      return;
+    }
+  }
+  Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
+      AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
+  entry->mValue.SetAsObject() = &jsval.toObject();
+}
+
+/* for nsTArray<nsString>: file and multipleSelect */
+static void AppendValueToCollectedData(
+    nsINode* aNode, const nsAString& aId, const nsAString& aValueType,
+    const nsTArray<nsString>& aValue, uint16_t& aNumXPath, uint16_t& aNumId,
+    nsTArray<CollectedInputDataValue>& aXPathVals,
+    nsTArray<CollectedInputDataValue>& aIdVals) {
+  CollectedInputDataValue entry;
+  entry.type = aValueType;
+  entry.value = AsVariant(aValue);
+  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
+                             aIdVals);
+}
+
+/* static */
+template <typename... ArgsT>
+void SessionStoreUtils::CollectFromTextAreaElement(Document& aDocument,
+                                                   uint16_t& aGeneratedCount,
+                                                   ArgsT&&... args) {
   RefPtr<nsContentList> textlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("textarea"));
   uint32_t length = textlist->Length(true);
@@ -405,7 +579,7 @@ static void CollectFromTextAreaElement(Document& aDocument,
     if (id.IsEmpty() && (aGeneratedCount > kMaxTraversedXPaths)) {
       continue;
     }
-    nsAutoString value;
+    nsString value;
     textArea->GetValue(value);
     // In order to reduce XPath generation (which is slow), we only save data
     // for form fields that have been changed. (cf. bug 537289)
@@ -413,21 +587,16 @@ static void CollectFromTextAreaElement(Document& aDocument,
                               eCaseMatters)) {
       continue;
     }
-    Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-        AppendEntryToCollectedData(textArea, id, aGeneratedCount, aRetVal);
-    entry->mValue.SetAsString() = value;
+    AppendValueToCollectedData(textArea, id, value, aGeneratedCount,
+                               std::forward<ArgsT>(args)...);
   }
 }
 
-/*
-  @param aDocument: DOMDocument instance to obtain form data for.
-  @param aGeneratedCount: the current number of XPath expressions in the
-                          returned object.
-  @return aRetVal: Form data encoded in an object.
- */
-static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
-                                    uint16_t& aGeneratedCount,
-                                    Nullable<CollectedData>& aRetVal) {
+/* static */
+template <typename... ArgsT>
+void SessionStoreUtils::CollectFromInputElement(Document& aDocument,
+                                                uint16_t& aGeneratedCount,
+                                                ArgsT&&... args) {
   RefPtr<nsContentList> inputlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("input"));
   uint32_t length = inputlist->Length(true);
@@ -461,16 +630,15 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
     if (!aInfo.IsNull() && !aInfo.Value().mCanAutomaticallyPersist) {
       continue;
     }
-    nsAutoString value;
+
     if (input->ControlType() == NS_FORM_INPUT_CHECKBOX ||
         input->ControlType() == NS_FORM_INPUT_RADIO) {
       bool checked = input->Checked();
       if (checked == input->DefaultChecked()) {
         continue;
       }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
-      entry->mValue.SetAsBoolean() = checked;
+      AppendValueToCollectedData(input, id, checked, aGeneratedCount,
+                                 std::forward<ArgsT>(args)...);
     } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
       IgnoredErrorResult rv;
       nsTArray<nsString> result;
@@ -478,19 +646,10 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
       if (rv.Failed() || result.Length() == 0) {
         continue;
       }
-      CollectedFileListValue val;
-      val.mType = NS_LITERAL_STRING("file");
-      val.mFileList.SwapElements(result);
-
-      JS::Rooted<JS::Value> jsval(aCx);
-      if (!ToJSValue(aCx, val, &jsval)) {
-        JS_ClearPendingException(aCx);
-        continue;
-      }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
-      entry->mValue.SetAsObject() = &jsval.toObject();
+      AppendValueToCollectedData(input, id, NS_LITERAL_STRING("file"), result,
+                                 aGeneratedCount, std::forward<ArgsT>(args)...);
     } else {
+      nsString value;
       input->GetValue(value, CallerType::System);
       // In order to reduce XPath generation (which is slow), we only save data
       // for form fields that have been changed. (cf. bug 537289)
@@ -501,45 +660,17 @@ static void CollectFromInputElement(JSContext* aCx, Document& aDocument,
                              eCaseMatters)) {
         continue;
       }
-      if (!id.IsEmpty()) {
-        // We want to avoid saving data for about:sessionrestore as a string.
-        // Since it's stored in the form as stringified JSON, stringifying
-        // further causes an explosion of escape characters. cf. bug 467409
-        if (id.EqualsLiteral("sessionData")) {
-          nsAutoCString url;
-          Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
-          if (url.EqualsLiteral("about:sessionrestore") ||
-              url.EqualsLiteral("about:welcomeback")) {
-            JS::Rooted<JS::Value> jsval(aCx);
-            if (JS_ParseJSON(aCx, value.get(), value.Length(), &jsval) &&
-                jsval.isObject()) {
-              Record<nsString, OwningStringOrBooleanOrObject>::EntryType*
-                  entry = AppendEntryToCollectedData(input, id, aGeneratedCount,
-                                                     aRetVal);
-              entry->mValue.SetAsObject() = &jsval.toObject();
-            } else {
-              JS_ClearPendingException(aCx);
-            }
-            continue;
-          }
-        }
-      }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(input, id, aGeneratedCount, aRetVal);
-      entry->mValue.SetAsString() = value;
+      AppendValueToCollectedData(aDocument, input, id, value, aGeneratedCount,
+                                 std::forward<ArgsT>(args)...);
     }
   }
 }
 
-/*
-  @param aDocument: DOMDocument instance to obtain form data for.
-  @param aGeneratedCount: the current number of XPath expressions in the
-                          returned object.
-  @return aRetVal: Form data encoded in an object.
- */
-static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
-                                     uint16_t& aGeneratedCount,
-                                     Nullable<CollectedData>& aRetVal) {
+/* static */
+template <typename... ArgsT>
+void SessionStoreUtils::CollectFromSelectElement(Document& aDocument,
+                                                 uint16_t& aGeneratedCount,
+                                                 ArgsT&&... args) {
   RefPtr<nsContentList> selectlist = NS_GetContentList(
       &aDocument, kNameSpaceID_XHTML, NS_LITERAL_STRING("select"));
   uint32_t length = selectlist->Length(true);
@@ -569,15 +700,8 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
       CollectedNonMultipleSelectValue val;
       val.mSelectedIndex = select->SelectedIndex();
       val.mValue = selectVal.AsAString();
-
-      JS::Rooted<JS::Value> jsval(aCx);
-      if (!ToJSValue(aCx, val, &jsval)) {
-        JS_ClearPendingException(aCx);
-        continue;
-      }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
-      entry->mValue.SetAsObject() = &jsval.toObject();
+      AppendValueToCollectedData(select, id, val, aGeneratedCount,
+                                 std::forward<ArgsT>(args)...);
     } else {
       // <select>s with the multiple attribute are easier to determine the
       // default value since each <option> has a defaultSelected property
@@ -603,14 +727,10 @@ static void CollectFromSelectElement(JSContext* aCx, Document& aDocument,
       if (hasDefaultValue) {
         continue;
       }
-      JS::Rooted<JS::Value> jsval(aCx);
-      if (!ToJSValue(aCx, selectslist, &jsval)) {
-        JS_ClearPendingException(aCx);
-        continue;
-      }
-      Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
-          AppendEntryToCollectedData(select, id, aGeneratedCount, aRetVal);
-      entry->mValue.SetAsObject() = &jsval.toObject();
+
+      AppendValueToCollectedData(
+          select, id, NS_LITERAL_STRING("multipleSelect"), selectslist,
+          aGeneratedCount, std::forward<ArgsT>(args)...);
     }
   }
 }
@@ -619,11 +739,14 @@ static void CollectCurrentFormData(JSContext* aCx, Document& aDocument,
                                    Nullable<CollectedData>& aRetVal) {
   uint16_t generatedCount = 0;
   /* textarea element */
-  CollectFromTextAreaElement(aDocument, generatedCount, aRetVal);
+  SessionStoreUtils::CollectFromTextAreaElement(aDocument, generatedCount,
+                                                aRetVal);
   /* input element */
-  CollectFromInputElement(aCx, aDocument, generatedCount, aRetVal);
+  SessionStoreUtils::CollectFromInputElement(aDocument, generatedCount, aCx,
+                                             aRetVal);
   /* select element */
-  CollectFromSelectElement(aCx, aDocument, generatedCount, aRetVal);
+  SessionStoreUtils::CollectFromSelectElement(aDocument, generatedCount, aCx,
+                                              aRetVal);
 
   Element* bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
@@ -1168,11 +1291,9 @@ static void CollectFrameTreeData(JSContext* aCx,
   SequenceRooter<JSObject*> rooter(aCx, &childrenData);
   uint32_t trailingNullCounter = 0;
 
-  nsTArray<RefPtr<BrowsingContext>> children;
-  aBrowsingContext->GetChildren(children);
-  for (uint32_t i = 0; i < children.Length(); i++) {
+  for (auto& child : aBrowsingContext->GetChildren()) {
     NullableRootedDictionary<CollectedData> data(aCx);
-    CollectFrameTreeData(aCx, children[i], data, aFunc);
+    CollectFrameTreeData(aCx, child, data, aFunc);
     if (data.IsNull()) {
       childrenData.AppendElement(nullptr);
       trailingNullCounter++;
@@ -1205,4 +1326,62 @@ static void CollectFrameTreeData(JSContext* aCx,
     Nullable<CollectedData>& aRetVal) {
   CollectFrameTreeData(aGlobal.Context(), aWindow.get(), aRetVal,
                        CollectCurrentFormData);
+}
+
+/* static */ void SessionStoreUtils::ComposeInputData(
+    const nsTArray<CollectedInputDataValue>& aData, InputElementData& ret) {
+  nsTArray<int> selectedIndex, valueIdx;
+  nsTArray<nsString> id, selectVal, strVal, type;
+  nsTArray<bool> boolVal;
+
+  for (const CollectedInputDataValue& data : aData) {
+    id.AppendElement(data.id);
+    type.AppendElement(data.type);
+
+    if (data.value.is<mozilla::dom::CollectedNonMultipleSelectValue>()) {
+      valueIdx.AppendElement(selectVal.Length());
+      selectedIndex.AppendElement(
+          data.value.as<mozilla::dom::CollectedNonMultipleSelectValue>()
+              .mSelectedIndex);
+      selectVal.AppendElement(
+          data.value.as<mozilla::dom::CollectedNonMultipleSelectValue>()
+              .mValue);
+    } else if (data.value.is<nsTArray<nsString>>()) {
+      // The first valueIdx is "index of the first string value"
+      valueIdx.AppendElement(strVal.Length());
+      strVal.AppendElements(data.value.as<nsTArray<nsString>>());
+      // The second valueIdx is "index of the last string value" + 1
+      id.AppendElement(data.id);
+      type.AppendElement(data.type);
+      valueIdx.AppendElement(strVal.Length());
+    } else if (data.value.is<nsString>()) {
+      valueIdx.AppendElement(strVal.Length());
+      strVal.AppendElement(data.value.as<nsString>());
+    } else if (data.type.EqualsLiteral("bool")) {
+      valueIdx.AppendElement(boolVal.Length());
+      boolVal.AppendElement(data.value.as<bool>());
+    }
+  }
+
+  if (selectedIndex.Length() != 0) {
+    ret.mSelectedIndex.Construct().Assign(std::move(selectedIndex));
+  }
+  if (valueIdx.Length() != 0) {
+    ret.mValueIdx.Construct().Assign(std::move(valueIdx));
+  }
+  if (id.Length() != 0) {
+    ret.mId.Construct().Assign(std::move(id));
+  }
+  if (selectVal.Length() != 0) {
+    ret.mSelectVal.Construct().Assign(std::move(selectVal));
+  }
+  if (strVal.Length() != 0) {
+    ret.mStrVal.Construct().Assign(std::move(strVal));
+  }
+  if (type.Length() != 0) {
+    ret.mType.Construct().Assign(std::move(type));
+  }
+  if (boolVal.Length() != 0) {
+    ret.mBoolVal.Construct().Assign(std::move(boolVal));
+  }
 }
