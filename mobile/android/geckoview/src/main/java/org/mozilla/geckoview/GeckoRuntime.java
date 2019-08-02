@@ -84,14 +84,6 @@ public final class GeckoRuntime implements Parcelable {
 
     /**
      * This is a key for extra data sent with {@link #ACTION_CRASHED}. The value is
-     * a boolean indicating whether or not the crash dump was succcessfully
-     * retrieved. If this is false, the dump file referred to in
-     * {@link #EXTRA_MINIDUMP_PATH} may be corrupted or incomplete.
-     */
-    public static final String EXTRA_MINIDUMP_SUCCESS = "minidumpSuccess";
-
-    /**
-     * This is a key for extra data sent with {@link #ACTION_CRASHED}. The value is
      * a boolean indicating whether or not the crash was fatal or not. If true, the
      * main application process was affected by the crash. If false, only an internal
      * process used by Gecko has crashed and the application may be able to recover.
@@ -208,7 +200,6 @@ public final class GeckoRuntime implements Parcelable {
                         context, crashHandler);
                 i.putExtra(EXTRA_MINIDUMP_PATH, message.getString(EXTRA_MINIDUMP_PATH));
                 i.putExtra(EXTRA_EXTRAS_PATH, message.getString(EXTRA_EXTRAS_PATH));
-                i.putExtra(EXTRA_MINIDUMP_SUCCESS, true);
                 i.putExtra(EXTRA_CRASH_FATAL, message.getBoolean(EXTRA_CRASH_FATAL, true));
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

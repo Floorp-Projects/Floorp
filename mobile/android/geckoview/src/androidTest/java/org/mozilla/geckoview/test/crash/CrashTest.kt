@@ -48,9 +48,6 @@ class CrashTest {
         assertThat("Extras file should exist",
                 File(intent.getStringExtra(GeckoRuntime.EXTRA_EXTRAS_PATH)).exists(),
                 equalTo(true))
-        assertThat("Dump should be succcesful",
-                intent.getBooleanExtra(GeckoRuntime.EXTRA_MINIDUMP_SUCCESS, false),
-                equalTo(true))
 
         assertThat("Fatality should match",
                 intent.getBooleanExtra(GeckoRuntime.EXTRA_CRASH_FATAL, !fatal), equalTo(fatal))

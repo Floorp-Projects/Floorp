@@ -10,6 +10,13 @@ exclude: true
 
 ## v70
 
+- Removed the obsolete `success` parameter from
+  [`CrashReporter#sendCrashReport`][70.3] and
+  [`CrashReporter#sendCrashReport`][70.4].
+
+[70.3]: ../CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-java.io.File-java.lang.String-
+[70.4]: ../CrashReporter.html#sendCrashReport-android.content.Context-java.io.File-java.util.Map-java.lang.String-
+
 - Added API for session context assignment
   [`GeckoSessionSettings.Builder.contextId`][70.1] and deletion of data
   related to a session context
@@ -374,4 +381,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: ce03a46188d89b6d2ed5ebc58bdcd640eda216c9
+[api-version]: a378cc7122deed44920fd8f3aad8627ed7a7960d
