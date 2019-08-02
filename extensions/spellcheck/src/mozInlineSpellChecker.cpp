@@ -1058,9 +1058,15 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
                                            nsGkAtoms::cite, eIgnoreCase)) {
         return false;
       }
-      if (parent->IsHTMLElement(nsGkAtoms::pre) &&
+      if (parent->IsAnyOfHTMLElements(nsGkAtoms::pre, nsGkAtoms::div) &&
           parent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_class,
                                            nsGkAtoms::mozsignature,
+                                           eIgnoreCase)) {
+        return false;
+      }
+      if (parent->IsHTMLElement(nsGkAtoms::div) &&
+          parent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::_class,
+                                           nsGkAtoms::mozfwcontainer,
                                            eIgnoreCase)) {
         return false;
       }
