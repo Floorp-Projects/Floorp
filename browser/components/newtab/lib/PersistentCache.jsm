@@ -57,25 +57,18 @@ this.PersistentCache = class PersistentCache {
   _load() {
     return (
       this._cache ||
-      // eslint-disable-next-line no-async-promise-executor
-      (this._cache = new Promise(async (resolve, reject) => {
-        let filepath;
-        try {
-          filepath = OS.Path.join(
-            OS.Constants.Path.localProfileDir,
-            this._filename
-          );
-        } catch (error) {
-          reject(error);
-          return;
-        }
-
+      (this._cache = new Promise(async resolve => {
         let file;
+        let data = {};
+        const filepath = OS.Path.join(
+          OS.Constants.Path.localProfileDir,
+          this._filename
+        );
+
         try {
           file = await fetch(`file://${filepath}`);
         } catch (error) {} // Cache file doesn't exist yet.
 
-        let data = {};
         if (file) {
           try {
             data = await file.json();

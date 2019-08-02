@@ -18,8 +18,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SnippetsTestMessageProvider:
     "resource://activity-stream/lib/SnippetsTestMessageProvider.jsm",
   PanelTestProvider: "resource://activity-stream/lib/PanelTestProvider.jsm",
-  ToolbarBadgeHub: "resource://activity-stream/lib/ToolbarBadgeHub.jsm",
-  ToolbarPanelHub: "resource://activity-stream/lib/ToolbarPanelHub.jsm",
 });
 const {
   ASRouterActions: ra,
@@ -493,13 +491,11 @@ class _ASRouter {
     };
     this._triggerHandler = this._triggerHandler.bind(this);
     this._localProviders = localProviders;
-    this.blockMessageById = this.blockMessageById.bind(this);
     this.onMessage = this.onMessage.bind(this);
     this.handleMessageRequest = this.handleMessageRequest.bind(this);
     this.addImpression = this.addImpression.bind(this);
     this._handleTargetingError = this._handleTargetingError.bind(this);
     this.onPrefChange = this.onPrefChange.bind(this);
-    this.dispatch = this.dispatch.bind(this);
   }
 
   async onPrefChange(prefName) {
@@ -716,6 +712,7 @@ class _ASRouter {
     this._storage = storage;
     this.WHITELIST_HOSTS = this._loadSnippetsWhitelistHosts();
     this.dispatchToAS = dispatchToAS;
+    this.dispatch = this.dispatch.bind(this);
 
     ASRouterPreferences.init();
     ASRouterPreferences.addListener(this.onPrefChange);
@@ -724,14 +721,6 @@ class _ASRouter {
       this.addImpression,
       this.dispatch
     );
-    ToolbarBadgeHub.init(this.waitForInitialized, {
-      handleMessageRequest: this.handleMessageRequest,
-      addImpression: this.addImpression,
-      blockMessageById: this.blockMessageById,
-    });
-    ToolbarPanelHub.init({
-      getMessages: this.handleMessageRequest,
-    });
 
     this._loadLocalProviders();
 
@@ -787,8 +776,6 @@ class _ASRouter {
     ASRouterPreferences.removeListener(this.onPrefChange);
     ASRouterPreferences.uninit();
     BookmarkPanelHub.uninit();
-    ToolbarPanelHub.uninit();
-    ToolbarBadgeHub.uninit();
 
     // Uninitialise all trigger listeners
     for (const listener of ASRouterTriggerListeners.values()) {
@@ -1034,16 +1021,12 @@ class _ASRouter {
   // Return an object containing targeting parameters used to select messages
   _getMessagesContext() {
     const {
-      messageImpressions,
       previousSessionEnd,
       trailheadInterrupt,
       trailheadTriplet,
     } = this.state;
 
     return {
-      get messageImpressions() {
-        return messageImpressions;
-      },
       get previousSessionEnd() {
         return previousSessionEnd;
       },
@@ -1054,20 +1037,6 @@ class _ASRouter {
         return trailheadTriplet;
       },
     };
-  }
-
-  _findAllMessages(candidateMessages, trigger) {
-    const messages = candidateMessages.filter(m =>
-      this.isBelowFrequencyCaps(m)
-    );
-    const context = this._getMessagesContext();
-
-    return ASRouterTargeting.findAllMatchingMessages({
-      messages,
-      trigger,
-      context,
-      onError: this._handleTargetingError,
-    });
   }
 
   _findMessage(candidateMessages, trigger) {
@@ -1284,9 +1253,6 @@ class _ASRouter {
           BookmarkPanelHub._forceShowMessage(target, message);
         }
         break;
-      case "toolbar_badge":
-        ToolbarBadgeHub.registerBadgeNotificationListener(message, { force });
-        break;
       default:
         target.sendAsyncMessage(OUTGOING_MESSAGE_NAME, {
           type: "SET_MESSAGE",
@@ -1480,23 +1446,12 @@ class _ASRouter {
     await this._sendMessageToTarget(message, target, trigger);
   }
 
-  handleMessageRequest({ triggerId, template, returnAll = false }) {
-    const msgs = this._getUnblockedMessages().filter(m => {
-      if (template && m.template !== template) {
-        return false;
-      }
-      if (m.trigger && m.trigger.id !== triggerId) {
-        return false;
-      }
-
-      return true;
-    });
-
-    if (returnAll) {
-      return this._findAllMessages(msgs, { id: triggerId });
-    }
-
-    return this._findMessage(msgs, { id: triggerId });
+  handleMessageRequest(trigger) {
+    const msgs = this._getUnblockedMessages();
+    return this._findMessage(
+      msgs.filter(m => m.trigger && m.trigger.id === trigger.id),
+      trigger
+    );
   }
 
   async setMessageById(id, target, force = true, action = {}) {

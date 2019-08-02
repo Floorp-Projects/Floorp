@@ -139,8 +139,7 @@
   display: inline-block;
   vertical-align: middle;
 
-  // Cards will wrap into the next line after this breakpoint
-  @media(max-width: 865px) {
+  @media(max-width: 850px) {
     height: 75px;
     min-width: 80px;
     background-size: 80px;

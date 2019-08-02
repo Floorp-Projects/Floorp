@@ -93,16 +93,19 @@ describe("AboutPreferences Feed", () => {
     });
     it("should try to render on event", async () => {
       const stub = sandbox.stub(instance, "renderPreferences");
+      instance._strings = {};
       Sections.push({});
 
       await instance.observe(window, PREFERENCES_LOADED_EVENT);
 
       assert.calledOnce(stub);
       assert.equal(stub.firstCall.args[0], window);
-      assert.include(stub.firstCall.args[1], Sections[0]);
+      assert.deepEqual(stub.firstCall.args[1], instance._strings);
+      assert.include(stub.firstCall.args[2], Sections[0]);
     });
     it("Hide topstories rows select in sections if discovery stream is enabled", async () => {
       const stub = sandbox.stub(instance, "renderPreferences");
+      instance._strings = {};
 
       Sections.push({
         rowsPref: "row_pref",
@@ -116,15 +119,62 @@ describe("AboutPreferences Feed", () => {
       await instance.observe(window, PREFERENCES_LOADED_EVENT);
 
       assert.calledOnce(stub);
-      const [, structure] = stub.firstCall.args;
-      assert.equal(structure[0].id, "search");
-      assert.equal(structure[1].id, "topsites");
-      assert.equal(structure[2].id, "topstories");
-      assert.isEmpty(structure[2].rowsPref);
+      assert.equal(stub.firstCall.args[2][0].id, "search");
+      assert.equal(stub.firstCall.args[2][1].id, "topsites");
+      assert.equal(stub.firstCall.args[2][2].id, "topstories");
+      assert.isEmpty(stub.firstCall.args[2][2].rowsPref);
+    });
+  });
+  describe("#strings", () => {
+    let activityStreamLocale;
+    let fetchStub;
+    let fetchText;
+    beforeEach(() => {
+      global.Cc["@mozilla.org/browser/aboutnewtab-service;1"] = {
+        getService() {
+          return { activityStreamLocale };
+        },
+      };
+      fetchStub = sandbox
+        .stub()
+        .resolves({ text: () => Promise.resolve(fetchText) });
+      globals.set("fetch", fetchStub);
+    });
+    it("should use existing strings if they exist", async () => {
+      instance._strings = {};
+
+      const strings = await instance.strings;
+
+      assert.equal(strings, instance._strings);
+    });
+    it("should report failure if missing", async () => {
+      sandbox.stub(Cu, "reportError");
+
+      const strings = await instance.strings;
+
+      assert.calledOnce(Cu.reportError);
+      assert.deepEqual(strings, {});
+    });
+    it("should fetch with the appropriate locale", async () => {
+      activityStreamLocale = "en-TEST";
+
+      await instance.strings;
+
+      assert.calledOnce(fetchStub);
+      assert.include(fetchStub.firstCall.args[0], activityStreamLocale);
+    });
+    it("should extract strings from js text", async () => {
+      const testStrings = { hello: "world" };
+      fetchText = `var strings = ${JSON.stringify(testStrings)};`;
+
+      const strings = await instance.strings;
+
+      assert.deepEqual(strings, testStrings);
     });
   });
   describe("#renderPreferences", () => {
     let node;
+    let strings;
     let prefStructure;
     let Preferences;
     let gHomePane;
@@ -150,6 +200,7 @@ describe("AboutPreferences Feed", () => {
           Preferences,
           gHomePane,
         },
+        strings,
         prefStructure,
         DiscoveryStream.config
       );
@@ -164,6 +215,7 @@ describe("AboutPreferences Feed", () => {
         remove: sandbox.stub(),
         style: {},
       };
+      strings = {};
       prefStructure = [];
       Preferences = {
         add: sandbox.stub(),
