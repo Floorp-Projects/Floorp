@@ -36,12 +36,21 @@ add_task(async function() {
       .then(console => {
         // This is for checking Browser Toolbox doesn't have a close button.
         const hasCloseButton = !!toolbox.doc.getElementById("toolbox-close");
-        const { jsterm } = console.hud;
-        const js =
-          "Services.obs.notifyObservers(null, 'browser-toolbox-console-works', " +
-          hasCloseButton +
-          ");";
-        return jsterm.execute(js);
+        const { wrapper } = console.hud.ui;
+        const js = `Services.obs.notifyObservers(null, 'browser-toolbox-console-works', ${hasCloseButton} )`;
+        const onResult = new Promise(resolve => {
+          const onNewMessages = messages => {
+            for (const message of messages) {
+              if (message.node.classList.contains("result")) {
+                console.hud.ui.off("new-messages", onNewMessages);
+                resolve();
+              }
+            }
+          };
+          console.hud.ui.on("new-messages", onNewMessages);
+        });
+        wrapper.dispatchEvaluateExpression(js);
+        return onResult;
       })
       .then(() => toolbox.destroy());
   };

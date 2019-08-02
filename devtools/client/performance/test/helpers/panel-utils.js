@@ -81,11 +81,10 @@ exports.initConsoleInTab = async function({ tab }) {
   const consoleMethod = async function(method, label, event) {
     const performanceFront = await toolbox.target.getFront("performance");
     const recordingEventReceived = once(performanceFront, event);
-    if (label === undefined) {
-      await panel.hud.jsterm.execute(`console.${method}()`);
-    } else {
-      await panel.hud.jsterm.execute(`console.${method}("${label}")`);
-    }
+    const expression = label
+      ? `console.${method}("${label}")`
+      : `console.${method}()`;
+    await panel.hud.ui.wrapper.dispatchEvaluateExpression(expression);
     await recordingEventReceived;
   };
 

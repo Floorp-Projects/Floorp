@@ -201,15 +201,25 @@ class UrlbarView {
    */
   close() {
     this.controller.cancelQuery();
+
+    if (!this.isOpen) {
+      return;
+    }
+
     this.panel.setAttribute("hidden", "true");
     this.removeAccessibleFocus();
     this.input.inputField.setAttribute("aria-expanded", "false");
     this.input.dropmarker.removeAttribute("open");
+
     this._rows.textContent = "";
+
     this.window.removeEventListener("resize", this);
+
     this.window.removeEventListener("mousedown", this);
     this.panel.removeEventListener("mousedown", this);
     this.input.textbox.removeEventListener("mousedown", this);
+
+    this.controller.notify(this.controller.NOTIFICATIONS.VIEW_CLOSE);
   }
 
   // UrlbarController listener methods.
@@ -398,16 +408,14 @@ class UrlbarView {
     this.input.inputField.setAttribute("aria-expanded", "true");
     this.input.dropmarker.setAttribute("open", "true");
 
-    if (this.oneOffSearchButtons.style.display != "none") {
-      this.oneOffSearchButtons._rebuild();
-    }
-
     this.window.addEventListener("mousedown", this);
     this.panel.addEventListener("mousedown", this);
     this.input.textbox.addEventListener("mousedown", this);
 
     this.window.addEventListener("resize", this);
     this._windowOuterWidth = this.window.outerWidth;
+
+    this.controller.notify(this.controller.NOTIFICATIONS.VIEW_OPEN);
   }
 
   /**

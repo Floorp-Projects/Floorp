@@ -32,8 +32,7 @@ nsresult GenerateOriginKey(nsIPrincipal* aPrincipal,
 
   if (domainOrigin.IsEmpty()) {
     // For the file:/// protocol use the exact directory as domain.
-    bool isScheme = false;
-    if (NS_SUCCEEDED(uri->SchemeIs("file", &isScheme)) && isScheme) {
+    if (uri->SchemeIs("file")) {
       nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
       NS_ENSURE_SUCCESS(rv, rv);
       rv = url->GetDirectory(domainOrigin);

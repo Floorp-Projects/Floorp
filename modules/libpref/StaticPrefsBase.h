@@ -64,12 +64,6 @@ struct IsAtomic<std::atomic<T>> : TrueType {};
 
 namespace StaticPrefs {
 
-// Enums for the update policy.
-enum class UpdatePolicy {
-  Once,  // Evaluate the preference once, unchanged during the session.
-  Live   // Evaluate the preference and set callback so it stays current/live.
-};
-
 void MaybeInitOncePrefs();
 
 }  // namespace StaticPrefs

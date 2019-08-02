@@ -1700,12 +1700,9 @@ nsresult nsHttpConnection::ResumeRecv() {
   mLastReadTime = PR_IntervalNow();
 
   if (mSocketIn) {
-    nsresult rv = mSocketIn->AsyncWait(this, 0, 0, nullptr);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    if (mTLSFilter && mTLSFilter->HasDataToRecv()) {
-      Unused << ForceRecv();
+    if (!mTLSFilter || !mTLSFilter->HasDataToRecv() ||
+        NS_FAILED(ForceRecv())) {
+      return mSocketIn->AsyncWait(this, 0, 0, nullptr);
     }
     return NS_OK;
   }

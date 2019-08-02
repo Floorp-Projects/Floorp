@@ -60,7 +60,6 @@ var FormAutofillFrameScript = {
 
   init() {
     addEventListener("focusin", this);
-    addEventListener("focusout", this);
     addEventListener("DOMFormBeforeSubmit", this);
     addMessageListener("FormAutofill:PreviewProfile", this);
     addMessageListener("FormAutofill:ClearForm", this);

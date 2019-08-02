@@ -38,14 +38,14 @@ add_task(async function() {
 });
 
 async function performTests() {
-  const { jsterm } = await openNewTabAndConsole(TEST_URI);
+  const hud = await openNewTabAndConsole(TEST_URI);
   const random = Math.random();
   const string = "Text: " + random;
   const obj = { a: 1, b: "foo", c: random };
 
-  await testCopy(jsterm, random, random.toString());
-  await testCopy(jsterm, JSON.stringify(string), string);
-  await testCopy(jsterm, obj.toSource(), JSON.stringify(obj, null, "  "));
+  await testCopy(hud, random, random.toString());
+  await testCopy(hud, JSON.stringify(string), string);
+  await testCopy(hud, obj.toSource(), JSON.stringify(obj, null, "  "));
 
   const outerHTML = await ContentTask.spawn(
     gBrowser.selectedBrowser,
@@ -54,14 +54,14 @@ async function performTests() {
       return content.document.getElementById(elementId).outerHTML;
     }
   );
-  await testCopy(jsterm, `$("#${id}")`, outerHTML);
+  await testCopy(hud, `$("#${id}")`, outerHTML);
 }
 
-function testCopy(jsterm, stringToCopy, expectedResult) {
+function testCopy(hud, stringToCopy, expectedResult) {
   return waitForClipboardPromise(() => {
     info(`Attempting to copy: "${stringToCopy}"`);
     const command = `copy(${stringToCopy})`;
     info(`Executing command: "${command}"`);
-    jsterm.execute(command);
+    execute(hud, command);
   }, expectedResult);
 }

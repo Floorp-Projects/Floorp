@@ -12,7 +12,7 @@
 
 [package]
 name = "audio_thread_priority"
-version = "0.15.0"
+version = "0.17.0"
 authors = ["Paul Adenot <paul@paul.cx>"]
 description = "Bump a thread to real-time priority, for audio work, on Linux, Windows and macOS"
 license = "MPL-2.0"
@@ -42,7 +42,7 @@ version = "0.2"
 version = "0.2"
 
 [target."cfg(target_os = \"macos\")".dependencies.mach]
-version = "0.1"
+version = "0.3"
 [target."cfg(target_os = \"windows\")".dependencies.winapi]
 version = "0.3"
 features = ["avrt", "errhandlingapi", "ntdef", "minwindef"]

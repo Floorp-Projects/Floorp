@@ -341,12 +341,7 @@ nsXBLService::~nsXBLService(void) {}
 
 // static
 bool nsXBLService::IsChromeOrResourceURI(nsIURI* aURI) {
-  bool isChrome = false;
-  bool isResource = false;
-  if (NS_SUCCEEDED(aURI->SchemeIs("chrome", &isChrome)) &&
-      NS_SUCCEEDED(aURI->SchemeIs("resource", &isResource)))
-    return (isChrome || isResource);
-  return false;
+  return aURI->SchemeIs("chrome") || aURI->SchemeIs("resource");
 }
 
 // Servo avoids wasting work styling subtrees of elements with XBL bindings by
@@ -428,8 +423,7 @@ static bool IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal) {
   aPrincipal->GetURI(getter_AddRefs(uri));
   NS_ENSURE_TRUE(uri, false);
 
-  bool isChrome = false;
-  return NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome;
+  return uri->SchemeIs("chrome");
 }
 
 // This function loads a particular XBL file and installs all of the bindings
@@ -683,10 +677,7 @@ static bool MayBindToContent(nsXBLPrototypeBinding* aProtoBinding,
   // they end up with a null principal (rather than inheriting the document's
   // principal), which causes them to fail the check above.
   if (nsContentUtils::AllowXULXBLForPrincipal(aBoundElement->NodePrincipal())) {
-    bool isDataURI = false;
-    nsresult rv = aURI->SchemeIs("data", &isDataURI);
-    NS_ENSURE_SUCCESS(rv, false);
-    if (isDataURI) {
+    if (aURI->SchemeIs("data")) {
       return true;
     }
   }
@@ -913,9 +904,9 @@ nsresult nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
     // document.
 
     // Always load chrome synchronously
-    bool chrome;
-    if (NS_SUCCEEDED(documentURI->SchemeIs("chrome", &chrome)) && chrome)
+    if (documentURI->SchemeIs("chrome")) {
       aForceSyncLoad = true;
+    }
 
     nsCOMPtr<Document> document;
     rv = FetchBindingDocument(aBoundElement, aBoundDocument, documentURI,

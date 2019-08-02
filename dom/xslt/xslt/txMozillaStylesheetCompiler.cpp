@@ -249,8 +249,7 @@ txStylesheetSink::OnStartRequest(nsIRequest* aRequest) {
   // sniffing themselves.
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
-  bool sniff;
-  if (NS_SUCCEEDED(uri->SchemeIs("file", &sniff)) && sniff &&
+  if (uri->SchemeIs("file") &&
       contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE)) {
     nsresult rv;
     nsCOMPtr<nsIStreamConverterService> serv =

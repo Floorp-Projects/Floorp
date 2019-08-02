@@ -2888,7 +2888,6 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
     if (c1kind == ZeroDigit) {
       TokenStart start(this->sourceUnits, -1);
       int radix;
-      bool isLegacyOctalOrNoctal = false;
       bool isBigInt = false;
       const Unit* numStart;
       unit = getCodeUnit();
@@ -2947,7 +2946,6 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         }
 
         radix = 8;
-        isLegacyOctalOrNoctal = true;
         // one past the '0'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
@@ -2961,6 +2959,11 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
 
         if (unit == '_') {
           error(JSMSG_SEPARATOR_IN_ZERO_PREFIXED_NUMBER);
+          return badToken();
+        }
+
+        if (unit == 'n' && anyCharsAccess().options().bigIntEnabledOption) {
+          error(JSMSG_BIGINT_INVALID_SYNTAX);
           return badToken();
         }
 
@@ -2982,10 +2985,6 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       }
 
       if (unit == 'n' && anyCharsAccess().options().bigIntEnabledOption) {
-        if (isLegacyOctalOrNoctal) {
-          error(JSMSG_BIGINT_INVALID_SYNTAX);
-          return badToken();
-        }
         isBigInt = true;
         unit = peekCodeUnit();
       } else {
