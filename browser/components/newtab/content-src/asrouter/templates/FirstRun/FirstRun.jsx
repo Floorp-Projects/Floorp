@@ -171,10 +171,6 @@ export class FirstRun extends React.PureComponent {
 
   closeTriplets() {
     this.setState({ isTripletsContainerVisible: false });
-    // TODO: Needs to block ALL extended triplets as well
-    if (this.props.message.template === "extended_triplets") {
-      this.props.onBlock();
-    }
   }
 
   render() {

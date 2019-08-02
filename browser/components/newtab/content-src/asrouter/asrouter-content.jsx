@@ -19,7 +19,6 @@ const TEMPLATES_ABOVE_PAGE = [
   "trailhead",
   "fxa_overlay",
   "return_to_amo_overlay",
-  "extended_triplets",
 ];
 const FIRST_RUN_TEMPLATES = TEMPLATES_ABOVE_PAGE;
 const TEMPLATES_BELOW_SEARCH = ["simple_below_search_snippet"];
@@ -228,7 +227,7 @@ export class ASRouterUISurface extends React.PureComponent {
       });
     } else {
       ASRouterUtils.sendMessage({
-        type: "NEWTAB_MESSAGE_REQUEST",
+        type: "SNIPPETS_REQUEST",
         data: { endpoint },
       });
     }
@@ -287,25 +286,15 @@ export class ASRouterUISurface extends React.PureComponent {
     const { message } = this.state;
     if (FIRST_RUN_TEMPLATES.includes(message.template)) {
       return (
-        <ImpressionsWrapper
-          id="FIRST_RUN"
-          message={this.state.message}
-          sendImpression={this.sendImpression}
-          shouldSendImpressionOnUpdate={shouldSendImpressionOnUpdate}
-          // This helps with testing
+        <FirstRun
           document={this.props.document}
-        >
-          <FirstRun
-            document={this.props.document}
-            message={message}
-            sendUserActionTelemetry={this.sendUserActionTelemetry}
-            executeAction={ASRouterUtils.executeAction}
-            dispatch={this.props.dispatch}
-            onBlock={this.onBlockById(this.state.message.id)}
-            onDismiss={this.onDismissById(this.state.message.id)}
-            fxaEndpoint={this.props.fxaEndpoint}
-          />
-        </ImpressionsWrapper>
+          message={message}
+          sendUserActionTelemetry={this.sendUserActionTelemetry}
+          executeAction={ASRouterUtils.executeAction}
+          dispatch={this.props.dispatch}
+          onDismiss={this.onDismissById(this.state.message.id)}
+          fxaEndpoint={this.props.fxaEndpoint}
+        />
       );
     }
     return null;
@@ -325,9 +314,7 @@ export class ASRouterUISurface extends React.PureComponent {
 
     return shouldRenderBelowSearch ? (
       // Render special below search snippets in place;
-      <div className="below-search-snippet-wrapper">
-        {this.renderSnippets()}
-      </div>
+      <div className="below-search-snippet">{this.renderSnippets()}</div>
     ) : (
       // For onboarding, regular snippets etc. we should render
       // everything in our footer container.

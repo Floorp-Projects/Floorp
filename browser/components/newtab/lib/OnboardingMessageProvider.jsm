@@ -99,19 +99,6 @@ const ONBOARDING_MESSAGES = () => [
     trigger: { id: "firstRun" },
   },
   {
-    id: "EXTENDED_TRIPLETS_1",
-    template: "extended_triplets",
-    targeting:
-      "trailheadTriplet && ((currentDate|date - profileAgeCreated) / 86400000) < 7",
-    includeBundle: {
-      length: 3,
-      template: "onboarding",
-      trigger: { id: "showOnboarding" },
-    },
-    frequency: { lifetime: 20 },
-    utm_term: "trailhead-cards",
-  },
-  {
     id: "TRAILHEAD_CARD_1",
     template: "onboarding",
     bundled: 3,
