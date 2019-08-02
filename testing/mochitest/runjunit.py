@@ -2,6 +2,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from __future__ import print_function
+
 import argparse
 import os
 import posixpath
@@ -306,8 +308,8 @@ class JUnitTestRunner(MochitestDesktop):
                 # minidumps directory is automatically created when the app
                 # (first) starts, so its lack of presence is a hint that
                 # something went wrong.
-                print "Automation Error: No crash directory (%s) found on remote device" % \
-                    remote_dir
+                print("Automation Error: " +
+                      "No crash directory ({}) found on remote device".format(remote_dir))
                 return True
             self.device.pull(remote_dir, dump_dir)
             crashed = mozcrash.log_crashes(self.log, dump_dir, symbols_path,

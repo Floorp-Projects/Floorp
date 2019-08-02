@@ -115,6 +115,7 @@ security/sandbox/chromium/
 security/sandbox/chromium-shim/
 testing/gtest/gmock/
 testing/gtest/gtest/
+testing/mochitest/pywebsocket
 testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
