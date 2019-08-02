@@ -9,6 +9,7 @@ tasks:
     decision_task_id: {$eval: as_slugid("decision_task")}
     expires_in: {$fromNow: '1 year'}
     user: ${event.sender.login}
+    project_name: fenix
 
     # We define the following variable at the very top, because they are used in the
     # default definition
@@ -81,11 +82,11 @@ tasks:
               - statuses  # Automatically added by taskcluster-github. It must be explicit because of Chain of Trust
               - $if: 'trust_level == 3'
                 then:
-                  - tc-treeherder.v2.fenix.${head_rev}
+                  - tc-treeherder.v2.${project_name}.${head_rev}
                 else: []
           payload:
             maxRunTime: 600   # Decision should remain fast enough to schedule a handful of tasks
-            image: mozillamobile/fenix:1.4
+            image: mozillamobile/${project_name}:1.4
             command:
               - /bin/bash
               - --login
@@ -108,15 +109,15 @@ tasks:
             artifacts:
               public/task-graph.json:
                 type: file
-                path: /opt/fenix/task-graph.json
+                path: /opt/${project_name}/task-graph.json
                 expires: ${expires_in}
               public/actions.json:
                 type: file
-                path: /opt/fenix/actions.json
+                path: /opt/${project_name}/actions.json
                 expires: ${expires_in}
               public/parameters.yml:
                 type: file
-                path: /opt/fenix/parameters.yml
+                path: /opt/${project_name}/parameters.yml
                 expires: ${expires_in}
           extra:
             tasks_for: ${tasks_for}
@@ -153,8 +154,8 @@ tasks:
                       treeherder:
                         symbol: D-PR
                     metadata:
-                      name: 'Fenix - Decision task (Pull Request #${pull_request_number})'
-                      description: 'Building and testing the Fenix - triggered by [#${pull_request_number}](${pull_request_url})'
+                      name: '${project_name} - Decision task (Pull Request #${pull_request_number})'
+                      description: 'Building and testing ${project_name} - triggered by [#${pull_request_number}](${pull_request_url})'
           - $if: 'tasks_for == "github-push" && head_branch[:10] != "refs/tags/"'
             then:
               $mergeDeep:
@@ -172,8 +173,8 @@ tasks:
                     treeherder:
                       symbol: D
                   metadata:
-                    name: Fenix VCS-Push Decision task
-                    description: Schedules the build and test tasks for Fenix.
+                    name: ${project_name} VCS-Push Decision task
+                    description: Schedules the build and test tasks for ${project_name}.
           - $if: 'tasks_for == "github-release" && event["action"] == "published"'
             then:
               $mergeDeep:
@@ -191,8 +192,8 @@ tasks:
                     treeherder:
                       symbol: D-github-release
                   metadata:
-                    name: Fenix Github Release Decision Task
-                    description: Building and releasing Fenix ${event.release.tag_name}
+                    name: ${project_name} Github Release Decision Task
+                    description: Building and releasing ${project_name} ${event.release.tag_name}
           - $if: 'tasks_for == "cron"'
             then:
               $let:
@@ -207,8 +208,8 @@ tasks:
                     - {$eval: 'default_task_definition'}
                     - scopes:
                         - $if: 'trust_level == 3'
-                          then: assume:hook-id:project-mobile/fenix-nightly
-                          else: assume:hook-id:project-mobile/fenix-nightly-staging
+                          then: assume:hook-id:project-mobile/${project_name}-nightly
+                          else: assume:hook-id:project-mobile/${project_name}-nightly-staging
                       routes:
                         $if: 'trust_level == 3'
                         then:
@@ -225,7 +226,7 @@ tasks:
                         treeherder:
                           symbol: nightly-D
                       metadata:
-                        name: Fenix Nightly Decision Task
+                        name: ${project_name} Nightly Decision Task
                         description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
               - $if: 'cron.name == "raptor"'
                 then:
@@ -233,8 +234,8 @@ tasks:
                     - {$eval: 'default_task_definition'}
                     - scopes:
                         - $if: 'trust_level == 3'
-                          then: assume:hook-id:project-mobile/fenix-raptor
-                          else: assume:hook-id:project-mobile/fenix-raptor-staging
+                          then: assume:hook-id:project-mobile/${project_name}-raptor
+                          else: assume:hook-id:project-mobile/${project_name}-raptor-staging
                       routes:
                         $if: 'trust_level == 3'
                         then:
@@ -252,5 +253,5 @@ tasks:
                         treeherder:
                           symbol: raptor-D
                       metadata:
-                        name: Fenix Raptor Decision Task
+                        name: ${project_name} Raptor Decision Task
                         description: Decision task scheduled by cron task [${cron.task_id}](https://tools.taskcluster.net/tasks/${cron.task_id})
