@@ -46,7 +46,7 @@ void DocAccessibleChild::Shutdown() {
 
 ipc::IPCResult DocAccessibleChild::RecvParentCOMProxy(
     const IDispatchHolder& aParentCOMProxy) {
-  MOZ_ASSERT(!mParentProxy && !aParentCOMProxy.IsNull());
+  MOZ_ASSERT(!aParentCOMProxy.IsNull());
   mParentProxy.reset(const_cast<IDispatchHolder&>(aParentCOMProxy).Release());
   SetConstructedInParentProcess();
 
