@@ -319,6 +319,27 @@ describe("SourceTreeItem", () => {
       expect(node).toMatchSnapshot();
     });
 
+    it("should show source item with blackbox icon", async () => {
+      const isBlackBoxed = true;
+      const mockSource = {
+        ...makeMockSource("http://mdn.com/one.js", "server1.conn13.child1/39"),
+        isBlackBoxed,
+      };
+      const node = render({
+        item: createMockItem({ contents: mockSource }),
+        source: mockSource,
+      });
+      expect(node).toMatchSnapshot();
+    });
+
+    it("should show source item with prettyPrint icon", async () => {
+      const node = render({
+        item: createMockItem(),
+        hasPrettySource: true,
+      });
+      expect(node).toMatchSnapshot();
+    });
+
     it("should show (mapped) for duplicate source items", async () => {
       const node = render({
         item: createMockItem(),
