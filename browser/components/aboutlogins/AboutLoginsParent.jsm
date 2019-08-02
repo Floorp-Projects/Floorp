@@ -67,7 +67,8 @@ const SUBDOMAIN_REGEX = new RegExp(/^www\d*\./);
 const augmentVanillaLoginObject = login => {
   let title;
   try {
-    title = new URL(login.origin).host;
+    // file:// URIs don't have a host property
+    title = new URL(login.origin).host || login.origin;
   } catch (ex) {
     title = login.origin.replace(SCHEME_REGEX, "");
   }
