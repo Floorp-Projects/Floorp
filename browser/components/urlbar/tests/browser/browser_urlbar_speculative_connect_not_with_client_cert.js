@@ -40,7 +40,7 @@ const clientAuthDialogs = {
         expectingChooseCertificate ? "" : "not "
       }expecting chooseCertificate to be called`
     );
-    is(certList.length, 1, "should have only one client certificate available");
+    ok(certList.length > 0, "Should have at least one certificate");
     selectedIndex.value = 0;
     rememberClientAuthCertificate.value = false;
     chooseCertificateCalled = true;
