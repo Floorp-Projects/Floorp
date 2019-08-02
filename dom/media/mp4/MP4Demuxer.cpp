@@ -73,44 +73,8 @@ class MP4TrackDemuxer : public MediaTrackDemuxer,
   // Queued samples extracted by the demuxer, but not yet returned.
   RefPtr<MediaRawData> mQueuedSample;
   bool mNeedReIndex;
-  bool mNeedSPSForTelemetry;
   enum CodecType { kH264, kVP9, kOther } mType = kOther;
 };
-
-// Returns true if no SPS was found and search for it should continue.
-bool AccumulateSPSTelemetry(const MediaByteBuffer* aExtradata) {
-  SPSData spsdata;
-  if (H264::DecodeSPSFromExtraData(aExtradata, spsdata)) {
-    uint8_t constraints = (spsdata.constraint_set0_flag ? (1 << 0) : 0) |
-                          (spsdata.constraint_set1_flag ? (1 << 1) : 0) |
-                          (spsdata.constraint_set2_flag ? (1 << 2) : 0) |
-                          (spsdata.constraint_set3_flag ? (1 << 3) : 0) |
-                          (spsdata.constraint_set4_flag ? (1 << 4) : 0) |
-                          (spsdata.constraint_set5_flag ? (1 << 5) : 0);
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG,
-                          constraints);
-
-    // Collect profile_idc values up to 244, otherwise 0 for unknown.
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_PROFILE,
-                          spsdata.profile_idc <= 244 ? spsdata.profile_idc : 0);
-
-    // Make sure level_idc represents a value between levels 1 and 5.2,
-    // otherwise collect 0 for unknown level.
-    Telemetry::Accumulate(Telemetry::VIDEO_DECODED_H264_SPS_LEVEL,
-                          (spsdata.level_idc >= 10 && spsdata.level_idc <= 52)
-                              ? spsdata.level_idc
-                              : 0);
-
-    // max_num_ref_frames should be between 0 and 16, anything larger will
-    // be treated as invalid.
-    Telemetry::Accumulate(Telemetry::VIDEO_H264_SPS_MAX_NUM_REF_FRAMES,
-                          std::min(spsdata.max_num_ref_frames, 17u));
-
-    return false;
-  }
-
-  return true;
-}
 
 MP4Demuxer::MP4Demuxer(MediaResource* aResource)
     : mResource(aResource),
@@ -352,11 +316,9 @@ MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
   EnsureUpToDateIndex();  // Force update of index
 
   VideoInfo* videoInfo = mInfo->GetAsVideoInfo();
-  // Collect telemetry from h264 AVCC SPS.
   if (videoInfo && MP4Decoder::IsH264(mInfo->mMimeType)) {
     mType = kH264;
     RefPtr<MediaByteBuffer> extraData = videoInfo->mExtraData;
-    mNeedSPSForTelemetry = AccumulateSPSTelemetry(extraData);
     SPSData spsdata;
     if (H264::DecodeSPSFromExtraData(extraData, spsdata) &&
         spsdata.pic_width > 0 && spsdata.pic_height > 0 &&
@@ -370,8 +332,6 @@ MP4TrackDemuxer::MP4TrackDemuxer(MediaResource* aResource,
     if (videoInfo && VPXDecoder::IsVP9(mInfo->mMimeType)) {
       mType = kVP9;
     }
-    // No SPS to be found.
-    mNeedSPSForTelemetry = false;
   }
 }
 
@@ -509,16 +469,6 @@ RefPtr<MP4TrackDemuxer::SamplesPromise> MP4TrackDemuxer::GetSamples(
   if (samples->GetSamples().IsEmpty()) {
     return SamplesPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_END_OF_STREAM,
                                            __func__);
-  }
-  for (const auto& sample : samples->GetSamples()) {
-    // Collect telemetry from h264 Annex B SPS.
-    if (mNeedSPSForTelemetry && mType == kH264 && AnnexB::IsAVCC(sample)) {
-      RefPtr<MediaByteBuffer> extradata = H264::ExtractExtraData(sample);
-      if (H264::HasSPS(extradata)) {
-        RefPtr<MediaByteBuffer> extradata = H264::ExtractExtraData(sample);
-        mNeedSPSForTelemetry = AccumulateSPSTelemetry(extradata);
-      }
-    }
   }
 
   if (mNextKeyframeTime.isNothing() ||

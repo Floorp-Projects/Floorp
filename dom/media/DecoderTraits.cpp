@@ -8,7 +8,6 @@
 #include "MediaContainerType.h"
 #include "nsMimeTypes.h"
 #include "mozilla/Preferences.h"
-#include "mozilla/Telemetry.h"
 
 #include "OggDecoder.h"
 #include "OggDemuxer.h"
@@ -150,9 +149,7 @@ static CanPlayStatus CanHandleMediaType(
   }
 #endif
 
-  if (DecoderTraits::IsHttpLiveStreamingType(aType)) {
-    Telemetry::Accumulate(Telemetry::MEDIA_HLS_CANPLAY_REQUESTED, true);
-  } else if (DecoderTraits::IsMatroskaType(aType)) {
+  if (DecoderTraits::IsMatroskaType(aType)) {
     Telemetry::Accumulate(Telemetry::MEDIA_MKV_CANPLAY_REQUESTED, true);
   }
 

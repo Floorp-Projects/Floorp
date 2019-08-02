@@ -32,18 +32,10 @@ sync protocol PRemoteDecoderManager
   manages PRemoteDecoder;
 
 parent:
-  // aBlacklistedD3D11Driver and aBlacklistedD3D9Driver are used to read back the blacklisted driver information
-  // from GPU process to content process.
-  // We should have added a new sync method to read back this information but, in that way, we also introduce one
-  // more sync IPC call.
-  // Considering that this information is only used for telemetry usage in bug 1393392 and should be removed once
-  // we have collected enough data, we add these two return values here for convenience.
   sync PRemoteDecoder(RemoteDecoderInfoIPDL info,
                       OptionSet options,
                       TextureFactoryIdentifier? identifier)
          returns (bool success,
-                  nsCString aBlacklistedD3D11Driver,
-                  nsCString aBlacklistedD3D9Driver,
                   nsCString aErrorDescription);
 
   sync Readback(SurfaceDescriptorGPUVideo sd) returns (SurfaceDescriptor aResult);
