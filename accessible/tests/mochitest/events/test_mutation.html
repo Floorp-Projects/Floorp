@@ -447,13 +447,6 @@
       gQueue.push(new changeStyle(id, "visibility", "hidden", kHideEvents));
       gQueue.push(new changeStyle(id, "visibility", "visible", kShowEvents));
 
-      // Show/hide events by changing of display style of accessible DOM node
-      // from 'inline' to 'block', 'block' to 'inline'.
-      id = "link3";
-      getAccessible(id); // ensure accessible is created
-      gQueue.push(new changeStyle(id, "display", "block", kHideAndShowEvents));
-      gQueue.push(new changeStyle(id, "display", "inline", kHideAndShowEvents));
-
       // Show/hide events by changing of visibility style of accessible DOM node
       // from 'collapse' to 'visible', 'visible' to 'collapse'.
       id = "link4";

@@ -1512,10 +1512,13 @@ void nsAccessibilityService::RemoveNativeRootAccessible(
 bool nsAccessibilityService::HasAccessible(nsINode* aDOMNode) {
   if (!aDOMNode) return false;
 
-  DocAccessible* document = GetDocAccessible(aDOMNode->OwnerDoc());
+  Document* document = aDOMNode->OwnerDoc();
   if (!document) return false;
 
-  return document->HasAccessible(aDOMNode);
+  DocAccessible* docAcc = GetExistingDocAccessible(aDOMNode->OwnerDoc());
+  if (!docAcc) return false;
+
+  return docAcc->HasAccessible(aDOMNode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

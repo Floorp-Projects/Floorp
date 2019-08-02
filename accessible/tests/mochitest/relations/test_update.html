@@ -100,7 +100,7 @@
         testRelation(aLabelID, RELATION_LABEL_FOR, aElmID);
         testRelation(aElmID, RELATION_LABELLED_BY, aLabelID);
 
-        this.containerNode.style.overflow = "visible";
+        this.containerNode.setAttribute('href', 'foo');
       };
 
       this.finalCheck = function recreateRelatives_finalCheck() {

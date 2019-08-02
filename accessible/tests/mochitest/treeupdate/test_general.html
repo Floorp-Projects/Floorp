@@ -133,6 +133,94 @@
       };
     }
 
+    // This tests a case where a container (c5) gets re-framed
+    // because an inline child has its block child set to display: none.
+    function hideBlockChildOfInline() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, "div"),
+        new invokerChecker(EVENT_REORDER, "span"),
+      ];
+
+      this.invoke = function hideBlockChildOfInline_invoke() {
+        document.body.offsetTop; // Flush layout.
+
+        getNode("div").style.display = "none";
+
+      };
+
+      this.finalCheck = function hideBlockChildOfInline_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { REGION: [] },
+          ] };
+        testAccessibleTree("c5", accTree);
+      };
+
+      this.getID = function hideBlockChildOfInline_getID() {
+        return "hide div from inside span.";
+      };
+    }
+
+    // This tests a case where a container (c5) gets re-framed
+    // because an inline child has its block child set to display: none.
+    function reinsertBlockChildOfInline() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_REORDER, "span"),
+      ];
+
+      this.invoke = function reinsertBlockChildOfInline_invoke() {
+        document.body.offsetTop; // Flush layout.
+
+        getNode("div").style.display = "block";
+
+      };
+
+      this.finalCheck = function reinsertBlockChildOfInline_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { REGION: [
+              { SECTION: [
+                { TEXT_LEAF: [] }
+              ] }
+            ] },
+          ] };
+        testAccessibleTree("c5", accTree);
+      };
+
+      this.getID = function reinsertBlockChildOfInline_getID() {
+        return "reinsert div from inside span.";
+      };
+    }
+
+    // This tests a case where a container (c5) gets re-framed
+    // because an inline child has its block child removed.
+    function removeBlockChildOfInline() {
+      this.eventSeq = [
+        new invokerChecker(EVENT_HIDE, getNode("div")),
+        new invokerChecker(EVENT_REORDER, "span"),
+      ];
+
+      this.invoke = function removeBlockChildOfInline_invoke() {
+        document.body.offsetTop; // Flush layout.
+
+        getNode("div").remove();
+
+      };
+
+      this.finalCheck = function removeBlockChildOfInline_finalCheck() {
+        var accTree =
+          { SECTION: [ // container
+            { REGION: [] },
+          ] };
+        testAccessibleTree("c5", accTree);
+      };
+
+      this.getID = function removeBlockChildOfInline_getID() {
+        return "remove div from inside span.";
+      };
+    }
+
+
     // //////////////////////////////////////////////////////////////////////////
     // Do tests
     // //////////////////////////////////////////////////////////////////////////
@@ -148,6 +236,9 @@
       gQueue.push(new removeRemove("c2"));
       gQueue.push(new insertInaccessibleAccessibleSiblings());
       gQueue.push(new displayContentsInsertion());
+      gQueue.push(new hideBlockChildOfInline());
+      gQueue.push(new reinsertBlockChildOfInline());
+      gQueue.push(new removeBlockChildOfInline());
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -168,5 +259,9 @@
 
   <div id="c3"><input type="button" value="button"></div>
   <div id="c4"></div>
+  <div id="c5">
+    <span role="region" id="span" aria-label="region"><div id="div">hello</div></span>
+  </div>
+
 </body>
 </html>

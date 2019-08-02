@@ -46,14 +46,14 @@ const rules = {
   ],
   HTMLInputImage: [
     ...HTMLControlHeadRule,
-    { attr: "alt", recreated: true },
-    { attr: "value", recreated: true },
+    { attr: "alt" },
+    { attr: "value" },
     { attr: "title" },
   ],
   HTMLInputImageNoValidSrc: [
     ...HTMLControlHeadRule,
-    { attr: "alt", recreated: true },
-    { attr: "value", recreated: true },
+    { attr: "alt" },
+    { attr: "value" },
   ],
   HTMLInputReset: [
     ...HTMLControlHeadRule,
