@@ -247,7 +247,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
         mFramerate(aFramerate),
         mBitrate(aBitrate) {
     MOZ_ASSERT(mTaskQueue);
-    Set(std::forward<Ts>(aCodecSpecific)...);
+    Set(std::forward<const Ts>(aCodecSpecific)...);
   }
 
   const TrackInfo& mConfig;
@@ -261,7 +261,7 @@ struct MOZ_STACK_CLASS CreateEncoderParams final {
  private:
   template <typename T>
   void Set(const T&& aCodecSpecific) {
-    mCodecSpecific.emplace(std::forward<T>(aCodecSpecific));
+    mCodecSpecific.emplace(std::forward<const T>(aCodecSpecific));
   }
 };
 
