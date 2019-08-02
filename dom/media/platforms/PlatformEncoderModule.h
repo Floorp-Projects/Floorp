@@ -27,7 +27,7 @@ static LazyLogModule sPEMLog("PlatformEncoderModule");
 
 class PlatformEncoderModule {
  public:
-  NS_INLINE_DECL_REFCOUNTING(PlatformEncoderModule)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PlatformEncoderModule)
 
   virtual already_AddRefed<MediaDataEncoder> CreateVideoEncoder(
       const CreateEncoderParams& aParams) const {
