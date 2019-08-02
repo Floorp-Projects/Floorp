@@ -341,8 +341,8 @@ impl AggregateDevice {
         assert_ne!(output_id, kAudioObjectUnknown);
         assert_ne!(input_id, output_id);
 
-        let output_sub_devices = audiounit_get_sub_devices(output_id);
-        let input_sub_devices = audiounit_get_sub_devices(input_id);
+        let output_sub_devices = Self::get_sub_devices(output_id)?;
+        let input_sub_devices = Self::get_sub_devices(input_id)?;
 
         unsafe {
             let sub_devices = CFArrayCreateMutable(ptr::null(), 0, &kCFTypeArrayCallBacks);
@@ -379,6 +379,46 @@ impl AggregateDevice {
         }
     }
 
+    pub fn get_sub_devices(
+        device_id: AudioDeviceID,
+    ) -> std::result::Result<Vec<AudioObjectID>, OSStatus> {
+        assert_ne!(device_id, kAudioObjectUnknown);
+
+        let mut sub_devices = Vec::new();
+        let address = AudioObjectPropertyAddress {
+            mSelector: kAudioAggregateDevicePropertyActiveSubDeviceList,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMaster,
+        };
+        let mut size: usize = 0;
+        let rv = audio_object_get_property_data_size(device_id, &address, &mut size);
+
+        if rv == kAudioHardwareUnknownPropertyError as OSStatus {
+            // Return a vector containing the device itself if the device has no sub devices.
+            sub_devices.push(device_id);
+            return Ok(sub_devices);
+        } else if rv != NO_ERR {
+            return Err(rv);
+        }
+
+        assert_ne!(size, 0);
+
+        let count = size / mem::size_of::<AudioObjectID>();
+        sub_devices = allocate_array(count);
+        let rv = audio_object_get_property_data(
+            device_id,
+            &address,
+            &mut size,
+            sub_devices.as_mut_ptr(),
+        );
+
+        if rv == NO_ERR {
+            Ok(sub_devices)
+        } else {
+            Err(rv)
+        }
+    }
+
     pub fn set_master_device(device_id: AudioDeviceID) -> std::result::Result<(), OSStatus> {
         assert_ne!(device_id, kAudioObjectUnknown);
         let address = AudioObjectPropertyAddress {
@@ -390,7 +430,7 @@ impl AggregateDevice {
         // Master become the 1st output sub device
         let output_device_id = audiounit_get_default_device_id(DeviceType::OUTPUT);
         assert_ne!(output_device_id, kAudioObjectUnknown);
-        let output_sub_devices = audiounit_get_sub_devices(output_device_id);
+        let output_sub_devices = Self::get_sub_devices(output_device_id)?;
         assert!(!output_sub_devices.is_empty());
         let master_sub_device = get_device_name(output_sub_devices[0]);
         let size = mem::size_of::<CFStringRef>();

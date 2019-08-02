@@ -8,6 +8,9 @@ extern crate atomic;
 extern crate bitflags;
 #[macro_use]
 extern crate cubeb_backend;
+#[macro_use]
+extern crate lazy_static;
+extern crate mach;
 
 mod backend;
 mod capi;
