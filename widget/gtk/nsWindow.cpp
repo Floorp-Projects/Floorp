@@ -3504,12 +3504,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   mBounds = aRect;
   ConstrainSize(&mBounds.width, &mBounds.height);
 
-  // eWindowType_child is not supported on Wayland. Just switch to toplevel
-  // as a workaround.
-  if (!mIsX11Display && mWindowType == eWindowType_child) {
-    mWindowType = eWindowType_toplevel;
-  }
-
   // figure out our parent window
   GtkWidget* parentMozContainer = nullptr;
   GtkContainer* parentGtkContainer = nullptr;
@@ -3541,6 +3535,18 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
     // get the toplevel window just in case someone needs to use it
     // for setting transients or whatever.
     topLevelParent = GTK_WINDOW(gtk_widget_get_toplevel(parentMozContainer));
+  }
+
+  if (!mIsX11Display) {
+    if (mWindowType == eWindowType_child) {
+      // eWindowType_child is not supported on Wayland. Just switch to toplevel
+      // as a workaround.
+      mWindowType = eWindowType_toplevel;
+    } else if (mWindowType == eWindowType_popup && !topLevelParent) {
+      // Workaround for Wayland where the popup windows always need to have
+      // parent window. For example webrtc ui is a popup window without parent.
+      mWindowType = eWindowType_toplevel;
+    }
   }
 
   // ok, create our windows

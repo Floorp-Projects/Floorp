@@ -56,6 +56,7 @@ pref_groups = [
     'mousewheel',
     'network',
     'nglayout',
+    'page_load',
     'plain_text',
     'plugins',
     'preferences',

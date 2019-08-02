@@ -1201,8 +1201,8 @@ using PrefsHashTable = HashSet<UniquePtr<Pref>, PrefHasher>;
 static PrefsHashTable* gHashTable;
 
 #ifdef DEBUG
-// This defines the datatype used to store our `Once` StaticPrefs checker.
-// We can't use HashMap for now due to alignment restrictions when dealing with
+// This defines the type used to store our `once` mirrors checker. We can't use
+// HashMap for now due to alignment restrictions when dealing with
 // std::function<void()> (see bug 1557617).
 typedef std::function<void()> AntiFootgunCallback;
 struct CompareStr {
@@ -1707,9 +1707,9 @@ static void NotifyCallbacks(const char* aPrefName, const PrefWrapper* aPref) {
   if (XRE_IsParentProcess() &&
       !StaticPrefs::preferences_force_disable_check_once_policy() &&
       (StaticPrefs::preferences_check_once_policy() || xpc::IsInAutomation())) {
-    // Check that we aren't modifying a `Once` pref using that prefName.
-    // We have about 100 `Once` StaticPrefs defined. std::map performs a search
-    // in O(log n), so this is fast enough for our case.
+    // Check that we aren't modifying a `once`-mirrored pref using that pref
+    // name. We have about 100 `once`-mirrored prefs. std::map performs a
+    // search in O(log n), so this is fast enough.
     MOZ_ASSERT(gOnceStaticPrefsAntiFootgun);
     auto search = gOnceStaticPrefsAntiFootgun->find(aPrefName);
     if (search != gOnceStaticPrefsAntiFootgun->end()) {
@@ -3724,8 +3724,8 @@ FileDescriptor Preferences::EnsureSnapshot(size_t* aSize) {
       iter.get()->AddToMap(builder);
     }
 
-    // Store the current value of Once StaticPrefs. Following this those
-    // StaticPrefs will become immutable.
+    // Store the current value of `once`-mirrored prefs. After this point they
+    // will be immutable.
     StaticPrefs::RegisterOncePrefs(builder);
 
     gSharedMap = new SharedPrefMap(std::move(builder));
@@ -4499,29 +4499,23 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
     MOZ_DIAGNOSTIC_ASSERT(gSharedMap);
 
 #ifdef DEBUG
-    // For a VarCache pref like this:
-    //
-    //   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-    //
-    // we generate checking code like this:
-    //
-    //   MOZ_ASSERT(Internals::GetPref<int32_t>(name, value) ==
-    //              StaticPrefs::my_pref(),
-    //              "Incorrect cached value for my.pref");
-    //
-    // This checks that all VarCache preferences match their current values.
-    // This can currently fail if the default value of a static VarCache
-    // preference is changed in a preference file or at runtime, rather than in
-    // StaticPrefList*.h.
-    //
-#  define PREF(name, cpp_type, value)
-#  define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value) \
+    // For mirrored prefs we generate code that checks the mirror variable
+    // matches the pref's current value. This can currently fail if the default
+    // value of a static VarCache preference is changed in a preference file or
+    // at runtime, rather than in StaticPrefList*.h.
+#  define NEVER_PREF(name, cpp_type, value)
+#  define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)           \
     MOZ_ASSERT(Internals::GetPref<StripAtomic<cpp_type>>(name, value) == \
                    StaticPrefs::full_id(),                               \
                "Incorrect cached value for " name);
+#  define ONCE_PREF(name, base_id, full_id, cpp_type, value)                 \
+    MOZ_ASSERT(                                                              \
+        Internals::GetPref<cpp_type>(name, value) == StaticPrefs::full_id(), \
+        "Incorrect cached value for " name);
 #  include "mozilla/StaticPrefListAll.h"
-#  undef PREF
-#  undef VARCACHE_PREF
+#  undef NEVER_PREF
+#  undef ALWAYS_PREF
+#  undef ONCE_PREF
 #endif
 
     return Ok();
@@ -5371,35 +5365,21 @@ static void InitPref(const char* aName, float aDefaultValue) {
 }
 
 template <typename T>
-static void InitVarCachePref(StaticPrefs::UpdatePolicy aPolicy,
-                             const nsACString& aName, T* aCache,
-                             StripAtomic<T> aDefaultValue, bool aIsStartup,
-                             bool aIsParent) {
-  // aIsStartup will be true when we first initialize the StaticPrefs and false
-  // when we want to reset the Preferences/StaticPrefs to their default value.
-
-  // InitVarCachePref is called under the following scenarios:
-  // aIsParent | aIsStartup | Action
-  // true      | true       | Set underlying preference and StaticPrefs to
-  //           |            | their default value, set callback for Live pref.
-  // true      | false      | reset underlying preference and StaticPref to
-  //           |            | default value.
-  // false     | true       | set callback for Live pref.
-  // false     | false      | none.
-  //
-  // We only set *aCache if the policy is Live as:
-  // 1- On startup, `Once` prefs will be initialized lazily in InitOncePrefs(),
-  // 2- After that, `Once` prefs are immutable.
-
+static void InitAlwaysPref(const nsACString& aName, T* aCache,
+                           StripAtomic<T> aDefaultValue, bool aIsStartup,
+                           bool aIsParent) {
+  // In the parent process, set/reset the pref value and the `always` mirror (if
+  // there is one) to the default value.
+  // - `once` mirrors will be initialized lazily in InitOncePrefs().
+  // - In child processes, the parent sends the correct initial values via
+  //   shared memory, so we do not re-initialize them here.
   if (aIsParent) {
     InitPref(PromiseFlatCString(aName).get(), aDefaultValue);
-    if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live)) {
-      *aCache = aDefaultValue;
-    }
+    *aCache = aDefaultValue;
   }
 
-  if (MOZ_LIKELY(aPolicy == StaticPrefs::UpdatePolicy::Live) &&
-      MOZ_LIKELY(aIsStartup)) {
+  // At startup, setup the callback for the `always` mirror (if there is one).
+  if (MOZ_LIKELY(aIsStartup)) {
     AddVarCacheNoAssignment(aCache, aName, aDefaultValue);
   }
 }
@@ -5411,7 +5391,8 @@ namespace StaticPrefs {
 
 void MaybeInitOncePrefs() {
   if (MOZ_LIKELY(sOncePrefRead)) {
-    // `Once` StaticPrefs have already been initialized to their default value.
+    // `once`-mirrored prefs have already been initialized to their default
+    // value.
     return;
   }
   StaticMutexAutoLock lock(sOncePrefMutex);
@@ -5427,89 +5408,70 @@ void MaybeInitOncePrefs() {
   sOncePrefRead = true;
 }
 
-// For a pref like this:
-//
-//   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-//
-// we generate a variable definition like this:
-//
-//   int32_t sVarCache_my_pref(99);
-//
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, default_value) \
+// For mirrored prefs we generate a variable definition.
+#define NEVER_PREF(name, cpp_type, value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, default_value) \
+  cpp_type sVarCache_##full_id(default_value);
+#define ONCE_PREF(name, base_id, full_id, cpp_type, default_value) \
   cpp_type sVarCache_##full_id(default_value);
 #include "mozilla/StaticPrefListAll.h"
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 
 static void InitAll(bool aIsStartup) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool isParent = XRE_IsParentProcess();
 
-  // For prefs like these:
-  //
-  //   PREF("foo.bar.baz", bool, true)
-  //   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-  //
-  // we generate registration calls like this:
-  //
-  //   if (isParent) {
-  //     InitPref_bool("foo.bar.baz", true);
-  //   }
-  //   InitVarCachePref(UpdatePolicy::Live, "my.pref", &sVarCache_my_pref,
-  //                    99, aIsStartup, isParent);
+  // For all prefs we generate some initialization code.
   //
   // The InitPref_*() functions have a type suffix to avoid ambiguity between
   // prefs having int32_t and float default values. That suffix is not needed
-  // for the InitVarCachePref() functions because they take a pointer parameter,
+  // for the InitAlwaysPref() functions because they take a pointer parameter,
   // which prevents automatic int-to-float coercion.
   //
   // In content processes, we rely on the parent to send us the correct initial
   // values via shared memory, so we do not re-initialize them here.
-#define PREF(name, cpp_type, value)   \
-  if (isParent) {                     \
-    InitPref_##cpp_type(name, value); \
+#define NEVER_PREF(name, cpp_type, value) \
+  if (isParent) {                         \
+    InitPref_##cpp_type(name, value);     \
   }
-#define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value) \
-  InitVarCachePref(UpdatePolicy::policy, NS_LITERAL_CSTRING(name),     \
-                   &sVarCache_##full_id, value, aIsStartup, isParent);
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)            \
+  InitAlwaysPref(NS_LITERAL_CSTRING(name), &sVarCache_##full_id, value, \
+                 aIsStartup, isParent);
+#define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
+  if (isParent) {                                          \
+    InitPref_##cpp_type(name, value);                      \
+  }
 #include "mozilla/StaticPrefListAll.h"
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 }
 
 static void InitOncePrefs() {
-  // For a pref like this:
+  // For `once`-mirrored prefs we generate some initialization code. This is
+  // done in case the pref value was updated when reading pref data files. It's
+  // necessary because we don't have callbacks registered for `once`-mirrored
+  // prefs.
   //
-  //   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-  //
-  // we generate an initialization (in a non-DEBUG build) like this:
-  //
-  //   if (UpdatePolicy::$POLICY == UpdatePolicy::Once) {
-  //     sVarCache_my_pref = Internals::GetPref("my.pref", 99);
-  //   }
-  //
-  // This is done to get the potentially updated Preference value as we didn't
-  // register a callback method for the `Once` policy.
-  //
-  // On debug build, we also install a mechanism that allows to check if the
-  // original Preference is being modified once `Once` StaticPrefs have been
-  // initialized as this would indicate a likely misuse of `Once` StaticPrefs
-  // and that maybe instead they should have been made `Live`.
-  //
-#define PREF(name, cpp_type, value)
+  // In debug builds, we also install a mechanism that can check if the
+  // preference value is modified after `once`-mirrored prefs are initialized.
+  // In tests this would indicate a likely misuse of a `once`-mirrored pref and
+  // suggest that it should instead be `always`-mirrored.
+#define NEVER_PREF(name, cpp_type, value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)
 #ifdef DEBUG
-#  define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value)       \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                          \
+#  define ONCE_PREF(name, base_id, full_id, cpp_type, value)                   \
+    {                                                                          \
       MOZ_ASSERT(gOnceStaticPrefsAntiFootgun);                                 \
-      sVarCache_##full_id =                                                    \
-          Internals::GetPref(name, StripAtomic<cpp_type>(value));              \
+      sVarCache_##full_id = Internals::GetPref(name, cpp_type(value));         \
       auto checkPref = [&]() {                                                 \
         MOZ_ASSERT(sOncePrefRead);                                             \
-        StripAtomic<cpp_type> staticPrefValue = full_id();                     \
-        StripAtomic<cpp_type> preferenceValue = Internals::GetPref(            \
-            GetPrefName_##base_id(), StripAtomic<cpp_type>(value));            \
+        cpp_type staticPrefValue = full_id();                                  \
+        cpp_type preferenceValue =                                             \
+            Internals::GetPref(GetPrefName_##base_id(), cpp_type(value));      \
         MOZ_ASSERT(staticPrefValue == preferenceValue,                         \
                    "Preference '" name                                         \
                    "' got modified since StaticPrefs::" #full_id               \
@@ -5521,16 +5483,14 @@ static void InitOncePrefs() {
                                                       std::move(checkPref)));  \
     }
 #else
-#  define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value) \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                    \
-      sVarCache_##full_id =                                              \
-          Internals::GetPref(name, StripAtomic<cpp_type>(value));        \
-    }
+#  define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
+    sVarCache_##full_id = Internals::GetPref(name, cpp_type(value));
 #endif
 
 #include "mozilla/StaticPrefListAll.h"
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 }
 
 }  // namespace StaticPrefs
@@ -5594,32 +5554,21 @@ static void RegisterOncePrefs(SharedPrefMapBuilder& aBuilder) {
                         "Must be called before gSharedMap has been created");
   MaybeInitOncePrefs();
 
-  // For a pref like this:
-  //
-  //   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-  //
-  // we generate a save call like this:
-  //
-  //   if (UpdatePolicy::$POLICY == UpdatePolicy::Once) {
-  //     SaveOncePrefToSharedMap(aBuilder, ONCE_PREF_NAME(my.pref),
-  //                             sVarCache_my_pref);
-  //   }
-  //
-  // `Once` StaticPrefs values will be stored in a hidden and locked preferences
-  // in the global SharedPreferenceMap. In order for those preferences to be
-  // hidden and not appear in about:config nor ever be stored to disk, we add
-  // the "$$$" prefix and suffix to the preference name and set the IsVisible
-  // flag to false.
-  //
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value)   \
-  if (UpdatePolicy::policy == UpdatePolicy::Once) {                      \
-    SaveOncePrefToSharedMap(aBuilder, ONCE_PREF_NAME(name),              \
-                            StripAtomic<cpp_type>(sVarCache_##full_id)); \
-  }
+  // For `once`-mirrored prefs we generate a save call, which saves the value
+  // as it was at parent startup. It is stored in a special (hidden and locked)
+  // entry in the global SharedPreferenceMap. In order for the entry to be
+  // hidden and not appear in about:config nor ever be stored to disk, we set
+  // its IsSkippedByIteration flag to true. We also distinguish it by adding a
+  // "$$$" prefix and suffix to the preference name.
+#define NEVER_PREF(name, cpp_type, value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)
+#define ONCE_PREF(name, base_id, full_id, cpp_type, value) \
+  SaveOncePrefToSharedMap(aBuilder, ONCE_PREF_NAME(name),  \
+                          cpp_type(sVarCache_##full_id));
 #include "mozilla/StaticPrefListAll.h"
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 }
 
 static void InitStaticPrefsFromShared() {
@@ -5627,45 +5576,30 @@ static void InitStaticPrefsFromShared() {
   MOZ_DIAGNOSTIC_ASSERT(gSharedMap,
                         "Must be called once gSharedMap has been created");
 
-  // For a prefs like this:
-  //
-  //   VARCACHE_PREF($POLICY, "my.pref", my_pref, my_pref, int32_t, 99)
-  //
-  // we generate an initialization like this:
-  //
-  //   {
-  //     int32_t val;
-  //     nsresult rv;
-  //     if (UpdatePolicy::$POLICY == UpdatePolicy::Once) {
-  //       rv = Internals::GetSharedPrefValue(
-  //              "$$$my.pref$$$", &val);
-  //     } else if (UpdatePolicy::Once == UpdatePolicy::Live) {
-  //       rv = Internals::GetSharedPrefValue("my.pref", &val);
-  //     }
-  //     MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));
-  //     sVarCache_my_pref = val;
-  //   }
-  //
-#define PREF(name, cpp_type, value)
-#define VARCACHE_PREF(policy, name, base_id, full_id, cpp_type, value) \
-  {                                                                    \
-    StripAtomic<cpp_type> val;                                         \
-    nsresult rv;                                                       \
-    if (UpdatePolicy::policy == UpdatePolicy::Once) {                  \
-      rv = Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val);  \
-    } else {                                                           \
-      rv = Internals::GetSharedPrefValue(name, &val);                  \
-    }                                                                  \
-    MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));                      \
-    StaticPrefs::sVarCache_##full_id = val;                            \
+  // For mirrored prefs we generate some initialization code.
+#define NEVER_PREF(name, cpp_type, value)
+#define ALWAYS_PREF(name, base_id, full_id, cpp_type, value) \
+  {                                                          \
+    StripAtomic<cpp_type> val;                               \
+    nsresult rv = Internals::GetSharedPrefValue(name, &val); \
+    MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));            \
+    StaticPrefs::sVarCache_##full_id = val;                  \
+  }
+#define ONCE_PREF(name, base_id, full_id, cpp_type, value)                   \
+  {                                                                          \
+    cpp_type val;                                                            \
+    nsresult rv = Internals::GetSharedPrefValue(ONCE_PREF_NAME(name), &val); \
+    MOZ_DIAGNOSTIC_ALWAYS_TRUE(NS_SUCCEEDED(rv));                            \
+    StaticPrefs::sVarCache_##full_id = val;                                  \
   }
 #include "mozilla/StaticPrefListAll.h"
-#undef PREF
-#undef VARCACHE_PREF
+#undef NEVER_PREF
+#undef ALWAYS_PREF
+#undef ONCE_PREF
 
-  // `Once` StaticPrefs have been set to their value in the step above and
-  // outside the parent process they are immutable. So we set sOncePrefRead
-  // so that we can directly skip any lazy initializations.
+  // `once`-mirrored prefs have been set to their value in the step above and
+  // outside the parent process they are immutable. We set sOncePrefRead so
+  // that we can directly skip any lazy initializations.
   sOncePrefRead = true;
 }
 

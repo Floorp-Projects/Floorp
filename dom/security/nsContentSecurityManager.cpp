@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsArray.h"
 #include "nsContentSecurityManager.h"
 #include "nsEscape.h"
 #include "nsDataHandler.h"
@@ -19,6 +20,7 @@
 #include "nsIURIFixup.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIRedirectHistoryEntry.h"
+#include "nsReadableUtils.h"
 
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -27,24 +29,47 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 #include "xpcpublic.h"
+
+#include "jsapi.h"
+#include "js/RegExp.h"
+
+using namespace mozilla::Telemetry;
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
                   nsIChannelEventSink)
 
 static mozilla::LazyLogModule sCSMLog("CSMLog");
 
-// This whitelist contains files that are permanently allowed to use eval()-like
+// This allowlist contains files that are permanently allowed to use eval()-like
 // functions. It is supposed to be restricted to files that are exclusively used
 // in testing contexts.
-static nsLiteralCString evalWhitelist[] = {
+static nsLiteralCString evalAllowlist[] = {
     // Test-only third-party library
     NS_LITERAL_CSTRING("resource://testing-common/sinon-7.2.7.js"),
     // Test-only third-party library
     NS_LITERAL_CSTRING("resource://testing-common/ajv-4.1.1.js"),
     // Test-only utility
     NS_LITERAL_CSTRING("resource://testing-common/content-task.js"),
+
+    // The Browser Toolbox/Console
+    NS_LITERAL_CSTRING("debugger"),
+
+    // The following files are NOT supposed to stay on this whitelist.
+    // Bug numbers indicate planned removal of each file.
+
+    // Bug 1498560
+    NS_LITERAL_CSTRING("chrome://global/content/bindings/autocomplete.xml"),
 };
+
+// We also permit two specific idioms in eval()-like contexts. We'd like to
+// elminate these too; but there are in-the-wild Mozilla privileged extensions
+// that use them.
+static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
+static NS_NAMED_LITERAL_STRING(sAllowedEval2,
+                               "function anonymous(\n) {\nreturn this\n}");
 
 /* static */
 bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
@@ -170,15 +195,228 @@ bool nsContentSecurityManager::AllowInsecureRedirectToDataURI(
   return false;
 }
 
+/*
+ * Performs a Regular Expression match, optionally returning the results.
+ *
+ * @param aPattern      The regex pattern
+ * @param aString       The string to compare against
+ * @param aOnlyMatch    Whether we want match results or only a true/false for
+ * the match
+ * @param aMatchResult  Out param for whether or not the pattern matched
+ * @param aRegexResults Out param for the matches of the regex, if requested
+ * @returns nsresult indicating correct function operation or error
+ */
+nsresult RegexEval(const nsAString& aPattern, const nsAString& aString,
+                   bool aOnlyMatch, bool& aMatchResult,
+                   nsTArray<nsString>* aRegexResults = nullptr) {
+  aMatchResult = false;
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+
+  JSContext* cx = jsapi.cx();
+  AutoDisableJSInterruptCallback disabler(cx);
+
+  JSAutoRealm ar(cx, xpc::UnprivilegedJunkScope());
+
+  JS::RootedObject regexp(
+      cx, JS::NewUCRegExpObject(cx, aPattern.BeginReading(), aPattern.Length(),
+                                JS::RegExpFlag::Unicode));
+  if (!regexp) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  JS::RootedValue regexResult(cx, JS::NullValue());
+
+  size_t index = 0;
+  if (!JS::ExecuteRegExpNoStatics(cx, regexp, aString.BeginReading(),
+                                  aString.Length(), &index, aOnlyMatch,
+                                  &regexResult)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (regexResult.isNull()) {
+    // On no match, ExecuteRegExpNoStatics returns Null
+    return NS_OK;
+  }
+  if (aOnlyMatch) {
+    // On match, with aOnlyMatch = true, ExecuteRegExpNoStatics returns boolean
+    // true.
+    MOZ_ASSERT(regexResult.isBoolean() && regexResult.toBoolean());
+    aMatchResult = true;
+    return NS_OK;
+  }
+  if (aRegexResults == nullptr) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // Now we know we have a result, and we need to extract it so we can read it.
+  uint32_t length;
+  JS::RootedObject regexResultObj(cx, &regexResult.toObject());
+  if (!JS_GetArrayLength(cx, regexResultObj, &length)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  MOZ_LOG(sCSMLog, LogLevel::Verbose, ("Regex Matched %i strings", length));
+
+  for (uint32_t i = 0; i < length; i++) {
+    JS::RootedValue element(cx);
+    if (!JS_GetElement(cx, regexResultObj, i, &element)) {
+      return NS_ERROR_NO_CONTENT;
+    }
+
+    nsAutoJSString value;
+    if (!value.init(cx, element)) {
+      return NS_ERROR_NO_CONTENT;
+    }
+
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
+            ("Regex Matching: %i: %s", i, NS_ConvertUTF16toUTF8(value).get()));
+    aRegexResults->AppendElement(value);
+  }
+
+  aMatchResult = true;
+  return NS_OK;
+}
+
+/*
+ * Telemetry Events extra data only supports 80 characters, so we optimize the
+ * filename to be smaller and collect more data.
+ */
+nsString OptimizeFileName(const nsAString& aFileName) {
+  nsString optimizedName(aFileName);
+
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("Optimizing FileName: %s", NS_ConvertUTF16toUTF8(optimizedName).get()));
+
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING(".xpi!"),
+                                 NS_LITERAL_STRING("!"));
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING("shield.mozilla.org!"),
+                                 NS_LITERAL_STRING("s!"));
+  optimizedName.ReplaceSubstring(NS_LITERAL_STRING("mozilla.org!"),
+                                 NS_LITERAL_STRING("m!"));
+  if (optimizedName.Length() > 80) {
+    optimizedName.Truncate(80);
+  }
+
+  MOZ_LOG(
+      sCSMLog, LogLevel::Verbose,
+      ("Optimized FileName: %s", NS_ConvertUTF16toUTF8(optimizedName).get()));
+  return optimizedName;
+}
+
+/*
+ * FilenameToEvalType takes a fileName and returns a Pair of strings.
+ * The First entry is a string indicating the type of fileName
+ * The Second entry is a Maybe<string> that can contain additional details to
+ * report.
+ *
+ * The reason we use strings (instead of an int/enum) is because the Telemetry
+ * Events API only accepts strings.
+ *
+ * Function is a static member of the class to enable gtests.
+ */
+
+/* static */
+FilenameType nsContentSecurityManager::FilenameToEvalType(
+    const nsString& fileName) {
+  // These are strings because the Telemetry Events API only accepts strings
+  static NS_NAMED_LITERAL_CSTRING(kChromeURI, "chromeuri");
+  static NS_NAMED_LITERAL_CSTRING(kResourceURI, "resourceuri");
+  static NS_NAMED_LITERAL_CSTRING(kSingleString, "singlestring");
+  static NS_NAMED_LITERAL_CSTRING(kMozillaExtension, "mozillaextension");
+  static NS_NAMED_LITERAL_CSTRING(kOtherExtension, "otherextension");
+  static NS_NAMED_LITERAL_CSTRING(kSuspectedUserChromeJS,
+                                  "suspectedUserChromeJS");
+  static NS_NAMED_LITERAL_CSTRING(kOther, "other");
+  static NS_NAMED_LITERAL_CSTRING(kRegexFailure, "regexfailure");
+
+  static NS_NAMED_LITERAL_STRING(kUCJSRegex, "(.+).uc.js\\?*[0-9]*$");
+  static NS_NAMED_LITERAL_STRING(kExtensionRegex, "extensions/(.+)@(.+)!(.+)$");
+  static NS_NAMED_LITERAL_STRING(kSingleFileRegex, "^[a-zA-Z0-9.?]+$");
+
+  // resource:// and chrome://
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("chrome://"))) {
+    return FilenameType(kChromeURI, Some(fileName));
+  }
+  if (StringBeginsWith(fileName, NS_LITERAL_STRING("resource://"))) {
+    return FilenameType(kResourceURI, Some(fileName));
+  }
+
+  // Extension
+  bool regexMatch;
+  nsTArray<nsString> regexResults;
+  nsresult rv = RegexEval(kExtensionRegex, fileName, /* aOnlyMatch = */ false,
+                          regexMatch, &regexResults);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    nsCString type =
+        StringEndsWith(regexResults[2], NS_LITERAL_STRING("mozilla.org.xpi"))
+            ? kMozillaExtension
+            : kOtherExtension;
+    auto& extensionNameAndPath =
+        Substring(regexResults[0], ArrayLength("extensions/") - 1);
+    return FilenameType(type, Some(OptimizeFileName(extensionNameAndPath)));
+  }
+
+  // Single File
+  rv = RegexEval(kSingleFileRegex, fileName, /* aOnlyMatch = */ true,
+                 regexMatch);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    return FilenameType(kSingleString, Some(fileName));
+  }
+
+  // Suspected userChromeJS script
+  rv = RegexEval(kUCJSRegex, fileName, /* aOnlyMatch = */ true, regexMatch);
+  if (NS_FAILED(rv)) {
+    return FilenameType(kRegexFailure, Nothing());
+  }
+  if (regexMatch) {
+    return FilenameType(kSuspectedUserChromeJS, Nothing());
+  }
+
+  return FilenameType(kOther, Nothing());
+}
+
 /* static */
 void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
-    nsIPrincipal* subjectPrincipal, JSContext* cx) {
-  if (!subjectPrincipal->IsSystemPrincipal()) {
+    JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
+  if (!aSubjectPrincipal->IsSystemPrincipal()) {
     return;
   }
 
   // Use static pref for performance reasons.
   if (StaticPrefs::security_allow_eval_with_system_principal()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because allowing pref is "
+             "enabled"));
+    return;
+  }
+
+  // This preferences is a file used for autoconfiguration of Firefox
+  // by administrators. It has also been (ab)used by the userChromeJS
+  // project to run legacy-style 'extensions', some of which use eval,
+  // all of which run in the System Principal context.
+  nsAutoString configPref;
+  Preferences::GetString("general.config.filename", configPref);
+  if (!configPref.IsEmpty()) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because of "
+             "general.config.filename"));
+    return;
+  }
+
+  // We permit these two common idioms to get access to the global JS object
+  if (!aScript.IsEmpty() &&
+      (aScript == sAllowedEval1 || aScript == sAllowedEval2)) {
+    MOZ_LOG(sCSMLog, LogLevel::Debug,
+            ("Allowing eval() with SystemPrincipal because a key string is "
+             "provided"));
     return;
   }
 
@@ -195,8 +433,8 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
       fileName_.SetLength(fileNameIndex);
     }
 
-    for (const nsLiteralCString& whitelistEntry : evalWhitelist) {
-      if (fileName_.Equals(whitelistEntry)) {
+    for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
+      if (fileName_.Equals(allowlistEntry)) {
         return;
       }
     }
@@ -204,8 +442,33 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
     fileName = fileName_;
   }
 
-  MOZ_CRASH_UNSAFE_PRINTF("do not use eval with system privileges: %s",
-                          fileName.get());
+  FilenameType fileNameType =
+      FilenameToEvalType(NS_ConvertUTF8toUTF16(fileName));
+  mozilla::Maybe<nsTArray<EventExtraEntry>> extra;
+  if (fileNameType.second().isSome()) {
+    extra = Some<nsTArray<EventExtraEntry>>({EventExtraEntry{
+        NS_LITERAL_CSTRING("fileinfo"),
+        NS_ConvertUTF16toUTF8(fileNameType.second().value())}});
+  } else {
+    extra = Nothing();
+  }
+  Telemetry::RecordEvent(Telemetry::EventID::Security_Evalusage_Systemcontext,
+                         mozilla::Some(fileNameType.first()), extra);
+
+#ifdef DEBUG
+  MOZ_CRASH_UNSAFE_PRINTF(
+      "Blocking eval() with SystemPrincipal from file %s and script provided "
+      "%s",
+      fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
+#else
+  MOZ_LOG(sCSMLog, LogLevel::Debug,
+          ("Blocking eval() with SystemPrincipal from file %s and script "
+           "provided %s",
+           fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
+#endif
+
+  // In the future, we will change this function to return false and abort JS
+  // execution without crashing the process. For now, just collect data.
 }
 
 /* static */
@@ -749,8 +1012,8 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       channelURI->GetSpec(channelSpec);
     }
 
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("doContentSecurityCheck {\n"));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("doContentSecurityCheck {\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  channelURI: %s\n", channelSpec.get()));
 
     // Log HTTP-specific things
@@ -758,7 +1021,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       nsresult rv;
       rv = httpChannel->GetRequestMethod(channelMethod);
       if (!NS_FAILED(rv)) {
-        MOZ_LOG(sCSMLog, LogLevel::Debug,
+        MOZ_LOG(sCSMLog, LogLevel::Verbose,
                 ("  HTTP Method: %s\n", channelMethod.get()));
       }
     }
@@ -772,7 +1035,7 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
                  NS_LITERAL_STRING("principalToInherit"));
 
     // Log Redirect Chain
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  RedirectChain:\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  RedirectChain:\n"));
     for (nsIRedirectHistoryEntry* redirectHistoryEntry :
          aLoadInfo->RedirectChain()) {
       nsCOMPtr<nsIPrincipal> principal;
@@ -780,16 +1043,16 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
       LogPrincipal(principal, NS_LITERAL_STRING("->"));
     }
 
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  internalContentPolicyType: %d\n",
              aLoadInfo->InternalContentPolicyType()));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  externalContentPolicyType: %d\n",
              aLoadInfo->GetExternalContentPolicyType()));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  upgradeInsecureRequests: %s\n",
              aLoadInfo->GetUpgradeInsecureRequests() ? "true" : "false"));
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
+    MOZ_LOG(sCSMLog, LogLevel::Verbose,
             ("  initalSecurityChecksDone: %s\n",
              aLoadInfo->GetInitialSecurityCheckDone() ? "true" : "false"));
 
@@ -808,9 +1071,9 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
     }
 
     // Security Flags
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("  securityFlags: "));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("  securityFlags: "));
     LogSecurityFlags(aLoadInfo->GetSecurityFlags());
-    MOZ_LOG(sCSMLog, LogLevel::Debug, ("}\n\n"));
+    MOZ_LOG(sCSMLog, LogLevel::Verbose, ("}\n\n"));
   }
 }
 
@@ -919,7 +1182,7 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
     nsIChannel* aChannel, nsCOMPtr<nsIStreamListener>& aInAndOutListener) {
   NS_ENSURE_ARG(aChannel);
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Debug))) {
+  if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Verbose))) {
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
 

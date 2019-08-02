@@ -22,7 +22,7 @@ add_task(async function() {
     messages: messages.map(text => ({ text })),
   });
 
-  hud.jsterm.execute("console.log('foo', 'bar');");
+  execute(hud, "console.log('foo', 'bar');");
 
   const [fncallNode, consoleMessageNode, resultNode] = (await onMessages).map(
     msg => msg.node

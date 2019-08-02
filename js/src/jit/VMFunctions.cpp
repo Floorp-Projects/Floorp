@@ -905,12 +905,9 @@ bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
   // In both cases we have to pop debug scopes.
   ok = DebugAPI::onLeaveFrame(cx, frame, pc, ok);
 
-  // Unwind to the outermost environment and set pc to the end of the
-  // script, regardless of error.
+  // Unwind to the outermost environment.
   EnvironmentIter ei(cx, frame, pc);
   UnwindAllEnvironmentsInFrame(cx, ei);
-  JSScript* script = frame->script();
-  frame->setOverridePc(script->offsetToPC(0));
 
   if (!ok) {
     // Pop this frame by updating packedExitFP, so that the exception
@@ -920,10 +917,6 @@ bool DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
     return false;
   }
 
-  // Clear the override pc. This is not necessary for correctness: the frame
-  // will return immediately, but this simplifies the check we emit in debug
-  // builds after each callVM, to ensure this flag is not set.
-  frame->clearOverridePc();
   return true;
 }
 
@@ -1011,18 +1004,11 @@ bool GeneratorThrowOrReturn(JSContext* cx, BaselineFrame* frame,
   uint32_t offset = script->resumeOffsets()[genObj->resumeIndex()];
   jsbytecode* pc = script->offsetToPC(offset);
 
-  // Initialize interpreter frame fields if needed. Doing this here is
-  // simpler than doing it in JIT code.
-  if (!script->hasBaselineScript()) {
-    MOZ_ASSERT(IsBaselineInterpreterEnabled());
-    MOZ_ASSERT(!frame->runningInInterpreter());
-    frame->initInterpFieldsForGeneratorThrowOrReturn(script, pc);
-  }
-
-  // Set the frame's pc to the current resume pc, so that frame iterators
-  // work. This function always returns false, so we're guaranteed to enter
-  // the exception handler where we will clear the pc.
-  frame->setOverridePc(pc);
+  // Always use an interpreter frame so frame iteration can easily recover the
+  // generator's bytecode pc (we don't have a matching RetAddrEntry in the
+  // BaselineScript).
+  MOZ_ASSERT(!frame->runningInInterpreter());
+  frame->initInterpFieldsForGeneratorThrowOrReturn(script, pc);
 
   // In the interpreter, AbstractGeneratorObject::resume marks the generator as
   // running, so we do the same.

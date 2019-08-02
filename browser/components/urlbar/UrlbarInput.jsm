@@ -1704,7 +1704,6 @@ class UrlbarInput {
 
   _on_TabSelect(event) {
     this._resetSearchState();
-    this.controller.viewContextChanged();
   }
 
   _on_keydown(event) {

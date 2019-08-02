@@ -19,7 +19,6 @@
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
-  fill-opacity: .6;
 }
 
 /* This is used by screenshots tests to hide intermittently different
@@ -103,9 +102,7 @@
   background-repeat: no-repeat;
   background-position: 1em 1em;
   background-size: 24px auto;
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: .6;
+  -moz-context-properties: fill;
   padding: 0.5em 0 1em;
   /* .identity-popup-host depends on this width */
   padding-inline-start: calc(2em + 24px);
@@ -323,19 +320,19 @@
 #identity-popup[ciphers=weak] .identity-popup-security-content,
 #identity-popup[mixedcontent~=passive-loaded][isbroken] .identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/connection.svg);
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
 }
 
 #identity-popup[connection=secure-cert-user-overridden] .identity-popup-security-content {
   background-image: url(chrome://browser/skin/connection-mixed-passive-loaded.svg);
   fill: unset;
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
 }
 
 #identity-popup[loginforms=insecure] .identity-popup-security-content,
 #identity-popup[mixedcontent~=active-loaded][isbroken] .identity-popup-security-content {
   background-image: url(chrome://browser/skin/controlcenter/mcb-disabled.svg);
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
 }
 
 #identity-popup[connection=extension] .identity-popup-security-content {
@@ -448,7 +445,7 @@ description#identity-popup-content-verifier,
 
 .protections-popup-category::after {
   content: url(chrome://browser/skin/back-12.svg);
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   transform: scaleX(-1) translateY(1px);
   float: right;
 }
@@ -478,7 +475,7 @@ description#identity-popup-content-verifier,
 .protections-popup-trackersView-empty-image {
   width: 48px;
   height: 48px;
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
   margin-bottom: 16px;
 }
 
@@ -531,7 +528,7 @@ description#identity-popup-content-verifier,
 .protections-popup-trackersView-icon,
 .protections-popup-cookiesView-icon {
   margin-inline-end: 10px;
-  -moz-context-properties: fill, fill-opacity;
+  -moz-context-properties: fill;
 }
 
 .protections-popup-trackersView-icon {
@@ -901,7 +898,8 @@ description#identity-popup-content-verifier,
   margin: 0;
 }
 
-.protection-popup-footer-icon {
+.protections-popup-footer-icon {
+  -moz-context-properties: fill;
   width: 16px;
   height: 16px;
 }

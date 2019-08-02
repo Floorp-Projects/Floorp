@@ -458,6 +458,101 @@ bool TenuredCell::isAligned() const {
 
 #endif
 
+// Base class for GC things that have 32-bit length and 32-bit flags fields
+// stored at the beginning (currently JSString and BigInt).
+//
+// First word of a Cell has additional requirements from GC and normally
+// would store a pointer. If a single word isn't large enough, the length
+// is stored separately.
+//
+//          32       0
+//  ------------------
+//  | Length | Flags |
+//  ------------------
+//
+// The low bits of the flags word (see NumFlagBitsReservedForGC) are reserved
+// for GC. Derived classes must ensure they don't use these flags for non-GC
+// purposes.
+template <class BaseCell>
+class CellWithLengthAndFlags : public BaseCell {
+  static_assert(std::is_same<BaseCell, Cell>::value ||
+                    std::is_same<BaseCell, TenuredCell>::value,
+                "BaseCell must be either Cell or TenuredCell");
+
+  // NOTE: This word can also be used for temporary storage, see
+  // setTemporaryGCUnsafeData.
+  uintptr_t flags_;
+
+#if JS_BITS_PER_WORD == 32
+  // Additional storage for length if |flags_| is too small to fit both.
+  uint32_t length_;
+#endif
+
+ protected:
+  static constexpr size_t NumFlagBitsReservedForGC = Cell::ReservedBits;
+
+  uint32_t lengthField() const {
+#if JS_BITS_PER_WORD == 32
+    return length_;
+#else
+    return uint32_t(flags_ >> 32);
+#endif
+  }
+
+  uint32_t flagsField() const { return uint32_t(flags_); }
+
+  void setFlagBit(uint32_t flag) { flags_ |= uintptr_t(flag); }
+  void clearFlagBit(uint32_t flag) { flags_ &= ~uintptr_t(flag); }
+  void toggleFlagBit(uint32_t flag) { flags_ ^= uintptr_t(flag); }
+
+  void setLengthAndFlags(uint32_t len, uint32_t flags) {
+#if JS_BITS_PER_WORD == 32
+    flags_ = flags;
+    length_ = len;
+#else
+    flags_ = (uint64_t(len) << 32) | uint64_t(flags);
+#endif
+  }
+
+  // Sub classes can store temporary data in the flags word. This is not GC safe
+  // and users must ensure flags/length are never checked (including by asserts)
+  // while this data is stored. Use of this method is strongly discouraged!
+  void setTemporaryGCUnsafeData(uintptr_t data) { flags_ = data; }
+
+  // To get back the data, values to safely re-initialize clobbered flags
+  // must be provided.
+  uintptr_t unsetTemporaryGCUnsafeData(uint32_t len, uint32_t flags) {
+    uintptr_t data = flags_;
+    setLengthAndFlags(len, flags);
+    return data;
+  }
+
+  // Offsets for direct field from jit code. A number of places directly
+  // access 32-bit length and flags fields so do endian trickery here.
+#if JS_BITS_PER_WORD == 32
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(CellWithLengthAndFlags, flags_);
+  }
+  static constexpr size_t offsetOfLength() {
+    return offsetof(CellWithLengthAndFlags, length_);
+  }
+#elif MOZ_LITTLE_ENDIAN
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(CellWithLengthAndFlags, flags_);
+  }
+  static constexpr size_t offsetOfLength() {
+    return offsetof(CellWithLengthAndFlags, flags_) + sizeof(uint32_t);
+  }
+#else
+  static constexpr size_t offsetOfFlags() {
+    return offsetof(CellWithLengthAndFlags, flags_) + sizeof(uint32_t);
+  }
+  static constexpr size_t offsetOfLength() {
+    return offsetof(CellWithLengthAndFlags, flags_);
+  }
+#endif
+};
+
 } /* namespace gc */
 } /* namespace js */
 

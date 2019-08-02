@@ -36,19 +36,21 @@ add_task(async function testPausedByConsole() {
   );
 
   info("Check Date objects can be used in the console");
-  const jsterm = await getSplitConsole(toolbox);
-  let executed = await jsterm.execute("new Date(2013, 3, 1)");
-  ok(
-    executed.textContent.includes("Mon Apr 01 2013 00:00:00"),
-    "Date object has expected text content"
+  const console = await getSplitConsole(toolbox);
+  let executed = await executeAndWaitForMessage(
+    console,
+    "new Date(2013, 3, 1)",
+    "Mon Apr 01 2013 00:00:00"
   );
+  ok(executed, "Date object has expected text content");
 
   info("Check RegExp objects can be used in the console");
-  executed = await jsterm.execute("new RegExp('.*')");
-  ok(
-    executed.textContent.includes("/.*/"),
-    "Text for message appeared correct"
+  executed = await executeAndWaitForMessage(
+    console,
+    "new RegExp('.*')",
+    "/.*/"
   );
+  ok(executed, "Text for message appeared correct");
 
   terminateWorkerInTab(tab, WORKER_URL);
   await waitForWorkerClose(workerTargetFront);
