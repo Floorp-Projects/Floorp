@@ -272,6 +272,11 @@ class nsLineBox final : public nsLineLink {
   void ClearHasLineClampEllipsis() { mFlags.mHasLineClampEllipsis = false; }
   bool HasLineClampEllipsis() const { return mFlags.mHasLineClampEllipsis; }
 
+  // mMovedFragments bit
+  void SetMovedFragments() { mFlags.mMovedFragments = true; }
+  void ClearMovedFragments() { mFlags.mMovedFragments = false; }
+  bool MovedFragments() const { return mFlags.mMovedFragments; }
+
  private:
   // Add a hash table for fast lookup when the line has more frames than this.
   static const uint32_t kMinChildCountForHashtable = 200;
@@ -624,6 +629,9 @@ class nsLineBox final : public nsLineLink {
     // line in the set of lines found by LineClampLineIterator for a given
     // block will have this flag set.
     bool mHasLineClampEllipsis : 1;
+    // Has this line moved to a different fragment of the block since
+    // the last time it was reflowed?
+    bool mMovedFragments : 1;
     StyleClear mBreakType;
   };
 
