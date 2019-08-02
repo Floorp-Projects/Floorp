@@ -199,6 +199,7 @@ class _ToolbarPanelHub {
       const iconEl = this._createElement(doc, "img");
       iconEl.src = content.icon_url;
       iconEl.classList.add("whatsNew-message-icon");
+      this._setTextAttribute(doc, iconEl, "alt", content.icon_alt);
       wrapperEl.appendChild(iconEl);
     }
 
@@ -243,6 +244,16 @@ class _ToolbarPanelHub {
       doc.l10n.setAttributes(el, stringObj.string_id);
     } else {
       el.textContent = stringObj;
+    }
+  }
+
+  // If `string_id` is present it means we are relying on fluent for translations.
+  // Otherwise, we have a vanilla string.
+  _setTextAttribute(doc, el, attr, stringObj) {
+    if (stringObj.string_id) {
+      doc.l10n.setAttributes(el, stringObj.string_id);
+    } else {
+      el.setAttribute(attr, stringObj);
     }
   }
 
