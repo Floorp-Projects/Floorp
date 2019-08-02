@@ -10,9 +10,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import androidx.annotation.VisibleForTesting
-import androidx.browser.customtabs.CustomTabsService
 import androidx.browser.customtabs.CustomTabsService.RELATION_HANDLE_ALL_URLS
 import androidx.browser.customtabs.CustomTabsService.RELATION_USE_AS_ORIGIN
+import androidx.browser.customtabs.CustomTabsService.Relation
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.fetch.Client
@@ -27,16 +27,13 @@ import java.security.cert.X509Certificate
 /**
  * Used to verify postMessage origin for a designated package name.
  *
- * Uses Digital Asset Links to confirm that the given origin is associated with the package name as
- * a postMessage origin. It caches any origin that has been verified during the current application
+ * Uses Digital Asset Links to confirm that the given origin is associated with the package name.
+ * It caches any origin that has been verified during the current application
  * lifecycle and reuses that without making any new network requests.
- *
- * The lifecycle of this object is governed by the owner. The owner has to call
- * {@link OriginVerifier#cleanUp()} for proper cleanup of dependencies.
  */
 class OriginVerifier(
     private val packageName: String,
-    @CustomTabsService.Relation private val relation: Int,
+    @Relation private val relation: Int,
     packageManager: PackageManager,
     httpClient: Client
 ) {
@@ -56,7 +53,7 @@ class OriginVerifier(
      */
     suspend fun verifyOrigin(origin: Uri) = withContext(IO) { verifyOriginInternal(origin) }
 
-    @Suppress("LongMethod", "ReturnCount")
+    @Suppress("ReturnCount")
     private fun verifyOriginInternal(origin: Uri): Boolean {
         val cachedOrigin = cachedOriginMap[packageName]
         if (cachedOrigin == origin) return true
@@ -112,7 +109,7 @@ class OriginVerifier(
 
         private val cachedOriginMap = mutableMapOf<String, Uri>()
 
-        @Suppress("PackageManagerGetSignatures", "Deprecation", "LongMethod")
+        @Suppress("PackageManagerGetSignatures", "Deprecation")
         // https://stackoverflow.com/questions/39192844/android-studio-warning-when-using-packagemanager-get-signatures
         private fun PackageManager.getSignature(packageName: String): Signature? {
             val packageInfo = try {

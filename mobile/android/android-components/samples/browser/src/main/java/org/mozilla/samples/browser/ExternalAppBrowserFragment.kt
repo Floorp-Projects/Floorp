@@ -33,7 +33,6 @@ class ExternalAppBrowserFragment : BaseBrowserFragment(), BackHandler {
     private val trustedScopes: List<Uri>
         get() = arguments?.getParcelableArrayList<Uri>(ARG_TRUSTED_SCOPES).orEmpty()
 
-    @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val layout = super.onCreateView(inflater, container, savedInstanceState)
 

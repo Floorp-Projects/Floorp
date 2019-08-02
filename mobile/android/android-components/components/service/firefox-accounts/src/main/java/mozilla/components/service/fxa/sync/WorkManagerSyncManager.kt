@@ -235,7 +235,7 @@ class WorkManagerSyncWorker(
         return lastSyncedTs != 0L && (System.currentTimeMillis() - lastSyncedTs) < SYNC_STAGGER_BUFFER_MS
     }
 
-    @Suppress("ReturnCount", "LongMethod")
+    @Suppress("ReturnCount")
     override suspend fun doWork(): Result {
         logger.debug("Starting sync... Tagged as: ${params.tags}")
 

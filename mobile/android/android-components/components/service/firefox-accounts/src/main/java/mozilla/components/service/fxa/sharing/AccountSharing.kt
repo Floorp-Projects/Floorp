@@ -4,7 +4,6 @@
 
 package mozilla.components.service.fxa.sharing
 
-import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.content.Context
 import android.content.pm.PackageManager
@@ -77,8 +76,7 @@ object AccountSharing {
         }
     }
 
-    @Suppress("LongMethod")
-    @SuppressLint("Recycle")
+    @Suppress("Recycle")
     private fun queryForAccount(context: Context, packageName: String): ShareableAccount? {
         // assuming a certain formatting for all authorities from all sources
         val authority = "$packageName.fxa.auth"

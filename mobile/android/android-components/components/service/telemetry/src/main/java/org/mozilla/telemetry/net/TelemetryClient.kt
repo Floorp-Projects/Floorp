@@ -23,7 +23,6 @@ class TelemetryClient(
 ) {
     private val logger = Logger("telemetry/client")
 
-    @Suppress("LongMethod")
     fun uploadPing(configuration: TelemetryConfiguration, path: String, serializedPing: String): Boolean {
         val request = Request(
             url = configuration.serverEndpoint + path,

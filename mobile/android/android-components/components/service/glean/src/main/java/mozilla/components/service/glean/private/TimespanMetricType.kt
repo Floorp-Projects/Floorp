@@ -117,7 +117,6 @@ data class TimespanMetricType(
      *
      * @param elapsedNanos The elapsed time to record, in nanoseconds.
      */
-    @Suppress("LongMethod")
     fun setRawNanos(elapsedNanos: Long) {
         if (!shouldRecord(logger)) {
             return

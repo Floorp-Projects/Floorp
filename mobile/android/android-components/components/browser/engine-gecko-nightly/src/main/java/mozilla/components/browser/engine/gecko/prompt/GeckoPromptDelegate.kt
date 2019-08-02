@@ -117,7 +117,6 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         }
     }
 
-    @Suppress("LongMethod")
     override fun onFilePrompt(
         session: GeckoSession,
         title: String?,

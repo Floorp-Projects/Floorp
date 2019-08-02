@@ -48,7 +48,6 @@ internal class MonthAndYearPicker @JvmOverloads constructor(
         iniYearView()
     }
 
-    @Suppress("LongMethod")
     override fun onValueChange(view: NumberPicker, oldVal: Int, newVal: Int) {
         var month = 0
         var year = 0

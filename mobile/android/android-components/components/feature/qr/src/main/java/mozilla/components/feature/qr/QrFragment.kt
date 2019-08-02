@@ -245,7 +245,7 @@ class QrFragment : Fragment() {
      * @param width The width of available size for camera preview
      * @param height The height of available size for camera preview
      */
-    @Suppress("ComplexMethod", "LongMethod")
+    @Suppress("ComplexMethod")
     internal fun setUpCameraOutputs(width: Int, height: Int) {
         val manager = activity?.getSystemService(Context.CAMERA_SERVICE) as CameraManager? ?: return
 
@@ -364,7 +364,6 @@ class QrFragment : Fragment() {
      * @param viewWidth The width of `textureView`
      * @param viewHeight The height of `textureView`
      */
-    @Suppress("LongMethod")
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
         val activity = activity ?: return
         val size = previewSize ?: return

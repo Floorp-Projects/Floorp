@@ -167,7 +167,6 @@ class BrowserIcons(
         loadIntoViewInternal(WeakReference(view), request, placeholder, error)
     }
 
-    @Suppress("LongMethod")
     @MainThread
     private suspend fun loadIntoViewInternal(
         view: WeakReference<ImageView>,

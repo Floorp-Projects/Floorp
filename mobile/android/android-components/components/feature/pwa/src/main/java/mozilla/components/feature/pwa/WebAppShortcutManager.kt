@@ -173,7 +173,6 @@ class WebAppShortcutManager(
  *
  * This version has its own cache to avoid affecting tab icons.
  */
-@Suppress("LongMethod")
 private fun webAppIcons(
     context: Context,
     httpClient: Client

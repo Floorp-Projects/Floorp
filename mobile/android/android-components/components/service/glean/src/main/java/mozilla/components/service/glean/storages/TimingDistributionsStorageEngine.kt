@@ -93,7 +93,6 @@ internal open class TimingDistributionsStorageEngineImplementation(
      *        be truncated nor converted)
      * @param timeUnit the [TimeUnit] the samples are in
      */
-    @Suppress("LongMethod")
     @Synchronized
     fun accumulateSamples(
         metricData: CommonMetricData,

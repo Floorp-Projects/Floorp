@@ -43,7 +43,6 @@ object ErrorRecording {
      * @param logger The [Logger] instance to display the warning.
      * @param numErrors The optional number of errors to report for this [ErrorType].
      */
-    @Suppress("LongMethod")
     internal fun recordError(
         metricData: CommonMetricData,
         errorType: ErrorType,

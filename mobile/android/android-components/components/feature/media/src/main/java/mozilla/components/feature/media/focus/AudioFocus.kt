@@ -59,7 +59,6 @@ internal class AudioFocus(
     }
 
     @Synchronized
-    @Suppress("LongMethod")
     override fun onAudioFocusChange(focusChange: Int) {
         val state = MediaStateMachine.state
 
@@ -95,7 +94,6 @@ internal class AudioFocus(
     }
 }
 
-@Suppress("LongMethod")
 private fun requestAudioFocusCompat(
     context: Context,
     listener: AudioManager.OnAudioFocusChangeListener

@@ -550,7 +550,6 @@ class GeckoEngineSession(
         }
     }
 
-    @Suppress("LongMethod")
     private fun ContentBlocking.BlockEvent.toTracker(): Tracker {
         val blockedContentCategories = ArrayList<Tracker.Category>()
 

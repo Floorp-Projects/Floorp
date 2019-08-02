@@ -85,7 +85,6 @@ class WebAppSiteControlsFeature(
     /**
      * Build the notification with site controls to be displayed while the web app is active.
      */
-    @Suppress("LongMethod")
     private fun buildNotification(): Notification {
         val channelId = ensureChannelExists()
 

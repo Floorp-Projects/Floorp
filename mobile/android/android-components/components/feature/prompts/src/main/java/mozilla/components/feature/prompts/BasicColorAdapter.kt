@@ -96,7 +96,6 @@ internal class ColorViewHolder(
         itemView.setOnClickListener(this)
     }
 
-    @Suppress("LongMethod")
     fun bind(colorItem: ColorItem) {
         // Save the color for the onClick callback
         color = colorItem.color

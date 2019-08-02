@@ -121,7 +121,7 @@ data class CustomTabConfig(
                 "createCustomTabConfigFromIntent(intent.unsafe)",
                 "mozilla.components.feature.customtabs.createCustomTabConfigFromIntent"
             ))
-        @Suppress("LongMethod", "ComplexMethod")
+        @Suppress("ComplexMethod")
         fun createFromIntent(intent: SafeIntent, displayMetrics: DisplayMetrics? = null): CustomTabConfig {
             val id = UUID.randomUUID().toString()
 

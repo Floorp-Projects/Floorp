@@ -33,6 +33,7 @@ dependencies {
     implementation project(':browser-session')
     implementation project(':concept-engine')
     implementation project(':concept-fetch')
+    implementation project(':feature-customtabs')
     implementation project(':feature-session')
     implementation project(':support-base')
     implementation project(':support-ktx')

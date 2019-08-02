@@ -279,7 +279,6 @@ open class FxaAccountManager(
      *
      * @param config Sync behaviour configuration, see [SyncConfig].
      */
-    @SuppressWarnings("LongMethod")
     fun setSyncConfigAsync(config: SyncConfig): Deferred<Unit> = synchronized(this) {
         logger.info("Enabling/updating sync with a new SyncConfig: $config")
 

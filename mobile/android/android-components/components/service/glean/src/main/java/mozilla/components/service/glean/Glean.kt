@@ -85,7 +85,6 @@ open class GleanInternalAPI internal constructor () {
      * as shared preferences
      * @param configuration A Glean [Configuration] object with global settings.
      */
-    @Suppress("LongMethod")
     fun initialize(
         applicationContext: Context,
         configuration: Configuration = Configuration()

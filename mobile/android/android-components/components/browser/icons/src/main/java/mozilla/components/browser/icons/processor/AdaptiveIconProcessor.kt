@@ -26,7 +26,6 @@ class AdaptiveIconProcessor : IconProcessor {
      * Creates an adaptive icon using the base icon.
      * On older devices, non-maskable icons are not transformed.
      */
-    @Suppress("LongMethod")
     override fun process(
         context: Context,
         request: IconRequest,

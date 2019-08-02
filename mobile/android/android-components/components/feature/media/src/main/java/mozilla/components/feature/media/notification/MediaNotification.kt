@@ -49,7 +49,6 @@ internal class MediaNotification(
     }
 }
 
-@Suppress("LongMethod")
 private fun MediaState.toNotificationData(context: Context): NotificationData {
     return when (this) {
         is MediaState.Playing -> NotificationData(

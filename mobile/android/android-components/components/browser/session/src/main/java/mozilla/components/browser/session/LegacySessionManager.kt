@@ -140,7 +140,7 @@ class LegacySessionManager(
         addInternal(session, selected, engineSession, parent = parent, viaRestore = false)
     }
 
-    @Suppress("LongParameterList", "ComplexMethod", "LongMethod")
+    @Suppress("LongParameterList", "ComplexMethod")
     private fun addInternal(
         session: Session,
         selected: Boolean = false,
@@ -429,7 +429,6 @@ class LegacySessionManager(
      *
      * Its implementation is synchronized with the behavior in `TabListReducer` of the `browser-state` component.
      */
-    @Suppress("LongMethod") // Yes, this method is pretty long. I hope we can delete it soon.
     private fun findNearbySession(index: Int, predicate: (Session) -> Boolean): Int {
         // Okay, this is a bit stupid and complex. This implementation intends to implement the same behavior we use in
         // BrowserStore - which is operating on a list without custom tabs. Since LegacySessionManager uses a list with

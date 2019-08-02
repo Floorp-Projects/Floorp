@@ -91,7 +91,6 @@ class BrowserMenuHighlightableItem(
         }
     }
 
-    @Suppress("LongMethod")
     private fun updateHighlight(view: View, isHighlighted: Boolean) {
         val highlightImageView = view.findViewById<AppCompatImageView>(R.id.highlight_image)
 

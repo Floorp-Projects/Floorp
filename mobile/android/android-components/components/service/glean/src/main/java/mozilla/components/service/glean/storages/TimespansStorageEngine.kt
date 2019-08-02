@@ -100,7 +100,6 @@ internal open class TimespansStorageEngineImplementation(
      * @param timeUnit the time unit we want the data in when snapshotting
      * @param elapsedNanos the time to record, in nanoseconds
      */
-    @Suppress("LongMethod")
     @Synchronized
     fun set(
         metricData: CommonMetricData,
