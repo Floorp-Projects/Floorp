@@ -1,0 +1,20 @@
+<!doctype html>
+<title>Test for bug 1461509</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<input id="i" type="date" value="1995-11-20" readonly required>
+<script>
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(function() {
+  let input = document.getElementById("i");
+  let value = input.value;
+
+  isnot(value, "", "should have a value");
+
+  input.focus();
+  synthesizeKey("KEY_Backspace");
+  is(input.value, value, "Value shouldn't change");
+  SimpleTest.finish();
+});
+</script>
