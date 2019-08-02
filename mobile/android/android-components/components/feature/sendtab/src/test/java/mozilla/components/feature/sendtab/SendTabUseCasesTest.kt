@@ -222,27 +222,25 @@ class SendTabUseCasesTest {
     }
 
     @Test
-    fun `SendTabUseCase - result is false if any send tab action fails`() {
-        val useCases = SendTabUseCases(manager)
+    fun `SendTabUseCase - result is false if any send tab action fails`() = runBlockingTest {
+        val useCases = SendTabUseCases(manager, coroutineContext)
         val device: Device = mock()
         val tab = TabData("Title", "http://example.com")
 
-        runBlocking {
-            useCases.sendToDeviceAsync("123", listOf(tab, tab))
+        useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-            verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
 
-            `when`(device.id).thenReturn("123")
-            `when`(state.otherDevices).thenReturn(listOf(device))
-            `when`(constellation.sendEventToDeviceAsync(any(), any()))
-                .thenReturn(CompletableDeferred(true))
-                .thenReturn(CompletableDeferred(true))
+        `when`(device.id).thenReturn("123")
+        `when`(state.otherDevices).thenReturn(listOf(device))
+        `when`(constellation.sendEventToDeviceAsync(any(), any()))
+            .thenReturn(CompletableDeferred(true))
+            .thenReturn(CompletableDeferred(true))
 
-            val result = useCases.sendToDeviceAsync("123", listOf(tab, tab))
+        val result = useCases.sendToDeviceAsync("123", listOf(tab, tab))
 
-            verify(constellation, never()).sendEventToDeviceAsync(any(), any())
-            Assert.assertFalse(result.await())
-        }
+        verify(constellation, never()).sendEventToDeviceAsync(any(), any())
+        Assert.assertFalse(result.await())
     }
 
     @Test

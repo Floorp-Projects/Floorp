@@ -31,7 +31,10 @@ dependencies {
     implementation project(':service-firefox-accounts')
     implementation project(':support-ktx')
     implementation project(':support-base')
+    implementation project(':concept-push')
+    implementation project(':feature-push')
 
+    implementation Dependencies.androidx_work_runtime
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
 

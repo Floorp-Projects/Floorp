@@ -205,6 +205,11 @@ class AutoPushFeature(
 
     /**
      * Returns subscription information for the push type if available.
+     *
+     * Implementation notes: We need to connect this to the device constellation so that we update our subscriptions
+     * when notified by FxA. See [#3859][0].
+     *
+     * [0]: https://github.com/mozilla-mobile/android-components/issues/3859
      */
     fun unsubscribeForType(type: PushType) {
         DeliveryManager.with(connection) {
@@ -231,6 +236,11 @@ class AutoPushFeature(
     /**
      * Deletes the registration token locally so that it forces the service to get a new one the
      * next time hits it's messaging server.
+     *
+     * Implementation notes: This shouldn't need to be used unless we're certain. When we introduce
+     * [a polling service][0] to check if endpoints are expired, we would invoke this.
+     *
+     * [0]: https://github.com/mozilla-mobile/android-components/issues/3173
      */
     fun forceRegistrationRenewal() {
         // Remove the cached token we have.
