@@ -709,4 +709,6 @@
     <string name="sign_out_disconnect">Disconnect</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Cancel</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">Can’t edit default folders</string>
 </resources>

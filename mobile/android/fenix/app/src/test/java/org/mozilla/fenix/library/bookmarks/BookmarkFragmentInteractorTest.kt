@@ -10,12 +10,14 @@ import android.content.Context
 import androidx.core.content.getSystemService
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination
+import io.mockk.called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
@@ -60,6 +62,9 @@ class BookmarkFragmentInteractorTest {
     )
     private val tree = BookmarkNode(
         BookmarkNodeType.FOLDER, "123", null, 0, "Mobile", null, listOf(item, separator, childItem, subfolder)
+    )
+    private val root = BookmarkNode(
+        BookmarkNodeType.FOLDER, BookmarkRoot.Root.id, null, 0, BookmarkRoot.Root.name, null, null
     )
 
     @Before
@@ -162,6 +167,13 @@ class BookmarkFragmentInteractorTest {
         verify {
             bookmarkStore.dispatch(BookmarkAction.DeselectAll)
         }
+    }
+
+    @Test
+    fun `cannot select bookmark roots`() {
+        interactor.select(root)
+
+        verify { bookmarkStore wasNot called }
     }
 
     @Test

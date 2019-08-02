@@ -28,6 +28,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
+import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
@@ -158,7 +159,11 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
                 inflater.inflate(R.menu.bookmarks_menu, menu)
             }
             is BookmarkState.Mode.Selecting -> {
-                inflater.inflate(R.menu.bookmarks_select_multi, menu)
+                if (mode.selectedItems.any { it.type != BookmarkNodeType.ITEM }) {
+                    inflater.inflate(R.menu.bookmarks_select_multi_not_item, menu)
+                } else {
+                    inflater.inflate(R.menu.bookmarks_select_multi, menu)
+                }
                 menu.findItem(R.id.edit_bookmark_multi_select)?.run {
                     isVisible = mode.selectedItems.size == 1
                     icon.colorFilter = PorterDuffColorFilter(

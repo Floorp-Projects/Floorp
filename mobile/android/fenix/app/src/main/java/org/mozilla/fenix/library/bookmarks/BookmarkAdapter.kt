@@ -203,7 +203,6 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
 
             if (!item.inRoots()) {
                 setupMenu(item)
-                view.setOnLongClickListener(null)
             } else {
                 view.overflowView.visibility = View.GONE
             }

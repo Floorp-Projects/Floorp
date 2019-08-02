@@ -84,6 +84,10 @@ class BookmarkFragmentInteractor(
     }
 
     override fun select(node: BookmarkNode) {
+        if (node.inRoots()) {
+            snackbarPresenter.present(context.getString(R.string.bookmark_cannot_edit_root))
+            return
+        }
         bookmarkStore.dispatch(BookmarkAction.Select(node))
     }
 
