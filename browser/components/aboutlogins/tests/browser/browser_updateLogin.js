@@ -33,7 +33,9 @@ add_task(async function test_login_item() {
     browser,
     LoginHelper.loginToVanillaObject(TEST_LOGIN1),
     async login => {
-      let loginList = content.document.querySelector("login-list");
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
       let loginListItem = Cu.waiveXrays(
         loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
       );
@@ -127,13 +129,12 @@ add_task(async function test_login_item() {
         "input[name='password']"
       );
       await ContentTaskUtils.waitForCondition(() => {
-        loginListItem = Cu.waiveXrays(
-          loginList.shadowRoot.querySelector(".login-list-item[data-guid]")
-        );
+        let guid = loginList._loginGuidsSortedOrder[0];
+        let updatedLogin = loginList._logins[guid].login;
         return (
-          loginListItem._login &&
-          loginListItem._login.username == usernameInput.value &&
-          loginListItem._login.password == passwordInput.value
+          updatedLogin &&
+          updatedLogin.username == usernameInput.value &&
+          updatedLogin.password == passwordInput.value
         );
       }, "Waiting for corresponding login in login list to update");
 

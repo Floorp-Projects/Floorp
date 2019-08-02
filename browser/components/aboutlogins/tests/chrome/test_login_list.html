@@ -311,9 +311,9 @@ add_task(async function test_sorted_list() {
   dispatchChangeEvent(loginSort);
   let loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
   is(loginListItems.length, 3, "The list should contain the three stored logins");
-  let timeUsed1 = loginListItems[0]._login.timeLastUsed;
-  let timeUsed2 = loginListItems[1]._login.timeLastUsed;
-  let timeUsed3 = loginListItems[2]._login.timeLastUsed;
+  let timeUsed1 = gLoginList._logins[loginListItems[0].dataset.guid].login.timeLastUsed;
+  let timeUsed2 = gLoginList._logins[loginListItems[1].dataset.guid].login.timeLastUsed;
+  let timeUsed3 = gLoginList._logins[loginListItems[2].dataset.guid].login.timeLastUsed;
   is(timeUsed1 > timeUsed2, true, "Logins sorted by timeLastUsed. First: " + timeUsed1 + "; Second: " + timeUsed2);
   is(timeUsed2 > timeUsed3, true, "Logins sorted by timeLastUsed. Second: " + timeUsed2 + "; Third: " + timeUsed3);
 
@@ -321,9 +321,9 @@ add_task(async function test_sorted_list() {
   loginSort.selectedIndex = 0;
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  let title1 = loginListItems[0]._login.title;
-  let title2 = loginListItems[1]._login.title;
-  let title3 = loginListItems[2]._login.title;
+  let title1 = gLoginList._logins[loginListItems[0].dataset.guid].login.title;
+  let title2 = gLoginList._logins[loginListItems[1].dataset.guid].login.title;
+  let title3 = gLoginList._logins[loginListItems[2].dataset.guid].login.title;
   is(title1.localeCompare(title2), -1, "Logins sorted by title. First: " + title1 + "; Second: " + title2);
   is(title2.localeCompare(title3), -1, "Logins sorted by title. Second: " + title2 + "; Third: " + title3);
 
@@ -331,9 +331,9 @@ add_task(async function test_sorted_list() {
   loginSort.selectedIndex = 2;
   dispatchChangeEvent(loginSort);
   loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  let pwChanged1 = loginListItems[0]._login.timePasswordChanged;
-  let pwChanged2 = loginListItems[1]._login.timePasswordChanged;
-  let pwChanged3 = loginListItems[2]._login.timePasswordChanged;
+  let pwChanged1 = gLoginList._logins[loginListItems[0].dataset.guid].login.timePasswordChanged;
+  let pwChanged2 = gLoginList._logins[loginListItems[1].dataset.guid].login.timePasswordChanged;
+  let pwChanged3 = gLoginList._logins[loginListItems[2].dataset.guid].login.timePasswordChanged;
   is(pwChanged1 > pwChanged2, true, "Logins sorted by timePasswordChanged. First: " + pwChanged1 + "; Second: " + pwChanged2);
   is(pwChanged2 > pwChanged3, true, "Logins sorted by timePasswordChanged. Second: " + pwChanged2 + "; Third: " + pwChanged3);
 });
