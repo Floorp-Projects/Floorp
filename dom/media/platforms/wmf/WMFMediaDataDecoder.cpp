@@ -51,13 +51,6 @@ static void SendTelemetry(unsigned long hr) {
   } else {
     sample = 3;  // high bucket
   }
-
-  nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableFunction("SendTelemetry", [sample] {
-        Telemetry::Accumulate(Telemetry::MEDIA_WMF_DECODE_ERROR, sample);
-      });
-
-  SystemGroup::Dispatch(TaskCategory::Other, runnable.forget());
 }
 
 RefPtr<ShutdownPromise> WMFMediaDataDecoder::Shutdown() {

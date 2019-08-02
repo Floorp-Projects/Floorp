@@ -45,12 +45,6 @@ class GpuRemoteVideoDecoderChild final : public RemoteVideoDecoderChild {
   MediaResult InitIPDL(const VideoInfo& aVideoInfo, float aFramerate,
                        const CreateDecoderParams::OptionSet& aOptions,
                        const layers::TextureFactoryIdentifier& aIdentifier);
-
-  void RecordShutdownTelemetry(bool aAbnormalShutdown) override;
-
- private:
-  nsCString mBlacklistedD3D11Driver;
-  nsCString mBlacklistedD3D9Driver;
 };
 
 class RemoteVideoDecoderParent final : public RemoteDecoderParent {

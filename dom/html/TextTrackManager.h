@@ -147,13 +147,8 @@ class TextTrackManager final : public nsIDOMEventListener {
   bool TrackIsDefault(TextTrack* aTextTrack);
 
   void ReportTelemetryForTrack(TextTrack* aTextTrack) const;
-  void ReportTelemetryForCue();
 
   bool IsShutdown() const;
-
-  // If there is at least one cue has been added to the cue list once, we would
-  // report the usage of cue to Telemetry.
-  bool mCueTelemetryReported;
 
   // This function will check media element's show poster flag to decide whether
   // we need to run `TimeMarchesOn`.
