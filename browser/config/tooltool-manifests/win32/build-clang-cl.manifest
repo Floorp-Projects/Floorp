@@ -8,14 +8,6 @@
     "unpack": true
   },
   {
-    "version": "MinGit-2.13.3-64-bit",
-    "size": 21482885,
-    "digest": "929bb3c07be8487ee519422a312bdbfeec8f4db4b62c49d02f9aad9fd2a66c0ee5fad63d2b06c8744c336dc9d50446fa4457897333ad17ffd783ecabd1e2ddbb",
-    "algorithm": "sha512",
-    "filename": "git.zip",
-    "unpack": true
-  },
-  {
     "version": "CMake 3.6.2 repack",
     "size": 19832889,
     "digest": "39b0508b60f655969d1b54c76753b14b5b2e92dab58613c835aed798a6aeb9077a7df78aebc011c2c753661fdc15007d3353c0c8773a53148380e2ec02afb629",
