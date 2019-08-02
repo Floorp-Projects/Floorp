@@ -3085,6 +3085,7 @@ exports.CSS_PROPERTIES = {
       "offset-path",
       "offset-distance",
       "offset-rotate",
+      "offset-anchor",
       "scroll-behavior",
       "scroll-snap-align",
       "scroll-snap-type",
@@ -8277,6 +8278,25 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
+  "offset-anchor": {
+    "isInherited": false,
+    "subproperties": [
+      "offset-anchor"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "bottom",
+      "center",
+      "inherit",
+      "initial",
+      "left",
+      "revert",
+      "right",
+      "top",
+      "unset"
+    ]
+  },
   "offset-distance": {
     "isInherited": false,
     "subproperties": [
@@ -10771,6 +10791,10 @@ exports.PREFERENCES = [
   [
     "font-variation-settings",
     "layout.css.font-variations.enabled"
+  ],
+  [
+    "offset-anchor",
+    "layout.css.motion-path.enabled"
   ],
   [
     "offset-path",
