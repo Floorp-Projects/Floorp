@@ -31,6 +31,9 @@ struct RemoteAudioDataIPDL
   uint32_t channels;
   uint32_t rate;
   uint32_t channelMap;
+  // Pass along buffer size since we're using ShmemPool
+  // and we can receive buffers larger than requested size.
+  int64_t audioDataBufferSize;
   Shmem buffer;
 };
 
@@ -54,6 +57,8 @@ parent:
 
   async Input(MediaRawDataIPDL data);
 
+  async DoneWithOutput(Shmem outputShmem);
+
   async Flush();
   async Drain();
   async Shutdown();
@@ -70,6 +75,8 @@ child:
 
   async FlushComplete();
   async ShutdownComplete();
+
+  async DoneWithInput(Shmem inputShmem);
 
   // Each output may include a SurfaceDescriptorGPUVideo that represents the decoded
   // frame. This SurfaceDescriptor can be used on the Layers IPDL protocol, but

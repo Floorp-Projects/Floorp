@@ -18,7 +18,8 @@ RemoteDecoderParent::RemoteDecoderParent(RemoteDecoderManagerParent* aParent,
                                          TaskQueue* aDecodeTaskQueue)
     : mParent(aParent),
       mManagerTaskQueue(aManagerTaskQueue),
-      mDecodeTaskQueue(aDecodeTaskQueue) {
+      mDecodeTaskQueue(aDecodeTaskQueue),
+      mDecodedFramePool(4) {
   MOZ_COUNT_CTOR(RemoteDecoderParent);
   MOZ_ASSERT(OnManagerThread());
   // We hold a reference to ourselves to keep us alive until IPDL
@@ -68,8 +69,12 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInput(
   MOZ_ASSERT(OnManagerThread());
   // XXX: This copies the data into a buffer owned by the MediaRawData. Ideally
   // we'd just take ownership of the shmem.
-  RefPtr<MediaRawData> data = new MediaRawData(aData.buffer().get<uint8_t>(),
-                                               aData.buffer().Size<uint8_t>());
+  // Use the passed bufferSize in MediaRawDataIPDL since we can get a Shmem
+  // buffer from ShmemPool larger than the requested size.
+  RefPtr<MediaRawData> data =
+      new MediaRawData(aData.buffer().get<uint8_t>(),
+                       std::min((unsigned long)aData.bufferSize(),
+                                (unsigned long)aData.buffer().Size<uint8_t>()));
   if (aData.buffer().Size<uint8_t>() && !data->Data()) {
     // OOM
     Error(NS_ERROR_OUT_OF_MEMORY);
@@ -83,7 +88,8 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvInput(
   data->mEOS = aData.eos();
   data->mDiscardPadding = aData.discardPadding();
 
-  DeallocShmem(aData.buffer());
+  // Send back to the child to reuse in ShmemPool
+  Unused << SendDoneWithInput(std::move(aData.buffer()));
 
   RefPtr<RemoteDecoderParent> self = this;
   mDecoder->Decode(data)->Then(
@@ -165,6 +171,12 @@ mozilla::ipc::IPCResult RemoteDecoderParent::RecvSetSeekThreshold(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult RemoteDecoderParent::RecvDoneWithOutput(
+    Shmem&& aOutputShmem) {
+  mDecodedFramePool.Put(ShmemBuffer(aOutputShmem));
+  return IPC_OK();
+}
+
 void RemoteDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(OnManagerThread());
@@ -172,6 +184,7 @@ void RemoteDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
+  mDecodedFramePool.Cleanup(this);
 }
 
 void RemoteDecoderParent::Error(const MediaResult& aError) {
