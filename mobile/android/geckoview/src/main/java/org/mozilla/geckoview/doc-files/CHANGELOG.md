@@ -22,6 +22,9 @@ exclude: true
 [69.2]: ../GeckoSession.html#setMessageDelegate-org.mozilla.geckoview.WebExtension-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
 [69.3]: ../WebExtension.html
 [69.4]: ../WebExtension.MessageDelegate.html
+[69.7]: ../GeckoSession.ContentDelegate.html#onKill
+
+- Created `onKill` to `ContentDelegate` to differentiate from crashes.
 
 ## v68
 - Added [`GeckoRuntime#configurationChanged`][68.1] to notify the device
@@ -335,4 +338,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: d143ce8f7ed19ff68f5d48243e34aed609767c5a
+[api-version]: 7b53d1a6703cc7f613de81c422dccdd95b6153fe
