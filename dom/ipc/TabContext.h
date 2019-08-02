@@ -47,15 +47,6 @@ class TabContext {
   bool IsMozBrowserElement() const;
 
   /**
-   * Does this TabContext correspond to an isolated mozbrowser?
-   *
-   * <iframe mozbrowser> is a mozbrowser element, but <xul:browser> is not.
-   * <iframe mozbrowser noisolation> does not count as isolated since isolation
-   * is disabled.  Isolation can only be disabled by chrome pages.
-   */
-  bool IsIsolatedMozBrowserElement() const;
-
-  /**
    * Does this TabContext correspond to a mozbrowser?  This is equivalent to
    * IsMozBrowserElement().  Returns false for <xul:browser>, which isn't a
    * mozbrowser.

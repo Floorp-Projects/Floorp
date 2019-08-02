@@ -2905,10 +2905,6 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
         docShellAttrs.mUserContextId == attrs.mUserContextId,
         "docshell and necko should have the same userContextId attribute.");
     MOZ_ASSERT(
-        docShellAttrs.mInIsolatedMozBrowser == attrs.mInIsolatedMozBrowser,
-        "docshell and necko should have the same inIsolatedMozBrowser "
-        "attribute.");
-    MOZ_ASSERT(
         docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
         "docshell and necko should have the same privateBrowsingId attribute.");
     MOZ_ASSERT(docShellAttrs.mGeckoViewSessionContextId ==
