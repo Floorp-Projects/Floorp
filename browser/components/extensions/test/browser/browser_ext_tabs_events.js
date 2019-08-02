@@ -77,17 +77,13 @@ add_task(async function test_tab_events_incognito_monitored() {
     }
 
     try {
-      let firstWindow = await browser.windows.create({
-        url: "about:blank",
-        incognito,
-      });
-      let otherWindow = await browser.windows.create({
-        url: "about:blank",
-        incognito,
-      });
+      let windows = await Promise.all([
+        browser.windows.create({ url: "about:blank", incognito }),
+        browser.windows.create({ url: "about:blank", incognito }),
+      ]);
 
-      let windowId = firstWindow.id;
-      let otherWindowId = otherWindow.id;
+      let windowId = windows[0].id;
+      let otherWindowId = windows[1].id;
 
       let created = await expectEvents(["onCreated", "onCreated"]);
       let initialTab = created[1].tab;
