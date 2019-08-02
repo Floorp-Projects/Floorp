@@ -617,7 +617,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
     if (NS_FAILED(rv)) {
       return rv;
     }
-    uriToLoad->SchemeIs("chrome", &uriToLoadIsChrome);
+    uriToLoadIsChrome = uriToLoad->SchemeIs("chrome");
   }
 
   bool nameSpecified = false;

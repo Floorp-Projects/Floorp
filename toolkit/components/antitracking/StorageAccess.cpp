@@ -138,12 +138,8 @@ static StorageAccess InternalStorageAllowedCheck(
   if (!uri) {
     Unused << aPrincipal->GetURI(getter_AddRefs(uri));
   }
-  if (uri) {
-    bool isAbout = false;
-    MOZ_ALWAYS_SUCCEEDS(uri->SchemeIs("about", &isAbout));
-    if (isAbout) {
-      return access;
-    }
+  if (uri && uri->SchemeIs("about")) {
+    return access;
   }
 
   if (!StorageDisabledByAntiTracking(aWindow, aChannel, aPrincipal, aURI,
