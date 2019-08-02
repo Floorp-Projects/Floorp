@@ -51,8 +51,6 @@ nsGenericHTMLElement* NS_NewHTMLVideoElement(
 namespace mozilla {
 namespace dom {
 
-static bool sVideoStatsEnabled;
-
 nsresult HTMLVideoElement::Clone(mozilla::dom::NodeInfo* aNodeInfo,
                                  nsINode** aResult) const {
   *aResult = nullptr;
@@ -417,13 +415,9 @@ bool HTMLVideoElement::SetVisualCloneSource(
 }
 
 /* static */
-void HTMLVideoElement::InitStatics() {
-  Preferences::AddBoolVarCache(&sVideoStatsEnabled,
-                               "media.video_stats.enabled");
+bool HTMLVideoElement::IsVideoStatsEnabled() {
+  return StaticPrefs::media_video_stats_enabled();
 }
-
-/* static */
-bool HTMLVideoElement::IsVideoStatsEnabled() { return sVideoStatsEnabled; }
 
 double HTMLVideoElement::TotalPlayTime() const {
   double total = 0.0;
