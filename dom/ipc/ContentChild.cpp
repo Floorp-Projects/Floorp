@@ -1104,10 +1104,7 @@ nsresult ContentChild::ProvideWindowCommon(
       newChild->RecvLoadURL(urlToLoad, showInfo);
     }
 
-    nsCOMPtr<nsPIDOMWindowOuter> win =
-        do_GetInterface(newChild->WebNavigation());
-    RefPtr<BrowsingContext> bc(win->GetBrowsingContext());
-    bc.forget(aReturn);
+    browsingContext.forget(aReturn);
   };
 
   // NOTE: Capturing by reference here is safe, as this function won't return

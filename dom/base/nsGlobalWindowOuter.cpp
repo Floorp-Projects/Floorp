@@ -7275,7 +7275,6 @@ nsresult nsGlobalWindowOuter::OpenInternal(
     // dialog is open.
     AutoPopupStatePusher popupStatePusher(PopupBlocker::openAbused, true);
 
-    nsCOMPtr<mozIDOMWindowProxy> win;
     if (!aCalledNoScript) {
       // We asserted at the top of this function that aNavigate is true for
       // !aCalledNoScript.
@@ -7283,7 +7282,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
           this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
           /* aCalledFromScript = */ true, aDialog, aNavigate, argv,
           isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
-          getter_AddRefs(win));
+          getter_AddRefs(domReturn));
     } else {
       // Force a system caller here so that the window watcher won't screw us
       // up.  We do NOT want this case looking at the JS context on the stack
@@ -7303,10 +7302,7 @@ nsresult nsGlobalWindowOuter::OpenInternal(
           this, url.IsVoid() ? nullptr : url.get(), name_ptr, options_ptr,
           /* aCalledFromScript = */ false, aDialog, aNavigate, aExtraArgument,
           isPopupSpamWindow, forceNoOpener, forceNoReferrer, aLoadState,
-          getter_AddRefs(win));
-    }
-    if (win) {
-      domReturn = nsPIDOMWindowOuter::From(win)->GetBrowsingContext();
+          getter_AddRefs(domReturn));
     }
   }
 

@@ -86,7 +86,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
                               nsIArray* aArgv, bool aIsPopupSpam,
                               bool aForceNoOpener, bool aForceNoReferrer,
                               nsDocShellLoadState* aLoadState,
-                              mozIDOMWindowProxy** aResult);
+                              mozilla::dom::BrowsingContext** aResult);
 
   static nsresult URIfromURL(const char* aURL, mozIDOMWindowProxy* aParent,
                              nsIURI** aURI);
