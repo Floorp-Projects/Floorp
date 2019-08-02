@@ -1281,8 +1281,8 @@ void NSSCertDBTrustDomain::NoteAuxiliaryExtension(AuxiliaryExtension extension,
   }
 }
 
-SECStatus InitializeNSS(const nsACString& dir, bool readOnly,
-                        bool loadPKCS11Modules) {
+SECStatus InitializeNSS(const nsACString& dir, NSSDBConfig nssDbConfig,
+                        PKCS11DBConfig pkcs11DbConfig) {
   MOZ_ASSERT(NS_IsMainThread());
 
   // The NSS_INIT_NOROOTINIT flag turns off the loading of the root certs
@@ -1291,24 +1291,24 @@ SECStatus InitializeNSS(const nsACString& dir, bool readOnly,
   // Ubuntu 8.04, which loads any nonexistent "<configdir>/libnssckbi.so" as
   // "/usr/lib/nss/libnssckbi.so".
   uint32_t flags = NSS_INIT_NOROOTINIT | NSS_INIT_OPTIMIZESPACE;
-  if (readOnly) {
+  if (nssDbConfig == NSSDBConfig::ReadOnly) {
     flags |= NSS_INIT_READONLY;
   }
-  if (!loadPKCS11Modules) {
+  if (pkcs11DbConfig == PKCS11DBConfig::DoNotLoadModules) {
     flags |= NSS_INIT_NOMODDB;
   }
   nsAutoCString dbTypeAndDirectory("sql:");
   dbTypeAndDirectory.Append(dir);
   MOZ_LOG(gCertVerifierLog, LogLevel::Debug,
-          ("InitializeNSS(%s, %d, %d)", dbTypeAndDirectory.get(), readOnly,
-           loadPKCS11Modules));
+          ("InitializeNSS(%s, %d, %d)", dbTypeAndDirectory.get(),
+           (int)nssDbConfig, (int)pkcs11DbConfig));
   SECStatus srv =
       NSS_Initialize(dbTypeAndDirectory.get(), "", "", SECMOD_DB, flags);
   if (srv != SECSuccess) {
     return srv;
   }
 
-  if (!readOnly) {
+  if (nssDbConfig == NSSDBConfig::ReadWrite) {
     UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
     if (!slot) {
       return SECFailure;
