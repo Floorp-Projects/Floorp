@@ -758,15 +758,14 @@ nsresult nsWindowWatcher::OpenWindowInternal(
       }
 
       if (provider) {
-        nsCOMPtr<mozIDOMWindowProxy> newWindow;
+        RefPtr<BrowsingContext> newBC;
         rv = provider->ProvideWindow(
             aParent, chromeFlags, aCalledFromJS, sizeSpec.PositionSpecified(),
             sizeSpec.SizeSpecified(), uriToLoad, name, features, aForceNoOpener,
-            aForceNoReferrer, aLoadState, &windowIsNew,
-            getter_AddRefs(newWindow));
+            aForceNoReferrer, aLoadState, &windowIsNew, getter_AddRefs(newBC));
 
-        if (NS_SUCCEEDED(rv)) {
-          GetWindowTreeItem(newWindow, getter_AddRefs(newDocShellItem));
+        if (NS_SUCCEEDED(rv) && newBC) {
+          newDocShellItem = newBC->GetDocShell();
           if (windowIsNew && newDocShellItem) {
             // Make sure to stop any loads happening in this window that the
             // window provider might have started.  Otherwise if our caller
@@ -783,7 +782,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
           if (!windowIsNew && newDocShellItem) {
             nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(newDocShellItem);
             if (!CheckUserContextCompatibility(docShell)) {
-              newWindow = nullptr;
+              newBC = nullptr;
               newDocShellItem = nullptr;
               windowIsNew = false;
             }

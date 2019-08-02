@@ -4882,11 +4882,11 @@ mozilla::ipc::IPCResult ContentParent::CommonCreateWindow(
       aResult = NS_ERROR_ABORT;
       return IPC_OK();
     }
-    nsCOMPtr<mozIDOMWindowProxy> win;
+    RefPtr<BrowsingContext> bc;
     aResult = newBrowserDOMWin->OpenURI(
         aURIToLoad, openerWindow, nsIBrowserDOMWindow::OPEN_CURRENTWINDOW,
         nsIBrowserDOMWindow::OPEN_NEW, aTriggeringPrincipal, aCsp,
-        getter_AddRefs(win));
+        getter_AddRefs(bc));
   }
 
   return IPC_OK();

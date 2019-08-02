@@ -11,6 +11,7 @@ interface nsIURI;
 interface nsIPrincipal;
 interface nsIContentSecurityPolicy;
 interface nsIReferrerInfo;
+webidl BrowsingContext;
 webidl Element;
 
 [scriptable, uuid(e774db14-79ac-4156-a7a3-aa3fd0a22c10)]
@@ -115,7 +116,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * @param aCsp the CSP to use (if any) for the new window.
    * @return the window into which the URI would have been opened.
   */
-  mozIDOMWindowProxy
+  BrowsingContext
   createContentWindow(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
                       in short aWhere, in long aFlags,
                       in nsIPrincipal aTriggeringPrincipal,
@@ -150,7 +151,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * @param aCsp the CSP to be applied to the new load.
    * @return the window into which the URI was opened.
   */
-  mozIDOMWindowProxy
+  BrowsingContext
   openURI(in nsIURI aURI, in mozIDOMWindowProxy aOpener,
           in short aWhere, in long aFlags, in nsIPrincipal aTriggeringPrincipal,
           [optional] in nsIContentSecurityPolicy aCsp);

@@ -771,7 +771,7 @@ ContentChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
                             const nsAString& aName, const nsACString& aFeatures,
                             bool aForceNoOpener, bool aForceNoReferrer,
                             nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-                            mozIDOMWindowProxy** aReturn) {
+                            BrowsingContext** aReturn) {
   return ProvideWindowCommon(
       nullptr, aParent, false, aChromeFlags, aCalledFromJS, aPositionSpecified,
       aSizeSpecified, aURI, aName, aFeatures, aForceNoOpener, aForceNoReferrer,
@@ -860,7 +860,7 @@ nsresult ContentChild::ProvideWindowCommon(
     bool aSizeSpecified, nsIURI* aURI, const nsAString& aName,
     const nsACString& aFeatures, bool aForceNoOpener, bool aForceNoReferrer,
     nsDocShellLoadState* aLoadState, bool* aWindowIsNew,
-    mozIDOMWindowProxy** aReturn) {
+    BrowsingContext** aReturn) {
   *aReturn = nullptr;
 
   nsAutoPtr<IPCTabContext> ipcContext;
@@ -1104,9 +1104,10 @@ nsresult ContentChild::ProvideWindowCommon(
       newChild->RecvLoadURL(urlToLoad, showInfo);
     }
 
-    nsCOMPtr<mozIDOMWindowProxy> win =
+    nsCOMPtr<nsPIDOMWindowOuter> win =
         do_GetInterface(newChild->WebNavigation());
-    win.forget(aReturn);
+    RefPtr<BrowsingContext> bc(win->GetBrowsingContext());
+    bc.forget(aReturn);
   };
 
   // NOTE: Capturing by reference here is safe, as this function won't return
