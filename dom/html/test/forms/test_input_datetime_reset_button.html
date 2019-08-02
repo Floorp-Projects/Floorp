@@ -19,6 +19,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1479708
 <input type="time" id="id_time_required" value="10:30" required>
 <input type="date" id="id_date_readonly" value="2017-06-08" readonly>
 <input type="time" id="id_time_readonly" value="10:30" readonly>
+<input type="date" id="id_date_disabled" value="2017-06-08" disabled>
+<input type="time" id="id_time_disabled" value="10:30" disabled>
 </div>
 <pre id="test">
 <script class="testbody">
@@ -47,9 +49,43 @@ SimpleTest.waitForFocus(function() {
 
   test_readonly_field_disabled("date");
   test_readonly_field_disabled("time");
+  test_disabled_field_disabled("date");
+  test_disabled_field_disabled("time");
+
+  // Now toggle the inputs to the initial state, but while being
+  // display: none. This tests for bug 1567191.
+  for (const input of document.querySelectorAll("input")) {
+    input.style.display = "none";
+    is(input.getBoundingClientRect().width, 0, "Should be undisplayed");
+  }
+
+  test_make_required("id_date_required", true);
+  test_make_required("id_time_required", true);
+  test_make_optional("id_date", true);
+  test_make_optional("id_time", true);
+
+  // And test other toggling as well.
+  test_readonly_field_disabled("date");
+  test_readonly_field_disabled("time");
+  test_disabled_field_disabled("date");
+  test_disabled_field_disabled("time");
 
   SimpleTest.finish();
 });
+
+function test_disabled_field_disabled(type) {
+  const id = "id_" + type + "_disabled";
+  const input = document.getElementById(id);
+
+  ok(input.disabled, "Should be disabled");
+  ok(get_reset_button(id).disabled, `disabled's reset button is disabled (${id})`);
+
+  input.disabled = false;
+  ok(!input.disabled, "Should not be disabled anymore");
+  ok(!get_reset_button(id).disabled, `enabled field's reset button is not disabled (${id})`);
+
+  input.disabled = true; // reset to the original state.
+}
 
 function test_readonly_field_disabled(type) {
   const id = "id_" + type + "_readonly";
@@ -61,6 +97,8 @@ function test_readonly_field_disabled(type) {
   input.readOnly = false;
   ok(!input.readOnly, "Should not be read-only anymore");
   ok(!get_reset_button(id).disabled, `non-readonly field's reset button is not disabled (${id})`);
+
+  input.readOnly = true; // reset to the original state.
 }
 
 function test_make_required(id) {
