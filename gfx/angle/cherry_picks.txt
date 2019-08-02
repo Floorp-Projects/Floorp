@@ -1,3 +1,17 @@
+commit 21dccd386996a40e5e52a1d1c4f1eb9abc66adf0
+Author: Glenn Watson <39062770+gw3583@users.noreply.github.com>
+Date:   Fri Aug 2 07:11:16 2019 +1000
+
+    Fix occasional corruption of vertex textures in HD4600 GPUs. (#19)
+    
+    This appears to be caused by the UpdateSubResource call,
+    which is worked around by enabling the other image upload
+    path that ANGLE supports.
+    
+    The workaround doesn't include a driver version, since the
+    bug is occurring in the most recent driver that is currently
+    available (15.40.42.5063, released 19th Mar 2019).
+
 commit b0a9c45400d23281c67059980f7a39cc4285e5f9
 Author: Jamie Madill <jmadill@chromium.org>
 Date:   Mon Apr 8 16:26:50 2019 -0400
