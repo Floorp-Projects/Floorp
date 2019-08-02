@@ -15,7 +15,6 @@ DEFAULT_EXPIRES_IN = '1 year'
 DEFAULT_APK_ARTIFACT_LOCATION = 'public/target.apk'
 _OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
 _DEFAULT_TASK_URL = 'https://queue.taskcluster.net/v1/task'
-GOOGLE_PROJECT = "moz-fenix"
 GOOGLE_APPLICATION_CREDENTIALS = '.firebase_token.json'
 
 
@@ -416,6 +415,7 @@ class TaskBuilder(object):
         routes=None,
         scopes=None,
         treeherder=None,
+        notify=None,
     ):
         dependencies = [] if dependencies is None else dependencies
         scopes = [] if scopes is None else scopes
@@ -428,6 +428,12 @@ class TaskBuilder(object):
 
         if self.trust_level == 3:
             routes.append('tc-treeherder.v2.fenix.{}'.format(self.commit))
+
+        extra = {
+            "treeherder": treeherder,
+        }
+        if notify:
+            extra['notify'] = notify
 
         return {
             "provisionerId": provisioner_id,
@@ -445,9 +451,7 @@ class TaskBuilder(object):
             "routes": routes,
             "scopes": scopes,
             "payload": payload,
-            "extra": {
-                "treeherder": treeherder,
-            },
+            "extra": extra,
             "metadata": {
                 "name": "Fenix - {}".format(name),
                 "description": description,
@@ -616,6 +620,7 @@ class TaskBuilder(object):
             dependencies=[signing_task_id],
             name=task_name,
             description=description,
+            routes=['notify.email.perftest-alerts@mozilla.com.on-failed'],
             payload={
                 "maxRunTime": 2700,
                 "artifacts": [{
@@ -677,7 +682,17 @@ class TaskBuilder(object):
                 },
                 'symbol': job_symbol,
                 'tier': 2,
-            }
+            },
+            notify={
+                'email': {
+                    'link': {
+                        'text': "Treeherder Job",
+                        'href': "https://treeherder.mozilla.org/#/jobs?repo=fenix&revision={}".format(self.commit),
+                    },
+                    'subject': '[fenix] Raptor job "{}" failed'.format(task_name),
+                    'content': "This calls for an action of the Performance team. Use the link to view it on Treeherder.",
+                },
+            },
         )
 
 
