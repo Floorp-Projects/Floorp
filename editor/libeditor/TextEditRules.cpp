@@ -1555,8 +1555,8 @@ nsresult TextEditRules::TruncateInsertionIfNeeded(const nsAString* aInString,
   return NS_OK;
 }
 
-CreateElementResult TextEditRules::CreateBRInternal(
-    const EditorDOMPoint& aPointToInsert, bool aForPadding) {
+CreateElementResult TextEditRules::CreatePaddingBRElementForEmptyLastLine(
+    const EditorDOMPoint& aPointToInsert) {
   MOZ_ASSERT(IsEditorDataAvailable());
 
   if (NS_WARN_IF(!aPointToInsert.IsSet())) {
@@ -1573,9 +1573,8 @@ CreateElementResult TextEditRules::CreateBRInternal(
     return CreateElementResult(NS_ERROR_FAILURE);
   }
 
-  if (aForPadding) {
-    brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
-  }
+  brElement->SetFlags(NS_PADDING_FOR_EMPTY_LAST_LINE);
+
   return CreateElementResult(brElement.forget());
 }
 
