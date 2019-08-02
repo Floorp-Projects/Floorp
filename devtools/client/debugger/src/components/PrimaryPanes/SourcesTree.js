@@ -90,6 +90,15 @@ function shouldAutoExpand(depth, item, debuggeeUrl, projectRoot) {
   return item.name === host;
 }
 
+function findSource({ threads, sources }, itemPath, source) {
+  const targetThread = threads.find(thread => itemPath.includes(thread.actor));
+  if (targetThread && source) {
+    const actor = targetThread.actor;
+    return sources[actor][source.id];
+  }
+  return source;
+}
+
 class SourcesTree extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
@@ -178,7 +187,8 @@ class SourcesTree extends Component<Props, State> {
 
   // NOTE: we get the source from sources because item.contents is cached
   getSource(item: TreeNode): ?Source {
-    return getSourceFromNode(item);
+    const source = getSourceFromNode(item);
+    return findSource(this.props, item.path, source);
   }
 
   getPath = (item: TreeNode): string => {
