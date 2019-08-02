@@ -100,7 +100,7 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  Live,
+  Always,
   "my.uint",
    my_uint,
    my_uint,
@@ -120,7 +120,7 @@ PREF("my.string", String, "foo\\"bar")
 PREF("my.string2", String, "foobar")
 
 VARCACHE_PREF(
-  Live,
+  Always,
   "my.atomic.bool",
    my_atomic_bool,
    my_atomic_bool,
@@ -128,7 +128,7 @@ VARCACHE_PREF(
 )
 
 VARCACHE_PREF(
-  Live,
+  Always,
   "my.atomic.int",
    my_atomic_int,
    my_atomic_int_DoNotUseDirectly,
