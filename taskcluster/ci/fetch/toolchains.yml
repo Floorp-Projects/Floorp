@@ -269,6 +269,15 @@ libdmg-hfsplus:
         repo: https://github.com/mozilla/libdmg-hfsplus/
         revision: 2ee327795680101d36f9700bd0fb618362237718
 
+hfsplus-tools:
+    description: hfstools-plus source code
+    fetch:
+        type: static-url
+        # Most-upstream is https://opensource.apple.com/source/diskdev_cmds/
+        url: https://src.fedoraproject.org/repo/pkgs/hfsplus-tools/diskdev_cmds-540.1.linux3.tar.gz/0435afc389b919027b69616ad1b05709/diskdev_cmds-540.1.linux3.tar.gz
+        sha256: b01b203a97f9a3bf36a027c13ddfc59292730552e62722d690d33bd5c24f5497
+        size: 411205
+
 llvm-for-dsymutil:
     description: llvm source code for dsymutil
     fetch:

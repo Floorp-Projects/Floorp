@@ -54,8 +54,8 @@ jobs:
                   path: /builds/worker/artifacts/profile-run-2.log
         run:
             using: run-task
+            cwd: '{checkout}'
             command: >
-                cd /builds/worker/checkouts/gecko &&
                 ./taskcluster/scripts/misc/run-profileserver.sh
 
     linux64-shippable/opt:
@@ -88,8 +88,8 @@ jobs:
                   path: /builds/worker/artifacts/profile-run-2.log
         run:
             using: run-task
+            cwd: '{checkout}'
             command: >
-                cd /builds/worker/checkouts/gecko &&
                 ./taskcluster/scripts/misc/run-profileserver.sh
 
     android-api-16/pgo:
@@ -157,7 +157,8 @@ jobs:
         run:
             using: run-task
             sparse-profile: profile-generate
-            command: cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver.sh
 
     win64-shippable/opt:
         description: "Win64 Profile Generation"
@@ -186,4 +187,5 @@ jobs:
         run:
             using: run-task
             sparse-profile: profile-generate
-            command: cd build/src && ./taskcluster/scripts/misc/run-profileserver.sh
+            cwd: '{checkout}'
+            command: ./taskcluster/scripts/misc/run-profileserver.sh

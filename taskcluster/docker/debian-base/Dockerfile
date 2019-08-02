@@ -59,4 +59,7 @@ COPY topsrcdir/taskcluster/docker/recipes/dot-config /builds/worker/.config
 # %include taskcluster/scripts/run-task
 COPY topsrcdir/taskcluster/scripts/run-task /builds/worker/bin/run-task
 
+# %include taskcluster/scripts/misc/fetch-content
+ADD topsrcdir/taskcluster/scripts/misc/fetch-content /builds/worker/bin/fetch-content
+
 RUN chown -R worker:worker /builds/worker/bin && chmod 755 /builds/worker/bin/*

@@ -3,7 +3,6 @@ set -x -e -v
 
 # This script is for packaging toolchains suitable for use by distributed sccache.
 WORKSPACE=$HOME/workspace
-UPLOAD_DIR=$HOME/artifacts
 TL_NAME="$1"
 
 cd $WORKSPACE/build/src

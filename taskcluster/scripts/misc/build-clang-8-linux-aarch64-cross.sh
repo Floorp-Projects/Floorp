@@ -5,7 +5,6 @@ set -x -e -v
 
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
-UPLOAD_DIR=$HOME/artifacts
 
 cd $HOME_DIR/src
 
@@ -17,8 +16,7 @@ export PATH="$WORKSPACE/build/src/binutils/bin:$PATH"
 set +x
 
 cd build/build-clang
-# |mach python| sets up a virtualenv for us!
-../../mach python ./build-clang.py -c clang-8-linux64-aarch64-cross.json
+python3 ./build-clang.py -c clang-8-linux64-aarch64-cross.json
 
 set -x
 

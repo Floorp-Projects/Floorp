@@ -4,7 +4,6 @@ set -x -e -v
 WORKSPACE=$HOME/workspace
 HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/upx
-UPLOAD_DIR=$HOME/artifacts
 
 mkdir -p $INSTALL_DIR/bin
 
