@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorDOMPoint.h"
+#include "mozilla/EditorUtils.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
@@ -3403,7 +3404,7 @@ nsresult HTMLEditor::DeleteNodeWithTransaction(nsINode& aNode) {
   // XXX This is not a override method of EditorBase's method.  This might
   //     cause not called accidentally.  We need to investigate this issue.
   if (NS_WARN_IF(!IsModifiableNode(*aNode.AsContent()) &&
-                 !IsMozEditorBogusNode(aNode.AsContent()))) {
+                 !EditorBase::IsPaddingBRElementForEmptyEditor(aNode))) {
     return NS_ERROR_FAILURE;
   }
   nsresult rv = EditorBase::DeleteNodeWithTransaction(aNode);
@@ -3616,8 +3617,8 @@ void HTMLEditor::DoContentInserted(nsIContent* aChild,
   }
   // We don't need to handle our own modifications
   else if (!GetTopLevelEditSubAction() && container->IsEditable()) {
-    if (IsMozEditorBogusNode(aChild)) {
-      // Ignore insertion of the bogus node
+    if (EditorBase::IsPaddingBRElementForEmptyEditor(*aChild)) {
+      // Ignore insertion of the padding <br> element.
       return;
     }
     RefPtr<HTMLEditRules> htmlRules = mRules->AsHTMLEditRules();
@@ -3662,8 +3663,8 @@ void HTMLEditor::ContentRemoved(nsIContent* aChild,
     // We don't need to handle our own modifications
   } else if (!GetTopLevelEditSubAction() &&
              aChild->GetParentNode()->IsEditable()) {
-    if (aChild && IsMozEditorBogusNode(aChild)) {
-      // Ignore removal of the bogus node
+    if (aChild && EditorBase::IsPaddingBRElementForEmptyEditor(*aChild)) {
+      // Ignore removal of the padding <br> element for empty editor.
       return;
     }
 
@@ -3751,7 +3752,7 @@ nsresult HTMLEditor::SelectEntireDocument() {
   RefPtr<TextEditRules> rules(mRules);
 
   // If we're empty, don't select all children because that would select the
-  // bogus node.
+  // padding <br> element for empty editor.
   if (rules->DocumentIsEmpty()) {
     nsresult rv = SelectionRefPtr()->Collapse(rootElement, 0);
     NS_WARNING_ASSERTION(
@@ -5252,7 +5253,8 @@ void HTMLEditor::OnModifyDocument() {
     return;
   }
 
-  AutoEditActionDataSetter editActionData(*this, EditAction::eCreateBogusNode);
+  AutoEditActionDataSetter editActionData(
+      *this, EditAction::eCreatePaddingBRElementForEmptyEditor);
   if (NS_WARN_IF(!editActionData.CanHandle())) {
     return;
   }

@@ -94,7 +94,7 @@ class HTMLEditRules : public TextEditRules {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual nsresult DidDoAction(EditSubActionInfo& aInfo,
                                nsresult aResult) override;
-  virtual bool DocumentIsEmpty() override;
+  virtual bool DocumentIsEmpty() const override;
 
   /**
    * DocumentModified() is called when editor content is changed.
@@ -193,7 +193,7 @@ class HTMLEditRules : public TextEditRules {
 
   /**
    * WillLoadHTML() is called before loading enter document from source.
-   * This removes bogus node if there is.
+   * This removes padding <br> element for empty editor if there is.
    */
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult WillLoadHTML();
 

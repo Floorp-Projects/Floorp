@@ -18,6 +18,7 @@
 #include "mozilla/TransactionManager.h"  // for TransactionManager
 #include "mozilla/WeakPtr.h"             // for WeakPtr
 #include "mozilla/dom/DataTransfer.h"    // for dom::DataTransfer
+#include "mozilla/dom/HTMLBRElement.h"   // for dom::HTMLBRElement
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
 #include "nsCOMPtr.h"  // for already_AddRefed, nsCOMPtr
@@ -100,9 +101,6 @@ class EventTarget;
 namespace widget {
 struct IMEState;
 }  // namespace widget
-
-#define kMOZEditorBogusNodeAttrAtom nsGkAtoms::mozeditorbogusnode
-#define kMOZEditorBogusNodeValue NS_LITERAL_STRING("TRUE")
 
 /**
  * SplitAtEdges is for EditorBase::SplitNodeDeepWithTransaction(),
@@ -707,7 +705,7 @@ class EditorBase : public nsIEditor,
         case EditSubAction::eUndo:
         case EditSubAction::eRedo:
         case EditSubAction::eComputeTextToOutput:
-        case EditSubAction::eCreateBogusNode:
+        case EditSubAction::eCreatePaddingBRElementForEmptyEditor:
         case EditSubAction::eNone:
           MOZ_ASSERT(aDirection == eNone);
           mDirectionOfTopLevelEditSubAction = eNone;
@@ -1619,8 +1617,8 @@ class EditorBase : public nsIEditor,
       return false;
     }
 
-    if (!aNode->IsContent() || IsMozEditorBogusNode(aNode) ||
-        !IsModifiableNode(*aNode)) {
+    if (!aNode->IsContent() || !IsModifiableNode(*aNode) ||
+        EditorBase::IsPaddingBRElementForEmptyEditor(*aNode)) {
       return false;
     }
 
@@ -1638,26 +1636,25 @@ class EditorBase : public nsIEditor,
   }
 
   /**
-   * Returns true if aNode is a usual element node (not bogus node) or
-   * a text node.  In other words, returns true if aNode is a usual element
-   * node or visible data node.
+   * Returns true if aNode is a usual element node (not padding <br> element
+   * for empty editor) or a text node.  In other words, returns true if aNode
+   * is a usual element node or visible data node.
    */
   bool IsElementOrText(const nsINode& aNode) const {
-    if (!aNode.IsContent() || IsMozEditorBogusNode(&aNode)) {
-      return false;
+    if (aNode.IsText()) {
+      return true;
     }
-    return aNode.NodeType() == nsINode::ELEMENT_NODE ||
-           aNode.NodeType() == nsINode::TEXT_NODE;
+    return aNode.IsElement() &&
+           !EditorBase::IsPaddingBRElementForEmptyEditor(aNode);
   }
 
   /**
-   * Returns true if aNode is a MozEditorBogus node.
+   * Returns true if aNode is a <br> element and it's marked as padding for
+   * empty editor.
    */
-  bool IsMozEditorBogusNode(const nsINode* aNode) const {
-    return aNode && aNode->IsElement() &&
-           aNode->AsElement()->AttrValueIs(
-               kNameSpaceID_None, kMOZEditorBogusNodeAttrAtom,
-               kMOZEditorBogusNodeValue, eCaseMatters);
+  static bool IsPaddingBRElementForEmptyEditor(const nsINode& aNode) {
+    const dom::HTMLBRElement* brElement = dom::HTMLBRElement::FromNode(&aNode);
+    return brElement && brElement->IsPaddingForEmptyEditor();
   }
 
   /**

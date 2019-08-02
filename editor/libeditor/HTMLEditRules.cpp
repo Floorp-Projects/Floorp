@@ -20,17 +20,18 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
+#include "mozilla/mozalloc.h"
+#include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
+#include "mozilla/dom/RangeBinding.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/StaticRange.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/RangeBinding.h"
-#include "mozilla/OwningNonNull.h"
-#include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAlgorithm.h"
 #include "nsCRT.h"
@@ -68,9 +69,6 @@ class nsISupports;
 namespace mozilla {
 
 using namespace dom;
-
-// const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
-// const static char* kMOZEditorBogusNodeValue="TRUE";
 
 enum { kLonely = 0, kPrevSib = 1, kNextSib = 2, kBothSibs = 3 };
 
@@ -455,7 +453,7 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
   }
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to normalize Selection");
   if (aEditSubAction == EditSubAction::eReplaceHeadWithHTMLSource ||
-      aEditSubAction == EditSubAction::eCreateBogusNode) {
+      aEditSubAction == EditSubAction::eCreatePaddingBRElementForEmptyEditor) {
     return NS_OK;
   }
 
@@ -631,7 +629,10 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
   }
 
   // detect empty doc
-  rv = CreateBogusNodeIfNeeded();
+  // XXX Need to investigate when the padding <br> element is removed because
+  //     I don't see the <br> element with testing manually.  If it won't be
+  //     used, we can get rid of this cost.
+  rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -804,7 +805,9 @@ nsresult HTMLEditRules::DidDoAction(EditSubActionInfo& aInfo,
   }
 }
 
-bool HTMLEditRules::DocumentIsEmpty() { return !!mBogusNode; }
+bool HTMLEditRules::DocumentIsEmpty() const {
+  return !!mPaddingBRElementForEmptyEditor;
+}
 
 nsresult HTMLEditRules::GetListState(bool* aMixed, bool* aOL, bool* aUL,
                                      bool* aDL) {
@@ -1641,19 +1644,21 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
 nsresult HTMLEditRules::WillLoadHTML() {
   MOZ_ASSERT(IsEditorDataAvailable());
 
-  // Delete mBogusNode if it exists. If we really need one,
-  // it will be added during post-processing in AfterEditInner().
-
-  if (mBogusNode) {
-    // A mutation event listener may recreate bogus node again during the
-    // call of DeleteNodeWithTransaction().  So, move it first.
-    nsCOMPtr<nsINode> bogusNode(std::move(mBogusNode));
-    DebugOnly<nsresult> rv =
-        MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*bogusNode);
+  // Delete mPaddingBRElementForEmptyEditor if it exists. If we really
+  // need one, it will be added during post-processing in AfterEditInner().
+  if (mPaddingBRElementForEmptyEditor) {
+    // A mutation event listener may recreate padding <br> element for empty
+    // editor again during the call of DeleteNodeWithTransaction().  So, move
+    // it first.
+    RefPtr<HTMLBRElement> paddingBRElement(
+        std::move(mPaddingBRElementForEmptyEditor));
+    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
+                                 .DeleteNodeWithTransaction(*paddingBRElement);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove the bogus node");
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to remove the padding <br> element");
   }
 
   return NS_OK;
@@ -2283,8 +2288,9 @@ nsresult HTMLEditRules::WillDeleteSelection(
   // CreateStyleForInsertText()
   mDidDeleteSelection = true;
 
-  // If there is only bogus content, cancel the operation
-  if (mBogusNode) {
+  // If there is only padding <br> element for empty editor, cancel the
+  // operation.
+  if (mPaddingBRElementForEmptyEditor) {
     *aCancel = true;
     return NS_OK;
   }
@@ -9455,7 +9461,7 @@ nsresult HTMLEditRules::AdjustSelection(nsIEditor::EDirection aAction) {
       if (point.GetContainer() == rootElement) {
         // Our root node is completely empty. Don't add a <br> here.
         // AfterEditInner() will add one for us when it calls
-        // CreateBogusNodeIfNeeded()!
+        // CreatePaddingBRElementForEmptyEditorIfNeeded()!
         return NS_OK;
       }
 
@@ -11095,22 +11101,25 @@ void HTMLEditRules::OnModifyDocument() {
   // the editor
   nsAutoScriptBlockerSuppressNodeRemoved scriptBlocker;
 
-  // Delete our bogus node, if we have one, since the document might not be
-  // empty any more.
-  if (mBogusNode) {
-    // A mutation event listener may recreate bogus node again during the
-    // call of DeleteNodeWithTransaction().  So, move it first.
-    nsCOMPtr<nsIContent> bogusNode(std::move(mBogusNode));
-    DebugOnly<nsresult> rv =
-        MOZ_KnownLive(HTMLEditorRef()).DeleteNodeWithTransaction(*bogusNode);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to remove the bogus node");
+  // Delete our padding <br> element for empty editor, if we have one, since
+  // the document might not be empty any more.
+  if (mPaddingBRElementForEmptyEditor) {
+    // A mutation event listener may recreate padding <br> element for empty
+    // editor again during the call of DeleteNodeWithTransaction().  So, move
+    // it first.
+    RefPtr<HTMLBRElement> paddingBRElement(
+        std::move(mPaddingBRElementForEmptyEditor));
+    DebugOnly<nsresult> rv = MOZ_KnownLive(HTMLEditorRef())
+                                 .DeleteNodeWithTransaction(*paddingBRElement);
+    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
+                         "Failed to remove the padding <br> element");
   }
 
-  // Try to recreate the bogus node if needed.
-  DebugOnly<nsresult> rv = CreateBogusNodeIfNeeded();
+  // Try to recreate the padding <br> element for empty editor if needed.
+  DebugOnly<nsresult> rv = CreatePaddingBRElementForEmptyEditorIfNeeded();
   NS_WARNING_ASSERTION(
       rv.value != NS_ERROR_EDITOR_DESTROYED,
-      "The editor has been destroyed during creating a bogus node");
+      "The editor has been destroyed during creating a padding <br> element");
 }
 
 }  // namespace mozilla

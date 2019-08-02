@@ -14,6 +14,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLBRElement.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Text.h"
@@ -483,17 +484,16 @@ nsresult ContentEventHandler::QueryContentRect(
   return NS_OK;
 }
 
-// Editor places a bogus BR node under its root content if the editor doesn't
-// have any text. This happens even for single line editors.
+// Editor places a padding <br> element under its root content if the editor
+// doesn't have any text. This happens even for single line editors.
 // When we get text content and when we change the selection,
-// we don't want to include the bogus BRs at the end.
+// we don't want to include the padding <br> elements at the end.
 static bool IsContentBR(nsIContent* aContent) {
-  return aContent->IsHTMLElement(nsGkAtoms::br) &&
-         !aContent->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                                             nsGkAtoms::moz, eIgnoreCase) &&
-         !aContent->AsElement()->AttrValueIs(kNameSpaceID_None,
-                                             nsGkAtoms::mozeditorbogusnode,
-                                             nsGkAtoms::_true, eIgnoreCase);
+  HTMLBRElement* brElement = HTMLBRElement::FromNode(aContent);
+  return brElement &&
+         !brElement->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
+                                 nsGkAtoms::moz, eIgnoreCase) &&
+         !brElement->IsPaddingForEmptyEditor();
 }
 
 static bool IsMozBR(nsIContent* aContent) {

@@ -26,6 +26,7 @@ class EditSubActionInfo;
 class HTMLEditor;
 class HTMLEditRules;
 namespace dom {
+class HTMLBRElement;
 class Selection;
 }  // namespace dom
 
@@ -100,7 +101,7 @@ class TextEditRules {
    * nodes.  Otherwise, i.e., there is no meaningful content,
    * return true.
    */
-  virtual bool DocumentIsEmpty();
+  virtual bool DocumentIsEmpty() const;
 
   bool DontEchoPassword() const;
 
@@ -130,7 +131,9 @@ class TextEditRules {
    */
   void HandleNewLines(nsString& aString);
 
-  bool HasBogusNode() { return !!mBogusNode; }
+  bool HasPaddingBRElementForEmptyEditor() const {
+    return !!mPaddingBRElementForEmptyEditor;
+  }
 
  protected:
   void InitFields();
@@ -263,9 +266,11 @@ class TextEditRules {
   MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateTrailingBRIfNeeded();
 
   /**
-   * Creates a bogus <br> node if the root element has no editable content.
+   * Creates a padding <br> element for empty editor if the root element has no
+   * editable content.
    */
-  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult CreateBogusNodeIfNeeded();
+  MOZ_CAN_RUN_SCRIPT MOZ_MUST_USE nsresult
+  CreatePaddingBRElementForEmptyEditorIfNeeded();
 
   /**
    * Returns a truncated insertion string if insertion would place us over
@@ -436,8 +441,9 @@ class TextEditRules {
    */
   inline already_AddRefed<nsINode> GetTextNodeAroundSelectionStartContainer();
 
-  // Magic node acts as placeholder in empty doc.
-  nsCOMPtr<nsIContent> mBogusNode;
+  // mPaddingBRElementForEmptyEditor should be used for placing caret
+  // at proper position when editor is empty.
+  RefPtr<dom::HTMLBRElement> mPaddingBRElementForEmptyEditor;
   // Cached selected node.
   nsCOMPtr<nsINode> mCachedSelectionNode;
   // Cached selected offset.
