@@ -16,6 +16,7 @@ import pathlib
 import random
 import subprocess
 import sys
+import tarfile
 import tempfile
 import time
 import urllib.request
@@ -257,6 +258,9 @@ def extract_archive(path, dest_dir, typ):
     path = path.resolve()
     dest_dir = dest_dir.resolve()
 
+    log('Extracting %s to %s' % (path, dest_dir))
+    t0 = time.time()
+
     # We pipe input to the decompressor program so that we can apply
     # custom decompressors that the program may not know about.
     if typ == 'tar':
@@ -276,8 +280,19 @@ def extract_archive(path, dest_dir, typ):
         else:
             raise ValueError('unknown archive format for tar file: %s' % path)
 
-        args = ['tar', 'xf', '-']
-        pipe_stdin = True
+        # On Windows, the tar program doesn't support things like symbolic
+        # links, while Windows actually support them. The tarfile module in
+        # python does. So use that. But since it's significantly slower than
+        # the tar program on Linux, only use tarfile on Windows (tarfile is
+        # also not much slower on Windows, presumably because of the
+        # notoriously bad I/O).
+        if sys.platform == 'win32':
+            tar = tarfile.open(fileobj=ifh, mode='r|')
+            tar.extractall(str(dest_dir))
+            args = []
+        else:
+            args = ['tar', 'xf', '-']
+            pipe_stdin = True
     elif typ == 'zip':
         # unzip from stdin has wonky behavior. We don't use a pipe for it.
         ifh = open(os.devnull, 'rb')
@@ -286,23 +301,21 @@ def extract_archive(path, dest_dir, typ):
     else:
         raise ValueError('unknown archive format: %s' % path)
 
-    log('Extracting %s to %s using %r' % (path, dest_dir, args))
-    t0 = time.time()
+    if args:
+        with ifh, subprocess.Popen(args, cwd=str(dest_dir), bufsize=0,
+                                   stdin=subprocess.PIPE) as p:
+            while True:
+                if not pipe_stdin:
+                    break
 
-    with ifh, subprocess.Popen(args, cwd=str(dest_dir), bufsize=0,
-                               stdin=subprocess.PIPE) as p:
-        while True:
-            if not pipe_stdin:
-                break
+                chunk = ifh.read(131072)
+                if not chunk:
+                    break
 
-            chunk = ifh.read(131072)
-            if not chunk:
-                break
+                p.stdin.write(chunk)
 
-            p.stdin.write(chunk)
-
-    if p.returncode:
-        raise Exception('%r exited %d' % (args, p.returncode))
+        if p.returncode:
+            raise Exception('%r exited %d' % (args, p.returncode))
 
     log('%s extracted in %.3fs' % (path, time.time() - t0))
 
