@@ -966,7 +966,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(nsCSSPropertyID aPropID) {
     return;
   }
 
-  bool didFlush = false;
+  DebugOnly<bool> didFlush = false;
   if (NeedsToFlushStyle()) {
     didFlush = true;
     // We look at the frame in NeedsToFlushLayout, so flush frames, not only
