@@ -18,5 +18,4 @@ export PATH=$WORKSPACE/python_bin:$PATH
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
 . taskcluster/scripts/misc/build-gn-common.sh

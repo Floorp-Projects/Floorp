@@ -20,7 +20,9 @@ esac
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 

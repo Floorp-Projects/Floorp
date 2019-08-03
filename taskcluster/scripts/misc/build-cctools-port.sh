@@ -21,9 +21,7 @@ CLANG_DIR=$MOZ_FETCHES_DIR/clang
 # Create our directories
 mkdir -p $CROSSTOOLS_BUILD_DIR $LIBTAPI_BUILD_DIR
 
-# Fetch clang from tooltool
 cd $GECKO_PATH
-. taskcluster/scripts/misc/tooltool-download.sh
 
 export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 
