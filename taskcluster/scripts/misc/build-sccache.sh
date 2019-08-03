@@ -8,7 +8,7 @@ TARGET="$1"
 case "$(uname -s)" in
 Linux)
     COMPRESS_EXT=xz
-    PATH="$GECKO_PATH/binutils/bin:$PATH"
+    PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
     ;;
 MINGW*)
     UPLOAD_DIR=$PWD/public/build
@@ -22,27 +22,27 @@ cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-PATH="$(cd $GECKO_PATH && pwd)/rustc/bin:$PATH"
+PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR/sccache
 
 case "$(uname -s)" in
 Linux)
     if [ "$TARGET" == "x86_64-apple-darwin" ]; then
-        export PATH="$GECKO_PATH/llvm-dsymutil/bin:$PATH"
-        export PATH="$GECKO_PATH/cctools/bin:$PATH"
-        cat >$GECKO_PATH/cross-linker <<EOF
-exec $GECKO_PATH/clang/bin/clang -v \
-  -fuse-ld=$GECKO_PATH/cctools/bin/x86_64-apple-darwin-ld \
+        export PATH="$MOZ_FETCHES_DIR/llvm-dsymutil/bin:$PATH"
+        export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
+        cat >cross-linker <<EOF
+exec $MOZ_FETCHES_DIR/clang/bin/clang -v \
+  -fuse-ld=$MOZ_FETCHES_DIR/cctools/bin/x86_64-apple-darwin-ld \
   -mmacosx-version-min=10.11 \
   -target $TARGET \
-  -B $GECKO_PATH/cctools/bin \
-  -isysroot $GECKO_PATH/MacOSX10.11.sdk \
+  -B $MOZ_FETCHES_DIR/cctools/bin \
+  -isysroot $MOZ_FETCHES_DIR/MacOSX10.11.sdk \
   "\$@"
 EOF
-        chmod +x $GECKO_PATH/cross-linker
-        export RUSTFLAGS="-C linker=$GECKO_PATH/cross-linker"
-        export CC="$GECKO_PATH/clang/bin/clang"
+        chmod +x cross-linker
+        export RUSTFLAGS="-C linker=$PWD/cross-linker"
+        export CC="$MOZ_FETCHES_DIR/clang/bin/clang"
         cargo build --features "all" --verbose --release --target $TARGET
     else
         # We can't use the system openssl; see the sad story in

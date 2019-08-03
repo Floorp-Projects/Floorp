@@ -8,8 +8,8 @@ COMPRESS_EXT=bz2
 
 cd $GECKO_PATH
 
-export PATH="$GECKO_PATH/ninja/bin:$PATH"
-export PATH="$GECKO_PATH/mingw64/bin:$PATH"
+export PATH="$MOZ_FETCHES_DIR/ninja/bin:$PATH"
+export PATH="$MOZ_FETCHES_DIR/mingw64/bin:$PATH"
 
 . taskcluster/scripts/misc/vs-setup.sh
 . taskcluster/scripts/misc/tooltool-download.sh

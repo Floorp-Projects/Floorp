@@ -97,7 +97,7 @@ jobs:
         worker:
             docker-image: {in-tree: webrender}
             env:
-                TOOLTOOL_MANIFEST: "/builds/worker/checkouts/gecko/browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             chain-of-trust: true
             artifacts:
                 - type: file
@@ -160,7 +160,7 @@ jobs:
         worker:
             docker-image: {in-tree: webrender}
             env:
-                TOOLTOOL_MANIFEST: "/builds/worker/checkouts/gecko/browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
+                TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-releng.manifest"
             chain-of-trust: true
             artifacts:
                 - type: file

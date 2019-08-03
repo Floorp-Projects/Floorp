@@ -16,10 +16,10 @@ cmake \
   -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_TARGETS_TO_BUILD=X86 \
-  -DCMAKE_C_COMPILER=$GECKO_PATH/gcc/bin/gcc \
+  -DCMAKE_C_COMPILER=$MOZ_FETCHES_DIR/gcc/bin/gcc \
   ..
 
-export LD_LIBRARY_PATH=$GECKO_PATH/gcc/lib64
+export LD_LIBRARY_PATH=$MOZ_FETCHES_DIR/gcc/lib64
 
 ninja dsymutil llvm-symbolizer
 

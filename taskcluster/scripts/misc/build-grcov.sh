@@ -27,7 +27,7 @@ if [ -e Cargo.toml ]; then
   mv Cargo.toml Cargo.toml.back
 fi
 
-PATH="$(cd $GECKO_PATH && pwd)/rustc/bin:$PATH"
+PATH="$(cd $MOZ_FETCHES_DIR && pwd)/rustc/bin:$PATH"
 
 pushd $MOZ_FETCHES_DIR/$PROJECT
 
