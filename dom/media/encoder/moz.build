@@ -18,6 +18,7 @@ EXPORTS += [
 
 UNIFIED_SOURCES += [
     'MediaEncoder.cpp',
+    'Muxer.cpp',
     'OpusTrackEncoder.cpp',
     'TrackEncoder.cpp',
 ]
