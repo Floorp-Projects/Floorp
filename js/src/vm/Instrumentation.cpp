@@ -267,4 +267,9 @@ bool InstrumentationScriptIdOperation(JSContext* cx, HandleScript script,
   return true;
 }
 
+bool GlobalHasInstrumentation(JSObject* global) {
+  return global->is<js::GlobalObject>() &&
+         global->as<js::GlobalObject>().getInstrumentationHolder();
+}
+
 } // namespace js
