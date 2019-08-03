@@ -108,6 +108,7 @@
             </intent-filter>
         </service>
 
+        <service android:name=".downloads.DownloadService" />
         <receiver
             android:name=".SearchWidgetProvider">
             <intent-filter>
