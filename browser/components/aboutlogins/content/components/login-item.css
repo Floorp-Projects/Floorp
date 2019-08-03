@@ -193,7 +193,7 @@
 .breach-alert {
   border-radius: 8px;
   border: 1px solid var(--in-content-border-color);
-  background-color: #FFFF98;
+  background-color: var(--yellow-10);
   background-image: url("chrome://global/skin/icons/warning.svg");
   background-repeat: no-repeat;
   background-position: left 10px top 10px;
