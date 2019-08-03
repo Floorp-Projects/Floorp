@@ -36,6 +36,8 @@ macosx64-gn:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
         script: build-gn-macosx.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
@@ -52,4 +54,6 @@ win32-gn:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/gn-build.manifest"
     run:
         script: build-gn-win32.sh
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/gn.tar.bz2
