@@ -228,7 +228,8 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   return meta.forget();
 }
 
-nsresult OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
+nsresult OpusTrackEncoder::GetEncodedTrack(
+    nsTArray<RefPtr<EncodedFrame>>& aData) {
   AUTO_PROFILER_LABEL("OpusTrackEncoder::GetEncodedTrack", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -426,7 +427,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
     mOutputTimeStamp +=
         FramesToUsecs(GetPacketDuration(), kOpusSamplingRate).value();
     LOG("[Opus] mOutputTimeStamp %lld.", mOutputTimeStamp);
-    aData.AppendEncodedFrame(audiodata);
+    aData.AppendElement(audiodata);
   }
 
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
