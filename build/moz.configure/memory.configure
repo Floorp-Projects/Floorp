@@ -50,19 +50,21 @@ set_config('MOZ_REPLACE_MALLOC_STATIC', replace_malloc_static)
 # ==============================================================
 
 # In general, it only makes sense for PHC to run on the platforms that have a
-# crash reporter. Currently it only runs on Linux, but not on 32-bit Linux
-# because stack tracing frequently crashes (for unclear reasons). In the
-# future, we want it to run on Win64 and Mac as well.
+# crash reporter.
 @depends(milestone, target, replace_malloc_default, '--enable-replace-malloc',
          when='--enable-jemalloc')
 def phc_default(milestone, target, replace_malloc_default, replace_malloc):
     if not replace_malloc_default or \
        (replace_malloc.origin != 'default' and not replace_malloc):
         return False
+    # Nightly only because PHC has a non-negligible performance cost.
     if not milestone.is_nightly:
         return False
+    # Both Linux32 and Win32 have frequent crashes when stack tracing (for
+    # unclear reasons), so PHC is enabled only on 64-bit only in both cases.
     return (target.os == 'GNU' and target.kernel == 'Linux' and
-            target.bitness == 64)
+            target.bitness == 64) or \
+           (target.kernel == 'WINNT' and target.bitness == 64)
 
 
 option('--enable-phc', env='MOZ_PHC', default=phc_default,
