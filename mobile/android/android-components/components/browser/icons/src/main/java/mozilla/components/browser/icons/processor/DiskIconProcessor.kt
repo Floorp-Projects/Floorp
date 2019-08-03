@@ -27,7 +27,7 @@ class DiskIconProcessor(
         icon: Icon,
         desiredSize: DesiredSize
     ): Icon {
-        if (resource != null && icon.shouldCacheOnDisk) {
+        if (resource != null && icon.shouldCacheOnDisk && !request.isPrivate) {
             cache.put(context, request, resource, icon)
         }
 

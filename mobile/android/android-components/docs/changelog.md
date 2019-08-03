@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-icons**
+  * Ensures icons are not cached on the disk in private sessions.
+
 # 10.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v9.0.0...v10.0.0)

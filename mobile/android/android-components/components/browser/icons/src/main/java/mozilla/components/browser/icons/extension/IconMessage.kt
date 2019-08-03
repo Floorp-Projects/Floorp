@@ -62,11 +62,11 @@ internal fun List<IconRequest.Resource>.toJSON(): JSONArray {
     }.toJSONArray()
 }
 
-internal fun JSONObject.toIconRequest(): IconRequest? {
+internal fun JSONObject.toIconRequest(isPrivate: Boolean): IconRequest? {
     return try {
         val url = getString("url")
 
-        IconRequest(url, resources = getJSONArray("icons").toIconResources())
+        IconRequest(url, isPrivate = isPrivate, resources = getJSONArray("icons").toIconResources())
     } catch (e: JSONException) {
         Logger.warn("Could not parse message from icons extensions", e)
         null
