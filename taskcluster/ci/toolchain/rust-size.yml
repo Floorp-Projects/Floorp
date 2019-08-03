@@ -32,5 +32,7 @@ win64-rust-size:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
     run:
         toolchain-artifact: public/build/rust-size.tar.bz2
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
     toolchains:
         - win64-rust-1.28

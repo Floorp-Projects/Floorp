@@ -232,6 +232,7 @@ win64-clang-cl:
             - 'build/build-clang/clang-win64.json'
         resources:
             - 'build/build-clang/clang-win64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.bz2
     fetches:
         fetch:

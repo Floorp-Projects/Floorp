@@ -39,6 +39,8 @@ macosx64-cbindgen:
         - try
     run:
         arguments: ['x86_64-apple-darwin']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
@@ -55,6 +57,8 @@ win64-cbindgen:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
     run:
         arguments: ['x86_64-pc-windows-msvc']
+        resources:
+            - taskcluster/scripts/misc/tooltool-download.sh
         toolchain-artifact: public/build/cbindgen.tar.bz2
     toolchains:
         - win64-rust-1.34
