@@ -136,8 +136,7 @@ class ReftestRunner(MozbuildObject):
         args.ignoreWindowSize = True
         args.printDeviceInfo = False
 
-        from mozrunner.devices.android_device import grant_runtime_permissions, get_adb_path
-        grant_runtime_permissions(self, args.app, device_serial=args.deviceSerial)
+        from mozrunner.devices.android_device import get_adb_path
 
         if not args.adb_path:
             args.adb_path = get_adb_path(self)

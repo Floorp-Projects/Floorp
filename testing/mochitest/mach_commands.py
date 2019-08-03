@@ -453,7 +453,6 @@ class MachCommands(MachCommandBase):
             return 1
 
         if buildapp == 'android':
-            from mozrunner.devices.android_device import grant_runtime_permissions
             from mozrunner.devices.android_device import verify_android_device
             app = kwargs.get('app')
             if not app:
@@ -464,8 +463,6 @@ class MachCommands(MachCommandBase):
             # verify installation
             verify_android_device(self, install=install, xre=False, network=True,
                                   app=app, device_serial=device_serial)
-            if install:
-                grant_runtime_permissions(self, app, device_serial=device_serial)
             run_mochitest = mochitest.run_android_test
         else:
             run_mochitest = mochitest.run_desktop_test
@@ -512,15 +509,13 @@ class GeckoviewJunitCommands(MachCommandBase):
     def run_junit(self, no_install, **kwargs):
         self._ensure_state_subdir_exists('.')
 
-        from mozrunner.devices.android_device import (grant_runtime_permissions,
-                                                      get_adb_path,
+        from mozrunner.devices.android_device import (get_adb_path,
                                                       verify_android_device)
         # verify installation
         app = kwargs.get('app')
         device_serial = kwargs.get('deviceSerial')
         verify_android_device(self, install=not no_install, xre=False, app=app,
                               device_serial=device_serial)
-        grant_runtime_permissions(self, app, device_serial=device_serial)
 
         if not kwargs.get('adbPath'):
             kwargs['adbPath'] = get_adb_path(self)
@@ -579,6 +574,13 @@ class RobocopCommands(MachCommandBase):
         if not app:
             kwargs['app'] = app = self.substs["ANDROID_PACKAGE_NAME"]
         device_serial = kwargs.get('deviceSerial')
+
+        # setup adb logging so that grant_runtime_permissions can log
+        from mozlog.commandline import setup_logging
+        format_args = {'level': self._mach_context.settings['test']['level']}
+        default_format = self._mach_context.settings['test']['format']
+        setup_logging('adb', kwargs, {default_format: sys.stdout}, format_args)
+
         verify_android_device(self, install=True, xre=False, network=True,
                               app=app, device_serial=device_serial)
         grant_runtime_permissions(self, app, device_serial=device_serial)
