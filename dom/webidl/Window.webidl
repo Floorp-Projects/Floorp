@@ -78,7 +78,7 @@ typedef OfflineResourceList ApplicationCache;
   [Throws, NeedsSubjectPrincipal] void alert(DOMString message);
   [Throws, NeedsSubjectPrincipal] boolean confirm(optional DOMString message = "");
   [Throws, NeedsSubjectPrincipal] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
-  [Throws, Func="nsGlobalWindowInner::IsWindowPrintEnabled"]
+  [Throws, Pref="dom.enable_window_print"]
   void print();
 
   [Throws, CrossOriginCallable, NeedsSubjectPrincipal]

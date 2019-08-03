@@ -3504,11 +3504,6 @@ void nsGlobalWindowInner::Stop(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(StopOuter, (aError), aError, );
 }
 
-/* static */
-bool nsGlobalWindowInner::IsWindowPrintEnabled(JSContext*, JSObject*) {
-  return !StaticPrefs::dom_disable_window_print();
-}
-
 void nsGlobalWindowInner::Print(ErrorResult& aError) {
   FORWARD_TO_OUTER_OR_THROW(PrintOuter, (aError), aError, );
 }
