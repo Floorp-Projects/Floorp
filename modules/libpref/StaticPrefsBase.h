@@ -17,18 +17,28 @@ class SharedPrefMapBuilder;
 
 typedef const char* String;
 
-typedef Atomic<bool, Relaxed> RelaxedAtomicBool;
-typedef Atomic<bool, ReleaseAcquire> ReleaseAcquireAtomicBool;
-typedef Atomic<bool, SequentiallyConsistent> SequentiallyConsistentAtomicBool;
+typedef Atomic<bool, Relaxed, recordreplay::Behavior::DontPreserve>
+    RelaxedAtomicBool;
+typedef Atomic<bool, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
+    ReleaseAcquireAtomicBool;
+typedef Atomic<bool, SequentiallyConsistent,
+               recordreplay::Behavior::DontPreserve>
+    SequentiallyConsistentAtomicBool;
 
-typedef Atomic<int32_t, Relaxed> RelaxedAtomicInt32;
-typedef Atomic<int32_t, ReleaseAcquire> ReleaseAcquireAtomicInt32;
-typedef Atomic<int32_t, SequentiallyConsistent>
+typedef Atomic<int32_t, Relaxed, recordreplay::Behavior::DontPreserve>
+    RelaxedAtomicInt32;
+typedef Atomic<int32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
+    ReleaseAcquireAtomicInt32;
+typedef Atomic<int32_t, SequentiallyConsistent,
+               recordreplay::Behavior::DontPreserve>
     SequentiallyConsistentAtomicInt32;
 
-typedef Atomic<uint32_t, Relaxed> RelaxedAtomicUint32;
-typedef Atomic<uint32_t, ReleaseAcquire> ReleaseAcquireAtomicUint32;
-typedef Atomic<uint32_t, SequentiallyConsistent>
+typedef Atomic<uint32_t, Relaxed, recordreplay::Behavior::DontPreserve>
+    RelaxedAtomicUint32;
+typedef Atomic<uint32_t, ReleaseAcquire, recordreplay::Behavior::DontPreserve>
+    ReleaseAcquireAtomicUint32;
+typedef Atomic<uint32_t, SequentiallyConsistent,
+               recordreplay::Behavior::DontPreserve>
     SequentiallyConsistentAtomicUint32;
 
 // XXX: Atomic<float> currently doesn't work (see bug 1552086). Once it's
@@ -40,8 +50,8 @@ struct StripAtomicImpl {
   typedef T Type;
 };
 
-template <typename T, MemoryOrdering Order>
-struct StripAtomicImpl<Atomic<T, Order>> {
+template <typename T, MemoryOrdering Order, recordreplay::Behavior Recording>
+struct StripAtomicImpl<Atomic<T, Order, Recording>> {
   typedef T Type;
 };
 
@@ -56,8 +66,8 @@ using StripAtomic = typename StripAtomicImpl<T>::Type;
 template <typename T>
 struct IsAtomic : FalseType {};
 
-template <typename T, MemoryOrdering Order>
-struct IsAtomic<Atomic<T, Order>> : TrueType {};
+template <typename T, MemoryOrdering Order, recordreplay::Behavior Recording>
+struct IsAtomic<Atomic<T, Order, Recording>> : TrueType {};
 
 template <typename T>
 struct IsAtomic<std::atomic<T>> : TrueType {};
