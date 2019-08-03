@@ -31,11 +31,11 @@ linux64-llvm-dsymutil:
     run:
         script: build-llvm-dsymutil.sh
         toolchain-artifact: public/build/llvm-dsymutil.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - llvm-for-dsymutil
+        toolchain:
+            - linux64-gcc-6
 
 linux64-binutils:
     description: "Binutils toolchain build"
@@ -60,13 +60,12 @@ linux64-hfsplus:
         script: build-hfsplus-linux.sh
         resources:
             - 'build/unix/build-hfsplus/build-hfsplus.sh'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/hfsplus-tools.tar.xz
-    toolchains:
-        - linux64-clang-8
     fetches:
         fetch:
             - hfsplus-tools
+        toolchain:
+            - linux64-clang-8
 
 linux64-libdmg:
     description: "libdmg-hfsplus toolchain build"
@@ -83,9 +82,10 @@ linux64-mar-tools:
     description: "mar-tools toolchain build"
     treeherder:
         symbol: TL(mar-tools)
-    toolchains:
-        - linux64-clang-7
-        - linux64-binutils
+    fetches:
+        toolchain:
+            - linux64-clang-7
+            - linux64-binutils
     run:
         script: build-mar-tools.sh
         sparse-profile: null
@@ -108,17 +108,15 @@ linux64-tup:
         max-run-time: 3600
     run:
         script: build-tup-linux.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/tup.tar.xz
     run-on-projects:
         - trunk
         - try
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - tup
+        toolchain:
+            - linux64-gcc-6
 
 linux64-upx:
     description: "UPX build"
@@ -156,8 +154,9 @@ browsertime:
             - 'tools/browsertime/package.json'
             - 'tools/browsertime/mach_commands.py'
         toolchain-artifact: public/build/browsertime.zip
-    toolchains:
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-node
 
 wrench-deps:
     description: "Downloads all the crates needed for building wrench"
@@ -170,10 +169,9 @@ wrench-deps:
         sparse-profile: null  # need all of gfx/wr checked out for this script
         resources:
             - 'gfx/wr/Cargo.lock'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/wrench-deps.tar.bz2
-    toolchains:
-        - linux64-rust-1.36  # whatever m-c is built with
     fetches:
         fetch:
             - android-rs-glue
+        toolchain:
+            - linux64-rust-1.36  # whatever m-c is built with

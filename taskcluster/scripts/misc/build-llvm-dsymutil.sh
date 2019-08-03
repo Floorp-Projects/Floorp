@@ -5,8 +5,6 @@ set -x -e -v
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
-
 cd $MOZ_FETCHES_DIR/llvm-project/llvm
 
 mkdir build

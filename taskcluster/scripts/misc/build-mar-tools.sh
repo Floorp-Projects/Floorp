@@ -7,8 +7,6 @@ COMPRESS_EXT=xz
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
-
 export MOZ_OBJDIR=obj-mar
 
 echo ac_add_options --enable-project=tools/update-packaging > .mozconfig

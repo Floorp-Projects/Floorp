@@ -7,7 +7,9 @@ COMPRESS_EXT=xz
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 export MOZ_OBJDIR=obj-minidump
 

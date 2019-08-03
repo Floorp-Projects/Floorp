@@ -81,8 +81,6 @@ linux64-gcc-sixgill:
         resources:
             - 'taskcluster/scripts/misc/build-gcc-sixgill-plugin-linux.sh'
         toolchain-artifact: public/build/sixgill.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - binutils-2.31.1
@@ -91,3 +89,5 @@ linux64-gcc-sixgill:
             - gmp-5.1.3
             - mpc-0.8.2
             - mpfr-3.1.5
+        toolchain:
+            - linux64-gcc-6

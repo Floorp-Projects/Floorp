@@ -8,8 +8,6 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-rust-size.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
     fetches:
         fetch:
             - rust-size
@@ -20,8 +18,9 @@ linux64-rust-size:
     worker-type: b-linux
     run:
         toolchain-artifact: public/build/rust-size.tar.xz
-    toolchains:
-        - linux64-rust-1.28
+    fetches:
+        toolchain:
+            - linux64-rust-1.28
 
 win64-rust-size:
     treeherder:
@@ -34,5 +33,6 @@ win64-rust-size:
         toolchain-artifact: public/build/rust-size.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - win64-rust-1.28
+    fetches:
+        toolchain:
+            - win64-rust-1.28

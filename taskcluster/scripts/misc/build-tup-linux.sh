@@ -6,10 +6,6 @@ set -e -v
 COMPRESS_EXT=xz
 export PATH=$MOZ_FETCHES_DIR/gcc/bin:$PATH
 
-cd $GECKO_PATH
-
-. taskcluster/scripts/misc/tooltool-download.sh
-
 cd $MOZ_FETCHES_DIR/tup
 
 patch -p1 <<'EOF'

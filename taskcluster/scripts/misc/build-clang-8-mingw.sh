@@ -33,7 +33,6 @@ default_win32_winnt=0x601
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
 patch_file="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
 
 prepare() {

@@ -11,9 +11,6 @@ root_dir=$MOZ_FETCHES_DIR
 build_dir=$GECKO_PATH/build
 data_dir=$GECKO_PATH/build/unix/build-gcc
 
-# Download and unpack upstream toolchain artifacts (ie, the gcc binary).
-. $(dirname $0)/tooltool-download.sh
-
 gcc_version=6.4.0
 gcc_ext=xz
 binutils_version=2.28.1

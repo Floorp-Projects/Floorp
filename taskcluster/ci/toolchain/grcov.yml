@@ -9,8 +9,6 @@ job-defaults:
         max-run-time: 1800
     run:
         script: build-grcov.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/grcov.tar.xz
     fetches:
         fetch:
@@ -19,8 +17,9 @@ job-defaults:
 linux64-grcov:
     treeherder:
         symbol: TL(grcov)
-    toolchains:
-        - linux64-rust-1.32
+    fetches:
+        toolchain:
+            - linux64-rust-1.32
 
 macosx64-grcov:
     treeherder:
@@ -28,8 +27,9 @@ macosx64-grcov:
     run-on-projects:
         - trunk
         - try
-    toolchains:
-        - linux64-rust-1.32
+    fetches:
+        toolchain:
+            - linux64-rust-1.32
 
 win64-grcov:
     treeherder:
@@ -42,5 +42,6 @@ win64-grcov:
         toolchain-artifact: public/build/grcov.tar.bz2
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - win64-rust-1.34
+    fetches:
+        toolchain:
+            - win64-rust-1.34

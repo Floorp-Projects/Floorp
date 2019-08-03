@@ -3,10 +3,6 @@ set -x -e -v
 
 COMPRESS_EXT=bz2
 
-cd $GECKO_PATH
-
-. taskcluster/scripts/misc/tooltool-download.sh
-
 cd $MOZ_FETCHES_DIR/nasm-*
 case "$1" in
     win64)
