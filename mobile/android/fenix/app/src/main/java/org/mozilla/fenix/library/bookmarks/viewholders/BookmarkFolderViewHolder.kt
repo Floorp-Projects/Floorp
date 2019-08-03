@@ -10,7 +10,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.bookmarks.BookmarkState
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 import org.mozilla.fenix.library.bookmarks.inRoots
 
@@ -19,14 +19,15 @@ import org.mozilla.fenix.library.bookmarks.inRoots
  */
 class BookmarkFolderViewHolder(
     view: LibrarySiteItemView,
-    interactor: BookmarkViewInteractor
+    interactor: BookmarkViewInteractor,
+    private val selectionHolder: SelectionHolder<BookmarkNode>
 ) : BookmarkNodeViewHolder(view, interactor) {
 
-    override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
+    override fun bind(item: BookmarkNode) {
 
         containerView.displayAs(LibrarySiteItemView.ItemType.FOLDER)
 
-        setClickListeners(mode, item, selected)
+        setSelectionListeners(item, selectionHolder)
 
         if (!item.inRoots()) {
             setupMenu(item)
@@ -34,31 +35,10 @@ class BookmarkFolderViewHolder(
             containerView.overflowView.visibility = View.GONE
         }
 
-        containerView.changeSelected(selected)
+        containerView.changeSelected(item in selectionHolder.selectedItems)
         containerView.iconView.image = containerView.context.getDrawable(R.drawable.ic_folder_icon)?.apply {
             setTint(ContextCompat.getColor(containerView.context, R.color.primary_text_light_theme))
         }
         containerView.titleView.text = item.title
-    }
-
-    private fun setClickListeners(
-        mode: BookmarkState.Mode,
-        item: BookmarkNode,
-        selected: Boolean
-    ) {
-        containerView.setOnClickListener {
-            when {
-                mode == BookmarkState.Mode.Normal -> interactor.expand(item)
-                selected -> interactor.deselect(item)
-                else -> interactor.select(item)
-            }
-        }
-
-        containerView.setOnLongClickListener {
-            if (mode == BookmarkState.Mode.Normal && !item.inRoots()) {
-                interactor.select(item)
-                true
-            } else false
-        }
     }
 }

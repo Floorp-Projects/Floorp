@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import org.mozilla.fenix.R
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
 import java.util.Calendar
 import java.util.Date
@@ -28,14 +29,16 @@ enum class HistoryItemTimeGroup {
 
 class HistoryAdapter(
     private val historyInteractor: HistoryInteractor
-) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback) {
+) : PagedListAdapter<HistoryItem, HistoryListItemViewHolder>(historyDiffCallback), SelectionHolder<HistoryItem> {
+
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
+    override val selectedItems get() = mode.selectedItems
 
     override fun getItemViewType(position: Int): Int = HistoryListItemViewHolder.LAYOUT_ID
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): HistoryListItemViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-        return HistoryListItemViewHolder(view, historyInteractor)
+        return HistoryListItemViewHolder(view, historyInteractor, this)
     }
 
     fun updateMode(mode: HistoryState.Mode) {

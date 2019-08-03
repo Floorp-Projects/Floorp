@@ -9,16 +9,17 @@ import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.library.LibraryItemMenu
 
 class HistoryItemMenu(
     private val context: Context,
     private val onItemTapped: (Item) -> Unit = {}
-) {
+) : LibraryItemMenu {
     sealed class Item {
         object Delete : Item()
     }
 
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+    override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
         listOf(

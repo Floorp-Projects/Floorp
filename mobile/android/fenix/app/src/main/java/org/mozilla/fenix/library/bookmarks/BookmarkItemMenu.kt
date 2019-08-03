@@ -11,12 +11,13 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
+import org.mozilla.fenix.library.LibraryItemMenu
 
 class BookmarkItemMenu(
     private val context: Context,
     private val item: BookmarkNode,
     private val onItemTapped: (BookmarkItemMenu.Item) -> Unit = {}
-) {
+) : LibraryItemMenu {
 
     sealed class Item {
         object Edit : Item()
@@ -28,7 +29,7 @@ class BookmarkItemMenu(
         object Delete : Item()
     }
 
-    val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
+    override val menuBuilder by lazy { BrowserMenuBuilder(menuItems) }
 
     private val menuItems by lazy {
         listOfNotNull(

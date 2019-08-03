@@ -117,7 +117,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `expand a level of bookmarks`() {
-        interactor.expand(tree)
+        interactor.open(tree)
 
         verify {
             navController.navigate(BookmarkFragmentDirections.actionBookmarkFragmentSelf(tree.guid))
@@ -236,7 +236,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `delete a bookmark item`() {
-        interactor.delete(item)
+        interactor.delete(setOf(item))
 
         verify {
             deleteBookmarkNodes(setOf(item), Event.RemoveBookmark)
@@ -245,7 +245,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `delete a bookmark folder`() {
-        interactor.delete(subfolder)
+        interactor.delete(setOf(subfolder))
 
         verify {
             deleteBookmarkNodes(setOf(subfolder), Event.RemoveBookmarkFolder)
@@ -254,7 +254,7 @@ class BookmarkFragmentInteractorTest {
 
     @Test
     fun `delete multiple bookmarks`() {
-        interactor.deleteMulti(setOf(item, subfolder))
+        interactor.delete(setOf(item, subfolder))
 
         verify {
             deleteBookmarkNodes(setOf(item, subfolder), Event.RemoveBookmarks)

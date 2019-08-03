@@ -31,7 +31,7 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.onItemPress(historyItem)
+        interactor.open(historyItem)
         assertEquals(historyItem, historyItemReceived)
     }
 
@@ -51,7 +51,7 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.onItemPress(historyItem)
+        interactor.select(historyItem)
 
         verify {
             store.dispatch(HistoryAction.AddItemForRemoval(historyItem))
@@ -74,7 +74,7 @@ class HistoryInteractorTest {
             mockk()
         )
 
-        interactor.onItemPress(historyItem)
+        interactor.deselect(historyItem)
 
         verify {
             store.dispatch(HistoryAction.RemoveItemForRemoval(historyItem))
@@ -133,22 +133,6 @@ class HistoryInteractorTest {
         )
         interactor.onDeleteAll()
         assertEquals(true, deleteAllDialogShown)
-    }
-
-    @Test
-    fun onDeleteOne() {
-        var itemsToDelete: Set<HistoryItem>? = null
-        val historyItem = HistoryItem(0, "title", "url", 0.toLong())
-        val interactor =
-            HistoryInteractor(
-                mockk(),
-                mockk(),
-                mockk(),
-                mockk(),
-                { itemsToDelete = it }
-            )
-        interactor.onDeleteOne(historyItem)
-        assertEquals(itemsToDelete, setOf(historyItem))
     }
 
     @Test

@@ -6,11 +6,10 @@ package org.mozilla.fenix.library.bookmarks.viewholders
 
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
-import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.library.LibrarySiteItemView
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkItemMenu
-import org.mozilla.fenix.library.bookmarks.BookmarkState
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 
 /**
@@ -18,11 +17,15 @@ import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
  */
 abstract class BookmarkNodeViewHolder(
     override val containerView: LibrarySiteItemView,
-    val interactor: BookmarkViewInteractor
+    private val interactor: BookmarkViewInteractor
 ) :
     RecyclerView.ViewHolder(containerView), LayoutContainer {
 
-    abstract fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean)
+    abstract fun bind(item: BookmarkNode)
+
+    protected fun setSelectionListeners(item: BookmarkNode, selectionHolder: SelectionHolder<BookmarkNode>) {
+        containerView.setSelectionInteractor(item, selectionHolder, interactor)
+    }
 
     protected fun setupMenu(item: BookmarkNode) {
         val bookmarkItemMenu = BookmarkItemMenu(containerView.context, item) {
@@ -33,15 +36,10 @@ abstract class BookmarkNodeViewHolder(
                 BookmarkItemMenu.Item.Share -> interactor.share(item)
                 BookmarkItemMenu.Item.OpenInNewTab -> interactor.openInNewTab(item)
                 BookmarkItemMenu.Item.OpenInPrivateTab -> interactor.openInPrivateTab(item)
-                BookmarkItemMenu.Item.Delete -> interactor.delete(item)
+                BookmarkItemMenu.Item.Delete -> interactor.delete(setOf(item))
             }
         }
 
-        containerView.overflowView.setOnClickListener {
-            bookmarkItemMenu.menuBuilder.build(containerView.context).show(
-                anchor = it,
-                orientation = BrowserMenu.Orientation.DOWN
-            )
-        }
+        containerView.attachMenu(bookmarkItemMenu)
     }
 }

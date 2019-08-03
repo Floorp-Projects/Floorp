@@ -51,24 +51,26 @@ class BookmarkFragmentInteractor(
     }
 
     override fun open(item: BookmarkNode) {
-        require(item.type == BookmarkNodeType.ITEM)
-        item.url?.let { url ->
-            activity!!
-                .openToBrowserAndLoad(
-                    searchTermOrURL = url,
-                    newTab = true,
-                    from = BrowserDirection.FromBookmarks
+        when (item.type) {
+            BookmarkNodeType.ITEM -> {
+                item.url?.let { url ->
+                    activity!!
+                        .openToBrowserAndLoad(
+                            searchTermOrURL = url,
+                            newTab = true,
+                            from = BrowserDirection.FromBookmarks
+                        )
+                }
+                metrics.track(Event.OpenedBookmark)
+            }
+            BookmarkNodeType.FOLDER -> {
+                navController.nav(
+                    R.id.bookmarkFragment,
+                    BookmarkFragmentDirections.actionBookmarkFragmentSelf(item.guid)
                 )
+            }
+            BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot open separators")
         }
-        metrics.track(Event.OpenedBookmark)
-    }
-
-    override fun expand(folder: BookmarkNode) {
-        require(folder.type == BookmarkNodeType.FOLDER)
-        navController.nav(
-            R.id.bookmarkFragment,
-            BookmarkFragmentDirections.actionBookmarkFragmentSelf(folder.guid)
-        )
     }
 
     override fun switchMode(mode: BookmarkState.Mode) {
@@ -83,16 +85,16 @@ class BookmarkFragmentInteractor(
         )
     }
 
-    override fun select(node: BookmarkNode) {
-        if (node.inRoots()) {
+    override fun select(item: BookmarkNode) {
+        if (item.inRoots()) {
             snackbarPresenter.present(context.getString(R.string.bookmark_cannot_edit_root))
             return
         }
-        bookmarkStore.dispatch(BookmarkAction.Select(node))
+        bookmarkStore.dispatch(BookmarkAction.Select(item))
     }
 
-    override fun deselect(node: BookmarkNode) {
-        bookmarkStore.dispatch(BookmarkAction.Deselect(node))
+    override fun deselect(item: BookmarkNode) {
+        bookmarkStore.dispatch(BookmarkAction.Deselect(item))
     }
 
     override fun deselectAll() {
@@ -148,23 +150,14 @@ class BookmarkFragmentInteractor(
         }
     }
 
-    override fun delete(node: BookmarkNode) {
-        val eventType = when (node.type) {
-            BookmarkNodeType.ITEM -> {
-                Event.RemoveBookmark
-            }
-            BookmarkNodeType.FOLDER -> {
-                Event.RemoveBookmarkFolder
-            }
-            BookmarkNodeType.SEPARATOR -> {
-                throw IllegalStateException("Cannot delete separators")
-            }
+    override fun delete(nodes: Set<BookmarkNode>) {
+        val eventType = when (nodes.singleOrNull()?.type) {
+            BookmarkNodeType.ITEM -> Event.RemoveBookmark
+            BookmarkNodeType.FOLDER -> Event.RemoveBookmarkFolder
+            BookmarkNodeType.SEPARATOR -> throw IllegalStateException("Cannot delete separators")
+            null -> Event.RemoveBookmarks
         }
-        deleteBookmarkNodes(setOf(node), eventType)
-    }
-
-    override fun deleteMulti(nodes: Set<BookmarkNode>) {
-        deleteBookmarkNodes(nodes, Event.RemoveBookmarks)
+        deleteBookmarkNodes(nodes, eventType)
     }
 
     override fun backPressed() {

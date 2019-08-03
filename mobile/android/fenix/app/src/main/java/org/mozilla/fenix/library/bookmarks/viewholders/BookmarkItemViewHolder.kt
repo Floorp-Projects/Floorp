@@ -6,7 +6,7 @@ package org.mozilla.fenix.library.bookmarks.viewholders
 
 import mozilla.components.concept.storage.BookmarkNode
 import org.mozilla.fenix.library.LibrarySiteItemView
-import org.mozilla.fenix.library.bookmarks.BookmarkState
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
 
 /**
@@ -14,10 +14,11 @@ import org.mozilla.fenix.library.bookmarks.BookmarkViewInteractor
  */
 class BookmarkItemViewHolder(
     view: LibrarySiteItemView,
-    interactor: BookmarkViewInteractor
+    interactor: BookmarkViewInteractor,
+    private val selectionHolder: SelectionHolder<BookmarkNode>
 ) : BookmarkNodeViewHolder(view, interactor) {
 
-    override fun bind(item: BookmarkNode, mode: BookmarkState.Mode, selected: Boolean) {
+    override fun bind(item: BookmarkNode) {
 
         containerView.displayAs(LibrarySiteItemView.ItemType.SITE)
 
@@ -25,8 +26,9 @@ class BookmarkItemViewHolder(
         containerView.titleView.text = if (item.title.isNullOrBlank()) item.url else item.title
         containerView.urlView.text = item.url
 
-        setClickListeners(mode, item, selected)
-        containerView.changeSelected(selected)
+        setSelectionListeners(item, selectionHolder)
+
+        containerView.changeSelected(item in selectionHolder.selectedItems)
         setColorsAndIcons(item.url)
     }
 
@@ -36,33 +38,5 @@ class BookmarkItemViewHolder(
         } else {
             containerView.iconView.setImageDrawable(null)
         }
-    }
-
-    private fun setClickListeners(
-        mode: BookmarkState.Mode,
-        item: BookmarkNode,
-        selected: Boolean
-    ) {
-        containerView.setOnClickListener {
-            when {
-                mode == BookmarkState.Mode.Normal -> interactor.open(item)
-                selected -> interactor.deselect(item)
-                else -> interactor.select(item)
-            }
-        }
-
-        containerView.setOnLongClickListener {
-            if (mode == BookmarkState.Mode.Normal) {
-                interactor.select(item)
-                true
-            } else false
-        }
-
-        containerView.iconView.setOnClickListener({
-            when {
-                selected -> interactor.deselect(item)
-                else -> interactor.select(item)
-            }
-        })
     }
 }

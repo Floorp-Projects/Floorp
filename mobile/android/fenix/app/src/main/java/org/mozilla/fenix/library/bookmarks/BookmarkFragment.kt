@@ -153,7 +153,7 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        when (val mode = bookmarkView.mode) {
+        when (val mode = bookmarkStore.state.mode) {
             BookmarkState.Mode.Normal -> {
                 inflater.inflate(R.menu.bookmarks_menu, menu)
             }

@@ -15,29 +15,16 @@ class HistoryInteractor(
     private val invalidateOptionsMenu: () -> Unit,
     private val deleteHistoryItems: (Set<HistoryItem>) -> Unit
 ) : HistoryViewInteractor {
-    override fun onItemPress(item: HistoryItem) {
-        when (val mode = store.state.mode) {
-            is HistoryState.Mode.Normal -> openToBrowser(item)
-            is HistoryState.Mode.Editing -> {
-                val isSelected = mode.selectedItems.contains(item)
-
-                if (isSelected) {
-                    store.dispatch(HistoryAction.RemoveItemForRemoval(item))
-                } else {
-                    store.dispatch(HistoryAction.AddItemForRemoval(item))
-                }
-            }
-        }
+    override fun open(item: HistoryItem) {
+        openToBrowser(item)
     }
 
-    override fun onItemLongPress(item: HistoryItem) {
-        val isSelected = store.state.mode.selectedItems.contains(item)
+    override fun select(item: HistoryItem) {
+        store.dispatch(HistoryAction.AddItemForRemoval(item))
+    }
 
-        if (isSelected) {
-            store.dispatch(HistoryAction.RemoveItemForRemoval(item))
-        } else {
-            store.dispatch(HistoryAction.AddItemForRemoval(item))
-        }
+    override fun deselect(item: HistoryItem) {
+        store.dispatch(HistoryAction.RemoveItemForRemoval(item))
     }
 
     override fun onBackPressed(): Boolean {
@@ -55,10 +42,6 @@ class HistoryInteractor(
 
     override fun onDeleteAll() {
         displayDeleteAll.invoke()
-    }
-
-    override fun onDeleteOne(item: HistoryItem) {
-        deleteHistoryItems.invoke(setOf(item))
     }
 
     override fun onDeleteSome(items: Set<HistoryItem>) {

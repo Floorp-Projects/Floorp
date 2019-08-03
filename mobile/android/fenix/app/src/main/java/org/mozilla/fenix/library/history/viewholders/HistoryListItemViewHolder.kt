@@ -7,8 +7,8 @@ package org.mozilla.fenix.library.history.viewholders
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
-import mozilla.components.browser.menu.BrowserMenu
 import org.mozilla.fenix.R
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem
 import org.mozilla.fenix.library.history.HistoryItemMenu
@@ -17,34 +17,21 @@ import org.mozilla.fenix.library.history.HistoryState
 
 class HistoryListItemViewHolder(
     view: View,
-    private val historyInteractor: HistoryInteractor
+    private val historyInteractor: HistoryInteractor,
+    private val selectionHolder: SelectionHolder<HistoryItem>
 ) : RecyclerView.ViewHolder(view) {
 
     private var item: HistoryItem? = null
-    private var mode: HistoryState.Mode = HistoryState.Mode.Normal
 
     init {
         setupMenu()
 
-        itemView.history_layout.setOnLongClickListener {
-            item?.also(historyInteractor::onItemLongPress)
-            true
-        }
-
-        itemView.history_layout.setOnClickListener {
-            item?.also(historyInteractor::onItemPress)
-        }
-
-        itemView.history_layout.iconView.setOnClickListener {
-            item?.apply {
-                historyInteractor.onItemLongPress(this)
-            }
-        }
-
         itemView.delete_button.setOnClickListener {
-            when (val mode = this.mode) {
-                HistoryState.Mode.Normal -> historyInteractor.onDeleteAll()
-                is HistoryState.Mode.Editing -> historyInteractor.onDeleteSome(mode.selectedItems)
+            val selected = selectionHolder.selectedItems
+            if (selected.isEmpty()) {
+                historyInteractor.onDeleteAll()
+            } else {
+                historyInteractor.onDeleteSome(selected)
             }
         }
     }
@@ -56,24 +43,24 @@ class HistoryListItemViewHolder(
         mode: HistoryState.Mode
     ) {
         this.item = item
-        this.mode = mode
 
         itemView.history_layout.titleView.text = item.title
         itemView.history_layout.urlView.text = item.url
 
-        toggleDeleteButton(showDeleteButton, mode)
+        toggleDeleteButton(showDeleteButton, mode === HistoryState.Mode.Normal)
 
         val headerText = timeGroup?.humanReadable(itemView.context)
         toggleHeader(headerText)
 
-        itemView.history_layout.changeSelected(item in mode.selectedItems)
+        itemView.history_layout.setSelectionInteractor(item, selectionHolder, historyInteractor)
+        itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
         itemView.history_layout.loadFavicon(item.url)
     }
 
-    private fun toggleHeader(text: String?) {
-        if (text != null) {
+    private fun toggleHeader(headerText: String?) {
+        if (headerText != null) {
             itemView.header_title.visibility = View.VISIBLE
-            itemView.header_title.text = text
+            itemView.header_title.text = headerText
         } else {
             itemView.header_title.visibility = View.GONE
         }
@@ -81,18 +68,18 @@ class HistoryListItemViewHolder(
 
     private fun toggleDeleteButton(
         showDeleteButton: Boolean,
-        mode: HistoryState.Mode
+        isNormalMode: Boolean
     ) {
         if (showDeleteButton) {
             itemView.delete_button.run {
                 visibility = View.VISIBLE
 
-                if (mode === HistoryState.Mode.Deleting || mode.selectedItems.isNotEmpty()) {
-                    isEnabled = false
-                    alpha = DELETE_BUTTON_DISABLED_ALPHA
-                } else {
+                if (isNormalMode) {
                     isEnabled = true
                     alpha = 1f
+                } else {
+                    isEnabled = false
+                    alpha = DELETE_BUTTON_DISABLED_ALPHA
                 }
             }
         } else {
@@ -102,17 +89,13 @@ class HistoryListItemViewHolder(
 
     private fun setupMenu() {
         val historyMenu = HistoryItemMenu(itemView.context) {
+            val item = this.item ?: return@HistoryItemMenu
             when (it) {
-                HistoryItemMenu.Item.Delete -> item?.also(historyInteractor::onDeleteOne)
+                HistoryItemMenu.Item.Delete -> historyInteractor.onDeleteSome(setOf(item))
             }
         }
 
-        itemView.history_layout.overflowView.setOnClickListener {
-            historyMenu.menuBuilder.build(itemView.context).show(
-                anchor = it,
-                orientation = BrowserMenu.Orientation.DOWN
-            )
-        }
+        itemView.history_layout.attachMenu(historyMenu)
     }
 
     companion object {

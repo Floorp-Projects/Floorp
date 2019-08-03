@@ -8,24 +8,25 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.library.LibrarySiteItemView
+import org.mozilla.fenix.library.SelectionHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkFolderViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkItemViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkNodeViewHolder
 import org.mozilla.fenix.library.bookmarks.viewholders.BookmarkSeparatorViewHolder
 
 class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteractor) :
-    RecyclerView.Adapter<BookmarkNodeViewHolder>() {
+    RecyclerView.Adapter<BookmarkNodeViewHolder>(), SelectionHolder<BookmarkNode> {
 
     private var tree: List<BookmarkNode> = listOf()
     private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
-    val selected: Set<BookmarkNode>
-        get() = (mode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
+    override val selectedItems: Set<BookmarkNode> get() = mode.selectedItems
     private var isFirstRun = true
 
     fun updateData(tree: BookmarkNode?, mode: BookmarkState.Mode) {
@@ -40,7 +41,7 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
 
         this.tree = tree?.children ?: listOf()
         isFirstRun = if (isFirstRun) false else {
-            emptyView.visibility = if (this.tree.isEmpty()) View.VISIBLE else View.GONE
+            emptyView.isVisible = this.tree.isEmpty()
             false
         }
         this.mode = mode
@@ -57,15 +58,8 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
         override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
             old[oldItemPosition].guid == new[newItemPosition].guid
 
-        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-            val oldSelected = (oldMode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
-            val newSelected = (newMode as? BookmarkState.Mode.Selecting)?.selectedItems ?: setOf()
-            val modesEqual = oldMode::class == newMode::class
-            val selectedEqual =
-                ((oldSelected.contains(old[oldItemPosition]) && newSelected.contains(new[newItemPosition])) ||
-                        (!oldSelected.contains(old[oldItemPosition]) && !newSelected.contains(new[newItemPosition])))
-            return modesEqual && selectedEqual
-        }
+        override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+            old[oldItemPosition] in oldMode.selectedItems == new[newItemPosition] in newMode.selectedItems
 
         override fun getOldListSize(): Int = old.size
         override fun getNewListSize(): Int = new.size
@@ -77,12 +71,9 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
         }
 
         return when (viewType) {
-            LibrarySiteItemView.ItemType.SITE.ordinal ->
-                BookmarkItemViewHolder(view, interactor)
-            LibrarySiteItemView.ItemType.FOLDER.ordinal ->
-                BookmarkFolderViewHolder(view, interactor)
-            LibrarySiteItemView.ItemType.SEPARATOR.ordinal ->
-                BookmarkSeparatorViewHolder(view, interactor)
+            LibrarySiteItemView.ItemType.SITE.ordinal -> BookmarkItemViewHolder(view, interactor, this)
+            LibrarySiteItemView.ItemType.FOLDER.ordinal -> BookmarkFolderViewHolder(view, interactor, this)
+            LibrarySiteItemView.ItemType.SEPARATOR.ordinal -> BookmarkSeparatorViewHolder(view, interactor)
             else -> throw IllegalStateException("ViewType $viewType does not match to a ViewHolder")
         }
     }
@@ -99,11 +90,7 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
     override fun getItemCount(): Int = tree.size
 
     override fun onBindViewHolder(holder: BookmarkNodeViewHolder, position: Int) {
-        holder.bind(
-            tree[position],
-            mode,
-            tree[position] in selected
-        )
+        holder.bind(tree[position])
     }
 }
 

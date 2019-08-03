@@ -13,13 +13,14 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
+import org.mozilla.fenix.library.SelectionInteractor
 
 /**
  * Interface for the Bookmarks view.
  * This interface is implemented by objects that want to respond to user interaction on the bookmarks management UI.
  */
 @SuppressWarnings("TooManyFunctions")
-interface BookmarkViewInteractor {
+interface BookmarkViewInteractor : SelectionInteractor<BookmarkNode> {
 
     /**
      * Swaps the head of the bookmarks tree, replacing it with a new, updated bookmarks tree.
@@ -27,20 +28,6 @@ interface BookmarkViewInteractor {
      * @param node the head node of the new bookmarks tree
      */
     fun change(node: BookmarkNode)
-
-    /**
-     * Opens a tab for a bookmark item.
-     *
-     * @param item the bookmark item to open
-     */
-    fun open(item: BookmarkNode)
-
-    /**
-     * Expands a bookmark folder in the bookmarks tree, providing a view of a different folder elsewhere in the tree.
-     *
-     * @param folder the bookmark folder to expand
-     */
-    fun expand(folder: BookmarkNode)
 
     /**
      * Switches the current bookmark multi-selection mode.
@@ -55,20 +42,6 @@ interface BookmarkViewInteractor {
      * @param node the bookmark node to edit
      */
     fun edit(node: BookmarkNode)
-
-    /**
-     * Selects a bookmark node in multi-selection.
-     *
-     * @param node the bookmark node to select
-     */
-    fun select(node: BookmarkNode)
-
-    /**
-     * De-selects a bookmark node in multi-selection.
-     *
-     * @param node the bookmark node to deselect
-     */
-    fun deselect(node: BookmarkNode)
 
     /**
      * De-selects all bookmark nodes, clearing the multi-selection mode.
@@ -105,18 +78,11 @@ interface BookmarkViewInteractor {
     fun openInPrivateTab(item: BookmarkNode)
 
     /**
-     * Deletes a bookmark node.
+     * Deletes a set of bookmark node.
      *
-     * @param node the bookmark node to delete
+     * @param nodes the bookmark nodes to delete
      */
-    fun delete(node: BookmarkNode)
-
-    /**
-     * Deletes a set of bookmark nodes.
-     *
-     * @param nodes the set of bookmark nodes to delete
-     */
-    fun deleteMulti(nodes: Set<BookmarkNode>)
+    fun delete(nodes: Set<BookmarkNode>)
 
     /**
      * Handles back presses for the bookmark screen, so navigation up the tree is possible.
@@ -133,10 +99,8 @@ class BookmarkView(
     val view: View = LayoutInflater.from(container.context)
         .inflate(R.layout.component_bookmark, container, true)
 
-    var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
-        private set
-    var tree: BookmarkNode? = null
-        private set
+    private var mode: BookmarkState.Mode = BookmarkState.Mode.Normal
+    private var tree: BookmarkNode? = null
     private var canGoBack = false
 
     private val bookmarkAdapter: BookmarkAdapter
@@ -157,7 +121,7 @@ class BookmarkView(
         }
 
         bookmarkAdapter.updateData(state.tree, mode)
-        when (state.mode) {
+        when (mode) {
             is BookmarkState.Mode.Normal ->
                 setUiForNormalMode(state.tree)
             is BookmarkState.Mode.Selecting ->
