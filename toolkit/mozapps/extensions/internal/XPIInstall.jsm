@@ -4422,6 +4422,7 @@ var XPIInstall = {
       aAddon._updateCheck.cancel();
     }
 
+    let wasActive = aAddon.active;
     let wasPending = aAddon.pendingUninstall;
 
     if (aForcePending) {
@@ -4524,7 +4525,8 @@ var XPIInstall = {
     }
 
     // Notify any other providers that a new theme has been enabled
-    if (aAddon.type === "theme" && aAddon.active) {
+    // (when the active theme is uninstalled, the default theme is enabled).
+    if (aAddon.type === "theme" && wasActive) {
       AddonManagerPrivate.notifyAddonChanged(null, aAddon.type);
     }
   },
