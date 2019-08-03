@@ -7,7 +7,7 @@
 #define ContainerWriter_h_
 
 #include "nsTArray.h"
-#include "EncodedFrameContainer.h"
+#include "EncodedFrame.h"
 #include "TrackMetadataBase.h"
 
 namespace mozilla {
@@ -26,14 +26,15 @@ class ContainerWriter {
   enum { END_OF_STREAM = 1 << 0 };
 
   /**
-   * Writes encoded track data from aBuffer to a packet, and insert this packet
-   * into the internal stream of container writer. aDuration is the playback
-   * duration of this packet in number of samples. aFlags is true with
-   * END_OF_STREAM if this is the last packet of track.
-   * Currently, WriteEncodedTrack doesn't support multiple tracks.
+   * Writes encoded track data from aData into the internal stream of container
+   * writer. aFlags is used to signal the impl of different conditions
+   * such as END_OF_STREAM. Each impl may handle different flags, and should be
+   * documented accordingly. Currently, WriteEncodedTrack doesn't support
+   * explicit track specification, though each impl may provide logic to
+   * allocate frames into different tracks.
    */
-  virtual nsresult WriteEncodedTrack(const EncodedFrameContainer& aData,
-                                     uint32_t aFlags = 0) = 0;
+  virtual nsresult WriteEncodedTrack(
+      const nsTArray<RefPtr<EncodedFrame>>& aData, uint32_t aFlags = 0) = 0;
 
   /**
    * Set the meta data pointer into muxer
@@ -59,7 +60,7 @@ class ContainerWriter {
    * even it is not full, and copy these container data to a buffer for
    * aOutputBufs to append.
    */
-  virtual nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
+  virtual nsresult GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
                                     uint32_t aFlags = 0) = 0;
 
  protected:
