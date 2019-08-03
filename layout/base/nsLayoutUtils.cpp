@@ -9654,18 +9654,50 @@ CSSPoint nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame) {
     return delta;
   }
   nsIFrame* frame = aFrame;
-  nsCOMPtr<nsIContent> content = frame->GetContent();
   nsCOMPtr<nsIContent> lastContent;
+  bool seenRcdRsf = false;
+
+  // Helper lambda to apply the callback transform for a single frame.
+  auto applyCallbackTransformForFrame = [&](nsIFrame* frame) {
+    if (frame) {
+      nsCOMPtr<nsIContent> content = frame->GetContent();
+      if (content && (content != lastContent)) {
+        void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
+        if (property) {
+          delta += *static_cast<CSSPoint*>(property);
+        }
+      }
+      lastContent = content;
+    }
+  };
+
   while (frame) {
-    if (content && (content != lastContent)) {
-      void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
-      if (property) {
-        delta += *static_cast<CSSPoint*>(property);
+    // Apply the callback transform for the current frame.
+    applyCallbackTransformForFrame(frame);
+
+    // Keep track of whether we've encountered the RCD-RSF.
+    nsPresContext* pc = frame->PresContext();
+    if (nsIScrollableFrame* scrollFrame = do_QueryFrame(frame)) {
+      if (scrollFrame->IsRootScrollFrameOfDocument() &&
+          pc->IsRootContentDocument()) {
+        seenRcdRsf = true;
       }
     }
+
+    // If we reach the RCD's viewport frame, but have not encountered
+    // the RCD-RSF, we were inside fixed content in the RCD.
+    // We still want to apply the RCD-RSF's callback transform because
+    // it contains the offset between the visual and layout viewports
+    // which applies to fixed content as well.
+    ViewportFrame* viewportFrame = do_QueryFrame(frame);
+    if (viewportFrame) {
+      if (pc->IsRootContentDocument() && !seenRcdRsf) {
+        applyCallbackTransformForFrame(pc->PresShell()->GetRootScrollFrame());
+      }
+    }
+
+    // Proceed to the parent frame.
     frame = GetCrossDocParentFrame(frame);
-    lastContent = content;
-    content = frame ? frame->GetContent() : nullptr;
   }
   return delta;
 }
