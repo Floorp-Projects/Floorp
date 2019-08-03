@@ -142,12 +142,13 @@ nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
     rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
     NS_ENSURE_TRUE(rc > 0, NS_ERROR_FAILURE);
 
-    ProduceOggPage(aOutputBufs);
-    return NS_OK;
-
     // Force generate a page even if the amount of packet data is not enough.
     // Usually do so after a header packet.
-  } else if (aFlags & ContainerWriter::FLUSH_NEEDED) {
+
+    ProduceOggPage(aOutputBufs);
+  }
+
+  if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     // rc = 0 means no packet to put into a page, or an internal error.
     rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
   } else {
@@ -162,20 +163,25 @@ nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
   if (aFlags & ContainerWriter::FLUSH_NEEDED) {
     mIsWritingComplete = true;
   }
-  return (rc > 0) ? NS_OK : NS_ERROR_FAILURE;
+  // We always return NS_OK here since it's OK to call this without having
+  // enough data to fill a page. It's the more common case compared to internal
+  // errors, and we cannot distinguish the two.
+  return NS_OK;
 }
 
-nsresult OggWriter::SetMetadata(TrackMetadataBase* aMetadata) {
-  MOZ_ASSERT(aMetadata);
+nsresult OggWriter::SetMetadata(
+    const nsTArray<RefPtr<TrackMetadataBase>>& aMetadata) {
+  MOZ_ASSERT(aMetadata.Length() == 1);
+  MOZ_ASSERT(aMetadata[0]);
 
   AUTO_PROFILER_LABEL("OggWriter::SetMetadata", OTHER);
 
-  if (aMetadata->GetKind() != TrackMetadataBase::METADATA_OPUS) {
+  if (aMetadata[0]->GetKind() != TrackMetadataBase::METADATA_OPUS) {
     LOG("wrong meta data type!");
     return NS_ERROR_FAILURE;
   }
   // Validate each field of METADATA
-  mMetadata = static_cast<OpusMetadata*>(aMetadata);
+  mMetadata = static_cast<OpusMetadata*>(aMetadata[0].get());
   if (mMetadata->mIdHeader.Length() == 0) {
     LOG("miss mIdHeader!");
     return NS_ERROR_FAILURE;
