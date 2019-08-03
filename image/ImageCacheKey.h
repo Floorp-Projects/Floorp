@@ -59,8 +59,6 @@ class ImageCacheKey final {
   void* ControlledDocument() const { return mControlledDocument; }
 
  private:
-  bool SchemeIs(const char* aScheme);
-
   // For ServiceWorker we need to use the document as
   // token for the key. All those exceptions are handled by this method.
   static void* GetSpecialCaseDocumentToken(dom::Document* aDocument,

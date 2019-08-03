@@ -48,9 +48,9 @@ ImageCacheKey::ImageCacheKey(nsIURI* aURI, const OriginAttributes& aAttrs,
       mControlledDocument(GetSpecialCaseDocumentToken(aDocument, aURI)),
       mTopLevelBaseDomain(GetTopLevelBaseDomain(aDocument, aURI)),
       mIsChrome(false) {
-  if (SchemeIs("blob")) {
+  if (mURI->SchemeIs("blob")) {
     mBlobSerial = BlobSerial(mURI);
-  } else if (SchemeIs("chrome")) {
+  } else if (mURI->SchemeIs("chrome")) {
     mIsChrome = true;
   }
 }
@@ -142,11 +142,6 @@ void ImageCacheKey::EnsureHash() const {
   hash = AddToHash(hash, HashString(suffix), HashString(mTopLevelBaseDomain),
                    HashString(ptr));
   mHash.emplace(hash);
-}
-
-bool ImageCacheKey::SchemeIs(const char* aScheme) {
-  bool matches = false;
-  return NS_SUCCEEDED(mURI->SchemeIs(aScheme, &matches)) && matches;
 }
 
 /* static */

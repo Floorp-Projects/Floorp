@@ -73,8 +73,7 @@ class EditorToolbar extends Component {
         },
       }),
       dom.button({
-        className:
-          "devtools-button webconsole-editor-toolbar-closeButton checked",
+        className: "devtools-button webconsole-editor-toolbar-closeButton",
         title: l10n.getFormatStr(
           "webconsole.editor.toolbar.closeButton.tooltip",
           [isMacOS ? "Cmd + B" : "Ctrl + B"]
