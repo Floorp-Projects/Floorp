@@ -2,12 +2,7 @@
 set -e -v
 
 # This is shared code for building GN.
-: GN_REV                 ${GN_REV:=d69a9c3765dee2e650bcccebbadf72c5d42d92b1}
-
-
-git clone --no-checkout https://gn.googlesource.com/gn $WORKSPACE/gn-standalone
-cd $WORKSPACE/gn-standalone
-git checkout $GN_REV
+cd $MOZ_FETCHES_DIR/gn
 
 # We remove /WC because of https://bugs.chromium.org/p/gn/issues/detail?id=51
 # And /MACHINE:x64 because we just let the PATH decide what cl and link are
@@ -38,10 +33,19 @@ index a7142fab..78d0fd56 100755
 EOF
 
 if test -n "$MAC_CROSS"; then
-    python build/gen.py --platform darwin
+    python build/gen.py --platform darwin --no-last-commit-position
 else
-    python build/gen.py
+    python build/gen.py --no-last-commit-position
 fi
+
+cat > out/last_commit_position.h <<EOF
+#ifndef OUT_LAST_COMMIT_POSITION_H_
+#define OUT_LAST_COMMIT_POSITION_H_
+
+#define LAST_COMMIT_POSITION "unknown"
+
+#endif  // OUT_LAST_COMMIT_POSITION_H_
+EOF
 
 ninja -C out -v
 

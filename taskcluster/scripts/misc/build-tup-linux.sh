@@ -3,11 +3,10 @@ set -e -v
 
 # This script is for building tup on Linux.
 
-WORKSPACE=$HOME/workspace
 COMPRESS_EXT=xz
-export PATH=$WORKSPACE/build/src/gcc/bin:$PATH
+export PATH=$GECKO_PATH/gcc/bin:$PATH
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 

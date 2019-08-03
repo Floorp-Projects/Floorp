@@ -3,10 +3,7 @@ set -x -e -v
 
 # This script is for building clang for Linux.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-cd $HOME_DIR/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
@@ -19,10 +16,10 @@ cmake \
   -GNinja \
   -DCMAKE_BUILD_TYPE=Release \
   -DLLVM_TARGETS_TO_BUILD=X86 \
-  -DCMAKE_C_COMPILER=$HOME_DIR/src/gcc/bin/gcc \
+  -DCMAKE_C_COMPILER=$GECKO_PATH/gcc/bin/gcc \
   ..
 
-export LD_LIBRARY_PATH=$HOME_DIR/src/gcc/lib64
+export LD_LIBRARY_PATH=$GECKO_PATH/gcc/lib64
 
 ninja dsymutil llvm-symbolizer
 

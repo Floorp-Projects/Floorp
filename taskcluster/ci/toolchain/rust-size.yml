@@ -10,6 +10,9 @@ job-defaults:
         script: build-rust-size.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+    fetches:
+        fetch:
+            - rust-size
 
 linux64-rust-size:
     treeherder:

@@ -291,3 +291,75 @@ tup:
         type: git
         repo: https://github.com/gittup/tup
         revision: 4371a41ba4ece660bf060b598b9eee4c2eb347d8
+
+rust-size:
+    description: rust-size source code
+    fetch:
+        type: git
+        repo: https://github.com/luser/rust-size
+        revision: ab659d93b1faba95307df952aefe3fbed3583669
+
+gn:
+    description: GN source code
+    fetch:
+        type: git
+        repo: https://gn.googlesource.com/gn
+        revision: d69a9c3765dee2e650bcccebbadf72c5d42d92b1
+
+grcov:
+    description: grcov source code
+    fetch:
+        type: git
+        repo: https://github.com/marco-c/grcov
+        revision: 9214a916805838265764f9c69eaed657ea3db021
+
+sccache:
+    description: sccache source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/sccache
+        # 0.2.9 + some change
+        revision: 93475f3458f7776c37b08201ae0d83ecac4b8fa2
+
+openssl-1.1.0g:
+    description: openssl 1.1.0g source code
+    fetch:
+        type: static-url
+        url: https://www.openssl.org/source/openssl-1.1.0g.tar.gz
+        sha256: de4d501267da39310905cb6dc8c6121f7a2cad45a7707f76df828fe1b85073af
+        size: 5404748
+
+fxc2:
+    description: fxc2 source code
+    fetch:
+        type: git
+        repo: https://github.com/mozilla/fxc2
+        revision: 63ad74b7faa7033f2c1be9cc1cd0225241a1a9a5
+
+mingw-w64:
+    description: mingw-w64 source code
+    fetch:
+        type: git
+        repo: git://git.code.sf.net/p/mingw-w64/mingw-w64
+        revision: 8db8dd5aa1885e7807424a06bd14eebc9c0effd4
+
+libunwind:
+    description: libunwind source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm-mirror/libunwind
+        revision: 6ee92fcc97350ae32db3172a269e9afcc2bab686
+
+llvm-mingw:
+    description: llvm-mingw source code
+    fetch:
+        type: git
+        repo: https://github.com/mstorsjo/llvm-mingw
+        revision: c3a16814bd26aa6702e1e5b482a3d9044bb0f725
+
+android-rs-glue:
+    description: android-rs-glue source code
+    fetch:
+        type: git
+        repo: https://github.com/staktrace/android-rs-glue
+        revision: 486491e81819c3346d364a93fc1f3c0206d3ece0
