@@ -36,7 +36,7 @@ internal fun SearchFragment.setInExperimentConstraints(layout: ConstraintLayout)
         toolbar_wrapper {
             connect(
                 TOP to TOP of UNSET,
-                BOTTOM to TOP of pill_wrapper
+                BOTTOM to TOP of pillWrapper
             )
         }
         awesomeBar {
@@ -46,7 +46,7 @@ internal fun SearchFragment.setInExperimentConstraints(layout: ConstraintLayout)
             )
         }
         (awesomeBar.layoutManager as? LinearLayoutManager)?.reverseLayout = true
-        pill_wrapper {
+        pillWrapper {
             connect(
                 BOTTOM to BOTTOM of PARENT_ID
             )
@@ -63,7 +63,7 @@ internal fun SearchFragment.setOutOfExperimentConstraints(layout: ConstraintLayo
                 BOTTOM to TOP of UNSET
             )
         }
-        search_with_shortcuts {
+        searchWithShortcuts {
             connect(
                 TOP to BOTTOM of toolbar_wrapper
             )
@@ -71,12 +71,12 @@ internal fun SearchFragment.setOutOfExperimentConstraints(layout: ConstraintLayo
         awesomeBar {
             connect(
                 TOP to TOP of UNSET,
-                TOP to BOTTOM of search_with_shortcuts,
-                BOTTOM to TOP of pill_wrapper
+                TOP to BOTTOM of searchWithShortcuts,
+                BOTTOM to TOP of pillWrapper
             )
         }
         (awesomeBar.layoutManager as? LinearLayoutManager)?.reverseLayout = false
-        pill_wrapper {
+        pillWrapper {
             connect(
                 BOTTOM to BOTTOM of PARENT_ID
             )

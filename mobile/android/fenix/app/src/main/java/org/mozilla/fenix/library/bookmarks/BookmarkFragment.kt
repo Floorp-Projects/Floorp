@@ -90,8 +90,8 @@ class BookmarkFragment : LibraryPageFragment<BookmarkNode>(), BackHandler, Accou
             ::deleteMulti
         )
 
-        bookmarkView = BookmarkView(view.bookmark_layout, bookmarkInteractor)
-        signInView = SignInView(view.bookmark_layout, bookmarkInteractor)
+        bookmarkView = BookmarkView(view.bookmarkLayout, bookmarkInteractor)
+        signInView = SignInView(view.bookmarkLayout, bookmarkInteractor)
         return view
     }
 

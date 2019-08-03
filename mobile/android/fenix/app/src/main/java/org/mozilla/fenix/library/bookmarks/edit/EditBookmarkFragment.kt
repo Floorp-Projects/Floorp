@@ -84,8 +84,8 @@ class EditBookmarkFragment : Fragment() {
                 when (bookmarkNode?.type) {
                     BookmarkNodeType.FOLDER -> {
                         activity?.title = getString(R.string.edit_bookmark_folder_fragment_title)
-                        bookmark_url_edit.visibility = View.GONE
-                        bookmark_url_label.visibility = View.GONE
+                        bookmarkUrlEdit.visibility = View.GONE
+                        bookmarkUrlLabel.visibility = View.GONE
                     }
                     BookmarkNodeType.ITEM -> {
                         activity?.title = getString(R.string.edit_bookmark_fragment_title)
@@ -94,8 +94,8 @@ class EditBookmarkFragment : Fragment() {
                 }
 
                 if (bookmarkNode != null) {
-                    bookmark_name_edit.setText(bookmarkNode!!.title)
-                    bookmark_url_edit.setText(bookmarkNode!!.url)
+                    bookmarkNameEdit.setText(bookmarkNode!!.title)
+                    bookmarkUrlEdit.setText(bookmarkNode!!.url)
 
                     if (sharedViewModel.selectedFolder != null && bookmarkNode?.title != null) {
                         val bookmarkPair = Pair(bookmarkNode?.title, bookmarkNode?.url)
@@ -106,8 +106,8 @@ class EditBookmarkFragment : Fragment() {
 
             bookmarkParent?.let { node ->
                 launch(Main) {
-                    bookmark_folder_selector.text = node.title
-                    bookmark_folder_selector.setOnClickListener {
+                    bookmarkFolderSelector.text = node.title
+                    bookmarkFolderSelector.setOnClickListener {
                         sharedViewModel.selectedFolder = null
                         nav(
                             R.id.bookmarkEditFragment,
@@ -124,14 +124,14 @@ class EditBookmarkFragment : Fragment() {
 
     override fun onPause() {
         super.onPause()
-        bookmark_name_edit.hideKeyboard()
-        bookmark_url_edit.hideKeyboard()
+        bookmarkNameEdit.hideKeyboard()
+        bookmarkUrlEdit.hideKeyboard()
     }
 
     private fun updateBookmarkFromObservableInput() {
         Observable.combineLatest(
-            bookmark_name_edit.textChanges().skipInitialValue(),
-            bookmark_url_edit.textChanges().skipInitialValue(),
+            bookmarkNameEdit.textChanges().skipInitialValue(),
+            bookmarkUrlEdit.textChanges().skipInitialValue(),
             BiFunction { name: CharSequence, url: CharSequence ->
                 Pair(name.toString(), url.toString())
             })
@@ -208,7 +208,7 @@ class EditBookmarkFragment : Fragment() {
                 }
             } catch (e: UrlParseFailed) {
                 launch(Main) {
-                    bookmark_url_edit.error = getString(R.string.bookmark_invalid_url_error)
+                    bookmarkUrlEdit.error = getString(R.string.bookmark_invalid_url_error)
                 }
             }
         }

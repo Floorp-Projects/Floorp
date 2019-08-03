@@ -48,7 +48,7 @@ class CreateCollectionFragment : DialogFragment() {
         }
 
         collectionCreationComponent = CollectionCreationComponent(
-            view.create_collection_wrapper,
+            view.createCollectionWrapper,
             ActionBusFactory.get(this),
             FenixViewModelProvider.create(
                 this,

@@ -22,15 +22,15 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/sign_out_cancel"
+        android:id="@+id/signOutCancel"
         style="@style/SitePermissionCancelButton"
         android:text="@string/sign_out_cancel"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sign_out_disconnect"
+        app:layout_constraintEnd_toStartOf="@+id/signOutDisconnect"
         app:layout_constraintTop_toBottomOf="@+id/sign_out_message" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/sign_out_disconnect"
+        android:id="@+id/signOutDisconnect"
         style="@style/SitePermissionPrimaryButton"
         android:text="@string/sign_out_disconnect"
         app:layout_constraintBottom_toBottomOf="parent"

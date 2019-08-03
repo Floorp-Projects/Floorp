@@ -60,7 +60,7 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             findNavController(),
             sharedViewModel
         )
-        signInView = SignInView(view.select_bookmark_layout, bookmarkInteractor)
+        signInView = SignInView(view.selectBookmarkLayout, bookmarkInteractor)
 
         return view
     }
@@ -88,7 +88,7 @@ class SelectBookmarkFolderFragment : Fragment(), AccountObserver {
             }
             activity?.title = bookmarkNode?.title ?: getString(R.string.library_bookmarks)
             val adapter = SelectBookmarkFolderAdapter(sharedViewModel)
-            recylerView_bookmark_folders.adapter = adapter
+            recylerViewBookmarkFolders.adapter = adapter
             adapter.updateData(bookmarkNode)
         }
     }

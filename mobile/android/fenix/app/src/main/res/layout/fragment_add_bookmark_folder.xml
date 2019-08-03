@@ -18,10 +18,10 @@
         android:textAllCaps="true"
         android:textColor="?primaryText"
         android:textSize="12sp"
-        android:labelFor="@id/bookmark_add_folder_title_edit" />
+        android:labelFor="@id/bookmarkAddFolderTitleEdit" />
 
     <org.mozilla.fenix.utils.ClearableEditText
-        android:id="@+id/bookmark_add_folder_title_edit"
+        android:id="@+id/bookmarkAddFolderTitleEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -41,7 +41,7 @@
         android:textSize="12sp" />
 
     <TextView
-        android:id="@+id/bookmark_add_folder_parent_selector"
+        android:id="@+id/bookmarkAddFolderParentSelector"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

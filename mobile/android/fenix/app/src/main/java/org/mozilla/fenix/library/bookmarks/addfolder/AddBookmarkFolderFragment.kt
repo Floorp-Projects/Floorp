@@ -53,8 +53,8 @@ class AddBookmarkFolderFragment : Fragment() {
             sharedViewModel.selectedFolder = sharedViewModel.selectedFolder
                 ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
             launch(Main) {
-                bookmark_add_folder_parent_selector.text = sharedViewModel.selectedFolder!!.title
-                bookmark_add_folder_parent_selector.setOnClickListener {
+                bookmarkAddFolderParentSelector.text = sharedViewModel.selectedFolder!!.title
+                bookmarkAddFolderParentSelector.setOnClickListener {
                     nav(
                         R.id.bookmarkAddFolderFragment,
                         AddBookmarkFolderFragmentDirections
@@ -77,14 +77,14 @@ class AddBookmarkFolderFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.confirm_add_folder_button -> {
-                if (bookmark_add_folder_title_edit.text.isNullOrBlank()) {
-                    bookmark_add_folder_title_edit.error =
+                if (bookmarkAddFolderTitleEdit.text.isNullOrBlank()) {
+                    bookmarkAddFolderTitleEdit.error =
                         getString(R.string.bookmark_empty_title_error)
                     return true
                 }
                 lifecycleScope.launch(IO) {
                     val newGuid = requireComponents.core.bookmarksStorage.addFolder(
-                        sharedViewModel.selectedFolder!!.guid, bookmark_add_folder_title_edit.text.toString(), null
+                        sharedViewModel.selectedFolder!!.guid, bookmarkAddFolderTitleEdit.text.toString(), null
                     )
                     sharedViewModel.selectedFolder = requireComponents.core.bookmarksStorage.getTree(newGuid)
                     requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)

@@ -38,7 +38,7 @@
             tools:text="@string/tab_crash_title_2"/>
 
     <CheckBox
-            android:id="@+id/send_crash_checkbox"
+            android:id="@+id/sendCrashCheckbox"
             android:layout_width="0dp"
             android:layout_height="32dp"
             android:layout_marginBottom="20dp"
@@ -47,13 +47,13 @@
             android:text="@string/tab_crash_send_report"
             android:textColor="?primaryText"
             android:textSize="15sp"
-            app:layout_constraintBottom_toTopOf="@id/close_tab_button"
+            app:layout_constraintBottom_toTopOf="@id/closeTabButton"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintWidth_percent="0.9"/>
 
     <Button
-            android:id="@+id/restore_tab_button"
+            android:id="@+id/restoreTabButton"
             android:layout_width="0dp"
             android:layout_height="36dp"
             android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"
@@ -72,7 +72,7 @@
             app:layout_constraintWidth_percent="0.4" />
 
     <Button
-            android:id="@+id/close_tab_button"
+            android:id="@+id/closeTabButton"
             android:layout_width="0dp"
             android:layout_height="36dp"
             android:layout_marginStart="@dimen/crash_reporter_close_tab_button_horizontal_margin"

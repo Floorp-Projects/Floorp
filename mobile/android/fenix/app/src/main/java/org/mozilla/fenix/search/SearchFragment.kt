@@ -108,7 +108,7 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        search_scan_button.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
+        searchScanButton.visibility = if (context?.hasCamera() == true) View.VISIBLE else View.GONE
         layoutComponents(view.search_layout)
 
         qrFeature.set(
@@ -119,7 +119,7 @@ class SearchFragment : Fragment(), BackHandler {
                     requestPermissions(permissions, REQUEST_CODE_CAMERA_PERMISSIONS)
                 },
                 onScanResult = { result ->
-                    search_scan_button.isChecked = false
+                    searchScanButton.isChecked = false
                     activity?.let {
                         AlertDialog.Builder(it).apply {
                             val spannable = resources.getSpannable(
@@ -153,7 +153,7 @@ class SearchFragment : Fragment(), BackHandler {
             view = view
         )
 
-        view.search_scan_button.setOnClickListener {
+        view.searchScanButton.setOnClickListener {
             toolbarView.view.clearFocus()
             requireComponents.analytics.metrics.track(Event.QRScannerOpened)
             qrFeature.get()?.scan(R.id.container)
@@ -161,7 +161,7 @@ class SearchFragment : Fragment(), BackHandler {
 
         view.toolbar_wrapper.clipToOutline = false
 
-        search_shortcuts_button.setOnClickListener {
+        searchShortcutsButton.setOnClickListener {
             val isOpen = searchStore.state.showShortcutEnginePicker
             searchStore.dispatch(SearchAction.ShowSearchShortcutEnginePicker(!isOpen))
 
@@ -204,7 +204,7 @@ class SearchFragment : Fragment(), BackHandler {
     override fun onBackPressed(): Boolean {
         return when {
             qrFeature.onBackPressed() -> {
-                view?.search_scan_button?.isChecked = false
+                view?.searchScanButton?.isChecked = false
                 toolbarView.view.requestFocus()
                 true
             }
@@ -217,21 +217,21 @@ class SearchFragment : Fragment(), BackHandler {
         val draw = BitmapDrawable(resources, searchIcon)
         val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
         draw.setBounds(0, 0, iconSize, iconSize)
-        search_engine_icon?.backgroundDrawable = draw
+        searchEngineIcon?.backgroundDrawable = draw
     }
 
     private fun updateSearchWithLabel(searchState: SearchState) {
-        search_with_shortcuts.visibility = if (searchState.showShortcutEnginePicker) View.VISIBLE else View.GONE
+        searchWithShortcuts.visibility = if (searchState.showShortcutEnginePicker) View.VISIBLE else View.GONE
     }
 
     private fun updateSearchShortuctsIcon(searchState: SearchState) {
         with(requireContext()) {
             val showShortcuts = searchState.showShortcutEnginePicker
-            search_shortcuts_button?.isChecked = showShortcuts
+            searchShortcutsButton?.isChecked = showShortcuts
 
             val color = if (showShortcuts) R.attr.contrastText else R.attr.primaryText
 
-            search_shortcuts_button.compoundDrawables[0]?.setTint(getColorFromAttr(color))
+            searchShortcutsButton.compoundDrawables[0]?.setTint(getColorFromAttr(color))
         }
     }
 
@@ -244,7 +244,7 @@ class SearchFragment : Fragment(), BackHandler {
                     if (context.isPermissionGranted(Manifest.permission.CAMERA)) {
                         permissionDidUpdate = true
                     } else {
-                        view?.search_scan_button?.isChecked = false
+                        view?.searchScanButton?.isChecked = false
                     }
                 }
             }

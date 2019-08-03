@@ -33,7 +33,7 @@ class PairFragment : Fragment(), BackHandler {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        pair_instructions.text = HtmlCompat.fromHtml(getString(R.string.pair_instructions),
+        pairInstructions.text = HtmlCompat.fromHtml(getString(R.string.pair_instructions),
             HtmlCompat.FROM_HTML_MODE_LEGACY)
 
         qrFeature.set(

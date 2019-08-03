@@ -11,7 +11,7 @@
         android:layout_height="match_parent" />
 
     <TextView
-        android:id="@+id/pair_instructions"
+        android:id="@+id/pairInstructions"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"

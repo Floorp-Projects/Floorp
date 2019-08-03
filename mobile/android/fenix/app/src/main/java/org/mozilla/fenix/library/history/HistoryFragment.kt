@@ -65,7 +65,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
             ::invalidateOptionsMenu,
             ::deleteHistoryItems
         )
-        historyView = HistoryView(view.history_layout, historyInteractor)
+        historyView = HistoryView(view.historyLayout, historyInteractor)
 
         return view
     }

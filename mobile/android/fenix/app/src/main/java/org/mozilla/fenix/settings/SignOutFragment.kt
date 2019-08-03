@@ -56,7 +56,7 @@ class SignOutFragment : BottomSheetDialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.sign_out_disconnect.setOnClickListener {
+        view.signOutDisconnect.setOnClickListener {
             requireComponents.analytics.metrics.track(Event.SyncAccountSignOut)
             lifecycleScope.launch {
                 accountManager.logoutAsync().await()
@@ -67,7 +67,7 @@ class SignOutFragment : BottomSheetDialogFragment() {
             }
         }
 
-        view.sign_out_cancel.setOnClickListener {
+        view.signOutCancel.setOnClickListener {
             dismiss()
         }
     }

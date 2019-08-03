@@ -9,7 +9,7 @@
     tools:context="org.mozilla.fenix.library.bookmarks.BookmarkFragment">
 
     <LinearLayout
-        android:id="@+id/bookmark_layout"
+        android:id="@+id/bookmarkLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical" />

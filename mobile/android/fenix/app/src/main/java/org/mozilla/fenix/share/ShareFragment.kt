@@ -54,7 +54,7 @@ class ShareFragment : AppCompatDialogFragment() {
         tabs = args.tabs ?: arrayOf(ShareTab(args.url!!, args.title ?: ""))
 
         component = ShareComponent(
-            view.share_wrapper,
+            view.shareWrapper,
             ActionBusFactory.get(this),
             FenixViewModelProvider.create(
                 this,

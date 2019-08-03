@@ -49,7 +49,7 @@ class ExceptionsFragment : Fragment() {
         }
         exceptionsInteractor =
             ExceptionsInteractor(::openLearnMore, ::deleteOneItem, ::deleteAllItems)
-        exceptionsView = ExceptionsView(view.exceptions_layout, exceptionsInteractor)
+        exceptionsView = ExceptionsView(view.exceptionsLayout, exceptionsInteractor)
         return view
     }
 

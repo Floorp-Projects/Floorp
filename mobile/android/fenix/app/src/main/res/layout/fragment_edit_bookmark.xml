@@ -18,10 +18,10 @@
         android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"
-        android:labelFor="@id/bookmark_name_edit" />
+        android:labelFor="@id/bookmarkNameEdit" />
 
     <org.mozilla.fenix.utils.ClearableEditText
-        android:id="@+id/bookmark_name_edit"
+        android:id="@+id/bookmarkNameEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -35,7 +35,7 @@
         tools:text="Internet for people, not profit -- Mozilla" />
 
     <TextView
-        android:id="@+id/bookmark_url_label"
+        android:id="@+id/bookmarkUrlLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
@@ -43,10 +43,10 @@
         android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"
-        android:labelFor="@id/bookmark_url_edit" />
+        android:labelFor="@id/bookmarkUrlEdit" />
 
     <org.mozilla.fenix.utils.ClearableEditText
-        android:id="@+id/bookmark_url_edit"
+        android:id="@+id/bookmarkUrlEdit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
@@ -68,10 +68,10 @@
         android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"
-        android:labelFor="@id/bookmark_folder_selector" />
+        android:labelFor="@id/bookmarkFolderSelector" />
 
     <TextView
-        android:id="@+id/bookmark_folder_selector"
+        android:id="@+id/bookmarkFolderSelector"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"

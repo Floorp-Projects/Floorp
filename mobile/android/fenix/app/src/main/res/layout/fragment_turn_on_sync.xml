@@ -40,7 +40,7 @@
             app:srcCompat="@drawable/ic_scan" />
 
         <TextView
-            android:id="@+id/sign_in_instructions"
+            android:id="@+id/signInInstructions"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
@@ -53,7 +53,7 @@
             app:layout_constraintTop_toBottomOf="@+id/sign_in_image" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/sign_in_scan_button"
+            android:id="@+id/signInScanButton"
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -70,10 +70,10 @@
             app:iconTint="?contrastText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/sign_in_instructions" />
+            app:layout_constraintTop_toBottomOf="@id/signInInstructions" />
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/sign_in_email_button"
+            android:id="@+id/signInEmailButton"
             style="@style/ThemeIndependentMaterialGreyButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -81,7 +81,7 @@
             android:text="@string/sign_in_with_email"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/sign_in_scan_button" />
+            app:layout_constraintTop_toBottomOf="@id/signInScanButton" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

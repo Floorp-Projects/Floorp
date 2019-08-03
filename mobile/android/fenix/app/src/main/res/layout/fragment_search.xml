@@ -24,7 +24,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/search_engine_icon"
+            android:id="@+id/searchEngineIcon"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_margin="12dp"
@@ -38,13 +38,13 @@
             android:layout_height="0dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/search_engine_icon"
+            app:layout_constraintStart_toEndOf="@id/searchEngineIcon"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
-        android:id="@+id/search_with_shortcuts"
+        android:id="@+id/searchWithShortcuts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="15dp"
@@ -64,12 +64,12 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:background="?neutralFaded"
-        app:layout_constraintBottom_toTopOf="@id/pill_wrapper"
+        app:layout_constraintBottom_toTopOf="@id/pillWrapper"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <LinearLayout
-        android:id="@+id/pill_wrapper"
+        android:id="@+id/pillWrapper"
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:background="?foundation"
@@ -83,7 +83,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <ToggleButton
-            android:id="@+id/search_scan_button"
+            android:id="@+id/searchScanButton"
             style="@style/search_pill"
             android:layout_marginEnd="8dp"
             android:drawableStart="@drawable/ic_qr"
@@ -91,7 +91,7 @@
             android:textOn="@string/search_scan_button" />
 
         <ToggleButton
-            android:id="@+id/search_shortcuts_button"
+            android:id="@+id/searchShortcutsButton"
             style="@style/search_pill"
             android:drawableStart="@drawable/ic_search"
             android:textOff="@string/search_shortcuts_button"

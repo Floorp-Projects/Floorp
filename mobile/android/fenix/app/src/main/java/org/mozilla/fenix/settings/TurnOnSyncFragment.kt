@@ -47,9 +47,9 @@ class TurnOnSyncFragment : Fragment(), AccountObserver {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_turn_on_sync, container, false)
-        view.sign_in_scan_button.setOnClickListener(getClickListenerForPairing())
-        view.sign_in_email_button.setOnClickListener(getClickListenerForSignIn())
-        view.sign_in_instructions.text = HtmlCompat.fromHtml(
+        view.signInScanButton.setOnClickListener(getClickListenerForPairing())
+        view.signInEmailButton.setOnClickListener(getClickListenerForSignIn())
+        view.signInInstructions.text = HtmlCompat.fromHtml(
             getString(R.string.sign_in_instructions),
             HtmlCompat.FROM_HTML_MODE_LEGACY
         )

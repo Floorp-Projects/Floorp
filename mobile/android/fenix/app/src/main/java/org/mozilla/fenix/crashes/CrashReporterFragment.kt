@@ -38,11 +38,11 @@ class CrashReporterFragment : Fragment() {
 
         val selectedSession = requireComponents.core.sessionManager.selectedSession
 
-        restore_tab_button.setOnClickListener {
+        restoreTabButton.setOnClickListener {
             selectedSession?.let { session -> closeFragment(true, session, crash) }
         }
 
-        close_tab_button.setOnClickListener {
+        closeTabButton.setOnClickListener {
             selectedSession?.let { session -> closeFragment(false, session, crash) }
         }
     }
@@ -67,7 +67,7 @@ class CrashReporterFragment : Fragment() {
 
     private fun submitReportIfNecessary(crash: Crash) {
         var didSubmitCrashReport = false
-        if (Settings.getInstance(context!!).isCrashReportingEnabled && send_crash_checkbox.isChecked) {
+        if (Settings.getInstance(context!!).isCrashReportingEnabled && sendCrashCheckbox.isChecked) {
             requireComponents.analytics.crashReporter.submitReport(crash)
             didSubmitCrashReport = true
         }
