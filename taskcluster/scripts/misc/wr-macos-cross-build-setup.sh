@@ -1,20 +1,11 @@
 #!/bin/bash
 set -x -e -v
 
-export WORKSPACE="/builds/worker/workspace"
-export TOOLS_DIR="${WORKSPACE}/build/src"
 export TARGET_TRIPLE="x86_64-apple-darwin"
 
-mkdir -p "${TOOLS_DIR}"
-
-# The tooltool-download script assumes that the gecko checkout is in
-# ${WORKSPACE}/build/src and that it can run `./mach` there. This is not
-# true when using run-task (which is what this script runs with) so we
-# symlink mach to satisfy tooltool-download's assumptions.
-ln -s "${GECKO_PATH}/mach" "${TOOLS_DIR}"
 source "${GECKO_PATH}/taskcluster/scripts/misc/tooltool-download.sh"
 
-MACOS_SYSROOT="${TOOLS_DIR}/MacOSX10.11.sdk"
+MACOS_SYSROOT="${GECKO_PATH}/MacOSX10.11.sdk"
 CLANGDIR="${MOZ_FETCHES_DIR}/clang"
 
 # Deploy the wrench dependencies

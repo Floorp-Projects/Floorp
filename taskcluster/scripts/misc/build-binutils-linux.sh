@@ -3,13 +3,10 @@ set -x -e -v
 
 # This script is for building binutils for Linux.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
+cd $GECKO_PATH
 
-cd $HOME_DIR/src
-
-build/unix/build-binutils/build-binutils.sh $HOME_DIR
+build/unix/build-binutils/build-binutils.sh $MOZ_FETCHES_DIR
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-cp $HOME_DIR/binutils.tar.* $UPLOAD_DIR
+cp $MOZ_FETCHES_DIR/binutils.tar.* $UPLOAD_DIR
