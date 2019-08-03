@@ -279,6 +279,7 @@ class App extends Component {
       autocomplete,
       editorMode,
       editorWidth,
+      editorFeatureEnabled,
     } = this.props;
 
     return JSTerm({
@@ -288,8 +289,9 @@ class App extends Component {
       onPaste: this.onPaste,
       codeMirrorEnabled: jstermCodeMirror,
       autocomplete,
-      editorMode,
+      editorMode: editorMode && editorFeatureEnabled,
       editorWidth,
+      editorFeatureEnabled,
     });
   }
 
@@ -314,13 +316,13 @@ class App extends Component {
   }
 
   renderNotificationBox() {
-    const { notifications, editorMode } = this.props;
+    const { notifications, editorMode, editorFeatureEnabled } = this.props;
 
     return NotificationBox({
       id: "webconsole-notificationbox",
       key: "notification-box",
-      displayBorderTop: !editorMode,
-      displayBorderBottom: editorMode,
+      displayBorderTop: !(editorMode && editorFeatureEnabled),
+      displayBorderBottom: editorMode && editorFeatureEnabled,
       wrapping: true,
       notifications,
     });
@@ -338,10 +340,10 @@ class App extends Component {
   }
 
   renderRootElement(children) {
-    const { jstermCodeMirror, editorMode } = this.props;
+    const { jstermCodeMirror, editorMode, editorFeatureEnabled } = this.props;
 
     const classNames = ["webconsole-app"];
-    if (editorMode) {
+    if (editorMode && editorFeatureEnabled) {
       classNames.push("jsterm-editor");
     }
     if (jstermCodeMirror) {
@@ -362,7 +364,12 @@ class App extends Component {
   }
 
   render() {
-    const { webConsoleUI, editorMode, dispatch } = this.props;
+    const {
+      webConsoleUI,
+      editorMode,
+      editorFeatureEnabled,
+      dispatch,
+    } = this.props;
 
     const filterBar = this.renderFilterBar();
     const consoleOutput = this.renderConsoleOutput();
@@ -374,7 +381,7 @@ class App extends Component {
 
     return this.renderRootElement([
       filterBar,
-      editorMode
+      editorFeatureEnabled && editorMode
         ? EditorToolbar({
             dispatch,
             editorMode,
@@ -388,7 +395,7 @@ class App extends Component {
         jsterm
       ),
       GridElementWidthResizer({
-        enabled: editorMode,
+        enabled: editorFeatureEnabled && editorMode,
         position: "end",
         className: "editor-resizer",
         getControlledElementNode: () => webConsoleUI.jsterm.node,

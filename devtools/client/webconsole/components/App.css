@@ -106,10 +106,25 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   flex-grow: 1;
+  /* We display the open editor button at the end of the input */
+  display: grid;
+  grid-template-columns: 1fr auto;
+  /* This allows us to not define a column for the CodeMirror container */
+  grid-auto-flow: column;
 }
 
 .jsterm-cm .jsterm-input-container {
   padding-block-start: 2px;
+}
+
+.webconsole-input-openEditorButton {
+  grid-column: -1 / -2;
+  height: 24px;
+  margin: 0;
+}
+
+.webconsole-input-openEditorButton::before {
+  background-image: url("chrome://devtools/skin/images/webconsole/editor.svg");
 }
 
 .webconsole-app .webconsole-output:empty ~ .jsterm-input-container {
@@ -249,7 +264,11 @@ body {
 }
 
 .jsterm-editor .webconsole-editor-toolbar .webconsole-editor-toolbar-closeButton::before {
-  background-image: url(chrome://devtools/skin/images/webconsole/editor.svg);
+  background-image: url("chrome://devtools/skin/images/close.svg");
+}
+
+.jsterm-editor .webconsole-input-openEditorButton {
+  display: none;
 }
 
 .jsterm-editor .webconsole-output {
@@ -263,6 +282,7 @@ body {
   width: 30vw;
   min-width: 150px;
   border-top: none;
+  display: block;
 }
 
 .jsterm-editor #webconsole-notificationbox {
