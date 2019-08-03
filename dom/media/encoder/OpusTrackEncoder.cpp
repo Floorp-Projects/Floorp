@@ -10,6 +10,7 @@
 
 #include <opus/opus.h>
 
+#undef LOG
 #define LOG(args, ...)
 
 namespace mozilla {
@@ -433,5 +434,3 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 }
 
 }  // namespace mozilla
-
-#undef LOG

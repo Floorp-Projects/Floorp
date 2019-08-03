@@ -39,6 +39,10 @@
 #  include "WebMWriter.h"
 #endif
 
+#ifdef LOG
+#  undef LOG
+#endif
+
 mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");
 #define LOG(type, msg) MOZ_LOG(gMediaEncoderLog, type, msg)
 
@@ -428,14 +432,7 @@ MediaEncoder::MediaEncoder(TaskQueue* aEncoderThread,
   }
 }
 
-MediaEncoder::~MediaEncoder() {
-  MOZ_ASSERT(mListeners.IsEmpty());
-  MOZ_ASSERT(!mAudioTrack);
-  MOZ_ASSERT(!mVideoTrack);
-  MOZ_ASSERT(!mAudioNode);
-  MOZ_ASSERT(!mInputPort);
-  MOZ_ASSERT(!mPipeStream);
-}
+MediaEncoder::~MediaEncoder() { MOZ_ASSERT(mListeners.IsEmpty()); }
 
 void MediaEncoder::RunOnGraph(already_AddRefed<Runnable> aRunnable) {
   MediaStreamGraphImpl* graph;
@@ -873,8 +870,6 @@ bool MediaEncoder::IsShutdown() {
 void MediaEncoder::Cancel() {
   MOZ_ASSERT(NS_IsMainThread());
 
-  Stop();
-
   RefPtr<MediaEncoder> self = this;
   nsresult rv = mEncoderThread->Dispatch(NewRunnableFrom([self]() mutable {
     self->mCanceled = true;
@@ -1030,5 +1025,3 @@ void MediaEncoder::SetVideoKeyFrameInterval(int32_t aVideoKeyFrameInterval) {
 }
 
 }  // namespace mozilla
-
-#undef LOG

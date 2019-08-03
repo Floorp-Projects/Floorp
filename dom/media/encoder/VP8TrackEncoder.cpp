@@ -570,5 +570,3 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
 }
 
 }  // namespace mozilla
-
-#undef VP8LOG

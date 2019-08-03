@@ -6,6 +6,7 @@
 #include "prtime.h"
 #include "GeckoProfiler.h"
 
+#undef LOG
 #define LOG(args, ...)
 
 namespace mozilla {
@@ -194,5 +195,3 @@ nsresult OggWriter::SetMetadata(
 }
 
 }  // namespace mozilla
-
-#undef LOG

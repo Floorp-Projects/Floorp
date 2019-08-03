@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Blob.h"
-#include "EmptyBlobImpl.h"
 #include "File.h"
 #include "MemoryBlobImpl.h"
 #include "mozilla/dom/BlobBinding.h"
@@ -71,14 +70,6 @@ Blob* Blob::Create(nsISupports* aParent, BlobImpl* aImpl) {
   MOZ_ASSERT(aImpl);
 
   return aImpl->IsFile() ? new File(aParent, aImpl) : new Blob(aParent, aImpl);
-}
-
-/* static */
-already_AddRefed<Blob> Blob::CreateEmptyBlob(nsISupports* aParent,
-                                             const nsAString& aContentType) {
-  RefPtr<Blob> blob = Blob::Create(aParent, new EmptyBlobImpl(aContentType));
-  MOZ_ASSERT(!blob->mImpl->IsFile());
-  return blob.forget();
 }
 
 /* static */
