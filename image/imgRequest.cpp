@@ -111,14 +111,11 @@ nsresult imgRequest::Init(nsIURI* aURI, nsIURI* aFinalURI,
   // account, as it needs to be handled using more complicated rules than
   // earlier elements of the redirect chain.
   if (aURI != aFinalURI) {
-    bool isHttps = false;
-    bool isChrome = false;
     bool schemeLocal = false;
-    if (NS_FAILED(aURI->SchemeIs("https", &isHttps)) ||
-        NS_FAILED(aURI->SchemeIs("chrome", &isChrome)) ||
-        NS_FAILED(NS_URIChainHasFlags(
+    if (NS_FAILED(NS_URIChainHasFlags(
             aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &schemeLocal)) ||
-        (!isHttps && !isChrome && !schemeLocal)) {
+        (!aURI->SchemeIs("https") && !aURI->SchemeIs("chrome") &&
+         !schemeLocal)) {
       mHadInsecureRedirect = true;
     }
   }
