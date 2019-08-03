@@ -763,5 +763,3 @@ void VideoTrackEncoder::SetKeyFrameInterval(int32_t aKeyFrameInterval) {
 }
 
 }  // namespace mozilla
-
-#undef TRACK_LOG
