@@ -11,6 +11,9 @@ const TEST_URI =
   "data:text/html,<meta charset=utf8>Testing jsterm with no input";
 
 add_task(async function() {
+  // For now, let's disable editor as we don't know what the final placement of the
+  // open editor button (which may impact this test).
+  await pushPref("devtools.webconsole.features.editor", false);
   // Run test with legacy JsTerm
   await pushPref("devtools.webconsole.jsterm.codeMirror", false);
   await performTests();
