@@ -175,8 +175,6 @@ class MediaRecorder final : public DOMEventTargetHelper,
   uint32_t mVideoBitsPerSecond;
   uint32_t mBitsPerSecond;
 
-  TimeStamp mStartTime;
-
   // DOMExceptions that are created early and possibly thrown in NotifyError.
   // Creating them early allows us to capture the JS stack for which cannot be
   // done at the time the error event is fired.
