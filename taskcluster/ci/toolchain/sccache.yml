@@ -43,6 +43,8 @@ macosx64-sccache:
         - try
     run:
         arguments: ['x86_64-apple-darwin']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
         toolchain-artifact: public/build/sccache.tar.xz
     toolchains:
@@ -62,5 +64,7 @@ win64-sccache:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
     run:
         toolchain-artifact: public/build/sccache.tar.bz2
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
     toolchains:
         - win64-rust-1.34

@@ -43,6 +43,8 @@ macosx64-minidump-stackwalk:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
         arguments: ['macosx64']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
     toolchains:
         - linux64-cctools-port
