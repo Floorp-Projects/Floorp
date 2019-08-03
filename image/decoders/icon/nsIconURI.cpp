@@ -272,8 +272,7 @@ nsresult nsMozIconURI::SetSpecInternal(const nsACString& aSpec) {
   mIconURL = do_QueryInterface(uri);
   if (mIconURL) {
     // The inner URI should be a 'file:' one. If not, bail.
-    bool isFile = false;
-    if (!NS_SUCCEEDED(mIconURL->SchemeIs("file", &isFile)) || !isFile) {
+    if (!mIconURL->SchemeIs("file")) {
       return NS_ERROR_MALFORMED_URI;
     }
     mFileName.Truncate();
