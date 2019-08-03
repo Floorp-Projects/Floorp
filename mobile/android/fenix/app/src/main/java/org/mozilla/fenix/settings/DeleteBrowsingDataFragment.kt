@@ -150,6 +150,7 @@ class DeleteBrowsingDataFragment : Fragment() {
         view?.open_tabs_item?.apply {
             val openTabs = requireComponents.core.sessionManager.sessions.size
             subtitleView.text = resources.getString(R.string.preferences_delete_browsing_data_tabs_subtitle, openTabs)
+            isEnabled = openTabs > 0
         }
     }
 
@@ -165,6 +166,7 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_browsing_data_subtitle,
                             historyCount
                         )
+                    isEnabled = historyCount > 0
                 }
             }
         }
@@ -182,6 +184,7 @@ class DeleteBrowsingDataFragment : Fragment() {
                             R.string.preferences_delete_browsing_data_collections_subtitle,
                             collectionsCount
                         )
+                    isEnabled = collectionsCount > 0
                 }
             }
         }
