@@ -6,12 +6,12 @@ set -e -v
 WORKSPACE=$HOME/workspace
 COMPRESS_EXT=xz
 
-CROSS_CCTOOLS_PATH=$WORKSPACE/build/src/cctools
-CROSS_SYSROOT=$WORKSPACE/build/src/MacOSX10.11.sdk
+CROSS_CCTOOLS_PATH=$GECKO_PATH/cctools
+CROSS_SYSROOT=$GECKO_PATH/MacOSX10.11.sdk
 
-export CC=$WORKSPACE/build/src/clang/bin/clang
-export CXX=$WORKSPACE/build/src/clang/bin/clang++
-export AR=$WORKSPACE/build/src/clang/bin/llvm-ar
+export CC=$GECKO_PATH/clang/bin/clang
+export CXX=$GECKO_PATH/clang/bin/clang++
+export AR=$GECKO_PATH/clang/bin/llvm-ar
 export CFLAGS="-target x86_64-apple-darwin -mlinker-version=137 -B ${CROSS_CCTOOLS_PATH}/bin -isysroot ${CROSS_SYSROOT} -I${CROSS_SYSROOT}/usr/include -iframework ${CROSS_SYSROOT}/System/Library/Frameworks"
 export CXXFLAGS="-stdlib=libc++ ${CFLAGS}"
 export LDFLAGS="${CXXFLAGS} -Wl,-syslibroot,${CROSS_SYSROOT} -Wl,-dead_strip"
@@ -26,7 +26,7 @@ mkdir -p $WORKSPACE/python_bin
 ln -s /usr/bin/python2.7 $WORKSPACE/python_bin/python
 export PATH=$WORKSPACE/python_bin:$PATH
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 

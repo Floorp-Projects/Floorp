@@ -16,6 +16,9 @@ job-defaults:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/build-gn-common.sh'
         toolchain-artifact: public/build/gn.tar.xz
+    fetches:
+        fetch:
+            - gn
 
 linux64-gn:
     treeherder:
@@ -41,7 +44,7 @@ macosx64-gn:
 
 win32-gn:
     treeherder:
-        symbol: TW32(gn)
+        symbol: TW64(gn)
     worker-type: b-win2012
     worker:
         max-run-time: 3600

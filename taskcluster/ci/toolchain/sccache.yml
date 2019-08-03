@@ -11,6 +11,9 @@ job-defaults:
         script: build-sccache.sh
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
+    fetches:
+        fetch:
+            - sccache
 
 linux64-sccache:
     treeherder:
@@ -23,6 +26,9 @@ linux64-sccache:
     toolchains:
         - linux64-rust-1.34
         - linux64-binutils
+    fetches:
+        fetch:
+            - openssl-1.1.0g
 
 macosx64-sccache:
     treeherder:

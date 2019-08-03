@@ -12,6 +12,11 @@ job-defaults:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/cbindgen.tar.xz
+    fetches:
+        fetch:
+            # If you update this, make sure to update the minimum version in
+            # build/moz.configure/bindgen.configure as well.
+            - cbindgen-0.9.0
 
 linux64-cbindgen:
     treeherder:
