@@ -5,10 +5,10 @@
     "assertions": false,
     "build_clang_tidy": true,
     "python_path": "/usr/bin/python2.7",
-    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
-    "cc": "/builds/worker/workspace/build/src/gcc/bin/gcc",
-    "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
-    "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "gcc_dir": "/builds/worker/workspace/build/gcc",
+    "cc": "/builds/worker/workspace/build/gcc/bin/gcc",
+    "cxx": "/builds/worker/workspace/build/gcc/bin/g++",
+    "as": "/builds/worker/workspace/build/gcc/bin/gcc",
     "patches": [
       "clang-tidy-8.patch"
     ]

@@ -10,15 +10,15 @@ cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-if [ -d "$GECKO_PATH/binutils/bin" ]; then
-  export PATH="$GECKO_PATH/binutils/bin:$PATH"
+if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
+  export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
 case "$JSON_CONFIG" in
 *macosx64*)
   # these variables are used in build-clang.py
-  export CROSS_CCTOOLS_PATH=$GECKO_PATH/cctools
-  export CROSS_SYSROOT=$GECKO_PATH/MacOSX10.11.sdk
+  export CROSS_CCTOOLS_PATH=$MOZ_FETCHES_DIR/cctools
+  export CROSS_SYSROOT=$MOZ_FETCHES_DIR/MacOSX10.11.sdk
   export PATH=$PATH:$CROSS_CCTOOLS_PATH/bin
   ;;
 *win64*)
@@ -30,8 +30,8 @@ case "$JSON_CONFIG" in
   # exists.
   export VSINSTALLDIR="${VSPATH}/"
 
-  export PATH="$(cd cmake && pwd)/bin:${PATH}"
-  export PATH="$(cd ninja && pwd)/bin:${PATH}"
+  export PATH="$(cd $MOZ_FETCHES_DIR/cmake && pwd)/bin:${PATH}"
+  export PATH="$(cd $MOZ_FETCHES_DIR/ninja && pwd)/bin:${PATH}"
   ;;
 *linux64*|*android*)
   ;;

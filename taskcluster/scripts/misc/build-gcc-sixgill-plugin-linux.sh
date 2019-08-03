@@ -32,7 +32,7 @@ ln -sf ../mpfr-3.1.5 mpfr
 popd
 
 export TMPDIR=${TMPDIR:-/tmp/}
-export gcc_bindir=$root_dir/src/gcc/bin
+export gcc_bindir=$MOZ_FETCHES_DIR/gcc/bin
 export gmp_prefix=/tools/gmp
 export gmp_dir=$root_dir$gmp_prefix
 
