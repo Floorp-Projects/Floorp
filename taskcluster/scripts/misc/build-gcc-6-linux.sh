@@ -3,11 +3,8 @@ set -e
 
 # This script is for building GCC 6 for Linux.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-root_dir=$HOME_DIR
-data_dir=$HOME_DIR/src/build/unix/build-gcc
+root_dir=$MOZ_FETCHES_DIR
+data_dir=$GECKO_PATH/build/unix/build-gcc
 
 . $data_dir/build-gcc.sh
 
@@ -28,4 +25,4 @@ build_gcc
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-cp $HOME_DIR/gcc.tar.* $UPLOAD_DIR
+cp $MOZ_FETCHES_DIR/gcc.tar.* $UPLOAD_DIR

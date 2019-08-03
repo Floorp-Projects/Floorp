@@ -2,12 +2,11 @@
 set -x -e -v
 
 WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
 INSTALL_DIR=$WORKSPACE/wine
 
 mkdir -p $INSTALL_DIR
 
-cd $HOME_DIR
+cd $MOZ_FETCHES_DIR
 
 # --------------
 cd wine-3.0.3

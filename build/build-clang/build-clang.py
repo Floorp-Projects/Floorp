@@ -620,6 +620,7 @@ if __name__ == "__main__":
         cc_name = "clang-cl"
         cxx_name = "clang-cl"
 
+    config_dir = os.path.dirname(args.config.name)
     config = json.load(args.config)
 
     llvm_revision = config["llvm_revision"]
@@ -706,7 +707,7 @@ if __name__ == "__main__":
             git_clone(base_dir, URL_REPO, source_dir, llvm_revision)
 
     for p in config.get("patches", []):
-        patch(p, source_dir)
+        patch(os.path.join(config_dir, p), source_dir)
 
     compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
 

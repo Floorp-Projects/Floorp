@@ -29,7 +29,9 @@ linux64-clang-tidy:
     treeherder:
         symbol: TL(clang-tidy)
     run:
-        script: build-clang-tidy-linux.sh
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-tidy-linux64.json'
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
@@ -47,8 +49,10 @@ macosx64-clang-tidy:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/macosx64/cross-clang.manifest"
     run:
         using: toolchain-script
-        script: build-clang-tidy-macosx.sh
+        script: build-clang.sh
         tooltool-downloads: internal
+        arguments:
+            - 'build/build-clang/clang-tidy-macosx64.json'
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
@@ -71,8 +75,9 @@ win64-clang-tidy:
         env:
             TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/build-clang-cl.manifest"
     run:
-        script: build-clang-tidy64-windows.sh
+        script: build-clang.sh
+        arguments:
+            - 'build/build-clang/clang-tidy-win64.json'
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
-            - 'taskcluster/scripts/misc/build-clang-windows-helper64.sh'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
