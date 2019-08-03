@@ -1412,10 +1412,14 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return { frames: frames.filter(x => !!x) };
   },
 
-  onSources: function(request) {
+  addAllSources() {
     for (const source of this.dbg.findSources()) {
       this._addSource(source);
     }
+  },
+
+  onSources: function(request) {
+    this.addAllSources();
 
     // No need to flush the new source packets here, as we are sending the
     // list of sources out immediately and we don't need to invoke the
@@ -1781,7 +1785,7 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     return {};
   },
 
-  _onWindowReady: function({ isTopLevel, window }) {
+  _onWindowReady: function({ isTopLevel, isBFCache, window }) {
     if (isTopLevel && this.state != "detached") {
       this.sources.reset();
       this.clearDebuggees();
@@ -1796,6 +1800,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // iframe).
     if (this.attached) {
       this.dbg.addDebuggees();
+    }
+
+    // BFCache navigations reuse old sources, so send existing sources to the
+    // client instead of waiting for onNewScript debugger notifications.
+    if (isBFCache) {
+      this.addAllSources();
     }
   },
 
