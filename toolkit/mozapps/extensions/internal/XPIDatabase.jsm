@@ -1874,7 +1874,7 @@ this.XPIDatabase = {
       if (theme.visible) {
         if (!aId && theme.id == DEFAULT_THEME_ID) {
           enableTheme = theme;
-        } else if (theme.id != aId) {
+        } else if (theme.id != aId && !theme.pendingUninstall) {
           this.updateAddonDisabledState(theme, true, undefined, true);
         }
       }
