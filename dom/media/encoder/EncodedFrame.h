@@ -7,6 +7,7 @@
 #define EncodedFrame_h_
 
 #include "nsISupportsImpl.h"
+#include "VideoUtils.h"
 
 namespace mozilla {
 
@@ -14,7 +15,7 @@ namespace mozilla {
 class EncodedFrame final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(EncodedFrame)
  public:
-  EncodedFrame() : mTimeStamp(0), mDuration(0), mFrameType(UNKNOWN) {}
+  EncodedFrame() : mTime(0), mDuration(0), mFrameType(UNKNOWN) {}
   enum FrameType {
     VP8_I_FRAME,       // VP8 intraframe
     VP8_P_FRAME,       // VP8 predicted frame
@@ -34,14 +35,28 @@ class EncodedFrame final {
     return NS_ERROR_FAILURE;
   }
   const nsTArray<uint8_t>& GetFrameData() const { return mFrameData; }
-  uint64_t GetTimeStamp() const { return mTimeStamp; }
-  void SetTimeStamp(uint64_t aTimeStamp) { mTimeStamp = aTimeStamp; }
+  // Timestamp in microseconds
+  uint64_t mTime;
+  // The playback duration of this packet. The unit is determined by the use
+  // case. For VP8 the unit should be microseconds. For opus this is the number
+  // of samples.
+  uint64_t mDuration;
+  // Represent what is in the FrameData
+  FrameType mFrameType;
 
-  uint64_t GetDuration() const { return mDuration; }
-  void SetDuration(uint64_t aDuration) { mDuration = aDuration; }
-
-  FrameType GetFrameType() const { return mFrameType; }
-  void SetFrameType(FrameType aFrameType) { mFrameType = aFrameType; }
+  uint64_t GetEndTime() const {
+    // Defend against untested types. This assert can be removed but we want
+    // to make sure other types are correctly accounted for.
+    MOZ_ASSERT(mFrameType == OPUS_AUDIO_FRAME || mFrameType == VP8_I_FRAME ||
+               mFrameType == VP8_P_FRAME);
+    if (mFrameType == OPUS_AUDIO_FRAME) {
+      // See bug 1356054 for discussion around standardization of time units
+      // (can remove videoutils import when this goes)
+      return mTime + FramesToUsecs(mDuration, 48000).value();
+    } else {
+      return mTime + mDuration;
+    }
+  }
 
  private:
   // Private destructor, to discourage deletion outside of Release():
@@ -49,11 +64,6 @@ class EncodedFrame final {
 
   // Encoded data
   nsTArray<uint8_t> mFrameData;
-  uint64_t mTimeStamp;
-  // The playback duration of this packet in number of samples
-  uint64_t mDuration;
-  // Represent what is in the FrameData
-  FrameType mFrameType;
 };
 
 }  // namespace mozilla
