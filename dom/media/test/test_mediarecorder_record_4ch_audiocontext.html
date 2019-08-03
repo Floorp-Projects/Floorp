@@ -56,8 +56,7 @@ function startTest() {
     }
     totalBlobSize += e.data.size;
     ok(totalBlobSize > 0, 'check the totalBlobSize');
-    is(e.data.type, expectedMimeType, 'blob should have expected mimetype');
-    is(mMediaRecorder.mimeType, expectedMimeType, 'recorder should have expected mimetype');
+    is(mMediaRecorder.mimeType, expectedMimeType, 'blob should has mimetype, return ' + mMediaRecorder.mimeType);
     if (!stopTriggered) {
       mMediaRecorder.stop();
       stopTriggered = true;

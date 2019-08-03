@@ -494,16 +494,6 @@ function verifyView(view1, view2) {
   continueToNextStep();
 }
 
-function verifyWasmModule(module1, module2) {
-  // We assume the given modules have no imports and export a single function
-  // named 'run'.
-  var instance1 = new WebAssembly.Instance(module1);
-  var instance2 = new WebAssembly.Instance(module2);
-  is(instance1.exports.run(), instance2.exports.run(), "same run() result");
-
-  continueToNextStep();
-}
-
 function grabFileUsageAndContinueHandler(request) {
   testGenerator.next(request.result.fileUsage);
 }
@@ -531,9 +521,24 @@ function setDataThreshold(threshold) {
   SpecialPowers.setIntPref("dom.indexedDB.dataThreshold", threshold);
 }
 
+function resetDataThreshold() {
+  info("Clearing data threshold pref");
+  SpecialPowers.clearUserPref("dom.indexedDB.dataThreshold");
+}
+
 function setMaxSerializedMsgSize(aSize) {
   info("Setting maximal size of a serialized message to " + aSize);
   SpecialPowers.setIntPref("dom.indexedDB.maxSerializedMsgSize", aSize);
+}
+
+function enablePreprocessing() {
+  info("Setting preprocessing pref");
+  SpecialPowers.setBoolPref("dom.indexedDB.preprocessing", true);
+}
+
+function resetPreprocessing() {
+  info("Clearing preprocessing pref");
+  SpecialPowers.clearUserPref("dom.indexedDB.preprocessing");
 }
 
 function getPrincipal(url) {
