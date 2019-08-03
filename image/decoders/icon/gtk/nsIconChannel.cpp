@@ -198,10 +198,9 @@ nsresult nsIconChannel::InitWithGIO(nsIMozIconURI* aIconURI) {
 
   // Get icon for file specified by URI
   if (fileURI) {
-    bool isFile;
     nsAutoCString spec;
     fileURI->GetAsciiSpec(spec);
-    if (NS_SUCCEEDED(fileURI->SchemeIs("file", &isFile)) && isFile) {
+    if (fileURI->SchemeIs("file")) {
       GFile* file = g_file_new_for_uri(spec.get());
       GFileInfo* fileInfo =
           g_file_query_info(file, G_FILE_ATTRIBUTE_STANDARD_ICON,
