@@ -15,91 +15,61 @@ const PREF_CONNECTION_TIMEOUT = "devtools.debugger.remote-timeout";
 /**
  * The WebConsoleConnectionProxy handles the connection between the Web Console
  * and the application we connect to through the remote debug protocol.
- *
- * @constructor
- * @param {WebConsoleUI} webConsoleUI
- *        A WebConsoleUI instance that owns this connection proxy.
- * @param RemoteTarget target
- *        The target that the console will connect to.
- * @param Boolean isBrowserConsole
- *        Indicates if we're setting up the connection for a browser console
- * @param Boolean fissionSupport
- *        Indicates if the console should support a "Fission architecture".
  */
-function WebConsoleConnectionProxy(
-  webConsoleUI,
-  target,
-  isBrowserConsole,
-  fissionSupport
-) {
-  this.webConsoleUI = webConsoleUI;
-  this.target = target;
-  this.webConsoleClient = target.activeConsole;
-  this.isBrowserConsole = isBrowserConsole;
-  this.fissionSupport = fissionSupport;
-
-  this._onPageError = this._onPageError.bind(this);
-  this._onLogMessage = this._onLogMessage.bind(this);
-  this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
-  this._onNetworkEvent = this._onNetworkEvent.bind(this);
-  this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
-  this._onTabNavigated = this._onTabNavigated.bind(this);
-  this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
-  this._onAttachConsole = this._onAttachConsole.bind(this);
-  this._onCachedMessages = this._onCachedMessages.bind(this);
-  this._connectionTimeout = this._connectionTimeout.bind(this);
-  this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
-    this
-  );
-  this._clearLogpointMessages = this._clearLogpointMessages.bind(this);
-}
-
-WebConsoleConnectionProxy.prototype = {
+class WebConsoleConnectionProxy {
   /**
-   * The owning WebConsoleUI instance.
-   *
-   * @see WebConsoleUI
-   * @type object
+   * @constructor
+   * @param {WebConsoleUI} webConsoleUI
+   *        A WebConsoleUI instance that owns this connection proxy.
+   * @param RemoteTarget target
+   *        The target that the console will connect to.
    */
-  webConsoleUI: null,
+  constructor(webConsoleUI, target, isBrowserConsole, fissionSupport) {
+    this.webConsoleUI = webConsoleUI;
+    this.target = target;
+    this.webConsoleClient = target.activeConsole;
+    this.isBrowserConsole = isBrowserConsole;
+    this.fissionSupport = fissionSupport;
 
-  /**
-   * The target that the console connects to.
-   * @type RemoteTarget
-   */
-  target: null,
+    /**
+     * The DebuggerClient object.
+     *
+     * @see DebuggerClient
+     * @type object
+     */
+    this.client = null;
 
-  /**
-   * The DebuggerClient object.
-   *
-   * @see DebuggerClient
-   * @type object
-   */
-  client: null,
+    /**
+     * Tells if the connection is established.
+     * @type boolean
+     */
+    this.connected = false;
 
-  /**
-   * The WebConsoleClient object.
-   *
-   * @see WebConsoleClient
-   * @type object
-   */
-  webConsoleClient: null,
+    /**
+     * Timer used for the connection.
+     * @private
+     * @type object
+     */
+    this._connectTimer = null;
 
-  /**
-   * Tells if the connection is established.
-   * @type boolean
-   */
-  connected: false,
+    this._connectDefer = null;
+    this._disconnecter = null;
 
-  /**
-   * Timer used for the connection.
-   * @private
-   * @type object
-   */
-  _connectTimer: null,
-
-  _connectDefer: null,
-  _disconnecter: null,
+    this._onPageError = this._onPageError.bind(this);
+    this._onLogMessage = this._onLogMessage.bind(this);
+    this._onConsoleAPICall = this._onConsoleAPICall.bind(this);
+    this._onNetworkEvent = this._onNetworkEvent.bind(this);
+    this._onNetworkEventUpdate = this._onNetworkEventUpdate.bind(this);
+    this._onTabNavigated = this._onTabNavigated.bind(this);
+    this._onTabWillNavigate = this._onTabWillNavigate.bind(this);
+    this._onAttachConsole = this._onAttachConsole.bind(this);
+    this._onCachedMessages = this._onCachedMessages.bind(this);
+    this._connectionTimeout = this._connectionTimeout.bind(this);
+    this._onLastPrivateContextExited = this._onLastPrivateContextExited.bind(
+      this
+    );
+    this._clearLogpointMessages = this._clearLogpointMessages.bind(this);
+  }
 
   /**
    * Initialize a debugger client and connect it to the debugger server.
@@ -108,7 +78,7 @@ WebConsoleConnectionProxy.prototype = {
    *         A promise object that is resolved/rejected based on the success of
    *         the connection initialization.
    */
-  connect: function() {
+  connect() {
     if (this._connectDefer) {
       return this._connectDefer.promise;
     }
@@ -137,27 +107,27 @@ WebConsoleConnectionProxy.prototype = {
     this._attachConsole();
 
     return connPromise;
-  },
+  }
 
   /**
    * Connection timeout handler.
    * @private
    */
-  _connectionTimeout: function() {
+  _connectionTimeout() {
     const error = {
       error: "timeout",
       message: l10n.getStr("connectionTimeout"),
     };
 
     this._connectDefer.reject(error);
-  },
+  }
 
   /**
    * Attach to the Web Console actor.
    * @private
    * @returns Promise
    */
-  _attachConsole: function() {
+  _attachConsole() {
     const listeners = ["PageError", "ConsoleAPI", "NetworkActivity"];
     // Enable the forwarding of console messages to the parent process
     // when we open the Browser Console or Toolbox.
@@ -170,7 +140,7 @@ WebConsoleConnectionProxy.prototype = {
         console.error("attachConsole failed: " + error);
         this._connectDefer.reject(error);
       });
-  },
+  }
 
   /**
    * The "attachConsole" response handler.
@@ -182,7 +152,7 @@ WebConsoleConnectionProxy.prototype = {
    *        The WebConsoleClient instance for the attached console, for the
    *        specific tab we work with.
    */
-  _onAttachConsole: async function(response) {
+  async _onAttachConsole(response) {
     let saveBodies = Services.prefs.getBoolPref(
       "devtools.netmonitor.saveRequestAndResponseBodies"
     );
@@ -212,41 +182,41 @@ WebConsoleConnectionProxy.prototype = {
     const msgs = ["PageError", "ConsoleAPI"];
     const cachedMessages = await this.webConsoleClient.getCachedMessages(msgs);
     this._onCachedMessages(cachedMessages);
-  },
+  }
 
   /**
    * Dispatch a message add on the new frontend and emit an event for tests.
    */
-  dispatchMessageAdd: function(packet) {
+  dispatchMessageAdd(packet) {
     this.webConsoleUI.wrapper.dispatchMessageAdd(packet);
-  },
+  }
 
   /**
    * Batched dispatch of messages.
    */
-  dispatchMessagesAdd: function(packets) {
+  dispatchMessagesAdd(packets) {
     this.webConsoleUI.wrapper.dispatchMessagesAdd(packets);
-  },
+  }
 
   /**
    * Dispatch a message event on the new frontend and emit an event for tests.
    */
-  dispatchMessageUpdate: function(networkInfo, response) {
+  dispatchMessageUpdate(networkInfo, response) {
     // Some message might try to update while we are closing the toolbox.
     if (!this.webConsoleUI) {
       return;
     }
     this.webConsoleUI.wrapper.dispatchMessageUpdate(networkInfo, response);
-  },
+  }
 
-  dispatchRequestUpdate: function(id, data) {
+  dispatchRequestUpdate(id, data) {
     // Some request might try to update while we are closing the toolbox.
     if (!this.webConsoleUI) {
       return Promise.resolve();
     }
 
     return this.webConsoleUI.wrapper.dispatchRequestUpdate(id, data);
-  },
+  }
 
   /**
    * The "cachedMessages" response handler.
@@ -255,7 +225,7 @@ WebConsoleConnectionProxy.prototype = {
    * @param object response
    *        The JSON response object received from the server.
    */
-  _onCachedMessages: async function(response) {
+  async _onCachedMessages(response) {
     if (response.error) {
       console.error(
         "Web Console getCachedMessages error: " +
@@ -285,7 +255,7 @@ WebConsoleConnectionProxy.prototype = {
 
     this.connected = true;
     this._connectDefer.resolve(this);
-  },
+  }
 
   /**
    * The "pageError" message type handler. We redirect any page errors to the UI
@@ -295,13 +265,14 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onPageError: function(packet) {
+  _onPageError(packet) {
     if (!this.webConsoleUI) {
       return;
     }
     packet.type = "pageError";
     this.dispatchMessageAdd(packet);
-  },
+  }
+
   /**
    * The "logMessage" message type handler. We redirect any message to the UI
    * for displaying.
@@ -310,13 +281,14 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onLogMessage: function(packet) {
+  _onLogMessage(packet) {
     if (!this.webConsoleUI) {
       return;
     }
     packet.type = "logMessage";
     this.dispatchMessageAdd(packet);
-  },
+  }
+
   /**
    * The "consoleAPICall" message type handler. We redirect any message to
    * the UI for displaying.
@@ -327,19 +299,19 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onConsoleAPICall: function(packet) {
+  _onConsoleAPICall(packet) {
     if (!this.webConsoleUI) {
       return;
     }
     packet.type = "consoleAPICall";
     this.dispatchMessageAdd(packet);
-  },
+  }
 
   _clearLogpointMessages(logpointId) {
     if (this.webConsoleUI) {
       this.webConsoleUI.wrapper.dispatchClearLogpointMessages(logpointId);
     }
-  },
+  }
 
   /**
    * The "networkEvent" message type handler. We redirect any message to
@@ -349,12 +321,13 @@ WebConsoleConnectionProxy.prototype = {
    * @param object networkInfo
    *        The network request information.
    */
-  _onNetworkEvent: function(networkInfo) {
+  _onNetworkEvent(networkInfo) {
     if (!this.webConsoleUI) {
       return;
     }
     this.dispatchMessageAdd(networkInfo);
-  },
+  }
+
   /**
    * The "networkEventUpdate" message type handler. We redirect any message to
    * the UI for displaying.
@@ -363,12 +336,13 @@ WebConsoleConnectionProxy.prototype = {
    * @param object response
    *        The update response received from the server.
    */
-  _onNetworkEventUpdate: function(response) {
+  _onNetworkEventUpdate(response) {
     if (!this.webConsoleUI) {
       return;
     }
     this.dispatchMessageUpdate(response.networkInfo, response);
-  },
+  }
+
   /**
    * The "lastPrivateContextExited" message type handler. When this message is
    * received the Web Console UI is cleared.
@@ -379,11 +353,11 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onLastPrivateContextExited: function(packet) {
+  _onLastPrivateContextExited(packet) {
     if (this.webConsoleUI) {
       this.webConsoleUI.clearPrivateMessages();
     }
-  },
+  }
 
   /**
    * The "navigate" event handlers. We redirect any message to the UI for displaying.
@@ -392,9 +366,10 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onTabNavigated: function(packet) {
+  _onTabNavigated(packet) {
+
     this.webConsoleUI.handleTabNavigated(packet);
-  },
+  }
 
   /**
    * The "will-navigate" event handlers. We redirect any message to the UI for displaying.
@@ -403,9 +378,9 @@ WebConsoleConnectionProxy.prototype = {
    * @param object packet
    *        The message received from the server.
    */
-  _onTabWillNavigate: function(packet) {
+  _onTabWillNavigate(packet) {
     this.webConsoleUI.handleTabWillNavigate(packet);
-  },
+  }
 
   /**
    * Release an object actor.
@@ -413,11 +388,11 @@ WebConsoleConnectionProxy.prototype = {
    * @param string actor
    *        The actor ID to send the request to.
    */
-  releaseActor: function(actor) {
+  releaseActor(actor) {
     if (this.client) {
       this.client.release(actor).catch(() => {});
     }
-  },
+  }
 
   /**
    * Disconnect the Web Console from the remote server.
@@ -425,7 +400,7 @@ WebConsoleConnectionProxy.prototype = {
    * @return object
    *         A promise object that is resolved when disconnect completes.
    */
-  disconnect: function() {
+  disconnect() {
     if (!this.client) {
       return;
     }
@@ -451,7 +426,7 @@ WebConsoleConnectionProxy.prototype = {
     this.target = null;
     this.connected = false;
     this.webConsoleUI = null;
-  },
-};
+  }
+}
 
 exports.WebConsoleConnectionProxy = WebConsoleConnectionProxy;
