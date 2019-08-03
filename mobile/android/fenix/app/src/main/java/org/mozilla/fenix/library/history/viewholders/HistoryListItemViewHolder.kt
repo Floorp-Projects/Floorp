@@ -35,6 +35,12 @@ class HistoryListItemViewHolder(
             item?.also(historyInteractor::onItemPress)
         }
 
+        itemView.history_layout.iconView.setOnClickListener {
+            item?.apply {
+                historyInteractor.onItemLongPress(this)
+            }
+        }
+
         itemView.delete_button.setOnClickListener {
             when (val mode = this.mode) {
                 HistoryState.Mode.Normal -> historyInteractor.onDeleteAll()

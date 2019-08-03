@@ -57,5 +57,12 @@ class BookmarkItemViewHolder(
                 true
             } else false
         }
+
+        containerView.iconView.setOnClickListener({
+            when {
+                selected -> interactor.deselect(item)
+                else -> interactor.select(item)
+            }
+        })
     }
 }
