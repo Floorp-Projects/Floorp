@@ -410,9 +410,7 @@ void ImageResource::NotifyDrawingObservers() {
     return;
   }
 
-  bool match = false;
-  if ((NS_FAILED(mURI->SchemeIs("resource", &match)) || !match) &&
-      (NS_FAILED(mURI->SchemeIs("chrome", &match)) || !match)) {
+  if (!mURI->SchemeIs("resource") && !mURI->SchemeIs("chrome")) {
     return;
   }
 

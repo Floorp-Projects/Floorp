@@ -7,6 +7,7 @@
 const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const Services = require("Services");
 const { debounce } = require("devtools/shared/debounce");
+const isMacOS = Services.appinfo.OS === "Darwin";
 
 loader.lazyRequireGetter(this, "Debugger", "Debugger");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
@@ -35,6 +36,12 @@ loader.lazyRequireGetter(
   this,
   "focusableSelector",
   "devtools/client/shared/focus",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "l10n",
+  "devtools/client/webconsole/utils/messages",
   true
 );
 
@@ -92,6 +99,10 @@ class JSTerm extends Component {
       autocompleteClear: PropTypes.func.isRequired,
       // Data to be displayed in the autocomplete popup.
       autocompleteData: PropTypes.object.isRequired,
+      // Toggle the editor mode.
+      editorToggle: PropTypes.func.isRequired,
+      // Is the editor feature enabled
+      editorFeatureEnabled: PropTypes.bool,
       // Is the input in editor mode.
       editorMode: PropTypes.bool,
       editorWidth: PropTypes.number,
@@ -143,8 +154,6 @@ class JSTerm extends Component {
       position: "bottom",
       autoSelect: true,
     };
-
-    const isMacOS = Services.appinfo.OS === "Darwin";
 
     const doc = this.webConsoleUI.document;
     const toolbox = this.webConsoleUI.wrapper.toolbox;
@@ -1536,17 +1545,31 @@ class JSTerm extends Component {
       return null;
     }
 
+    const openEditorButton = this.props.editorFeatureEnabled
+      ? dom.button({
+          className: "devtools-button webconsole-input-openEditorButton",
+          title: l10n.getFormatStr(
+            "webconsole.input.openEditorButton.tooltip",
+            [isMacOS ? "Cmd + B" : "Ctrl + B"]
+          ),
+          onClick: this.props.editorToggle,
+        })
+      : undefined;
+
     if (this.props.codeMirrorEnabled) {
-      return dom.div({
-        className: "jsterm-input-container devtools-input devtools-monospace",
-        key: "jsterm-container",
-        style: { direction: "ltr" },
-        "aria-live": "off",
-        onContextMenu: this.onContextMenu,
-        ref: node => {
-          this.node = node;
+      return dom.div(
+        {
+          className: "jsterm-input-container devtools-input devtools-monospace",
+          key: "jsterm-container",
+          style: { direction: "ltr" },
+          "aria-live": "off",
+          onContextMenu: this.onContextMenu,
+          ref: node => {
+            this.node = node;
+          },
         },
-      });
+        openEditorButton
+      );
     }
 
     const { onPaste } = this.props;
@@ -1581,7 +1604,8 @@ class JSTerm extends Component {
         onPaste: onPaste,
         onDrop: onPaste,
         onContextMenu: this.onContextMenu,
-      })
+      }),
+      openEditorButton
     );
   }
 }
@@ -1607,6 +1631,7 @@ function mapDispatchToProps(dispatch) {
     autocompleteClear: () => dispatch(actions.autocompleteClear()),
     evaluateExpression: expression =>
       dispatch(actions.evaluateExpression(expression)),
+    editorToggle: () => dispatch(actions.editorToggle()),
   };
 }
 

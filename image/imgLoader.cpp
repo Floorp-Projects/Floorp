@@ -2029,9 +2029,7 @@ bool imgLoader::PreferLoadFromCache(nsIURI* aURI) const {
   // the moz-extension:// protocol), load it directly from the cache to prevent
   // re-decoding the image. See Bug 1373258.
   // TODO: Bug 1406134
-  bool match = false;
-  return (NS_SUCCEEDED(aURI->SchemeIs("moz-page-thumb", &match)) && match) ||
-         (NS_SUCCEEDED(aURI->SchemeIs("moz-extension", &match)) && match);
+  return aURI->SchemeIs("moz-page-thumb") || aURI->SchemeIs("moz-extension");
 }
 
 #define LOAD_FLAGS_CACHE_MASK \
@@ -3000,15 +2998,12 @@ imgCacheValidator::AsyncOnChannelRedirect(
   // security code, which needs to know whether there is an insecure load at any
   // point in the redirect chain.
   nsCOMPtr<nsIURI> oldURI;
-  bool isHttps = false;
-  bool isChrome = false;
   bool schemeLocal = false;
   if (NS_FAILED(oldChannel->GetURI(getter_AddRefs(oldURI))) ||
-      NS_FAILED(oldURI->SchemeIs("https", &isHttps)) ||
-      NS_FAILED(oldURI->SchemeIs("chrome", &isChrome)) ||
       NS_FAILED(NS_URIChainHasFlags(
           oldURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE, &schemeLocal)) ||
-      (!isHttps && !isChrome && !schemeLocal)) {
+      (!oldURI->SchemeIs("https") && !oldURI->SchemeIs("chrome") &&
+       !schemeLocal)) {
     mHadInsecureRedirect = true;
   }
 
