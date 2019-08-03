@@ -949,9 +949,14 @@ BrowserChild::ProvideWindow(mozIDOMWindowProxy* aParent, uint32_t aChromeFlags,
 }
 
 void BrowserChild::DestroyWindow() {
-  if (mBrowsingContext) {
-    mBrowsingContext = nullptr;
-  }
+  mBrowsingContext = nullptr;
+
+  // TabGroups contain circular references to their event queues that they break
+  // when the last window leaves. If we never attached a window to our TabGroup,
+  // though, it will never see a window leave, and will therefore never break
+  // its circular references. If it hasn't had a window attached by now, it
+  // never will, so have it destroy itself now if it's empty.
+  mTabGroup->MaybeDestroy();
 
   if (mStatusFilter) {
     if (nsCOMPtr<nsIWebProgress> webProgress =
