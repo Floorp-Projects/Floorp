@@ -24,7 +24,7 @@ cd $GECKO_PATH
 # to package up what we just built. If we don't move the compiler,
 # we will package up the compiler we downloaded along with the
 # stuff we just built.
-mv mingw32 mingw32-gcc
+mv $MOZ_FETCHES_DIR/mingw32 mingw32-gcc
 export PATH="$GECKO_PATH/mingw32-gcc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR

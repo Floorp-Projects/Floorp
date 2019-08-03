@@ -1,6 +1,6 @@
 VSDIR=vs2017_15.8.4
-VSPATH="${GECKO_PATH}/${VSDIR}"
-UNIX_VSPATH="$(cd ${GECKO_PATH} && pwd)/${VSDIR}"
+VSPATH="${MOZ_FETCHES_DIR}/${VSDIR}"
+UNIX_VSPATH="$(cd ${MOZ_FETCHES_DIR} && pwd)/${VSDIR}"
 SDK_VERSION=10.0.17134.0
 
 export INCLUDE="${VSPATH}/VC/include;${VSPATH}/VC/atlmfc/include;${VSPATH}/SDK/Include/${SDK_VERSION}/ucrt;${VSPATH}/SDK/Include/${SDK_VERSION}/shared;${VSPATH}/SDK/Include/${SDK_VERSION}/um;${VSPATH}/SDK/Include/${SDK_VERSION}/winrt;${VSPATH}/DIA SDK/include"

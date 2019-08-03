@@ -1,6 +1,6 @@
 # Fetch a tooltool manifest.
 
-cd $GECKO_PATH
+cd $MOZ_FETCHES_DIR
 
 case "`uname -s`" in
 Linux)
@@ -30,6 +30,6 @@ fi
 : TOOLTOOL_CACHE                ${TOOLTOOL_CACHE:=/builds/worker/tooltool-cache}
 export TOOLTOOL_CACHE
 
-./mach artifact toolchain -v${TOOLTOOL_DL_FLAGS}${TOOLTOOL_MANIFEST:+ --tooltool-manifest "${TOOLTOOL_MANIFEST}"}${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}} --retry 5${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
+${GECKO_PATH}/mach artifact toolchain -v${TOOLTOOL_DL_FLAGS}${TOOLTOOL_MANIFEST:+ --tooltool-manifest "${GECKO_PATH}/${TOOLTOOL_MANIFEST}"}${TOOLTOOL_CACHE:+ --cache-dir ${TOOLTOOL_CACHE}} --retry 5${MOZ_TOOLCHAINS:+ ${MOZ_TOOLCHAINS}}
 
 cd $OLDPWD

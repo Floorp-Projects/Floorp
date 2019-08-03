@@ -8,4 +8,4 @@ cd $GECKO_PATH
 
 . taskcluster/scripts/misc/tooltool-download.sh
 
-sccache/sccache --package-toolchain $GECKO_PATH/$TL_NAME/bin/$TL_NAME $HOME/artifacts/$TL_NAME-dist-toolchain.tar.xz
+$MOZ_FETCHES_DIR/sccache/sccache --package-toolchain $MOZ_FETCHES_DIR/$TL_NAME/bin/$TL_NAME $HOME/artifacts/$TL_NAME-dist-toolchain.tar.xz

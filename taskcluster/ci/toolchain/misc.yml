@@ -149,9 +149,6 @@ browsertime:
     description: "npm install browsertime node_modules"
     treeherder:
         symbol: TL(browsertime)
-    worker:
-        env:
-            NODEJS: "/builds/worker/workspace/build/src/node/bin/node"
     run:
         script: browsertime.sh
         sparse-profile: null

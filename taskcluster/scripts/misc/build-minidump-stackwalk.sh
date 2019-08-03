@@ -19,7 +19,7 @@ case "$1" in
 macosx64)
     TOOLCHAINS="cctools rustc clang"
     echo ac_add_options --target=x86_64-apple-darwin >> .mozconfig
-    echo ac_add_options --with-macos-sdk=$GECKO_PATH/MacOSX10.11.sdk >> .mozconfig
+    echo ac_add_options --with-macos-sdk=$MOZ_FETCHES_DIR/MacOSX10.11.sdk >> .mozconfig
     ;;
 mingw32)
     TOOLCHAINS="binutils rustc clang"
@@ -34,7 +34,7 @@ mingw32)
 esac
 
 for t in $TOOLCHAINS; do
-    PATH="$GECKO_PATH/$t/bin:$PATH"
+    PATH="$MOZ_FETCHES_DIR/$t/bin:$PATH"
 done
 
 ./mach build -v

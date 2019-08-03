@@ -8,7 +8,7 @@ mkdir -p $INSTALL_DIR/bin
 
 cd $GECKO_PATH
 . taskcluster/scripts/misc/tooltool-download.sh
-export PATH="$GECKO_PATH/clang/bin:$PATH"
+export PATH="$MOZ_FETCHES_DIR/clang/bin:$PATH"
 
 # --------------
 
