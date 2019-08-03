@@ -8454,10 +8454,9 @@ nsresult DeserializeStructuredCloneFile(FileManager* aFileManager,
   return NS_OK;
 }
 
-nsresult DeserializeStructuredCloneFiles(FileManager* aFileManager,
-                                         const nsAString& aText,
-                                         nsTArray<StructuredCloneFile>& aResult,
-                                         bool* aHasPreprocessInfo) {
+nsresult DeserializeStructuredCloneFiles(
+    FileManager* aFileManager, const nsAString& aText,
+    nsTArray<StructuredCloneFile>& aResult) {
   MOZ_ASSERT(!IsOnBackgroundThread());
 
   nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing> tokenizer(aText,
@@ -8474,20 +8473,6 @@ nsresult DeserializeStructuredCloneFiles(FileManager* aFileManager,
     rv = DeserializeStructuredCloneFile(aFileManager, token, file);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
-
-    if (!aHasPreprocessInfo) {
-      continue;
-    }
-
-    if (file->mType == StructuredCloneFile::eWasmBytecode) {
-      *aHasPreprocessInfo = true;
-    } else if (file->mType == StructuredCloneFile::eWasmCompiled) {
-      MOZ_ASSERT(aResult.Length() > 1);
-      MOZ_ASSERT(aResult[aResult.Length() - 2].mType ==
-                 StructuredCloneFile::eWasmBytecode);
-
-      *aHasPreprocessInfo = true;
     }
   }
 
@@ -8540,7 +8525,7 @@ nsresult SerializeStructuredCloneFiles(
   for (uint32_t index = 0; index < count; index++) {
     const StructuredCloneFile& file = aFiles[index];
 
-    if (aForPreprocess && file.mType != StructuredCloneFile::eWasmBytecode) {
+    if (aForPreprocess && file.mType != StructuredCloneFile::eStructuredClone) {
       continue;
     }
 
@@ -8615,23 +8600,12 @@ nsresult SerializeStructuredCloneFiles(
       }
 
       case StructuredCloneFile::eStructuredClone: {
-        SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
-        MOZ_ASSERT(file);
-
-        file->file() = null_t();
-        file->type() = StructuredCloneFile::eStructuredClone;
-
-        break;
-      }
-
-      case StructuredCloneFile::eWasmBytecode: {
         if (!aForPreprocess) {
-          SerializedStructuredCloneFile* serializedFile =
-              aResult.AppendElement(fallible);
-          MOZ_ASSERT(serializedFile);
+          SerializedStructuredCloneFile* file = aResult.AppendElement(fallible);
+          MOZ_ASSERT(file);
 
-          serializedFile->file() = null_t();
-          serializedFile->type() = StructuredCloneFile::eWasmBytecode;
+          file->file() = null_t();
+          file->type() = StructuredCloneFile::eStructuredClone;
         } else {
           RefPtr<FileBlobImpl> impl = new FileBlobImpl(nativeFile);
           impl->SetFileId(file.mFileInfo->Id());
@@ -8650,7 +8624,7 @@ nsresult SerializeStructuredCloneFiles(
           MOZ_ASSERT(serializedFile);
 
           serializedFile->file() = ipcBlob;
-          serializedFile->type() = StructuredCloneFile::eWasmBytecode;
+          serializedFile->type() = StructuredCloneFile::eStructuredClone;
 
           aDatabase->MapBlob(ipcBlob, file.mFileInfo);
         }
@@ -8658,13 +8632,20 @@ nsresult SerializeStructuredCloneFiles(
         break;
       }
 
+      case StructuredCloneFile::eWasmBytecode:
       case StructuredCloneFile::eWasmCompiled: {
         SerializedStructuredCloneFile* serializedFile =
             aResult.AppendElement(fallible);
         MOZ_ASSERT(serializedFile);
 
+        // Set file() to null, support for storing WebAssembly.Modules has been
+        // removed in bug 1469395. Support for de-serialization of
+        // WebAssembly.Modules modules has been removed in bug 1561876. Full
+        // removal is tracked in bug 1487479.
+
         serializedFile->file() = null_t();
-        serializedFile->type() = StructuredCloneFile::eWasmCompiled;
+        serializedFile->type() = file.mType;
+
         break;
       }
 
@@ -10358,7 +10339,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::ProcessValue(
   }
 
   nsTArray<StructuredCloneFile> files;
-  rv = DeserializeStructuredCloneFiles(mFileManager, ids, files, nullptr);
+  rv = DeserializeStructuredCloneFiles(mFileManager, ids, files);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -13776,23 +13757,8 @@ bool TransactionBase::VerifyRequestParams(
       }
 
       case StructuredCloneFile::eStructuredClone:
-        ASSERT_UNLESS_FUZZING();
-        return false;
-
       case StructuredCloneFile::eWasmBytecode:
       case StructuredCloneFile::eWasmCompiled:
-        if (NS_WARN_IF(
-                file.type() !=
-                DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent)) {
-          ASSERT_UNLESS_FUZZING();
-          return false;
-        }
-        if (NS_WARN_IF(!file.get_PBackgroundIDBDatabaseFileParent())) {
-          ASSERT_UNLESS_FUZZING();
-          return false;
-        }
-        break;
-
       case StructuredCloneFile::eEndGuard:
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -18219,8 +18185,8 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
   }
 
   if (!aFileIds.IsVoid()) {
-    nsresult rv = DeserializeStructuredCloneFiles(
-        aFileManager, aFileIds, aInfo->mFiles, &aInfo->mHasPreprocessInfo);
+    nsresult rv =
+        DeserializeStructuredCloneFiles(aFileManager, aFileIds, aInfo->mFiles);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18243,8 +18209,7 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   nsresult rv;
 
   if (!aFileIds.IsVoid()) {
-    rv = DeserializeStructuredCloneFiles(aFileManager, aFileIds, aInfo->mFiles,
-                                         &aInfo->mHasPreprocessInfo);
+    rv = DeserializeStructuredCloneFiles(aFileManager, aFileIds, aInfo->mFiles);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -18257,6 +18222,11 @@ nsresult DatabaseOperationBase::GetStructuredCloneReadInfoFromExternalBlob(
   if (index >= aInfo->mFiles.Length()) {
     MOZ_ASSERT(false, "Bad index value!");
     return NS_ERROR_UNEXPECTED;
+  }
+
+  if (IndexedDatabaseManager::PreprocessingEnabled()) {
+    aInfo->mHasPreprocessInfo = true;
+    return NS_OK;
   }
 
   StructuredCloneFile& file = aInfo->mFiles[index];
@@ -24132,9 +24102,7 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
       const FileAddInfo& fileAddInfo = fileAddInfos[index];
 
       MOZ_ASSERT(fileAddInfo.type() == StructuredCloneFile::eBlob ||
-                 fileAddInfo.type() == StructuredCloneFile::eMutableFile ||
-                 fileAddInfo.type() == StructuredCloneFile::eWasmBytecode ||
-                 fileAddInfo.type() == StructuredCloneFile::eWasmCompiled);
+                 fileAddInfo.type() == StructuredCloneFile::eMutableFile);
 
       const DatabaseOrMutableFile& file = fileAddInfo.file();
 
@@ -24169,22 +24137,6 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase* aTransaction) {
           MOZ_ASSERT(storedFileInfo->mFileInfo);
 
           storedFileInfo->mType = StructuredCloneFile::eMutableFile;
-          break;
-        }
-
-        case StructuredCloneFile::eWasmBytecode:
-        case StructuredCloneFile::eWasmCompiled: {
-          MOZ_ASSERT(file.type() ==
-                     DatabaseOrMutableFile::TPBackgroundIDBDatabaseFileParent);
-
-          storedFileInfo->mFileActor = static_cast<DatabaseFile*>(
-              file.get_PBackgroundIDBDatabaseFileParent());
-          MOZ_ASSERT(storedFileInfo->mFileActor);
-
-          storedFileInfo->mFileInfo = storedFileInfo->mFileActor->GetFileInfo();
-          MOZ_ASSERT(storedFileInfo->mFileInfo);
-
-          storedFileInfo->mType = fileAddInfo.type();
           break;
         }
 
@@ -24651,8 +24603,8 @@ void MoveData<SerializedStructuredCloneReadInfo>(
 }
 
 template <>
-void MoveData<WasmModulePreprocessInfo>(StructuredCloneReadInfo& aInfo,
-                                        WasmModulePreprocessInfo& aResult) {}
+void MoveData<PreprocessInfo>(StructuredCloneReadInfo& aInfo,
+                              PreprocessInfo& aResult) {}
 
 template <bool aForPreprocess, typename T>
 nsresult ObjectStoreGetRequestOp::ConvertResponse(
@@ -24761,7 +24713,7 @@ nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
   if (mGetAll) {
     aParams = ObjectStoreGetAllPreprocessParams();
 
-    FallibleTArray<WasmModulePreprocessInfo> falliblePreprocessInfos;
+    FallibleTArray<PreprocessInfo> falliblePreprocessInfos;
     if (NS_WARN_IF(!falliblePreprocessInfos.SetLength(mPreprocessInfoCount,
                                                       fallible))) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -24781,7 +24733,7 @@ nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
       }
     }
 
-    nsTArray<WasmModulePreprocessInfo>& preprocessInfos =
+    nsTArray<PreprocessInfo>& preprocessInfos =
         aParams.get_ObjectStoreGetAllPreprocessParams().preprocessInfos();
 
     falliblePreprocessInfos.SwapElements(preprocessInfos);
@@ -24791,7 +24743,7 @@ nsresult ObjectStoreGetRequestOp::GetPreprocessParams(
 
   aParams = ObjectStoreGetPreprocessParams();
 
-  WasmModulePreprocessInfo& preprocessInfo =
+  PreprocessInfo& preprocessInfo =
       aParams.get_ObjectStoreGetPreprocessParams().preprocessInfo();
 
   nsresult rv = ConvertResponse<true>(mResponse[0], preprocessInfo);

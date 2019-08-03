@@ -109,19 +109,19 @@ union RequestResponse
   IndexCountResponse;
 };
 
-struct WasmModulePreprocessInfo
+struct PreprocessInfo
 {
   SerializedStructuredCloneFile[] files;
 };
 
 struct ObjectStoreGetPreprocessParams
 {
-  WasmModulePreprocessInfo preprocessInfo;
+  PreprocessInfo preprocessInfo;
 };
 
 struct ObjectStoreGetAllPreprocessParams
 {
-  WasmModulePreprocessInfo[] preprocessInfos;
+  PreprocessInfo[] preprocessInfos;
 };
 
 union PreprocessParams
