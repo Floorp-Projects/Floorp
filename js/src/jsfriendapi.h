@@ -2685,6 +2685,12 @@ extern JS_FRIEND_API void LogDtor(void* self, const char* type, uint32_t sz);
  */
 extern JS_FRIEND_API uint64_t GetGCHeapUsageForObjectZone(JSObject* obj);
 
+/**
+ * Return whether a global object's realm has had instrumentation enabled by a
+ * Debugger.
+ */
+extern JS_FRIEND_API bool GlobalHasInstrumentation(JSObject* global);
+
 } /* namespace js */
 
 #endif /* jsfriendapi_h */
