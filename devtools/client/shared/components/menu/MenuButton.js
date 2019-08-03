@@ -45,6 +45,9 @@ class MenuButton extends PureComponent {
       // The document to be used for rendering the menu popup.
       doc: PropTypes.object.isRequired,
 
+      // A text content for the button.
+      label: PropTypes.string,
+
       // An optional ID to assign to the menu's container tooltip object.
       menuId: PropTypes.string,
 
@@ -411,10 +414,10 @@ class MenuButton extends PureComponent {
         this.tooltip.panel
       );
 
-      return button(buttonProps, menu);
+      return button(buttonProps, this.props.label, menu);
     }
 
-    return button(buttonProps);
+    return button(buttonProps, this.props.label);
   }
 }
 
