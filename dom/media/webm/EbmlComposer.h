@@ -38,7 +38,8 @@ class EbmlComposer {
   /*
    * Insert media encoded buffer into muxer and it would be package
    * into SimpleBlock. If no cluster is opened, new cluster will start for
-   * writing.
+   * writing. Frames passed to this function should already have any codec delay
+   * applied.
    */
   void WriteSimpleBlock(EncodedFrame* aFrame);
   /*
@@ -68,8 +69,6 @@ class EbmlComposer {
   uint64_t mClusterLengthLoc = 0;
   // Audio codec specific header data.
   nsTArray<uint8_t> mCodecPrivateData;
-  // Codec delay in nanoseconds.
-  uint64_t mCodecDelay = 0;
 
   // The timecode of the cluster.
   uint64_t mClusterTimecode = 0;
