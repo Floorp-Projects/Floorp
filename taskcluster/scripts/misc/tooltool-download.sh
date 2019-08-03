@@ -1,6 +1,6 @@
 # Fetch a tooltool manifest.
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 case "`uname -s`" in
 Linux)

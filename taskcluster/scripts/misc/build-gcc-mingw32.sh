@@ -3,11 +3,8 @@ set -e
 
 # This script is for building a MinGW GCC (and headers) to be used on Linux to compile for Windows.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-root_dir=$HOME_DIR
-data_dir=$HOME_DIR/src/build/unix/build-gcc
+root_dir=$MOZ_FETCHES_DIR
+data_dir=$GECKO_PATH/build/unix/build-gcc
 
 . $data_dir/build-gcc.sh
 

@@ -4,11 +4,9 @@ set -x -e
 
 echo "running as" $(id)
 
-: WORKSPACE ${WORKSPACE:=/builds/worker/workspace}
-
 set -v
 
-cd $WORKSPACE/build/src
+cd $GECKO_PATH
 
 # Download toolchain artifacts.
 . taskcluster/scripts/misc/tooltool-download.sh

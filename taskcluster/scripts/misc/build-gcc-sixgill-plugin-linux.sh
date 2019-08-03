@@ -7,12 +7,9 @@ set -x
 # the gcc checkout because it needs to recompile gmp and the gcc build script
 # determines the version of gmp to download.
 
-WORKSPACE=$HOME/workspace
-HOME_DIR=$WORKSPACE/build
-
-root_dir=$HOME_DIR
-build_dir=$HOME_DIR/src/build
-data_dir=$HOME_DIR/src/build/unix/build-gcc
+root_dir=$MOZ_FETCHES_DIR
+build_dir=$GECKO_PATH/build
+data_dir=$GECKO_PATH/build/unix/build-gcc
 
 # Download and unpack upstream toolchain artifacts (ie, the gcc binary).
 . $(dirname $0)/tooltool-download.sh
@@ -87,4 +84,4 @@ build_sixgill
 
 # Put a tarball in the artifacts dir
 mkdir -p $UPLOAD_DIR
-cp $HOME_DIR/sixgill.tar.* $UPLOAD_DIR
+cp $MOZ_FETCHES_DIR/sixgill.tar.* $UPLOAD_DIR

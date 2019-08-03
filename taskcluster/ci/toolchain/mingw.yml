@@ -72,3 +72,6 @@ linux64-mingw-fxc2-x86:
         toolchain-artifact: public/build/fxc2.tar.xz
     toolchains:
         - linux64-clang-8-mingw-x86
+    fetches:
+        fetch:
+            - fxc2
