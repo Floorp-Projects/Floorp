@@ -9,7 +9,6 @@ kind-dependencies:
 
 transforms:
     - taskgraph.transforms.try_job:transforms
-    - taskgraph.transforms.use_toolchains:transforms
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.cached_tasks:transforms
     - taskgraph.transforms.task:transforms
