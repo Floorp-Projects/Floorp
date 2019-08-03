@@ -30,10 +30,6 @@
 class nsIEventTarget;
 struct nsID;
 
-namespace JS {
-struct WasmModule;
-}  // namespace JS
-
 namespace mozilla {
 namespace ipc {
 
@@ -570,9 +566,9 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   RefPtr<IDBTransaction> mTransaction;
   nsTArray<RefPtr<PreprocessHelper>> mPreprocessHelpers;
-  nsTArray<nsTArray<RefPtr<JS::WasmModule>>> mModuleSets;
+  nsTArray<UniquePtr<JSStructuredCloneData>> mCloneDatas;
   uint32_t mRunningPreprocessHelpers;
-  uint32_t mCurrentModuleSetIndex;
+  uint32_t mCurrentCloneDataIndex;
   nsresult mPreprocessResultCode;
   bool mGetAll;
 
@@ -586,13 +582,12 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   void MaybeSendContinue();
 
-  void OnPreprocessFinished(uint32_t aModuleSetIndex,
-                            nsTArray<RefPtr<JS::WasmModule>>& aModuleSet);
+  void OnPreprocessFinished(uint32_t aCloneDataIndex,
+                            UniquePtr<JSStructuredCloneData> aCloneData);
 
   void OnPreprocessFailed(uint32_t aModuleSetIndex, nsresult aErrorCode);
 
-  const nsTArray<RefPtr<JS::WasmModule>>* GetNextModuleSet(
-      const StructuredCloneReadInfo& aInfo);
+  UniquePtr<JSStructuredCloneData> GetNextCloneData();
 
   void HandleResponse(nsresult aResponse);
 
@@ -609,10 +604,9 @@ class BackgroundRequestChild final : public BackgroundRequestChildBase,
 
   void HandleResponse(uint64_t aResponse);
 
-  nsresult HandlePreprocess(const WasmModulePreprocessInfo& aPreprocessInfo);
+  nsresult HandlePreprocess(const PreprocessInfo& aPreprocessInfo);
 
-  nsresult HandlePreprocess(
-      const nsTArray<WasmModulePreprocessInfo>& aPreprocessInfos);
+  nsresult HandlePreprocess(const nsTArray<PreprocessInfo>& aPreprocessInfos);
 
   // IPDL methods are only called by IPDL.
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
