@@ -172,6 +172,10 @@ class nsMainThreadPtrHolder<
 
 namespace mozilla {
 
+#ifdef LOG
+#  undef LOG
+#endif
+
 LazyLogModule gMediaManagerLog("MediaManager");
 #define LOG(...) MOZ_LOG(gMediaManagerLog, LogLevel::Debug, (__VA_ARGS__))
 
@@ -4614,7 +4618,5 @@ void GetUserMediaWindowListener::NotifyChrome() {
         }
       }));
 }
-
-#undef LOG
 
 }  // namespace mozilla

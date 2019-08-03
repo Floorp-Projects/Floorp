@@ -220,8 +220,7 @@ already_AddRefed<TrackMetadataBase> VP8TrackEncoder::GetMetadata() {
   return meta.forget();
 }
 
-nsresult VP8TrackEncoder::GetEncodedPartitions(
-    nsTArray<RefPtr<EncodedFrame>>& aData) {
+nsresult VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData) {
   vpx_codec_iter_t iter = nullptr;
   EncodedFrame::FrameType frameType = EncodedFrame::VP8_P_FRAME;
   nsTArray<uint8_t> frameData;
@@ -250,7 +249,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
   if (!frameData.IsEmpty()) {
     // Copy the encoded data to aData.
     EncodedFrame* videoData = new EncodedFrame();
-    videoData->mFrameType = frameType;
+    videoData->SetFrameType(frameType);
 
     // Convert the timestamp and duration to Usecs.
     CheckedInt64 timestamp = FramesToUsecs(pkt->data.frame.pts, mTrackRate);
@@ -258,7 +257,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
       NS_ERROR("Microsecond timestamp overflow");
       return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
     }
-    videoData->mTime = (uint64_t)timestamp.value();
+    videoData->SetTimeStamp((uint64_t)timestamp.value());
 
     mExtractedDuration += pkt->data.frame.duration;
     if (!mExtractedDuration.isValid()) {
@@ -280,13 +279,14 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(
     }
 
     mExtractedDurationUs = totalDuration;
-    videoData->mDuration = (uint64_t)duration.value();
+    videoData->SetDuration((uint64_t)duration.value());
     videoData->SwapInFrameData(frameData);
     VP8LOG(LogLevel::Verbose,
            "GetEncodedPartitions TimeStamp %" PRIu64 ", Duration %" PRIu64
            ", FrameType %d",
-           videoData->mTime, videoData->mDuration, videoData->mFrameType);
-    aData.AppendElement(videoData);
+           videoData->GetTimeStamp(), videoData->GetDuration(),
+           videoData->GetFrameType());
+    aData.AppendEncodedFrame(videoData);
   }
 
   return pkt ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -441,8 +441,7 @@ VP8TrackEncoder::EncodeOperation VP8TrackEncoder::GetNextEncodeOperation(
  *      encode it.
  * 4. Remove the encoded chunks in mSourceSegment after for-loop.
  */
-nsresult VP8TrackEncoder::GetEncodedTrack(
-    nsTArray<RefPtr<EncodedFrame>>& aData) {
+nsresult VP8TrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
   AUTO_PROFILER_LABEL("VP8TrackEncoder::GetEncodedTrack", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -510,7 +509,7 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
       // because this frame will be skipped.
       VP8LOG(LogLevel::Warning,
              "MediaRecorder lagging behind. Skipping a frame.");
-      RefPtr<EncodedFrame> last = aData.LastElement();
+      RefPtr<EncodedFrame> last = aData.GetEncodedFrames().LastElement();
       if (last) {
         mExtractedDuration += chunk.mDuration;
         if (!mExtractedDuration.isValid()) {
@@ -526,7 +525,8 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
           NS_ERROR("skipped duration overflow");
           return NS_ERROR_DOM_MEDIA_OVERFLOW_ERR;
         }
-        last->mDuration += static_cast<uint64_t>(skippedDuration.value());
+        last->SetDuration(last->GetDuration() +
+                          (static_cast<uint64_t>(skippedDuration.value())));
       }
     }
 
@@ -570,5 +570,3 @@ nsresult VP8TrackEncoder::GetEncodedTrack(
 }
 
 }  // namespace mozilla
-
-#undef VP8LOG

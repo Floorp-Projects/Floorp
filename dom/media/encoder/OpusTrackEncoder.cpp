@@ -10,6 +10,7 @@
 
 #include <opus/opus.h>
 
+#undef LOG
 #define LOG(args, ...)
 
 namespace mozilla {
@@ -227,8 +228,7 @@ already_AddRefed<TrackMetadataBase> OpusTrackEncoder::GetMetadata() {
   return meta.forget();
 }
 
-nsresult OpusTrackEncoder::GetEncodedTrack(
-    nsTArray<RefPtr<EncodedFrame>>& aData) {
+nsresult OpusTrackEncoder::GetEncodedTrack(EncodedFrameContainer& aData) {
   AUTO_PROFILER_LABEL("OpusTrackEncoder::GetEncodedTrack", OTHER);
 
   MOZ_ASSERT(mInitialized || mCanceled);
@@ -325,7 +325,7 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
     MOZ_ASSERT(frameCopied <= 3844, "frameCopied exceeded expected range");
 
     RefPtr<EncodedFrame> audiodata = new EncodedFrame();
-    audiodata->mFrameType = EncodedFrame::OPUS_AUDIO_FRAME;
+    audiodata->SetFrameType(EncodedFrame::OPUS_AUDIO_FRAME);
     int framesInPCM = frameCopied;
     if (mResampler) {
       AutoTArray<AudioDataValue, 9600> resamplingDest;
@@ -367,10 +367,10 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
               mResampledLeftover.Length());
       // This is always at 48000Hz.
       framesInPCM = framesLeft + outframesToCopy;
-      audiodata->mDuration = framesInPCM;
+      audiodata->SetDuration(framesInPCM);
     } else {
       // The ogg time stamping and pre-skip is always timed at 48000.
-      audiodata->mDuration = frameCopied * (kOpusSamplingRate / mSamplingRate);
+      audiodata->SetDuration(frameCopied * (kOpusSamplingRate / mSamplingRate));
     }
 
     // Remove the raw data which has been pulled to pcm buffer.
@@ -422,16 +422,14 @@ nsresult OpusTrackEncoder::GetEncodedTrack(
 
     audiodata->SwapInFrameData(frameData);
     // timestamp should be the time of the first sample
-    audiodata->mTime = mOutputTimeStamp;
+    audiodata->SetTimeStamp(mOutputTimeStamp);
     mOutputTimeStamp +=
         FramesToUsecs(GetPacketDuration(), kOpusSamplingRate).value();
     LOG("[Opus] mOutputTimeStamp %lld.", mOutputTimeStamp);
-    aData.AppendElement(audiodata);
+    aData.AppendEncodedFrame(audiodata);
   }
 
   return result >= 0 ? NS_OK : NS_ERROR_FAILURE;
 }
 
 }  // namespace mozilla
-
-#undef LOG
