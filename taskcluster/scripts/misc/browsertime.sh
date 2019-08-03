@@ -8,9 +8,6 @@ set -v
 
 cd $GECKO_PATH
 
-# Download toolchain artifacts.
-. taskcluster/scripts/misc/tooltool-download.sh
-
 export PATH=$PATH:$MOZ_FETCHES_DIR/node/bin
 
 # We don't install ImageMagick, so this will fail.  Continue.

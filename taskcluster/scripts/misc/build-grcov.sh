@@ -20,7 +20,9 @@ esac
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 # cargo gets mad if the parent directory has a Cargo.toml file in it
 if [ -e Cargo.toml ]; then

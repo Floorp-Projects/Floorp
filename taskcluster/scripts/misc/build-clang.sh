@@ -8,7 +8,9 @@ JSON_CONFIG="$1"
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
+if [ -n "$TOOLTOOL_MANIFEST" ]; then
+  . taskcluster/scripts/misc/tooltool-download.sh
+fi
 
 if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
   export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"

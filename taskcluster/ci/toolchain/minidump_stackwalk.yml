@@ -15,7 +15,6 @@ job-defaults:
             - 'config/external/zlib'
             - 'mfbt'
             - 'moz.configure'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'testing/tools/fileid'
             - 'toolkit/crashreporter'
             - 'toolkit/crashreporter/google-breakpad/src/common'
@@ -30,10 +29,11 @@ job-defaults:
 linux64-minidump-stackwalk:
     treeherder:
         symbol: TL(stackwalk)
-    toolchains:
-        - linux64-clang-8
-        - linux64-binutils
-        - linux64-rust-1.31
+    fetches:
+        toolchain:
+            - linux64-clang-8
+            - linux64-binutils
+            - linux64-rust-1.31
 
 macosx64-minidump-stackwalk:
     treeherder:
@@ -46,10 +46,11 @@ macosx64-minidump-stackwalk:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-rust-macos-1.31
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-rust-macos-1.31
 
 win32-minidump-stackwalk:
     treeherder:
@@ -58,6 +59,7 @@ win32-minidump-stackwalk:
         docker-image: {in-tree: mingw32-build}
     run:
         arguments: ['mingw32']
-    toolchains:
-        - linux64-clang-8-mingw-x86
-        - mingw32-rust-1.31
+    fetches:
+        toolchain:
+            - linux64-clang-8-mingw-x86
+            - mingw32-rust-1.31

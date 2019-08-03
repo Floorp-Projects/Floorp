@@ -9,7 +9,6 @@ set -x -e -v
 UPLOAD_DIR=$HOME/artifacts
 
 cd $GECKO_PATH
-. taskcluster/scripts/misc/tooltool-download.sh
 export PATH=$PATH:$MOZ_FETCHES_DIR/rustc/bin
 cargo install --version 0.1.23 cargo-vendor
 cd gfx/wr/

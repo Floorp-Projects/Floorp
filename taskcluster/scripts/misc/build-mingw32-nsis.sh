@@ -15,16 +15,13 @@ INSTALL_DIR=$GECKO_PATH/mingw32
 
 mkdir -p $INSTALL_DIR
 
-cd $GECKO_PATH
-. taskcluster/scripts/misc/tooltool-download.sh
-# After tooltool runs, we move the stuff we just downloaded.
 # As explained above, we have to build nsis to the directory it
 # will eventually be run from, which is the same place we just
 # installed our compiler. But at the end of the script we want
 # to package up what we just built. If we don't move the compiler,
 # we will package up the compiler we downloaded along with the
 # stuff we just built.
-mv $MOZ_FETCHES_DIR/mingw32 mingw32-gcc
+mv $MOZ_FETCHES_DIR/mingw32 $GECKO_PATH/mingw32-gcc
 export PATH="$GECKO_PATH/mingw32-gcc/bin:$PATH"
 
 cd $MOZ_FETCHES_DIR

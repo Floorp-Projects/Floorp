@@ -37,9 +37,9 @@ linux64-clang-tidy:
             - 'build/build-clang/clang-tidy-linux64.json'
         resources:
             - 'build/build-clang/clang-tidy-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - linux64-gcc-6
+    fetches:
+        toolchain:
+            - linux64-gcc-6
 
 macosx64-clang-tidy:
     index:
@@ -59,11 +59,12 @@ macosx64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-gcc-6
-        - linux64-node
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-gcc-6
+            - linux64-node
 
 win64-clang-tidy:
     description: "Clang-tidy toolchain build"

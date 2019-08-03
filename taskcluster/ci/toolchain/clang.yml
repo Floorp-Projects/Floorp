@@ -21,13 +21,12 @@ linux64-clang-4.0:
             - 'build/build-clang/clang-4.0-linux64.json'
         resources:
             - 'build/build-clang/clang-4.0-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-4.0
+        toolchain:
+            - linux64-gcc-6
 
 linux64-clang-7:
     description: "Clang 7 toolchain build"
@@ -40,13 +39,12 @@ linux64-clang-7:
             - 'build/build-clang/clang-7-linux64.json'
         resources:
             - 'build/build-clang/clang-7-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-7
+        toolchain:
+            - linux64-gcc-6
 
 linux64-clang-8:
     description: "Clang 8 toolchain build"
@@ -59,14 +57,13 @@ linux64-clang-8:
             - 'build/build-clang/clang-8-linux64.json'
         resources:
             - 'build/build-clang/clang-8-linux64.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-8
+        toolchain:
+            - linux64-gcc-6
 
 linux64-clang-8-mingw-x86:
     description: "MinGW-Clang Trunk x86 toolchain build"
@@ -79,17 +76,16 @@ linux64-clang-8-mingw-x86:
             - 'build/build-clang/clang-8-mingw.json'
         resources:
             - 'build/build-clang/clang-8-mingw.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-mingw-x86
         toolchain-artifact: public/build/clangmingw.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-8
             - mingw-w64
             - libunwind
             - llvm-mingw
+        toolchain:
+            - linux64-gcc-6
 
 linux64-clang-8-mingw-x64:
     description: "MinGW-Clang Trunk x64 toolchain build"
@@ -103,17 +99,16 @@ linux64-clang-8-mingw-x64:
             - 'build/build-clang/clang-8-mingw.json'
         resources:
             - 'build/build-clang/clang-8-mingw.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-mingw-x64
         toolchain-artifact: public/build/clangmingw.tar.xz
-    toolchains:
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-8
             - mingw-w64
             - libunwind
             - llvm-mingw
+        toolchain:
+            - linux64-gcc-6
 
 linux64-clang-8-android-cross:
     description: "Clang 8 toolchain build"
@@ -126,15 +121,14 @@ linux64-clang-8-android-cross:
             - 'build/build-clang/clang-8-android.json'
         resources:
             - 'build/build-clang/clang-8-android.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-clang-android-cross
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-gcc-6
-        - linux64-android-ndk-linux-repack
     fetches:
         fetch:
             - clang-8
+        toolchain:
+            - linux64-gcc-6
+            - linux64-android-ndk-linux-repack
 
 linux64-clang-8-aarch64-cross:
     description: "Clang 8 toolchain build with aarch64 runtime"
@@ -151,15 +145,14 @@ linux64-clang-8-aarch64-cross:
             - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
         resources:
             - 'build/build-clang/clang-8-linux64-aarch64-cross.json'
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-alias: linux64-aarch64-cross
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-binutils
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-8
+        toolchain:
+            - linux64-binutils
+            - linux64-gcc-6
 
 linux64-clang-8-macosx-cross:
     description: "Clang 8 toolchain build with MacOS Compiler RT libs"
@@ -180,13 +173,13 @@ linux64-clang-8-macosx-cross:
         toolchain-alias: linux64-clang-macosx-cross
         toolchain-artifact: public/build/clang.tar.xz
         tooltool-downloads: internal
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-gcc-6
     fetches:
         fetch:
             - clang-8
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-gcc-6
 
 macosx64-clang:
     description: "Clang toolchain build"
@@ -209,14 +202,14 @@ macosx64-clang:
             - 'build/build-clang/clang-8-macosx64.json'
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/clang.tar.xz
-    toolchains:
-        - linux64-cctools-port
-        - linux64-clang-8
-        - linux64-gcc-6
-        - linux64-node
     fetches:
         fetch:
             - clang-8
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang-8
+            - linux64-gcc-6
+            - linux64-node
 
 win64-clang-cl:
     description: "Clang-cl toolchain build"

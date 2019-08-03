@@ -5,8 +5,6 @@ set -x -e -v
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
-
 export PATH=$PATH:$MOZ_FETCHES_DIR/clang/bin
 
 build/unix/build-hfsplus/build-hfsplus.sh $MOZ_FETCHES_DIR
