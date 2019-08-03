@@ -8,8 +8,10 @@
 
 import { parse } from "./certDecoder.js";
 import { pemToDER } from "./utils.js";
+let gElements = {};
 
 document.addEventListener("DOMContentLoaded", async e => {
+  gElements.certificateSection = document.querySelector("certificate-section");
   let url = new URL(document.URL);
   let certInfo = url.searchParams.getAll("cert");
   if (certInfo.length === 0) {
@@ -23,12 +25,11 @@ document.addEventListener("DOMContentLoaded", async e => {
 export const updateSelectedItem = (() => {
   let state;
   return selectedItem => {
-    let certificateSection = document.querySelector("certificate-section");
     if (selectedItem) {
       if (state !== selectedItem) {
         state = selectedItem;
-        certificateSection.updateCertificateSource(selectedItem);
-        certificateSection.updateSelectedTab(selectedItem);
+        gElements.certificateSection.updateCertificateSource(selectedItem);
+        gElements.certificateSection.updateSelectedTab(selectedItem);
       }
     }
     return state;
@@ -222,16 +223,17 @@ const adjustCertInformation = cert => {
     Critical: cert.ext.scts.critical || false,
   });
 
-  return {
-    certItems,
+  certItems.push({
     tabName: cert.subject.cn,
-  };
+  });
+
+  return certItems;
 };
 
-const render = async (certs, error) => {
+const render = async error => {
   await customElements.whenDefined("certificate-section");
   const CertificateSection = customElements.get("certificate-section");
-  document.querySelector("body").append(new CertificateSection(certs, error));
+  document.querySelector("body").append(new CertificateSection(error));
   return Promise.resolve();
 };
 
@@ -258,9 +260,10 @@ const buildChain = async chain => {
         return Promise.reject();
       }
       let adjustedCerts = certs.map(cert => adjustCertInformation(cert));
-      return render(adjustedCerts, false);
+      console.log(adjustedCerts);
+      return render(false);
     })
     .catch(err => {
-      render(null, true);
+      render(true);
     });
 };
