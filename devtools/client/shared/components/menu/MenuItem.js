@@ -30,14 +30,8 @@ class MenuItem extends PureComponent {
       // a space-separated string.
       className: PropTypes.string,
 
-      // An optional ID to be assigned to the item.
-      id: PropTypes.string,
-
-      // The item label.
-      label: PropTypes.string.isRequired,
-
-      // An optional callback to be invoked when the item is selected.
-      onClick: PropTypes.func,
+      // A disabled state of the menu item.
+      disabled: PropTypes.bool,
 
       // URL of the icon to associate with the MenuItem. (Optional)
       //
@@ -48,6 +42,22 @@ class MenuItem extends PureComponent {
       // use, not simply the URL (e.g.
       // "url(chrome://devtools/skim/image/foo.svg)").
       icon: PropTypes.string,
+
+      // An optional ID to be assigned to the item.
+      id: PropTypes.string,
+
+      // The item label.
+      label: PropTypes.string.isRequired,
+
+      // An optional callback to be invoked when the item is selected.
+      onClick: PropTypes.func,
+
+      // Optional menu item role override. Use this property with a value
+      // "menuitemradio" if the menu item is a radio.
+      role: PropTypes.string,
+
+      // An optional text for the item tooltip.
+      tooltip: PropTypes.string,
     };
   }
 
@@ -111,13 +121,24 @@ class MenuItem extends PureComponent {
       attr.onClick = this.props.onClick;
     }
 
-    if (typeof this.props.checked !== "undefined") {
+    if (this.props.tooltip) {
+      attr.title = this.props.tooltip;
+    }
+
+    if (this.props.disabled) {
+      attr.disabled = this.props.disabled;
+    }
+
+    if (this.props.role) {
+      attr.role = this.props.role;
+    } else if (typeof this.props.checked !== "undefined") {
       attr.role = "menuitemcheckbox";
-      if (this.props.checked) {
-        attr["aria-checked"] = true;
-      }
     } else {
       attr.role = "menuitem";
+    }
+
+    if (this.props.checked) {
+      attr["aria-checked"] = true;
     }
 
     const textLabel = span(
