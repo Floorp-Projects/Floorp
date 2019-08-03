@@ -30,6 +30,10 @@ async function performTests() {
     false,
     "Editor is disabled when pref is set to false"
   );
+  let openEditorButton = getInlineOpenEditorButton(hud);
+  ok(openEditorButton, "button is rendered in the inline input");
+  let rect = openEditorButton.getBoundingClientRect();
+  ok(rect.width > 0 && rect.height > 0, "Button is visible");
 
   await closeConsole();
 
@@ -43,4 +47,16 @@ async function performTests() {
     true,
     "Editor is enabled when pref is set to true"
   );
+  openEditorButton = getInlineOpenEditorButton(hud);
+  rect = openEditorButton.getBoundingClientRect();
+  ok(rect.width === 0 && rect.height === 0, "Button is hidden in editor mode");
+
+  await toggleLayout(hud);
+  getInlineOpenEditorButton(hud).click();
+  await waitFor(() => isEditorModeEnabled(hud));
+  ok("Editor is open when clicking on the button");
+}
+
+function getInlineOpenEditorButton(hud) {
+  return hud.ui.outputNode.querySelector(".webconsole-input-openEditorButton");
 }
