@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, print_function
 
-import fileinput
 import glob
 import os
 import platform
@@ -92,7 +91,7 @@ def _get_device(substs, device_serial=None):
 
 
 def _install_host_utils(build_obj):
-    _log_info("Installing host utilities. This may take a while...")
+    _log_info("Installing host utilities...")
     installed = False
     host_platform = _get_host_platform()
     if host_platform:
@@ -194,7 +193,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             "No Android devices connected. Start an emulator? (Y/n) ").strip()
         if response.lower().startswith('y') or response == '':
             if not emulator.check_avd():
-                _log_info("Fetching AVD. This may take a while...")
+                _log_info("Fetching AVD...")
                 emulator.update_avd()
             _log_info("Starting emulator running %s..." %
                       emulator.get_avd_description())
@@ -237,7 +236,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             if response.lower().startswith('y') or response == '':
                 if installed:
                     device.uninstall_app(app)
-                _log_info("Installing Firefox. This may take a while...")
+                _log_info("Installing Firefox...")
                 build_obj._run_make(directory=".", target='install',
                                     ensure_exit_code=False)
         elif app == 'org.mozilla.geckoview.test':
@@ -246,7 +245,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             if response.lower().startswith('y') or response == '':
                 if installed:
                     device.uninstall_app(app)
-                _log_info("Installing geckoview AndroidTest. This may take a while...")
+                _log_info("Installing geckoview AndroidTest...")
                 sub = 'geckoview:installWithGeckoBinariesDebugAndroidTest'
                 build_obj._mach_context.commands.dispatch('gradle',
                                                           args=[sub],
@@ -257,7 +256,7 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False,
             if response.lower().startswith('y') or response == '':
                 if installed:
                     device.uninstall_app(app)
-                _log_info("Installing geckoview_example. This may take a while...")
+                _log_info("Installing geckoview_example...")
                 sub = 'install-geckoview_example'
                 build_obj._mach_context.commands.dispatch('android',
                                                           subcommand=sub,
@@ -334,18 +333,7 @@ def grant_runtime_permissions(build_obj, app, device_serial=None):
     (eg. org.mozilla.geckoview.test).
     """
     device = _get_device(build_obj.substs, device_serial)
-    try:
-        sdk_level = device.version
-        if sdk_level and sdk_level >= 23:
-            _log_info("Granting important runtime permissions to %s" % app)
-            device.shell_output('pm grant %s android.permission.WRITE_EXTERNAL_STORAGE' % app)
-            device.shell_output('pm grant %s android.permission.READ_EXTERNAL_STORAGE' % app)
-            device.shell_output('pm grant %s android.permission.ACCESS_COARSE_LOCATION' % app)
-            device.shell_output('pm grant %s android.permission.ACCESS_FINE_LOCATION' % app)
-            device.shell_output('pm grant %s android.permission.CAMERA' % app)
-            device.shell_output('pm grant %s android.permission.RECORD_AUDIO' % app)
-    except Exception:
-        _log_warning("Unable to grant runtime permissions to %s" % app)
+    device.grant_runtime_permissions(app)
 
 
 class AndroidEmulator(object):
@@ -357,7 +345,6 @@ class AndroidEmulator(object):
             emulator = AndroidEmulator()
             if not emulator.is_running() and emulator.is_available():
                 if not emulator.check_avd():
-                    warn("this may take a while...")
                     emulator.update_avd()
                 emulator.start()
                 emulator.wait_for_start()
@@ -412,8 +399,7 @@ class AndroidEmulator(object):
         """
            Determine if the AVD is already installed locally.
            (This is usually used to determine if update_avd() is likely
-           to require a download; it is a convenient way of determining
-           whether a 'this may take a while' warning is warranted.)
+           to require a download.)
 
            Returns True if the AVD is installed.
         """
@@ -533,7 +519,7 @@ class AndroidEmulator(object):
         if not self._verify_emulator():
             return False
         if self.avd_info.x86:
-            _log_info("Running the x86 emulator; be sure to install an x86 APK!")
+            _log_info("Running the x86/x86_64 emulator; be sure to install an x86 or x86_64 APK!")
         else:
             _log_info("Running the arm emulator; be sure to install an arm APK!")
         return True
@@ -811,48 +797,6 @@ def _get_host_platform():
     return plat
 
 
-def _get_device_platform(substs):
-    # PIE executables are required when SDK level >= 21 - important for gdbserver
-    device = _get_device(substs)
-    sdk_level = device.version
-    pie = ''
-    if sdk_level and sdk_level >= 21:
-        pie = '-pie'
-    if substs['TARGET_CPU'].startswith('arm'):
-        return 'arm%s' % pie
-    return 'x86%s' % pie
-
-
-def _update_gdbinit(substs, path):
-    if os.path.exists(path):
-        obj_replaced = False
-        src_replaced = False
-        # update existing objdir/srcroot in place
-        for line in fileinput.input(path, inplace=True):
-            if "feninit.default.objdir" in line and substs and 'MOZ_BUILD_ROOT' in substs:
-                print("python feninit.default.objdir = '%s'" % substs['MOZ_BUILD_ROOT'])
-                obj_replaced = True
-            elif "feninit.default.srcroot" in line and substs and 'top_srcdir' in substs:
-                print("python feninit.default.srcroot = '%s'" % substs['top_srcdir'])
-                src_replaced = True
-            else:
-                print(line.strip())
-        # append objdir/srcroot if not updated
-        if (not obj_replaced) and substs and 'MOZ_BUILD_ROOT' in substs:
-            with open(path, "a") as f:
-                f.write("\npython feninit.default.objdir = '%s'\n" % substs['MOZ_BUILD_ROOT'])
-        if (not src_replaced) and substs and 'top_srcdir' in substs:
-            with open(path, "a") as f:
-                f.write("python feninit.default.srcroot = '%s'\n" % substs['top_srcdir'])
-    else:
-        # write objdir/srcroot to new gdbinit file
-        with open(path, "w") as f:
-            if substs and 'MOZ_BUILD_ROOT' in substs:
-                f.write("python feninit.default.objdir = '%s'\n" % substs['MOZ_BUILD_ROOT'])
-            if substs and 'top_srcdir' in substs:
-                f.write("python feninit.default.srcroot = '%s'\n" % substs['top_srcdir'])
-
-
 def _verify_kvm(substs):
     # 'emulator -accel-check' should produce output like:
     # accel:
@@ -870,4 +814,4 @@ def _verify_kvm(substs):
     except Exception as e:
         _log_warning(str(e))
     _log_warning("Unable to verify kvm acceleration!")
-    _log_warning("The x86 emulator may fail to start without kvm.")
+    _log_warning("The x86/x86_64 emulator may fail to start without kvm.")
