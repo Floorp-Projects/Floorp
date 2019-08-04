@@ -9,16 +9,6 @@ const TEST_URI =
   "data:text/html;charset=utf-8,<p>Web Console test for splitting</p>";
 
 add_task(async function() {
-  // Run in legacy JsTerm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await testHistory();
-
-  // And then in codeMirror JsTerm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await testHistory();
-});
-
-async function testHistory() {
   info(
     "Test that the split console input is focused and restores the focus properly."
   );
@@ -47,7 +37,7 @@ async function testHistory() {
   );
   activeElement = getActiveElement(inspector.panelDoc);
   is(activeElement, inspector.searchBox, "Search box is focused");
-}
+});
 
 function getActiveElement(doc) {
   let activeElement = doc.activeElement;

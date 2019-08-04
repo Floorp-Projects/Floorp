@@ -16,15 +16,6 @@ add_task(async function() {
   // This is required for testing the text input in the browser console:
   await pushPref("devtools.chrome.enabled", true);
 
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   await addTab(TEST_URI);
   const hud = await HUDService.toggleBrowserConsole();
 
@@ -79,10 +70,7 @@ async function performTests() {
     "The context menu has the expected entries for a simple log message"
   );
 
-  menuPopup = await openContextMenu(
-    hud,
-    hud.jsterm.node || hud.jsterm.inputNode
-  );
+  menuPopup = await openContextMenu(hud, hud.jsterm.node);
 
   let actualEntries = getL10NContextMenu(menuPopup);
   is(
@@ -99,7 +87,7 @@ async function performTests() {
   is(actualEntries[4], "#editmenu-delete (editmenu-delete) [disabled]");
   is(actualEntries[5], "#editmenu-selectAll (editmenu-select-all) [disabled]");
 
-  const node = hud.jsterm.inputNode || hud.jsterm.node;
+  const node = hud.jsterm.node;
   const inputContainer = node.closest(".jsterm-input-container");
   await openContextMenu(hud, inputContainer);
 
@@ -121,7 +109,7 @@ async function performTests() {
   await hideContextMenu(hud);
   // Close the browser console.
   await HUDService.toggleBrowserConsole();
-}
+});
 
 function addPrefBasedEntries(expectedEntries) {
   if (Services.prefs.getBoolPref("devtools.webconsole.sidebarToggle", false)) {

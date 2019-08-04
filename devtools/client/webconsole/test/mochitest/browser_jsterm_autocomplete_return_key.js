@@ -26,15 +26,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - test pressing return with open popup</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
@@ -62,12 +53,7 @@ async function performTests() {
     "last index is selected"
   );
   is(popup.selectedItem.label, "item33", "item33 is selected");
-  const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(
-    hud,
-    prefix + "item33",
-    "completeNode.value holds item33"
-  );
+  checkInputCompletionValue(hud, "item33", "completeNode.value holds item33");
 
   info("press Return to accept suggestion. wait for popup to hide");
   let onPopupClose = popup.once("popup-closed");
@@ -105,4 +91,4 @@ async function performTests() {
     "window.foobar.item3",
     "completion was successful after KEY_Enter"
   );
-}
+});

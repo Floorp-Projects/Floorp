@@ -22,21 +22,12 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test [ completion.
   </script>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   await testInputs(hud);
   await testCompletionTextUpdateOnPopupNavigate(hud);
   await testAcceptCompletionExistingClosingBracket(hud);
-}
+});
 
 async function testInputs(hud) {
   const tests = [
@@ -163,7 +154,7 @@ async function testInput(
   );
   checkInputCompletionValue(
     hud,
-    " ".repeat(input.length) + expectedCompletionText,
+    expectedCompletionText,
     `${description} - completeNode has expected value`
   );
 
@@ -198,25 +189,13 @@ async function testCompletionTextUpdateOnPopupNavigate(hud) {
     `"data-test"|"dataTest"|"DATA-TEST"`,
     `popup has expected items, in expected order`
   );
-  checkInputCompletionValue(
-    hud,
-    " ".repeat(input.length) + `-test"]`,
-    `completeNode has expected value`
-  );
+  checkInputCompletionValue(hud, `-test"]`, `completeNode has expected value`);
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(
-    hud,
-    " ".repeat(input.length) + `Test"]`,
-    `completeNode has expected value`
-  );
+  checkInputCompletionValue(hud, `Test"]`, `completeNode has expected value`);
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
-  checkInputCompletionValue(
-    hud,
-    " ".repeat(input.length) + `-TEST"]`,
-    `completeNode has expected value`
-  );
+  checkInputCompletionValue(hud, `-TEST"]`, `completeNode has expected value`);
 
   const onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");

@@ -7,15 +7,6 @@ const TEST_URI =
   "data:text/html,Test <code>keys()</code> & <code>values()</code> jsterm helper";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   let message = await executeAndWaitForMessage(
@@ -41,4 +32,4 @@ async function performTests() {
     ".result"
   );
   ok(message, "`keys(window)` worked");
-}
+});

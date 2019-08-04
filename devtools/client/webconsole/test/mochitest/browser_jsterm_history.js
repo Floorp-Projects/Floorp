@@ -11,14 +11,6 @@ const TEST_URI = "data:text/html;charset=UTF-8,test";
 const COMMANDS = ["document", "window", "window.location"];
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await testHistory();
-
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await testHistory();
-});
-
-async function testHistory() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   jsterm.focus();
@@ -62,4 +54,4 @@ async function testHistory() {
     COMMANDS[idxLast],
     "check history next idx:" + idxLast
   );
-}
+});

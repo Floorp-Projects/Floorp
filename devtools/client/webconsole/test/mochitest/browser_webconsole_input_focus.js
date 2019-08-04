@@ -42,7 +42,7 @@ add_task(async function() {
 });
 
 function waitForBlurredInput(hud) {
-  const node = hud.jsterm.node || hud.jsterm.inputNode;
+  const node = hud.jsterm.node;
   return new Promise(resolve => {
     const lostFocus = () => {
       ok(!isInputFocused(hud), "input node is not focused");

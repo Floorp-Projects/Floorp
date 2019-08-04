@@ -285,9 +285,6 @@ pref("devtools.webconsole.sidebarToggle", true);
 pref("devtools.webconsole.sidebarToggle", false);
 #endif
 
-// Enable CodeMirror in the JsTerm
-pref("devtools.webconsole.jsterm.codeMirror", true);
-
 // Enable editor mode in the console in Nightly builds.
 #if defined(NIGHTLY_BUILD)
 pref("devtools.webconsole.features.editor", true);

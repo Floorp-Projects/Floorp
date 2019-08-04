@@ -12,15 +12,6 @@ const TEST_URI =
   "data:text/html;charset=utf8,<p>test cached autocompletion results";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
@@ -31,11 +22,7 @@ async function performTests() {
   // Test if 'doc' gives 'document'
   await jstermComplete("doc");
   is(getInputValue(hud), "doc", "'docu' completion (input.value)");
-  checkInputCompletionValue(
-    hud,
-    "   ument",
-    "'docu' completion (completeNode)"
-  );
+  checkInputCompletionValue(hud, "ument", "'docu' completion (completeNode)");
 
   // Test typing 'window.'.'
   await jstermComplete("window.");
@@ -146,7 +133,7 @@ async function performTests() {
     "zzz-zzzz",
     "filtering from the cache works - step 2"
   );
-}
+});
 
 function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);

@@ -13,17 +13,6 @@ const TEST_URI =
 const MINIMUM_MESSAGE_HEIGHT = 19;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
-  // The style is only enabled in the new jsterm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
   const { document } = ui;
@@ -110,7 +99,7 @@ async function performTests() {
     appNode.offsetHeight,
     "The entire height is taken by filter bar and input"
   );
-}
+});
 
 function testLayout(node) {
   is(

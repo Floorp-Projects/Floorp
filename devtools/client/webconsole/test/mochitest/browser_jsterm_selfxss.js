@@ -18,15 +18,6 @@ const stringToCopy = "EvilCommand";
 
 add_task(async function() {
   await pushPref("devtools.chrome.enabled", false);
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTest();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTest();
-});
-
-async function performTest() {
   await pushPref("devtools.selfxss.count", 0);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { ui } = hud;
@@ -69,4 +60,4 @@ async function performTest() {
   setInputValue(hud, "");
   goDoCommand("cmd_paste");
   is(getInputValue(hud), stringToCopy, "Paste works");
-}
+});

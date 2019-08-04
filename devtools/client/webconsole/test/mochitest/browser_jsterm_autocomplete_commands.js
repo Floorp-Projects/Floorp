@@ -8,15 +8,6 @@
 const TEST_URI = `data:text/html;charset=utf-8,Test command autocomplete`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
@@ -41,7 +32,7 @@ async function performTests() {
   await onAutocompleUpdated;
   checkInputCompletionValue(
     hud,
-    "  creenshot",
+    "creenshot",
     "completion node has expected :screenshot value"
   );
 
@@ -64,13 +55,13 @@ async function performTests() {
   await onAutocompleUpdated;
   checkInputCompletionValue(
     hud,
-    "    p",
+    "p",
     "completion node has expected :help value"
   );
 
   EventUtils.synthesizeKey("KEY_Tab");
   is(getInputValue(hud), ":help", "Tab key correctly completes :help");
-}
+});
 
 function getPopupItems(popup) {
   return popup.items.map(item => item.label);

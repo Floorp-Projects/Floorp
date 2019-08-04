@@ -6,15 +6,6 @@
 const TEST_URI = "data:text/html,Test error documentation";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Check that errors with entries in errordocs.js display links next to their messages.
@@ -55,4 +46,4 @@ async function performTests() {
       `The link has the expected "${errorUrl}" href value`
     );
   }
-}
+});

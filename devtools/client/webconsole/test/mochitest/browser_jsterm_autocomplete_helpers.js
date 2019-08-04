@@ -12,21 +12,12 @@ const TEST_URI =
   "data:text/html;charset=utf8,<p>test JSTerm Helpers autocomplete";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   await testInspectAutoCompletion(hud, "i", true);
   await testInspectAutoCompletion(hud, "window.", false);
   await testInspectAutoCompletion(hud, "dump(i", true);
   await testInspectAutoCompletion(hud, "window.dump(i", true);
-}
+});
 
 async function testInspectAutoCompletion(hud, inputValue, expectInspect) {
   setInputValue(hud, "");

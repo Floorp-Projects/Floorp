@@ -21,15 +21,6 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test [ completion cached result
   </script>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 
@@ -109,7 +100,7 @@ async function performTests() {
     );
     checkInputCompletionValue(
       hud,
-      " ".repeat(test.initialInput.length) + test.expectedCompletionText,
+      test.expectedCompletionText,
       `completeNode has expected value`
     );
     for (const {
@@ -128,7 +119,7 @@ async function performTests() {
       );
       checkInputCompletionValue(
         hud,
-        " ".repeat(getInputValue(hud).length) + expectedCompletionText,
+        expectedCompletionText,
         `completeNode has expected value`
       );
     }
@@ -138,7 +129,7 @@ async function performTests() {
     EventUtils.synthesizeKey("KEY_Escape");
     await onPopupClose;
   }
-}
+});
 
 function getAutocompletePopupLabels(autocompletePopup) {
   return autocompletePopup.items.map(i => i.label);

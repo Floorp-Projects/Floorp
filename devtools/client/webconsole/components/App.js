@@ -79,7 +79,6 @@ class App extends Component {
       onFirstMeaningfulPaint: PropTypes.func.isRequired,
       serviceContainer: PropTypes.object.isRequired,
       closeSplitConsole: PropTypes.func.isRequired,
-      jstermCodeMirror: PropTypes.bool,
       autocomplete: PropTypes.bool,
       currentReverseSearchEntry: PropTypes.string,
       reverseSearchInputVisible: PropTypes.bool,
@@ -275,7 +274,6 @@ class App extends Component {
     const {
       webConsoleUI,
       serviceContainer,
-      jstermCodeMirror,
       autocomplete,
       editorMode,
       editorWidth,
@@ -287,7 +285,6 @@ class App extends Component {
       webConsoleUI,
       serviceContainer,
       onPaste: this.onPaste,
-      codeMirrorEnabled: jstermCodeMirror,
       autocomplete,
       editorMode: editorMode && editorFeatureEnabled,
       editorWidth,
@@ -329,25 +326,21 @@ class App extends Component {
   }
 
   renderConfirmDialog() {
-    const { webConsoleUI, serviceContainer, jstermCodeMirror } = this.props;
+    const { webConsoleUI, serviceContainer } = this.props;
 
     return ConfirmDialog({
       webConsoleUI,
       serviceContainer,
-      codeMirrorEnabled: jstermCodeMirror,
       key: "confirm-dialog",
     });
   }
 
   renderRootElement(children) {
-    const { jstermCodeMirror, editorMode, editorFeatureEnabled } = this.props;
+    const { editorMode, editorFeatureEnabled } = this.props;
 
     const classNames = ["webconsole-app"];
     if (editorMode && editorFeatureEnabled) {
       classNames.push("jsterm-editor");
-    }
-    if (jstermCodeMirror) {
-      classNames.push("jsterm-cm");
     }
 
     return div(

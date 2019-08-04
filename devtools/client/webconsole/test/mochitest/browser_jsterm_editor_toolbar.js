@@ -9,16 +9,6 @@ const TEST_URI = "data:text/html;charset=utf8,<p>Test editor toolbar";
 
 add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   await pushPref("devtools.webconsole.input.editor", false);
 
   const tab = await addTab(TEST_URI);
@@ -123,7 +113,7 @@ async function performTests() {
   closeButton.click();
   await waitFor(() => !isEditorModeEnabled(hud));
   ok(true, "Editor mode is disabled when clicking on the close button");
-}
+});
 
 function getEditorToolbar(hud) {
   return hud.ui.outputNode.querySelector(".webconsole-editor-toolbar");
