@@ -414,8 +414,10 @@ class LayerManagerComposite final : public HostLayerManager {
 
   /**
    * Render the current layer tree to the active target.
+   * Returns true if the current invalid region can be cleared, false if
+   * rendering was canceled.
    */
-  void Render(const nsIntRegion& aInvalidRegion,
+  bool Render(const nsIntRegion& aInvalidRegion,
               const nsIntRegion& aOpaqueRegion);
 #if defined(MOZ_WIDGET_ANDROID)
   void RenderToPresentationSurface();
