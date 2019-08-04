@@ -8,23 +8,19 @@
 
 // Test stepping back while recording, then resuming recording.
 add_task(async function() {
-  const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_continuous.html", "current");
+  const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
+  const { threadFront, target } = dbg;
 
-  const { toolbox, target } = await attachDebugger(tab);
-  const client = toolbox.threadFront;
-  await client.interrupt();
-  const bp = await setBreakpoint(client, "doc_rr_continuous.html", 13);
-  await resumeToLine(client, 13);
+  await threadFront.interrupt();
+  const bp = await setBreakpoint(threadFront, "doc_rr_continuous.html", 13);
+  await resumeToLine(threadFront, 13);
   const value = await evaluateInTopFrame(target, "number");
-  await reverseStepOverToLine(client, 12);
+  await reverseStepOverToLine(threadFront, 12);
   await checkEvaluateInTopFrame(target, "number", value - 1);
-  await resumeToLine(client, 13);
-  await resumeToLine(client, 13);
+  await resumeToLine(threadFront, 13);
+  await resumeToLine(threadFront, 13);
   await checkEvaluateInTopFrame(target, "number", value + 1);
 
-  await client.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await threadFront.removeBreakpoint(bp);
+  await shutdownDebugger(dbg);
 });

@@ -8,37 +8,35 @@
 
 // Stepping past the beginning or end of a frame should act like a step-out.
 add_task(async function() {
-  const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
-  await once(Services.ppmm, "RecordingFinished");
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadFront, target } = dbg;
 
-  const { target, toolbox } = await attachDebugger(tab);
-  const client = toolbox.threadFront;
-  await client.interrupt();
-  const bp = await setBreakpoint(client, "doc_rr_basic.html", 21);
-  await rewindToLine(client, 21);
+  await threadFront.interrupt();
+  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
-  await reverseStepOverToLine(client, 20);
-  await reverseStepOverToLine(client, 12);
+  await reverseStepOverToLine(threadFront, 20);
+  await reverseStepOverToLine(threadFront, 12);
+  await reverseStepOverToLine(threadFront, 12);
 
   // After reverse-stepping out of the topmost frame we should rewind to the
   // last breakpoint hit.
-  await reverseStepOverToLine(client, 21);
+  await reverseStepOverToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 9);
 
-  await stepOverToLine(client, 22);
-  await stepOverToLine(client, 23);
-  await stepOverToLine(client, 13);
-  await stepOverToLine(client, 17);
-  await stepOverToLine(client, 18);
+  await stepOverToLine(threadFront, 22);
+  await stepOverToLine(threadFront, 23);
+  await stepOverToLine(threadFront, 13);
+  await stepOverToLine(threadFront, 17);
+  await stepOverToLine(threadFront, 18);
 
   // After forward-stepping out of the topmost frame we should run forward to
   // the next breakpoint hit.
-  await stepOverToLine(client, 21);
+  await stepOverToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
 
-  await client.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await threadFront.removeBreakpoint(bp);
+  await shutdownDebugger(dbg);
 });

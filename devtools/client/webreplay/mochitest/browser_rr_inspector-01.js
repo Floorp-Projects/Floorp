@@ -21,7 +21,7 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
     waitForRecording: true,
   });
-  const { threadFront, tab, toolbox } = dbg;
+  const { threadFront } = dbg;
 
   await threadFront.interrupt();
   await threadFront.resume();
@@ -59,6 +59,5 @@ add_task(async function() {
   );
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.closeToolbox();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });
