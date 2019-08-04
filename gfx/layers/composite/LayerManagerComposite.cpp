@@ -553,42 +553,39 @@ void LayerManagerComposite::UpdateAndRender() {
   nsIntRegion opaque;
   PostProcessLayers(opaque);
 
-  nsIntRegion changed;
   if (mClonedLayerTreeProperties) {
     // We need to compute layer tree differences even if we're not going to
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
     // ContainerLayers.
 
+    nsIntRegion changed;
     const bool overflowed = !mClonedLayerTreeProperties->ComputeDifferences(
         mRoot, changed, nullptr);
 
     if (overflowed) {
       changed = mTarget ? mTargetBounds : mRenderBounds;
     }
+
+    mInvalidRegion.Or(mInvalidRegion, changed);
   }
 
   nsIntRegion invalid;
   if (mTarget) {
     // Since we're composing to an external target, we're not going to use
     // the damage region from layers changes - we want to composite
-    // everything in the target bounds. Instead we accumulate the layers
-    // damage region for the next window composite.
-    mInvalidRegion.Or(mInvalidRegion, changed);
+    // everything in the target bounds. The layers damage region has been
+    // stored in mInvalidRegion and will be picked up by the next window
+    // composite.
     invalid = mTargetBounds;
   } else {
-    if (mClonedLayerTreeProperties) {
-      invalid = std::move(changed);
-    } else {
+    if (!mClonedLayerTreeProperties) {
       // If we didn't have a previous layer tree, invalidate the entire render
       // area.
-      invalid = mRenderBounds;
+      mInvalidRegion = mRenderBounds;
     }
 
-    // Add any additional invalid rects from the window manager or previous
-    // damage computed during ComposeToTarget().
-    invalid.Or(invalid, mInvalidRegion);
-    mInvalidRegion.SetEmpty();
+    invalid = mInvalidRegion;
   }
 
   if (invalid.IsEmpty() && !mWindowOverlayChanged) {
@@ -601,11 +598,15 @@ void LayerManagerComposite::UpdateAndRender() {
   // so we will invalidate after we've decided if something changed.
   InvalidateDebugOverlay(invalid, mRenderBounds);
 
-  Render(invalid, opaque);
+  bool rendered = Render(invalid, opaque);
 #if defined(MOZ_WIDGET_ANDROID)
   RenderToPresentationSurface();
 #endif
-  mWindowOverlayChanged = false;
+
+  if (!mTarget && rendered) {
+    mInvalidRegion.SetEmpty();
+    mWindowOverlayChanged = false;
+  }
 
   // Update cached layer tree information.
   mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
@@ -893,13 +894,13 @@ class ScopedCompositorRenderOffset {
 };
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
-void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
+bool LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
                                    const nsIntRegion& aOpaqueRegion) {
   AUTO_PROFILER_LABEL("LayerManagerComposite::Render", GRAPHICS);
 
   if (mDestroyed || !mCompositor || mCompositor->IsDestroyed()) {
     NS_WARNING("Call on destroyed layer manager");
-    return;
+    return false;
   }
 
   mCompositor->RequestAllowFrameRecording(!!mCompositionRecorder);
@@ -943,7 +944,7 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     AUTO_PROFILER_LABEL("LayerManagerComposite::Render:Prerender", GRAPHICS);
 
     if (!mCompositor->GetWidget()->PreRender(&widgetContext)) {
-      return;
+      return false;
     }
   }
 
@@ -985,7 +986,7 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   if (actualBounds.IsEmpty()) {
     mProfilerScreenshotGrabber.NotifyEmptyFrame();
     mCompositor->GetWidget()->PostRender(&widgetContext);
-    return;
+    return true;
   }
 
   // Allow widget to render a custom background.
@@ -1086,6 +1087,8 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
   mPayload.Clear();
 
   mCompositor->WaitForGPU();
+
+  return true;
 }
 
 #if defined(MOZ_WIDGET_ANDROID)
