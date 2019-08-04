@@ -6,13 +6,13 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const {
   setBreakpointAtEntryPoints,
 } = require("devtools/server/actors/breakpoint");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert, fetch } = DevToolsUtils;
+const { assert } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 
@@ -165,13 +165,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._extensionName;
   },
 
-  get isCacheEnabled() {
-    if (this.threadActor._parent._getCacheDisabled) {
-      return !this.threadActor._parent._getCacheDisabled();
-    }
-    return true;
-  },
-
   form: function() {
     const source = this._source;
 
@@ -208,18 +201,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     query.source = this._source;
     return this.dbg.findScripts(query);
-  },
-
-  _reportLoadSourceError: function(error) {
-    try {
-      DevToolsUtils.reportException("SourceActor", error);
-
-      JSON.stringify(this.form(), null, 4)
-        .split(/\n/g)
-        .forEach(line => console.error("\t", line));
-    } catch (e) {
-      // ignore
-    }
   },
 
   _getSourceText: async function() {
@@ -263,53 +244,16 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       return toResolvedContent(this._source.text);
     }
 
-    // Only load the HTML page source from cache (which exists when
-    // there are inline sources). Otherwise, we can't trust the
-    // cache because we are most likely here because we are
-    // fetching the original text for sourcemapped code, and the
-    // page hasn't requested it before (if it has, it was a
-    // previous debugging session).
-    // Additionally, we should only try the cache if it is currently enabled
-    // for the document.  Without this check, the cache may return stale data
-    // that doesn't match the document shown in the browser.
-    const loadFromCache = this.isInlineSource && this.isCacheEnabled;
-
-    // Fetch the sources with the same principal as the original document
-    const win = this.threadActor._parent.window;
-    let principal, cacheKey;
-    // On xpcshell, we don't have a window but a Sandbox
-    if (!isWorker && win instanceof Ci.nsIDOMWindow) {
-      const docShell = win.docShell;
-      const channel = docShell.currentDocumentChannel;
-      principal = channel.loadInfo.loadingPrincipal;
-
-      // Retrieve the cacheKey in order to load POST requests from cache
-      // Note that chrome:// URLs don't support this interface.
-      if (
-        loadFromCache &&
-        docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel
-      ) {
-        cacheKey = docShell.currentDocumentChannel.cacheKey;
-      }
-    }
-
-    const sourceFetched = fetch(this.url, {
-      principal,
-      cacheKey,
-      loadFromCache,
-    });
+    const result = await this.sources.htmlFileContents(
+      this.url,
+      /* partial */ false,
+      /* canUseCache */ this.isInlineSource
+    );
 
     // Record the contentType we just learned during fetching
-    return sourceFetched.then(
-      result => {
-        this._contentType = result.contentType;
-        return result;
-      },
-      error => {
-        this._reportLoadSourceError(error);
-        throw error;
-      }
-    );
+    this._contentType = result.contentType;
+
+    return result;
   },
 
   getBreakableLines() {
