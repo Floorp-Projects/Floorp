@@ -77,6 +77,9 @@ void BeforeCheckpoint();
 // true if we just rewound.
 void AfterCheckpoint(size_t aCheckpoint, bool aRestoredCheckpoint);
 
+// Called when a child crashes, returning whether the crash was recovered from.
+bool RecoverFromCrash(parent::ChildProcessInfo* aChild);
+
 // Accessors for state which can be accessed from JS.
 
 // Mark a time span when the main thread is idle.

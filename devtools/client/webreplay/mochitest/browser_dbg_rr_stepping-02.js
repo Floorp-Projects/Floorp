@@ -8,30 +8,27 @@
 
 // Test fixes for some simple stepping bugs.
 add_task(async function() {
-  const tab = BrowserTestUtils.addTab(gBrowser, null, { recordExecution: "*" });
-  gBrowser.selectedTab = tab;
-  openTrustedLinkIn(EXAMPLE_URL + "doc_rr_basic.html", "current");
-  await once(Services.ppmm, "RecordingFinished");
+  const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
+    waitForRecording: true,
+  });
+  const { threadFront } = dbg;
 
-  const { toolbox } = await attachDebugger(tab);
-  const front = toolbox.threadFront;
-  await front.interrupt();
-  const bp = await setBreakpoint(front, "doc_rr_basic.html", 22);
-  await rewindToLine(front, 22);
-  await stepInToLine(front, 25);
-  await stepOverToLine(front, 26);
-  await stepOverToLine(front, 27);
-  await reverseStepOverToLine(front, 26);
-  await stepInToLine(front, 30);
-  await stepOverToLine(front, 31);
-  await stepOverToLine(front, 32);
-  await stepOverToLine(front, 33);
-  await reverseStepOverToLine(front, 32);
-  await stepOutToLine(front, 27);
-  await reverseStepOverToLine(front, 26);
-  await reverseStepOverToLine(front, 25);
+  await threadFront.interrupt();
+  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 22);
+  await rewindToLine(threadFront, 22);
+  await stepInToLine(threadFront, 25);
+  await stepOverToLine(threadFront, 26);
+  await stepOverToLine(threadFront, 27);
+  await reverseStepOverToLine(threadFront, 26);
+  await stepInToLine(threadFront, 30);
+  await stepOverToLine(threadFront, 31);
+  await stepOverToLine(threadFront, 32);
+  await stepOverToLine(threadFront, 33);
+  await reverseStepOverToLine(threadFront, 32);
+  await stepOutToLine(threadFront, 27);
+  await reverseStepOverToLine(threadFront, 26);
+  await reverseStepOverToLine(threadFront, 25);
 
-  await front.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await threadFront.removeBreakpoint(bp);
+  await shutdownDebugger(dbg);
 });

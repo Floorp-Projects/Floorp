@@ -9,7 +9,7 @@
 // Test some issues when stepping around after hitting a breakpoint while recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const { threadFront, tab, toolbox } = dbg;
+  const { threadFront } = dbg;
 
   await threadFront.interrupt();
   const bp1 = await setBreakpoint(threadFront, "doc_rr_continuous.html", 19);
@@ -24,6 +24,5 @@ add_task(async function() {
   await threadFront.removeBreakpoint(bp1);
   await threadFront.removeBreakpoint(bp2);
   await threadFront.removeBreakpoint(bp3);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });
