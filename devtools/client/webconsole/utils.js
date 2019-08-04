@@ -30,23 +30,6 @@ var WebConsoleUtils = {
   },
 
   /**
-   * Copies certain style attributes from one element to another.
-   *
-   * @param Node from
-   *        The target node.
-   * @param Node to
-   *        The destination node.
-   */
-  copyTextStyles: function(from, to) {
-    const win = from.ownerDocument.defaultView;
-    const style = win.getComputedStyle(from);
-    to.style.fontFamily = style.fontFamily;
-    to.style.fontSize = style.fontSize;
-    to.style.fontWeight = style.fontWeight;
-    to.style.fontStyle = style.fontStyle;
-  },
-
-  /**
    * Value of devtools.selfxss.count preference
    *
    * @type number

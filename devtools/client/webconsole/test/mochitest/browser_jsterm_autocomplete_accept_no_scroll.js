@@ -19,9 +19,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
   </script>`;
 
 add_task(async function() {
-  // Only run test with legacy JsTerm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
   const { autocompletePopup: popup } = jsterm;
@@ -35,12 +32,10 @@ add_task(async function() {
   EventUtils.sendString("window.foobar.");
 
   await onPopUpOpen;
+  const scrollableEl = ui.window.document.querySelector(".CodeMirror-scroll");
 
-  const inputContainer = ui.window.document.querySelector(
-    ".jsterm-input-container"
-  );
-  ok(inputContainer.scrollTop > 0, "The input overflows");
-  const scrollTop = inputContainer.scrollTop;
+  ok(scrollableEl.scrollTop > 0, "The input overflows");
+  const scrollTop = scrollableEl.scrollTop;
 
   info("Hit Enter to accept the autocompletion");
   const onPopupClose = popup.once("popup-closed");
@@ -54,7 +49,7 @@ add_task(async function() {
     "completion was successful after KEY_Enter"
   );
   is(
-    inputContainer.scrollTop,
+    scrollableEl.scrollTop,
     scrollTop,
     "The scrolling position stayed the same when accepting the completion"
   );

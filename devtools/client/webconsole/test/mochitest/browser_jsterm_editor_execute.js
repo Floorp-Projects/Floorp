@@ -13,19 +13,10 @@ const TEST_URI =
 add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const expression = `x = 10`;
   setInputValue(hud, expression);
   await executeAndWaitForMessage(hud, undefined, "", ".result");
   is(getInputValue(hud), expression, "input line is not cleared after submit");
-}
+});

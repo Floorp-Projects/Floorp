@@ -12,15 +12,6 @@ add_task(async function() {
   // Enable await mapping.
   await pushPref("devtools.debugger.features.map-await-expression", true);
 
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const executeAndWaitForResultMessage = (input, expectedOutput) =>
@@ -73,4 +64,4 @@ async function performTests() {
     `Promise {`
   );
   ok(message, "Promise are displayed as expected");
-}
+});

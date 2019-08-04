@@ -12,15 +12,6 @@ add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
 
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   // Reset editorWidth pref so we have steady results when running multiple times.
   await pushPref("devtools.webconsole.input.editorWidth", null);
 
@@ -60,7 +51,7 @@ async function performTests() {
     `${newWidth}px`,
     "The width is applied again when switching back to editor"
   );
-}
+});
 
 async function resize(resizer, clientX) {
   const doc = resizer.ownerDocument;

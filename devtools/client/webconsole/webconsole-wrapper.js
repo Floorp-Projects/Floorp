@@ -182,10 +182,8 @@ class WebConsoleWrapper {
         },
 
         inputHasSelection: () => {
-          const { editor, inputNode } = webConsoleUI.jsterm || {};
-          return editor
-            ? !!editor.getSelection()
-            : inputNode && inputNode.selectionStart !== inputNode.selectionEnd;
+          const { editor } = webConsoleUI.jsterm || {};
+          return editor && !!editor.getSelection();
         },
 
         getInputValue: () => {
@@ -217,10 +215,7 @@ class WebConsoleWrapper {
         },
 
         getJsTermTooltipAnchor: () => {
-          if (jstermCodeMirror) {
-            return webConsoleUI.jsterm.node.querySelector(".CodeMirror-cursor");
-          }
-          return webConsoleUI.jsterm.completeNode;
+          return webConsoleUI.outputNode.querySelector(".CodeMirror-cursor");
         },
         getMappedExpression: this.hud.getMappedExpression.bind(this.hud),
         getPanelWindow: () => webConsoleUI.window,
@@ -401,8 +396,6 @@ class WebConsoleWrapper {
       });
 
       const { prefs } = store.getState();
-      const jstermCodeMirror =
-        prefs.jstermCodeMirror && !Services.appinfo.accessibilityEnabled;
       const autocomplete = prefs.autocomplete;
       const editorFeatureEnabled = prefs.editor;
 
@@ -428,7 +421,6 @@ class WebConsoleWrapper {
         webConsoleUI,
         onFirstMeaningfulPaint: resolve,
         closeSplitConsole: this.closeSplitConsole.bind(this),
-        jstermCodeMirror,
         autocomplete,
         editorFeatureEnabled,
         hideShowContentMessagesCheckbox: !webConsoleUI.isBrowserConsole,

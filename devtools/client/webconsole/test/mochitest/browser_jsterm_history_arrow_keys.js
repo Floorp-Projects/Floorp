@@ -20,15 +20,6 @@ const TEST_VALUES = [
 ];
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 
@@ -158,37 +149,28 @@ async function performTests() {
     EventUtils.synthesizeKey("KEY_ArrowDown", option);
     checkInput("|", "Cmd+↓: input is empty");
   }
-}
+});
 
 function setCursorAtPosition(hud, pos) {
-  const { jsterm } = hud;
-  const { inputNode, editor } = jsterm;
+  const { editor } = hud.jsterm;
 
-  if (editor) {
-    let line = 0;
-    let ch = 0;
-    let currentPos = 0;
-    getInputValue(hud)
-      .split("\n")
-      .every(l => {
-        if (l.length < pos - currentPos) {
-          line++;
-          currentPos += l.length;
-          return true;
-        }
-        ch = pos - currentPos;
-        return false;
-      });
-    return editor.setCursor({ line, ch });
-  }
-
-  return inputNode.setSelectionRange(pos, pos);
+  let line = 0;
+  let ch = 0;
+  let currentPos = 0;
+  getInputValue(hud)
+    .split("\n")
+    .every(l => {
+      if (l.length < pos - currentPos) {
+        line++;
+        currentPos += l.length;
+        return true;
+      }
+      ch = pos - currentPos;
+      return false;
+    });
+  return editor.setCursor({ line, ch });
 }
 
 function inputHasNoSelection(jsterm) {
-  if (jsterm.editor) {
-    return !jsterm.editor.getDoc().getSelection();
-  }
-
-  return jsterm.inputNode.selectionStart === jsterm.inputNode.selectionEnd;
+  return !jsterm.editor.getDoc().getSelection();
 }

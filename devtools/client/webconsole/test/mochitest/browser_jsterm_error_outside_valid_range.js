@@ -9,15 +9,6 @@
 const TEST_URI = "data:text/html,Test error documentation";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const text =
@@ -33,4 +24,4 @@ async function performTests() {
     true,
     "Error message displayed as expected, without crashing the console."
   );
-}
+});

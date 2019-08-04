@@ -23,14 +23,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Test</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const { jsterm } = await openNewTabAndConsole(TEST_URI);
   const { autocompletePopup: popup } = jsterm;
 
@@ -83,4 +75,4 @@ async function performTests() {
     originalWidth,
     "popup is back to its original width"
   );
-}
+});

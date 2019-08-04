@@ -10,15 +10,6 @@
 const TEST_URI = `data:text/html;charset=utf8,test autocompletion with $ or _`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   execute(hud, "var testObject = {$$aaab: '', $$aaac: ''}");
@@ -37,7 +28,7 @@ async function performTests() {
   await testAutocomplete(hud, "blargh");
   await testAutocomplete(hud, "foobar.a");
   await testAutocomplete(hud, "blargh.a");
-}
+});
 
 async function testAutocomplete(hud, inputString) {
   await setInputValueForAutocompletion(hud, inputString);

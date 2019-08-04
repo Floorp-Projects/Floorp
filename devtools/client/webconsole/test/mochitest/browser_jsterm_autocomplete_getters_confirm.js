@@ -34,15 +34,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Autocomplete popup - invoke getter usage test</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
@@ -153,4 +144,4 @@ async function performTests() {
   );
   checkInputValueAndCursorPosition(hud, "window.foo.rab.|");
   is(isConfirmDialogOpened(toolbox), false, "confirm tooltip is now closed");
-}
+});

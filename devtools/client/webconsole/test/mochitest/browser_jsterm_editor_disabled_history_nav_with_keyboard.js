@@ -13,15 +13,6 @@ const TEST_URI =
 add_task(async function() {
   await pushPref("devtools.webconsole.features.editor", true);
   await pushPref("devtools.webconsole.input.editor", true);
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const testExpressions = [
@@ -100,7 +91,7 @@ async function performTests() {
   EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_ArrowDown");
   is(getInputValue(hud), jsExpression, "And the cows are still there...");
-}
+});
 
 function getEditorToolbar(hud) {
   return hud.ui.outputNode.querySelector(".webconsole-editor-toolbar");

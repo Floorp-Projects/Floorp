@@ -23,15 +23,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 812618 - test completion inside text</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   info("web console opened");
@@ -155,7 +146,7 @@ async function performTests() {
   is(getInputValue(hud), "9t9luftballons", "jsterm has expected value");
   is(popup.isOpen, false, "popup is not open");
   ok(!getInputCompletionValue(hud), "there is no completion text");
-}
+});
 
 async function setInitialState(hud) {
   const { jsterm } = hud;

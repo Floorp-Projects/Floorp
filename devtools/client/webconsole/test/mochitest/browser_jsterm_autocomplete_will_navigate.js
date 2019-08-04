@@ -22,15 +22,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Test autocomplete close on content navigation</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   info("web console opened");
@@ -56,4 +47,4 @@ async function performTests() {
   ok(!popup.isOpen, "popup is not open after reloading the page");
   is(getInputValue(hud), "window.foo.", "completion was cancelled");
   ok(!getInputCompletionValue(hud), "completeNode is empty");
-}
+});

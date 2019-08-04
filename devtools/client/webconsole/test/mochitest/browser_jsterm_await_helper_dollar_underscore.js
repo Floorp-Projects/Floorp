@@ -11,16 +11,6 @@ const TEST_URI = "data:text/html;charset=utf-8,top-level await + $_";
 add_task(async function() {
   // Enable await mapping.
   await pushPref("devtools.debugger.features.map-await-expression", true);
-
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   const executeAndWaitForResultMessage = (input, expectedOutput) =>
@@ -90,4 +80,4 @@ async function performTests() {
     true,
     "$_ was replaced with the last resolving top-level await evaluation result"
   );
-}
+});

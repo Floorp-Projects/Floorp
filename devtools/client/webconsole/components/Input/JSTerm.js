@@ -4,7 +4,6 @@
 
 "use strict";
 
-const { Utils: WebConsoleUtils } = require("devtools/client/webconsole/utils");
 const Services = require("Services");
 const { debounce } = require("devtools/shared/debounce");
 const isMacOS = Services.appinfo.OS === "Darwin";
@@ -74,10 +73,6 @@ const {
 class JSTerm extends Component {
   static get propTypes() {
     return {
-      // Append new executed expression into history list (action).
-      appendToHistory: PropTypes.func.isRequired,
-      // Remove all entries from the history list (action).
-      clearHistory: PropTypes.func.isRequired,
       // Returns previous or next value from the history
       // (depending on direction argument).
       getValueFromHistory: PropTypes.func.isRequired,
@@ -89,7 +84,6 @@ class JSTerm extends Component {
       serviceContainer: PropTypes.object.isRequired,
       // Handler for clipboard 'paste' event (also used for 'drop' event, callback).
       onPaste: PropTypes.func,
-      codeMirrorEnabled: PropTypes.bool,
       // Evaluate provided expression.
       evaluateExpression: PropTypes.func.isRequired,
       // Update position in the history after executing an expression (action).
@@ -118,8 +112,7 @@ class JSTerm extends Component {
     this.webConsoleUI = webConsoleUI;
     this.hudId = this.webConsoleUI.hudId;
 
-    this._keyPress = this._keyPress.bind(this);
-    this._inputEventHandler = this._inputEventHandler.bind(this);
+    this._onEditorChanges = this._onEditorChanges.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
 
@@ -135,8 +128,6 @@ class JSTerm extends Component {
     this.lastInputValue = "";
 
     this.autocompletePopup = null;
-    this.inputNode = null;
-    this.completeNode = null;
 
     EventEmitter.decorate(this);
     webConsoleUI.jsterm = this;
@@ -165,336 +156,313 @@ class JSTerm extends Component {
       autocompleteOptions
     );
 
-    if (this.props.codeMirrorEnabled) {
-      if (this.node) {
-        const onArrowUp = () => {
-          let inputUpdated;
-          if (this.autocompletePopup.isOpen) {
-            this.autocompletePopup.selectPreviousItem();
-            return null;
-          }
-
-          if (this.props.editorMode === false && this.canCaretGoPrevious()) {
-            inputUpdated = this.historyPeruse(HISTORY_BACK);
-          }
-
-          return inputUpdated ? null : "CodeMirror.Pass";
-        };
-
-        const onArrowDown = () => {
-          let inputUpdated;
-          if (this.autocompletePopup.isOpen) {
-            this.autocompletePopup.selectNextItem();
-            return null;
-          }
-
-          if (this.props.editorMode === false && this.canCaretGoNext()) {
-            inputUpdated = this.historyPeruse(HISTORY_FORWARD);
-          }
-
-          return inputUpdated ? null : "CodeMirror.Pass";
-        };
-
-        const onArrowLeft = () => {
-          if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {
-            this.clearCompletion();
-          }
-          return "CodeMirror.Pass";
-        };
-
-        const onArrowRight = () => {
-          // We only want to complete on Right arrow if the completion text is
-          // displayed.
-          if (this.getAutoCompletionText()) {
-            this.acceptProposedCompletion();
-            return null;
-          }
-
-          this.clearCompletion();
-          return "CodeMirror.Pass";
-        };
-
-        const onCtrlCmdEnter = () => {
-          if (this.hasAutocompletionSuggestion()) {
-            return this.acceptProposedCompletion();
-          }
-
-          this._execute();
+    if (this.node) {
+      const onArrowUp = () => {
+        let inputUpdated;
+        if (this.autocompletePopup.isOpen) {
+          this.autocompletePopup.selectPreviousItem();
           return null;
-        };
+        }
 
-        this.editor = new Editor({
-          autofocus: true,
-          enableCodeFolding: false,
-          autoCloseBrackets: false,
-          lineNumbers: this.props.editorMode,
-          lineWrapping: true,
-          mode: Editor.modes.js,
-          styleActiveLine: false,
-          tabIndex: "0",
-          viewportMargin: Infinity,
-          disableSearchAddon: true,
-          extraKeys: {
-            Enter: () => {
-              // No need to handle shift + Enter as it's natively handled by CodeMirror.
+        if (this.props.editorMode === false && this.canCaretGoPrevious()) {
+          inputUpdated = this.historyPeruse(HISTORY_BACK);
+        }
 
-              const hasSuggestion = this.hasAutocompletionSuggestion();
-              if (
-                !hasSuggestion &&
-                !Debugger.isCompilableUnit(this._getValue())
-              ) {
-                // incomplete statement
-                return "CodeMirror.Pass";
-              }
+        return inputUpdated ? null : "CodeMirror.Pass";
+      };
 
-              if (hasSuggestion) {
-                return this.acceptProposedCompletion();
-              }
+      const onArrowDown = () => {
+        let inputUpdated;
+        if (this.autocompletePopup.isOpen) {
+          this.autocompletePopup.selectNextItem();
+          return null;
+        }
 
-              if (!this.props.editorMode) {
-                this._execute();
-                return null;
-              }
+        if (this.props.editorMode === false && this.canCaretGoNext()) {
+          inputUpdated = this.historyPeruse(HISTORY_FORWARD);
+        }
+
+        return inputUpdated ? null : "CodeMirror.Pass";
+      };
+
+      const onArrowLeft = () => {
+        if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {
+          this.clearCompletion();
+        }
+        return "CodeMirror.Pass";
+      };
+
+      const onArrowRight = () => {
+        // We only want to complete on Right arrow if the completion text is
+        // displayed.
+        if (this.getAutoCompletionText()) {
+          this.acceptProposedCompletion();
+          return null;
+        }
+
+        this.clearCompletion();
+        return "CodeMirror.Pass";
+      };
+
+      const onCtrlCmdEnter = () => {
+        if (this.hasAutocompletionSuggestion()) {
+          return this.acceptProposedCompletion();
+        }
+
+        this._execute();
+        return null;
+      };
+
+      this.editor = new Editor({
+        autofocus: true,
+        enableCodeFolding: false,
+        autoCloseBrackets: false,
+        lineNumbers: this.props.editorMode,
+        lineWrapping: true,
+        mode: Editor.modes.js,
+        styleActiveLine: false,
+        tabIndex: "0",
+        viewportMargin: Infinity,
+        disableSearchAddon: true,
+        extraKeys: {
+          Enter: () => {
+            // No need to handle shift + Enter as it's natively handled by CodeMirror.
+
+            const hasSuggestion = this.hasAutocompletionSuggestion();
+            if (
+              !hasSuggestion &&
+              !Debugger.isCompilableUnit(this._getValue())
+            ) {
+              // incomplete statement
               return "CodeMirror.Pass";
-            },
+            }
 
-            "Cmd-Enter": onCtrlCmdEnter,
-            "Ctrl-Enter": onCtrlCmdEnter,
+            if (hasSuggestion) {
+              return this.acceptProposedCompletion();
+            }
 
-            Tab: () => {
-              if (this.hasEmptyInput()) {
-                this.editor.codeMirror.getInputField().blur();
-                return false;
-              }
-
-              if (
-                this.props.autocompleteData &&
-                this.props.autocompleteData.getterPath
-              ) {
-                this.props.autocompleteUpdate(
-                  true,
-                  this.props.autocompleteData.getterPath
-                );
-                return false;
-              }
-
-              const isSomethingSelected = this.editor.somethingSelected();
-              const hasSuggestion = this.hasAutocompletionSuggestion();
-
-              if (hasSuggestion && !isSomethingSelected) {
-                this.acceptProposedCompletion();
-                return false;
-              }
-
-              if (!isSomethingSelected) {
-                this.insertStringAtCursor("\t");
-                return false;
-              }
-
-              // Something is selected, let the editor handle the indent.
-              return true;
-            },
-
-            "Shift-Tab": () => {
-              if (this.hasEmptyInput()) {
-                this.focusPreviousElement();
-                return false;
-              }
-
-              const hasSuggestion = this.hasAutocompletionSuggestion();
-
-              if (hasSuggestion) {
-                return false;
-              }
-
-              return "CodeMirror.Pass";
-            },
-
-            Up: onArrowUp,
-            "Cmd-Up": onArrowUp,
-
-            Down: onArrowDown,
-            "Cmd-Down": onArrowDown,
-
-            Left: onArrowLeft,
-            "Ctrl-Left": onArrowLeft,
-            "Cmd-Left": onArrowLeft,
-            "Alt-Left": onArrowLeft,
-            // On OSX, Ctrl-A navigates to the beginning of the line.
-            "Ctrl-A": isMacOS ? onArrowLeft : undefined,
-
-            Right: onArrowRight,
-            "Ctrl-Right": onArrowRight,
-            "Cmd-Right": onArrowRight,
-            "Alt-Right": onArrowRight,
-
-            "Ctrl-N": () => {
-              // Control-N differs from down arrow: it ignores autocomplete state.
-              // Note that we preserve the default 'down' navigation within
-              // multiline text.
-              if (
-                Services.appinfo.OS === "Darwin" &&
-                this.props.editorMode === false &&
-                this.canCaretGoNext() &&
-                this.historyPeruse(HISTORY_FORWARD)
-              ) {
-                return null;
-              }
-
-              this.clearCompletion();
-              return "CodeMirror.Pass";
-            },
-
-            "Ctrl-P": () => {
-              // Control-P differs from up arrow: it ignores autocomplete state.
-              // Note that we preserve the default 'up' navigation within
-              // multiline text.
-              if (
-                Services.appinfo.OS === "Darwin" &&
-                this.props.editorMode === false &&
-                this.canCaretGoPrevious() &&
-                this.historyPeruse(HISTORY_BACK)
-              ) {
-                return null;
-              }
-
-              this.clearCompletion();
-              return "CodeMirror.Pass";
-            },
-
-            PageUp: () => {
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectPreviousPageItem();
-              } else {
-                const { outputScroller } = this.webConsoleUI;
-                const { scrollTop, clientHeight } = outputScroller;
-                outputScroller.scrollTop = Math.max(
-                  0,
-                  scrollTop - clientHeight
-                );
-              }
-
+            if (!this.props.editorMode) {
+              this._execute();
               return null;
-            },
-
-            PageDown: () => {
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectNextPageItem();
-              } else {
-                const { outputScroller } = this.webConsoleUI;
-                const {
-                  scrollTop,
-                  scrollHeight,
-                  clientHeight,
-                } = outputScroller;
-                outputScroller.scrollTop = Math.min(
-                  scrollHeight,
-                  scrollTop + clientHeight
-                );
-              }
-
-              return null;
-            },
-
-            Home: () => {
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectItemAtIndex(0);
-                return null;
-              }
-
-              if (!this._getValue()) {
-                this.webConsoleUI.outputScroller.scrollTop = 0;
-                return null;
-              }
-
-              if (this.getAutoCompletionText()) {
-                this.clearCompletion();
-              }
-
-              return "CodeMirror.Pass";
-            },
-
-            End: () => {
-              if (this.autocompletePopup.isOpen) {
-                this.autocompletePopup.selectItemAtIndex(
-                  this.autocompletePopup.itemCount - 1
-                );
-                return null;
-              }
-
-              if (!this._getValue()) {
-                const { outputScroller } = this.webConsoleUI;
-                outputScroller.scrollTop = outputScroller.scrollHeight;
-                return null;
-              }
-
-              if (this.getAutoCompletionText()) {
-                this.clearCompletion();
-              }
-
-              return "CodeMirror.Pass";
-            },
-
-            "Ctrl-Space": () => {
-              if (!this.autocompletePopup.isOpen) {
-                this.props.autocompleteUpdate(true);
-                return null;
-              }
-
-              return "CodeMirror.Pass";
-            },
-
-            Esc: false,
-            "Cmd-F": false,
-            "Ctrl-F": false,
+            }
+            return "CodeMirror.Pass";
           },
-        });
 
-        this.editor.on("changes", this._inputEventHandler);
-        this.editor.on("beforeChange", this._onBeforeChange);
-        this.editor.appendToLocalElement(this.node);
-        const cm = this.editor.codeMirror;
-        cm.on("paste", (_, event) => this.props.onPaste(event));
-        cm.on("drop", (_, event) => this.props.onPaste(event));
+          "Cmd-Enter": onCtrlCmdEnter,
+          "Ctrl-Enter": onCtrlCmdEnter,
 
-        this.node.addEventListener("keydown", event => {
-          if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
-            if (this.autocompletePopup.isOpen) {
-              this.clearCompletion();
-              event.preventDefault();
-              event.stopPropagation();
+          Tab: () => {
+            if (this.hasEmptyInput()) {
+              this.editor.codeMirror.getInputField().blur();
+              return false;
             }
 
             if (
               this.props.autocompleteData &&
               this.props.autocompleteData.getterPath
             ) {
-              this.props.autocompleteClear();
-              event.preventDefault();
-              event.stopPropagation();
+              this.props.autocompleteUpdate(
+                true,
+                this.props.autocompleteData.getterPath
+              );
+              return false;
             }
+
+            const isSomethingSelected = this.editor.somethingSelected();
+            const hasSuggestion = this.hasAutocompletionSuggestion();
+
+            if (hasSuggestion && !isSomethingSelected) {
+              this.acceptProposedCompletion();
+              return false;
+            }
+
+            if (!isSomethingSelected) {
+              this.insertStringAtCursor("\t");
+              return false;
+            }
+
+            // Something is selected, let the editor handle the indent.
+            return true;
+          },
+
+          "Shift-Tab": () => {
+            if (this.hasEmptyInput()) {
+              this.focusPreviousElement();
+              return false;
+            }
+
+            const hasSuggestion = this.hasAutocompletionSuggestion();
+
+            if (hasSuggestion) {
+              return false;
+            }
+
+            return "CodeMirror.Pass";
+          },
+
+          Up: onArrowUp,
+          "Cmd-Up": onArrowUp,
+
+          Down: onArrowDown,
+          "Cmd-Down": onArrowDown,
+
+          Left: onArrowLeft,
+          "Ctrl-Left": onArrowLeft,
+          "Cmd-Left": onArrowLeft,
+          "Alt-Left": onArrowLeft,
+          // On OSX, Ctrl-A navigates to the beginning of the line.
+          "Ctrl-A": isMacOS ? onArrowLeft : undefined,
+
+          Right: onArrowRight,
+          "Ctrl-Right": onArrowRight,
+          "Cmd-Right": onArrowRight,
+          "Alt-Right": onArrowRight,
+
+          "Ctrl-N": () => {
+            // Control-N differs from down arrow: it ignores autocomplete state.
+            // Note that we preserve the default 'down' navigation within
+            // multiline text.
+            if (
+              Services.appinfo.OS === "Darwin" &&
+              this.props.editorMode === false &&
+              this.canCaretGoNext() &&
+              this.historyPeruse(HISTORY_FORWARD)
+            ) {
+              return null;
+            }
+
+            this.clearCompletion();
+            return "CodeMirror.Pass";
+          },
+
+          "Ctrl-P": () => {
+            // Control-P differs from up arrow: it ignores autocomplete state.
+            // Note that we preserve the default 'up' navigation within
+            // multiline text.
+            if (
+              Services.appinfo.OS === "Darwin" &&
+              this.props.editorMode === false &&
+              this.canCaretGoPrevious() &&
+              this.historyPeruse(HISTORY_BACK)
+            ) {
+              return null;
+            }
+
+            this.clearCompletion();
+            return "CodeMirror.Pass";
+          },
+
+          PageUp: () => {
+            if (this.autocompletePopup.isOpen) {
+              this.autocompletePopup.selectPreviousPageItem();
+            } else {
+              const { outputScroller } = this.webConsoleUI;
+              const { scrollTop, clientHeight } = outputScroller;
+              outputScroller.scrollTop = Math.max(0, scrollTop - clientHeight);
+            }
+
+            return null;
+          },
+
+          PageDown: () => {
+            if (this.autocompletePopup.isOpen) {
+              this.autocompletePopup.selectNextPageItem();
+            } else {
+              const { outputScroller } = this.webConsoleUI;
+              const { scrollTop, scrollHeight, clientHeight } = outputScroller;
+              outputScroller.scrollTop = Math.min(
+                scrollHeight,
+                scrollTop + clientHeight
+              );
+            }
+
+            return null;
+          },
+
+          Home: () => {
+            if (this.autocompletePopup.isOpen) {
+              this.autocompletePopup.selectItemAtIndex(0);
+              return null;
+            }
+
+            if (!this._getValue()) {
+              this.webConsoleUI.outputScroller.scrollTop = 0;
+              return null;
+            }
+
+            if (this.getAutoCompletionText()) {
+              this.clearCompletion();
+            }
+
+            return "CodeMirror.Pass";
+          },
+
+          End: () => {
+            if (this.autocompletePopup.isOpen) {
+              this.autocompletePopup.selectItemAtIndex(
+                this.autocompletePopup.itemCount - 1
+              );
+              return null;
+            }
+
+            if (!this._getValue()) {
+              const { outputScroller } = this.webConsoleUI;
+              outputScroller.scrollTop = outputScroller.scrollHeight;
+              return null;
+            }
+
+            if (this.getAutoCompletionText()) {
+              this.clearCompletion();
+            }
+
+            return "CodeMirror.Pass";
+          },
+
+          "Ctrl-Space": () => {
+            if (!this.autocompletePopup.isOpen) {
+              this.props.autocompleteUpdate(true);
+              return null;
+            }
+
+            return "CodeMirror.Pass";
+          },
+
+          Esc: false,
+          "Cmd-F": false,
+          "Ctrl-F": false,
+        },
+      });
+
+      this.editor.on("changes", this._onEditorChanges);
+      this.editor.on("beforeChange", this._onEditorBeforeChange);
+      this.editor.appendToLocalElement(this.node);
+      const cm = this.editor.codeMirror;
+      cm.on("paste", (_, event) => this.props.onPaste(event));
+      cm.on("drop", (_, event) => this.props.onPaste(event));
+
+      this.node.addEventListener("keydown", event => {
+        if (event.keyCode === KeyCodes.DOM_VK_ESCAPE) {
+          if (this.autocompletePopup.isOpen) {
+            this.clearCompletion();
+            event.preventDefault();
+            event.stopPropagation();
           }
-        });
-      }
-    } else if (this.inputNode) {
-      this.inputNode.addEventListener("keypress", this._keyPress);
-      this.inputNode.addEventListener("input", this._inputEventHandler);
-      this.inputNode.addEventListener("keyup", this._inputEventHandler);
-      this.focus();
+
+          if (
+            this.props.autocompleteData &&
+            this.props.autocompleteData.getterPath
+          ) {
+            this.props.autocompleteClear();
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }
+      });
+
+      // Update the character width needed for the popup offset calculations.
+      this._inputCharWidth = this._getInputCharWidth();
+      this.lastInputValue && this._setValue(this.lastInputValue);
     }
-
-    this.inputBorderSize = this.inputNode
-      ? this.inputNode.getBoundingClientRect().height -
-        this.inputNode.clientHeight
-      : 0;
-
-    // Update the character and chevron width needed for the popup offset calculations.
-    this._inputCharWidth = this._getInputCharWidth();
-    this._paddingInlineStart = this.editor
-      ? null
-      : this._getInputPaddingInlineStart();
-
-    this.lastInputValue && this._setValue(this.lastInputValue);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -558,8 +526,6 @@ class JSTerm extends Component {
   focus() {
     if (this.editor) {
       this.editor.focus();
-    } else if (this.inputNode && !this.inputNode.getAttribute("focused")) {
-      this.inputNode.focus();
     }
   }
 
@@ -605,76 +571,33 @@ class JSTerm extends Component {
   }
 
   /**
-   * Updates the size of the input field (command line) to fit its contents.
-   *
-   * @returns void
-   */
-  resizeInput() {
-    if (this.props.codeMirrorEnabled || !this.inputNode) {
-      return;
-    }
-
-    const { inputNode, completeNode } = this;
-
-    // Reset the height so that scrollHeight will reflect the natural height of
-    // the contents of the input field.
-    inputNode.style.height = "auto";
-    const minHeightBackup = inputNode.style.minHeight;
-    inputNode.style.minHeight = "unset";
-    completeNode.style.height = "auto";
-
-    // Now resize the input field to fit its contents.
-    const scrollHeight = inputNode.scrollHeight;
-
-    if (scrollHeight > 0) {
-      const pxHeight = scrollHeight + this.inputBorderSize + "px";
-      inputNode.style.height = pxHeight;
-      inputNode.style.minHeight = minHeightBackup;
-      completeNode.style.height = pxHeight;
-    }
-  }
-
-  /**
-   * Sets the value of the input field (command line), and resizes the field to
-   * fit its contents. This method is preferred over setting "inputNode.value"
-   * directly, because it correctly resizes the field.
+   * Sets the value of the input field.
    *
    * @param string newValue
    *        The new value to set.
    * @returns void
    */
-  _setValue(newValue) {
-    newValue = newValue || "";
+  _setValue(newValue = "") {
     this.lastInputValue = newValue;
 
-    if (this.props.codeMirrorEnabled) {
-      if (this.editor) {
-        // In order to get the autocomplete popup to work properly, we need to set the
-        // editor text and the cursor in the same operation. If we don't, the text change
-        // is done before the cursor is moved, and the autocompletion call to the server
-        // sends an erroneous query.
-        this.editor.codeMirror.operation(() => {
-          this.editor.setText(newValue);
+    if (this.editor) {
+      // In order to get the autocomplete popup to work properly, we need to set the
+      // editor text and the cursor in the same operation. If we don't, the text change
+      // is done before the cursor is moved, and the autocompletion call to the server
+      // sends an erroneous query.
+      this.editor.codeMirror.operation(() => {
+        this.editor.setText(newValue);
 
-          // Set the cursor at the end of the input.
-          const lines = newValue.split("\n");
-          this.editor.setCursor({
-            line: lines.length - 1,
-            ch: lines[lines.length - 1].length,
-          });
-          this.editor.setAutoCompletionText();
+        // Set the cursor at the end of the input.
+        const lines = newValue.split("\n");
+        this.editor.setCursor({
+          line: lines.length - 1,
+          ch: lines[lines.length - 1].length,
         });
-      }
-    } else {
-      if (!this.inputNode) {
-        return;
-      }
-
-      this.inputNode.value = newValue;
-      this.completeNode.value = "";
+        this.editor.setAutoCompletionText();
+      });
     }
 
-    this.resizeInput();
     this.emit("set-input-value");
   }
 
@@ -683,28 +606,14 @@ class JSTerm extends Component {
    * @returns string
    */
   _getValue() {
-    if (this.props.codeMirrorEnabled) {
-      return this.editor ? this.editor.getText() || "" : "";
-    }
-
-    return this.inputNode ? this.inputNode.value || "" : "";
+    return this.editor ? this.editor.getText() || "" : "";
   }
 
   getSelectionStart() {
-    if (this.props.codeMirrorEnabled) {
-      return this.getInputValueBeforeCursor().length;
-    }
-
-    return this.inputNode ? this.inputNode.selectionStart : null;
+    return this.getInputValueBeforeCursor().length;
   }
 
   getSelectedText() {
-    if (this.inputNode) {
-      return this.inputNode.value.substring(
-        this.inputNode.selectionStart,
-        this.inputNode.selectionEnd
-      );
-    }
     return this.editor.getSelection();
   }
 
@@ -712,7 +621,7 @@ class JSTerm extends Component {
    * Even handler for the "beforeChange" event fired by codeMirror. This event is fired
    * when codeMirror is about to make a change to its DOM representation.
    */
-  _onBeforeChange(cm, change) {
+  _onEditorBeforeChange(cm, change) {
     // If the user did not type a character that matches the completion text, then we
     // clear it before the change is done to prevent a visual glitch.
     // See Bugs 1491776 & 1558248.
@@ -731,291 +640,17 @@ class JSTerm extends Component {
   }
 
   /**
-   * The inputNode "input" and "keyup" event handler.
-   * @private
+   * The editor "changes" event handler.
    */
-  _inputEventHandler() {
+  _onEditorChanges() {
     const value = this._getValue();
     if (this.lastInputValue !== value) {
-      this.resizeInput();
       if (this.props.autocomplete || this.autocompletePopup.isOpen) {
         this.autocompleteUpdate();
       }
       this.lastInputValue = value;
     }
   }
-
-  /* eslint-disable complexity */
-  /**
-   * The inputNode "keypress" event handler.
-   *
-   * @private
-   * @param Event event
-   */
-  _keyPress(event) {
-    const inputValue = this._getValue();
-    let inputUpdated = false;
-
-    if (event.ctrlKey) {
-      switch (event.charCode) {
-        case 97:
-          // control-a (goes to beginning of the line, need to clear completion)
-          if (!Services.appinfo.OS == "Darwin") {
-            break;
-          }
-          this.clearCompletion();
-          break;
-        case 101:
-          // control-e (goes to end of the line, need to clear completion)
-          if (Services.appinfo.OS == "WINNT") {
-            break;
-          }
-          this.clearCompletion();
-          break;
-
-        case 110:
-          // Control-N differs from down arrow: it ignores autocomplete state.
-          // Note that we preserve the default 'down' navigation within
-          // multiline text.
-          if (
-            Services.appinfo.OS == "Darwin" &&
-            this.props.editorMode === false &&
-            this.canCaretGoNext() &&
-            this.historyPeruse(HISTORY_FORWARD)
-          ) {
-            event.preventDefault();
-            // Ctrl-N is also used to focus the Network category button on
-            // MacOSX. The preventDefault() call doesn't prevent the focus
-            // from moving away from the input.
-            this.focus();
-          }
-          this.clearCompletion();
-          break;
-
-        case 112:
-          // Control-P differs from up arrow: it ignores autocomplete state.
-          // Note that we preserve the default 'up' navigation within
-          // multiline text.
-          if (
-            Services.appinfo.OS == "Darwin" &&
-            this.props.editorMode === false &&
-            this.canCaretGoPrevious() &&
-            this.historyPeruse(HISTORY_BACK)
-          ) {
-            event.preventDefault();
-            // Ctrl-P may also be used to focus some category button on MacOSX.
-            // The preventDefault() call doesn't prevent the focus from moving
-            // away from the input.
-            this.focus();
-          }
-          this.clearCompletion();
-          break;
-        default:
-          break;
-      }
-
-      if (event.key === " " && !this.autocompletePopup.isOpen) {
-        // Open the autocompletion popup on Ctrl-Space (if it wasn't displayed).
-        this.props.autocompleteUpdate(true);
-        event.preventDefault();
-      }
-
-      if (
-        event.keyCode === KeyCodes.DOM_VK_LEFT &&
-        (this.autocompletePopup.isOpen || this.getAutoCompletionText())
-      ) {
-        this.clearCompletion();
-      }
-
-      // We only want to complete on Right arrow if the completion text is displayed.
-      if (event.keyCode === KeyCodes.DOM_VK_RIGHT) {
-        if (this.getAutoCompletionText()) {
-          this.acceptProposedCompletion();
-          event.preventDefault();
-        }
-        this.clearCompletion();
-      }
-
-      // control-enter should execute the current input if codeMirror
-      // is not enabled but editor mode is enabled.
-      if (event.keyCode === KeyCodes.DOM_VK_RETURN) {
-        if (this.hasAutocompletionSuggestion()) {
-          this.acceptProposedCompletion();
-        } else if (this.props.editorMode) {
-          this._execute();
-        }
-        event.preventDefault();
-      }
-
-      return;
-    } else if (event.metaKey && Services.appinfo.OS === "Darwin") {
-      // cmd-enter should execute the current input if codeMirror
-      // is not enabled but editor mode is enabled.
-      if (event.keyCode === KeyCodes.DOM_VK_RETURN) {
-        if (this.hasAutocompletionSuggestion()) {
-          this.acceptProposedCompletion();
-        } else if (this.props.editorMode) {
-          this._execute();
-        }
-        event.preventDefault();
-      }
-    } else if (event.keyCode == KeyCodes.DOM_VK_RETURN) {
-      if (
-        !this.autocompletePopup.isOpen &&
-        (event.shiftKey || !Debugger.isCompilableUnit(this._getValue()))
-      ) {
-        // shift return or incomplete statement
-        return;
-      }
-    }
-
-    const { props } = this;
-
-    switch (event.keyCode) {
-      case KeyCodes.DOM_VK_ESCAPE:
-        if (this.autocompletePopup.isOpen) {
-          this.clearCompletion();
-          event.preventDefault();
-          event.stopPropagation();
-        } else if (
-          props.autocompleteData &&
-          props.autocompleteData.getterPath
-        ) {
-          props.autocompleteClear();
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_RETURN:
-        if (this.hasAutocompletionSuggestion()) {
-          this.acceptProposedCompletion();
-        } else if (!props.editorMode) {
-          this._execute();
-        } else {
-          this.insertStringAtCursor("\n");
-        }
-        event.preventDefault();
-        break;
-
-      case KeyCodes.DOM_VK_UP:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectPreviousItem();
-          event.preventDefault();
-        } else if (
-          this.props.editorMode === false &&
-          this.canCaretGoPrevious()
-        ) {
-          inputUpdated = this.historyPeruse(HISTORY_BACK);
-        }
-        if (inputUpdated) {
-          event.preventDefault();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_DOWN:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectNextItem();
-          event.preventDefault();
-        } else if (this.props.editorMode === false && this.canCaretGoNext()) {
-          inputUpdated = this.historyPeruse(HISTORY_FORWARD);
-        }
-        if (inputUpdated) {
-          event.preventDefault();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_PAGE_UP:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectPreviousPageItem();
-        } else {
-          this.webConsoleUI.outputScroller.scrollTop = Math.max(
-            0,
-            this.webConsoleUI.outputScroller.scrollTop -
-              this.webConsoleUI.outputScroller.clientHeight
-          );
-        }
-        event.preventDefault();
-        break;
-
-      case KeyCodes.DOM_VK_PAGE_DOWN:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectNextPageItem();
-        } else {
-          this.webConsoleUI.outputScroller.scrollTop = Math.min(
-            this.webConsoleUI.outputScroller.scrollHeight,
-            this.webConsoleUI.outputScroller.scrollTop +
-              this.webConsoleUI.outputScroller.clientHeight
-          );
-        }
-        event.preventDefault();
-        break;
-
-      case KeyCodes.DOM_VK_HOME:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectItemAtIndex(0);
-          event.preventDefault();
-        } else if (this.getAutoCompletionText()) {
-          this.clearCompletion();
-        } else if (inputValue.length <= 0) {
-          this.webConsoleUI.outputScroller.scrollTop = 0;
-          event.preventDefault();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_END:
-        if (this.autocompletePopup.isOpen) {
-          this.autocompletePopup.selectItemAtIndex(
-            this.autocompletePopup.itemCount - 1
-          );
-          event.preventDefault();
-        } else if (this.getAutoCompletionText()) {
-          this.clearCompletion();
-        } else if (inputValue.length <= 0) {
-          const { outputScroller } = this.webConsoleUI;
-          outputScroller.scrollTop = outputScroller.scrollHeight;
-          event.preventDefault();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_LEFT:
-        if (this.autocompletePopup.isOpen || this.getAutoCompletionText()) {
-          this.clearCompletion();
-        }
-        break;
-
-      case KeyCodes.DOM_VK_RIGHT:
-        // We only want to complete on Right arrow if the completion text is
-        // displayed.
-        if (this.getAutoCompletionText()) {
-          this.acceptProposedCompletion();
-          event.preventDefault();
-        }
-        this.clearCompletion();
-        break;
-
-      case KeyCodes.DOM_VK_TAB:
-        if (this.hasAutocompletionSuggestion()) {
-          this.acceptProposedCompletion();
-          event.preventDefault();
-        } else if (
-          props.autocompleteData &&
-          props.autocompleteData.getterPath
-        ) {
-          event.preventDefault();
-          props.autocompleteUpdate(true, props.autocompleteData.getterPath);
-        } else if (!this.hasEmptyInput()) {
-          if (!event.shiftKey) {
-            this.insertStringAtCursor("\t");
-          }
-          event.preventDefault();
-        }
-        break;
-      default:
-        break;
-    }
-  }
-  /* eslint-enable complexity */
 
   /**
    * Go up/down the history stack of input values.
@@ -1055,16 +690,6 @@ class JSTerm extends Component {
   }
 
   /**
-   * Test for multiline input.
-   *
-   * @return boolean
-   *         True if CR or LF found in node value; else false.
-   */
-  hasMultilineInput() {
-    return /[\r\n]/.test(this._getValue());
-  }
-
-  /**
    * Check if the caret is at a location that allows selecting the previous item
    * in history when the user presses the Up arrow key.
    *
@@ -1074,24 +699,13 @@ class JSTerm extends Component {
    *         otherwise false.
    */
   canCaretGoPrevious() {
-    const inputValue = this._getValue();
-
-    if (this.editor) {
-      const { line, ch } = this.editor.getCursor();
-      return (
-        (line === 0 && ch === 0) || (line === 0 && ch === inputValue.length)
-      );
-    }
-
-    const node = this.inputNode;
-    if (node.selectionStart != node.selectionEnd) {
+    if (!this.editor) {
       return false;
     }
 
-    const multiline = /[\r\n]/.test(inputValue);
-    return node.selectionStart == 0
-      ? true
-      : node.selectionStart == inputValue.length && !multiline;
+    const inputValue = this._getValue();
+    const { line, ch } = this.editor.getCursor();
+    return (line === 0 && ch === 0) || (line === 0 && ch === inputValue.length);
   }
 
   /**
@@ -1104,26 +718,19 @@ class JSTerm extends Component {
    *         false.
    */
   canCaretGoNext() {
-    const inputValue = this._getValue();
-    const multiline = /[\r\n]/.test(inputValue);
-
-    if (this.editor) {
-      const { line, ch } = this.editor.getCursor();
-      return (
-        (!multiline && ch === 0) ||
-        this.editor.getDoc().getRange({ line: 0, ch: 0 }, { line, ch })
-          .length === inputValue.length
-      );
-    }
-
-    const node = this.inputNode;
-    if (node.selectionStart != node.selectionEnd) {
+    if (!this.editor) {
       return false;
     }
 
-    return node.selectionStart == node.value.length
-      ? true
-      : node.selectionStart == 0 && !multiline;
+    const inputValue = this._getValue();
+    const multiline = /[\r\n]/.test(inputValue);
+
+    const { line, ch } = this.editor.getCursor();
+    return (
+      (!multiline && ch === 0) ||
+      this.editor.getDoc().getRange({ line: 0, ch: 0 }, { line, ch }).length ===
+        inputValue.length
+    );
   }
 
   /**
@@ -1142,6 +749,10 @@ class JSTerm extends Component {
    * @fires autocomplete-updated
    */
   updateAutocompletionPopup(data) {
+    if (!this.editor) {
+      return;
+    }
+
     const { matches, matchProp, isElementAccess } = data;
     if (!matches.length) {
       this.clearCompletion();
@@ -1202,27 +813,13 @@ class JSTerm extends Component {
         !this.canDisplayAutoCompletionText() &&
         items[0].label !== matchProp)
     ) {
+      // We need to show the popup at the "." or "[".
+      const xOffset = -1 * matchProp.length * this._inputCharWidth;
+      const yOffset = 5;
       const popupAlignElement = this.props.serviceContainer.getJsTermTooltipAnchor();
-      let xOffset;
-      let yOffset;
-
-      if (this.editor) {
-        // We need to show the popup at the "." or "[".
-        xOffset = -1 * matchProp.length * this._inputCharWidth;
-        yOffset = 5;
-      } else if (this.inputNode) {
-        const offset =
-          inputUntilCursor.length -
-          (inputUntilCursor.lastIndexOf("\n") + 1) -
-          matchProp.length;
-        xOffset = offset * this._inputCharWidth + this._paddingInlineStart;
-      }
-
-      if (popupAlignElement) {
-        popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
-          preventSelectCallback: true,
-        });
-      }
+      popup.openPopup(popupAlignElement, xOffset, yOffset, 0, {
+        preventSelectCallback: true,
+      });
     } else if (items.length < minimumAutoCompleteLength && popup.isOpen) {
       popup.hidePopup();
     }
@@ -1267,11 +864,6 @@ class JSTerm extends Component {
       this.autocompletePopup.clearItems();
 
       if (this.autocompletePopup.isOpen) {
-        // Trigger a blur/focus of the JSTerm input to force screen readers to read the
-        // value again.
-        if (this.inputNode) {
-          this.inputNode.blur();
-        }
         this.autocompletePopup.once("popup-closed", () => {
           this.focus();
         });
@@ -1330,18 +922,11 @@ class JSTerm extends Component {
   }
 
   getInputValueBeforeCursor() {
-    if (this.editor) {
-      return this.editor
-        .getDoc()
-        .getRange({ line: 0, ch: 0 }, this.editor.getCursor());
-    }
-
-    if (this.inputNode) {
-      const cursor = this.inputNode.selectionStart;
-      return this._getValue().substring(0, cursor);
-    }
-
-    return null;
+    return this.editor
+      ? this.editor
+          .getDoc()
+          .getRange({ line: 0, ch: 0 }, this.editor.getCursor())
+      : null;
   }
 
   /**
@@ -1352,6 +937,10 @@ class JSTerm extends Component {
    * @param {int} numberOfCharsToReplaceCharsBeforeCursor - defaults to 0
    */
   insertStringAtCursor(str, numberOfCharsToReplaceCharsBeforeCursor = 0) {
+    if (!this.editor) {
+      return;
+    }
+
     const value = this._getValue();
     let prefix = this.getInputValueBeforeCursor();
     const suffix = value.replace(prefix, "");
@@ -1364,65 +953,37 @@ class JSTerm extends Component {
     }
 
     // We need to retrieve the cursor before setting the new value.
-    const editorCursor = this.editor && this.editor.getCursor();
-
-    const scrollPosition = this.inputNode
-      ? this.inputNode.parentElement.scrollTop
-      : null;
+    const { line, ch } = this.editor.getCursor();
 
     this._setValue(prefix + str + suffix);
 
-    if (this.inputNode) {
-      const newCursor = prefix.length + str.length;
-      this.inputNode.selectionStart = this.inputNode.selectionEnd = newCursor;
-      this.inputNode.parentElement.scrollTop = scrollPosition;
-    } else if (this.editor) {
-      // Set the cursor on the same line it was already at, after the autocompleted text
-      this.editor.setCursor({
-        line: editorCursor.line,
-        ch:
-          editorCursor.ch +
-          str.length -
-          numberOfCharsToReplaceCharsBeforeCursor,
-      });
-    }
+    // Set the cursor on the same line it was already at, after the autocompleted text
+    this.editor.setCursor({
+      line,
+      ch: ch + str.length - numberOfCharsToReplaceCharsBeforeCursor,
+    });
   }
 
   /**
    * Set the autocompletion text of the input.
    *
    * @param string suffix
-   *        The proposed suffix for the inputNode value.
+   *        The proposed suffix for the input value.
    */
   setAutoCompletionText(suffix) {
+    if (!this.editor) {
+      return;
+    }
+
     if (suffix && !this.canDisplayAutoCompletionText()) {
       suffix = "";
     }
 
-    if (this.completeNode) {
-      const lines = this.getInputValueBeforeCursor().split("\n");
-      const lastLine = lines[lines.length - 1];
-      const prefix =
-        "\n".repeat(lines.length - 1) + lastLine.replace(/[\S]/g, " ");
-      this.completeNode.value = suffix ? prefix + suffix : "";
-    }
-
-    if (this.editor) {
-      this.editor.setAutoCompletionText(suffix);
-    }
+    this.editor.setAutoCompletionText(suffix);
   }
 
   getAutoCompletionText() {
-    if (this.completeNode) {
-      // Remove the spaces we set to align with the input value.
-      return this.completeNode.value.replace(/^\s+/gm, "");
-    }
-
-    if (this.editor) {
-      return this.editor.getAutoCompletionText();
-    }
-
-    return null;
+    return this.editor ? this.editor.getAutoCompletionText() : null;
   }
 
   /**
@@ -1446,20 +1007,14 @@ class JSTerm extends Component {
    * i.e. if there is no characters displayed on the same line of the cursor and after it.
    */
   canDisplayAutoCompletionText() {
-    if (this.editor) {
-      const { ch, line } = this.editor.getCursor();
-      const lineContent = this.editor.getLine(line);
-      const textAfterCursor = lineContent.substring(ch);
-      return textAfterCursor === "";
+    if (!this.editor) {
+      return false;
     }
 
-    if (this.inputNode) {
-      const value = this._getValue();
-      const textAfterCursor = value.substring(this.inputNode.selectionStart);
-      return textAfterCursor.split("\n")[0] === "";
-    }
-
-    return false;
+    const { ch, line } = this.editor.getCursor();
+    const lineContent = this.editor.getLine(line);
+    const textAfterCursor = lineContent.substring(ch);
+    return textAfterCursor === "";
   }
 
   /**
@@ -1469,48 +1024,7 @@ class JSTerm extends Component {
    * @returns {Number|null}: Width off the "x" char, or null if the input does not exist.
    */
   _getInputCharWidth() {
-    if (!this.inputNode && !this.node) {
-      return null;
-    }
-
-    if (this.editor) {
-      return this.editor.defaultCharWidth();
-    }
-
-    const doc = this.webConsoleUI.document;
-    const tempLabel = doc.createElement("span");
-    const style = tempLabel.style;
-    style.position = "fixed";
-    style.padding = "0";
-    style.margin = "0";
-    style.width = "auto";
-    style.color = "transparent";
-    WebConsoleUtils.copyTextStyles(this.inputNode, tempLabel);
-    tempLabel.textContent = "x";
-    doc.documentElement.appendChild(tempLabel);
-    const width = tempLabel.getBoundingClientRect().width;
-    tempLabel.remove();
-    return width;
-  }
-
-  /**
-   * Calculates and returns the width of the chevron icon.
-   * This will be used in opening the popup at the correct offset.
-   *
-   * @returns {Number|null}: Width of the icon, or null if the input does not exist.
-   */
-  _getInputPaddingInlineStart() {
-    if (!this.inputNode) {
-      return null;
-    }
-    // Calculate the width of the chevron placed at the beginning of the input box.
-    const doc = this.webConsoleUI.document;
-
-    return new Number(
-      doc.defaultView
-        .getComputedStyle(this.inputNode)
-        .paddingInlineStart.replace(/[^0-9.]/g, "")
-    );
+    return this.editor ? this.editor.defaultCharWidth() : null;
   }
 
   onContextMenu(e) {
@@ -1521,12 +1035,6 @@ class JSTerm extends Component {
     if (this.autocompletePopup) {
       this.autocompletePopup.destroy();
       this.autocompletePopup = null;
-    }
-
-    if (this.inputNode) {
-      this.inputNode.removeEventListener("keypress", this._keyPress);
-      this.inputNode.removeEventListener("input", this._inputEventHandler);
-      this.inputNode.removeEventListener("keyup", this._inputEventHandler);
     }
 
     if (this.editor) {
@@ -1556,55 +1064,17 @@ class JSTerm extends Component {
         })
       : undefined;
 
-    if (this.props.codeMirrorEnabled) {
-      return dom.div(
-        {
-          className: "jsterm-input-container devtools-input devtools-monospace",
-          key: "jsterm-container",
-          style: { direction: "ltr" },
-          "aria-live": "off",
-          onContextMenu: this.onContextMenu,
-          ref: node => {
-            this.node = node;
-          },
-        },
-        openEditorButton
-      );
-    }
-
-    const { onPaste } = this.props;
-
     return dom.div(
       {
-        className: "jsterm-input-container",
+        className: "jsterm-input-container devtools-input devtools-monospace",
         key: "jsterm-container",
         style: { direction: "ltr" },
         "aria-live": "off",
+        onContextMenu: this.onContextMenu,
         ref: node => {
           this.node = node;
         },
       },
-      dom.textarea({
-        className: "jsterm-complete-node devtools-monospace",
-        key: "complete",
-        tabIndex: "-1",
-        ref: node => {
-          this.completeNode = node;
-        },
-      }),
-      dom.textarea({
-        className: "jsterm-input-node devtools-monospace",
-        key: "input",
-        tabIndex: "0",
-        rows: "1",
-        "aria-autocomplete": "list",
-        ref: node => {
-          this.inputNode = node;
-        },
-        onPaste: onPaste,
-        onDrop: onPaste,
-        onContextMenu: this.onContextMenu,
-      }),
       openEditorButton
     );
   }
@@ -1622,8 +1092,6 @@ function mapStateToProps(state) {
 
 function mapDispatchToProps(dispatch) {
   return {
-    appendToHistory: expr => dispatch(actions.appendToHistory(expr)),
-    clearHistory: () => dispatch(actions.clearHistory()),
     updateHistoryPosition: (direction, expression) =>
       dispatch(actions.updateHistoryPosition(direction, expression)),
     autocompleteUpdate: (force, getterPath) =>

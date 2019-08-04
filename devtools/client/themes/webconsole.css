@@ -459,8 +459,6 @@ a {
 }
 
 /* JSTerm Styles */
-
-html .jsterm-input-node-html,
 html #webconsole-notificationbox {
   flex: 0;
   width: 100%;
@@ -478,54 +476,8 @@ html #webconsole-notificationbox {
   position: relative;
 }
 
-.jsterm-input-node {
-  box-sizing: border-box;
-  min-height: 100%;
-  color: var(--theme-text-color-strong);
-  /* input icon */
-  background-image: url(chrome://devtools/skin/images/webconsole/input.svg);
-  background-position-x: calc(10px + var(--console-icon-horizontal-offset));
-  background-position-y: 7px;
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  -moz-context-properties: fill;
-  fill: var(--theme-icon-dimmed-color);
-}
-
-.jsterm-complete-node {
-  color: var(--theme-comment);
-}
-
-textarea.jsterm-input-node,
-textarea.jsterm-complete-node {
-  width: 100%;
-  margin: 0;
-  border: none;
-  background-color: transparent;
-  resize: none;
-  font-size: inherit;
-  line-height: 16px;
-  overflow-x: hidden;
-  padding: 5px 0;
-  padding-inline-start: var(--console-inline-start-gutter);
-}
-
-textarea.jsterm-complete-node {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  pointer-events: none;
-}
-
-textarea.jsterm-input-node:focus {
-  fill: var(--theme-icon-checked-color);
-  box-shadow: none;
-  outline: none;
-}
-
 /* CodeMirror-powered JsTerm */
-.jsterm-cm .jsterm-input-container > .CodeMirror {
+.webconsole-app .jsterm-input-container > .CodeMirror {
   font-size: var(--theme-code-font-size);
   line-height: var(--console-output-line-height);
   /* aim for a 32px left space (a descendent has 4px padding) */
@@ -540,11 +492,11 @@ textarea.jsterm-input-node:focus {
   fill: var(--theme-icon-dimmed-color);
 }
 
-.jsterm-cm .jsterm-input-container > .CodeMirror-focused {
+.webconsole-app .jsterm-input-container > .CodeMirror-focused {
   fill: var(--theme-icon-checked-color);
 }
 
-.jsterm-cm .cm-auto-complete-shadow-text::after {
+.webconsole-app .cm-auto-complete-shadow-text::after {
   content: attr(title);
   color: var(--theme-comment);
   /* This is important for the completion text not to move while the user is typing */
@@ -552,7 +504,7 @@ textarea.jsterm-input-node:focus {
   position: absolute;
 }
 
-.jsterm-cm .CodeMirror-hscrollbar {
+.webconsole-app .CodeMirror-hscrollbar {
   /* We never want to see the horizontal scrollbar */
   display: none !important;
 }

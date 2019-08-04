@@ -16,15 +16,6 @@ const TEST_URI =
   "bug 804845 and bug 619598";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   ok(!getInputValue(hud), "input is empty");
@@ -33,7 +24,7 @@ async function performTests() {
   testSingleLineInputNavNoHistory(hud);
   testMultiLineInputNavNoHistory(hud);
   await testNavWithHistory(hud);
-}
+});
 
 function testSingleLineInputNavNoHistory(hud) {
   const checkInput = (expected, assertionInfo) =>

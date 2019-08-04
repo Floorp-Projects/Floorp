@@ -19,15 +19,6 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test case-sensitivity completio
   </script>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
@@ -45,7 +36,7 @@ async function performTests() {
     "fooBar - FooBar",
     "popup has expected item, in expected order"
   );
-  checkInputCompletionValue(hud, "    ar", "completeNode has expected value");
+  checkInputCompletionValue(hud, "ar", "completeNode has expected value");
 
   info("Check that filtering the autocomplete cache is also case insensitive");
   let onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
@@ -59,7 +50,7 @@ async function performTests() {
     "fooBar - FooBar",
     "popup cache filtering is also case-insensitive"
   );
-  checkInputCompletionValue(hud, "     r", "completeNode has expected value");
+  checkInputCompletionValue(hud, "r", "completeNode has expected value");
 
   info(
     "Check that accepting the completion value will change the input casing"
@@ -84,11 +75,7 @@ async function performTests() {
     "Foo",
     "popup has expected item"
   );
-  checkInputCompletionValue(
-    hud,
-    "        oo",
-    "completeNode has expected value"
-  );
+  checkInputCompletionValue(hud, "oo", "completeNode has expected value");
 
   onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
@@ -108,7 +95,7 @@ async function performTests() {
     "function - Function",
     "popup has expected item"
   );
-  checkInputCompletionValue(hud, "    tion", "completeNode has expected value");
+  checkInputCompletionValue(hud, "tion", "completeNode has expected value");
 
   onPopupClose = autocompletePopup.once("popup-closed");
   EventUtils.synthesizeKey("KEY_Tab");
@@ -136,7 +123,7 @@ async function performTests() {
     "Test - TEST",
     "popup was filtered case-sensitively, as expected"
   );
-}
+});
 
 function getAutocompletePopupLabels(autocompletePopup) {
   return autocompletePopup.items.map(i => i.label);

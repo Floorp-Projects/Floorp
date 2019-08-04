@@ -24,15 +24,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>bug 585991 - autocomplete popup navigation and tab key usage test</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   info("web console opened");
@@ -63,34 +54,21 @@ async function performTests() {
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
-  let prefix = getInputValue(hud).replace(/[\S]/g, " ");
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(
-    hud,
-    prefix + "item3",
-    "completeNode.value holds item3"
-  );
+  checkInputCompletionValue(hud, "item3", "completeNode.value holds item3");
 
   EventUtils.synthesizeKey("KEY_ArrowUp");
 
   is(popup.selectedIndex, 2, "index 2 is selected");
   is(popup.selectedItem.label, "item2", "item2 is selected");
-  checkInputCompletionValue(
-    hud,
-    prefix + "item2",
-    "completeNode.value holds item2"
-  );
+  checkInputCompletionValue(hud, "item2", "completeNode.value holds item2");
 
   EventUtils.synthesizeKey("KEY_ArrowDown");
 
   is(popup.selectedIndex, 3, "index 3 is selected");
   is(popup.selectedItem.label, "item3", "item3 is selected");
-  checkInputCompletionValue(
-    hud,
-    prefix + "item3",
-    "completeNode.value holds item3"
-  );
+  checkInputCompletionValue(hud, "item3", "completeNode.value holds item3");
 
   let currentSelectionIndex = popup.selectedIndex;
 
@@ -136,12 +114,7 @@ async function performTests() {
     "Check that hitting Home hides the completion text when the popup is hidden"
   );
   await setInputValueForAutocompletion(hud, "window.foo.item0");
-  prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(
-    hud,
-    prefix + "0",
-    "completeNode has expected value"
-  );
+  checkInputCompletionValue(hud, "0", "completeNode has expected value");
   if (Services.appinfo.OS == "Darwin") {
     EventUtils.synthesizeKey("a", { ctrlKey: true });
   } else {
@@ -157,16 +130,11 @@ async function performTests() {
     "Check that hitting End hides the completion text when the popup is hidden"
   );
   await setInputValueForAutocompletion(hud, "window.foo.item0");
-  prefix = getInputValue(hud).replace(/[\S]/g, " ");
-  checkInputCompletionValue(
-    hud,
-    prefix + "0",
-    "completeNode has expected value"
-  );
+  checkInputCompletionValue(hud, "0", "completeNode has expected value");
   EventUtils.synthesizeKey("KEY_End");
   checkInputCompletionValue(
     hud,
     "",
     "completeNode was cleared after hitting End"
   );
-}
+});
