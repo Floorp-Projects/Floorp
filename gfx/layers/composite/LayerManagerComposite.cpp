@@ -591,6 +591,7 @@ void LayerManagerComposite::UpdateAndRender() {
   if (invalid.IsEmpty() && !mWindowOverlayChanged) {
     // Composition requested, but nothing has changed. Don't do any work.
     mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
+    mProfilerScreenshotGrabber.NotifyEmptyFrame();
     return;
   }
 
