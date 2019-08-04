@@ -247,13 +247,6 @@ bool SVGFEImageElement::OutputIsTainted(const nsTArray<bool>& aInputsAreTainted,
     return false;
   }
 
-  uint32_t status;
-  currentRequest->GetImageStatus(&status);
-  if ((status & imgIRequest::STATUS_LOAD_COMPLETE) == 0) {
-    // The load has not completed yet.
-    return false;
-  }
-
   nsCOMPtr<nsIPrincipal> principal;
   rv = currentRequest->GetImagePrincipal(getter_AddRefs(principal));
   if (NS_FAILED(rv) || !principal) {
