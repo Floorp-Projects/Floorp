@@ -12,15 +12,6 @@ const TEST_URI =
   "data:text/html;charset=utf-8,Test document.body autocompletion";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
 
@@ -60,15 +51,5 @@ async function performTests() {
   EventUtils.sendString("o");
 
   await onAutoCompleteUpdated;
-
-  // Build the spaces that are placed in the input to place the autocompletion result at
-  // the expected spot:
-  // > document.bo        <-- input
-  // > -----------dy      <-- autocomplete
-  const spaces = " ".repeat(inputStr.length + 1);
-  checkInputCompletionValue(
-    hud,
-    spaces + "dy",
-    "autocomplete shows document.body"
-  );
-}
+  checkInputCompletionValue(hud, "dy", "autocomplete shows document.body");
+});

@@ -16,15 +16,6 @@ XPCOMUtils.defineLazyServiceGetter(
 const stringToCopy = "foobazbarBug642615";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
   ui.clearOutput();
@@ -74,4 +65,4 @@ async function performTests() {
 
   await onAutocompleteUpdated;
   ok(!getInputCompletionValue(hud), "no completion value after paste (ctrl-v)");
-}
+});

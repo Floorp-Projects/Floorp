@@ -25,15 +25,6 @@ const MDN_URL =
   "https://developer.mozilla.org/docs/Tools/Web_Console/Invoke_getters_from_autocomplete";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
@@ -66,4 +57,4 @@ async function performTests() {
   info("Close the popup");
   EventUtils.synthesizeKey("KEY_Escape");
   await waitFor(() => !isConfirmDialogOpened(toolbox));
-}
+});

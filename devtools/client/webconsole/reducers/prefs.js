@@ -15,7 +15,6 @@ const PrefState = overrides =>
       {
         logLimit: 1000,
         sidebarToggle: false,
-        jstermCodeMirror: false,
         groupWarnings: false,
         historyCount: 50,
         editor: false,

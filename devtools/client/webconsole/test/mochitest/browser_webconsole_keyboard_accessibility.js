@@ -16,16 +16,6 @@ const TEST_URI = `data:text/html;charset=utf-8,<p>Test keyboard accessibility</p
   `;
 
 add_task(async function() {
-  // Run in legacy JsTerm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-
-  // And then in codeMirror JsTerm.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   info("Web Console opened");
   const outputScroller = hud.ui.outputScroller;
@@ -110,4 +100,4 @@ async function performTests() {
     outputScroller.ownerDocument.activeElement,
     "filter input is focused"
   );
-}
+});

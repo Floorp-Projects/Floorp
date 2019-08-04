@@ -13,15 +13,6 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test code completion
   </script>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm, ui } = hud;
   const { autocompletePopup } = jsterm;
@@ -29,7 +20,7 @@ async function performTests() {
   // Test typing 'docu'.
   await setInputValueForAutocompletion(hud, "foob");
   is(getInputValue(hud), "foob", "'foob' completion (input.value)");
-  checkInputCompletionValue(hud, "    ar", "'foob' completion (completeNode)");
+  checkInputCompletionValue(hud, "ar", "'foob' completion (completeNode)");
   is(autocompletePopup.items.length, 1, "autocomplete popup has 1 item");
   is(autocompletePopup.isOpen, false, "autocomplete popup is not open");
 
@@ -54,11 +45,7 @@ async function performTests() {
   const onPopupOpened = autocompletePopup.once("popup-opened");
   await setInputValueForAutocompletion(hud, "document.getElem");
   is(getInputValue(hud), "document.getElem", "'document.getElem' completion");
-  checkInputCompletionValue(
-    hud,
-    "                entById",
-    "'document.getElem' completion"
-  );
+  checkInputCompletionValue(hud, "entById", "'document.getElem' completion");
 
   // Test pressing key down.
   await onPopupOpened;
@@ -66,7 +53,7 @@ async function performTests() {
   is(getInputValue(hud), "document.getElem", "'document.getElem' completion");
   checkInputCompletionValue(
     hud,
-    "                entsByClassName",
+    "entsByClassName",
     "'document.getElem' another tab completion"
   );
 
@@ -78,16 +65,12 @@ async function performTests() {
     "document.getElem",
     "'document.getElem' untab completion"
   );
-  checkInputCompletionValue(
-    hud,
-    "                entById",
-    "'document.getElem' completion"
-  );
+  checkInputCompletionValue(hud, "entById", "'document.getElem' completion");
 
   ui.clearOutput();
 
   await setInputValueForAutocompletion(hud, "docu");
-  checkInputCompletionValue(hud, "    ment", "'docu' completion");
+  checkInputCompletionValue(hud, "ment", "'docu' completion");
 
   let onAutocompletUpdated = jsterm.once("autocomplete-updated");
   EventUtils.synthesizeKey("KEY_Enter");
@@ -101,7 +84,7 @@ async function performTests() {
   setInputValue(hud, "console.log('one');\n");
   EventUtils.sendString("consol");
   await onAutocompletUpdated;
-  checkInputCompletionValue(hud, "\n      e", "multi-line completion");
+  checkInputCompletionValue(hud, "e", "multi-line completion");
 
   // Test multi-line completion works even if there is text after the cursor
   onAutocompletUpdated = jsterm.once("autocomplete-updated");
@@ -110,14 +93,14 @@ async function performTests() {
   EventUtils.sendString("console.g");
   await onAutocompletUpdated;
   checkInputValueAndCursorPosition(hud, "{\nconsole.g|\n}");
-  checkInputCompletionValue(hud, "\n         roup", "multi-line completion");
+  checkInputCompletionValue(hud, "roup", "multi-line completion");
   is(autocompletePopup.isOpen, true, "popup is opened");
 
   // Test non-object autocompletion.
   await setInputValueForAutocompletion(hud, "Object.name.sl");
-  checkInputCompletionValue(hud, "              ice", "non-object completion");
+  checkInputCompletionValue(hud, "ice", "non-object completion");
 
   // Test string literal autocompletion.
   await setInputValueForAutocompletion(hud, "'Asimov'.sl");
-  checkInputCompletionValue(hud, "           ice", "string literal completion");
-}
+  checkInputCompletionValue(hud, "ice", "string literal completion");
+});

@@ -7,15 +7,6 @@ const TEST_URI = "data:text/html,Test <code>help()</code> jsterm helper";
 const HELP_URL = "https://developer.mozilla.org/docs/Tools/Web_Console/Helpers";
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   let openedLinks = 0;
@@ -45,4 +36,4 @@ async function performTests() {
 
   is(openedLinks, 3, "correct number of pages opened by the help calls");
   hud.openLink = oldOpenLink;
-}
+});

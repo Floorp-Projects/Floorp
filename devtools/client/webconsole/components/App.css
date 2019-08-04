@@ -103,6 +103,7 @@ body {
 
 .webconsole-app .jsterm-input-container {
   min-height: 28px;
+  padding-block-start: 2px;
   overflow-y: auto;
   overflow-x: hidden;
   flex-grow: 1;
@@ -113,8 +114,8 @@ body {
   grid-auto-flow: column;
 }
 
-.jsterm-cm .jsterm-input-container {
-  padding-block-start: 2px;
+.webconsole-app .webconsole-output:empty ~ .jsterm-input-container {
+  border-top: none;
 }
 
 .webconsole-input-openEditorButton {
@@ -125,10 +126,6 @@ body {
 
 .webconsole-input-openEditorButton::before {
   background-image: url("chrome://devtools/skin/images/webconsole/editor.svg");
-}
-
-.webconsole-app .webconsole-output:empty ~ .jsterm-input-container {
-  border-top: none;
 }
 
 .reverse-search {
@@ -290,7 +287,7 @@ body {
   grid-column: -1 / 1;
 }
 
-.jsterm-cm.jsterm-editor .jsterm-input-container > .CodeMirror {
+.jsterm-editor .jsterm-input-container > .CodeMirror {
   padding-inline-start: 0;
   background-image: none;
 }

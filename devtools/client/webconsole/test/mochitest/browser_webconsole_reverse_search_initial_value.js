@@ -9,15 +9,6 @@
 const TEST_URI = `data:text/html,<meta charset=utf8>Test reverse search initial value`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
 
@@ -39,12 +30,7 @@ async function performTests() {
   setInputValue(hud, "ado");
 
   info(`Select 2 chars ("do") from the input`);
-  if (jsterm.inputNode) {
-    jsterm.inputNode.selectionStart = 1;
-    jsterm.inputNode.selectionEnd = 3;
-  } else {
-    jsterm.editor.setSelection({ line: 0, ch: 1 }, { line: 0, ch: 3 });
-  }
+  jsterm.editor.setSelection({ line: 0, ch: 1 }, { line: 0, ch: 3 });
 
   info("Check that the reverse search toolbar as the expected initial state");
   let reverseSearchElement = await openReverseSearch(hud);
@@ -109,4 +95,4 @@ async function performTests() {
     "",
     "Reverse search input is empty"
   );
-}
+});

@@ -18,15 +18,6 @@ const TEST_URI = `data:text/html;charset=utf-8,
 <body>Autocomplete popup - invoke getter - close dialog test</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
@@ -87,4 +78,4 @@ async function performTests() {
     true,
     "The tooltip is now closed since the input doesn't match a getter name"
   );
-}
+});

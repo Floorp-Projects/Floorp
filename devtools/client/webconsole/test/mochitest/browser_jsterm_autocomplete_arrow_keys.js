@@ -17,20 +17,11 @@ const TEST_URI = `data:text/html;charset=utf-8,<head><script>
   </script></head><body>Autocomplete text navigation key usage test</body>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests(true);
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests(oldJsterm) {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
 
-  await checkWordNavigation(hud, oldJsterm);
+  await checkWordNavigation(hud);
   await checkArrowLeftDismissPopup(hud);
   await checkArrowLeftDismissCompletion(hud);
   await checkArrowRightAcceptCompletion(hud);
@@ -52,7 +43,7 @@ async function performTests(oldJsterm) {
   });
   await onPopUpClose;
   is(getInputValue(hud), "win.", "input value wasn't modified");
-}
+});
 
 async function checkArrowLeftDismissPopup(hud) {
   const popup = hud.jsterm.autocompletePopup;
@@ -94,11 +85,7 @@ async function checkArrowLeftDismissPopup(hud) {
     // checkInput is asserting the cursor position with the "|" char.
     checkInputValueAndCursorPosition(hud, "window.foo.bb|");
     is(popup.isOpen, true, "popup is open");
-    checkInputCompletionValue(
-      hud,
-      "             b",
-      "completeNode has expected value"
-    );
+    checkInputCompletionValue(hud, "b", "completeNode has expected value");
 
     const { keyOption, expectedInput } = test;
     info(`Test that arrow left closes the popup and clears complete node`);
@@ -145,12 +132,7 @@ async function checkArrowLeftDismissCompletion(hud) {
 
   for (const test of tests) {
     await setInputValueForAutocompletion(hud, "window.foo.a");
-    const prefix = getInputValue(hud).replace(/[\S]/g, " ");
-    checkInputCompletionValue(
-      hud,
-      prefix + "a",
-      "completeNode has expected value"
-    );
+    checkInputCompletionValue(hud, "a", "completeNode has expected value");
 
     info(`Test that arrow left dismiss the completion text`);
     const { keyOption, expectedInput } = test;
@@ -197,11 +179,7 @@ async function checkArrowRightAcceptCompletion(hud) {
     // checkInput is asserting the cursor position with the "|" char.
     checkInputValueAndCursorPosition(hud, `window.foo.bb|`);
     is(popup.isOpen, true, "popup is open");
-    checkInputCompletionValue(
-      hud,
-      "             b",
-      "completeNode has expected value"
-    );
+    checkInputCompletionValue(hud, "b", "completeNode has expected value");
 
     const { keyOption } = test;
     info(`Test that arrow right closes the popup and accepts the completion`);
@@ -216,13 +194,12 @@ async function checkArrowRightAcceptCompletion(hud) {
   setInputValue(hud, "");
 }
 
-async function checkWordNavigation(hud, oldJsterm) {
+async function checkWordNavigation(hud) {
   const accelKey = Services.appinfo.OS == "Darwin" ? "altKey" : "ctrlKey";
   const goLeft = () =>
     EventUtils.synthesizeKey("KEY_ArrowLeft", { [accelKey]: true });
   const goRight = () =>
     EventUtils.synthesizeKey("KEY_ArrowRight", { [accelKey]: true });
-  const isWindowsAndOldJsTerm = Services.appinfo.OS == "WINNT" && oldJsterm;
 
   setInputValue(hud, "aa bb cc dd");
   checkInputValueAndCursorPosition(hud, "aa bb cc dd|");
@@ -247,16 +224,13 @@ async function checkWordNavigation(hud, oldJsterm) {
 
   goRight();
   // Windows differ from other platforms, going to the start of the next string.
-  let expectedInput = isWindowsAndOldJsTerm ? "aa |bb cc dd" : "aa| bb cc dd";
-  checkInputValueAndCursorPosition(hud, expectedInput);
+  checkInputValueAndCursorPosition(hud, "aa| bb cc dd");
 
   goRight();
-  expectedInput = isWindowsAndOldJsTerm ? "aa bb |cc dd" : "aa bb| cc dd";
-  checkInputValueAndCursorPosition(hud, expectedInput);
+  checkInputValueAndCursorPosition(hud, "aa bb| cc dd");
 
   goRight();
-  expectedInput = isWindowsAndOldJsTerm ? "aa bb cc |dd" : "aa bb cc| dd";
-  checkInputValueAndCursorPosition(hud, expectedInput);
+  checkInputValueAndCursorPosition(hud, "aa bb cc| dd");
 
   goRight();
   checkInputValueAndCursorPosition(hud, "aa bb cc dd|");

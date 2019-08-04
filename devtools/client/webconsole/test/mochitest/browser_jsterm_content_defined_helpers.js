@@ -37,15 +37,6 @@ const TEST_URI = `data:text/html,<meta charset=utf8>
   </script>`;
 
 add_task(async function() {
-  // Run test with legacy JsTerm
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-  // And then run it with the CodeMirror-powered one.
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup } = jsterm;
@@ -69,7 +60,7 @@ async function performTests() {
     );
     ok(true, `output is correct for ${helper}()`);
   }
-}
+});
 
 function getPopupLabels(popup) {
   return popup.getItems().map(item => item.label);

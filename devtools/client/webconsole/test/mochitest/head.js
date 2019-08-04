@@ -546,15 +546,7 @@ async function setInputValueForAutocompletion(
   }
 
   if (Number.isInteger(caretPosition)) {
-    if (jsterm.inputNode) {
-      const { inputNode } = jsterm;
-      inputNode.value = value;
-      inputNode.setSelectionRange(caretPosition, caretPosition);
-    }
-
-    if (jsterm.editor) {
-      jsterm.editor.setCursor(jsterm.editor.getPosition(caretPosition));
-    }
+    jsterm.editor.setCursor(jsterm.editor.getPosition(caretPosition));
   }
 }
 
@@ -588,13 +580,7 @@ function checkInputCompletionValue(hud, expectedValue, assertionInfo) {
   }
 
   info(`Expects "${expectedValue}", is "${completionValue}"`);
-
-  if (hud.jsterm.completeNode) {
-    is(completionValue, expectedValue, assertionInfo);
-  } else {
-    // CodeMirror jsterm doesn't need to add prefix-spaces.
-    is(completionValue, expectedValue.trim(), assertionInfo);
-  }
+  is(completionValue, expectedValue, assertionInfo);
 }
 
 /**
@@ -606,13 +592,7 @@ function checkInputCompletionValue(hud, expectedValue, assertionInfo) {
  */
 function checkInputCursorPosition(hud, expectedCursorIndex, assertionInfo) {
   const { jsterm } = hud;
-  if (jsterm.inputNode) {
-    const { selectionStart, selectionEnd } = jsterm.inputNode;
-    is(selectionStart, expectedCursorIndex, assertionInfo);
-    ok(selectionStart === selectionEnd);
-  } else {
-    is(jsterm.editor.getCursor().ch, expectedCursorIndex, assertionInfo);
-  }
+  is(jsterm.editor.getCursor().ch, expectedCursorIndex, assertionInfo);
 }
 
 /**
@@ -643,20 +623,11 @@ function checkInputValueAndCursorPosition(
   const inputValue = expectedStringWithCursor.replace("|", "");
   const { jsterm } = hud;
   is(getInputValue(hud), inputValue, "console input has expected value");
-  if (jsterm.inputNode) {
-    is(jsterm.inputNode.selectionStart, jsterm.inputNode.selectionEnd);
-    is(
-      jsterm.inputNode.selectionStart,
-      expectedStringWithCursor.indexOf("|"),
-      assertionInfo
-    );
-  } else {
-    const lines = expectedStringWithCursor.split("\n");
-    const lineWithCursor = lines.findIndex(line => line.includes("|"));
-    const { ch, line } = jsterm.editor.getCursor();
-    is(line, lineWithCursor, assertionInfo + " - correct line");
-    is(ch, lines[lineWithCursor].indexOf("|"), assertionInfo + " - correct ch");
-  }
+  const lines = expectedStringWithCursor.split("\n");
+  const lineWithCursor = lines.findIndex(line => line.includes("|"));
+  const { ch, line } = jsterm.editor.getCursor();
+  is(line, lineWithCursor, assertionInfo + " - correct line");
+  is(ch, lines[lineWithCursor].indexOf("|"), assertionInfo + " - correct ch");
 }
 
 /**
@@ -667,15 +638,7 @@ function checkInputValueAndCursorPosition(
  */
 function getInputCompletionValue(hud) {
   const { jsterm } = hud;
-  if (jsterm.completeNode) {
-    return jsterm.completeNode.value;
-  }
-
-  if (jsterm.editor) {
-    return jsterm.editor.getAutoCompletionText();
-  }
-
-  return null;
+  return jsterm.editor.getAutoCompletionText();
 }
 
 /**
@@ -688,16 +651,7 @@ function isInputFocused(hud) {
   const { jsterm } = hud;
   const document = hud.ui.outputNode.ownerDocument;
   const documentIsFocused = document.hasFocus();
-
-  if (jsterm.inputNode) {
-    return document.activeElement == jsterm.inputNode && documentIsFocused;
-  }
-
-  if (jsterm.editor) {
-    return documentIsFocused && jsterm.editor.hasFocus();
-  }
-
-  return false;
+  return documentIsFocused && jsterm.editor.hasFocus();
 }
 
 /**

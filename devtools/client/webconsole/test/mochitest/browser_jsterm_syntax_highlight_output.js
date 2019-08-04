@@ -6,14 +6,6 @@
 const TEST_URI = "data:text/html;charset=utf-8,Test syntax highlighted output";
 
 add_task(async function() {
-  await pushPref("devtools.webconsole.jsterm.codeMirror", true);
-  await performTests();
-
-  await pushPref("devtools.webconsole.jsterm.codeMirror", false);
-  await performTests();
-});
-
-async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
 
   // Syntax highlighting is implemented with a Custom Element:
@@ -28,13 +20,7 @@ async function performTests() {
   execute(hud, "var a = 'str';");
   const message = await onMessage;
   const highlighted = message.node.querySelectorAll("syntax-highlighted");
-  let expectedMarkup;
-  if (Services.prefs.getBoolPref("devtools.webconsole.jsterm.codeMirror")) {
-    /* eslint-disable-next-line max-len */
-    expectedMarkup = `<syntax-highlighted class="cm-s-mozilla"><span class="cm-keyword">var</span> <span class="cm-def">a</span> <span class="cm-operator">=</span> <span class="cm-string">'str'</span>;</syntax-highlighted>`;
-  } else {
-    expectedMarkup = `<syntax-highlighted>var a = 'str';</syntax-highlighted>`;
-  }
+  const expectedMarkup = `<syntax-highlighted class="cm-s-mozilla"><span class="cm-keyword">var</span> <span class="cm-def">a</span> <span class="cm-operator">=</span> <span class="cm-string">'str'</span>;</syntax-highlighted>`;
   is(highlighted.length, 1, "1 syntax highlighted tag");
   is(highlighted[0].outerHTML, expectedMarkup, "got expected html");
-}
+});
