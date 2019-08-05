@@ -912,8 +912,9 @@ void nsTableRowFrame::ReflowChildren(nsPresContext* aPresContext,
       // In vertical-rl mode, we are likely to have containerSize.width = 0
       // because ComputedWidth() was NS_UNCONSTRAINEDSIZE.
       // For cases where that's wrong, we will fix up the position later.
-      FinishReflowChild(kidFrame, aPresContext, desiredSize, nullptr, wm,
-                        kidPosition, containerSize, ReflowChildFlags::Default);
+      FinishReflowChild(kidFrame, aPresContext, desiredSize,
+                        kidReflowInput.ptrOr(nullptr), wm, kidPosition,
+                        containerSize, ReflowChildFlags::Default);
 
       nsTableFrame* tableFrame = GetTableFrame();
       if (tableFrame->IsBorderCollapse()) {
