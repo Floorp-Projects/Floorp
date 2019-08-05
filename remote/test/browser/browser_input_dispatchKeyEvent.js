@@ -35,7 +35,7 @@ add_task(async function() {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  const { client, tab } = await setupForURL(toDataURL("<input>"));
+  const { client, tab } = await setupTestForUri(toDataURL("<input>"));
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   const { Input } = client;

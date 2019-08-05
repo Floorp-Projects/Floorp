@@ -4,7 +4,7 @@
 "use strict";
 
 add_task(async function testDispatchMouseEvent() {
-  const { client, tab } = await setupForURL(toDataURL("<div>foo</div>"));
+  const { client, tab } = await setupTestForUri(toDataURL("<div>foo</div>"));
 
   const { Input } = client;
 

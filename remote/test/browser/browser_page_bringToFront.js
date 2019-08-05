@@ -7,7 +7,7 @@ const FIRST_DOC = toDataURL("first");
 const SECOND_DOC = toDataURL("second");
 
 add_task(async function testBringToFrontUpdatesSelectedTab() {
-  const { client, tab } = await setupForURL(FIRST_DOC);
+  const { client, tab } = await setupTestForUri(FIRST_DOC);
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   info("Open another tab that should become the front tab");
@@ -35,7 +35,7 @@ add_task(async function testBringToFrontUpdatesSelectedTab() {
 });
 
 add_task(async function testBringToFrontUpdatesFocusedWindow() {
-  const { client, tab } = await setupForURL(FIRST_DOC);
+  const { client, tab } = await setupTestForUri(FIRST_DOC);
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   is(tab.ownerGlobal, getFocusedNavigator(), "The initial window is focused");
