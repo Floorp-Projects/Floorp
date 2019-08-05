@@ -53,7 +53,7 @@ add_task(async function() {
   await closeConsole();
 
   info("web console closed");
-  hud = await HUDService.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
   await waitFor(() => findMessage(hud, "cachedBrowserConsoleMessage"));

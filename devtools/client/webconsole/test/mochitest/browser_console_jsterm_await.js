@@ -14,7 +14,7 @@ add_task(async function() {
   await pushPref("devtools.debugger.features.map-await-expression", true);
 
   await addTab(TEST_URI);
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   const executeAndWaitForResultMessage = (input, expectedOutput) =>
     executeAndWaitForMessage(hud, input, expectedOutput, ".result");
@@ -40,5 +40,5 @@ add_task(async function() {
   );
 
   info("Close the Browser console");
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 });

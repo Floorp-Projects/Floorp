@@ -32,7 +32,7 @@ add_task(async function() {
   // in the test.
   Services.prefs.setBoolPref("devtools.chrome.enabled", true);
 
-  browserConsole = await HUDService.toggleBrowserConsole();
+  browserConsole = await BrowserConsoleManager.toggleBrowserConsole();
   objInspector = await logObject(browserConsole);
   testJSTermIsVisible(browserConsole);
   await testObjectInspectorPropertiesAreSet(objInspector);
@@ -44,10 +44,10 @@ add_task(async function() {
   await testObjectInspectorPropertiesAreSet(objInspector);
   await closeConsole(browserTab);
 
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
   Services.prefs.setBoolPref("devtools.chrome.enabled", false);
 
-  browserConsole = await HUDService.toggleBrowserConsole();
+  browserConsole = await BrowserConsoleManager.toggleBrowserConsole();
   objInspector = await logObject(browserConsole);
   testJSTermIsNotVisible(browserConsole);
 
@@ -58,7 +58,7 @@ add_task(async function() {
 
   info("Close webconsole and browser console");
   await closeConsole(browserTab);
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 async function logObject(hud) {
