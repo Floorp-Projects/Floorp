@@ -25,7 +25,7 @@ add_task(async function() {
   front.once("profiler-started", (entries, interval, features, duration) => {
     is(entries, 1024, "Should apply entries by startProfiler");
     is(interval, 0.1, "Should apply interval by startProfiler");
-    is(features, 0x202, "Should apply features by startProfiler");
+    is(typeof features, "number", "Should apply features by startProfiler");
     is(duration, 2, "Should apply duration by startProfiler");
   });
 
