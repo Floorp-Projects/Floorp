@@ -616,6 +616,8 @@ WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(
   }
 
   if (!aFullScreenUpdate) {
+    NS_WARNING(
+        "We can't create a new Wayland buffer for non-fullscreen updates!");
     return nullptr;
   }
 
@@ -672,6 +674,8 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::LockWaylandBuffer(
               (void*)buffer));
 
   if (!buffer) {
+    NS_WARNING(
+        "WindowSurfaceWayland::LockWaylandBuffer(): No buffer available");
     return nullptr;
   }
 
