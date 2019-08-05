@@ -57,6 +57,13 @@ async function testReloadAboutDevToolsToolbox(toolId) {
   await gDevTools.once("toolbox-ready");
   ok(true, "Toolbox is re-created again");
 
+  // Check that about:devtools-toolbox is still selected tab. See Bug 1570692.
+  is(
+    devtoolsBrowser,
+    gBrowser.selectedBrowser,
+    "about:devtools-toolbox is still selected"
+  );
+
   info("Check whether about:devtools-toolbox page displays correctly");
   ok(
     devtoolsBrowser.contentDocument.querySelector(".debug-target-info"),
