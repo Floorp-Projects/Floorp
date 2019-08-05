@@ -343,7 +343,7 @@ void nsTableColGroupFrame::Reflow(nsPresContext* aPresContext,
     nsReflowStatus status;
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowInput, 0, 0,
                 ReflowChildFlags::Default, status);
-    FinishReflowChild(kidFrame, aPresContext, kidSize, nullptr, 0, 0,
+    FinishReflowChild(kidFrame, aPresContext, kidSize, &kidReflowInput, 0, 0,
                       ReflowChildFlags::Default);
   }
 

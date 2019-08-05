@@ -275,14 +275,16 @@ nsIFrame::LogicalSides nsTableRowGroupFrame::GetLogicalSkipSides(
 // Position and size aKidFrame and update our reflow input.
 void nsTableRowGroupFrame::PlaceChild(
     nsPresContext* aPresContext, TableRowGroupReflowInput& aReflowInput,
-    nsIFrame* aKidFrame, WritingMode aWM, const LogicalPoint& aKidPosition,
-    const nsSize& aContainerSize, ReflowOutput& aDesiredSize,
-    const nsRect& aOriginalKidRect, const nsRect& aOriginalKidVisualOverflow) {
+    nsIFrame* aKidFrame, const ReflowInput& aKidReflowInput, WritingMode aWM,
+    const LogicalPoint& aKidPosition, const nsSize& aContainerSize,
+    ReflowOutput& aDesiredSize, const nsRect& aOriginalKidRect,
+    const nsRect& aOriginalKidVisualOverflow) {
   bool isFirstReflow = aKidFrame->HasAnyStateBits(NS_FRAME_FIRST_REFLOW);
 
   // Place and size the child
-  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, nullptr, aWM,
-                    aKidPosition, aContainerSize, ReflowChildFlags::Default);
+  FinishReflowChild(aKidFrame, aPresContext, aDesiredSize, &aKidReflowInput,
+                    aWM, aKidPosition, aContainerSize,
+                    ReflowChildFlags::Default);
 
   nsTableFrame* tableFrame = GetTableFrame();
   if (tableFrame->IsBorderCollapse()) {
@@ -411,8 +413,8 @@ void nsTableRowGroupFrame::ReflowChildren(
       kidReflowInput.ApplyRelativePositioning(&kidPosition, containerSize);
 
       // Place the child
-      PlaceChild(aPresContext, aReflowInput, kidFrame, wm, kidPosition,
-                 containerSize, desiredSize,
+      PlaceChild(aPresContext, aReflowInput, kidFrame, kidReflowInput, wm,
+                 kidPosition, containerSize, desiredSize,
                  oldKidRect.GetPhysicalRect(wm, containerSize),
                  oldKidVisualOverflow);
       aReflowInput.bCoord += cellSpacingB;

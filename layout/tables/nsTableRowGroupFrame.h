@@ -344,7 +344,7 @@ class nsTableRowGroupFrame final : public nsContainerFrame,
 
   void PlaceChild(nsPresContext* aPresContext,
                   TableRowGroupReflowInput& aReflowInput, nsIFrame* aKidFrame,
-                  mozilla::WritingMode aWM,
+                  const ReflowInput& aKidReflowInput, mozilla::WritingMode aWM,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize& aContainerSize, ReflowOutput& aDesiredSize,
                   const nsRect& aOriginalKidRect,
