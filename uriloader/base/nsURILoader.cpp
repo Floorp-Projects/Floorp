@@ -252,11 +252,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
         nsCOMPtr<nsIURI> uri;
         rv = httpChannel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv) && uri) {
-          bool httpScheme = false;
-          bool httpsScheme = false;
-          uri->SchemeIs("http", &httpScheme);
-          uri->SchemeIs("https", &httpsScheme);
-          if ((httpScheme || httpsScheme) &&
+          if ((uri->SchemeIs("http") || uri->SchemeIs("https")) &&
               nsContentUtils::AttemptLargeAllocationLoad(httpChannel)) {
             return NS_BINDING_ABORTED;
           }

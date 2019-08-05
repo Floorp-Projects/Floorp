@@ -544,24 +544,13 @@ static nsresult OfflineAppPermForPrincipal(nsIPrincipal* aPrincipal,
   if (!innerURI) return NS_OK;
 
   // only http and https applications can use offline APIs.
-  bool match;
-  nsresult rv = innerURI->SchemeIs("http", &match);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!match) {
-    rv = innerURI->SchemeIs("https", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!match) {
-      return NS_OK;
-    }
-  } else {
-    if (!sAllowInsecureOfflineCache) {
-      return NS_OK;
-    }
+  if (!(innerURI->SchemeIs("http") && sAllowInsecureOfflineCache) &&
+      !innerURI->SchemeIs("https")) {
+    return NS_OK;
   }
 
   nsAutoCString domain;
-  rv = innerURI->GetAsciiHost(domain);
+  nsresult rv = innerURI->GetAsciiHost(domain);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (nsOfflineCacheUpdateService::AllowedDomains()->Contains(domain)) {
@@ -639,11 +628,7 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
     }
 
     // if http then we should prevent this cache
-    bool match;
-    rv = innerURI->SchemeIs("http", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (match) {
+    if (innerURI->SchemeIs("http")) {
       return NS_ERROR_NOT_AVAILABLE;
     }
   }

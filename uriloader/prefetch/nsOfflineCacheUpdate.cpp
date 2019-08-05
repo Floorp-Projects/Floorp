@@ -509,8 +509,7 @@ nsOfflineCacheUpdateItem::AsyncOnChannelRedirect(
   nsAutoCString oldScheme;
   mURI->GetScheme(oldScheme);
 
-  bool match;
-  if (NS_FAILED(newURI->SchemeIs(oldScheme.get(), &match)) || !match) {
+  if (!newURI->SchemeIs(oldScheme.get())) {
     LOG(("rejected: redirected to a different scheme\n"));
     return NS_ERROR_ABORT;
   }
@@ -841,8 +840,9 @@ nsresult nsOfflineManifestItem::HandleManifestLine(
       uri->GetScheme(scheme);
 
       // Manifest URIs must have the same scheme as the manifest.
-      bool match;
-      if (NS_FAILED(mURI->SchemeIs(scheme.get(), &match)) || !match) break;
+      if (!mURI->SchemeIs(scheme.get())) {
+        break;
+      }
 
       mExplicitURIs.AppendObject(uri);
 
@@ -934,8 +934,9 @@ nsresult nsOfflineManifestItem::HandleManifestLine(
 
       nsAutoCString scheme;
       bypassURI->GetScheme(scheme);
-      bool equals;
-      if (NS_FAILED(mURI->SchemeIs(scheme.get(), &equals)) || !equals) break;
+      if (!mURI->SchemeIs(scheme.get())) {
+        break;
+      }
       if (NS_FAILED(DropReferenceFromURL(bypassURI))) break;
       nsCString spec;
       if (NS_FAILED(bypassURI->GetAsciiSpec(spec))) break;
@@ -1142,14 +1143,8 @@ nsresult nsOfflineCacheUpdate::InitInternal(nsIURI* aManifestURI,
   nsresult rv;
 
   // Only http and https applications are supported.
-  bool match;
-  rv = aManifestURI->SchemeIs("http", &match);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!match) {
-    rv = aManifestURI->SchemeIs("https", &match);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!match) return NS_ERROR_ABORT;
+  if (!aManifestURI->SchemeIs("http") && !aManifestURI->SchemeIs("https")) {
+    return NS_ERROR_ABORT;
   }
 
   mManifestURI = aManifestURI;
@@ -2136,9 +2131,9 @@ nsresult nsOfflineCacheUpdate::AddURI(nsIURI* aURI, uint32_t aType,
   nsAutoCString scheme;
   aURI->GetScheme(scheme);
 
-  bool match;
-  if (NS_FAILED(mManifestURI->SchemeIs(scheme.get(), &match)) || !match)
+  if (!mManifestURI->SchemeIs(scheme.get())) {
     return NS_ERROR_FAILURE;
+  }
 
   // Don't fetch the same URI twice.
   for (uint32_t i = 0; i < mItems.Length(); i++) {
