@@ -920,13 +920,14 @@ nsresult nsCORSListenerProxy::UpdateChannel(nsIChannel* aChannel,
   // consider calling SetBlockedRequest in nsCORSListenerProxy::UpdateChannel
   //
   // Check that the uri is ok to load
+  uint32_t flags = loadInfo->CheckLoadURIFlags();
   rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-      mRequestingPrincipal, uri, nsIScriptSecurityManager::STANDARD);
+      mRequestingPrincipal, uri, flags);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (originalURI != uri) {
     rv = nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-        mRequestingPrincipal, originalURI, nsIScriptSecurityManager::STANDARD);
+        mRequestingPrincipal, originalURI, flags);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
