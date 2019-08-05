@@ -1320,7 +1320,8 @@ bool AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
   }
 
   uint32_t result = 0;
-  rv = permManager->TestPermissionFromPrincipal(parentPrincipal, type, &result);
+  rv = permManager->TestPermissionWithoutDefaultsFromPrincipal(parentPrincipal,
+                                                               type, &result);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     LOG(("Failed to test the permission"));
     return false;
