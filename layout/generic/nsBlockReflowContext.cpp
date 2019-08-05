@@ -436,15 +436,10 @@ bool nsBlockReflowContext::PlaceBlock(const ReflowInput& aReflowInput,
           .ConvertTo(frameWM, mWritingMode,
                      mContainerSize - mMetrics.PhysicalSize());
 
-  // ApplyRelativePositioning in right-to-left writing modes needs to
-  // know the updated frame width
-  mFrame->SetSize(mWritingMode, mMetrics.Size(mWritingMode));
-  aReflowInput.ApplyRelativePositioning(&logPos, mContainerSize);
-
   // Now place the frame and complete the reflow process
   nsContainerFrame::FinishReflowChild(
       mFrame, mPresContext, mMetrics, &aReflowInput, frameWM, logPos,
-      mContainerSize, nsIFrame::ReflowChildFlags::Default);
+      mContainerSize, nsIFrame::ReflowChildFlags::ApplyRelativePositioning);
 
   aOverflowAreas = mMetrics.mOverflowAreas + mFrame->GetPosition();
 

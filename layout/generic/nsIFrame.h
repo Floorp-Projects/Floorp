@@ -2551,9 +2551,14 @@ class nsIFrame : public nsQueryFrame {
     NoMoveFrame = (1 << 1) | NoMoveView,
     NoSizeView = 1 << 2,
     NoVisibility = 1 << 3,
+
     // Only applies to ReflowChild; if true, don't delete the next-in-flow, even
     // if the reflow is fully complete.
-    NoDeleteNextInFlowChild = 1 << 4
+    NoDeleteNextInFlowChild = 1 << 4,
+
+    // Only applies to FinishReflowChild.  Tell it to call
+    // ApplyRelativePositioning.
+    ApplyRelativePositioning = 1 << 5
   };
 
   /**
