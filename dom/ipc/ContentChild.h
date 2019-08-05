@@ -73,6 +73,7 @@ class ClonedMessageData;
 class BrowserChild;
 class GetFilesHelperChild;
 class TabContext;
+enum class MediaControlActions : uint32_t;
 
 class ContentChild final : public PContentChild,
                            public nsIWindowProvider,
@@ -687,6 +688,9 @@ class ContentChild final : public PContentChild,
 
   mozilla::ipc::IPCResult RecvSetMediaMuted(BrowsingContext* aContext,
                                             bool aMuted);
+
+  mozilla::ipc::IPCResult RecvUpdateMediaAction(BrowsingContext* aContext,
+                                                MediaControlActions aAction);
 
   void HoldBrowsingContextGroup(BrowsingContextGroup* aBCG);
   void ReleaseBrowsingContextGroup(BrowsingContextGroup* aBCG);

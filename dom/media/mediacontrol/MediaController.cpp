@@ -8,6 +8,7 @@
 
 #include "MediaControlService.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -40,16 +41,28 @@ TabMediaController::~TabMediaController() {
 void TabMediaController::Play() {
   LOG("Play");
   mIsPlaying = true;
+  RefPtr<BrowsingContext> context = GetContext();
+  if (context) {
+    context->Canonical()->UpdateMediaAction(MediaControlActions::ePlay);
+  }
 }
 
 void TabMediaController::Pause() {
   LOG("Pause");
   mIsPlaying = false;
+  RefPtr<BrowsingContext> context = GetContext();
+  if (context) {
+    context->Canonical()->UpdateMediaAction(MediaControlActions::ePause);
+  }
 }
 
 void TabMediaController::Stop() {
   LOG("Stop");
   mIsPlaying = false;
+  RefPtr<BrowsingContext> context = GetContext();
+  if (context) {
+    context->Canonical()->UpdateMediaAction(MediaControlActions::eStop);
+  }
 }
 
 void TabMediaController::Shutdown() {
