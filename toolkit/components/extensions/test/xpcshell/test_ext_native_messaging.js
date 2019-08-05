@@ -665,11 +665,14 @@ add_task(async function test_connect_native_from_content_script() {
     true
   );
   Services.prefs.setBoolPref("security.allow_unsafe_parent_loads", true);
-  await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+  const page = await ExtensionTestUtils.loadContentPage(
+    "http://example.com/dummy"
+  );
 
   let result = await extension.awaitMessage("result");
   equal(result, "disconnected", "connectNative() failed from content script");
 
+  await page.close();
   await extension.unload();
 
   let procCount = await getSubprocessCount();

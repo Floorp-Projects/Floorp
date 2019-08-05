@@ -31,7 +31,6 @@ using media::TimeUnit;
  */
 struct PlaybackInfoInit {
   TimeUnit mStartTime;
-  StreamTime mOffset;
   MediaInfo mInfo;
 };
 
@@ -59,7 +58,7 @@ class DecodedStreamGraphListener {
       MozPromiseHolder<DecodedStream::EndedPromise>&& aAudioEndedHolder,
       SourceMediaStream* aVideoStream,
       MozPromiseHolder<DecodedStream::EndedPromise>&& aVideoEndedHolder,
-      StreamTime aOffset, AbstractThread* aMainThread)
+      AbstractThread* aMainThread)
       : mAudioTrackListener(
             aAudioStream
                 ? MakeRefPtr<DecodedStreamTrackListener>(this, aAudioStream)
@@ -72,7 +71,6 @@ class DecodedStreamGraphListener {
         mVideoEndedHolder(std::move(aVideoEndedHolder)),
         mAudioStream(aAudioStream),
         mVideoStream(aVideoStream),
-        mOffset(aOffset),
         mAbstractMainThread(aMainThread) {
     MOZ_ASSERT(NS_IsMainThread());
     if (mAudioTrackListener) {
@@ -93,13 +91,12 @@ class DecodedStreamGraphListener {
   }
 
   void NotifyOutput(SourceMediaStream* aStream, StreamTime aCurrentTrackTime) {
-    StreamTime currentTime = aCurrentTrackTime + mOffset;
     if (aStream == mAudioStream) {
-      if (currentTime >= mAudioEnd) {
+      if (aCurrentTrackTime >= mAudioEnd) {
         mAudioStream->EndTrack(OutputStreamManager::sTrackID);
       }
     } else if (aStream == mVideoStream) {
-      if (currentTime >= mVideoEnd) {
+      if (aCurrentTrackTime >= mVideoEnd) {
         mVideoStream->EndTrack(OutputStreamManager::sTrackID);
       }
     } else {
@@ -111,7 +108,7 @@ class DecodedStreamGraphListener {
     }
     MOZ_ASSERT_IF(aStream == mAudioStream, !mAudioEnded);
     MOZ_ASSERT_IF(aStream == mVideoStream, !mVideoEnded);
-    mOnOutput.Notify(aStream->StreamTimeToMicroseconds(currentTime));
+    mOnOutput.Notify(aStream->StreamTimeToMicroseconds(aCurrentTrackTime));
   }
 
   void NotifyEnded(SourceMediaStream* aStream) {
@@ -215,7 +212,6 @@ class DecodedStreamGraphListener {
   const RefPtr<SourceMediaStream> mVideoStream;
   Atomic<StreamTime> mAudioEnd{STREAM_TIME_MAX};
   Atomic<StreamTime> mVideoEnd{STREAM_TIME_MAX};
-  const StreamTime mOffset;
   const RefPtr<AbstractThread> mAbstractMainThread;
 };
 
@@ -317,7 +313,7 @@ DecodedStreamData::DecodedStreamData(
       // DecodedStreamGraphListener will resolve these promises.
       mListener(MakeRefPtr<DecodedStreamGraphListener>(
           mAudioStream, std::move(aAudioEndedPromise), mVideoStream,
-          std::move(aVideoEndedPromise), aInit.mOffset, aMainThread)),
+          std::move(aVideoEndedPromise), aMainThread)),
       mOutputStreamManager(aOutputStreamManager),
       mAbstractMainThread(aMainThread) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -474,7 +470,7 @@ nsresult DecodedStream::Start(const TimeUnit& aStartTime,
   mAudioEndedPromise = audioEndedHolder.Ensure(__func__);
   MozPromiseHolder<DecodedStream::EndedPromise> videoEndedHolder;
   mVideoEndedPromise = videoEndedHolder.Ensure(__func__);
-  PlaybackInfoInit init{aStartTime, mStreamTimeOffset, aInfo};
+  PlaybackInfoInit init{aStartTime, aInfo};
   nsCOMPtr<nsIRunnable> r = new R(std::move(init), std::move(audioEndedHolder),
                                   std::move(videoEndedHolder),
                                   mOutputStreamManager, mAbstractMainThread);
@@ -496,7 +492,6 @@ void DecodedStream::Stop() {
 
   DisconnectListener();
   ResetVideo(mPrincipalHandle);
-  mStreamTimeOffset += SentDuration();
   mStartTime.reset();
   mAudioEndedPromise = nullptr;
   mVideoEndedPromise = nullptr;
@@ -843,16 +838,6 @@ void DecodedStream::SendVideo(const PrincipalHandle& aPrincipalHandle) {
                                  mData->mVideoStreamWritten);
     mData->mHaveSentFinishVideo = true;
   }
-}
-
-StreamTime DecodedStream::SentDuration() {
-  AssertOwnerThread();
-
-  if (!mData) {
-    return 0;
-  }
-
-  return std::max(mData->mAudioStreamWritten, mData->mVideoStreamWritten);
 }
 
 void DecodedStream::SendData() {

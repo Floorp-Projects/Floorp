@@ -128,3 +128,4 @@ test-pref(media.autoplay.block-webaudio,false) load 1545133.html
 load track-with-zero-dimensions.mp4 # Bug 1542539
 load 1560215.html
 load 1547899.html
+load 1569645.html

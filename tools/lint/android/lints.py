@@ -96,7 +96,7 @@ def api_lint(config, **lintargs):
                     'path': mozpath.relpath(r['file'], topsrcdir),
                     'lineno': int(r['line']),
                     'column': int(r.get('column') or 0),
-                    'message': '{}: {}'.format(r['msg'], r['detail']),
+                    'message': r['msg'],
                 }
                 results.append(result.from_config(config, **err))
 

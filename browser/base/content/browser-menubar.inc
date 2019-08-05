@@ -434,8 +434,9 @@
                 <menuitem id="menu_openHelp"
                           oncommand="openHelpLink('firefox-help')"
                           onclick="checkForMiddleClick(this, event);"
+                          data-l10n-id="menu-help-product"
 #ifdef XP_MACOSX
-                          key="key_openHelpMac" data-l10n-id="menu-help-product"/>
+                          key="key_openHelpMac"/>
 #else
                           />
 #endif

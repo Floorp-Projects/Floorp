@@ -156,6 +156,14 @@
   fill: #12BC00;
 }
 
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #identity-icon[lock-icon-gray],
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #identity-icon[lock-icon-gray],
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #identity-icon[lock-icon-gray] {
+  fill-opacity: 0.6;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+}
+
 #urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #identity-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #identity-icon,
 #urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #identity-icon,
