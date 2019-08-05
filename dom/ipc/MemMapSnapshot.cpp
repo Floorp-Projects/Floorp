@@ -8,10 +8,19 @@
 
 #include "base/eintr_wrapper.h"
 #include "base/file_util.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/ipc/FileDescriptorUtils.h"
 #include "nsIFile.h"
+
+#ifdef XP_WIN
+#  include "mozilla/RandomNum.h"
+#  include "mozilla/WindowsVersion.h"
+#  include "nsDebug.h"
+#  include "nsString.h"
+#  include <windows.h>
+#endif
 
 #ifdef XP_UNIX
 #  include <sys/stat.h>
@@ -44,8 +53,36 @@ Result<Ok, nsresult> MemMapSnapshot::Finalize(AutoMemMap& aMem) {
 #if defined(XP_WIN)
 
 Result<Ok, nsresult> MemMapSnapshot::Create(size_t aSize) {
-  HANDLE handle = CreateFileMapping(INVALID_HANDLE_VALUE, nullptr,
-                                    PAGE_READWRITE, 0, DWORD(aSize), nullptr);
+  SECURITY_ATTRIBUTES sa;
+  SECURITY_DESCRIPTOR sd;
+  ACL dacl;
+
+  sa.nLength = sizeof(sa);
+  sa.lpSecurityDescriptor = &sd;
+  sa.bInheritHandle = FALSE;
+
+  if (NS_WARN_IF(!InitializeAcl(&dacl, sizeof(dacl), ACL_REVISION)) ||
+      NS_WARN_IF(
+          !InitializeSecurityDescriptor(&sd, SECURITY_DESCRIPTOR_REVISION)) ||
+      NS_WARN_IF(!SetSecurityDescriptorDacl(&sd, TRUE, &dacl, FALSE))) {
+    return Err(NS_ERROR_FAILURE);
+  }
+
+  nsAutoStringN<sizeof("MozSharedMem_") + 16 * 4> name;
+  if (!IsWin8Point1OrLater()) {
+    name.AssignLiteral("MozSharedMem_");
+    for (size_t i = 0; i < 4; ++i) {
+      Maybe<uint64_t> randomNum = RandomUint64();
+      if (NS_WARN_IF(randomNum.isNothing())) {
+        return Err(NS_ERROR_UNEXPECTED);
+      }
+      name.AppendPrintf("%016llx", *randomNum);
+    }
+  }
+
+  HANDLE handle =
+      CreateFileMapping(INVALID_HANDLE_VALUE, &sa, PAGE_READWRITE, 0,
+                        DWORD(aSize), name.IsEmpty() ? nullptr : name.get());
 
   if (!handle) {
     return Err(NS_ERROR_FAILURE);
