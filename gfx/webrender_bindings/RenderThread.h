@@ -306,12 +306,15 @@ class RenderThread final {
   };
 
   struct WindowInfo {
+    // PendingCount() >= RenderingCount() at all times.
     int64_t PendingCount() { return mPendingFrames.size(); }
     int64_t RenderingCount() { return mIsRendering ? 1 : 0; }
 
-    bool mIsDestroyed = false;
-    bool mIsRendering = false;
+    // If mIsRendering is true, mPendingFrames.front() is currently being
+    // rendered.
     std::queue<PendingFrameInfo> mPendingFrames;
+    bool mIsRendering = false;
+    bool mIsDestroyed = false;
     bool mHadSlowFrame = false;
   };
 
