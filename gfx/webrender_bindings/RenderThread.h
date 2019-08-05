@@ -300,6 +300,11 @@ class RenderThread final {
   std::map<wr::WindowId, UniquePtr<layers::WebRenderCompositionRecorder>>
       mCompositionRecorders;
 
+  struct PendingFrameInfo {
+    TimeStamp mStartTime;
+    VsyncId mStartId;
+  };
+
   struct WindowInfo {
     bool mIsDestroyed = false;
     bool mRender = false;
@@ -308,8 +313,7 @@ class RenderThread final {
     uint8_t mDocFramesSeen = 0;
     // One entry in this queue for each pending frame, so the length
     // should always equal mPendingCount
-    std::queue<TimeStamp> mStartTimes;
-    std::queue<VsyncId> mStartIds;
+    std::queue<PendingFrameInfo> mPendingFrames;
     std::queue<uint8_t> mDocFrameCounts;
     bool mHadSlowFrame = false;
   };
