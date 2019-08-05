@@ -42,7 +42,7 @@ add_task(function test_HomePage() {
     "Homepage should not be overriden by default."
   );
   let newvalue = "about:blank|about:newtab";
-  HomePage.set(newvalue);
+  HomePage.safeSet(newvalue);
   Assert.ok(HomePage.overridden, "Homepage should be overriden after set()");
   Assert.equal(HomePage.get(), newvalue, "Homepage should be ${newvalue}");
   Assert.notEqual(
@@ -88,50 +88,4 @@ add_task(function test_recoverEmptyHomepage() {
   Assert.ok(HomePage.overridden, "Homepage is overriden with empty string.");
   Assert.equal(HomePage.get(), HomePage.getDefault(), "Recover is default");
   Assert.ok(!HomePage.overridden, "Recover should have set default");
-});
-
-add_task(async function test_initWithIgnoredPageCausesReset() {
-  HomePage.set("http://bad/?ignore=me");
-  Assert.ok(HomePage.overridden, "Should have overriden the homepage");
-
-  await HomePage.init();
-
-  Assert.ok(
-    !HomePage.overridden,
-    "Should no longer be overriding the homepage."
-  );
-  Assert.equal(
-    HomePage.get(),
-    HomePage.getDefault(),
-    "Should have reset to the default preference"
-  );
-});
-
-add_task(async function test_updateIgnoreListCausesReset() {
-  HomePage.set("http://bad/?new=ignore");
-  Assert.ok(HomePage.overridden, "Should have overriden the homepage");
-
-  // Simulate an ignore list update.
-  await RemoteSettings("hijack-blocklists").emit("sync", {
-    data: {
-      current: [
-        {
-          id: HOMEPAGE_IGNORELIST,
-          schema: 1553857697843,
-          last_modified: 1553859483588,
-          matches: ["ignore=me", "new=ignore"],
-        },
-      ],
-    },
-  });
-
-  Assert.ok(
-    !HomePage.overridden,
-    "Should no longer be overriding the homepage."
-  );
-  Assert.equal(
-    HomePage.get(),
-    HomePage.getDefault(),
-    "Should have reset to the default preference"
-  );
 });

@@ -13,6 +13,11 @@ ChromeUtils.defineModuleGetter(
   "ExtensionSettingsStore",
   "resource://gre/modules/ExtensionSettingsStore.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
 
 // Named this way so they correspond to the extensions
 const HOME_URI_2 = "http://example.com/";
@@ -24,6 +29,8 @@ const CONTROLLED_BY_OTHER = "controlled_by_other_extensions";
 const NOT_CONTROLLABLE = "not_controllable";
 
 const HOMEPAGE_URL_PREF = "browser.startup.homepage";
+const HOMEPAGE_EXTENSION_CONTROLLED =
+  "browser.startup.homepage_override.extensionControlled";
 
 const getHomePageURL = () => {
   return Services.prefs.getStringPref(HOMEPAGE_URL_PREF);
@@ -609,4 +616,32 @@ add_task(async function test_overriding_home_page_incognito_external() {
 
   await extension.unload();
   await BrowserTestUtils.closeWindow(win);
+});
+
+add_task(async function test_overriding_with_ignored_url() {
+  // Manually poke into the ignore list a value to be ignored.
+  HomePage._ignoreList.push("ignore=me");
+  Services.prefs.setBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, false);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      chrome_settings_overrides: { homepage: "https://example.com/?ignore=me" },
+      name: "extension",
+    },
+    useAddonManager: "temporary",
+  });
+
+  await extension.startup();
+
+  ok(HomePage.isDefault, "Should still have the default homepage");
+  is(
+    Services.prefs.getBoolPref(
+      "browser.startup.homepage_override.extensionControlled"
+    ),
+    false,
+    "Should not be extension controlled."
+  );
+
+  await extension.unload();
+  HomePage._ignoreList.pop();
 });
