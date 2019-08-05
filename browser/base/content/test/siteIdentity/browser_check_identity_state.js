@@ -38,7 +38,7 @@ requestLongerTimeout(2);
 
 async function webpageTest(secureCheck) {
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
 
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
   if (secureCheck) {
@@ -58,7 +58,6 @@ async function webpageTest(secureCheck) {
   }
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
   await SpecialPowers.popPrefEnv();
 }
 
@@ -69,7 +68,7 @@ add_task(async function test_webpage() {
 
 async function webpageTestTextWarning(secureCheck) {
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_TEXT_PREF, secureCheck]] });
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
 
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
   if (secureCheck) {
@@ -97,7 +96,6 @@ async function webpageTestTextWarning(secureCheck) {
   }
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
   await SpecialPowers.popPrefEnv();
 }
 
@@ -110,7 +108,7 @@ async function webpageTestTextWarningCombined(secureCheck) {
   await SpecialPowers.pushPrefEnv({
     set: [[INSECURE_TEXT_PREF, secureCheck], [INSECURE_ICON_PREF, secureCheck]],
   });
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
 
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
   if (secureCheck) {
@@ -138,7 +136,6 @@ async function webpageTestTextWarningCombined(secureCheck) {
   }
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
   await SpecialPowers.popPrefEnv();
 }
 
@@ -148,33 +145,19 @@ add_task(async function test_webpage_text_warning_combined() {
 });
 
 async function blankPageTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
 
   let newTab = await loadNewTab("about:blank");
-  is(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "pageproxystate should be invalid"
-  );
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = oldTab;
-  is(
-    gURLBar.getAttribute("pageproxystate"),
-    "valid",
-    "pageproxystate should be valid"
-  );
   is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.selectedTab = newTab;
-  is(
-    gURLBar.getAttribute("pageproxystate"),
-    "invalid",
-    "pageproxystate should be invalid"
-  );
+  is(getIdentityMode(), "unknownIdentity", "Identity should be unknown");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
   await SpecialPowers.popPrefEnv();
 }
 
@@ -184,7 +167,7 @@ add_task(async function test_blank() {
 });
 
 async function secureTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
 
   let newTab = await loadNewTab("https://example.com/" + DUMMY);
@@ -197,7 +180,6 @@ async function secureTest(secureCheck) {
   is(getIdentityMode(), "verifiedDomain", "Identity should be verified");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -208,7 +190,7 @@ add_task(async function test_secure_enabled() {
 });
 
 async function insecureTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
 
   let newTab = await loadNewTab("http://example.com/" + DUMMY);
@@ -229,7 +211,6 @@ async function insecureTest(secureCheck) {
   }
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -240,7 +221,7 @@ add_task(async function test_insecure() {
 });
 
 async function addonsTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
 
   let newTab = await loadNewTab("about:addons");
@@ -253,7 +234,6 @@ async function addonsTest(secureCheck) {
   is(getIdentityMode(), "chromeUI", "Identity should be chrome");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -264,7 +244,7 @@ add_task(async function test_addons() {
 });
 
 async function fileTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let fileURI = getTestFilePath("");
 
@@ -278,7 +258,6 @@ async function fileTest(secureCheck) {
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -289,7 +268,7 @@ add_task(async function test_file() {
 });
 
 async function resourceUriTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let dataURI = "resource://gre/modules/Services.jsm";
 
@@ -304,7 +283,6 @@ async function resourceUriTest(secureCheck) {
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -315,7 +293,7 @@ add_task(async function test_resource_uri() {
 });
 
 async function noCertErrorTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let newTab = BrowserTestUtils.addTab(gBrowser);
   gBrowser.selectedTab = newTab;
@@ -334,7 +312,6 @@ async function noCertErrorTest(secureCheck) {
   is(getConnectionState(), "not-secure", "Connection should be file");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -380,7 +357,7 @@ add_task(async function test_about_net_error_uri_from_navigation_tab() {
 });
 
 async function aboutUriTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let aboutURI = "about:robots";
 
@@ -394,7 +371,6 @@ async function aboutUriTest(secureCheck) {
   is(getConnectionState(), "file", "Connection should be file");
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -427,7 +403,7 @@ add_task(async function test_reader_uri() {
 });
 
 async function dataUriTest(secureCheck) {
-  let oldTab = await loadNewTab("about:robots");
+  let oldTab = gBrowser.selectedTab;
   await SpecialPowers.pushPrefEnv({ set: [[INSECURE_ICON_PREF, secureCheck]] });
   let dataURI = "data:text/html,hi";
 
@@ -449,7 +425,6 @@ async function dataUriTest(secureCheck) {
   }
 
   gBrowser.removeTab(newTab);
-  gBrowser.removeTab(oldTab);
 
   await SpecialPowers.popPrefEnv();
 }
@@ -465,10 +440,7 @@ async function pbModeTest(prefs, secureCheck) {
   let privateWin = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
   });
-  let oldTab = await BrowserTestUtils.openNewForegroundTab(
-    privateWin.gBrowser,
-    "about:robots"
-  );
+  let oldTab = privateWin.gBrowser.selectedTab;
   let newTab = await BrowserTestUtils.openNewForegroundTab(
     privateWin.gBrowser,
     "http://example.com/" + DUMMY

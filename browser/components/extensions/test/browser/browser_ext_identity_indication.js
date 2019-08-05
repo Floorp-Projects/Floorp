@@ -12,11 +12,8 @@ function confirmDefaults() {
     "Identity icon should be the search icon"
   );
 
-  let label = document.getElementById("identity-icon-label");
-  ok(
-    BrowserTestUtils.is_hidden(label),
-    "No label should be used before the extension is started"
-  );
+  let label = document.getElementById("identity-icon-label").value;
+  is(label, "", "No label should be used before the extension is started");
 }
 
 function confirmExtensionPage() {
@@ -36,13 +33,8 @@ function confirmExtensionPage() {
     "The correct tooltip should be used"
   );
 
-  let label = document.getElementById("identity-icon-label");
-  is(
-    label.value,
-    "Extension (Test Extension)",
-    "The correct label should be used"
-  );
-  ok(BrowserTestUtils.is_visible(label), "No label should be visible");
+  let label = document.getElementById("identity-icon-label").value;
+  is(label, "Extension (Test Extension)", "The correct label should be used");
 }
 
 add_task(async function testIdentityIndication() {
