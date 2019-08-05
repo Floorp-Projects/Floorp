@@ -33,6 +33,8 @@ if [ ${COMMAND} = "verify" ]; then
     exit $result
 fi
 
+test -d "${RSPDIR}" || mkdir "${RSPDIR}"
+
 request=ikev1_dsa.req
 response=`echo $request | sed -e "s/req/rsp/"`
 echo $request $response
