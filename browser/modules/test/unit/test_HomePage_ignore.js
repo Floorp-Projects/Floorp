@@ -13,6 +13,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   sinon: "resource://testing-common/Sinon.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
 const HOMEPAGE_IGNORELIST = "homepage-urls";
@@ -54,6 +55,14 @@ add_task(async function test_initWithIgnoredPageCausesReset() {
     HomePage.getDefault(),
     "Should have reset to the default preference"
   );
+
+  TelemetryTestUtils.assertEvents(
+    [{ object: "ignore", value: "saved_reset" }],
+    {
+      category: "homepage",
+      method: "preference",
+    }
+  );
 });
 
 add_task(async function test_updateIgnoreListCausesReset() {
@@ -86,6 +95,13 @@ add_task(async function test_updateIgnoreListCausesReset() {
     HomePage.getDefault(),
     "Should have reset to the default preference"
   );
+  TelemetryTestUtils.assertEvents(
+    [{ object: "ignore", value: "saved_reset" }],
+    {
+      category: "homepage",
+      method: "preference",
+    }
+  );
 });
 
 add_task(async function test_setIgnoredUrl() {
@@ -99,6 +115,13 @@ add_task(async function test_setIgnoredUrl() {
     "Should still have the default homepage."
   );
   Assert.ok(!HomePage.overriden, "Should not be overriding the homepage.");
+  TelemetryTestUtils.assertEvents(
+    [{ object: "ignore", value: "set_blocked" }],
+    {
+      category: "homepage",
+      method: "preference",
+    }
+  );
 });
 
 // Also need an integration mochitest with an extension (if we can).
