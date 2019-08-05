@@ -80,7 +80,7 @@ class IntentReceiverActivity : Activity() {
                 } else {
                     if (!intent.getBooleanExtra(NotificationManager.RECEIVE_TABS_TAG, false)) {
                         intent.flags =
-                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     }
                     true
                 }
