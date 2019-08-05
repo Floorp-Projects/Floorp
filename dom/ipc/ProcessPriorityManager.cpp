@@ -215,7 +215,6 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   NS_DECL_NSITIMERCALLBACK
 
   virtual void Notify(const WakeLockInformation& aInfo) override;
-  static void StaticInit();
   void Init();
 
   int32_t Pid() const;
@@ -258,9 +257,6 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   }
 
  private:
-  static uint32_t sBackgroundPerceivableGracePeriodMS;
-  static uint32_t sBackgroundGracePeriodMS;
-
   void FireTestOnlyObserverNotification(
       const char* aTopic, const nsACString& aData = EmptyCString());
 
@@ -294,11 +290,6 @@ bool ProcessPriorityManagerImpl::sInitialized = false;
 bool ProcessPriorityManagerImpl::sPrefListenersRegistered = false;
 /* static */
 StaticRefPtr<ProcessPriorityManagerImpl> ProcessPriorityManagerImpl::sSingleton;
-/* static */
-uint32_t ParticularProcessPriorityManager::sBackgroundPerceivableGracePeriodMS =
-    0;
-/* static */
-uint32_t ParticularProcessPriorityManager::sBackgroundGracePeriodMS = 0;
 
 NS_IMPL_ISUPPORTS(ProcessPriorityManagerImpl, nsIObserver,
                   nsISupportsWeakReference);
@@ -502,15 +493,6 @@ ParticularProcessPriorityManager::ParticularProcessPriorityManager(
       mHoldsPlayingVideoWakeLock(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
   LOGP("Creating ParticularProcessPriorityManager.");
-}
-
-void ParticularProcessPriorityManager::StaticInit() {
-  Preferences::AddUintVarCache(
-      &sBackgroundPerceivableGracePeriodMS,
-      "dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS");
-  Preferences::AddUintVarCache(
-      &sBackgroundGracePeriodMS,
-      "dom.ipc.processPriorityManager.backgroundGracePeriodMS");
 }
 
 void ParticularProcessPriorityManager::Init() {
@@ -719,10 +701,12 @@ void ParticularProcessPriorityManager::ScheduleResetPriority(
   uint32_t timeout = 0;
   switch (aTimeoutPref) {
     case BACKGROUND_PERCEIVABLE_GRACE_PERIOD:
-      timeout = sBackgroundPerceivableGracePeriodMS;
+      timeout = StaticPrefs::
+          dom_ipc_processPriorityManager_backgroundPerceivableGracePeriodMS();
       break;
     case BACKGROUND_GRACE_PERIOD:
-      timeout = sBackgroundGracePeriodMS;
+      timeout =
+          StaticPrefs::dom_ipc_processPriorityManager_backgroundGracePeriodMS();
       break;
     default:
       MOZ_ASSERT(false, "Unrecognized timeout pref");
@@ -953,7 +937,6 @@ namespace mozilla {
 void ProcessPriorityManager::Init() {
   ProcessPriorityManagerImpl::StaticInit();
   ProcessPriorityManagerChild::StaticInit();
-  ParticularProcessPriorityManager::StaticInit();
 }
 
 /* static */

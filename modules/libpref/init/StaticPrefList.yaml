@@ -1481,6 +1481,16 @@
   value: false
   mirror: always
 
+- name: dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS
+  type: uint32_t
+  value: 0
+  mirror: always
+
+- name: dom.ipc.processPriorityManager.backgroundGracePeriodMS
+  type: uint32_t
+  value: 0
+  mirror: always
+
 # Is support for input type=date and type=time enabled?
 - name: dom.forms.datetime
   type: bool
