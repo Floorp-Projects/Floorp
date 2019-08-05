@@ -282,6 +282,8 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   }
 
   bool render = false;
+  PendingFrameInfo frame;
+  bool hadSlowFrame;
   {  // scope lock
     auto windows = mWindowInfos.Lock();
     auto it = windows->find(AsUint64(aWindowId));
@@ -290,18 +292,20 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
       return;
     }
 
-    it->second->mDocFramesSeen++;
-    if (it->second->mDocFramesSeen < it->second->mDocFrameCounts.front()) {
-      it->second->mRender |= aRender;
+    WindowInfo* info = it->second;
+    PendingFrameInfo& frameInfo = info->mPendingFrames.front();
+    frameInfo.mDocFramesSeen++;
+    frameInfo.mFrameNeedsRender |= aRender;
+    if (frameInfo.mDocFramesSeen < frameInfo.mDocFramesTotal) {
       return;
     }
-    MOZ_ASSERT(it->second->mDocFramesSeen ==
-               it->second->mDocFrameCounts.front());
-    render = it->second->mRender || aRender;
-    it->second->mRender = false;
-    it->second->mIsRendering = true;
-    it->second->mDocFrameCounts.pop();
-    it->second->mDocFramesSeen = 0;
+
+    MOZ_ASSERT(frameInfo.mDocFramesSeen == frameInfo.mDocFramesTotal);
+    render = frameInfo.mFrameNeedsRender;
+    info->mIsRendering = true;
+
+    frame = frameInfo;
+    hadSlowFrame = info->mHadSlowFrame;
   }
 
   if (IsDestroyed(aWindowId)) {
@@ -310,20 +314,6 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
 
   if (mHandlingDeviceReset) {
     return;
-  }
-
-  PendingFrameInfo frame;
-
-  bool hadSlowFrame;
-  {  // scope lock
-    auto windows = mWindowInfos.Lock();
-    auto it = windows->find(AsUint64(aWindowId));
-    MOZ_ASSERT(it != windows->end());
-    WindowInfo* info = it->second;
-    MOZ_ASSERT(info->PendingCount() > 0);
-    frame = info->mPendingFrames.front();
-    hadSlowFrame = info->mHadSlowFrame;
-    info->mHadSlowFrame = false;
   }
 
   UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
@@ -552,8 +542,8 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
     MOZ_ASSERT(false);
     return;
   }
-  it->second->mPendingFrames.push(PendingFrameInfo{aStartTime, aStartId});
-  it->second->mDocFrameCounts.push(aDocFrameCount);
+  it->second->mPendingFrames.push(
+      PendingFrameInfo{aStartTime, aStartId, 0, aDocFrameCount, false});
 }
 
 void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {

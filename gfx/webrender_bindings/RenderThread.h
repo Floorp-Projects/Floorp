@@ -302,6 +302,9 @@ class RenderThread final {
   struct PendingFrameInfo {
     TimeStamp mStartTime;
     VsyncId mStartId;
+    uint8_t mDocFramesSeen = 0;
+    uint8_t mDocFramesTotal = 0;
+    bool mFrameNeedsRender = false;
   };
 
   struct WindowInfo {
@@ -309,11 +312,8 @@ class RenderThread final {
     int64_t RenderingCount() { return mIsRendering ? 1 : 0; }
 
     bool mIsDestroyed = false;
-    bool mRender = false;
     bool mIsRendering = false;
-    uint8_t mDocFramesSeen = 0;
     std::queue<PendingFrameInfo> mPendingFrames;
-    std::queue<uint8_t> mDocFrameCounts;
     bool mHadSlowFrame = false;
   };
 
