@@ -228,6 +228,10 @@ html|*#webRTC-previewVideo {
   height: 16px;
 }
 
+.popup-subitem:-moz-locale-dir(rtl) {
+  transform: scaleX(-1);
+}
+
 .identity-popup-popup-menulist {
   min-width: 6.5em;
 }
