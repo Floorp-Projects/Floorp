@@ -10,8 +10,8 @@ var WebConsole = require("devtools/client/webconsole/webconsole");
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(
   this,
-  "HUDService",
-  "devtools/client/webconsole/hudservice",
+  "BrowserConsoleManager",
+  "devtools/client/webconsole/browser-console-manager",
   true
 );
 
@@ -36,16 +36,8 @@ class BrowserConsole extends WebConsole {
    * @param nsIDOMWindow chromeWindow
    *        The window of the browser console owner.
    * @param Boolean fissionSupport
-   * @param object hudService
-   *        The parent HUD Service
    */
-  constructor(
-    target,
-    iframeWindow,
-    chromeWindow,
-    hudService,
-    fissionSupport = false
-  ) {
+  constructor(target, iframeWindow, chromeWindow, fissionSupport = false) {
     super(target, iframeWindow, chromeWindow, true, fissionSupport);
 
     this._telemetry = new Telemetry();
@@ -131,7 +123,7 @@ var ShutdownObserver = {
 
   observe(message, topic) {
     if (topic == "quit-application-granted") {
-      HUDService.storeBrowserConsoleSessionState();
+      BrowserConsoleManager.storeBrowserConsoleSessionState();
       this.uninit();
     }
   },

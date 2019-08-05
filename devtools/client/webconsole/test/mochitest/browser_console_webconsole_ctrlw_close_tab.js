@@ -61,7 +61,7 @@ add_task(async function() {
   ]);
   info("promise.all resolved. start testing the Browser Console");
 
-  hud = await HUDService.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "Browser Console opened");
 
   const deferred = defer();

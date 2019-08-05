@@ -16,7 +16,7 @@ add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
 
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
   // On e10s, the exception is triggered in child process

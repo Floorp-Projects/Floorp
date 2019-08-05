@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf8,Test browser console clear cache";
 add_task(async function() {
   await pushPref("devtools.browserconsole.contentMessages", true);
   await addTab(TEST_URI);
-  let hud = await HUDService.toggleBrowserConsole();
+  let hud = await BrowserConsoleManager.toggleBrowserConsole();
   const CACHED_MESSAGE = "CACHED_MESSAGE";
   await logTextToConsole(hud, CACHED_MESSAGE);
 
@@ -29,8 +29,8 @@ add_task(async function() {
   is(messages.length, 1, "There is only the new message in the output");
 
   info("Close and re-open the browser console");
-  await HUDService.toggleBrowserConsole();
-  hud = await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Log a smoke message in order to know that the console is ready");
   await logTextToConsole(hud, "Smoke message");
