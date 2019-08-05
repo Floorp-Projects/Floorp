@@ -294,6 +294,30 @@ extensions.data:
       These events are sent when an extension is migrating its data to the new IndexedDB backend,
       the value of this event is the addon id.
 
+homepage:
+  preference:
+    objects: ["ignore"]
+    release_channel_collection: opt-out
+    products:
+      - "firefox"
+      - "fennec"
+    record_in_processes: ["main"]
+    description: >
+      This is recorded whenever the homepage preference is either reset due to
+      being on the ignore list, or setting is blocked due to being on the same
+      list.
+      The value field records the reason for the ignore. "saved_reset" for
+      when a saved preference value is reset. "set_blocked" for when the setting
+      was blocked and "set_blocked_extension" for when we know a WebExtension
+      attempting to set it was blocked.
+    bug_numbers: [1535049]
+    notification_emails:
+      - "mdeboer@mozilla.com"
+      - "rharter@mozilla.com"
+    expiry_version: never
+    extra_keys:
+      webExtensionId: The identifier of the webextension, if known.
+
 navigation:
   search:
     objects: ["about_home", "about_newtab", "contextmenu", "oneoff",

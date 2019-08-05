@@ -3,21 +3,16 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonManager",
-  "resource://gre/modules/AddonManager.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionSettingsStore",
-  "resource://gre/modules/ExtensionSettingsStore.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "HomePage",
-  "resource:///modules/HomePage.jsm"
-);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  ExtensionSettingsStore: "resource://gre/modules/ExtensionSettingsStore.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
+});
 
 // Named this way so they correspond to the extensions
 const HOME_URI_2 = "http://example.com/";
@@ -625,6 +620,11 @@ add_task(async function test_overriding_with_ignored_url() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
+      browser_specific_settings: {
+        gecko: {
+          id: "ignore_homepage@example.com",
+        },
+      },
       chrome_settings_overrides: { homepage: "https://example.com/?ignore=me" },
       name: "extension",
     },
@@ -640,6 +640,19 @@ add_task(async function test_overriding_with_ignored_url() {
     ),
     false,
     "Should not be extension controlled."
+  );
+  TelemetryTestUtils.assertEvents(
+    [
+      {
+        object: "ignore",
+        value: "set_blocked_extension",
+        extra: { webExtensionId: "ignore_homepage@example.com" },
+      },
+    ],
+    {
+      category: "homepage",
+      method: "preference",
+    }
   );
 
   await extension.unload();
