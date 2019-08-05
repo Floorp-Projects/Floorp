@@ -120,8 +120,6 @@ class AsyncImagePipelineManager final {
   void SetWillGenerateFrame(wr::RenderRoot aRenderRoot);
   bool GetAndResetWillGenerateFrame(wr::RenderRoot aRenderRoot);
 
-  wr::ExternalImageId GetNextExternalImageId();
-
  private:
   void ProcessPipelineRendered(const wr::PipelineId& aPipelineId,
                                const wr::Epoch& aEpoch,
