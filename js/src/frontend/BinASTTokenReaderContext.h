@@ -12,8 +12,6 @@
 
 #include "mozilla/Maybe.h"  // mozilla::Maybe
 
-#include <brotli/decode.h>  // BrotliDecoderState
-
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t, uint32_t
 
@@ -388,13 +386,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   };
 
  private:
-  // Buffer that holds already brotli-decoded but not yet used data.
-  // decodedBuffer[decodedBegin, decodedEnd) holds the data.
-  static const size_t DECODED_BUFFER_SIZE = 128;
-  uint8_t decodedBuffer_[DECODED_BUFFER_SIZE];
-  size_t decodedBegin_ = 0;
-  size_t decodedEnd_ = 0;
-
   // A buffer of bits used to lookup data from the Huffman tables.
   // It may contain up to 64 bits.
   //
@@ -444,14 +435,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
     uint8_t bitLength;
   } bitBuffer;
 
-  // The number of already decoded bytes.
-  size_t availableDecodedLength() const { return decodedEnd_ - decodedBegin_; }
-
-  // The beginning of decoded buffer.
-  const uint8_t* decodedBufferBegin() const {
-    return decodedBuffer_ + decodedBegin_;
-  }
-
   // Returns true if the brotli stream finished.
   bool isEOF() const;
 
@@ -473,16 +456,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   MOZ_MUST_USE JS::Result<Ok> readBuf(uint8_t* bytes, uint32_t& len);
 
   enum class FillResult { EndOfStream, Filled };
-
-  /**
-   * Read bytes to fill decodedBuffer_.
-   *
-   * On success, this guarantees there's at least 1 byte in the buffer.
-   * If there is no data, return an error.
-   */
-  MOZ_MUST_USE JS::Result<FillResult> fillDecodedBuf();
-
-  void advanceDecodedBuffer(uint32_t count);
 
  public:
   /**
@@ -649,8 +622,6 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
   class HuffmanDictionary dictionary;
 
   const uint8_t* posBeforeTree_;
-
-  BrotliDecoderState* decoder_ = nullptr;
 
  public:
   BinASTTokenReaderContext(const BinASTTokenReaderContext&) = delete;
