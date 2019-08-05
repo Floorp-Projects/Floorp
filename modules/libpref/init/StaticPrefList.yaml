@@ -1576,6 +1576,11 @@
   value: false
   mirror: always
 
+- name: dom.largeAllocation.testing.allHttpLoads
+  type: bool
+  value: false
+  mirror: always
+
 # Whether the disabled attribute in HTMLLinkElement disables the sheet loading
 # altogether, or forwards to the inner stylesheet method without attribute
 # reflection.
