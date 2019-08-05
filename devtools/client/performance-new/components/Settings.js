@@ -152,13 +152,6 @@ const featureCheckboxes = [
     title: "Record main thread I/O markers.",
   },
   {
-    name: "Memory",
-    value: "memory",
-    title:
-      "Add memory measurements to the samples, this includes resident set size " +
-      "(RSS) and unique set size (USS).",
-  },
-  {
     name: "Privacy",
     value: "privacy",
     title: "Remove some potentially user-identifiable information.",

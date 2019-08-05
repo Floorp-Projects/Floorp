@@ -237,7 +237,6 @@ function intializeState() {
     js: true,
     leaf: true,
     mainthreadio: false,
-    memory: false,
     privacy: false,
     responsiveness: true,
     screenshots: false,
