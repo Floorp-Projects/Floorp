@@ -201,7 +201,7 @@ inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
 }
 
 inline bool JSScript::isDebuggee() const {
-  return realm_->debuggerObservesAllExecution() || hasDebugScript();
+  return realm()->debuggerObservesAllExecution() || hasDebugScript();
 }
 
 #endif /* vm_JSScript_inl_h */
