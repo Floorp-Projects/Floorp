@@ -299,7 +299,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
                it->second->mDocFrameCounts.front());
     render = it->second->mRender || aRender;
     it->second->mRender = false;
-    it->second->mRenderingCount++;
+    it->second->mIsRendering = true;
     it->second->mDocFrameCounts.pop();
     it->second->mDocFramesSeen = 0;
   }
@@ -400,7 +400,7 @@ static void NotifyDidRender(layers::CompositorBridgeParent* aBridge,
 }
 
 static void NotifyDidStartRender(layers::CompositorBridgeParent* aBridge) {
-  // Starting a render will change increment mRenderingCount, and potentially
+  // Starting a render will change mIsRendering, and potentially
   // change whether we can allow the bridge to intiate another frame.
   if (aBridge->GetWrBridge()) {
     aBridge->GetWrBridge()->CompositeIfNeeded();
@@ -518,8 +518,8 @@ bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
   if (info->PendingCount() > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(info->PendingCount() >= info->mRenderingCount);
-  return info->PendingCount() > info->mRenderingCount;
+  MOZ_ASSERT(info->PendingCount() >= info->RenderingCount());
+  return info->PendingCount() > info->RenderingCount();
 }
 
 bool RenderThread::IsDestroyed(wr::WindowId aWindowId) {
@@ -565,14 +565,14 @@ void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
   }
   WindowInfo* info = it->second;
   MOZ_ASSERT(info->PendingCount() > 0);
-  MOZ_ASSERT(info->mRenderingCount > 0);
+  MOZ_ASSERT(info->mIsRendering);
   if (info->PendingCount() <= 0) {
     return;
   }
 
   PendingFrameInfo frame = std::move(info->mPendingFrames.front());
   info->mPendingFrames.pop();
-  info->mRenderingCount--;
+  info->mIsRendering = false;
 
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
   // point until now (when the frame is finally pushed to the screen) is
