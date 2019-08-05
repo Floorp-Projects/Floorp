@@ -6,8 +6,6 @@
 const TRACKING_PAGE =
   "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const FP_PROTECTION_PREF = "privacy.trackingprotection.fingerprinting.enabled";
-const FP_ANNOTATION_PREF =
-  "privacy.trackingprotection.fingerprinting.annotate.enabled";
 let fpHistogram;
 
 add_task(async function setup() {
@@ -24,7 +22,8 @@ add_task(async function setup() {
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.annotate_channels", false],
       ["privacy.trackingprotection.cryptomining.enabled", false],
-      ["privacy.trackingprotection.cryptomining.annotate.enabled", false],
+      ["urlclassifier.features.cryptomining.annotate.blacklistHosts", ""],
+      ["urlclassifier.features.cryptomining.annotate.blacklistTables", ""],
     ],
   });
   fpHistogram = Services.telemetry.getHistogramById(
@@ -191,7 +190,6 @@ function testTelemetry(pagesVisited, pagesWithBlockableContent, hasException) {
 
 add_task(async function test() {
   Services.prefs.setBoolPref(FP_PROTECTION_PREF, true);
-  Services.prefs.setBoolPref(FP_ANNOTATION_PREF, true);
 
   await testIdentityState(false);
   await testIdentityState(true);
@@ -200,5 +198,4 @@ add_task(async function test() {
   await testSubview(true);
 
   Services.prefs.clearUserPref(FP_PROTECTION_PREF);
-  Services.prefs.clearUserPref(FP_ANNOTATION_PREF);
 });

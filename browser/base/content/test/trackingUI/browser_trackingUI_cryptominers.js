@@ -6,8 +6,6 @@
 const TRACKING_PAGE =
   "http://example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const CM_PROTECTION_PREF = "privacy.trackingprotection.cryptomining.enabled";
-const CM_ANNOTATION_PREF =
-  "privacy.trackingprotection.cryptomining.annotate.enabled";
 let cmHistogram;
 
 add_task(async function setup() {
@@ -24,7 +22,7 @@ add_task(async function setup() {
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.annotate_channels", false],
       ["privacy.trackingprotection.fingerprinting.enabled", false],
-      ["privacy.trackingprotection.fingerprinting.annotate.enabled", false],
+      ["urlclassifier.features.fingerprinting.annotate.blacklistHosts", ""],
     ],
   });
   cmHistogram = Services.telemetry.getHistogramById(
@@ -192,7 +190,6 @@ function testTelemetry(pagesVisited, pagesWithBlockableContent, hasException) {
 
 add_task(async function test() {
   Services.prefs.setBoolPref(CM_PROTECTION_PREF, true);
-  Services.prefs.setBoolPref(CM_ANNOTATION_PREF, true);
 
   await testIdentityState(false);
   await testIdentityState(true);
@@ -201,5 +198,4 @@ add_task(async function test() {
   await testSubview(true);
 
   Services.prefs.clearUserPref(CM_PROTECTION_PREF);
-  Services.prefs.clearUserPref(CM_ANNOTATION_PREF);
 });
