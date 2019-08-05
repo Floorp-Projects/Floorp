@@ -525,7 +525,7 @@ toolbarpaletteitem[place=toolbar] > toolbarspring {
  */
 #customization-panelHolder > #widget-overflow-fixed-list:not(:empty) {
   padding-bottom: 50px; /* Make sure there's always space to drop stuff. */
-  border-top: 1px solid rgba(0,0,0,0.1);
+  border-top: 1px solid var(--panel-separator-color);
 }
 
 #customization-panelHolder > #widget-overflow-fixed-list::before {

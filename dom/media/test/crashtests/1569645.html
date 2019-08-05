@@ -1,0 +1,23 @@
+<html>
+<head>
+    <script>
+      function start () {
+        const canvas = document.getElementById("c")
+        canvas.getContext("2d")
+        const video = canvas.captureStream()
+        const ac = new AudioContext()
+        const dest = ac.createMediaStreamDestination()
+        const recorder = new MediaRecorder(
+          new MediaStream([...video.getTracks(), ...dest.stream.getTracks()]), {
+            'mimeType': 'audio/ogg'
+          })
+        recorder.start()
+      }
+
+      window.addEventListener('load', start)
+    </script>
+</head>
+<body>
+<canvas id="c"></canvas>
+</body>
+</html>

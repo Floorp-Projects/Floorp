@@ -26,9 +26,6 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-static bool sFloatFragmentsInsideColumnEnabled;
-static bool sFloatFragmentsInsideColumnPrefCached;
-
 BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
                                    nsPresContext* aPresContext,
                                    nsBlockFrame* aFrame, bool aBStartMarginRoot,
@@ -46,15 +43,6 @@ BlockReflowInput::BlockReflowInput(const ReflowInput& aReflowInput,
       mLineNumber(0),
       mFloatBreakType(StyleClear::None),
       mConsumedBSize(aConsumedBSize) {
-  if (!sFloatFragmentsInsideColumnPrefCached) {
-    sFloatFragmentsInsideColumnPrefCached = true;
-    Preferences::AddBoolVarCache(
-        &sFloatFragmentsInsideColumnEnabled,
-        "layout.float-fragments-inside-column.enabled");
-  }
-  mFlags.mFloatFragmentsInsideColumnEnabled =
-      sFloatFragmentsInsideColumnEnabled;
-
   WritingMode wm = aReflowInput.GetWritingMode();
   mFlags.mIsFirstInflow = !aFrame->GetPrevInFlow();
   mFlags.mIsOverflowContainer = IS_TRUE_OVERFLOW_CONTAINER(aFrame);
@@ -918,23 +906,16 @@ bool BlockReflowInput::FlowAndPlaceFloat(nsIFrame* aFloat) {
     mBlock->ReflowFloat(*this, adjustedAvailableSpace, aFloat, floatMargin,
                         floatOffsets, pushedDown, reflowStatus);
   }
-  if (aFloat->GetPrevInFlow()) floatMargin.BStart(wm) = 0;
-  if (reflowStatus.IsIncomplete()) floatMargin.BEnd(wm) = 0;
+  if (aFloat->GetPrevInFlow()) {
+    floatMargin.BStart(wm) = 0;
+  }
+  if (reflowStatus.IsIncomplete()) {
+    floatMargin.BEnd(wm) = 0;
+  }
 
-  // In the case that we're in columns and not splitting floats, we need
-  // to check here that the float's height fit, and if it didn't, bail.
-  // (controlled by the pref "layout.float-fragments-inside-column.enabled")
-  //
-  // Likewise, if none of the float fit, and it needs to be pushed in
-  // its entirety to the next page (IsTruncated() or IsInlineBreakBefore()),
-  // we need to do the same.
-  if ((ContentBSize() != NS_UNCONSTRAINEDSIZE &&
-       !mFlags.mFloatFragmentsInsideColumnEnabled &&
-       adjustedAvailableSpace.BSize(wm) == NS_UNCONSTRAINEDSIZE &&
-       !mustPlaceFloat &&
-       aFloat->BSize(wm) + floatMargin.BStartEnd(wm) >
-           ContentBEnd() - floatPos.B(wm)) ||
-      reflowStatus.IsTruncated() || reflowStatus.IsInlineBreakBefore()) {
+  // If none of the float fit, and it needs to be pushed in its entirety to the
+  // next page, we need to bail.
+  if (reflowStatus.IsTruncated() || reflowStatus.IsInlineBreakBefore()) {
     PushFloatPastBreak(aFloat);
     return false;
   }

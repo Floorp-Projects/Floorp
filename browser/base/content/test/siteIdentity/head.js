@@ -292,26 +292,26 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     .getComputedStyle(
       document
         .getElementById("identity-popup-securityView")
-        .getElementsByClassName("identity-popup-security-content")[0]
+        .getElementsByClassName("identity-popup-security-connection")[0]
     )
     .getPropertyValue("background-image");
   let securityContentBG = tabbrowser.ownerGlobal
     .getComputedStyle(
       document
         .getElementById("identity-popup-mainView")
-        .getElementsByClassName("identity-popup-security-content")[0]
+        .getElementsByClassName("identity-popup-security-connection")[0]
     )
     .getPropertyValue("background-image");
 
   if (stateInsecure) {
     is(
       securityViewBG,
-      'url("chrome://browser/skin/controlcenter/conn-not-secure.svg")',
+      'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
       "CC using 'not secure' icon"
     );
     is(
       securityContentBG,
-      'url("chrome://browser/skin/controlcenter/conn-not-secure.svg")',
+      'url("chrome://browser/skin/connection-mixed-active-loaded.svg")',
       "CC using 'not secure' icon"
     );
   }
@@ -319,12 +319,12 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
   if (stateSecure) {
     is(
       securityViewBG,
-      'url("chrome://browser/skin/controlcenter/connection.svg")',
+      'url("chrome://browser/skin/connection-secure.svg")',
       "CC using secure icon"
     );
     is(
       securityContentBG,
-      'url("chrome://browser/skin/controlcenter/connection.svg")',
+      'url("chrome://browser/skin/connection-secure.svg")',
       "CC using secure icon"
     );
   }
@@ -344,24 +344,24 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     } else if (activeBlocked || passiveLoaded) {
       is(
         securityViewBG,
-        'url("chrome://browser/skin/controlcenter/connection.svg")',
+        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
         "CC using degraded icon"
       );
       is(
         securityContentBG,
-        'url("chrome://browser/skin/controlcenter/connection.svg")',
+        'url("chrome://browser/skin/connection-mixed-passive-loaded.svg")',
         "CC using degraded icon"
       );
     } else {
       // There is a case here with weak ciphers, but no bc tests are handling this yet.
       is(
         securityViewBG,
-        'url("chrome://browser/skin/controlcenter/connection.svg")',
+        'url("chrome://browser/skin/connection-secure.svg")',
         "CC using degraded icon"
       );
       is(
         securityContentBG,
-        'url("chrome://browser/skin/controlcenter/connection.svg")',
+        'url("chrome://browser/skin/connection-secure.svg")',
         "CC using degraded icon"
       );
     }

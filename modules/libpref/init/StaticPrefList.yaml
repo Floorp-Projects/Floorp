@@ -1275,12 +1275,12 @@
   value: false
   mirror: always
 
-- name: dom.disable_window_print
+- name: dom.enable_window_print
   type: bool
 #ifdef ANDROID
-  value: true
-#else
   value: false
+#else
+  value: true
 #endif
   mirror: always
 
