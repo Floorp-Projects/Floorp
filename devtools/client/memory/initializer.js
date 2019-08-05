@@ -38,7 +38,7 @@ const initialize = async function() {
   window.gStore = store;
 };
 
-const destroy = async function() {
+const destroy = function() {
   const ok = ReactDOM.unmountComponentAtNode(root);
   assert(
     ok,
