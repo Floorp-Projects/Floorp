@@ -15,9 +15,9 @@ DIRS += [
     'utils',
 ]
 DevToolsModules(
+    'browser-console-manager.js',
     'browser-console.js',
     'constants.js',
-    'hudservice.js',
     'panel.js',
     'store.js',
     'types.js',

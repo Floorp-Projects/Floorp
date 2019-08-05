@@ -26,11 +26,11 @@
 // This can be racy because Input.dispatchKeyEvent and window.myVariable = "newValue" run
 // in different processes.
 
-const PAGE_URI =
+const PAGE_URL =
   "http://example.com/browser/remote/test/browser/doc_input_dispatchKeyEvent_race.html";
 
 add_task(async function() {
-  const { client, tab } = await setupTestForUri(PAGE_URI);
+  const { client, tab } = await setupForURL(PAGE_URL);
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   const { Input, Runtime } = client;

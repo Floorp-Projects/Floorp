@@ -44,9 +44,9 @@ const uint8_t MAX_CODE_BIT_LENGTH = 20;
 const uint8_t MAX_PREFIX_BIT_LENGTH = 32;
 
 // The length of the bit buffer, in bits.
-const uint8_t BIT_BUFFER_LENGTH = 64;
+const uint8_t BIT_BUFFER_SIZE = 64;
 
-// Number of bits into the BIT_BUFFER_LENGTH read at each step.
+// Number of bits into the `bitBuffer` read at each step.
 const uint8_t BIT_BUFFER_READ_UNIT = 8;
 
 // Hardcoded limits to avoid allocating too eagerly.
@@ -1018,15 +1018,16 @@ JS::Result<Ok> BinASTTokenReaderContext::readHuffmanPrelude() {
   return reader.run(HUFFMAN_STACK_INITIAL_CAPACITY);
 }
 
-BinASTTokenReaderContext::BitBuffer::BitBuffer() : bits(0), length(0) {
-  static_assert(sizeof(bits) * 8 == BIT_BUFFER_LENGTH,
-                "Expecting bitBuffer to match BIT_BUFFER_LENGTH");
+BinASTTokenReaderContext::BitBuffer::BitBuffer() : bits(0), bitLength(0) {
+  static_assert(sizeof(bits) * 8 == BIT_BUFFER_SIZE,
+                "Expecting bitBuffer to match BIT_BUFFER_SIZE");
 }
 
 template <Compression C>
 HuffmanLookup BinASTTokenReaderContext::BitBuffer::getHuffmanLookup() {
   // Only keep the leading 32 bits.
-  const uint8_t bitLength = std::min<uint8_t>(length, MAX_PREFIX_BIT_LENGTH);
+  const uint8_t bitLength =
+      std::min<uint8_t>(this->bitLength, MAX_PREFIX_BIT_LENGTH);
   const uint32_t bitsPrefix = bits & (uint64_t)0x00000000FFFFFFFF;
   return HuffmanLookup(bitsPrefix, bitLength);
 }
@@ -1037,33 +1038,59 @@ BinASTTokenReaderContext::BitBuffer::advanceBitBuffer(
     BinASTTokenReaderContext& owner, const uint8_t bitLength) {
   // It should be impossible to call `advanceBitBuffer`
   // with more bits than what we just handed out.
-  MOZ_ASSERT(bitLength <= this->length);
-  this->length -= bitLength;
-  // We're reading from the leading bits on. Since we have just read
-  // `bitLength` bits, we now need to shift everything else into
-  // position.
-  this->bits <<= bitLength;
-  if (length <= MAX_PREFIX_BIT_LENGTH) {
+  MOZ_ASSERT(bitLength <= this->bitLength);
+
+  // The algorithm is not intuitive, so consider an example, where the byte
+  // stream starts with `0b_HGFE_DCBA`, `0b_PONM_LKJI`, `0b_XWVU_TRSQ` (to keep
+  // things concise, in the example, we won't use the entire 64 bits).
+  //
+  // In each byte, bits are stored in the reverse order, so what we want
+  // is `0b_ABCD_EFGH`, `0b_IJML_MNOP`, `0b_QRST_UVWX`.
+  // For the example, let's assume that we have already read
+  // `0b_ABCD_EFGH`, `0b_IJKL_MNOP` into `bits`, so before the call to
+  // `advanceBitBuffer`, `bits` initially contains
+  // `0b_XXXX_XXXX__XXXX_XXXX__ABCD_EFGH__IJKL_MNOP`, where `X` are bits that
+  // are beyond `this->bitLength`
+
+  // 1. We have consumed a few bits from the bit buffer, say `ABC`.
+  // `bits` is now `0b_XXXX_XXXX__XXXX_XXXX__XXXD_EFGH__IJKL_MNOP`.
+  this->bitLength -= bitLength;
+
+  if (this->bitLength <= MAX_PREFIX_BIT_LENGTH) {
     // Keys can be up to MAX_PREFIX_BIT_LENGTH bits long. If we have fewer bits
     // available, it's time to reload. We'll try and get as close to 64 bits as
     // possible.
-    while (length <= BIT_BUFFER_LENGTH - BIT_BUFFER_READ_UNIT) {
+
+    while (this->bitLength <= BIT_BUFFER_SIZE - BIT_BUFFER_READ_UNIT) {
       // Let's try and pull one byte.
       uint8_t byte;
-      uint32_t byteLen = 1;
-      MOZ_TRY((owner.readBuf<C, EndOfFilePolicy::BestEffort>(&byte, byteLen)));
-      if (byteLen < 1) {
+      uint32_t readLen = 1;
+      MOZ_TRY((owner.readBuf<C, EndOfFilePolicy::BestEffort>(&byte, readLen)));
+      if (readLen < 1) {
         // Ok, nothing left to read.
         break;
       }
 
-      // We have just read one byte.
-      // Append it to `bits`.
-      MOZ_ASSERT(bits <= 0x00FFFFFFFFFFFFFF);
+      // 2. We have just read to `byte`, here `0b_XWVU_TSRQ`. Let's reverse
+      // `byte` into `0b_QRST_UVWX`.
+      const uint8_t reversedByte =
+          (byte & 0b10000000) >> 7 | (byte & 0b01000000) >> 5 |
+          (byte & 0b00100000) >> 3 | (byte & 0b00010000) >> 1 |
+          (byte & 0b00001000) << 1 | (byte & 0b00000100) << 3 |
+          (byte & 0b00000010) << 5 | (byte & 0b00000001) << 7;
+
+      // 3. Make space for these bits at the end of the stream
+      // so shift `bits` into
+      // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__0000_0000`.
       this->bits <<= BIT_BUFFER_READ_UNIT;
-      this->bits += byte;
-      this->length += BIT_BUFFER_READ_UNIT;
-      MOZ_ASSERT(bits >> this->length == 0);
+
+      // 4. Finally, combine into.
+      // `0b_XXXX_XXXX__XXXD_EFGH__IJKL_MNOP__QRST_UVWX`.
+      this->bits += reversedByte;
+      this->bitLength += BIT_BUFFER_READ_UNIT;
+      MOZ_ASSERT(bits >> this->bitLength == 0);
+
+      // 4. Continue as long as we don't have enough bits.
     }
   }
 
@@ -1314,9 +1341,6 @@ HuffmanEntry<const T*> HuffmanTableImpl<T, N>::lookup(HuffmanLookup key) const {
 
     const uint32_t keyBits = key.leadingBits(iter.key.bitLength);
     if (keyBits == iter.key.bits) {
-      // FIXME: keyBits are actually stored in the reverse order from the
-      // stream.
-      // FIXME: We need to reverse either the one or the other.
       // Entry found.
       return HuffmanEntry<const T*>(iter.key.bits, iter.key.bitLength,
                                     &iter.value);

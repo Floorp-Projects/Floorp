@@ -15,7 +15,7 @@ add_task(async function() {
   const wcHud = await openNewTabAndConsole(TEST_URI);
   ok(wcHud, "web console opened");
 
-  const bcHud = await HUDService.toggleBrowserConsole();
+  const bcHud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(bcHud, "browser console opened");
 
   // Cause an exception in a script loaded with the DevTools loader.

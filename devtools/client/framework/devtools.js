@@ -25,8 +25,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "HUDService",
-  "devtools/client/webconsole/hudservice",
+  "BrowserConsoleManager",
+  "devtools/client/webconsole/browser-console-manager",
   true
 );
 loader.lazyRequireGetter(this, "Telemetry", "devtools/client/shared/telemetry");
@@ -428,7 +428,7 @@ DevTools.prototype = {
    *                 A SessionStore state object that gets modified by reference
    */
   saveDevToolsSession: function(state) {
-    state.browserConsole = HUDService.getBrowserConsoleSessionState();
+    state.browserConsole = BrowserConsoleManager.getBrowserConsoleSessionState();
     state.browserToolbox = BrowserToolboxProcess.getBrowserToolboxSessionState();
 
     // Check if the module is loaded to avoid loading ScratchpadManager for no reason.
@@ -458,8 +458,8 @@ DevTools.prototype = {
       BrowserToolboxProcess.init();
     }
 
-    if (browserConsole && !HUDService.getBrowserConsole()) {
-      HUDService.toggleBrowserConsole();
+    if (browserConsole && !BrowserConsoleManager.getBrowserConsole()) {
+      BrowserConsoleManager.toggleBrowserConsole();
     }
   },
 
@@ -705,8 +705,10 @@ DevTools.prototype = {
    * toolkit/components/extensions/ext-c-toolkit.js
    */
   openBrowserConsole: function() {
-    const { HUDService } = require("devtools/client/webconsole/hudservice");
-    HUDService.openBrowserConsoleOrFocus();
+    const {
+      BrowserConsoleManager,
+    } = require("devtools/client/webconsole/browser-console-manager");
+    BrowserConsoleManager.openBrowserConsoleOrFocus();
   },
 
   /**

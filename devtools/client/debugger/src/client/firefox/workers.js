@@ -11,26 +11,26 @@ export function supportsWorkers(tabTarget: TabTarget) {
   return tabTarget.isBrowsingContext || tabTarget.isContentProcess;
 }
 
-export async function updateWorkerClients({
+export async function updateWorkerTargets({
   tabTarget,
   debuggerClient,
   threadFront,
-  workerClients,
+  workerTargets,
   options,
 }: Object) {
   if (!supportsWorkers(tabTarget)) {
     return {};
   }
 
-  const newWorkerClients = {};
+  const newWorkerTargets = {};
 
   const { workers } = await tabTarget.listWorkers();
   for (const workerTargetFront of workers) {
     try {
       await workerTargetFront.attach();
       const threadActorID = workerTargetFront._threadActor;
-      if (workerClients[threadActorID]) {
-        newWorkerClients[threadActorID] = workerClients[threadActorID];
+      if (workerTargets[threadActorID]) {
+        newWorkerTargets[threadActorID] = workerTargets[threadActorID];
       } else {
         const [, workerThread] = await workerTargetFront.attachThread(options);
         workerThread.resume();
@@ -40,11 +40,7 @@ export async function updateWorkerClients({
         const consoleFront = await workerTargetFront.getFront("console");
         await consoleFront.startListeners([]);
 
-        newWorkerClients[workerThread.actor] = {
-          url: workerTargetFront.url,
-          thread: workerThread,
-          console: consoleFront,
-        };
+        newWorkerTargets[workerThread.actor] = workerTargetFront;
       }
     } catch (e) {
       // If any of the workers have terminated since the list command initiated
@@ -52,5 +48,5 @@ export async function updateWorkerClients({
     }
   }
 
-  return newWorkerClients;
+  return newWorkerTargets;
 }

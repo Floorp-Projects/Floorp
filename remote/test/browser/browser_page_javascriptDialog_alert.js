@@ -3,12 +3,10 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 // Test a browser alert is detected via Page.javascriptDialogOpening and can be
 // closed with Page.handleJavaScriptDialog
 add_task(async function() {
-  const { client, tab } = await setupTestForUri(TEST_URI);
+  const { client, tab } = await setup();
 
   const { Page } = client;
 

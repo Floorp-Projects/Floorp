@@ -102,30 +102,48 @@ function getTargets(CDP) {
 }
 
 /**
- * Create a new tab for the provided uri and start a CDP server debugging the
- * created tab.
+ * Set up test environment in same fashion as setupForURL(),
+ * except using an empty document.
  */
-async function setupTestForUri(uri) {
-  // Open a test page, to prevent debugging the random default page
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
+async function setup() {
+  return setupForURL(toDataURL(""));
+}
 
-  // Start the CDP server
+/**
+ * Set up test environment by starting the remote agent, connecting
+ * the CDP client over loopback, and creating a fresh tab to avoid
+ * state bleedover from previous test.
+ */
+async function setupForURL(url) {
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
+
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
-
-  // Retrieve the chrome-remote-interface library object
   const CDP = await getCDP();
 
-  // Connect to the server
   const client = await CDP({
     target(list) {
-      // Ensure debugging the right target, i.e. the one for our test tab.
-      return list.find(target => {
-        return target.url == uri;
-      });
+      // ensure we are debugging the right target, i.e. the requested URL
+      return list.find(target => target.url == url);
     },
   });
-  ok(true, "CDP client has been instantiated");
+  info("CDP client instantiated");
+
   return { client, tab };
+}
+
+/** Creates a data URL for the given source document. */
+function toDataURL(src, doctype = "html") {
+  let doc, mime;
+  switch (doctype) {
+    case "html":
+      mime = "text/html;charset=utf-8";
+      doc = `<!doctype html>\n<meta charset=utf-8>\n${src}`;
+      break;
+    default:
+      throw new Error("Unexpected doctype: " + doctype);
+  }
+
+  return `data:${mime},${encodeURIComponent(doc)}`;
 }
 
 /**

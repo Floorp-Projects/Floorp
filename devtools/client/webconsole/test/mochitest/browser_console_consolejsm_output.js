@@ -15,7 +15,7 @@ add_task(async function testCategoryLogs() {
   const { console } = ChromeUtils.import("resource://gre/modules/Console.jsm");
   console.log("bug861338-log-cached");
 
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   await checkMessageExists(hud, "bug861338-log-cached");
 
@@ -49,7 +49,7 @@ add_task(async function testCategoryLogs() {
   await checkMessageExists(hud, "foobarTimer");
 
   hud.ui.clearOutput(true);
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 add_task(async function testFilter() {
@@ -61,7 +61,7 @@ add_task(async function testFilter() {
     "resource://gre/modules/Console.jsm"
   );
   const console2 = new ConsoleAPI();
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   // Enable the error category and disable the log category.
   await setFilterState(hud, {
@@ -82,7 +82,7 @@ add_task(async function testFilter() {
 
   await resetFilters(hud);
   hud.ui.clearOutput(true);
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 // Test that console.profile / profileEnd trigger the right events

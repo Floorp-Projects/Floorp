@@ -5,12 +5,13 @@
 
 /* global getCDP */
 
-// Assert the order of Runtime.executionContextDestroyed, Page.frameNavigated and Runtime.executionContextCreated
+// Assert the order of Runtime.executionContextDestroyed,
+// Page.frameNavigated, and Runtime.executionContextCreated
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
+const TEST_DOC = toDataURL("default-test-page");
 
 add_task(async function testCDP() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupForURL(TEST_DOC);
   const { Page, Runtime } = client;
 
   const events = [];
@@ -52,7 +53,7 @@ add_task(async function testCDP() {
   ok(!!frameTree.frame, "getFrameTree exposes one frame");
   is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
   ok(!!frameTree.frame.id, "getFrameTree's frame has an id");
-  is(frameTree.frame.url, TEST_URI, "getFrameTree's frame has the right url");
+  is(frameTree.frame.url, TEST_DOC, "getFrameTree's frame has the right url");
   is(
     frameTree.frame.id,
     context.auxData.frameId,
@@ -62,7 +63,7 @@ add_task(async function testCDP() {
   const onFrameNavigated = Page.frameNavigated();
   const onExecutionContextDestroyed = Runtime.executionContextDestroyed();
   const onExecutionContextCreated2 = Runtime.executionContextCreated();
-  const url = "data:text/html;charset=utf-8,test-page";
+  const url = toDataURL("test-page");
   const { frameId } = await Page.navigate({ url });
   ok(true, "A new page has been loaded");
   ok(frameId, "Page.navigate returned a frameId");

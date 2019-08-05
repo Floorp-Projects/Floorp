@@ -28,7 +28,7 @@ add_task(async function() {
 
   const opened = waitForBrowserConsole();
 
-  let hud = HUDService.getBrowserConsole();
+  let hud = BrowserConsoleManager.getBrowserConsole();
   ok(!hud, "browser console is not open");
   info("wait for the browser console to open with ctrl-shift-j");
   EventUtils.synthesizeKey("j", { accelKey: true, shiftKey: true }, window);

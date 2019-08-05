@@ -62,50 +62,71 @@ struct NormalizedInterfaceAndField {
 // the returned `HuffmanKey` and consume as many bits from the bit stream.
 struct HuffmanLookup {
   HuffmanLookup(uint32_t bits, uint8_t bitLength)
-      : bits(bits), bitLength(bitLength) {
+      // We zero out the highest `32 - bitLength` bits.
+      : bits(bits & (uint32_t(0xFFFFFFFF) >> (32 - bitLength))),
+        bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
     MOZ_ASSERT(bits >> bitLength == 0);
   }
 
-  // Return the `bitLength` leading bits of this superset.
-  // This only makes sense if `bitLength <= this.bitLength`.
+  // Return the `bitLength` leading bits of this superset, in the order
+  // expected to compare to a `HuffmanKey`. The order of bits and bytes
+  // is ensured by `BitBuffer`.
+  //
+  // Note: This only makes sense if `bitLength <= this.bitLength`.
+  //
+  // So, for instance, if `leadingBits(4)` returns
+  // `0b_0000_0000__0000_0000__0000_0000__0000_0100`, this is
+  // equal to Huffman Key `0100`.
   uint32_t leadingBits(const uint8_t bitLength) const;
 
-  // The buffer holding the bits.
-  // FIXME: Document bit order.
+  // The buffer holding the bits. At this stage, bits are stored
+  // in the same order as `HuffmanKey`. See the implementation of
+  // `BitBuffer` methods for more details about how this order
+  // is implemented.
+  //
+  // If `bitLength < 32`, the unused highest bits are guaranteed
+  // to be 0.
   uint32_t bits;
 
-  // The actual length of buffer `bits`:
-  // - if `bitLength == 0`, use 0 bits of `bits`, this entire value is `0`;
-  // - if `bitLength == 1`, only use the last bit of `bits`;
-  // - ...
-  // - if `bitLength == 32`, use the entire value of `bits`;
-  // - other values of `bitLength` are invalid.
+  // The actual length of buffer `bits`.
   //
-  // Invariant: the first `32 - bitLength` bits are always 0.
+  // MUST be within `[0, 32]`.
+  //
+  // If `bitLength < 32`, it means that some of the highest bits are unused.
   uint8_t bitLength;
 };
 
 // A Huffman Key.
 struct HuffmanKey {
-  HuffmanKey(uint32_t bits, uint8_t bitLength)
+  // Construct the HuffmanKey.
+  //
+  // `bits` and `bitLength` define a buffer containing the standard Huffman
+  // code for this key.
+  //
+  // For instance, if the Huffman code is `0100`,
+  // - `bits = 0b0000_0000__0000_0000__0000_0000__0000_0100`;
+  // - `bitLength = 4`.
+  HuffmanKey(const uint32_t bits, const uint8_t bitLength)
       : bits(bits), bitLength(bitLength) {
     MOZ_ASSERT(bitLength <= 32);
     MOZ_ASSERT(bits >> bitLength == 0);
   }
 
   // The buffer holding the bits.
-  // FIXME: Document bit order.
+  //
+  // For a Huffman code of `0100`
+  // - `bits = 0b0000_0000__0000_0000__0000_0000__0000_0100`;
+  //
+  // If `bitLength < 32`, the unused highest bits are guaranteed
+  // to be 0.
   uint32_t bits;
 
-  // The actual length of buffer `bits`:
-  // - if `bitLength == 0`, use 0 bits of `bits`, this entire value is `0`;
-  // - if `bitLength == 1`, only use the last bit of `bits`;
-  // - ...
-  // - if `bitLength == 32`, use the entire value of `bits`;
-  // - other values of `bitLength` are invalid.
+  // The actual length of buffer `bits`.
   //
-  // Invariant: the first `32 - bitLength` bits are always 0.
+  // MUST be within `[0, 32]`.
+  //
+  // If `bitLength < 32`, it means that some of the highest bits are unused.
   uint8_t bitLength;
 };
 
@@ -397,15 +418,30 @@ class MOZ_STACK_CLASS BinASTTokenReaderContext : public BinASTTokenReaderBase {
 
    private:
     // The contents of the buffer.
+    //
+    // - Bytes are added in the same order as the bytestream.
+    // - Individual bits within bytes are mirrored.
+    //
+    // In other words, if the byte stream starts with
+    // `0b_HGFE_DCBA`, `0b_PONM_LKJI`, `0b_0000_0000`,
+    // .... `0b_0000_0000`, `bits` will hold
+    // `0b_0000_...0000__ABCD_EFGH__IJKL_MNOP`.
+    //
+    // Note: By opposition to `HuffmanKey` or `HuffmanLookup`,
+    // the highest bits are NOT guaranteed to be `0`.
     uint64_t bits;
 
     // The number of elements in `bits`.
     //
-    // Until we start lookup up into Huffman tables, `length == 0`.
+    // Until we start lookup up into Huffman tables, `bitLength == 0`.
     // Once we do, we refill the buffer before any lookup, i.e.
-    // `length == 32` until we reach the last few bytes of the stream,
+    // `MAX_PREFIX_BIT_LENGTH = 32 <= bitLength <= BIT_BUFFER_SIZE = 64`
+    // until we reach the last few bytes of the stream,
     // in which case `length` decreases monotonically to 0.
-    uint64_t length;
+    //
+    // If `bitLength < BIT_BUFFER_SIZE = 64`, some of the highest
+    // bits of `bits` are unused.
+    uint8_t bitLength;
   } bitBuffer;
 
   // The number of already decoded bytes.

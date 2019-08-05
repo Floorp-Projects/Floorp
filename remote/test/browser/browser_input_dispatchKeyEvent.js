@@ -5,8 +5,6 @@
 
 // Basic test for dispatch key event API with input type text
 
-const TEST_URI = "data:text/html;charset=utf-8,<input type=text>";
-
 // Map of key codes used in this test.
 const KEYCODES = {
   a: 65,
@@ -37,7 +35,7 @@ add_task(async function() {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  const { client, tab } = await setupTestForUri(TEST_URI);
+  const { client, tab } = await setupForURL(toDataURL("<input>"));
   is(gBrowser.selectedTab, tab, "Selected tab is the target tab");
 
   const { Input } = client;

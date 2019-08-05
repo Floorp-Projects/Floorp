@@ -5,7 +5,6 @@
 
 // Test that frameNavigated is not fired for iframes embedded in the page.
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
 const PAGE_URL =
   "http://example.com/browser/remote/test/browser/doc_page_frameNavigated_iframe.html";
 
@@ -13,7 +12,7 @@ const promises = new Set();
 const resolutions = new Map();
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupForURL(toDataURL("default-test-page"));
 
   const { Page } = client;
   await Page.enable();

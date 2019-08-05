@@ -29,7 +29,7 @@ add_task(async function() {
   await closeConsole();
   info("web console closed");
 
-  hud = await HUDService.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
   await testBrowserConsole(hud);
   await closeConsole();
 });

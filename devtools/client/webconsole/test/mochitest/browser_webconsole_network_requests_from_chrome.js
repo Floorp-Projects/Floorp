@@ -28,7 +28,7 @@ add_task(async function() {
   Services.console.registerListener(listener);
 
   // trigger a lazy-load of the HUD Service
-  HUDService;
+  BrowserConsoleManager;
 
   await sendRequestFromChrome();
 

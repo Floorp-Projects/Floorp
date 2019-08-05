@@ -5,10 +5,10 @@
 
 // Test the Runtime execution context events
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
+const TEST_DOC = toDataURL("default-test-page");
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupForURL(TEST_DOC);
 
   const firstContext = await testRuntimeEnable(client);
   await testEvaluate(client, firstContext);
@@ -48,7 +48,7 @@ async function testEvaluate({ Runtime }, previousContext) {
   });
   is(
     result.value,
-    TEST_URI,
+    TEST_DOC,
     "Runtime.evaluate works and is against the test page"
   );
 }
@@ -59,8 +59,7 @@ async function testNavigate({ Runtime, Page }, previousContext) {
   const executionContextDestroyed = Runtime.executionContextDestroyed();
   const executionContextCreated = Runtime.executionContextCreated();
 
-  const url = "data:text/html;charset=utf-8,test-page";
-  const { frameId } = await Page.navigate({ url });
+  const { frameId } = await Page.navigate({ url: toDataURL("test-page") });
   ok(true, "A new page has been loaded");
   is(
     frameId,
@@ -136,7 +135,7 @@ async function testNavigateBack({ Runtime }, firstContext, previousContext) {
   });
   is(
     result.value,
-    TEST_URI,
+    TEST_DOC,
     "Runtime.evaluate works and is against the page we just navigated to"
   );
 }
@@ -147,7 +146,7 @@ async function testNavigateViaLocation({ Runtime }, previousContext) {
   const executionContextDestroyed = Runtime.executionContextDestroyed();
   const executionContextCreated = Runtime.executionContextCreated();
 
-  const url2 = "data:text/html;charset=utf-8,test-page-2";
+  const url2 = toDataURL("test-page-2");
   await Runtime.evaluate({
     contextId: previousContext.id,
     expression: `window.location = '${url2}';`,

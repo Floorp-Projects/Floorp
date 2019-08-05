@@ -8,7 +8,6 @@
 
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/net/UrlClassifierCommon.h"
-#include "mozilla/StaticPrefs_privacy.h"
 #include "nsContentUtils.h"
 #include "nsNetUtil.h"
 
@@ -89,11 +88,6 @@ UrlClassifierFeatureSocialTrackingAnnotation::MaybeCreate(
       ("UrlClassifierFeatureSocialTrackingAnnotation: MaybeCreate for channel "
        "%p",
        aChannel));
-
-  if (!StaticPrefs::
-          privacy_trackingprotection_socialtracking_annotate_enabled()) {
-    return nullptr;
-  }
 
   if (!UrlClassifierCommon::ShouldEnableClassifier(aChannel)) {
     return nullptr;

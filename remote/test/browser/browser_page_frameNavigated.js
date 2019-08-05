@@ -5,13 +5,13 @@
 
 // Test the Page navigation events
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
+const TEST_DOC = toDataURL("default-test-page");
 
 const promises = new Set();
 const resolutions = new Map();
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupForURL(TEST_DOC);
 
   const { Page } = client;
 
@@ -23,7 +23,7 @@ add_task(async function() {
   ok(!!frameTree.frame, "getFrameTree exposes one frame");
   is(frameTree.childFrames.length, 0, "getFrameTree reports no child frame");
   ok(frameTree.frame.id, "getFrameTree's frame has an id");
-  is(frameTree.frame.url, TEST_URI, "getFrameTree's frame has the right url");
+  is(frameTree.frame.url, TEST_DOC, "getFrameTree's frame has the right url");
 
   // Save the given `promise` resolution into the `promises` global Set
   function recordPromise(name, promise) {
