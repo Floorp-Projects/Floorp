@@ -51,41 +51,6 @@ add_task(async function setup() {
   });
 });
 
-// Tests that pressing the permissions preferences icon in the identity popup
-// links to about:preferences
-add_task(async function testOpenPreferencesFromPermissionsPrefsButton() {
-  await BrowserTestUtils.withNewTab("https://example.com", async function() {
-    await openIdentityPopup();
-
-    let preferencesButton = document.getElementById(
-      "identity-popup-permission-preferences-button"
-    );
-
-    ok(
-      BrowserTestUtils.is_visible(preferencesButton),
-      "The preferences button is shown."
-    );
-
-    Services.telemetry.clearEvents();
-
-    let shown = waitAndAssertPreferencesShown("permissions", true);
-    preferencesButton.click();
-    await shown;
-
-    let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
-      true
-    ).parent;
-    let clickEvents = events.filter(
-      e =>
-        e[1] == "security.ui.identitypopup" &&
-        e[2] == "click" &&
-        e[3] == "permission_prefs_btn"
-    );
-    is(clickEvents.length, 1, "recorded telemetry for the click");
-  });
-});
-
 // Tests that pressing the preferences button in the trackers subview
 // links to about:preferences
 add_task(async function testOpenPreferencesFromTrackersSubview() {

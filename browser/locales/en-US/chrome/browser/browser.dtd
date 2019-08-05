@@ -684,19 +684,21 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY editBookmark.showForNewBookmarks.label       "Show editor when saving">
 <!ENTITY editBookmark.showForNewBookmarks.accesskey   "S">
 
-<!-- LOCALIZATION NOTE (identity.securityView.label)
+<!-- LOCALIZATION NOTE (identity.securityView.label2)
      This is the header of the security subview in the Site Identity panel. -->
-<!ENTITY identity.securityView.label "Site Security">
+<!ENTITY identity.securityView.label2 "Connection Security">
 
-<!ENTITY identity.connection "Connection">
-<!ENTITY identity.connectionSecure "Secure Connection">
+<!ENTITY identity.connectionSecure2 "Connection Secure">
 <!ENTITY identity.connectionNotSecure "Connection Is Not Secure">
+<!ENTITY identity.connectionNotSecureSecurityView "You are not securely connected to this site.">
 <!ENTITY identity.connectionFile "This page is stored on your computer.">
-<!ENTITY identity.connectionVerified2 "You are securely connected to this site, owned by:">
+<!ENTITY identity.connectionVerified3 "You are securely connected to this site.">
 <!ENTITY identity.connectionInternal "This is a secure &brandShortName; page.">
 <!ENTITY identity.extensionPage "This page is loaded from an extension.">
 <!ENTITY identity.insecureLoginForms2 "Logins entered on this page could be compromised.">
 <!ENTITY identity.customRoot "Connection verified by a certificate issuer that is not recognized by Mozilla.">
+
+<!ENTITY identity.evOwnerLabel "Site owned by:">
 
 <!-- Strings for connection state warnings. -->
 <!ENTITY identity.activeBlocked "&brandShortName; has blocked parts of this page that are not secure.">
@@ -730,10 +732,10 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 
 <!ENTITY identity.clearSiteData "Clear Cookies and Site Data…">
 
-<!ENTITY identity.permissions "Permissions">
+<!-- LOCALIZATION NOTE (identity.permissions2): "set" as in "configured for this website" -->
+<!ENTITY identity.permissions2 "Permissions Set">
 <!ENTITY identity.permissionsEmpty "You have not granted this site any special permissions.">
 <!ENTITY identity.permissionsReloadHint "You may need to reload the page for changes to apply.">
-<!ENTITY identity.permissionsPreferences.tooltip "Open Permissions Preferences">
 
 <!ENTITY protections.etpON.header "Enhanced Tracking Protection is ON for this site">
 <!ENTITY protections.etpOFF.header "Enhanced Tracking Protection is OFF for this site">
