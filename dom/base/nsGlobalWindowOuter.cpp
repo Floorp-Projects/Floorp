@@ -2322,7 +2322,7 @@ void nsGlobalWindowOuter::PrepareForProcessChange(JSObject* aProxy) {
     MOZ_CRASH("PrepareForProcessChange GetRemoteOuterWindowProxy");
   }
 
-  if (!xpc::TransplantObject(cx, localProxy, remoteProxy)) {
+  if (!xpc::TransplantObjectNukingXrayWaiver(cx, localProxy, remoteProxy)) {
     MOZ_CRASH("PrepareForProcessChange TransplantObject");
   }
 }
