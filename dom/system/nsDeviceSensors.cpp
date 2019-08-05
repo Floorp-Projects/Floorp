@@ -150,8 +150,6 @@ class DeviceSensorTestEvent : public Runnable {
   uint32_t mType;
 };
 
-static bool sTestSensorEvents = false;
-
 NS_IMETHODIMP nsDeviceSensors::AddWindowListener(uint32_t aType,
                                                  nsIDOMWindow* aWindow) {
   if (!IsSensorAllowedByPref(aType, aWindow)) return NS_OK;
@@ -164,14 +162,7 @@ NS_IMETHODIMP nsDeviceSensors::AddWindowListener(uint32_t aType,
 
   mWindowListeners[aType]->AppendElement(aWindow);
 
-  static bool sPrefCacheInitialized = false;
-  if (!sPrefCacheInitialized) {
-    sPrefCacheInitialized = true;
-    Preferences::AddBoolVarCache(&sTestSensorEvents,
-                                 "device.sensors.test.events", false);
-  }
-
-  if (sTestSensorEvents) {
+  if (StaticPrefs::device_sensors_test_events()) {
     nsCOMPtr<nsIRunnable> event = new DeviceSensorTestEvent(this, aType);
     NS_DispatchToCurrentThread(event);
   }
@@ -446,7 +437,7 @@ void nsDeviceSensors::FireDOMMotionEvent(Document* doc, EventTarget* target,
       TimeDuration::FromMilliseconds(DEFAULT_SENSOR_POLL);
   bool fireEvent =
       (TimeStamp::Now() > mLastDOMMotionEventTime + sensorPollDuration) ||
-      sTestSensorEvents;
+      StaticPrefs::device_sensors_test_events();
 
   switch (type) {
     case nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION:

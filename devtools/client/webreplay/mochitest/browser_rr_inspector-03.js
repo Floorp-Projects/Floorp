@@ -32,7 +32,7 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_styles.html", {
     waitForRecording: true,
   });
-  const { threadFront, tab, toolbox } = dbg;
+  const { threadFront } = dbg;
 
   await threadFront.interrupt();
   await threadFront.resume();
@@ -49,8 +49,7 @@ add_task(async function() {
   await checkBackgroundColor("#maindiv", "rgb(255, 0, 0)");
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.closeToolbox();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 
   async function checkBackgroundColor(node, color) {
     await selectNode(node, inspector);

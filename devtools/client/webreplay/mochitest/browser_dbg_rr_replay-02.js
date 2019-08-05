@@ -20,12 +20,12 @@ add_task(async function() {
   const firstTab = await attachDebugger(recordingTab);
   let toolbox = firstTab.toolbox;
   let target = firstTab.target;
-  let client = toolbox.threadFront;
-  await client.interrupt();
-  let bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
-  await resumeToLine(client, 14);
-  await resumeToLine(client, 14);
-  await reverseStepOverToLine(client, 13);
+  let threadFront = toolbox.threadFront;
+  await threadFront.interrupt();
+  let bp = await setBreakpoint(threadFront, "doc_rr_continuous.html", 14);
+  await resumeToLine(threadFront, 14);
+  await resumeToLine(threadFront, 14);
+  await reverseStepOverToLine(threadFront, 13);
   const lastNumberValue = await evaluateInTopFrame(target, "number");
 
   const remoteTab = recordingTab.linkedBrowser.frameLoader.remoteTab;
@@ -33,7 +33,7 @@ add_task(async function() {
   ok(remoteTab.saveRecording(recordingFile), "Saved recording");
   await once(Services.ppmm, "SaveRecordingFinished");
 
-  await client.removeBreakpoint(bp);
+  await threadFront.removeBreakpoint(bp);
   await toolbox.destroy();
   await gBrowser.removeTab(recordingTab);
 
@@ -43,25 +43,24 @@ add_task(async function() {
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 
-  const rplyTab = await attachDebugger(replayingTab);
-  toolbox = rplyTab.toolbox;
-  target = rplyTab.target;
-  client = toolbox.threadFront;
-  await client.interrupt();
+  const dbg = await attachDebugger(replayingTab);
+  toolbox = dbg.toolbox;
+  target = dbg.target;
+  threadFront = toolbox.threadFront;
+  await threadFront.interrupt();
 
   // The recording does not actually end at the point where we saved it, but
   // will do at the next checkpoint. Rewind to the point we are interested in.
-  bp = await setBreakpoint(client, "doc_rr_continuous.html", 14);
-  await rewindToLine(client, 14);
+  bp = await setBreakpoint(threadFront, "doc_rr_continuous.html", 14);
+  await rewindToLine(threadFront, 14);
 
   await checkEvaluateInTopFrame(target, "number", lastNumberValue);
-  await reverseStepOverToLine(client, 13);
-  await rewindToLine(client, 14);
+  await reverseStepOverToLine(threadFront, 13);
+  await rewindToLine(threadFront, 14);
   await checkEvaluateInTopFrame(target, "number", lastNumberValue - 1);
-  await resumeToLine(client, 14);
+  await resumeToLine(threadFront, 14);
   await checkEvaluateInTopFrame(target, "number", lastNumberValue);
 
-  await client.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(replayingTab);
+  await threadFront.removeBreakpoint(bp);
+  await shutdownDebugger(dbg);
 });

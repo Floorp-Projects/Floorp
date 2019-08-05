@@ -4497,27 +4497,6 @@ Result<Ok, const char*> Preferences::InitInitialObjects(bool aIsStartup) {
 
   if (!XRE_IsParentProcess()) {
     MOZ_DIAGNOSTIC_ASSERT(gSharedMap);
-
-#ifdef DEBUG
-    // For mirrored prefs we generate code that checks the mirror variable
-    // matches the pref's current value. This can currently fail if the default
-    // value of a static VarCache preference is changed in a preference file or
-    // at runtime, rather than in StaticPrefList*.h.
-#  define NEVER_PREF(name, cpp_type, value)
-#  define ALWAYS_PREF(name, base_id, full_id, cpp_type, value)           \
-    MOZ_ASSERT(Internals::GetPref<StripAtomic<cpp_type>>(name, value) == \
-                   StaticPrefs::full_id(),                               \
-               "Incorrect cached value for " name);
-#  define ONCE_PREF(name, base_id, full_id, cpp_type, value)                 \
-    MOZ_ASSERT(                                                              \
-        Internals::GetPref<cpp_type>(name, value) == StaticPrefs::full_id(), \
-        "Incorrect cached value for " name);
-#  include "mozilla/StaticPrefListAll.h"
-#  undef NEVER_PREF
-#  undef ALWAYS_PREF
-#  undef ONCE_PREF
-#endif
-
     return Ok();
   }
 

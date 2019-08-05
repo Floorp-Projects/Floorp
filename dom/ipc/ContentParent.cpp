@@ -1896,6 +1896,25 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateReplayingProcess(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvGenerateReplayCrashReport(
+    const uint32_t& aChannelId) {
+  if (aChannelId >= mReplayingChildren.length()) {
+    return IPC_FAIL(this, "invalid channel ID");
+  }
+
+  GeckoChildProcessHost* child = mReplayingChildren[aChannelId];
+  if (!child) {
+    return IPC_FAIL(this, "invalid channel ID");
+  }
+
+  if (mCrashReporter) {
+    ProcessId pid = base::GetProcId(child->GetChildProcessHandle());
+    mCrashReporter->GenerateCrashReport(pid);
+  }
+
+  return IPC_OK();
+}
+
 jsipc::CPOWManager* ContentParent::GetCPOWManager() {
   if (PJavaScriptParent* p =
           LoneManagedOrNullAsserts(ManagedPJavaScriptParent())) {

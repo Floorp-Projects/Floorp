@@ -13,7 +13,6 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { tab, toolbox } = dbg;
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
@@ -40,6 +39,5 @@ add_task(async function() {
 
   await dbg.actions.removeAllBreakpoints(getContext(dbg));
 
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });

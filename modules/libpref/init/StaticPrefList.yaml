@@ -853,6 +853,11 @@
   value: 2048
   mirror: always
 
+- name: browser.tabs.remote.force-paint
+  type: bool
+  value: true
+  mirror: always
+
 # When this pref is enabled document loads with a mismatched
 # Cross-Origin header will fail to load
 - name: browser.tabs.remote.useCrossOriginPolicy
@@ -1097,6 +1102,11 @@
   value: false
   mirror: always
 
+- name: device.sensors.test.events
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "devtools."
 #---------------------------------------------------------------------------
@@ -1124,6 +1134,11 @@
 - name: dom.allow_cut_copy
   type: bool
   value: true
+  mirror: always
+
+- name: dom.allow_XUL_XBL_for_file
+  type: bool
+  value: false
   mirror: always
 
 # Is support for automatically removing replaced filling animations enabled?
@@ -1260,6 +1275,15 @@
   value: false
   mirror: always
 
+- name: dom.disable_window_print
+  type: bool
+#ifdef ANDROID
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: dom.element.transform-getters.enabled
   type: bool
   value: false
@@ -1319,6 +1343,15 @@
 
 # Disable clipboard read() and write() by default
 - name: dom.events.asyncClipboard.dataTransfer
+  type: bool
+  value: false
+  mirror: always
+
+# This pref controls whether or not the `protected` dataTransfer state is
+# enabled. If the `protected` dataTransfer stae is disabled, then the
+# DataTransfer will be read-only whenever it should be protected, and will not
+# be disconnected after a drag event is completed.
+- name: dom.events.dataTransfer.protected.enabled
   type: bool
   value: false
   mirror: always
@@ -1872,6 +1905,11 @@
   value: true
   mirror: always
 
+- name: dom.securecontext.whitelist_onions
+  type: bool
+  value: false
+  mirror: always
+
 # This pref enables FeaturePolicy logic and the parsing of 'allow' attribute in
 # HTMLIFrameElement objects.
 - name: dom.security.featurePolicy.enabled
@@ -1970,6 +2008,11 @@
 
 - name: dom.testing.structuredclonetester.enabled
   type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+- name: dom.testing.sync-content-blocking-notifications
+  type: bool
   value: false
   mirror: always
 
@@ -2586,6 +2629,12 @@
 - name: geo.enabled
   type: bool
   value: true
+  mirror: always
+
+# Time, in milliseconds, to wait for the location provider to spin up.
+- name: geo.timeout
+  type: int32_t
+  value: 6000
   mirror: always
 
 #---------------------------------------------------------------------------
@@ -4383,6 +4432,11 @@
   value: true
   mirror: once
 
+- name: layout.reflow.synthMouseMove
+  type: bool
+  value: true
+  mirror: always
+
 # This and code dependent on it should be removed once containerless scrolling looks stable.
 - name: layout.scroll.root-frame-containers
   type: RelaxedAtomicBool
@@ -4637,6 +4691,11 @@
   mirror: always
 
 - name: media.clearkey.persistent-license.enabled
+  type: bool
+  value: false
+  mirror: always
+
+- name: media.cloneElementVisually.testing
   type: bool
   value: false
   mirror: always
@@ -4913,6 +4972,12 @@
   value: false
   mirror: always
 
+# This pref disables the reception of RTCP. It is used for testing.
+- name: media.webrtc.net.force_disable_rtcp_reception
+  type: ReleaseAcquireAtomicBool
+  value: false
+  mirror: always
+
 # TextTrack WebVTT Region extension support.
 - name: media.webvtt.regions.enabled
   type: bool
@@ -4991,6 +5056,12 @@
 # Zero tolerance in pre-release builds to detect any decoder regression.
   value: 0
 #endif
+  mirror: always
+
+# Are video stats enabled? (Disabling can help prevent fingerprinting.)
+- name: media.video_stats.enabled
+  type: bool
+  value: true
   mirror: always
 
 # Opus

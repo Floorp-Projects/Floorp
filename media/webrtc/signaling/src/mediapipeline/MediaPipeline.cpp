@@ -34,6 +34,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SharedThreadPool.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/StaticPrefs_media.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/UniquePtrExtensions.h"
@@ -63,14 +64,6 @@ using namespace mozilla::layers;
 mozilla::LazyLogModule gMediaPipelineLog("MediaPipeline");
 
 namespace mozilla {
-
-// When enabled, this pref disables the reception of RTCP. This is used
-// for testing.
-static const auto kQuashRtcpRxPref =
-    NS_LITERAL_CSTRING("media.webrtc.net.force_disable_rtcp_reception");
-Atomic<bool, ReleaseAcquire> MediaPipeline::sPrefsRegistered(false);
-Atomic<bool, ReleaseAcquire> MediaPipeline::sForceDisableRtcpReceptionPref(
-    false);
 
 // An async inserter for audio data, to avoid running audio codec encoders
 // on the MSG/input audio thread.  Basically just bounces all the audio
@@ -270,13 +263,6 @@ MediaPipeline::MediaPipeline(const std::string& aPc,
     mConduit->SetReceiverTransport(mTransport);
   } else {
     mConduit->SetTransmitterTransport(mTransport);
-  }
-  if (!sPrefsRegistered.exchange(true)) {
-    MOZ_ASSERT(Preferences::IsServiceAvailable());
-    Preferences::AddAtomicBoolVarCache(&sForceDisableRtcpReceptionPref,
-                                       kQuashRtcpRxPref, false);
-    MOZ_LOG(gMediaPipelineLog, LogLevel::Info,
-            ("Creating pref cache: %s succeeded", kQuashRtcpRxPref.get()));
   }
 }
 
@@ -619,7 +605,7 @@ void MediaPipeline::RtcpPacketReceived(MediaPacket& packet) {
   mPacketDumper->Dump(mLevel, dom::mozPacketDumpType::Rtcp, false,
                       packet.data(), packet.len());
 
-  if (sForceDisableRtcpReceptionPref) {
+  if (StaticPrefs::media_webrtc_net_force_disable_rtcp_reception()) {
     MOZ_LOG(gMediaPipelineLog, LogLevel::Debug,
             ("%s RTCP packet forced to be dropped", mDescription.c_str()));
     return;

@@ -12,7 +12,7 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { tab, toolbox, threadFront, target } = dbg;
+  const { threadFront, target } = dbg;
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
@@ -32,6 +32,5 @@ add_task(async function() {
   await checkEvaluateInTopFrame(target, "number", 5);
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });

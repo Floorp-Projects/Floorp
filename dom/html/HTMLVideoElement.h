@@ -44,8 +44,6 @@ class HTMLVideoElement final : public HTMLMediaElement {
                               nsAttrValue& aResult) override;
   NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
 
-  static void InitStatics();
-
   virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction()
       const override;
 

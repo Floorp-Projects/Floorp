@@ -8,6 +8,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/Span.h"
+#include "mozilla/StaticPrefs_dom.h"
 
 #include "DataTransfer.h"
 
@@ -83,22 +84,6 @@ enum CustomClipboardTypeId {
   eCustomClipboardTypeId_String
 };
 
-// The dom.events.dataTransfer.protected.enabled preference controls whether or
-// not the `protected` dataTransfer state is enabled. If the `protected`
-// dataTransfer stae is disabled, then the DataTransfer will be read-only
-// whenever it should be protected, and will not be disconnected after a drag
-// event is completed.
-static bool PrefProtected() {
-  static bool sInitialized = false;
-  static bool sValue = false;
-  if (!sInitialized) {
-    sInitialized = true;
-    Preferences::AddBoolVarCache(&sValue,
-                                 "dom.events.dataTransfer.protected.enabled");
-  }
-  return sValue;
-}
-
 static DataTransfer::Mode ModeForEvent(EventMessage aEventMessage) {
   switch (aEventMessage) {
     case eCut:
@@ -115,8 +100,9 @@ static DataTransfer::Mode ModeForEvent(EventMessage aEventMessage) {
       // the DataTransfer, rather than just the type information.
       return DataTransfer::Mode::ReadOnly;
     default:
-      return PrefProtected() ? DataTransfer::Mode::Protected
-                             : DataTransfer::Mode::ReadOnly;
+      return StaticPrefs::dom_events_dataTransfer_protected_enabled()
+                 ? DataTransfer::Mode::Protected
+                 : DataTransfer::Mode::ReadOnly;
   }
 }
 
@@ -1280,7 +1266,7 @@ bool DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
 
 void DataTransfer::Disconnect() {
   SetMode(Mode::Protected);
-  if (PrefProtected()) {
+  if (StaticPrefs::dom_events_dataTransfer_protected_enabled()) {
     ClearAll();
   }
 }
@@ -1581,7 +1567,8 @@ void DataTransfer::FillInExternalCustomTypes(nsIVariant* aData, uint32_t aIndex,
 }
 
 void DataTransfer::SetMode(DataTransfer::Mode aMode) {
-  if (!PrefProtected() && aMode == Mode::Protected) {
+  if (!StaticPrefs::dom_events_dataTransfer_protected_enabled() &&
+      aMode == Mode::Protected) {
     mMode = Mode::ReadOnly;
   } else {
     mMode = aMode;

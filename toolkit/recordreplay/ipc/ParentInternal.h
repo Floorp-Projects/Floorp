@@ -151,21 +151,21 @@ struct RecordingProcessData {
 // Information about a recording or replaying child process.
 class ChildProcessInfo {
   // Channel for communicating with the process.
-  Channel* mChannel;
+  Channel* mChannel = nullptr;
 
   // The last time we sent or received a message from this process.
   TimeStamp mLastMessageTime;
 
   // Whether this process is recording.
-  bool mRecording;
+  bool mRecording = false;
 
   // Whether the process is currently paused.
-  bool mPaused;
+  bool mPaused = false;
 
   // Flags for whether we have received messages from the child indicating it
   // is crashing.
-  bool mHasBegunFatalError;
-  bool mHasFatalError;
+  bool mHasBegunFatalError = false;
+  bool mHasFatalError = false;
 
   void OnIncomingMessage(const Message& aMsg);
 
@@ -184,6 +184,7 @@ class ChildProcessInfo {
   size_t GetId() { return mChannel->GetId(); }
   bool IsRecording() { return mRecording; }
   bool IsPaused() { return mPaused; }
+  bool HasCrashed() { return mHasFatalError; }
 
   // Send a message over the underlying channel.
   void SendMessage(Message&& aMessage);
