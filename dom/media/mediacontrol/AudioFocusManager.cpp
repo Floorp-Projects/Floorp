@@ -7,6 +7,7 @@
 #include "MediaControlService.h"
 
 #include "mozilla/Logging.h"
+#include "mozilla/StaticPrefs_media.h"
 
 extern mozilla::LazyLogModule gMediaControlLog;
 
@@ -41,6 +42,12 @@ void AudioFocusManager::RevokeAudioFocus(uint64_t aId) {
 }
 
 void AudioFocusManager::HandleAudioCompetition(uint64_t aId) {
+  // Enable audio focus management will start the audio competition which is
+  // only allowing one controller playing at a time.
+  if (!StaticPrefs::media_audioFocus_management()) {
+    return;
+  }
+
   for (size_t idx = 0; idx < mOwningFocusControllers.Length(); idx++) {
     const uint64_t controllerId = mOwningFocusControllers[idx];
     if (controllerId != aId) {
