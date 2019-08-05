@@ -55,6 +55,14 @@ class SocketProcessParent final : public PSocketProcessParent {
   PWebrtcProxyChannelParent* AllocPWebrtcProxyChannelParent(
       const TabId& aTabId);
   bool DeallocPWebrtcProxyChannelParent(PWebrtcProxyChannelParent* aActor);
+  PDNSRequestParent* AllocPDNSRequestParent(
+      const nsCString& aHost, const OriginAttributes& aOriginAttributes,
+      const uint32_t& aFlags);
+  virtual mozilla::ipc::IPCResult RecvPDNSRequestConstructor(
+      PDNSRequestParent* actor, const nsCString& hostName,
+      const OriginAttributes& aOriginAttributes,
+      const uint32_t& flags) override;
+  bool DeallocPDNSRequestParent(PDNSRequestParent*);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
   bool SendRequestMemoryReport(const uint32_t& aGeneration,

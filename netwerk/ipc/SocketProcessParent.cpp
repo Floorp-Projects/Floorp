@@ -7,6 +7,7 @@
 
 #include "SocketProcessHost.h"
 #include "mozilla/ipc/CrashReporterHost.h"
+#include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TelemetryIPC.h"
 #ifdef MOZ_WEBRTC
@@ -150,6 +151,28 @@ bool SocketProcessParent::DeallocPWebrtcProxyChannelParent(
       static_cast<WebrtcProxyChannelParent*>(aActor);
   parent->Release();
 #endif
+  return true;
+}
+
+PDNSRequestParent* SocketProcessParent::AllocPDNSRequestParent(
+    const nsCString& aHost, const OriginAttributes& aOriginAttributes,
+    const uint32_t& aFlags) {
+  DNSRequestParent* p = new DNSRequestParent();
+  p->AddRef();
+  return p;
+}
+
+mozilla::ipc::IPCResult SocketProcessParent::RecvPDNSRequestConstructor(
+    PDNSRequestParent* aActor, const nsCString& aHost,
+    const OriginAttributes& aOriginAttributes, const uint32_t& aFlags) {
+  static_cast<DNSRequestParent*>(aActor)->DoAsyncResolve(
+      aHost, aOriginAttributes, aFlags);
+  return IPC_OK();
+}
+
+bool SocketProcessParent::DeallocPDNSRequestParent(PDNSRequestParent* aParent) {
+  DNSRequestParent* p = static_cast<DNSRequestParent*>(aParent);
+  p->Release();
   return true;
 }
 

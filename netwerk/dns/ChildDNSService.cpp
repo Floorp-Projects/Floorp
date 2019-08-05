@@ -29,7 +29,7 @@ static StaticRefPtr<ChildDNSService> gChildDNSService;
 static const char kPrefNameDisablePrefetch[] = "network.dns.disablePrefetch";
 
 already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
-  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsSocketProcess());
 
   if (!gChildDNSService) {
     gChildDNSService = new ChildDNSService();
@@ -45,7 +45,7 @@ ChildDNSService::ChildDNSService()
     : mFirstTime(true),
       mDisablePrefetch(false),
       mPendingRequestsLock("DNSPendingRequestsLock") {
-  MOZ_ASSERT(XRE_IsContentProcess());
+  MOZ_ASSERT(XRE_IsContentProcess() || XRE_IsSocketProcess());
 }
 
 void ChildDNSService::GetDNSRecordHashKey(
@@ -67,7 +67,9 @@ nsresult ChildDNSService::AsyncResolveInternal(
     const nsACString& hostname, uint16_t type, uint32_t flags,
     nsIDNSListener* listener, nsIEventTarget* target_,
     const OriginAttributes& aOriginAttributes, nsICancelable** result) {
-  NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
+  if (XRE_IsContentProcess()) {
+    NS_ENSURE_TRUE(gNeckoChild != nullptr, NS_ERROR_FAILURE);
+  }
 
   if (mDisablePrefetch && (flags & RESOLVE_SPECULATE)) {
     return NS_ERROR_DNS_LOOKUP_QUEUE_FULL;
