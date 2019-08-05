@@ -16,7 +16,7 @@ const {
 add_task(async function() {
   await addTab("about:blank");
 
-  const hud = await HUDService.openBrowserConsoleOrFocus();
+  const hud = await BrowserConsoleManager.openBrowserConsoleOrFocus();
 
   const { message, actor } = await obtainObjectWithCPOW(hud);
   await testFrontEnd(hud, message);

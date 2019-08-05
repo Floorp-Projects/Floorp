@@ -76,8 +76,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "HUDService",
-  "devtools/client/webconsole/hudservice",
+  "BrowserConsoleManager",
+  "devtools/client/webconsole/browser-console-manager",
   true
 );
 loader.lazyRequireGetter(
@@ -961,7 +961,7 @@ Toolbox.prototype = {
       if (id == "browserConsole") {
         // Add key for toggling the browser console from the detached window
         shortcuts.on(electronKey, () => {
-          HUDService.toggleBrowserConsole();
+          BrowserConsoleManager.toggleBrowserConsole();
         });
       } else if (toolId) {
         // KeyShortcuts contain tool-specific and global key shortcuts,

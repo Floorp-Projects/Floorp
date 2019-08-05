@@ -10,7 +10,7 @@ add_task(async function() {
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
 
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
   await hud.ui.clearOutput();
   await openNewTabAndConsole(
     `data:text/html,<script>console.log("hello from content")</script>`
