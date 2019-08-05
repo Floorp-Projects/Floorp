@@ -71,7 +71,7 @@ add_task(async function() {
   info("Test browser console");
   await closeConsole(privateTab);
   info("web console closed");
-  hud = await HUDService.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   // Make sure that the cached messages from private tabs are not displayed in the
   // browser console.
@@ -116,10 +116,10 @@ add_task(async function() {
   assertNoPrivateMessages(hud);
 
   info("close the browser console");
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 
   info("reopen the browser console");
-  hud = await HUDService.toggleBrowserConsole();
+  hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console reopened");
 
   assertNoPrivateMessages(hud);

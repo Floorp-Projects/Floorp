@@ -5,8 +5,6 @@
 
 // Test very basic CDP features.
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 add_task(async function() {
   // Start the CDP server
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));

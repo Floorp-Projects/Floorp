@@ -9,8 +9,8 @@ const TRACKING_PAGE =
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
+      ["privacy.socialtracking.block_cookies.enabled", true],
       ["privacy.trackingprotection.socialtracking.enabled", true],
-      ["privacy.trackingprotection.socialtracking.annotate.enabled", true],
       [
         "urlclassifier.features.socialtracking.blacklistHosts",
         "socialtracking.example.com",
@@ -22,9 +22,11 @@ add_task(async function setup() {
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.annotate_channels", false],
       ["privacy.trackingprotection.cryptomining.enabled", false],
-      ["privacy.trackingprotection.cryptomining.annotate.enabled", false],
+      ["urlclassifier.features.cryptomining.annotate.blacklistHosts", ""],
+      ["urlclassifier.features.cryptomining.annotate.blacklistTables", ""],
       ["privacy.trackingprotection.fingerprinting.enabled", false],
-      ["privacy.trackingprotection.fingerprinting.annotate.enabled", false],
+      ["urlclassifier.features.fingerprinting.annotate.blacklistHosts", ""],
+      ["urlclassifier.features.fingerprinting.annotate.blacklistTables", ""],
     ],
   });
 });

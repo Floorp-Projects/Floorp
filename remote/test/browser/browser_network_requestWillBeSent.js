@@ -5,14 +5,13 @@
 
 // Test the Network.requestWillBeSent event
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-const PAGE_URI =
+const PAGE_URL =
   "http://example.com/browser/remote/test/browser/doc_network_requestWillBeSent.html";
-const JS_URI =
+const JS_URL =
   "http://example.com/browser/remote/test/browser/file_network_requestWillBeSent.js";
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setupForURL(toDataURL("default-test-page"));
 
   const { Page, Network } = client;
 
@@ -25,7 +24,7 @@ add_task(async function() {
       ok(true, "Received a request");
       switch (++requests) {
         case 1:
-          is(event.request.url, PAGE_URI, "Got the page request");
+          is(event.request.url, PAGE_URL, "Got the page request");
           is(event.type, "Document", "The page request has 'Document' type");
           is(
             event.requestId,
@@ -34,7 +33,7 @@ add_task(async function() {
           );
           break;
         case 2:
-          is(event.request.url, JS_URI, "Got the JS request");
+          is(event.request.url, JS_URL, "Got the JS request");
           resolve();
           break;
         case 3:
@@ -43,7 +42,7 @@ add_task(async function() {
     });
   });
 
-  const { frameId } = await Page.navigate({ url: PAGE_URI });
+  const { frameId } = await Page.navigate({ url: PAGE_URL });
   ok(frameId, "Page.navigate returned a frameId");
 
   info("Wait for Network.requestWillBeSent events");

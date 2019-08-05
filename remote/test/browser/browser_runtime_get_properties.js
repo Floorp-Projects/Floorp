@@ -5,10 +5,8 @@
 
 // Test the Runtime remote object
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setup();
 
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;

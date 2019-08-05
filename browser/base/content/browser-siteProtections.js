@@ -902,7 +902,7 @@ var ThirdPartyCookies = {
 };
 
 var SocialTracking = {
-  PREF_ENABLED: "privacy.trackingprotection.socialtracking.annotate.enabled",
+  PREF_ENABLED: "privacy.socialtracking.block_cookies.enabled",
   PREF_NOTIFICATION_UI_ENABLED: "privacy.socialtracking.notification.enabled",
   PREF_SESSION_PAGELOAD_MIN:
     "privacy.socialtracking.notification.session.pageload.min",

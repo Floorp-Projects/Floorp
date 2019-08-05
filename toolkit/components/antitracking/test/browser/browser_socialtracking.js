@@ -12,7 +12,6 @@ function runTest(obj) {
         ["privacy.trackingprotection.annotate_channels", true],
         ["privacy.storagePrincipal.enabledForTrackers", false],
         ["urlclassifier.features.socialtracking.annotate.blacklistHosts", "not-tracking.example.com"],
-        ["privacy.trackingprotection.socialtracking.annotate.enabled", obj.annotationEnabled],
         ["urlclassifier.features.socialtracking.blacklistHosts", "not-tracking.example.com"],
         ["privacy.trackingprotection.socialtracking.enabled", obj.protectionEnabled],
         ["privacy.socialtracking.block_cookies.enabled", obj.cookieBlocking],
@@ -76,17 +75,7 @@ function runTest(obj) {
 }
 
 runTest({
-  testName: "Socialtracking-annotation feature not enabled",
-  annotationEnabled: false,
-  protectionEnabled: false,
-  loading: true,
-  cookieBlocking: false,
-  result: true,
-});
-
-runTest({
   testName: "Socialtracking-annotation feature enabled but not considered for tracking detection.",
-  annotationEnabled: true,
   protectionEnabled: false,
   loading: true,
   cookieBlocking: false,
@@ -95,7 +84,6 @@ runTest({
 
 runTest({
   testName: "Socialtracking-annotation feature enabled and considered for tracking detection.",
-  annotationEnabled: true,
   protectionEnabled: false,
   loading: true,
   cookieBlocking: true,
@@ -104,7 +92,6 @@ runTest({
 
 runTest({
   testName: "Socialtracking-protection feature enabled.",
-  annotationEnabled: true,
   protectionEnabled: true,
   loading: false,
   cookieBlocking: true,
