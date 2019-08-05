@@ -17,7 +17,7 @@ add_task(async function() {
   await pushPref("devtools.chrome.enabled", true);
 
   await addTab(TEST_URI);
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
 
   info("Reload the content window to produce a network log");
   const onNetworkMessage = waitForMessage(hud, "test-console.html");
@@ -108,7 +108,7 @@ add_task(async function() {
 
   await hideContextMenu(hud);
   // Close the browser console.
-  await HUDService.toggleBrowserConsole();
+  await BrowserConsoleManager.toggleBrowserConsole();
 });
 
 function addPrefBasedEntries(expectedEntries) {

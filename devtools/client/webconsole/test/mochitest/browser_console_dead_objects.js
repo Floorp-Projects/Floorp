@@ -15,7 +15,7 @@
 "use strict";
 
 add_task(async function() {
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
   ok(hud, "browser console opened");
 
   // Add the reference to the nuked sandbox.

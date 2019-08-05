@@ -34,7 +34,7 @@ add_task(async function() {
   // Show the content messages
   await pushPref("devtools.browserconsole.contentMessages", true);
 
-  const hud = await HUDService.toggleBrowserConsole();
+  const hud = await BrowserConsoleManager.toggleBrowserConsole();
   hud.ui.clearOutput();
 
   await addTab(TEST_URI);

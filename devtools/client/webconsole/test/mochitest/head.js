@@ -36,7 +36,9 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-var { HUDService } = require("devtools/client/webconsole/hudservice");
+var {
+  BrowserConsoleManager,
+} = require("devtools/client/webconsole/browser-console-manager");
 var WCUL10n = require("devtools/client/webconsole/utils/l10n");
 const DOCS_GA_PARAMS = `?${new URLSearchParams({
   utm_source: "mozilla",
@@ -60,10 +62,10 @@ registerCleanupFunction(async function() {
   Services.prefs.getChildList("devtools.webconsole.filter").forEach(pref => {
     Services.prefs.clearUserPref(pref);
   });
-  const browserConsole = HUDService.getBrowserConsole();
+  const browserConsole = BrowserConsoleManager.getBrowserConsole();
   if (browserConsole) {
     browserConsole.ui.clearOutput(true);
-    await HUDService.toggleBrowserConsole();
+    await BrowserConsoleManager.toggleBrowserConsole();
   }
 });
 
@@ -929,7 +931,7 @@ async function waitForBrowserConsole() {
       Services.obs.removeObserver(observer, "web-console-created");
       subject.QueryInterface(Ci.nsISupportsString);
 
-      const hud = HUDService.getBrowserConsole();
+      const hud = BrowserConsoleManager.getBrowserConsole();
       ok(hud, "browser console is open");
       is(subject.data, hud.hudId, "notification hudId is correct");
 

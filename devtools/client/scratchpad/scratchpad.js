@@ -127,8 +127,8 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  "HUDService",
-  "devtools/client/webconsole/hudservice",
+  "BrowserConsoleManager",
+  "devtools/client/webconsole/browser-console-manager",
   true
 );
 loader.lazyRequireGetter(
@@ -1586,7 +1586,7 @@ var Scratchpad = {
    * Open the Error Console.
    */
   openErrorConsole: function SP_openErrorConsole() {
-    HUDService.toggleBrowserConsole();
+    BrowserConsoleManager.toggleBrowserConsole();
   },
 
   /**

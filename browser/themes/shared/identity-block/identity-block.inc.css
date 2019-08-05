@@ -216,12 +216,11 @@
 /* Separator */
 #tracking-protection-icon-container::after {
   content: "";
-  border-right: 1px solid var(--lwt-background-tab-separator-color, currentColor);
+  border-right: 1px solid var(--urlbar-separator-color);
   position: absolute;
   right: 0;
   top: 4px;
   height: 21px;
-  opacity: .3;
 }
 
 #tracking-protection-icon-container:-moz-locale-dir(rtl)::after {

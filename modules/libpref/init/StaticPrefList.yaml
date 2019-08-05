@@ -5742,32 +5742,14 @@
   value: false
   mirror: always
 
-# Annotate fingerprinting resources.
-- name: privacy.trackingprotection.fingerprinting.annotate.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Block 3rd party cryptomining resources.
 - name: privacy.trackingprotection.cryptomining.enabled
   type: bool
   value: false
   mirror: always
 
-# Annotate cryptomining resources.
-- name: privacy.trackingprotection.cryptomining.annotate.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Block 3rd party socialtracking resources.
 - name: privacy.trackingprotection.socialtracking.enabled
-  type: bool
-  value: false
-  mirror: always
-
-# Annotate socialtracking resources.
-- name: privacy.trackingprotection.socialtracking.annotate.enabled
   type: bool
   value: false
   mirror: always

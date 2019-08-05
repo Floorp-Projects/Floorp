@@ -4,12 +4,10 @@
 "use strict";
 
 // Test the Runtime.callFunctionOn
-// Also see browser_runtime_evaluate as it covers basic usages of this method.
-
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
+// See also browser_runtime_evaluate, which covers basic usages of this method.
 
 add_task(async function() {
-  const { client } = await setupTestForUri(TEST_URI);
+  const { client } = await setup();
 
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;

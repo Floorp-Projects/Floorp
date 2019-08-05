@@ -3,10 +3,8 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,<div>foo</div>";
-
 add_task(async function testDispatchMouseEvent() {
-  const { client, tab } = await setupTestForUri(TEST_URI);
+  const { client, tab } = await setupForURL(toDataURL("<div>foo</div>"));
 
   const { Input } = client;
 
