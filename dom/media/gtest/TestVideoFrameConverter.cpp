@@ -80,6 +80,7 @@ VideoChunk GenerateChunk(int32_t aWidth, int32_t aHeight, TimeStamp aTime) {
 TEST_F(VideoFrameConverterTest, BasicConversion) {
   TimeStamp now = TimeStamp::Now();
   VideoChunk chunk = GenerateChunk(640, 480, now);
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitForNConverted(1);
   ASSERT_EQ(frames.size(), 1U);
@@ -92,6 +93,7 @@ TEST_F(VideoFrameConverterTest, BasicPacing) {
   TimeStamp now = TimeStamp::Now();
   TimeStamp future = now + TimeDuration::FromMilliseconds(100);
   VideoChunk chunk = GenerateChunk(640, 480, future);
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitForNConverted(1);
   EXPECT_GT(TimeStamp::Now(), future);
@@ -106,6 +108,7 @@ TEST_F(VideoFrameConverterTest, MultiPacing) {
   TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
   TimeStamp future2 = now + TimeDuration::FromMilliseconds(200);
   VideoChunk chunk = GenerateChunk(640, 480, future1);
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   chunk = GenerateChunk(640, 480, future2);
   mConverter->QueueVideoChunk(chunk, false);
@@ -125,6 +128,7 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   TimeStamp now = TimeStamp::Now();
   TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
   VideoChunk chunk = GenerateChunk(640, 480, future1);
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(chunk, false);
   auto frames = WaitForNConverted(2);
   EXPECT_GT(TimeStamp::Now(), now + TimeDuration::FromMilliseconds(1100));
@@ -141,6 +145,7 @@ TEST_F(VideoFrameConverterTest, DropsOld) {
   TimeStamp now = TimeStamp::Now();
   TimeStamp future1 = now + TimeDuration::FromMilliseconds(1000);
   TimeStamp future2 = now + TimeDuration::FromMilliseconds(100);
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(GenerateChunk(800, 600, future1), false);
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
   auto frames = WaitForNConverted(1);
@@ -159,6 +164,7 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   TimeStamp future1 = now + TimeDuration::FromMilliseconds(100);
   TimeStamp future2 = now + TimeDuration::FromMilliseconds(200);
   TimeStamp future3 = now + TimeDuration::FromMilliseconds(400);
+  mConverter->SetActive(true);
   mConverter->SetTrackEnabled(false);
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future2), false);
@@ -178,6 +184,7 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   TimeStamp start = TimeStamp::Now();
   TimeStamp future1 = start + TimeDuration::FromMilliseconds(100);
 
+  mConverter->SetActive(true);
   mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
   WaitForNConverted(1);
 
@@ -210,4 +217,28 @@ TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
   EXPECT_EQ(frames[1].first().width(), 320);
   EXPECT_EQ(frames[1].first().height(), 240);
   EXPECT_GT(frames[1].second(), future3);
+}
+
+// We check that the no frame is converted while inactive, and that on
+// activating the most recently queued frame gets converted.
+TEST_F(VideoFrameConverterTest, NoConversionsWhileInactive) {
+  TimeStamp now = TimeStamp::Now();
+  TimeStamp future1 = now - TimeDuration::FromMilliseconds(1);
+  TimeStamp future2 = now;
+  mConverter->QueueVideoChunk(GenerateChunk(640, 480, future1), false);
+  mConverter->QueueVideoChunk(GenerateChunk(800, 600, future2), false);
+
+  // SetActive needs to follow the same async path as the frames to be in sync.
+  auto q =
+      MakeRefPtr<TaskQueue>(GetMediaThreadPool(MediaThreadType::WEBRTC_DECODER),
+                            "VideoFrameConverterTest");
+  auto timer = MakeRefPtr<MediaTimer>(false);
+  timer->WaitFor(TimeDuration::FromMilliseconds(100), __func__)
+      ->Then(q, __func__,
+             [converter = mConverter] { converter->SetActive(true); });
+
+  auto frames = WaitForNConverted(1);
+  ASSERT_EQ(frames.size(), 1U);
+  EXPECT_EQ(frames[0].first().width(), 800);
+  EXPECT_EQ(frames[0].first().height(), 600);
 }
