@@ -159,10 +159,10 @@ var gIdentityHandler = {
       "identity-popup-mainView-panel-header-span"
     ));
   },
-  get _identityPopupContentHost() {
-    delete this._identityPopupContentHost;
-    return (this._identityPopupContentHost = document.getElementById(
-      "identity-popup-host"
+  get _identityPopupSecurityEVContentOwner() {
+    delete this._identityPopupSecurityEVContentOwner;
+    return (this._identityPopupSecurityEVContentOwner = document.getElementById(
+      "identity-popup-security-ev-content-owner"
     ));
   },
   get _identityPopupContentOwner() {
@@ -999,10 +999,15 @@ var gIdentityHandler = {
 
     // Push the appropriate strings out to the UI.
     this._identityPopupMainViewHeaderLabel.textContent = gNavigatorBundle.getFormattedString(
-      "identity.headerWithHost",
+      "identity.headerMainWithHost",
       [host]
     );
-    this._identityPopupContentHost.textContent = host;
+
+    this._identityPopupSecurityEVContentOwner.textContent = gNavigatorBundle.getFormattedString(
+      "identity.ev.contentOwner",
+      [owner]
+    );
+
     this._identityPopupContentOwner.textContent = owner;
     this._identityPopupContentSupp.textContent = supplemental;
     this._identityPopupContentVerif.textContent = verifier;

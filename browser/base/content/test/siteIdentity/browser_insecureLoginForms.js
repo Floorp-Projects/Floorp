@@ -87,14 +87,14 @@ add_task(async function test_simple() {
         .getComputedStyle(
           document
             .getElementById("identity-popup-securityView")
-            .getElementsByClassName("identity-popup-security-content")[0]
+            .getElementsByClassName("identity-popup-security-connection")[0]
         )
         .getPropertyValue("background-image");
       let securityContentBG = gBrowser.ownerGlobal
         .getComputedStyle(
           document
             .getElementById("identity-popup-mainView")
-            .getElementsByClassName("identity-popup-security-content")[0]
+            .getElementsByClassName("identity-popup-security-connection")[0]
         )
         .getPropertyValue("background-image");
       is(
@@ -255,14 +255,14 @@ add_task(async function test_ignoring_window_opener() {
       .getComputedStyle(
         document
           .getElementById("identity-popup-securityView")
-          .getElementsByClassName("identity-popup-security-content")[0]
+          .getElementsByClassName("identity-popup-security-connection")[0]
       )
       .getPropertyValue("background-image");
     let securityContentBG = gBrowser.ownerGlobal
       .getComputedStyle(
         document
           .getElementById("identity-popup-mainView")
-          .getElementsByClassName("identity-popup-security-content")[0]
+          .getElementsByClassName("identity-popup-security-connection")[0]
       )
       .getPropertyValue("background-image");
     is(
@@ -272,12 +272,12 @@ add_task(async function test_ignoring_window_opener() {
     );
     is(
       securityViewBG,
-      'url("chrome://browser/skin/controlcenter/connection.svg")',
+      'url("chrome://browser/skin/connection-secure.svg")',
       "Using expected icon image in the Control Center main view"
     );
     is(
       securityContentBG,
-      'url("chrome://browser/skin/controlcenter/connection.svg")',
+      'url("chrome://browser/skin/connection-secure.svg")',
       "Using expected icon image in the Control Center subview"
     );
 

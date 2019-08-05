@@ -39,14 +39,14 @@ add_task(async function() {
     .getComputedStyle(
       document
         .getElementById("identity-popup-securityView")
-        .getElementsByClassName("identity-popup-security-content")[0]
+        .getElementsByClassName("identity-popup-security-connection")[0]
     )
     .getPropertyValue("background-image");
   let securityContentBG = gBrowser.ownerGlobal
     .getComputedStyle(
       document
         .getElementById("identity-popup-mainView")
-        .getElementsByClassName("identity-popup-security-content")[0]
+        .getElementsByClassName("identity-popup-security-connection")[0]
     )
     .getPropertyValue("background-image");
   is(
