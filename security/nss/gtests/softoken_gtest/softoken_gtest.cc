@@ -3,6 +3,7 @@
 #include "nspr.h"
 #include "nss.h"
 #include "pk11pub.h"
+#include "secmod.h"
 #include "secerr.h"
 
 #include "nss_scoped_ptrs.h"
@@ -113,6 +114,27 @@ TEST_F(SoftokenTest, CreateObjectChangePassword) {
   ASSERT_TRUE(slot);
   EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, nullptr));
   EXPECT_EQ(SECSuccess, PK11_ChangePW(slot.get(), "", "password"));
+  EXPECT_EQ(SECSuccess, PK11_Logout(slot.get()));
+  ScopedPK11GenericObject obj(PK11_CreateGenericObject(
+      slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
+  EXPECT_EQ(nullptr, obj);
+}
+
+/* The size limit for a password is 500 characters as defined in pkcs11i.h */
+TEST_F(SoftokenTest, CreateObjectChangeToBigPassword) {
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, nullptr));
+  EXPECT_EQ(
+      SECSuccess,
+      PK11_ChangePW(slot.get(), "",
+                    "rUIFIFr2bxKnbJbitsfkyqttpk6vCJzlYMNxcxXcaN37gSZKbLk763X7iR"
+                    "yeVNWZHQ02lSF69HYjzTyPW3318ZD0DBFMMbALZ8ZPZP73CIo5uIQlaowV"
+                    "IbP8eOhRYtGUqoLGlcIFNEYogV8Q3GN58VeBMs0KxrIOvPQ9s8SnYYkqvt"
+                    "zzgntmAvCgvk64x6eQf0okHwegd5wi6m0WVJytEepWXkP9J629FSa5kNT8"
+                    "FvL3jvslkiImzTNuTvl32fQDXXMSc8vVk5Q3mH7trMZM0VDdwHWYERjHbz"
+                    "kGxFgp0VhediHx7p9kkz6H6ac4et9sW4UkTnN7xhYc1Zr17wRSk2heQtcX"
+                    "oZJGwuzhiKm8A8wkuVxms6zO56P4JORIk8oaUW6lyNTLo2kWWnTA"));
   EXPECT_EQ(SECSuccess, PK11_Logout(slot.get()));
   ScopedPK11GenericObject obj(PK11_CreateGenericObject(
       slot.get(), attributes, PR_ARRAY_SIZE(attributes), true));
@@ -264,6 +286,100 @@ TEST_F(SoftokenNoDBTest, NeedUserInitNoDB) {
   slot = nullptr;
   ASSERT_EQ(SECSuccess, NSS_Shutdown());
 }
+
+#ifndef NSS_FIPS_DISABLED
+
+class SoftokenFipsTest : public SoftokenTest {
+ protected:
+  SoftokenFipsTest() : SoftokenTest("SoftokenFipsTest.d-") {}
+
+  virtual void SetUp() {
+    SoftokenTest::SetUp();
+
+    // Turn on FIPS mode (code borrowed from FipsMode in modutil/pk11.c)
+    char *internal_name;
+    ASSERT_FALSE(PK11_IsFIPS());
+    internal_name = PR_smprintf("%s", SECMOD_GetInternalModule()->commonName);
+    ASSERT_EQ(SECSuccess, SECMOD_DeleteInternalModule(internal_name));
+    PR_smprintf_free(internal_name);
+    ASSERT_TRUE(PK11_IsFIPS());
+  }
+};
+
+const std::vector<std::string> kFipsPasswordCases[] = {
+    // FIPS level1 -> level1 -> level1
+    {"", "", ""},
+    // FIPS level1 -> level1 -> level2
+    {"", "", "strong-_123"},
+    // FIXME: this should work: FIPS level1 -> level2 -> level2
+    // {"", "strong-_123", "strong-_456"},
+    // FIPS level2 -> level2 -> level2
+    {"strong-_123", "strong-_456", "strong-_123"}};
+
+const std::vector<std::string> kFipsPasswordBadCases[] = {
+    // FIPS level1 -> level2 -> level1
+    {"", "strong-_123", ""},
+    // FIPS level2 -> level1 -> level1
+    {"strong-_123", ""},
+    // FIPS level2 -> level2 -> level1
+    {"strong-_123", "strong-_456", ""},
+    // initialize with a weak password
+    {"weak"},
+    // FIPS level1 -> weak password
+    {"", "weak"},
+    // FIPS level2 -> weak password
+    {"strong-_123", "weak"}};
+
+class SoftokenFipsPasswordTest
+    : public SoftokenFipsTest,
+      public ::testing::WithParamInterface<std::vector<std::string>> {};
+
+class SoftokenFipsBadPasswordTest
+    : public SoftokenFipsTest,
+      public ::testing::WithParamInterface<std::vector<std::string>> {};
+
+TEST_P(SoftokenFipsPasswordTest, SetPassword) {
+  const std::vector<std::string> &passwords = GetParam();
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+
+  auto it = passwords.begin();
+  auto prev_it = it;
+  EXPECT_EQ(SECSuccess, PK11_InitPin(slot.get(), nullptr, (*it).c_str()));
+  for (it++; it != passwords.end(); it++, prev_it++) {
+    EXPECT_EQ(SECSuccess,
+              PK11_ChangePW(slot.get(), (*prev_it).c_str(), (*it).c_str()));
+  }
+}
+
+TEST_P(SoftokenFipsBadPasswordTest, SetBadPassword) {
+  const std::vector<std::string> &passwords = GetParam();
+  ScopedPK11SlotInfo slot(PK11_GetInternalKeySlot());
+  ASSERT_TRUE(slot);
+
+  auto it = passwords.begin();
+  auto prev_it = it;
+  SECStatus rv = PK11_InitPin(slot.get(), nullptr, (*it).c_str());
+  if (it + 1 == passwords.end())
+    EXPECT_EQ(SECFailure, rv);
+  else
+    EXPECT_EQ(SECSuccess, rv);
+  for (it++; it != passwords.end(); it++, prev_it++) {
+    rv = PK11_ChangePW(slot.get(), (*prev_it).c_str(), (*it).c_str());
+    if (it + 1 == passwords.end())
+      EXPECT_EQ(SECFailure, rv);
+    else
+      EXPECT_EQ(SECSuccess, rv);
+  }
+}
+
+INSTANTIATE_TEST_CASE_P(FipsPasswordCases, SoftokenFipsPasswordTest,
+                        ::testing::ValuesIn(kFipsPasswordCases));
+
+INSTANTIATE_TEST_CASE_P(BadFipsPasswordCases, SoftokenFipsBadPasswordTest,
+                        ::testing::ValuesIn(kFipsPasswordBadCases));
+
+#endif
 
 }  // namespace nss_test
 
