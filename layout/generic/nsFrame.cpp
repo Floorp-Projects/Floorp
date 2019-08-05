@@ -7727,6 +7727,12 @@ void nsIFrame::ListGeneric(nsACString& aTo, const char* aPrefix,
                              so.height);
     }
   }
+  bool hasNormalPosition;
+  nsPoint normalPosition = GetNormalPosition(&hasNormalPosition);
+  if (hasNormalPosition) {
+    aTo += nsPrintfCString(" normal-position={%d,%d}", normalPosition.x,
+                           normalPosition.y);
+  }
   if (0 != mState) {
     aTo += nsPrintfCString(" [state=%016llx]", (unsigned long long)mState);
   }
