@@ -310,8 +310,8 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
                   ReflowChildFlags::Default, aStatus);
       kidBSize = kidDesiredSize.BSize(wm);
 
-      FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, nullptr, 0, 0,
-                        ReflowChildFlags::Default);
+      FinishReflowChild(kidFrame, aPresContext, kidDesiredSize, &kidReflowInput,
+                        0, 0, ReflowChildFlags::Default);
     } else {
       kidBSize = LogicalSize(wm, mFrames.FirstChild()->GetSize()).BSize(wm);
     }
