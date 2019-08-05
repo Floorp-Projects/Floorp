@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PDNSRequest;
 include protocol PSocketProcessBridge;
 include protocol PProfiler;
 include protocol PWebrtcProxyChannel;
@@ -19,12 +20,14 @@ using mozilla::Telemetry::KeyedScalarAction from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using base::ProcessId from "base/process.h";
+using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace net {
 
 protocol PSocketProcess
 {
+  manages PDNSRequest;
   manages PWebrtcProxyChannel;
 
 parent:
@@ -40,6 +43,8 @@ parent:
   async RecordDiscardedData(DiscardedData data);
 
   async PWebrtcProxyChannel(TabId tabId);
+  async PDNSRequest(nsCString hostName, OriginAttributes originAttributes,
+                    uint32_t flags);
 
 child:
   async PreferenceUpdate(Pref pref);
