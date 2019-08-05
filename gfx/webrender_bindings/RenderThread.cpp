@@ -320,7 +320,7 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
     auto it = windows->find(AsUint64(aWindowId));
     MOZ_ASSERT(it != windows->end());
     WindowInfo* info = it->second;
-    MOZ_ASSERT(info->mPendingCount > 0);
+    MOZ_ASSERT(info->PendingCount() > 0);
     frame = info->mPendingFrames.front();
     hadSlowFrame = info->mHadSlowFrame;
     info->mHadSlowFrame = false;
@@ -515,11 +515,11 @@ bool RenderThread::TooManyPendingFrames(wr::WindowId aWindowId) {
   }
   WindowInfo* info = it->second;
 
-  if (info->mPendingCount > maxFrameCount) {
+  if (info->PendingCount() > maxFrameCount) {
     return true;
   }
-  MOZ_ASSERT(info->mPendingCount >= info->mRenderingCount);
-  return info->mPendingCount > info->mRenderingCount;
+  MOZ_ASSERT(info->PendingCount() >= info->mRenderingCount);
+  return info->PendingCount() > info->mRenderingCount;
 }
 
 bool RenderThread::IsDestroyed(wr::WindowId aWindowId) {
@@ -552,7 +552,6 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
     MOZ_ASSERT(false);
     return;
   }
-  it->second->mPendingCount++;
   it->second->mPendingFrames.push(PendingFrameInfo{aStartTime, aStartId});
   it->second->mDocFrameCounts.push(aDocFrameCount);
 }
@@ -565,15 +564,14 @@ void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
     return;
   }
   WindowInfo* info = it->second;
-  MOZ_ASSERT(info->mPendingCount > 0);
+  MOZ_ASSERT(info->PendingCount() > 0);
   MOZ_ASSERT(info->mRenderingCount > 0);
-  if (info->mPendingCount <= 0) {
+  if (info->PendingCount() <= 0) {
     return;
   }
 
   PendingFrameInfo frame = std::move(info->mPendingFrames.front());
   info->mPendingFrames.pop();
-  info->mPendingCount--;
   info->mRenderingCount--;
 
   // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
