@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1570673",
+    title: "Sending an initially disabled video track should be playable remotely",
+    visible: true,
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+    test.setMediaConstraints([{video: true}], []);
+    test.chain.insertAfter("PC_LOCAL_GUM", function PC_LOCAL_DISABLE_VIDEO() {
+      for (const {track} of test.pcLocal._pc.getSenders()) {
+        if (track.kind == "video") {
+          track.enabled = false;
+        }
+      }
+    });
+    test.chain.append(async function PC_REMOTE_RECEIVING_BLACK() {
+      const v = test.pcRemote.remoteMediaElements[0];
+      is(v.readyState, v.HAVE_ENOUGH_DATA, "video element should be playing");
+      const h = new CaptureStreamTestHelper2D();
+      await h.waitForPixel(test.pcRemote.remoteMediaElements[0],
+        px => h.isPixel(px, h.black, 128));
+    });
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
+
