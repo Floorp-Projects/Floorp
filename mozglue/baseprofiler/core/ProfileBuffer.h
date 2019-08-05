@@ -72,9 +72,6 @@ class ProfileBuffer final {
   void StreamCountersToJSON(SpliceableJSONWriter& aWriter,
                             const TimeStamp& aProcessStartTime,
                             double aSinceTime) const;
-  void StreamMemoryToJSON(SpliceableJSONWriter& aWriter,
-                          const TimeStamp& aProcessStartTime,
-                          double aSinceTime) const;
 
   // Find (via |aLastSample|) the most recent sample for the thread denoted by
   // |aThreadId| and clone it, patching in the current time as appropriate.
