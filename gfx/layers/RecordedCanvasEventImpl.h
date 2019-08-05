@@ -171,7 +171,8 @@ template <class S>
 RecordedTextureLock::RecordedTextureLock(S& aStream)
     : RecordedEventDerived(TEXTURE_LOCK) {
   ReadElement(aStream, mDT);
-  ReadElement(aStream, mMode);
+  ReadElementConstrained(aStream, mMode, OpenMode::OPEN_NONE,
+                         OpenMode::OPEN_READ_WRITE_ASYNC);
 }
 
 class RecordedTextureUnlock final
