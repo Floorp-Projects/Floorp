@@ -1556,7 +1556,7 @@ void js::Nursery::shrinkAllocableSpace(size_t newCapacity) {
 }
 
 void js::Nursery::minimizeAllocableSpace() {
-  shrinkAllocableSpace(tunables().gcMinNurseryBytes());
+  shrinkAllocableSpace(roundSize(tunables().gcMinNurseryBytes()));
 }
 
 bool js::Nursery::queueDictionaryModeObjectToSweep(NativeObject* obj) {
