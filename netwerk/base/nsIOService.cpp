@@ -86,6 +86,7 @@ using mozilla::dom::ServiceWorkerDescriptor;
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
 #define NETWORK_CAPTIVE_PORTAL_PREF "network.captive-portal-service.enabled"
 #define WEBRTC_PREF_PREFIX "media.peerconnection."
+#define NETWORK_DNS_PREF "network.dns."
 
 #define MAX_RECURSION_COUNT 50
 
@@ -224,6 +225,7 @@ static const char* gCallbackPrefs[] = {
 
 static const char* gCallbackPrefsForSocketProcess[] = {
     WEBRTC_PREF_PREFIX,
+    NETWORK_DNS_PREF,
     nullptr,
 };
 
