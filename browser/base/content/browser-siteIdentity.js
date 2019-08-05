@@ -334,6 +334,17 @@ var gIdentityHandler = {
     return this._protectionsPanelEnabled;
   },
 
+  get _useGrayLockIcon() {
+    delete this._useGrayLockIcon;
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "_useGrayLockIcon",
+      "security.secure_connection_icon_color_gray",
+      false
+    );
+    return this._useGrayLockIcon;
+  },
+
   /**
    * Handles clicks on the "Clear Cookies and Site Data" button.
    */
@@ -826,6 +837,13 @@ var gIdentityHandler = {
       icon.setAttribute("showing", "true");
     }
 
+    // Gray lock icon for secure connections if pref set
+    this._updateAttribute(
+      this._identityIcon,
+      "lock-icon-gray",
+      this._useGrayLockIcon
+    );
+
     // Push the appropriate strings out to the UI
     this._identityIcon.setAttribute("tooltiptext", tooltip);
 
@@ -941,25 +959,24 @@ var gIdentityHandler = {
       ciphers = "weak";
     }
 
+    // Gray lock icon for secure connections if pref set
+    this._updateAttribute(
+      this._identityPopup,
+      "lock-icon-gray",
+      this._useGrayLockIcon
+    );
+
     // Update all elements.
     let elementIDs = ["identity-popup", "identity-popup-securityView-body"];
 
-    function updateAttribute(elem, attr, value) {
-      if (value) {
-        elem.setAttribute(attr, value);
-      } else {
-        elem.removeAttribute(attr);
-      }
-    }
-
     for (let id of elementIDs) {
       let element = document.getElementById(id);
-      updateAttribute(element, "connection", connection);
-      updateAttribute(element, "loginforms", loginforms);
-      updateAttribute(element, "ciphers", ciphers);
-      updateAttribute(element, "mixedcontent", mixedcontent);
-      updateAttribute(element, "isbroken", this._isBrokenConnection);
-      updateAttribute(element, "customroot", customRoot);
+      this._updateAttribute(element, "connection", connection);
+      this._updateAttribute(element, "loginforms", loginforms);
+      this._updateAttribute(element, "ciphers", ciphers);
+      this._updateAttribute(element, "mixedcontent", mixedcontent);
+      this._updateAttribute(element, "isbroken", this._isBrokenConnection);
+      this._updateAttribute(element, "customroot", customRoot);
     }
 
     // Initialize the optional strings to empty values
@@ -1226,6 +1243,14 @@ var gIdentityHandler = {
 
     if (!this._permissionList.hasChildNodes()) {
       this._permissionEmptyHint.removeAttribute("hidden");
+    }
+  },
+
+  _updateAttribute(elem, attr, value) {
+    if (value) {
+      elem.setAttribute(attr, value);
+    } else {
+      elem.removeAttribute(attr);
     }
   },
 
