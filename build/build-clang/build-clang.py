@@ -49,8 +49,8 @@ def check_run(args):
             sys.stdout.flush()
         r = p.wait()
         if r != 0:
-            cmake_output_re = re.compile("See also \"(.*/CMakeOutput.log)\"")
-            cmake_error_re = re.compile("See also \"(.*/CMakeError.log)\"")
+            cmake_output_re = re.compile(b"See also \"(.*/CMakeOutput.log)\"")
+            cmake_error_re = re.compile(b"See also \"(.*/CMakeError.log)\"")
 
             def find_first_match(re):
                 for l in lines:
