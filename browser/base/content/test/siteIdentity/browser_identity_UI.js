@@ -142,12 +142,4 @@ async function runTest(i, forward) {
     .querySelector("#identity-popup-security-expander")
     .click();
   await promiseViewShown;
-
-  displayedHost = currentTest.effectiveHost || currentTest.location;
-  ok(
-    gIdentityHandler._identityPopupContentHost.textContent.includes(
-      displayedHost
-    ),
-    "security subview header shows the host for test " + testDesc
-  );
 }
