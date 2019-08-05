@@ -2596,6 +2596,7 @@ toolbar#nav-bar {
                 'dom.serviceWorkers.parent_intercept', False),
             "socketprocess_e10s": self.extraPrefs.get(
                 'network.process.enabled', False),
+            "verify": options.verify,
             "webrender": options.enable_webrender,
         })
 
