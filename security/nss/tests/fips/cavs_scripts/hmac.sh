@@ -31,6 +31,9 @@ if [ ${COMMAND} = "verify" ]; then
     done
     exit $result
 fi
+
+test -d "${RSPDIR}" || mkdir "${RSPDIR}"
+
 for request in $hmac_requests; do
     response=`echo $request | sed -e "s/req/rsp/"`
     echo $request $response

@@ -843,7 +843,7 @@ nsresult Loader::CreateSheet(
     css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
     nsIReferrerInfo* aLoadingReferrerInfo, const nsAString& aIntegrity,
     bool aSyncLoad, StyleSheetState& aSheetState, RefPtr<StyleSheet>* aSheet) {
-  LOG(("css::Loader::CreateSheet"));
+  LOG(("css::Loader::CreateSheet(%s)", aURI ? aURI->GetSpecOrDefault().get() : "inline"));
   MOZ_ASSERT(aSheet, "Null out param!");
 
   if (!mSheets) {
@@ -897,8 +897,8 @@ nsresult Loader::CreateSheet(
           sheet->ParsingMode() != aParsingMode) {
         LOG(
             ("  Not cloning completed sheet %p because it has a "
-             "forced unique inner or the wrong parsing mode",
-             sheet.get()));
+             "forced unique inner (%d) or the wrong parsing mode",
+             sheet.get(), sheet->HasForcedUniqueInner()));
         sheet = nullptr;
         fromCompleteSheets = false;
       }

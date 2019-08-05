@@ -197,6 +197,13 @@ class coverityAction(argparse.Action):
 
     def dump_cov_artifact(self, cov_results, source, output):
         import json
+
+        def relpath(path):
+            '''Build path relative to repository root'''
+            if path.startswith(cwd):
+                return os.path.relpath(path, cwd)
+            return path
+
         # Parse Coverity json into structured issues
         with open(cov_results) as f:
             result = json.load(f)
@@ -223,7 +230,7 @@ class coverityAction(argparse.Action):
 
                 # Embed all events into extra message
                 for event in issue['events']:
-                    dict_issue['extra']['stack'].append({'file_path': event['strippedFilePathname'],
+                    dict_issue['extra']['stack'].append({'file_path': relpath(event['strippedFilePathname']),
                                                          'line_number': event['lineNumber'],
                                                          'path_type': event['eventTag'],
                                                          'description': event['eventDescription']})
@@ -237,6 +244,7 @@ class coverityAction(argparse.Action):
                     print('Skipping CID: {0} from file: {1} since it\'s not related with the current patch.'.format(
                         issue['stateOnServer']['cid'], issue['strippedMainEventFilePathname']))
                     continue
+                path = relpath(path)
                 if path in files_list:
                     files_list[path]['warnings'].append(build_element(issue))
                 else:
