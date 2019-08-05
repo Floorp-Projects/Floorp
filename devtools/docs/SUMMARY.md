@@ -27,6 +27,7 @@
     * [`xpcshell`](tests/xpcshell.md)
     * [Chrome mochitests](tests/mochitest-chrome.md)
     * [DevTools mochitests](tests/mochitest-devtools.md)
+    * [Node tests](tests/node-tests.md)
     * [Tips](tests/tips.md)
   * [Writing tests](tests/writing-tests.md)
   * [Debugging intermittent failures](tests/debugging-intermittents.md)
