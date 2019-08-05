@@ -792,12 +792,15 @@ description#identity-popup-content-verifier,
   opacity: 0.8;
 }
 
+#protections-popup[hasException] .protections-popup-tp-switch-on-header,
+#protections-popup:not([hasException]) .protections-popup-tp-switch-off-header {
+  display: none;
+}
+
 #protections-popup-mainView-panel-header > description {
   display: none;
 }
 
-#protections-popup:not([hasException]) .protections-popup-tp-switch-on-header,
-#protections-popup[hasException] .protections-popup-tp-switch-off-header,
 #protections-popup:not([hasException])[toast] #protections-popup-toast-panel-tp-on-desc,
 #protections-popup[hasException][toast] #protections-popup-toast-panel-tp-off-desc {
   display: unset;

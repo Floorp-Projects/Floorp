@@ -26,14 +26,11 @@
 
       <hbox id="protections-popup-tp-switch-section" class="protections-popup-section">
         <vbox class="protections-popup-tp-switch-label-box" flex="1">
-          <label class="protections-popup-tp-switch-on-header"
-                 hidden="true">&protections.etpON.header;</label>
-          <label class="protections-popup-tp-switch-off-header"
-                 hidden="true">&protections.etpOFF.header;</label>
+          <label class="protections-popup-tp-switch-on-header">&protections.etpON.header;</label>
+          <label class="protections-popup-tp-switch-off-header">&protections.etpOFF.header;</label>
           <label id="protections-popup-tp-switch-breakage-link"
                  class="text-link"
-                 onclick="gProtectionsHandler.showSiteNotWorkingView();"
-                 hidden="true">&protections.siteNotWorking.label;</label>
+                 onclick="gProtectionsHandler.showSiteNotWorkingView();">&protections.siteNotWorking.label;</label>
         </vbox>
         <vbox class="protections-popup-tp-switch-box">
           <toolbarbutton id="protections-popup-tp-switch"
