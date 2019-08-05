@@ -131,7 +131,7 @@ open class GleanInternalAPI internal constructor () {
         // threaded race conditions.
         @Suppress("EXPERIMENTAL_API_USAGE")
         if (!Dispatchers.API.testingMode) {
-            metricsPingScheduler.startupCheck()
+            metricsPingScheduler.schedule()
         }
 
         // Signal Dispatcher that init is complete

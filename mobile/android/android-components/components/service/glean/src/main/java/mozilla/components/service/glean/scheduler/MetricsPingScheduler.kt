@@ -8,6 +8,10 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import android.text.format.DateUtils
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleObserver
+import androidx.lifecycle.OnLifecycleEvent
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.Worker
@@ -31,8 +35,12 @@ import java.util.concurrent.TimeUnit as AndroidTimeUnit
  * - ping is overdue (due time already passed) for the current calendar day;
  * - ping is soon to be sent in the current calendar day;
  * - ping was already sent, and must be scheduled for the next calendar day.
+ *
+ * The scheduler also makes use of the [LifecycleObserver] in order to correctly schedule
+ * the [MetricsPingWorker]
  */
-internal class MetricsPingScheduler(val applicationContext: Context) {
+@Suppress("TooManyFunctions")
+internal class MetricsPingScheduler(val applicationContext: Context) : LifecycleObserver {
     private val logger = Logger("glean/MetricsPingScheduler")
     internal val sharedPreferences: SharedPreferences by lazy {
         applicationContext.getSharedPreferences(this.javaClass.canonicalName, Context.MODE_PRIVATE)
@@ -41,6 +49,12 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
     companion object {
         const val LAST_METRICS_PING_SENT_DATETIME = "last_metrics_ping_iso_datetime"
         const val DUE_HOUR_OF_THE_DAY = 4
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal var isInForeground = false
+    }
+
+    init {
+        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
     /**
@@ -157,7 +171,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      * Performs startup checks to decide when to schedule the next metrics ping
      * collection.
      */
-    fun startupCheck() {
+    fun schedule() {
         val now = getCalendarInstance()
         val lastSentDate = getLastCollectedDate()
 
@@ -218,8 +232,14 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
         // Update the collection date: we don't really care if we have data or not, let's
         // always update the sent date.
         updateSentDate(getISOTimeString(now, truncateTo = TimeUnit.Day))
-        // Reschedule the collection.
-        schedulePingCollection(now, sendTheNextCalendarDay = true)
+
+        // Reschedule the collection if we are in the foreground so that any metrics collected after
+        // this are sent in the next window.  If we are in the background, then we may stay there
+        // until the app is killed so we shouldn't reschedule unless the app is foregrounded again
+        // (see GleanLifecycleObserver).
+        if (isInForeground) {
+            schedulePingCollection(now, sendTheNextCalendarDay = true)
+        }
     }
 
     /**
@@ -262,6 +282,32 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getCalendarInstance(): Calendar = Calendar.getInstance()
+
+    /**
+     * Update flag to show we are no longer in the foreground.
+     */
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onEnterBackground() {
+        isInForeground = false
+    }
+
+    /**
+     * Update the flag to indicate we are moving to the foreground, and if Glean is initialized we
+     * will check to see if the metrics ping needs scheduled for collection.
+     */
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onEnterForeground() {
+        isInForeground = true
+
+        // We check for the metrics ping schedule here because the app could have been in the
+        // background and resumed in which case Glean would already be initialized but we still need
+        // to perform the check to determine whether or not to collect and schedule the metrics ping.
+        // If this is the first ON_START event since the app was launched, Glean wouldn't be
+        // initialized yet.
+        if (Glean.isInitialized()) {
+            schedule()
+        }
+    }
 }
 
 /**
