@@ -7,7 +7,7 @@
 // See also browser_runtime_evaluate, which covers basic usages of this method.
 
 add_task(async function() {
-  const { client } = await setupForURL(toDataURL(""));
+  const { client } = await setup();
 
   const firstContext = await testRuntimeEnable(client);
   const contextId = firstContext.id;

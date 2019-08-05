@@ -102,6 +102,14 @@ function getTargets(CDP) {
 }
 
 /**
+ * Set up test environment in same fashion as setupForURL(),
+ * except using an empty document.
+ */
+async function setup() {
+  return setupForURL(toDataURL(""));
+}
+
+/**
  * Set up test environment by starting the remote agent, connecting
  * the CDP client over loopback, and creating a fresh tab to avoid
  * state bleedover from previous test.
