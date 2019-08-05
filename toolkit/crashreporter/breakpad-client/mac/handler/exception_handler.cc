@@ -690,9 +690,9 @@ bool ExceptionHandler::InstallHandler() {
     return false;
   }
 
-  // Don't modify exception ports when replaying, to avoid interfering with the
-  // record/replay system's exception handler.
-  if (mozilla::recordreplay::IsReplaying()) {
+  // Don't modify exception ports when recording or replaying, to avoid
+  // interfering with the record/replay system's exception handler.
+  if (mozilla::recordreplay::IsRecordingOrReplaying()) {
     return true;
   }
 

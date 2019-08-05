@@ -182,6 +182,11 @@ const ContentProcessTargetActor = ActorClassWithSpec(contentProcessTargetSpec, {
     if (this._workerList) {
       this._workerList.onListChanged = null;
     }
+
+    if (this._sources) {
+      this._sources.destroy();
+      this._sources = null;
+    }
   },
 });
 

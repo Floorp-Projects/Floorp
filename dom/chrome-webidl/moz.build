@@ -37,6 +37,7 @@ WEBIDL_FILES = [
     'ChannelWrapper.webidl',
     'DebuggerNotification.webidl',
     'DebuggerNotificationObserver.webidl',
+    'DebuggerUtils.webidl',
     'DocumentL10n.webidl',
     'DominatorTree.webidl',
     'DOMLocalization.webidl',

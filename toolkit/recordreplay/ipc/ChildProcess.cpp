@@ -30,11 +30,7 @@ void ChildProcessInfo::SetIntroductionMessage(IntroductionMessage* aMessage) {
 
 ChildProcessInfo::ChildProcessInfo(
     const Maybe<RecordingProcessData>& aRecordingProcessData)
-    : mChannel(nullptr),
-      mRecording(aRecordingProcessData.isSome()),
-      mPaused(false),
-      mHasBegunFatalError(false),
-      mHasFatalError(false) {
+    : mRecording(aRecordingProcessData.isSome()) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   static bool gFirst = false;
@@ -48,7 +44,7 @@ ChildProcessInfo::ChildProcessInfo(
 
 ChildProcessInfo::~ChildProcessInfo() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  if (IsRecording()) {
+  if (IsRecording() && !HasCrashed()) {
     SendMessage(TerminateMessage());
   }
 }
@@ -96,6 +92,7 @@ void ChildProcessInfo::OnIncomingMessage(const Message& aMsg) {
 
 void ChildProcessInfo::SendMessage(Message&& aMsg) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(!HasCrashed());
 
   // Update paused state.
   MOZ_RELEASE_ASSERT(IsPaused() || aMsg.CanBeSentWhileUnpaused());
@@ -190,6 +187,20 @@ void ChildProcessInfo::OnCrash(const char* aWhy) {
   CrashReporter::AnnotateCrashReport(
       CrashReporter::Annotation::RecordReplayError, nsAutoCString(aWhy));
 
+  if (!IsRecording()) {
+    // Notify the parent when a replaying process crashes so that a report can
+    // be generated.
+    dom::ContentChild::GetSingleton()->SendGenerateReplayCrashReport(GetId());
+
+    // Continue execution if we were able to recover from the crash.
+    if (js::RecoverFromCrash(this)) {
+      // Mark this child as crashed so it can't be used again, even if it didn't
+      // generate a minidump.
+      mHasFatalError = true;
+      return;
+    }
+  }
+
   // If we received a FatalError message then the child generated a minidump.
   // Shut down cleanly so that we don't mask the report with our own crash.
   if (mHasFatalError) {
@@ -279,33 +290,34 @@ void ChildProcessInfo::WaitUntilPaused() {
       if (IsPaused()) {
         return;
       }
+    } else if (HasCrashed()) {
+      // If the child crashed but we recovered, we don't have to keep waiting.
+      return;
+    } else if (gChildrenAreDebugging || IsRecording()) {
+      // Don't watch for hangs when children are being debugged. Recording
+      // children are never treated as hanged both because we can't recover if
+      // they crash and because they may just be idling.
+      gMonitor->Wait();
     } else {
-      if (gChildrenAreDebugging || IsRecording()) {
-        // Don't watch for hangs when children are being debugged. Recording
-        // children are never treated as hanged both because they cannot be
-        // restarted and because they may just be idling.
-        gMonitor->Wait();
-      } else {
-        TimeStamp deadline =
-            mLastMessageTime + TimeDuration::FromSeconds(HangSeconds);
-        if (TimeStamp::Now() >= deadline) {
-          MonitorAutoUnlock unlock(*gMonitor);
-          if (!sentTerminateMessage) {
-            // Try to get the child to crash, so that we can get a minidump.
-            // Sending the message will reset mLastMessageTime so we get to
-            // wait another HangSeconds before hitting the restart case below.
-            // Use SendMessageRaw to avoid problems if we are recovering.
-            CrashReporter::AnnotateCrashReport(
-                CrashReporter::Annotation::RecordReplayHang, true);
-            SendMessage(TerminateMessage());
-            sentTerminateMessage = true;
-          } else {
-            // The child is still non-responsive after sending the terminate
-            // message.
-            OnCrash("Child process non-responsive");
-          }
-        }
+      TimeStamp deadline =
+          mLastMessageTime + TimeDuration::FromSeconds(HangSeconds);
+      if (TimeStamp::Now() < deadline) {
         gMonitor->WaitUntil(deadline);
+      } else {
+        MonitorAutoUnlock unlock(*gMonitor);
+        if (!sentTerminateMessage) {
+          // Try to get the child to crash, so that we can get a minidump.
+          // Sending the message will reset mLastMessageTime so we get to
+          // wait another HangSeconds before hitting the restart case below.
+          CrashReporter::AnnotateCrashReport(
+              CrashReporter::Annotation::RecordReplayHang, true);
+          SendMessage(TerminateMessage());
+          sentTerminateMessage = true;
+        } else {
+          // The child is still non-responsive after sending the terminate
+          // message.
+          OnCrash("Child process non-responsive");
+        }
       }
     }
   }

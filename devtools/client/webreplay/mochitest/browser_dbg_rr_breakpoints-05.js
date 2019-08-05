@@ -13,7 +13,7 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { threadFront, tab, toolbox, target } = dbg;
+  const { threadFront, target } = dbg;
 
   await threadFront.interrupt();
 
@@ -27,6 +27,5 @@ add_task(async function() {
   await checkEvaluateInTopFrame(target, "number", 2);
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });

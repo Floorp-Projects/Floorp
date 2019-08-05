@@ -15,7 +15,7 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_inspector_basic.html", {
     waitForRecording: true,
   });
-  const { threadFront, tab, toolbox } = dbg;
+  const { threadFront, toolbox } = dbg;
 
   await threadFront.interrupt();
   await threadFront.resume();
@@ -39,8 +39,7 @@ add_task(async function() {
   await testActor.isNodeCorrectlyHighlighted("#maindiv", is);
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.closeToolbox();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 
   function moveMouseOver(selector, x, y) {
     info("Waiting for element " + selector + " to be highlighted");

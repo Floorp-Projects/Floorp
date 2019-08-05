@@ -303,6 +303,8 @@ class ContentParent final : public PContentParent,
       const uint32_t& channelId, FileDescriptor* connection);
   mozilla::ipc::IPCResult RecvCreateReplayingProcess(
       const uint32_t& aChannelId);
+  mozilla::ipc::IPCResult RecvGenerateReplayCrashReport(
+      const uint32_t& aChannelId);
 
   mozilla::ipc::IPCResult RecvCreateGMPService();
 

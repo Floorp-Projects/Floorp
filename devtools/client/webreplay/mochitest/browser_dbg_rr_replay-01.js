@@ -27,19 +27,19 @@ add_task(async function() {
   gBrowser.selectedTab = replayingTab;
   await once(Services.ppmm, "HitRecordingEndpoint");
 
-  const { target, toolbox } = await attachDebugger(replayingTab);
-  const client = toolbox.threadFront;
-  await client.interrupt();
-  const bp = await setBreakpoint(client, "doc_rr_basic.html", 21);
-  await rewindToLine(client, 21);
+  const dbg = await attachDebugger(replayingTab);
+  const { threadFront } = dbg.toolbox;
+  const { target } = dbg;
+  await threadFront.interrupt();
+  const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
-  await rewindToLine(client, 21);
+  await rewindToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 9);
-  await resumeToLine(client, 21);
+  await resumeToLine(threadFront, 21);
   await checkEvaluateInTopFrame(target, "number", 10);
 
-  await client.removeBreakpoint(bp);
-  await toolbox.destroy();
+  await threadFront.removeBreakpoint(bp);
   await gBrowser.removeTab(recordingTab);
-  await gBrowser.removeTab(replayingTab);
+  await shutdownDebugger(dbg);
 });

@@ -4,10 +4,12 @@
 
 "use strict";
 
+const { Ci } = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert } = DevToolsUtils;
+const { assert, fetch } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
 const { SourceLocation } = require("devtools/server/actors/common");
+const Services = require("Services");
 
 loader.lazyRequireGetter(
   this,
@@ -23,8 +25,8 @@ loader.lazyRequireGetter(
 );
 
 /**
- * Manages the sources for a thread. Handles source maps, locations in the
- * sources, etc for ThreadActors.
+ * Manages the sources for a thread. Handles HTML file contents, locations in
+ * the sources, etc for ThreadActors.
  */
 function TabSources(threadActor, allowSourceFn = () => true) {
   EventEmitter.decorate(this);
@@ -41,6 +43,16 @@ function TabSources(threadActor, allowSourceFn = () => true) {
   // Debugger.Source -> SourceActor
   this._sourceActors = new Map();
 
+  // URL -> content
+  //
+  // Any possibly incomplete content that has been loaded for each URL.
+  this._htmlContents = new Map();
+
+  // URL -> Promise[]
+  //
+  // Any promises waiting on a URL to be completely loaded.
+  this._htmlWaiters = new Map();
+
   // Debugger.Source.id -> Debugger.Source
   //
   // The IDs associated with ScriptSources and available via DebuggerSource.id
@@ -49,6 +61,10 @@ function TabSources(threadActor, allowSourceFn = () => true) {
   // has not been GC'ed and the actor has been created. This is lazily populated
   // the first time it is needed.
   this._sourcesByInternalSourceId = null;
+
+  if (!isWorker) {
+    Services.obs.addObserver(this, "devtools-html-content");
+  }
 }
 
 /**
@@ -59,6 +75,12 @@ function TabSources(threadActor, allowSourceFn = () => true) {
 const MINIFIED_SOURCE_REGEXP = /\bmin\.js$/;
 
 TabSources.prototype = {
+  destroy() {
+    if (!isWorker) {
+      Services.obs.removeObserver(this, "devtools-html-content");
+    }
+  },
+
   /**
    * Update preferences and clear out existing sources
    */
@@ -80,6 +102,8 @@ TabSources.prototype = {
    */
   reset: function() {
     this._sourceActors = new Map();
+    this._htmlContents = new Map();
+    this._htmlWaiters = new Map();
     this._sourcesByInternalSourceId = null;
   },
 
@@ -448,6 +472,130 @@ TabSources.prototype = {
 
   iter: function() {
     return [...this._sourceActors.values()];
+  },
+
+  /**
+   * Listener for new HTML content.
+   */
+  observe(subject, topic, data) {
+    if (topic == "devtools-html-content") {
+      const { parserID, uri, contents, complete } = JSON.parse(data);
+      if (this._htmlContents.has(uri)) {
+        const existing = this._htmlContents.get(uri);
+        if (existing.parserID == parserID) {
+          assert(!existing.complete);
+          existing.content = existing.content + contents;
+          existing.complete = complete;
+
+          // After the HTML has finished loading, resolve any promises
+          // waiting for the complete file contents. Waits will only
+          // occur when the URL was ever partially loaded.
+          if (complete) {
+            const waiters = this._htmlWaiters.get(uri);
+            if (waiters) {
+              for (const waiter of waiters) {
+                waiter();
+              }
+              this._htmlWaiters.delete(uri);
+            }
+          }
+        }
+      } else {
+        this._htmlContents.set(uri, {
+          content: contents,
+          complete,
+          contentType: "text/html",
+          parserID,
+        });
+      }
+    }
+  },
+
+  /**
+   * Get the contents of the HTML file at a URL, fetching it if necessary.
+   * If partial is set and any content for the URL has been received,
+   * that partial content is returned synchronously.
+   */
+  htmlFileContents(url, partial, canUseCache) {
+    if (this._htmlContents.has(url)) {
+      const data = this._htmlContents.get(url);
+      if (!partial && !data.complete) {
+        return new Promise(resolve => {
+          if (!this._htmlWaiters.has(url)) {
+            this._htmlWaiters.set(url, []);
+          }
+          this._htmlWaiters.get(url).push(resolve);
+        }).then(() => {
+          assert(data.complete);
+          return {
+            content: data.content,
+            contentType: data.contentType,
+          };
+        });
+      }
+      return {
+        content: data.content,
+        contentType: data.contentType,
+      };
+    }
+
+    return this._fetchHtmlFileContents(url, partial, canUseCache);
+  },
+
+  _fetchHtmlFileContents: async function(url, partial, canUseCache) {
+    // Only try the cache if it is currently enabled for the document.
+    // Without this check, the cache may return stale data that doesn't match
+    // the document shown in the browser.
+    let loadFromCache = canUseCache;
+    if (canUseCache && this._thread._parent._getCacheDisabled) {
+      loadFromCache = !this._thread._parent._getCacheDisabled();
+    }
+
+    // Fetch the sources with the same principal as the original document
+    const win = this._thread._parent.window;
+    let principal, cacheKey;
+    // On xpcshell, we don't have a window but a Sandbox
+    if (!isWorker && win instanceof Ci.nsIDOMWindow) {
+      const docShell = win.docShell;
+      const channel = docShell.currentDocumentChannel;
+      principal = channel.loadInfo.loadingPrincipal;
+
+      // Retrieve the cacheKey in order to load POST requests from cache
+      // Note that chrome:// URLs don't support this interface.
+      if (
+        loadFromCache &&
+        docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel
+      ) {
+        cacheKey = docShell.currentDocumentChannel.cacheKey;
+      }
+    }
+
+    let result;
+    try {
+      result = await fetch(url, {
+        principal,
+        cacheKey,
+        loadFromCache,
+      });
+    } catch (error) {
+      this._reportLoadSourceError(error);
+      throw error;
+    }
+
+    this._htmlContents.set(url, result);
+
+    return result;
+  },
+
+  _reportLoadSourceError: function(error) {
+    try {
+      DevToolsUtils.reportException("SourceActor", error);
+
+      const lines = JSON.stringify(this.form(), null, 4).split(/\n/g);
+      lines.forEach(line => console.error("\t", line));
+    } catch (e) {
+      // ignore
+    }
   },
 };
 

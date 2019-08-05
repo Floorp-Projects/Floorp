@@ -6,13 +6,13 @@
 
 "use strict";
 
-const { Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const {
   setBreakpointAtEntryPoints,
 } = require("devtools/server/actors/breakpoint");
 const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert, fetch } = DevToolsUtils;
+const { assert } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const { sourceSpec } = require("devtools/shared/specs/source");
 
@@ -111,6 +111,7 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     this._source = source;
     this._contentType = contentType;
     this._isInlineSource = isInlineSource;
+    this._startLineColumnDisplacement = null;
 
     this.source = this.source.bind(this);
     this._getSourceText = this._getSourceText.bind(this);
@@ -165,13 +166,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return this._extensionName;
   },
 
-  get isCacheEnabled() {
-    if (this.threadActor._parent._getCacheDisabled) {
-      return !this.threadActor._parent._getCacheDisabled();
-    }
-    return true;
-  },
-
   form: function() {
     const source = this._source;
 
@@ -208,18 +202,6 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
 
     query.source = this._source;
     return this.dbg.findScripts(query);
-  },
-
-  _reportLoadSourceError: function(error) {
-    try {
-      DevToolsUtils.reportException("SourceActor", error);
-
-      JSON.stringify(this.form(), null, 4)
-        .split(/\n/g)
-        .forEach(line => console.error("\t", line));
-    } catch (e) {
-      // ignore
-    }
   },
 
   _getSourceText: async function() {
@@ -263,57 +245,20 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
       return toResolvedContent(this._source.text);
     }
 
-    // Only load the HTML page source from cache (which exists when
-    // there are inline sources). Otherwise, we can't trust the
-    // cache because we are most likely here because we are
-    // fetching the original text for sourcemapped code, and the
-    // page hasn't requested it before (if it has, it was a
-    // previous debugging session).
-    // Additionally, we should only try the cache if it is currently enabled
-    // for the document.  Without this check, the cache may return stale data
-    // that doesn't match the document shown in the browser.
-    const loadFromCache = this.isInlineSource && this.isCacheEnabled;
-
-    // Fetch the sources with the same principal as the original document
-    const win = this.threadActor._parent.window;
-    let principal, cacheKey;
-    // On xpcshell, we don't have a window but a Sandbox
-    if (!isWorker && win instanceof Ci.nsIDOMWindow) {
-      const docShell = win.docShell;
-      const channel = docShell.currentDocumentChannel;
-      principal = channel.loadInfo.loadingPrincipal;
-
-      // Retrieve the cacheKey in order to load POST requests from cache
-      // Note that chrome:// URLs don't support this interface.
-      if (
-        loadFromCache &&
-        docShell.currentDocumentChannel instanceof Ci.nsICacheInfoChannel
-      ) {
-        cacheKey = docShell.currentDocumentChannel.cacheKey;
-      }
-    }
-
-    const sourceFetched = fetch(this.url, {
-      principal,
-      cacheKey,
-      loadFromCache,
-    });
+    const result = await this.sources.htmlFileContents(
+      this.url,
+      /* partial */ false,
+      /* canUseCache */ this.isInlineSource
+    );
 
     // Record the contentType we just learned during fetching
-    return sourceFetched.then(
-      result => {
-        this._contentType = result.contentType;
-        return result;
-      },
-      error => {
-        this._reportLoadSourceError(error);
-        throw error;
-      }
-    );
+    this._contentType = result.contentType;
+
+    return result;
   },
 
-  getBreakableLines() {
-    const positions = this.getBreakpointPositions();
+  getBreakableLines: async function() {
+    const positions = await this.getBreakpointPositions();
     const lines = new Set();
     for (const position of positions) {
       if (!lines.has(position.line)) {
@@ -324,7 +269,113 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     return Array.from(lines);
   },
 
-  getBreakpointPositions(query) {
+  // For inline <script> tags in HTML pages, the column numbers of the start
+  // line are relative to the column immediately after the opening <script> tag,
+  // rather than the start of the line itself. Calculate the start line and any
+  // column displacement from the start of that line in the HTML file.
+  _getStartLineColumnDisplacement() {
+    if (this._startLineColumnDisplacement) {
+      return this._startLineColumnDisplacement;
+    }
+
+    // Allow fetching the partial contents of the HTML file. When getting the
+    // displacement to install breakpoints on an inline source that just
+    // appeared, we don't expect the HTML file to be completely loaded, and if
+    // we wait for it to load then the script will have already started running.
+    // Fetching the partial contents will only return a promise if we haven't
+    // seen any data for the file, which will only be the case when the debugger
+    // attaches to an existing page. In this case we don't need to get the
+    // displacement synchronously, so it's OK if we yield to the event loop
+    // while the promise resolves.
+    const fileContents = this.sources.htmlFileContents(
+      this.url,
+      /* partial */ true,
+      /* canUseCache */ this.isInlineSource
+    );
+    if (fileContents.then) {
+      return fileContents.then(contents =>
+        this._setStartLineColumnDisplacement(contents)
+      );
+    }
+    return this._setStartLineColumnDisplacement(fileContents);
+  },
+
+  _setStartLineColumnDisplacement(fileContents) {
+    const d = this._calculateStartLineColumnDisplacement(fileContents);
+    this._startLineColumnDisplacement = d;
+    return d;
+  },
+
+  _calculateStartLineColumnDisplacement(fileContents) {
+    const scripts = this._findDebuggeeScripts();
+    if (!scripts.length) {
+      return {};
+    }
+
+    const sorted = scripts.sort((a, b) => b.startLine < a.startLine);
+    const startLine = sorted[0].startLine;
+
+    const lineBreak = /\r\n?|\n|\u2028|\u2029/;
+    const fileStartLine =
+      fileContents.content.split(lineBreak)[startLine - 1] || "";
+
+    const sourceContents = this._source.text;
+
+    if (lineBreak.test(sourceContents)) {
+      // The inline script must end the HTML file's line.
+      const firstLine = sourceContents.split(lineBreak)[0];
+      if (firstLine.length && fileStartLine.endsWith(firstLine)) {
+        const column = fileStartLine.length - firstLine.length;
+        return { startLine, column };
+      }
+      return {};
+    }
+
+    // The inline script could be anywhere on the line. Search for its
+    // contents in the line's text. This is a best-guess method and may return
+    // the wrong result if the text appears multiple times on the line, but
+    // the result should make some sense to the user in any case.
+    const column = fileStartLine.indexOf(sourceContents);
+    if (column != -1) {
+      return { startLine, column };
+    }
+    return {};
+  },
+
+  // If a { line, column } location is on the starting line of an inline source,
+  // adjust it upwards or downwards (per |upward|) according to the starting
+  // column displacement.
+  _adjustInlineScriptLocation(location, upward) {
+    if (!this._isInlineSource) {
+      return location;
+    }
+
+    const info = this._getStartLineColumnDisplacement();
+    if (info.then) {
+      return info.then(i =>
+        this._adjustInlineScriptLocationFromDisplacement(i, location, upward)
+      );
+    }
+    return this._adjustInlineScriptLocationFromDisplacement(
+      info,
+      location,
+      upward
+    );
+  },
+
+  _adjustInlineScriptLocationFromDisplacement(info, location, upward) {
+    const { line, column } = location;
+    if (this._startLineColumnDisplacement.startLine == line) {
+      let displacement = this._startLineColumnDisplacement.column;
+      if (!upward) {
+        displacement = -displacement;
+      }
+      return { line, column: column + displacement };
+    }
+    return location;
+  },
+
+  getBreakpointPositions: async function(query) {
     const {
       start: { line: startLine = 0, column: startColumn = 0 } = {},
       end: { line: endLine = Infinity, column: endColumn = Infinity } = {},
@@ -354,10 +405,17 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
           continue;
         }
 
-        positions.push({
-          line: lineNumber,
-          column: columnNumber,
-        });
+        // Adjust columns according to any inline script start column, so that
+        // column breakpoints show up correctly in the UI.
+        const position = await this._adjustInlineScriptLocation(
+          {
+            line: lineNumber,
+            column: columnNumber,
+          },
+          /* upward */ true
+        );
+
+        positions.push(position);
       }
     }
 
@@ -371,8 +429,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
     );
   },
 
-  getBreakpointPositionsCompressed(query) {
-    const items = this.getBreakpointPositions(query);
+  getBreakpointPositionsCompressed: async function(query) {
+    const items = await this.getBreakpointPositions(query);
     const compressed = {};
     for (const { line, column } of items) {
       if (!compressed[line]) {
@@ -484,8 +542,8 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
    *
    * @returns A Promise that resolves to the given BreakpointActor.
    */
-  applyBreakpoint: function(actor) {
-    const { line, column } = actor.location;
+  applyBreakpoint: async function(actor) {
+    let { line, column } = actor.location;
 
     // Find all entry points that correspond to the given location.
     const entryPoints = [];
@@ -522,6 +580,20 @@ const SourceActor = ActorClassWithSpec(sourceSpec, {
         }
       }
     } else {
+      // Adjust columns according to any inline script start column, to undo
+      // the adjustment performed when sending the breakpoint to the client and
+      // allow the breakpoint to be set correctly in the source (which treats
+      // the location after the <script> tag as column 0).
+      let adjusted = this._adjustInlineScriptLocation(
+        { line, column },
+        /* upward */ false
+      );
+      if (adjusted.then) {
+        adjusted = await adjusted;
+      }
+      line = adjusted.line;
+      column = adjusted.column;
+
       // Find all scripts that match the given source actor, line,
       // and column number.
       const scripts = this._findDebuggeeScripts({ line, column }).filter(

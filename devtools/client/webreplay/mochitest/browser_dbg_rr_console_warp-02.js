@@ -12,7 +12,7 @@ add_task(async function() {
     waitForRecording: true,
   });
 
-  const { tab, toolbox, threadFront } = dbg;
+  const { threadFront } = dbg;
   const console = await getDebuggerSplitConsole(dbg);
   const hud = console.hud;
 
@@ -25,6 +25,5 @@ add_task(async function() {
   message = findMessage(hud, "number: 1");
   // ok(message.classList.contains("paused-before"), "paused before message is shown");
 
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });
