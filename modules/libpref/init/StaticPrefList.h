@@ -724,15 +724,14 @@ VARCACHE_PREF(
   bool, true
 )
 
-// Whether Content Blocking allow list is respected for ETP interventions.
+// Whether Content Blocking Third-Party Cookies UI has been enabled.
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.allowlist.storage.enabled",
   browser_contentblocking_allowlist_storage_enabled,
-  bool, true
+  bool, false
 )
 
-// Whether Content Blocking allow list is respected for tracking annotations.
 VARCACHE_PREF(
   Live,
   "browser.contentblocking.allowlist.annotations.enabled",
