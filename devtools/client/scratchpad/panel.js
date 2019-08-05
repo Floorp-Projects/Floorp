@@ -48,5 +48,6 @@ ScratchpadPanel.prototype = {
 
   destroy() {
     this.emit("destroyed");
+    return Promise.resolve();
   },
 };

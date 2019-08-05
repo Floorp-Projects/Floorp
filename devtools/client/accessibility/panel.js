@@ -274,11 +274,16 @@ AccessibilityPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy() {
-    if (this._destroyed) {
+  async destroy() {
+    if (this._destroying) {
+      await this._destroying;
       return;
     }
-    this._destroyed = true;
+
+    let resolver;
+    this._destroying = new Promise(resolve => {
+      resolver = resolve;
+    });
 
     this.target.off("navigate", this.onTabNavigated);
     this._toolbox.off("select", this.onPanelVisibilityChange);
@@ -311,6 +316,8 @@ AccessibilityPanel.prototype = {
     this.panelWin.gTelemetry = null;
 
     this.emit("destroyed");
+
+    resolver();
   },
 };
 
