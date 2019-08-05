@@ -51,6 +51,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Unused.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "nsContentUtils.h"
 
 mozilla::LazyLogModule nsURILoader::mLog("URILoader");
@@ -235,20 +236,16 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStartRequest(nsIRequest* request) {
       return NS_BINDING_ABORTED;
     }
 
-    static bool sLargeAllocationTestingAllHttpLoads = false;
     static bool sLargeAllocationHeaderEnabled = false;
     static bool sCachedLargeAllocationPref = false;
     if (!sCachedLargeAllocationPref) {
       sCachedLargeAllocationPref = true;
       mozilla::Preferences::AddBoolVarCache(
           &sLargeAllocationHeaderEnabled, "dom.largeAllocationHeader.enabled");
-      mozilla::Preferences::AddBoolVarCache(
-          &sLargeAllocationTestingAllHttpLoads,
-          "dom.largeAllocation.testing.allHttpLoads");
     }
 
     if (sLargeAllocationHeaderEnabled) {
-      if (sLargeAllocationTestingAllHttpLoads) {
+      if (StaticPrefs::dom_largeAllocation_testing_allHttpLoads()) {
         nsCOMPtr<nsIURI> uri;
         rv = httpChannel->GetURI(getter_AddRefs(uri));
         if (NS_SUCCEEDED(rv) && uri) {
