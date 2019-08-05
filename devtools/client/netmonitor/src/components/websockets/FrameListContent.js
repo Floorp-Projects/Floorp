@@ -42,6 +42,7 @@ class FrameListContent extends Component {
       frames: PropTypes.array,
       selectedFrame: PropTypes.object,
       selectFrame: PropTypes.func.isRequired,
+      columns: PropTypes.object.isRequired,
     };
   }
 
@@ -56,7 +57,7 @@ class FrameListContent extends Component {
   }
 
   render() {
-    const { frames, selectedFrame, connector } = this.props;
+    const { frames, selectedFrame, connector, columns } = this.props;
 
     if (frames.length === 0) {
       return div(
@@ -64,6 +65,10 @@ class FrameListContent extends Component {
         FRAMES_EMPTY_TEXT
       );
     }
+
+    const visibleColumns = Object.entries(columns)
+      .filter(([name, isVisible]) => isVisible)
+      .map(([name]) => name);
 
     return table(
       { className: "ws-frames-list-table" },
@@ -80,6 +85,7 @@ class FrameListContent extends Component {
             isSelected: item === selectedFrame,
             onMouseDown: evt => this.onMouseDown(evt, item),
             connector,
+            visibleColumns,
           })
         )
       )
@@ -91,6 +97,7 @@ module.exports = connect(
   state => ({
     selectedFrame: getSelectedFrame(state),
     frames: getDisplayedFrames(state),
+    columns: state.webSockets.columns,
   }),
   dispatch => ({
     selectFrame: item => dispatch(Actions.selectFrame(item)),
