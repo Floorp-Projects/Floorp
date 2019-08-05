@@ -170,6 +170,10 @@ class AboutLoginsChild extends ActorChild {
         if (masterPasswordPromise) {
           masterPasswordPromise.resolve(message.data);
         }
+        break;
+      case "AboutLogins:SendFavicons":
+        this.sendToContent("SendFavicons", message.data);
+        break;
       case "AboutLogins:SyncState":
         this.sendToContent("SyncState", message.data);
         break;

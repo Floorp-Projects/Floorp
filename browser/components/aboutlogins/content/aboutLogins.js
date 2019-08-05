@@ -60,6 +60,10 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       updateNoLogins();
       break;
     }
+    case "SendFavicons": {
+      gElements.loginList.addFavicons(event.detail.value);
+      break;
+    }
     case "SyncState": {
       gElements.fxAccountsButton.updateState(event.detail.value);
       break;

@@ -54,6 +54,10 @@ export default class LoginItem extends HTMLElement {
     this._saveChangesButton = this.shadowRoot.querySelector(
       ".save-changes-button"
     );
+    this._favicon = this.shadowRoot.querySelector(".login-item-favicon");
+    this._faviconWrapper = this.shadowRoot.querySelector(
+      ".login-item-favicon-wrapper"
+    );
     this._title = this.shadowRoot.querySelector(".login-item-title");
     this._timeCreated = this.shadowRoot.querySelector(".time-created");
     this._timeChanged = this.shadowRoot.querySelector(".time-changed");
@@ -73,6 +77,7 @@ export default class LoginItem extends HTMLElement {
     this._originInput.addEventListener("click", this);
     this._revealCheckbox.addEventListener("click", this);
     window.addEventListener("AboutLoginsInitialLoginSelected", this);
+    window.addEventListener("AboutLoginsLoadInitialFavicon", this);
     window.addEventListener("AboutLoginsLoginSelected", this);
     window.addEventListener("AboutLoginsShowBlankLogin", this);
   }
@@ -97,6 +102,19 @@ export default class LoginItem extends HTMLElement {
       timeUsed: this._login.timeLastUsed || "",
     });
 
+    if (this._login.faviconDataURI) {
+      this._faviconWrapper.classList.add("hide-default-favicon");
+      this._favicon.src = this._login.faviconDataURI;
+      document.l10n.setAttributes(this._favicon, "login-favicon", {
+        title: this._login.title,
+      });
+      this._favicon.hidden = false;
+    } else {
+      // reset the src and alt attributes if the currently selected favicon doesn't have a favicon
+      this._favicon.hidden = true;
+      this._faviconWrapper.classList.remove("hide-default-favicon");
+    }
+
     this._title.textContent = this._login.title;
     this._originInput.defaultValue = this._login.origin || "";
     this._usernameInput.defaultValue = this._login.username || "";
@@ -119,6 +137,10 @@ export default class LoginItem extends HTMLElement {
     switch (event.type) {
       case "AboutLoginsInitialLoginSelected": {
         this.setLogin(event.detail, { skipFocusChange: true });
+        break;
+      }
+      case "AboutLoginsLoadInitialFavicon": {
+        this.render();
         break;
       }
       case "AboutLoginsLoginSelected": {

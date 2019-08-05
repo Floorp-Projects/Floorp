@@ -216,6 +216,33 @@ export default class LoginList extends HTMLElement {
     }
   }
 
+  addFavicons(favicons) {
+    for (let favicon in favicons) {
+      let { login, listItem } = this._logins[favicon];
+      favicon = favicons[favicon];
+      if (favicon && login.title) {
+        favicon.uri = btoa(
+          new Uint8Array(favicon.data).reduce(
+            (data, byte) => data + String.fromCharCode(byte),
+            ""
+          )
+        );
+        let faviconDataURI = `data:${favicon.mimeType};base64,${favicon.uri}`;
+        login.faviconDataURI = faviconDataURI;
+      }
+      LoginListItemFactory.update(listItem, login);
+    }
+    let selectedListItem = this._list.querySelector(
+      ".login-list-item.selected"
+    );
+    if (selectedListItem) {
+      window.dispatchEvent(
+        new CustomEvent("AboutLoginsLoadInitialFavicon", {})
+      );
+    }
+    this.render();
+  }
+
   /**
    * @param {Map} breachesByLoginGUID A Map of breaches by login GUIDs used
    *                                  for displaying breached login indicators.
