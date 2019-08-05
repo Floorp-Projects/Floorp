@@ -436,35 +436,48 @@ waitForAllPaints(() => {
         { style: 'animation: move-in 100s infinite;' });
       parentElement.appendChild(div);
       const animation = div.getAnimations()[0];
-      const timeAtStart = document.timeline.currentTime;
+      let timeAtStart = document.timeline.currentTime;
 
       ok(!animation.isRunningOnCompositor,
          'The transform animation on out of view element ' +
          'is not running on the compositor');
 
+      // Structure copied from restyling_transform_animations_in_scrolled_out_element
       let markers;
       let now;
+      let elapsed;
       while (true) {
         now = document.timeline.currentTime;
-        if ((now - timeAtStart) >= 200) {
-          // If the current time has elapsed over 200ms since the animation was
-          // created, it means that the animation should have already
-          // unthrottled in this tick, let's see what we observe in this tick's
-          // restyling process.
-          markers = await observeStyling(1);
+        elapsed = (now - timeAtStart);
+        markers = await observeStyling(1);
+        if (markers.length > 0) {
           break;
         }
-
-        markers = await observeStyling(1);
-        is(markers.length, 0,
-           'Transform animation running on out of view element ' +
-           'should be throttled until 200ms is elapsed');
       }
 
-      is(markers.length, 1,
+      ok(elapsed.toPrecision(10) >= 200,
+         'Transform animation running on out of view element ' +
+         'should be throttled until 200ms is elapsed. now: ' +
+            now + ' start time: ' + timeAtStart + ' elapsed:' + elapsed);
+
+      timeAtStart = document.timeline.currentTime;
+      markers = await observeStyling(1);
+      now = document.timeline.currentTime;
+      elapsed = (now - timeAtStart);
+
+      let expectedMarkersLengthValid;
+      // On the fence of 200 ms, we probably have 1 marker; but if we hit a bad rounding
+      // we might still have 0. But if it's > 200, we should have 1; and less we should have 0.
+      if (elapsed.toPrecision(10) == 200)
+        expectedMarkersLengthValid = markers.length < 2;
+      else if (elapsed.toPrecision(10) > 200)
+        expectedMarkersLengthValid = markers.length == 1;
+      else
+        expectedMarkersLengthValid = markers.length == 0;
+      ok(expectedMarkersLengthValid,
          'Transform animation running on out of view element ' +
          'should be unthrottled after around 200ms have elapsed. now: ' +
-         now + ' start time: ' + timeAtStart);
+         now + ' start time: ' + timeAtStart +  ' elapsed: ' + elapsed);
 
       await ensureElementRemoval(parentElement);
     }
