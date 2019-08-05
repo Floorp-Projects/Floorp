@@ -83,6 +83,8 @@ if [ ${COMMAND} = "verify" ]; then
     exit $result
 fi
 
+test -d "${RSPDIR}" || mkdir "${RSPDIR}"
+
 for request in $cbc_kat_requests; do
     response=`echo $request | sed -e "s/req/rsp/"`
     echo $request $response

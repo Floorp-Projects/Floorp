@@ -645,17 +645,37 @@ FC_SetPIN(CK_SESSION_HANDLE hSession, CK_CHAR_PTR pOldPin,
 
     CHECK_FORK();
 
-    if ((rv = sftk_fipsCheck()) == CKR_OK &&
-        (rv = sftk_newPinCheck(pNewPin, usNewLen)) == CKR_OK) {
+    rv = sftk_fipsCheck();
+    if (rv != CKR_OK) {
+        goto loser;
+    }
+
+    if (isLevel2 || usNewLen > 0) {
+        rv = sftk_newPinCheck(pNewPin, usNewLen);
+        if (rv != CKR_OK) {
+            goto loser;
+        }
         rv = NSC_SetPIN(hSession, pOldPin, usOldLen, pNewPin, usNewLen);
-        if ((rv == CKR_OK) &&
-            (sftk_SlotIDFromSessionHandle(hSession) == FIPS_SLOT_ID)) {
+        if (rv != CKR_OK) {
+            goto loser;
+        }
+        if (sftk_SlotIDFromSessionHandle(hSession) == FIPS_SLOT_ID) {
             /* if we set the password in level1 we now go
              * to level2. NOTE: we don't allow the user to
              * go from level2 to level1 */
             isLevel2 = PR_TRUE;
         }
+    } else {
+        /* here both old and new passwords are empty, but we need to
+         * call NSC_SetPIN to force rekey the database entries */
+        PORT_Assert(usNewLen == 0);
+        rv = NSC_SetPIN(hSession, pOldPin, usOldLen, pNewPin, usNewLen);
+        if (rv != CKR_OK) {
+            goto loser;
+        }
     }
+
+loser:
     if (sftk_audit_enabled) {
         char msg[128];
         NSSAuditSeverity severity = (rv == CKR_OK) ? NSS_AUDIT_INFO : NSS_AUDIT_ERROR;
