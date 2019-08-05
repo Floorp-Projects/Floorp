@@ -77,6 +77,8 @@ let HomePage = {
       return;
     }
 
+    Services.telemetry.setEventRecordingEnabled("homepage", true);
+
     // Now we have the values, listen for future updates.
     this._ignoreListListener = this._handleIgnoreListUpdated.bind(this);
 
@@ -174,6 +176,12 @@ let HomePage = {
       Cu.reportError(
         `Ignoring homepage setting for ${value} as it is on the ignore list.`
       );
+      Services.telemetry.recordEvent(
+        "homepage",
+        "preference",
+        "ignore",
+        "set_blocked"
+      );
       return false;
     }
     Services.prefs.setStringPref(kPrefName, value);
@@ -247,6 +255,12 @@ let HomePage = {
       ) {
         this.clear();
         Services.prefs.clearUserPref(kExtensionControllerPref);
+        Services.telemetry.recordEvent(
+          "homepage",
+          "preference",
+          "ignore",
+          "saved_reset"
+        );
       }
     }
   },
