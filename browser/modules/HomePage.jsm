@@ -167,7 +167,30 @@ let HomePage = {
    *   The new value to set the preference to. This could be a single url, or a
    *   `|` separated list of URLs.
    */
-  set(value) {
+  async set(value) {
+    await this.init();
+
+    if (await this.shouldIgnore(value)) {
+      Cu.reportError(
+        `Ignoring homepage setting for ${value} as it is on the ignore list.`
+      );
+      return false;
+    }
+    Services.prefs.setStringPref(kPrefName, value);
+    return true;
+  },
+
+  /**
+   * Sets the homepage preference to a new page. This is an synchronous version
+   * that should only be used when we know the source is safe as it bypasses the
+   * ignore list, e.g. when setting directly to about:blank or a value not
+   * supplied externally.
+   *
+   * @param {string} value
+   *   The new value to set the preference to. This could be a single url, or a
+   *   `|` separated list of URLs.
+   */
+  safeSet(value) {
     Services.prefs.setStringPref(kPrefName, value);
   },
 
@@ -187,13 +210,28 @@ let HomePage = {
   },
 
   /**
+   * Determines if a url should be ignored according to the ignore list.
+   *
+   * @param {string} url
+   *   A string that is the url or urls to be ignored.
+   * @returns {boolean}
+   *   True if the url should be ignored.
+   */
+  async shouldIgnore(url) {
+    await this.init();
+
+    const lowerURL = url.toLowerCase();
+    return this._ignoreList.some(code => lowerURL.includes(code));
+  },
+
+  /**
    * Handles updates of the ignore list, checking the existing preference and
    * correcting it as necessary.
    *
    * @param {Object} eventData
    *   The event data as received from RemoteSettings.
    */
-  _handleIgnoreListUpdated({ data: { current } }) {
+  async _handleIgnoreListUpdated({ data: { current } }) {
     for (const entry of current) {
       if (entry.id == kHomePageIgnoreListId) {
         this._ignoreList = [...entry.matches];

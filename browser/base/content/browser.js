@@ -4204,11 +4204,7 @@ function openHomeDialog(aURL) {
   );
 
   if (pressedVal == 0) {
-    try {
-      HomePage.set(aURL);
-    } catch (ex) {
-      dump("Failed to set the home page.\n" + ex + "\n");
-    }
+    HomePage.set(aURL).catch(Cu.reportError);
   }
 }
 
