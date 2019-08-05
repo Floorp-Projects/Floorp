@@ -1208,6 +1208,7 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
       if (frame) {
         menuPopupFrame = do_QueryFrame(frame);
       }
+
       // The popup is not fully created yet (we're called from
       // nsWindow::Create()) or we're toplevel popup without parent.
       // In both cases just use parent which was passed to nsWindow::Create().
@@ -1217,9 +1218,21 @@ GtkWidget* nsWindow::ConfigureWaylandPopupWindows() {
         return GTK_WIDGET(parentWidget);
       }
 
+      LOG(("...[%p] is %s\n", (void*)this,
+           menuPopupFrame->IsContextMenu() ? "context menu" : "popup"));
+
       nsWindow* parentWindow =
           static_cast<nsWindow*>(menuPopupFrame->GetParentMenuWidget());
       LOG(("...[%p] GetParentMenuWidget() = %p\n", (void*)this, parentWindow));
+
+      // If the popup is a regular menu but GetParentMenuWidget() returns
+      // nullptr which means it's connected non-menu parent
+      // (bookmark toolbar for instance).
+      // In this case use a parent given at nsWindow::Create().
+      if (!parentWindow && !menuPopupFrame->IsContextMenu()) {
+        parentWindow =
+            get_window_for_gtk_widget(GTK_WIDGET(mToplevelParentWindow));
+      }
 
       if (!parentWindow) {
         LOG(("...[%p] using active/visible popups as a parent [%p]\n",
