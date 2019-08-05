@@ -112,7 +112,7 @@ class RunInfo(dict):
         if extras is not None:
             self.update(extras)
 
-        self["headless"] = extras["headless"]
+        self["headless"] = extras.get("headless", False)
         self["webrender"] = enable_webrender
 
 
