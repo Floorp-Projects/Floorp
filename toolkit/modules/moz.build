@@ -195,6 +195,7 @@ EXTRA_JS_MODULES += [
     'GMPInstallManager.jsm',
     'GMPUtils.jsm',
     'Http.jsm',
+    'IgnoreLists.jsm',
     'IndexedDB.jsm',
     'InlineSpellChecker.jsm',
     'InlineSpellCheckerContent.jsm',
