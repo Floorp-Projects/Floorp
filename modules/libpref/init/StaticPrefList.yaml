@@ -3318,12 +3318,6 @@
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
 
-# BigInt API
-- name: javascript.options.bigint
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
