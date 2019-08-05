@@ -126,8 +126,6 @@ void StreamSamplesAndMarkers(const char* aName, int aThreadId,
       schema.WriteField("stack");
       schema.WriteField("time");
       schema.WriteField("responsiveness");
-      schema.WriteField("rss");
-      schema.WriteField("uss");
     }
 
     aWriter.StartArrayProperty("data");

@@ -133,34 +133,32 @@ class Vector;
     MACRO(3, "mainthreadio", MainThreadIO,                                     \
           "Add main thread I/O to the profile")                                \
                                                                                \
-    MACRO(4, "memory", Memory, "Add memory measurements")                      \
-                                                                               \
-    MACRO(5, "privacy", Privacy,                                               \
+    MACRO(4, "privacy", Privacy,                                               \
           "Do not include user-identifiable information")                      \
                                                                                \
-    MACRO(6, "responsiveness", Responsiveness,                                 \
+    MACRO(5, "responsiveness", Responsiveness,                                 \
           "Collect thread responsiveness information")                         \
                                                                                \
-    MACRO(7, "screenshots", Screenshots,                                       \
+    MACRO(6, "screenshots", Screenshots,                                       \
           "Take a snapshot of the window on every composition")                \
                                                                                \
-    MACRO(8, "seqstyle", SequentialStyle,                                      \
+    MACRO(7, "seqstyle", SequentialStyle,                                      \
           "Disable parallel traversal in styling")                             \
                                                                                \
-    MACRO(9, "stackwalk", StackWalk,                                           \
+    MACRO(8, "stackwalk", StackWalk,                                           \
           "Walk the C++ stack, not available on all platforms")                \
                                                                                \
-    MACRO(10, "tasktracer", TaskTracer,                                        \
+    MACRO(9, "tasktracer", TaskTracer,                                         \
           "Start profiling with feature TaskTracer")                           \
                                                                                \
-    MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
+    MACRO(10, "threads", Threads, "Profile the registered secondary threads")  \
                                                                                \
-    MACRO(12, "trackopts", TrackOptimizations,                                 \
+    MACRO(11, "trackopts", TrackOptimizations,                                 \
           "Have the JavaScript engine track JIT optimizations")                \
                                                                                \
-    MACRO(13, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
                                                                                \
-    MACRO(14, "jsallocations", JSAllocations,                                  \
+    MACRO(13, "jsallocations", JSAllocations,                                  \
           "Have the JavaScript engine track allocations")
 
 struct ProfilerFeature {

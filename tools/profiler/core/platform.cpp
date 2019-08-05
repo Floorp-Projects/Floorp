@@ -213,9 +213,6 @@ static uint32_t AvailableFeatures() {
 #if !defined(MOZ_TASK_TRACER)
   ProfilerFeature::ClearTaskTracer(features);
 #endif
-#if !(defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY))
-  ProfilerFeature::ClearMemory(features);
-#endif
   if (!JS::TraceLoggerSupported()) {
     ProfilerFeature::ClearJSTracer(features);
   }
@@ -235,7 +232,7 @@ static uint32_t DefaultFeatures() {
 static uint32_t StartupExtraDefaultFeatures() {
   // Enable mainthreadio by default for startup profiles as startup is heavy on
   // I/O operations, and main thread I/O is really important to see there.
-  return ProfilerFeature::MainThreadIO | ProfilerFeature::Memory;
+  return ProfilerFeature::MainThreadIO;
 }
 
 class PSMutex : public StaticMutex {};
@@ -2125,7 +2122,6 @@ static void locked_profiler_stream_json_for_this_process(
   buffer.StreamProfilerOverheadToJSON(aWriter, CorePS::ProcessStartTime(),
                                       aSinceTime);
   buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
-  buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
 
   // Data of TaskTracer doesn't belong in the circular buffer.
   if (ActivePS::FeatureTaskTracer(aLock)) {
@@ -2516,23 +2512,6 @@ void SamplerThread::Run() {
         TimeDuration delta = sampleStart - CorePS::ProcessStartTime();
         ProfileBuffer& buffer = ActivePS::Buffer(lock);
 
-        // Report memory use
-        int64_t rssMemory = 0;
-        int64_t ussMemory = 0;
-        if (ActivePS::FeatureMemory(lock)) {
-          rssMemory = nsMemoryReporterManager::ResidentFast();
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-          ussMemory = nsMemoryReporterManager::ResidentUnique();
-#endif
-          if (rssMemory != 0) {
-            buffer.AddEntry(ProfileBufferEntry::ResidentMemory(rssMemory));
-            if (ussMemory != 0) {
-              buffer.AddEntry(ProfileBufferEntry::UnsharedMemory(ussMemory));
-            }
-          }
-          buffer.AddEntry(ProfileBufferEntry::Time(delta.ToMilliseconds()));
-        }
-
         // handle per-process generic counters
         const Vector<BaseProfilerCount*>& counters = CorePS::Counters(lock);
         TimeStamp now = TimeStamp::NowUnfuzzed();
@@ -2585,11 +2564,6 @@ void SamplerThread::Run() {
               lock, *registeredThread, [&](const Registers& aRegs) {
                 DoPeriodicSample(lock, *registeredThread, *profiledThreadData,
                                  now, aRegs);
-                // only report these once per sample-time (if 0 we don't put
-                // them in the buffer, so for the rest of the threads we won't
-                // insert them)
-                rssMemory = 0;
-                ussMemory = 0;
               });
         }
 

@@ -173,7 +173,6 @@ static uint32_t AvailableFeatures() {
   // Now remove features not supported on this platform/configuration.
   ProfilerFeature::ClearJava(features);
   ProfilerFeature::ClearJS(features);
-  ProfilerFeature::ClearMemory(features);
   ProfilerFeature::ClearResponsiveness(features);
   ProfilerFeature::ClearScreenshots(features);
 #  if !defined(HAVE_NATIVE_UNWIND)
@@ -198,7 +197,7 @@ static uint32_t DefaultFeatures() {
 static uint32_t StartupExtraDefaultFeatures() {
   // Enable mainthreadio by default for startup profiles as startup is heavy on
   // I/O operations, and main thread I/O is really important to see there.
-  return ProfilerFeature::MainThreadIO | ProfilerFeature::Memory;
+  return ProfilerFeature::MainThreadIO;
 }
 
 // The auto-lock/unlock mutex that guards accesses to CorePS and ActivePS.
@@ -1632,7 +1631,6 @@ static void locked_profiler_stream_json_for_this_process(
                                         aSinceTime);
     buffer.StreamCountersToJSON(aWriter, CorePS::ProcessStartTime(),
                                 aSinceTime);
-    buffer.StreamMemoryToJSON(aWriter, CorePS::ProcessStartTime(), aSinceTime);
 
     // Lists the samples for each thread profile
     aWriter.StartArrayProperty("threads");

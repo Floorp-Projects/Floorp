@@ -44,8 +44,6 @@ class ProfilerMarker;
   MACRO(Resume, double)                                             \
   MACRO(ThreadId, int)                                              \
   MACRO(Time, double)                                               \
-  MACRO(ResidentMemory, uint64_t)                                   \
-  MACRO(UnsharedMemory, uint64_t)                                   \
   MACRO(CounterId, void*)                                           \
   MACRO(CounterKey, uint64_t)                                       \
   MACRO(Number, uint64_t)                                           \
@@ -408,24 +406,6 @@ class UniqueStacks {
 //     },
 //     /* more counters */
 //   ],
-//   "memory":
-//   {
-//     "initial_heap": 12345678,
-//     "samples:
-//     {
-//       "schema":
-//       {
-//         "time": 1,            /* number */
-//         "rss": 2,             /* number */
-//         "uss": 3              /* number */
-//       },
-//       "data":
-//       [
-//         /* { time: 0.1, rss: 12345678, uss: 87654321} */
-//         [ 0.1, 12345678, 87654321 ]
-//       ]
-//     },
-//   },
 // }
 //
 
