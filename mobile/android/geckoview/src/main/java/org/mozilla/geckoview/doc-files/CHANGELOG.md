@@ -381,4 +381,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: a378cc7122deed44920fd8f3aad8627ed7a7960d
+[api-version]: b101f0344e941cb50eaaf75326e126ce3efc52b4
