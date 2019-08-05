@@ -151,7 +151,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
 
         case nsXPTType::T_BOOL:
            if (iCount < PARAM_GPR_COUNT)
-              // We need cast to uint8_t to remove garbage on upper 56-bit
+              // We need the cast to uint8_t to remove garbage on upper 56-bit
               // at first.
               dp->val.b  = (bool)(uint8_t)gprData[iCount++];
            else
