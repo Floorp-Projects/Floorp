@@ -18,6 +18,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import mozilla.appservices.Megazord
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.service.experiments.Experiments
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
 import mozilla.components.service.fretboard.storage.flatfile.FlatFileExperimentStorage
@@ -70,6 +71,14 @@ open class FenixApplication : Application() {
         // We want to call this function as early as possible, but only once and
         // on the main process, as it uses Gecko to fetch experiments from the server.
         experimentLoader = loadExperiments()
+
+        // Enable the service-experiments component
+        Experiments.initialize(
+            applicationContext,
+            mozilla.components.service.experiments.Configuration(
+                httpClient = lazy(LazyThreadSafetyMode.NONE) { components.core.client }
+            )
+        )
 
         setupLeakCanary()
         if (Settings.getInstance(this).isTelemetryEnabled) {
