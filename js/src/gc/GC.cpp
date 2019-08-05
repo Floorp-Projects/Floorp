@@ -1471,18 +1471,14 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMaxBytes_ = value;
       break;
     case JSGC_MIN_NURSERY_BYTES:
-      if ((value > gcMaxNurseryBytes_ && gcMaxNurseryBytes_ != 0) ||
-          value < ArenaSize || value >= MaxNurseryBytes) {
-        // We make an exception for gcMaxNurseryBytes_ == 0 since that special
-        // value is used to disable generational GC.
+      if (value > gcMaxNurseryBytes_ || value < ArenaSize ||
+          value >= MaxNurseryBytes) {
         return false;
       }
       gcMinNurseryBytes_ = value;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      if (((value < gcMinNurseryBytes_) && (value != 0)) ||
-          value >= MaxNurseryBytes) {
-        // Note that we make an exception for value == 0 as above.
+      if (value < gcMinNurseryBytes_ || value >= MaxNurseryBytes) {
         return false;
       }
       gcMaxNurseryBytes_ = value;
