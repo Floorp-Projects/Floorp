@@ -626,7 +626,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "737e8e8f44d5"
+        "revision": "89bc77dd569d"
     },
     "gu-IN": {
         "platforms": [
@@ -1430,7 +1430,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "f1dc6e47ad65"
+        "revision": "ba7f233c7319"
     },
     "tr": {
         "platforms": [
