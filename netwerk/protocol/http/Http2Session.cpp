@@ -4149,33 +4149,36 @@ void Http2Session::ConnectSlowConsumer(Http2Stream* stream) {
 }
 
 uint32_t Http2Session::FindTunnelCount(nsHttpConnectionInfo* aConnInfo) {
+  return FindTunnelCount(aConnInfo->HashKey());
+}
+uint32_t Http2Session::FindTunnelCount(nsCString const& aHashKey) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   uint32_t rv = 0;
-  mTunnelHash.Get(aConnInfo->HashKey(), &rv);
+  mTunnelHash.Get(aHashKey, &rv);
   return rv;
 }
 
 void Http2Session::RegisterTunnel(Http2Stream* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  nsHttpConnectionInfo* ci = aTunnel->Transaction()->ConnectionInfo();
-  uint32_t newcount = FindTunnelCount(ci) + 1;
-  mTunnelHash.Remove(ci->HashKey());
-  mTunnelHash.Put(ci->HashKey(), newcount);
+  nsCString const& regKey = aTunnel->RegistrationKey();
+  uint32_t newcount = FindTunnelCount(regKey) + 1;
+  mTunnelHash.Remove(regKey);
+  mTunnelHash.Put(regKey, newcount);
   LOG3(("Http2Stream::RegisterTunnel %p stream=%p tunnels=%d [%s]", this,
-        aTunnel, newcount, ci->HashKey().get()));
+        aTunnel, newcount, regKey.get()));
 }
 
 void Http2Session::UnRegisterTunnel(Http2Stream* aTunnel) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
-  nsHttpConnectionInfo* ci = aTunnel->Transaction()->ConnectionInfo();
-  MOZ_ASSERT(FindTunnelCount(ci));
-  uint32_t newcount = FindTunnelCount(ci) - 1;
-  mTunnelHash.Remove(ci->HashKey());
+  nsCString const& regKey = aTunnel->RegistrationKey();
+  MOZ_ASSERT(FindTunnelCount(regKey));
+  uint32_t newcount = FindTunnelCount(regKey) - 1;
+  mTunnelHash.Remove(regKey);
   if (newcount) {
-    mTunnelHash.Put(ci->HashKey(), newcount);
+    mTunnelHash.Put(regKey, newcount);
   }
   LOG3(("Http2Session::UnRegisterTunnel %p stream=%p tunnels=%d [%s]", this,
-        aTunnel, newcount, ci->HashKey().get()));
+        aTunnel, newcount, regKey.get()));
 }
 
 void Http2Session::CreateTunnel(nsHttpTransaction* trans,
