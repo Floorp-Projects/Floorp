@@ -185,19 +185,34 @@ nsresult Http2Stream::ReadSegments(nsAHttpSegmentReader* reader, uint32_t count,
       // Mark that we are blocked on read if the http transaction needs to
       // provide more of the request message body and there is nothing queued
       // for writing
-      if (rv == NS_BASE_STREAM_WOULD_BLOCK && !mTxInlineFrameUsed)
+      if (rv == NS_BASE_STREAM_WOULD_BLOCK && !mTxInlineFrameUsed) {
+        LOG(("Http2Stream %p mRequestBlockedOnRead = 1", this));
         mRequestBlockedOnRead = 1;
+      }
 
       // A transaction that had already generated its headers before it was
       // queued at the session level (due to concurrency concerns) may not call
       // onReadSegment off the ReadSegments() stack above.
-      if (mUpstreamState == GENERATING_HEADERS && NS_SUCCEEDED(rv)) {
+
+      // When mTransaction->ReadSegments returns NS_BASE_STREAM_WOULD_BLOCK it
+      // means it may have already finished providing all the request data
+      // necessary to generate open, calling OnReadSegment will drive sending
+      // the request; this may happen after dequeue of the stream.
+
+      if (mUpstreamState == GENERATING_HEADERS &&
+          (NS_SUCCEEDED(rv) || rv == NS_BASE_STREAM_WOULD_BLOCK)) {
         LOG3(
             ("Http2Stream %p ReadSegments forcing OnReadSegment call\n", this));
         uint32_t wasted = 0;
         mSegmentReader = reader;
-        Unused << OnReadSegment("", 0, &wasted);
+        nsresult rv2 = OnReadSegment("", 0, &wasted);
         mSegmentReader = nullptr;
+
+        LOG3(("  OnReadSegment returned 0x%08" PRIx32,
+              static_cast<uint32_t>(rv2)));
+        if (NS_SUCCEEDED(rv2)) {
+          mRequestBlockedOnRead = 0;
+        }
       }
 
       // If the sending flow control window is open (!mBlockedOnRwin) then
