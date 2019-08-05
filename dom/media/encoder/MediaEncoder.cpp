@@ -542,7 +542,8 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
 
   if (AudioStreamTrack* audio = aTrack->AsAudioStreamTrack()) {
     if (!mAudioEncoder) {
-      MOZ_ASSERT(false, "No audio encoder for this audio track");
+      // No audio encoder for this audio track. It could be disabled.
+      LOG(LogLevel::Warning, ("Cannot connect to audio track - no encoder"));
       return;
     }
     if (mAudioTrack) {
@@ -554,6 +555,7 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
       return;
     }
 
+    LOG(LogLevel::Info, ("Connected to audio track %p", aTrack));
     mAudioTrack = audio;
     // With full duplex we don't risk having audio come in late to the MSG
     // so we won't need a direct listener.
@@ -565,7 +567,8 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
     audio->AddListener(mAudioListener);
   } else if (VideoStreamTrack* video = aTrack->AsVideoStreamTrack()) {
     if (!mVideoEncoder) {
-      MOZ_ASSERT(false, "No video encoder for this video track");
+      // No video encoder for this video track. It could be disabled.
+      LOG(LogLevel::Warning, ("Cannot connect to video track - no encoder"));
       return;
     }
     if (mVideoTrack) {
@@ -577,6 +580,7 @@ void MediaEncoder::ConnectMediaStreamTrack(MediaStreamTrack* aTrack) {
       return;
     }
 
+    LOG(LogLevel::Info, ("Connected to video track %p", aTrack));
     mVideoTrack = video;
     video->AddDirectListener(mVideoListener);
     video->AddListener(mVideoListener);
