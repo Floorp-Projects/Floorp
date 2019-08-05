@@ -1181,7 +1181,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       }
       auto& value = mTrackListValues[i];
       if (value.IsTrackSize()) {
-        mExpandedTracks.AppendElement(MakePair(i, 0ul));
+        mExpandedTracks.AppendElement(MakePair(i, size_t(0)));
         mExpandedLineNames.AppendElement(std::move(names));
         continue;
       }
@@ -1190,7 +1190,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
         MOZ_ASSERT(i == mRepeatAutoStart);
         mRepeatAutoStart = mExpandedTracks.Length();
         mRepeatAutoEnd = mRepeatAutoStart;
-        mExpandedTracks.AppendElement(MakePair(i, 0ul));
+        mExpandedTracks.AppendElement(MakePair(i, size_t(0)));
 
         auto repeatNames = repeat.line_names.AsSpan();
         MOZ_ASSERT(repeatNames.Length() == 2);
