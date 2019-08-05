@@ -2807,12 +2807,20 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   nsPoint dist(std::abs(pt.x - mLastUpdateFramesPos.x),
                std::abs(pt.y - mLastUpdateFramesPos.y));
   nsSize visualViewportSize = GetVisualViewportSize();
-  nscoord horzAllowance =
-      std::max(visualViewportSize.width / std::max(sHorzScrollFraction, 1),
-               AppUnitsPerCSSPixel());
-  nscoord vertAllowance =
-      std::max(visualViewportSize.height / std::max(sVertScrollFraction, 1),
-               AppUnitsPerCSSPixel());
+  nscoord horzAllowance = std::max(
+      visualViewportSize.width /
+          std::max(
+              StaticPrefs::
+                  layout_framevisibility_amountscrollbeforeupdatehorizontal(),
+              1),
+      AppUnitsPerCSSPixel());
+  nscoord vertAllowance = std::max(
+      visualViewportSize.height /
+          std::max(
+              StaticPrefs::
+                  layout_framevisibility_amountscrollbeforeupdatevertical(),
+              1),
+      AppUnitsPerCSSPixel());
   if (dist.x >= horzAllowance || dist.y >= vertAllowance) {
     needFrameVisibilityUpdate = true;
   }
@@ -3245,10 +3253,6 @@ bool ScrollFrameHelper::sFrameVisPrefsCached = false;
 uint32_t ScrollFrameHelper::sHorzExpandScrollPort = 0;
 /* static */
 uint32_t ScrollFrameHelper::sVertExpandScrollPort = 1;
-/* static */
-int32_t ScrollFrameHelper::sHorzScrollFraction = 2;
-/* static */
-int32_t ScrollFrameHelper::sVertScrollFraction = 2;
 
 /* static */
 void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
@@ -3259,14 +3263,6 @@ void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
     Preferences::AddUintVarCache(&sVertExpandScrollPort,
                                  "layout.framevisibility.numscrollportheights",
                                  1);
-
-    Preferences::AddIntVarCache(
-        &sHorzScrollFraction,
-        "layout.framevisibility.amountscrollbeforeupdatehorizontal", 2);
-    Preferences::AddIntVarCache(
-        &sVertScrollFraction,
-        "layout.framevisibility.amountscrollbeforeupdatevertical", 2);
-
     sFrameVisPrefsCached = true;
   }
 }
