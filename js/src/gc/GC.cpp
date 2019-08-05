@@ -1339,7 +1339,7 @@ bool GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes) {
       setMarkStackLimit(atoi(size), lock);
     }
 
-    if (!nursery().init(maxNurseryBytes, lock)) {
+    if (!nursery().init(lock)) {
       return false;
     }
 
@@ -2139,8 +2139,8 @@ void ZoneHeapThreshold::updateAfterGC(size_t lastBytes,
                                       const AutoLockGC& lock) {
   float growthFactor =
       computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-  gcTriggerBytes_ = computeZoneTriggerBytes(growthFactor, lastBytes, gckind,
-                                            tunables, lock);
+  gcTriggerBytes_ =
+      computeZoneTriggerBytes(growthFactor, lastBytes, gckind, tunables, lock);
 }
 
 /* static */
