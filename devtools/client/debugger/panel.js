@@ -137,12 +137,9 @@ DebuggerPanel.prototype = {
     frames.forEach(frame => {
       frame.actor = frame.id;
     });
+    const target = this._client.lookupTarget(thread);
 
-    return { frames, selected };
-  },
-
-  lookupConsoleClient: function(thread) {
-    return this._client.lookupConsoleClient(thread);
+    return { frames, selected, target };
   },
 
   getMappedExpression(expression) {
