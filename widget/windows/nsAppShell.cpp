@@ -34,12 +34,6 @@
 #  include "mozilla/a11y/Platform.h"
 #endif  // defined(ACCESSIBILITY)
 
-// These are two messages that the code in winspool.drv on Windows 7 explicitly
-// waits for while it is pumping other Windows messages, during display of the
-// Printer Properties dialog.
-#define MOZ_WM_PRINTER_PROPERTIES_COMPLETION 0x5b7a
-#define MOZ_WM_PRINTER_PROPERTIES_FAILURE 0x5b7f
-
 using namespace mozilla;
 using namespace mozilla::widget;
 
@@ -528,14 +522,18 @@ bool nsAppShell::ProcessNextNativeEvent(bool mayWait) {
           continue;  // the message is consumed.
         }
 
-        // Store Printer Properties messages for reposting, because they are not
-        // processed by a window procedure, but are explicitly waited for in the
-        // winspool.drv code that will be further up the stack.
-        if (msg.message == MOZ_WM_PRINTER_PROPERTIES_COMPLETION ||
-            msg.message == MOZ_WM_PRINTER_PROPERTIES_FAILURE) {
+#if defined(_X86_)
+        // Store Printer dialog messages for reposting on x86, because on x86
+        // Windows 7 they are not processed by a window procedure, but are
+        // explicitly waited for in the winspool.drv code that will be further
+        // up the stack (winspool!WaitForCompletionMessage). These are
+        // undocumented Windows Message identifiers found in winspool.drv.
+        if (msg.message == 0x5b7a || msg.message == 0x5b7f ||
+            msg.message == 0x5b80 || msg.message == 0x5b81) {
           mMsgsToRepost.push_back(msg);
           continue;
         }
+#endif
 
         ::TranslateMessage(&msg);
         ::DispatchMessageW(&msg);

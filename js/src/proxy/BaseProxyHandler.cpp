@@ -5,7 +5,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/Proxy.h"
+#include "proxy/DeadObjectProxy.h"
 #include "vm/ProxyObject.h"
+#include "vm/WrapperObject.h"
 
 #include "vm/JSContext-inl.h"
 #include "vm/JSObject-inl.h"
@@ -383,3 +385,35 @@ bool BaseProxyHandler::getElements(JSContext* cx, HandleObject proxy,
 bool BaseProxyHandler::isCallable(JSObject* obj) const { return false; }
 
 bool BaseProxyHandler::isConstructor(JSObject* obj) const { return false; }
+
+JS_FRIEND_API void js::NukeNonCCWProxy(JSContext* cx, HandleObject proxy) {
+  MOZ_ASSERT(proxy->is<ProxyObject>());
+  MOZ_ASSERT(!proxy->is<CrossCompartmentWrapperObject>());
+
+  // (NotifyGCNukeWrapper() only needs to be called on CCWs.)
+
+  // The proxy is about to be replaced, so we need to do any necessary
+  // cleanup first.
+  proxy->as<ProxyObject>().handler()->finalize(cx->defaultFreeOp(), proxy);
+
+  proxy->as<ProxyObject>().nuke();
+
+  MOZ_ASSERT(IsDeadProxyObject(proxy));
+}
+
+JS_FRIEND_API void js::NukeRemovedCrossCompartmentWrapper(JSContext* cx,
+                                                          JSObject* wrapper) {
+  MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
+
+  NotifyGCNukeWrapper(wrapper);
+
+  // We don't need to call finalize here because the CCW finalizer doesn't do
+  // anything. Skipping finalize means that |wrapper| doesn't need to be rooted
+  // to pass the hazard analysis, which is needed because this method is called
+  // from some tricky places inside transplanting where rooting can be
+  // difficult.
+
+  wrapper->as<ProxyObject>().nuke();
+
+  MOZ_ASSERT(IsDeadProxyObject(wrapper));
+}

@@ -990,7 +990,7 @@ package org.mozilla.geckoview {
     method @AnyThread protected void updatePrefs(@NonNull RuntimeSettings);
   }
 
-  public abstract static class RuntimeSettings.Builder<Settings extends org.mozilla.geckoview.RuntimeSettings> {
+  public abstract static class RuntimeSettings.Builder<Settings extends RuntimeSettings> {
     ctor public Builder();
     method @AnyThread @NonNull public Settings build();
     method @AnyThread @NonNull protected Settings getSettings();

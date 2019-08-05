@@ -2828,9 +2828,6 @@ pref("layout.display-list.rebuild-frame-limit", 500);
 // pref to control whether layout warnings that are hit quite often are enabled
 pref("layout.spammy_warnings.enabled", false);
 
-// Should we fragment floats inside CSS column layout?
-pref("layout.float-fragments-inside-column.enabled", true);
-
 // The number of frames times the frame rate is the time required to
 // pass without painting used to guess that we'll not paint again soon
 pref("layout.idle_period.required_quiescent_frames", 2);

@@ -148,6 +148,7 @@ const startupPhases = {
     {
       name: "PWebRenderBridge::Msg_GetSnapshot",
       condition: WIN && WEBRENDER,
+      ignoreIfUnused: true, // Sometimes in the next phase on Windows10 QR
       maxCount: 1,
     },
     {
@@ -217,6 +218,18 @@ const startupPhases = {
       condition: MAC,
       ignoreIfUnused: true,
       maxCount: 1,
+    },
+    {
+      name: "PWebRenderBridge::Msg_GetSnapshot",
+      condition: WIN && WEBRENDER,
+      ignoreIfUnused: true,
+      maxCount: 1,
+    },
+    {
+      name: "PCompositorBridge::Msg_WillClose",
+      condition: WIN,
+      ignoreIfUnused: true,
+      maxCount: 2,
     },
   ],
 };
