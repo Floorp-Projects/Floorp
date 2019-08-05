@@ -1426,6 +1426,20 @@ devtools.main:
       prompt_enabled: True if the user enables the prompt, false otherwise.
       runtime_id: Random id generated to track events related to a single runtime
       session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
+  wrong_shortcut:
+    objects: ["tools"]
+    bug_numbers: [1567497]
+    notification_emails: ["dev-developer-tools@lists.mozilla.org", "hkirschner@mozilla.com"]
+    products:
+      - "firefox"
+    record_in_processes: ["main"]
+    description: User tried to use a shortcut we don't support yet in devtools.
+    release_channel_collection: opt-out
+    expiry_version: "75"
+    extra_keys:
+      shortcut: The shortcut pressed by the user
+      tool_id: The id of the panel the user was using
+      session_id: The start time of the session in milliseconds since epoch (Unix Timestamp) e.g. 1396381378123.
 
 security.ui.certerror:
   load:
