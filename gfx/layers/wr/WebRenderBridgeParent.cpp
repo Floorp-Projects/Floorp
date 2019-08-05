@@ -1941,7 +1941,9 @@ wr::Epoch WebRenderBridgeParent::UpdateWebRender(
 }
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvScheduleComposite() {
-  ScheduleGenerateFrameAllRenderRoots();
+  // Caller of LayerManager::ScheduleComposite() expects that it trigger
+  // composite. Then we do not want to skip generate frame.
+  ScheduleForcedGenerateFrame();
   return IPC_OK();
 }
 
