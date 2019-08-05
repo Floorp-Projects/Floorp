@@ -19,6 +19,7 @@ import mozilla.components.service.glean.net.HttpPingUploader
 
 /**
  * This class is the worker class used by [WorkManager] to handle uploading the ping to the server.
+ * @suppress This is internal only, don't show it in the docs.
  */
 class PingUploadWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     companion object {
