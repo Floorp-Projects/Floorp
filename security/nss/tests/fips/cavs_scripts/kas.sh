@@ -68,6 +68,8 @@ if [ ${COMMAND} = "verify" ]; then
     exit $result
 fi
 
+test -d "${RSPDIR}" || mkdir "${RSPDIR}"
+
 request=KASFunctionTest_ECCEphemeralUnified_NOKC_ZZOnly_init.req
 response=`echo $request | sed -e "s/req/rsp/"`
 echo $request $response
