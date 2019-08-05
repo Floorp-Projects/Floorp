@@ -110,7 +110,7 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      * set to true; it transfers the key presses to the [SeekBar]
      * to be handled accordingly.
      */
-    private val mSeekBarKeyListener = View.OnKeyListener { v, keyCode, event ->
+    private val mSeekBarKeyListener = View.OnKeyListener { _, keyCode, event ->
         if (event.action != KeyEvent.ACTION_DOWN) {
             return@OnKeyListener false
         }
@@ -142,12 +142,12 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     var min: Int
         get() = mMin
         set(min) {
-            var min = min
-            if (min > mMax) {
-                min = mMax
+            var minimum = min
+            if (minimum > mMax) {
+                minimum = mMax
             }
-            if (min != mMin) {
-                mMin = min
+            if (minimum != mMin) {
+                mMin = minimum
                 notifyChanged()
             }
         }
@@ -181,12 +181,12 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
     var max: Int
         get() = mMax
         set(max) {
-            var max = max
-            if (max < mMin) {
-                max = mMin
+            var maximum = max
+            if (maximum < mMin) {
+                maximum = mMin
             }
-            if (max != mMax) {
-                mMax = max
+            if (maximum != mMax) {
+                mMax = maximum
                 notifyChanged()
             }
         }
@@ -272,8 +272,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         mSeekBar?.isEnabled = isEnabled
     }
 
-    override fun onSetInitialValue(defaultValue: Any?) {
-        var defaultValue = defaultValue
+    override fun onSetInitialValue(initialValue: Any?) {
+        var defaultValue = initialValue
         if (defaultValue == null) {
             defaultValue = 0
         }
@@ -284,8 +284,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
         return a!!.getInt(index, 0)
     }
 
-    private fun setValueInternal(seekBarValue: Int, notifyChanged: Boolean) {
-        var seekBarValue = seekBarValue
+    private fun setValueInternal(value: Int, notifyChanged: Boolean) {
+        var seekBarValue = value
         if (seekBarValue < mMin) {
             seekBarValue = mMin
         }
@@ -326,8 +326,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      *
      * @param value the value to display next to the [SeekBar]
      */
-    internal /* synthetic access */ fun updateLabelValue(value: Int) {
-        var value = value
+    internal /* synthetic access */ fun updateLabelValue(labelValue: Int) {
+        var value = labelValue
         if (mSeekBarValueTextView != null) {
             value = value * STEP_SIZE + MIN_VALUE
             val decimalValue = (value / DECIMAL_CONVERSION).toDouble()
@@ -341,8 +341,8 @@ class TextPercentageSeekBarPreference @JvmOverloads constructor(
      *
      * @param value the value of text size
      */
-    internal /* synthetic access */ fun updateExampleTextValue(value: Int) {
-        var value = value
+    internal /* synthetic access */ fun updateExampleTextValue(textValue: Int) {
+        var value = textValue
         if (mExampleTextTextView != null) {
             value = value * STEP_SIZE + MIN_VALUE
             val decimal = value / DECIMAL_CONVERSION
