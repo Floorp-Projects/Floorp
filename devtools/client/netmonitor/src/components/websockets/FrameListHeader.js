@@ -6,15 +6,54 @@
 
 const { Component } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const { WS_FRAMES_HEADERS } = require("../../constants");
-const { L10N } = require("../../utils/l10n");
+const {
+  WS_FRAMES_HEADERS,
+} = require("devtools/client/netmonitor/src/constants.js");
+const { L10N } = require("devtools/client/netmonitor/src/utils/l10n.js");
+const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
+const {
+  connect,
+} = require("devtools/client/shared/redux/visibility-handler-connect");
+const Actions = require("devtools/client/netmonitor/src/actions/index.js");
+
+// Components
+const FrameListHeaderContextMenu = require("devtools/client/netmonitor/src/components/websockets/FrameListHeaderContextMenu.js");
 
 /**
  * Renders the frame list header.
  */
 class FrameListHeader extends Component {
+  static get propTypes() {
+    return {
+      columns: PropTypes.object.isRequired,
+      toggleColumn: PropTypes.func.isRequired,
+      resetColumns: PropTypes.func.isRequired,
+    };
+  }
+
   constructor(props) {
     super(props);
+
+    this.onContextMenu = this.onContextMenu.bind(this);
+  }
+
+  onContextMenu(evt) {
+    evt.preventDefault();
+    const { resetColumns, toggleColumn, columns } = this.props;
+
+    this.contextMenu = new FrameListHeaderContextMenu({
+      toggleColumn,
+      resetColumns,
+    });
+    this.contextMenu.open(evt, columns);
+  }
+
+  /**
+   * Helper method to get visibleColumns.
+   */
+  getVisibleColumns() {
+    const { columns } = this.props;
+    return WS_FRAMES_HEADERS.filter(header => columns[header.name]);
   }
 
   /**
@@ -44,10 +83,11 @@ class FrameListHeader extends Component {
   }
 
   /**
-   * Render all columns in the table header
+   * Render all columns in the table header.
    */
   renderColumns() {
-    return WS_FRAMES_HEADERS.map(header => this.renderColumn(header));
+    const visibleColumns = this.getVisibleColumns();
+    return visibleColumns.map(header => this.renderColumn(header));
   }
 
   render() {
@@ -56,6 +96,7 @@ class FrameListHeader extends Component {
       dom.tr(
         {
           className: "ws-frames-list-headers",
+          onContextMenu: this.onContextMenu,
         },
         this.renderColumns()
       )
@@ -63,4 +104,12 @@ class FrameListHeader extends Component {
   }
 }
 
-module.exports = FrameListHeader;
+module.exports = connect(
+  state => ({
+    columns: state.webSockets.columns,
+  }),
+  dispatch => ({
+    toggleColumn: column => dispatch(Actions.toggleWebSocketsColumn(column)),
+    resetColumns: () => dispatch(Actions.resetWebSocketsColumns()),
+  })
+)(FrameListHeader);
