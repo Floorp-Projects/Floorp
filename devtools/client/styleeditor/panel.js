@@ -5,7 +5,6 @@
 "use strict";
 
 var Services = require("Services");
-var promise = require("promise");
 var { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 var EventEmitter = require("devtools/shared/event-emitter");
 
@@ -131,22 +130,21 @@ StyleEditorPanel.prototype = {
    * Destroy the style editor.
    */
   destroy: function() {
-    if (!this._destroyed) {
-      this._destroyed = true;
-
-      this._target.off("close", this.destroy);
-      this._target = null;
-      this._toolbox = null;
-      this._panelWin = null;
-      this._panelDoc = null;
-      this._debuggee.destroy();
-      this._debuggee = null;
-
-      this.UI.destroy();
-      this.UI = null;
+    if (this._destroyed) {
+      return;
     }
+    this._destroyed = true;
 
-    return promise.resolve(null);
+    this._target.off("close", this.destroy);
+    this._target = null;
+    this._toolbox = null;
+    this._panelWin = null;
+    this._panelDoc = null;
+    this._debuggee.destroy();
+    this._debuggee = null;
+
+    this.UI.destroy();
+    this.UI = null;
   },
 };
 
