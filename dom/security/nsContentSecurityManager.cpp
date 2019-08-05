@@ -615,19 +615,11 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     return NS_OK;
   }
 
-  uint32_t flags = nsIScriptSecurityManager::STANDARD;
-  if (aLoadInfo->GetAllowChrome()) {
-    flags |= nsIScriptSecurityManager::ALLOW_CHROME;
-  }
-  if (aLoadInfo->GetDisallowScript()) {
-    flags |= nsIScriptSecurityManager::DISALLOW_SCRIPT;
-  }
-
   // Only call CheckLoadURIWithPrincipal() using the TriggeringPrincipal and not
   // the LoadingPrincipal when SEC_ALLOW_CROSS_ORIGIN_* security flags are set,
   // to allow, e.g. user stylesheets to load chrome:// URIs.
   return nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-      aLoadInfo->TriggeringPrincipal(), aURI, flags);
+      aLoadInfo->TriggeringPrincipal(), aURI, aLoadInfo->CheckLoadURIFlags());
 }
 
 static bool URIHasFlags(nsIURI* aURI, uint32_t aURIFlags) {
