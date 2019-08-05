@@ -3,8 +3,6 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 // Test beforeunload dialog events.
 add_task(async function() {
   info("Allow to trigger onbeforeunload without user interaction");
@@ -15,7 +13,7 @@ add_task(async function() {
     SpecialPowers.pushPrefEnv(options, resolve);
   });
 
-  const { client, tab } = await setupTestForUri(TEST_URI);
+  const { client, tab } = await setup();
 
   const { Page } = client;
 

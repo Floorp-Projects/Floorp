@@ -3,12 +3,10 @@
 
 "use strict";
 
-const TEST_URI = "data:text/html;charset=utf-8,default-test-page";
-
 // Test for window.prompt(). Check that the dialog is correctly detected and that it can
 // be rejected or accepted, with a custom prompt text.
 add_task(async function() {
-  const { client, tab } = await setupTestForUri(TEST_URI);
+  const { client, tab } = await setup();
 
   const { Page } = client;
 
