@@ -3038,3 +3038,5 @@ void MediaFormatReader::OnFirstDemuxFailed(TrackInfo::TrackType aType,
 }  // namespace mozilla
 
 #undef NS_DispatchToMainThread
+#undef LOGV
+#undef LOG

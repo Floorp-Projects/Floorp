@@ -212,4 +212,6 @@ bool OpusParser::IsValidMapping2ChannelsCount(uint8_t aChannels) {
   return val == valInt || valInt * valInt + 2 == aChannels;
 }
 
+#undef OPUS_LOG
+
 }  // namespace mozilla
