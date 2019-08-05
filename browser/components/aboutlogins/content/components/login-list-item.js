@@ -22,6 +22,9 @@ export default class LoginListItemFactory {
   static update(listItem, login) {
     let title = listItem.querySelector(".title");
     let username = listItem.querySelector(".username");
+    let favicon = listItem.querySelector(".favicon");
+    let faviconWrapper = listItem.querySelector(".favicon-wrapper");
+
     if (!login.guid) {
       listItem.id = "new-login-list-item";
       document.l10n.setAttributes(title, "login-list-item-title-new-login");
@@ -52,6 +55,14 @@ export default class LoginListItemFactory {
         username,
         "login-list-item-subtitle-missing-username"
       );
+    }
+
+    if (login.faviconDataURI) {
+      faviconWrapper.classList.add("hide-default-favicon");
+      favicon.src = login.faviconDataURI;
+      document.l10n.setAttributes(favicon, "login-favicon", {
+        title: login.title,
+      });
     }
   }
 }

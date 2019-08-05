@@ -41,6 +41,7 @@
 
 .header {
   display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--in-content-box-border-color);
   margin-bottom: 40px;
 }
@@ -190,6 +191,24 @@
   box-shadow: 0 0 0 4px var(--in-content-border-active-shadow);
 }
 
+.login-item-favicon {
+  width: 24px;
+}
+
+.login-item-favicon-wrapper {
+  margin-inline-end: 12px;
+  height: 24px;
+  width: 24px;
+  background-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  background-repeat: no-repeat;
+  background-size: contain;
+  -moz-context-properties: fill;
+}
+
+.login-item-favicon-wrapper.hide-default-favicon {
+  background-image: none;
+}
+
 .breach-alert {
   border-radius: 8px;
   border: 1px solid var(--in-content-border-color);
@@ -231,6 +250,10 @@ a.breach-alert-link {
     .breach-alert {
       box-shadow: 0 2px 8px 0 rgba(249,249,250,0.1);
       color: #0C0C0D;
+    }
+
+    .login-item-favicon-wrapper {
+      fill: var(--in-content-border-hover);
     }
   }
 }

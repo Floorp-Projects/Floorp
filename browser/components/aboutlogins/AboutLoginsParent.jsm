@@ -35,6 +35,12 @@ ChromeUtils.defineModuleGetter(
   "resource://services-sync/UIState.jsm"
 );
 
+ChromeUtils.defineModuleGetter(
+  this,
+  "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm"
+);
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   return LoginHelper.createLogger("AboutLoginsParent");
 });
@@ -262,16 +268,19 @@ var AboutLoginsParent = {
           messageManager.sendAsyncMessage("AboutLogins:SyncState", syncState);
           this.updatePasswordSyncNotificationState();
 
-          if (!BREACH_ALERTS_ENABLED) {
-            return;
+          if (BREACH_ALERTS_ENABLED) {
+            const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
+              logins
+            );
+            messageManager.sendAsyncMessage(
+              "AboutLogins:UpdateBreaches",
+              breachesByLoginGUID
+            );
           }
 
-          const breachesByLoginGUID = await LoginHelper.getBreachesForLogins(
-            logins
-          );
           messageManager.sendAsyncMessage(
-            "AboutLogins:UpdateBreaches",
-            breachesByLoginGUID
+            "AboutLogins:SendFavicons",
+            await this.getAllFavicons(logins)
           );
         } catch (ex) {
           if (ex.result != Cr.NS_ERROR_NOT_INITIALIZED) {
@@ -372,6 +381,38 @@ var AboutLoginsParent = {
         break;
       }
     }
+  },
+
+  async getFavicon(login) {
+    try {
+      const faviconData = await PlacesUtils.promiseFaviconData(login.hostname);
+      return {
+        faviconData,
+        guid: login.guid,
+      };
+    } catch (ex) {
+      return null;
+    }
+  },
+
+  async getAllFavicons(logins) {
+    let favicons = await Promise.all(
+      logins.map(login => this.getFavicon(login))
+    );
+    let vanillaFavicons = {};
+    for (let favicon of favicons) {
+      if (!favicon) {
+        continue;
+      }
+      try {
+        vanillaFavicons[favicon.guid] = {
+          data: favicon.faviconData.data,
+          dataLen: favicon.faviconData.dataLen,
+          mimeType: favicon.faviconData.mimeType,
+        };
+      } catch (ex) {}
+    }
+    return vanillaFavicons;
   },
 
   showMasterPasswordLoginNotifications() {
