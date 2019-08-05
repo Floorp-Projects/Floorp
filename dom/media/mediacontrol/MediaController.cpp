@@ -58,6 +58,7 @@ void TabMediaController::Shutdown() {
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   if (service->GetControllerById(Id())) {
     service->RemoveMediaController(this);
+    service->GetAudioFocusManager().RevokeAudioFocus(Id());
   }
 }
 
@@ -73,6 +74,10 @@ void TabMediaController::NotifyMediaActiveChanged(bool aActive) {
 
 void TabMediaController::NotifyMediaAudibleChanged(bool aAudible) {
   mAudible = aAudible;
+  if (mAudible) {
+    RefPtr<MediaControlService> service = MediaControlService::GetService();
+    service->GetAudioFocusManager().RequestAudioFocus(Id());
+  }
 }
 
 void TabMediaController::IncreaseControlledMediaNum() {
@@ -104,6 +109,7 @@ void TabMediaController::Deactivate() {
   mIsPlaying = false;
   RefPtr<MediaControlService> service = MediaControlService::GetService();
   service->RemoveMediaController(this);
+  service->GetAudioFocusManager().RevokeAudioFocus(Id());
 }
 
 uint64_t TabMediaController::ControlledMediaNum() const {
