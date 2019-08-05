@@ -360,8 +360,6 @@ struct ProfileSample {
   uint32_t mStack;
   double mTime;
   Maybe<double> mResponsiveness;
-  Maybe<double> mRSS;
-  Maybe<double> mUSS;
 };
 
 static void WriteSample(SpliceableJSONWriter& aWriter,
@@ -371,8 +369,6 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
     STACK = 0,
     TIME = 1,
     RESPONSIVENESS = 2,
-    RSS = 3,
-    USS = 4
   };
 
   AutoArraySchemaWriter writer(aWriter, aUniqueStrings);
@@ -383,14 +379,6 @@ static void WriteSample(SpliceableJSONWriter& aWriter,
 
   if (aSample.mResponsiveness.isSome()) {
     writer.DoubleElement(RESPONSIVENESS, *aSample.mResponsiveness);
-  }
-
-  if (aSample.mRSS.isSome()) {
-    writer.DoubleElement(RSS, *aSample.mRSS);
-  }
-
-  if (aSample.mUSS.isSome()) {
-    writer.DoubleElement(USS, *aSample.mUSS);
   }
 }
 
@@ -429,10 +417,7 @@ class EntryGetter {
 //     )+
 //     Marker*
 //     Responsiveness?
-//     ResidentMemory?
-//     UnsharedMemory?
 //   )
-//   | ( ResidentMemory UnsharedMemory? Time)  /* Memory */
 //   | ( /* Counters */
 //       CounterId
 //       Time
@@ -777,16 +762,6 @@ void ProfileBuffer::StreamSamplesToJSON(SpliceableJSONWriter& aWriter,
       e.Next();
     }
 
-    if (e.Has() && e.Get().IsResidentMemory()) {
-      sample.mRSS = Some(e.Get().GetDouble());
-      e.Next();
-    }
-
-    if (e.Has() && e.Get().IsUnsharedMemory()) {
-      sample.mUSS = Some(e.Get().GetDouble());
-      e.Next();
-    }
-
     WriteSample(aWriter, *aUniqueStacks.mUniqueStrings, sample);
   }
 }
@@ -1104,66 +1079,6 @@ void ProfileBuffer::StreamCountersToJSON(SpliceableJSONWriter& aWriter,
   aWriter.EndArray();  // counters
 }
 
-void ProfileBuffer::StreamMemoryToJSON(SpliceableJSONWriter& aWriter,
-                                       const TimeStamp& aProcessStartTime,
-                                       double aSinceTime) const {
-  enum Schema : uint32_t { TIME = 0, RSS = 1, USS = 2 };
-
-  EntryGetter e(*this);
-
-  aWriter.StartObjectProperty("memory");
-  // Stream all memory (rss/uss) data. We skip other entries, because we
-  // process them in StreamSamplesToJSON()/etc.
-  aWriter.IntProperty("initial_heap", 0);  // XXX FIX
-  aWriter.StartObjectProperty("samples");
-  {
-    JSONSchemaWriter schema(aWriter);
-    schema.WriteField("time");
-    schema.WriteField("rss");
-    schema.WriteField("uss");
-  }
-
-  aWriter.StartArrayProperty("data");
-  int64_t previous_rss = 0;
-  int64_t previous_uss = 0;
-  while (e.Has()) {
-    // valid sequence: Resident, Unshared?, Time
-    if (e.Get().IsResidentMemory()) {
-      int64_t rss = e.Get().GetInt64();
-      int64_t uss = 0;
-      e.Next();
-      if (e.Has()) {
-        if (e.Get().IsUnsharedMemory()) {
-          uss = e.Get().GetDouble();
-          e.Next();
-          if (!e.Has()) {
-            break;
-          }
-        }
-        if (e.Get().IsTime()) {
-          double time = e.Get().GetDouble();
-          if (time >= aSinceTime &&
-              (previous_rss != rss || previous_uss != uss)) {
-            AutoArraySchemaWriter writer(aWriter);
-            writer.DoubleElement(TIME, time);
-            writer.IntElement(RSS, rss);
-            if (uss != 0) {
-              writer.IntElement(USS, uss);
-            }
-            previous_rss = rss;
-            previous_uss = uss;
-          }
-        } else {
-          ERROR_AND_CONTINUE("expected a Time entry");
-        }
-      }
-    }
-    e.Next();
-  }
-  aWriter.EndArray();   // data
-  aWriter.EndObject();  // samples
-  aWriter.EndObject();  // memory
-}
 #  undef ERROR_AND_CONTINUE
 
 static void AddPausedRange(SpliceableJSONWriter& aWriter, const char* aReason,
@@ -1256,8 +1171,6 @@ bool ProfileBuffer::DuplicateLastSample(int aThreadId,
             (TimeStamp::NowUnfuzzed() - aProcessStartTime).ToMilliseconds()));
         break;
       case ProfileBufferEntry::Kind::Marker:
-      case ProfileBufferEntry::Kind::ResidentMemory:
-      case ProfileBufferEntry::Kind::UnsharedMemory:
       case ProfileBufferEntry::Kind::CounterKey:
       case ProfileBufferEntry::Kind::Number:
       case ProfileBufferEntry::Kind::Count:
