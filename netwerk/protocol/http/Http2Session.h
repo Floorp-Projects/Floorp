@@ -596,6 +596,7 @@ class Http2Session final : public ASpdySession,
   void RegisterTunnel(Http2Stream*);
   void UnRegisterTunnel(Http2Stream*);
   uint32_t FindTunnelCount(nsHttpConnectionInfo*);
+  uint32_t FindTunnelCount(nsCString const&);
   nsDataHashtable<nsCStringHashKey, uint32_t> mTunnelHash;
   uint32_t mTrrStreams;
 
