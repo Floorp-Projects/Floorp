@@ -12,7 +12,7 @@ object Versions {
     const val anko = "0.10.8"
     const val sentry = "1.7.10"
     const val leakcanary = "1.6.3"
-    const val leanplum = "4.3.1"
+    const val leanplum = "5.2.3"
 
     const val androidx_appcompat = "1.1.0-rc01"
     const val androidx_coordinator_layout = "1.1.0-beta01"
