@@ -372,17 +372,6 @@ bool CrossCompartmentWrapper::boxedValue_unbox(JSContext* cx,
 
 const CrossCompartmentWrapper CrossCompartmentWrapper::singleton(0u);
 
-static void NukeRemovedCrossCompartmentWrapper(JSContext* cx,
-                                               JSObject* wrapper) {
-  MOZ_ASSERT(wrapper->is<CrossCompartmentWrapperObject>());
-
-  NotifyGCNukeWrapper(wrapper);
-
-  wrapper->as<ProxyObject>().nuke();
-
-  MOZ_ASSERT(IsDeadProxyObject(wrapper));
-}
-
 JS_FRIEND_API void js::NukeCrossCompartmentWrapper(JSContext* cx,
                                                    JSObject* wrapper) {
   JS::Compartment* comp = wrapper->compartment();

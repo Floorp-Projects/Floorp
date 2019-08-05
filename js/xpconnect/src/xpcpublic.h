@@ -86,6 +86,11 @@ JSObject* TransplantObjectRetainingXrayExpandos(JSContext* cx,
                                                 JS::HandleObject origobj,
                                                 JS::HandleObject target);
 
+// If origObj has an xray waiver, nuke it before transplant.
+JSObject* TransplantObjectNukingXrayWaiver(JSContext* cx,
+                                           JS::HandleObject origObj,
+                                           JS::HandleObject target);
+
 bool IsContentXBLCompartment(JS::Compartment* compartment);
 bool IsContentXBLScope(JS::Realm* realm);
 bool IsInContentXBLScope(JSObject* obj);
