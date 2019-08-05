@@ -362,12 +362,12 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">Delete %1$d items</string>
-    <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Today</string>
-    <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">This week</string>
-    <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">This month</string>
+    <!-- Text for the header that groups the history for last 24 hours -->
+    <string name="history_24_hours">Last 24 hours</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">Last 7 days</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">Last 30 days</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">Older</string>
     <!-- Text shown when no history exists -->

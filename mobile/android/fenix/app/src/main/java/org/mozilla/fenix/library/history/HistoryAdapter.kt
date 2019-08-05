@@ -19,9 +19,9 @@ enum class HistoryItemTimeGroup {
     Today, ThisWeek, ThisMonth, Older;
 
     fun humanReadable(context: Context): String = when (this) {
-        Today -> context.getString(R.string.history_today)
-        ThisWeek -> context.getString(R.string.history_this_week)
-        ThisMonth -> context.getString(R.string.history_this_month)
+        Today -> context.getString(R.string.history_24_hours)
+        ThisWeek -> context.getString(R.string.history_7_days)
+        ThisMonth -> context.getString(R.string.history_30_days)
         Older -> context.getString(R.string.history_older)
     }
 }
