@@ -12,7 +12,7 @@ const promises = new Set();
 const resolutions = new Map();
 
 add_task(async function() {
-  const { client } = await setupForURL(toDataURL("default-test-page"));
+  const { client } = await setupTestForUri(toDataURL("default-test-page"));
 
   const { Page } = client;
   await Page.enable();

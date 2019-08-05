@@ -11,7 +11,7 @@
 const TEST_DOC = toDataURL("default-test-page");
 
 add_task(async function testCDP() {
-  const { client } = await setupForURL(TEST_DOC);
+  const { client } = await setupTestForUri(TEST_DOC);
   const { Page, Runtime } = client;
 
   const events = [];

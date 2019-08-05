@@ -102,32 +102,29 @@ function getTargets(CDP) {
 }
 
 /**
- * Set up test environment in same fashion as setupForURL(),
- * except using an empty document.
+ * Create a new tab for the provided uri and start a CDP server debugging the
+ * created tab.
  */
-async function setup() {
-  return setupForURL(toDataURL(""));
-}
+async function setupTestForUri(uri) {
+  // Open a test page, to prevent debugging the random default page
+  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri);
 
-/**
- * Set up test environment by starting the remote agent, connecting
- * the CDP client over loopback, and creating a fresh tab to avoid
- * state bleedover from previous test.
- */
-async function setupForURL(url) {
-  const tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-
+  // Start the CDP server
   await RemoteAgent.listen(Services.io.newURI("http://localhost:9222"));
+
+  // Retrieve the chrome-remote-interface library object
   const CDP = await getCDP();
 
+  // Connect to the server
   const client = await CDP({
     target(list) {
-      // ensure we are debugging the right target, i.e. the requested URL
-      return list.find(target => target.url == url);
+      // Ensure debugging the right target, i.e. the one for our test tab.
+      return list.find(target => {
+        return target.url == uri;
+      });
     },
   });
-  info("CDP client instantiated");
-
+  ok(true, "CDP client has been instantiated");
   return { client, tab };
 }
 
