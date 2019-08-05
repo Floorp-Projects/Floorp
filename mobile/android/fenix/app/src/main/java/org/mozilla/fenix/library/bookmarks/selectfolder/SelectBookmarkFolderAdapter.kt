@@ -6,11 +6,13 @@ package org.mozilla.fenix.library.bookmarks.selectfolder
 
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.util.dpToPx
+import org.jetbrains.anko.image
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibrarySiteItemView
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -67,7 +69,9 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
 
         fun bind(folder: BookmarkNodeWithDepth, selected: Boolean, onSelect: (BookmarkNode) -> Unit) {
             view.changeSelected(selected)
-            view.iconView.setImageResource(R.drawable.ic_folder_icon)
+            view.iconView.image = containerView.context.getDrawable(R.drawable.ic_folder_icon)?.apply {
+                setTint(ContextCompat.getColor(containerView.context, R.color.primary_text_light_theme))
+            }
             view.titleView.text = folder.node.title
             view.setOnClickListener {
                 onSelect(folder.node)
