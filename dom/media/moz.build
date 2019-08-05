@@ -42,6 +42,7 @@ DIRS += [
     'imagecapture',
     'ipc',
     'mediacapabilities',
+    'mediacontrol',
     'mediasink',
     'mediasource',
     'mp3',
