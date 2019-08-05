@@ -753,10 +753,6 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // visibility.
   static uint32_t sHorzExpandScrollPort;
   static uint32_t sVertExpandScrollPort;
-  // The fraction of the scrollport we allow to scroll by before we schedule
-  // an update of frame visibility.
-  static int32_t sHorzScrollFraction;
-  static int32_t sVertScrollFraction;
 };
 
 }  // namespace mozilla

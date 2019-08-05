@@ -4584,6 +4584,20 @@
   value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
+# The fraction of the scrollport we allow to horizontally scroll by before we
+# schedule an update of frame visibility.
+- name: layout.framevisibility.amountscrollbeforeupdatehorizontal
+  type: int32_t
+  value: 2
+  mirror: always
+
+# The fraction of the scrollport we allow to vertically scroll by before we
+# schedule an update of frame visibility.
+- name: layout.framevisibility.amountscrollbeforeupdatevertical
+  type: int32_t
+  value: 2
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "media."
 #---------------------------------------------------------------------------
