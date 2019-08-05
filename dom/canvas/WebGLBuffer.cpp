@@ -105,6 +105,12 @@ void WebGLBuffer::BufferData(GLenum target, uint64_t size, const void* data,
       mContext->ErrorOutOfMemory("Failed to alloc index cache.");
       return;
     }
+    // memcpy out of SharedArrayBuffers can be racey, and should generally use
+    // memcpySafeWhenRacy. But it's safe here:
+    // * We only memcpy in one place.
+    // * We only read out of the single copy, and only after copying.
+    // * If we get data value corruption from racing read-during-write, that's
+    // fine.
     memcpy(newIndexCache.get(), data, size);
     uploadData = newIndexCache.get();
   }
