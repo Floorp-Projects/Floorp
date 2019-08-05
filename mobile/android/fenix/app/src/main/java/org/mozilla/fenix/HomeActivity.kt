@@ -196,7 +196,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             return
         } else if (intent?.extras?.getBoolean(OPEN_TO_SEARCH) == true) {
             this.intent.putExtra(OPEN_TO_SEARCH, false)
-            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null, true))
+            navHost.navController.nav(null, NavGraphDirections.actionGlobalSearch(null))
             return
         }
 

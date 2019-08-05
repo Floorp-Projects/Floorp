@@ -72,11 +72,6 @@
             android:name="session_id"
             app:argType="string"
             app:nullable="true" />
-        <argument
-            android:name="displaySearchShortcuts"
-            android:defaultValue="false"
-            app:argType="boolean"
-            app:nullable="false" />
         <action
             android:id="@+id/action_searchFragment_to_searchEngineFragment"
             app:destination="@id/searchEngineFragment"
