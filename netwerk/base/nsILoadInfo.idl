@@ -6,6 +6,7 @@
 
 #include "nsISupports.idl"
 #include "nsIContentPolicy.idl"
+#include "nsIScriptSecurityManager.idl"
 
 interface nsIChannel;
 interface nsIContentSecurityPolicy;
@@ -398,7 +399,7 @@ interface nsILoadInfo : nsISupports
    */
   readonly attribute nsSecurityFlags securityFlags;
 
-%{ C++
+%{C++
   inline nsSecurityFlags GetSecurityFlags()
   {
     nsSecurityFlags result;
@@ -493,6 +494,19 @@ interface nsILoadInfo : nsISupports
    * when calling CheckLoadURIWithPrincipal().
    */
   [infallible] readonly attribute boolean disallowScript;
+
+%{C++
+  uint32_t CheckLoadURIFlags() {
+    uint32_t flags = nsIScriptSecurityManager::STANDARD;
+    if (GetAllowChrome()) {
+      flags |= nsIScriptSecurityManager::ALLOW_CHROME;
+    }
+    if (GetDisallowScript()) {
+      flags |= nsIScriptSecurityManager::DISALLOW_SCRIPT;
+    }
+    return flags;
+  }
+%}
 
   /**
    * Returns true if SEC_DONT_FOLLOW_REDIRECTS is set.
