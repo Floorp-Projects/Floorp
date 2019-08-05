@@ -625,6 +625,12 @@ strong {
   line-height: 14px;
 }
 
+.event-tooltip-editor-frame {
+  border-style: none;
+  height: 100%;
+  width: 100%;
+}
+
 /* Tooltip: HTML Search */
 
 #searchbox-panel-listbox {
