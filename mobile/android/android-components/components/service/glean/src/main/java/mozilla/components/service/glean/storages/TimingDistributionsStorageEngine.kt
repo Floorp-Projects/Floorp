@@ -9,16 +9,14 @@ import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.private.CommonMetricData
-import mozilla.components.service.glean.private.HistogramType
-import mozilla.components.service.glean.private.TimeUnit
-import mozilla.components.service.glean.utils.getAdjustedTime
 
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.org.json.tryGetInt
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import mozilla.components.support.ktx.android.org.json.tryGetString
-import org.json.JSONArray
 import org.json.JSONObject
+import java.lang.Math.log
+import java.lang.Math.pow
+import kotlin.math.log
 
 /**
  * This singleton handles the in-memory storage logic for timing distributions. It is meant to be
@@ -34,6 +32,11 @@ internal object TimingDistributionsStorageEngine : TimingDistributionsStorageEng
 internal open class TimingDistributionsStorageEngineImplementation(
     override val logger: Logger = Logger("glean/TimingDistributionsStorageEngine")
 ) : GenericStorageEngine<TimingDistributionData>() {
+
+    companion object {
+        // Maximum time of 10 minutes in nanoseconds
+        internal const val MAX_SAMPLE_TIME: Long = 1000L * 1000L * 1000L * 60L * 10L
+    }
 
     override fun deserializeSingleMetric(metricName: String, value: Any?): TimingDistributionData? {
         return try {
@@ -60,47 +63,40 @@ internal open class TimingDistributionsStorageEngineImplementation(
      *
      * @param metricData the metric information for the timing distribution
      * @param sample the value to accumulate, in nanoseconds
-     * @param timeUnit the [TimeUnit] the sample will be converted to
      */
     @Synchronized
     fun accumulate(
         metricData: CommonMetricData,
-        sample: Long,
-        timeUnit: TimeUnit
+        sample: Long
     ) {
-        // We're checking for errors in `accumulateSamples` already, but
-        // we need to check it here too anyway because `getAdjustedTime` would
-        // throw otherwise.
-        if (sample < 0) {
-            ErrorRecording.recordError(
-                metricData,
-                ErrorRecording.ErrorType.InvalidValue,
-                "Accumulate negative $sample",
-                logger
-            )
-            return
-        }
-
-        val sampleInUnit = getAdjustedTime(timeUnit, sample)
-        accumulateSamples(metricData, longArrayOf(sampleInUnit), timeUnit)
+        accumulateSamples(metricData, longArrayOf(sample))
     }
 
     /**
      * Accumulate an array of samples for the provided metric.
      *
      * @param metricData the metric information for the timing distribution
-     * @param samples the values to accumulate, provided in the metric's [TimeUnit] (they won't
-     *        be truncated nor converted)
-     * @param timeUnit the [TimeUnit] the samples are in
+     * @param samples the values to accumulate, in nanoseconds
      */
     @Synchronized
     fun accumulateSamples(
         metricData: CommonMetricData,
-        samples: LongArray,
-        timeUnit: TimeUnit
+        samples: LongArray
     ) {
-        val validSamples = samples.filter { sample -> sample >= 0 }
-        val numNegativeSamples = samples.size - validSamples.size
+        var numTooLongSamples = 0
+        var numNegativeSamples = 0
+        val validSamples = samples.map { sample ->
+            if (sample < 0) {
+                numNegativeSamples += 1
+                0
+            } else if (sample > MAX_SAMPLE_TIME) {
+                numTooLongSamples += 1
+                MAX_SAMPLE_TIME
+            } else {
+                sample
+            }
+        }
+
         if (numNegativeSamples > 0) {
             ErrorRecording.recordError(
                 metricData,
@@ -109,22 +105,32 @@ internal open class TimingDistributionsStorageEngineImplementation(
                 logger,
                 numNegativeSamples
             )
+            // Negative samples indicate a serious and unexpected error, so don't record anything
             return
+        }
+
+        if (numTooLongSamples > 0) {
+            ErrorRecording.recordError(
+                metricData,
+                ErrorRecording.ErrorType.InvalidValue,
+                "Accumulate $numTooLongSamples samples longer than 10 minutes",
+                logger,
+                numTooLongSamples
+            )
+            // Too long samples should just be truncated, but otherwise we deal record and handle them
         }
 
         // Since the custom combiner closure captures this value, we need to just create a dummy
         // value here that won't be used by the combine function, and create a fresh
         // TimingDistributionData for each value that doesn't have an existing current value.
-        val dummy = TimingDistributionData(category = metricData.category, name = metricData.name,
-            timeUnit = timeUnit)
+        val dummy = TimingDistributionData(category = metricData.category, name = metricData.name)
         validSamples.forEach { sample ->
             super.recordMetric(metricData, dummy, null) { currentValue, _ ->
                 currentValue?.let {
                     it.accumulate(sample)
                     it
                 } ?: let {
-                    val newTD = TimingDistributionData(category = metricData.category, name = metricData.name,
-                        timeUnit = timeUnit)
+                    val newTD = TimingDistributionData(category = metricData.category, name = metricData.name)
                     newTD.accumulate(sample)
                     return@let newTD
                 }
@@ -154,38 +160,69 @@ internal open class TimingDistributionsStorageEngineImplementation(
 /**
  * This class represents the structure of a timing distribution according to the pipeline schema. It
  * is meant to help serialize and deserialize data to the correct format for transport and storage,
- * as well as including a helper function to calculate the bucket sizes.
+ * as well as performing the calculations to determine the correct bucket for each sample.
+ *
+ * The bucket index of a given sample is determined with the following function:
+ *
+ *     i = ⌊n log₂(𝑥)⌋
+ *
+ * In other words, there are n buckets for each power of 2 magnitude.
+ *
+ * The value of 8 for n was determined experimentally based on existing data to have sufficient
+ * resolution.
+ *
+ * Samples greater than 10 minutes in length are truncated to 10 minutes.
  *
  * @param category of the metric
  * @param name of the metric
- * @param bucketCount total number of buckets
- * @param rangeMin the minimum value that can be represented
- * @param rangeMax the maximum value that can be represented
- * @param histogramType the [HistogramType] representing the bucket layout
- * @param values a map containing the bucket index mapped to the accumulated count
+ * @param values a map containing the minimum bucket value mapped to the accumulated count
  * @param sum the accumulated sum of all the samples in the timing distribution
- * @param timeUnit the base [TimeUnit] of the bucket values
  */
 @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
 data class TimingDistributionData(
     val category: String,
     val name: String,
-    val bucketCount: Int = DEFAULT_BUCKET_COUNT,
-    val rangeMin: Long = DEFAULT_RANGE_MIN,
-    val rangeMax: Long = DEFAULT_RANGE_MAX,
-    val histogramType: HistogramType = HistogramType.Exponential,
     // map from bucket limits to accumulated values
     val values: MutableMap<Long, Long> = mutableMapOf(),
-    var sum: Long = 0,
-    val timeUnit: TimeUnit = TimeUnit.Millisecond
+    var sum: Long = 0
 ) {
     companion object {
-        // The following are defaults for a simple timing distribution for the default time unit
-        // of millisecond.  The values arrived at were an approximated using existing "_MS"
-        // telemetry probes as a guide.
-        const val DEFAULT_BUCKET_COUNT = 100
-        const val DEFAULT_RANGE_MIN = 0L
-        const val DEFAULT_RANGE_MAX = 60000L
+        // The base of the logarithm used to determine bucketing
+        internal const val LOG_BASE = 2.0
+
+        // The buckets per each order of magnitude of the logarithm.
+        internal const val BUCKETS_PER_MAGNITUDE = 8.0
+
+        // The combined log base and buckets per magnitude.
+        internal val EXPONENT = pow(LOG_BASE, 1.0 / BUCKETS_PER_MAGNITUDE)
+
+        /**
+         * Maps a sample to a "bucket index" that it belongs in.
+         * A "bucket index" is the consecutive integer index of each bucket, useful as a
+         * mathematical concept, even though the internal representation is stored and
+         * sent using the minimum value in each bucket.
+         */
+        internal fun sampleToBucketIndex(sample: Long): Long {
+            return log(sample.toDouble() + 1, EXPONENT).toLong()
+        }
+
+        /**
+         * Determines the minimum value of a bucket, given a bucket index.
+         */
+        internal fun bucketIndexToBucketMinimum(bucketIndex: Long): Long {
+            return pow(EXPONENT, bucketIndex.toDouble()).toLong()
+        }
+
+        /**
+         * Maps a sample to the minimum value of the bucket it belongs in.
+         */
+        internal fun sampleToBucketMinimum(sample: Long): Long {
+            return if (sample == 0L) {
+                0L
+            } else {
+                bucketIndexToBucketMinimum(sampleToBucketIndex(sample))
+            }
+        }
 
         /**
          * Factory function that takes stringified JSON and converts it back into a
@@ -209,37 +246,21 @@ data class TimingDistributionData(
             // something is wrong and we should return null.
             val category = jsonObject.tryGetString("category").orEmpty()
             val name = jsonObject.tryGetString("name") ?: return null
-            val bucketCount = jsonObject.tryGetInt("bucket_count") ?: return null
-            // If 'range' isn't present, JSONException is thrown
-            val range = try {
-                val array = jsonObject.getJSONArray("range")
-                // Range must have exactly 2 values
-                if (array.length() == 2) {
-                    // The getLong() function throws JSONException if we can't convert to a Long, so
-                    // the catch should return null if either value isn't a valid Long
-                    array.getLong(0)
-                    array.getLong(1)
-                    // This returns the JSONArray to the assignment if everything checks out
-                    array
-                } else {
-                    return null
-                }
-            } catch (e: org.json.JSONException) {
-                return null
-            }
-            val rawHistogramType = jsonObject.tryGetString("histogram_type") ?: return null
-            val histogramType = try {
-                HistogramType.valueOf(rawHistogramType.capitalize())
-            } catch (e: IllegalArgumentException) {
-                return null
-            }
             // Attempt to parse the values map, if it fails then something is wrong and we need to
             // return null.
             val values = try {
                 val mapData = jsonObject.getJSONObject("values")
                 val valueMap: MutableMap<Long, Long> = mutableMapOf()
                 mapData.keys().forEach { key ->
-                    valueMap[key.toLong()] = mapData.tryGetLong(key) ?: 0L
+                    mapData.tryGetLong(key)?.let {
+                        // Don't restore buckets with zero values. They are unnecessary,
+                        // and it also makes it easier to determine the contiguous range of
+                        // buckets that we need to fill in the ping when we send it out if
+                        // we can assume the values map never as 0 values.
+                        if (it != 0L) {
+                            valueMap[key.toLong()] = it
+                        }
+                    }
                 }
                 valueMap
             } catch (e: org.json.JSONException) {
@@ -247,23 +268,12 @@ data class TimingDistributionData(
                 return null
             }
             val sum = jsonObject.tryGetLong("sum") ?: return null
-            val rawTimeUnit = jsonObject.tryGetString("time_unit") ?: return null
-            val timeUnit = try {
-                TimeUnit.valueOf(rawTimeUnit.capitalize())
-            } catch (e: IllegalArgumentException) {
-                return null
-            }
 
             return TimingDistributionData(
                 category = category,
                 name = name,
-                bucketCount = bucketCount,
-                rangeMin = range.getLong(0),
-                rangeMax = range.getLong(1),
-                histogramType = histogramType,
                 values = values,
-                sum = sum,
-                timeUnit = timeUnit
+                sum = sum
             )
         }
     }
@@ -276,37 +286,15 @@ data class TimingDistributionData(
     // blank categories
     internal val identifier: String = if (category.isEmpty()) { name } else { "$category.$name" }
 
-    // This is a list of limits for the buckets.  Instantiated lazily to ensure that the range and
-    // bucket counts are set first.
-    internal val buckets: List<Long> by lazy { getBuckets() }
-
     /**
-     * Accumulates a sample to the correct bucket, using a binary search to locate the index of the
-     * bucket where the sample is bigger than or equal to the bucket limit.
+     * Accumulates a sample to the correct bucket.
      * If a value doesn't exist for this bucket yet, one is created.
      *
      * @param sample Long value representing the sample that is being accumulated
      */
     internal fun accumulate(sample: Long) {
-        var under = 0
-        var over = bucketCount
-        var mid: Int
-
-        do {
-            mid = under + (over - under) / 2
-            if (mid == under) {
-                break
-            }
-
-            if (buckets[mid] <= sample) {
-                under = mid
-            } else {
-                over = mid
-            }
-        } while (true)
-
-        val limit = buckets[mid]
-        values[limit] = (values[limit] ?: 0) + 1
+        var bucketMinimum = sampleToBucketMinimum(sample)
+        values[bucketMinimum] = (values[bucketMinimum] ?: 0) + 1
         sum += sample
     }
 
@@ -315,55 +303,33 @@ data class TimingDistributionData(
      * purposes.
      */
     internal fun toJsonObject(): JSONObject {
+        val completeValues = if (values.size != 0) {
+            // A bucket range is defined by its own key, and the key of the next
+            // highest bucket. This emplicitly adds any empty buckets (even if they have values
+            // of 0) between the lowest and highest bucket so that the backend knows the
+            // bucket ranges even without needing to know that function that was used to
+            // create the buckets.
+            val minBucket = sampleToBucketIndex(values.keys.min()!!)
+            val maxBucket = sampleToBucketIndex(values.keys.max()!!) + 1
+
+            var completeValues: MutableMap<String, Long> = mutableMapOf()
+
+            for (i in minBucket..maxBucket) {
+                val bucketMinimum = bucketIndexToBucketMinimum(i)
+                val bucketSum = values.get(bucketMinimum)?.let { it } ?: 0
+                completeValues[bucketMinimum.toString()] = bucketSum
+            }
+
+            completeValues
+        } else {
+            values
+        }
+
         return JSONObject(mapOf(
             "category" to category,
             "name" to name,
-            "bucket_count" to bucketCount,
-            "range" to JSONArray(arrayOf(rangeMin, rangeMax)),
-            "histogram_type" to histogramType.toString().toLowerCase(),
-            "values" to values.mapKeys { "${it.key}" },
-            "sum" to sum,
-            "time_unit" to timeUnit.toString().toLowerCase()
+            "values" to completeValues,
+            "sum" to sum
         ))
-    }
-
-    /**
-     * Helper function to generate the list of bucket max values used when accumulating to the
-     * correct buckets.
-     *
-     * @return List containing the bucket limits
-     */
-    private fun getBuckets(): List<Long> {
-        // This algorithm calculates the bucket sizes using a natural log approach to get
-        // `bucketCount` number of buckets, exponentially spaced between `range[MIN]` and
-        // `range[MAX]`.
-        //
-        // Bucket limits are the minimal bucket value.
-        // That means values in a bucket `i` are `range[i] <= value < range[i+1]`.
-        // It will always contain an underflow bucket (`< 1`).
-        val logMax = Math.log(rangeMax.toDouble())
-        val result: MutableList<Long> = mutableListOf()
-        var current = rangeMin
-        if (current == 0L) {
-            current = 1L
-        }
-
-        // underflow bucket
-        result.add(0)
-        result.add(current)
-
-        for (i in 2 until bucketCount) {
-            val logCurrent = Math.log(current.toDouble())
-            val logRatio = (logMax - logCurrent) / (bucketCount - i)
-            val logNext = logCurrent + logRatio
-            val nextValue = Math.round(Math.exp(logNext))
-            if (nextValue > current) {
-                current = nextValue
-            } else {
-                ++current
-            }
-            result.add(current)
-        }
-        return result.sorted()
     }
 }

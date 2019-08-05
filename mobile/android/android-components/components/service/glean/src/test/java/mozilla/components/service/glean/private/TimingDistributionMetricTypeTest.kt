@@ -48,7 +48,7 @@ class TimingDistributionMetricTypeTest {
         for (i in 1L..3L) {
             TimingManager.getElapsedNanos = { 0 }
             val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i * 1000000 } // ms to ns
+            TimingManager.getElapsedNanos = { i }
             metric.stopAndAccumulate(timerId)
         }
 
@@ -119,7 +119,7 @@ class TimingDistributionMetricTypeTest {
         for (i in 1L..3L) {
             TimingManager.getElapsedNanos = { 0 }
             val timerId = metric.start()
-            TimingManager.getElapsedNanos = { i * 1000000 } // ms to ns
+            TimingManager.getElapsedNanos = { i }
             metric.stopAndAccumulate(timerId)
         }
 

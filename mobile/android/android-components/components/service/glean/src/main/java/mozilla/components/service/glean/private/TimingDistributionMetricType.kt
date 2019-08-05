@@ -63,8 +63,7 @@ data class TimingDistributionMetricType(
                 // Delegate storing the string to the storage engine.
                 TimingDistributionsStorageEngine.accumulate(
                     metricData = this@TimingDistributionMetricType,
-                    sample = elapsedNanos,
-                    timeUnit = timeUnit
+                    sample = elapsedNanos
                 )
             }
         }
@@ -94,8 +93,7 @@ data class TimingDistributionMetricType(
         Dispatchers.API.launch {
             TimingDistributionsStorageEngine.accumulateSamples(
                 metricData = this@TimingDistributionMetricType,
-                samples = samples,
-                timeUnit = timeUnit
+                samples = samples
             )
         }
     }
