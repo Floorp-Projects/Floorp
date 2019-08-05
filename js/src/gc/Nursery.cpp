@@ -1405,14 +1405,6 @@ void js::Nursery::maybeResizeNursery(JS::GCReason reason) {
 }
 
 bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
-  // Disable the nursery if the user changed the configuration setting. The
-  // nursery can only be re-enabled by resetting the configuration and
-  // restarting firefox.
-  if (tunables().gcMaxNurseryBytes() == 0) {
-    disable();
-    return true;
-  }
-
   // Shrink the nursery to its minimum size if we ran out of memory or
   // received a memory pressure event.
   if (gc::IsOOMReason(reason) || runtime()->gc.systemHasLowMemory()) {
@@ -1427,6 +1419,7 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 #endif
 
+  MOZ_ASSERT(tunables().gcMaxNurseryBytes() >= ArenaSize);
   CheckedInt<unsigned> newMaxNurseryChunksChecked =
       (JS_ROUND(CheckedInt<size_t>(tunables().gcMaxNurseryBytes()), ChunkSize) /
        ChunkSize)
