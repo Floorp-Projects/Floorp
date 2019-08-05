@@ -51,6 +51,8 @@ class CanvasEventRingBuffer final : public gfx::EventRingBuffer {
 
   bool good() const final { return mGood; }
 
+  void SetIsBad() final { mGood = false; }
+
   void write(const char* const aData, const size_t aSize) final;
 
   bool HasDataToRead();
