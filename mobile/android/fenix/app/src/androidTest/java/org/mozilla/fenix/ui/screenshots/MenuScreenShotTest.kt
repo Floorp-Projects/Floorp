@@ -14,28 +14,25 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-
-import org.junit.After
-import org.junit.Rule
-import org.junit.Test
-import org.mozilla.fenix.HomeActivity
-import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.HomeActivityTestRule
-import org.mozilla.fenix.helpers.TestAssetHelper
-
-import tools.fastlane.screengrab.Screengrab
-import tools.fastlane.screengrab.locale.LocaleTestRule
-
 import br.com.concretesolutions.kappuccino.actions.ClickActions
 import br.com.concretesolutions.kappuccino.extensions.type
 import okhttp3.mockwebserver.MockWebServer
 import org.hamcrest.Matchers
+import org.junit.After
 import org.junit.Before
+import org.junit.Rule
+import org.junit.Test
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.HomeActivityTestRule
+import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.swipeToBottom
+import tools.fastlane.screengrab.Screengrab
+import tools.fastlane.screengrab.locale.LocaleTestRule
 
 class MenuScreenShotTest : ScreenshotTest() {
 
@@ -234,7 +231,7 @@ fun saveToCollectionButton() = Espresso.onView(Matchers.allOf(ViewMatchers.withI
 fun collectionsButton() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.collection_overflow_button))).click()
 fun addBookmarkFolderButton() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.add_bookmark_folder))).click()
 fun confirmAddFolderButton() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.confirm_add_folder_button))).click()
-fun addFolderName() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.bookmark_add_folder_title_edit)))
+fun addFolderName() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.bookmarkAddFolderTitleEdit)))
         .type("folder")
 fun bookmarkFolderMenu() = Espresso.onView(Matchers.allOf(ViewMatchers.withId(R.id.overflow_menu))).click()
 fun editBookmarkFolder() = ClickActions.click { text(R.string.bookmark_menu_edit_button) }

@@ -17,18 +17,18 @@ import androidx.test.espresso.matcher.ViewMatchers
 import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
-import androidx.test.uiautomator.UiDevice
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
+import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
+import org.hamcrest.CoreMatchers.startsWith
 import org.hamcrest.Matchers
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.TestAssetHelper
-import androidx.test.uiautomator.UiSelector
-import org.hamcrest.CoreMatchers.startsWith
 
 /**
  * Implementation of Robot Pattern for the search fragment.
@@ -108,12 +108,12 @@ private fun allowPermissionButton(): UiObject {
 
 private fun scanButton(): ViewInteraction {
     mDevice.wait(Until.findObject(By.res("R.id.search_scan_button")), TestAssetHelper.waitingTime)
-    return onView(allOf(withId(R.id.search_scan_button)))
+    return onView(allOf(withId(R.id.searchScanButton)))
 }
 
 private fun shortcutsButton(): ViewInteraction {
     mDevice.wait(Until.findObjects(By.res("R.id.search_shortcuts_button")), TestAssetHelper.waitingTime)
-    return onView(withId(R.id.search_shortcuts_button))
+    return onView(withId(R.id.searchShortcutsButton))
 }
 
 private fun assertDuckDuckGoURL() {
