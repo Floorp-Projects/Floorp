@@ -27,7 +27,7 @@ add_task(async function test_downloads_api_namespace_and_permissions() {
   let extensionData = {
     background: backgroundScript,
     manifest: {
-      permissions: ["downloads", "downloads.open", "downloads.shelf"],
+      permissions: ["downloads", "downloads.open"],
     },
   };
 
