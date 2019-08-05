@@ -320,7 +320,24 @@ void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
                   /* aReadbackSize */ Nothing(),
                   /* aReadbackFormat */ Nothing(),
                   /* aReadbackBuffer */ Nothing(), hadSlowFrame);
-  FrameRenderingComplete(aWindowId);
+
+  {  // scope lock
+    auto windows = mWindowInfos.Lock();
+    auto it = windows->find(AsUint64(aWindowId));
+    if (it == windows->end()) {
+      MOZ_ASSERT(false);
+      return;
+    }
+    WindowInfo* info = it->second;
+    info->mPendingFrames.pop();
+    info->mIsRendering = false;
+  }
+
+  // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
+  // point until now (when the frame is finally pushed to the screen) is
+  // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
+  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
+                                          frame.mStartTime);
 }
 
 void RenderThread::WakeUp(wr::WindowId aWindowId) {
@@ -544,31 +561,6 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
   }
   it->second->mPendingFrames.push(
       PendingFrameInfo{aStartTime, aStartId, 0, aDocFrameCount, false});
-}
-
-void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
-  auto windows = mWindowInfos.Lock();
-  auto it = windows->find(AsUint64(aWindowId));
-  if (it == windows->end()) {
-    MOZ_ASSERT(false);
-    return;
-  }
-  WindowInfo* info = it->second;
-  MOZ_ASSERT(info->PendingCount() > 0);
-  MOZ_ASSERT(info->mIsRendering);
-  if (info->PendingCount() <= 0) {
-    return;
-  }
-
-  PendingFrameInfo frame = std::move(info->mPendingFrames.front());
-  info->mPendingFrames.pop();
-  info->mIsRendering = false;
-
-  // The start time is from WebRenderBridgeParent::CompositeToTarget. From that
-  // point until now (when the frame is finally pushed to the screen) is
-  // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
-  mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
-                                          frame.mStartTime);
 }
 
 void RenderThread::NotifySlowFrame(wr::WindowId aWindowId) {
