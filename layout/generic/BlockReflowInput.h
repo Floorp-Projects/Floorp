@@ -39,7 +39,6 @@ class BlockReflowInput {
           mIsLineLayoutEmpty(false),
           mIsOverflowContainer(false),
           mIsFloatListInBlockPropertyTable(false),
-          mFloatFragmentsInsideColumnEnabled(false),
           mCanHaveOverflowMarkers(false) {}
 
     // Set in the BlockReflowInput constructor when the frame being reflowed has
@@ -100,9 +99,6 @@ class BlockReflowInput {
 
     // Set when our mPushedFloats list is stored on the block's property table.
     bool mIsFloatListInBlockPropertyTable : 1;
-
-    // Set when the pref layout.float-fragments-inside-column.enabled is true.
-    bool mFloatFragmentsInsideColumnEnabled : 1;
 
     // Set when we need text-overflow or -webkit-line-clamp processing.
     bool mCanHaveOverflowMarkers : 1;
