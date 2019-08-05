@@ -44,8 +44,10 @@ add_task(async function testSetHomepageFromBookmark() {
   dialog.document.getElementById("bookmarks").selectItems([bm.guid]);
   dialog.document.documentElement.getButton("accept").click();
 
+  await TestUtils.waitForCondition(() => HomePage.get() == TEST_URL1);
+
   Assert.equal(
-    Services.prefs.getCharPref("browser.startup.homepage"),
+    HomePage.get(),
     TEST_URL1,
     "Should have set the homepage to the same as the bookmark."
   );
@@ -74,8 +76,12 @@ add_task(async function testSetHomepageFromTopLevelFolder() {
     .selectItems([PlacesUtils.bookmarks.menuGuid]);
   dialog.document.documentElement.getButton("accept").click();
 
+  await TestUtils.waitForCondition(
+    () => HomePage.get() == `${TEST_URL1}|${TEST_URL2}`
+  );
+
   Assert.equal(
-    Services.prefs.getCharPref("browser.startup.homepage"),
+    HomePage.get(),
     `${TEST_URL1}|${TEST_URL2}`,
     "Should have set the homepage to the same as the bookmark."
   );

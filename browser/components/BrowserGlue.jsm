@@ -3033,7 +3033,7 @@ BrowserGlue.prototype = {
             HomePage.reset();
           } else {
             value = updated;
-            HomePage.set(value);
+            HomePage.safeSet(value);
           }
         }
       }

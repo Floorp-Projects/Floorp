@@ -314,7 +314,7 @@ var gHomePane = {
         break;
       case this.HOME_MODE_BLANK:
         if (HomePage.get() !== "about:blank") {
-          HomePage.set("about:blank");
+          HomePage.safeSet("about:blank");
         } else {
           this._renderCustomSettings({ shouldShow: false });
         }
@@ -370,7 +370,7 @@ var gHomePane = {
 
     // FIXME Bug 244192: using dangerous "|" joiner!
     if (tabs.length) {
-      HomePage.set(tabs.map(getTabURI).join("|"));
+      HomePage.set(tabs.map(getTabURI).join("|")).catch(Cu.reportError);
     }
 
     Services.telemetry.scalarAdd("preferences.use_current_page", 1);
@@ -382,7 +382,7 @@ var gHomePane = {
     }
     if (rv.urls && rv.names) {
       // XXX still using dangerous "|" joiner!
-      HomePage.set(rv.urls.join("|"));
+      HomePage.set(rv.urls.join("|")).catch(Cu.reportError);
     }
   },
 
@@ -429,7 +429,7 @@ var gHomePane = {
 
   onCustomHomePageChange(event) {
     const value = event.target.value || HomePage.getDefault();
-    HomePage.set(value);
+    HomePage.set(value).catch(Cu.reportError);
   },
 
   /**

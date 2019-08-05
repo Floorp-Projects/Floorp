@@ -21,6 +21,11 @@ ChromeUtils.defineModuleGetter(
   "ExtensionControlledPopup",
   "resource:///modules/ExtensionControlledPopup.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "HomePage",
+  "resource:///modules/HomePage.jsm"
+);
 
 const DEFAULT_SEARCH_STORE_TYPE = "default_search";
 const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
@@ -226,8 +231,11 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
     await ExtensionSettingsStore.initialize();
 
     let homepageUrl = manifest.chrome_settings_overrides.homepage;
+    const ignoreHomePageUrl =
+      homepageUrl && (await HomePage.shouldIgnore(homepageUrl));
 
-    if (homepageUrl) {
+    // If this is a page we ignore, just skip the homepage setting completely.
+    if (homepageUrl && !ignoreHomePageUrl) {
       let inControl;
       if (
         extension.startupReason == "ADDON_INSTALL" ||

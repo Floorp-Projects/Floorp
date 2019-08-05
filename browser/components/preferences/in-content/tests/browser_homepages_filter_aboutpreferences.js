@@ -20,13 +20,16 @@ add_task(async function testSetHomepageUseCurrent() {
   useCurrent.click();
 
   is(gBrowser.tabs.length, 3, "Three tabs should be open");
+  await TestUtils.waitForCondition(
+    () => HomePage.get() == "about:blank|about:home"
+  );
   is(
     HomePage.get(),
     "about:blank|about:home",
     "about:blank and about:home should be the only homepages set"
   );
 
-  HomePage.set(oldHomepage);
+  HomePage.safeSet(oldHomepage);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
