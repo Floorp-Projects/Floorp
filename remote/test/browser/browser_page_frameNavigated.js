@@ -11,7 +11,7 @@ const promises = new Set();
 const resolutions = new Map();
 
 add_task(async function() {
-  const { client } = await setupForURL(TEST_DOC);
+  const { client } = await setupTestForUri(TEST_DOC);
 
   const { Page } = client;
 
