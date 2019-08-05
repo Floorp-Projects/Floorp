@@ -215,6 +215,8 @@ class EventRingBuffer {
 
   virtual bool good() const = 0;
 
+  virtual void SetIsBad() = 0;
+
  protected:
   /**
    * Wait until space is available for writing and then set mBufPos and
@@ -264,6 +266,7 @@ class EventStream {
   virtual void write(const char* aData, size_t aSize) = 0;
   virtual void read(char* aOut, size_t aSize) = 0;
   virtual bool good() = 0;
+  virtual void SetIsBad() = 0;
 };
 
 class RecordedEvent {
