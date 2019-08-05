@@ -51,6 +51,8 @@ if [ ${COMMAND} = "verify" ]; then
     exit $result
 fi
 
+test -d "${RSPDIR}" || mkdir "${RSPDIR}"
+
 for request in $sha_ShortMsg_requests; do
     response=`echo $request | sed -e "s/req/rsp/"`
     echo $request $response
