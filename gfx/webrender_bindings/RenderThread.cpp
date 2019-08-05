@@ -289,8 +289,7 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
     return;
   }
 
-  TimeStamp startTime;
-  VsyncId startId;
+  PendingFrameInfo frame;
 
   bool hadSlowFrame;
   {  // scope lock
@@ -299,13 +298,12 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
     MOZ_ASSERT(it != windows->end());
     WindowInfo* info = it->second;
     MOZ_ASSERT(info->mPendingCount > 0);
-    startTime = info->mStartTimes.front();
-    startId = info->mStartIds.front();
+    frame = info->mPendingFrames.front();
     hadSlowFrame = info->mHadSlowFrame;
     info->mHadSlowFrame = false;
   }
 
-  UpdateAndRender(aWindowId, startId, startTime, aRender,
+  UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, aRender,
                   /* aReadbackSize */ Nothing(),
                   /* aReadbackFormat */ Nothing(),
                   /* aReadbackBuffer */ Nothing(), hadSlowFrame);
@@ -532,8 +530,7 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
     return;
   }
   it->second->mPendingCount++;
-  it->second->mStartTimes.push(aStartTime);
-  it->second->mStartIds.push(aStartId);
+  it->second->mPendingFrames.push(PendingFrameInfo{aStartTime, aStartId});
   it->second->mDocFrameCounts.push(aDocFrameCount);
 }
 
@@ -575,6 +572,9 @@ void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
   if (info->mPendingCount <= 0) {
     return;
   }
+
+  PendingFrameInfo frame = std::move(info->mPendingFrames.front());
+  info->mPendingFrames.pop();
   info->mPendingCount--;
   info->mRenderingCount--;
 
@@ -582,9 +582,7 @@ void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
   // point until now (when the frame is finally pushed to the screen) is
   // equivalent to the COMPOSITE_TIME metric in the non-WR codepath.
   mozilla::Telemetry::AccumulateTimeDelta(mozilla::Telemetry::COMPOSITE_TIME,
-                                          info->mStartTimes.front());
-  info->mStartTimes.pop();
-  info->mStartIds.pop();
+                                          frame.mStartTime);
 }
 
 void RenderThread::NotifySlowFrame(wr::WindowId aWindowId) {
