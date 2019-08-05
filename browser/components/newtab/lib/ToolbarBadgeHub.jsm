@@ -51,7 +51,7 @@ ChromeUtils.defineModuleGetter(
 
 // Frequency at which to check for new messages
 const SYSTEM_TICK_INTERVAL = 5 * 60 * 1000;
-let notificationsByWindow = new WeakMap();
+const notificationsByWindow = new WeakMap();
 
 class _ToolbarBadgeHub {
   constructor() {
@@ -213,7 +213,6 @@ class _ToolbarBadgeHub {
     }
     this._clearBadgeTimeout();
     this.state = {};
-    notificationsByWindow = new WeakMap();
   }
 
   removeToolbarNotification(toolbarButton) {
@@ -338,7 +337,6 @@ class _ToolbarBadgeHub {
     this._clearBadgeTimeout();
     clearInterval(this.state._intervalId);
     this.state = null;
-    notificationsByWindow = new WeakMap();
     Services.prefs.removeObserver(this.prefs.WHATSNEW_TOOLBAR_PANEL, this);
   }
 }
