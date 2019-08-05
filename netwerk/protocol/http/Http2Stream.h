@@ -365,6 +365,11 @@ class Http2Stream : public nsAHttpSegmentReader,
   /// connect tunnels
  public:
   bool IsTunnel() { return mIsTunnel; }
+  // TODO - remove as part of bug 1564120 fix?
+  // This method saves the key the tunnel was registered under, so that when the
+  // associated transaction connection info hash key changes, we still find it
+  // and decrement the correct item in the session's tunnel hash table.
+  nsCString& RegistrationKey();
 
  private:
   void ClearTransactionsBlockedOnTunnel();
@@ -373,6 +378,7 @@ class Http2Stream : public nsAHttpSegmentReader,
 
   bool mIsTunnel;
   bool mPlainTextTunnel;
+  nsCString mRegistrationKey;
 
   /// websockets
  public:
