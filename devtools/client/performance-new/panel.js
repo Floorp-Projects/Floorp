@@ -45,7 +45,7 @@ class PerformancePanel {
     return this.toolbox.target;
   }
 
-  async destroy() {
+  destroy() {
     // Make sure this panel is not already destroyed.
     if (this._destroyed) {
       return;
