@@ -368,15 +368,15 @@ nsresult TLSFilterTransaction::WriteSegmentsAgain(nsAHttpSegmentWriter* aWriter,
 
   mSegmentWriter = aWriter;
 
-  nsresult rv = mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten,
-                                                 again);
+  nsresult rv =
+      mTransaction->WriteSegmentsAgain(this, aCount, outCountWritten, again);
 
   if (NS_SUCCEEDED(rv) && !(*outCountWritten) && NS_FAILED(mFilterReadCode)) {
-      // nsPipe turns failures into silent OK.. undo that!
-      rv = mFilterReadCode;
-      if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
-        Unused << Connection()->ResumeRecv();
-      }
+    // nsPipe turns failures into silent OK.. undo that!
+    rv = mFilterReadCode;
+    if (Connection() && (mFilterReadCode == NS_BASE_STREAM_WOULD_BLOCK)) {
+      Unused << Connection()->ResumeRecv();
+    }
   }
   LOG(("TLSFilterTransaction %p called trans->WriteSegments rv=%" PRIx32
        " %d\n",
@@ -1218,6 +1218,9 @@ nsresult SpdyConnectTransaction::ReadSegments(nsAHttpSegmentReader* reader,
       }
       return rv;
     }
+
+    LOG(("SpdyConnectTransaciton::ReadSegments %p connect request consumed",
+         this));
     return NS_BASE_STREAM_WOULD_BLOCK;
   }
 
