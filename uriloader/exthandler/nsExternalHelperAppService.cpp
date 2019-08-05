@@ -745,17 +745,7 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(
         nsAutoCString query;
 
         // We only care about the query for HTTP and HTTPS URLs
-        nsresult rv;
-        bool isHTTP, isHTTPS;
-        rv = uri->SchemeIs("http", &isHTTP);
-        if (NS_FAILED(rv)) {
-          isHTTP = false;
-        }
-        rv = uri->SchemeIs("https", &isHTTPS);
-        if (NS_FAILED(rv)) {
-          isHTTPS = false;
-        }
-        if (isHTTP || isHTTPS) {
+        if (uri->SchemeIs("http") || uri->SchemeIs("https")) {
           url->GetQuery(query);
         }
 
