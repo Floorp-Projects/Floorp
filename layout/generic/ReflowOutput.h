@@ -245,7 +245,7 @@ class ReflowOutput {
   nscoord& Width() { return mWritingMode.IsVertical() ? mBSize : mISize; }
   nscoord& Height() { return mWritingMode.IsVertical() ? mISize : mBSize; }
 
-  nsSize PhysicalSize() {
+  nsSize PhysicalSize() const {
     return Size(mWritingMode).GetPhysicalSize(mWritingMode);
   }
 
