@@ -37,6 +37,7 @@ const {
   positionEquals,
   positionSubsumes,
   setInterval,
+  setTimeout,
 } = sandbox;
 
 const InvalidCheckpointId = 0;
@@ -132,6 +133,9 @@ function ChildProcess(id, recording) {
   // Whether this child has diverged from the recording and cannot run forward.
   this.divergedFromRecording = false;
 
+  // Whether this child has crashed and is unusable.
+  this.crashed = false;
+
   // Any manifest which is currently being executed. Child processes initially
   // have a manifest to run forward to the first checkpoint.
   this.manifest = {
@@ -148,8 +152,8 @@ function ChildProcess(id, recording) {
   // The time the manifest was sent to the child.
   this.manifestSendTime = Date.now();
 
-  // Per-child state about asynchronous manifests.
-  this.asyncManifestInfo = new AsyncManifestChildInfo();
+  // Any async manifest which this child has partially processed.
+  this.asyncManifest = null;
 }
 
 ChildProcess.prototype = {
@@ -176,6 +180,7 @@ ChildProcess.prototype = {
   // destination: An optional destination where the child will end up.
   // expectedDuration: Optional estimate of the time needed to run the manifest.
   sendManifest(manifest) {
+    assert(!this.crashed);
     assert(this.paused);
     this.paused = false;
     this.manifest = manifest;
@@ -183,6 +188,24 @@ ChildProcess.prototype = {
 
     dumpv(`SendManifest #${this.id} ${stringify(manifest.contents)}`);
     RecordReplayControl.sendManifest(this.id, manifest.contents);
+
+    // When sending a manifest to a replaying process, make sure we can detect
+    // hangs in the process. A hanged replaying process will only be terminated
+    // if we wait on it, so use a sufficiently long timeout and enter the wait
+    // if the child hasn't completed its manifest by the deadline.
+    if (this != gMainChild) {
+      // Use the same 30 second wait which RecordReplayControl uses, so that the
+      // hang will be noticed immediately if we start waiting.
+      let waitDuration = 30 * 1000;
+      if (manifest.expectedDuration) {
+        waitDuration += manifest.expectedDuration;
+      }
+      setTimeout(() => {
+        if (!this.crashed && this.manifest == manifest) {
+          this.waitUntilPaused();
+        }
+      }, waitDuration);
+    }
   },
 
   // Called when the child's current manifest finishes.
@@ -200,6 +223,10 @@ ChildProcess.prototype = {
     this.manifest.onFinished(response);
     this.manifest = null;
     maybeDumpStatistics();
+
+    if (this != gMainChild) {
+      pokeChildSoon(this);
+    }
   },
 
   // Block until this child is paused. If maybeCreateCheckpoint is specified
@@ -348,11 +375,6 @@ function sendAsyncManifest(manifest) {
   });
 }
 
-function AsyncManifestChildInfo() {
-  // Any async manifest this child has partially processed.
-  this.inProgressManifest = null;
-}
-
 // Pick the best async manifest for a child to process.
 function pickAsyncManifest(child, lowPriority) {
   const worklist = asyncManifestWorklist(lowPriority);
@@ -403,8 +425,8 @@ function pickAsyncManifest(child, lowPriority) {
 
 function processAsyncManifest(child) {
   // If the child has partially processed a manifest, continue with it.
-  let manifest = child.asyncManifestInfo.inProgressManifest;
-  child.asyncManifestInfo.inProgressManifest = null;
+  let manifest = child.asyncManifest;
+  child.asyncManifest = null;
 
   if (manifest && child == gActiveChild) {
     // After a child becomes the active child, it gives up on any in progress
@@ -423,18 +445,19 @@ function processAsyncManifest(child) {
     }
   }
 
+  child.asyncManifest = manifest;
+
   if (manifest.point && maybeReachPoint(child, manifest.point)) {
     // The manifest has been partially processed.
-    child.asyncManifestInfo.inProgressManifest = manifest;
     return true;
   }
 
   child.sendManifest({
     contents: manifest.contents(child),
     onFinished: data => {
+      child.asyncManifest = null;
       manifest.onFinished(child, data);
       manifest.resolve();
-      pokeChildSoon(child);
     },
     destination: manifest.destination,
     expectedDuration: manifest.expectedDuration,
@@ -530,21 +553,6 @@ function addCheckpoint(checkpoint, duration) {
   getCheckpointInfo(checkpoint).duration = duration;
 }
 
-// Unpause a child and restore it to its most recent saved checkpoint at or
-// before target.
-function restoreCheckpoint(child, target) {
-  assert(child.savedCheckpoints.has(target));
-  child.sendManifest({
-    contents: { kind: "restoreCheckpoint", target },
-    onFinished({ restoredCheckpoint }) {
-      assert(restoredCheckpoint);
-      child.divergedFromRecording = false;
-      pokeChildSoon(child);
-    },
-    destination: checkpointExecutionPoint(target),
-  });
-}
-
 // Bring a child to the specified execution point, sending it one or more
 // manifests if necessary. Returns true if the child has not reached the point
 // yet but some progress was made, or false if the child is at the point.
@@ -555,33 +563,45 @@ function maybeReachPoint(child, endpoint) {
   ) {
     return false;
   }
+
   if (child.divergedFromRecording || child.pausePoint().position) {
-    restoreCheckpoint(
-      child,
-      child.lastSavedCheckpoint(child.pausePoint().checkpoint)
-    );
+    restoreCheckpointPriorTo(child.pausePoint().checkpoint);
     return true;
   }
+
   if (endpoint.checkpoint < child.pauseCheckpoint()) {
-    restoreCheckpoint(child, child.lastSavedCheckpoint(endpoint.checkpoint));
+    restoreCheckpointPriorTo(endpoint.checkpoint);
     return true;
   }
+
   child.sendManifest({
     contents: {
       kind: "runToPoint",
       endpoint,
       needSaveCheckpoints: child.flushNeedSaveCheckpoints(),
     },
-    onFinished() {
-      pokeChildSoon(child);
-    },
+    onFinished() {},
     destination: endpoint,
     expectedDuration: checkpointRangeDuration(
       child.pausePoint().checkpoint,
       endpoint.checkpoint
     ),
   });
+
   return true;
+
+  // Send the child to its most recent saved checkpoint at or before target.
+  function restoreCheckpointPriorTo(target) {
+    target = child.lastSavedCheckpoint(target);
+    child.sendManifest({
+      contents: { kind: "restoreCheckpoint", target },
+      onFinished({ restoredCheckpoint }) {
+        assert(restoredCheckpoint);
+        child.divergedFromRecording = false;
+      },
+      destination: checkpointExecutionPoint(target),
+    });
+  }
 }
 
 function nextSavedCheckpoint(checkpoint) {
@@ -619,7 +639,7 @@ function checkpointExecutionPoint(checkpoint) {
 
 // Check to see if an idle replaying child can make any progress.
 function pokeChild(child) {
-  assert(!child.recording);
+  assert(child != gMainChild);
 
   if (!child.paused) {
     return;
@@ -630,12 +650,14 @@ function pokeChild(child) {
   }
 
   if (child == gActiveChild) {
-    sendChildToPausePoint(child);
+    sendActiveChildToPausePoint();
     return;
   }
 
   // If there is nothing to do, run forward to the end of the recording.
-  maybeReachPoint(child, checkpointExecutionPoint(gLastFlushCheckpoint));
+  if (gLastFlushCheckpoint) {
+    maybeReachPoint(child, checkpointExecutionPoint(gLastFlushCheckpoint));
+  }
 }
 
 function pokeChildSoon(child) {
@@ -977,15 +999,16 @@ function cachedPoints() {
 
 // The pause mode classifies the current state of the debugger.
 const PauseModes = {
-  // Process is actively recording. gPausePoint is the last point the main child
-  // reached.
+  // The main child is the active child, and is either paused or actively
+  // recording. gPausePoint is the last point the main child reached.
   RUNNING: "RUNNING",
 
-  // gActiveChild is paused at gPausePoint.
+  // gActiveChild is a replaying child paused at gPausePoint.
   PAUSED: "PAUSED",
 
-  // gActiveChild is being taken to gPausePoint. The debugger is considered to
-  // be paused, but interacting with the child must wait until it arrives.
+  // gActiveChild is a replaying child being taken to gPausePoint. The debugger
+  // is considered to be paused, but interacting with the child must wait until
+  // it arrives.
   ARRIVING: "ARRIVING",
 
   // gActiveChild is null, and we are looking for the last breakpoint hit prior
@@ -997,15 +1020,13 @@ const PauseModes = {
 // Current pause mode.
 let gPauseMode = PauseModes.RUNNING;
 
-// In PAUSED or ARRIVING mode, the point we are paused at or sending the active child to.
+// In PAUSED or ARRIVING modes, the point we are paused at or sending the active
+// child to.
 let gPausePoint = null;
 
 // In PAUSED mode, any debugger requests that have been sent to the child.
+// In ARRIVING mode, the requests must be sent once the child arrives.
 const gDebuggerRequests = [];
-
-// In PAUSED mode, whether gDebuggerRequests contains artificial requests that
-// need to be synced with the child before new requests can be sent to it.
-let gSyncDebuggerRequests = false;
 
 function setPauseState(mode, point, child) {
   assert(mode);
@@ -1015,11 +1036,6 @@ function setPauseState(mode, point, child) {
   gPauseMode = mode;
   gPausePoint = point;
   gActiveChild = child;
-
-  if (mode != PauseModes.PAUSED) {
-    gDebuggerRequests.length = 0;
-    gSyncDebuggerRequests = false;
-  }
 
   if (mode == PauseModes.ARRIVING) {
     updateNearbyPoints();
@@ -1031,6 +1047,7 @@ function setPauseState(mode, point, child) {
 // Mark the debugger as paused, and asynchronously send a child to the pause
 // point.
 function setReplayingPauseTarget(point) {
+  assert(!gDebuggerRequests.length);
   setPauseState(PauseModes.ARRIVING, point, closestChild(point.checkpoint));
 
   gDebugger._onPause();
@@ -1038,33 +1055,37 @@ function setReplayingPauseTarget(point) {
   findFrameSteps(point);
 }
 
-// Synchronously send a child to the specific point and pause.
-function pauseReplayingChild(child, point) {
-  do {
-    child.waitUntilPaused();
-  } while (maybeReachPoint(child, point));
-
-  setPauseState(PauseModes.PAUSED, point, child);
-}
-
-function sendChildToPausePoint(child) {
-  assert(child.paused && child == gActiveChild);
+function sendActiveChildToPausePoint() {
+  assert(gActiveChild.paused);
 
   switch (gPauseMode) {
     case PauseModes.PAUSED:
-      assert(pointEquals(child.pausePoint(), gPausePoint));
+      assert(pointEquals(gActiveChild.pausePoint(), gPausePoint));
       return;
 
     case PauseModes.ARRIVING:
-      if (pointEquals(child.pausePoint(), gPausePoint)) {
+      if (pointEquals(gActiveChild.pausePoint(), gPausePoint)) {
         setPauseState(PauseModes.PAUSED, gPausePoint, gActiveChild);
+
+        // Send any debugger requests the child is considered to have received.
+        if (gDebuggerRequests.length) {
+          gActiveChild.sendManifest({
+            contents: {
+              kind: "batchDebuggerRequest",
+              requests: gDebuggerRequests,
+            },
+            onFinished(finishData) {
+              assert(!finishData || !finishData.restoredCheckpoint);
+            },
+          });
+        }
       } else {
-        maybeReachPoint(child, gPausePoint);
+        maybeReachPoint(gActiveChild, gPausePoint);
       }
       return;
 
     default:
-      throw new Error(`Unexpected pause mode: ${gPauseMode}`);
+      ThrowError(`Unexpected pause mode: ${gPauseMode}`);
   }
 }
 
@@ -1083,6 +1104,12 @@ function waitUntilPauseFinishes() {
     }
     pokeChild(gActiveChild);
   }
+}
+
+// Synchronously send a child to the specific point and pause.
+function pauseReplayingChild(child, point) {
+  setPauseState(PauseModes.ARRIVING, point, child);
+  waitUntilPauseFinishes();
 }
 
 // After the debugger resumes, find the point where it should pause next.
@@ -1162,6 +1189,7 @@ async function finishResume() {
 // Unpause the active child and asynchronously pause at the next or previous
 // breakpoint hit.
 function resume(forward) {
+  gDebuggerRequests.length = 0;
   if (gActiveChild.recording) {
     if (forward) {
       maybeResumeRecording();
@@ -1187,8 +1215,77 @@ function resume(forward) {
 
 // Synchronously bring the active child to the specified execution point.
 function timeWarp(point) {
+  gDebuggerRequests.length = 0;
   setReplayingPauseTarget(point);
   Services.cpmm.sendAsyncMessage("TimeWarpFinished");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Crash Recovery
+////////////////////////////////////////////////////////////////////////////////
+
+// The maximum number of crashes which we can recover from.
+const MaxCrashes = 4;
+
+// How many child processes have crashed.
+let gNumCrashes = 0;
+
+// eslint-disable-next-line no-unused-vars
+function ChildCrashed(id) {
+  dumpv(`Child Crashed: ${id}`);
+
+  // In principle we can recover when any replaying child process crashes.
+  // For simplicity, there are some cases where we don't yet try to recover if
+  // a replaying process crashes.
+  //
+  // - It is the main child, and running forward through the recording. While it
+  //   could crash here just as easily as any other replaying process, any crash
+  //   will happen early on and won't interrupt a long-running debugger session.
+  //
+  // - It is the active child, and is paused at gPausePoint. It must have
+  //   crashed while processing a debugger request, which is unlikely.
+  const child = gReplayingChildren[id];
+  if (
+    !child ||
+    !child.manifest ||
+    (child == gActiveChild && gPauseMode == PauseModes.PAUSED)
+  ) {
+    ThrowError("Cannot recover from crashed child");
+  }
+
+  if (++gNumCrashes > MaxCrashes) {
+    ThrowError("Too many crashes");
+  }
+
+  delete gReplayingChildren[id];
+  child.crashed = true;
+
+  // Spawn a new child to replace the one which just crashed.
+  const newChild = spawnReplayingChild();
+  pokeChildSoon(newChild);
+
+  // The new child should save the same checkpoints as the old one.
+  for (const checkpoint of child.savedCheckpoints) {
+    newChild.addSavedCheckpoint(checkpoint);
+  }
+
+  // Any regions the old child scanned need to be rescanned.
+  for (const checkpoint of child.scannedCheckpoints) {
+    scanRecording(checkpoint);
+  }
+
+  // Requeue any async manifest the child was processing.
+  if (child.asyncManifest) {
+    sendAsyncManifest(child.asyncManifest);
+  }
+
+  // If the active child crashed while heading to the pause point, pick another
+  // child to head to the pause point.
+  if (child == gActiveChild) {
+    assert(gPauseMode == PauseModes.ARRIVING);
+    gActiveChild = closestChild(gPausePoint.checkpoint);
+    pokeChildSoon(gActiveChild);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1522,13 +1619,19 @@ function setMainChild() {
 // Child Management
 ////////////////////////////////////////////////////////////////////////////////
 
+function spawnReplayingChild() {
+  const id = RecordReplayControl.spawnReplayingChild();
+  const child = new ChildProcess(id, false);
+  gReplayingChildren[id] = child;
+  return child;
+}
+
 // How many replaying children to spawn. This should be a pref instead...
 const NumReplayingChildren = 4;
 
 function spawnReplayingChildren() {
   for (let i = 0; i < NumReplayingChildren; i++) {
-    const id = RecordReplayControl.spawnReplayingChild();
-    gReplayingChildren[id] = new ChildProcess(id, false);
+    spawnReplayingChild();
   }
   addSavedCheckpoint(FirstCheckpointId);
 }
@@ -1669,17 +1772,6 @@ const gControl = {
   sendRequest(request) {
     waitUntilPauseFinishes();
 
-    if (gSyncDebuggerRequests) {
-      gActiveChild.sendManifest({
-        contents: { kind: "batchDebuggerRequest", requests: gDebuggerRequests },
-        onFinished(finishData) {
-          assert(!finishData || !finishData.restoredCheckpoint);
-        },
-      });
-      gActiveChild.waitUntilPaused();
-      gSyncDebuggerRequests = false;
-    }
-
     let data;
     gActiveChild.sendManifest({
       contents: { kind: "debuggerRequest", request },
@@ -1694,13 +1786,6 @@ const gControl = {
       // checkpoint. Restore the child to the point it should be paused at and
       // fill its paused state back in by resending earlier debugger requests.
       pauseReplayingChild(gActiveChild, gPausePoint);
-      gActiveChild.sendManifest({
-        contents: { kind: "batchDebuggerRequest", requests: gDebuggerRequests },
-        onFinished(finishData) {
-          assert(!finishData || !finishData.restoredCheckpoint);
-        },
-      });
-      gActiveChild.waitUntilPaused();
       return { unhandledDivergence: true };
     }
 
@@ -1747,11 +1832,13 @@ const gControl = {
   cachedPoints,
 
   getPauseData() {
-    if (!gDebuggerRequests.length) {
-      assert(!gSyncDebuggerRequests);
+    // If the child has not arrived at the pause point yet, see if there is
+    // cached pause data for this point already which we can immediately return.
+    if (gPauseMode == PauseModes.ARRIVING && !gDebuggerRequests.length) {
       const data = maybeGetPauseData(gPausePoint);
       if (data) {
-        gSyncDebuggerRequests = true;
+        // After the child pauses, it will need to generate the pause data so
+        // that any referenced objects will be instantiated.
         gDebuggerRequests.push({ type: "pauseData" });
         return data;
       }
@@ -1907,4 +1994,5 @@ var EXPORTED_SYMBOLS = [
   "ManifestFinished",
   "BeforeSaveRecording",
   "AfterSaveRecording",
+  "ChildCrashed",
 ];

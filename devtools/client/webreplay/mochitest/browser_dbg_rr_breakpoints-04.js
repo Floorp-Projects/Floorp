@@ -10,7 +10,7 @@
 // recording.
 add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_continuous.html");
-  const { threadFront, tab, toolbox, target } = dbg;
+  const { threadFront, target } = dbg;
 
   const bp = await setBreakpoint(threadFront, "doc_rr_continuous.html", 14);
   await resumeToLine(threadFront, 14);
@@ -29,6 +29,5 @@ add_task(async function() {
   await checkEvaluateInTopFrame(target, "number", value + 2);
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.destroy();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });

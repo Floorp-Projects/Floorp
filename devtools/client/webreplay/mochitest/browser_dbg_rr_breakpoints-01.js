@@ -11,7 +11,7 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_rr_basic.html", {
     waitForRecording: true,
   });
-  const { threadFront, tab, toolbox, target } = dbg;
+  const { threadFront, target } = dbg;
 
   const bp = await setBreakpoint(threadFront, "doc_rr_basic.html", 21);
 
@@ -37,6 +37,5 @@ add_task(async function() {
   await checkEvaluateInTopFrame(target, "number", 10);
 
   await threadFront.removeBreakpoint(bp);
-  await toolbox.closeToolbox();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 });

@@ -83,8 +83,7 @@ typedef enum JSGCParamKey {
   /**
    * Maximum size of the generational GC nurseries.
    *
-   * This will be rounded to the nearest gc::ChunkSize.  The special value 0
-   * will disable generational GC.
+   * This will be rounded to the nearest gc::ChunkSize.
    *
    * Pref: javascript.options.mem.nursery.max_kb
    * Default: JS::DefaultNurseryBytes

@@ -12,8 +12,7 @@ add_task(async function() {
   const dbg = await attachRecordingDebugger("doc_control_flow.html", {
     waitForRecording: true,
   });
-  const { threadFront, tab, toolbox } = dbg;
-
+  const { threadFront } = dbg;
   const breakpoints = [];
 
   await rewindToBreakpoint(10);
@@ -32,8 +31,7 @@ add_task(async function() {
   for (const bp of breakpoints) {
     await threadFront.removeBreakpoint(bp);
   }
-  await toolbox.closeToolbox();
-  await gBrowser.removeTab(tab);
+  await shutdownDebugger(dbg);
 
   async function rewindToBreakpoint(line) {
     const bp = await setBreakpoint(threadFront, "doc_control_flow.html", line);

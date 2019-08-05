@@ -3236,7 +3236,6 @@ class nsContentUtils {
   static nsIInterfaceRequestor* sSameOriginChecker;
 
   static bool sIsHandlingKeyBoardEvent;
-  static bool sAllowXULXBL_for_file;
 #ifndef RELEASE_OR_BETA
   static bool sBypassCSSOMOriginCheck;
 #endif

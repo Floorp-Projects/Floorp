@@ -50,8 +50,16 @@ static parent::ChildProcessInfo* GetChildById(JSContext* aCx,
     return nullptr;
   }
   parent::ChildProcessInfo* child = parent::GetChildProcess(aValue.toNumber());
-  if (!child || (!aAllowUnpaused && !child->IsPaused())) {
-    JS_ReportErrorASCII(aCx, "Unpaused or bad child ID");
+  if (!child) {
+    JS_ReportErrorASCII(aCx, "Bad child ID");
+    return nullptr;
+  }
+  if (child->HasCrashed()) {
+    JS_ReportErrorASCII(aCx, "Child has crashed");
+    return nullptr;
+  }
+  if (!aAllowUnpaused && !child->IsPaused()) {
+    JS_ReportErrorASCII(aCx, "Child is unpaused");
     return nullptr;
   }
   return child;
@@ -124,6 +132,19 @@ void AfterSaveRecording() {
   if (NS_FAILED(gControl->AfterSaveRecording())) {
     MOZ_CRASH("AfterSaveRecording");
   }
+}
+
+bool RecoverFromCrash(parent::ChildProcessInfo* aChild) {
+  MOZ_RELEASE_ASSERT(gControl);
+
+  AutoSafeJSContext cx;
+  JSAutoRealm ar(cx, xpc::PrivilegedJunkScope());
+
+  if (NS_FAILED(gControl->ChildCrashed(aChild->GetId()))) {
+    return false;
+  }
+
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

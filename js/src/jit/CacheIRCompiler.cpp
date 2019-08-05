@@ -3752,7 +3752,7 @@ void CacheIRCompiler::emitPostBarrierShared(Register obj,
                                             Register scratch,
                                             Register maybeIndex) {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
-  if (!cx_->nursery().exists()) {
+  if (!cx_->nursery().isEnabled()) {
     return;
   }
 

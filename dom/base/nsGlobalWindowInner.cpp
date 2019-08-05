@@ -3506,13 +3506,7 @@ void nsGlobalWindowInner::Stop(ErrorResult& aError) {
 
 /* static */
 bool nsGlobalWindowInner::IsWindowPrintEnabled(JSContext*, JSObject*) {
-  static bool called = false;
-  static bool printDisabled = false;
-  if (!called) {
-    called = true;
-    Preferences::AddBoolVarCache(&printDisabled, "dom.disable_window_print");
-  }
-  return !printDisabled;
+  return !StaticPrefs::dom_disable_window_print();
 }
 
 void nsGlobalWindowInner::Print(ErrorResult& aError) {

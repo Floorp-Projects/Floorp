@@ -24,7 +24,7 @@ const EXAMPLE_URL =
 async function attachDebugger(tab) {
   const target = await TargetFactory.forTab(tab);
   const toolbox = await gDevTools.showToolbox(target, "jsdebugger");
-  return { toolbox, target };
+  return { toolbox, tab, target };
 }
 
 async function attachRecordingDebugger(
@@ -44,6 +44,12 @@ async function attachRecordingDebugger(
 
   await threadFront.interrupt();
   return { ...dbg, tab, threadFront, target };
+}
+
+async function shutdownDebugger(dbg) {
+  await waitForRequestsToSettle(dbg);
+  await dbg.toolbox.destroy();
+  await gBrowser.removeTab(dbg.tab);
 }
 
 // Return a promise that resolves when a breakpoint has been set.
@@ -170,4 +176,4 @@ PromiseTestUtils.whitelistRejectionsGlobally(
 // When running the full test suite, long delays can occur early on in tests,
 // before child processes have even been spawned. Allow a longer timeout to
 // avoid failures from this.
-requestLongerTimeout(120);
+requestLongerTimeout(4);
