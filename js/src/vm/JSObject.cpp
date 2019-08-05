@@ -3058,15 +3058,6 @@ extern bool PropertySpecNameToId(JSContext* cx, JSPropertySpec::Name name,
 // JSPropertySpec list, but omit the definition if the preference is off.
 JS_FRIEND_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
                                                       JSProtoKey key, jsid id) {
-  if (key == JSProto_DataView &&
-      !cx->realm()->creationOptions().getBigIntEnabled() &&
-      (id == NameToId(cx->names().getBigInt64) ||
-       id == NameToId(cx->names().getBigUint64) ||
-       id == NameToId(cx->names().setBigInt64) ||
-       id == NameToId(cx->names().setBigUint64))) {
-    return true;
-  }
-
   return false;
 }
 
