@@ -240,6 +240,19 @@ this.withPrefEnv = function(inPrefs) {
   };
 };
 
+this.withStudiesEnabled = function(testFunc) {
+  return async function inner(...args) {
+    await SpecialPowers.pushPrefEnv({
+      set: [["app.shield.optoutstudies.enabled", true]],
+    });
+    try {
+      await testFunc(...args);
+    } finally {
+      await SpecialPowers.popPrefEnv();
+    }
+  };
+};
+
 /**
  * Combine a list of functions right to left. The rightmost function is passed
  * to the preceding function as the argument; the result of this is passed to

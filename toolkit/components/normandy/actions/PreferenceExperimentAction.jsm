@@ -4,11 +4,8 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseStudyAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseStudyAction.jsm"
 );
 ChromeUtils.defineModuleGetter(
   this,
@@ -30,13 +27,6 @@ ChromeUtils.defineModuleGetter(
   "PreferenceExperiments",
   "resource://normandy/lib/PreferenceExperiments.jsm"
 );
-const SHIELD_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "shieldOptOutPref",
-  SHIELD_OPT_OUT_PREF,
-  false
-);
 
 var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
 
@@ -45,7 +35,7 @@ var EXPORTED_SYMBOLS = ["PreferenceExperimentAction"];
  * user to an experiment branch and modify a preference temporarily to
  * measure how it affects Firefox via Telemetry.
  */
-class PreferenceExperimentAction extends BaseAction {
+class PreferenceExperimentAction extends BaseStudyAction {
   get schema() {
     return ActionSchemas["multi-preference-experiment"];
   }
@@ -53,15 +43,6 @@ class PreferenceExperimentAction extends BaseAction {
   constructor() {
     super();
     this.seenExperimentNames = [];
-  }
-
-  _preExecution() {
-    if (!shieldOptOutPref) {
-      this.log.info(
-        "User has opted out of preference experiments. Disabling this action."
-      );
-      this.disable();
-    }
   }
 
   async _run(recipe) {

@@ -829,17 +829,6 @@
              data-l10n-id="collection-health-report-link"/>
       <vbox class="indent">
         <hbox align="center">
-          <checkbox id="optOutStudiesEnabled"
-                    class="tail-with-learn-more"
-                    data-l10n-id="collection-studies"/>
-          <label id="viewShieldStudies"
-                 href="about:studies"
-                 useoriginprincipal="true"
-                 class="learnMore" is="text-link"
-                 data-l10n-id="collection-studies-link"/>
-        </hbox>
-
-        <hbox align="center">
           <checkbox id="addonRecommendationEnabled"
                     class="tail-with-learn-more"
                     data-l10n-id="addon-recommendations"/>
@@ -853,6 +842,19 @@
   <description id="TelemetryDisabledDesc"
     class="indent tip-caption" control="telemetryGroup"
     data-l10n-id="collection-health-report-disabled"/>
+#endif
+
+#ifdef MOZ_NORMANDY
+    <hbox align="center">
+      <checkbox id="optOutStudiesEnabled"
+                class="tail-with-learn-more"
+                data-l10n-id="collection-studies"/>
+      <label id="viewShieldStudies"
+              href="about:studies"
+              useoriginprincipal="true"
+              class="learnMore" is="text-link"
+              data-l10n-id="collection-studies-link"/>
+    </hbox>
 #endif
 
 #ifdef MOZ_CRASHREPORTER

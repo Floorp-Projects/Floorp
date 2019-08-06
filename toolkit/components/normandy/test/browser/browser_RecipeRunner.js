@@ -590,7 +590,6 @@ decorate_task(
 decorate_task(
   withPrefEnv({
     set: [
-      ["datareporting.healthreport.uploadEnabled", true], // telemetry enabled
       ["app.normandy.dev_mode", false],
       ["app.normandy.first_run", false],
       ["app.normandy.enabled", true],
@@ -647,26 +646,6 @@ decorate_task(
       "RecipeRunner should re-enable when a valid api url is given"
     );
     is(disableStub.callCount, 2, "Disable should not be called again");
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["datareporting.healthreport.uploadEnabled", false]],
-    });
-    is(enableStub.callCount, 3, "Enable should not be called again");
-    is(
-      disableStub.callCount,
-      3,
-      "RecipeRunner should disable when telemetry is disabled"
-    );
-
-    await SpecialPowers.pushPrefEnv({
-      set: [["datareporting.healthreport.uploadEnabled", true]],
-    });
-    is(
-      enableStub.callCount,
-      4,
-      "RecipeRunner should re-enable when telemetry is enabled"
-    );
-    is(disableStub.callCount, 3, "Disable should not be called again");
 
     is(
       runStub.callCount,

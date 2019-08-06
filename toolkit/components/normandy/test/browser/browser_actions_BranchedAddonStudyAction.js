@@ -74,6 +74,7 @@ function recipeFromStudy(study, overrides = {}) {
 // Test that enroll is not called if recipe is already enrolled and update does nothing
 // if recipe is unchanged
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([branchedAddonStudyFactory()]),
@@ -107,6 +108,7 @@ decorate_task(
 // Test that if the add-on fails to install, the database is cleaned up and the
 // error is correctly reported.
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -147,6 +149,7 @@ decorate_task(
 
 // Ensure that the database is clean and error correctly reported if hash check fails
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -184,6 +187,7 @@ decorate_task(
 
 // Ensure that the database is clean and error correctly reported if there is a metadata mismatch
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -221,6 +225,7 @@ decorate_task(
 
 // Test that in the case of a study add-on conflicting with a non-study add-on, the study does not enroll
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -271,6 +276,7 @@ decorate_task(
 
 // Test a successful update
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -347,6 +353,7 @@ decorate_task(
 
 // Test update fails when addon ID does not match
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -400,6 +407,7 @@ decorate_task(
 
 // Test update fails when original addon does not exist
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -455,6 +463,7 @@ decorate_task(
 
 // Test update fails when download fails
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -509,6 +518,7 @@ decorate_task(
 
 // Test update fails when hash check fails
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -564,6 +574,7 @@ decorate_task(
 
 // Test update fails on downgrade when study version is greater than extension version
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -618,6 +629,7 @@ decorate_task(
 
 // Test update fails when there is a version mismatch with metadata
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -686,6 +698,7 @@ decorate_task(
 
 // Test that unenrolling fails if the study doesn't exist
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies(),
   async function unenrollNonexistent(studies) {
@@ -700,6 +713,7 @@ decorate_task(
 
 // Test that unenrolling an inactive experiment fails
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies([branchedAddonStudyFactory({ active: false })]),
   withSendEventStub,
@@ -716,6 +730,7 @@ decorate_task(
 // test a successful unenrollment
 const testStopId = "testStop@example.com";
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies([
     branchedAddonStudyFactory({
@@ -769,6 +784,7 @@ decorate_task(
 
 // If the add-on for a study isn't installed, a warning should be logged, but the action is still successful
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies([
     branchedAddonStudyFactory({
@@ -801,6 +817,7 @@ decorate_task(
 
 // Test that the action respects the study opt-out
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -836,6 +853,7 @@ decorate_task(
 
 // Test that the action does not enroll paused recipes
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -867,6 +885,7 @@ decorate_task(
 
 // Test that the action updates paused recipes
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([
@@ -924,6 +943,7 @@ decorate_task(
 
 // Test that unenroll called if the study is no longer sent from the server
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   AddonStudies.withStudies([branchedAddonStudyFactory()]),
   async function unenroll([study]) {
@@ -942,6 +962,7 @@ decorate_task(
 // A test function that will be parameterized over the argument "branch" below.
 // Mocks the branch selector, and then tests that the user correctly gets enrolled in that branch.
 const successEnrollBranchedTest = decorate(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,
@@ -1070,6 +1091,7 @@ add_task(() => successEnrollBranchedTest("b"));
 
 // If the enrolled branch no longer exists, unenroll
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   AddonStudies.withStudies([branchedAddonStudyFactory()]),
@@ -1142,6 +1164,7 @@ decorate_task(
 
 // Test that branches without an add-on can be enrolled and unenrolled succesfully.
 decorate_task(
+  withStudiesEnabled,
   ensureAddonCleanup,
   withMockNormandyApi,
   withSendEventStub,

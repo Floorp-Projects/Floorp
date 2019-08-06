@@ -5,6 +5,7 @@
 toolkit.jar:
 % resource normandy %res/normandy/
   res/normandy/Normandy.jsm (./Normandy.jsm)
+  res/normandy/NormandyMigrations.jsm (./NormandyMigrations.jsm)
   res/normandy/lib/ (./lib/*)
   res/normandy/skin/  (./skin/*)
   res/normandy/actions/ (./actions/*.jsm)
