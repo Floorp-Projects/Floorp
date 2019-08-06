@@ -59,7 +59,9 @@ class BookmarkAdapter(val emptyView: View, val interactor: BookmarkViewInteracto
             old[oldItemPosition].guid == new[newItemPosition].guid
 
         override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
-            old[oldItemPosition] in oldMode.selectedItems == new[newItemPosition] in newMode.selectedItems
+            old[oldItemPosition] in oldMode.selectedItems == new[newItemPosition] in newMode.selectedItems &&
+                    old[oldItemPosition].title == new[newItemPosition].title &&
+                    old[oldItemPosition].url == new[newItemPosition].url
 
         override fun getOldListSize(): Int = old.size
         override fun getNewListSize(): Int = new.size
