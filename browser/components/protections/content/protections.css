@@ -147,12 +147,17 @@ a.hidden,
   cursor: default;
 }
 
-#protection-details:hover {
+#protection-details:hover,
+#protection-details:focus {
   background-color: var(--in-content-button-background);
 }
 
 #protection-details:hover:active {
   background-color: var(--in-content-button-background-hover);
+}
+
+#protection-details:-moz-focusring {
+  outline: none;
 }
 
 #protection-details span {
