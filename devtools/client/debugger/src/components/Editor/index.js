@@ -52,6 +52,7 @@ import HighlightLine from "./HighlightLine";
 import EmptyLines from "./EmptyLines";
 import EditorMenu from "./EditorMenu";
 import ConditionalPanel from "./ConditionalPanel";
+import InlinePreviews from "./InlinePreviews";
 
 import {
   showSourceText,
@@ -77,6 +78,7 @@ import { resizeToggleButton, resizeBreakpointGutter } from "../../utils/ui";
 import "./Editor.css";
 import "./Breakpoints.css";
 import "./Highlight.css";
+import "./InlinePreview.css";
 
 import type SourceEditor from "../../utils/editor/source-editor";
 import type { SymbolDeclarations } from "../../workers/parser";
@@ -587,6 +589,7 @@ class Editor extends PureComponent<Props, State> {
       cx,
       selectedSourceWithContent,
       conditionalPanelLocation,
+      isPaused,
     } = this.props;
     const { editor, contextMenu } = this.state;
 
@@ -617,6 +620,12 @@ class Editor extends PureComponent<Props, State> {
         {conditionalPanelLocation ? <ConditionalPanel editor={editor} /> : null}
         {features.columnBreakpoints ? (
           <ColumnBreakpoints editor={editor} />
+        ) : null}
+        {isPaused && features.inlinePreview ? (
+          <InlinePreviews
+            editor={editor}
+            selectedSource={selectedSourceWithContent.source}
+          />
         ) : null}
       </div>
     );

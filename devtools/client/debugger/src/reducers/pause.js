@@ -80,6 +80,9 @@ type ThreadPauseState = {
   lastCommand: Command,
   wasStepping: boolean,
   previousLocation: ?MappedLocation,
+  inlinePreview: {
+    [FrameId]: Object,
+  },
 };
 
 // Pause state describing all threads.
@@ -123,6 +126,7 @@ const resumedPauseState = {
   },
   selectedFrameId: null,
   why: null,
+  inlinePreview: {},
 };
 
 const createInitialPauseState = () => ({
@@ -360,6 +364,18 @@ function update(
         expandedScopes.delete(path);
       }
       return updateThreadState({ expandedScopes });
+    }
+
+    case "ADD_INLINE_PREVIEW": {
+      const { frame, previewData } = action;
+      const selectedFrameId = frame.id;
+
+      return updateThreadState({
+        inlinePreview: {
+          ...threadState().inlinePreview,
+          [selectedFrameId]: previewData,
+        },
+      });
     }
   }
 
@@ -601,6 +617,29 @@ export function getSkipPausing(state: State) {
 
 export function isMapScopesEnabled(state: State) {
   return state.pause.mapScopes;
+}
+
+export function getInlinePreview(
+  state: State,
+  thread: ThreadId,
+  frameId: string
+) {
+  return getThreadPauseState(state.pause, thread).inlinePreview[
+    getGeneratedFrameId(frameId)
+  ];
+}
+
+export function getInlinePreviewExpression(
+  state: State,
+  thread: ThreadId,
+  frameId: string,
+  line: number,
+  expression: string
+) {
+  const previewData = getThreadPauseState(state.pause, thread).inlinePreview[
+    getGeneratedFrameId(frameId)
+  ];
+  return previewData && previewData[line] && previewData[line][expression];
 }
 
 // NOTE: currently only used for chrome
