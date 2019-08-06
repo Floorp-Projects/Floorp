@@ -71,6 +71,8 @@ static NS_NAMED_LITERAL_STRING(sAllowedEval1, "this");
 static NS_NAMED_LITERAL_STRING(sAllowedEval2,
                                "function anonymous(\n) {\nreturn this\n}");
 
+static Atomic<bool, mozilla::Relaxed> sTelemetryEventEnabled(false);
+
 /* static */
 bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     nsIChannel* aChannel) {
@@ -384,17 +386,29 @@ FilenameType nsContentSecurityManager::FilenameToEvalType(
 }
 
 /* static */
-void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
+void nsContentSecurityManager::AssertEvalNotRestricted(
     JSContext* cx, nsIPrincipal* aSubjectPrincipal, const nsAString& aScript) {
-  if (!aSubjectPrincipal->IsSystemPrincipal()) {
+  bool systemPrincipal = aSubjectPrincipal->IsSystemPrincipal();
+  if (systemPrincipal &&
+      StaticPrefs::security_allow_eval_with_system_principal()) {
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing eval() %s because allowing pref is "
+         "enabled",
+         (systemPrincipal ? "with System Principal" : "in parent process")));
     return;
   }
 
-  // Use static pref for performance reasons.
-  if (StaticPrefs::security_allow_eval_with_system_principal()) {
+  if (XRE_IsE10sParentProcess() &&
+      StaticPrefs::security_allow_eval_in_parent_process()) {
     MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("Allowing eval() with SystemPrincipal because allowing pref is "
+            ("Allowing eval() in parent process because allowing pref is "
              "enabled"));
+    return;
+  }
+
+  if (!systemPrincipal && !XRE_IsE10sParentProcess()) {
+    // Usage of eval we are unconcerned with.
     return;
   }
 
@@ -405,42 +419,62 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
   nsAutoString configPref;
   Preferences::GetString("general.config.filename", configPref);
   if (!configPref.IsEmpty()) {
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("Allowing eval() with SystemPrincipal because of "
-             "general.config.filename"));
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing eval() %s because of "
+         "general.config.filename",
+         (systemPrincipal ? "with System Principal" : "in parent process")));
     return;
   }
 
   // We permit these two common idioms to get access to the global JS object
   if (!aScript.IsEmpty() &&
       (aScript == sAllowedEval1 || aScript == sAllowedEval2)) {
-    MOZ_LOG(sCSMLog, LogLevel::Debug,
-            ("Allowing eval() with SystemPrincipal because a key string is "
-             "provided"));
+    MOZ_LOG(
+        sCSMLog, LogLevel::Debug,
+        ("Allowing eval() %s because a key string is "
+         "provided",
+         (systemPrincipal ? "with System Principal" : "in parent process")));
     return;
   }
 
-  nsAutoCString fileName;
-  JS::AutoFilename scriptFilename;
-  if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
-    nsDependentCSubstring fileName_(scriptFilename.get(),
-                                    strlen(scriptFilename.get()));
-    ToLowerCase(fileName_);
-    // Extract file name alone if scriptFilename contains line number
-    // separated by multiple space delimiters in few cases.
-    int32_t fileNameIndex = fileName_.FindChar(' ');
-    if (fileNameIndex != -1) {
-      fileName_.SetLength(fileNameIndex);
-    }
-
-    for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
-      if (fileName_.Equals(allowlistEntry)) {
-        return;
+  // Check the allowlist for the provided filename. getFilename is a helper
+  // function
+  auto getFilename = [](JSContext* cx) -> const nsCString {
+    JS::AutoFilename scriptFilename;
+    if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
+      nsDependentCSubstring fileName_(scriptFilename.get(),
+                                      strlen(scriptFilename.get()));
+      ToLowerCase(fileName_);
+      // Extract file name alone if scriptFilename contains line number
+      // separated by multiple space delimiters in few cases.
+      int32_t fileNameIndex = fileName_.FindChar(' ');
+      if (fileNameIndex != -1) {
+        fileName_.SetLength(fileNameIndex);
       }
-    }
 
-    fileName = fileName_;
+      nsAutoCString fileName(fileName_);
+      return std::move(fileName);
+    }
+    return NS_LITERAL_CSTRING("unknown-file");
+  };
+
+  nsCString fileName = getFilename(cx);
+  for (const nsLiteralCString& allowlistEntry : evalAllowlist) {
+    if (fileName.Equals(allowlistEntry)) {
+      MOZ_LOG(
+          sCSMLog, LogLevel::Debug,
+          ("Allowing eval() %s because the containing "
+           "file is in the allowlist",
+           (systemPrincipal ? "with System Principal" : "in parent process")));
+      return;
+    }
   }
+
+  // Send Telemetry
+  Telemetry::EventID eventType =
+      systemPrincipal ? Telemetry::EventID::Security_Evalusage_Systemcontext
+                      : Telemetry::EventID::Security_Evalusage_Parentprocess;
 
   FilenameType fileNameType =
       FilenameToEvalType(NS_ConvertUTF8toUTF16(fileName));
@@ -452,18 +486,25 @@ void nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
   } else {
     extra = Nothing();
   }
-  Telemetry::RecordEvent(Telemetry::EventID::Security_Evalusage_Systemcontext,
-                         mozilla::Some(fileNameType.first()), extra);
+  if (!sTelemetryEventEnabled.exchange(true)) {
+    sTelemetryEventEnabled = true;
+    Telemetry::SetEventRecordingEnabled(
+        NS_LITERAL_CSTRING("security.evalUsage"), true);
+  }
+  Telemetry::RecordEvent(eventType, mozilla::Some(fileNameType.first()), extra);
 
+  // Crash or Log
 #ifdef DEBUG
   MOZ_CRASH_UNSAFE_PRINTF(
-      "Blocking eval() with SystemPrincipal from file %s and script provided "
+      "Blocking eval() %s from file %s and script provided "
       "%s",
+      (systemPrincipal ? "with System Principal" : "in parent process"),
       fileName.get(), NS_ConvertUTF16toUTF8(aScript).get());
 #else
-  MOZ_LOG(sCSMLog, LogLevel::Debug,
-          ("Blocking eval() with SystemPrincipal from file %s and script "
+  MOZ_LOG(sCSMLog, LogLevel::Warning,
+          ("Blocking eval() %s from file %s and script "
            "provided %s",
+           (systemPrincipal ? "with System Principal" : "in parent process"),
            fileName.get(), NS_ConvertUTF16toUTF8(aScript).get()));
 #endif
 

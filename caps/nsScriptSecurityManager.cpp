@@ -424,11 +424,12 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   nsresult rv = csp->GetAllowsEval(&reportViolation, &evalOK);
 
   // A little convoluted. We want the scriptSample for a) reporting a violation
-  // or b) passing it to AssertEvalNotUsingSystemPrincipal. So do the work to
-  // get it if either of those cases is true.
+  // or b) passing it to AssertEvalNotUsingSystemPrincipal or c) we're in the
+  // parent process. So do the work to get it if either of those cases is true.
   nsAutoJSString scriptSample;
   nsCOMPtr<nsIPrincipal> subjectPrincipal = nsContentUtils::SubjectPrincipal();
-  if (reportViolation || subjectPrincipal->IsSystemPrincipal()) {
+  if (reportViolation || subjectPrincipal->IsSystemPrincipal() ||
+      XRE_IsE10sParentProcess()) {
     JS::Rooted<JSString*> jsString(cx, JS::ToString(cx, aValue));
     if (NS_WARN_IF(!jsString)) {
       JS_ClearPendingException(cx);
@@ -442,8 +443,8 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
   }
 
 #if !defined(ANDROID) && (defined(NIGHTLY_BUILD) || defined(DEBUG))
-  nsContentSecurityManager::AssertEvalNotUsingSystemPrincipal(
-      cx, subjectPrincipal, scriptSample);
+  nsContentSecurityManager::AssertEvalNotRestricted(cx, subjectPrincipal,
+                                                    scriptSample);
 #endif
 
   if (NS_FAILED(rv)) {
