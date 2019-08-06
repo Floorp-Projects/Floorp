@@ -38,7 +38,8 @@ nsDocShellLoadState::nsDocShellLoadState(nsIURI* aURI)
   MOZ_ASSERT(aURI, "Cannot create a LoadState with a null URI!");
 }
 
-nsDocShellLoadState::nsDocShellLoadState(DocShellLoadStateInit& aLoadState) {
+nsDocShellLoadState::nsDocShellLoadState(
+    const DocShellLoadStateInit& aLoadState) {
   MOZ_ASSERT(aLoadState.URI(), "Cannot create a LoadState with a null URI!");
   mResultPrincipalURIIsSome = aLoadState.ResultPrincipalURIIsSome();
   mKeepResultPrincipalURIIfSet = aLoadState.KeepResultPrincipalURIIfSet();
