@@ -3,14 +3,6 @@
 
 let unfiledFolderId;
 
-async function setChangesSynced(buf, changes) {
-  await storeRecords(buf, Object.values(changes), { needsMerge: false });
-  for (let id in changes) {
-    changes[id].synced = true;
-  }
-  await PlacesSyncUtils.bookmarks.pushChanges(changes);
-}
-
 add_task(async function setup() {
   unfiledFolderId = await PlacesUtils.promiseItemId(
     PlacesUtils.bookmarks.unfiledGuid
@@ -114,7 +106,11 @@ add_task(async function test_value_combo() {
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications({ skipTags: true });
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [PlacesUtils.bookmarks.toolbarGuid],
+    "Should leave toolbar with new remote structure unmerged"
+  );
 
   let menuInfo = await PlacesUtils.bookmarks.fetch(
     PlacesUtils.bookmarks.menuGuid
@@ -124,7 +120,7 @@ add_task(async function test_value_combo() {
     {
       bzBmk_______: {
         tombstone: false,
-        counter: 1,
+        counter: 3,
         synced: false,
         cleartext: {
           id: "bzBmk_______",
@@ -289,6 +285,9 @@ add_task(async function test_value_combo() {
     PlacesUtils.bookmarks.menuGuid,
     "Should not move Mozilla bookmark"
   );
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -501,7 +500,6 @@ add_task(async function test_value_only_changes() {
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(
@@ -633,6 +631,9 @@ add_task(async function test_value_only_changes() {
     "Should not change structure for value-only changes"
   );
 
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
@@ -714,7 +715,11 @@ add_task(async function test_conflicting_keywords() {
       ])
     );
     let changesToUpload = await buf.apply();
-    deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+    deepEqual(
+      await buf.fetchUnmergedGuids(),
+      ["bookmarkAAA1"],
+      "Should leave A1 with conflicting keyword unmerged"
+    );
     deepEqual(
       changesToUpload,
       {
@@ -734,10 +739,26 @@ add_task(async function test_conflicting_keywords() {
             keyword: "two",
           },
         },
+        bookmarkAAA1: {
+          tombstone: false,
+          counter: 1,
+          synced: false,
+          cleartext: {
+            id: "bookmarkAAA1",
+            type: "bookmark",
+            parentid: "toolbar",
+            hasDupe: true,
+            parentName: BookmarksToolbarTitle,
+            dateAdded: dateAdded.getTime(),
+            bmkUri: "http://example.com/a",
+            title: "A1",
+            keyword: "two",
+          },
+        },
       },
       "Should reupload bookmarks with different keyword"
     );
-    await setChangesSynced(buf, changesToUpload);
+    await storeChangesInMirror(buf, changesToUpload);
 
     let entryByOldKeyword = await PlacesUtils.keywords.fetch("one");
     ok(
@@ -773,10 +794,30 @@ add_task(async function test_conflicting_keywords() {
       ])
     );
     let changesToUpload = await buf.apply();
-    deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+    deepEqual(
+      await buf.fetchUnmergedGuids(),
+      ["bookmarkAAAA"],
+      "Should leave A with conflicting keyword unmerged"
+    );
     deepEqual(
       changesToUpload,
       {
+        bookmarkAAAA: {
+          tombstone: false,
+          counter: 1,
+          synced: false,
+          cleartext: {
+            id: "bookmarkAAAA",
+            type: "bookmark",
+            parentid: "menu",
+            hasDupe: true,
+            parentName: BookmarksMenuTitle,
+            dateAdded: dateAdded.getTime(),
+            bmkUri: "http://example.com/a",
+            title: "A",
+            keyword: "three",
+          },
+        },
         bookmarkAAA1: {
           tombstone: false,
           counter: 1,
@@ -794,9 +835,9 @@ add_task(async function test_conflicting_keywords() {
           },
         },
       },
-      "Should reupload bookmarks with updated keyword"
+      "Should reupload A and A1 with updated keyword"
     );
-    await setChangesSynced(buf, changesToUpload);
+    await storeChangesInMirror(buf, changesToUpload);
 
     let entryByOldKeyword = await PlacesUtils.keywords.fetch("two");
     ok(
@@ -822,6 +863,7 @@ add_task(async function test_conflicting_keywords() {
 
 add_task(async function test_keywords() {
   let buf = await openMirror("keywords");
+  let now = new Date();
 
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
@@ -832,23 +874,27 @@ add_task(async function test_keywords() {
         title: "A",
         url: "http://example.com/a",
         keyword: "one",
+        dateAdded: now,
       },
       {
         guid: "bookmarkBBBB",
         title: "B",
         url: "http://example.com/b",
         keyword: "two",
+        dateAdded: now,
       },
       {
         guid: "bookmarkCCCC",
         title: "C",
         url: "http://example.com/c",
+        dateAdded: now,
       },
       {
         guid: "bookmarkDDDD",
         title: "D",
         url: "http://example.com/d",
         keyword: "three",
+        dateAdded: now,
       },
     ],
   });
@@ -873,6 +919,7 @@ add_task(async function test_keywords() {
         title: "A",
         bmkUri: "http://example.com/a",
         keyword: "one",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkBBBB",
@@ -881,6 +928,7 @@ add_task(async function test_keywords() {
         title: "B",
         bmkUri: "http://example.com/b",
         keyword: "two",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkCCCC",
@@ -888,6 +936,7 @@ add_task(async function test_keywords() {
         type: "bookmark",
         title: "C",
         bmkUri: "http://example.com/c",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkDDDD",
@@ -896,6 +945,7 @@ add_task(async function test_keywords() {
         title: "D",
         bmkUri: "http://example.com/d",
         keyword: "three",
+        dateAdded: now.getTime(),
       },
     ]),
     { needsMerge: false }
@@ -913,6 +963,7 @@ add_task(async function test_keywords() {
         title: "A",
         bmkUri: "http://example.com/a",
         keyword: "two",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkBBBB",
@@ -920,6 +971,7 @@ add_task(async function test_keywords() {
         type: "bookmark",
         title: "B",
         bmkUri: "http://example.com/b",
+        dateAdded: now.getTime(),
       },
     ])
   );
@@ -935,14 +987,42 @@ add_task(async function test_keywords() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
-  let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(
-    idsToUpload,
+    changesToUpload,
     {
-      updated: ["bookmarkBBBB", "bookmarkCCCC", "bookmarkDDDD"],
-      deleted: [],
+      bookmarkCCCC: {
+        tombstone: false,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "bookmarkCCCC",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: now.getTime(),
+          bmkUri: "http://example.com/c",
+          title: "C",
+          keyword: "four",
+        },
+      },
+      bookmarkDDDD: {
+        tombstone: false,
+        counter: 1,
+        synced: false,
+        cleartext: {
+          id: "bookmarkDDDD",
+          type: "bookmark",
+          parentid: "menu",
+          hasDupe: true,
+          parentName: BookmarksMenuTitle,
+          dateAdded: now.getTime(),
+          bmkUri: "http://example.com/d",
+          title: "D",
+        },
+      },
     },
-    "Should reupload all local records with changed keywords"
+    "Should upload C with new keyword, D with keyword removed"
   );
 
   let entryForOne = await PlacesUtils.keywords.fetch("one");
@@ -970,6 +1050,7 @@ add_task(async function test_keywords() {
 
 add_task(async function test_keywords_complex() {
   let buf = await openMirror("keywords_complex");
+  let now = new Date();
 
   info("Set up mirror");
   await PlacesUtils.bookmarks.insertTree({
@@ -980,23 +1061,27 @@ add_task(async function test_keywords_complex() {
         title: "B",
         url: "http://example.com/b",
         keyword: "four",
+        dateAdded: now,
       },
       {
         guid: "bookmarkCCCC",
         title: "C",
         url: "http://example.com/c",
         keyword: "five",
+        dateAdded: now,
       },
       {
         guid: "bookmarkDDDD",
         title: "D",
         url: "http://example.com/d",
+        dateAdded: now,
       },
       {
         guid: "bookmarkEEEE",
         title: "E",
         url: "http://example.com/e",
         keyword: "three",
+        dateAdded: now,
       },
     ],
   });
@@ -1021,6 +1106,7 @@ add_task(async function test_keywords_complex() {
         title: "B",
         bmkUri: "http://example.com/b",
         keyword: "four",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkCCCC",
@@ -1029,6 +1115,7 @@ add_task(async function test_keywords_complex() {
         title: "C",
         bmkUri: "http://example.com/c",
         keyword: "five",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkDDDD",
@@ -1036,6 +1123,7 @@ add_task(async function test_keywords_complex() {
         type: "bookmark",
         title: "D",
         bmkUri: "http://example.com/d",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkEEEE",
@@ -1044,6 +1132,7 @@ add_task(async function test_keywords_complex() {
         title: "E",
         bmkUri: "http://example.com/e",
         keyword: "three",
+        dateAdded: now.getTime(),
       },
     ]),
     { needsMerge: false }
@@ -1075,6 +1164,7 @@ add_task(async function test_keywords_complex() {
         title: "A",
         bmkUri: "http://example.com/a",
         keyword: "one",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkAAA1",
@@ -1083,6 +1173,7 @@ add_task(async function test_keywords_complex() {
         title: "A (copy)",
         bmkUri: "http://example.com/a",
         keyword: "two",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkBBB1",
@@ -1090,6 +1181,7 @@ add_task(async function test_keywords_complex() {
         type: "bookmark",
         title: "B",
         bmkUri: "http://example.com/b",
+        dateAdded: now.getTime(),
       },
       {
         id: "bookmarkCCCC",
@@ -1098,6 +1190,7 @@ add_task(async function test_keywords_complex() {
         title: "C (remote)",
         bmkUri: "http://example.com/c-remote",
         keyword: "six",
+        dateAdded: now.getTime(),
       },
     ])
   );
@@ -1105,12 +1198,73 @@ add_task(async function test_keywords_complex() {
   info("Apply remote");
   let observer = expectBookmarkChangeNotifications();
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    ["bookmarkAAA1", "bookmarkAAAA", "bookmarkBBB1"],
+    "Should leave A1, A, B with conflicting keywords unmerged"
+  );
 
-  let idsToUpload = inspectChangeRecords(changesToUpload);
-  let expectedIdsToUpload = {
-    updated: ["bookmarkBBBB"],
-    deleted: [],
+  let expectedChangesToUpload = {
+    bookmarkBBBB: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkBBBB",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: now.getTime(),
+        bmkUri: "http://example.com/b",
+        title: "B",
+      },
+    },
+    bookmarkBBB1: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkBBB1",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: now.getTime(),
+        bmkUri: "http://example.com/b",
+        title: "B",
+      },
+    },
+    bookmarkAAAA: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkAAAA",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: now.getTime(),
+        bmkUri: "http://example.com/a",
+        title: "A",
+      },
+    },
+    bookmarkAAA1: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkAAA1",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: now.getTime(),
+        bmkUri: "http://example.com/a",
+        title: "A (copy)",
+      },
+    },
   };
 
   // We'll take the keyword of either "bookmarkAAAA" or "bookmarkAAA1",
@@ -1118,26 +1272,27 @@ add_task(async function test_keywords_complex() {
   let entriesForOne = await fetchAllKeywords("one");
   let entriesForTwo = await fetchAllKeywords("two");
   if (entriesForOne.length) {
-    expectedIdsToUpload.updated.push("bookmarkAAA1");
     ok(!entriesForTwo.length, "Should drop conflicting keyword from A1");
     deepEqual(
       entriesForOne.map(keyword => keyword.url.href),
       ["http://example.com/a"],
       "Should use A keyword for A and A1"
     );
+    expectedChangesToUpload.bookmarkAAAA.cleartext.keyword = "one";
+    expectedChangesToUpload.bookmarkAAA1.cleartext.keyword = "one";
   } else {
-    expectedIdsToUpload.updated.push("bookmarkAAAA");
     ok(!entriesForOne.length, "Should drop conflicting keyword from A");
     deepEqual(
       entriesForTwo.map(keyword => keyword.url.href),
       ["http://example.com/a"],
       "Should use A1 keyword for A and A1"
     );
+    expectedChangesToUpload.bookmarkAAAA.cleartext.keyword = "two";
+    expectedChangesToUpload.bookmarkAAA1.cleartext.keyword = "two";
   }
-  expectedIdsToUpload.updated.sort();
   deepEqual(
-    idsToUpload,
-    expectedIdsToUpload,
+    changesToUpload,
+    expectedChangesToUpload,
     "Should reupload all local records with corrected keywords"
   );
 
@@ -1565,7 +1720,11 @@ add_task(async function test_rewrite_tag_queries() {
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    ["queryBBBBBBB", "queryCCCCCCC"],
+    "Should leave rewritten queries unmerged"
+  );
 
   deepEqual(
     changesToUpload,
@@ -1656,6 +1815,9 @@ add_task(async function test_rewrite_tag_queries() {
   containerForC.containerOpen = false;
 
   toolbarContainer.containerOpen = false;
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
@@ -1929,8 +2091,22 @@ add_task(async function test_duplicate_url_rows() {
 
   info("Apply mirror");
   let observer = expectBookmarkChangeNotifications();
-  await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  let changesToUpload = await buf.apply();
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [
+      PlacesUtils.bookmarks.menuGuid,
+      PlacesUtils.bookmarks.mobileGuid,
+      PlacesUtils.bookmarks.toolbarGuid,
+      PlacesUtils.bookmarks.unfiledGuid,
+    ],
+    "Should leave roots unmerged"
+  );
+  deepEqual(
+    Object.keys(changesToUpload).sort(),
+    ["menu", "mobile", "toolbar", "unfiled"],
+    "Should upload roots"
+  );
 
   await assertLocalTree(
     PlacesUtils.bookmarks.rootGuid,
@@ -2059,6 +2235,9 @@ add_task(async function test_duplicate_url_rows() {
       );
     }
   });
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

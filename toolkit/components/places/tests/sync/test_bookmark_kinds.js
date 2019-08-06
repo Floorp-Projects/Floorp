@@ -225,7 +225,11 @@ add_task(async function test_mismatched_folder_types() {
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [PlacesUtils.bookmarks.toolbarGuid],
+    "Should leave toolbar with new remote structure unmerged"
+  );
 
   let idsToUpload = inspectChangeRecords(changesToUpload);
   deepEqual(
@@ -248,15 +252,17 @@ add_task(async function test_mismatched_folder_types() {
     "Should delete livemarks locally"
   );
 
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
   await PlacesSyncUtils.bookmarks.reset();
 });
 
 add_task(async function test_different_but_compatible_bookmark_types() {
+  let buf = await openMirror("partial_queries");
   try {
-    let buf = await openMirror("partial_queries");
-
     await PlacesUtils.bookmarks.insertTree({
       guid: PlacesUtils.bookmarks.menuGuid,
       children: [
@@ -327,6 +333,7 @@ add_task(async function test_different_but_compatible_bookmark_types() {
     Assert.equal(changes.bookmarkAAAA.cleartext.type, "query");
     Assert.equal(changes.bookmarkBBBB.cleartext.type, "bookmark");
   } finally {
+    await buf.finalize();
     await PlacesUtils.bookmarks.eraseEverything();
     await PlacesSyncUtils.bookmarks.reset();
   }

@@ -268,9 +268,7 @@ add_bookmark_test(async function test_delete_invalid_roots_from_server(engine) {
           engineData.steps.map(step => step.name),
           [
             "fetchLocalTree",
-            "fetchNewLocalContents",
             "fetchRemoteTree",
-            "fetchNewRemoteContents",
             "merge",
             "apply",
             "notifyObservers",

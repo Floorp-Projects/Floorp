@@ -54,9 +54,11 @@ impl Tree {
         Builder {
             entries: vec![BuilderEntry {
                 item: root,
+                content: None,
                 parent: BuilderEntryParent::Root,
                 children: Vec::new(),
             }],
+            deleted_guids: HashSet::new(),
             entry_index_by_guid,
             reparent_orphans_to: None,
         }
@@ -88,15 +90,15 @@ impl Tree {
         self.deleted_guids.contains(guid)
     }
 
-    /// Notes a tombstone for a deleted item.
+    /// Indicates if the GUID is mentioned in the tree, either as a node or
+    /// a deletion.
     #[inline]
-    pub fn note_deleted(&mut self, guid: Guid) {
-        self.deleted_guids.insert(guid);
+    pub fn mentions(&self, guid: &Guid) -> bool {
+        self.entry_index_by_guid.contains_key(guid) || self.deleted_guids.contains(guid)
     }
 
     /// Returns an iterator for all node and tombstone GUIDs.
     pub fn guids(&self) -> impl Iterator<Item = &Guid> {
-        assert_eq!(self.entries.len(), self.entry_index_by_guid.len());
         self.entries
             .iter()
             .map(|entry| &entry.item.guid)
@@ -106,7 +108,6 @@ impl Tree {
     /// Returns the node for a given `guid`, or `None` if a node with the `guid`
     /// doesn't exist in the tree, or was deleted.
     pub fn node_for_guid(&self, guid: &Guid) -> Option<Node<'_>> {
-        assert_eq!(self.entries.len(), self.entry_index_by_guid.len());
         self.entry_index_by_guid
             .get(guid)
             .map(|&index| Node(self, &self.entries[index]))
@@ -142,13 +143,6 @@ impl fmt::Display for Tree {
             }
         }
         Ok(())
-    }
-}
-
-#[cfg(test)]
-impl PartialEq for Tree {
-    fn eq(&self, other: &Tree) -> bool {
-        self.root() == other.root() && self.deletions().eq(other.deletions())
     }
 }
 
@@ -241,6 +235,7 @@ impl PartialEq for Tree {
 pub struct Builder {
     entry_index_by_guid: HashMap<Guid, Index>,
     entries: Vec<BuilderEntry>,
+    deleted_guids: HashSet<Guid>,
     reparent_orphans_to: Option<Guid>,
 }
 
@@ -255,20 +250,21 @@ impl Builder {
 
     /// Inserts an `item` into the tree. Returns an error if the item already
     /// exists.
-    pub fn item(&mut self, item: Item) -> Result<ParentBuilder<'_>> {
+    pub fn item(&mut self, item: Item) -> Result<ItemBuilder<'_>> {
         assert_eq!(self.entries.len(), self.entry_index_by_guid.len());
         if self.entry_index_by_guid.contains_key(&item.guid) {
             return Err(ErrorKind::DuplicateItem(item.guid.clone()).into());
         }
+        let entry_index = self.entries.len();
         self.entry_index_by_guid
-            .insert(item.guid.clone(), self.entries.len());
-        let entry_child = BuilderEntryChild::Exists(self.entries.len());
+            .insert(item.guid.clone(), entry_index);
         self.entries.push(BuilderEntry {
             item,
+            content: None,
             parent: BuilderEntryParent::None,
             children: Vec::new(),
         });
-        Ok(ParentBuilder(self, entry_child))
+        Ok(ItemBuilder(self, entry_index))
     }
 
     /// Sets parents for a `child_guid`. Depending on where the parent comes
@@ -282,12 +278,31 @@ impl Builder {
         ParentBuilder(self, entry_child)
     }
 
+    /// Notes a tombstone for a deleted item, marking it as deleted in the
+    /// tree.
+    #[inline]
+    pub fn deletion(&mut self, guid: Guid) -> &mut Builder {
+        self.deleted_guids.insert(guid);
+        self
+    }
+
     /// Equivalent to using our implementation of`TryInto<Tree>::try_into`, but
     /// provided both for convenience when updating from previous versions of
     /// `dogear`, and for cases where a type hint would otherwise be needed to
     /// clarify the target type of the conversion.
     pub fn into_tree(self) -> Result<Tree> {
         self.try_into()
+    }
+
+    /// Mutates content and structure for an existing item. This is only
+    /// exposed to tests.
+    #[cfg(test)]
+    pub fn mutate(&mut self, child_guid: &Guid) -> ItemBuilder<'_> {
+        assert_eq!(self.entries.len(), self.entry_index_by_guid.len());
+        match self.entry_index_by_guid.get(child_guid) {
+            Some(&child_index) => ItemBuilder(self, child_index),
+            None => panic!("Can't mutate nonexistent item {}", child_guid),
+        }
     }
 }
 
@@ -296,8 +311,14 @@ impl TryFrom<Builder> for Tree {
     /// Builds a tree from all stored items and parent-child associations,
     /// resolving inconsistencies like orphans, multiple parents, and
     /// parent-child disagreements.
-    fn try_from(builder: Builder) -> Result<Tree> {
+    fn try_from(mut builder: Builder) -> Result<Tree> {
         let mut problems = Problems::default();
+
+        // The indices in this bit vector point to zombie entries, which exist
+        // in the tree, but are also flagged as deleted. We'll remove these
+        // zombies from the set of deleted GUIDs, and mark them as diverged for
+        // reupload.
+        let mut zombies = SmallBitVec::from_elem(builder.entries.len(), false);
 
         // First, resolve parents for all entries, and build a lookup table for
         // items without a position.
@@ -306,16 +327,19 @@ impl TryFrom<Builder> for Tree {
         for (entry_index, entry) in builder.entries.iter().enumerate() {
             let r = ResolveParent::new(&builder, entry, &mut problems);
             let resolved_parent = r.resolve();
-            if let ResolvedParent::ByParentGuid(parent_index) = &resolved_parent {
+            if let ResolvedParent::ByParentGuid(parent_index) = resolved_parent {
                 // Reparented items are special: since they aren't mentioned in
                 // that parent's `children`, we don't know their positions. Note
                 // them for when we resolve children. We also clone the GUID,
                 // since we use it for sorting, but can't access it by
                 // reference once we call `builder.entries.into_iter()` below.
                 let reparented_child_indices = reparented_child_indices_by_parent
-                    .entry(*parent_index)
+                    .entry(parent_index)
                     .or_default();
                 reparented_child_indices.push(entry_index);
+            }
+            if builder.deleted_guids.remove(&entry.item.guid) {
+                zombies.set(entry_index, true);
             }
             parents.push(resolved_parent);
         }
@@ -351,52 +375,69 @@ impl TryFrom<Builder> for Tree {
                 }
             };
 
+            // If the entry is a zombie, mark it as diverged, so that the merger
+            // can remove the tombstone and reupload the item.
+            if zombies[entry_index] {
+                divergence = Divergence::Diverged;
+            }
+
             // Check if the entry's children exist and agree that this entry is
             // their parent.
             let mut child_indices = Vec::with_capacity(entry.children.len());
             for child in entry.children {
                 match child {
-                    BuilderEntryChild::Exists(child_index) => match &parents[child_index] {
-                        ResolvedParent::Root => {
-                            // The Places root can't be a child of another entry.
-                            unreachable!("A child can't be a top-level root");
-                        }
-                        ResolvedParent::ByStructure(parent_index) => {
-                            // If the child has a valid parent by structure, it
-                            // must be the entry. If it's not, there's a bug
-                            // in `ResolveParent` or `BuilderEntry`.
-                            assert_eq!(*parent_index, entry_index);
-                            child_indices.push(child_index);
-                        }
-                        ResolvedParent::ByChildren(parent_index) => {
-                            // If the child has multiple parents, we may have
-                            // resolved a different one, so check if we decided
-                            // to keep the child in this entry.
+                    BuilderEntryChild::Exists(child_index) => {
+                        if zombies[entry_index] {
+                            // If the entry has a zombie child, mark it as
+                            // diverged.
                             divergence = Divergence::Diverged;
-                            if *parent_index == entry_index {
+                        }
+                        match &parents[child_index] {
+                            ResolvedParent::Root => {
+                                // The Places root can't be a child of another entry.
+                                unreachable!("A child can't be a top-level root");
+                            }
+                            ResolvedParent::ByStructure(parent_index) => {
+                                // If the child has a valid parent by structure, it
+                                // must be the entry. If it's not, there's a bug
+                                // in `ResolveParent` or `BuilderEntry`.
+                                assert_eq!(*parent_index, entry_index);
                                 child_indices.push(child_index);
                             }
+                            ResolvedParent::ByChildren(parent_index) => {
+                                // If the child has multiple parents, we may have
+                                // resolved a different one, so check if we decided
+                                // to keep the child in this entry.
+                                divergence = Divergence::Diverged;
+                                if *parent_index == entry_index {
+                                    child_indices.push(child_index);
+                                }
+                            }
+                            ResolvedParent::ByParentGuid(parent_index) => {
+                                // We should only ever prefer parents
+                                // `by_parent_guid` over parents `by_children` for
+                                // misparented user content roots. Otherwise,
+                                // there's a bug in `ResolveParent`.
+                                assert_eq!(*parent_index, 0);
+                                divergence = Divergence::Diverged;
+                            }
                         }
-                        ResolvedParent::ByParentGuid(parent_index) => {
-                            // We should only ever prefer parents
-                            // `by_parent_guid` over parents `by_children` for
-                            // misparented user content roots. Otherwise,
-                            // there's a bug in `ResolveParent`.
-                            assert_eq!(*parent_index, 0);
-                            divergence = Divergence::Diverged;
-                        }
-                    },
+                    }
                     BuilderEntryChild::Missing(child_guid) => {
-                        // If the entry's `children` mentions a GUID for which
-                        // we don't have an entry, note it as a problem, and
-                        // ignore the child.
+                        // If the entry's `children` mention a deleted or
+                        // nonexistent GUID, note it as a problem, and ignore
+                        // the child.
                         divergence = Divergence::Diverged;
-                        problems.note(
-                            &entry.item.guid,
+                        let problem = if builder.deleted_guids.remove(&child_guid) {
+                            Problem::DeletedChild {
+                                child_guid: child_guid.clone(),
+                            }
+                        } else {
                             Problem::MissingChild {
                                 child_guid: child_guid.clone(),
-                            },
-                        );
+                            }
+                        };
+                        problems.note(&entry.item.guid, problem);
                     }
                 }
             }
@@ -412,6 +453,7 @@ impl TryFrom<Builder> for Tree {
 
             entries.push(TreeEntry {
                 item: entry.item,
+                content: entry.content,
                 parent_index,
                 child_indices,
                 divergence,
@@ -422,54 +464,39 @@ impl TryFrom<Builder> for Tree {
         Ok(Tree {
             entry_index_by_guid: builder.entry_index_by_guid,
             entries,
-            deleted_guids: HashSet::new(),
+            deleted_guids: builder.deleted_guids,
             problems,
         })
     }
 }
 
-/// Describes where an item's parent comes from.
-pub struct ParentBuilder<'b>(&'b mut Builder, BuilderEntryChild);
+/// Adds an item with content and structure to a tree builder.
+pub struct ItemBuilder<'b>(&'b mut Builder, Index);
 
-impl<'b> ParentBuilder<'b> {
-    /// Records a `parent_guid` from the item's parent's `children`. The
-    /// `parent_guid` must refer to an existing folder in the tree, but
-    /// the item itself doesn't need to exist. This handles folders with
-    /// missing children.
-    pub fn by_children(self, parent_guid: &Guid) -> Result<&'b mut Builder> {
-        let parent_index = match self.0.entry_index_by_guid.get(parent_guid) {
-            Some(&parent_index) if self.0.entries[parent_index].item.is_folder() => parent_index,
-            _ => {
-                return Err(ErrorKind::InvalidParent(
-                    self.child_guid().clone(),
-                    parent_guid.clone(),
-                )
-                .into());
-            }
-        };
-        if let BuilderEntryChild::Exists(child_index) = &self.1 {
-            self.0.entries[*child_index].parents_by(&[BuilderParentBy::Children(parent_index)])?;
-        }
-        self.0.entries[parent_index].children.push(self.1);
-        Ok(self.0)
+impl<'b> ItemBuilder<'b> {
+    /// Sets content info for an item that hasn't been uploaded or merged yet.
+    /// We'll try to dedupe local items with content info to remotely changed
+    /// items with similar contents and different GUIDs.
+    #[inline]
+    pub fn content<'c>(&'c mut self, content: Content) -> &'c mut ItemBuilder<'b> {
+        mem::replace(&mut self.0.entries[self.1].content, Some(content));
+        self
     }
 
-    /// Records a `parent_guid` from the item's `parentid`. The item must
-    /// exist in the tree, but the `parent_guid` doesn't need to exist,
-    /// or even refer to a folder. The builder will reparent items with
-    /// missing and non-folder `parentid`s to the default folder when it
-    /// builds the tree.
+    /// Records a `parent_guid` from the item's parent's `children`. See
+    /// `ParentBuilder::by_children`.
+    #[inline]
+    pub fn by_children(self, parent_guid: &Guid) -> Result<&'b mut Builder> {
+        let b = ParentBuilder(self.0, BuilderEntryChild::Exists(self.1));
+        b.by_children(parent_guid)
+    }
+
+    /// Records a `parent_guid` from the item's `parentid`. See
+    /// `ParentBuilder::by_parent_guid`.
+    #[inline]
     pub fn by_parent_guid(self, parent_guid: Guid) -> Result<&'b mut Builder> {
-        match &self.1 {
-            BuilderEntryChild::Exists(child_index) => {
-                self.0.entries[*child_index]
-                    .parents_by(&[BuilderParentBy::UnknownItem(parent_guid)])?;
-            }
-            BuilderEntryChild::Missing(child_guid) => {
-                return Err(ErrorKind::MissingItem(child_guid.clone()).into());
-            }
-        }
-        Ok(self.0)
+        let b = ParentBuilder(self.0, BuilderEntryChild::Exists(self.1));
+        b.by_parent_guid(parent_guid)
     }
 
     /// Records a `parent_guid` from a valid tree structure. This is for
@@ -504,32 +531,67 @@ impl<'b> ParentBuilder<'b> {
             Some(&parent_index) if self.0.entries[parent_index].item.is_folder() => parent_index,
             _ => {
                 return Err(ErrorKind::InvalidParent(
-                    self.child_guid().clone(),
+                    self.0.entries[self.1].item.guid.clone(),
                     parent_guid.clone(),
                 )
                 .into());
             }
         };
-        match &self.1 {
-            BuilderEntryChild::Exists(child_index) => {
-                self.0.entries[*child_index].parents_by(&[
-                    BuilderParentBy::Children(parent_index),
-                    BuilderParentBy::KnownItem(parent_index),
-                ])?;
+        self.0.entries[self.1].parents_by(&[
+            BuilderParentBy::Children(parent_index),
+            BuilderParentBy::KnownItem(parent_index),
+        ])?;
+        self.0.entries[parent_index]
+            .children
+            .push(BuilderEntryChild::Exists(self.1));
+        Ok(self.0)
+    }
+}
+
+/// Adds structure for an existing item to a tree builder.
+pub struct ParentBuilder<'b>(&'b mut Builder, BuilderEntryChild);
+
+impl<'b> ParentBuilder<'b> {
+    /// Records a `parent_guid` from the item's parent's `children`. The
+    /// `parent_guid` must refer to an existing folder in the tree, but
+    /// the item itself doesn't need to exist. This handles folders with
+    /// missing children.
+    pub fn by_children(self, parent_guid: &Guid) -> Result<&'b mut Builder> {
+        let parent_index = match self.0.entry_index_by_guid.get(parent_guid) {
+            Some(&parent_index) if self.0.entries[parent_index].item.is_folder() => parent_index,
+            _ => {
+                let child_guid = match &self.1 {
+                    BuilderEntryChild::Exists(index) => &self.0.entries[*index].item.guid,
+                    BuilderEntryChild::Missing(guid) => guid,
+                };
+                return Err(
+                    ErrorKind::InvalidParent(child_guid.clone(), parent_guid.clone()).into(),
+                );
             }
-            BuilderEntryChild::Missing(child_guid) => {
-                return Err(ErrorKind::MissingItem(child_guid.clone()).into());
-            }
+        };
+        if let BuilderEntryChild::Exists(child_index) = &self.1 {
+            self.0.entries[*child_index].parents_by(&[BuilderParentBy::Children(parent_index)])?;
         }
         self.0.entries[parent_index].children.push(self.1);
         Ok(self.0)
     }
 
-    fn child_guid(&self) -> &Guid {
+    /// Records a `parent_guid` from the item's `parentid`. The item must
+    /// exist in the tree, but the `parent_guid` doesn't need to exist,
+    /// or even refer to a folder. The builder will reparent items with
+    /// missing and non-folder `parentid`s to the default folder when it
+    /// builds the tree.
+    pub fn by_parent_guid(self, parent_guid: Guid) -> Result<&'b mut Builder> {
         match &self.1 {
-            BuilderEntryChild::Exists(index) => &self.0.entries[*index].item.guid,
-            BuilderEntryChild::Missing(guid) => guid,
+            BuilderEntryChild::Exists(child_index) => {
+                self.0.entries[*child_index]
+                    .parents_by(&[BuilderParentBy::UnknownItem(parent_guid)])?;
+            }
+            BuilderEntryChild::Missing(child_guid) => {
+                return Err(ErrorKind::MissingItem(child_guid.clone()).into());
+            }
         }
+        Ok(self.0)
     }
 }
 
@@ -557,6 +619,7 @@ impl<'b> ParentBuilder<'b> {
 #[derive(Debug)]
 struct TreeEntry {
     item: Item,
+    content: Option<Content>,
     divergence: Divergence,
     parent_index: Option<Index>,
     child_indices: Vec<Index>,
@@ -567,6 +630,7 @@ struct TreeEntry {
 #[derive(Debug)]
 struct BuilderEntry {
     item: Item,
+    content: Option<Content>,
     parent: BuilderEntryParent,
     children: Vec<BuilderEntryChild>,
 }
@@ -674,7 +738,7 @@ impl<'a> ResolveParent<'a> {
     }
 
     fn resolve(self) -> ResolvedParent {
-        if self.entry.item.guid.is_user_content_root() {
+        if self.entry.item.guid.is_built_in_root() {
             self.user_content_root()
         } else {
             self.item()
@@ -878,7 +942,12 @@ impl<'a> PossibleParent<'a> {
             BuilderParentBy::UnknownItem(guid) => {
                 match self.builder.entry_index_by_guid.get(guid) {
                     Some(index) => &self.builder.entries[*index],
-                    None => return DivergedParentGuid::Missing(guid.clone()).into(),
+                    None => {
+                        if self.builder.deleted_guids.contains(guid) {
+                            return DivergedParentGuid::Deleted(guid.clone()).into();
+                        }
+                        return DivergedParentGuid::Missing(guid.clone()).into();
+                    }
                 }
             }
         };
@@ -1041,9 +1110,11 @@ pub enum Problem {
     /// `DivergedParent::ByChildren`, the item has a parent-child disagreement.
     DivergedParents(Vec<DivergedParent>),
 
-    /// The item is mentioned in a folder's `children`, but doesn't exist or is
-    /// deleted.
+    /// The item is mentioned in a folder's `children`, but doesn't exist.
     MissingChild { child_guid: Guid },
+
+    /// The item is mentioned in a folder's `children`, but is deleted.
+    DeletedChild { child_guid: Guid },
 }
 
 impl Problem {
@@ -1053,6 +1124,12 @@ impl Problem {
             Problem::Orphan => {
                 return ProblemCounts {
                     orphans: 1,
+                    ..ProblemCounts::default()
+                }
+            }
+            Problem::DeletedChild { .. } => {
+                return ProblemCounts {
+                    deleted_children: 1,
                     ..ProblemCounts::default()
                 }
             }
@@ -1113,6 +1190,16 @@ impl Problem {
                         }
                     }
                 }
+                DivergedParentGuid::Deleted(_) => {
+                    if deltas.deleted_parent_guids > 0 {
+                        deltas
+                    } else {
+                        ProblemCounts {
+                            deleted_parent_guids: 1,
+                            ..deltas
+                        }
+                    }
+                }
                 DivergedParentGuid::Missing(_) => {
                     if deltas.missing_parent_guids > 0 {
                         deltas
@@ -1154,6 +1241,9 @@ impl fmt::Display for DivergedParent {
                 DivergedParentGuid::NonFolder(parent_guid) => {
                     write!(f, "has non-folder parent {}", parent_guid)
                 }
+                DivergedParentGuid::Deleted(parent_guid) => {
+                    write!(f, "has deleted parent {}", parent_guid)
+                }
                 DivergedParentGuid::Missing(parent_guid) => {
                     write!(f, "has nonexistent parent {}", parent_guid)
                 }
@@ -1169,6 +1259,8 @@ pub enum DivergedParentGuid {
     Folder(Guid),
     /// Exists, but isn't a folder.
     NonFolder(Guid),
+    /// Is explicitly deleted.
+    Deleted(Guid),
     /// Doesn't exist at all.
     Missing(Guid),
 }
@@ -1250,6 +1342,9 @@ impl<'a> fmt::Display for ProblemSummary<'a> {
             Problem::MissingChild { child_guid } => {
                 return write!(f, "{} has nonexistent child {}", self.guid(), child_guid);
             }
+            Problem::DeletedChild { child_guid } => {
+                return write!(f, "{} has deleted child {}", self.guid(), child_guid);
+            }
         };
         match parents.as_slice() {
             [a] => write!(f, "{}", a)?,
@@ -1282,6 +1377,8 @@ pub struct ProblemCounts {
     pub misparented_roots: usize,
     /// Number of items with multiple, conflicting parents `by_children`.
     pub multiple_parents_by_children: usize,
+    /// Number of items whose `parentid` is deleted.
+    pub deleted_parent_guids: usize,
     /// Number of items whose `parentid` doesn't exist.
     pub missing_parent_guids: usize,
     /// Number of items whose `parentid` isn't a folder.
@@ -1289,6 +1386,8 @@ pub struct ProblemCounts {
     /// Number of items whose `parentid`s disagree with their parents'
     /// `children`.
     pub parent_child_disagreements: usize,
+    /// Number of deleted items mentioned in all parents' `children`.
+    pub deleted_children: usize,
     /// Number of nonexistent items mentioned in all parents' `children`.
     pub missing_children: usize,
 }
@@ -1301,10 +1400,12 @@ impl ProblemCounts {
             misparented_roots: self.misparented_roots + other.misparented_roots,
             multiple_parents_by_children: self.multiple_parents_by_children
                 + other.multiple_parents_by_children,
+            deleted_parent_guids: self.deleted_parent_guids + other.deleted_parent_guids,
             missing_parent_guids: self.missing_parent_guids + other.missing_parent_guids,
             non_folder_parent_guids: self.non_folder_parent_guids + other.non_folder_parent_guids,
             parent_child_disagreements: self.parent_child_disagreements
                 + other.parent_child_disagreements,
+            deleted_children: self.deleted_children + other.deleted_children,
             missing_children: self.missing_children + other.missing_children,
         }
     }
@@ -1316,12 +1417,41 @@ impl ProblemCounts {
 pub struct Node<'t>(&'t Tree, &'t TreeEntry);
 
 impl<'t> Node<'t> {
+    /// Returns content info for deduping this item, if available.
+    pub fn content(&self) -> Option<&'t Content> {
+        self.1.content.as_ref()
+    }
+
     /// Returns an iterator for all children of this node.
     pub fn children<'n>(&'n self) -> impl Iterator<Item = Node<'t>> + 'n {
         self.1
             .child_indices
             .iter()
             .map(move |&child_index| Node(self.0, &self.0.entries[child_index]))
+    }
+
+    /// Returns the child at the given index, or `None` if the index is out of
+    /// bounds.
+    pub fn child(&self, index: usize) -> Option<Node<'_>> {
+        self.1
+            .child_indices
+            .get(index)
+            .map(|&child_index| Node(self.0, &self.0.entries[child_index]))
+    }
+
+    /// Returns `true` if this and `other` have the same child GUIDs.
+    pub fn has_matching_children<'u>(&self, other: Node<'u>) -> bool {
+        if self.1.child_indices.len() != other.1.child_indices.len() {
+            return false;
+        }
+        for (index, &child_index) in self.1.child_indices.iter().enumerate() {
+            let guid = &self.0.entries[child_index].item.guid;
+            let other_guid = &other.0.entries[other.1.child_indices[index]].item.guid;
+            if guid != other_guid {
+                return false;
+            }
+        }
+        true
     }
 
     /// Returns the resolved parent of this node, or `None` if this is the
@@ -1343,8 +1473,10 @@ impl<'t> Node<'t> {
 
     /// Indicates if this node is for a syncable item.
     ///
-    /// Syncable items descend from the four user content roots. Any
-    /// other roots and their descendants, like the left pane root,
+    /// Syncable items descend from the four user content roots. For historical
+    /// reasons, the Desktop tags root and its descendants are also marked as
+    /// syncable, even though they are not part of the synced tree structure.
+    /// Any other roots and their descendants, like the left pane root,
     /// left pane queries, and custom roots, are non-syncable.
     ///
     /// Newer Desktops should never reupload non-syncable items
@@ -1359,7 +1491,7 @@ impl<'t> Node<'t> {
         if self.is_root() {
             return false;
         }
-        if self.is_user_content_root() {
+        if self.is_built_in_root() {
             return true;
         }
         match self.kind {
@@ -1429,10 +1561,11 @@ impl<'t> Node<'t> {
         ptr::eq(self.1, &self.0.entries[0])
     }
 
-    /// Indicates if this node is a user content root.
+    /// Indicates if this node is a Places built-in root. Any other roots except
+    /// these are non-syncable.
     #[inline]
-    pub fn is_user_content_root(&self) -> bool {
-        self.1.item.guid.is_user_content_root()
+    pub fn is_built_in_root(&self) -> bool {
+        self.1.item.guid.is_built_in_root()
     }
 }
 
@@ -1447,25 +1580,6 @@ impl<'t> Deref for Node<'t> {
 impl<'t> fmt::Display for Node<'t> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.1.item.fmt(f)
-    }
-}
-
-#[cfg(test)]
-impl<'t> PartialEq for Node<'t> {
-    fn eq(&self, other: &Node<'_>) -> bool {
-        match (self.parent(), other.parent()) {
-            (Some(parent), Some(other_parent)) => {
-                if parent.1.item != other_parent.1.item {
-                    return false;
-                }
-            }
-            (Some(_), None) | (None, Some(_)) => return false,
-            (None, None) => {}
-        }
-        if self.1.item != other.1.item {
-            return false;
-        }
-        self.children().eq(other.children())
     }
 }
 
@@ -1566,89 +1680,6 @@ impl fmt::Display for Validity {
     }
 }
 
-/// The root of a merged tree, from which all merged nodes descend.
-#[derive(Debug)]
-pub struct MergedRoot<'t> {
-    node: MergedNode<'t>,
-    size_hint: usize,
-}
-
-impl<'t> MergedRoot<'t> {
-    /// Returns a merged root for the given node. `size_hint` indicates the
-    /// size of the tree, excluding the root, and is used to avoid extra
-    /// allocations for the descendants.
-    pub(crate) fn with_size(node: MergedNode<'t>, size_hint: usize) -> MergedRoot<'_> {
-        MergedRoot { node, size_hint }
-    }
-
-    /// Returns the root node.
-    pub fn node(&self) -> &MergedNode<'_> {
-        &self.node
-    }
-
-    /// Returns a flattened `Vec` of the root node's descendants, excluding the
-    /// root node itself.
-    pub fn descendants(&self) -> Vec<MergedDescendant<'_>> {
-        fn accumulate<'t>(
-            results: &mut Vec<MergedDescendant<'t>>,
-            merged_node: &'t MergedNode<'t>,
-            level: usize,
-        ) {
-            results.reserve(merged_node.merged_children.len());
-            for (position, merged_child_node) in merged_node.merged_children.iter().enumerate() {
-                results.push(MergedDescendant {
-                    merged_parent_node: &merged_node,
-                    level: level + 1,
-                    position,
-                    merged_node: merged_child_node,
-                });
-                accumulate(results, merged_child_node, level + 1);
-            }
-        }
-        let mut results = Vec::with_capacity(self.size_hint);
-        accumulate(&mut results, &self.node, 0);
-        results
-    }
-
-    /// Returns an ASCII art representation of the root and its descendants,
-    /// similar to `Node::to_ascii_string`.
-    pub fn to_ascii_string(&self) -> String {
-        self.node.to_ascii_fragment("")
-    }
-
-    /// Lets us avoid needing to specify the target type in tests.
-    #[cfg(test)]
-    pub(crate) fn into_tree(self) -> Result<Tree> {
-        self.try_into()
-    }
-}
-
-#[cfg(test)]
-impl<'t> TryFrom<MergedRoot<'t>> for Tree {
-    type Error = Error;
-    fn try_from(merged_root: MergedRoot<'t>) -> Result<Tree> {
-        fn to_item(merged_node: &MergedNode<'_>) -> Item {
-            let node = merged_node.merge_state.node();
-            let mut item = Item::new(merged_node.guid.clone(), node.kind);
-            item.age = node.age;
-            item.needs_merge = merged_node.merge_state.upload_reason() != UploadReason::None;
-            item
-        }
-
-        let mut b = Tree::with_root(to_item(&merged_root.node));
-        for MergedDescendant {
-            merged_parent_node,
-            merged_node,
-            ..
-        } in merged_root.descendants()
-        {
-            b.item(to_item(merged_node))?
-                .by_structure(&merged_parent_node.guid)?;
-        }
-        b.try_into()
-    }
-}
-
 /// A merged bookmark node that indicates which side to prefer, and holds merged
 /// child nodes.
 #[derive(Debug)]
@@ -1660,7 +1691,7 @@ pub struct MergedNode<'t> {
 
 impl<'t> MergedNode<'t> {
     /// Creates a merged node from the given merge state.
-    pub(crate) fn new(guid: Guid, merge_state: MergeState<'t>) -> MergedNode<'t> {
+    pub fn new(guid: Guid, merge_state: MergeState<'t>) -> MergedNode<'t> {
         MergedNode {
             guid,
             merge_state,
@@ -1668,13 +1699,29 @@ impl<'t> MergedNode<'t> {
         }
     }
 
+    /// Indicates if the merged node exists locally and has a new GUID.
+    /// The merger uses this to flag deduped items and items with invalid
+    /// GUIDs with new local structure.
+    pub fn local_guid_changed(&self) -> bool {
+        self.merge_state
+            .local_node()
+            .map_or(false, |local_node| local_node.guid != self.guid)
+    }
+
     /// Indicates if the merged node exists remotely and has a new GUID. The
     /// merger uses this to flag parents and children of remote nodes with
     /// invalid GUIDs for reupload.
-    pub(crate) fn remote_guid_changed(&self) -> bool {
+    pub fn remote_guid_changed(&self) -> bool {
         self.merge_state
             .remote_node()
             .map_or(false, |remote_node| remote_node.guid != self.guid)
+    }
+
+    /// Returns an ASCII art representation of the root and its descendants,
+    /// similar to `Node::to_ascii_string`.
+    #[inline]
+    pub fn to_ascii_string(&self) -> String {
+        self.to_ascii_fragment("")
     }
 
     fn to_ascii_fragment(&self, prefix: &str) -> String {
@@ -1703,17 +1750,7 @@ impl<'t> fmt::Display for MergedNode<'t> {
     }
 }
 
-/// A descendant holds a merged node, merged parent node, position in the
-/// merged parent, and level in the merged tree.
-#[derive(Clone, Copy, Debug)]
-pub struct MergedDescendant<'t> {
-    pub merged_parent_node: &'t MergedNode<'t>,
-    pub level: usize,
-    pub position: usize,
-    pub merged_node: &'t MergedNode<'t>,
-}
-
-/// The merge state indicates which node we should prefer, local or remote, when
+/// The merge state indicates which side we should prefer, local or remote, when
 /// resolving conflicts.
 #[derive(Clone, Copy, Debug)]
 pub enum MergeState<'t> {
@@ -1721,13 +1758,28 @@ pub enum MergeState<'t> {
     /// be uploaded.
     LocalOnly(Node<'t>),
 
+    /// Local-only with a new local structure means the item should be uploaded,
+    /// _and_ has new children (reparented or repositioned) locally.
+    LocalOnlyWithNewLocalStructure(Node<'t>),
+
     /// A remote-only merge state means the item only exists remotely, and
     /// should be applied.
     RemoteOnly(Node<'t>),
 
+    /// Remote-only with a new remote structure means the item should be
+    /// applied, _and_ has a new child list that should be uploaded.
+    RemoteOnlyWithNewRemoteStructure(Node<'t>),
+
     /// A local merge state means the item exists on both sides, and has newer
     /// local changes that should be uploaded.
     Local {
+        local_node: Node<'t>,
+        remote_node: Node<'t>,
+    },
+
+    /// Local with a new local structure means the item has newer local changes
+    /// that should be uploaded, and new children locally.
+    LocalWithNewLocalStructure {
         local_node: Node<'t>,
         remote_node: Node<'t>,
     },
@@ -1739,42 +1791,28 @@ pub enum MergeState<'t> {
         remote_node: Node<'t>,
     },
 
-    /// A remote-only merge state with new structure means the item only exists
-    /// remotely, and has a new merged structure that should be reuploaded. We
-    /// use new structure states to resolve conflicts caused by moving local
-    /// items out of a remotely deleted folder, moving remote items out of a
-    /// locally deleted folder, or merging divergent items.
-    RemoteOnlyWithNewStructure(Node<'t>),
-
-    /// A remote merge state with new structure means the item exists on both
-    /// sides, has newer remote changes, and new structure that should be
-    /// reuploaded.
-    RemoteWithNewStructure {
+    /// Remote with a new remote structure means the item has newer remote
+    /// changes that should be applied, and a new child list that should be
+    /// uploaded.
+    RemoteWithNewRemoteStructure {
         local_node: Node<'t>,
         remote_node: Node<'t>,
     },
 
-    /// An unchanged merge state means the item didn't change on either side,
-    /// and doesn't need to be uploaded or applied.
+    /// An unchanged merge state means the item and its children are the
+    /// same on both sides, and don't need to be uploaded or applied.
     Unchanged {
         local_node: Node<'t>,
         remote_node: Node<'t>,
     },
-}
 
-/// The reason for uploading or reuploading a merged descendant.
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum UploadReason {
-    /// The item doesn't need to be uploaded.
-    None,
-    /// The item was added locally since the last sync.
-    LocallyNew,
-    /// The item has newer local changes.
-    Merged,
-    /// The item didn't change locally, but has new structure. Reuploading
-    /// the same item with new structure on every sync may indicate a sync loop,
-    /// where two or more clients clash trying to fix up the remote tree.
-    NewStructure,
+    /// Unchanged with a new local structure means the item hasn't changed, but
+    /// its children have. The new children should be applied locally, but not
+    /// uploaded.
+    UnchangedWithNewLocalStructure {
+        local_node: Node<'t>,
+        remote_node: Node<'t>,
+    },
 }
 
 impl<'t> MergeState<'t> {
@@ -1783,12 +1821,14 @@ impl<'t> MergeState<'t> {
     pub fn local_node(&self) -> Option<&Node<'t>> {
         match self {
             MergeState::LocalOnly(local_node)
+            | MergeState::LocalOnlyWithNewLocalStructure(local_node)
             | MergeState::Local { local_node, .. }
+            | MergeState::LocalWithNewLocalStructure { local_node, .. }
             | MergeState::Remote { local_node, .. }
-            | MergeState::RemoteWithNewStructure { local_node, .. }
-            | MergeState::Unchanged { local_node, .. } => Some(local_node),
-
-            MergeState::RemoteOnly(_) | MergeState::RemoteOnlyWithNewStructure(_) => None,
+            | MergeState::RemoteWithNewRemoteStructure { local_node, .. }
+            | MergeState::Unchanged { local_node, .. }
+            | MergeState::UnchangedWithNewLocalStructure { local_node, .. } => Some(local_node),
+            MergeState::RemoteOnly(_) | MergeState::RemoteOnlyWithNewRemoteStructure(_) => None,
         }
     }
 
@@ -1796,14 +1836,15 @@ impl<'t> MergeState<'t> {
     /// locally. The inverse of `local_node()`.
     pub fn remote_node(&self) -> Option<&Node<'t>> {
         match self {
-            MergeState::RemoteOnly(remote_node)
-            | MergeState::Local { remote_node, .. }
+            MergeState::Local { remote_node, .. }
+            | MergeState::LocalWithNewLocalStructure { remote_node, .. }
+            | MergeState::RemoteOnly(remote_node)
+            | MergeState::RemoteOnlyWithNewRemoteStructure(remote_node)
             | MergeState::Remote { remote_node, .. }
-            | MergeState::RemoteOnlyWithNewStructure(remote_node)
-            | MergeState::RemoteWithNewStructure { remote_node, .. }
-            | MergeState::Unchanged { remote_node, .. } => Some(remote_node),
-
-            MergeState::LocalOnly(_) => None,
+            | MergeState::RemoteWithNewRemoteStructure { remote_node, .. }
+            | MergeState::Unchanged { remote_node, .. }
+            | MergeState::UnchangedWithNewLocalStructure { remote_node, .. } => Some(remote_node),
+            MergeState::LocalOnly(_) | MergeState::LocalOnlyWithNewLocalStructure(_) => None,
         }
     }
 
@@ -1811,56 +1852,124 @@ impl<'t> MergeState<'t> {
     /// in the local tree. This is not necessarily the inverse of
     /// `should_upload()`, as remote items with new structure should be both
     /// applied and reuploaded, and unchanged items should be neither.
-    pub fn should_apply(&self) -> bool {
+    pub fn should_apply_item(&self) -> bool {
         match self {
             MergeState::RemoteOnly(_)
+            | MergeState::RemoteOnlyWithNewRemoteStructure(_)
             | MergeState::Remote { .. }
-            | MergeState::RemoteOnlyWithNewStructure(_)
-            | MergeState::RemoteWithNewStructure { .. } => true,
+            | MergeState::RemoteWithNewRemoteStructure { .. } => true,
+            MergeState::LocalOnly(_)
+            | MergeState::LocalOnlyWithNewLocalStructure(_)
+            | MergeState::Local { .. }
+            | MergeState::LocalWithNewLocalStructure { .. }
+            | MergeState::Unchanged { .. }
+            | MergeState::UnchangedWithNewLocalStructure { .. } => false,
+        }
+    }
 
+    /// Returns `true` if the item has a new structure (parent or children)
+    /// that should be updated in the local tree.
+    pub fn should_apply_structure(&self) -> bool {
+        match self {
+            MergeState::LocalOnlyWithNewLocalStructure(_)
+            | MergeState::LocalWithNewLocalStructure { .. }
+            | MergeState::RemoteOnly(_)
+            | MergeState::RemoteOnlyWithNewRemoteStructure(_)
+            | MergeState::Remote { .. }
+            | MergeState::RemoteWithNewRemoteStructure { .. }
+            | MergeState::UnchangedWithNewLocalStructure { .. } => true,
             MergeState::LocalOnly(_) | MergeState::Local { .. } | MergeState::Unchanged { .. } => {
                 false
             }
         }
     }
 
-    /// Returns the reason for (re)uploading this node.
-    pub fn upload_reason(&self) -> UploadReason {
+    /// Returns `true` if the item should be flagged for (re)upload.
+    pub fn should_upload(&self) -> bool {
         match self {
-            MergeState::LocalOnly(_) => UploadReason::LocallyNew,
-            MergeState::RemoteOnly(_) => UploadReason::None,
-            MergeState::Local { .. } => UploadReason::Merged,
-            MergeState::Remote { .. } => UploadReason::None,
-            MergeState::RemoteOnlyWithNewStructure(_) => {
-                // We're reuploading an item that only exists remotely, so it
-                // must have new structure. Otherwise, its merge state would
-                // be remote only, without new structure.
-                UploadReason::NewStructure
+            MergeState::LocalOnly(_)
+            | MergeState::LocalOnlyWithNewLocalStructure(_)
+            | MergeState::Local { .. }
+            | MergeState::LocalWithNewLocalStructure { .. }
+            | MergeState::RemoteOnlyWithNewRemoteStructure(_)
+            | MergeState::RemoteWithNewRemoteStructure { .. } => true,
+            MergeState::RemoteOnly(_)
+            | MergeState::Remote { .. }
+            | MergeState::Unchanged { .. }
+            | MergeState::UnchangedWithNewLocalStructure { .. } => false,
+        }
+    }
+
+    /// Returns a new merge state, indicating that the item has a new merged
+    /// structure that should be applied locally.
+    pub fn with_new_local_structure(self) -> MergeState<'t> {
+        match self {
+            MergeState::LocalOnly(local_node) => {
+                MergeState::LocalOnlyWithNewLocalStructure(local_node)
             }
-            MergeState::RemoteWithNewStructure { local_node, .. } => {
-                if local_node.needs_merge {
-                    // The item exists on both sides, and changed locally, so
-                    // we're uploading to resolve a merge conflict.
-                    UploadReason::Merged
-                } else {
-                    // The item exists on both sides, and didn't change locally,
-                    // so we must be uploading new structure to fix GUIDs or
-                    // divergences.
-                    UploadReason::NewStructure
+            MergeState::LocalOnlyWithNewLocalStructure(local_node) => {
+                MergeState::LocalOnlyWithNewLocalStructure(local_node)
+            }
+            MergeState::Local {
+                local_node,
+                remote_node,
+            } => MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            },
+            MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            } => MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            },
+            MergeState::RemoteOnly(remote_node) => MergeState::RemoteOnly(remote_node),
+            MergeState::RemoteOnlyWithNewRemoteStructure(local_node) => {
+                MergeState::RemoteOnlyWithNewRemoteStructure(local_node)
+            }
+            MergeState::Remote {
+                local_node,
+                remote_node,
+            } => MergeState::Remote {
+                local_node,
+                remote_node,
+            },
+            MergeState::RemoteWithNewRemoteStructure {
+                local_node,
+                remote_node,
+            } => MergeState::RemoteWithNewRemoteStructure {
+                local_node,
+                remote_node,
+            },
+            MergeState::Unchanged {
+                local_node,
+                remote_node,
+            } => {
+                // Once the structure changes, it doesn't matter which side we
+                // pick; we'll need to reupload the item to the server, anyway.
+                MergeState::UnchangedWithNewLocalStructure {
+                    local_node,
+                    remote_node,
                 }
             }
-            MergeState::Unchanged { .. } => UploadReason::None,
+            MergeState::UnchangedWithNewLocalStructure {
+                local_node,
+                remote_node,
+            } => MergeState::UnchangedWithNewLocalStructure {
+                local_node,
+                remote_node,
+            },
         }
     }
 
     /// Returns a new merge state, indicating that the item has a new merged
     /// structure that should be reuploaded to the server.
-    pub(crate) fn with_new_structure(&self) -> MergeState<'t> {
-        match *self {
+    pub fn with_new_remote_structure(self) -> MergeState<'t> {
+        match self {
             MergeState::LocalOnly(local_node) => MergeState::LocalOnly(local_node),
-            MergeState::RemoteOnly(remote_node)
-            | MergeState::RemoteOnlyWithNewStructure(remote_node) => {
-                MergeState::RemoteOnlyWithNewStructure(remote_node)
+            MergeState::LocalOnlyWithNewLocalStructure(local_node) => {
+                MergeState::LocalOnlyWithNewLocalStructure(local_node)
             }
             MergeState::Local {
                 local_node,
@@ -1869,14 +1978,30 @@ impl<'t> MergeState<'t> {
                 local_node,
                 remote_node,
             },
+            MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            } => MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            },
+            MergeState::RemoteOnly(remote_node) => {
+                MergeState::RemoteOnlyWithNewRemoteStructure(remote_node)
+            }
+            MergeState::RemoteOnlyWithNewRemoteStructure(remote_node) => {
+                MergeState::RemoteOnlyWithNewRemoteStructure(remote_node)
+            }
             MergeState::Remote {
                 local_node,
                 remote_node,
-            }
-            | MergeState::RemoteWithNewStructure {
+            } => MergeState::RemoteWithNewRemoteStructure {
                 local_node,
                 remote_node,
-            } => MergeState::RemoteWithNewStructure {
+            },
+            MergeState::RemoteWithNewRemoteStructure {
+                local_node,
+                remote_node,
+            } => MergeState::RemoteWithNewRemoteStructure {
                 local_node,
                 remote_node,
             },
@@ -1891,6 +2016,13 @@ impl<'t> MergeState<'t> {
                     remote_node,
                 }
             }
+            MergeState::UnchangedWithNewLocalStructure {
+                local_node,
+                remote_node,
+            } => MergeState::LocalWithNewLocalStructure {
+                local_node,
+                remote_node,
+            },
         }
     }
 
@@ -1899,14 +2031,16 @@ impl<'t> MergeState<'t> {
     /// for logging and `try_from()`.
     fn node(&self) -> &Node<'t> {
         match self {
-            MergeState::LocalOnly(local_node) | MergeState::Local { local_node, .. } => local_node,
-
+            MergeState::LocalOnly(local_node)
+            | MergeState::LocalOnlyWithNewLocalStructure(local_node)
+            | MergeState::Local { local_node, .. }
+            | MergeState::LocalWithNewLocalStructure { local_node, .. }
+            | MergeState::Unchanged { local_node, .. }
+            | MergeState::UnchangedWithNewLocalStructure { local_node, .. } => local_node,
             MergeState::RemoteOnly(remote_node)
+            | MergeState::RemoteOnlyWithNewRemoteStructure(remote_node)
             | MergeState::Remote { remote_node, .. }
-            | MergeState::RemoteOnlyWithNewStructure(remote_node)
-            | MergeState::RemoteWithNewStructure { remote_node, .. } => remote_node,
-
-            MergeState::Unchanged { local_node, .. } => local_node,
+            | MergeState::RemoteWithNewRemoteStructure { remote_node, .. } => remote_node,
         }
     }
 }
@@ -1915,13 +2049,15 @@ impl<'t> fmt::Display for MergeState<'t> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(match self {
             MergeState::LocalOnly(_) | MergeState::Local { .. } => "(Local, Local)",
+            MergeState::LocalOnlyWithNewLocalStructure(_)
+            | MergeState::LocalWithNewLocalStructure { .. } => "(Local, New)",
 
             MergeState::RemoteOnly(_) | MergeState::Remote { .. } => "(Remote, Remote)",
-
-            MergeState::RemoteOnlyWithNewStructure(_)
-            | MergeState::RemoteWithNewStructure { .. } => "(Remote, New)",
+            MergeState::RemoteOnlyWithNewRemoteStructure(_)
+            | MergeState::RemoteWithNewRemoteStructure { .. } => "(Remote, New)",
 
             MergeState::Unchanged { .. } => "(Unchanged, Unchanged)",
+            MergeState::UnchangedWithNewLocalStructure { .. } => "(Unchanged, New)",
         })
     }
 }
@@ -1938,5 +2074,5 @@ impl<'t> fmt::Display for MergeState<'t> {
 pub enum Content {
     Bookmark { title: String, url_href: String },
     Folder { title: String },
-    Separator { position: i64 },
+    Separator,
 }
