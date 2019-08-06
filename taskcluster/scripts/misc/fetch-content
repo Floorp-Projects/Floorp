@@ -353,7 +353,8 @@ def extract_archive(path, dest_dir, typ):
     log('%s extracted in %.3fs' % (path, time.time() - t0))
 
 
-def repack_archive(orig: pathlib.Path, dest: pathlib.Path):
+def repack_archive(orig: pathlib.Path, dest: pathlib.Path,
+                   strip_components=0, prefix=''):
     assert orig != dest
     log('Repacking as %s' % dest)
     orig_typ = archive_type(orig)
@@ -365,6 +366,19 @@ def repack_archive(orig: pathlib.Path, dest: pathlib.Path):
 
     if dest.suffixes[-2:] != ['.tar', '.zst']:
         raise Exception('Only producing .tar.zst archives is supported.')
+
+    if strip_components or prefix:
+        def filter(name):
+            if strip_components:
+                stripped = '/'.join(name.split('/')[strip_components:])
+                if not stripped:
+                    raise Exception(
+                        'Stripping %d components would remove files'
+                        % strip_components)
+                name = stripped
+            return prefix + name
+    else:
+        filter = None
 
     with rename_after_close(dest, 'wb') as fh:
         ctx = ZstdCompressor()
@@ -379,7 +393,7 @@ def repack_archive(orig: pathlib.Path, dest: pathlib.Path):
                         continue
                     tarinfo = tarfile.TarInfo()
                     filename = zipinfo.filename
-                    tarinfo.name = filename
+                    tarinfo.name = filter(filename) if filter else filename
                     tarinfo.size = zipinfo.file_size
                     # Zip files don't have any knowledge of the timezone
                     # they were created in. Which is not really convenient to
@@ -412,8 +426,20 @@ def repack_archive(orig: pathlib.Path, dest: pathlib.Path):
             assert typ == 'tar'
 
             ifh = open_tar_stream(orig)
-            # We only change compression here. The tar stream is unchanged.
-            ctx.copy_stream(ifh, fh)
+            if filter:
+                # To apply the filter, we need to open the tar stream and
+                # tweak it.
+                origtar = tarfile.open(fileobj=ifh, mode='r|')
+                with ctx.stream_writer(fh) as compressor, \
+                        tarfile.open(fileobj=compressor, mode='w:') as tar:
+                    for tarinfo in origtar:
+                        if tarinfo.isdir():
+                            continue
+                        tarinfo.name = filter(tarinfo.name)
+                        tar.addfile(tarinfo, origtar.extractfile(tarinfo))
+            else:
+                # We only change compression here. The tar stream is unchanged.
+                ctx.copy_stream(ifh, fh)
 
 
 def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
@@ -528,8 +554,8 @@ def command_static_url(args):
         if gpg_sig_url:
             gpg_verify_path(dl_dest, gpg_key, gpg_signature)
 
-        if dl_dest != dest:
-            repack_archive(dl_dest, dest)
+        if dl_dest != dest or args.strip_components or args.add_prefix:
+            repack_archive(dl_dest, dest, args.strip_components, args.add_prefix)
     except Exception:
         try:
             dl_dest.unlink()
@@ -604,6 +630,12 @@ def main():
                           'URL to fetch')
     url.add_argument('--gpg-key-env',
                      help='Environment variable containing GPG key to validate')
+    url.add_argument('--strip-components', type=int, default=0,
+                     help='Number of leading components to strip from file '
+                          'names in the downloaded archive')
+    url.add_argument('--add-prefix', default='',
+                     help='Prefix to add to file names in the downloaded '
+                          'archive')
     url.add_argument('url', help='URL to fetch')
     url.add_argument('dest', help='Destination path')
 
