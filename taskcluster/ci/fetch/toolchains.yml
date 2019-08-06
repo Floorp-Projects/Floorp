@@ -399,3 +399,24 @@ clang-8:
         type: git
         repo: https://github.com/llvm/llvm-project
         revision: d2298e74235598f15594fe2c99bbac870a507c59
+
+ninja:
+    description: ninja 1.9.0
+    fetch:
+        type: static-url
+        url: https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
+        sha256: 2d70010633ddaacc3af4ffbd21e22fae90d158674a09e132e06424ba3ab036e9
+        size: 254497
+        artifact-name: ninja.tar.zst
+        add-prefix: ninja/bin/
+
+cmake:
+    description: cmake 3.15.1
+    fetch:
+        type: static-url
+        url: https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1-win64-x64.zip
+        sha256: 82a0edfed4cb0b45b25d2f99e621d3ed4014f66191d8f3c7eadf1d9ccf9c461b
+        size: 32214192
+        artifact-name: cmake.tar.zst
+        strip-components: 1
+        add-prefix: cmake/
