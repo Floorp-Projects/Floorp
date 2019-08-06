@@ -194,9 +194,9 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
                          FunctionAsyncKind asyncKind)
     : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
                   generatorKind, asyncKind, data.get().flags.isArrow(),
-                  data.get().isNamedLambda(), data.get().flags.isGetter(),
-                  data.get().flags.isSetter(), data.get().flags.isMethod(),
-                  data.get().flags.isInterpreted(),
+                  data.get().flags.isNamedLambda(data.get().atom),
+                  data.get().flags.isGetter(), data.get().flags.isSetter(),
+                  data.get().flags.isMethod(), data.get().flags.isInterpreted(),
                   data.get().flags.isInterpretedLazy(), data.get().flags.kind(),
                   data.get().atom) {
   functionCreationData_.emplace(data);
