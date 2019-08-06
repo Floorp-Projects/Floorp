@@ -78,6 +78,7 @@ async function testNoDevices() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["privacy.resistFingerprinting", false],
+      ["media.navigator.permission.device", false],
       ["media.navigator.streams.fake", false],
       ["media.audio_loopback_dev", "foo"],
       ["media.video_loopback_dev", "bar"]
