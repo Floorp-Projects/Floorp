@@ -30,8 +30,8 @@ add_task(async function test_fetch() {
       "icon box is active"
     );
     is(
-      gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"),
+      gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+      gNavigatorBundle.getString("trackingProtection.icon.activeTooltip2"),
       "correct tooltip"
     );
   });
