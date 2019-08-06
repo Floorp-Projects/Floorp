@@ -630,8 +630,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult DoURILoad(nsDocShellLoadState* aLoadState, bool aLoadFromExternal,
                      nsIDocShell** aDocShell, nsIRequest** aRequest);
 
-  nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
-                               nsIChannel* aChannel);
+  static nsresult AddHeadersToChannel(nsIInputStream* aHeadersData,
+                                      nsIChannel* aChannel);
 
   nsresult DoChannelLoad(nsIChannel* aChannel, nsIURILoader* aURILoader,
                          bool aBypassClassifier);
