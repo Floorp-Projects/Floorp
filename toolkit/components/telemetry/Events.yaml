@@ -1593,11 +1593,12 @@ intl.ui.browserLanguage:
 
 security:
   evalUsage:
-    objects: ["systemContext"]
+    objects: ["systemContext", "parentProcess"]
     bug_numbers:
       - 1567623
     description: >
-      eval() (or an eval()-like method) was called while running in the System Principal Context.
+      eval() (or an eval()-like method) was called while running in the System Principal
+      context or the Parent Process.
       Expected values are:
         chromeuri - chrome:// file
         resourceuri - resource:// file

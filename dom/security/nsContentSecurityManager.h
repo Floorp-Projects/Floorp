@@ -41,9 +41,9 @@ class nsContentSecurityManager : public nsIContentSecurityManager,
   static bool AllowInsecureRedirectToDataURI(nsIChannel* aNewChannel);
 
   static FilenameType FilenameToEvalType(const nsString& fileName);
-  static void AssertEvalNotUsingSystemPrincipal(JSContext* cx,
-                                                nsIPrincipal* aSubjectPrincipal,
-                                                const nsAString& aScript);
+  static void AssertEvalNotRestricted(JSContext* cx,
+                                      nsIPrincipal* aSubjectPrincipal,
+                                      const nsAString& aScript);
 
  private:
   static nsresult CheckChannel(nsIChannel* aChannel);
