@@ -2,7 +2,7 @@
 
 # AccountSharing
 
-`object AccountSharing` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L40)
+`object AccountSharing` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L39)
 
 Allows querying trusted FxA Auth provider packages on the device for instances of [ShareableAccount](../-shareable-account/index.md).
 Once an instance of [ShareableAccount](../-shareable-account/index.md) is obtained, it may be used with

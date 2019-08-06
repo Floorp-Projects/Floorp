@@ -2,7 +2,7 @@
 
 # FirefoxAccountsAuthFeature
 
-`class FirefoxAccountsAuthFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FirefoxAccountsAuthFeature.kt#L21)
+`class FirefoxAccountsAuthFeature` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/accounts/src/main/java/mozilla/components/feature/accounts/FirefoxAccountsAuthFeature.kt#L27)
 
 Ties together an account manager with a session manager/tabs implementation, facilitating an
 authentication flow.
@@ -11,7 +11,7 @@ authentication flow.
 
 | Name | Summary |
 |---|---|
-| [&lt;init&gt;](-init-.md) | `FirefoxAccountsAuthFeature(accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, tabsUseCases: `[`TabsUseCases`](../../mozilla.components.feature.tabs/-tabs-use-cases/index.md)`, redirectUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.Main)`<br>Ties together an account manager with a session manager/tabs implementation, facilitating an authentication flow. |
+| [&lt;init&gt;](-init-.md) | `FirefoxAccountsAuthFeature(accountManager: `[`FxaAccountManager`](../../mozilla.components.service.fxa.manager/-fxa-account-manager/index.md)`, redirectUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`, coroutineContext: `[`CoroutineContext`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/index.html)` = Dispatchers.IO, onBeginAuthentication: (<ERROR CLASS>, `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = { _, _ -> })`<br>Ties together an account manager with a session manager/tabs implementation, facilitating an authentication flow. |
 
 ### Properties
 
@@ -23,5 +23,5 @@ authentication flow.
 
 | Name | Summary |
 |---|---|
-| [beginAuthentication](begin-authentication.md) | `fun beginAuthentication(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
-| [beginPairingAuthentication](begin-pairing-authentication.md) | `fun beginPairingAuthentication(pairingUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [beginAuthentication](begin-authentication.md) | `fun beginAuthentication(context: <ERROR CLASS>): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
+| [beginPairingAuthentication](begin-pairing-authentication.md) | `fun beginPairingAuthentication(context: <ERROR CLASS>, pairingUrl: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |

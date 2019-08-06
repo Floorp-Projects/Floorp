@@ -2,7 +2,7 @@
 
 # onCreateInputConnection
 
-`open fun onCreateInputConnection(outAttrs: <ERROR CLASS>): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L522)
+`open fun onCreateInputConnection(outAttrs: <ERROR CLASS>): <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/ui/autocomplete/src/main/java/mozilla/components/ui/autocomplete/InlineAutocompleteEditText.kt#L534)
 
 Code to handle deleting autocomplete first when backspacing.
 If there is no autocomplete text, both removeAutocomplete() and commitAutocomplete()

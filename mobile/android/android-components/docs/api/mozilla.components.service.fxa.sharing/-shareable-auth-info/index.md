@@ -2,7 +2,7 @@
 
 # ShareableAuthInfo
 
-`data class ShareableAuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L28)
+`data class ShareableAuthInfo` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L27)
 
 Data structure describing FxA and Sync credentials necessary to share an FxA account.
 

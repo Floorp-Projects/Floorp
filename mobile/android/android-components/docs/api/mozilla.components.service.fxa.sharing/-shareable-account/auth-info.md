@@ -2,4 +2,4 @@
 
 # authInfo
 
-`val authInfo: `[`ShareableAuthInfo`](../-shareable-auth-info/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L22)
+`val authInfo: `[`ShareableAuthInfo`](../-shareable-auth-info/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L21)

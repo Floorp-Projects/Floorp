@@ -2,7 +2,7 @@
 
 # ShareableAccount
 
-`data class ShareableAccount` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L19)
+`data class ShareableAccount` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/firefox-accounts/src/main/java/mozilla/components/service/fxa/sharing/AccountSharing.kt#L18)
 
 Data structure describing an FxA account within another package that may be used to sign-in.
 

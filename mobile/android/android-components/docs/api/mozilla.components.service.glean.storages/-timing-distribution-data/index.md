@@ -2,7 +2,7 @@
 
 # TimingDistributionData
 
-`data class TimingDistributionData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L171)
+`data class TimingDistributionData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/storages/TimingDistributionsStorageEngine.kt#L170)
 
 This class represents the structure of a timing distribution according to the pipeline schema. It
 is meant to help serialize and deserialize data to the correct format for transport and storage,
