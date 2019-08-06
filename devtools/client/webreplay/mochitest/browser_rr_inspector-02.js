@@ -28,7 +28,7 @@ add_task(async function() {
 
   info("Waiting for element picker to become active.");
   toolbox.win.focus();
-  await toolbox.inspectorFront.nodePicker.start();
+  await inspector.inspectorFront.nodePicker.start();
 
   info("Moving mouse over div.");
   await moveMouseOver("#maindiv", 1, 1);

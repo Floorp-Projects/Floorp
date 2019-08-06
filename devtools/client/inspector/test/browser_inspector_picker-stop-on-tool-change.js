@@ -12,10 +12,9 @@ const TEST_URI =
   "testing the highlighter goes away on tool selection";
 
 add_task(async function() {
-  const { toolbox } = await openInspectorForURL(TEST_URI);
-  const pickerStopped = toolbox.inspectorFront.nodePicker.once(
-    "picker-stopped"
-  );
+  const { inspector, toolbox } = await openInspectorForURL(TEST_URI);
+  const { inspectorFront } = inspector;
+  const pickerStopped = inspectorFront.nodePicker.once("picker-stopped");
 
   info("Starting the inspector picker");
   await startPicker(toolbox);
