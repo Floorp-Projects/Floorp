@@ -13,9 +13,14 @@ EXPORTS.mozilla += [
     'KeyValueStorage.h',
 ]
 
+EXPORTS += [
+    'DecoderBenchmark.h',
+]
+
 UNIFIED_SOURCES += [
     'BenchmarkStorageChild.cpp',
     'BenchmarkStorageParent.cpp',
+    'DecoderBenchmark.cpp',
     'KeyValueStorage.cpp',
     'MediaCapabilities.cpp',
 ]
