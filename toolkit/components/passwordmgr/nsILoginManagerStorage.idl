@@ -51,13 +51,17 @@ interface nsILoginManagerStorage : nsISupports {
    *        The login to be added.
    * @param aPreEncrypted
    *        Whether the login was already encrypted or not.
+   * @param aPlaintextUsername
+   *        The plaintext username, if the login was already encrypted.
+   * @param aPlaintextPassword
+   *        The plaintext password, if the login was already encrypted.
    * @return a clone of the login info with the guid set (even if it was not provided).
    *
    * Default values for the login's nsILoginMetaInfo properties will be
    * created. However, if the caller specifies non-default values, they will
    * be used instead.
    */
-  nsILoginInfo addLogin(in nsILoginInfo aLogin, [optional] in boolean aPreEncrypted);
+  nsILoginInfo addLogin(in nsILoginInfo aLogin, [optional] in boolean aPreEncrypted, [optional] in jsval aPlaintextUsername, [optional] in jsval aPlaintextPassword);
 
 
   /**
