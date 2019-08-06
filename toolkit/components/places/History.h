@@ -138,8 +138,10 @@ class History final : public IHistory,
   /**
    * Helper function to append a new URI to mRecentlyVisitedURIs. See
    * mRecentlyVisitedURIs.
+   * @param {nsIURI} aURI The URI to append
+   * @param {bool} aHidden The hidden status of the visit being appended.
    */
-  void AppendToRecentlyVisitedURIs(nsIURI* aURI);
+  void AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden);
 
   void NotifyVisitedParent(const nsTArray<mozilla::ipc::URIParams>& aURIs);
 
@@ -230,13 +232,9 @@ class History final : public IHistory,
       MOZ_ASSERT_UNREACHABLE("Do not call me!");
     }
     MOZ_INIT_OUTSIDE_CTOR PRTime time;
+    MOZ_INIT_OUTSIDE_CTOR bool hidden;
   };
   nsTHashtable<RecentURIKey> mRecentlyVisitedURIs;
-  /**
-   * Whether aURI has been visited "recently".
-   * See RECENTLY_VISITED_URIS_MAX_AGE.
-   */
-  bool IsRecentlyVisitedURI(nsIURI* aURI);
 };
 
 }  // namespace places

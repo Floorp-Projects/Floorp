@@ -529,7 +529,7 @@ class NotifyManyVisitsObservers : public Runnable {
     }
 
     if (aNow - aPlace.visitTime < RECENTLY_VISITED_URIS_MAX_AGE) {
-      mHistory->AppendToRecentlyVisitedURIs(aURI);
+      mHistory->AppendToRecentlyVisitedURIs(aURI, aPlace.hidden);
     }
     mHistory->NotifyVisited(aURI);
 
@@ -1978,7 +1978,7 @@ void History::Shutdown() {
   }
 }
 
-void History::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
+void History::AppendToRecentlyVisitedURIs(nsIURI* aURI, bool aHidden) {
   // Add a new entry, if necessary.
   RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
   if (!entry) {
@@ -1986,6 +1986,7 @@ void History::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
   }
   if (entry) {
     entry->time = PR_Now();
+    entry->hidden = aHidden;
   }
 
   // Remove entries older than RECENTLY_VISITED_URIS_MAX_AGE.
@@ -1995,13 +1996,6 @@ void History::AppendToRecentlyVisitedURIs(nsIURI* aURI) {
       iter.Remove();
     }
   }
-}
-
-inline bool History::IsRecentlyVisitedURI(nsIURI* aURI) {
-  RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
-  // Check if the entry exists and is younger than
-  // RECENTLY_VISITED_URIS_MAX_AGE.
-  return entry && (PR_Now() - entry->time) < RECENTLY_VISITED_URIS_MAX_AGE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2042,16 +2036,10 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
     return NS_OK;
   }
 
-  // Do not save a reloaded uri if we have visited the same URI recently.
   bool reload = false;
   if (aLastVisitedURI) {
     rv = aURI->Equals(aLastVisitedURI, &reload);
     NS_ENSURE_SUCCESS(rv, rv);
-    if (reload && IsRecentlyVisitedURI(aURI)) {
-      // Regardless we must update the stored visit time.
-      AppendToRecentlyVisitedURIs(aURI);
-      return NS_OK;
-    }
   }
 
   nsTArray<VisitData> placeArray(1);
@@ -2108,6 +2096,26 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   // Error pages should never be autocompleted.
   if (aFlags & IHistory::UNRECOVERABLE_ERROR) {
     place.shouldUpdateFrecency = false;
+  }
+
+  // Do not save a reloaded uri if we have visited the same URI recently.
+  if (reload) {
+    RecentURIKey* entry = mRecentlyVisitedURIs.GetEntry(aURI);
+    // Check if the entry exists and is younger than
+    // RECENTLY_VISITED_URIS_MAX_AGE.
+    if (entry && (PR_Now() - entry->time) < RECENTLY_VISITED_URIS_MAX_AGE) {
+      bool wasHidden = entry->hidden;
+      // Regardless of whether we store the visit or not, we must update the
+      // stored visit time.
+      AppendToRecentlyVisitedURIs(aURI, place.hidden);
+      // We always want to store an unhidden visit, if the previous visits were
+      // hidden, because otherwise the page may not appear in the history UI.
+      // This can happen for example at a page redirecting to itself.
+      if (!wasHidden || place.hidden) {
+        // We can skip this visit.
+        return NS_OK;
+      }
+    }
   }
 
   // EMBED visits are session-persistent and should not go through the database.
