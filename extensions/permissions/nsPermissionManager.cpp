@@ -478,7 +478,9 @@ nsresult UpgradeHostToOriginAndInsert(
     // It was previously possible to insert useless entries to your permissions
     // database for URIs which have a null principal. This acts as a cleanup,
     // getting rid of these useless database entries
-    if (uri->SchemeIs("moz-nullprincipal")) {
+    bool nullpScheme = false;
+    if (NS_SUCCEEDED(uri->SchemeIs("moz-nullprincipal", &nullpScheme)) &&
+        nullpScheme) {
       NS_WARNING("A moz-nullprincipal: permission is being discarded.");
       return NS_OK;
     }

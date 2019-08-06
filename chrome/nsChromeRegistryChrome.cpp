@@ -594,8 +594,13 @@ void nsChromeRegistryChrome::ManifestOverride(ManifestProcessingContext& cx,
   }
 
   if (cx.mType == NS_SKIN_LOCATION) {
-    bool chromeSkinOnly =
-        chromeuri->SchemeIs("chrome") && resolveduri->SchemeIs("chrome");
+    bool chromeSkinOnly = false;
+    nsresult rv = chromeuri->SchemeIs("chrome", &chromeSkinOnly);
+    chromeSkinOnly = chromeSkinOnly && NS_SUCCEEDED(rv);
+    if (chromeSkinOnly) {
+      rv = resolveduri->SchemeIs("chrome", &chromeSkinOnly);
+      chromeSkinOnly = chromeSkinOnly && NS_SUCCEEDED(rv);
+    }
     if (chromeSkinOnly) {
       nsAutoCString chromePath, resolvedPath;
       chromeuri->GetPathQueryRef(chromePath);
