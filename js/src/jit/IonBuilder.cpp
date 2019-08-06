@@ -8221,7 +8221,7 @@ AbortReasonOr<Ok> IonBuilder::loadStaticSlot(JSObject* staticObject,
 // purposes.
 bool IonBuilder::needsPostBarrier(MDefinition* value) {
   CompileZone* zone = realm->zone();
-  if (!zone->nurseryEnabled()) {
+  if (!zone->nurseryExists()) {
     return false;
   }
   if (value->mightBeType(MIRType::Object)) {
