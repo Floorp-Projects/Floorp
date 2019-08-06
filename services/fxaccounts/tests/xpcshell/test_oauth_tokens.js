@@ -221,18 +221,12 @@ add_task(async function testSignOutDestroysTokens() {
 add_task(async function testTokenRaces() {
   // Here we do 2 concurrent fetches each for 2 different token scopes (ie,
   // 4 token fetches in total).
-  // This should provoke a potential race in the token fetching but we should
-  // handle and detect that leaving us with one of the fetch tokens being
-  // revoked and the same token value returned to both calls.
+  // This should provoke a potential race in the token fetching but we use
+  // a map of in-flight token fetches, so we should still only perform 2
+  // fetches, but each of the 4 calls should resolve with the correct values.
   let client = new MockFxAccountsOAuthGrantClient();
   let fxa = await createMockFxA(client);
 
-  // We should see 2 notifications as part of this - set up the listeners
-  // now (and wait on them later)
-  let notifications = Promise.all([
-    promiseNotification("testhelper-fxa-revoke-complete"),
-    promiseNotification("testhelper-fxa-revoke-complete"),
-  ]);
   let results = await Promise.all([
     fxa.getOAuthToken({ scope: "test-scope", client }),
     fxa.getOAuthToken({ scope: "test-scope", client }),
@@ -240,9 +234,7 @@ add_task(async function testTokenRaces() {
     fxa.getOAuthToken({ scope: "test-scope-2", client }),
   ]);
 
-  equal(client.numTokenFetches, 4, "should have fetched 4 tokens.");
-  // We should see 2 of the 4 revoked due to the race.
-  await notifications;
+  equal(client.numTokenFetches, 2, "should have fetched 2 tokens.");
 
   // Should have 2 unique tokens
   results.sort();
@@ -250,8 +242,8 @@ add_task(async function testTokenRaces() {
   equal(results[2], results[3]);
   // should be 2 active.
   equal(client.activeTokens.size, 2);
-  // Which can each be revoked.
-  notifications = Promise.all([
+  // Which can each be revoked, which will trigger a notification.
+  let notifications = Promise.all([
     promiseNotification("testhelper-fxa-revoke-complete"),
     promiseNotification("testhelper-fxa-revoke-complete"),
   ]);
@@ -260,4 +252,30 @@ add_task(async function testTokenRaces() {
   await fxa.removeCachedOAuthToken({ token: results[2] });
   equal(client.activeTokens.size, 0);
   await notifications;
+});
+
+add_task(async function testSignOutDuringFetch() {
+  let client = new MockFxAccountsOAuthGrantClient();
+  let fxa = await createMockFxA(client);
+
+  // We need a couple of promises to ensure things happen at the right time...
+  let resolveSignedOut;
+  let promiseSignedOut = new Promise(resolve => {
+    resolveSignedOut = resolve;
+  });
+  let resolveInGetTokenFromAssertion;
+  let promiseInGetTokenFromAssertion = new Promise(resolve => {
+    resolveInGetTokenFromAssertion = resolve;
+  });
+  client.getTokenFromAssertion = async function(assertion, scope) {
+    resolveInGetTokenFromAssertion();
+    await promiseSignedOut;
+    return { access_token: "token" };
+  };
+
+  let getTokenPromise = fxa.getOAuthToken({ scope: "test-scope", client });
+  await promiseInGetTokenFromAssertion;
+  await fxa.signOut();
+  resolveSignedOut();
+  await Assert.rejects(getTokenPromise, /Another user has signed in/);
 });
