@@ -38,12 +38,7 @@ const TOOLTIP_DOM_CONTENT_LOADED = L10N.getStr(
 );
 const TOOLTIP_LOAD = L10N.getStr("networkMenu.summary.tooltip.load");
 
-const UPDATED_SUMMARY_PROPS = [
-  "count",
-  "contentSize",
-  "transferredSize",
-  "millis",
-];
+const UPDATED_SUMMARY_PROPS = ["count", "contentSize", "transferredSize", "ms"];
 
 const UPDATED_TIMING_PROPS = ["DOMContentLoaded", "load"];
 
@@ -76,7 +71,7 @@ class StatusBar extends Component {
 
   render() {
     const { openStatistics, summary, timingMarkers } = this.props;
-    const { count, contentSize, transferredSize, millis } = summary;
+    const { count, contentSize, transferredSize, ms } = summary;
     const { DOMContentLoaded, load } = timingMarkers;
 
     const countText =
@@ -93,7 +88,7 @@ class StatusBar extends Component {
     );
     const finishText = L10N.getFormatStrWithNumbers(
       "networkMenu.summary.finish",
-      getFormattedTime(millis)
+      getFormattedTime(ms)
     );
 
     return div(
