@@ -7,7 +7,12 @@ EXPORTS.mozilla.dom += [
     'MediaCapabilities.h',
 ]
 
+EXPORTS.mozilla += [
+    'KeyValueStorage.h',
+]
+
 UNIFIED_SOURCES += [
+    'KeyValueStorage.cpp',
     'MediaCapabilities.cpp',
 ]
 
