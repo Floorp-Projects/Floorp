@@ -435,6 +435,7 @@ label:hover {
   padding-top: 20px;
   line-height: 18px;
   grid-column-gap: 10px;
+  margin-bottom: 20px;
 }
 
 .monitor-scanned-text {
@@ -546,4 +547,8 @@ label:hover {
 #sign-up-for-monitor-link:focus {
   box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
   outline: none;
+}
+
+.monitor-card.has-logins .card-body {
+  padding-block-end: 0;
 }
