@@ -53,6 +53,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/dom/ReferrerInfo.h"
+#include "mozilla/dom/DOMTypes.h"
 
 #define HTTP_BASE_CHANNEL_IID                        \
   {                                                  \
@@ -473,6 +474,31 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Set referrerInfo and compute the referrer header if neccessary.
   nsresult SetReferrerInfo(nsIReferrerInfo* aReferrerInfo, bool aClone,
                            bool aCompute);
+
+  struct ReplacementChannelConfig {
+    ReplacementChannelConfig() = default;
+    explicit ReplacementChannelConfig(
+        const dom::ReplacementChannelConfigInit& aInit);
+
+    uint32_t loadFlags = 0;
+    uint32_t redirectFlags = 0;
+    uint32_t classOfService = 0;
+    Maybe<bool> privateBrowsing = Nothing();
+    Maybe<nsCString> method;
+    nsCOMPtr<nsIReferrerInfo> referrerInfo;
+    Maybe<dom::TimedChannelInfo> timedChannel;
+
+    dom::ReplacementChannelConfigInit Serialize();
+  };
+
+  // Create a ReplacementChannelConfig object that can be used to duplicate the
+  // current channel.
+  ReplacementChannelConfig CloneReplacementChannelConfig(
+      bool aPreserveMethod, uint32_t aRedirectFlags,
+      uint32_t aExtraLoadFlags = 0);
+
+  static void ConfigureReplacementChannel(nsIChannel*,
+                                          const ReplacementChannelConfig&);
 
  protected:
   nsresult GetTopWindowURI(nsIURI* aURIBeingLoaded, nsIURI** aTopWindowURI);
