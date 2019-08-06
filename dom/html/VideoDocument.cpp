@@ -102,7 +102,7 @@ void VideoDocument::SetScriptGlobalObject(
 }
 
 nsresult VideoDocument::CreateVideoElement() {
-  Element* body = GetBodyElement();
+  RefPtr<Element> body = GetBodyElement();
   if (!body) {
     NS_WARNING("no body on video document!");
     return NS_ERROR_FAILURE;

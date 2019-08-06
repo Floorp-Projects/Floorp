@@ -657,7 +657,7 @@ nsresult ImageDocument::CreateSyntheticDocument() {
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Add the image element
-  Element* body = GetBodyElement();
+  RefPtr<Element> body = GetBodyElement();
   if (!body) {
     NS_WARNING("no body on image document!");
     return NS_ERROR_FAILURE;
