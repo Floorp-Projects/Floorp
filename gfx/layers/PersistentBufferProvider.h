@@ -177,6 +177,9 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   Maybe<uint32_t> mBack;
   // Offset of the texture in mTextures that is presented to the compositor.
   Maybe<uint32_t> mFront;
+  // Offset of the texture in mTextures which texture's readlock is unreliable.
+  // Therefore it should not be used as next back buffer.
+  Maybe<uint32_t> mTextureLockIsUnreliable;
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
