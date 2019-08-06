@@ -574,7 +574,7 @@ Toolbox.prototype = {
   },
 
   _attachAndResumeThread: async function() {
-    const threadOptions = {
+    const [, threadFront] = await this._target.attachThread({
       autoBlackBox: false,
       ignoreFrameEnvironment: true,
       pauseOnExceptions: Services.prefs.getBoolPref(
@@ -586,8 +586,10 @@ Toolbox.prototype = {
       showOverlayStepButtons: Services.prefs.getBoolPref(
         "devtools.debugger.features.overlay-step-buttons"
       ),
-    };
-    const [, threadFront] = await this._target.attachThread(threadOptions);
+      skipBreakpoints: Services.prefs.getBoolPref(
+        "devtools.debugger.skip-pausing"
+      ),
+    });
 
     try {
       await threadFront.resume();
