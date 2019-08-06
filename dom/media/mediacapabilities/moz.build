@@ -8,12 +8,22 @@ EXPORTS.mozilla.dom += [
 ]
 
 EXPORTS.mozilla += [
+    'BenchmarkStorageChild.h',
+    'BenchmarkStorageParent.h',
     'KeyValueStorage.h',
 ]
 
 UNIFIED_SOURCES += [
+    'BenchmarkStorageChild.cpp',
+    'BenchmarkStorageParent.cpp',
     'KeyValueStorage.cpp',
     'MediaCapabilities.cpp',
 ]
+
+IPDL_SOURCES += [
+    'PBenchmarkStorage.ipdl'
+]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
