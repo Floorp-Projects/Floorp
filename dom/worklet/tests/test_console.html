@@ -9,6 +9,7 @@
 <body>
 
 <script type="application/javascript">
+const WORKLET_SCRIPT = "worklet_console.js";
 
 function configureTest() {
   function consoleListener() {
@@ -21,6 +22,8 @@ function configureTest() {
         var obj = aSubject.wrappedJSObject;
         if (obj.arguments[0] == "Hello world from a worklet") {
           ok(true, "Message received \\o/");
+          is(obj.filename,
+             new URL(WORKLET_SCRIPT, document.baseURI).toString());
 
           SpecialPowers.removeObserver(this, "console-api-log-event");
           SimpleTest.finish();
@@ -40,7 +43,7 @@ function configureTest() {
 // This function is called into an iframe.
 function runTestInIframe() {
   var audioContext = new AudioContext();
-  audioContext.audioWorklet.addModule("worklet_console.js");
+  audioContext.audioWorklet.addModule(WORKLET_SCRIPT);
 }
 
 </script>
