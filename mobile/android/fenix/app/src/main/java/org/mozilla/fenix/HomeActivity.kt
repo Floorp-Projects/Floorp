@@ -133,7 +133,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        navHost.navController.popBackStack(R.id.homeFragment, false)
         handleCrashIfNecessary(intent)
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
