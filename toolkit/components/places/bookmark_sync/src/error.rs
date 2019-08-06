@@ -18,6 +18,7 @@ pub enum Error {
     InvalidLocalRoots,
     InvalidRemoteRoots,
     Nsresult(nsresult),
+    UnknownItemType(i64),
     UnknownItemKind(i64),
     MalformedString(Box<dyn error::Error + Send + Sync + 'static>),
     MergeConflict,
@@ -71,7 +72,8 @@ impl From<Error> for nsresult {
             }
             Error::Storage(err) => err.into(),
             Error::Nsresult(result) => result.clone(),
-            Error::UnknownItemKind(_)
+            Error::UnknownItemType(_)
+            | Error::UnknownItemKind(_)
             | Error::MalformedString(_)
             | Error::UnknownItemValidity(_) => NS_ERROR_INVALID_ARG,
             Error::MergeConflict => NS_ERROR_STORAGE_BUSY,
@@ -89,7 +91,8 @@ impl fmt::Display for Error {
                 f.write_str("The roots in the mirror database are invalid")
             }
             Error::Nsresult(result) => write!(f, "Operation failed with {}", result.error_name()),
-            Error::UnknownItemKind(kind) => write!(f, "Unknown item kind {} in database", kind),
+            Error::UnknownItemType(typ) => write!(f, "Unknown item type {} in Places", typ),
+            Error::UnknownItemKind(kind) => write!(f, "Unknown item kind {} in mirror", kind),
             Error::MalformedString(err) => err.fmt(f),
             Error::MergeConflict => f.write_str("Local tree changed during merge"),
             Error::UnknownItemValidity(validity) => {

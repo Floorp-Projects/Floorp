@@ -12,16 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::{collections::HashMap, time::Duration, time::Instant};
+use std::{time::Duration, time::Instant};
 
 use crate::driver::{
-    AbortSignal, ContentsStats, DefaultAbortSignal, DefaultDriver, Driver, TelemetryEvent,
-    TreeStats,
+    AbortSignal, DefaultAbortSignal, DefaultDriver, Driver, TelemetryEvent, TreeStats,
 };
-use crate::error::{Error, ErrorKind};
-use crate::guid::Guid;
-use crate::merge::{Deletion, Merger};
-use crate::tree::{Content, MergedRoot, Tree};
+use crate::error::Error;
+use crate::merge::{MergedRoot, Merger};
+use crate::tree::Tree;
 
 /// A store is the main interface to Dogear. It implements methods for building
 /// local and remote trees from a storage backend, fetching content info for
@@ -31,29 +29,15 @@ pub trait Store<E: From<Error>> {
     /// the local store.
     fn fetch_local_tree(&self) -> Result<Tree, E>;
 
-    /// Fetches content info for all new local items that haven't been uploaded
-    /// or merged yet. We'll try to dedupe them to remotely changed items with
-    /// similar contents and different GUIDs.
-    fn fetch_new_local_contents(&self) -> Result<HashMap<Guid, Content>, E>;
-
     /// Builds a fully rooted, consistent tree from the items and tombstones in
     /// the mirror.
     fn fetch_remote_tree(&self) -> Result<Tree, E>;
-
-    /// Fetches content info for all items in the mirror that changed since the
-    /// last sync and don't exist locally. We'll try to match new local items to
-    /// these.
-    fn fetch_new_remote_contents(&self) -> Result<HashMap<Guid, Content>, E>;
 
     /// Applies the merged root to the local store, and stages items for
     /// upload. On Desktop, this method inserts the merged tree into a temp
     /// table, updates Places, and inserts outgoing items into another
     /// temp table.
-    fn apply<'t>(
-        &mut self,
-        root: MergedRoot<'t>,
-        deletions: impl Iterator<Item = Deletion<'t>>,
-    ) -> Result<(), E>;
+    fn apply<'t>(&mut self, root: MergedRoot<'t>) -> Result<(), E>;
 
     /// Builds and applies a merged tree using the default merge driver.
     fn merge(&mut self) -> Result<(), E> {
@@ -69,78 +53,49 @@ pub trait Store<E: From<Error>> {
         signal: &impl AbortSignal,
     ) -> Result<(), E> {
         signal.err_if_aborted()?;
+        debug!(driver, "Building local tree");
         let (local_tree, time) = with_timing(|| self.fetch_local_tree())?;
         driver.record_telemetry_event(TelemetryEvent::FetchLocalTree(TreeStats {
             items: local_tree.size(),
             problems: local_tree.problems().counts(),
             time,
         }));
-        debug!(driver, "Built local tree from mirror\n{}", local_tree);
+        trace!(driver, "Built local tree from mirror\n{}", local_tree);
 
         signal.err_if_aborted()?;
-        let (new_local_contents, time) = with_timing(|| self.fetch_new_local_contents())?;
-        driver.record_telemetry_event(TelemetryEvent::FetchNewLocalContents(ContentsStats {
-            items: new_local_contents.len(),
-            time,
-        }));
-
-        signal.err_if_aborted()?;
+        debug!(driver, "Building remote tree");
         let (remote_tree, time) = with_timing(|| self.fetch_remote_tree())?;
         driver.record_telemetry_event(TelemetryEvent::FetchRemoteTree(TreeStats {
             items: remote_tree.size(),
             problems: remote_tree.problems().counts(),
             time,
         }));
-        debug!(driver, "Built remote tree from mirror\n{}", remote_tree);
+        trace!(driver, "Built remote tree from mirror\n{}", remote_tree);
 
         signal.err_if_aborted()?;
-        let (new_remote_contents, time) = with_timing(|| self.fetch_new_remote_contents())?;
-        driver.record_telemetry_event(TelemetryEvent::FetchNewRemoteContents(ContentsStats {
-            items: new_local_contents.len(),
-            time,
-        }));
-
-        let mut merger = Merger::with_driver(
-            driver,
-            signal,
-            &local_tree,
-            &new_local_contents,
-            &remote_tree,
-            &new_remote_contents,
-        );
+        debug!(driver, "Building merged tree");
+        let merger = Merger::with_driver(driver, signal, &local_tree, &remote_tree);
         let (merged_root, time) = with_timing(|| merger.merge())?;
-        driver.record_telemetry_event(TelemetryEvent::Merge(time, *merger.counts()));
-        debug!(
+        driver.record_telemetry_event(TelemetryEvent::Merge(time, *merged_root.counts()));
+        trace!(
             driver,
             "Built new merged tree\n{}\nDelete Locally: [{}]\nDelete Remotely: [{}]",
-            merged_root.to_ascii_string(),
-            merger
+            merged_root.node().to_ascii_string(),
+            merged_root
                 .local_deletions()
                 .map(|d| d.guid.as_str())
                 .collect::<Vec<_>>()
                 .join(", "),
-            merger
+            merged_root
                 .remote_deletions()
                 .map(|d| d.guid.as_str())
                 .collect::<Vec<_>>()
                 .join(", ")
         );
 
-        // The merged tree should know about all items mentioned in the local
-        // and remote trees. Otherwise, it's incomplete, and we can't apply it.
-        // This indicates a bug in the merger.
-
         signal.err_if_aborted()?;
-        if !merger.subsumes(&local_tree) {
-            Err(E::from(ErrorKind::UnmergedLocalItems.into()))?;
-        }
-
-        signal.err_if_aborted()?;
-        if !merger.subsumes(&remote_tree) {
-            Err(E::from(ErrorKind::UnmergedRemoteItems.into()))?;
-        }
-
-        let ((), time) = with_timing(|| self.apply(merged_root, merger.deletions()))?;
+        debug!(driver, "Applying merged tree");
+        let ((), time) = with_timing(|| self.apply(merged_root))?;
         driver.record_telemetry_event(TelemetryEvent::Apply(time));
 
         Ok(())

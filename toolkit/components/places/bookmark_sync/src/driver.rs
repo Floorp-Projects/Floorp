@@ -203,18 +203,12 @@ impl Task for RecordTelemetryEventTask {
                     problem_counts_to_bag(&stats.problems).bag().coerce(),
                 )
             },
-            TelemetryEvent::FetchNewLocalContents(stats) => unsafe {
-                callback.OnFetchNewLocalContents(as_millis(stats.time), stats.items as i64)
-            },
             TelemetryEvent::FetchRemoteTree(stats) => unsafe {
                 callback.OnFetchRemoteTree(
                     as_millis(stats.time),
                     stats.items as i64,
                     problem_counts_to_bag(&stats.problems).bag().coerce(),
                 )
-            },
-            TelemetryEvent::FetchNewRemoteContents(stats) => unsafe {
-                callback.OnFetchNewRemoteContents(as_millis(stats.time), stats.items as i64)
             },
             TelemetryEvent::Merge(time, counts) => unsafe {
                 callback.OnMerge(

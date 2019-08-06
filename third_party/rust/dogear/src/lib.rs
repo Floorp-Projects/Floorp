@@ -20,22 +20,15 @@ mod driver;
 mod error;
 mod guid;
 mod merge;
-#[macro_use]
 mod store;
 mod tree;
 
 #[cfg(test)]
 mod tests;
 
-pub use crate::driver::{
-    AbortSignal, ContentsStats, DefaultAbortSignal, DefaultDriver, Driver, TelemetryEvent,
-    TreeStats,
-};
-pub use crate::error::{Error, ErrorKind, Result};
-pub use crate::guid::{Guid, MENU_GUID, MOBILE_GUID, ROOT_GUID, TOOLBAR_GUID, UNFILED_GUID};
-pub use crate::merge::{Deletion, Merger, StructureCounts};
-pub use crate::store::Store;
-pub use crate::tree::{
-    Content, Item, Kind, MergeState, MergedDescendant, MergedNode, MergedRoot, ProblemCounts, Tree,
-    UploadReason, Validity,
-};
+pub use crate::driver::*;
+pub use crate::error::*;
+pub use crate::guid::*;
+pub use crate::merge::*;
+pub use crate::store::*;
+pub use crate::tree::*;

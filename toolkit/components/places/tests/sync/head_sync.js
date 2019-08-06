@@ -193,6 +193,16 @@ async function fetchLocalTree(rootGuid) {
   function bookmarkNodeToInfo(node) {
     let { guid, index, title, typeCode: type } = node;
     let itemInfo = { guid, index, title, type };
+    if (node.annos) {
+      let syncableAnnos = node.annos.filter(anno =>
+        [PlacesUtils.LMANNO_FEEDURI, PlacesUtils.LMANNO_SITEURI].includes(
+          anno.name
+        )
+      );
+      if (syncableAnnos.length) {
+        itemInfo.annos = syncableAnnos;
+      }
+    }
     if (node.uri) {
       itemInfo.url = node.uri;
     }

@@ -212,16 +212,19 @@ impl MergeTask {
 impl Task for MergeTask {
     fn run(&self) {
         let mut db = self.db.clone();
+        let log = Logger::new(self.max_log_level, self.logger.clone());
+        let driver = Driver::new(log, self.progress.clone());
         let mut store = store::Store::new(
             &mut db,
+            &driver,
             &self.controller,
             self.local_time_millis,
             self.remote_time_millis,
             &self.weak_uploads,
         );
-        let log = Logger::new(self.max_log_level, self.logger.clone());
-        let driver = Driver::new(log, self.progress.clone());
-        *self.result.borrow_mut() = store.merge_with_driver(&driver, &*self.controller);
+        *self.result.borrow_mut() = store
+            .prepare()
+            .and_then(|_| store.merge_with_driver(&driver, &*self.controller));
     }
 
     fn done(&self) -> Result<(), nsresult> {

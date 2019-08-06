@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "dogear"
-version = "0.2.6"
+version = "0.3.0"
 authors = ["Lina Cambridge <lina@mozilla.com>"]
 exclude = ["/.travis/**", ".travis.yml", "/docs/**", "book.toml"]
 description = "A library for merging bookmark trees."
