@@ -24,7 +24,7 @@ let gStyles = null;
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
   const { target } = await attachURL(url);
-  const inspector = await target.getInspector();
+  const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;
   gStyles = await inspector.getPageStyle();
   runNextTest();
