@@ -58,7 +58,6 @@ class SearchTest {
 
         homeScreen {
         }.openSearch {
-            clickShortcutsButton()
             verifySearchWithText()
             clickDuckDuckGoEngineButton()
             typeSearch()
@@ -74,7 +73,6 @@ class SearchTest {
 
         homeScreen {
         }.openSearch {
-            clickShortcutsButton()
             scrollToSearchEngineSettings()
             clickSearchEngineSettings()
             verifySearchEngineSettings()
