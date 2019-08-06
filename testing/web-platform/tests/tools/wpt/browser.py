@@ -595,7 +595,7 @@ class ChromeAndroid(Browser):
         return find_executable("chromedriver")
 
     def install_webdriver(self, dest=None, channel=None, browser_binary=None):
-        chrome = Chrome()
+        chrome = Chrome(self.logger)
         return chrome.install_webdriver(dest, channel)
 
     def version(self, binary=None, webdriver_binary=None):

@@ -2,18 +2,18 @@ import subprocess
 
 from .base import Browser, ExecutorBrowser, require_arg
 from .base import get_timeout_multiplier   # noqa: F401
+from .chrome import executor_kwargs as chrome_executor_kwargs
 from ..webdriver_server import ChromeDriverServer
-from ..executors import executor_kwargs as base_executor_kwargs
-from ..executors.executorselenium import (SeleniumTestharnessExecutor,  # noqa: F401
-                                          SeleniumRefTestExecutor)  # noqa: F401
+from ..executors.executorwebdriver import (WebDriverTestharnessExecutor,  # noqa: F401
+                                           WebDriverRefTestExecutor)  # noqa: F401
 from ..executors.executorchrome import ChromeDriverWdspecExecutor  # noqa: F401
 
 
 __wptrunner__ = {"product": "chrome_android",
                  "check_args": "check_args",
                  "browser": "ChromeAndroidBrowser",
-                 "executor": {"testharness": "SeleniumTestharnessExecutor",
-                              "reftest": "SeleniumRefTestExecutor",
+                 "executor": {"testharness": "WebDriverTestharnessExecutor",
+                              "reftest": "WebDriverRefTestExecutor",
                               "wdspec": "ChromeDriverWdspecExecutor"},
                  "browser_kwargs": "browser_kwargs",
                  "executor_kwargs": "executor_kwargs",
@@ -36,31 +36,25 @@ def browser_kwargs(test_type, run_info_data, config, **kwargs):
 
 def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                     **kwargs):
-    from selenium.webdriver import DesiredCapabilities
-
-    # Use extend() to modify the global list in place.
+    # Use update() to modify the global list in place.
     _wptserve_ports.update(set(
         server_config['ports']['http'] + server_config['ports']['https'] +
         server_config['ports']['ws'] + server_config['ports']['wss']
     ))
 
-    executor_kwargs = base_executor_kwargs(test_type, server_config, cache_manager, run_info_data,
-                                           **kwargs)
-    executor_kwargs["close_after_done"] = True
-    capabilities = dict(DesiredCapabilities.CHROME.items())
-    capabilities["goog:chromeOptions"] = {}
-    # TODO(chrome): browser_channel should be properly supported.
+    executor_kwargs = chrome_executor_kwargs(test_type, server_config,
+                                             cache_manager, run_info_data,
+                                             **kwargs)
+    del executor_kwargs["capabilities"]["goog:chromeOptions"]["prefs"]
+    del executor_kwargs["capabilities"]["goog:chromeOptions"]["useAutomationExtension"]
+
+    # TODO(Hexcles): browser_channel should be properly supported.
     package_name = "com.android.chrome"  # stable channel
     # Required to start on mobile
-    capabilities["goog:chromeOptions"]["androidPackage"] = package_name
+    executor_kwargs["capabilities"]["goog:chromeOptions"]["androidPackage"] = \
+        package_name
+    # Map wptrunner args to chromeOptions.
 
-    for (kwarg, capability) in [("binary", "binary"), ("binary_args", "args")]:
-        if kwargs[kwarg] is not None:
-            capabilities["goog:chromeOptions"][capability] = kwargs[kwarg]
-    if test_type == "testharness":
-        capabilities["useAutomationExtension"] = False
-        capabilities["excludeSwitches"] = ["enable-automation"]
-    executor_kwargs["capabilities"] = capabilities
     return executor_kwargs
 
 
