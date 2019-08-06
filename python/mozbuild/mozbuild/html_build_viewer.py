@@ -24,7 +24,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.end_headers()
 
             keys = sorted(s.json_files.keys())
-            json.dump({'files': keys}, self.wfile)
+            json.dump({'files': ['resources/%s' % k for k in keys]}, self.wfile)
             return
 
         if p.startswith('/resources/'):
