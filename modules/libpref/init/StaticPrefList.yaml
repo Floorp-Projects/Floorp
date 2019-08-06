@@ -5971,6 +5971,13 @@
   value: true
   mirror: always
 
+# Disabled by default so it doesn't affect Thunderbird/SeaMonkey, but
+# enabled in firefox.js
+- name: security.allow_eval_in_parent_process
+  type: bool
+  value: true
+  mirror: always
+
 # Whether strict file origin policy is in effect.
 - name: security.fileuri.strict_origin_policy
   type: RelaxedAtomicBool
