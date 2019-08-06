@@ -296,8 +296,10 @@ nsWindowWatcher::OpenWindow(mozIDOMWindowProxy* aParent, const char* aUrl,
                              /* aForceNoOpener = */ false,
                              /* aForceNoReferrer = */ false,
                              /* aLoadState = */ nullptr, getter_AddRefs(bc)));
-  nsCOMPtr<mozIDOMWindowProxy> win(bc->GetDOMWindow());
-  win.forget(aResult);
+  if (bc) {
+    nsCOMPtr<mozIDOMWindowProxy> win(bc->GetDOMWindow());
+    win.forget(aResult);
+  }
   return NS_OK;
 }
 
