@@ -14,17 +14,23 @@ function add_ocsp_test(
   aHost,
   aExpectedResult,
   aStaplingEnabled,
-  aExpectOCSPRequest = false
+  aExpectOCSPRequest = false,
+  aWithSecurityInfo = undefined
 ) {
-  add_connection_test(aHost, aExpectedResult, function() {
-    gExpectOCSPRequest = aExpectOCSPRequest;
-    clearOCSPCache();
-    clearSessionCache();
-    Services.prefs.setBoolPref(
-      "security.ssl.enable_ocsp_stapling",
-      aStaplingEnabled
-    );
-  });
+  add_connection_test(
+    aHost,
+    aExpectedResult,
+    function() {
+      gExpectOCSPRequest = aExpectOCSPRequest;
+      clearOCSPCache();
+      clearSessionCache();
+      Services.prefs.setBoolPref(
+        "security.ssl.enable_ocsp_stapling",
+        aStaplingEnabled
+      );
+    },
+    aWithSecurityInfo
+  );
 }
 
 function add_tests() {
@@ -33,49 +39,44 @@ function add_tests() {
   add_ocsp_test(
     "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com",
     PRErrorCodeSuccess,
-    true
+    true,
+    false,
+    function(aSecInfo) {
+      Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
+      Services.prefs.setBoolPref(
+        "security.cert_pinning.process_headers_from_non_builtin_roots",
+        true
+      );
+      let uri = Services.io.newURI(
+        "https://ocsp-stapling-must-staple-ee-with-must-staple-int.example.com"
+      );
+      let keyHash = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
+      let backupKeyHash = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
+      let header = `max-age=1000; pin-sha256="${keyHash}"; pin-sha256="${backupKeyHash}"`;
+      let ssservice = Cc["@mozilla.org/ssservice;1"].getService(
+        Ci.nsISiteSecurityService
+      );
+      ssservice.processHeader(
+        Ci.nsISiteSecurityService.HEADER_HPKP,
+        uri,
+        header,
+        aSecInfo,
+        0,
+        Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
+      );
+      ok(
+        ssservice.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
+        "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com should have HPKP set"
+      );
+
+      // Clear accumulated state.
+      ssservice.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
+      Services.prefs.clearUserPref(
+        "security.cert_pinning.process_headers_from_non_builtin_roots"
+      );
+      Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
+    }
   );
-
-  add_test(() => {
-    Services.prefs.setIntPref("security.cert_pinning.enforcement_level", 1);
-    Services.prefs.setBoolPref(
-      "security.cert_pinning.process_headers_from_non_builtin_roots",
-      true
-    );
-    let uri = Services.io.newURI(
-      "https://ocsp-stapling-must-staple-ee-with-must-staple-int.example.com"
-    );
-    let keyHash = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
-    let backupKeyHash = "KHAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN=";
-    let header = `max-age=1000; pin-sha256="${keyHash}"; pin-sha256="${backupKeyHash}"`;
-    let ssservice = Cc["@mozilla.org/ssservice;1"].getService(
-      Ci.nsISiteSecurityService
-    );
-    let secInfo = new FakeTransportSecurityInfo();
-    secInfo.serverCert = constructCertFromFile(
-      "ocsp_certs/must-staple-ee-with-must-staple-int.pem"
-    );
-    ssservice.processHeader(
-      Ci.nsISiteSecurityService.HEADER_HPKP,
-      uri,
-      header,
-      secInfo,
-      0,
-      Ci.nsISiteSecurityService.SOURCE_ORGANIC_REQUEST
-    );
-    ok(
-      ssservice.isSecureURI(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0),
-      "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com should have HPKP set"
-    );
-
-    // Clear accumulated state.
-    ssservice.resetState(Ci.nsISiteSecurityService.HEADER_HPKP, uri, 0);
-    Services.prefs.clearUserPref(
-      "security.cert_pinning.process_headers_from_non_builtin_roots"
-    );
-    Services.prefs.clearUserPref("security.cert_pinning.enforcement_level");
-    run_next_test();
-  });
 
   // Next, a case where it's present in the intermediate, not the ee
   add_ocsp_test(
