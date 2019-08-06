@@ -954,7 +954,7 @@ description#identity-popup-content-verifier,
   color: #f9f9fa;
 }
 
-#protections-popup-tp-switch[showdotindicator]::after {
+#protections-popup-tp-switch:not([enabled])[showdotindicator]::after {
   background: #00B3F4;
   border: 1px rgba(0,144,237,0.5) solid;
   content: " ";
@@ -968,7 +968,7 @@ description#identity-popup-content-verifier,
   width: 10px;
 }
 
-#protections-popup-tp-switch[showdotindicator]:-moz-locale-dir(rtl)::after {
+#protections-popup-tp-switch:not([enabled])[showdotindicator]:-moz-locale-dir(rtl)::after {
   left: unset;
   right: calc(1em + 20px);
 }
