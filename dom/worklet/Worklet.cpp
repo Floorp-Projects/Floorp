@@ -131,7 +131,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     }
 
     RefPtr<WorkletFetchHandler> handler =
-        new WorkletFetchHandler(aWorklet, aModuleURL, promise);
+        new WorkletFetchHandler(aWorklet, spec, promise);
     fetchPromise->AppendNativeHandler(handler);
 
     aWorklet->AddImportFetchHandler(spec, handler);
@@ -236,7 +236,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
     RejectPromises(NS_ERROR_DOM_NETWORK_ERR);
   }
 
-  const nsString& URL() const { return mURL; }
+  const nsCString& URL() const { return mURL; }
 
   void ExecutionFailed(nsresult aRv) {
     MOZ_ASSERT(NS_IsMainThread());
@@ -249,7 +249,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
   }
 
  private:
-  WorkletFetchHandler(Worklet* aWorklet, const nsAString& aURL,
+  WorkletFetchHandler(Worklet* aWorklet, const nsACString& aURL,
                       Promise* aPromise)
       : mWorklet(aWorklet), mStatus(ePending), mErrorStatus(NS_OK), mURL(aURL) {
     MOZ_ASSERT(aWorklet);
@@ -316,7 +316,7 @@ class WorkletFetchHandler final : public PromiseNativeHandler,
 
   nsresult mErrorStatus;
 
-  nsString mURL;
+  nsCString mURL;
 };
 
 NS_IMPL_ISUPPORTS(WorkletFetchHandler, nsIStreamLoaderObserver)
@@ -347,11 +347,9 @@ void ExecutionRunnable::RunOnWorkletThread() {
 
   JS::Rooted<JSObject*> globalObj(cx, globalScope->GetGlobalJSObject());
 
-  NS_ConvertUTF16toUTF8 url(mHandler->URL());
-
   JS::CompileOptions compileOptions(cx);
   compileOptions.setIntroductionType("Worklet");
-  compileOptions.setFileAndLine(url.get(), 0);
+  compileOptions.setFileAndLine(mHandler->URL().get(), 0);
   compileOptions.setIsRunOnce(true);
   compileOptions.setNoScriptRval(true);
 
