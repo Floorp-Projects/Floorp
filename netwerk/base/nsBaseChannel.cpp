@@ -23,6 +23,7 @@
 #include "LoadInfo.h"
 #include "nsServiceManagerUtils.h"
 #include "nsRedirectHistoryEntry.h"
+#include "nsHttpHandler.h"
 
 using namespace mozilla;
 
@@ -66,6 +67,8 @@ nsBaseChannel::nsBaseChannel()
       mContentLength(-1),
       mWasOpened(false) {
   mContentType.AssignLiteral(UNKNOWN_CONTENT_TYPE);
+  RefPtr<nsHttpHandler> handler = nsHttpHandler::GetInstance();
+  Unused << handler->NewChannelId(mChannelId);
 }
 
 nsBaseChannel::~nsBaseChannel() {
@@ -347,13 +350,11 @@ void nsBaseChannel::ClassifyURI() {
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsISupports
 
-NS_IMPL_ISUPPORTS_INHERITED(nsBaseChannel, nsHashPropertyBag, nsIRequest,
-                            nsIChannel, nsIThreadRetargetableRequest,
-                            nsIInterfaceRequestor, nsITransportEventSink,
-                            nsIRequestObserver, nsIStreamListener,
-                            nsIThreadRetargetableStreamListener,
-                            nsIAsyncVerifyRedirectCallback,
-                            nsIPrivateBrowsingChannel)
+NS_IMPL_ISUPPORTS_INHERITED(
+    nsBaseChannel, nsHashPropertyBag, nsIRequest, nsIChannel, nsIIdentChannel,
+    nsIThreadRetargetableRequest, nsIInterfaceRequestor, nsITransportEventSink,
+    nsIRequestObserver, nsIStreamListener, nsIThreadRetargetableStreamListener,
+    nsIAsyncVerifyRedirectCallback, nsIPrivateBrowsingChannel)
 
 //-----------------------------------------------------------------------------
 // nsBaseChannel::nsIRequest
@@ -696,6 +697,21 @@ nsBaseChannel::AsyncOpen(nsIStreamListener* aListener) {
 
   ClassifyURI();
 
+  return NS_OK;
+}
+
+//-----------------------------------------------------------------------------
+// nsBaseChannel::nsIIdentChannel
+
+NS_IMETHODIMP
+nsBaseChannel::GetChannelId(uint64_t* aChannelId) {
+  *aChannelId = mChannelId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBaseChannel::SetChannelId(uint64_t aChannelId) {
+  mChannelId = aChannelId;
   return NS_OK;
 }
 
