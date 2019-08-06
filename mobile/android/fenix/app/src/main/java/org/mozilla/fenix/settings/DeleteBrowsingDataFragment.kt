@@ -33,7 +33,11 @@ class DeleteBrowsingDataFragment : Fragment() {
     private lateinit var sessionObserver: SessionManager.Observer
     private var tabCollections: List<TabCollection> = listOf()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? =
         inflater.inflate(R.layout.fragment_delete_browsing_data, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -78,15 +82,13 @@ class DeleteBrowsingDataFragment : Fragment() {
     private fun askToDelete() {
         context?.let {
             AlertDialog.Builder(it).apply {
-                val appName = context.getString(R.string.app_name)
-                val message = context.getString(R.string.preferences_delete_browsing_data_prompt_message, appName)
-                setMessage(message)
+                setMessage(R.string.delete_browsing_data_prompt_message)
 
-                setNegativeButton(R.string.preferences_delete_browsing_data_prompt_cancel) { it: DialogInterface, _ ->
+                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { it: DialogInterface, _ ->
                     it.cancel()
                 }
 
-                setPositiveButton(R.string.preferences_delete_browsing_data_prompt_allow) { it: DialogInterface, _ ->
+                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { it: DialogInterface, _ ->
                     it.dismiss()
                     deleteSelected()
                 }
@@ -125,7 +127,9 @@ class DeleteBrowsingDataFragment : Fragment() {
         delete_browsing_data_wrapper.isClickable = true
         delete_browsing_data_wrapper.alpha = ENABLED_ALPHA
 
-        listOf(open_tabs_item, browsing_data_item, collections_item).forEach { it.isChecked = false }
+        listOf(open_tabs_item, browsing_data_item, collections_item).forEach {
+            it.isChecked = false
+        }
 
         updateTabCount()
         updateHistoryCount()
@@ -149,7 +153,10 @@ class DeleteBrowsingDataFragment : Fragment() {
     private fun updateTabCount() {
         view?.open_tabs_item?.apply {
             val openTabs = requireComponents.core.sessionManager.sessions.size
-            subtitleView.text = resources.getString(R.string.preferences_delete_browsing_data_tabs_subtitle, openTabs)
+            subtitleView.text = resources.getString(
+                R.string.preferences_delete_browsing_data_tabs_subtitle,
+                openTabs
+            )
             isEnabled = openTabs > 0
         }
     }
@@ -176,7 +183,8 @@ class DeleteBrowsingDataFragment : Fragment() {
         view?.browsing_data_item?.subtitleView?.text = ""
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val collectionsCount = requireComponents.core.tabCollectionStorage.getTabCollectionsCount()
+            val collectionsCount =
+                requireComponents.core.tabCollectionStorage.getTabCollectionsCount()
             launch(Dispatchers.Main) {
                 view?.collections_item?.apply {
                     subtitleView.text =

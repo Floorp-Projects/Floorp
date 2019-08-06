@@ -216,11 +216,11 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
     private fun displayDeleteAllDialog() {
         activity?.let { activity ->
             AlertDialog.Builder(activity).apply {
-                setMessage(R.string.history_delete_all_dialog)
-                setNegativeButton(android.R.string.cancel) { dialog: DialogInterface, _ ->
+                setMessage(R.string.delete_browsing_data_prompt_message)
+                setNegativeButton(R.string.delete_browsing_data_prompt_cancel) { dialog: DialogInterface, _ ->
                     dialog.cancel()
                 }
-                setPositiveButton(R.string.history_clear_dialog) { dialog: DialogInterface, _ ->
+                setPositiveButton(R.string.delete_browsing_data_prompt_allow) { dialog: DialogInterface, _ ->
                     historyStore.dispatch(HistoryAction.EnterDeletionMode)
                     lifecycleScope.launch {
                         requireComponents.analytics.metrics.track(Event.HistoryAllItemsRemoved)
