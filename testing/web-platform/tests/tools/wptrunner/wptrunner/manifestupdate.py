@@ -1,5 +1,4 @@
 from __future__ import print_function
-import itertools
 import os
 from six.moves.urllib.parse import urljoin
 from collections import namedtuple, defaultdict, deque
@@ -8,7 +7,7 @@ from math import ceil
 from wptmanifest import serialize
 from wptmanifest.node import (DataNode, ConditionalNode, BinaryExpressionNode,
                               BinaryOperatorNode, NumberNode, StringNode, VariableNode,
-                              ValueNode, UnaryExpressionNode, UnaryOperatorNode, KeyValueNode,
+                              ValueNode, UnaryExpressionNode, UnaryOperatorNode,
                               ListNode)
 from wptmanifest.backends import conditional
 from wptmanifest.backends.conditional import ManifestItem
@@ -874,8 +873,7 @@ def make_expr(prop_set, rhs):
                 BinaryExpressionNode(
                     BinaryOperatorNode("=="),
                     VariableNode(prop),
-                    make_node(value))
-                )
+                    make_node(value)))
         else:
             if value:
                 expressions.append(VariableNode(prop))
