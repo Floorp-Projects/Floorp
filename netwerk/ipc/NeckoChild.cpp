@@ -60,7 +60,10 @@ NeckoChild::~NeckoChild() {
 }
 
 void NeckoChild::InitNeckoChild() {
-  MOZ_ASSERT(IsNeckoChild(), "InitNeckoChild called by non-child!");
+  if (!IsNeckoChild()) {
+    MOZ_ASSERT(false, "InitNeckoChild called by non-child!");
+    return;
+  }
 
   if (!gNeckoChild) {
     mozilla::dom::ContentChild* cpc =

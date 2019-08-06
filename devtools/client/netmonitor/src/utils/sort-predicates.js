@@ -35,7 +35,7 @@ function compareValues(first, second) {
 }
 
 function waterfall(first, second) {
-  const result = compareValues(first.startedMillis, second.startedMillis);
+  const result = compareValues(first.startedMs, second.startedMs);
   return result || compareValues(first.id, second.id);
 }
 

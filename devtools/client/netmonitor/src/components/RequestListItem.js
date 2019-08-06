@@ -110,7 +110,7 @@ const UPDATED_REQ_ITEM_PROPS = [
   "cause",
   "contentSize",
   "transferredSize",
-  "startedMillis",
+  "startedMs",
   "totalTime",
   "requestCookies",
   "requestHeaders",
@@ -119,7 +119,7 @@ const UPDATED_REQ_ITEM_PROPS = [
 ];
 
 const UPDATED_REQ_PROPS = [
-  "firstRequestStartedMillis",
+  "firstRequestStartedMs",
   "index",
   "isSelected",
   "requestFilterTypes",
@@ -170,27 +170,27 @@ const COLUMN_COMPONENTS = [
   {
     column: "startTime",
     ColumnComponent: RequestListColumnTime,
-    props: ["connector", "firstRequestStartedMillis", { type: "start" }],
+    props: ["connector", "firstRequestStartedMs", { type: "start" }],
   },
   {
     column: "endTime",
     ColumnComponent: RequestListColumnTime,
-    props: ["connector", "firstRequestStartedMillis", { type: "end" }],
+    props: ["connector", "firstRequestStartedMs", { type: "end" }],
   },
   {
     column: "responseTime",
     ColumnComponent: RequestListColumnTime,
-    props: ["connector", "firstRequestStartedMillis", { type: "response" }],
+    props: ["connector", "firstRequestStartedMs", { type: "response" }],
   },
   {
     column: "duration",
     ColumnComponent: RequestListColumnTime,
-    props: ["connector", "firstRequestStartedMillis", { type: "duration" }],
+    props: ["connector", "firstRequestStartedMs", { type: "duration" }],
   },
   {
     column: "latency",
     ColumnComponent: RequestListColumnTime,
-    props: ["connector", "firstRequestStartedMillis", { type: "latency" }],
+    props: ["connector", "firstRequestStartedMs", { type: "latency" }],
   },
 ];
 
@@ -206,7 +206,7 @@ class RequestListItem extends Component {
       item: PropTypes.object.isRequired,
       index: PropTypes.number.isRequired,
       isSelected: PropTypes.bool.isRequired,
-      firstRequestStartedMillis: PropTypes.number.isRequired,
+      firstRequestStartedMs: PropTypes.number.isRequired,
       fromCache: PropTypes.bool,
       onCauseBadgeMouseDown: PropTypes.func.isRequired,
       onDoubleClick: PropTypes.func.isRequired,
@@ -275,7 +275,7 @@ class RequestListItem extends Component {
       item,
       index,
       isSelected,
-      firstRequestStartedMillis,
+      firstRequestStartedMs,
       fromCache,
       onDoubleClick,
       onContextMenu,
@@ -326,7 +326,7 @@ class RequestListItem extends Component {
       columns.waterfall &&
         RequestListColumnWaterfall({
           connector,
-          firstRequestStartedMillis,
+          firstRequestStartedMs,
           item,
           onWaterfallMouseDown,
         })

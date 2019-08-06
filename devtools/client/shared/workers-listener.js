@@ -28,6 +28,14 @@ class WorkersListener {
 
     this._listener = listener;
     this.rootFront.on("workerListChanged", this._listener);
+    this.rootFront.onFront("processDescriptor", processFront => {
+      processFront.onFront("contentProcessTarget", front => {
+        this._contentProcessFronts.push(front);
+        front.on("workerListChanged", this._listener);
+      });
+    });
+
+    // Support FF69 and older
     this.rootFront.onFront("contentProcessTarget", front => {
       this._contentProcessFronts.push(front);
       front.on("workerListChanged", this._listener);

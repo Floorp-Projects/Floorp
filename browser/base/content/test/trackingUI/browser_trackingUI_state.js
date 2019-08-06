@@ -30,6 +30,20 @@ var ThirdPartyCookies = null;
 var tabbrowser = null;
 var gTrackingPageURL = TRACKING_PAGE;
 
+const sBrandBundle = Services.strings.createBundle(
+  "chrome://branding/locale/brand.properties"
+);
+const sNoTrackerIconTooltip = gNavigatorBundle.getFormattedString(
+  "trackingProtection.icon.noTrackersDetectedTooltip",
+  [sBrandBundle.GetStringFromName("brandShortName")]
+);
+const sActiveIconTooltip = gNavigatorBundle.getString(
+  "trackingProtection.icon.activeTooltip2"
+);
+const sDisabledIconTooltip = gNavigatorBundle.getString(
+  "trackingProtection.icon.disabledTooltip2"
+);
+
 registerCleanupFunction(function() {
   TrackingProtection = gProtectionsHandler = ThirdPartyCookies = tabbrowser = null;
   UrlClassifierTestUtils.cleanupTestTrackers();
@@ -75,9 +89,10 @@ function testBenignPage() {
     !gProtectionsHandler.iconBox.hasAttribute("hasException"),
     "icon box shows no exception"
   );
-  ok(
-    !gProtectionsHandler.iconBox.hasAttribute("tooltiptext"),
-    "icon box has no tooltip"
+  is(
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    sNoTrackerIconTooltip,
+    "correct tooltip"
   );
   ok(
     BrowserTestUtils.is_visible(gProtectionsHandler.iconBox),
@@ -113,8 +128,8 @@ function testBenignPageWithException() {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-    gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    sDisabledIconTooltip,
     "correct tooltip"
   );
 
@@ -170,10 +185,8 @@ function testTrackingPage(window) {
     "icon box shows no exception"
   );
   is(
-    gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-    blockedByTP
-      ? gNavigatorBundle.getString("trackingProtection.icon.activeTooltip")
-      : "",
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    blockedByTP ? sActiveIconTooltip : sNoTrackerIconTooltip,
     "correct tooltip"
   );
 
@@ -214,8 +227,8 @@ function testTrackingPageUnblocked(blockedByTP, window) {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-    gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    sDisabledIconTooltip,
     "correct tooltip"
   );
 

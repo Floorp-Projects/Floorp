@@ -10,7 +10,6 @@ const {
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { WS_FRAMES_HEADERS } = require("../../constants");
 
 loader.lazyGetter(this, "FrameListColumnSize", function() {
   return createFactory(require("./FrameListColumnSize"));
@@ -40,11 +39,6 @@ const COLUMN_COMPONENT_MAP = {
   finBit: FrameListColumnFinBit,
 };
 
-const COLUMN_COMPONENTS = WS_FRAMES_HEADERS.map(({ name }) => ({
-  name,
-  ColumnComponent: COLUMN_COMPONENT_MAP[name] || dom.td,
-}));
-
 /**
  * Renders one row in the frame list.
  */
@@ -56,11 +50,19 @@ class FrameListItem extends Component {
       isSelected: PropTypes.bool.isRequired,
       onMouseDown: PropTypes.func.isRequired,
       connector: PropTypes.object.isRequired,
+      visibleColumns: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { item, index, isSelected, onMouseDown, connector } = this.props;
+    const {
+      item,
+      index,
+      isSelected,
+      onMouseDown,
+      connector,
+      visibleColumns,
+    } = this.props;
 
     const classList = ["ws-frame-list-item", index % 2 ? "odd" : "even"];
     if (isSelected) {
@@ -73,14 +75,15 @@ class FrameListItem extends Component {
         tabIndex: 0,
         onMouseDown,
       },
-      COLUMN_COMPONENTS.map(({ ColumnComponent, name }) =>
-        ColumnComponent({
+      visibleColumns.map(name => {
+        const ColumnComponent = COLUMN_COMPONENT_MAP[name];
+        return ColumnComponent({
           key: `ws-frame-list-column-${name}-${index}`,
           connector,
           item,
           index,
-        })
-      )
+        });
+      })
     );
   }
 }
