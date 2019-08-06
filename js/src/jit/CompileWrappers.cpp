@@ -143,13 +143,13 @@ uint32_t* CompileZone::addressOfNurseryAllocCount() {
 }
 
 bool CompileZone::canNurseryAllocateStrings() {
-  return nurseryEnabled() &&
+  return nurseryExists() &&
          zone()->runtimeFromAnyThread()->gc.nursery().canAllocateStrings() &&
          zone()->allocNurseryStrings;
 }
 
-bool CompileZone::nurseryEnabled() {
-  return zone()->runtimeFromAnyThread()->gc.nursery().isEnabled();
+bool CompileZone::nurseryExists() {
+  return zone()->runtimeFromAnyThread()->gc.nursery().exists();
 }
 
 void CompileZone::setMinorGCShouldCancelIonCompilations() {
