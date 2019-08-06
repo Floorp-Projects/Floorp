@@ -85,3 +85,7 @@ win64-clang-tidy:
         resources:
             - 'build/build-clang/clang-tidy-win64.json'
         toolchain-artifact: public/build/clang-tidy.tar.bz2
+    fetches:
+        fetch:
+            - cmake
+            - ninja

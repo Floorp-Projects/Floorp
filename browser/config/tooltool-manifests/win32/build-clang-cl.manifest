@@ -6,21 +6,5 @@
     "algorithm": "sha512",
     "filename": "vs2017_15.8.4.zip",
     "unpack": true
-  },
-  {
-    "version": "CMake 3.6.2 repack",
-    "size": 19832889,
-    "digest": "39b0508b60f655969d1b54c76753b14b5b2e92dab58613c835aed798a6aeb9077a7df78aebc011c2c753661fdc15007d3353c0c8773a53148380e2ec02afb629",
-    "algorithm": "sha512",
-    "filename": "cmake362.zip",
-    "unpack": true
-  },
-  {
-    "version": "Ninja 1.7.1",
-    "size": 184821,
-    "digest": "e4f9a1ae624a2630e75264ba37d396d9c7407d6e6aea3763056210ba6e1387908bd31cf4037a6a3661a418e86c4d2761e0c333e6a3bd0d66549d2b0d72d3f43b",
-    "algorithm": "sha512",
-    "filename": "ninja171.zip",
-    "unpack": true
   }
 ]
