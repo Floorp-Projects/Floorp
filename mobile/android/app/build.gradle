@@ -415,7 +415,7 @@ if (gradle.startParameter.taskNames.any { it.endsWith('UnitTest') }) {
 // Run two tasks, accepting the cost of duplicate work.
 android.applicationVariants.all { variant ->
     def jarTask = tasks["bundle${variant.name.capitalize()}Classes"]
-    def bundleJar = jarTask.outputs.files.find({ it.absolutePath.contains('/classes.jar') })
+    def bundleJar = jarTask.outputs.files.find({ it.name == 'classes.jar' })
 
     task("findbugsHtml${variant.name.capitalize()}", type: FindBugs) {
         outputs.upToDateWhen { false } // We always want to re-run findbugs when asked.
