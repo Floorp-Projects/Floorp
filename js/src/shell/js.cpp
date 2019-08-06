@@ -479,6 +479,7 @@ static bool enableWasmVerbose = false;
 static bool enableTestWasmAwaitTier2 = false;
 static bool enableAsyncStacks = false;
 static bool enableStreams = false;
+static bool enableBigInt = false;
 static bool enableFields = false;
 static bool enableAwaitFix = false;
 #ifdef JS_GC_ZEAL
@@ -3783,6 +3784,7 @@ static const JSClass sandbox_class = {"sandbox", JSCLASS_GLOBAL_FLAGS,
 static void SetStandardRealmOptions(JS::RealmOptions& options) {
   options.creationOptions()
       .setSharedMemoryAndAtomicsEnabled(enableSharedMemory)
+      .setBigIntEnabled(enableBigInt)
       .setStreamsEnabled(enableStreams)
       .setFieldsEnabled(enableFields)
       .setAwaitFixEnabled(enableAwaitFix);
@@ -6203,6 +6205,13 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     if (v.isBoolean()) {
       kind = v.toBoolean() ? ShellGlobalKind::WindowProxy
                            : ShellGlobalKind::GlobalObject;
+    }
+
+    if (!JS_GetProperty(cx, opts, "enableBigInt", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      creationOptions.setBigIntEnabled(v.toBoolean());
     }
 
     if (!JS_GetProperty(cx, opts, "systemPrincipal", &v)) {
@@ -10205,6 +10214,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   enableTestWasmAwaitTier2 = op.getBoolOption("test-wasm-await-tier2");
   enableAsyncStacks = !op.getBoolOption("no-async-stacks");
   enableStreams = !op.getBoolOption("no-streams");
+  enableBigInt = !op.getBoolOption("no-bigint");
   enableFields = !op.getBoolOption("disable-experimental-fields");
   enableAwaitFix = op.getBoolOption("enable-experimental-await-fix");
 
@@ -10956,6 +10966,7 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "enable-streams",
                         "Enable WHATWG Streams (default)") ||
       !op.addBoolOption('\0', "no-streams", "Disable WHATWG Streams") ||
+      !op.addBoolOption('\0', "no-bigint", "Disable BigInt support") ||
       !op.addBoolOption('\0', "disable-experimental-fields",
                         "Disable public fields in classes") ||
       !op.addBoolOption('\0', "enable-experimental-await-fix",
