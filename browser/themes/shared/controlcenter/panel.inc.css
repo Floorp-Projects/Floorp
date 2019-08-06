@@ -956,16 +956,16 @@ description#identity-popup-content-verifier,
 
 #protections-popup-tp-switch:not([enabled])[showdotindicator]::after {
   background: #00B3F4;
-  border: 1px rgba(0,144,237,0.5) solid;
+  border: 2px rgba(0,144,237,0.5) solid;
   content: " ";
   border-radius: 6px;
   position: absolute;
   margin: auto;
   top: 0;
   bottom: 12px;
-  left: calc(1em + 20px);
-  height: 10px;
-  width: 10px;
+  left: calc(1em + 21px);
+  height: 6px;
+  width: 6px;
 }
 
 #protections-popup-tp-switch:not([enabled])[showdotindicator]:-moz-locale-dir(rtl)::after {

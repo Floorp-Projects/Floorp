@@ -1765,6 +1765,14 @@ var gProtectionsHandler = {
       !currentlyEnabled
     );
 
+    // Show the blue dot indicator if the protection is disabled. We need this
+    // in addition to the 'enabled' attribute of the TP switch section due to
+    // the blue dot won't be shown in the case that TP switch to off from on.
+    this._protectionsPopupTPSwitch.toggleAttribute(
+      "showdotindicator",
+      !currentlyEnabled
+    );
+
     // Update the tooltip of the blocked tracker counter.
     this.maybeUpdateEarliestRecordedDateTooltip();
   },
