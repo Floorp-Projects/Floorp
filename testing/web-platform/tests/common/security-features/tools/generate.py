@@ -57,6 +57,18 @@ def dump_test_parameters(selection):
         selection, indent=2, separators=(',', ': '), sort_keys=True)
 
 
+def get_test_filename(config, selection):
+    '''Returns the filname for the main test HTML file'''
+
+    selection_for_filename = copy.deepcopy(selection)
+    # Use 'unset' rather than 'None' in test filenames.
+    if selection_for_filename['delivery_value'] is None:
+        selection_for_filename['delivery_value'] = 'unset'
+
+    return os.path.join(config.spec_directory,
+                        config.test_file_path_pattern % selection_for_filename)
+
+
 def handle_deliveries(policy_deliveries):
     '''
     Generate <meta> elements and HTTP headers for the given list of
@@ -119,8 +131,7 @@ def generate_selection(config, selection, spec, test_html_template_basename):
     selection['sanity_checker_js'] = config.sanity_checker_js
     selection['spec_json_js'] = config.spec_json_js
 
-    test_filename = os.path.join(config.spec_directory,
-                                 config.test_file_path_pattern % selection)
+    test_filename = get_test_filename(config, selection)
     test_headers_filename = test_filename + ".headers"
     test_directory = os.path.dirname(test_filename)
 
