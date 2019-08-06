@@ -120,10 +120,8 @@
                flex="1">
         <hbox id="protections-popup-siteNotWorkingView-header">
           <vbox class="protections-popup-tp-switch-label-box" flex="1">
-            <label class="protections-popup-tp-switch-on-header"
-              hidden="true">&protections.etpON.header;</label>
-            <label class="protections-popup-tp-switch-off-header"
-              hidden="true">&protections.etpOFF.header;</label>
+            <label class="protections-popup-tp-switch-on-header">&protections.etpON.header;</label>
+            <label class="protections-popup-tp-switch-off-header">&protections.etpOFF.header;</label>
           </vbox>
           <vbox class="protections-popup-tp-switch-box">
             <toolbarbutton id="protections-popup-siteNotWorking-tp-switch"
