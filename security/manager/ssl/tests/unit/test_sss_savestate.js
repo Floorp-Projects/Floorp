@@ -121,7 +121,9 @@ function run_test() {
     let maxAge = "max-age=" + i * 1000;
     // alternate setting includeSubdomains
     let includeSubdomains = i % 2 == 0 ? "; includeSubdomains" : "";
-    let secInfo = new FakeTransportSecurityInfo();
+    let secInfo = Cc[
+      "@mozilla.org/security/transportsecurityinfo;1"
+    ].createInstance(Ci.nsITransportSecurityInfo);
     SSService.processHeader(
       Ci.nsISiteSecurityService.HEADER_HSTS,
       uris[uriIndex],
