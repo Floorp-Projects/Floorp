@@ -376,8 +376,6 @@ var AboutLoginsParent = {
           return;
         }
         this.messageSubscribers("AboutLogins:LoginRemoved", login);
-      }
-      default: {
         break;
       }
     }
