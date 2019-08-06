@@ -35,7 +35,10 @@ export default class MenuButton extends HTMLElement {
   handleEvent(event) {
     switch (event.type) {
       case "blur": {
-        if (event.target == this) {
+        if (
+          event.explicitOriginalTarget &&
+          event.explicitOriginalTarget.closest(".menu") == this._menu
+        ) {
           // Only hide the menu if focus has left the menu-button.
           return;
         }
@@ -56,7 +59,7 @@ export default class MenuButton extends HTMLElement {
         if (event.originalTarget == this._menuButton) {
           this._toggleMenu();
           if (!this._menu.hidden) {
-            this._focusSuccessor(true);
+            this._menuButton.focus();
           }
           return;
         }
