@@ -1,4 +1,4 @@
-componentsVersion: 7.0.0
+componentsVersion: 8.0.0
 projects:
   concept-awesomebar:
     path: components/concept/awesomebar
