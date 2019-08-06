@@ -105,6 +105,7 @@ using base::SharedMemoryHandle from "base/shared_memory.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::fontlist::Pointer from "SharedFontList.h";
 using gfxSparseBitSet from "gfxFontUtils.h";
+using mozilla::dom::MediaControlActions from "ipc/MediaControlIPC.h";
 
 union ChromeRegistryItem
 {
@@ -808,6 +809,12 @@ child:
     * This method is used to notifty content process to mute or unmute media.
     */
     async SetMediaMuted(BrowsingContext aContext, bool aMuted);
+
+    /**
+     * This method is used to apply the media action to outer window in the
+     * content process, such as play, pause, stop ..e.t.c.
+     */
+    async UpdateMediaAction(BrowsingContext aContext, MediaControlActions aAction);
 
     // Begin subscribing to a new BrowsingContextGroup, sending down the current
     // value for every individual BrowsingContext.
