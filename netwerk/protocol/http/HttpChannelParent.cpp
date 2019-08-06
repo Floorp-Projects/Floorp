@@ -2666,9 +2666,6 @@ nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
         Maybe<LoadInfoArgs> loadInfoArgs;
         MOZ_ALWAYS_SUCCEEDS(LoadInfoToLoadInfoArgs(loadInfo, &loadInfoArgs));
 
-        uint32_t newLoadFlags = nsIRequest::LOAD_NORMAL;
-        MOZ_ALWAYS_SUCCEEDS(channel->GetLoadFlags(&newLoadFlags));
-
         nsCOMPtr<nsIURI> uri;
         channel->GetURI(getter_AddRefs(uri));
 
@@ -2685,6 +2682,9 @@ nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
           MOZ_ALWAYS_SUCCEEDS(internalChannel->GetRedirectMode(&redirectMode));
         }
 
+        ReplacementChannelConfigInit config =
+            httpChannel->CloneReplacementChannelConfig(true, 0).Serialize();
+
         dom::ContentParent* cp =
             dom::ContentProcessManager::GetSingleton()->GetContentProcessById(
                 ContentParentId{cpId});
@@ -2692,8 +2692,8 @@ nsresult HttpChannelParent::TriggerCrossProcessRedirect(nsIChannel* aChannel,
           return NS_ERROR_UNEXPECTED;
         }
         auto result = cp->SendCrossProcessRedirect(
-            self->mRedirectChannelId, uri, newLoadFlags, loadInfoArgs,
-            channelId, originalURI, aIdentifier, redirectMode);
+            self->mRedirectChannelId, uri, config, loadInfoArgs, channelId,
+            originalURI, aIdentifier, redirectMode);
 
         MOZ_ASSERT(result, "SendCrossProcessRedirect failed");
 
