@@ -19,6 +19,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
           src="../events.js"></script>
 
   <script type="application/javascript">
+    let PromEvents = {};
+    Services.scriptloader.loadSubScript(
+      "chrome://mochitests/content/a11y/accessible/tests/mochitest/promisified-events.js",
+      PromEvents);
     // gA11yEventDumpToConsole = true; // debugging
 
     function changeARIAActiveDescendant(aContainer, aItem) {
@@ -124,8 +128,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     }
 
     var gQueue = null;
-    function doTest() {
+    async function doTest() {
       gQueue = new eventQueue();
+      // Later tests use await.
+      let queueFinished = new Promise(resolve => {
+        gQueue.onFinish = function() {
+          resolve();
+          return DO_NOT_FINISH_TEST;
+        };
+      });
 
       gQueue.push(new synthFocus("listbox", new focusChecker("item1")));
       gQueue.push(new changeARIAActiveDescendant("listbox", "item2"));
@@ -156,7 +167,24 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new synthFocus(shadowListbox, new focusChecker(shadowItem1)));
       gQueue.push(new changeARIAActiveDescendant(shadowListbox, shadowItem2));
 
-      gQueue.invoke(); // Will call SimpleTest.finish();
+      gQueue.invoke();
+      await queueFinished;
+      // Tests beyond this point use await rather than eventQueue.
+
+      info("Testing simultaneous insertion, relocation and aria-activedescendant");
+      let comboboxWithHiddenList = getNode("comboboxWithHiddenList");
+      let focused = PromEvents.waitForEvent(EVENT_FOCUS, comboboxWithHiddenList);
+      comboboxWithHiddenList.focus();
+      await focused;
+      testStates(comboboxWithHiddenList, STATE_FOCUSED);
+      // hiddenList is owned, so unhiding causes insertion and relocation.
+      getNode("hiddenList").hidden = false;
+      focused = PromEvents.waitForEvent(EVENT_FOCUS, "hiddenListOption");
+      comboboxWithHiddenList.setAttribute("aria-activedescendant", "hiddenListOption");
+      await focused;
+      testStates("hiddenListOption", STATE_FOCUSED);
+
+      SimpleTest.finish();
     }
 
     SimpleTest.waitForExplicitFinish();
@@ -222,5 +250,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     item.setAttribute("role", "option");
     listbox.appendChild(item);
   </script>
+
+  <div id="comboboxWithHiddenList" tabindex="0" role="combobox" aria-owns="hiddenList">
+  </div>
+  <div id="hiddenList" hidden role="listbox">
+    <div id="hiddenListOption" role="option"></div>
+  </div>
 </body>
 </html>
