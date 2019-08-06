@@ -6,7 +6,6 @@
 
 import { getSelectedFrame, getGeneratedFrameScope } from "../../selectors";
 import { mapScopes } from "./mapScopes";
-import { generateInlinePreview } from "./inlinePreview";
 import { PROMISE } from "../utils/middleware/promise";
 import type { ThreadContext } from "../../types";
 import type { ThunkArgs } from "../types";
@@ -18,7 +17,7 @@ export function fetchScopes(cx: ThreadContext) {
       return;
     }
 
-    const scopes = await dispatch({
+    const scopes = dispatch({
       type: "ADD_SCOPES",
       cx,
       thread: cx.thread,
@@ -26,7 +25,6 @@ export function fetchScopes(cx: ThreadContext) {
       [PROMISE]: client.getFrameScopes(frame),
     });
 
-    dispatch(generateInlinePreview(cx.thread, frame));
     await dispatch(mapScopes(cx, scopes, frame));
   };
 }
