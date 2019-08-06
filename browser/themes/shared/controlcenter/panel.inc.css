@@ -11,11 +11,8 @@
 
 #identity-popup,
 #protections-popup {
+  font-size: 1.1em;
   --popup-width: 33rem;
-}
-
-#identity-popup,
-#protections-popup {
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
@@ -204,23 +201,8 @@
 #protections-popup-content > description,
 .protections-popup-footer-button-label,
 #protections-popup-trackers-blocked-counter-description {
-  font-size: 110%;
   margin: 0;
 }
-
-#identity-popup-mainView-panel-header > label,
-.identity-popup-permission-label,
-.identity-popup-permission-state-label,
-.identity-popup-security-connection > description,
-#identity-popup-securityView > .panel-header,
-#identity-popup-breakageReportView > .panel-header,
-#identity-popup-security-description > description,
-#identity-popup-securityView-body > description,
-#identity-popup-securityView-body > label,
-#identity-popup-permissions-content > description {
-  font-size: 110%;
-}
-
 
 #identity-popup-mainView-panel-header,
 #protections-popup-mainView-panel-header,
@@ -404,7 +386,6 @@ description#identity-popup-content-verifier,
 #protections-popup-sendReportView-heading,
 #protections-popup-sendReportView-body {
   padding: 16px;
-  font-size: 110%;
 }
 
 .identity-popup-breakageReportView-collection-section,
