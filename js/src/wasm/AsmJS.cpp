@@ -6076,6 +6076,22 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
     return false;
   }
 
+  // Eagerly process the function tree, and null out all the functionbox
+  // pointers from this root of the tree.
+  //
+  // This is because the scope exit above frees all the function boxes
+  // that would have been created as part of this subtree.
+  FunctionTree* tree = m.parser().getTreeHolder()->getCurrentParent();
+  if (tree) {
+    m.parser().publishDeferredItems(tree);
+
+    tree->visitRecursively(m.cx(), &m.parser(),
+                           [](ParserBase* parser, FunctionTree* tree) {
+                             tree->setFunctionBox(nullptr);
+                             return true;
+                           });
+  }
+
   if (!CheckFunctionHead(m, funNode)) {
     return false;
   }
@@ -6978,14 +6994,16 @@ bool js::InstantiateAsmJS(JSContext* cx, unsigned argc, JS::Value* vp) {
   return true;
 }
 
-static JSFunction* NewAsmJSModuleFunction(JSContext* cx, JSFunction* origFun,
+static JSFunction* NewAsmJSModuleFunction(JSContext* cx,
+                                          FunctionBox* origFunbox,
                                           HandleObject moduleObj) {
-  RootedAtom name(cx, origFun->explicitName());
+  RootedAtom name(cx, origFunbox->explicitName());
 
-  FunctionFlags flags = origFun->isLambda() ? FunctionFlags::ASMJS_LAMBDA_CTOR
-                                            : FunctionFlags::ASMJS_CTOR;
+  FunctionFlags flags = origFunbox->isLambda()
+                            ? FunctionFlags::ASMJS_LAMBDA_CTOR
+                            : FunctionFlags::ASMJS_CTOR;
   JSFunction* moduleFun = NewNativeConstructor(
-      cx, InstantiateAsmJS, origFun->nargs(), name,
+      cx, InstantiateAsmJS, origFunbox->nargs(), name,
       gc::AllocKind::FUNCTION_EXTENDED, TenuredObject, flags);
   if (!moduleFun) {
     return nullptr;
@@ -7105,8 +7123,7 @@ static bool DoCompileAsmJS(JSContext* cx, AsmJSParser<Unit>& parser,
   // The module function dynamically links the AsmJSModule when called and
   // generates a set of functions wrapping all the exports.
   FunctionBox* funbox = parser.pc_->functionBox();
-  RootedFunction moduleFun(
-      cx, NewAsmJSModuleFunction(cx, funbox->function(), moduleObj));
+  RootedFunction moduleFun(cx, NewAsmJSModuleFunction(cx, funbox, moduleObj));
   if (!moduleFun) {
     return false;
   }

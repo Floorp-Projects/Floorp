@@ -398,7 +398,26 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
  public:
   FunctionTreeHolder* getTreeHolder() { return &treeHolder_; }
-  bool publishLazyScripts();
+
+  bool publishDeferredItems() {
+    return publishDeferredItems(getTreeHolder()->getFunctionTree());
+  }
+
+  bool publishDeferredItems(FunctionTree* root) {
+    // Publish deferred functions before LazyScripts, as the
+    // LazyScripts need the functions.
+    if (!publishDeferredFunctions(root)) {
+      return false;
+    }
+    if (!publishLazyScripts(root)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool publishLazyScripts(FunctionTree* root);
+  bool publishDeferredFunctions(FunctionTree* root);
 
   bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
 
@@ -692,6 +711,12 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   FunctionBox* newFunctionBox(FunctionNodeType funNode, JSFunction* fun,
                               uint32_t toStringStart, Directives directives,
+                              GeneratorKind generatorKind,
+                              FunctionAsyncKind asyncKind);
+
+  FunctionBox* newFunctionBox(FunctionNodeType funNode,
+                              FunctionCreationData& fcd, uint32_t toStringStart,
+                              Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
 
@@ -1124,10 +1149,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                       ListNodeType nodeList, TokenKind* ttp);
 
   inline bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
-      InHandling inHandling, YieldHandling yieldHandling,
-      FunctionSyntaxKind kind, GeneratorKind generatorKind,
-      FunctionAsyncKind asyncKind, bool tryAnnexB,
+      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      uint32_t toStringStart, InHandling inHandling,
+      YieldHandling yieldHandling, FunctionSyntaxKind kind,
+      GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
   inline bool skipLazyInnerFunction(FunctionNodeType funNode,
@@ -1504,8 +1529,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ListNodeType statementList(YieldHandling yieldHandling);
 
   MOZ_MUST_USE FunctionNodeType innerFunction(
-      FunctionNodeType funNode, ParseContext* outerpc, HandleFunction fun,
-      uint32_t toStringStart, InHandling inHandling,
+      FunctionNodeType funNode, ParseContext* outerpc,
+      FunctionCreationData& fcd, uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
@@ -1659,10 +1684,10 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
-      InHandling inHandling, YieldHandling yieldHandling,
-      FunctionSyntaxKind kind, GeneratorKind generatorKind,
-      FunctionAsyncKind asyncKind, bool tryAnnexB,
+      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      uint32_t toStringStart, InHandling inHandling,
+      YieldHandling yieldHandling, FunctionSyntaxKind kind,
+      GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
   bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
@@ -1812,10 +1837,10 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, HandleFunction fun, uint32_t toStringStart,
-      InHandling inHandling, YieldHandling yieldHandling,
-      FunctionSyntaxKind kind, GeneratorKind generatorKind,
-      FunctionAsyncKind asyncKind, bool tryAnnexB,
+      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      uint32_t toStringStart, InHandling inHandling,
+      YieldHandling yieldHandling, FunctionSyntaxKind kind,
+      GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
       Directives inheritedDirectives, Directives* newDirectives);
 
   bool skipLazyInnerFunction(FunctionNodeType funNode, uint32_t toStringStart,
