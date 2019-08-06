@@ -269,16 +269,39 @@ void RenderThread::WriteCollectedFramesForWindow(wr::WindowId aWindowId) {
   }
 }
 
-void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
+void RenderThread::HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender) {
   if (mHasShutdown) {
     return;
   }
 
   if (!IsInRenderThread()) {
     Loop()->PostTask(NewRunnableMethod<wr::WindowId, bool>(
-        "wr::RenderThread::NewFrameReady", this, &RenderThread::HandleFrame,
-        aWindowId, aRender));
+        "wr::RenderThread::HandleFrameOneDoc", this,
+        &RenderThread::HandleFrameOneDoc, aWindowId, aRender));
     return;
+  }
+
+  bool render = false;
+  {  // scope lock
+    auto windows = mWindowInfos.Lock();
+    auto it = windows->find(AsUint64(aWindowId));
+    if (it == windows->end()) {
+      MOZ_ASSERT(false);
+      return;
+    }
+
+    it->second->mDocFramesSeen++;
+    if (it->second->mDocFramesSeen < it->second->mDocFrameCounts.front()) {
+      it->second->mRender |= aRender;
+      return;
+    }
+    MOZ_ASSERT(it->second->mDocFramesSeen ==
+               it->second->mDocFrameCounts.front());
+    render = it->second->mRender || aRender;
+    it->second->mRender = false;
+    it->second->mRenderingCount++;
+    it->second->mDocFrameCounts.pop();
+    it->second->mDocFramesSeen = 0;
   }
 
   if (IsDestroyed(aWindowId)) {
@@ -303,7 +326,7 @@ void RenderThread::HandleFrame(wr::WindowId aWindowId, bool aRender) {
     info->mHadSlowFrame = false;
   }
 
-  UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, aRender,
+  UpdateAndRender(aWindowId, frame.mStartId, frame.mStartTime, render,
                   /* aReadbackSize */ Nothing(),
                   /* aReadbackFormat */ Nothing(),
                   /* aReadbackBuffer */ Nothing(), hadSlowFrame);
@@ -532,31 +555,6 @@ void RenderThread::IncPendingFrameCount(wr::WindowId aWindowId,
   it->second->mPendingCount++;
   it->second->mPendingFrames.push(PendingFrameInfo{aStartTime, aStartId});
   it->second->mDocFrameCounts.push(aDocFrameCount);
-}
-
-mozilla::Pair<bool, bool> RenderThread::IncRenderingFrameCount(
-    wr::WindowId aWindowId, bool aRender) {
-  auto windows = mWindowInfos.Lock();
-  auto it = windows->find(AsUint64(aWindowId));
-  if (it == windows->end()) {
-    MOZ_ASSERT(false);
-    return MakePair(false, false);
-  }
-
-  it->second->mDocFramesSeen++;
-  if (it->second->mDocFramesSeen < it->second->mDocFrameCounts.front()) {
-    it->second->mRender |= aRender;
-    return MakePair(false, it->second->mRender);
-  } else {
-    MOZ_ASSERT(it->second->mDocFramesSeen ==
-               it->second->mDocFrameCounts.front());
-    bool render = it->second->mRender || aRender;
-    it->second->mRender = false;
-    it->second->mRenderingCount++;
-    it->second->mDocFrameCounts.pop();
-    it->second->mDocFramesSeen = 0;
-    return MakePair(true, render);
-  }
 }
 
 void RenderThread::FrameRenderingComplete(wr::WindowId aWindowId) {
@@ -961,25 +959,18 @@ static already_AddRefed<gl::GLContext> CreateGLContext() {
 
 extern "C" {
 
-static void HandleFrame(mozilla::wr::WrWindowId aWindowId, bool aRender) {
-  auto incResult = mozilla::wr::RenderThread::Get()->IncRenderingFrameCount(
-      aWindowId, aRender);
-  if (incResult.first()) {
-    mozilla::wr::RenderThread::Get()->HandleFrame(aWindowId,
-                                                  incResult.second());
-  }
-}
-
 void wr_notifier_wake_up(mozilla::wr::WrWindowId aWindowId) {
   mozilla::wr::RenderThread::Get()->WakeUp(aWindowId);
 }
 
 void wr_notifier_new_frame_ready(mozilla::wr::WrWindowId aWindowId) {
-  HandleFrame(aWindowId, /* aRender */ true);
+  mozilla::wr::RenderThread::Get()->HandleFrameOneDoc(aWindowId,
+                                                      /* aRender */ true);
 }
 
 void wr_notifier_nop_frame_done(mozilla::wr::WrWindowId aWindowId) {
-  HandleFrame(aWindowId, /* aRender */ false);
+  mozilla::wr::RenderThread::Get()->HandleFrameOneDoc(aWindowId,
+                                                      /* aRender */ false);
 }
 
 void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId,
