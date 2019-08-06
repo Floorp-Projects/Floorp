@@ -211,43 +211,7 @@ static void AssertActivityIsLegal() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class CodeAddressServiceStringTable final {
- public:
-  CodeAddressServiceStringTable() : mSet(32) {}
-
-  const char* Intern(const char* aString) {
-    nsCharPtrHashKey* e = mSet.PutEntry(aString);
-    return e->GetKey();
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return mSet.SizeOfExcludingThis(aMallocSizeOf);
-  }
-
- private:
-  typedef nsTHashtable<nsCharPtrHashKey> StringSet;
-  StringSet mSet;
-};
-
-struct CodeAddressServiceStringAlloc final {
-  static char* copy(const char* aStr) { return strdup(aStr); }
-  static void free(char* aPtr) { ::free(aPtr); }
-};
-
-// WalkTheStack does not hold any locks needed by MozDescribeCodeAddress, so
-// this class does not need to do anything.
-struct CodeAddressServiceLock final {
-  static void Unlock() {}
-  static void Lock() {}
-  static bool IsLocked() { return true; }
-};
-
-typedef mozilla::CodeAddressService<CodeAddressServiceStringTable,
-                                    CodeAddressServiceStringAlloc,
-                                    CodeAddressServiceLock>
-    WalkTheStackCodeAddressService;
-
-mozilla::StaticAutoPtr<WalkTheStackCodeAddressService> gCodeAddressService;
+mozilla::StaticAutoPtr<CodeAddressService<>> gCodeAddressService;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -808,7 +772,7 @@ void nsTraceRefcnt::WalkTheStack(FILE* aStream) {
  */
 static void WalkTheStackCached(FILE* aStream) {
   if (!gCodeAddressService) {
-    gCodeAddressService = new WalkTheStackCodeAddressService();
+    gCodeAddressService = new CodeAddressService<>();
   }
   MozStackWalk(PrintStackFrameCached, /* skipFrames */ 2, /* maxFrames */ 0,
                aStream);
@@ -816,7 +780,7 @@ static void WalkTheStackCached(FILE* aStream) {
 
 static void WalkTheStackSavingLocations(std::vector<void*>& aLocations) {
   if (!gCodeAddressService) {
-    gCodeAddressService = new WalkTheStackCodeAddressService();
+    gCodeAddressService = new CodeAddressService<>();
   }
   static const int kFramesToSkip = 0 +  // this frame gets inlined
                                    1 +  // GetSerialNumber
