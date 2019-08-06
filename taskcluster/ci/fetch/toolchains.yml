@@ -2,17 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-binutils-2.25.1:
-    description: binutils 2.25.1 source code
-    fetch:
-        type: static-url
-        url: ftp://ftp.gnu.org/gnu/binutils/binutils-2.25.1.tar.bz2
-        sha256: b5b14added7d78a8d1ca70b5cb75fef57ce2197264f4f5835326b0df22ac9f22
-        size: 24163561
-        gpg-signature:
-            sig-url: "{url}.sig"
-            key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
-
 binutils-2.27:
     description: binutils 2.27 source code
     fetch:
@@ -34,14 +23,6 @@ binutils-2.31.1:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-binutils/3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F.key
-
-cloog-0.18.1:
-    description: cloog source code
-    fetch:
-        type: static-url
-        url: ftp://gcc.gnu.org/pub/gcc/infrastructure/cloog-0.18.1.tar.gz
-        sha256: 02500a4edd14875f94fe84cbeda4290425cb0c1c2474c6f75d75a303d64b4196
-        size: 3857324
 
 gcc-6.4.0:
     description: GCC 6.4.0 source code
@@ -108,14 +89,6 @@ gmp-6.1.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
-
-isl-0.12.2:
-    description: ISL 0.12.2 source code
-    fetch:
-        type: static-url
-        url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.12.2.tar.bz2
-        sha256: f4b3dbee9712850006e44f0db2103441ab3d13b406f77996d1df19ee89d11fb4
-        size: 1319434
 
 isl-0.15:
     description: ISL 0.15 source code
