@@ -1237,7 +1237,9 @@ BrowserGlue.prototype = {
       "resource:///modules/themes/dark/"
     );
 
-    Normandy.init();
+    if (AppConstants.MOZ_NORMANDY) {
+      Normandy.init();
+    }
 
     SaveToPocket.init();
     Services.obs.notifyObservers(null, "browser-ui-startup-complete");

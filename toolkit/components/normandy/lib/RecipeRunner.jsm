@@ -39,8 +39,6 @@ const TIMER_NAME = "recipe-client-addon-run";
 const REMOTE_SETTINGS_COLLECTION = "normandy-recipes";
 const PREF_CHANGED_TOPIC = "nsPref:changed";
 
-const TELEMETRY_ENABLED_PREF = "datareporting.healthreport.uploadEnabled";
-
 const PREF_PREFIX = "app.normandy";
 const RUN_INTERVAL_PREF = `${PREF_PREFIX}.run_interval_seconds`;
 const FIRST_RUN_PREF = `${PREF_PREFIX}.first_run`;
@@ -53,12 +51,7 @@ const LAZY_CLASSIFY_PREF = `${PREF_PREFIX}.experiments.lazy_classify`;
 // see https://searchfox.org/mozilla-central/rev/11cfa0462/toolkit/components/timermanager/UpdateTimerManager.jsm#8
 const TIMER_LAST_UPDATE_PREF = `app.update.lastUpdateTime.${TIMER_NAME}`;
 
-const PREFS_TO_WATCH = [
-  RUN_INTERVAL_PREF,
-  TELEMETRY_ENABLED_PREF,
-  SHIELD_ENABLED_PREF,
-  API_URL_PREF,
-];
+const PREFS_TO_WATCH = [RUN_INTERVAL_PREF, SHIELD_ENABLED_PREF, API_URL_PREF];
 
 XPCOMUtils.defineLazyGetter(this, "gRemoteSettingsClient", () => {
   return RemoteSettings(REMOTE_SETTINGS_COLLECTION, {
@@ -169,7 +162,6 @@ var RecipeRunner = {
             break;
 
           // explicit fall-through
-          case TELEMETRY_ENABLED_PREF:
           case SHIELD_ENABLED_PREF:
           case API_URL_PREF:
             this.checkPrefs();
@@ -187,25 +179,10 @@ var RecipeRunner = {
   },
 
   checkPrefs() {
-    // Only run if Unified Telemetry is enabled.
-    if (!Services.prefs.getBoolPref(TELEMETRY_ENABLED_PREF)) {
-      log.debug(
-        "Disabling RecipeRunner because Unified Telemetry is disabled."
-      );
-      this.disable();
-      return;
-    }
-
     if (!Services.prefs.getBoolPref(SHIELD_ENABLED_PREF)) {
       log.debug(
         `Disabling Shield because ${SHIELD_ENABLED_PREF} is set to false`
       );
-      this.disable();
-      return;
-    }
-
-    if (!Services.policies.isAllowed("Shield")) {
-      log.debug("Disabling Shield because it's blocked by policy.");
       this.disable();
       return;
     }
