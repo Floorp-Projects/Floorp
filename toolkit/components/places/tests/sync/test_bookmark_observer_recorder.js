@@ -381,8 +381,8 @@ add_task(async function test_apply_then_revert() {
   });
   deepEqual(
     await buf.fetchUnmergedGuids(),
-    [],
-    "Should merge all items, first time"
+    [PlacesUtils.bookmarks.menuGuid],
+    "Should leave menu with new remote structure unmerged after first time"
   );
 
   info("Revert local tree");
@@ -414,8 +414,8 @@ add_task(async function test_apply_then_revert() {
   });
   deepEqual(
     await buf.fetchUnmergedGuids(),
-    [],
-    "Should merge all items, second time"
+    [PlacesUtils.bookmarks.menuGuid],
+    "Should leave menu with new remote structure unmerged after second time"
   );
   deepEqual(
     secondTimeRecords,
@@ -646,6 +646,9 @@ add_task(async function test_apply_then_revert() {
     },
     "Should apply new structure, second time"
   );
+
+  await storeChangesInMirror(buf, secondTimeRecords);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

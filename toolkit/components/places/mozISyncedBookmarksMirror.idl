@@ -16,15 +16,9 @@ interface mozISyncedBookmarksMirrorProgressListener : nsISupports {
   void onFetchLocalTree(in long long took, in long long itemCount,
                         in nsIPropertyBag problems);
 
-  // Called after the merger fetches content info from Places for deduping.
-  void onFetchNewLocalContents(in long long took, in long long itemCount);
-
   // Called after the merger builds the remote tree from the mirror database.
   void onFetchRemoteTree(in long long took, in long long itemCount,
                          in nsIPropertyBag problems);
-
-  // Called after the merger fetches remote content info from the mirror.
-  void onFetchNewRemoteContents(in long long took, in long long itemCount);
 
   // Called after the merger builds the merged tree, including structure change
   // counts for event telemetry.

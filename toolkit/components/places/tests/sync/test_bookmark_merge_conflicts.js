@@ -66,7 +66,11 @@ add_task(async function test_bookmark_change_during_sync() {
   );
 
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [PlacesUtils.bookmarks.toolbarGuid],
+    "Should leave toolbar with new remote structure unmerged"
+  );
 
   let infoForA = await PlacesUtils.bookmarks.fetch("bookmarkAAAA");
   let datesAdded = await promiseManyDatesAdded([
@@ -107,6 +111,9 @@ add_task(async function test_bookmark_change_during_sync() {
     },
     "Should apply A"
   );
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

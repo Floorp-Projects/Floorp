@@ -83,7 +83,11 @@ add_task(async function test_merged_item_chunking() {
 
   info("Apply remote");
   let changesToUpload = await buf.apply();
-  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+  deepEqual(
+    await buf.fetchUnmergedGuids(),
+    [PlacesUtils.bookmarks.unfiledGuid],
+    "Should leave unfiled with new remote structure unmerged"
+  );
 
   let localChildRecordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
     "toolbar"
@@ -100,6 +104,9 @@ add_task(async function test_merged_item_chunking() {
     ["unfiled", ...localGuids].sort(),
     "Should upload unfiled and all new local children"
   );
+
+  await storeChangesInMirror(buf, changesToUpload);
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();

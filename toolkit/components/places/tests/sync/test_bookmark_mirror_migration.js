@@ -1,6 +1,71 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Keep in sync with `SyncedBookmarksMirror.jsm`.
+const CURRENT_MIRROR_SCHEMA_VERSION = 6;
+
+// Migrations between 5 and 6 add two indexes.
+add_task(async function test_migrate_from_5_to_current() {
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  let dbFile = await setupFixtureFile("mirror_v5.sqlite");
+  let buf = await SyncedBookmarksMirror.open({
+    path: dbFile.path,
+    recordTelemetryEvent(object, method, value, extra) {},
+    recordStepTelemetry() {},
+    recordValidationTelemetry() {},
+  });
+
+  let schemaVersion = await buf.db.getSchemaVersion("mirror");
+  equal(
+    schemaVersion,
+    CURRENT_MIRROR_SCHEMA_VERSION,
+    "Should upgrade mirror schema to current version"
+  );
+
+  let changesToUpload = await buf.apply();
+  deepEqual(changesToUpload, {}, "Shouldn't flag any items for reupload");
+
+  await assertLocalTree(
+    PlacesUtils.bookmarks.menuGuid,
+    {
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [
+        {
+          guid: "bookmarkAAAA",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 0,
+          title: "A",
+          url: "http://example.com/a",
+        },
+        {
+          guid: "bookmarkBBBB",
+          type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+          index: 1,
+          title: "B",
+          url: "http://example.com/b",
+          keyword: "hi",
+        },
+      ],
+    },
+    "Should apply mirror tree after migrating"
+  );
+
+  let keywordEntry = await PlacesUtils.keywords.fetch("hi");
+  equal(
+    keywordEntry.url.href,
+    "http://example.com/b",
+    "Should apply keyword from migrated mirror"
+  );
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 // Migrations between 1 and 2 discard the entire database.
 add_task(async function test_migrate_from_1_to_2() {
   let dbFile = await setupFixtureFile("mirror_v1.sqlite");
