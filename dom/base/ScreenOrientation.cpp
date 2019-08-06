@@ -84,6 +84,7 @@ ScreenOrientation::ScreenOrientation(nsPIDOMWindowInner* aWindow,
 }
 
 ScreenOrientation::~ScreenOrientation() {
+  UnlockDeviceOrientation();
   hal::UnregisterScreenConfigurationObserver(this);
   MOZ_ASSERT(!mFullscreenListener);
 }
