@@ -35,15 +35,6 @@ struct FunctionCreationData {
 
   HandleAtom getAtom(JSContext* cx) const;
 
-  bool isNamedLambda() const {
-    return flags.isLambda() && atom && !flags.hasInferredName() &&
-           !flags.hasGuessedAtom();
-  }
-
-  JSAtom* explicitName() {
-    return (flags.hasInferredName() || flags.hasGuessedAtom()) ? nullptr : atom;
-  }
-
   void trace(JSTracer* trc) {
     TraceNullableRoot(trc, &atom, "FunctionCreationData atom");
   }
