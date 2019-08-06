@@ -58,11 +58,11 @@ class WebSocketsPanel extends Component {
     this.clearFilterText = this.clearFilterText.bind(this);
   }
 
-  componentDidUpdate(nextProps) {
+  componentDidUpdate(prevProps) {
     const { selectedFrameVisible, openFrameDetailsTab, channelId } = this.props;
 
     // If a new WebSocket connection is selected, clear the filter text
-    if (channelId !== nextProps.channelId) {
+    if (channelId !== prevProps.channelId) {
       this.clearFilterText();
     }
 
