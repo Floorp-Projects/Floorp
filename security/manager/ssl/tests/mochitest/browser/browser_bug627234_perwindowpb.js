@@ -3,6 +3,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+var FakeTransportSecurityInfo = function() {};
+
+FakeTransportSecurityInfo.prototype = {
+  serverCert: null,
+  cipherName: null,
+  keyLength: 2048,
+  isDomainMismatch: false,
+  isNotValidAtThisTime: false,
+  isUntrusted: false,
+  isExtendedValidation: false,
+  getInterface(aIID) {
+    return this.QueryInterface(aIID);
+  },
+  QueryInterface: ChromeUtils.generateQI(["nsITransportSecurityInfo"]),
+};
+
 function whenNewWindowLoaded(aOptions, aCallback) {
   let win = OpenBrowserWindow(aOptions);
   win.addEventListener(
@@ -33,9 +49,7 @@ function test() {
   function doTest(aIsPrivateMode, aWindow, aCallback) {
     BrowserTestUtils.browserLoaded(aWindow.gBrowser.selectedBrowser).then(
       () => {
-        let secInfo = Cc[
-          "@mozilla.org/security/transportsecurityinfo;1"
-        ].createInstance(Ci.nsITransportSecurityInfo);
+        let secInfo = new FakeTransportSecurityInfo();
         uri = aWindow.Services.io.newURI("https://localhost/img.png");
         gSSService.processHeader(
           Ci.nsISiteSecurityService.HEADER_HSTS,
