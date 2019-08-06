@@ -176,6 +176,10 @@ document.addEventListener("DOMContentLoaded", e => {
     true
   );
   if (lockwiseEnabled) {
+    const lockwiseUI = document.querySelector(".lockwise-card");
+    lockwiseUI.classList.remove("hidden");
+    lockwiseUI.classList.add("loading");
+
     const lockwiseCard = new LockwiseCard(document);
     lockwiseCard.init();
   }
@@ -189,6 +193,11 @@ document.addEventListener("DOMContentLoaded", e => {
     true
   );
   if (monitorEnabled) {
+    // Show the Monitor card.
+    const monitorUI = document.querySelector(".card.monitor-card.hidden");
+    monitorUI.classList.remove("hidden");
+    monitorUI.classList.add("loading");
+
     const monitorCard = new MonitorCard(document);
     monitorCard.init();
   }
