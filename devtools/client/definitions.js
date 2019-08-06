@@ -160,8 +160,9 @@ Tools.inspector = {
   inMenu: true,
 
   preventClosingOnKey: true,
-  onkey: function(panel, toolbox) {
-    toolbox.inspectorFront.nodePicker.togglePicker();
+  onkey: async function(panel, toolbox) {
+    const inspectorFront = await toolbox.target.getFront("inspector");
+    inspectorFront.nodePicker.togglePicker();
   },
 
   isTargetSupported: function(target) {
@@ -616,8 +617,8 @@ function createHighlightButton(highlighterName, id) {
     description: l10n(`toolbox.buttons.${id}`),
     isTargetSupported: target => !target.chrome,
     async onClick(event, toolbox) {
-      await toolbox.initInspector();
-      const highlighter = await toolbox.inspectorFront.getOrCreateHighlighterByType(
+      const inspectorFront = await toolbox.target.getFront("inspector");
+      const highlighter = await inspectorFront.getOrCreateHighlighterByType(
         highlighterName
       );
       if (highlighter.isShown()) {
