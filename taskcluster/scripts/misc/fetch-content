@@ -19,6 +19,7 @@ import sys
 import tarfile
 import tempfile
 import time
+import urllib.parse
 import urllib.request
 
 try:
@@ -328,7 +329,7 @@ def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
     the destination directory.
     """
 
-    basename = url.split('/')[-1]
+    basename = urllib.parse.urlparse(url).path.split('/')[-1]
     dest_path = dest_dir / basename
 
     download_to_path(url, dest_path, sha256=sha256, size=size)
