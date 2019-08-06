@@ -1191,6 +1191,12 @@ class ContentParent final : public PContentParent,
   mozilla::ipc::IPCResult RecvStoreUserInteractionAsPermission(
       const Principal& aPrincipal);
 
+  mozilla::ipc::IPCResult RecvNotifyMediaActiveChanged(
+      BrowsingContext* aContext, bool aActive);
+
+  mozilla::ipc::IPCResult RecvNotifyMediaAudibleChanged(
+      BrowsingContext* aContext, bool aAudible);
+
   // Notify the ContentChild to enable the input event prioritization when
   // initializing.
   void MaybeEnableRemoteInputEventQueue();
