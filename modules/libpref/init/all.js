@@ -1015,16 +1015,6 @@ pref("print.font-variations-as-paths", true);
 // in a document.
 pref("extensions.spellcheck.inline.max-misspellings", 500);
 
-// General prefs for editor.
-// Whether Gecko specific editing UI is enabled by default.
-// Those UIs are not impelemnted by any other browsers.  So, only Firefox users
-// can change some styles with them.  This means that only Firefox users may
-// get unexpected result of some web apps if they assume that users cannot
-// change such styles.
-pref("editor.resizing.enabled_by_default", false);
-pref("editor.inline_table_editing.enabled_by_default", false);
-pref("editor.positioning.enabled_by_default", false);
-
 // Whether inserting <div> when typing Enter in a block element which can
 // contain <div>.  If false, inserts <br> instead.
 pref("editor.use_div_for_default_newlines",  true);
