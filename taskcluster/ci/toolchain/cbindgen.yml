@@ -54,7 +54,7 @@ win64-cbindgen:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         arguments: ['x86_64-pc-windows-msvc']
         resources:
