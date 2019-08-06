@@ -16,6 +16,8 @@ export default class LoginItem extends HTMLElement {
   constructor() {
     super();
     this._login = {};
+    this._copyUsernameTimeoutId = 0;
+    this._copyPasswordTimeoutId = 0;
   }
 
   connectedCallback() {
@@ -238,10 +240,15 @@ export default class LoginItem extends HTMLElement {
               detail: propertyToCopy,
             })
           );
-          setTimeout(() => {
+          let timeoutId = setTimeout(() => {
             copyButton.disabled = false;
             delete copyButton.dataset.copied;
           }, LoginItem.COPY_BUTTON_RESET_TIMEOUT);
+          if (copyButton.dataset.copyLoginProperty == "password") {
+            this._copyPasswordTimeoutId = timeoutId;
+          } else {
+            this._copyUsernameTimeoutId = timeoutId;
+          }
 
           recordTelemetryEvent({
             object: copyButton.dataset.telemetryObject,
@@ -390,6 +397,16 @@ export default class LoginItem extends HTMLElement {
     this._toggleEditing(!login.guid);
 
     this._revealCheckbox.checked = false;
+
+    clearTimeout(this._copyUsernameTimeoutId);
+    clearTimeout(this._copyPasswordTimeoutId);
+    for (let copyButton of [
+      this._copyUsernameButton,
+      this._copyPasswordButton,
+    ]) {
+      copyButton.disabled = false;
+      delete copyButton.dataset.copied;
+    }
 
     if (!skipFocusChange) {
       this._editButton.focus();

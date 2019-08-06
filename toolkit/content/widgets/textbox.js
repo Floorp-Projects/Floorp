@@ -215,11 +215,9 @@
     }
 
     doCommand(command) {
-      console.log("COMMAND: " + command);
       var controller = document.commandDispatcher.getControllerForCommand(
         command
       );
-      console.log("controller is good: " + !!controller);
       controller.doCommand(command);
     }
 
