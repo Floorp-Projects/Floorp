@@ -1502,6 +1502,13 @@ var PlacesUtils = {
   promiseLargeCacheDBConnection: () => gAsyncDBLargeCacheConnPromised,
 
   /**
+   * Returns a Sqlite.jsm wrapper for the main Places connection. Most callers
+   * should prefer `withConnectionWrapper`, which ensures that all database
+   * operations finish before the connection is closed.
+   */
+  promiseUnsafeWritableDBConnection: () => gAsyncDBWrapperPromised,
+
+  /**
    * Performs a read/write operation on the Places database through a Sqlite.jsm
    * wrapped connection to the Places database.
    *

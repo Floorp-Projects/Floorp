@@ -60,12 +60,10 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
-  AsyncShutdown: "resource://gre/modules/AsyncShutdown.jsm",
   Log: "resource://gre/modules/Log.jsm",
   OS: "resource://gre/modules/osfile.jsm",
   PlacesSyncUtils: "resource://gre/modules/PlacesSyncUtils.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Sqlite: "resource://gre/modules/Sqlite.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "MirrorLog", () =>
@@ -293,7 +291,7 @@ class SyncedBookmarksMirror {
       recordTelemetryEvent,
       recordStepTelemetry,
       recordValidationTelemetry,
-      finalizeAt = AsyncShutdown.profileBeforeChange,
+      finalizeAt = PlacesUtils.history.shutdownClient.jsclient,
     } = {}
   ) {
     this.db = db;
@@ -310,7 +308,7 @@ class SyncedBookmarksMirror {
     // tracks state for shutdown hang reporting.
     this.progress = new ProgressTracker(recordStepTelemetry);
     this.finalizeAt = finalizeAt;
-    this.finalizeBound = () => this.finalize();
+    this.finalizeBound = () => this.finalize({ alsoCleanup: false });
     this.finalizeAt.addBlocker(
       "SyncedBookmarksMirror: finalize",
       this.finalizeBound,
@@ -348,14 +346,10 @@ class SyncedBookmarksMirror {
    *         A mirror ready for use.
    */
   static async open(options) {
-    let db = await Sqlite.cloneStorageConnection({
-      connection: PlacesUtils.history.DBConnection,
-      readOnly: false,
-    });
+    let db = await PlacesUtils.promiseUnsafeWritableDBConnection();
     let path = OS.Path.join(OS.Constants.Path.profileDir, options.path);
     let whyFailed = "initialize";
     try {
-      await db.execute(`PRAGMA foreign_keys = ON`);
       try {
         await attachAndInitMirrorDatabase(db, path);
       } catch (ex) {
@@ -390,7 +384,6 @@ class SyncedBookmarksMirror {
       options.recordTelemetryEvent("mirror", "open", "error", {
         why: whyFailed,
       });
-      await db.close();
       throw ex;
     }
     return new SyncedBookmarksMirror(db, options);
@@ -1345,13 +1338,26 @@ class SyncedBookmarksMirror {
    * Closes the mirror database connection. This is called automatically on
    * shutdown, but may also be called explicitly when the mirror is no longer
    * needed.
+   *
+   * @param {Boolean} [options.alsoCleanup]
+   *                  If specified, drop all temp tables, views, and triggers,
+   *                  and detach from the mirror database before closing the
+   *                  connection. Defaults to `true`.
    */
-  finalize() {
+  finalize({ alsoCleanup = true } = {}) {
     if (!this.finalizePromise) {
       this.finalizePromise = (async () => {
         this.progress.step(ProgressTracker.STEPS.FINALIZE);
         this.merger.finalize();
-        await this.db.close();
+        if (alsoCleanup) {
+          // If the mirror is finalized explicitly, clean up temp entities and
+          // detach from the mirror database. We can skip this for automatic
+          // finalization, since the Places connection is already shutting
+          // down.
+          await cleanupMirrorDatabase(this.db);
+        }
+        await this.db.execute(`PRAGMA mirror.optimize(0x02)`);
+        await this.db.execute(`DETACH mirror`);
         this.finalizeAt.removeBlocker(this.finalizeBound);
       })();
     }
@@ -1561,6 +1567,31 @@ async function initializeMirrorDatabase(db) {
                     WHERE keyword NOT NULL`);
 
   await createMirrorRoots(db);
+}
+
+/**
+ * Drops all temp tables, views, and triggers used for merging, and detaches
+ * from the mirror database.
+ *
+ * @param {Sqlite.OpenedConnection} db
+ *        The mirror database connection.
+ */
+async function cleanupMirrorDatabase(db) {
+  await db.executeTransaction(async function() {
+    await db.execute(`DROP TABLE changeGuidOps`);
+    await db.execute(`DROP TABLE itemsToApply`);
+    await db.execute(`DROP TABLE applyNewLocalStructureOps`);
+    await db.execute(`DROP TABLE itemsToRemove`);
+    await db.execute(`DROP VIEW localTags`);
+    await db.execute(`DROP TABLE itemsAdded`);
+    await db.execute(`DROP TABLE guidsChanged`);
+    await db.execute(`DROP TABLE itemsChanged`);
+    await db.execute(`DROP TABLE itemsMoved`);
+    await db.execute(`DROP TABLE itemsRemoved`);
+    await db.execute(`DROP TABLE itemsToUpload`);
+    await db.execute(`DROP TABLE structureToUpload`);
+    await db.execute(`DROP TABLE tagsToUpload`);
+  });
 }
 
 /**
