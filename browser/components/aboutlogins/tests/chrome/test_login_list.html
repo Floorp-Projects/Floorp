@@ -58,19 +58,9 @@ const TEST_LOGIN_3 = {
 };
 
 const TEST_BREACH = {
-  AddedDate: "2018-12-20T23:56:26Z",
-  BreachDate: "2018-12-11",
-  Domain: "abc.example.com",
-  Name: "ABC Example",
-  PwnCount: 1643100,
-  DataClasses: ["Usernames", "Passwords"],
-  _status: "synced",
-  id: "047940fe-d2fd-4314-b636-b4a952ee0043",
-  last_modified: "1541615610052",
-  schema: "1541615609018",
-  breachAlertURL: "https://monitor.firefox.com/breach-details/ABC-Example",
+  Name: "Test-Breach",
+  breachAlertURL: "https://monitor.firefox.com/breach-details/Test-Breach",
 };
-
 
 const TEST_BREACHES_MAP = new Map();
 TEST_BREACHES_MAP.set(TEST_LOGIN_1.guid, TEST_BREACH);
@@ -346,25 +336,7 @@ add_task(async function test_sorted_list() {
   let pwChanged3 = gLoginList._logins[loginListItems[2].dataset.guid].login.timePasswordChanged;
   is(pwChanged1 > pwChanged2, true, "Logins sorted by timePasswordChanged. First: " + pwChanged1 + "; Second: " + pwChanged2);
   is(pwChanged2 > pwChanged3, true, "Logins sorted by timePasswordChanged. Second: " + pwChanged2 + "; Third: " + pwChanged3);
-
-  // sort by breached when there are breached logins
-  gLoginList.updateBreaches(TEST_BREACHES_MAP);
-  loginSort.selectedIndex = 3;
-  dispatchChangeEvent(loginSort);
-  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  is(loginListItems[0].classList.contains("breached"), true, "Breached login should be displayed at top of list");
-  is(!loginListItems[1].classList.contains("breached"), true, "Non-breached login should be displayed below breached");
-
-  // sort by name when there are no breached logins
-  gLoginList.updateBreaches(new Map());
-  loginSort.selectedIndex = 3;
-  dispatchChangeEvent(loginSort);
-  loginListItems = gLoginList.shadowRoot.querySelectorAll(".login-list-item:not([hidden])");
-  title1 = loginListItems[0]._login.title;
-  title2 = loginListItems[1]._login.title;
-  is(title1.localeCompare(title2), -1, "Logins should be sorted alphabetically by hostname");
 });
-
 </script>
 
 </body>
