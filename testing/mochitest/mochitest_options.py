@@ -830,7 +830,7 @@ class MochitestArguments(ArgumentContainer):
                          "--disable-e10s.".format(options.flavor))
 
         if options.enable_fission:
-            options.extraPrefs.append("fission.autostart=1")
+            options.extraPrefs.append("fission.autostart=true")
 
         options.leakThresholds = {
             "default": options.defaultLeakThreshold,
