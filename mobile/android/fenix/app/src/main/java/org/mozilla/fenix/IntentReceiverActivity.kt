@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
-import org.mozilla.fenix.components.NotificationManager
 import org.mozilla.fenix.customtabs.AuthCustomTabActivity
 import org.mozilla.fenix.customtabs.CustomTabActivity
 import org.mozilla.fenix.ext.components
