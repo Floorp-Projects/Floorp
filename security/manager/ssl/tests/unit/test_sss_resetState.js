@@ -10,42 +10,17 @@
 
 do_get_profile();
 
-var gCertDB = Cc["@mozilla.org/security/x509certdb;1"].getService(
-  Ci.nsIX509CertDB
-);
-const ROOT_CERT = addCertFromFile(gCertDB, "bad_certs/test-ca.pem", "CTu,,");
-
 var gSSService = Cc["@mozilla.org/ssservice;1"].getService(
   Ci.nsISiteSecurityService
 );
 
-function run_test() {
-  Services.prefs.setBoolPref(
-    "security.cert_pinning.process_headers_from_non_builtin_roots",
-    true
-  );
-  test_removeState(Ci.nsISiteSecurityService.HEADER_HSTS, 0);
-  test_removeState(
-    Ci.nsISiteSecurityService.HEADER_HSTS,
-    Ci.nsISocketProvider.NO_PERMANENT_STORAGE
-  );
-  test_removeState(Ci.nsISiteSecurityService.HEADER_HPKP, 0);
-  test_removeState(
-    Ci.nsISiteSecurityService.HEADER_HPKP,
-    Ci.nsISocketProvider.NO_PERMANENT_STORAGE
-  );
-}
-
-function test_removeState(type, flags) {
+function test_removeState(secInfo, type, flags) {
   info(`running test_removeState(type=${type}, flags=${flags})`);
   const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
   const PINNING_ROOT_KEY_HASH = "VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8=";
   const PINNING_HEADERS = `pin-sha256="${NON_ISSUED_KEY_HASH}"; pin-sha256="${PINNING_ROOT_KEY_HASH}"`;
   let headerAddendum =
     type == Ci.nsISiteSecurityService.HEADER_HPKP ? PINNING_HEADERS : "";
-  let secInfo = new FakeTransportSecurityInfo(
-    constructCertFromFile("bad_certs/default-ee.pem")
-  );
   // Simulate visiting a non-preloaded site by processing an HSTS or HPKP header
   // (depending on which type we were given), check that the HSTS/HPKP bit gets
   // set, simulate "forget about this site" (call removeState), and then check
@@ -123,4 +98,50 @@ function test_removeState(type, flags) {
   }
   gSSService.resetState(type, preloadedURI, flags);
   ok(gSSService.isSecureURI(type, preloadedURI, flags));
+}
+
+function add_tests() {
+  let secInfo = null;
+  add_connection_test(
+    "not-preloaded.example.com",
+    PRErrorCodeSuccess,
+    undefined,
+    aSecInfo => {
+      secInfo = aSecInfo;
+    }
+  );
+
+  add_task(() => {
+    test_removeState(secInfo, Ci.nsISiteSecurityService.HEADER_HSTS, 0);
+    test_removeState(
+      secInfo,
+      Ci.nsISiteSecurityService.HEADER_HSTS,
+      Ci.nsISocketProvider.NO_PERMANENT_STORAGE
+    );
+
+    test_removeState(secInfo, Ci.nsISiteSecurityService.HEADER_HPKP, 0);
+    test_removeState(
+      secInfo,
+      Ci.nsISiteSecurityService.HEADER_HPKP,
+      Ci.nsISocketProvider.NO_PERMANENT_STORAGE
+    );
+  });
+}
+
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref(
+    "sercurity.cert_pinning.process_headers_from_non_builtin_roots"
+  );
+});
+
+function run_test() {
+  Services.prefs.setBoolPref(
+    "security.cert_pinning.process_headers_from_non_builtin_roots",
+    true
+  );
+
+  add_tls_server_setup("BadCertAndPinningServer", "bad_certs");
+
+  add_tests();
+  run_next_test();
 }
