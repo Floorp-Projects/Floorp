@@ -183,7 +183,9 @@ class Nursery {
   explicit Nursery(JSRuntime* rt);
   ~Nursery();
 
-  MOZ_MUST_USE bool init(AutoLockGCBgAlloc& lock);
+  MOZ_MUST_USE bool init(uint32_t maxNurseryBytes, AutoLockGCBgAlloc& lock);
+
+  unsigned chunkCountLimit() const { return chunkCountLimit_; }
 
   // Number of allocated (ready to use) chunks.
   unsigned allocatedChunkCount() const { return chunks_.length(); }
@@ -196,6 +198,8 @@ class Nursery {
     MOZ_ASSERT(capacity());
     return JS_HOWMANY(capacity(), gc::ChunkSize);
   }
+
+  bool exists() const { return chunkCountLimit() != 0; }
 
   void enable();
   void disable();
@@ -333,7 +337,10 @@ class Nursery {
   // limit respectively.
   size_t spaceToEnd(unsigned chunkCount) const;
 
-  size_t capacity() const { return capacity_; }
+  size_t capacity() const {
+    MOZ_ASSERT(capacity_ <= chunkCountLimit() * gc::ChunkSize);
+    return capacity_;
+  }
   size_t committed() const { return spaceToEnd(allocatedChunkCount()); }
 
   // Used and free space both include chunk trailers for that part of the
@@ -433,6 +440,10 @@ class Nursery {
   // changed by maybeResizeNursery() each collection. It does not include chunk
   // trailers.
   size_t capacity_;
+
+  // This limit is fixed by configuration. It represents the maximum size
+  // the nursery is permitted to tune itself to in maybeResizeNursery();
+  unsigned chunkCountLimit_;
 
   mozilla::TimeDuration timeInChunkAlloc_;
 
@@ -601,7 +612,7 @@ class Nursery {
   // Change the allocable space provided by the nursery.
   void maybeResizeNursery(JS::GCReason reason);
   bool maybeResizeExact(JS::GCReason reason);
-  static size_t roundSize(size_t size);
+  size_t roundSize(size_t size) const;
   void growAllocableSpace(size_t newCapacity);
   void shrinkAllocableSpace(size_t newCapacity);
   void minimizeAllocableSpace();
