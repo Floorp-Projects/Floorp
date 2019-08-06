@@ -520,6 +520,12 @@ max-width: ${width}px; max-height: ${height}px`;
       }
       reuseCanvas = !cache;
 
+      let ctxInterface = win.CanvasRenderingContext2D;
+      let flags =
+        ctxInterface.DRAWWINDOW_DRAW_CARET |
+        ctxInterface.DRAWWINDOW_DRAW_VIEW |
+        ctxInterface.DRAWWINDOW_USE_WIDGET_LAYERS;
+
       if (
         !(
           0 <= browserRect.left &&
@@ -563,7 +569,7 @@ browserRect.height: ${browserRect.height}`);
         0, // top
         browserRect.width,
         browserRect.height,
-        { canvas }
+        { canvas, flags }
       );
     }
     if (
