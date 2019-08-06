@@ -3638,7 +3638,7 @@ var BrowserOnClick = {
         securityInfo = getSecurityInfo(securityInfoAsString);
         cert = securityInfo.serverCert;
         if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
-          let derb64 = encodeURIComponent(btoa(getDERString(cert)));
+          let derb64 = encodeURIComponent(cert.getBase64DERString());
           let url = `about:certificate?cert=${derb64}`;
           openTrustedLinkIn(url, "tab", {
             triggeringPrincipal: browser.contentPrincipal,
@@ -3973,19 +3973,10 @@ function getSecurityInfo(securityInfoAsString) {
   return securityInfo;
 }
 
-// TODO: can we pull getDERString and getPEMString in from pippki.js instead of
+// TODO: can we pull getPEMString in from pippki.js instead of
 // duplicating them here?
-function getDERString(cert) {
-  var derArray = cert.getRawDER();
-  var derString = "";
-  for (var i = 0; i < derArray.length; i++) {
-    derString += String.fromCharCode(derArray[i]);
-  }
-  return derString;
-}
-
 function getPEMString(cert) {
-  var derb64 = btoa(getDERString(cert));
+  var derb64 = cert.getBase64DERString();
   // Wrap the Base64 string into lines of 64 characters,
   // with CRLF line breaks (as specified in RFC 1421).
   var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
