@@ -10,7 +10,7 @@ const { REQUESTS_WATERFALL } = require("../constants");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const STATE_KEYS = [
-  "firstRequestStartedMillis",
+  "firstRequestStartedMs",
   "scale",
   "timingMarkers",
   "waterfallWidth",
@@ -110,7 +110,7 @@ class WaterfallBackground {
       }
 
       const delta = Math.floor(
-        (timestamp - state.firstRequestStartedMillis) * state.scale
+        (timestamp - state.firstRequestStartedMs) * state.scale
       );
       drawPixelAt(delta, color);
     }

@@ -217,7 +217,7 @@ class CDPConnector {
       .addRequest(
         id,
         {
-          startedMillis: startedDateTime,
+          startedMs: startedDateTime,
           method,
           url,
           isXHR,

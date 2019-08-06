@@ -45,6 +45,7 @@ class nsFrameLoader;
 namespace mozilla {
 class RemoteSpellcheckEngineChild;
 class ChildProfilerController;
+class BenchmarkStorageChild;
 
 using mozilla::loader::PScriptCacheChild;
 
@@ -290,6 +291,10 @@ class ContentChild final : public PContentChild,
   PMediaChild* AllocPMediaChild();
 
   bool DeallocPMediaChild(PMediaChild* aActor);
+
+  PBenchmarkStorageChild* AllocPBenchmarkStorageChild();
+
+  bool DeallocPBenchmarkStorageChild(PBenchmarkStorageChild* aActor);
 
   PPresentationChild* AllocPPresentationChild();
 

@@ -411,42 +411,39 @@ function propertiesEqual(props, item1, item2) {
  * Calculate the start time of a request, which is the time from start
  * of 1st request until the start of this request.
  *
- * Without a firstRequestStartedMillis argument the wrong time will be returned.
+ * Without a firstRequestStartedMs argument the wrong time will be returned.
  * However, it can be omitted when comparing two start times and neither supplies
- * a firstRequestStartedMillis.
+ * a firstRequestStartedMs.
  */
-function getStartTime(item, firstRequestStartedMillis = 0) {
-  return item.startedMillis - firstRequestStartedMillis;
+function getStartTime(item, firstRequestStartedMs = 0) {
+  return item.startedMs - firstRequestStartedMs;
 }
 
 /**
  * Calculate the end time of a request, which is the time from start
  * of 1st request until the end of this response.
  *
- * Without a firstRequestStartedMillis argument the wrong time will be returned.
+ * Without a firstRequestStartedMs argument the wrong time will be returned.
  * However, it can be omitted when comparing two end times and neither supplies
- * a firstRequestStartedMillis.
+ * a firstRequestStartedMs.
  */
-function getEndTime(item, firstRequestStartedMillis = 0) {
-  const { startedMillis, totalTime } = item;
-  return startedMillis + totalTime - firstRequestStartedMillis;
+function getEndTime(item, firstRequestStartedMs = 0) {
+  const { startedMs, totalTime } = item;
+  return startedMs + totalTime - firstRequestStartedMs;
 }
 
 /**
  * Calculate the response time of a request, which is the time from start
  * of 1st request until the beginning of download of this response.
  *
- * Without a firstRequestStartedMillis argument the wrong time will be returned.
+ * Without a firstRequestStartedMs argument the wrong time will be returned.
  * However, it can be omitted when comparing two response times and neither supplies
- * a firstRequestStartedMillis.
+ * a firstRequestStartedMs.
  */
-function getResponseTime(item, firstRequestStartedMillis = 0) {
-  const { startedMillis, totalTime, eventTimings = { timings: {} } } = item;
+function getResponseTime(item, firstRequestStartedMs = 0) {
+  const { startedMs, totalTime, eventTimings = { timings: {} } } = item;
   return (
-    startedMillis +
-    totalTime -
-    firstRequestStartedMillis -
-    eventTimings.timings.receive
+    startedMs + totalTime - firstRequestStartedMs - eventTimings.timings.receive
   );
 }
 

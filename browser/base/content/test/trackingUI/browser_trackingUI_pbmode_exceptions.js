@@ -58,8 +58,8 @@ function testTrackingPage(window) {
     "icon box shows no exception"
   );
   is(
-    gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-    gNavigatorBundle.getString("trackingProtection.icon.activeTooltip"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    gNavigatorBundle.getString("trackingProtection.icon.activeTooltip2"),
     "correct tooltip"
   );
 }
@@ -81,8 +81,8 @@ function testTrackingPageUnblocked() {
     "shield shows exception"
   );
   is(
-    gProtectionsHandler.iconBox.getAttribute("tooltiptext"),
-    gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip"),
+    gProtectionsHandler._trackingProtectionIconTooltipLabel.textContent,
+    gNavigatorBundle.getString("trackingProtection.icon.disabledTooltip2"),
     "correct tooltip"
   );
 
