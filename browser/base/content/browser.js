@@ -277,6 +277,12 @@ XPCOMUtils.defineLazyGetter(this, "RTL_UI", () => {
   return Services.locale.isAppLocaleRTL;
 });
 
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", () => {
+  return Services.strings.createBundle(
+    "chrome://branding/locale/brand.properties"
+  );
+});
+
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", () => {
   return Services.strings.createBundle(
     "chrome://browser/locale/browser.properties"

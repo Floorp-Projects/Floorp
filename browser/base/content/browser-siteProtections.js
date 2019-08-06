@@ -1271,6 +1271,12 @@ var gProtectionsHandler = {
       "protections-popup-sendReportView-collection-url"
     ));
   },
+  get _trackingProtectionIconTooltipLabel() {
+    delete this._trackingProtectionIconTooltipLabel;
+    return (this._trackingProtectionIconTooltipLabel = document.getElementById(
+      "tracking-protection-icon-tooltip-label"
+    ));
+  },
   get _socialblockPopupNotification() {
     delete this._socialblockPopupNotification;
     return (this._socialblockPopupNotification = document.getElementById(
@@ -1300,14 +1306,14 @@ var gProtectionsHandler = {
     get activeTooltipText() {
       delete this.activeTooltipText;
       return (this.activeTooltipText = gNavigatorBundle.getString(
-        "trackingProtection.icon.activeTooltip"
+        "trackingProtection.icon.activeTooltip2"
       ));
     },
 
     get disabledTooltipText() {
       delete this.disabledTooltipText;
       return (this.disabledTooltipText = gNavigatorBundle.getString(
-        "trackingProtection.icon.disabledTooltip"
+        "trackingProtection.icon.disabledTooltip2"
       ));
     },
   },
@@ -1638,22 +1644,22 @@ var gProtectionsHandler = {
     this.iconBox.toggleAttribute("hasException", hasException);
 
     if (hasException) {
-      this.iconBox.setAttribute(
-        "tooltiptext",
-        this.strings.disabledTooltipText
-      );
+      this._trackingProtectionIconTooltipLabel.textContent = this.strings.disabledTooltipText;
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(1);
       }
     } else if (anyBlocking) {
-      this.iconBox.setAttribute("tooltiptext", this.strings.activeTooltipText);
+      this._trackingProtectionIconTooltipLabel.textContent = this.strings.activeTooltipText;
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(2);
       }
     } else {
-      this.iconBox.removeAttribute("tooltiptext");
+      this._trackingProtectionIconTooltipLabel.textContent = gNavigatorBundle.getFormattedString(
+        "trackingProtection.icon.noTrackersDetectedTooltip",
+        [gBrandBundle.GetStringFromName("brandShortName")]
+      );
     }
 
     if (SocialTracking.isBlocking(event)) {
