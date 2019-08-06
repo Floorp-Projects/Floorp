@@ -1348,11 +1348,6 @@ class BaseScript : public gc::TenuredCell {
   // non-null (except on no-jit builds).
   uint8_t* jitCodeRaw_ = nullptr;
 
-  // Object that determines what Realm this script is compiled for. In general
-  // this refers to the realm's GlobalObject, but for a lazy-script we instead
-  // refer to the associated function.
-  GCPtrObject functionOrGlobal_;
-
   // The ScriptSourceObject for this script.
   GCPtr<ScriptSourceObject*> sourceObject_ = {};
 
@@ -1394,17 +1389,15 @@ class BaseScript : public gc::TenuredCell {
   uint32_t immutableFlags_ = 0;
   uint32_t mutableFlags_ = 0;
 
-  BaseScript(uint8_t* stubEntry, JSObject* functionOrGlobal,
-             ScriptSourceObject* sourceObject, uint32_t sourceStart,
-             uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringEnd)
+  BaseScript(uint8_t* stubEntry, ScriptSourceObject* sourceObject,
+             uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
+             uint32_t toStringEnd)
       : jitCodeRaw_(stubEntry),
-        functionOrGlobal_(functionOrGlobal),
         sourceObject_(sourceObject),
         sourceStart_(sourceStart),
         sourceEnd_(sourceEnd),
         toStringStart_(toStringStart),
         toStringEnd_(toStringEnd) {
-    MOZ_ASSERT(functionOrGlobal->compartment() == sourceObject->compartment());
     MOZ_ASSERT(toStringStart <= sourceStart);
     MOZ_ASSERT(sourceStart <= sourceEnd);
     MOZ_ASSERT(sourceEnd <= toStringEnd);
@@ -1563,12 +1556,6 @@ class BaseScript : public gc::TenuredCell {
   };
 
   uint8_t* jitCodeRaw() const { return jitCodeRaw_; }
-
-  JS::Realm* realm() const { return functionOrGlobal_->nonCCWRealm(); }
-  JS::Compartment* compartment() const {
-    return functionOrGlobal_->compartment();
-  }
-  JS::Compartment* maybeCompartment() const { return compartment(); }
 
   ScriptSourceObject* sourceObject() const { return sourceObject_; }
   ScriptSource* scriptSource() const { return sourceObject()->source(); }
@@ -2158,6 +2145,9 @@ class JSScript : public js::BaseScript {
   // Unshared variable-length data
   js::PrivateScriptData* data_ = nullptr;
 
+ public:
+  JS::Realm* realm_ = nullptr;
+
  private:
   // JIT and type inference data for this script. May be purged on GC.
   js::jit::JitScript* jitScript_ = nullptr;
@@ -2236,7 +2226,7 @@ class JSScript : public js::BaseScript {
       js::MutableHandle<JS::GCVector<js::Scope*>> scopes);
 
  private:
-  JSScript(js::HandleObject global, uint8_t* stubEntry,
+  JSScript(JS::Realm* realm, uint8_t* stubEntry,
            js::HandleScriptSourceObject sourceObject, uint32_t sourceStart,
            uint32_t sourceEnd, uint32_t toStringStart, uint32_t toStringend);
 
@@ -2282,6 +2272,12 @@ class JSScript : public js::BaseScript {
 
  public:
   inline JSPrincipals* principals();
+
+  JS::Compartment* compartment() const {
+    return JS::GetCompartmentForRealm(realm_);
+  }
+  JS::Compartment* maybeCompartment() const { return compartment(); }
+  JS::Realm* realm() const { return realm_; }
 
   js::RuntimeScriptData* scriptData() { return scriptData_; }
   js::ImmutableScriptData* immutableScriptData() const {
@@ -3159,6 +3155,9 @@ class LazyScript : public BaseScript {
   WeakHeapPtrScript script_;
   friend void js::gc::SweepLazyScripts(GCParallelTask* task);
 
+  // Original function with which the lazy script is associated.
+  GCPtrFunction function_;
+
   // This field holds one of:
   //   * LazyScript in which the script is nested.  This case happens if the
   //     enclosing script is lazily parsed and have never been compiled.
@@ -3293,9 +3292,11 @@ class LazyScript : public BaseScript {
 
   static inline JSFunction* functionDelazifying(JSContext* cx,
                                                 Handle<LazyScript*>);
-  JSFunction* functionNonDelazifying() const {
-    return &functionOrGlobal_->as<JSFunction>();
-  }
+  JSFunction* functionNonDelazifying() const { return function_; }
+
+  JS::Compartment* compartment() const;
+  JS::Compartment* maybeCompartment() const { return compartment(); }
+  Realm* realm() const;
 
   void initScript(JSScript* script);
 

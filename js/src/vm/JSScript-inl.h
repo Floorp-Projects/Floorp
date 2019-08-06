@@ -60,11 +60,11 @@ void SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
 
 /* static */ inline JSFunction* LazyScript::functionDelazifying(
     JSContext* cx, Handle<LazyScript*> script) {
-  RootedFunction fun(cx, script->functionNonDelazifying());
-  if (fun && !JSFunction::getOrCreateScript(cx, fun)) {
+  RootedFunction fun(cx, script->function_);
+  if (script->function_ && !JSFunction::getOrCreateScript(cx, fun)) {
     return nullptr;
   }
-  return fun;
+  return script->function_;
 }
 
 }  // namespace js
@@ -201,7 +201,7 @@ inline bool JSScript::ensureHasAnalyzedArgsUsage(JSContext* cx) {
 }
 
 inline bool JSScript::isDebuggee() const {
-  return realm()->debuggerObservesAllExecution() || hasDebugScript();
+  return realm_->debuggerObservesAllExecution() || hasDebugScript();
 }
 
 #endif /* vm_JSScript_inl_h */
