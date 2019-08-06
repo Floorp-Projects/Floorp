@@ -139,7 +139,7 @@ class GleanTest {
 
         try {
             // Simulate the first foreground event after the application starts.
-            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+            lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
             click.record()
 
             // Simulate going to background.
