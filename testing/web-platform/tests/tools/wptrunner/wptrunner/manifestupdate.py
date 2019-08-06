@@ -403,7 +403,7 @@ class PropertyUpdate(object):
         as `expected` in the test metadata.
 
         When `remove_intermittent` is True, old intermittent statuses will be removed
-        if no longer intermittent. This is only relevant if `update_intermittent` is 
+        if no longer intermittent. This is only relevant if `update_intermittent` is
         also True, because if False, the metadata will simply update one `expected`
         status.
         """
@@ -721,7 +721,7 @@ class ExpectedUpdate(PropertyUpdate):
         expected = [status for status, _ in sorted_new]
         if self.update_intermittent:
             if not self.remove_intermittent:
-                # If we are not removing existing recorded intermittents that don't 
+                # If we are not removing existing recorded intermittents that don't
                 # appear in new, manually add them back in to expected.
                 if isinstance(current, list):
                     expected.extend([status for status in current if status not in expected])
@@ -729,7 +729,7 @@ class ExpectedUpdate(PropertyUpdate):
                 return expected[0]
             return expected
 
-        # If nothing has changed and not self.update_intermittent, preserve existing 
+        # If nothing has changed and not self.update_intermittent, preserve existing
         # intermittent.
         if set(expected).issubset(set(current)):
             return current
