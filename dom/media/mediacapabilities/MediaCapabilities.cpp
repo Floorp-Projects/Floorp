@@ -7,6 +7,7 @@
 #include "MediaCapabilities.h"
 #include "AllocationPolicy.h"
 #include "Benchmark.h"
+#include "DecoderBenchmark.h"
 #include "DecoderTraits.h"
 #include "Layers.h"
 #include "MediaInfo.h"
@@ -284,17 +285,53 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                                 std::move(aValue.RejectValue()), __func__);
                           } else {
                             MOZ_ASSERT(config->IsVideo());
-                            nsAutoCString reason;
-                            bool powerEfficient = true;
-                            bool smooth = true;
-                            if (config->GetAsVideoInfo()->mImage.height > 480) {
+                            if (StaticPrefs::media_mediacapabilities_from_database()) {
+                              nsAutoCString reason;
+                              bool powerEfficient =
+                                  decoder->IsHardwareAccelerated(reason);
+
+                              int32_t videoFrameRate =
+                                  frameRate < 1 ? 1 : frameRate;
+
+                              DecoderBenchmarkInfo benchmarkInfo{
+                                  config->mMimeType,
+                                  config->GetAsVideoInfo()->mImage.width,
+                                  config->GetAsVideoInfo()->mImage.height,
+                                  videoFrameRate, 8};
+
+                              p = DecoderBenchmark::Get(benchmarkInfo)->Then(
+                                  GetMainThreadSerialEventTarget(),
+                                  __func__,
+                                  [powerEfficient](int32_t score) {
+                                    // score < 0 means no entry found.
+                                    bool smooth = score < 0 || score >
+                                      StaticPrefs::
+                                        media_mediacapabilities_drop_threshold();
+                                    return CapabilitiesPromise::
+                                        CreateAndResolve(
+                                            MediaCapabilitiesInfo(
+                                                true, smooth,
+                                                powerEfficient),
+                                            __func__);
+                                  },
+                                  [](nsresult rv) {
+                                    return CapabilitiesPromise::
+                                        CreateAndReject(rv, __func__);
+                                  });
+                            } else if (config->GetAsVideoInfo()->mImage.height < 480) {
                               // Assume that we can do stuff at 480p or less in
                               // a power efficient manner and smoothly. If
                               // greater than 480p we assume that if the video
                               // decoding is hardware accelerated it will be
                               // smooth and power efficient, otherwise we use
                               // the benchmark to estimate
-                              powerEfficient =
+                              p = CapabilitiesPromise::CreateAndResolve(
+                                  MediaCapabilitiesInfo(true, true, true),
+                                  __func__);
+                            } else {
+                              nsAutoCString reason;
+                              bool smooth = true;
+                              bool powerEfficient =
                                   decoder->IsHardwareAccelerated(reason);
                               if (!powerEfficient &&
                                   VPXDecoder::IsVP9(config->mMimeType)) {
@@ -318,11 +355,12 @@ already_AddRefed<Promise> MediaCapabilities::DecodingInfo(
                                   smooth = needed > 2;
                                 }
                               }
+
+                              p = CapabilitiesPromise::CreateAndResolve(
+                                  MediaCapabilitiesInfo(true /* supported */,
+                                                        smooth, powerEfficient),
+                                  __func__);
                             }
-                            p = CapabilitiesPromise::CreateAndResolve(
-                                MediaCapabilitiesInfo(true /* supported */,
-                                                      smooth, powerEfficient),
-                                __func__);
                           }
                           MOZ_ASSERT(p.get(), "the promise has been created");
                           // Let's keep alive the decoder and the config object
