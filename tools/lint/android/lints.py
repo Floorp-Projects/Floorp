@@ -92,7 +92,7 @@ def api_lint(config, **lintargs):
         for rule in ('compat_failures', 'failures'):
             for r in issues[rule]:
                 err = {
-                    'rule': rule,
+                    'rule': r['rule'] if rule == 'failures' else 'compat_failures',
                     'path': mozpath.relpath(r['file'], topsrcdir),
                     'lineno': int(r['line']),
                     'column': int(r.get('column') or 0),
