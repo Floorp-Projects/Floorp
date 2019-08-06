@@ -439,17 +439,6 @@ class Chrome(Browser):
     product = "chrome"
     requirements = "requirements_chrome.txt"
 
-    @property
-    def binary(self):
-        if uname[0] == "Linux":
-            return "/usr/bin/google-chrome"
-        if uname[0] == "Darwin":
-            return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-        if uname[0] == "Windows":
-            return os.path.expandvars("$SYSTEMDRIVE\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe")
-        self.logger.warning("Unable to find the browser binary.")
-        return None
-
     def install(self, dest=None, channel=None):
         raise NotImplementedError
 
@@ -488,7 +477,25 @@ class Chrome(Browser):
         return platform
 
     def find_binary(self, venv_path=None, channel=None):
-        raise NotImplementedError
+        if uname[0] == "Linux":
+            name = "google-chrome"
+            if channel == "stable":
+                name += "-stable"
+            elif channel == "beta":
+                name += "-beta"
+            elif channel == "dev":
+                name += "-unstable"
+            # No Canary on Linux.
+            return find_executable(name)
+        if uname[0] == "Darwin":
+            if channel == "canary":
+                return "/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary"
+            # All other channels share the same path on macOS.
+            return "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        if uname[0] == "Windows":
+            return os.path.expandvars(r"$SYSTEMDRIVE\Program Files (x86)\Google\Chrome\Application\chrome.exe")
+        self.logger.warning("Unable to find the browser binary.")
+        return None
 
     def find_webdriver(self, channel=None):
         return find_executable("chromedriver")
@@ -538,6 +545,8 @@ class Chrome(Browser):
     def install_webdriver(self, dest=None, channel=None, browser_binary=None):
         if dest is None:
             dest = os.pwd
+        if browser_binary is None:
+            browser_binary = self.find_binary(channel)
         url = self._latest_chromedriver_url(browser_binary)
         self.logger.info("Downloading ChromeDriver from %s" % url)
         unzip(get(url).raw, dest)
@@ -548,7 +557,10 @@ class Chrome(Browser):
         return find_executable("chromedriver", dest)
 
     def version(self, binary=None, webdriver_binary=None):
-        binary = binary or self.binary
+        if not binary:
+            self.logger.warning("No browser binary provided.")
+            return None
+
         if uname[0] == "Windows":
             return _get_fileversion(binary, self.logger)
 
