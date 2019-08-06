@@ -921,6 +921,7 @@ impl UniformLocation {
     pub const INVALID: Self = UniformLocation(-1);
 }
 
+#[derive(Debug)]
 pub struct Capabilities {
     /// Whether multisampled render targets are supported.
     pub supports_multisampling: bool,
@@ -1041,7 +1042,7 @@ pub struct Device {
 }
 
 /// Contains the parameters necessary to bind a draw target.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum DrawTarget {
     /// Use the device's default draw target, with the provided dimensions,
     /// which are used to set the viewport.
@@ -1168,7 +1169,7 @@ impl DrawTarget {
 }
 
 /// Contains the parameters necessary to bind a texture-backed read target.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum ReadTarget {
     /// Use the device's default draw target.
     Default,
