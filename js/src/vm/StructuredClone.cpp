@@ -2038,12 +2038,6 @@ JSString* JSStructuredCloneReader::readString(uint32_t data) {
 }
 
 BigInt* JSStructuredCloneReader::readBigInt(uint32_t data) {
-  if (!context()->realm()->creationOptions().getBigIntEnabled()) {
-    JS_ReportErrorNumberASCII(context(), GetErrorMessage, nullptr,
-                              JSMSG_SC_BIGINT_DISABLED);
-    return nullptr;
-  }
-
   size_t length = data & JS_BITMASK(31);
   bool isNegative = data & (1 << 31);
   if (length == 0) {
