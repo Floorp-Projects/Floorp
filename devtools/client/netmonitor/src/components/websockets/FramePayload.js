@@ -54,21 +54,18 @@ class FramePayload extends Component {
   }
 
   componentDidMount() {
-    const { selectedFrame, connector } = this.props;
-    getFramePayload(selectedFrame.payload, connector.getLongString).then(
-      payload => {
-        const { json } = isJSON(payload);
-        this.setState({
-          payload,
-          isFormattedData: !!json,
-          formattedData: json,
-        });
-      }
-    );
+    this.updateFramePayload();
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { selectedFrame, connector } = nextProps;
+  componentDidUpdate(prevProps) {
+    if (this.props.selectedFrame !== prevProps.selectedFrame) {
+      this.updateFramePayload();
+    }
+  }
+
+  updateFramePayload() {
+    const { selectedFrame, connector } = this.props;
+
     getFramePayload(selectedFrame.payload, connector.getLongString).then(
       payload => {
         const { json } = isJSON(payload);

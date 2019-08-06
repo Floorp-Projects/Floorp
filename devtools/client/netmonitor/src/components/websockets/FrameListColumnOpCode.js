@@ -15,7 +15,6 @@ class FrameListColumnOpCode extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      index: PropTypes.number.isRequired,
     };
   }
 
@@ -25,11 +24,9 @@ class FrameListColumnOpCode extends Component {
 
   render() {
     const { opCode } = this.props.item;
-    const { index } = this.props;
 
     return dom.td(
       {
-        key: index,
         className: "ws-frames-list-column ws-frames-list-opCode",
         title: opCode,
       },

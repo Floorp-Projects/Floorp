@@ -15,7 +15,6 @@ class FrameListColumnFinBit extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      index: PropTypes.number.isRequired,
     };
   }
 
@@ -25,11 +24,9 @@ class FrameListColumnFinBit extends Component {
 
   render() {
     const { finBit } = this.props.item;
-    const { index } = this.props;
 
     return dom.td(
       {
-        key: index,
         className: "ws-frames-list-column ws-frames-list-finBit",
         title: finBit.toString(),
       },

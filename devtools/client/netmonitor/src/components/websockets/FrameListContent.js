@@ -46,10 +46,6 @@ class FrameListContent extends Component {
     };
   }
 
-  constructor(props) {
-    super(props);
-  }
-
   onMouseDown(evt, item) {
     if (evt.button === LEFT_MOUSE_BUTTON) {
       this.props.selectFrame(item);
