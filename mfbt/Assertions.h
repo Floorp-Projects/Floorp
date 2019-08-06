@@ -439,49 +439,54 @@ struct AssertionConditionType {
 #endif
 
 /* First the single-argument form. */
-#define MOZ_ASSERT_HELPER1(expr)                               \
+#define MOZ_ASSERT_HELPER1(kind, expr)                         \
   do {                                                         \
     MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr);                  \
     if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) {    \
       MOZ_REPORT_ASSERTION_FAILURE(#expr, __FILE__, __LINE__); \
-      MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ")");     \
+      MOZ_CRASH_ANNOTATE(kind "(" #expr ")");                  \
       MOZ_REALLY_CRASH(__LINE__);                              \
     }                                                          \
   } while (false)
 /* Now the two-argument form. */
-#define MOZ_ASSERT_HELPER2(expr, explain)                                \
-  do {                                                                   \
-    MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr);                            \
-    if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) {              \
-      MOZ_REPORT_ASSERTION_FAILURE(#expr " (" explain ")", __FILE__,     \
-                                   __LINE__);                            \
-      MOZ_CRASH_ANNOTATE("MOZ_RELEASE_ASSERT(" #expr ") (" explain ")"); \
-      MOZ_REALLY_CRASH(__LINE__);                                        \
-    }                                                                    \
+#define MOZ_ASSERT_HELPER2(kind, expr, explain)                      \
+  do {                                                               \
+    MOZ_VALIDATE_ASSERT_CONDITION_TYPE(expr);                        \
+    if (MOZ_UNLIKELY(!MOZ_CHECK_ASSERT_ASSIGNMENT(expr))) {          \
+      MOZ_REPORT_ASSERTION_FAILURE(#expr " (" explain ")", __FILE__, \
+                                   __LINE__);                        \
+      MOZ_CRASH_ANNOTATE(kind "(" #expr ") (" explain ")");          \
+      MOZ_REALLY_CRASH(__LINE__);                                    \
+    }                                                                \
   } while (false)
 
-#define MOZ_RELEASE_ASSERT_GLUE(a, b) a b
+#define MOZ_ASSERT_GLUE(a, b) a b
 #define MOZ_RELEASE_ASSERT(...)                                       \
-  MOZ_RELEASE_ASSERT_GLUE(                                            \
+  MOZ_ASSERT_GLUE(                                                    \
       MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
-      (__VA_ARGS__))
+      ("MOZ_RELEASE_ASSERT", __VA_ARGS__))
 
 #ifdef DEBUG
-#  define MOZ_ASSERT(...) MOZ_RELEASE_ASSERT(__VA_ARGS__)
+#  define MOZ_ASSERT(...)                                               \
+    MOZ_ASSERT_GLUE(                                                    \
+        MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
+        ("MOZ_ASSERT", __VA_ARGS__))
 #else
 #  define MOZ_ASSERT(...) \
     do {                  \
     } while (false)
 #endif /* DEBUG */
 
-#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
-#  define MOZ_DIAGNOSTIC_ASSERT MOZ_RELEASE_ASSERT
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION) || defined(DEBUG)
+#  define MOZ_DIAGNOSTIC_ASSERT(...)                                    \
+    MOZ_ASSERT_GLUE(                                                    \
+        MOZ_PASTE_PREFIX_AND_ARG_COUNT(MOZ_ASSERT_HELPER, __VA_ARGS__), \
+        ("MOZ_DIAGNOSTIC_ASSERT", __VA_ARGS__))
 #  define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
 #else
-#  define MOZ_DIAGNOSTIC_ASSERT MOZ_ASSERT
-#  ifdef DEBUG
-#    define MOZ_DIAGNOSTIC_ASSERT_ENABLED 1
-#  endif
+#  define MOZ_DIAGNOSTIC_ASSERT(...) \
+    do {                             \
+    } while (false)
 #endif
 
 /*
