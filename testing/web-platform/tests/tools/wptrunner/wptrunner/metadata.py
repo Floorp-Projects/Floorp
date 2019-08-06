@@ -1,9 +1,6 @@
 from __future__ import print_function
 import array
 import os
-import shutil
-import tempfile
-import uuid
 from collections import defaultdict, namedtuple
 
 from mozlog import structuredlog
@@ -676,7 +673,7 @@ class TestFileData(object):
 Result = namedtuple("Result", ["status", "default_expected"])
 
 
-def create_expected(url_base, test_path,  run_info_properties):
+def create_expected(url_base, test_path, run_info_properties):
     expected = manifestupdate.ExpectedManifest(None,
                                                test_path,
                                                url_base,
