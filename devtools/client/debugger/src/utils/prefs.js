@@ -66,6 +66,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.features.windowless-workers", true);
   pref("devtools.debugger.features.event-listeners-breakpoints", true);
   pref("devtools.debugger.features.log-points", true);
+  pref("devtools.debugger.features.inline-preview", true);
   pref("devtools.debugger.log-actions", true);
   pref("devtools.debugger.features.overlay-step-buttons", false);
 }
@@ -128,6 +129,7 @@ export const features = new PrefsHelper("devtools.debugger.features", {
   eventListenersBreakpoints: ["Bool", "event-listeners-breakpoints"],
   logPoints: ["Bool", "log-points"],
   showOverlayStepButtons: ["Bool", "debugger.features.overlay-step-buttons"],
+  inlinePreview: ["Bool", "inline-preview"],
 });
 
 export const asyncStore = asyncStoreHelper("debugger", {

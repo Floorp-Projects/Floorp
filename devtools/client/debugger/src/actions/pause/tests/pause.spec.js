@@ -206,7 +206,10 @@ describe("pause", () => {
       const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo(generatedLocation, {
         scope: {
-          bindings: { variables: { b: {} }, arguments: [{ a: {} }] },
+          bindings: {
+            variables: { b: { value: {} } },
+            arguments: [{ a: { value: {} } }],
+          },
         },
       });
 
@@ -223,7 +226,10 @@ describe("pause", () => {
           location: { column: 0, line: 1, sourceId: "foo" },
           originalDisplayName: "foo",
           scope: {
-            bindings: { arguments: [{ a: {} }], variables: { b: {} } },
+            bindings: {
+              arguments: [{ a: { value: {} } }],
+              variables: { b: { value: {} } },
+            },
           },
           thread: "FakeThread",
         },
@@ -234,7 +240,10 @@ describe("pause", () => {
           "1": {
             pending: false,
             scope: {
-              bindings: { arguments: [{ a: {} }], variables: { b: {} } },
+              bindings: {
+                arguments: [{ a: { value: {} } }],
+                variables: { b: { value: {} } },
+              },
             },
           },
         },
