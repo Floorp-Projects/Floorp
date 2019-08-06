@@ -63,12 +63,11 @@ add_task(async function() {
 
   const tab = await addTab(TEST_URI);
   const toolbox = await openToolbox(tab);
-  const inspectorFront = await toolbox.target.getFront("inspector");
 
   await startPickerAndAssertSwitchToInspector(toolbox);
 
   info("Stoppping element picker.");
-  await inspectorFront.nodePicker.stop();
+  await toolbox.inspectorFront.nodePicker.stop();
 
   checkResults();
 });
