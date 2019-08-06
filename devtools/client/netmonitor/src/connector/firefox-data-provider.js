@@ -93,7 +93,7 @@ class FirefoxDataProvider {
         id,
         {
           // Convert the received date/time string to a unix timestamp.
-          startedMillis: Date.parse(startedDateTime),
+          startedMs: Date.parse(startedDateTime),
           method,
           url,
           isXHR,

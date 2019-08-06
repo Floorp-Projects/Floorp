@@ -21,9 +21,9 @@ function TimingMarkers() {
 
 function addRequest(state, action) {
   const nextState = { ...state };
-  const { startedMillis } = action.data;
-  if (startedMillis < state.firstDocumentRequestStartTimestamp) {
-    nextState.firstDocumentRequestStartTimestamp = startedMillis;
+  const { startedMs } = action.data;
+  if (startedMs < state.firstDocumentRequestStartTimestamp) {
+    nextState.firstDocumentRequestStartTimestamp = startedMs;
   }
 
   return nextState;
