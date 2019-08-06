@@ -322,10 +322,9 @@ nsresult ScriptPreloader::Observe(nsISupports* subject, const char* topic,
     if (nsCOMPtr<dom::Document> doc = do_QueryInterface(subject)) {
       nsCOMPtr<nsIURI> uri = doc->GetDocumentURI();
 
-      bool schemeIs;
       if ((NS_IsAboutBlank(uri) &&
            doc->GetReadyStateEnum() == doc->READYSTATE_UNINITIALIZED) ||
-          (NS_SUCCEEDED(uri->SchemeIs("chrome", &schemeIs)) && schemeIs)) {
+          uri->SchemeIs("chrome")) {
         return NS_OK;
       }
     }

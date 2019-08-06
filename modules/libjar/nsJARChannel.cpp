@@ -224,11 +224,11 @@ nsresult nsJARChannel::Init(nsIURI* uri) {
   // Prevent loading jar:javascript URIs (see bug 290982).
   nsCOMPtr<nsIURI> innerURI;
   rv = mJarURI->GetJARFile(getter_AddRefs(innerURI));
-  if (NS_FAILED(rv)) return rv;
-  bool isJS;
-  rv = innerURI->SchemeIs("javascript", &isJS);
-  if (NS_FAILED(rv)) return rv;
-  if (isJS) {
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (innerURI->SchemeIs("javascript")) {
     NS_WARNING("blocking jar:javascript:");
     return NS_ERROR_INVALID_ARG;
   }
