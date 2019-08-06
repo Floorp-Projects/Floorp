@@ -264,6 +264,13 @@ class Chrome(BrowserSetup):
     browser_cls = browser.Chrome
 
     def setup_kwargs(self, kwargs):
+        browser_channel = kwargs["browser_channel"]
+        if kwargs["binary"] is None:
+            binary = self.browser.find_binary(channel=browser_channel)
+            if binary:
+                kwargs["binary"] = binary
+            else:
+                raise WptrunError("Unable to locate Chrome binary")
         if kwargs["webdriver_binary"] is None:
             webdriver_binary = self.browser.find_webdriver()
 
@@ -272,7 +279,10 @@ class Chrome(BrowserSetup):
 
                 if install:
                     logger.info("Downloading chromedriver")
-                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path, browser_binary=kwargs["binary"])
+                    webdriver_binary = self.browser.install_webdriver(
+                        dest=self.venv.bin_path,
+                        browser_binary=kwargs["binary"]
+                    )
             else:
                 logger.info("Using webdriver binary %s" % webdriver_binary)
 
@@ -351,7 +361,7 @@ class EdgeChromium(BrowserSetup):
         if kwargs["binary"] is None:
             binary = self.browser.find_binary(channel=browser_channel)
             if binary:
-                kwargs["binary"] = self.browser.find_binary()
+                kwargs["binary"] = binary
             else:
                 raise WptrunError("Unable to locate Edge binary")
         if kwargs["webdriver_binary"] is None:
