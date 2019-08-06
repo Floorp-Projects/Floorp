@@ -188,16 +188,17 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
 }
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-                         FunctionCreationData& data, uint32_t toStringStart,
-                         Directives directives, bool extraWarnings,
-                         GeneratorKind generatorKind,
+                         Handle<FunctionCreationData> data,
+                         uint32_t toStringStart, Directives directives,
+                         bool extraWarnings, GeneratorKind generatorKind,
                          FunctionAsyncKind asyncKind)
     : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
-                  generatorKind, asyncKind, data.flags.isArrow(),
-                  data.isNamedLambda(), data.flags.isGetter(),
-                  data.flags.isSetter(), data.flags.isMethod(),
-                  data.flags.isInterpreted(), data.flags.isInterpretedLazy(),
-                  data.flags.kind(), data.atom) {
+                  generatorKind, asyncKind, data.get().flags.isArrow(),
+                  data.get().isNamedLambda(), data.get().flags.isGetter(),
+                  data.get().flags.isSetter(), data.get().flags.isMethod(),
+                  data.get().flags.isInterpreted(),
+                  data.get().flags.isInterpretedLazy(), data.get().flags.kind(),
+                  data.get().atom) {
   functionCreationData_.emplace(data);
 }
 
@@ -272,7 +273,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 }
 
 void FunctionBox::initFieldInitializer(ParseContext* enclosing,
-                                       FunctionCreationData& data,
+                                       Handle<FunctionCreationData> data,
                                        HasHeritage hasHeritage) {
   this->initWithEnclosingParseContext(enclosing, data,
                                       FunctionSyntaxKind::Expression);

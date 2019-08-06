@@ -447,6 +447,9 @@ class FunctionBox : public ObjectBox, public SharedContext {
   }
 
   mozilla::Maybe<FunctionCreationData> functionCreationData_;
+
+  bool hasFunctionCreationData() { return functionCreationData_.isSome(); }
+
   const mozilla::Maybe<FunctionCreationData>& functionCreationData() const {
     return functionCreationData_;
   }
@@ -454,12 +457,19 @@ class FunctionBox : public ObjectBox, public SharedContext {
     return functionCreationData_;
   }
 
+  Handle<FunctionCreationData> functionCreationDataHandle() {
+    // This is safe because the FunctionCreationData are marked
+    // via ParserBase -> FunctionBox -> FunctionCreationData.
+    return Handle<FunctionCreationData>::fromMarkedLocation(
+        functionCreationData_.ptr());
+  }
+
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
   FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-              FunctionCreationData& data, uint32_t toStringStart,
+              Handle<FunctionCreationData> data, uint32_t toStringStart,
               Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
@@ -489,10 +499,10 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void initStandaloneFunction(Scope* enclosingScope);
 
   void initWithEnclosingParseContext(ParseContext* enclosing,
-                                     FunctionCreationData& fun,
+                                     Handle<FunctionCreationData> fun,
                                      FunctionSyntaxKind kind) {
-    initWithEnclosingParseContext(enclosing, kind, fun.flags.isArrow(),
-                                  fun.flags.allowSuperProperty());
+    initWithEnclosingParseContext(enclosing, kind, fun.get().flags.isArrow(),
+                                  fun.get().flags.allowSuperProperty());
   }
 
   void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
@@ -503,7 +513,8 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
                             HasHeritage hasHeritage);
-  void initFieldInitializer(ParseContext* enclosing, FunctionCreationData& data,
+  void initFieldInitializer(ParseContext* enclosing,
+                            Handle<FunctionCreationData> data,
                             HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
