@@ -17,6 +17,7 @@
 
 .editor-wrapper .CodeMirror-linewidget {
   margin-right: -7px;
+  overflow: hidden;
 }
 
 .editor-wrapper {
