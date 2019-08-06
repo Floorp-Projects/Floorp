@@ -71,19 +71,11 @@ class IntentReceiverActivity : Activity() {
             }
             intent.action == Intent.ACTION_VIEW || intent.action == Intent.ACTION_SEND -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
-                if ((intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0) {
-                    // This Intent was launched from history (recent apps). Android will redeliver the
-                    // original Intent (which might be a VIEW intent). However if there's no active browsing
-                    // session then we do not want to re-process the Intent and potentially re-open a website
-                    // from a session that the user already "erased".
-                    false
-                } else {
-                    if (!intent.getBooleanExtra(NotificationManager.RECEIVE_TABS_TAG, false)) {
-                        intent.flags =
-                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    }
-                    true
-                }
+                // This Intent was launched from history (recent apps). Android will redeliver the
+                // original Intent (which might be a VIEW intent). However if there's no active browsing
+                // session then we do not want to re-process the Intent and potentially re-open a website
+                // from a session that the user already "erased".
+                intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
             }
             else -> {
                 intent.setClassName(applicationContext, HomeActivity::class.java.name)
