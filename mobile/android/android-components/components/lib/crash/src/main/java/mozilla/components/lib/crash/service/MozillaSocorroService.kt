@@ -43,7 +43,6 @@ class MozillaSocorroService(
             applicationContext,
             File(crash.minidumpPath),
             File(crash.extrasPath),
-            crash.minidumpSuccess,
             appName)
     }
 }
