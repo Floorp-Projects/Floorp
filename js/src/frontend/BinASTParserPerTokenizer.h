@@ -329,7 +329,8 @@ class BinASTParseContext : public ParseContext {
   BinASTParseContext(JSContext* cx, BinASTParserPerTokenizer<Tok>* parser,
                      SharedContext* sc, Directives* newDirectives)
       : ParseContext(cx, parser->pc_, sc, *parser, parser->usedNames_,
-                     newDirectives, /* isFull = */ true) {}
+                     newDirectives, /* treeHolder = */ nullptr,
+                     /* isFull = */ true) {}
 };
 
 void TraceBinASTParser(JSTracer* trc, JS::AutoGCRooter* parser);

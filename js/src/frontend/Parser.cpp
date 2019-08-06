@@ -22,6 +22,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Casting.h"
 #include "mozilla/Range.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
@@ -192,7 +193,8 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       isUnexpectedEOF_(false),
       awaitHandling_(AwaitIsName),
       inParametersOfAsyncFunction_(false),
-      parseGoal_(uint8_t(parseGoal)) {
+      parseGoal_(uint8_t(parseGoal)),
+      treeHolder_(cx) {
 }
 
 bool ParserBase::checkOptions() {
@@ -848,6 +850,7 @@ bool PerHandlerParser<ParseHandler>::
       mozilla::IsSame<ParseHandler, SyntaxParseHandler>::value;
   uint32_t scriptId = pc_->scriptId();
   uint32_t scopeId = scope.id();
+
   for (BindingIter bi = scope.bindings(pc_); bi; bi++) {
     if (UsedNamePtr p = usedNames_.lookup(bi.name())) {
       bool closedOver;
@@ -1673,6 +1676,9 @@ bool PerHandlerParser<FullParseHandler>::finishFunction(
   return true;
 }
 
+static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
+                           HandleScriptSourceObject, ParseGoal parseGoal);
+
 template <>
 bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
     bool isStandaloneFunction /* = false */,
@@ -1698,19 +1704,54 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
 
   FunctionBox* funbox = pc_->functionBox();
   funbox->synchronizeArgCount();
-  RootedFunction fun(cx_, funbox->function());
+
+  // Emplace the data required for the lazy script here. It will
+  // be emitted before the rest of script emission.
+  funbox->lazyScriptData().emplace(cx_);
+  return funbox->lazyScriptData()->init(cx_, pc_->closedOverBindingsForLazy(),
+                                        pc_->innerFunctionBoxesForLazy,
+                                        pc_->sc()->strict());
+}
+
+bool ParserBase::publishLazyScripts() {
+  if (FunctionTree* root = getTreeHolder()->getFunctionTree()) {
+    auto visitor = [](ParserBase* parser, FunctionTree* tree) {
+      FunctionBox* funbox = tree->funbox();
+      if (!funbox) {
+        return true;
+      }
+
+      // No lazy script data, so not a lazy function.
+      if (!funbox->lazyScriptData().isSome()) {
+        return true;
+      }
+
+      return EmitLazyScript(parser->cx_, funbox, parser->sourceObject_,
+                            parser->parseGoal());
+    };
+    return root->visitRecursively(this->cx_, this, visitor);
+  }
+  return true;
+}
+
+static bool EmitLazyScript(JSContext* cx, FunctionBox* funbox,
+                           HandleScriptSourceObject sourceObject,
+                           ParseGoal parseGoal) {
+  LazyScriptCreationData& data = *funbox->lazyScriptData();
+
+  Rooted<JSFunction*> function(cx, funbox->function());
   LazyScript* lazy = LazyScript::Create(
-      cx_, fun, sourceObject_, pc_->closedOverBindingsForLazy(),
-      pc_->innerFunctionBoxesForLazy, funbox->bufStart, funbox->bufEnd,
+      cx, function, sourceObject, data.closedOverBindings,
+      data.innerFunctionBoxes, funbox->bufStart, funbox->bufEnd,
       funbox->toStringStart, funbox->toStringEnd, funbox->startLine,
-      funbox->startColumn, parseGoal());
+      funbox->startColumn, parseGoal);
   if (!lazy) {
     return false;
   }
 
   // Flags that need to be copied into the JSScript when we do the full
   // parse.
-  if (pc_->sc()->strict()) {
+  if (data.strict) {
     lazy->setStrict();
   }
   lazy->setGeneratorKind(funbox->generatorKind());
@@ -1738,8 +1779,12 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // parse.
   PropagateTransitiveParseFlags(funbox, lazy);
 
-  fun->initLazyScript(lazy);
+  function->initLazyScript(lazy);
   funbox->setIsInterpretedLazy(true);
+
+  // In order to allow asserting that we published all lazy script data,
+  // reset the lazyScriptData here, now that it's no longer needed.
+  funbox->lazyScriptData().reset();
   return true;
 }
 
@@ -1764,7 +1809,6 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     FunctionAsyncKind asyncKind, Directives inheritedDirectives,
     Directives* newDirectives) {
   MOZ_ASSERT(checkOptionsCalled_);
-
   // Skip prelude.
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
@@ -2600,6 +2644,47 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
   return nodeList;
 }
 
+AutoPushTree::AutoPushTree(FunctionTreeHolder* holder)
+    : holder_(holder), oldParent_(holder_->getCurrentParent()) {
+  MOZ_ASSERT(holder->getCurrentParent());
+}
+
+bool AutoPushTree::init(JSContext* cx, FunctionBox* funbox) {
+  // Add a new child, and set it as the current parent.
+  FunctionTree* child = holder_->getCurrentParent()->add(cx);
+  if (!child) {
+    return false;
+  }
+  child->setFunctionBox(funbox);
+  holder_->setCurrentParent(child);
+  return true;
+}
+
+AutoPushTree::~AutoPushTree() {
+  // Restore the old parent.
+  holder_->setCurrentParent(oldParent_);
+}
+
+void FunctionTree::dump(JSContext* cx, FunctionTree& node, int indent) {
+  for (int i = 0; i < indent; i++) {
+    fprintf(stderr, " ");
+  }
+
+  fprintf(stderr, "(*) %p %s", node.funbox_,
+          node.funbox_
+              ? (node.funbox_->lazyScriptData().isSome() ? "Lazy" : "Eager")
+              : "Nil");
+  if (node.funbox_ && node.funbox_->explicitName()) {
+    UniqueChars bytes = AtomToPrintableString(cx, node.funbox_->explicitName());
+    fprintf(stderr, " %s\n", bytes ? bytes.get() : "<nobytes>");
+  } else {
+    fprintf(stderr, " <noexplicitname> \n");
+  }
+  for (auto& child : node.children_) {
+    dump(cx, child, indent + 2);
+  }
+}
+
 template <class ParseHandler, typename Unit>
 typename ParseHandler::FunctionNodeType
 GeneralParser<ParseHandler, Unit>::functionDefinition(
@@ -2708,6 +2793,10 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     }
     funbox->initWithEnclosingParseContext(pc_, fun, kind);
 
+    // set syntaxParser's current parent to link tree and ensure tree
+    // continuity.
+    syntaxParser->getTreeHolder()->setCurrentParent(
+        this->getTreeHolder()->getCurrentParent());
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
             SyntaxParseHandler::NodeGeneric, pc_, funbox, inHandling,
