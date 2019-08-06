@@ -7,6 +7,7 @@ package mozilla.components.service.glean.storages
 import android.content.Context
 import mozilla.components.service.glean.private.BooleanMetricType
 import mozilla.components.service.glean.private.CounterMetricType
+import mozilla.components.service.glean.private.CustomDistributionMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.StringListMetricType
 import mozilla.components.service.glean.private.StringMetricType
@@ -26,6 +27,7 @@ internal class StorageEngineManager(
     private val storageEngines: Map<String, StorageEngine> = mapOf(
         "boolean" to BooleansStorageEngine,
         "counter" to CountersStorageEngine,
+        "custom_distribution" to CustomDistributionsStorageEngine,
         "datetime" to DatetimesStorageEngine,
         "events" to EventsStorageEngine,
         "string" to StringsStorageEngine,
@@ -143,6 +145,7 @@ internal class StorageEngineManager(
             return when (subMetric) {
                 is BooleanMetricType -> BooleansStorageEngine
                 is CounterMetricType -> CountersStorageEngine
+                is CustomDistributionMetricType -> CustomDistributionsStorageEngine
                 is DatetimeMetricType -> DatetimesStorageEngine
                 is StringListMetricType -> StringListsStorageEngine
                 is StringMetricType -> StringsStorageEngine
