@@ -344,7 +344,12 @@ LoginManager.prototype = {
       logins[i].username = usernames[i];
       logins[i].password = passwords[i];
       log.debug("Adding login");
-      let resultLogin = this._storage.addLogin(logins[i], true);
+      let resultLogin = this._storage.addLogin(
+        logins[i],
+        true,
+        plaintextUsername,
+        plaintextPassword
+      );
       // Reset the username and password to keep the same guarantees as addLogin
       logins[i].username = plaintextUsername;
       logins[i].password = plaintextPassword;
