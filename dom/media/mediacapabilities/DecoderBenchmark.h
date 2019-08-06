@@ -25,7 +25,6 @@ struct DecoderBenchmarkInfo final {
 
 class DecoderBenchmark final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DecoderBenchmark)
-  DecoderBenchmark() = default;
 
  public:
   void Store(const DecoderBenchmarkInfo& aBenchInfo,
