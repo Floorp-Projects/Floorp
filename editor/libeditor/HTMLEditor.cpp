@@ -15,6 +15,7 @@
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/mozInlineSpellChecker.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/TextEvents.h"
 
 #include "nsCRT.h"
@@ -94,63 +95,23 @@ static bool IsNamedAnchorTag(const nsAtom& aTagName) {
   return &aTagName == nsGkAtoms::anchor;
 }
 
-class HTMLEditorPrefs final {
- public:
-  static bool IsResizingUIEnabledByDefault() {
-    EnsurePrefValues();
-    return sUserWantsToEnableResizingUIByDefault;
-  }
-  static bool IsInlineTableEditingUIEnabledByDefault() {
-    EnsurePrefValues();
-    return sUserWantsToEnableInlineTableEditingUIByDefault;
-  }
-  static bool IsAbsolutePositioningUIEnabledByDefault() {
-    EnsurePrefValues();
-    return sUserWantsToEnableAbsolutePositioningUIByDefault;
-  }
-
- private:
-  static bool sUserWantsToEnableResizingUIByDefault;
-  static bool sUserWantsToEnableInlineTableEditingUIByDefault;
-  static bool sUserWantsToEnableAbsolutePositioningUIByDefault;
-
-  static void EnsurePrefValues() {
-    static bool sInitialized = false;
-    if (sInitialized) {
-      return;
-    }
-    Preferences::AddBoolVarCache(&sUserWantsToEnableResizingUIByDefault,
-                                 "editor.resizing.enabled_by_default");
-    Preferences::AddBoolVarCache(
-        &sUserWantsToEnableInlineTableEditingUIByDefault,
-        "editor.inline_table_editing.enabled_by_default");
-    Preferences::AddBoolVarCache(
-        &sUserWantsToEnableAbsolutePositioningUIByDefault,
-        "editor.positioning.enabled_by_default");
-    sInitialized = true;
-  }
-};
-
-bool HTMLEditorPrefs::sUserWantsToEnableResizingUIByDefault = false;
-bool HTMLEditorPrefs::sUserWantsToEnableInlineTableEditingUIByDefault = false;
-bool HTMLEditorPrefs::sUserWantsToEnableAbsolutePositioningUIByDefault = false;
-
 HTMLEditor::HTMLEditor()
     : mCRInParagraphCreatesParagraph(false),
       mCSSAware(false),
       mSelectedCellIndex(0),
-      mIsObjectResizingEnabled(HTMLEditorPrefs::IsResizingUIEnabledByDefault()),
+      mIsObjectResizingEnabled(
+          StaticPrefs::editor_resizing_enabled_by_default()),
       mIsResizing(false),
       mPreserveRatio(false),
       mResizedObjectIsAnImage(false),
       mIsAbsolutelyPositioningEnabled(
-          HTMLEditorPrefs::IsAbsolutePositioningUIEnabledByDefault()),
+          StaticPrefs::editor_positioning_enabled_by_default()),
       mResizedObjectIsAbsolutelyPositioned(false),
       mGrabberClicked(false),
       mIsMoving(false),
       mSnapToGridEnabled(false),
       mIsInlineTableEditingEnabled(
-          HTMLEditorPrefs::IsInlineTableEditingUIEnabledByDefault()),
+          StaticPrefs::editor_inline_table_editing_enabled_by_default()),
       mOriginalX(0),
       mOriginalY(0),
       mResizedObjectX(0),
