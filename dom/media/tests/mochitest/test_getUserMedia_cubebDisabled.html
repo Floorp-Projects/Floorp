@@ -18,6 +18,7 @@
     info("Get user media with cubeb disabled starting");
     // Push prefs to ensure no cubeb context and no fake streams.
     await pushPrefs(["media.cubeb.force_null_context", true],
+                    ["media.navigator.permission.device", false],
                     ["media.navigator.streams.fake", false]);
 
     // Request audio only, to avoid cams
