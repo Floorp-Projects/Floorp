@@ -52,9 +52,6 @@
 --spectre-mitigations=on
 --more-compartments
 
-# Experimental JS language features
---no-bigint
-
 # GC-related
 # These 2 flags can cause the shell to slow down
 # --gc-zeal=2
