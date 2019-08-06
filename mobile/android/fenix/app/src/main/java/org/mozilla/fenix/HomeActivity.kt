@@ -134,6 +134,11 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
         handleCrashIfNecessary(intent)
+        intent?.run {
+            if (this.flags and Intent.FLAG_ACTIVITY_CLEAR_TASK != 0) {
+                return
+            }
+        }
         handleOpenedFromExternalSourceIfNecessary(intent)
     }
 
