@@ -8,7 +8,6 @@
 #define mozilla_dom_CanonicalBrowsingContext_h
 
 #include "mozilla/dom/BrowsingContext.h"
-#include "mozilla/dom/MediaController.h"
 #include "mozilla/RefPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
@@ -78,10 +77,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // set the media mute property for the top level window and propagate it to
   // other top level windows in other processes.
   void NotifyMediaMutedChanged(bool aMuted);
-
-  // This function would update the media action for the current outer window
-  // and propogate the action to other browsing contexts in content processes.
-  void UpdateMediaAction(MediaControlActions aAction);
 
   // Validate that the given process is allowed to perform the given
   // transaction. aSource is |nullptr| if set in the parent process.

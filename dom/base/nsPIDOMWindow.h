@@ -70,7 +70,6 @@ class TimeoutManager;
 class WindowGlobalChild;
 class CustomElementRegistry;
 enum class CallerType : uint32_t;
-enum class MediaControlActions : uint32_t;
 }  // namespace dom
 }  // namespace mozilla
 
@@ -756,8 +755,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
   nsresult SetAudioVolume(float aVolume);
 
   void MaybeActiveMediaComponents();
-
-  void UpdateMediaAction(const mozilla::dom::MediaControlActions aAction);
 
   void SetServiceWorkersTestingEnabled(bool aEnabled);
   bool GetServiceWorkersTestingEnabled();
