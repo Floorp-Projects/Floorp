@@ -3801,12 +3801,15 @@ void PrivateScriptData::trace(JSTracer* trc) {
   }
 }
 
-JSScript::JSScript(HandleObject global, uint8_t* stubEntry,
+JSScript::JSScript(JS::Realm* realm, uint8_t* stubEntry,
                    HandleScriptSourceObject sourceObject, uint32_t sourceStart,
                    uint32_t sourceEnd, uint32_t toStringStart,
                    uint32_t toStringEnd)
-    : js::BaseScript(stubEntry, global, sourceObject, sourceStart, sourceEnd,
-                     toStringStart, toStringEnd) {}
+    : js::BaseScript(stubEntry, sourceObject, sourceStart, sourceEnd,
+                     toStringStart, toStringEnd),
+      realm_(realm) {
+  MOZ_ASSERT(JS::GetCompartmentForRealm(realm) == sourceObject->compartment());
+}
 
 /* static */
 JSScript* JSScript::New(JSContext* cx, HandleScriptSourceObject sourceObject,
@@ -3824,7 +3827,7 @@ JSScript* JSScript::New(JSContext* cx, HandleScriptSourceObject sourceObject,
 #endif
 
   return new (script)
-      JSScript(cx->global(), stubEntry, sourceObject, sourceStart, sourceEnd,
+      JSScript(cx->realm(), stubEntry, sourceObject, sourceStart, sourceEnd,
                toStringStart, toStringEnd);
 }
 
@@ -4915,6 +4918,10 @@ void JSScript::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
 
+  JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal();
+  MOZ_ASSERT(global);
+  TraceManuallyBarrieredEdge(trc, &global, "script_global");
+
   jit::TraceJitScripts(trc, this);
 
   if (trc->isMarkingTracer()) {
@@ -5240,10 +5247,15 @@ LazyScript::LazyScript(JSFunction* fun, uint8_t* stubEntry,
                        uint32_t immutableFlags, uint32_t sourceStart,
                        uint32_t sourceEnd, uint32_t toStringStart,
                        uint32_t toStringEnd, uint32_t lineno, uint32_t column)
-    : BaseScript(stubEntry, fun, &sourceObject, sourceStart, sourceEnd,
+    : BaseScript(stubEntry, &sourceObject, sourceStart, sourceEnd,
                  toStringStart, toStringEnd),
       script_(nullptr),
+      function_(fun),
       lazyData_(data) {
+  MOZ_ASSERT(function_);
+  MOZ_ASSERT(sourceObject_);
+  MOZ_ASSERT(function_->compartment() == sourceObject_->compartment());
+
   lineno_ = lineno;
   column_ = column;
 
@@ -5259,6 +5271,12 @@ void LazyScript::initScript(JSScript* script) {
   MOZ_ASSERT(!script_.unbarrieredGet());
   script_.set(script);
 }
+
+JS::Compartment* LazyScript::compartment() const {
+  return function_->compartment();
+}
+
+Realm* LazyScript::realm() const { return function_->realm(); }
 
 void LazyScript::setEnclosingLazyScript(LazyScript* enclosingLazyScript) {
   MOZ_ASSERT(enclosingLazyScript);
