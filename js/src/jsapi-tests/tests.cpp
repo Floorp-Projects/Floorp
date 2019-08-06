@@ -90,6 +90,7 @@ JSObject* JSAPITest::createGlobal(JSPrincipals* principals) {
   JS::RealmOptions options;
   options.creationOptions()
       .setStreamsEnabled(true)
+      .setBigIntEnabled(true)
       .setFieldsEnabled(true)
       .setAwaitFixEnabled(true);
   newGlobal = JS_NewGlobalObject(cx, getGlobalClass(), principals,
