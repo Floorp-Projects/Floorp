@@ -619,6 +619,28 @@ class ADBDevice(ADBCommand):
 
         self._initialize_boot_state(timeout=timeout)
 
+        # Record the start time of the ADBDevice initialization so we can
+        # determine if we should abort with an ADBTimeoutError if it is
+        # taking too long.
+        start_time = time.time()
+
+        # Attempt to get the Android version as early as possible in order
+        # to work around differences in determining adb command exit codes
+        # in Android before and after Android 7.
+        self.version = 0
+        while self.version < 1 and (time.time() - start_time) <= float(timeout):
+            try:
+                version = self.get_prop("ro.build.version.sdk",
+                                        timeout=timeout)
+                self.version = int(version)
+            except ValueError:
+                self._logger.info("unexpected ro.build.version.sdk: '%s'" % version)
+                time.sleep(2)
+        if self.version < 1:
+            # note slightly different meaning to the ADBTimeoutError here (and above):
+            # failed to get valid (numeric) version string in all attempts in allowed time
+            raise ADBTimeoutError("ADBDevice: unable to determine ro.build.version.sdk.")
+
         # Catch exceptions due to the potential for segfaults
         # calling su when using an improperly rooted device.
 
@@ -664,7 +686,6 @@ class ADBDevice(ADBCommand):
         # mounting the sdcard. We can work around this by checking if
         # the sdcard is missing when we attempt to ls it and retrying
         # if it is not yet available.
-        start_time = time.time()
         boot_completed = False
         while not boot_completed and (time.time() - start_time) <= float(timeout):
             try:
@@ -721,20 +742,6 @@ class ADBDevice(ADBCommand):
 
         self._selinux = None
         self.enforcing = 'Permissive'
-
-        self.version = 0
-        while self.version < 1 and (time.time() - start_time) <= float(timeout):
-            try:
-                version = self.get_prop("ro.build.version.sdk",
-                                        timeout=timeout)
-                self.version = int(version)
-            except ValueError:
-                self._logger.info("unexpected ro.build.version.sdk: '%s'" % version)
-                time.sleep(2)
-        if self.version < 1:
-            # note slightly different meaning to the ADBTimeoutError here (and above):
-            # failed to get valid (numeric) version string in all attempts in allowed time
-            raise ADBTimeoutError("ADBDevice: unable to determine ro.build.version.sdk.")
 
         # Do we have pidof?
         if self.version >= version_codes.N:
@@ -939,7 +946,7 @@ class ADBDevice(ADBCommand):
     @staticmethod
     def _get_exitcode(file_obj):
         """Get the exitcode from the last line of the file_obj for shell
-        commands.
+        commands executed on Android prior to Android 7.
         """
         re_returncode = re.compile(r'adb_returncode=([0-9]+)')
         file_obj.seek(0, os.SEEK_END)
@@ -1404,7 +1411,16 @@ class ADBDevice(ADBCommand):
             envstr = '&& '.join(['export %s=%s' %
                                  (x[0], x[1]) for x in env.items()])
             cmd = envstr + "&& " + cmd
-        cmd += "; echo adb_returncode=$?"
+        # Before Android 7, an exitcode 0 for the process on the host
+        # did not mean that the exitcode of the Android process was
+        # also 0. We therefore used the echo adb_returncode=$? hack to
+        # obtain it there. However Android 7 and later intermittently
+        # do not emit the adb_returncode in stdout using this hack. In
+        # Android 7 and later the exitcode of the host process does
+        # match the exitcode of the Android process and we can use it
+        # directly.
+        if not hasattr(self, 'version') or self.version < version_codes.N:
+            cmd += "; echo adb_returncode=$?"
 
         args = [self._adb_path]
         if self._adb_host:
@@ -1443,7 +1459,10 @@ class ADBDevice(ADBCommand):
             adb_process.timedout = True
             adb_process.exitcode = adb_process.proc.poll()
         elif exitcode == 0:
-            adb_process.exitcode = self._get_exitcode(adb_process.stdout_file)
+            if hasattr(self, 'version') and self.version >= version_codes.N:
+                adb_process.exitcode = 0
+            else:
+                adb_process.exitcode = self._get_exitcode(adb_process.stdout_file)
         else:
             adb_process.exitcode = exitcode
 
