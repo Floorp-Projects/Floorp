@@ -535,7 +535,7 @@ JSScript* frontend::ScriptCompiler<Unit>::compileScript(
 
     // Reset preserved state before trying again.
     info.usedNames->reset();
-    parser->getTreeHolder()->resetFunctionTree();
+    parser->getTreeHolder().resetFunctionTree();
   }
 
   // We have just finished parsing the source. Inform the source so that we
