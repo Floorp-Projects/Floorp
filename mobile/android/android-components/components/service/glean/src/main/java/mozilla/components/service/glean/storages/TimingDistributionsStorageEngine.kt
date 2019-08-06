@@ -81,6 +81,7 @@ internal open class TimingDistributionsStorageEngineImplementation(
      * @param samples the values to accumulate, in the given `timeUnit`
      * @param timeUnit the unit that the given samples are in, defaults to nanoseconds
      */
+    @Suppress("ComplexMethod")
     @Synchronized
     fun accumulateSamples(
         metricData: CommonMetricData,
@@ -241,7 +242,7 @@ data class TimingDistributionData(
          * @param json Stringified JSON value representing a [TimingDistributionData] object
          * @return A [TimingDistributionData] or null if unable to rebuild from the string.
          */
-        @Suppress("ReturnCount", "ComplexMethod")
+        @Suppress("ReturnCount", "ComplexMethod", "NestedBlockDepth")
         internal fun fromJsonString(json: String): TimingDistributionData? {
             val jsonObject: JSONObject
             try {
