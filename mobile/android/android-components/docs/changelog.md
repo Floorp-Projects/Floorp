@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **browser-session**
+  * Clear session icon only if URL host changes.
+
 * **feature-pwa**
   * Adds `WebAppUseCases.isInstallable` to check if the current session can be installed as a Progressive Web App.
 

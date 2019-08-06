@@ -5,6 +5,7 @@
 package mozilla.components.browser.session.engine
 
 import android.graphics.Bitmap
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.engine.request.LoadRequestOption
 import mozilla.components.concept.engine.EngineSession
@@ -26,10 +27,12 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
+@RunWith(AndroidJUnit4::class)
 class EngineObserverTest {
 
     @Test
@@ -447,6 +450,20 @@ class EngineObserverTest {
         observer.onLocationChange("https://www.firefox.com")
 
         assertNull(session.icon)
+    }
+
+    @Test
+    fun `onLocationChange doesn't clear icon when new URL is from the same host as the session URL`() {
+        val session = Session("https://www.mozilla.org/?desktop-redirect=true")
+        session.icon = mock()
+
+        val observer = EngineObserver(session)
+
+        assertNotNull(session.icon)
+
+        observer.onLocationChange("https://www.mozilla.org")
+
+        assertNotNull(session.icon)
     }
 
     @Test
