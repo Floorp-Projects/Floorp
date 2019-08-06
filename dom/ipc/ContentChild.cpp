@@ -227,7 +227,6 @@
 #endif
 
 #include "mozilla/dom/File.h"
-#include "mozilla/dom/MediaController.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/InputStreamUtils.h"
@@ -3737,16 +3736,6 @@ mozilla::ipc::IPCResult ContentChild::RecvSetMediaMuted(
   nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
   if (window) {
     window->SetAudioMuted(aMuted);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvUpdateMediaAction(
-    BrowsingContext* aContext, MediaControlActions aAction) {
-  MOZ_ASSERT(aContext);
-  nsCOMPtr<nsPIDOMWindowOuter> window = aContext->GetDOMWindow();
-  if (window) {
-    window->UpdateMediaAction(aAction);
   }
   return IPC_OK();
 }

@@ -139,10 +139,6 @@ bool IsEnableAudioCompetingForAllAgents() {
 namespace mozilla {
 namespace dom {
 
-extern void NotifyMediaStarted(uint64_t aWindowID);
-extern void NotifyMediaStopped(uint64_t aWindowID);
-extern void NotifyMediaAudibleChanged(uint64_t aWindowID, bool aAudible);
-
 const char* SuspendTypeToStr(const nsSuspendedTypes& aSuspend) {
   MOZ_ASSERT(aSuspend == nsISuspendedTypes::NONE_SUSPENDED ||
              aSuspend == nsISuspendedTypes::SUSPENDED_PAUSE ||
@@ -774,7 +770,6 @@ void AudioChannelService::AudioChannelWindow::AppendAgentAndIncreaseAgentsNum(
   if (mConfig.mNumberOfAgents == 1) {
     NotifyChannelActive(aAgent->WindowID(), true);
   }
-  NotifyMediaStarted(aAgent->WindowID());
 }
 
 void AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(
@@ -790,7 +785,6 @@ void AudioChannelService::AudioChannelWindow::RemoveAgentAndReduceAgentsNum(
   if (mConfig.mNumberOfAgents == 0) {
     NotifyChannelActive(aAgent->WindowID(), false);
   }
-  NotifyMediaStopped(aAgent->WindowID());
 }
 
 void AudioChannelService::AudioChannelWindow::AudioCapturedChanged(
@@ -830,7 +824,6 @@ void AudioChannelService::AudioChannelWindow::AppendAudibleAgentIfNotContained(
       NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eAudible,
                                 aReason);
     }
-    NotifyMediaAudibleChanged(aAgent->WindowID(), true);
   }
 }
 
@@ -844,7 +837,6 @@ void AudioChannelService::AudioChannelWindow::RemoveAudibleAgentIfContained(
       NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eNotAudible,
                                 aReason);
     }
-    NotifyMediaAudibleChanged(aAgent->WindowID(), false);
   }
 }
 
