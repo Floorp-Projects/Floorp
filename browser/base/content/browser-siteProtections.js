@@ -1645,20 +1645,33 @@ var gProtectionsHandler = {
 
     if (hasException) {
       this._trackingProtectionIconTooltipLabel.textContent = this.strings.disabledTooltipText;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
+        this.strings.disabledTooltipText
+      );
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(1);
       }
     } else if (anyBlocking) {
       this._trackingProtectionIconTooltipLabel.textContent = this.strings.activeTooltipText;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
+        this.strings.activeTooltipText
+      );
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(2);
       }
     } else {
-      this._trackingProtectionIconTooltipLabel.textContent = gNavigatorBundle.getFormattedString(
+      let noTrackerTooltipStr = gNavigatorBundle.getFormattedString(
         "trackingProtection.icon.noTrackersDetectedTooltip",
         [gBrandBundle.GetStringFromName("brandShortName")]
+      );
+      this._trackingProtectionIconTooltipLabel.textContent = noTrackerTooltipStr;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
+        noTrackerTooltipStr
       );
     }
 
