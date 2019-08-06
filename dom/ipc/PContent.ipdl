@@ -45,6 +45,7 @@ include protocol PRemoteDecoderManager;
 include protocol PProfiler;
 include protocol PScriptCache;
 include protocol PSessionStorageObserver;
+include protocol PBenchmarkStorage;
 include DOMTypes;
 include JavaScriptTypes;
 include IPCBlob;
@@ -354,6 +355,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PScriptCache;
     manages PLoginReputation;
     manages PSessionStorageObserver;
+    manages PBenchmarkStorage;
 
     // Depending on exactly how the new browser is being created, it might be
     // created from either the child or parent process!
@@ -886,6 +888,8 @@ parent:
     async PLoginReputation(URIParams formURI);
 
     async PSessionStorageObserver();
+
+    async PBenchmarkStorage();
 
     // Services remoting
 

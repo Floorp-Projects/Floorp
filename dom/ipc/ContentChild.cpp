@@ -17,6 +17,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
+#include "mozilla/BenchmarkStorageChild.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MemoryTelemetry.h"
 #include "mozilla/NullPrincipal.h"
@@ -2229,6 +2230,15 @@ media::PMediaChild* ContentChild::AllocPMediaChild() {
 
 bool ContentChild::DeallocPMediaChild(media::PMediaChild* aActor) {
   return media::DeallocPMediaChild(aActor);
+}
+
+PBenchmarkStorageChild* ContentChild::AllocPBenchmarkStorageChild() {
+  return BenchmarkStorageChild::Instance();
+}
+
+bool ContentChild::DeallocPBenchmarkStorageChild(PBenchmarkStorageChild* aActor) {
+  delete aActor;
+  return true;
 }
 
 PSpeechSynthesisChild* ContentChild::AllocPSpeechSynthesisChild() {
