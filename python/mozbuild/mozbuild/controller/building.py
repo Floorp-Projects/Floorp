@@ -10,6 +10,7 @@ import io
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -333,7 +334,21 @@ class BuildMonitor(MozbuildObject):
                 return
 
             self.log_resource_usage(usage)
-            with open(self._get_state_filename('build_resources.json'), 'w') as fh:
+            # When running on automation, we store the resource usage data in
+            # the upload path, alongside, for convenience, a copy of the HTML
+            # viewer.
+            if 'MOZ_AUTOMATION' in os.environ and 'UPLOAD_PATH' in os.environ:
+                build_resources_path = os.path.join(os.environ['UPLOAD_PATH'],
+                                                    'build_resources.json')
+                shutil.copy(
+                    os.path.join(
+                        self.topsrcdir, 'python', 'mozbuild', 'mozbuild',
+                        'resources', 'html-build-viewer',
+                        'build_resources.html'),
+                    os.environ['UPLOAD_PATH'])
+            else:
+                build_resources_path = self._get_state_filename('build_resources.json')
+            with open(build_resources_path, 'w') as fh:
                 json.dump(self.resources.as_dict(), fh, indent=2)
         except Exception as e:
             self.log(logging.WARNING, 'build_resources_error',
@@ -1182,7 +1197,13 @@ class BuildDriver(MozbuildObject):
                     # it through; otherwise, fail.
                     status = 1
 
-            monitor.finish(record_usage=status == 0)
+            record_usage = status == 0
+
+            # On automation, only record usage for plain `mach build`
+            if 'MOZ_AUTOMATION' in os.environ and what:
+                record_usage = False
+
+            monitor.finish(record_usage=record_usage)
 
         if status == 0:
             usage = monitor.get_resource_usage()
