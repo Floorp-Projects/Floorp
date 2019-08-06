@@ -546,7 +546,6 @@ void LayerManagerComposite::UpdateAndRender() {
     return;
   }
 
-  nsIntRegion invalid;
   // The results of our drawing always go directly into a pixel buffer,
   // so we don't need to pass any global transform here.
   mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
@@ -554,12 +553,12 @@ void LayerManagerComposite::UpdateAndRender() {
   nsIntRegion opaque;
   PostProcessLayers(opaque);
 
+  nsIntRegion changed;
   if (mClonedLayerTreeProperties) {
     // We need to compute layer tree differences even if we're not going to
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
     // ContainerLayers.
-    nsIntRegion changed;
 
     const bool overflowed = !mClonedLayerTreeProperties->ComputeDifferences(
         mRoot, changed, nullptr);
@@ -567,25 +566,23 @@ void LayerManagerComposite::UpdateAndRender() {
     if (overflowed) {
       changed = mTarget ? mTargetBounds : mRenderBounds;
     }
-
-    if (mTarget) {
-      // Since we're composing to an external target, we're not going to use
-      // the damage region from layers changes - we want to composite
-      // everything in the target bounds. Instead we accumulate the layers
-      // damage region for the next window composite.
-      mInvalidRegion.Or(mInvalidRegion, changed);
-    } else {
-      invalid = std::move(changed);
-    }
   }
 
+  nsIntRegion invalid;
   if (mTarget) {
-    invalid.Or(invalid, mTargetBounds);
+    // Since we're composing to an external target, we're not going to use
+    // the damage region from layers changes - we want to composite
+    // everything in the target bounds. Instead we accumulate the layers
+    // damage region for the next window composite.
+    mInvalidRegion.Or(mInvalidRegion, changed);
+    invalid = mTargetBounds;
   } else {
-    // If we didn't have a previous layer tree, invalidate the entire render
-    // area.
-    if (!mClonedLayerTreeProperties) {
-      invalid.Or(invalid, mRenderBounds);
+    if (mClonedLayerTreeProperties) {
+      invalid = std::move(changed);
+    } else {
+      // If we didn't have a previous layer tree, invalidate the entire render
+      // area.
+      invalid = mRenderBounds;
     }
 
     // Add any additional invalid rects from the window manager or previous
