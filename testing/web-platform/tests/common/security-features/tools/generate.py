@@ -57,6 +57,45 @@ def dump_test_parameters(selection):
         selection, indent=2, separators=(',', ': '), sort_keys=True)
 
 
+def handle_deliveries(policy_deliveries):
+    '''
+    Generate <meta> elements and HTTP headers for the given list of
+    PolicyDelivery.
+    TODO(hiroshige): Merge duplicated code here, scope/document.py, etc.
+    '''
+
+    meta = ''
+    headers = {}
+
+    for delivery in policy_deliveries:
+        if delivery.value is None:
+            continue
+        if delivery.key == 'referrerPolicy':
+            if delivery.delivery_type == 'meta':
+                meta += \
+                    '<meta name="referrer" content="%s">' % delivery.value
+            elif delivery.delivery_type == 'http-rp':
+                headers['Referrer-Policy'] = delivery.value
+                # TODO(kristijanburnik): Limit to WPT origins.
+                headers['Access-Control-Allow-Origin'] = '*'
+            else:
+                raise Exception(
+                    'Invalid delivery_type: %s' % delivery.delivery_type)
+        elif delivery.key == 'mixedContent':
+            assert (delivery.value == 'opt-in')
+            if delivery.delivery_type == 'meta':
+                meta += '<meta http-equiv="Content-Security-Policy" ' + \
+                       'content="block-all-mixed-content">'
+            elif delivery.delivery_type == 'http-rp':
+                headers['Content-Security-Policy'] = 'block-all-mixed-content'
+            else:
+                raise Exception(
+                    'Invalid delivery_type: %s' % delivery.delivery_type)
+        else:
+            raise Exception('Invalid delivery_key: %s' % delivery.key)
+    return {"meta": meta, "headers": headers}
+
+
 def generate_selection(config, selection, spec, test_html_template_basename):
     test_parameters = dump_test_parameters(selection)
     # Adjust the template for the test invoking JS. Indent it to look nice.
@@ -109,13 +148,16 @@ def generate_selection(config, selection, spec, test_html_template_basename):
     except:
         pass
 
-    delivery = config.handleDelivery(selection, spec)
+    delivery = handle_deliveries([
+        util.PolicyDelivery(selection['delivery_type'],
+                            selection['delivery_key'],
+                            selection['delivery_value'])
+    ])
 
     if len(delivery['headers']) > 0:
         with open(test_headers_filename, "w") as f:
             for header in delivery['headers']:
-                f.write(header)
-                f.write('\n')
+                f.write('%s: %s\n' % (header, delivery['headers'][header]))
 
     selection['meta_delivery_method'] = delivery['meta']
     # Obey the lint and pretty format.
