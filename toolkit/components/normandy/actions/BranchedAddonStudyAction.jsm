@@ -14,8 +14,8 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { BaseAction } = ChromeUtils.import(
-  "resource://normandy/actions/BaseAction.jsm"
+const { BaseStudyAction } = ChromeUtils.import(
+  "resource://normandy/actions/BaseStudyAction.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -32,8 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 });
 
 var EXPORTED_SYMBOLS = ["BranchedAddonStudyAction"];
-
-const OPT_OUT_STUDIES_ENABLED_PREF = "app.shield.optoutstudies.enabled";
 
 class AddonStudyEnrollError extends Error {
   /**
@@ -115,7 +113,7 @@ class AddonStudyUpdateError extends Error {
   }
 }
 
-class BranchedAddonStudyAction extends BaseAction {
+class BranchedAddonStudyAction extends BaseStudyAction {
   get schema() {
     return ActionSchemas["branched-addon-study"];
   }
@@ -123,23 +121,6 @@ class BranchedAddonStudyAction extends BaseAction {
   constructor() {
     super();
     this.seenRecipeIds = new Set();
-  }
-
-  /**
-   * This hook is executed once before any recipes have been processed, it is
-   * responsible for:
-   *
-   *   - Checking if the user has opted out of studies, and if so, it disables the action.
-   *   - Setting up tracking of seen recipes, for use in _finalize.
-   */
-  _preExecution() {
-    // Check opt-out preference
-    if (!Services.prefs.getBoolPref(OPT_OUT_STUDIES_ENABLED_PREF, true)) {
-      this.log.info(
-        "User has opted-out of opt-out experiments, disabling action."
-      );
-      this.disable();
-    }
   }
 
   /**

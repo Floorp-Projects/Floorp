@@ -42,6 +42,7 @@ function preferenceExperimentFactory(args) {
 }
 
 decorate_task(
+  withStudiesEnabled,
   withStub(PreferenceExperimentAction.prototype, "_run"),
   PreferenceExperiments.withMockExperiments([]),
   async function enroll_user_if_never_been_in_experiment(runStub) {
