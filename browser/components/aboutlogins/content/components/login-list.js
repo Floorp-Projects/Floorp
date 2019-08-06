@@ -10,20 +10,6 @@ const sortFnOptions = {
   name: (a, b) => collator.compare(a.title, b.title),
   "last-used": (a, b) => a.timeLastUsed < b.timeLastUsed,
   "last-changed": (a, b) => a.timePasswordChanged < b.timePasswordChanged,
-  breached: (a, b, breachesByLoginGUID) => {
-    if (!breachesByLoginGUID) {
-      return 0;
-    }
-    const aIsBreached = breachesByLoginGUID.has(a.guid);
-    const bIsBreached = breachesByLoginGUID.has(b.guid);
-    if (aIsBreached && !bIsBreached) {
-      return -1;
-    }
-    if (!aIsBreached && bIsBreached) {
-      return 1;
-    }
-    return collator.compare(a.title, b.title);
-  },
 };
 
 export default class LoginList extends HTMLElement {
@@ -263,16 +249,7 @@ export default class LoginList extends HTMLElement {
    */
   updateBreaches(breachesByLoginGUID) {
     this._breachesByLoginGUID = breachesByLoginGUID;
-    if (this._breachesByLoginGUID.size === 0) {
-      return;
-    }
-    const breachedSortOptionElement = this._sortSelect.namedItem("breached");
-    breachedSortOptionElement.hidden = false;
-    this._sortSelect.selectedIndex = breachedSortOptionElement.index;
-    this._sortSelect.dispatchEvent(new CustomEvent("input", { bubbles: true }));
-    this._sortSelect.dispatchEvent(
-      new CustomEvent("change", { bubbles: true })
-    );
+    this.render();
   }
 
   /**
@@ -372,7 +349,7 @@ export default class LoginList extends HTMLElement {
     this._loginGuidsSortedOrder = this._loginGuidsSortedOrder.sort((a, b) => {
       let loginA = this._logins[a].login;
       let loginB = this._logins[b].login;
-      return sortFnOptions[sort](loginA, loginB, this._breachesByLoginGUID);
+      return sortFnOptions[sort](loginA, loginB);
     });
   }
 
