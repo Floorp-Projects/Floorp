@@ -41,6 +41,10 @@ body[focuseddatatype=cryptominer] {
   --tab-highlight: var(--grey);
 }
 
+h2 {
+  font-weight: 700;
+}
+
 #report-title {
   font-size: 20px;
   font-weight: 300;
