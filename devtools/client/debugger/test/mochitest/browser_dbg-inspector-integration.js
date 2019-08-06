@@ -6,7 +6,14 @@
 // opens the Inspector panel
 
 function waitForInspectorPanelChange(dbg) {
-  return dbg.toolbox.getPanelWhenReady("inspector");
+  const { toolbox } = dbg;
+
+  return new Promise(resolve => {
+    toolbox.getPanelWhenReady("inspector").then(() => {
+      ok(toolbox.inspectorFront, "Inspector is shown.");
+      resolve(toolbox.inspectorFront);
+    });
+  });
 }
 
 add_task(async function() {

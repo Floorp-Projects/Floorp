@@ -154,11 +154,11 @@ StyleEditorUI.prototype = {
   },
 
   async initializeHighlighter() {
-    const inspectorFront = await this._toolbox.target.getFront("inspector");
-    this._walker = inspectorFront.walker;
+    await this._toolbox.initInspector();
+    this._walker = this._toolbox.walker;
 
     try {
-      this._highlighter = await inspectorFront.getHighlighterByType(
+      this._highlighter = await this._toolbox.inspectorFront.getHighlighterByType(
         SELECTOR_HIGHLIGHTER_TYPE
       );
     } catch (e) {
