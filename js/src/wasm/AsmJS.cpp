@@ -6081,7 +6081,7 @@ static bool CheckFunction(ModuleValidator<Unit>& m) {
   //
   // This is because the scope exit above frees all the function boxes
   // that would have been created as part of this subtree.
-  FunctionTree* tree = m.parser().getTreeHolder()->getCurrentParent();
+  FunctionTree* tree = m.parser().getTreeHolder().getCurrentParent();
   if (tree) {
     m.parser().publishDeferredItems(tree);
 

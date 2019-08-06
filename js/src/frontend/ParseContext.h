@@ -181,11 +181,11 @@ class FunctionTreeHolder;
 // A class used to maintain our function tree as ParseContexts are
 // pushed and popped.
 class MOZ_RAII AutoPushTree {
-  FunctionTreeHolder* holder_ = nullptr;
+  FunctionTreeHolder& holder_;
   FunctionTree* oldParent_ = nullptr;
 
  public:
-  explicit AutoPushTree(FunctionTreeHolder* holder);
+  explicit AutoPushTree(FunctionTreeHolder& holder);
   ~AutoPushTree();
 
   bool init(JSContext* cx, FunctionBox* box);
@@ -500,7 +500,7 @@ class ParseContext : public Nestable<ParseContext> {
  public:
   ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
                ErrorReporter& errorReporter, UsedNameTracker& usedNames,
-               Directives* newDirectives, FunctionTreeHolder* treeHolder,
+               FunctionTreeHolder& treeHolder, Directives* newDirectives,
                bool isFull);
 
   MOZ_MUST_USE bool init();
