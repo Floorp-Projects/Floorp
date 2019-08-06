@@ -412,19 +412,8 @@ class MOZ_RAII PEHeaders final {
     return nullptr;
   }
 
-  struct IATThunks {
-    IATThunks(PIMAGE_THUNK_DATA aFirstThunk, ptrdiff_t aNumThunks)
-        : mFirstThunk(aFirstThunk), mNumThunks(aNumThunks) {}
-
-    size_t Length() const {
-      return size_t(mNumThunks) * sizeof(IMAGE_THUNK_DATA);
-    }
-
-    PIMAGE_THUNK_DATA mFirstThunk;
-    ptrdiff_t mNumThunks;
-  };
-
-  Maybe<IATThunks> GetIATThunksForModule(const char* aModuleNameASCII) {
+  Maybe<Span<IMAGE_THUNK_DATA>> GetIATThunksForModule(
+      const char* aModuleNameASCII) {
     PIMAGE_IMPORT_DESCRIPTOR impDesc = GetIATForModule(aModuleNameASCII);
     if (!impDesc) {
       return Nothing();
@@ -442,8 +431,7 @@ class MOZ_RAII PEHeaders final {
       ++curIatThunk;
     }
 
-    ptrdiff_t thunkCount = curIatThunk - firstIatThunk;
-    return Some(IATThunks(firstIatThunk, thunkCount));
+    return Some(MakeSpan(firstIatThunk, curIatThunk));
   }
 
   /**
