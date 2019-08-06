@@ -8,16 +8,11 @@ data_dir=$GECKO_PATH/build/unix/build-gcc
 
 . $data_dir/build-gcc.sh
 
-gcc_version=7.4.0
-gcc_ext=xz
-binutils_version=2.31.1
-binutils_ext=xz
-
-pushd $root_dir/gcc-$gcc_version
-ln -sf ../gmp-6.1.0 gmp
-ln -sf ../isl-0.16.1 isl
-ln -sf ../mpc-1.0.3 mpc
-ln -sf ../mpfr-3.1.4 mpfr
+pushd $root_dir/gcc-source
+ln -sf ../gmp-source gmp
+ln -sf ../isl-source isl
+ln -sf ../mpc-source mpc
+ln -sf ../mpfr-source mpfr
 popd
 
 build_binutils

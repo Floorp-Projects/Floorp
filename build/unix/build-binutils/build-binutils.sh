@@ -1,13 +1,10 @@
 #!/bin/bash
 
-binutils_version=2.31.1
 make_flags="-j$(nproc)"
 
 root_dir="$1"
 
-cd $root_dir
-
-cd binutils-$binutils_version
+cd $root_dir/binutils-source
 
 patch -p1 <<'EOF'
 From 4476cc67e657d6b26cd453c555a611f1ab956660 Mon Sep 17 00:00:00 2001
@@ -73,7 +70,7 @@ for target in $TARGETS; do
   mkdir binutils-$target
   cd binutils-$target
 
-  ../binutils-$binutils_version/configure --prefix /tools/binutils/ --disable-gold --disable-ld --disable-binutils --disable-gprof --disable-nls --target=$target || exit 1
+  ../binutils-source/configure --prefix /tools/binutils/ --disable-gold --disable-ld --disable-binutils --disable-gprof --disable-nls --target=$target || exit 1
   make $make_flags || exit 1
   make install $make_flags DESTDIR=$root_dir || exit 1
 
@@ -86,7 +83,7 @@ cd binutils-objdir
 
 # --enable-targets builds extra target support in ld.
 # Enabling aarch64 support brings in arm support, so we don't need to specify that too.
-../binutils-$binutils_version/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls --enable-targets="$TARGETS" || exit 1
+../binutils-source/configure --prefix /tools/binutils/ --enable-gold --enable-plugins --disable-nls --enable-targets="$TARGETS" || exit 1
 make $make_flags || exit 1
 make install $make_flags DESTDIR=$root_dir || exit 1
 
