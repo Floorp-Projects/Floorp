@@ -3279,7 +3279,7 @@ Toolbox.prototype = {
         // than most other fronts because it is closely related to the toolbox.
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
-        this._inspector = await this.target.getFront("inspector");
+        this._inspector = await this.target.getInspector();
         this._walker = this.inspectorFront.walker;
         this._highlighter = this.inspectorFront.highlighter;
         this._selection = this.inspectorFront.selection;
