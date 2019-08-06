@@ -1928,11 +1928,6 @@
   value: @IS_NIGHTLY_BUILD@
   mirror: always
 
-- name: dom.security.respect_document_nosniff
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 # Expose the 'policy' attribute in document and HTMLIFrameElement
 - name: dom.security.featurePolicy.webidl.enabled
   type: bool
