@@ -38,7 +38,7 @@ const TOOLTIP_FRAMES_TOTAL_TIME = L10N.getStr(
   "networkMenu.ws.summary.tooltip.framesTotalTime"
 );
 
-const UPDATED_WS_SUMMARY_PROPS = ["count", "totalMillis", "totalSize"];
+const UPDATED_WS_SUMMARY_PROPS = ["count", "totalMs", "totalSize"];
 
 /**
  * Displays the summary of frame count, total size and total time since the first frame.
@@ -61,7 +61,7 @@ class StatusBar extends Component {
 
   render() {
     const { summary } = this.props;
-    const { count, totalSize, totalMillis } = summary;
+    const { count, totalSize, totalMs } = summary;
 
     const countText =
       count === 0
@@ -71,7 +71,7 @@ class StatusBar extends Component {
             L10N.getStr("networkMenu.ws.summary.framesCount2")
           ).replace("#1", count);
     const totalSizeText = getFormattedSize(totalSize);
-    const totalMillisText = getFormattedTime(totalMillis);
+    const totalMillisText = getFormattedTime(totalMs);
 
     return footer(
       { className: "devtools-toolbar devtools-toolbar-bottom" },

@@ -37,8 +37,8 @@ function Requests() {
     // True if the monitor is recording HTTP traffic
     recording: true,
     // Auxiliary fields to hold requests stats
-    firstStartedMillis: +Infinity,
-    lastEndedMillis: -Infinity,
+    firstStartedMs: +Infinity,
+    lastEndedMs: -Infinity,
   };
 }
 
@@ -152,12 +152,12 @@ function addRequest(state, action) {
   nextState.requests = mapSet(state.requests, newRequest.id, newRequest);
 
   // Update the started/ended timestamps.
-  const { startedMillis } = action.data;
-  if (startedMillis < state.firstStartedMillis) {
-    nextState.firstStartedMillis = startedMillis;
+  const { startedMs } = action.data;
+  if (startedMs < state.firstStartedMs) {
+    nextState.firstStartedMs = startedMs;
   }
-  if (startedMillis > state.lastEndedMillis) {
-    nextState.lastEndedMillis = startedMillis;
+  if (startedMs > state.lastEndedMs) {
+    nextState.lastEndedMs = startedMs;
   }
 
   // Select the request if it was preselected and there is no other selection.
@@ -170,7 +170,7 @@ function addRequest(state, action) {
 }
 
 function updateRequest(state, action) {
-  const { requests, lastEndedMillis } = state;
+  const { requests, lastEndedMs } = state;
 
   let request = requests.get(action.id);
   if (!request) {
@@ -182,14 +182,13 @@ function updateRequest(state, action) {
     ...processNetworkUpdates(action.data, request),
   };
   const requestEndTime =
-    request.startedMillis +
+    request.startedMs +
     (request.eventTimings ? request.eventTimings.totalTime : 0);
 
   return {
     ...state,
     requests: mapSet(state.requests, action.id, request),
-    lastEndedMillis:
-      requestEndTime > lastEndedMillis ? requestEndTime : lastEndedMillis,
+    lastEndedMs: requestEndTime > lastEndedMs ? requestEndTime : lastEndedMs,
   };
 }
 

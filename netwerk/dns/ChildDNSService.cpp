@@ -29,7 +29,7 @@ static StaticRefPtr<ChildDNSService> gChildDNSService;
 static const char kPrefNameDisablePrefetch[] = "network.dns.disablePrefetch";
 
 already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
-  MOZ_ASSERT(IsNeckoChild());
+  MOZ_ASSERT(XRE_IsContentProcess());
 
   if (!gChildDNSService) {
     gChildDNSService = new ChildDNSService();
@@ -45,7 +45,7 @@ ChildDNSService::ChildDNSService()
     : mFirstTime(true),
       mDisablePrefetch(false),
       mPendingRequestsLock("DNSPendingRequestsLock") {
-  MOZ_ASSERT(IsNeckoChild());
+  MOZ_ASSERT(XRE_IsContentProcess());
 }
 
 void ChildDNSService::GetDNSRecordHashKey(

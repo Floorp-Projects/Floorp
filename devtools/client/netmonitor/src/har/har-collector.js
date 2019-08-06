@@ -184,8 +184,8 @@ HarCollector.prototype = {
     }
 
     file = {
-      startedDeltaMillis: startTime - this.firstRequestStart,
-      startedMillis: startTime,
+      startedDeltaMs: startTime - this.firstRequestStart,
+      startedMs: startTime,
       method: method,
       url: url,
       isXHR: isXHR,

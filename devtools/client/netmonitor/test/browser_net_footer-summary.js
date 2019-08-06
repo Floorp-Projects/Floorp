@@ -95,11 +95,11 @@ add_task(async function() {
     info("Current summary finish: " + valueFinish);
     const expectedFinish = L10N.getFormatStrWithNumbers(
       "networkMenu.summary.finish",
-      getFormattedTime(requestsSummary.millis)
+      getFormattedTime(requestsSummary.ms)
     );
 
     info(`Computed total bytes: ${requestsSummary.bytes}`);
-    info(`Computed total millis: ${requestsSummary.millis}`);
+    info(`Computed total ms: ${requestsSummary.ms}`);
 
     is(valueCount, expectedCount, "The current summary count is correct.");
     is(

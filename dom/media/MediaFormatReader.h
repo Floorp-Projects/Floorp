@@ -232,6 +232,10 @@ class MediaFormatReader final
 
   MediaEventSource<MediaResult>& OnDecodeWarning() { return mOnDecodeWarning; }
 
+  MediaEventSource<VideoInfo>& OnStoreDecoderBenchmark() {
+    return mOnStoreDecoderBenchmark;
+  }
+
  private:
   ~MediaFormatReader();
 
@@ -305,6 +309,11 @@ class MediaFormatReader final
   void SetVideoDecodeThreshold();
 
   size_t SizeOfQueue(TrackType aTrack);
+
+  // Fire a new OnStoreDecoderBenchmark event that will create new
+  // storage of the decoder benchmark.
+  // This is called only on TaskQueue.
+  void NotifyDecoderBenchmarkStore();
 
   RefPtr<PDMFactory> mPlatform;
   RefPtr<PDMFactory> mEncryptedPlatform;
@@ -774,6 +783,8 @@ class MediaFormatReader final
   MediaEventProducer<void> mOnWaitingForKey;
 
   MediaEventProducer<MediaResult> mOnDecodeWarning;
+
+  MediaEventProducer<VideoInfo> mOnStoreDecoderBenchmark;
 
   RefPtr<FrameStatistics> mFrameStats;
 

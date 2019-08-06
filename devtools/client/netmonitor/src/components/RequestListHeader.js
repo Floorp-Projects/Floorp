@@ -603,7 +603,7 @@ module.exports = connect(
   state => ({
     columns: state.ui.columns,
     columnsData: state.ui.columnsData,
-    firstRequestStartedMillis: state.requests.firstStartedMillis,
+    firstRequestStartedMs: state.requests.firstStartedMs,
     scale: getWaterfallScale(state),
     sort: state.sort,
     timingMarkers: state.timingMarkers,

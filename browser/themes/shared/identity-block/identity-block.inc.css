@@ -269,6 +269,24 @@
   -moz-context-properties: fill, fill-opacity;
 }
 
+#tracking-protection-icon-box[hasException]::before {
+  background: url(chrome://browser/skin/badge-blue.svg);
+  content: "";
+  position: absolute;
+  bottom: 15px;
+  right: 0;
+  height: 14px;
+  width: 14px;
+}
+
+#tracking-protection-icon-box[hasException]:-moz-locale-dir(rtl)::before {
+  left: 0;
+  right: unset;
+  /* This is needed in order to put the dot in front of the shield icon in rtl
+     mode */
+  z-index: 1;
+}
+
 :root[lwt-toolbar-field-brighttext] #tracking-protection-icon-box:not([hasException])[active] #tracking-protection-icon-animatable-image {
   background-image: url(chrome://browser/skin/tracking-protection-animation-brighttext.svg);
 }
@@ -286,6 +304,10 @@
 
 #tracking-protection-icon-box[animationsenabled][active][animate] #tracking-protection-icon-animatable-image:-moz-locale-dir(rtl) {
   animation-name: tp-icon-animation-rtl;
+}
+
+#tracking-protection-icon-tooltip {
+  max-width: 500px;
 }
 
 #urlbar[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box > #tracking-protection-icon {

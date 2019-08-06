@@ -114,10 +114,10 @@ const getTypeFilteredRequests = createSelector(
 
 const getDisplayedRequestsSummary = createSelector(
   getDisplayedRequests,
-  state => state.requests.lastEndedMillis - state.requests.firstStartedMillis,
-  (requests, totalMillis) => {
+  state => state.requests.lastEndedMs - state.requests.firstStartedMs,
+  (requests, totalMs) => {
     if (requests.size == 0) {
-      return { count: 0, bytes: 0, millis: 0 };
+      return { count: 0, bytes: 0, ms: 0 };
     }
 
     const totalBytes = requests.reduce(
@@ -141,7 +141,7 @@ const getDisplayedRequestsSummary = createSelector(
     return {
       count: requests.size,
       contentSize: totalBytes.contentSize,
-      millis: totalMillis,
+      ms: totalMs,
       transferredSize: totalBytes.transferredSize,
     };
   }

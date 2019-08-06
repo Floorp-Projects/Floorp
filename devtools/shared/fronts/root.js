@@ -13,6 +13,12 @@ const {
 loader.lazyRequireGetter(this, "getFront", "devtools/shared/protocol", true);
 loader.lazyRequireGetter(
   this,
+  "ProcessDescriptorFront",
+  "devtools/shared/fronts/descriptors/process",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "BrowsingContextTargetFront",
   "devtools/shared/fronts/targets/browsing-context",
   true
@@ -81,12 +87,12 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
 
       // And then from the Child processes
       const { processes } = await this.listProcesses();
-      for (const process of processes) {
+      for (const processDescriptorFront of processes) {
         // Ignore parent process
-        if (process.parent) {
+        if (processDescriptorFront.isParent) {
           continue;
         }
-        const front = await this.getProcess(process.id);
+        const front = await processDescriptorFront.getTarget();
         const response = await front.listWorkers();
         workers = workers.concat(response.workers);
       }
@@ -159,6 +165,24 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     return result;
   }
 
+  async listProcesses() {
+    const { processes } = await super.listProcesses();
+    const processDescriptors = processes.map(form => {
+      if (form.actor && form.actor.includes("processDescriptor")) {
+        return this._getProcessDescriptorFront(form);
+      }
+      // Support FF69 and older
+      return {
+        id: form.id,
+        isParent: form.parent,
+        getTarget: () => {
+          return this.getProcess(form.id);
+        },
+      };
+    });
+    return { processes: processDescriptors };
+  }
+
   /**
    * Fetch the ParentProcessTargetActor for the main process.
    *
@@ -170,10 +194,18 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
   }
 
   async getProcess(id) {
+    const { form } = await super.getProcess(id);
+    if (form.actor && form.actor.includes("processDescriptor")) {
+      // The server currently returns a form, when we can drop backwards compatibility,
+      // we can use automatic marshalling here instead, making the next line unnecessary
+      const processDescriptorFront = this._getProcessDescriptorFront(form);
+      return processDescriptorFront.getTarget();
+    }
+
+    // Backwards compatibility for servers up to FF69.
     // Do not use specification automatic marshalling as getProcess may return
     // two different type: ParentProcessTargetActor or ContentProcessTargetActor.
     // Also, we do want to memoize the fronts and return already existing ones.
-    const { form } = await super.getProcess(id);
     let front = this.actor(form.actor);
     if (front) {
       return front;
@@ -195,6 +227,25 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
     front.form(form);
     this.manage(front);
 
+    return front;
+  }
+
+  /**
+   * Get the previous process descriptor front if it exists, create a new one if not.
+   *
+   * If we are using a modern server, we will get a form for a processDescriptorFront.
+   * Until we can switch to auto marshalling, we need to marshal this into a process
+   * descriptor front ourselves.
+   */
+  _getProcessDescriptorFront(form) {
+    let front = this.actor(form.actor);
+    if (front) {
+      return front;
+    }
+    front = new ProcessDescriptorFront(this._client);
+    front.form(form);
+    front.actorID = form.actor;
+    this.manage(front);
     return front;
   }
 
