@@ -266,24 +266,6 @@ CSPService::AsyncOnChannelRedirect(nsIChannel* oldChannel,
     return NS_OK;
   }
 
-  // Check CSP navigate-to
-  // We need to enforce the CSP of the document that initiated the load,
-  // which is the CSP to inherit.
-  nsCOMPtr<nsIContentSecurityPolicy> cspToInherit = loadInfo->GetCspToInherit();
-  if (cspToInherit) {
-    bool allowsNavigateTo = true;
-    rv = cspToInherit->GetAllowsNavigateTo(newUri, loadInfo,
-                                           true,  /* aWasRedirected */
-                                           false, /* aEnforceWhitelist */
-                                           &allowsNavigateTo);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    if (!allowsNavigateTo) {
-      oldChannel->Cancel(NS_ERROR_CSP_NAVIGATE_TO_VIOLATION);
-      return NS_OK;
-    }
-  }
-
   /* Since redirecting channels don't call into nsIContentPolicy, we call our
    * Content Policy implementation directly when redirects occur using the
    * information set in the LoadInfo when channels are created.
