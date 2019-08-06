@@ -175,6 +175,22 @@ class UsedNameTracker {
   }
 };
 
+class FunctionTree;
+class FunctionTreeHolder;
+
+// A class used to maintain our function tree as ParseContexts are
+// pushed and popped.
+class MOZ_RAII AutoPushTree {
+  FunctionTreeHolder* holder_ = nullptr;
+  FunctionTree* oldParent_ = nullptr;
+
+ public:
+  explicit AutoPushTree(FunctionTreeHolder* holder);
+  ~AutoPushTree();
+
+  bool init(JSContext* cx, FunctionBox* box);
+};
+
 /*
  * The struct ParseContext stores information about the current parsing context,
  * which is part of the parser state (see the field Parser::pc). The current
@@ -401,6 +417,9 @@ class ParseContext : public Nestable<ParseContext> {
   };
 
  private:
+  // Not all contexts are Function contexts, hence the maybe
+  mozilla::Maybe<AutoPushTree> tree;
+
   // Trace logging of parsing time.
   AutoFrontendTraceLog traceLog_;
 
@@ -481,7 +500,8 @@ class ParseContext : public Nestable<ParseContext> {
  public:
   ParseContext(JSContext* cx, ParseContext*& parent, SharedContext* sc,
                ErrorReporter& errorReporter, UsedNameTracker& usedNames,
-               Directives* newDirectives, bool isFull);
+               Directives* newDirectives, FunctionTreeHolder* treeHolder,
+               bool isFull);
 
   MOZ_MUST_USE bool init();
 

@@ -187,6 +187,7 @@
 #include "frontend/SharedContext.h"
 #include "frontend/SyntaxParseHandler.h"
 #include "frontend/TokenStream.h"
+#include "js/Vector.h"
 
 #include "vm/ErrorReporting.h"
 
@@ -205,7 +206,7 @@ class SourceParseContext : public ParseContext {
   SourceParseContext(GeneralParser<ParseHandler, Unit>* prs, SharedContext* sc,
                      Directives* newDirectives)
       : ParseContext(prs->cx_, prs->pc_, sc, prs->tokenStream, prs->usedNames_,
-                     newDirectives,
+                     newDirectives, prs->getTreeHolder(),
                      mozilla::IsSame<ParseHandler, FullParseHandler>::value) {}
 };
 
@@ -290,6 +291,82 @@ class MOZ_STACK_CLASS ParserSharedBase : private JS::AutoGCRooter {
   BigIntBox* newBigIntBox(BigInt* val);
 };
 
+// A tree of function nodes pointing to a FunctionBox and all its
+// nested inner functions.
+class FunctionTree {
+  FunctionBox* funbox_;
+
+  Vector<FunctionTree> children_;
+
+ public:
+  explicit FunctionTree(JSContext* cx) : funbox_(nullptr), children_(cx) {}
+
+  // Note: If we're using vector type, the pointer returned here
+  // is only valid if the tree is only added to in DFS order
+  //
+  // Open to suggestions about how to do that better.
+  FunctionTree* add(JSContext* cx) {
+    if (!children_.emplaceBack(cx)) {
+      return nullptr;
+    }
+    return &children_.back();
+  }
+
+  void reset() {
+    funbox_ = nullptr;
+    children_.clear();
+  }
+
+  FunctionBox* funbox() { return funbox_; }
+  void setFunctionBox(FunctionBox* node) { funbox_ = node; }
+
+  typedef bool (*FunctionTreeVisitorFunction)(ParserBase*, FunctionTree*);
+  bool visitRecursively(JSContext* cx, ParserBase* parser,
+                        FunctionTreeVisitorFunction func) {
+    if (!CheckRecursionLimit(cx)) {
+      return false;
+    }
+
+    for (auto& child : children_) {
+      if (!child.visitRecursively(cx, parser, func)) {
+        return false;
+      }
+    }
+
+    return func(parser, this);
+  }
+
+  void dump(JSContext* cx) { dump(cx, *this, 1); }
+
+ private:
+  static void dump(JSContext* cx, FunctionTree& node, int indent);
+};
+
+// Owner of a function tree.
+//
+// Note: Function trees point to function boxes, which only have the lifetime of
+//       the BytecodeCompiler, so exercise caution when holding onto a
+//       holder.
+class FunctionTreeHolder {
+  FunctionTree treeRoot_;
+  FunctionTree* currentParent_;
+
+ public:
+  explicit FunctionTreeHolder(JSContext* cx)
+      : treeRoot_(cx), currentParent_(&treeRoot_) {}
+
+  FunctionTree* getFunctionTree() { return &treeRoot_; }
+  FunctionTree* getCurrentParent() { return currentParent_; }
+  void setCurrentParent(FunctionTree* parent) { currentParent_ = parent; }
+
+  // When a parse has failed, we need to reset the root of the
+  // function tree as we don't want a reparse to have old entries.
+  void resetFunctionTree() {
+    treeRoot_.reset();
+    currentParent_ = &treeRoot_;
+  }
+};
+
 class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
                                    public ErrorReportMixin {
   using Base = ErrorReportMixin;
@@ -317,7 +394,12 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   /* ParseGoal */ uint8_t parseGoal_ : 1;
 
+  FunctionTreeHolder treeHolder_;
+
  public:
+  FunctionTreeHolder* getTreeHolder() { return &treeHolder_; }
+  bool publishLazyScripts();
+
   bool awaitIsKeyword() const { return awaitHandling_ != AwaitIsName; }
 
   bool inParametersOfAsyncFunction() const {

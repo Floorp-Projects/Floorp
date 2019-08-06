@@ -221,7 +221,8 @@ void ParseContext::Scope::removeCatchParameters(ParseContext* pc,
 ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
                            SharedContext* sc, ErrorReporter& errorReporter,
                            class UsedNameTracker& usedNames,
-                           Directives* newDirectives, bool isFull)
+                           Directives* newDirectives,
+                           FunctionTreeHolder* treeHolder, bool isFull)
     : Nestable<ParseContext>(&parent),
       traceLog_(sc->cx_,
                 isFull ? TraceLogger_ParsingFull : TraceLogger_ParsingSyntax,
@@ -241,6 +242,13 @@ ParseContext::ParseContext(JSContext* cx, ParseContext*& parent,
       isStandaloneFunctionBody_(false),
       superScopeNeedsHomeObject_(false) {
   if (isFunctionBox()) {
+    // We exclude ASM bodies because they are always eager, and the
+    // FunctionBoxes that get added to the tree in an AsmJS compilation
+    // don't have a long enough lifespan, as the AsmJS parser is stack
+    // allocated inside the ModuleValidator.
+    if (treeHolder && !this->functionBox()->useAsmOrInsideUseAsm()) {
+      tree.emplace(treeHolder);
+    }
     if (functionBox()->isNamedLambda()) {
       namedLambdaScope_.emplace(cx, parent, usedNames);
     }
@@ -257,6 +265,9 @@ bool ParseContext::init() {
   JSContext* cx = sc()->cx_;
 
   if (isFunctionBox()) {
+    if (tree && !tree->init(cx, this->functionBox())) {
+      return false;
+    }
     // Named lambdas always need a binding for their own name. If this
     // binding is closed over when we finish parsing the function in
     // finishExtraFunctionScopes, the function box needs to be marked as
@@ -265,12 +276,12 @@ bool ParseContext::init() {
       if (!namedLambdaScope_->init(this)) {
         return false;
       }
-      AddDeclaredNamePtr p =
-          namedLambdaScope_->lookupDeclaredNameForAdd(functionBox()->explicitName());
+      AddDeclaredNamePtr p = namedLambdaScope_->lookupDeclaredNameForAdd(
+          functionBox()->explicitName());
       MOZ_ASSERT(!p);
-      if (!namedLambdaScope_->addDeclaredName(this, p, functionBox()->explicitName(),
-                                              DeclarationKind::Const,
-                                              DeclaredNameInfo::npos)) {
+      if (!namedLambdaScope_->addDeclaredName(
+              this, p, functionBox()->explicitName(), DeclarationKind::Const,
+              DeclaredNameInfo::npos)) {
         return false;
       }
     }
