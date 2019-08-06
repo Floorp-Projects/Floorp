@@ -1352,7 +1352,7 @@ var gProtectionsHandler = {
       this,
       "_protectionsPopupToastTimeout",
       "browser.protections_panel.toast.timeout",
-      5000
+      3000
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -1814,6 +1814,9 @@ var gProtectionsHandler = {
 
     // Toggle the breakage link if needed.
     this.toggleBreakageLink();
+
+    // Change the state of the tracking protection icon.
+    this.iconBox.toggleAttribute("hasException", newExceptionState);
 
     // Indicating that we need to show a toast after refreshing the page.
     // And caching the current URI and window ID in order to only show the mini
