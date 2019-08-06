@@ -3100,16 +3100,15 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
         (0xff5eu <= ch && ch <= 0xff9fu)) {
       return true;
     }
-    char16_t ch2;
-    if (NS_IS_HIGH_SURROGATE(ch) && aFrag->GetLength() > uint32_t(aPos) + 1 &&
-        NS_IS_LOW_SURROGATE(ch2 = aFrag->CharAt(aPos + 1))) {
-      uint32_t u = SURROGATE_TO_UCS4(ch, ch2);
-      // CJK Unified Ideographs Extension B,
-      // CJK Unified Ideographs Extension C,
-      // CJK Unified Ideographs Extension D,
-      // CJK Compatibility Ideographs Supplement
-      if (0x20000u <= u && u <= 0x2ffffu) {
-        return true;
+    if (NS_IS_HIGH_SURROGATE(ch)) {
+      if (char32_t u = aFrag->ScalarValueAt(aPos)) {
+        // CJK Unified Ideographs Extension B,
+        // CJK Unified Ideographs Extension C,
+        // CJK Unified Ideographs Extension D,
+        // CJK Compatibility Ideographs Supplement
+        if (0x20000u <= u && u <= 0x2ffffu) {
+          return true;
+        }
       }
     }
   }
@@ -7218,11 +7217,8 @@ nsIFrame::ContentOffsets nsTextFrame::GetCharacterOffsetAtFramePointInternal(
     // chars that are ligated in the textrun to form a single flag symbol.
     uint32_t offs = extraCluster.GetOriginalOffset();
     const nsTextFragment* frag = TextFragment();
-    if (offs + 1 < frag->GetLength() &&
-        NS_IS_HIGH_SURROGATE(frag->CharAt(offs)) &&
-        NS_IS_LOW_SURROGATE(frag->CharAt(offs + 1)) &&
-        gfxFontUtils::IsRegionalIndicator(
-            SURROGATE_TO_UCS4(frag->CharAt(offs), frag->CharAt(offs + 1)))) {
+    if (frag->IsHighSurrogateFollowedByLowSurrogateAt(offs) &&
+        gfxFontUtils::IsRegionalIndicator(frag->ScalarValueAt(offs))) {
       allowSplitLigature = false;
       if (extraCluster.GetSkippedOffset() > 1 &&
           !mTextRun->IsLigatureGroupStart(extraCluster.GetSkippedOffset())) {
@@ -7732,8 +7728,7 @@ static bool IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
     uint32_t ch = frag->CharAt(offs);
 
     if (gfxFontUtils::IsVarSelector(ch) ||
-        (NS_IS_LOW_SURROGATE(ch) && offs > 0 &&
-         NS_IS_HIGH_SURROGATE(frag->CharAt(offs - 1))) ||
+        frag->IsLowSurrogateFollowingHighSurrogateAt(offs) ||
         (!aTextRun->IsLigatureGroupStart(index) &&
          (unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault ||
           (unicode::GetEmojiPresentation(ch) == unicode::TextDefault &&
@@ -7744,17 +7739,15 @@ static bool IsAcceptableCaretPosition(const gfxSkipCharsIterator& aIter,
 
     // If the proposed position is before a high surrogate, we need to decode
     // the surrogate pair (if valid) and check the resulting character.
-    if (NS_IS_HIGH_SURROGATE(ch) && offs + 1 < frag->GetLength()) {
-      uint32_t ch2 = frag->CharAt(offs + 1);
-      if (NS_IS_LOW_SURROGATE(ch2)) {
-        ch = SURROGATE_TO_UCS4(ch, ch2);
+    if (NS_IS_HIGH_SURROGATE(ch)) {
+      if (char32_t ucs4 = frag->ScalarValueAt(offs)) {
         // If the character is a (Plane-14) variation selector,
         // or an emoji character that is ligated with the previous
         // character (i.e. part of a Regional-Indicator flag pair,
         // or an emoji-ZWJ sequence), this is not a valid boundary.
-        if (gfxFontUtils::IsVarSelector(ch) ||
+        if (gfxFontUtils::IsVarSelector(ucs4) ||
             (!aTextRun->IsLigatureGroupStart(index) &&
-             unicode::GetEmojiPresentation(ch) == unicode::EmojiDefault)) {
+             unicode::GetEmojiPresentation(ucs4) == unicode::EmojiDefault)) {
           return false;
         }
       }
@@ -7861,9 +7854,7 @@ bool ClusterIterator::IsPunctuation() {
 }
 
 int32_t ClusterIterator::GetAfterInternal() {
-  if (mFrag->Is2b() && NS_IS_HIGH_SURROGATE(mFrag->Get2b()[mCharIndex]) &&
-      uint32_t(mCharIndex) + 1 < mFrag->GetLength() &&
-      NS_IS_LOW_SURROGATE(mFrag->Get2b()[mCharIndex + 1])) {
+  if (mFrag->IsHighSurrogateFollowedByLowSurrogateAt(mCharIndex)) {
     return mCharIndex + 2;
   }
   return mCharIndex + 1;
@@ -7928,16 +7919,14 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
     nsString maskedText;
     maskedText.SetCapacity(mFrag->GetLength());
     for (uint32_t i = 0; i < mFrag->GetLength(); ++i) {
-      uint32_t ch = mFrag->CharAt(i);
       mIterator.SetOriginalOffset(i);
       uint32_t skippedOffset = mIterator.GetSkippedOffset();
-      if (NS_IS_HIGH_SURROGATE(ch) && i < mFrag->GetLength() - 1 &&
-          NS_IS_LOW_SURROGATE(mFrag->CharAt(i + 1))) {
+      if (mFrag->IsHighSurrogateFollowedByLowSurrogateAt(i)) {
         if (transformedTextRun->mStyles[skippedOffset]->mMaskPassword) {
           maskedText.Append(kPasswordMask);
           maskedText.Append(kPasswordMask);
         } else {
-          maskedText.Append(ch);
+          maskedText.Append(mFrag->CharAt(i));
           maskedText.Append(mFrag->CharAt(i + 1));
         }
         ++i;
@@ -7945,7 +7934,7 @@ ClusterIterator::ClusterIterator(nsTextFrame* aTextFrame, int32_t aPosition,
         maskedText.Append(
             transformedTextRun->mStyles[skippedOffset]->mMaskPassword
                 ? kPasswordMask
-                : ch);
+                : mFrag->CharAt(i));
       }
     }
     mMaskedFrag.SetTo(maskedText, mFrag->IsBidi(), true);
@@ -8085,7 +8074,8 @@ static int32_t FindEndOfPunctuationRun(const nsTextFragment* aFrag,
   int32_t i;
 
   for (i = aStart; i < aEnd - aOffset; ++i) {
-    if (nsContentUtils::IsFirstLetterPunctuationAt(aFrag, aOffset + i)) {
+    if (nsContentUtils::IsFirstLetterPunctuation(
+            aFrag->ScalarValueAt(aOffset + i))) {
       aIter->SetOriginalOffset(aOffset + i);
       FindClusterEnd(aTextRun, aEnd, aIter);
       i = aIter->GetOriginalOffset() - aOffset;
