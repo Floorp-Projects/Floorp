@@ -80,6 +80,7 @@
         <menu label="&ldb.DumpMenu.label;"
               accesskey="&ldb.DumpMenu.accesskey;">
           <menupopup>
+            <menuitem id="menu_processIDs" label="Process IDs" accesskey="P" oncommand="gDebugger.dumpProcessIDs();" />
             <menuitem id="menu_dumpWebShells" label="&ldb.dumpWebShells.label;" accesskey="&ldb.dumpWebShells.accesskey;" oncommand="gDebugger.dumpWebShells();" />
             <menuitem id="menu_dumpContent" label="&ldb.dumpContent.label;" accesskey="&ldb.dumpContent.accesskey;" oncommand="gDebugger.dumpContent();" />
             <menuitem id="menu_dumpFrames" label="&ldb.dumpFrames.label;" accesskey="&ldb.dumpFrames.accesskey;" oncommand="gDebugger.dumpFrames();" />

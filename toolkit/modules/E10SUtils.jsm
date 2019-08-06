@@ -774,6 +774,31 @@ var E10SUtils = {
     }
     return deserialized;
   },
+
+  /**
+   * Returns the pids for a remote browser and its remote subframes.
+   */
+  getBrowserPids(aBrowser, aRemoteSubframes) {
+    if (!aBrowser.isRemoteBrowser || !aBrowser.frameLoader) {
+      return [];
+    }
+    let tabPid = aBrowser.frameLoader.remoteTab.osPid;
+    let pids = new Set();
+    if (aRemoteSubframes) {
+      let stack = [aBrowser.browsingContext];
+      while (stack.length) {
+        let bc = stack.pop();
+        stack.push(...bc.getChildren());
+        if (bc.currentWindowGlobal) {
+          let pid = bc.currentWindowGlobal.osPid;
+          if (pid != tabPid) {
+            pids.add(pid);
+          }
+        }
+      }
+    }
+    return [tabPid, ...pids];
+  },
 };
 
 XPCOMUtils.defineLazyGetter(

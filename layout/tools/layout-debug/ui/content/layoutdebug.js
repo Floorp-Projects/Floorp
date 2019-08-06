@@ -74,6 +74,20 @@ class Debugger {
     this._attached = true;
   }
 
+  dumpProcessIDs() {
+    let parentPid = Services.appinfo.processID;
+    let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
+      gBrowser,
+      gFissionBrowser
+    );
+
+    dump(`Parent pid: ${parentPid}\n`);
+    dump(`Content pid: ${contentPid || "-"}\n`);
+    if (gFissionBrowser) {
+      dump(`Subframe pids: ${framePids.length ? framePids.join(", ") : "-"}\n`);
+    }
+  }
+
   get visualDebugging() {
     return this._visualDebugging;
   }
