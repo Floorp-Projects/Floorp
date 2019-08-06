@@ -188,8 +188,7 @@ LoadInfo::LoadInfo(
               innerWindow->GetTopLevelStorageAreaPrincipal();
         } else if (contextOuter->IsTopLevelWindow()) {
           Document* doc = innerWindow->GetExtantDoc();
-          if (!doc || (!doc->StorageAccessSandboxed() &&
-                       !nsContentUtils::IsInPrivateBrowsing(doc))) {
+          if (!doc || (!doc->StorageAccessSandboxed())) {
             mTopLevelStorageAreaPrincipal = innerWindow->GetPrincipal();
           }
 
