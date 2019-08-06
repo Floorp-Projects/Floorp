@@ -802,18 +802,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
 
-  // Process only currently queued generic notifications.
-  nsTArray<RefPtr<Notification>> notifications;
-  notifications.SwapElements(mNotifications);
-
-  uint32_t notificationCount = notifications.Length();
-  for (uint32_t idx = 0; idx < notificationCount; idx++) {
-    notifications[idx]->Process();
-    if (!mDocument) return;
-  }
-
   // Process invalidation list of the document after all accessible tree
-  // modification are done.
+  // mutation is done.
   mDocument->ProcessInvalidationList();
 
   // Process relocation list.
@@ -826,6 +816,20 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
     }
   }
   mRelocations.Clear();
+
+  // Process only currently queued generic notifications.
+  // These are used for processing aria-activedescendant, DOMMenuItemActive,
+  // etc. Therefore, they must be processed after relocations, since relocated
+  // subtrees might not have been created before relocation processing and the
+  // target might be inside a relocated subtree.
+  nsTArray<RefPtr<Notification>> notifications;
+  notifications.SwapElements(mNotifications);
+
+  uint32_t notificationCount = notifications.Length();
+  for (uint32_t idx = 0; idx < notificationCount; idx++) {
+    notifications[idx]->Process();
+    if (!mDocument) return;
+  }
 
   // If a generic notification occurs after this point then we may be allowed to
   // process it synchronously.  However we do not want to reenter if fireing
