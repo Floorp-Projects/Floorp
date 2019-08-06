@@ -730,8 +730,8 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                               FunctionAsyncKind asyncKind);
 
   FunctionBox* newFunctionBox(FunctionNodeType funNode,
-                              FunctionCreationData& fcd, uint32_t toStringStart,
-                              Directives directives,
+                              Handle<FunctionCreationData> fcd,
+                              uint32_t toStringStart, Directives directives,
                               GeneratorKind generatorKind,
                               FunctionAsyncKind asyncKind);
 
@@ -1164,7 +1164,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                       ListNodeType nodeList, TokenKind* ttp);
 
   inline bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1543,12 +1543,13 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   ListNodeType statementList(YieldHandling yieldHandling);
 
-  MOZ_MUST_USE FunctionNodeType innerFunction(
-      FunctionNodeType funNode, ParseContext* outerpc,
-      FunctionCreationData& fcd, uint32_t toStringStart, InHandling inHandling,
-      YieldHandling yieldHandling, FunctionSyntaxKind kind,
-      GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
-      Directives inheritedDirectives, Directives* newDirectives);
+  MOZ_MUST_USE FunctionNodeType
+  innerFunction(FunctionNodeType funNode, ParseContext* outerpc,
+                Handle<FunctionCreationData> fcd, uint32_t toStringStart,
+                InHandling inHandling, YieldHandling yieldHandling,
+                FunctionSyntaxKind kind, GeneratorKind generatorKind,
+                FunctionAsyncKind asyncKind, bool tryAnnexB,
+                Directives inheritedDirectives, Directives* newDirectives);
 
   // Implements Automatic Semicolon Insertion.
   //
@@ -1699,7 +1700,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
@@ -1852,7 +1853,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   bool trySyntaxParseInnerFunction(
-      FunctionNodeType* funNode, FunctionCreationData& fcd,
+      FunctionNodeType* funNode, Handle<FunctionCreationData> fcd,
       uint32_t toStringStart, InHandling inHandling,
       YieldHandling yieldHandling, FunctionSyntaxKind kind,
       GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
