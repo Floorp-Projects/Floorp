@@ -56,3 +56,6 @@ win32-gn:
         resources:
             - 'taskcluster/scripts/misc/tooltool-download.sh'
         toolchain-artifact: public/build/gn.tar.bz2
+    fetches:
+        fetch:
+            - ninja

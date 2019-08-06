@@ -230,3 +230,5 @@ win64-clang-cl:
     fetches:
         fetch:
             - clang-8
+            - cmake
+            - ninja

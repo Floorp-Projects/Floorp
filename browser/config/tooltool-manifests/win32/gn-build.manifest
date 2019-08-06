@@ -6,13 +6,5 @@
     "algorithm": "sha512",
     "filename": "vs2017_15.8.4.zip",
     "unpack": true
-  },
-  {
-    "version": "Ninja 1.7.1",
-    "size": 184821,
-    "digest": "e4f9a1ae624a2630e75264ba37d396d9c7407d6e6aea3763056210ba6e1387908bd31cf4037a6a3661a418e86c4d2761e0c333e6a3bd0d66549d2b0d72d3f43b",
-    "algorithm": "sha512",
-    "filename": "ninja171.zip",
-    "unpack": true
   }
 ]
