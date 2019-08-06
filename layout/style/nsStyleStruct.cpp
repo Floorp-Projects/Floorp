@@ -1163,8 +1163,6 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mMinHeight(StyleSize::Auto()),
       mMaxHeight(StyleMaxSize::None()),
       mFlexBasis(StyleFlexBasis::Size(StyleSize::Auto())),
-      mGridAutoColumns(StyleTrackSize::Breadth(StyleTrackBreadth::Auto())),
-      mGridAutoRows(StyleTrackSize::Breadth(StyleTrackBreadth::Auto())),
       mAspectRatio(0.0f),
       mGridAutoFlow(NS_STYLE_GRID_AUTO_FLOW_ROW),
       mBoxSizing(StyleBoxSizing::Content),

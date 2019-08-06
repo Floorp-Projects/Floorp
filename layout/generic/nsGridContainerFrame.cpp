@@ -925,7 +925,7 @@ void nsGridContainerFrame::GridItemInfo::Dump() const {
 struct nsGridContainerFrame::TrackSizingFunctions {
  private:
   TrackSizingFunctions(const GridTemplate& aTemplate,
-                       const StyleTrackSize& aAutoSizing,
+                       const StyleImplicitGridTracks& aAutoSizing,
                        const Maybe<size_t>& aRepeatAutoIndex, bool aIsSubgrid)
       : mTemplate(aTemplate),
         mTrackListValues(aTemplate.TrackListValues()),
@@ -943,14 +943,15 @@ struct nsGridContainerFrame::TrackSizingFunctions {
 
  public:
   TrackSizingFunctions(const GridTemplate& aGridTemplate,
-                       const StyleTrackSize& aAutoSizing, bool aIsSubgrid)
+                       const StyleImplicitGridTracks& aAutoSizing,
+                       bool aIsSubgrid)
       : TrackSizingFunctions(aGridTemplate, aAutoSizing,
                              aGridTemplate.RepeatAutoIndex(), aIsSubgrid) {}
 
  private:
   enum { ForSubgridFallbackTag };
   TrackSizingFunctions(const GridTemplate& aGridTemplate,
-                       const StyleTrackSize& aAutoSizing,
+                       const StyleImplicitGridTracks& aAutoSizing,
                        decltype(ForSubgridFallbackTag))
       : TrackSizingFunctions(aGridTemplate, aAutoSizing, Nothing(),
                              /* aIsSubgrid */ true) {}
@@ -1124,8 +1125,22 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     return end;
   }
   const StyleTrackSize& SizingFor(uint32_t aTrackIndex) const {
+    static const StyleTrackSize kAutoTrackSize =
+        StyleTrackSize::Breadth(StyleTrackBreadth::Auto());
+    auto getImplicitSize = [this](size_t aIndex) -> const StyleTrackSize& {
+      MOZ_ASSERT(!(mAutoSizing.Length() == 1 &&
+                   mAutoSizing.AsSpan()[0] == kAutoTrackSize),
+                 "It's impossible to have one track with auto value because we "
+                 "filter out this case during parsing");
+      // If multiple track sizes are given, the pattern is repeated as necessary
+      // to find the size of the implicit tracks.
+      return mAutoSizing.IsEmpty()
+                 ? kAutoTrackSize
+                 : mAutoSizing.AsSpan()[aIndex % mAutoSizing.Length()];
+    };
+
     if (MOZ_UNLIKELY(aTrackIndex < mExplicitGridOffset)) {
-      return mAutoSizing;
+      return getImplicitSize(aTrackIndex);
     }
     uint32_t index = aTrackIndex - mExplicitGridOffset;
     if (index >= mRepeatAutoStart) {
@@ -1136,7 +1151,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
       }
     }
     if (index >= mExpandedTracks.Length()) {
-      return mAutoSizing;
+      return getImplicitSize(index);
     }
     auto& indices = mExpandedTracks[index];
     const TrackListValue& value = mTrackListValues[indices.first()];
@@ -1232,7 +1247,7 @@ struct nsGridContainerFrame::TrackSizingFunctions {
   // Some style data references, for easy access.
   const GridTemplate& mTemplate;
   const Span<const TrackListValue> mTrackListValues;
-  const StyleTrackSize& mAutoSizing;
+  const StyleImplicitGridTracks& mAutoSizing;
   // An array from expanded track sizes (without expanding auto-repeat, which is
   // included just once at `mRepeatAutoStart`).
   //
