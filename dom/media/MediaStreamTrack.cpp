@@ -7,7 +7,7 @@
 
 #include "DOMMediaStream.h"
 #include "MediaStreamError.h"
-#include "MediaStreamGraph.h"
+#include "MediaStreamGraphImpl.h"
 #include "MediaStreamListener.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/Promise.h"

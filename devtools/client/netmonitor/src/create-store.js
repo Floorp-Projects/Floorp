@@ -27,7 +27,10 @@ const { Requests } = require("./reducers/requests");
 const { Sort } = require("./reducers/sort");
 const { TimingMarkers } = require("./reducers/timing-markers");
 const { UI, Columns, ColumnsData } = require("./reducers/ui");
-const { WebSockets } = require("./reducers/web-sockets");
+const {
+  WebSockets,
+  getWebSocketsDefaultColumnsState,
+} = require("./reducers/web-sockets");
 
 /**
  * Configure state and middleware for the Network monitor tool.
@@ -45,7 +48,9 @@ function configureStore(connector, telemetry) {
       columns: getColumnState(),
       columnsData: getColumnsData(),
     }),
-    webSockets: new WebSockets(),
+    webSockets: WebSockets({
+      columns: getWebSocketsColumnState(),
+    }),
   };
 
   // Prepare middleware.
@@ -69,6 +74,21 @@ function configureStore(connector, telemetry) {
 function getColumnState() {
   const columns = Columns();
   const visibleColumns = getPref("devtools.netmonitor.visibleColumns");
+
+  const state = {};
+  for (const col in columns) {
+    state[col] = visibleColumns.includes(col);
+  }
+
+  return state;
+}
+
+/**
+ * Get column state of WebSockets from preferences.
+ */
+function getWebSocketsColumnState() {
+  const columns = getWebSocketsDefaultColumnsState();
+  const visibleColumns = getPref("devtools.netmonitor.ws.visibleColumns");
 
   const state = {};
   for (const col in columns) {

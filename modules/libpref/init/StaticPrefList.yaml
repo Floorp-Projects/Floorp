@@ -2429,6 +2429,24 @@
   value: false
   mirror: always
 
+# General prefs for editor, indicating whether Gecko-specific editing UI is
+# enabled by default. Those UIs are not implemented by any other browsers.  So,
+# only Firefox users can change some styles with them. This means that Firefox
+# users may get unexpected result of some web apps if they assume that users
+# cannot change such styles.
+- name: editor.resizing.enabled_by_default
+  type: bool
+  value: false
+  mirror: always
+- name: editor.inline_table_editing.enabled_by_default
+  type: bool
+  value: false
+  mirror: always
+- name: editor.positioning.enabled_by_default
+  type: bool
+  value: false
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "extensions."
 #---------------------------------------------------------------------------
@@ -4608,6 +4626,17 @@
 - name: media.cache_readahead_limit.cellular
   type: RelaxedAtomicUint32
   value: 30
+  mirror: always
+
+# MediaCapabilities
+- name: media.mediacapabilities.drop-threshold
+  type: RelaxedAtomicInt32
+  value: 95
+  mirror: always
+
+- name: media.mediacapabilities.from-database
+  type: RelaxedAtomicBool
+  value: true
   mirror: always
 
 # AudioSink

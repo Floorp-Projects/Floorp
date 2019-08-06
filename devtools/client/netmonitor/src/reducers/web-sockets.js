@@ -12,13 +12,34 @@ const {
   WS_CLEAR_FRAMES,
   WS_TOGGLE_FRAME_FILTER_TYPE,
   WS_SET_REQUEST_FILTER_TEXT,
+  WS_TOGGLE_COLUMN,
+  WS_RESET_COLUMNS,
 } = require("../constants");
+
+/**
+ * The default column state for the FramesListItem component.
+ */
+const defaultColumnsState = {
+  data: true,
+  size: false,
+  opCode: false,
+  maskBit: false,
+  finBit: false,
+  time: true,
+};
+
+/**
+ * Returns a new object of default cols.
+ */
+function getWebSocketsDefaultColumnsState() {
+  return Object.assign({}, defaultColumnsState);
+}
 
 /**
  * This structure stores list of all WebSocket frames received
  * from the backend.
  */
-function WebSockets() {
+function WebSockets(initialState = {}) {
   return {
     // Map with all requests (key = channelId, value = array of frame objects)
     frames: new Map(),
@@ -28,6 +49,8 @@ function WebSockets() {
     selectedFrame: null,
     frameDetailsOpen: false,
     currentChannelId: null,
+    columns: getWebSocketsDefaultColumnsState(),
+    ...initialState,
   };
 }
 
@@ -121,6 +144,31 @@ function setFrameFilterText(state, action) {
 }
 
 /**
+ * Toggle the user specified column view state.
+ */
+function toggleColumn(state, action) {
+  const { column } = action;
+
+  return {
+    ...state,
+    columns: {
+      ...state.columns,
+      [column]: !state.columns[column],
+    },
+  };
+}
+
+/**
+ * Reset back to default columns view state.
+ */
+function resetColumns(state) {
+  return {
+    ...state,
+    columns: getWebSocketsDefaultColumnsState(),
+  };
+}
+
+/**
  * Append new item into existing map and return new map.
  */
 function mapSet(map, key, value) {
@@ -154,6 +202,10 @@ function webSockets(state = WebSockets(), action) {
       return toggleFrameFilterType(state, action);
     case WS_SET_REQUEST_FILTER_TEXT:
       return setFrameFilterText(state, action);
+    case WS_TOGGLE_COLUMN:
+      return toggleColumn(state, action);
+    case WS_RESET_COLUMNS:
+      return resetColumns(state);
     default:
       return state;
   }
@@ -162,4 +214,5 @@ function webSockets(state = WebSockets(), action) {
 module.exports = {
   WebSockets,
   webSockets,
+  getWebSocketsDefaultColumnsState,
 };

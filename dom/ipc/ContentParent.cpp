@@ -32,6 +32,7 @@
 #endif
 #include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Components.h"
 #include "mozilla/StyleSheetInlines.h"
@@ -3743,6 +3744,15 @@ media::PMediaParent* ContentParent::AllocPMediaParent() {
 
 bool ContentParent::DeallocPMediaParent(media::PMediaParent* aActor) {
   return media::DeallocPMediaParent(aActor);
+}
+
+PBenchmarkStorageParent* ContentParent::AllocPBenchmarkStorageParent() {
+  return new BenchmarkStorageParent;
+}
+
+bool ContentParent::DeallocPBenchmarkStorageParent(PBenchmarkStorageParent* aActor) {
+  delete aActor;
+  return true;
 }
 
 PPresentationParent* ContentParent::AllocPPresentationParent() {
