@@ -5607,7 +5607,8 @@ nsIPrincipal* nsGlobalWindowInner::GetTopLevelPrincipal() {
 }
 
 nsIPrincipal* nsGlobalWindowInner::GetTopLevelStorageAreaPrincipal() {
-  if (mDoc && (mDoc->StorageAccessSandboxed())) {
+  if (mDoc && (mDoc->StorageAccessSandboxed() ||
+               nsContentUtils::IsInPrivateBrowsing(mDoc))) {
     // Storage access is disabled
     return nullptr;
   }
