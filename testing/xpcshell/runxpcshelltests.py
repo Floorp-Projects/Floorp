@@ -1194,7 +1194,7 @@ class XPCShellTests(object):
         self.failCount += test.failCount
         self.todoCount += test.todoCount
 
-    def updateMozinfo(self, prefs):
+    def updateMozinfo(self, prefs, options):
         # Handle filenames in mozInfo
         if not isinstance(self.mozInfo, dict):
             mozInfoFile = self.mozInfo
@@ -1217,6 +1217,7 @@ class XPCShellTests(object):
         self.mozInfo['fission'] = prefs.get('fission.autostart', False)
         self.mozInfo['serviceworker_e10s'] = prefs.get(
             'dom.serviceWorkers.parent_intercept', False)
+        self.mozInfo['verify'] = options.get('verify', False)
         self.mozInfo['webrender'] = self.enable_webrender
 
         mozinfo.update(self.mozInfo)
@@ -1318,7 +1319,7 @@ class XPCShellTests(object):
 
         self.event = Event()
 
-        if not self.updateMozinfo(prefs):
+        if not self.updateMozinfo(prefs, options):
             return False
 
         self.stack_fixer_function = None
