@@ -20,25 +20,14 @@ function assertElementsDisplayed(details, expected) {
     expected.title,
     "Should be displaying the correct title"
   );
-  if (expected.separator) {
-    Assert.notEqual(
-      window.getComputedStyle(details.element.separator).display,
-      "none",
-      "Should be displaying a separator"
-    );
-    Assert.notEqual(
-      window.getComputedStyle(details.element.separator).visibility,
-      "collapse",
-      "Should be displaying a separator"
-    );
-  } else {
-    Assert.ok(
-      window.getComputedStyle(details.element.separator).display == "none" ||
-        window.getComputedStyle(details.element.separator).visibility ==
-          "collapse",
-      "Should not be displaying a separator"
-    );
-  }
+  let separatorVisible =
+    window.getComputedStyle(details.element.separator).display != "none" &&
+    window.getComputedStyle(details.element.separator).visibility != "collapse";
+  Assert.equal(
+    expected.separator,
+    separatorVisible,
+    `Should${expected.separator ? " " : " not "}be displaying a separator`
+  );
 }
 
 add_task(async function setup() {
@@ -274,7 +263,7 @@ add_task(async function test_remote_tab_result() {
         url: "http://example.com",
         icon: UrlbarUtils.ICON.DEFAULT,
         client: "7cqCr77ptzX3",
-        lastUsed: 1452124677,
+        lastUsed: parseInt(Date.now() / 1000),
       },
     ],
   };
@@ -303,6 +292,9 @@ add_task(async function test_remote_tab_result() {
   sandbox
     .stub(SyncedTabs._internal, "getTabClients")
     .callsFake(() => Promise.resolve(Cu.cloneInto([REMOTE_TAB], {})));
+
+  // Reset internal cache in PlacesRemoteTabsAutocompleteProvider.
+  Services.obs.notifyObservers(null, "weave:engine:sync:finish", "tabs");
 
   registerCleanupFunction(async function() {
     sandbox.restore();
