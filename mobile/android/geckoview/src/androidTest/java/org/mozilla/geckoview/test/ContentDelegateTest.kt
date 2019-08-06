@@ -156,31 +156,37 @@ class ContentDelegateTest : BaseSessionTest() {
         // If we add multiple content processes, this test will need to be fixed to ensure the
         // test sessions go into the same one.
         val newSession = sessionRule.createOpenSession()
+
+        // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
+        // individual sessions here. Therefore, assert 'onCrash' is called for the two sessions
+        // individually.
+        val mainSessionCrash = GeckoResult<Void>()
+        val newSessionCrash = GeckoResult<Void>()
+        sessionRule.delegateUntilTestEnd(object : Callbacks.ContentDelegate {
+            fun reportCrash(session: GeckoSession) {
+                if (session == mainSession) {
+                    mainSessionCrash.complete(null)
+                } else if (session == newSession) {
+                    newSessionCrash.complete(null)
+                }
+            }
+            // Slower devices may not catch crashes in a timely manner, so we check to see
+            // if either `onKill` or `onCrash` is called
+            override fun onCrash(session: GeckoSession) {
+                reportCrash(session)
+            }
+            override fun onKill(session: GeckoSession) {
+                reportCrash(session)
+            }
+        })
+
         newSession.loadTestPath(HELLO_HTML_PATH)
         newSession.waitForPageStop()
 
         mainSession.loadUri(CONTENT_CRASH_URL)
 
-        // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
-        // individual sessions here. Therefore, assert 'onCrash' is called for the two sessions
-        // individually.
-        val remainingSessions = mutableListOf(newSession, mainSession)
-        while (remainingSessions.isNotEmpty()) {
-            val onCrashCalled = GeckoResult<Void>()
-            sessionRule.delegateDuringNextWait(object : Callbacks.ContentDelegate {
-                // Slower devices may not catch crashes in a timely manner, so we check to see
-                // if either `onKill` or `onCrash` is called
-                override fun onCrash(session: GeckoSession) {
-                    remainingSessions.remove(session)
-                    onCrashCalled.complete(null)
-                }
-                override fun onKill(session: GeckoSession) {
-                    remainingSessions.remove(session)
-                    onCrashCalled.complete(null)
-                }
-            })
-            sessionRule.waitForResult(onCrashCalled)
-        }
+        sessionRule.waitForResult(newSessionCrash)
+        sessionRule.waitForResult(mainSessionCrash)
     }
 
     @AnyThread
