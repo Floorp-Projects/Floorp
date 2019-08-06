@@ -22,6 +22,12 @@ if CONFIG['MOZ_REPLACE_MALLOC_STATIC'] and \
         '/mfbt/JSONWriter.cpp',
         '/mozglue/misc/StackWalk.cpp',
     ]
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        OS_LIBS += [
+            'dbghelp',
+        ]
+
+if CONFIG['MOZ_DMD'] or CONFIG['MOZ_PHC']:
     if CONFIG['MOZ_BUILD_APP'] == 'memory':
         EXPORTS.mozilla += [
             '/mozglue/misc/StackWalk.h',
