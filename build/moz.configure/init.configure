@@ -819,7 +819,7 @@ def real_host(value, shell):
     if not value:
         config_guess = os.path.join(os.path.dirname(__file__), '..',
                                     'autoconf', 'config.guess')
-        host = subprocess.check_output([shell, config_guess]).strip()
+        host = subprocess.check_output([shell, config_guess], universal_newlines=True).strip()
         try:
             return split_triplet(host)
         except ValueError:
