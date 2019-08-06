@@ -894,8 +894,19 @@ void MediaFormatReader::ShutdownDecoder(TrackType aTrack) {
   auto& decoder = GetDecoderData(aTrack);
   // Flush the decoder if necessary.
   decoder.Flush();
+
   // Shut down the decoder if any.
   decoder.ShutdownDecoder();
+}
+
+void MediaFormatReader::NotifyDecoderBenchmarkStore() {
+  MOZ_ASSERT(OnTaskQueue());
+  auto& decoder = GetDecoderData(TrackInfo::kVideoTrack);
+  if (decoder.GetCurrentInfo() && decoder.GetCurrentInfo()->GetAsVideoInfo()) {
+    VideoInfo info = *(decoder.GetCurrentInfo()->GetAsVideoInfo());
+    info.SetFrameRate(static_cast<int32_t>(ceil(decoder.mMeanRate.Mean())));
+    mOnStoreDecoderBenchmark.Notify(std::move(info));
+  }
 }
 
 RefPtr<ShutdownPromise> MediaFormatReader::TearDownDecoders() {
@@ -1838,6 +1849,11 @@ void MediaFormatReader::HandleDemuxedSamples(
     LOG("%s stream id has changed from:%d to:%d.", TrackTypeToStr(aTrack),
         decoder.mLastStreamSourceID, info->GetID());
 
+    if (aTrack == TrackInfo::kVideoTrack) {
+      // We are about to create a new decoder thus the benchmark,
+      // up to this point, is stored.
+      NotifyDecoderBenchmarkStore();
+    }
     decoder.mNextStreamSourceID.reset();
     decoder.mLastStreamSourceID = info->GetID();
     decoder.mInfo = info;
@@ -2111,6 +2127,10 @@ void MediaFormatReader::Update(TrackType aTrack) {
     } else if (decoder.HasCompletedDrain()) {
       if (decoder.mDemuxEOS) {
         LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
+        if (aTrack == TrackInfo::kVideoTrack) {
+          // End of video, store the benchmark of the decoder.
+          NotifyDecoderBenchmarkStore();
+        }
         decoder.RejectPromise(NS_ERROR_DOM_MEDIA_END_OF_STREAM, __func__);
       } else if (decoder.mWaitingForData) {
         if (decoder.mDrainState == DrainState::DrainCompleted &&

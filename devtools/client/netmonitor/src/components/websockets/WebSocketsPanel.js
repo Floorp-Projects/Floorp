@@ -72,6 +72,9 @@ class WebSocketsPanel extends Component {
   }
 
   componentWillUnmount() {
+    const { openFrameDetailsTab } = this.props;
+    openFrameDetailsTab(false);
+
     const { clientHeight } = findDOMNode(this.refs.endPanel) || {};
 
     if (clientHeight) {

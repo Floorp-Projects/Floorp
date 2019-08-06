@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "nsCharTraits.h"
 #include "nsString.h"
 #include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
@@ -214,6 +215,59 @@ class nsTextFragment final {
     MOZ_ASSERT(uint32_t(aIndex) < mState.mLength, "bad index");
     return mState.mIs2b ? Get2b()[aIndex]
                         : static_cast<unsigned char>(m1b[aIndex]);
+  }
+
+  /**
+   * IsHighSurrogateFollowedByLowSurrogateAt() returns true if character at
+   * aIndex is high surrogate and it's followed by low surrogate.
+   */
+  inline bool IsHighSurrogateFollowedByLowSurrogateAt(int32_t aIndex) const {
+    MOZ_ASSERT(aIndex >= 0);
+    MOZ_ASSERT(aIndex < mState.mLength);
+    if (!mState.mIs2b || aIndex + 1 >= mState.mLength) {
+      return false;
+    }
+    return NS_IS_HIGH_SURROGATE(Get2b()[aIndex]) &&
+           NS_IS_LOW_SURROGATE(Get2b()[aIndex + 1]);
+  }
+
+  /**
+   * IsLowSurrogateFollowingHighSurrogateAt() returns true if character at
+   * aIndex is low surrogate and it follows high surrogate.
+   */
+  inline bool IsLowSurrogateFollowingHighSurrogateAt(int32_t aIndex) const {
+    MOZ_ASSERT(aIndex >= 0);
+    MOZ_ASSERT(aIndex < mState.mLength);
+    if (!mState.mIs2b || aIndex <= 0) {
+      return false;
+    }
+    return NS_IS_LOW_SURROGATE(Get2b()[aIndex]) &&
+           NS_IS_HIGH_SURROGATE(Get2b()[aIndex - 1]);
+  }
+
+  /**
+   * ScalarValueAt() returns a Unicode scalar value at aIndex.  If the character
+   * at aIndex is a high surrogate followed by low surrogate, returns character
+   * code for the pair.  If the index is low surrogate, or a high surrogate but
+   * not in a pair, returns 0.
+   */
+  inline char32_t ScalarValueAt(int32_t aIndex) const {
+    MOZ_ASSERT(aIndex >= 0);
+    MOZ_ASSERT(aIndex < mState.mLength);
+    if (!mState.mIs2b) {
+      return static_cast<unsigned char>(m1b[aIndex]);
+    }
+    char16_t ch = Get2b()[aIndex];
+    if (!IS_SURROGATE(ch)) {
+      return ch;
+    }
+    if (aIndex + 1 < mState.mLength && NS_IS_HIGH_SURROGATE(ch)) {
+      char16_t nextCh = Get2b()[aIndex + 1];
+      if (NS_IS_LOW_SURROGATE(nextCh)) {
+        return SURROGATE_TO_UCS4(ch, nextCh);
+      }
+    }
+    return 0;
   }
 
   void SetBidi(bool aBidi) { mState.mIsBidi = aBidi; }

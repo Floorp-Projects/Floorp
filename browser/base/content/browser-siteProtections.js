@@ -1271,6 +1271,12 @@ var gProtectionsHandler = {
       "protections-popup-sendReportView-collection-url"
     ));
   },
+  get _trackingProtectionIconTooltipLabel() {
+    delete this._trackingProtectionIconTooltipLabel;
+    return (this._trackingProtectionIconTooltipLabel = document.getElementById(
+      "tracking-protection-icon-tooltip-label"
+    ));
+  },
   get _socialblockPopupNotification() {
     delete this._socialblockPopupNotification;
     return (this._socialblockPopupNotification = document.getElementById(
@@ -1300,14 +1306,14 @@ var gProtectionsHandler = {
     get activeTooltipText() {
       delete this.activeTooltipText;
       return (this.activeTooltipText = gNavigatorBundle.getString(
-        "trackingProtection.icon.activeTooltip"
+        "trackingProtection.icon.activeTooltip2"
       ));
     },
 
     get disabledTooltipText() {
       delete this.disabledTooltipText;
       return (this.disabledTooltipText = gNavigatorBundle.getString(
-        "trackingProtection.icon.disabledTooltip"
+        "trackingProtection.icon.disabledTooltip2"
       ));
     },
   },
@@ -1346,7 +1352,7 @@ var gProtectionsHandler = {
       this,
       "_protectionsPopupToastTimeout",
       "browser.protections_panel.toast.timeout",
-      5000
+      3000
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -1638,8 +1644,9 @@ var gProtectionsHandler = {
     this.iconBox.toggleAttribute("hasException", hasException);
 
     if (hasException) {
-      this.iconBox.setAttribute(
-        "tooltiptext",
+      this._trackingProtectionIconTooltipLabel.textContent = this.strings.disabledTooltipText;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
         this.strings.disabledTooltipText
       );
       if (!this.hadShieldState && !isSimulated) {
@@ -1647,13 +1654,25 @@ var gProtectionsHandler = {
         this.shieldHistogramAdd(1);
       }
     } else if (anyBlocking) {
-      this.iconBox.setAttribute("tooltiptext", this.strings.activeTooltipText);
+      this._trackingProtectionIconTooltipLabel.textContent = this.strings.activeTooltipText;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
+        this.strings.activeTooltipText
+      );
       if (!this.hadShieldState && !isSimulated) {
         this.hadShieldState = true;
         this.shieldHistogramAdd(2);
       }
     } else {
-      this.iconBox.removeAttribute("tooltiptext");
+      let noTrackerTooltipStr = gNavigatorBundle.getFormattedString(
+        "trackingProtection.icon.noTrackersDetectedTooltip",
+        [gBrandBundle.GetStringFromName("brandShortName")]
+      );
+      this._trackingProtectionIconTooltipLabel.textContent = noTrackerTooltipStr;
+      gIdentityHandler._trackingProtectionIconContainer.setAttribute(
+        "aria-label",
+        noTrackerTooltipStr
+      );
     }
 
     if (SocialTracking.isBlocking(event)) {
@@ -1746,6 +1765,14 @@ var gProtectionsHandler = {
       !currentlyEnabled
     );
 
+    // Show the blue dot indicator if the protection is disabled. We need this
+    // in addition to the 'enabled' attribute of the TP switch section due to
+    // the blue dot won't be shown in the case that TP switch to off from on.
+    this._protectionsPopupTPSwitch.toggleAttribute(
+      "showdotindicator",
+      !currentlyEnabled
+    );
+
     // Update the tooltip of the blocked tracker counter.
     this.maybeUpdateEarliestRecordedDateTooltip();
   },
@@ -1787,6 +1814,9 @@ var gProtectionsHandler = {
 
     // Toggle the breakage link if needed.
     this.toggleBreakageLink();
+
+    // Change the state of the tracking protection icon.
+    this.iconBox.toggleAttribute("hasException", newExceptionState);
 
     // Indicating that we need to show a toast after refreshing the page.
     // And caching the current URI and window ID in order to only show the mini
