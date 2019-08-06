@@ -158,7 +158,7 @@ promise_test(test_function, name, properties)
 ```
 
 `test_function` is a function that receives a test as an argument. It must
-return a promise. The test completes when the returned promise resolves. The
+return a promise. The test completes when the returned promise settles. The
 test fails if the returned promise rejects.
 
 E.g.:
