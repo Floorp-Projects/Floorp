@@ -42,7 +42,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return
 
         if p == '/':
-            p = '/index.html'
+            p = '/build_resources.html'
 
         self.serve_docroot(s.doc_root, p[1:])
 
