@@ -93,7 +93,7 @@ auto-scan = Automatically scanned today
 # This string is displayed after a large numeral that indicates the total number
 # of email addresses being monitored. Don’t add $count to
 # your localization, because it would result in the number showing twice.
-info-monitored-addresses = 
+info-monitored-addresses =
   { $count ->
      [one] Email address being monitored.
     *[other] Email addresses being monitored.
@@ -127,3 +127,9 @@ password-warning =
      [one] Saved login may have been exposed in a data breach. Change this password for better online security. <a data-l10n-name="lockwise-link">View Saved Logins</a>
     *[other] Saved logins may have been exposed in a data breach. Change these passwords for better online security. <a data-l10n-name="lockwise-link">View Saved Logins</a>
   }
+
+# This is the title attribute describing the graph report's link to about:settings#privacy
+go-to-privacy-settings = Go to Privacy Settings
+
+# This is the title attribute describing the Lockwise card's link to about:logins
+go-to-saved-logins = Go to Saved Logins

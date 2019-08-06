@@ -23,9 +23,13 @@ document.addEventListener("DOMContentLoaded", e => {
   ];
 
   let protectionDetails = document.getElementById("protection-details");
-  protectionDetails.addEventListener("click", () => {
-    RPMSendAsyncMessage("OpenContentBlockingPreferences");
-  });
+  let protectionDetailsEvtHandler = evt => {
+    if (evt.keyCode == evt.DOM_VK_RETURN || evt.type == "click") {
+      RPMSendAsyncMessage("OpenContentBlockingPreferences");
+    }
+  };
+  protectionDetails.addEventListener("click", protectionDetailsEvtHandler);
+  protectionDetails.addEventListener("keypress", protectionDetailsEvtHandler);
 
   let cbCategory = RPMGetStringPref("browser.contentblocking.category");
   if (cbCategory == "custom") {
