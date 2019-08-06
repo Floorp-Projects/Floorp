@@ -17,16 +17,15 @@
   <script type="application/javascript">
   function doTest() {
     var tree =
-     { SECTION: [
-       { SECTION: [ // div
-         { LABEL: [ ] }, // link
-       ] },
-       { SECTION: [ // div table-cell referred by label
-         { TEXT_LEAF: [ ] }, // 'Z'
-         { TEXT_LEAF: [ ] }, // ' '
-       ] },
-     ] };
+      {SECTION: [
+       { role: ROLE_PUSHBUTTON, name: "Hello" },
+       { SECTION: [
+        { TEXT: [ { role: ROLE_TEXT_LEAF, name: "Hello" } ] },
+        { role: ROLE_TEXT_LEAF, name: "World" }
+       ]}
+      ]};
     testAccessibleTree("container", tree);
+    dumpTree("container");
 
     SimpleTest.finish();
   }
@@ -48,8 +47,10 @@
   </pre>
 
   <div id="container">
-    <div><label for="x"></label></div>
-    <div style="display: table-cell;" id="x">Z<span style='white-space:pre'> </span><span></span></div>
+    <div role="button" aria-labelledby="a"></div>
+    <div>
+      <span id="a">Hello</span><span id="b">World</span>
+    </div>
   </div>
 </body>
 </html>
