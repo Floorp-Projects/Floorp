@@ -76,16 +76,22 @@ object AccountSharing {
         }
     }
 
-    @Suppress("Recycle")
+    @Suppress("Recycle", "ComplexMethod")
     private fun queryForAccount(context: Context, packageName: String): ShareableAccount? {
         // assuming a certain formatting for all authorities from all sources
         val authority = "$packageName.fxa.auth"
+
         val client = context.contentResolver.acquireContentProviderClient(authority) ?: return null
-        return client.use {
+
+        // We don't use `.use` below because in older versions of Android (5, 6), ContentProviderClient
+        // does not implement an AutoCloseable interface. This won't be caught at compile time, but
+        // at runtime we'll get hit `IncompatibleClassChangeError` exception.
+        // See https://github.com/mozilla-mobile/android-components/issues/4038.
+        return try {
             val authAuthorityUri = Uri.parse("content://$authority")
             val authStateUri = Uri.withAppendedPath(authAuthorityUri, "state")
 
-            it.query(
+            client.query(
                 authStateUri,
                 arrayOf(KEY_EMAIL, KEY_SESSION_TOKEN, KEY_KSYNC, KEY_KXSCS),
                 null, null, null
@@ -108,6 +114,14 @@ object AccountSharing {
                 } else {
                     null
                 }
+            }
+        } finally {
+            // 'close' was added in API24. For earlier API versions, we need to use 'release'.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                client.close()
+            } else {
+                @Suppress("deprecation")
+                client.release()
             }
         }
     }
