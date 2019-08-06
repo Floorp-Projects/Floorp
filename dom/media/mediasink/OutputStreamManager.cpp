@@ -165,8 +165,7 @@ OutputStreamManager::OutputStreamManager(MediaStreamGraphImpl* aGraph,
       mPrincipalHandle(
           aAbstractMainThread,
           aPrincipal ? MakePrincipalHandle(aPrincipal) : PRINCIPAL_HANDLE_NONE,
-          "OutputStreamManager::mPrincipalHandle (Canonical)"),
-      mPrincipal(aPrincipal) {
+          "OutputStreamManager::mPrincipalHandle (Canonical)") {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
@@ -180,7 +179,7 @@ void OutputStreamManager::Add(DOMMediaStream* aDOMStream) {
                                 this, mAbstractMainThread, aDOMStream))
                             ->get();
   for (const auto& lt : mLiveTracks) {
-    p->AddTrack(lt->mSourceStream, lt->mType, mPrincipal, false);
+    p->AddTrack(lt->mSourceStream, lt->mType, mPrincipalHandle.Ref(), false);
   }
 }
 
@@ -260,7 +259,7 @@ already_AddRefed<SourceMediaStream> OutputStreamManager::AddTrack(
   mLiveTracks.AppendElement(MakeUnique<LiveTrack>(stream, aType));
   AutoRemoveDestroyedStreams();
   for (const auto& data : mStreams) {
-    data->AddTrack(stream, aType, mPrincipal, true);
+    data->AddTrack(stream, aType, mPrincipalHandle.Ref(), true);
   }
 
   return stream.forget();
@@ -320,12 +319,11 @@ OutputStreamManager::CanonicalPrincipalHandle() {
 
 void OutputStreamManager::SetPrincipal(nsIPrincipal* aPrincipal) {
   MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIPrincipal> principal = mPrincipal;
+  nsCOMPtr<nsIPrincipal> principal = GetPrincipalFromHandle(mPrincipalHandle);
   if (nsContentUtils::CombineResourcePrincipals(&principal, aPrincipal)) {
-    mPrincipal = principal;
     AutoRemoveDestroyedStreams();
     for (const UniquePtr<OutputStreamData>& data : mStreams) {
-      data->SetPrincipal(mPrincipal);
+      data->SetPrincipal(principal);
     }
     mPrincipalHandle = MakePrincipalHandle(principal);
   }
