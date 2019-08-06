@@ -259,10 +259,7 @@ var gSync = {
       return;
     }
 
-    if (
-      this.sendTabConfiguredAndLoading ||
-      this.sendTabTargets.length <= 0
-    ) {
+    if (this.sendTabConfiguredAndLoading || this.sendTabTargets.length <= 0) {
       PanelUI.showSubView("PanelUI-fxa-menu-sendtab-no-devices", anchor);
       return;
     }
