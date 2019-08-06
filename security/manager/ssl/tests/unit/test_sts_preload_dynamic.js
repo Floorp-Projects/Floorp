@@ -16,7 +16,9 @@ function run_test() {
   let SSService = Cc["@mozilla.org/ssservice;1"].getService(
     Ci.nsISiteSecurityService
   );
-  let secInfo = new FakeTransportSecurityInfo();
+  let secInfo = Cc[
+    "@mozilla.org/security/transportsecurityinfo;1"
+  ].createInstance(Ci.nsITransportSecurityInfo);
   let unlikelyHost = "highlyunlikely.example.com";
   let uri = Services.io.newURI("https://" + unlikelyHost);
   let subDomainUri = Services.io.newURI("https://subdomain." + unlikelyHost);
