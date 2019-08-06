@@ -518,64 +518,13 @@ class AutoBlockIntercepts {
 // Location service
 //---------------------------------------------------------------------------
 
-class StringTable {
- public:
-  StringTable() : mSet(64) {}
-
-  const char* Intern(const char* aString) {
-    StringHashSet::AddPtr p = mSet.lookupForAdd(aString);
-    if (p) {
-      return *p;
-    }
-
-    const char* newString = InfallibleAllocPolicy::strdup_(aString);
-    MOZ_ALWAYS_TRUE(mSet.add(p, newString));
-    return newString;
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    size_t n = 0;
-    n += mSet.shallowSizeOfExcludingThis(aMallocSizeOf);
-    for (auto iter = mSet.iter(); !iter.done(); iter.next()) {
-      n += aMallocSizeOf(iter.get());
-    }
-    return n;
-  }
-
- private:
-  struct StringHasher {
-    typedef const char* Lookup;
-
-    static mozilla::HashNumber hash(const char* const& aS) {
-      return HashString(aS);
-    }
-
-    static bool match(const char* const& aA, const char* const& aB) {
-      return strcmp(aA, aB) == 0;
-    }
-  };
-
-  typedef mozilla::HashSet<const char*, StringHasher, InfallibleAllocPolicy>
-      StringHashSet;
-
-  StringHashSet mSet;
-};
-
-class StringAlloc {
- public:
-  static char* copy(const char* aString) {
-    return InfallibleAllocPolicy::strdup_(aString);
-  }
-  static void free(char* aString) { InfallibleAllocPolicy::free_(aString); }
-};
-
 struct DescribeCodeAddressLock {
   static void Unlock() { gStateLock->Unlock(); }
   static void Lock() { gStateLock->Lock(); }
   static bool IsLocked() { return gStateLock->IsLocked(); }
 };
 
-typedef CodeAddressService<StringTable, StringAlloc, DescribeCodeAddressLock>
+typedef CodeAddressService<InfallibleAllocPolicy, DescribeCodeAddressLock>
     CodeAddressService;
 
 //---------------------------------------------------------------------------
