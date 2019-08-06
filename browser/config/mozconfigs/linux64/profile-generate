@@ -5,5 +5,5 @@ mk_add_options "export MOZ_AUTOMATION_PACKAGE_TESTS=0"
 mk_add_options "export MOZ_AUTOMATION_PACKAGE_GENERATED_SOURCES=0"
 mk_add_options "export MOZ_AUTOMATION_L10N_CHECK=0"
 
-ac_add_options --enable-profile-generate
+ac_add_options --enable-profile-generate=cross
 ac_add_options --disable-tests
