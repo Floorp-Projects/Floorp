@@ -7,6 +7,7 @@ package mozilla.components.service.glean.private
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import mozilla.components.service.glean.storages.TimingDistributionData
 import mozilla.components.service.glean.testing.GleanTestRule
 import mozilla.components.service.glean.timing.TimingManager
 import org.junit.After
@@ -164,16 +165,24 @@ class TimingDistributionMetricTypeTest {
         val testSamples = (1L..3L).toList().toLongArray()
         metric.accumulateSamples(testSamples)
 
+        val secondsToNanos = 1000L * 1000L * 1000L
+
         // Check that data was properly recorded in the second ping.
         assertTrue(metric.testHasValue("store1"))
         val snapshot = metric.testGetValue("store1")
         // Check the sum
-        assertEquals(6L, snapshot.sum)
+        assertEquals(6L * secondsToNanos, snapshot.sum)
         // Check that the 1L fell into the first bucket
-        assertEquals(1L, snapshot.values[1])
+        assertEquals(
+            1L, snapshot.values[TimingDistributionData.sampleToBucketMinimum(1 * secondsToNanos)]
+        )
         // Check that the 2L fell into the second bucket
-        assertEquals(1L, snapshot.values[2])
+        assertEquals(
+            1L, snapshot.values[TimingDistributionData.sampleToBucketMinimum(2 * secondsToNanos)]
+        )
         // Check that the 3L fell into the third bucket
-        assertEquals(1L, snapshot.values[3])
+        assertEquals(
+            1L, snapshot.values[TimingDistributionData.sampleToBucketMinimum(3 * secondsToNanos)]
+        )
     }
 }

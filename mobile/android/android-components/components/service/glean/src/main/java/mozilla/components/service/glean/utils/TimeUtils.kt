@@ -26,3 +26,23 @@ internal fun getAdjustedTime(timeUnit: TimeUnit, elapsedNanos: Long): Long {
         TimeUnit.Day -> AndroidTimeUnit.NANOSECONDS.toDays(elapsedNanos)
     }
 }
+
+/**
+ * Convenience method to get a time in a different unit to nanoseconds.
+ *
+ * @param timeUnit the unit the value is in
+ * @param value a time in the given unit
+ *
+ * @return the time, in nanoseconds
+ */
+internal fun timeToNanos(timeUnit: TimeUnit, value: Long): Long {
+    return when (timeUnit) {
+        TimeUnit.Nanosecond -> value
+        TimeUnit.Microsecond -> AndroidTimeUnit.MICROSECONDS.toNanos(value)
+        TimeUnit.Millisecond -> AndroidTimeUnit.MILLISECONDS.toNanos(value)
+        TimeUnit.Second -> AndroidTimeUnit.SECONDS.toNanos(value)
+        TimeUnit.Minute -> AndroidTimeUnit.MINUTES.toNanos(value)
+        TimeUnit.Hour -> AndroidTimeUnit.HOURS.toNanos(value)
+        TimeUnit.Day -> AndroidTimeUnit.DAYS.toNanos(value)
+    }
+}

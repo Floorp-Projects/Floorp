@@ -9,6 +9,8 @@ import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.private.CommonMetricData
+import mozilla.components.service.glean.private.TimeUnit
+import mozilla.components.service.glean.utils.timeToNanos
 
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.tryGetLong
@@ -76,24 +78,31 @@ internal open class TimingDistributionsStorageEngineImplementation(
      * Accumulate an array of samples for the provided metric.
      *
      * @param metricData the metric information for the timing distribution
-     * @param samples the values to accumulate, in nanoseconds
+     * @param samples the values to accumulate, in the given `timeUnit`
+     * @param timeUnit the unit that the given samples are in, defaults to nanoseconds
      */
     @Synchronized
     fun accumulateSamples(
         metricData: CommonMetricData,
-        samples: LongArray
+        samples: LongArray,
+        timeUnit: TimeUnit = TimeUnit.Nanosecond
     ) {
+        // Remove invalid samples, and convert to nanos
         var numTooLongSamples = 0
         var numNegativeSamples = 0
+        var factor = timeToNanos(timeUnit, 1)
         val validSamples = samples.map { sample ->
             if (sample < 0) {
                 numNegativeSamples += 1
                 0
-            } else if (sample > MAX_SAMPLE_TIME) {
-                numTooLongSamples += 1
-                MAX_SAMPLE_TIME
             } else {
-                sample
+                val sampleInNanos = sample * factor
+                if (sampleInNanos > MAX_SAMPLE_TIME) {
+                    numTooLongSamples += 1
+                    MAX_SAMPLE_TIME
+                } else {
+                    sampleInNanos
+                }
             }
         }
 

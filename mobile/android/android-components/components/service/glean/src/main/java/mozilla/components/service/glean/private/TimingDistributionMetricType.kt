@@ -93,7 +93,8 @@ data class TimingDistributionMetricType(
         Dispatchers.API.launch {
             TimingDistributionsStorageEngine.accumulateSamples(
                 metricData = this@TimingDistributionMetricType,
-                samples = samples
+                samples = samples,
+                timeUnit = timeUnit
             )
         }
     }
