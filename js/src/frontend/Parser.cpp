@@ -194,7 +194,7 @@ ParserBase::ParserBase(JSContext* cx, LifoAlloc& alloc,
       awaitHandling_(AwaitIsName),
       inParametersOfAsyncFunction_(false),
       parseGoal_(uint8_t(parseGoal)),
-      treeHolder_(cx) {
+      treeHolder_(cx, FunctionTreeHolder::Mode::Eager) {
 }
 
 bool ParserBase::checkOptions() {
@@ -344,9 +344,24 @@ FunctionBox* PerHandlerParser<ParseHandler>::newFunctionBox(
    * scanning, parsing and code generation for the whole script or top-level
    * function.
    */
-  FunctionBox* funbox = alloc_.new_<FunctionBox>(
-      cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
-      options().extraWarningsOption, generatorKind, asyncKind);
+
+  FunctionBox* funbox;
+  if (getTreeHolder().isDeferred()) {
+    funbox = alloc_.new_<FunctionBox>(
+        cx_, traceListHead_, fcd, toStringStart, inheritedDirectives,
+        options().extraWarningsOption, generatorKind, asyncKind);
+  } else {
+    Rooted<FunctionCreationData> functionData(cx_, fcd);
+    RootedFunction fun(cx_, AllocNewFunction(cx_, functionData));
+    if (!fun) {
+      ReportOutOfMemory(cx_);
+      return nullptr;
+    }
+    funbox = alloc_.new_<FunctionBox>(
+        cx_, traceListHead_, fun, toStringStart, inheritedDirectives,
+        options().extraWarningsOption, generatorKind, asyncKind);
+  }
+
   if (!funbox) {
     ReportOutOfMemory(cx_);
     return nullptr;
@@ -1736,9 +1751,19 @@ bool PerHandlerParser<SyntaxParseHandler>::finishFunction(
   // Emplace the data required for the lazy script here. It will
   // be emitted before the rest of script emission.
   funbox->lazyScriptData().emplace(cx_);
-  return funbox->lazyScriptData()->init(cx_, pc_->closedOverBindingsForLazy(),
-                                        pc_->innerFunctionBoxesForLazy,
-                                        pc_->sc()->strict());
+  if (!funbox->lazyScriptData()->init(cx_, pc_->closedOverBindingsForLazy(),
+                                      pc_->innerFunctionBoxesForLazy,
+                                      pc_->sc()->strict())) {
+    return false;
+  }
+
+  // If we can defer the LazyScript creation, we are now done.
+  if (getTreeHolder().isDeferred()) {
+    return true;
+  }
+
+  // Eager Function tree mode, emit the lazy script now.
+  return EmitLazyScript(cx_, funbox, sourceObject_, parseGoal());
 }
 
 bool ParserBase::publishLazyScripts(FunctionTree* root) {
@@ -2692,25 +2717,26 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
   return nodeList;
 }
 
-AutoPushTree::AutoPushTree(FunctionTreeHolder* holder)
-    : holder_(holder), oldParent_(holder_->getCurrentParent()) {
-  MOZ_ASSERT(holder->getCurrentParent());
+AutoPushTree::AutoPushTree(FunctionTreeHolder& holder)
+    : holder_(holder), oldParent_(holder_.getCurrentParent()) {
+  MOZ_ASSERT(holder_.getCurrentParent());
+  MOZ_ASSERT(!holder_.isEager());
 }
 
 bool AutoPushTree::init(JSContext* cx, FunctionBox* funbox) {
   // Add a new child, and set it as the current parent.
-  FunctionTree* child = holder_->getCurrentParent()->add(cx);
+  FunctionTree* child = holder_.getCurrentParent()->add(cx);
   if (!child) {
     return false;
   }
   child->setFunctionBox(funbox);
-  holder_->setCurrentParent(child);
+  holder_.setCurrentParent(child);
   return true;
 }
 
 AutoPushTree::~AutoPushTree() {
   // Restore the old parent.
-  holder_->setCurrentParent(oldParent_);
+  holder_.setCurrentParent(oldParent_);
 }
 
 void FunctionTree::dump(JSContext* cx, FunctionTree& node, int indent) {
@@ -2841,8 +2867,8 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
 
     // set syntaxParser's current parent to link tree and ensure tree
     // continuity.
-    syntaxParser->getTreeHolder()->setCurrentParent(
-        this->getTreeHolder()->getCurrentParent());
+    syntaxParser->getTreeHolder().setCurrentParent(
+        this->getTreeHolder().getCurrentParent());
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
             SyntaxParseHandler::NodeGeneric, pc_, funbox, inHandling,
