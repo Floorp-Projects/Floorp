@@ -28,6 +28,7 @@ NS_INTERFACE_MAP_BEGIN(nsViewSourceChannel)
   NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannel, mHttpChannel)
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIIdentChannel, mHttpChannel)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIHttpChannelInternal,
                                      mHttpChannelInternal)
   NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsICachingChannel, mCachingChannel)
