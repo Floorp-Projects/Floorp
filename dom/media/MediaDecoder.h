@@ -42,6 +42,7 @@ class MediaMemoryInfo;
 
 class AbstractThread;
 class DOMMediaStream;
+class DecoderBenchmark;
 class FrameStatistics;
 class VideoFrameContainer;
 class MediaFormatReader;
@@ -475,6 +476,8 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   void OnNextFrameStatus(MediaDecoderOwner::NextFrameStatus);
 
+  void OnStoreDecoderBenchmark(const VideoInfo& aInfo);
+
   void FinishShutdown();
 
   void ConnectMirrors(MediaDecoderStateMachine* aObject);
@@ -516,6 +519,9 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
 
   // Counters related to decode and presentation of frames.
   const RefPtr<FrameStatistics> mFrameStats;
+
+  // Store a benchmark of the decoder based on FrameStatistics.
+  RefPtr<DecoderBenchmark> mDecoderBenchmark;
 
   RefPtr<VideoFrameContainer> mVideoFrameContainer;
 
@@ -576,6 +582,7 @@ class MediaDecoder : public DecoderDoctorLifeLogger<MediaDecoder> {
   MediaEventListener mOnWaitingForKey;
   MediaEventListener mOnDecodeWarning;
   MediaEventListener mOnNextFrameStatus;
+  MediaEventListener mOnStoreDecoderBenchmark;
 
   // True if we have suspended video decoding.
   bool mIsVideoDecodingSuspended = false;
