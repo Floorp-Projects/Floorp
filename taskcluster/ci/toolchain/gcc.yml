@@ -16,7 +16,7 @@ linux64-gcc-6:
     treeherder:
         symbol: TL(gcc6)
     run:
-        script: build-gcc-6-linux.sh
+        script: build-gcc-linux.sh
         toolchain-alias: linux64-gcc
     fetches:
         fetch:
@@ -32,7 +32,7 @@ linux64-gcc-7:
     treeherder:
         symbol: TL(gcc7)
     run:
-        script: build-gcc-7-linux.sh
+        script: build-gcc-linux.sh
     fetches:
         fetch:
             - binutils-2.31.1
@@ -47,7 +47,7 @@ linux64-gcc-8:
     treeherder:
         symbol: TL(gcc8)
     run:
-        script: build-gcc-8-linux.sh
+        script: build-gcc-linux.sh
     fetches:
         fetch:
             - binutils-2.31.1
@@ -62,7 +62,7 @@ linux64-gcc-9:
     treeherder:
         symbol: TL(gcc9)
     run:
-        script: build-gcc-9-linux.sh
+        script: build-gcc-linux.sh
     fetches:
         fetch:
             - binutils-2.31.1
