@@ -1454,6 +1454,31 @@ bool nsCSPPolicy::hasDirective(CSPDirective aDir) const {
   return false;
 }
 
+bool nsCSPPolicy::allowsNavigateTo(nsIURI* aURI, bool aWasRedirected,
+                                   bool aEnforceWhitelist) const {
+  bool allowsNavigateTo = true;
+
+  for (unsigned long i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(
+            nsIContentSecurityPolicy::NAVIGATE_TO_DIRECTIVE)) {
+      // Early return if we can skip the whitelist AND 'unsafe-allow-redirects'
+      // is present.
+      if (!aEnforceWhitelist &&
+          mDirectives[i]->allows(CSP_UNSAFE_ALLOW_REDIRECTS, EmptyString(),
+                                 false)) {
+        return true;
+      }
+      // Otherwise, check against the whitelist.
+      if (!mDirectives[i]->permits(aURI, EmptyString(), aWasRedirected, false,
+                                   false, false)) {
+        allowsNavigateTo = false;
+      }
+    }
+  }
+
+  return allowsNavigateTo;
+}
+
 /*
  * Use this function only after ::allows() returned 'false'. Most and
  * foremost it's used to get the violated directive before sending reports.
