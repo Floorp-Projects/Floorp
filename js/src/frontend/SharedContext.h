@@ -323,7 +323,18 @@ class FunctionBox : public ObjectBox, public SharedContext {
   // has expressions.
   VarScope::Data* extraVarScopeBindings_;
 
+  FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+              uint32_t toStringStart, Directives directives, bool extraWarnings,
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
+              bool isArrow, bool isNamedLambda, bool isGetter, bool isSetter,
+              bool isMethod, bool isInterpreted, bool isInterpretedLazy,
+              FunctionFlags::FunctionKind kind, JSAtom* explicitName);
+
   void initWithEnclosingScope(Scope* enclosingScope, JSFunction* fun);
+
+  void initWithEnclosingParseContext(ParseContext* enclosing,
+                                     FunctionSyntaxKind kind, bool isArrow,
+                                     bool allowSuperProperty);
 
  public:
   // Back pointer used by asm.js for error messages.
@@ -435,8 +446,21 @@ class FunctionBox : public ObjectBox, public SharedContext {
     return lazyScriptData_;
   }
 
+  mozilla::Maybe<FunctionCreationData> functionCreationData_;
+  const mozilla::Maybe<FunctionCreationData>& functionCreationData() const {
+    return functionCreationData_;
+  }
+  mozilla::Maybe<FunctionCreationData>& functionCreationData() {
+    return functionCreationData_;
+  }
+
   FunctionBox(JSContext* cx, TraceListNode* traceListHead, JSFunction* fun,
               uint32_t toStringStart, Directives directives, bool extraWarnings,
+              GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
+
+  FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+              FunctionCreationData& data, uint32_t toStringStart,
+              Directives directives, bool extraWarnings,
               GeneratorKind generatorKind, FunctionAsyncKind asyncKind);
 
 #ifdef DEBUG
@@ -463,9 +487,23 @@ class FunctionBox : public ObjectBox, public SharedContext {
 
   void initFromLazyFunction(JSFunction* fun);
   void initStandaloneFunction(Scope* enclosingScope);
+
+  void initWithEnclosingParseContext(ParseContext* enclosing,
+                                     FunctionCreationData& fun,
+                                     FunctionSyntaxKind kind) {
+    initWithEnclosingParseContext(enclosing, kind, fun.flags.isArrow(),
+                                  fun.flags.allowSuperProperty());
+  }
+
   void initWithEnclosingParseContext(ParseContext* enclosing, JSFunction* fun,
-                                     FunctionSyntaxKind kind);
+                                     FunctionSyntaxKind kind) {
+    initWithEnclosingParseContext(enclosing, kind, fun->isArrow(),
+                                  fun->allowSuperProperty());
+  }
+
   void initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
+                            HasHeritage hasHeritage);
+  void initFieldInitializer(ParseContext* enclosing, FunctionCreationData& data,
                             HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
@@ -476,6 +514,12 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void finish();
 
   JSFunction* function() const { return &object()->as<JSFunction>(); }
+
+  // Initialize FunctionBox with a deferred allocation Function
+  void initializeFunction(JSFunction* fun) {
+    clobberFunction(fun);
+    synchronizeArgCount();
+  }
 
   void clobberFunction(JSFunction* function) {
     gcThing = function;
@@ -545,6 +589,13 @@ class FunctionBox : public ObjectBox, public SharedContext {
   bool needsPromiseResult() const { return isAsync() && !isGenerator(); }
 
   bool isArrow() const { return isArrow_; }
+  bool isLambda() const {
+    if (hasObject()) {
+      return function()->isLambda();
+    }
+    MOZ_ASSERT(functionCreationData().isSome());
+    return functionCreationData()->flags.isLambda();
+  }
 
   bool hasRest() const { return hasRest_; }
   void setHasRest() { hasRest_ = true; }
@@ -591,11 +642,17 @@ class FunctionBox : public ObjectBox, public SharedContext {
     definitelyNeedsArgsObj_ = true;
   }
   void setNeedsHomeObject() {
-    MOZ_ASSERT(function()->allowSuperProperty());
+    MOZ_ASSERT_IF(hasObject(), function()->allowSuperProperty());
+    MOZ_ASSERT_IF(!hasObject(), functionCreationData().isSome());
+    MOZ_ASSERT_IF(!hasObject(),
+                  functionCreationData()->flags.allowSuperProperty());
     needsHomeObject_ = true;
   }
   void setDerivedClassConstructor() {
-    MOZ_ASSERT(function()->isClassConstructor());
+    MOZ_ASSERT_IF(hasObject(), function()->isClassConstructor());
+    MOZ_ASSERT_IF(!hasObject(), functionCreationData().isSome());
+    MOZ_ASSERT_IF(!hasObject(),
+                  functionCreationData()->flags.isClassConstructor());
     isDerivedClassConstructor_ = true;
   }
   void setHasInnerFunctions() { hasInnerFunctions_ = true; }
@@ -642,7 +699,12 @@ class FunctionBox : public ObjectBox, public SharedContext {
   size_t nargs() { return nargs_; }
 
   // Flush the acquired argCount to the associated function.
-  void synchronizeArgCount() { function()->setArgCount(nargs_); }
+  // If the function doesn't exist yet, this of course isn't necessary;
+  void synchronizeArgCount() {
+    if (hasObject()) {
+      function()->setArgCount(nargs_);
+    }
+  }
 
   void trace(JSTracer* trc) override;
 };

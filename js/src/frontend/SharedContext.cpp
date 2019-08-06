@@ -115,11 +115,14 @@ bool FunctionBox::atomsAreKept() { return cx_->zone()->hasKeptAtoms(); }
 #endif
 
 FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
-                         JSFunction* fun, uint32_t toStringStart,
-                         Directives directives, bool extraWarnings,
-                         GeneratorKind generatorKind,
-                         FunctionAsyncKind asyncKind)
-    : ObjectBox(fun, traceListHead),
+                         uint32_t toStringStart, Directives directives,
+                         bool extraWarnings, GeneratorKind generatorKind,
+                         FunctionAsyncKind asyncKind, bool isArrow,
+                         bool isNamedLambda, bool isGetter, bool isSetter,
+                         bool isMethod, bool isInterpreted,
+                         bool isInterpretedLazy,
+                         FunctionFlags::FunctionKind kind, JSAtom* explicitName)
+    : ObjectBox(traceListHead),
       SharedContext(cx, Kind::FunctionBox, directives, extraWarnings),
       enclosingScope_(nullptr),
       namedLambdaBindings_(nullptr),
@@ -156,20 +159,46 @@ FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
       isDerivedClassConstructor_(false),
       hasThisBinding_(false),
       hasInnerFunctions_(false),
-      isArrow_(fun->isArrow()),
-      isNamedLambda_(fun->isNamedLambda()),
-      isGetter_(fun->isGetter()),
-      isSetter_(fun->isSetter()),
-      isMethod_(fun->isMethod()),
-      isInterpreted_(fun->isInterpreted()),
-      isInterpretedLazy_(fun->isInterpretedLazy()),
-      kind_(fun->kind()),
-      explicitName_(fun->explicitName()),
-      nargs_(0) {
+      isArrow_(isArrow),
+      isNamedLambda_(isNamedLambda),
+      isGetter_(isGetter),
+      isSetter_(isSetter),
+      isMethod_(isMethod),
+      isInterpreted_(isInterpreted),
+      isInterpretedLazy_(isInterpretedLazy),
+      kind_(kind),
+      explicitName_(explicitName),
+      nargs_(0) {}
+
+FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+                         JSFunction* fun, uint32_t toStringStart,
+                         Directives directives, bool extraWarnings,
+                         GeneratorKind generatorKind,
+                         FunctionAsyncKind asyncKind)
+    : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
+                  generatorKind, asyncKind, fun->isArrow(),
+                  fun->isNamedLambda(), fun->isGetter(), fun->isSetter(),
+                  fun->isMethod(), fun->isInterpreted(),
+                  fun->isInterpretedLazy(), fun->kind(), fun->explicitName()) {
+  gcThing = fun;
   // Functions created at parse time may be set singleton after parsing and
   // baked into JIT code, so they must be allocated tenured. They are held by
   // the JSScript so cannot be collected during a minor GC anyway.
   MOZ_ASSERT(fun->isTenured());
+}
+
+FunctionBox::FunctionBox(JSContext* cx, TraceListNode* traceListHead,
+                         FunctionCreationData& data, uint32_t toStringStart,
+                         Directives directives, bool extraWarnings,
+                         GeneratorKind generatorKind,
+                         FunctionAsyncKind asyncKind)
+    : FunctionBox(cx, traceListHead, toStringStart, directives, extraWarnings,
+                  generatorKind, asyncKind, data.flags.isArrow(),
+                  data.isNamedLambda(), data.flags.isGetter(),
+                  data.flags.isSetter(), data.flags.isMethod(),
+                  data.flags.isInterpreted(), data.flags.isInterpretedLazy(),
+                  data.flags.kind(), data.atom) {
+  functionCreationData_.emplace(data);
 }
 
 void FunctionBox::initFromLazyFunction(JSFunction* fun) {
@@ -197,13 +226,14 @@ void FunctionBox::initStandaloneFunction(Scope* enclosingScope) {
 }
 
 void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
-                                                JSFunction* fun,
-                                                FunctionSyntaxKind kind) {
+                                                FunctionSyntaxKind kind,
+                                                bool isArrow,
+                                                bool allowSuperProperty) {
   SharedContext* sc = enclosing->sc();
   useAsm = sc->isFunctionBox() && sc->asFunctionBox()->useAsmOrInsideUseAsm();
 
   // Arrow functions don't have their own `this` binding.
-  if (fun->isArrow()) {
+  if (isArrow) {
     allowNewTarget_ = sc->allowNewTarget();
     allowSuperProperty_ = sc->allowSuperProperty();
     allowSuperCall_ = sc->allowSuperCall();
@@ -212,7 +242,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     thisBinding_ = sc->thisBinding();
   } else {
     allowNewTarget_ = true;
-    allowSuperProperty_ = fun->allowSuperProperty();
+    allowSuperProperty_ = allowSuperProperty;
 
     if (IsConstructorKind(kind)) {
       auto stmt =
@@ -241,9 +271,10 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
   }
 }
 
-void FunctionBox::initFieldInitializer(ParseContext* enclosing, JSFunction* fun,
+void FunctionBox::initFieldInitializer(ParseContext* enclosing,
+                                       FunctionCreationData& data,
                                        HasHeritage hasHeritage) {
-  this->initWithEnclosingParseContext(enclosing, fun,
+  this->initWithEnclosingParseContext(enclosing, data,
                                       FunctionSyntaxKind::Expression);
   allowSuperProperty_ = true;
   allowSuperCall_ = false;
