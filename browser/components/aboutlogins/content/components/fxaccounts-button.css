@@ -11,9 +11,8 @@
 .fxaccounts-extra-text {
   color: var(--in-content-deemphasized-text);
   font-size: smaller;
-  width: 250px;
+  max-width: 20ch;
   text-align: end;
-  margin-inline-start: 36px;
 }
 
 .fxaccounts-avatar-button,
