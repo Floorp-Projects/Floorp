@@ -97,7 +97,6 @@ using mozilla::Telemetry::DynamicScalarDefinition from "mozilla/TelemetryComms.h
 using mozilla::Telemetry::ChildEventData from "mozilla/TelemetryComms.h";
 using mozilla::Telemetry::DiscardedData from "mozilla/TelemetryComms.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
-using refcounted class nsIInputStream from "mozilla/ipc/IPCStreamUtils.h";
 using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
