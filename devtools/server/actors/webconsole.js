@@ -216,7 +216,6 @@ const WebConsoleActor = ActorClassWithSpec(webconsoleSpec, {
     }
 
     this.traits = {
-      transferredResponseSize: true,
       selectedObjectActor: true, // 44+
     };
 
