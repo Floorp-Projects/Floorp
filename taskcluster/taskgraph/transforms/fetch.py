@@ -71,7 +71,10 @@ FETCH_SCHEMA = Schema({
                 Required('key-path'): basestring,
             },
 
-            # The name to give to the generated artifact.
+            # The name to give to the generated artifact. Defaults to the file
+            # portion of the URL. Using a different extension converts the
+            # archive to the given type. Only conversion to .tar.zst is
+            # supported.
             Optional('artifact-name'): basestring,
 
             # IMPORTANT: when adding anything that changes the behavior of the task,

@@ -7,6 +7,7 @@ import argparse
 import bz2
 import concurrent.futures
 import contextlib
+import datetime
 import gzip
 import hashlib
 import json
@@ -15,6 +16,7 @@ import multiprocessing
 import os
 import pathlib
 import random
+import stat
 import subprocess
 import sys
 import tarfile
@@ -22,6 +24,7 @@ import tempfile
 import time
 import urllib.parse
 import urllib.request
+import zipfile
 
 try:
     import zstandard
@@ -39,6 +42,18 @@ def log(msg):
 
 class IntegrityError(Exception):
     """Represents an integrity error when downloading a URL."""
+
+
+def ZstdCompressor(*args, **kwargs):
+    if not zstandard:
+        raise ValueError('zstandard Python package not available')
+    return zstandard.ZstdCompressor(*args, **kwargs)
+
+
+def ZstdDecompressor(*args, **kwargs):
+    if not zstandard:
+        raise ValueError('zstandard Python package not available')
+    return zstandard.ZstdDecompressor(*args, **kwargs)
 
 
 @contextlib.contextmanager
@@ -257,6 +272,23 @@ def gpg_verify_path(path: pathlib.Path, public_key_data: bytes,
             subprocess.run(['gpgconf', '--kill', 'gpg-agent'], env=env)
 
 
+def open_tar_stream(path: pathlib.Path):
+    """"""
+    if path.suffix == '.bz2':
+        return bz2.open(str(path), 'rb')
+    elif path.suffix == '.gz':
+        return gzip.open(str(path), 'rb')
+    elif path.suffix == '.xz':
+        return lzma.open(str(path), 'rb')
+    elif path.suffix == '.zst':
+        dctx = ZstdDecompressor()
+        return dctx.stream_reader(path.open('rb'))
+    elif path.suffix == '.tar':
+        return path.open('rb')
+    else:
+        raise ValueError('unknown archive format for tar file: %s' % path)
+
+
 def archive_type(path: pathlib.Path):
     """Attempt to identify a path as an extractable archive."""
     if path.suffixes[-2:-1] == ['.tar']:
@@ -280,22 +312,7 @@ def extract_archive(path, dest_dir, typ):
     # We pipe input to the decompressor program so that we can apply
     # custom decompressors that the program may not know about.
     if typ == 'tar':
-        if path.suffix == '.bz2':
-            ifh = bz2.open(str(path), 'rb')
-        elif path.suffix == '.gz':
-            ifh = gzip.open(str(path), 'rb')
-        elif path.suffix == '.xz':
-            ifh = lzma.open(str(path), 'rb')
-        elif path.suffix == '.zst':
-            if not zstandard:
-                raise ValueError('zstandard Python package not available')
-            dctx = zstandard.ZstdDecompressor()
-            ifh = dctx.stream_reader(path.open('rb'))
-        elif path.suffix == '.tar':
-            ifh = path.open('rb')
-        else:
-            raise ValueError('unknown archive format for tar file: %s' % path)
-
+        ifh = open_tar_stream(path)
         # On Windows, the tar program doesn't support things like symbolic
         # links, while Windows actually support them. The tarfile module in
         # python does. So use that. But since it's significantly slower than
@@ -334,6 +351,69 @@ def extract_archive(path, dest_dir, typ):
             raise Exception('%r exited %d' % (args, p.returncode))
 
     log('%s extracted in %.3fs' % (path, time.time() - t0))
+
+
+def repack_archive(orig: pathlib.Path, dest: pathlib.Path):
+    assert orig != dest
+    log('Repacking as %s' % dest)
+    orig_typ = archive_type(orig)
+    typ = archive_type(dest)
+    if not orig_typ:
+        raise Exception('Archive type not supported for %s' % orig.name)
+    if not typ:
+        raise Exception('Archive type not supported for %s' % dest.name)
+
+    if dest.suffixes[-2:] != ['.tar', '.zst']:
+        raise Exception('Only producing .tar.zst archives is supported.')
+
+    with rename_after_close(dest, 'wb') as fh:
+        ctx = ZstdCompressor()
+        if orig_typ == 'zip':
+            assert typ == 'tar'
+            zip = zipfile.ZipFile(orig)
+            # Convert the zip stream to a tar on the fly.
+            with ctx.stream_writer(fh) as compressor, \
+                    tarfile.open(fileobj=compressor, mode='w:') as tar:
+                for zipinfo in zip.infolist():
+                    if zipinfo.is_dir():
+                        continue
+                    tarinfo = tarfile.TarInfo()
+                    filename = zipinfo.filename
+                    tarinfo.name = filename
+                    tarinfo.size = zipinfo.file_size
+                    # Zip files don't have any knowledge of the timezone
+                    # they were created in. Which is not really convenient to
+                    # reliably convert to a timestamp. But we don't really
+                    # care about accuracy, but rather about reproducibility,
+                    # so we pick UTC.
+                    time = datetime.datetime(
+                        *zipinfo.date_time, tzinfo=datetime.timezone.utc)
+                    tarinfo.mtime = time.timestamp()
+                    # 0 is MS-DOS, 3 is UNIX. Only in the latter case do we
+                    # get anything useful for the tar file mode.
+                    if zipinfo.create_system == 3:
+                        mode = zipinfo.external_attr >> 16
+                    else:
+                        mode = 0o0644
+                    tarinfo.mode = stat.S_IMODE(mode)
+                    if stat.S_ISLNK(mode):
+                        tarinfo.type = tarfile.SYMTYPE
+                        tarinfo.linkname = zip.read(filename).decode()
+                        tar.addfile(tarinfo, zip.open(filename))
+                    elif stat.S_ISREG(mode) or stat.S_IFMT(mode) == 0:
+                        tar.addfile(tarinfo, zip.open(filename))
+                    else:
+                        raise Exception('Unsupported file mode %o'
+                                        % stat.S_IFMT(mode))
+
+        elif orig_typ == 'tar':
+            if typ == 'zip':
+                raise Exception('Repacking a tar to zip is not supported')
+            assert typ == 'tar'
+
+            ifh = open_tar_stream(orig)
+            # We only change compression here. The tar stream is unchanged.
+            ctx.copy_stream(ifh, fh)
 
 
 def fetch_and_extract(url, dest_dir, extract=True, sha256=None, size=None):
@@ -379,9 +459,6 @@ def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
     if dest_path.suffixes[-2:] != ['.tar', '.zst']:
         raise Exception('Only producing .tar.zst archives is supported.')
 
-    if not zstandard:
-        raise ValueError('zstandard Python package not available')
-
     with tempfile.TemporaryDirectory() as td:
         temp_dir = pathlib.Path(td)
 
@@ -403,7 +480,7 @@ def git_checkout_archive(dest_path: pathlib.Path, repo: str, commit: str,
         ], stdout=subprocess.PIPE)
 
         with rename_after_close(dest_path, 'wb') as out:
-            ctx = zstandard.ZstdCompressor()
+            ctx = ZstdCompressor()
             ctx.copy_stream(proc.stdout, out)
 
         proc.wait()
@@ -439,19 +516,31 @@ def command_static_url(args):
     dest = pathlib.Path(args.dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
 
+    basename = urllib.parse.urlparse(args.url).path.split('/')[-1]
+    if basename.endswith(''.join(dest.suffixes)):
+        dl_dest = dest
+    else:
+        dl_dest = dest.parent / basename
+
     try:
-        download_to_path(args.url, dest, sha256=args.sha256, size=args.size)
+        download_to_path(args.url, dl_dest, sha256=args.sha256, size=args.size)
 
         if gpg_sig_url:
-            gpg_verify_path(dest, gpg_key, gpg_signature)
+            gpg_verify_path(dl_dest, gpg_key, gpg_signature)
 
+        if dl_dest != dest:
+            repack_archive(dl_dest, dest)
     except Exception:
         try:
-            dest.unlink()
+            dl_dest.unlink()
         except FileNotFoundError:
             pass
 
         raise
+
+    if dl_dest != dest:
+        log('Removing %s' % dl_dest)
+        dl_dest.unlink()
 
 
 def api(root_url, service, version, path):
