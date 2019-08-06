@@ -36,6 +36,7 @@ public class WebExtensionController {
          * @param source An instance of {@link WebExtension} or null if extension was not registered
          *               with GeckoRuntime.registerWebextension
          * @param session An instance of {@link GeckoSession} to be closed.
+         * @return GeckoResult.ALLOW if the tab will be closed, GeckoResult.DENY otherwise
          */
         @UiThread
         @NonNull
