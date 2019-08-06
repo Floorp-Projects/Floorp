@@ -109,8 +109,8 @@ class DebianBootstrapper(NasmInstall, NodeInstall, StyloInstall, ClangStaticAnal
                             self.which('python3.5')])
 
         if not have_python3:
-            python3_packages = self.check_output([
-                'apt-cache', 'pkgnames', 'python3'])
+            python3_packages = self.check_output(
+                ['apt-cache', 'pkgnames', 'python3'], universal_newlines=True)
             python3_packages = python3_packages.splitlines()
 
             if 'python3' in python3_packages:
