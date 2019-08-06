@@ -121,42 +121,6 @@ static bool PrintCycle(
   return maybeImminent;
 }
 
-#  ifndef MOZ_CALLSTACK_DISABLED
-struct CodeAddressServiceLock final {
-  static void Unlock() {}
-  static void Lock() {}
-  static bool IsLocked() { return true; }
-};
-
-struct CodeAddressServiceStringAlloc final {
-  static char* copy(const char* aString) { return ::strdup(aString); }
-  static void free(char* aString) { ::free(aString); }
-};
-
-class CodeAddressServiceStringTable final {
- public:
-  CodeAddressServiceStringTable() : mSet(32) {}
-
-  const char* Intern(const char* aString) {
-    nsCharPtrHashKey* e = mSet.PutEntry(aString);
-    return e->GetKey();
-  }
-
-  size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
-    return mSet.SizeOfExcludingThis(aMallocSizeOf);
-  }
-
- private:
-  typedef nsTHashtable<nsCharPtrHashKey> StringSet;
-  StringSet mSet;
-};
-
-typedef CodeAddressService<CodeAddressServiceStringTable,
-                           CodeAddressServiceStringAlloc,
-                           CodeAddressServiceLock>
-    WalkTheStackCodeAddressService;
-#  endif
-
 bool BlockingResourceBase::Print(nsACString& aOut) const {
   fprintf(stderr, "--- %s : %s", kResourceTypeName[mType], mName);
   aOut += BlockingResourceBase::kResourceTypeName[mType];
@@ -176,7 +140,7 @@ bool BlockingResourceBase::Print(nsACString& aOut) const {
 #  else
   const AcquisitionState& state = acquired ? mAcquired : mFirstSeen;
 
-  WalkTheStackCodeAddressService addressService;
+  CodeAddressService<> addressService;
 
   for (uint32_t i = 0; i < state.ref().Length(); i++) {
     const size_t kMaxLength = 1024;
