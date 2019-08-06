@@ -5,6 +5,30 @@
   <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    iframe{
+      border: 1px solid orange;
+    }
+  </style>
+
+  <iframe src="file_nosniff_navigation.sjs?xml"> </iframe>
+  <iframe src="file_nosniff_navigation.sjs?html"></iframe>
+  <iframe src="file_nosniff_navigation.sjs?css" ></iframe>
+  <iframe src="file_nosniff_navigation.sjs?json"></iframe>
+  <iframe src="file_nosniff_navigation.sjs?img"></iframe>
+ 
+  <hr>
+  <iframe src="file_nosniff_navigation_mismatch.sjs?html"></iframe>
+  <iframe src="file_nosniff_navigation_mismatch.sjs?xml"></iframe>
+  <iframe src="file_nosniff_navigation_mismatch.sjs"></iframe>
+
+  <iframe src="file_nosniff_navigation_garbage.sjs?xml"> </iframe>
+  <iframe src="file_nosniff_navigation_garbage.sjs?html"></iframe>
+  <iframe src="file_nosniff_navigation_garbage.sjs?css" ></iframe>
+  <iframe src="file_nosniff_navigation_garbage.sjs?json"></iframe>
+  <iframe src="file_nosniff_navigation_garbage.sjs?img"></iframe>
+ 
+
 </head>
 <body>
 
@@ -25,12 +49,16 @@
 
 SimpleTest.waitForExplicitFinish();
 
-window.addEventListener("load",async  ()=>{
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.security.respect_document_nosniff", true]]}, ()=>{
-      window.open("window_nosniff_navigation.html");
-    });
- 
+window.addEventListener("load", ()=>{
+  let iframes = Array.from(document.querySelectorAll("iframe"));
+
+  iframes.forEach( frame => {
+    let result = frame.contentWindow.document.URL == "about:blank";
+    let sniffTarget = (new URL(frame.src)).search;
+    ok(result, `${sniffTarget} - was not Sniffed`);
+  });
+  
+  SimpleTest.finish();
 });
 </script>
 </body>
