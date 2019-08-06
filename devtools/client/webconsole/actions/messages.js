@@ -118,29 +118,14 @@ function messageGetMatchingElements(id, cssSelectors) {
   };
 }
 
-function messageGetTableData(id, client, dataType) {
-  return async ({ dispatch }) => {
-    let enumResponse;
-    try {
-      if (["Map", "WeakMap", "Set", "WeakSet"].includes(dataType)) {
-        enumResponse = await client.enumEntries();
-      } else {
-        enumResponse = await client.enumProperties({
-          ignoreNonIndexedProperties: dataType === "Array",
-        });
-      }
-    } catch (e) {
-      if (e.error === "noSuchActor") {
-        return;
-      }
-    }
+function messageGetTableData(id, grip, dataType) {
+  return async ({ dispatch, services }) => {
+    const needEntries = ["Map", "WeakMap", "Set", "WeakSet"].includes(dataType);
+    const results = await (needEntries
+      ? services.fetchObjectEntries(grip)
+      : services.fetchObjectProperties(grip, dataType === "Array"));
 
-    const { iterator } = enumResponse;
-    // eslint-disable-next-line mozilla/use-returnValue
-    iterator.slice(0, iterator.count, sliceResponse => {
-      const { ownProperties } = sliceResponse;
-      dispatch(messageUpdatePayload(id, ownProperties));
-    });
+    dispatch(messageUpdatePayload(id, results));
   };
 }
 

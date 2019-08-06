@@ -100,7 +100,6 @@ class WebConsoleWrapper {
             ])
           );
         },
-        proxy: webConsoleUI.proxy,
         openLink: (url, e) => {
           webConsoleUI.hud.openLink(url, e);
         },
@@ -119,6 +118,20 @@ class WebConsoleWrapper {
         },
         createElement: nodename => {
           return this.document.createElement(nodename);
+        },
+        fetchObjectProperties: async (grip, ignoreNonIndexedProperties) => {
+          const client = new ObjectClient(this.hud.target.client, grip);
+          const { iterator } = await client.enumProperties({
+            ignoreNonIndexedProperties,
+          });
+          const { ownProperties } = await iterator.slice(0, iterator.count);
+          return ownProperties;
+        },
+        fetchObjectEntries: async grip => {
+          const client = new ObjectClient(this.hud.target.client, grip);
+          const { iterator } = await client.enumEntries();
+          const { ownProperties } = await iterator.slice(0, iterator.count);
+          return ownProperties;
         },
         getLongString: grip => {
           return webConsoleUI.proxy.webConsoleClient.getString(grip);

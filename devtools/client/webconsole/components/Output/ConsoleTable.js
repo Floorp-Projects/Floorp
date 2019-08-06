@@ -8,7 +8,6 @@ const {
   createFactory,
 } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
-const ObjectClient = require("devtools/shared/client/object-client");
 const actions = require("devtools/client/webconsole/actions/messages");
 const { l10n } = require("devtools/client/webconsole/utils/messages");
 const { MODE } = require("devtools/client/shared/components/reps/reps");
@@ -30,9 +29,7 @@ class ConsoleTable extends Component {
     return {
       dispatch: PropTypes.func.isRequired,
       parameters: PropTypes.array.isRequired,
-      serviceContainer: PropTypes.shape({
-        proxy: PropTypes.object.isRequired,
-      }),
+      serviceContainer: PropTypes.object.isRequired,
       id: PropTypes.string.isRequired,
       tableData: PropTypes.object,
     };
@@ -45,20 +42,20 @@ class ConsoleTable extends Component {
   }
 
   componentWillMount() {
-    const { id, dispatch, serviceContainer, parameters } = this.props;
+    const { id, dispatch, parameters } = this.props;
 
     if (!Array.isArray(parameters) || parameters.length === 0) {
       return;
     }
 
-    const client = new ObjectClient(
-      serviceContainer.proxy.client,
-      parameters[0]
-    );
-    const dataType = getParametersDataType(parameters);
-
     // Get all the object properties.
-    dispatch(actions.messageGetTableData(id, client, dataType));
+    dispatch(
+      actions.messageGetTableData(
+        id,
+        parameters[0],
+        getParametersDataType(parameters)
+      )
+    );
   }
 
   getHeaders(columns) {
