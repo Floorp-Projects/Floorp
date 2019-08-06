@@ -220,7 +220,7 @@ function updateResourcesGraph() {
 }
 
 function renderKey(key) {
-  d3.json("/resources/" + key, function onResource(error, response) {
+  d3.json(key, function onResource(error, response) {
     if (error) {
       alert("Data not available. Is the server still running?");
       return;
