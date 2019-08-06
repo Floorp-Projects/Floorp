@@ -18,7 +18,7 @@ class HTTPHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         s = self.server.wrapper
         p = self.path
 
-        if p == '/list':
+        if p == '/build_resources.json':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.end_headers()
