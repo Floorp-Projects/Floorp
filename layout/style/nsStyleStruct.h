@@ -960,7 +960,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   using StyleMaxSize = mozilla::StyleMaxSize;
   using StyleFlexBasis = mozilla::StyleFlexBasis;
   using WritingMode = mozilla::WritingMode;
-  using StyleTrackSize = mozilla::StyleTrackSize;
+  using StyleImplicitGridTracks = mozilla::StyleImplicitGridTracks;
 
   explicit nsStylePosition(const mozilla::dom::Document&);
   nsStylePosition(const nsStylePosition& aOther);
@@ -1002,8 +1002,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   StyleSize mMinHeight;
   StyleMaxSize mMaxHeight;
   StyleFlexBasis mFlexBasis;
-  StyleTrackSize mGridAutoColumns;
-  StyleTrackSize mGridAutoRows;
+  StyleImplicitGridTracks mGridAutoColumns;
+  StyleImplicitGridTracks mGridAutoRows;
   float mAspectRatio;
   uint8_t mGridAutoFlow;  // NS_STYLE_GRID_AUTO_FLOW_*
   mozilla::StyleBoxSizing mBoxSizing;
