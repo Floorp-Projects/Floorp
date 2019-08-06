@@ -12,7 +12,7 @@
 #identity-popup,
 #protections-popup {
   font-size: 1.1em;
-  --popup-width: 33rem;
+  --popup-width: 33em;
   /* Set default fill for icons in the identity popup.
      Individual icons can override this. */
   fill: currentColor;
