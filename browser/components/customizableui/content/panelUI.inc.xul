@@ -794,6 +794,26 @@
                        oncommand="gSync.openSendFromFxaMenu(this);"/>
       </vbox>
     </panelview>
+    <panelview id="PanelUI-fxa-menu-sendtab-not-configured" flex="1" class="PanelUI-subView">
+      <vbox id="PanelUI-fxa-sendtab-not-configured" align="center" class="panel-subview-body">
+        <image class="fxaSendToDeviceLogo" role="presentation"/>
+        <label class="PanelUI-fxa-service-description-label">&fxa.service.sendTab.description;</label>
+        <toolbarbutton id="PanelUI-fxa-menu-sendtab-not-configured-button"
+                       class="PanelUI-fxa-signin-button"
+                       label="&fxa.menu.signin.label;"
+                       oncommand="gSync.openFxAEmailFirstPageFromFxaMenu(this);"/>
+      </vbox>
+    </panelview>
+    <panelview id="PanelUI-fxa-menu-sendtab-no-devices" flex="1" class="PanelUI-subView">
+      <vbox id="PanelUI-fxa-sendtab-no-devices" align="center" class="panel-subview-body">
+        <image class="fxaSendToDeviceLogo" role="presentation"/>
+        <label class="PanelUI-fxa-service-description-label">&fxa.service.sendTab.description;</label>
+        <toolbarbutton id="PanelUI-fxa-menu-sendtab-connect-device-button"
+                       class="PanelUI-fxa-signin-button"
+                       label="&appMenuRemoteTabs.connectdevice.label;"
+                       oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
+      </vbox>
+    </panelview>
 
     <panelview id="PanelUI-bookmarkingTools" class="PanelUI-subView">
       <vbox class="panel-subview-body">

@@ -132,6 +132,7 @@
   skin/classic/browser/fxa/fxa-spinner.svg                     (../shared/fxa/fxa-spinner.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
+  skin/classic/browser/fxa/send-to-device.svg                  (../shared/fxa/send-to-device.svg)
 
   skin/classic/browser/fxa/avatar.svg                          (../shared/fxa/avatar.svg)
   skin/classic/browser/fxa/avatar-color.svg                    (../shared/fxa/avatar-color.svg)
