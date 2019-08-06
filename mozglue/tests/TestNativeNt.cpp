@@ -151,5 +151,22 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
+  Maybe<Span<IMAGE_THUNK_DATA>> iatThunks =
+      k32headers.GetIATThunksForModule("kernel32.dll");
+  if (iatThunks) {
+    printf(
+        "TEST-FAILED | NativeNt | Detected the IAT thunk for kernel32 "
+        "in kernel32.dll\n");
+    return 1;
+  }
+
+  iatThunks = k32headers.GetIATThunksForModule("ntdll.dll");
+  if (!iatThunks) {
+    printf(
+        "TEST-FAILED | NativeNt | Unable to find the IAT thunk for "
+        "ntdll.dll in kernel32.dll\n");
+    return 1;
+  }
+
   return 0;
 }

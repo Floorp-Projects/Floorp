@@ -369,17 +369,18 @@ LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
     return importDirRestored;
   }
 
-  Maybe<nt::PEHeaders::IATThunks> ntdllThunks =
+  Maybe<Span<IMAGE_THUNK_DATA>> ntdllThunks =
       ourExeImage.GetIATThunksForModule("ntdll.dll");
   if (!ntdllThunks) {
     return LAUNCHER_ERROR_FROM_WIN32(ERROR_INVALID_DATA);
   }
 
-  PIMAGE_THUNK_DATA firstIatThunk = ntdllThunks.value().mFirstThunk;
-  SIZE_T iatLength = ntdllThunks.value().Length();
   SIZE_T bytesWritten;
 
   {  // Scope for prot
+    PIMAGE_THUNK_DATA firstIatThunk = ntdllThunks.value().data();
+    SIZE_T iatLength = ntdllThunks.value().LengthBytes();
+
     AutoVirtualProtect prot(firstIatThunk, iatLength, PAGE_READWRITE,
                             aChildProcess);
     if (!prot) {
