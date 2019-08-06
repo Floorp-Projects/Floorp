@@ -30,7 +30,7 @@ class RequestListColumnWaterfall extends Component {
   static get propTypes() {
     return {
       connector: PropTypes.object.isRequired,
-      firstRequestStartedMillis: PropTypes.number.isRequired,
+      firstRequestStartedMs: PropTypes.number.isRequired,
       item: PropTypes.object.isRequired,
       onWaterfallMouseDown: PropTypes.func.isRequired,
     };
@@ -52,9 +52,7 @@ class RequestListColumnWaterfall extends Component {
         UPDATED_WATERFALL_PROPS,
         this.props.item,
         nextProps.item
-      ) ||
-      this.props.firstRequestStartedMillis !==
-        nextProps.firstRequestStartedMillis
+      ) || this.props.firstRequestStartedMs !== nextProps.firstRequestStartedMs
     );
   }
 
@@ -142,11 +140,7 @@ class RequestListColumnWaterfall extends Component {
   }
 
   render() {
-    const {
-      firstRequestStartedMillis,
-      item,
-      onWaterfallMouseDown,
-    } = this.props;
+    const { firstRequestStartedMs, item, onWaterfallMouseDown } = this.props;
 
     return dom.td(
       {
@@ -161,8 +155,7 @@ class RequestListColumnWaterfall extends Component {
         {
           className: "requests-list-timings",
           style: {
-            paddingInlineStart: `${item.startedMillis -
-              firstRequestStartedMillis}px`,
+            paddingInlineStart: `${item.startedMs - firstRequestStartedMs}px`,
           },
           onMouseDown: onWaterfallMouseDown,
         },

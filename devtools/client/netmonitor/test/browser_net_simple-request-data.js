@@ -73,14 +73,14 @@ function test() {
       isnot(requestItem.id, "", "The attached request id should not be empty.");
 
       is(
-        typeof requestItem.startedMillis,
+        typeof requestItem.startedMs,
         "number",
-        "The attached startedMillis is incorrect."
+        "The attached startedMs is incorrect."
       );
       isnot(
-        requestItem.startedMillis,
+        requestItem.startedMs,
         0,
-        "The attached startedMillis should not be zero."
+        "The attached startedMs should not be zero."
       );
 
       is(

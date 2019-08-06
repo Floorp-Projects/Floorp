@@ -60,23 +60,23 @@ const getSelectedFrame = createSelector(
 const getDisplayedFramesSummary = createSelector(
   getDisplayedFrames,
   displayedFrames => {
-    let firstStartedMillis = +Infinity;
-    let lastEndedMillis = -Infinity;
+    let firstStartedMs = +Infinity;
+    let lastEndedMs = -Infinity;
     let totalSize = 0;
 
     displayedFrames.forEach(frame => {
       totalSize += frame.payload.length;
-      if (frame.timeStamp < firstStartedMillis) {
-        firstStartedMillis = frame.timeStamp;
+      if (frame.timeStamp < firstStartedMs) {
+        firstStartedMs = frame.timeStamp;
       }
-      if (frame.timeStamp > lastEndedMillis) {
-        lastEndedMillis = frame.timeStamp;
+      if (frame.timeStamp > lastEndedMs) {
+        lastEndedMs = frame.timeStamp;
       }
     });
 
     return {
       count: displayedFrames.length,
-      totalMillis: (lastEndedMillis - firstStartedMillis) / 1000,
+      totalMs: (lastEndedMs - firstStartedMs) / 1000,
       totalSize,
     };
   }
