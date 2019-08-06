@@ -370,7 +370,7 @@ class ExpectedUpdater(object):
     def test_start(self, data):
         test_id = intern(data["test"].encode("utf8"))
         try:
-            test_data = self.id_test_map[test_id]
+            self.id_test_map[test_id]
         except KeyError:
             print("Test not found %s, skipping" % test_id)
             return
