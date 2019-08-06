@@ -4779,28 +4779,19 @@
         label = tab._fullLabel || tab.getAttribute("label");
       }
       if (AppConstants.NIGHTLY_BUILD) {
-        if (
-          tab.linkedBrowser &&
-          tab.linkedBrowser.isRemoteBrowser &&
-          tab.linkedBrowser.frameLoader
-        ) {
-          label +=
-            " (pid " + tab.linkedBrowser.frameLoader.remoteTab.osPid + ")";
-
-          // If we're running with fission enabled, try to include PID
-          // information for every remote subframe.
-          if (gFissionBrowser) {
-            let pids = new Set();
-            let stack = [tab.linkedBrowser.browsingContext];
-            while (stack.length) {
-              let bc = stack.pop();
-              stack.push(...bc.getChildren());
-              if (bc.currentWindowGlobal) {
-                pids.add(bc.currentWindowGlobal.osPid);
-              }
+        if (tab.linkedBrowser) {
+          // On Nightly builds, show the PID of the content process, and if
+          // we're running with fission enabled, try to include PIDs for
+          // every remote subframe.
+          let [contentPid, ...framePids] = E10SUtils.getBrowserPids(
+            tab.linkedBrowser,
+            gFissionBrowser
+          );
+          if (contentPid) {
+            label += " (pid " + contentPid + ")";
+            if (gFissionBrowser) {
+              label += " [F " + framePids.join(", ") + "]";
             }
-
-            label += " [F " + Array.from(pids).join(", ") + "]";
           }
         }
       }
