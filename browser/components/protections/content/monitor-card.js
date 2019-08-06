@@ -32,8 +32,8 @@ export default class MonitorClass {
       this.buildContent(loginData, monitorData);
 
       // Show the Monitor card.
-      const monitorCard = this.doc.querySelector(".card.monitor-card.hidden");
-      monitorCard.classList.remove("hidden");
+      const monitorUI = this.doc.querySelector(".card.monitor-card.loading");
+      monitorUI.classList.remove("loading");
     });
   }
 
@@ -85,6 +85,11 @@ export default class MonitorClass {
   }
 
   renderContentForUserWithLogins(monitorData) {
+    const monitorCardBody = this.doc.querySelector(
+      ".card.monitor-card .card-body"
+    );
+    monitorCardBody.classList.remove("hidden");
+
     const storedEmail = this.doc.querySelector(
       "span[data-type='stored-emails']"
     );

@@ -15,6 +15,9 @@
   --dark-grey: #818191;
   --tab-highlight: var(--social-color); /* start with social selected */
   --column-width: 16px;
+  /* Colors for the loading indicator */
+  --protection-report-loader-color-stop: #aeaeae3d;
+  --protection-report-loader-gradient-opacity: .95;
 }
 
 body {
@@ -75,7 +78,7 @@ h2 {
 
 /* We want to hide certain components depending on its state. */
 a.hidden,
-.card-body.hidden,
+.loading .card-body.hidden,
 .lockwise-card.hidden,
 #lockwise-body-content .has-logins.hidden,
 #lockwise-body-content .no-logins.hidden,
@@ -84,7 +87,12 @@ a.hidden,
 .monitor-card.no-logins #monitor-header-content a,
 .monitor-card.no-logins .inline-text-icon.monitor-scanned-text,
 .monitor-card.has-logins #sign-up-for-monitor-link,
-#monitor-body-content .monitor-breached-passwords.hidden {
+#monitor-body-content .monitor-breached-passwords.hidden,
+.loading a,
+.loading button,
+.loading .card-title,
+.loading .content,
+.loading .monitor-scanned-text {
   display: none;
 }
 
@@ -93,6 +101,7 @@ a.hidden,
   height: 60px;
   grid-column: 1;
   margin: 0 auto;
+  z-index: 1;
 }
 
 .etp-card .icon {
@@ -552,6 +561,33 @@ label:hover {
 #sign-up-for-monitor-link:focus {
   box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
   outline: none;
+}
+
+.monitor-card.loading::after,
+.lockwise-card.loading::after {
+  position: absolute;
+  height: 110px;
+  width: 765px;
+  content: "";
+  background-image: linear-gradient(to right, var(--in-content-box-background) 0%, var(--protection-report-loader-color-stop) 30%, var(--in-content-box-background) 40%, var(--in-content-box-background) 100%);
+  background-repeat: no-repeat;
+  animation-duration: 2s;
+  animation-iteration-count: infinite;
+  animation-name: loading;
+  animation-timing-function: cubic-bezier(.07,.95,1,1);
+  background-size: 700px 100%;
+  opacity: var(--protection-report-loader-gradient-opacity);
+}
+
+@keyframes loading {
+  0% {
+    background-position-x: -300px;
+  }
+
+  100% {
+    background-position-x: 700px;
+    opacity: .02;
+  }
 }
 
 .monitor-card.has-logins .card-body {

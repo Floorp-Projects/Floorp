@@ -30,9 +30,8 @@ export default class LockwiseCard {
       // Once data for the user is retrieved, display the lockwise card.
       this.buildContent(data);
 
-      // Show the Lockwise card.
-      const lockwiseCard = this.doc.querySelector(".lockwise-card.hidden");
-      lockwiseCard.classList.remove("hidden");
+      const lockwiseUI = document.querySelector(".card.lockwise-card.loading");
+      lockwiseUI.classList.remove("loading");
     });
   }
 
@@ -76,6 +75,11 @@ export default class LockwiseCard {
    *        The number of synced devices.
    */
   renderContentForLoggedInUser(container, storedLogins, syncedDevices) {
+    const lockwiseCardBody = this.doc.querySelector(
+      ".card.lockwise-card .card-body"
+    );
+    lockwiseCardBody.classList.remove("hidden");
+
     // Set the text for number of stored logins.
     const numberOfLoginsBlock = container.querySelector(
       ".number-of-logins.block"
