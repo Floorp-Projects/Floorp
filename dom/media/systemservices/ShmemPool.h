@@ -10,11 +10,13 @@
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/Mutex.h"
 
-#undef LOG
-#undef LOG_ENABLED
-extern mozilla::LazyLogModule gCamerasParentLog;
-#define LOG(args) MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
+extern mozilla::LazyLogModule sShmemPoolLog;
+#define SHMEMPOOL_LOG(args) \
+  MOZ_LOG(sShmemPoolLog, mozilla::LogLevel::Debug, args)
+#define SHMEMPOOL_LOG_WARN(args) \
+  MOZ_LOG(sShmemPoolLog, mozilla::LogLevel::Warning, args)
+#define SHMEMPOOL_LOG_ERROR(args) \
+  MOZ_LOG(sShmemPoolLog, mozilla::LogLevel::Error, args)
 
 namespace mozilla {
 
@@ -85,6 +87,15 @@ class ShmemPool {
 
     // Pool is empty, don't block caller.
     if (mPoolFree == 0) {
+      if (!mErrorLogged) {
+        // log "out of pool" once as error to avoid log spam
+        mErrorLogged = true;
+        SHMEMPOOL_LOG_ERROR(
+            ("ShmemPool is empty, future occurrences "
+             "will be logged as warnings"));
+      } else {
+        SHMEMPOOL_LOG_WARN(("ShmemPool is empty"));
+      }
       // This isn't initialized, so will be understood as an error.
       return ShmemBuffer();
     }
@@ -92,10 +103,10 @@ class ShmemPool {
     ShmemBuffer& res = mShmemPool[mPoolFree - 1];
 
     if (!res.mInitialized) {
-      LOG(("Initializing new Shmem in pool"));
+      SHMEMPOOL_LOG(("Initializing new Shmem in pool"));
       if (!aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
                                  &res.mShmem)) {
-        LOG(("Failure allocating new Shmem buffer"));
+        SHMEMPOOL_LOG(("Failure allocating new Shmem buffer"));
         return ShmemBuffer();
       }
       res.mInitialized = true;
@@ -106,13 +117,13 @@ class ShmemPool {
     // Prepare buffer, increase size if needed (we never shrink as we don't
     // maintain seperate sized pools and we don't want to keep reallocating)
     if (res.mShmem.Size<char>() < aSize) {
-      LOG(("Size change/increase in Shmem Pool"));
+      SHMEMPOOL_LOG(("Size change/increase in Shmem Pool"));
       aInstance->DeallocShmem(res.mShmem);
       res.mInitialized = false;
       // this may fail; always check return value
       if (!aInstance->AllocShmem(aSize, ipc::SharedMemory::TYPE_BASIC,
                                  &res.mShmem)) {
-        LOG(("Failure allocating resized Shmem buffer"));
+        SHMEMPOOL_LOG(("Failure allocating resized Shmem buffer"));
         return ShmemBuffer();
       } else {
         res.mInitialized = true;
@@ -127,7 +138,8 @@ class ShmemPool {
     size_t poolUse = mShmemPool.Length() - mPoolFree;
     if (poolUse > mMaxPoolUse) {
       mMaxPoolUse = poolUse;
-      LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
+      SHMEMPOOL_LOG(
+          ("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
     }
 #endif
     return std::move(res);
@@ -136,6 +148,7 @@ class ShmemPool {
  private:
   Mutex mMutex;
   size_t mPoolFree;
+  bool mErrorLogged;
 #ifdef DEBUG
   size_t mMaxPoolUse;
 #endif

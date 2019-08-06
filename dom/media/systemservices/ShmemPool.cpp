@@ -9,11 +9,17 @@
 #include "mozilla/ShmemPool.h"
 #include "mozilla/Move.h"
 
+mozilla::LazyLogModule sShmemPoolLog("ShmemPool");
+
+#define SHMEMPOOL_LOG_VERBOSE(args) \
+  MOZ_LOG(sShmemPoolLog, mozilla::LogLevel::Verbose, args)
+
 namespace mozilla {
 
 ShmemPool::ShmemPool(size_t aPoolSize)
     : mMutex("mozilla::ShmemPool"),
-      mPoolFree(aPoolSize)
+      mPoolFree(aPoolSize),
+      mErrorLogged(false)
 #ifdef DEBUG
       ,
       mMaxPoolUse(0)
@@ -27,6 +33,15 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize) {
 
   // Pool is empty, don't block caller.
   if (mPoolFree == 0) {
+    if (!mErrorLogged) {
+      // log "out of pool" once as error to avoid log spam
+      mErrorLogged = true;
+      SHMEMPOOL_LOG_ERROR(
+          ("ShmemPool is empty, future occurrences "
+           "will be logged as warnings"));
+    } else {
+      SHMEMPOOL_LOG_WARN(("ShmemPool is empty"));
+    }
     // This isn't initialized, so will be understood as an error.
     return ShmemBuffer();
   }
@@ -34,14 +49,14 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize) {
   ShmemBuffer& res = mShmemPool[mPoolFree - 1];
 
   if (!res.mInitialized) {
-    LOG(("No free preallocated Shmem"));
+    SHMEMPOOL_LOG(("No free preallocated Shmem"));
     return ShmemBuffer();
   }
 
   MOZ_ASSERT(res.mShmem.IsWritable(), "Pool in Shmem is not writable?");
 
   if (res.mShmem.Size<uint8_t>() < aSize) {
-    LOG(("Free Shmem but not of the right size"));
+    SHMEMPOOL_LOG(("Free Shmem but not of the right size"));
     return ShmemBuffer();
   }
 
@@ -50,7 +65,8 @@ mozilla::ShmemBuffer ShmemPool::GetIfAvailable(size_t aSize) {
   size_t poolUse = mShmemPool.Length() - mPoolFree;
   if (poolUse > mMaxPoolUse) {
     mMaxPoolUse = poolUse;
-    LOG(("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
+    SHMEMPOOL_LOG(
+        ("Maximum ShmemPool use increased: %zu buffers", mMaxPoolUse));
   }
 #endif
   return std::move(res);
@@ -64,7 +80,7 @@ void ShmemPool::Put(ShmemBuffer&& aShmem) {
 #ifdef DEBUG
   size_t poolUse = mShmemPool.Length() - mPoolFree;
   if (poolUse > 0) {
-    LOG_VERBOSE(("ShmemPool usage reduced to %zu buffers", poolUse));
+    SHMEMPOOL_LOG_VERBOSE(("ShmemPool usage reduced to %zu buffers", poolUse));
   }
 #endif
 }
