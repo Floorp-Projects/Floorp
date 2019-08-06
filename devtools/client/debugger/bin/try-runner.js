@@ -142,5 +142,12 @@ console.log({
   remarkPassed,
 });
 
+if (!success) {
+  console.log(
+    "[debugger-node-test-runner] You can find documentation about the " +
+      "debugger node tests at https://docs.firefox-dev.tools/tests/node-tests.html"
+  );
+}
+
 process.exitCode = success ? 0 : 1;
 console.log("CODE", process.exitCode);
