@@ -25,11 +25,12 @@ _wptserve_ports = set()
 
 
 def check_args(**kwargs):
+    require_arg(kwargs, "package_name")
     require_arg(kwargs, "webdriver_binary")
 
 
 def browser_kwargs(test_type, run_info_data, config, **kwargs):
-    return {"binary": kwargs["binary"],
+    return {"package_name": kwargs["package_name"],
             "webdriver_binary": kwargs["webdriver_binary"],
             "webdriver_args": kwargs.get("webdriver_args")}
 
@@ -45,15 +46,13 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
     executor_kwargs = chrome_executor_kwargs(test_type, server_config,
                                              cache_manager, run_info_data,
                                              **kwargs)
+    # Remove unsupported options on mobile.
     del executor_kwargs["capabilities"]["goog:chromeOptions"]["prefs"]
     del executor_kwargs["capabilities"]["goog:chromeOptions"]["useAutomationExtension"]
 
-    # TODO(Hexcles): browser_channel should be properly supported.
-    package_name = "com.android.chrome"  # stable channel
-    # Required to start on mobile
+    assert kwargs["package_name"], "missing --package-name"
     executor_kwargs["capabilities"]["goog:chromeOptions"]["androidPackage"] = \
-        package_name
-    # Map wptrunner args to chromeOptions.
+        kwargs["package_name"]
 
     return executor_kwargs
 
@@ -71,12 +70,10 @@ class ChromeAndroidBrowser(Browser):
     ``wptrunner.webdriver.ChromeDriverServer``.
     """
 
-    def __init__(self, logger, binary, webdriver_binary="chromedriver",
+    def __init__(self, logger, package_name, webdriver_binary="chromedriver",
                  webdriver_args=None):
-        """Creates a new representation of Chrome.  The `binary` argument gives
-        the browser binary to use for testing."""
         Browser.__init__(self, logger)
-        self.binary = binary
+        self.package_name = package_name
         self.server = ChromeDriverServer(self.logger,
                                          binary=webdriver_binary,
                                          args=webdriver_args)
