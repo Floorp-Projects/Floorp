@@ -37,7 +37,7 @@ win64-grcov:
     worker-type: b-win2012
     worker:
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         toolchain-artifact: public/build/grcov.tar.bz2
         resources:

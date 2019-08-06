@@ -50,7 +50,7 @@ win32-gn:
     worker:
         max-run-time: 3600
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/gn-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         script: build-gn-win32.sh
         resources:
