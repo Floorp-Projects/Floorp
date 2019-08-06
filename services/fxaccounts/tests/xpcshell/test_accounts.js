@@ -1306,7 +1306,7 @@ add_test(function test_getOAuthTokenScoped() {
     client_id: "abc123",
   });
   client.getTokenFromAssertion = function(assertion, scopeString) {
-    equal(scopeString, "foo bar");
+    equal(scopeString, "bar foo"); // scopes are sorted locally before request.
     getTokenFromAssertionCalled = true;
     return Promise.resolve({ access_token: "token" });
   };
