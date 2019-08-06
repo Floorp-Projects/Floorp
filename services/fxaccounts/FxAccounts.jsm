@@ -166,6 +166,7 @@ var publicProperties = [
 // being resolved, the .resolve() call will actually be rejected.
 var AccountState = (this.AccountState = function(storageManager) {
   this.storageManager = storageManager;
+  this.inFlightTokenRequests = new Map();
   this.promiseInitialized = this.storageManager
     .getAccountData()
     .then(data => {
@@ -200,6 +201,7 @@ AccountState.prototype = {
       );
       this.whenKeysReadyDeferred = null;
     }
+    this.inFlightTokenRequests.clear();
     return this.signOut();
   },
 
@@ -208,6 +210,7 @@ AccountState.prototype = {
     this.cert = null;
     this.keyPair = null;
     this.oauthTokens = null;
+    this.inFlightTokenRequests.clear();
 
     // Avoid finalizing the storageManager multiple times (ie, .signOut()
     // followed by .abort())
@@ -1731,31 +1734,55 @@ FxAccountsInternal.prototype = {
       return cached.token;
     }
 
-    // We are going to hit the server - this is the string we pass to it.
-    let scopeString = scope.join(" ");
+    // Build the string we use in our "inflight" map and that we send to the
+    // server. Because it's used as a key in the map we sort the scopes.
+    let scopeString = scope.sort().join(" ");
     let client = options.client || this.oauthClient;
     let oAuthURL = client.serverURL.href;
 
+    // We keep a map of in-flight requests to avoid multiple promise-based
+    // consumers concurrently requesting the same token.
+    let maybeInFlight = currentState.inFlightTokenRequests.get(scopeString);
+    if (maybeInFlight) {
+      log.debug("getOAuthToken has an in-flight request for this scope");
+      return maybeInFlight;
+    }
+
+    // We need to start a new fetch and stick the promise in our in-flight map
+    // and remove it when it resolves.
+    let promise = this._doTokenFetch(client, scopeString)
+      .then(token => {
+        // As a sanity check, ensure something else hasn't raced getting a token
+        // of the same scope. If something has we just make noise rather than
+        // taking any concrete action because it should never actually happen.
+        if (currentState.getCachedToken(scope)) {
+          log.error(`detected a race for oauth token with scope ${scope}`);
+        }
+        // If we got one, cache it.
+        if (token) {
+          let entry = { token, server: oAuthURL };
+          currentState.setCachedToken(scope, entry);
+        }
+        return token;
+      })
+      .finally(() => {
+        // Remove ourself from the in-flight map. There's no need to check the
+        // result of .delete() to handle a signout race, because setCachedToken
+        // above will fail in that case and cause the entire call to fail.
+        currentState.inFlightTokenRequests.delete(scopeString);
+      });
+
+    currentState.inFlightTokenRequests.set(scopeString, promise);
+    return promise;
+  },
+
+  async _doTokenFetch(client, scopeString) {
+    let oAuthURL = client.serverURL.href;
     try {
       log.debug("getOAuthToken fetching new token from", oAuthURL);
       let assertion = await this.getAssertion(oAuthURL);
       let result = await client.getTokenFromAssertion(assertion, scopeString);
       let token = result.access_token;
-      // If we got one, cache it.
-      if (token) {
-        let entry = { token, server: oAuthURL };
-        // But before we do, check the cache again - if we find one now, it
-        // means someone else concurrently requested the same scope and beat
-        // us to the cache write. To be nice to the server, we revoke the one
-        // we just got and return the newly cached value.
-        let cached = currentState.getCachedToken(scope);
-        if (cached) {
-          log.debug("Detected a race for this token - revoking the new one.");
-          this._destroyOAuthToken(entry);
-          return cached.token;
-        }
-        currentState.setCachedToken(scope, entry);
-      }
       return token;
     } catch (err) {
       throw this._errorToErrorClass(err);
