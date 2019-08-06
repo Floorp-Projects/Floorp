@@ -11,6 +11,9 @@ registerCleanupFunction(() => {
 add_task(
   threadFrontTest(async ({ threadFront, debuggee }) => {
     return new Promise(resolve => {
+      const bigIntEnabled = Services.prefs.getBoolPref(
+        "javascript.options.bigint"
+      );
       threadFront.once("paused", function(packet) {
         const args = packet.frame.arguments;
 
@@ -18,14 +21,18 @@ add_task(
 
         const objClient = threadFront.pauseGrip(args[0]);
         objClient.getPrototypeAndProperties(function(response) {
-          const { a, b, c, d, e, f, g } = response.ownProperties;
+          const { a, b, c, d } = response.ownProperties;
           testPropertyType(a, "Infinity");
           testPropertyType(b, "-Infinity");
           testPropertyType(c, "NaN");
           testPropertyType(d, "-0");
-          testPropertyType(e, "BigInt");
-          testPropertyType(f, "BigInt");
-          testPropertyType(g, "BigInt");
+
+          if (bigIntEnabled) {
+            const { e, f, g } = response.ownProperties;
+            testPropertyType(e, "BigInt");
+            testPropertyType(f, "BigInt");
+            testPropertyType(g, "BigInt");
+          }
 
           threadFront.resume().then(resolve);
         });
@@ -41,9 +48,12 @@ add_task(
       b: -Infinity,
       c: NaN,
       d: -0,
-      e: 1n,
+      ${
+        bigIntEnabled
+          ? `e: 1n,
       f: -2n,
-      g: 0n,
+      g: 0n,`
+          : ``
       }
     })`);
     });
