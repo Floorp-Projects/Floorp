@@ -17,6 +17,8 @@ login-favicon =
 
 fxaccounts-sign-in-text = Get your passwords on your other devices
 fxaccounts-sign-in-button = Sign in to { -sync-brand-short-name }
+fxaccounts-avatar-button =
+  .title = Manage account
 
 ## The ⋯ menu that is in the top corner of the page
 
