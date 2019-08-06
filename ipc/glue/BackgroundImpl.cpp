@@ -1618,6 +1618,9 @@ PBackgroundChild* ChildImpl::GetOrCreateSocketActorForCurrentThread(
   if (NS_IsMainThread()) {
     if (!bridgeChild->SendInitBackground(std::move(parent))) {
       NS_WARNING("Failed to create top level actor!");
+      // Need to close the IPC channel before ChildImpl getting deleted.
+      strongActor->Close();
+      strongActor->AssertActorDestroyed();
       return nullptr;
     }
   } else {
