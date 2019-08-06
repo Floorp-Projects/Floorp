@@ -14,7 +14,6 @@ const {
 
 types.addDictType("console.traits", {
   evaluateJSAsync: "boolean",
-  transferredResponseSize: "boolean",
   selectedObjectActor: "boolean",
 });
 
