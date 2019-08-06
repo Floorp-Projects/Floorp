@@ -1479,6 +1479,11 @@ class UrlbarInput {
       numChars: this._lastSearchString.length,
     });
 
+    // Clear selection unless we are switching application windows.
+    if (this.document.activeElement != this.inputField) {
+      this.selectionStart = this.selectionEnd = 0;
+    }
+
     // In certain cases, like holding an override key and confirming an entry,
     // we don't key a keyup event for the override key, thus we make this
     // additional cleanup on blur.
