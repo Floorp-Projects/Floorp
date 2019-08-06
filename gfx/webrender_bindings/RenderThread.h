@@ -167,8 +167,10 @@ class RenderThread final {
 
   // RenderNotifier implementation
 
-  /// Automatically forwarded to the render thread.
-  void HandleFrame(wr::WindowId aWindowId, bool aRender);
+  /// Automatically forwarded to the render thread. Will trigger a render for
+  /// the current pending frame once one call per document in that pending
+  // frame has been received.
+  void HandleFrameOneDoc(wr::WindowId aWindowId, bool aRender);
 
   /// Automatically forwarded to the render thread.
   void WakeUp(wr::WindowId aWindowId);
@@ -223,9 +225,6 @@ class RenderThread final {
   void IncPendingFrameCount(wr::WindowId aWindowId, const VsyncId& aStartId,
                             const TimeStamp& aStartTime,
                             uint8_t aDocFrameCount);
-  /// Can be called from any thread.
-  mozilla::Pair<bool, bool> IncRenderingFrameCount(wr::WindowId aWindowId,
-                                                   bool aRender);
   /// Can be called from any thread.
   void FrameRenderingComplete(wr::WindowId aWindowId);
 
