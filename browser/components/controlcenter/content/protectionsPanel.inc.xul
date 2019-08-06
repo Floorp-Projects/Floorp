@@ -105,7 +105,7 @@
           </toolbarbutton>
           <hbox id="protections-popup-trackers-blocked-counter-box"
                 align="center"
-                right="0">
+                end="0">
             <description id="protections-popup-trackers-blocked-counter-description"
                          onclick="gProtectionsHandler.openProtections(true);"/>
           </hbox>
