@@ -107,6 +107,9 @@ class HistoryView(
     fun updateEmptyState(userHasHistory: Boolean) {
         history_list.isVisible = userHasHistory
         history_empty_view.isVisible = !userHasHistory
+        if (!userHasHistory) {
+            history_empty_view.announceForAccessibility(context.getString(R.string.history_empty_message))
+        }
     }
 
     override fun onBackPressed(): Boolean {
