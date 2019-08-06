@@ -26,6 +26,10 @@ if not CONFIG['MOZ_REPLACE_MALLOC_STATIC']:
         '../logalloc/FdPrintf.cpp',
         '/mozglue/misc/StackWalk.cpp',
     ]
+    if CONFIG['OS_ARCH'] == 'WINNT':
+        OS_LIBS += [
+            'dbghelp',
+        ]
 
 TEST_DIRS += ['test']
 
