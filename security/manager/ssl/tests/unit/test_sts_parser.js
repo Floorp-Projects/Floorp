@@ -9,9 +9,7 @@
 // STS parser tests
 
 let sss = Cc["@mozilla.org/ssservice;1"].getService(Ci.nsISiteSecurityService);
-let secInfo = Cc[
-  "@mozilla.org/security/transportsecurityinfo;1"
-].createInstance(Ci.nsITransportSecurityInfo);
+let secInfo = new FakeTransportSecurityInfo();
 
 function testSuccess(header, expectedMaxAge, expectedIncludeSubdomains) {
   let dummyUri = Services.io.newURI("https://foo.com/bar.html");

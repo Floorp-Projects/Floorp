@@ -14,9 +14,7 @@ Observer.prototype = {
 };
 
 var gObserver = new Observer();
-var secInfo = Cc[
-  "@mozilla.org/security/transportsecurityinfo;1"
-].createInstance(Ci.nsITransportSecurityInfo);
+var secInfo = new FakeTransportSecurityInfo();
 
 function cleanup() {
   Services.obs.removeObserver(gObserver, "last-pb-context-exited");

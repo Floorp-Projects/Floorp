@@ -9,7 +9,7 @@
 interface nsIX509Cert;
 interface nsIX509CertList;
 
-[builtinclass, scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
+[scriptable, uuid(216112d3-28bc-4671-b057-f98cc09ba1ea)]
 interface nsITransportSecurityInfo : nsISupports {
     readonly attribute unsigned long securityState;
     readonly attribute long errorCode; // PRErrorCode
@@ -72,3 +72,4 @@ interface nsITransportSecurityInfo : nsISupports {
     [must_use]
     readonly attribute boolean isExtendedValidation;
 };
+
