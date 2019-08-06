@@ -82,7 +82,7 @@ async function initLayoutFrontForUrl(url) {
 
 async function initAccessibilityFrontForUrl(url) {
   const target = await addTabTarget(url);
-  const inspector = await target.getInspector();
+  const inspector = await target.getFront("inspector");
   const walker = inspector.walker;
   const accessibility = await target.getFront("accessibility");
 
@@ -113,8 +113,7 @@ async function initPerfFront() {
 
 async function initInspectorFront(url) {
   const target = await addTabTarget(url);
-
-  const inspector = await target.getInspector();
+  const inspector = await target.getFront("inspector");
   const walker = inspector.walker;
 
   return { inspector, walker, target };
