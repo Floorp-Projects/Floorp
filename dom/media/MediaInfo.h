@@ -253,6 +253,9 @@ class VideoInfo : public TrackInfo {
   // bits etc)
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
 
+  Maybe<int32_t> GetFrameRate() const { return mFrameRate; }
+  void SetFrameRate(int32_t aRate) { mFrameRate = Some(aRate); }
+
  private:
   // mImage may be cropped; currently only used with the WebM container.
   // A negative width or height indicate that no cropping is to occur.
@@ -260,6 +263,8 @@ class VideoInfo : public TrackInfo {
 
   // Indicates whether or not frames may contain alpha information.
   bool mAlphaPresent = false;
+
+  Maybe<int32_t> mFrameRate;
 };
 
 class AudioInfo : public TrackInfo {
