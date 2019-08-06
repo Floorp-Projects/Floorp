@@ -288,6 +288,10 @@
   animation-name: tp-icon-animation-rtl;
 }
 
+#tracking-protection-icon-tooltip {
+  max-width: 500px;
+}
+
 #urlbar[pageproxystate="valid"] > #tracking-protection-icon-container > #tracking-protection-icon-box > #tracking-protection-icon {
   list-style-image: url(chrome://browser/skin/tracking-protection.svg);
 }
