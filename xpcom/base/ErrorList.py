@@ -792,6 +792,7 @@ with modules["PROFILE"]:
 # =======================================================================
 with modules["SECURITY"]:
     # Error code for CSP
+    errors["NS_ERROR_CSP_NAVIGATE_TO_VIOLATION"] = FAILURE(97)
     errors["NS_ERROR_CSP_FORM_ACTION_VIOLATION"] = FAILURE(98)
     errors["NS_ERROR_CSP_FRAME_ANCESTOR_VIOLATION"] = FAILURE(99)
 
