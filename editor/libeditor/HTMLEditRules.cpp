@@ -2448,8 +2448,7 @@ nsresult HTMLEditRules::WillDeleteSelection(
         // Bug 1068979: delete both codepoints if surrogate pair
         if (so > 0) {
           const nsTextFragment* text = &nodeAsText->TextFragment();
-          if (NS_IS_LOW_SURROGATE(text->CharAt(so)) &&
-              NS_IS_HIGH_SURROGATE(text->CharAt(so - 1))) {
+          if (text->IsLowSurrogateFollowingHighSurrogateAt(so)) {
             so--;
           }
         }
