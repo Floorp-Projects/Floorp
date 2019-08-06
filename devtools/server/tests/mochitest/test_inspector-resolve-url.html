@@ -24,7 +24,7 @@ let gDoc;
 addTest(async function() {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
-  gInspector = await target.getFront("inspector");
+  gInspector = await target.getInspector();
   gDoc = doc;
   runNextTest();
 });

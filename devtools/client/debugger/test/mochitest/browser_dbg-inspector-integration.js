@@ -31,8 +31,9 @@ add_task(async function() {
 
   // Ensure hovering over button highlights the node in content pane
   const view = inspectorNode.ownerDocument.defaultView;
-  const inspectorFront = await toolbox.target.getFront("inspector");
-  const onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  const onNodeHighlight = toolbox.target
+    .once("inspector")
+    .then(inspector => inspector.highlighter.once("node-highlight"));
   EventUtils.synthesizeMouseAtCenter(
     inspectorNode,
     { type: "mousemove" },

@@ -18,8 +18,9 @@ add_task(async function() {
   let node = getRowByIndex(panel, 2).querySelector(".objectBox-node");
   // the inspector should be initialized first and then the node should
   // highlight after the hover effect.
-  const inspectorFront = await toolbox.target.getFront("inspector");
-  let onNodeHighlight = inspectorFront.highlighter.once("node-highlight");
+  let onNodeHighlight = toolbox.target
+    .once("inspector")
+    .then(inspector => inspector.highlighter.once("node-highlight"));
   EventUtils.synthesizeMouseAtCenter(
     node,
     {

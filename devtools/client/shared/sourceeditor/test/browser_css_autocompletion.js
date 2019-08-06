@@ -93,7 +93,7 @@ add_task(async function test() {
 async function runTests() {
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   await target.attach();
-  inspector = await target.getFront("inspector");
+  inspector = await target.getInspector();
   const walker = inspector.walker;
   completer = new CSSCompleter({
     walker: walker,
