@@ -428,19 +428,26 @@ function renderResources(id, resources, what) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  d3.json("list", function onList(error, response) {
-    if (!response || !("files" in response)) {
+  d3.json("build_resources.json", function onList(error, response) {
+    if (!response) {
       return;
     }
-    if (response.files.length > 1) {
-      var list = d3.select("#list");
-      for (file of response.files) {
-        list.append("option").attr("value", file).text(file);
+    // If the response contains a list of files, use that list.
+    // Otherwise, we expect it's directly build resources data.
+    if (Object.keys(response).length == 1 && "files" in response) {
+      if (response.files.length > 1) {
+        var list = d3.select("#list");
+        for (file of response.files) {
+          list.append("option").attr("value", file).text(file);
+        }
+        list.on("change", function() {renderKey(this.value);})
+        list.style("display", "inline");
       }
-      list.on("change", function() {renderKey(this.value);})
-      list.style("display", "inline");
+      renderKey(response.files[0]);
+    } else {
+      currentResources = new BuildResources(response);
+      updateResourcesGraph();
     }
-    renderKey(response.files[0]);
   });
 }, false);
 
