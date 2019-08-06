@@ -29,7 +29,7 @@ window.onload = function() {
     const url = document.getElementById("inspectorContent").href;
 
     const { target } = await attachURL(url);
-    inspector = await target.getFront("inspector");
+    inspector = await target.getInspector();
     walkerFront = inspector.walker;
 
     runNextTest();
