@@ -83,6 +83,7 @@ const BadCertAndPinningHost sBadCertAndPinningHosts[] = {
      "ee-from-missing-intermediate"},
     {"imminently-distrusted.example.com", "ee-imminently-distrusted"},
     {"localhost", "unknownissuer"},
+    {"a.pinning.example.com", "default-ee"},
     {nullptr, nullptr}};
 
 int32_t DoSNISocketConfigBySubjectCN(PRFileDesc* aFd,
