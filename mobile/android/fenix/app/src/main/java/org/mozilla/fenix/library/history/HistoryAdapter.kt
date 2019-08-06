@@ -43,6 +43,8 @@ class HistoryAdapter(
 
     fun updateMode(mode: HistoryState.Mode) {
         this.mode = mode
+        // Update the delete button alpha that the first item holds
+        if (itemCount > 0) notifyItemChanged(0)
     }
 
     override fun onBindViewHolder(holder: HistoryListItemViewHolder, position: Int) {
