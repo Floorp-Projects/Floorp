@@ -32,7 +32,7 @@ function viewCertHelper(parent, cert) {
 
   if (Services.prefs.getBoolPref("security.aboutcertificate.enabled")) {
     let ownerGlobal = window.docShell.chromeEventHandler.ownerGlobal;
-    let derb64 = encodeURIComponent(btoa(getDERString(cert)));
+    let derb64 = encodeURIComponent(cert.getBase64DERString());
     let url = `about:certificate?cert=${derb64}`;
     ownerGlobal.openTrustedLinkIn(url, "tab", {
       triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
@@ -48,15 +48,6 @@ function viewCertHelper(parent, cert) {
   }
 }
 
-function getDERString(cert) {
-  var derArray = cert.getRawDER();
-  var derString = "";
-  for (var i = 0; i < derArray.length; i++) {
-    derString += String.fromCharCode(derArray[i]);
-  }
-  return derString;
-}
-
 function getPKCS7String(certArray) {
   let certList = Cc["@mozilla.org/security/x509certlist;1"].createInstance(
     Ci.nsIX509CertList
@@ -68,7 +59,7 @@ function getPKCS7String(certArray) {
 }
 
 function getPEMString(cert) {
-  var derb64 = btoa(getDERString(cert));
+  var derb64 = cert.getBase64DERString();
   // Wrap the Base64 string into lines of 64 characters with CRLF line breaks
   // (as specified in RFC 1421).
   var wrapped = derb64.replace(/(\S{64}(?!$))/g, "$1\r\n");
@@ -169,7 +160,7 @@ async function exportToFile(parent, cert) {
       }
       break;
     case 2:
-      content = getDERString(cert);
+      content = cert.getRawDER();
       break;
     case 3:
       content = getPKCS7String([cert]);
