@@ -479,7 +479,7 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   MOZ_MUST_USE nsresult InitConnectionMgr();
 
-  void NotifyObservers(nsIHttpChannel* chan, const char* event);
+  void NotifyObservers(nsIChannel* chan, const char* event);
 
   void SetFastOpenOSSupport();
 
