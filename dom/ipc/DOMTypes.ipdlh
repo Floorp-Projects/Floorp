@@ -32,6 +32,7 @@ using refcounted class mozilla::dom::BrowsingContext from "mozilla/dom/BrowsingC
 using refcounted class nsIURI from "mozilla/ipc/URIUtils.h";
 using refcounted class nsIContentSecurityPolicy from "mozilla/dom/CSPMessageUtils.h";
 using refcounted class nsIReferrerInfo from "mozilla/dom/ReferrerInfoUtils.h";
+using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
 
 namespace mozilla {
 namespace dom {
@@ -237,6 +238,40 @@ struct DocShellLoadStateInit
   // nsIInputStream PostDataStream; // will be used after IPC transaction
   // nsIInputStream HeadersStream; // will be used after IPC transaction
   // nsIChannel pendingRedirectedChannel; // sent through other mechanism
+};
+
+struct TimedChannelInfo
+{
+  bool timingEnabled;
+  int8_t redirectCount;
+  int8_t internalRedirectCount;
+  TimeStamp asyncOpen;
+  TimeStamp channelCreation;
+  TimeStamp redirectStart;
+  TimeStamp redirectEnd;
+  nsString initiatorType;
+  bool allRedirectsSameOrigin;
+  bool allRedirectsPassTimingAllowCheck;
+  bool? timingAllowCheckForPrincipal;
+  TimeStamp launchServiceWorkerStart;
+  TimeStamp launchServiceWorkerEnd;
+  TimeStamp dispatchFetchEventStart;
+  TimeStamp dispatchFetchEventEnd;
+  TimeStamp handleFetchEventStart;
+  TimeStamp handleFetchEventEnd;
+  TimeStamp responseStart;
+  TimeStamp responseEnd;
+};
+
+struct ReplacementChannelConfigInit
+{
+  uint32_t loadFlags;
+  uint32_t redirectFlags;
+  uint32_t classOfService;
+  bool? privateBrowsing;
+  nsCString? method;
+  nsIReferrerInfo referrerInfo;
+  TimedChannelInfo? timedChannel;
 };
 
 } // namespace dom
