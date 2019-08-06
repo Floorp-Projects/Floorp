@@ -35,6 +35,7 @@ dependencies {
     implementation Dependencies.kotlin_coroutines
 
     implementation Dependencies.androidx_test_junit
+    implementation Dependencies.testing_mockwebserver
     implementation Dependencies.testing_mockito
     implementation (Dependencies.testing_robolectric) {
         exclude group: 'org.apache.maven'

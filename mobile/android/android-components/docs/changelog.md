@@ -12,6 +12,8 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
 
+* **support-test**
+  * Fixed [#3893](https://github.com/mozilla-mobile/android-components/issues/3893) Moving WebserverRule to support-test.
 
 # 7.0.0
 

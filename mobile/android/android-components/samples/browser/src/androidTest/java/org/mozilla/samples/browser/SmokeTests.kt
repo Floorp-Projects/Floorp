@@ -20,11 +20,11 @@ import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.android.test.leaks.LeakDetectionRule
+import mozilla.components.support.test.rules.WebserverRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.samples.browser.rules.WebserverRule
 import java.util.concurrent.TimeUnit
 
 private const val INITIAL_WAIT_SECONDS = 5L
