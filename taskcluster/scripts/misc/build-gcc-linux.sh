@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# This script is for building GCC 7 for Linux.
+# This script is for building GCC for Linux.
 
 root_dir=$MOZ_FETCHES_DIR
 data_dir=$GECKO_PATH/build/unix/build-gcc
