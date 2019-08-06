@@ -137,11 +137,11 @@ add_task(async function test_menu_keyboard_cycling() {
   is(document.activeElement, gMenuButton, "menu-button should be focused to start the test");
   is(true, menu.hidden, "menu should be hidden before pressing 'space'");
 
-  sendKey("SPACE");
+  sendKey("RETURN");
 
   await SimpleTest.promiseWaitForCondition(() => !menu.hidden, "waiting for menu to show");
 
-  ok(!menu.hidden, "menu should be visible after pressing 'space'");
+  ok(!menu.hidden, "menu should be visible after pressing 'enter'");
 
   for (let item of allItems) {
     await waitForElementFocus("." + item);
