@@ -76,7 +76,7 @@ class BackgroundServices(
         }
     )
     // If sync has been turned off on the server then disable syncing.
-    private val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
+    val syncConfig = if (context.isInExperiment(Experiments.asFeatureSyncDisabled)) {
         null
     } else {
         SyncConfig(setOf("history", "bookmarks"), syncPeriodInMinutes = 240L) // four hours
