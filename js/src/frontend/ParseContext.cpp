@@ -515,9 +515,9 @@ bool ParseContext::declareFunctionThis(const UsedNameTracker& usedNames,
   if (canSkipLazyClosedOverBindings) {
     declareThis = funbox->function()->lazyScript()->hasThisBinding();
   } else {
-    declareThis = hasUsedFunctionSpecialName(usedNames, dotThis) ||
-                  funbox->function()->kind() ==
-                      FunctionFlags::FunctionKind::ClassConstructor;
+    declareThis =
+        hasUsedFunctionSpecialName(usedNames, dotThis) ||
+        funbox->kind() == FunctionFlags::FunctionKind::ClassConstructor;
   }
 
   if (declareThis) {

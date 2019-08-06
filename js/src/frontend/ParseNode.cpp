@@ -395,13 +395,13 @@ BigIntBox::BigIntBox(BigInt* bi, TraceListNode* traceLink)
 
 ObjectBox::ObjectBox(JSObject* obj, TraceListNode* traceLink)
     : TraceListNode(obj, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT(!object()->is<JSFunction>());
+  MOZ_ASSERT_IF(hasObject(), !object()->is<JSFunction>());
 }
 
 ObjectBox::ObjectBox(JSFunction* function, TraceListNode* traceLink)
     : TraceListNode(function, traceLink), emitLink(nullptr) {
-  MOZ_ASSERT(object()->is<JSFunction>());
-  MOZ_ASSERT(asFunctionBox()->function() == function);
+  MOZ_ASSERT_IF(hasObject(), object()->is<JSFunction>());
+  MOZ_ASSERT_IF(hasObject(), asFunctionBox()->function() == function);
 }
 
 FunctionBox* ObjectBox::asFunctionBox() {
@@ -417,7 +417,9 @@ void TraceListNode::TraceList(JSTracer* trc, TraceListNode* listHead) {
 }
 
 void TraceListNode::trace(JSTracer* trc) {
-  TraceGenericPointerRoot(trc, &gcThing, "parser.traceListNode");
+  if (gcThing) {
+    TraceGenericPointerRoot(trc, &gcThing, "parser.traceListNode");
+  }
 }
 
 void FunctionBox::trace(JSTracer* trc) {
@@ -427,6 +429,9 @@ void FunctionBox::trace(JSTracer* trc) {
   }
   if (explicitName_) {
     TraceRoot(trc, &explicitName_, "funbox-explicitName");
+  }
+  if (functionCreationData_) {
+    functionCreationData_->trace(trc);
   }
 }
 

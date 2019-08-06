@@ -2175,6 +2175,8 @@ class TraceListNode {
   TraceListNode* traceLink;
 
   TraceListNode(js::gc::Cell* gcThing, TraceListNode* traceLink);
+  explicit TraceListNode(TraceListNode* traceLink)
+      : gcThing(nullptr), traceLink(traceLink) {}
 
   bool isBigIntBox() const { return gcThing->is<BigInt>(); }
   bool isObjectBox() const { return gcThing->is<JSObject>(); }
@@ -2203,6 +2205,10 @@ class ObjectBox : public TraceListNode {
 
  public:
   ObjectBox(JSObject* obj, TraceListNode* link);
+  explicit ObjectBox(TraceListNode* link)
+      : TraceListNode(link), emitLink(nullptr) {}
+
+  bool hasObject() const { return gcThing != nullptr; }
 
   JSObject* object() const { return gcThing->as<JSObject>(); }
 
