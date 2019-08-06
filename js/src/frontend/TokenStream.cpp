@@ -2475,7 +2475,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::decimalNumber(
                            this->sourceUnits.addressOfNextCodeUnit(), &dval)) {
       return false;
     }
-  } else if (unit == 'n') {
+  } else if (unit == 'n' && anyCharsAccess().options().bigIntEnabledOption) {
     isBigInt = true;
     unit = peekCodeUnit();
   } else {
@@ -2677,6 +2677,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::regexpLiteral(
 template <typename Unit, class AnyCharsAccess>
 MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::bigIntLiteral(
     TokenStart start, Modifier modifier, TokenKind* out) {
+  MOZ_ASSERT(anyCharsAccess().options().bigIntEnabledOption);
   MOZ_ASSERT(this->sourceUnits.previousCodeUnit() == toUnit('n'));
   MOZ_ASSERT(this->sourceUnits.offset() > start.offset());
   uint32_t length = this->sourceUnits.offset() - start.offset();
@@ -2961,7 +2962,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
           return badToken();
         }
 
-        if (unit == 'n') {
+        if (unit == 'n' && anyCharsAccess().options().bigIntEnabledOption) {
           error(JSMSG_BIGINT_INVALID_SYNTAX);
           return badToken();
         }
@@ -2983,7 +2984,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         return decimalNumber(unit, start, numStart, modifier, ttp);
       }
 
-      if (unit == 'n') {
+      if (unit == 'n' && anyCharsAccess().options().bigIntEnabledOption) {
         isBigInt = true;
         unit = peekCodeUnit();
       } else {
