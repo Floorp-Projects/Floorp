@@ -57,18 +57,23 @@ add_task(async function test_blocker_state() {
   ]);
 
   await buf.tryApply(0, 0, { notifyAll() {} }, []);
-  // Fire the shutdown blocker, but don't `await` its promise yet, so that we
-  // can check its progress synchronously.
-  let waitPromise = barrier.wait();
-  let blocker = barrier.state.find(
-    b => b.name == "SyncedBookmarksMirror: finalize"
-  );
+  await barrier.wait();
+
+  let state = buf.progress.fetchState();
+  let steps = state.steps;
   deepEqual(
-    blocker.state.steps,
-    buf.progress.steps,
-    "Should report merge progress in shutdown blocker state"
+    steps.map(s => s.step),
+    [
+      "fetchLocalTree",
+      "fetchRemoteTree",
+      "merge",
+      "apply",
+      "notifyObservers",
+      "fetchLocalChangeRecords",
+      "finalize",
+    ],
+    "Should report merge progress after waiting on blocker"
   );
-  await waitPromise;
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
