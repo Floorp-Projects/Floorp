@@ -28,6 +28,10 @@ async function testSteps() {
     },
   ];
 
+  info("Setting prefs");
+
+  Services.prefs.setBoolPref("dom.storage.next_gen", true);
+
   for (let origin of origins) {
     const principal = getPrincipal(origin.uri);
 
