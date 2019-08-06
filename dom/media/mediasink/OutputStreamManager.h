@@ -157,7 +157,6 @@ class OutputStreamManager {
   nsTArray<UniquePtr<OutputStreamData>> mStreams;
   nsTArray<UniquePtr<LiveTrack>> mLiveTracks;
   Canonical<PrincipalHandle> mPrincipalHandle;
-  nsCOMPtr<nsIPrincipal> mPrincipal;
   bool mPlaying = false;
 };
 
