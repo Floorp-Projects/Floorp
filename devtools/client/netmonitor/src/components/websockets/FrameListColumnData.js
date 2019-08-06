@@ -17,7 +17,6 @@ class FrameListColumnData extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      index: PropTypes.number.isRequired,
       connector: PropTypes.object.isRequired,
     };
   }
@@ -39,23 +38,12 @@ class FrameListColumnData extends Component {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
-    const { item, connector } = nextProps;
-    getFramePayload(item.payload, connector.getLongString).then(payload => {
-      this.setState({
-        payload,
-      });
-    });
-  }
-
   render() {
-    const { index } = this.props;
     const { type } = this.props.item;
     const typeLabel = L10N.getStr(`netmonitor.ws.type.${type}`);
 
     return dom.td(
       {
-        key: index,
         className: "ws-frames-list-column ws-frames-list-payload",
         title: typeLabel + " " + this.state.payload,
       },
