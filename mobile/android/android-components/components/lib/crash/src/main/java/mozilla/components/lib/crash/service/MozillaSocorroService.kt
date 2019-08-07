@@ -39,10 +39,35 @@ class MozillaSocorroService(
     }
 
     internal fun sendViaGeckoViewCrashReporter(crash: Crash.NativeCodeCrash) {
-        GeckoCrashReporter.sendCrashReport(
-            applicationContext,
-            File(crash.minidumpPath),
-            File(crash.extrasPath),
-            appName)
+        // GeckoView Nightly introduced a breaking API change to the crash reporter that has not been uplifted to beta.
+        // Since our CrashReporter does not follow the same abstractions as the engine, this results in
+        // a `NoSuchMethodError` being thrown.
+        // We should fix this in the future to make the crash reporter be part of the same engine extraction.
+        // See: https://github.com/mozilla-mobile/android-components/issues/4052
+        try {
+            GeckoCrashReporter.sendCrashReport(
+                applicationContext,
+                File(crash.minidumpPath),
+                File(crash.extrasPath),
+                appName
+            )
+        } catch (e: NoSuchMethodError) {
+            val deprecatedMethod = GeckoCrashReporter::class.java.getDeclaredMethod(
+                "sendCrashReport",
+                Context::class.java,
+                File::class.java,
+                File::class.java,
+                Boolean::class.java,
+                String::class.java
+            )
+            deprecatedMethod.invoke(
+                GeckoCrashReporter::class.java,
+                applicationContext,
+                File(crash.minidumpPath),
+                File(crash.extrasPath),
+                crash.minidumpSuccess,
+                appName
+            )
+        }
     }
 }

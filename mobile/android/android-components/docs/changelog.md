@@ -39,7 +39,7 @@ permalink: /changelog/
         // passed-in context allows easily opening new activities for handling urls.
         tabsUseCases.addTab(authUrl)
      }
-     
+
      // ... elsewhere, in the UI code, handling click on button "Sign In":
      components.feature.beginAuthentication(activityContext)
     ```
@@ -72,6 +72,9 @@ permalink: /changelog/
 
 * **concept-sync**, **service-firefox-accounts**:
   * ⚠️ **This is a breaking change**: Added `OAuthAccount@disconnectAsync`, which replaced `DeviceConstellation@destroyCurrentDeviceAsync`.
+
+* **lib-crash**
+  * ⚠️ **Known issue**: Sending a crash using the `MozillaSocorroService` with GeckoView 69.0 or 68.0, will lead to a `NoSuchMethodError` when using this particular version of android components. See [#4052](https://github.com/mozilla-mobile/android-components/issues/4052).
 
 # 6.0.2
 
