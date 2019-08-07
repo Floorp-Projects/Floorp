@@ -113,3 +113,4 @@ fuzzy-if(skiaContent,0-4,0-2) == underline-select-1.html underline-select-1-ref.
 == vertical-mode-decorations-1.html vertical-mode-decorations-1-ref.html
 fuzzy-if(Android,0-238,0-36) == vertical-mode-decorations-2.html vertical-mode-decorations-2-ref.html
 != 1415214.html 1415214-notref.html
+test-pref(layout.css.text-decoration-thickness.enabled,false) == text-decoration-shorthands-001.html text-decoration-shorthands-001-ref.html
