@@ -134,6 +134,19 @@ fn unwrap_inst(
                     .get(var_pool.get(def.defined_vars[0]).dst_def.unwrap())
                     .to_comment_string(var_pool)
             ));
+
+            fmt.line("let r = pos.func.dfg.inst_results(inst);");
+            for (i, &var_index) in def.defined_vars.iter().enumerate() {
+                let var = var_pool.get(var_index);
+                fmtln!(fmt, "let {} = &r[{}];", var.name, i);
+                fmtln!(
+                    fmt,
+                    "let typeof_{} = pos.func.dfg.value_type(*{});",
+                    var.name,
+                    var.name
+                );
+            }
+
             replace_inst = true;
         } else {
             // Boring case: Detach the result values, capture them in locals.
@@ -527,7 +540,7 @@ fn gen_isa(
         direct_groups.len()
     );
     fmt.indent(|fmt| {
-        for group_index in direct_groups {
+        for &group_index in direct_groups {
             fmtln!(fmt, "{},", transform_groups.get(group_index).rust_name());
         }
     });

@@ -8,12 +8,14 @@ use crate::cursor::{Cursor, FuncCursor};
 use crate::divconst_magic_numbers::{magic_s32, magic_s64, magic_u32, magic_u64};
 use crate::divconst_magic_numbers::{MS32, MS64, MU32, MU64};
 use crate::flowgraph::ControlFlowGraph;
-use crate::ir::condcodes::{CondCode, IntCC};
-use crate::ir::dfg::ValueDef;
-use crate::ir::instructions::{Opcode, ValueList};
-use crate::ir::types::{I32, I64};
-use crate::ir::Inst;
-use crate::ir::{DataFlowGraph, Ebb, Function, InstBuilder, InstructionData, Type, Value};
+use crate::ir::{
+    condcodes::{CondCode, IntCC},
+    dfg::ValueDef,
+    immediates,
+    instructions::{Opcode, ValueList},
+    types::{I16, I32, I64, I8},
+    DataFlowGraph, Ebb, Function, Inst, InstBuilder, InstructionData, Type, Value,
+};
 use crate::timing;
 
 //----------------------------------------------------------------------
@@ -450,6 +452,70 @@ fn do_divrem_transformation(divrem_info: &DivRemByConstInfo, pos: &mut FuncCurso
     }
 }
 
+#[inline]
+fn resolve_imm64_value(dfg: &DataFlowGraph, value: Value) -> Option<immediates::Imm64> {
+    if let ValueDef::Result(candidate_inst, _) = dfg.value_def(value) {
+        if let InstructionData::UnaryImm {
+            opcode: Opcode::Iconst,
+            imm,
+        } = dfg[candidate_inst]
+        {
+            return Some(imm);
+        }
+    }
+    None
+}
+
+/// Try to transform [(x << N) >> N] into a (un)signed-extending move.
+/// Returns true if the final instruction has been converted to such a move.
+fn try_fold_extended_move(
+    pos: &mut FuncCursor,
+    inst: Inst,
+    opcode: Opcode,
+    arg: Value,
+    imm: immediates::Imm64,
+) -> bool {
+    if let ValueDef::Result(arg_inst, _) = pos.func.dfg.value_def(arg) {
+        if let InstructionData::BinaryImm {
+            opcode: Opcode::IshlImm,
+            arg: prev_arg,
+            imm: prev_imm,
+        } = &pos.func.dfg[arg_inst]
+        {
+            if imm != *prev_imm {
+                return false;
+            }
+
+            let dest_ty = pos.func.dfg.ctrl_typevar(inst);
+            if dest_ty != pos.func.dfg.ctrl_typevar(arg_inst) || !dest_ty.is_int() {
+                return false;
+            }
+
+            let imm_bits: i64 = imm.into();
+            let ireduce_ty = match dest_ty.lane_bits() as i64 - imm_bits {
+                8 => I8,
+                16 => I16,
+                32 => I32,
+                _ => return false,
+            };
+            let ireduce_ty = ireduce_ty.by(dest_ty.lane_count()).unwrap();
+
+            // This becomes a no-op, since ireduce_ty has a smaller lane width than
+            // the argument type (also the destination type).
+            let arg = *prev_arg;
+            let narrower_arg = pos.ins().ireduce(ireduce_ty, arg);
+
+            if opcode == Opcode::UshrImm {
+                pos.func.dfg.replace(inst).uextend(dest_ty, narrower_arg);
+            } else {
+                pos.func.dfg.replace(inst).sextend(dest_ty, narrower_arg);
+            }
+            return true;
+        }
+    }
+    false
+}
+
 /// Apply basic simplifications.
 ///
 /// This folds constants with arithmetic to form `_imm` instructions, and other
@@ -457,69 +523,164 @@ fn do_divrem_transformation(divrem_info: &DivRemByConstInfo, pos: &mut FuncCurso
 fn simplify(pos: &mut FuncCursor, inst: Inst) {
     match pos.func.dfg[inst] {
         InstructionData::Binary { opcode, args } => {
-            if let ValueDef::Result(iconst_inst, _) = pos.func.dfg.value_def(args[1]) {
-                if let InstructionData::UnaryImm {
-                    opcode: Opcode::Iconst,
-                    mut imm,
-                } = pos.func.dfg[iconst_inst]
-                {
-                    let new_opcode = match opcode {
-                        Opcode::Iadd => Opcode::IaddImm,
-                        Opcode::Imul => Opcode::ImulImm,
-                        Opcode::Sdiv => Opcode::SdivImm,
-                        Opcode::Udiv => Opcode::UdivImm,
-                        Opcode::Srem => Opcode::SremImm,
-                        Opcode::Urem => Opcode::UremImm,
-                        Opcode::Band => Opcode::BandImm,
-                        Opcode::Bor => Opcode::BorImm,
-                        Opcode::Bxor => Opcode::BxorImm,
-                        Opcode::Rotl => Opcode::RotlImm,
-                        Opcode::Rotr => Opcode::RotrImm,
-                        Opcode::Ishl => Opcode::IshlImm,
-                        Opcode::Ushr => Opcode::UshrImm,
-                        Opcode::Sshr => Opcode::SshrImm,
-                        Opcode::Isub => {
-                            imm = imm.wrapping_neg();
-                            Opcode::IaddImm
-                        }
-                        _ => return,
-                    };
-                    let ty = pos.func.dfg.ctrl_typevar(inst);
-                    pos.func
-                        .dfg
-                        .replace(inst)
-                        .BinaryImm(new_opcode, ty, imm, args[0]);
-                }
-            } else if let ValueDef::Result(iconst_inst, _) = pos.func.dfg.value_def(args[0]) {
-                if let InstructionData::UnaryImm {
-                    opcode: Opcode::Iconst,
-                    imm,
-                } = pos.func.dfg[iconst_inst]
-                {
-                    let new_opcode = match opcode {
-                        Opcode::Isub => Opcode::IrsubImm,
-                        _ => return,
-                    };
-                    let ty = pos.func.dfg.ctrl_typevar(inst);
-                    pos.func
-                        .dfg
-                        .replace(inst)
-                        .BinaryImm(new_opcode, ty, imm, args[1]);
-                }
+            if let Some(mut imm) = resolve_imm64_value(&pos.func.dfg, args[1]) {
+                let new_opcode = match opcode {
+                    Opcode::Iadd => Opcode::IaddImm,
+                    Opcode::Imul => Opcode::ImulImm,
+                    Opcode::Sdiv => Opcode::SdivImm,
+                    Opcode::Udiv => Opcode::UdivImm,
+                    Opcode::Srem => Opcode::SremImm,
+                    Opcode::Urem => Opcode::UremImm,
+                    Opcode::Band => Opcode::BandImm,
+                    Opcode::Bor => Opcode::BorImm,
+                    Opcode::Bxor => Opcode::BxorImm,
+                    Opcode::Rotl => Opcode::RotlImm,
+                    Opcode::Rotr => Opcode::RotrImm,
+                    Opcode::Ishl => Opcode::IshlImm,
+                    Opcode::Ushr => Opcode::UshrImm,
+                    Opcode::Sshr => Opcode::SshrImm,
+                    Opcode::Isub => {
+                        imm = imm.wrapping_neg();
+                        Opcode::IaddImm
+                    }
+                    Opcode::Ifcmp => Opcode::IfcmpImm,
+                    _ => return,
+                };
+                let ty = pos.func.dfg.ctrl_typevar(inst);
+                pos.func
+                    .dfg
+                    .replace(inst)
+                    .BinaryImm(new_opcode, ty, imm, args[0]);
+
+                // Repeat for BinaryImm simplification.
+                simplify(pos, inst);
+            } else if let Some(imm) = resolve_imm64_value(&pos.func.dfg, args[0]) {
+                let new_opcode = match opcode {
+                    Opcode::Iadd => Opcode::IaddImm,
+                    Opcode::Imul => Opcode::ImulImm,
+                    Opcode::Band => Opcode::BandImm,
+                    Opcode::Bor => Opcode::BorImm,
+                    Opcode::Bxor => Opcode::BxorImm,
+                    Opcode::Isub => Opcode::IrsubImm,
+                    _ => return,
+                };
+                let ty = pos.func.dfg.ctrl_typevar(inst);
+                pos.func
+                    .dfg
+                    .replace(inst)
+                    .BinaryImm(new_opcode, ty, imm, args[1]);
             }
         }
+
+        InstructionData::Unary { opcode, arg } => match opcode {
+            Opcode::AdjustSpDown => {
+                if let Some(imm) = resolve_imm64_value(&pos.func.dfg, arg) {
+                    // Note this works for both positive and negative immediate values.
+                    pos.func.dfg.replace(inst).adjust_sp_down_imm(imm);
+                }
+            }
+            _ => {}
+        },
+
+        InstructionData::BinaryImm { opcode, arg, imm } => {
+            let ty = pos.func.dfg.ctrl_typevar(inst);
+
+            let mut arg = arg;
+            let mut imm = imm;
+            match opcode {
+                Opcode::IaddImm
+                | Opcode::ImulImm
+                | Opcode::BorImm
+                | Opcode::BandImm
+                | Opcode::BxorImm => {
+                    // Fold binary_op(C2, binary_op(C1, x)) into binary_op(binary_op(C1, C2), x)
+                    if let ValueDef::Result(arg_inst, _) = pos.func.dfg.value_def(arg) {
+                        if let InstructionData::BinaryImm {
+                            opcode: prev_opcode,
+                            arg: prev_arg,
+                            imm: prev_imm,
+                        } = &pos.func.dfg[arg_inst]
+                        {
+                            if opcode == *prev_opcode {
+                                if ty == pos.func.dfg.ctrl_typevar(arg_inst) {
+                                    let lhs: i64 = imm.into();
+                                    let rhs: i64 = (*prev_imm).into();
+                                    let new_imm = match opcode {
+                                        Opcode::BorImm => lhs | rhs,
+                                        Opcode::BandImm => lhs & rhs,
+                                        Opcode::BxorImm => lhs ^ rhs,
+                                        Opcode::IaddImm => lhs.wrapping_add(rhs),
+                                        Opcode::ImulImm => lhs.wrapping_mul(rhs),
+                                        _ => panic!("can't happen"),
+                                    };
+                                    let new_imm = immediates::Imm64::from(new_imm);
+                                    let new_arg = *prev_arg;
+                                    pos.func
+                                        .dfg
+                                        .replace(inst)
+                                        .BinaryImm(opcode, ty, new_imm, new_arg);
+                                    imm = new_imm;
+                                    arg = new_arg;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Opcode::UshrImm | Opcode::SshrImm => {
+                    if try_fold_extended_move(pos, inst, opcode, arg, imm) {
+                        return;
+                    }
+                }
+
+                _ => {}
+            };
+
+            // Replace operations that are no-ops.
+            match (opcode, imm.into()) {
+                (Opcode::IaddImm, 0)
+                | (Opcode::ImulImm, 1)
+                | (Opcode::SdivImm, 1)
+                | (Opcode::UdivImm, 1)
+                | (Opcode::BorImm, 0)
+                | (Opcode::BandImm, -1)
+                | (Opcode::BxorImm, 0)
+                | (Opcode::RotlImm, 0)
+                | (Opcode::RotrImm, 0)
+                | (Opcode::IshlImm, 0)
+                | (Opcode::UshrImm, 0)
+                | (Opcode::SshrImm, 0) => {
+                    // Alias the result value with the original argument.
+                    let results = pos.func.dfg.detach_results(inst);
+                    debug_assert!(results.len(&pos.func.dfg.value_lists) == 1);
+                    let first_result = results.get(0, &pos.func.dfg.value_lists).unwrap();
+                    pos.func.dfg.change_to_alias(first_result, arg);
+
+                    // Replace instruction by a nop.
+                    pos.func.dfg.replace(inst).nop();
+                    return;
+                }
+                (Opcode::ImulImm, 0) | (Opcode::BandImm, 0) => {
+                    // Replace by zero.
+                    pos.func.dfg.replace(inst).iconst(ty, 0);
+                    return;
+                }
+                (Opcode::BorImm, -1) => {
+                    // Replace by minus one.
+                    pos.func.dfg.replace(inst).iconst(ty, -1);
+                    return;
+                }
+                _ => {}
+            }
+        }
+
         InstructionData::IntCompare { opcode, cond, args } => {
             debug_assert_eq!(opcode, Opcode::Icmp);
-            if let ValueDef::Result(iconst_inst, _) = pos.func.dfg.value_def(args[1]) {
-                if let InstructionData::UnaryImm {
-                    opcode: Opcode::Iconst,
-                    imm,
-                } = pos.func.dfg[iconst_inst]
-                {
-                    pos.func.dfg.replace(inst).icmp_imm(cond, args[0], imm);
-                }
+            if let Some(imm) = resolve_imm64_value(&pos.func.dfg, args[1]) {
+                pos.func.dfg.replace(inst).icmp_imm(cond, args[0], imm);
             }
         }
+
         InstructionData::CondTrap { .. }
         | InstructionData::Branch { .. }
         | InstructionData::Ternary {
@@ -542,6 +703,7 @@ fn simplify(pos: &mut FuncCursor, inst: Inst) {
                 }
             }
         }
+
         _ => {}
     }
 }

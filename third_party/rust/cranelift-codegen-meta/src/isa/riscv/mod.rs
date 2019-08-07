@@ -8,6 +8,9 @@ use crate::shared::types::Float::{F32, F64};
 use crate::shared::types::Int::{I32, I64};
 use crate::shared::Definitions as SharedDefinitions;
 
+mod encodings;
+mod recipes;
+
 fn define_settings(shared: &SettingGroup) -> SettingGroup {
     let mut setting = SettingGroupBuilder::new("riscv");
 
@@ -89,6 +92,7 @@ pub fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     let inst_group = InstructionGroupBuilder::new(
         "riscv",
         "riscv specific instruction set",
+        &mut shared_defs.all_instructions,
         &shared_defs.format_registry,
     )
     .build();
@@ -112,7 +116,24 @@ pub fn define(shared_defs: &mut SharedDefinitions) -> TargetIsa {
     rv_64.legalize_type(F32, expand);
     rv_64.legalize_type(F64, expand);
 
+    let recipes = recipes::define(shared_defs, &regs);
+
+    let encodings = encodings::define(shared_defs, &settings, &recipes);
+    rv_32.set_encodings(encodings.enc32);
+    rv_64.set_encodings(encodings.enc64);
+    let encodings_predicates = encodings.inst_pred_reg.extract();
+
+    let recipes = recipes.collect();
+
     let cpu_modes = vec![rv_32, rv_64];
 
-    TargetIsa::new("riscv", inst_group, settings, regs, cpu_modes)
+    TargetIsa::new(
+        "riscv",
+        inst_group,
+        settings,
+        regs,
+        recipes,
+        cpu_modes,
+        encodings_predicates,
+    )
 }
