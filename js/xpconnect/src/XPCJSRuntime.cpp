@@ -401,9 +401,11 @@ static bool PrincipalImmuneToScriptPolicy(nsIPrincipal* aPrincipal) {
   aPrincipal->GetURI(getter_AddRefs(principalURI));
   MOZ_ASSERT(principalURI);
 
-  if (principalURI->SchemeIs("about")) {
+  bool isAbout;
+  nsresult rv = principalURI->SchemeIs("about", &isAbout);
+  if (NS_SUCCEEDED(rv) && isAbout) {
     nsCOMPtr<nsIAboutModule> module;
-    nsresult rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
+    rv = NS_GetAboutModule(principalURI, getter_AddRefs(module));
     if (NS_SUCCEEDED(rv)) {
       uint32_t flags;
       rv = module->GetURIFlags(principalURI, &flags);

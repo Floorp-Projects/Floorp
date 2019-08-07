@@ -313,8 +313,9 @@ NS_IMETHODIMP nsSound::Play(nsIURL* aURL) {
 
   if (!libcanberra) return NS_ERROR_NOT_AVAILABLE;
 
-  nsresult rv;
-  if (aURL->SchemeIs("file")) {
+  bool isFile;
+  nsresult rv = aURL->SchemeIs("file", &isFile);
+  if (NS_SUCCEEDED(rv) && isFile) {
     ca_context* ctx = ca_context_get_default();
     if (!ctx) {
       return NS_ERROR_OUT_OF_MEMORY;

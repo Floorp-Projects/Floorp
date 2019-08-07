@@ -1349,7 +1349,9 @@ void gfxUserFontSet::UserFontCache::Entry::ReportMemory(
       spec.ReplaceChar('/', '\\');
       // Some fonts are loaded using horrendously-long data: URIs;
       // truncate those before reporting them.
-      if (mURI->get()->SchemeIs("data") && spec.Length() > 255) {
+      bool isData;
+      if (NS_SUCCEEDED(mURI->get()->SchemeIs("data", &isData)) && isData &&
+          spec.Length() > 255) {
         spec.Truncate(252);
         spec.AppendLiteral("...");
       }
