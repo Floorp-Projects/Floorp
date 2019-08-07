@@ -1,0 +1,80 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set sw=2 ts=8 et tw=80 ft=cpp : */
+
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PNecko;
+include protocol PStreamFilter;
+include InputStreamParams;
+include URIParams;
+include PBackgroundSharedTypes;
+include NeckoChannelParams;
+include IPCServiceWorkerDescriptor;
+include IPCStream;
+include DOMTypes;
+
+include "mozilla/net/NeckoMessageUtils.h";
+
+using class nsHttpHeaderArray from "nsHttpHeaderArray.h";
+using mozilla::net::NetAddr from "mozilla/net/DNS.h";
+using struct mozilla::net::ResourceTimingStruct from "mozilla/net/TimingStruct.h";
+
+namespace mozilla {
+namespace net {
+
+refcounted protocol PDocumentChannel
+{
+  manager PNecko;
+
+parent:
+
+  async Suspend();
+  async Resume();
+
+  async Cancel(nsresult status);
+
+  async __delete__();
+
+child:
+
+  // Used to cancel child channel if we hit errors during creating and
+  // AsyncOpen of nsHttpChannel on the parent.
+  async FailedAsyncOpen(nsresult status);
+
+  async NotifyChannelClassifierProtectionDisabled(uint32_t acceptedReason);
+  async NotifyCookieAllowed();
+  async NotifyCookieBlocked(uint32_t rejectedReason);
+
+  async SetClassifierMatchedInfo(nsCString list, nsCString provider, nsCString fullHash);
+  async SetClassifierMatchedTrackingInfo(nsCString lists, nsCString fullHash);
+
+  // This message is sent to a child that has been redirected to another process.
+  // As a consequence, it should cleanup the channel listeners and remove the
+  // request from the loadGroup.
+  async CancelForProcessSwitch();
+
+  async RedirectToRealChannel(uint32_t aRegistrarId,
+                              nsIURI aURI,
+                              uint32_t aNewLoadFlags,
+                              ReplacementChannelConfigInit? aInit,
+                              LoadInfoArgs? aLoadInfo,
+                              uint64_t aChannelId,
+                              nsIURI aOriginalURI,
+                              uint32_t aRedirectMode,
+                              uint32_t aRedirectFlags,
+                              uint32_t? aContentDisposition,
+                              nsString? aContentDispositionFilename) returns(nsresult rv);
+
+  async ConfirmRedirect(nsIURI aNewURI) returns(nsresult rv);
+
+  // Tell child to delete channel (all IPDL deletes must be done from child to
+  // avoid races: see bug 591708).
+  async DeleteSelf();
+
+};
+
+} // namespace net
+} // namespace mozilla
+

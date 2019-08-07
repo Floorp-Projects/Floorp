@@ -131,6 +131,13 @@ bool NeckoChild::DeallocPAltDataOutputStreamChild(
   return true;
 }
 
+already_AddRefed<PDocumentChannelChild> NeckoChild::AllocPDocumentChannelChild(
+    const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
+    const DocumentChannelCreationArgs& args) {
+  MOZ_ASSERT_UNREACHABLE("AllocPDocumentChannelChild should not be called");
+  return nullptr;
+}
+
 PFTPChannelChild* NeckoChild::AllocPFTPChannelChild(
     const PBrowserOrId& aBrowser, const SerializedLoadContext& aSerialized,
     const FTPChannelCreationArgs& aOpenArgs) {
