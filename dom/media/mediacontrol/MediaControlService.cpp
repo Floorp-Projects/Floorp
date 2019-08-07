@@ -48,7 +48,7 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(MediaControlService)
 NS_IMPL_RELEASE(MediaControlService)
 
-MediaControlService::MediaControlService() {
+MediaControlService::MediaControlService() : mAudioFocusManager(this) {
   LOG("create media control service");
   RefPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
@@ -58,7 +58,7 @@ MediaControlService::MediaControlService() {
 
 MediaControlService::~MediaControlService() {
   LOG("destroy media control service");
-  ShutdownAllControllers();
+  Shutdown();
 }
 
 NS_IMETHODIMP
@@ -71,12 +71,17 @@ MediaControlService::Observe(nsISupports* aSubject, const char* aTopic,
     if (obs) {
       obs->RemoveObserver(this, "xpcom-shutdown");
     }
-    ShutdownAllControllers();
-    mControllers.Clear();
+    Shutdown();
     sIsXPCOMShutdown = true;
     gMediaControlService = nullptr;
   }
   return NS_OK;
+}
+
+void MediaControlService::Shutdown() {
+  ShutdownAllControllers();
+  mControllers.Clear();
+  mAudioFocusManager.Shutdown();
 }
 
 RefPtr<MediaController> MediaControlService::GetOrCreateControllerById(
