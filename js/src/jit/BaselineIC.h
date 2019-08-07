@@ -1048,9 +1048,6 @@ class ICMonitoredFallbackStub : public ICFallbackStub {
 
  public:
   MOZ_MUST_USE bool initMonitoringChain(JSContext* cx, JSScript* script);
-  MOZ_MUST_USE bool addMonitorStubForValue(JSContext* cx, BaselineFrame* frame,
-                                           StackTypeSet* types,
-                                           HandleValue val);
 
   ICTypeMonitor_Fallback* maybeFallbackMonitorStub() const {
     return fallbackMonitorStub_;

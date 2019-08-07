@@ -1080,26 +1080,54 @@ bool ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx,
   return true;
 }
 
-bool ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx,
-                                                     BaselineFrame* frame,
-                                                     StackTypeSet* types,
-                                                     HandleValue val) {
-  ICTypeMonitor_Fallback* typeMonitorFallback =
-      getFallbackMonitorStub(cx, frame->script());
-  if (!typeMonitorFallback) {
-    return false;
+static void TypeMonitorMagicValue(JSContext* cx, ICTypeMonitor_Fallback* stub,
+                                  JSScript* script, jsbytecode* pc,
+                                  HandleValue value) {
+  MOZ_ASSERT(value.isMagic());
+
+  // It's possible that we arrived here from bailing out of Ion, and that
+  // Ion proved that the value is dead and optimized out. In such cases,
+  // do nothing. However, it's also possible that we have an uninitialized
+  // this, in which case we should not look for other magic values.
+
+  if (value.whyMagic() == JS_OPTIMIZED_OUT) {
+    MOZ_ASSERT(!stub->monitorsThis());
+    return;
   }
-  return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
+
+  // In derived class constructors (including nested arrows/eval), the
+  // |this| argument or GETALIASEDVAR can return the magic TDZ value.
+  MOZ_ASSERT(value.whyMagic() == JS_UNINITIALIZED_LEXICAL);
+  MOZ_ASSERT(script->functionNonDelazifying() || script->isForEval());
+  MOZ_ASSERT(stub->monitorsThis() || *GetNextPc(pc) == JSOP_CHECKTHIS ||
+             *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
+             *GetNextPc(pc) == JSOP_CHECKRETURN);
+  if (stub->monitorsThis()) {
+    JitScript::MonitorThisType(cx, script, TypeSet::UnknownType());
+  } else {
+    JitScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
+  }
 }
 
 bool TypeMonitorResult(JSContext* cx, ICMonitoredFallbackStub* stub,
                        BaselineFrame* frame, HandleScript script,
                        jsbytecode* pc, HandleValue val) {
+  ICTypeMonitor_Fallback* typeMonitorFallback =
+      stub->getFallbackMonitorStub(cx, script);
+  if (!typeMonitorFallback) {
+    return false;
+  }
+
+  if (MOZ_UNLIKELY(val.isMagic())) {
+    TypeMonitorMagicValue(cx, typeMonitorFallback, script, pc, val);
+    return true;
+  }
+
   AutoSweepJitScript sweep(script);
   StackTypeSet* types = script->jitScript()->bytecodeTypes(sweep, script, pc);
   JitScript::MonitorBytecodeType(cx, script, pc, types, val);
 
-  return stub->addMonitorStubForValue(cx, frame, types, val);
+  return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
 }
 
 bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
@@ -1273,6 +1301,7 @@ bool ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx,
                                                     StackTypeSet* types,
                                                     HandleValue val) {
   MOZ_ASSERT(types);
+  MOZ_ASSERT(!val.isMagic());
 
   // Don't attach too many SingleObject/ObjectGroup stubs. If the value is a
   // primitive or if we will attach an any-object stub, we can handle this
@@ -1312,10 +1341,6 @@ bool ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx,
     addOptimizedMonitorStub(stub);
 
   } else if (val.isPrimitive() || types->unknownObject()) {
-    if (val.isMagic(JS_UNINITIALIZED_LEXICAL)) {
-      return true;
-    }
-    MOZ_ASSERT(!val.isMagic());
     ValueType type = val.type();
 
     // Check for existing TypeMonitor stub.
@@ -1455,28 +1480,7 @@ bool DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame,
   res.set(value);
 
   if (MOZ_UNLIKELY(value.isMagic())) {
-    // It's possible that we arrived here from bailing out of Ion, and that
-    // Ion proved that the value is dead and optimized out. In such cases,
-    // do nothing. However, it's also possible that we have an uninitialized
-    // this, in which case we should not look for other magic values.
-
-    if (value.whyMagic() == JS_OPTIMIZED_OUT) {
-      MOZ_ASSERT(!stub->monitorsThis());
-      return true;
-    }
-
-    // In derived class constructors (including nested arrows/eval), the
-    // |this| argument or GETALIASEDVAR can return the magic TDZ value.
-    MOZ_ASSERT(value.isMagic(JS_UNINITIALIZED_LEXICAL));
-    MOZ_ASSERT(frame->isFunctionFrame() || frame->isEvalFrame());
-    MOZ_ASSERT(stub->monitorsThis() || *GetNextPc(pc) == JSOP_CHECKTHIS ||
-               *GetNextPc(pc) == JSOP_CHECKTHISREINIT ||
-               *GetNextPc(pc) == JSOP_CHECKRETURN);
-    if (stub->monitorsThis()) {
-      JitScript::MonitorThisType(cx, script, TypeSet::UnknownType());
-    } else {
-      JitScript::MonitorBytecodeType(cx, script, pc, TypeSet::UnknownType());
-    }
+    TypeMonitorMagicValue(cx, stub, script, pc, value);
     return true;
   }
 
