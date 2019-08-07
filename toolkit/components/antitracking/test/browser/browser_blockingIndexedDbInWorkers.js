@@ -1,6 +1,6 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "IndexedDB in workers",
   async _ => {
     function blockCode() {
