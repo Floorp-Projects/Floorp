@@ -1,25 +1,21 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-#include "Entries.h"
+#include "HashStore.h"
+#include "LookupCacheV4.h"
 #include "nsIFile.h"
 #include "nsTArray.h"
 #include "gtest/gtest.h"
 
+using namespace mozilla;
 using namespace mozilla::safebrowsing;
 
 namespace mozilla {
 namespace safebrowsing {
 class Classifier;
 class LookupCacheV4;
-class TableUpdate;
 }  // namespace safebrowsing
 }  // namespace mozilla
 
-#define GTEST_TABLE_V4 NS_LITERAL_CSTRING("gtest-malware-proto")
-#define GTEST_TABLE_V2 NS_LITERAL_CSTRING("gtest-malware-simple")
+typedef nsCString _Fragment;
+typedef nsTArray<nsCString> _PrefixArray;
 
 template <typename Function>
 void RunTestInNewThread(Function&& aFunction);
@@ -30,49 +26,27 @@ nsresult SyncApplyUpdates(Classifier* aClassifier,
 
 // Return nsIFile with root directory - NS_APP_USER_PROFILE_50_DIR
 // Sub-directories are passed in path argument.
-already_AddRefed<nsIFile> GetFile(const nsTArray<nsString>& aPath);
+already_AddRefed<nsIFile> GetFile(const nsTArray<nsString>& path);
 
 // ApplyUpdate will call |ApplyUpdates| of Classifier within a new thread
-void ApplyUpdate(nsTArray<TableUpdate*>& aUpdates);
+void ApplyUpdate(nsTArray<TableUpdate*>& updates);
 
-void ApplyUpdate(TableUpdate* aUpdate);
+void ApplyUpdate(TableUpdate* update);
 
-/**
- * Prefix processing utility functions
- */
+// This function converts lexigraphic-sorted prefixes to a hashtable
+// which key is prefix size and value is concatenated prefix string.
+void PrefixArrayToPrefixStringMap(const nsTArray<nsCString>& prefixArray,
+                                  PrefixStringMap& out);
 
-typedef nsCString _Prefix;
-typedef nsTArray<nsCString> _PrefixArray;
+nsresult PrefixArrayToAddPrefixArrayV2(const nsTArray<nsCString>& prefixArray,
+                                       AddPrefixArray& out);
 
-// This function converts a lexigraphic-sorted prefixes array
-// to a hash table keyed by prefix size(PrefixStringMap is defined in Entries.h)
-nsresult PrefixArrayToPrefixStringMap(const _PrefixArray& aPrefixArray,
-                                      PrefixStringMap& aOut);
-
-// This function converts a lexigraphic-sorted prefixes array
-// to an array containing AddPrefix(AddPrefix is defined in Entries.h)
-nsresult PrefixArrayToAddPrefixArray(const _PrefixArray& aPrefixArray,
-                                     AddPrefixArray& aOut);
-
-_Prefix CreatePrefixFromURL(const char* aURL, uint8_t aPrefixSize);
-
-_Prefix CreatePrefixFromURL(const nsCString& aURL, uint8_t aPrefixSize);
+// Generate a hash prefix from string
+nsCString GeneratePrefix(const nsCString& aFragment, uint8_t aLength);
 
 // To test if the content is equal
-void CheckContent(LookupCacheV4* aCache, PrefixStringMap& aExpected);
-
-/**
- * Utility function to generate safebrowsing internal structure
- */
+void CheckContent(LookupCacheV4* cache, PrefixStringMap& expected);
 
 // Create a LookupCacheV4 object with sepecified prefix array.
 template <typename T>
-RefPtr<T> SetupLookupCache(const _PrefixArray& aPrefixArray);
-
-/**
- * Retrieve Classifer class
- */
-RefPtr<Classifier> GetClassifier();
-
-nsresult BuildLookupCache(const RefPtr<Classifier>& aClassifier,
-                          const nsACString& aTable, _PrefixArray& aPrefixArray);
+RefPtr<T> SetupLookupCache(const _PrefixArray& prefixArray);

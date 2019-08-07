@@ -1,11 +1,12 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 #include "gtest/gtest.h"
-#include "mozilla/EndianUtils.h"
 #include "ProtocolParser.h"
+#include "mozilla/EndianUtils.h"
+
+using namespace mozilla;
+using namespace mozilla::safebrowsing;
 
 typedef FetchThreatListUpdatesResponse_ListUpdateResponse ListUpdateResponse;
 
@@ -13,51 +14,9 @@ static bool InitUpdateResponse(ListUpdateResponse* aUpdateResponse,
                                ThreatType aThreatType, const nsACString& aState,
                                const nsACString& aChecksum, bool isFullUpdate,
                                const nsTArray<uint32_t>& aFixedLengthPrefixes,
-                               bool aDoPrefixEncoding) {
-  aUpdateResponse->set_threat_type(aThreatType);
-  aUpdateResponse->set_new_client_state(aState.BeginReading(), aState.Length());
-  aUpdateResponse->mutable_checksum()->set_sha256(aChecksum.BeginReading(),
-                                                  aChecksum.Length());
-  aUpdateResponse->set_response_type(isFullUpdate
-                                         ? ListUpdateResponse::FULL_UPDATE
-                                         : ListUpdateResponse::PARTIAL_UPDATE);
+                               bool aDoPrefixEncoding);
 
-  auto additions = aUpdateResponse->mutable_additions()->Add();
-
-  if (!aDoPrefixEncoding) {
-    additions->set_compression_type(RAW);
-    auto rawHashes = additions->mutable_raw_hashes();
-    rawHashes->set_prefix_size(4);
-    auto prefixes = rawHashes->mutable_raw_hashes();
-    for (auto p : aFixedLengthPrefixes) {
-      char buffer[4];
-      NativeEndian::copyAndSwapToBigEndian(buffer, &p, 1);
-      prefixes->append(buffer, 4);
-    }
-    return true;
-  }
-
-  if (1 != aFixedLengthPrefixes.Length()) {
-    printf("This function only supports single value encoding.\n");
-    return false;
-  }
-
-  uint32_t firstValue = aFixedLengthPrefixes[0];
-  additions->set_compression_type(RICE);
-  auto riceHashes = additions->mutable_rice_hashes();
-  riceHashes->set_first_value(firstValue);
-  riceHashes->set_num_entries(0);
-
-  return true;
-}
-
-static void DumpBinary(const nsACString& aBinary) {
-  nsCString s;
-  for (size_t i = 0; i < aBinary.Length(); i++) {
-    s.AppendPrintf("\\x%.2X", (uint8_t)aBinary[i]);
-  }
-  printf("%s\n", s.get());
-}
+static void DumpBinary(const nsACString& aBinary);
 
 TEST(UrlClassifierProtocolParser, UpdateWait)
 {
@@ -136,4 +95,54 @@ TEST(UrlClassifierProtocolParser, SingleValueEncoding)
   }
 
   delete p;
+}
+
+static bool InitUpdateResponse(ListUpdateResponse* aUpdateResponse,
+                               ThreatType aThreatType, const nsACString& aState,
+                               const nsACString& aChecksum, bool isFullUpdate,
+                               const nsTArray<uint32_t>& aFixedLengthPrefixes,
+                               bool aDoPrefixEncoding) {
+  aUpdateResponse->set_threat_type(aThreatType);
+  aUpdateResponse->set_new_client_state(aState.BeginReading(), aState.Length());
+  aUpdateResponse->mutable_checksum()->set_sha256(aChecksum.BeginReading(),
+                                                  aChecksum.Length());
+  aUpdateResponse->set_response_type(isFullUpdate
+                                         ? ListUpdateResponse::FULL_UPDATE
+                                         : ListUpdateResponse::PARTIAL_UPDATE);
+
+  auto additions = aUpdateResponse->mutable_additions()->Add();
+
+  if (!aDoPrefixEncoding) {
+    additions->set_compression_type(RAW);
+    auto rawHashes = additions->mutable_raw_hashes();
+    rawHashes->set_prefix_size(4);
+    auto prefixes = rawHashes->mutable_raw_hashes();
+    for (auto p : aFixedLengthPrefixes) {
+      char buffer[4];
+      NativeEndian::copyAndSwapToBigEndian(buffer, &p, 1);
+      prefixes->append(buffer, 4);
+    }
+    return true;
+  }
+
+  if (1 != aFixedLengthPrefixes.Length()) {
+    printf("This function only supports single value encoding.\n");
+    return false;
+  }
+
+  uint32_t firstValue = aFixedLengthPrefixes[0];
+  additions->set_compression_type(RICE);
+  auto riceHashes = additions->mutable_rice_hashes();
+  riceHashes->set_first_value(firstValue);
+  riceHashes->set_num_entries(0);
+
+  return true;
+}
+
+static void DumpBinary(const nsACString& aBinary) {
+  nsCString s;
+  for (size_t i = 0; i < aBinary.Length(); i++) {
+    s.AppendPrintf("\\x%.2X", (uint8_t)aBinary[i]);
+  }
+  printf("%s\n", s.get());
 }
