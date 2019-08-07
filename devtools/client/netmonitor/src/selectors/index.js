@@ -5,8 +5,9 @@
 "use strict";
 
 const requests = require("./requests");
+const search = require("./search");
 const timingMarkers = require("./timing-markers");
 const ui = require("./ui");
 const webSockets = require("./web-sockets");
 
-Object.assign(exports, requests, timingMarkers, ui, webSockets);
+Object.assign(exports, search, requests, timingMarkers, ui, webSockets);
