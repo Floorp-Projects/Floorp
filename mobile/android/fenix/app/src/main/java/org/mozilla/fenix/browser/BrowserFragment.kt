@@ -16,6 +16,7 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
@@ -66,19 +67,21 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
     private var findBookmarkJob: Job? = null
 
-    /*
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Disabled while awaiting a better solution to #3209
         postponeEnterTransition()
         sharedElementEnterTransition =
-            TransitionInflater.from(context).inflateTransition(android.R.transition.move).setDuration(
-                SHARED_TRANSITION_MS
-            )
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+                .setDuration(
+                    SHARED_TRANSITION_MS
+                )
     }
-    */
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         val view = super.onCreateView(inflater, container, savedInstanceState)
         view.browserLayout.transitionName = "$TAB_ITEM_TRANSITION_NAME${getSessionById()?.id}"
 
@@ -96,7 +99,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         val sessionManager = requireComponents.core.sessionManager
 
         getSessionById()?.let {
-            quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
+            quickActionSheetView =
+                QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
 
             customTabSessionId?.let { customTabSessionId ->
                 customTabsIntegration.set(
@@ -137,13 +141,17 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 requireComponents.core.sessionManager,
                 view.readerViewControlsBar
             ) { available ->
-                if (available) { requireComponents.analytics.metrics.track(Event.ReaderModeAvailable) }
+                if (available) {
+                    requireComponents.analytics.metrics.track(Event.ReaderModeAvailable)
+                }
 
                 browserStore.apply {
                     dispatch(QuickActionSheetAction.ReadableStateChange(available))
-                    dispatch(QuickActionSheetAction.ReaderActiveStateChange(
-                        sessionManager.selectedSession?.readerMode ?: false
-                    ))
+                    dispatch(
+                        QuickActionSheetAction.ReaderActiveStateChange(
+                            sessionManager.selectedSession?.readerMode ?: false
+                        )
+                    )
                 }
             },
             owner = this,
@@ -183,7 +191,9 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         if (customTabsIntegration.onBackPressed()) return true
 
         getSessionById()?.let { session ->
-            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(session)
+            if (session.source == Session.Source.ACTION_VIEW) requireComponents.core.sessionManager.remove(
+                session
+            )
         }
         return false
     }
@@ -198,7 +208,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         quickActionSheetController = DefaultQuickActionSheetController(
             context = context!!,
             navController = findNavController(),
-            currentSession = getSessionById() ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
+            currentSession = getSessionById()
+                ?: requireComponents.core.sessionManager.selectedSessionOrThrow,
             appLinksUseCases = requireComponents.useCases.appLinksUseCases,
             bookmarkTapped = {
                 lifecycleScope.launch { bookmarkTapped(it) }
@@ -214,7 +225,8 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         return if (customTabSessionId != null) Pair(toolbarSize, 0) else Pair(0, toolbarAndQASSize)
     }
 
-    override fun getAppropriateLayoutGravity() = if (customTabSessionId != null) Gravity.TOP else Gravity.BOTTOM
+    override fun getAppropriateLayoutGravity() =
+        if (customTabSessionId != null) Gravity.TOP else Gravity.BOTTOM
 
     private fun themeReaderViewControlsForPrivateMode(view: View) = with(view) {
         listOf(
@@ -223,7 +235,12 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         ).map {
             findViewById<Button>(it)
         }.forEach {
-            it.setTextColor(ContextCompat.getColorStateList(context, R.color.readerview_private_button_color))
+            it.setTextColor(
+                ContextCompat.getColorStateList(
+                    context,
+                    R.color.readerview_private_button_color
+                )
+            )
         }
 
         listOf(
@@ -232,13 +249,19 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         ).map {
             findViewById<RadioButton>(it)
         }.forEach {
-            it.setTextColor(ContextCompat.getColorStateList(context, R.color.readerview_private_radio_color))
+            it.setTextColor(
+                ContextCompat.getColorStateList(
+                    context,
+                    R.color.readerview_private_radio_color
+                )
+            )
         }
     }
 
     private suspend fun bookmarkTapped(session: Session) = withContext(IO) {
         val bookmarksStorage = requireComponents.core.bookmarksStorage
-        val existing = bookmarksStorage.getBookmarksWithUrl(session.url).firstOrNull { it.url == session.url }
+        val existing =
+            bookmarksStorage.getBookmarksWithUrl(session.url).firstOrNull { it.url == session.url }
         if (existing != null) {
             // Bookmark exists, go to edit fragment
             withContext(Main) {
@@ -268,7 +291,9 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                         .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
                             nav(
                                 R.id.browserFragment,
-                                BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(guid)
+                                BrowserFragmentDirections.actionBrowserFragmentToBookmarkEditFragment(
+                                    guid
+                                )
                             )
                         }
                         .setText(getString(R.string.bookmark_saved_snackbar))
@@ -281,7 +306,11 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
     private fun subscribeToTabCollections() {
         requireComponents.core.tabCollectionStorage.getCollections().observe(this, Observer {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
-            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.CollectionsChange(
+                    it
+                )
+            )
         })
     }
 

@@ -19,6 +19,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.transition.TransitionInflater
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,6 +55,12 @@ class SearchFragment : Fragment(), BackHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        postponeEnterTransition()
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+                .setDuration(
+                    SHARED_TRANSITION_MS
+                )
         requireComponents.analytics.metrics.track(Event.InteractWithSearchURLArea)
     }
 
@@ -101,6 +108,7 @@ class SearchFragment : Fragment(), BackHandler {
             (activity as HomeActivity).browsingModeManager.isPrivate
         )
 
+        startPostponedEnterTransition()
         return view
     }
 
@@ -191,7 +199,8 @@ class SearchFragment : Fragment(), BackHandler {
 
         // The user has the option to go to 'Shortcuts' -> 'Search engine settings' to modify the default search engine.
         // When returning from that settings screen we need to update it to account for any changes.
-        val currentDefaultEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+        val currentDefaultEngine =
+            requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
         if (searchStore.state.defaultEngineSource.searchEngine != currentDefaultEngine) {
             searchStore.dispatch(
                 SearchAction.SelectNewDefaultSearchEngine
@@ -232,7 +241,8 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     private fun updateSearchWithLabel(searchState: SearchState) {
-        searchWithShortcuts.visibility = if (searchState.showShortcutEnginePicker) View.VISIBLE else View.GONE
+        searchWithShortcuts.visibility =
+            if (searchState.showShortcutEnginePicker) View.VISIBLE else View.GONE
     }
 
     private fun updateSearchShortuctsIcon(searchState: SearchState) {
@@ -246,7 +256,11 @@ class SearchFragment : Fragment(), BackHandler {
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             REQUEST_CODE_CAMERA_PERMISSIONS -> qrFeature.withFeature {
                 it.onPermissionsResult(permissions, grantResults)
@@ -270,6 +284,7 @@ class SearchFragment : Fragment(), BackHandler {
     }
 
     companion object {
+        private const val SHARED_TRANSITION_MS = 200L
         private const val REQUEST_CODE_CAMERA_PERMISSIONS = 1
     }
 }

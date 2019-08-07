@@ -5,8 +5,10 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
+import android.view.ViewGroup
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
+import androidx.navigation.fragment.FragmentNavigator
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.runWithSession
@@ -27,6 +29,7 @@ import org.mozilla.fenix.utils.Settings
 class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
+    browserLayout: ViewGroup,
     toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,
@@ -57,15 +60,13 @@ class ToolbarIntegration(
                         // We need to dynamically add the options here because if you do it in XML it overwrites
                         val options = NavOptions.Builder().setPopUpTo(R.id.nav_graph, false)
                             .setEnterAnim(R.anim.fade_in).build()
-                        val extras = null
-// Disabled while awaiting a better solution to #3209
-//                        val extras =
-//                            FragmentNavigator.Extras.Builder()
-//                                .addSharedElement(
-//                                    browserLayout,
-//                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
-//                                )
-//                                .build()
+                        val extras =
+                            FragmentNavigator.Extras.Builder()
+                                .addSharedElement(
+                                    browserLayout,
+                                    "$TAB_ITEM_TRANSITION_NAME${sessionManager.selectedSession?.id}"
+                                )
+                                .build()
                         val navController = Navigation.findNavController(toolbar)
                         if (!navController.popBackStack(
                                 R.id.homeFragment,
@@ -104,7 +105,8 @@ class ToolbarIntegration(
             ThemeManager.resolveAttribute(R.attr.primaryText, context), renderStyle = renderStyle
         )
     )
-    private var menuPresenter = MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
+    private var menuPresenter =
+        MenuPresenter(toolbar, context.components.core.sessionManager, sessionId)
 
     override fun start() {
         menuPresenter.start()

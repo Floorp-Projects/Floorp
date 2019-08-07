@@ -25,10 +25,12 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.OnLifecycleEvent
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.FragmentNavigator
 import androidx.navigation.fragment.NavHostFragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE
+import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
@@ -114,8 +116,10 @@ class HomeFragment : Fragment(), AccountObserver {
                 viewLifecycleOwner.lifecycleScope.launch {
                     delay(ANIM_SCROLL_DELAY)
                     restoreLayoutState()
-//                startPostponedEnterTransition()
-                }.invokeOnCompletion { sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this) }
+                    startPostponedEnterTransition()
+                }.invokeOnCompletion {
+                    sessionControlComponent.view.viewTreeObserver.removeOnPreDrawListener(this)
+                }
             }
             return true
         }
@@ -136,10 +140,10 @@ class HomeFragment : Fragment(), AccountObserver {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-// Disabled while awaiting a better solution to #3209
-//        postponeEnterTransition()
-//        sharedElementEnterTransition = TransitionInflater.from(context).inflateTransition(android.R.transition.move)
-//            .setDuration(SHARED_TRANSITION_MS)
+        postponeEnterTransition()
+        sharedElementEnterTransition =
+            TransitionInflater.from(context).inflateTransition(android.R.transition.move)
+                .setDuration(SHARED_TRANSITION_MS)
 
         val sessionObserver = BrowserSessionsObserver(sessionManager, singleSessionObserver) {
             emitSessionChanges()
@@ -189,12 +193,11 @@ class HomeFragment : Fragment(), AccountObserver {
             }
         }
 
-//        postponeEnterTransition()
-
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
         ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
 
+        postponeEnterTransition()
         sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
 
         return view
@@ -208,9 +211,7 @@ class HomeFragment : Fragment(), AccountObserver {
         homeViewModel?.layoutManagerState?.also { parcelable ->
             sessionControlComponent.view.layoutManager?.onRestoreInstanceState(parcelable)
         }
-        val progress = homeViewModel?.motionLayoutProgress
-        homeLayout?.progress =
-            if (progress ?: 0F > MOTION_LAYOUT_PROGRESS_ROUND_POINT) 1.0f else 0f
+        homeLayout?.progress = homeViewModel?.motionLayoutProgress ?: 0F
         homeViewModel?.layoutManagerState = null
     }
 
@@ -223,7 +224,8 @@ class HomeFragment : Fragment(), AccountObserver {
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
 
-            val searchEngine = requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
+            val searchEngine =
+                requireComponents.search.searchEngineManager.getDefaultSearchEngine(requireContext())
             val searchIcon = BitmapDrawable(resources, searchEngine.icon)
             searchIcon.setBounds(0, 0, iconSize, iconSize)
 
@@ -244,13 +246,11 @@ class HomeFragment : Fragment(), AccountObserver {
             invokePendingDeleteJobs()
             onboarding.finish()
             val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)
-// Disabled while awaiting a better solution to #3209
-//            val extras =
-//                FragmentNavigator.Extras.Builder()
-//                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
-//                    .build()
-//            nav(R.id.homeFragment, directions, extras)
-            nav(R.id.homeFragment, directions)
+            val extras =
+                FragmentNavigator.Extras.Builder()
+                    .addSharedElement(toolbar_wrapper, "toolbar_wrapper_transition")
+                    .build()
+            nav(R.id.homeFragment, directions, extras)
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
@@ -268,8 +268,13 @@ class HomeFragment : Fragment(), AccountObserver {
             }
 
             if (onboarding.userHasBeenOnboarded()) {
-                val mode = if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
-                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+                val mode =
+                    if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
+                getManagedEmitter<SessionControlChange>().onNext(
+                    SessionControlChange.ModeChange(
+                        mode
+                    )
+                )
             }
 
             browsingModeManager.mode = newMode
@@ -324,7 +329,11 @@ class HomeFragment : Fragment(), AccountObserver {
                 onboarding.finish()
 
                 val mode = currentMode(context!!)
-                getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.ModeChange(mode))
+                getManagedEmitter<SessionControlChange>().onNext(
+                    SessionControlChange.ModeChange(
+                        mode
+                    )
+                )
             }
         }
     }
@@ -344,13 +353,14 @@ class HomeFragment : Fragment(), AccountObserver {
                 val session = sessionManager.findSessionById(action.sessionId)
                 sessionManager.select(session!!)
                 val directions = HomeFragmentDirections.actionHomeFragmentToBrowserFragment(null)
-// Disabled while awaiting a better solution to #3209
-//                val extras =
-//                    FragmentNavigator.Extras.Builder()
-//                        .addSharedElement(action.tabView, "$TAB_ITEM_TRANSITION_NAME${action.sessionId}")
-//                        .build()
-//                nav(R.id.homeFragment, directions, extras)
-                nav(R.id.homeFragment, directions)
+                val extras =
+                    FragmentNavigator.Extras.Builder()
+                        .addSharedElement(
+                            action.tabView,
+                            "$TAB_ITEM_TRANSITION_NAME${action.sessionId}"
+                        )
+                        .build()
+                nav(R.id.homeFragment, directions, extras)
             }
             is TabAction.Close -> {
                 if (pendingSessionDeletion?.deletionJob == null) {
@@ -430,7 +440,8 @@ class HomeFragment : Fragment(), AccountObserver {
     private fun createDeleteCollectionPrompt(tabCollection: TabCollection) {
         context?.let {
             AlertDialog.Builder(it).apply {
-                val message = context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
+                val message =
+                    context.getString(R.string.tab_collection_dialog_message, tabCollection.title)
                 setMessage(message)
                 setNegativeButton(R.string.tab_collection_dialog_negative) { dialog: DialogInterface, _ ->
                     dialog.cancel()
@@ -531,7 +542,10 @@ class HomeFragment : Fragment(), AccountObserver {
             }
             is CollectionAction.RemoveTab -> {
                 viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-                    requireComponents.core.tabCollectionStorage.removeTabFromCollection(action.collection, action.tab)
+                    requireComponents.core.tabCollectionStorage.removeTabFromCollection(
+                        action.collection,
+                        action.tab
+                    )
                 }
                 requireComponents.analytics.metrics.track(Event.CollectionTabRemoved)
             }
@@ -594,7 +608,11 @@ class HomeFragment : Fragment(), AccountObserver {
     private fun subscribeToTabCollections(): Observer<List<TabCollection>> {
         return Observer<List<TabCollection>> {
             requireComponents.core.tabCollectionStorage.cachedTabCollections = it
-            getManagedEmitter<SessionControlChange>().onNext(SessionControlChange.CollectionsChange(it))
+            getManagedEmitter<SessionControlChange>().onNext(
+                SessionControlChange.CollectionsChange(
+                    it
+                )
+            )
         }.also { observer ->
             requireComponents.core.tabCollectionStorage.getCollections().observe(this, observer)
         }
@@ -659,7 +677,8 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private fun getListOfSessions(): List<Session> {
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
-        val notPendingDeletion: (Session) -> Boolean = { it.id != pendingSessionDeletion?.sessionId }
+        val notPendingDeletion: (Session) -> Boolean =
+            { it.id != pendingSessionDeletion?.sessionId }
         return sessionManager.filteredSessions(isPrivate, notPendingDeletion)
     }
 
@@ -677,10 +696,12 @@ class HomeFragment : Fragment(), AccountObserver {
         }
         viewModel?.tabs = tabs
         val selectedTabs =
-            tabs.find { tab -> tab.sessionId == selectedTabId } ?: if (tabs.size == 1) tabs[0] else null
+            tabs.find { tab -> tab.sessionId == selectedTabId }
+                ?: if (tabs.size == 1) tabs[0] else null
         val selectedSet = if (selectedTabs == null) mutableSetOf() else mutableSetOf(selectedTabs)
         viewModel?.selectedTabs = selectedSet
-        viewModel?.tabCollections = requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
+        viewModel?.tabCollections =
+            requireComponents.core.tabCollectionStorage.cachedTabCollections.reversed()
         viewModel?.selectedTabCollection = selectedTabCollection
         viewModel?.saveCollectionStep =
             step ?: viewModel?.getStepForTabsAndCollectionSize() ?: SaveCollectionStep.SelectTabs
@@ -743,7 +764,10 @@ class HomeFragment : Fragment(), AccountObserver {
     override fun onLoggedOut() = emitAccountChanges()
     override fun onProfileUpdated(profile: Profile) = emitAccountChanges()
 
-    private fun scrollAndAnimateCollection(tabsAddedToCollectionSize: Int, changedCollection: TabCollection? = null) {
+    private fun scrollAndAnimateCollection(
+        tabsAddedToCollectionSize: Int,
+        changedCollection: TabCollection? = null
+    ) {
         if (view != null) {
             viewLifecycleOwner.lifecycleScope.launch {
                 val recyclerView = sessionControlComponent.view
@@ -762,10 +786,14 @@ class HomeFragment : Fragment(), AccountObserver {
                         }
                 }
                 val lastVisiblePosition =
-                    (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition() ?: 0
+                    (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+                        ?: 0
                 if (lastVisiblePosition < indexOfCollection) {
                     val onScrollListener = object : RecyclerView.OnScrollListener() {
-                        override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
+                        override fun onScrollStateChanged(
+                            recyclerView: RecyclerView,
+                            newState: Int
+                        ) {
                             super.onScrollStateChanged(recyclerView, newState)
                             if (newState == SCROLL_STATE_IDLE) {
                                 animateCollection(tabsAddedToCollectionSize, indexOfCollection)
@@ -784,8 +812,10 @@ class HomeFragment : Fragment(), AccountObserver {
 
     private fun animateCollection(addedTabsSize: Int, indexOfCollection: Int) {
         viewLifecycleOwner.lifecycleScope.launch {
-            val viewHolder = sessionControlComponent.view.findViewHolderForAdapterPosition(indexOfCollection)
-            val border = (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
+            val viewHolder =
+                sessionControlComponent.view.findViewHolderForAdapterPosition(indexOfCollection)
+            val border =
+                (viewHolder as? CollectionViewHolder)?.view?.findViewById<View>(R.id.selected_border)
             val listener = object : Animator.AnimatorListener {
                 override fun onAnimationCancel(animation: Animator?) {
                     border?.visibility = View.GONE
@@ -799,7 +829,8 @@ class HomeFragment : Fragment(), AccountObserver {
                         ?.start()
                 }
             }
-            border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)?.setDuration(FADE_ANIM_DURATION)
+            border?.animate()?.alpha(1.0F)?.setStartDelay(ANIM_ON_SCREEN_DELAY)
+                ?.setDuration(FADE_ANIM_DURATION)
                 ?.setListener(listener)?.start()
         }.invokeOnCompletion {
             showSavedSnackbar(addedTabsSize)
@@ -816,7 +847,8 @@ class HomeFragment : Fragment(), AccountObserver {
                 } else {
                     R.string.create_collection_tab_saved
                 }
-                FenixSnackbar.make(view, Snackbar.LENGTH_LONG).setText(view.context.getString(stringRes)).show()
+                FenixSnackbar.make(view, Snackbar.LENGTH_LONG)
+                    .setText(view.context.getString(stringRes)).show()
             }
         }
     }
@@ -853,7 +885,6 @@ class HomeFragment : Fragment(), AccountObserver {
         private const val SHARED_TRANSITION_MS = 200L
         private const val TAB_ITEM_TRANSITION_NAME = "tab_item"
         private const val toolbarPaddingDp = 12f
-        private const val MOTION_LAYOUT_PROGRESS_ROUND_POINT = 0.25f
     }
 }
 
