@@ -4,15 +4,13 @@
 
 this.URLDecorationAnnotationsService = function() {};
 
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
-
 ChromeUtils.defineModuleGetter(
   this,
   "RemoteSettings",
   "resource://services-settings/remote-settings.js"
 );
+
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const COLLECTION_NAME = "anti-tracking-url-decoration";
 const PREF_NAME = "privacy.restrict3rdpartystorage.url_decorations";
@@ -25,17 +23,23 @@ URLDecorationAnnotationsService.prototype = {
   ]),
 
   _initialized: false,
+  _prefBranch: null,
 
   onDataAvailable(entries) {
     // Use this technique in order to ensure the pref cannot be changed by the
     // user e.g. through about:config.  This preferences is only intended as a
     // mechanism for reflecting this data to content processes.
-    Preferences.unlock(PREF_NAME);
-    new Preferences({ defaultBranch: true }).set(
+    if (this._prefBranch === null) {
+      this._prefBranch = Services.prefs.getDefaultBranch("");
+    }
+
+    const branch = this._prefBranch;
+    branch.unlockPref(PREF_NAME);
+    branch.setStringPref(
       PREF_NAME,
       entries.map(x => x.token.replace(/ /, "%20")).join(" ")
     );
-    Preferences.lock(PREF_NAME);
+    branch.lockPref(PREF_NAME);
   },
 
   observe(aSubject, aTopic, aData) {
