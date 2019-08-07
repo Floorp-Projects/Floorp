@@ -1802,7 +1802,9 @@ Toolbox.prototype = {
    * gets the focus.
    */
   _onPickerCanceled: function() {
-    this.win.focus();
+    if (this.hostType !== Toolbox.HostType.WINDOW) {
+      this.win.focus();
+    }
   },
 
   /**
