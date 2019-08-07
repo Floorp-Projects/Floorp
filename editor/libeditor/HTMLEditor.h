@@ -823,7 +823,7 @@ class HTMLEditor final : public TextEditor,
                                                           int32_t aChange,
                                                           int32_t* aReturn);
 
-  virtual bool IsBlockNode(nsINode* aNode) override;
+  virtual bool IsBlockNode(nsINode* aNode) const override;
   using EditorBase::IsBlockNode;
 
   /**
@@ -835,7 +835,7 @@ class HTMLEditor final : public TextEditor,
   /**
    * Returns true if aNode is a container.
    */
-  virtual bool IsContainer(nsINode* aNode) override;
+  virtual bool IsContainer(nsINode* aNode) const override;
 
   /**
    * Join together any adjacent editable text nodes in the range.
@@ -846,7 +846,7 @@ class HTMLEditor final : public TextEditor,
    * IsInVisibleTextFrames() returns true if all text in aText is in visible
    * text frames.  Callers have to guarantee that there is no pending reflow.
    */
-  bool IsInVisibleTextFrames(dom::Text& aText);
+  bool IsInVisibleTextFrames(dom::Text& aText) const;
 
   /**
    * IsVisibleTextNode() returns true if aText has visible text.  If it has
@@ -893,9 +893,10 @@ class HTMLEditor final : public TextEditor,
    *
    * The nsIContent variant returns aIsSet instead of using an out parameter.
    */
-  bool IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
-                                  nsAtom* aAttribute, const nsAString* aValue,
-                                  nsAString* outValue = nullptr);
+  static bool IsTextPropertySetByContent(nsINode* aNode, nsAtom* aProperty,
+                                         nsAtom* aAttribute,
+                                         const nsAString* aValue,
+                                         nsAString* outValue = nullptr);
 
   static dom::Element* GetLinkElement(nsINode* aNode);
 

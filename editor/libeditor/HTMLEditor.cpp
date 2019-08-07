@@ -763,7 +763,7 @@ HTMLEditor::NodeIsBlock(nsINode* aNode, bool* aIsBlock) {
   return NS_OK;
 }
 
-bool HTMLEditor::IsBlockNode(nsINode* aNode) {
+bool HTMLEditor::IsBlockNode(nsINode* aNode) const {
   return aNode && NodeIsBlockStatic(aNode);
 }
 
@@ -3744,7 +3744,7 @@ bool HTMLEditor::TagCanContainTag(nsAtom& aParentTag, nsAtom& aChildTag) const {
   return HTMLEditUtils::CanContain(parentTagEnum, childTagEnum);
 }
 
-bool HTMLEditor::IsContainer(nsINode* aNode) {
+bool HTMLEditor::IsContainer(nsINode* aNode) const {
   MOZ_ASSERT(aNode);
 
   int32_t tagEnum;
@@ -4234,7 +4234,7 @@ nsIContent* HTMLEditor::GetLastEditableLeaf(nsINode& aNode) {
   return child;
 }
 
-bool HTMLEditor::IsInVisibleTextFrames(Text& aText) {
+bool HTMLEditor::IsInVisibleTextFrames(Text& aText) const {
   nsISelectionController* selectionController = GetSelectionController();
   if (NS_WARN_IF(!selectionController)) {
     return false;
