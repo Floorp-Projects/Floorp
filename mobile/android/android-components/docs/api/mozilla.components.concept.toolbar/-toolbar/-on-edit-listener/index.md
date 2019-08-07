@@ -2,7 +2,7 @@
 
 # OnEditListener
 
-`interface OnEditListener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L133)
+`interface OnEditListener` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L138)
 
 Listener to be invoked when the user edits the URL.
 

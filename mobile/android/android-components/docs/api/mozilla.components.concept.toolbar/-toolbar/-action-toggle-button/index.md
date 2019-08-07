@@ -2,7 +2,7 @@
 
 # ActionToggleButton
 
-`open class ActionToggleButton : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L220)
+`open class ActionToggleButton : `[`Action`](../-action/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L225)
 
 An action button with two states, selected and unselected. When the button is pressed, the
 state changes automatically.

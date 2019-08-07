@@ -2,7 +2,7 @@
 
 # Action
 
-`interface Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L158)
+`interface Action` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L163)
 
 Generic interface for actions to be added to the toolbar.
 

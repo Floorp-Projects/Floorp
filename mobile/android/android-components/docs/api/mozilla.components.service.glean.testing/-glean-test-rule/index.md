@@ -2,7 +2,7 @@
 
 # GleanTestRule
 
-`class GleanTestRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L28)
+`class GleanTestRule : TestWatcher` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/testing/GleanTestRule.kt#L30)
 
 This implements a JUnit rule for writing tests for Glean SDK metrics.
 

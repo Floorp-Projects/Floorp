@@ -17,6 +17,7 @@ Interface to be implemented by components that provide browser toolbar functiona
 | [ActionToggleButton](-action-toggle-button/index.md) | `open class ActionToggleButton : `[`Action`](-action/index.md)<br>An action button with two states, selected and unselected. When the button is pressed, the state changes automatically. |
 | [OnEditListener](-on-edit-listener/index.md) | `interface OnEditListener`<br>Listener to be invoked when the user edits the URL. |
 | [SiteSecurity](-site-security/index.md) | `enum class SiteSecurity` |
+| [SiteTrackingProtection](-site-tracking-protection/index.md) | `enum class SiteTrackingProtection`<br>Indicates which tracking protection status a site has. |
 
 ### Properties
 
@@ -24,6 +25,7 @@ Interface to be implemented by components that provide browser toolbar functiona
 |---|---|
 | [private](private.md) | `abstract var private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets/gets private mode. |
 | [siteSecure](site-secure.md) | `abstract var siteSecure: `[`SiteSecurity`](-site-security/index.md)<br>Sets/Gets the site security to be displayed on the toolbar. |
+| [siteTrackingProtection](site-tracking-protection.md) | `abstract var siteTrackingProtection: `[`SiteTrackingProtection`](-site-tracking-protection/index.md)<br>Sets/Gets the site tracking protection state to be displayed on the toolbar. |
 | [title](title.md) | `abstract var title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets/Gets the title to be displayed on the toolbar. |
 | [url](url.md) | `abstract var url: `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)<br>Sets/Gets the URL to be displayed on the toolbar. |
 

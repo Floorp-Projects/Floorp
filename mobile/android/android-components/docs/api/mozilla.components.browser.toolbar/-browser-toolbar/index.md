@@ -2,7 +2,7 @@
 
 # BrowserToolbar
 
-`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L67)
+`class BrowserToolbar : `[`Toolbar`](../../mozilla.components.concept.toolbar/-toolbar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L69)
 
 A customizable toolbar for browsers.
 
@@ -43,14 +43,17 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | [browserActionMargin](browser-action-margin.md) | `var browserActionMargin: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the margin to be used between browser actions. |
 | [clearViewColor](clear-view-color.md) | `var clearViewColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the color tint of the cancel button. |
 | [displaySiteSecurityIcon](display-site-security-icon.md) | `var displaySiteSecurityIcon: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a site security icon (usually a lock or globe icon) should be visible next to the URL. |
+| [displayTrackingProtectionIcon](display-tracking-protection-icon.md) | `var displayTrackingProtectionIcon: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Set/Get whether a tracking protection icon (usually a shield icon) should be visible. |
 | [hint](hint.md) | `var hint: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets the text to be displayed when the URL of the toolbar is empty. |
 | [hintColor](hint-color.md) | `var hintColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the text to be displayed when the URL of the toolbar is empty. |
 | [menuViewColor](menu-view-color.md) | `var menuViewColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Gets/Sets the color tint of the menu button. |
 | [onUrlClicked](on-url-clicked.md) | `var onUrlClicked: () -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets a lambda that will be invoked whenever the URL in display mode was clicked. Only if this lambda returns true the toolbar will switch to editing mode. Return false to not switch to editing mode and handle the click manually. |
 | [private](private.md) | `var private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets/gets private mode. |
 | [progressBarGravity](progress-bar-gravity.md) | `var progressBarGravity: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Set progress bar to be at the top of the toolbar. It's on bottom by default. |
+| [separatorColor](separator-color.md) | `var separatorColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the vertical separator between the tracking protection icon and the security indicator icon. |
 | [siteSecure](site-secure.md) | `var siteSecure: `[`SiteSecurity`](../../mozilla.components.concept.toolbar/-toolbar/-site-security/index.md)<br>Sets/Gets the site security to be displayed on the toolbar. |
 | [siteSecurityColor](site-security-color.md) | `var siteSecurityColor: `[`Pair`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-pair/index.html)`<`[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`>`<br>Set/Get the site security icon colours (usually a lock or globe icon). It uses a pair of integers which represent the insecure and secure colours respectively. |
+| [siteTrackingProtection](site-tracking-protection.md) | `var siteTrackingProtection: `[`SiteTrackingProtection`](../../mozilla.components.concept.toolbar/-toolbar/-site-tracking-protection/index.md)<br>Sets/Gets the site tracking protection state to be displayed on the toolbar. |
 | [suggestionBackgroundColor](suggestion-background-color.md) | `var suggestionBackgroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>The background color used for autocomplete suggestions in edit mode. |
 | [suggestionForegroundColor](suggestion-foreground-color.md) | `var suggestionForegroundColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`?`<br>The foreground color used for autocomplete suggestions in edit mode. |
 | [textColor](text-color.md) | `var textColor: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)<br>Sets the colour of the text for the URL/search term displayed in the toolbar. |
@@ -84,9 +87,23 @@ implemented by the DisplayToolbar and EditToolbar classes.
 | [setOnEditFocusChangeListener](set-on-edit-focus-change-listener.md) | `fun setOnEditFocusChangeListener(listener: (`[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when focus of the URL input view (in edit mode) changed. |
 | [setOnEditListener](set-on-edit-listener.md) | `fun setOnEditListener(listener: `[`OnEditListener`](../../mozilla.components.concept.toolbar/-toolbar/-on-edit-listener/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers the given listener to be invoked when the user edits the URL. |
 | [setOnSiteSecurityClickedListener](set-on-site-security-clicked-listener.md) | `fun setOnSiteSecurityClickedListener(listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when the site security indicator icon is clicked. |
+| [setOnTrackingProtectionClickedListener](set-on-tracking-protection-clicked-listener.md) | `fun setOnTrackingProtectionClickedListener(listener: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets a listener to be invoked when the site tracking protection indicator icon is clicked. |
 | [setOnUrlCommitListener](set-on-url-commit-listener.md) | `fun setOnUrlCommitListener(listener: (`[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Registers the given function to be invoked when the user selected a new URL i.e. is done editing. |
 | [setOnUrlLongClickListener](set-on-url-long-click-listener.md) | `fun setOnUrlLongClickListener(handler: (<ERROR CLASS>) -> `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Set a LongClickListener to the urlView of the toolbar. |
 | [setSearchTerms](set-search-terms.md) | `fun setSearchTerms(searchTerms: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Displays the currently used search terms as part of this Toolbar. |
+| [setTrackingProtectionIcons](set-tracking-protection-icons.md) | `fun setTrackingProtectionIcons(iconOnNoTrackersBlocked: <ERROR CLASS> = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_ON_NO_TRACKERS_BLOCKED
+            )
+        ), iconOnTrackersBlocked: <ERROR CLASS> = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_ON_TRACKERS_BLOCKED
+            )
+        ), iconDisabledForSite: <ERROR CLASS> = requireNotNull(
+            context.getDrawable(
+                TrackingProtectionIconView.DEFAULT_ICON_OFF_FOR_A_SITE
+            )
+        )): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Sets the different icons that the tracking protection icon could has depending of its [Toolbar.siteTrackingProtection](../../mozilla.components.concept.toolbar/-toolbar/site-tracking-protection.md) |
 | [setUrlTextPadding](set-url-text-padding.md) | `fun setUrlTextPadding(left: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = displayToolbar.urlView.paddingLeft, top: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = displayToolbar.urlView.paddingTop, right: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = displayToolbar.urlView.paddingRight, bottom: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)` = displayToolbar.urlView.paddingBottom): <ERROR CLASS>`<br>Sets the padding to be applied to the URL text (in display mode). |
 
 ### Inherited Functions

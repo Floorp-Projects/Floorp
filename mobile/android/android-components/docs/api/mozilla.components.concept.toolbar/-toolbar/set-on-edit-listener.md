@@ -2,7 +2,7 @@
 
 # setOnEditListener
 
-`abstract fun setOnEditListener(listener: `[`OnEditListener`](-on-edit-listener/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L118)
+`abstract fun setOnEditListener(listener: `[`OnEditListener`](-on-edit-listener/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L123)
 
 Registers the given listener to be invoked when the user edits the URL.
 

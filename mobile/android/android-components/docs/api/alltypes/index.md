@@ -372,7 +372,6 @@
 | [mozilla.components.service.fxa.PersistCallback](../mozilla.components.service.fxa/-persist-callback.md) |  |
 | [mozilla.components.feature.session.PictureInPictureFeature](../mozilla.components.feature.session/-picture-in-picture-feature/index.md) | A simple implementation of Picture-in-picture mode if on a supported platform. |
 | [mozilla.components.service.glean.private.PingType](../mozilla.components.service.glean.private/-ping-type/index.md) | This implements the developer facing API for custom pings. |
-| [mozilla.components.service.glean.scheduler.PingUploadWorker](../mozilla.components.service.glean.scheduler/-ping-upload-worker/index.md) | This class is the worker class used by [WorkManager](#) to handle uploading the ping to the server. |
 | [mozilla.components.support.test.robolectric.shadow.PixelCopyShadow](../mozilla.components.support.test.robolectric.shadow/-pixel-copy-shadow/index.md) | Shadow for [PixelCopy](#) API. |
 | [mozilla.components.feature.webnotifications.Placeholder](../mozilla.components.feature.webnotifications/-placeholder/index.md) |  |
 | [mozilla.components.browser.storage.sync.PlacesBookmarksStorage](../mozilla.components.browser.storage.sync/-places-bookmarks-storage/index.md) | Implementation of the [BookmarksStorage](../mozilla.components.concept.storage/-bookmarks-storage/index.md) which is backed by a Rust Places lib via [PlacesApi](#). |

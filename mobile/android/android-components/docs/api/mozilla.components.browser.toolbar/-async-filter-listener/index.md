@@ -2,7 +2,7 @@
 
 # AsyncFilterListener
 
-`class AsyncFilterListener : `[`OnFilterListener`](../../mozilla.components.ui.autocomplete/-on-filter-listener.md)`, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L698)
+`class AsyncFilterListener : `[`OnFilterListener`](../../mozilla.components.ui.autocomplete/-on-filter-listener.md)`, CoroutineScope` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L793)
 
 Wraps [filter](#) execution in a coroutine context, cancelling prior executions on every invocation.
 [coroutineContext](coroutine-context.md) must be of type that doesn't propagate cancellation of its children upwards.

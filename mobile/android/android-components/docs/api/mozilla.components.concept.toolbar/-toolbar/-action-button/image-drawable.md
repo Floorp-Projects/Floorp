@@ -2,7 +2,7 @@
 
 # imageDrawable
 
-`val imageDrawable: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L177)
+`val imageDrawable: <ERROR CLASS>?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/toolbar/src/main/java/mozilla/components/concept/toolbar/Toolbar.kt#L182)
 
 The drawable to be shown.
 

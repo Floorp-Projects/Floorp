@@ -2,7 +2,7 @@
 
 # padding
 
-`val padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L603)
+`val padding: `[`Padding`](../../../mozilla.components.support.base.android/-padding/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/toolbar/src/main/java/mozilla/components/browser/toolbar/BrowserToolbar.kt#L698)
 
 a custom [Padding](../../../mozilla.components.support.base.android/-padding/index.md) for this Button.
 

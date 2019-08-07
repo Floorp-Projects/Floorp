@@ -148,7 +148,6 @@
 | [mozilla.components.service.glean.debug](mozilla.components.service.glean.debug/index.md) |  |
 | [mozilla.components.service.glean.error](mozilla.components.service.glean.error/index.md) |  |
 | [mozilla.components.service.glean.private](mozilla.components.service.glean.private/index.md) |  |
-| [mozilla.components.service.glean.scheduler](mozilla.components.service.glean.scheduler/index.md) |  |
 | [mozilla.components.service.glean.storages](mozilla.components.service.glean.storages/index.md) |  |
 | [mozilla.components.service.glean.testing](mozilla.components.service.glean.testing/index.md) |  |
 | [mozilla.components.service.glean.timing](mozilla.components.service.glean.timing/index.md) |  |
