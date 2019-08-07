@@ -285,7 +285,7 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
                                    nsIChannel* aChannel,
                                    nsIPrincipal* aPrincipal, nsIURI* aURI,
                                    uint32_t& aRejectedReason) {
-  MOZ_ASSERT(aWindow || aChannel);
+  MOZ_ASSERT(aWindow || aChannel || aPrincipal);
   nsCOMPtr<nsICookieSettings> cookieSettings;
   if (aWindow) {
     if (aWindow->GetExtantDoc()) {
