@@ -475,11 +475,14 @@ class gfxTextRun : public gfxShapedText {
 
   class MOZ_STACK_CLASS GlyphRunIterator {
    public:
-    GlyphRunIterator(const gfxTextRun* aTextRun, Range aRange)
+    GlyphRunIterator(const gfxTextRun* aTextRun, Range aRange,
+                     bool aReverse = false)
         : mTextRun(aTextRun),
+          mDirection(aReverse ? -1 : 1),
           mStartOffset(aRange.start),
           mEndOffset(aRange.end) {
-      mNextIndex = mTextRun->FindFirstGlyphRunContaining(aRange.start);
+      mNextIndex = mTextRun->FindFirstGlyphRunContaining(
+          aReverse ? aRange.end - 1 : aRange.start);
     }
     bool NextRun();
     const GlyphRun* GetGlyphRun() const { return mGlyphRun; }
@@ -491,7 +494,8 @@ class gfxTextRun : public gfxShapedText {
     MOZ_INIT_OUTSIDE_CTOR const GlyphRun* mGlyphRun;
     MOZ_INIT_OUTSIDE_CTOR uint32_t mStringStart;
     MOZ_INIT_OUTSIDE_CTOR uint32_t mStringEnd;
-    uint32_t mNextIndex;
+    const int32_t mDirection;
+    int32_t mNextIndex;
     uint32_t mStartOffset;
     uint32_t mEndOffset;
   };
