@@ -742,22 +742,6 @@
                         label="&fxa.menu.syncSettings.label;"
                         oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <toolbarseparator/>
-        <toolbarbutton id="PanelUI-fxa-menu-logins-button"
-                        class="subviewbutton subviewbutton-iconic"
-                        label="&logins.label;"
-                        oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'fxamenu' })"/>
-        <toolbarseparator id="fxa-menu-service-separator"/>
-        <toolbarbutton id="PanelUI-fxa-menu-monitor-button"
-                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                        label="&monitorFullName;"
-                        closemenu="none"
-                        oncommand="PanelUI.showSubView('PanelUI-fxa-menu-monitor', this, event)"/>
-        <toolbarbutton id="PanelUI-fxa-menu-send-button"
-                        class="subviewbutton subviewbutton-iconic subviewbutton-nav"
-                        label="&sendFullName;"
-                        closemenu="none"
-                        oncommand="PanelUI.showSubView('PanelUI-fxa-menu-send', this, event)"/>
-        <toolbarseparator/>
         <!-- The `Sync Now` button is disabled by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
                         label="&syncSyncNowItem.label;"
@@ -766,6 +750,24 @@
                         class="subviewbutton subviewbutton-iconic"
                         oncommand="gSync.doSyncFromFxaMenu(this);"
                         closemenu="none"/>
+        <toolbarseparator/>
+        <toolbarbutton id="PanelUI-fxa-menu-logins-button"
+                        class="subviewbutton subviewbutton-iconic"
+                        label="&logins.label;"
+                        oncommand="LoginHelper.openPasswordManager(window, { entryPoint: 'fxamenu' })"/>
+        <toolbarseparator id="fxa-menu-service-separator"/>
+        <label value="&fxa.menu.firefoxServices.label;"
+               class="subview-subheader"/>
+        <toolbarbutton id="PanelUI-fxa-menu-monitor-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&monitorFullName;"
+                       type="open-to-new"
+                       oncommand="gSync.openMonitorFromFxaMenu(this);"/>
+        <toolbarbutton id="PanelUI-fxa-menu-send-button"
+                       class="subviewbutton subviewbutton-iconic"
+                       label="&sendFullName;"
+                       type="open-to-new"
+                       oncommand="gSync.openSendFromFxaMenu(this);"/>
       </vbox>
     </panelview>
     <!-- This panelview is used to contain the dynamically created buttons for send tab to devices -->
@@ -774,24 +776,6 @@
         <toolbarbutton id="PanelUI-sendTabToDevice-syncingDevices" class="subviewbutton subviewbutton-iconic pageAction-sendToDevice-notReady"
                        label="&sendToDevice.syncNotReady.label;"
                        disabled="true"/>
-      </vbox>
-    </panelview>
-    <panelview id="PanelUI-fxa-menu-monitor" flex="1" class="PanelUI-subView">
-      <vbox id="PanelUI-fxa-monitor" align="center" class="panel-subview-body">
-        <image class="fxaMonitorLogo" role="presentation"/>
-        <label class="PanelUI-fxa-service-description-label">&fxa.service.monitor.description;</label>
-        <toolbarbutton class="PanelUI-fxa-signin-button"
-                       label="&fxa.service.monitor.launch;"
-                       oncommand="gSync.openMonitorFromFxaMenu(this);"/>
-      </vbox>
-    </panelview>
-    <panelview id="PanelUI-fxa-menu-send" flex="1" class="PanelUI-subView">
-      <vbox id="PanelUI-fxa-send" align="center" class="panel-subview-body">
-        <image class="fxaSendLogo" role="presentation"/>
-        <label class="PanelUI-fxa-service-description-label">&fxa.service.send.description;</label>
-        <toolbarbutton class="PanelUI-fxa-signin-button"
-                       label="&fxa.service.send.launch;"
-                       oncommand="gSync.openSendFromFxaMenu(this);"/>
       </vbox>
     </panelview>
     <panelview id="PanelUI-fxa-menu-sendtab-not-configured" flex="1" class="PanelUI-subView">
