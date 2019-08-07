@@ -372,9 +372,9 @@ bool nsCoreUtils::IsTabDocument(Document* aDocumentNode) {
 
 bool nsCoreUtils::IsErrorPage(Document* aDocument) {
   nsIURI* uri = aDocument->GetDocumentURI();
-  bool isAboutScheme = false;
-  uri->SchemeIs("about", &isAboutScheme);
-  if (!isAboutScheme) return false;
+  if (!uri->SchemeIs("about")) {
+    return false;
+  }
 
   nsAutoCString path;
   uri->GetPathQueryRef(path);
