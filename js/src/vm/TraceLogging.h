@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "jsapi.h"
+#include "jsfriendapi.h"
 
 #include "js/AllocPolicy.h"
 #include "js/HashTable.h"

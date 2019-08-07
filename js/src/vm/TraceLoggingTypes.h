@@ -11,6 +11,8 @@
 
 #include "js/AllocPolicy.h"
 
+class JSLinearString;
+
 // Tree items, meaning they have a start and stop and form a nested tree.
 #define TRACELOGGER_TREE_ITEMS(_)              \
   _(AnnotateScripts)                           \
