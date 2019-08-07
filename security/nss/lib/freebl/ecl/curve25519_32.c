@@ -29,6 +29,10 @@
  *  1. Convert custom integer types to stdint.h types
  */
 
+#ifdef FREEBL_NO_DEPEND
+#include "../stubs.h"
+#endif
+
 #include "ecl-priv.h"
 
 /* fe means field element. Here the field is \Z/(2^255-19). An element t,

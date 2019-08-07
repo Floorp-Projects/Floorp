@@ -12,6 +12,25 @@
 #include "seccomon.h"
 #include "selfencrypt.h"
 
+SECStatus SSLInt_GetHandshakeRandoms(PRFileDesc *fd, SSL3Random client_random,
+                                     SSL3Random server_random) {
+  if (!fd) {
+    return SECFailure;
+  }
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (!ss) {
+    return SECFailure;
+  }
+
+  if (client_random) {
+    memcpy(client_random, ss->ssl3.hs.client_random, sizeof(SSL3Random));
+  }
+  if (server_random) {
+    memcpy(server_random, ss->ssl3.hs.server_random, sizeof(SSL3Random));
+  }
+  return SECSuccess;
+}
+
 SECStatus SSLInt_IncrementClientHandshakeVersion(PRFileDesc *fd) {
   sslSocket *ss = ssl_FindSocket(fd);
   if (!ss) {
