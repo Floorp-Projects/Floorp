@@ -7253,6 +7253,7 @@ var gCSSProperties = {
       "text-decoration-color",
       "text-decoration-line",
       "text-decoration-style",
+      "text-decoration-thickness",
     ],
     initial_values: ["none"],
     other_values: [
@@ -7268,6 +7269,10 @@ var gCSSProperties = {
       "red underline",
       "#ff0000 underline",
       "dotted underline",
+      "solid underline 50px",
+      "underline 50px blue",
+      "50px dotted line-through purple",
+      "overline 2em",
     ],
     invalid_values: [
       "none none",
@@ -7279,6 +7284,8 @@ var gCSSProperties = {
       "underline overline line-through blink none",
       "underline overline line-throuh blink blink",
       "rgb(0, rubbish, 0) underline",
+      "5% underline blue",
+      "dotted line-through 25%",
     ],
   },
   "text-decoration-color": {
@@ -7348,6 +7355,18 @@ var gCSSProperties = {
       "wave",
     ],
   },
+  "text-decoration-thickness": {
+    domProp: "textDecorationThickness",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    applies_to_first_letter: true,
+    applies_to_first_line: true,
+    applies_to_placeholder: true,
+    applies_to_cue: true,
+    initial_values: ["auto"],
+    other_values: ["0", "-14px", "25px", "100em", "-45em"],
+    invalid_values: ["13", "-25", "rubbish", ",./!@#$", "43%", "-10%"],
+  },
   "text-decoration-skip-ink": {
     domProp: "textDecorationSkipInk",
     inherited: true,
@@ -7371,14 +7390,6 @@ var gCSSProperties = {
   "text-underline-offset": {
     domProp: "textUnderlineOffset",
     inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["auto"],
-    other_values: ["0", "-14px", "25px", "100em", "-45em"],
-    invalid_values: ["13", "-25", "rubbish", ",./!@#$", "43%", "-10%"],
-  },
-  "text-decoration-thickness": {
-    domProp: "textDecorationThickness",
-    inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["auto"],
     other_values: ["0", "-14px", "25px", "100em", "-45em"],
