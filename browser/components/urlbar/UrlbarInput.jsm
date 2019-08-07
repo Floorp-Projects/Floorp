@@ -59,8 +59,6 @@ class UrlbarInput {
     // In the future this may be moved to the view, so it can customize
     // the container element.
     let MozXULElement = this.window.MozXULElement;
-    // TODO Bug 1567377: urlbarView-body-inner possibly doesn't need the
-    // role="combobox" once bug 1551598 is fixed.
     this.textbox.after(
       MozXULElement.parseXULToFragment(`
         <vbox id="urlbar-results"
@@ -68,8 +66,7 @@ class UrlbarInput {
               tooltip="aHTMLTooltip"
               hidden="true">
           <html:div class="urlbarView-body-outer">
-            <html:div class="urlbarView-body-inner"
-                      role="combobox">
+            <html:div class="urlbarView-body-inner">
               <html:div id="urlbarView-results"
                         role="listbox"/>
             </html:div>
