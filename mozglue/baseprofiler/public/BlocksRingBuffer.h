@@ -183,12 +183,29 @@ class BlocksRingBuffer {
   // Buffer length, constant. No need for locking.
   PowerOfTwo<Length> BufferLength() const { return mBuffer.BufferLength(); }
 
-  // Number of pushed and cleared entries. Live entries = pushed - cleared.
+  // Snapshot of the buffer state.
+  struct State {
+    // Index to the first block.
+    BlockIndex mRangeStart;
+
+    // Index past the last block. Equals mRangeStart if empty.
+    BlockIndex mRangeEnd;
+
+    // Number of blocks that have been pushed into this buffer.
+    uint64_t mPushedBlockCount = 0;
+
+    // Number of blocks that have been removed from this buffer.
+    // Note: Live entries = pushed - cleared.
+    uint64_t mClearedBlockCount = 0;
+  };
+
+  // Get a snapshot of the current state.
   // Note that these may change right after this thread-safe call, so they
   // should only be used for statistical purposes.
-  Pair<uint64_t, uint64_t> GetPushedAndClearedCounts() const {
+  State GetState() const {
     baseprofiler::detail::BaseProfilerAutoLock lock(mMutex);
-    return {mPushedBlockCount, mClearedBlockCount};
+    return {mFirstReadIndex, mNextWriteIndex, mPushedBlockCount,
+            mClearedBlockCount};
   }
 
   // Iterator-like class used to read from an entry.
