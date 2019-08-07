@@ -36,7 +36,8 @@ internal open class TimingDistributionsStorageEngineImplementation(
 ) : GenericStorageEngine<TimingDistributionData>() {
 
     companion object {
-        // Maximum time of 10 minutes in nanoseconds
+        // Maximum time of 10 minutes in nanoseconds. This maximum means we
+        // retain a maximum of 313 buckets.
         internal const val MAX_SAMPLE_TIME: Long = 1000L * 1000L * 1000L * 60L * 10L
     }
 
