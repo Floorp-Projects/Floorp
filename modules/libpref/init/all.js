@@ -19,7 +19,6 @@ pref("security.tls.version.min", 1);
 pref("security.tls.version.max", 4);
 pref("security.tls.version.fallback-limit", 4);
 pref("security.tls.insecure_fallback_hosts", "");
-pref("security.tls.enable_0rtt_data", false);
 // Turn off post-handshake authentication for TLS 1.3 by default,
 // until the incompatibility with HTTP/2 is resolved:
 // https://tools.ietf.org/html/draft-davidben-http2-tls13-00
