@@ -109,7 +109,7 @@ EXPORTS.mozilla += sorted(['!' + gf for gf in genfiles])
 GENERATED_FILES += [genfiles_tuple]
 
 static_pref_list = GENERATED_FILES[genfiles_tuple]
-static_pref_list.script = 'init/generate_static_pref_list.py:emit_header'
+static_pref_list.script = 'init/generate_static_pref_list.py:emit_code'
 static_pref_list.inputs = ['init/StaticPrefList.yaml']
 
 PYTHON_UNITTEST_MANIFESTS += [
