@@ -146,7 +146,7 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
   UrlClassifierCommon::SetTrackingInfo(aChannel, aList, aHashes);
 
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eFingerprinting, flags,
+      aChannel, flags,
       nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
 
   return NS_OK;

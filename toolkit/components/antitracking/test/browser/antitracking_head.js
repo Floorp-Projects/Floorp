@@ -72,11 +72,36 @@ this.AntiTracking = {
     accessRemoval = null,
     callbackAfterRemoval = null
   ) {
+    let runExtraTests = true;
+    let options = {};
+    if (typeof callbackNonTracking == "object" && !!callbackNonTracking) {
+      options.callback = callbackNonTracking.callback;
+      runExtraTests = callbackNonTracking.runExtraTests;
+      if ("cookieBehavior" in callbackNonTracking) {
+        options.cookieBehavior = callbackNonTracking.cookieBehavior;
+      } else {
+        options.cookieBehavior = BEHAVIOR_ACCEPT;
+      }
+      if ("blockingByAllowList" in callbackNonTracking) {
+        options.blockingByAllowList = callbackNonTracking.blockingByAllowList;
+      } else {
+        options.blockingByAllowList = false;
+      }
+      if ("expectedBlockingNotifications" in callbackNonTracking) {
+        options.expectedBlockingNotifications =
+          callbackNonTracking.expectedBlockingNotifications;
+      } else {
+        options.expectedBlockingNotifications = 0;
+      }
+      callbackNonTracking = options.callback;
+      options.accessRemoval = null;
+      options.callbackAfterRemoval = null;
+    }
+
     // Here we want to test that a 3rd party context is simply blocked.
     this._createTask({
       name,
       cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-      blockingByContentBlockingRTUI: true,
       allowList: false,
       callback: callbackTracking,
       extraPrefs,
@@ -88,48 +113,7 @@ this.AntiTracking = {
     });
     this._createCleanupTask(cleanupFunction);
 
-    this._createTask({
-      name,
-      cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-      blockingByContentBlockingRTUI: false,
-      allowList: true,
-      callback: callbackTracking,
-      extraPrefs,
-      expectedBlockingNotifications,
-      runInPrivateWindow,
-      iframeSandbox,
-      accessRemoval,
-      callbackAfterRemoval,
-    });
-    this._createCleanupTask(cleanupFunction);
-
     if (callbackNonTracking) {
-      let runExtraTests = true;
-      let options = {};
-      if (typeof callbackNonTracking == "object") {
-        options.callback = callbackNonTracking.callback;
-        runExtraTests = callbackNonTracking.runExtraTests;
-        if ("cookieBehavior" in callbackNonTracking) {
-          options.cookieBehavior = callbackNonTracking.cookieBehavior;
-        } else {
-          options.cookieBehavior = BEHAVIOR_ACCEPT;
-        }
-        if ("blockingByContentBlockingRTUI" in callbackNonTracking) {
-          options.blockingByContentBlockingRTUI =
-            callbackNonTracking.blockingByContentBlockingRTUI;
-        } else {
-          options.blockingByContentBlockingRTUI = false;
-        }
-        if ("blockingByAllowList" in callbackNonTracking) {
-          options.blockingByAllowList = callbackNonTracking.blockingByAllowList;
-        } else {
-          options.blockingByAllowList = false;
-        }
-        callbackNonTracking = options.callback;
-        options.accessRemoval = null;
-        options.callbackAfterRemoval = null;
-      }
-
       // Phase 1: Here we want to test that a 3rd party context is not blocked if pref is off.
       if (runExtraTests) {
         // There are five ways in which the third-party context may not be blocked:
@@ -142,7 +126,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_ACCEPT,
-          blockingByContentBlockingRTUI: true,
           allowList: false,
           callback: callbackNonTracking,
           extraPrefs,
@@ -157,7 +140,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_ACCEPT,
-          blockingByContentBlockingRTUI: false,
           allowList: true,
           callback: callbackNonTracking,
           extraPrefs,
@@ -171,23 +153,7 @@ this.AntiTracking = {
 
         this._createTask({
           name,
-          cookieBehavior: BEHAVIOR_ACCEPT,
-          blockingByContentBlockingRTUI: false,
-          allowList: false,
-          callback: callbackNonTracking,
-          extraPrefs,
-          expectedBlockingNotifications: 0,
-          runInPrivateWindow,
-          iframeSandbox,
-          accessRemoval: null, // only passed with non-blocking callback
-          callbackAfterRemoval: null,
-        });
-        this._createCleanupTask(cleanupFunction);
-
-        this._createTask({
-          name,
           cookieBehavior: BEHAVIOR_REJECT,
-          blockingByContentBlockingRTUI: true,
           allowList: false,
           callback: callbackTracking,
           extraPrefs,
@@ -202,7 +168,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_LIMIT_FOREIGN,
-          blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
           extraPrefs,
@@ -217,7 +182,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_REJECT_FOREIGN,
-          blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
           extraPrefs,
@@ -232,7 +196,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlockingRTUI: true,
           allowList: true,
           callback: callbackNonTracking,
           extraPrefs,
@@ -247,7 +210,6 @@ this.AntiTracking = {
         this._createTask({
           name,
           cookieBehavior: BEHAVIOR_REJECT_TRACKER,
-          blockingByContentBlockingRTUI: false,
           allowList: false,
           callback: callbackNonTracking,
           extraPrefs,
@@ -257,6 +219,21 @@ this.AntiTracking = {
           accessRemoval: null, // only passed with non-blocking callback
           callbackAfterRemoval: null,
           thirdPartyPage: TEST_ANOTHER_3RD_PARTY_PAGE,
+        });
+        this._createCleanupTask(cleanupFunction);
+      } else {
+        // This is only used for imageCacheWorker.js tests
+        this._createTask({
+          name,
+          cookieBehavior: options.cookieBehavior,
+          allowList: options.blockingByAllowList,
+          callback: options.callback,
+          extraPrefs,
+          expectedBlockingNotifications: options.expectedBlockingNotifications,
+          runInPrivateWindow,
+          iframeSandbox,
+          accessRemoval: options.accessRemoval,
+          callbackAfterRemoval: options.callbackAfterRemoval,
         });
         this._createCleanupTask(cleanupFunction);
       }
@@ -310,24 +287,11 @@ this.AntiTracking = {
     await windowClosed;
   },
 
-  async _setupTest(
-    win,
-    cookieBehavior,
-    blockingByContentBlockingRTUI,
-    extraPrefs
-  ) {
+  async _setupTest(win, cookieBehavior, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.storage_access.enabled", true],
-        [
-          "browser.contentblocking.allowlist.annotations.enabled",
-          blockingByContentBlockingRTUI,
-        ],
-        [
-          "browser.contentblocking.allowlist.storage.enabled",
-          blockingByContentBlockingRTUI,
-        ],
         ["network.cookie.cookieBehavior", cookieBehavior],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
@@ -376,9 +340,7 @@ this.AntiTracking = {
             : "non-blocking") +
           " cookieBehavior (" +
           options.cookieBehavior +
-          ") and " +
-          (options.blockingByContentBlockingRTUI ? "" : "no") +
-          " contentBlocking third-party cookies UI with" +
+          ") with" +
           (options.allowList ? "" : "out") +
           " allow list test " +
           options.name +
@@ -412,7 +374,6 @@ this.AntiTracking = {
       await AntiTracking._setupTest(
         win,
         options.cookieBehavior,
-        options.blockingByContentBlockingRTUI,
         options.extraPrefs
       );
 
@@ -452,7 +413,6 @@ this.AntiTracking = {
       let doAccessRemovalChecks =
         typeof options.accessRemoval == "string" &&
         options.cookieBehavior == BEHAVIOR_REJECT_TRACKER &&
-        options.blockingByContentBlockingRTUI &&
         !options.allowList;
       let thirdPartyPage;
       if (typeof options.thirdPartyPage == "string") {
@@ -664,12 +624,7 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(
-        win,
-        BEHAVIOR_REJECT_TRACKER,
-        true,
-        extraPrefs
-      );
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
@@ -755,12 +710,7 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(
-        win,
-        BEHAVIOR_REJECT_TRACKER,
-        true,
-        extraPrefs
-      );
+      await AntiTracking._setupTest(win, BEHAVIOR_REJECT_TRACKER, extraPrefs);
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
