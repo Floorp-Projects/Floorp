@@ -786,6 +786,13 @@ panelmultiview[mainViewId="PanelUI-fxa"] #PanelUI-remotetabs-syncnow {
   width: 80px;
 }
 
+.fxaSendToDeviceLogo {
+  margin-top: 15px;
+  height: 119px;
+  width: 164px;
+  list-style-image: url(chrome://browser/skin/fxa/send-to-device.svg);
+}
+
 .fxaSendLogo {
   list-style-image: url(chrome://browser/content/logos/send.svg);
 }
