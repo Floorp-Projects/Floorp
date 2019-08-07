@@ -519,16 +519,16 @@ void MediaStreamTrack::SetReadyState(MediaStreamTrackState aState) {
     }
     if (mMSGListener) {
       RemoveListener(mMSGListener);
-      mMSGListener = nullptr;
     }
     if (mPort) {
       mPort->Destroy();
-      mPort = nullptr;
     }
     if (mStream) {
       mStream->Destroy();
-      mStream = nullptr;
     }
+    mPort = nullptr;
+    mStream = nullptr;
+    mMSGListener = nullptr;
   }
 
   mReadyState = aState;
