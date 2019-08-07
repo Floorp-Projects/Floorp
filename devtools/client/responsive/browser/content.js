@@ -16,7 +16,9 @@ var global = this;
   }
 
   const gDeviceSizeWasPageSize = docShell.deviceSizeIsPageSize;
-  const gFloatingScrollbarsStylesheet = Services.io.newURI("chrome://devtools/skin/floating-scrollbars-responsive-design.css");
+  const gFloatingScrollbarsStylesheet = Services.io.newURI(
+    "chrome://devtools/skin/floating-scrollbars-responsive-design.css"
+  );
 
   let requiresFloatingScrollbars;
   let active = false;
@@ -45,9 +47,13 @@ var global = this;
       return;
     }
     addMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
-    webProgress.addProgressListener(WebProgressListener, Ci.nsIWebProgress.NOTIFY_ALL);
+    const webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
+    webProgress.addProgressListener(
+      WebProgressListener,
+      Ci.nsIWebProgress.NOTIFY_ALL
+    );
     docShell.deviceSizeIsPageSize = true;
     requiresFloatingScrollbars = data.requiresFloatingScrollbars;
     if (data.notifyOnResize) {
@@ -117,8 +123,9 @@ var global = this;
     }
     active = false;
     removeMessageListener("ResponsiveMode:RequestScreenshot", screenshot);
-    const webProgress = docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIWebProgress);
+    const webProgress = docShell
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress);
     webProgress.removeProgressListener(WebProgressListener);
     docShell.deviceSizeIsPageSize = gDeviceSizeWasPageSize;
     // Restore the original physical screen orientation values before RDM is stopped.
@@ -149,7 +156,7 @@ var global = this;
       const winUtils = win.windowUtils;
       try {
         winUtils.loadSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
-      } catch (e) { }
+      } catch (e) {}
     }
 
     flushStyle();
@@ -165,13 +172,16 @@ var global = this;
       const winUtils = win.windowUtils;
       try {
         winUtils.removeSheet(gFloatingScrollbarsStylesheet, win.AGENT_SHEET);
-      } catch (e) { }
+      } catch (e) {}
     }
     flushStyle();
   }
 
   function restoreScreenOrientation() {
-    docShell.contentViewer.DOMDocument.setRDMPaneOrientation("landscape-primary", 0);
+    docShell.contentViewer.DOMDocument.setRDMPaneOrientation(
+      "landscape-primary",
+      0
+    );
   }
 
   function setDocumentInRDMPane(inRDMPane) {
@@ -189,7 +199,10 @@ var global = this;
   }
 
   function screenshot() {
-    const canvas = content.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    const canvas = content.document.createElementNS(
+      "http://www.w3.org/1999/xhtml",
+      "canvas"
+    );
     const ratio = content.devicePixelRatio;
     const width = content.innerWidth * ratio;
     const height = content.innerHeight * ratio;
@@ -198,8 +211,18 @@ var global = this;
     canvas.height = height;
     const ctx = canvas.getContext("2d");
     ctx.scale(ratio, ratio);
-    ctx.drawWindow(content, content.scrollX, content.scrollY, width, height, "#fff");
-    sendAsyncMessage("ResponsiveMode:RequestScreenshot:Done", canvas.toDataURL());
+    ctx.drawWindow(
+      content,
+      content.scrollX,
+      content.scrollY,
+      width,
+      height,
+      "#fff"
+    );
+    sendAsyncMessage(
+      "ResponsiveMode:RequestScreenshot:Done",
+      canvas.toDataURL()
+    );
   }
 
   const WebProgressListener = {
@@ -217,8 +240,10 @@ var global = this;
       });
       makeScrollbarsFloating();
     },
-    QueryInterface: ChromeUtils.generateQI(["nsIWebProgressListener",
-                                            "nsISupportsWeakReference"]),
+    QueryInterface: ChromeUtils.generateQI([
+      "nsIWebProgressListener",
+      "nsISupportsWeakReference",
+    ]),
   };
 })();
 

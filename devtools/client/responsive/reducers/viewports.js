@@ -37,7 +37,6 @@ const INITIAL_VIEWPORT = {
 };
 
 const reducers = {
-
   [ADD_VIEWPORT](viewports, { userContextId }) {
     // For the moment, there can be at most one viewport.
     if (viewports.length === 1) {
@@ -109,7 +108,10 @@ const reducers = {
 
       Services.prefs.setIntPref(VIEWPORT_WIDTH_PREF, newDevice.width);
       Services.prefs.setIntPref(VIEWPORT_HEIGHT_PREF, newDevice.height);
-      Services.prefs.setIntPref(VIEWPORT_PIXEL_RATIO_PREF, newDevice.pixelRatio);
+      Services.prefs.setIntPref(
+        VIEWPORT_PIXEL_RATIO_PREF,
+        newDevice.pixelRatio
+      );
 
       return {
         ...viewport,
@@ -182,7 +184,6 @@ const reducers = {
       };
     });
   },
-
 };
 
 module.exports = function(viewports = INITIAL_VIEWPORTS, action) {

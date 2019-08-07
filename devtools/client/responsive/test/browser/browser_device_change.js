@@ -11,15 +11,15 @@ const DEFAULT_DPPX = window.devicePixelRatio;
 const Types = require("devtools/client/responsive/types");
 
 const testDevice = {
-  "name": "Fake Phone RDM Test",
-  "width": 320,
-  "height": 570,
-  "pixelRatio": 5.5,
-  "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
-  "touch": true,
-  "firefoxOS": true,
-  "os": "custom",
-  "featured": true,
+  name: "Fake Phone RDM Test",
+  width: 320,
+  height: 570,
+  pixelRatio: 5.5,
+  userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+  touch: true,
+  firefoxOS: true,
+  os: "custom",
+  featured: true,
 };
 
 // Add the new device to the list
@@ -31,8 +31,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   reloadOnUAChange(true);
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   // Test defaults
   testViewportDimensions(ui, 320, 480);
@@ -55,9 +59,15 @@ addRDMTask(TEST_URL, async function({ ui }) {
   // Test resetting device when resizing viewport
   const deviceRemoved = once(ui, "device-association-removed");
   reloaded = waitForViewportLoad(ui);
-  await testViewportResize(ui, ".viewport-vertical-resize-handle",
-    [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
-  await Promise.all([ deviceRemoved, reloaded ]);
+  await testViewportResize(
+    ui,
+    ".viewport-vertical-resize-handle",
+    [-10, -10],
+    [testDevice.width, testDevice.height - 10],
+    [0, -10],
+    ui
+  );
+  await Promise.all([deviceRemoved, reloaded]);
   info("Should have default UA after resizing viewport");
   await testUserAgent(ui, DEFAULT_UA);
   await testDevicePixelRatio(ui, DEFAULT_DPPX);
@@ -84,10 +94,13 @@ add_task(async function() {
   reloadOnUAChange(true);
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state =>
-    state.viewports.length == 1 &&
-    state.viewports[0].device === "Laptop (1366 x 768)" &&
-    state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.viewports[0].device === "Laptop (1366 x 768)" &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   // Select device with custom UA
   let reloaded = waitForViewportLoad(ui);

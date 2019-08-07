@@ -5,9 +5,13 @@
 
 // Test resizing the viewport.
 
-const { addViewport, resizeViewport } =
-  require("devtools/client/responsive/actions/viewports");
-const { toggleTouchSimulation } = require("devtools/client/responsive/actions/ui");
+const {
+  addViewport,
+  resizeViewport,
+} = require("devtools/client/responsive/actions/viewports");
+const {
+  toggleTouchSimulation,
+} = require("devtools/client/responsive/actions/ui");
 
 add_task(async function() {
   const store = Store();
@@ -25,5 +29,9 @@ add_task(async function() {
 
   viewport = getState().viewports[0];
   equal(viewport.width, 400, "Resized width of 400 (with touch simulation on)");
-  equal(viewport.height, 400, "Resized height of 400 (with touch simulation on)");
+  equal(
+    viewport.height,
+    400,
+    "Resized height of 400 (with touch simulation on)"
+  );
 });

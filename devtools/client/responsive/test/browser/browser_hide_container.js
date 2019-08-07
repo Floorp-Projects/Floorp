@@ -8,10 +8,12 @@
 const TEST_URL = "http://example.com/";
 const CONTAINER_URL = "chrome://devtools/content/responsive/index.xhtml";
 
-const { TabStateFlusher } =
-  ChromeUtils.import("resource:///modules/sessionstore/TabStateFlusher.jsm");
-const { OUTER_FRAME_LOADER_SYMBOL } =
-  require("devtools/client/responsive/browser/tunnel");
+const { TabStateFlusher } = ChromeUtils.import(
+  "resource:///modules/sessionstore/TabStateFlusher.jsm"
+);
+const {
+  OUTER_FRAME_LOADER_SYMBOL,
+} = require("devtools/client/responsive/browser/tunnel");
 
 function flushContainerTabState(tab) {
   const browser = tab.linkedBrowser;

@@ -57,7 +57,9 @@ class ViewportDimension extends PureComponent {
    * and false otherwise.
    */
   isInputValid(value) {
-    return /^\d{2,4}$/.test(value) && parseInt(value, 10) >= MIN_VIEWPORT_DIMENSION;
+    return (
+      /^\d{2,4}$/.test(value) && parseInt(value, 10) >= MIN_VIEWPORT_DIMENSION
+    );
   }
 
   onInputBlur() {
@@ -76,17 +78,23 @@ class ViewportDimension extends PureComponent {
     }
 
     if (this.widthInput == target) {
-      this.setState({
-        width: target.value,
-        isWidthValid: this.isInputValid(target.value),
-      }, callback);
+      this.setState(
+        {
+          width: target.value,
+          isWidthValid: this.isInputValid(target.value),
+        },
+        callback
+      );
     }
 
     if (this.heightInput == target) {
-      this.setState({
-        height: target.value,
-        isHeightValid: this.isInputValid(target.value),
-      }, callback);
+      this.setState(
+        {
+          height: target.value,
+          isHeightValid: this.isInputValid(target.value),
+        },
+        callback
+      );
     }
   }
 
@@ -148,8 +156,11 @@ class ViewportDimension extends PureComponent {
       onRemoveDeviceAssociation(viewport.id);
     }
 
-    doResizeViewport(viewport.id,
-      parseInt(this.state.width, 10), parseInt(this.state.height, 10));
+    doResizeViewport(
+      viewport.id,
+      parseInt(this.state.width, 10),
+      parseInt(this.state.height, 10)
+    );
   }
 
   render() {
@@ -158,14 +169,17 @@ class ViewportDimension extends PureComponent {
         className:
           "viewport-dimension" +
           (this.state.isEditing ? " editing" : "") +
-          (!this.state.isWidthValid || !this.state.isHeightValid ? " invalid" : ""),
+          (!this.state.isWidthValid || !this.state.isHeightValid
+            ? " invalid"
+            : ""),
       },
       dom.input({
         ref: input => {
           this.widthInput = input;
         },
-        className: "text-input viewport-dimension-input" +
-                   (this.state.isWidthValid ? "" : " invalid"),
+        className:
+          "text-input viewport-dimension-input" +
+          (this.state.isWidthValid ? "" : " invalid"),
         size: 4,
         type: "number",
         value: this.state.width,
@@ -175,15 +189,19 @@ class ViewportDimension extends PureComponent {
         onKeyDown: this.onInputKeyDown,
         onKeyUp: this.onInputKeyUp,
       }),
-      dom.span({
-        className: "viewport-dimension-separator",
-      }, "×"),
+      dom.span(
+        {
+          className: "viewport-dimension-separator",
+        },
+        "×"
+      ),
       dom.input({
         ref: input => {
           this.heightInput = input;
         },
-        className: "text-input viewport-dimension-input" +
-                   (this.state.isHeightValid ? "" : " invalid"),
+        className:
+          "text-input viewport-dimension-input" +
+          (this.state.isHeightValid ? "" : " invalid"),
         size: 4,
         type: "number",
         value: this.state.height,

@@ -31,8 +31,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Verify that remove buttons affect the correct device");
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   const deviceSelector = document.getElementById("device-selector");
 
@@ -53,8 +57,9 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await addDeviceInModal(ui, device2);
 
   info("Verify all custom devices default to enabled in modal");
-  const deviceCbs =
-    [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
+  const deviceCbs = [
+    ...document.querySelectorAll(".device-type-custom .device-input-checkbox"),
+  ];
   is(deviceCbs.length, 2, "Both devices have a checkbox in modal");
   for (const cb of deviceCbs) {
     ok(cb.checked, "Custom device enabled");
@@ -64,8 +69,12 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Look for device 1 and 2 in device selector");
 
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
-    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item added to device selector");
     ok(deviceItem2, "Test device 2 menu item added to device selector");
   });
@@ -73,17 +82,30 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Remove device 2");
-  const deviceRemoveButtons = [...document.querySelectorAll(".device-remove-button")];
-  is(deviceRemoveButtons.length, 2, "Both devices have a remove button in modal");
-  const removed = waitUntilState(store, state => state.devices.custom.length == 1);
+  const deviceRemoveButtons = [
+    ...document.querySelectorAll(".device-remove-button"),
+  ];
+  is(
+    deviceRemoveButtons.length,
+    2,
+    "Both devices have a remove button in modal"
+  );
+  const removed = waitUntilState(
+    store,
+    state => state.devices.custom.length == 1
+  );
   deviceRemoveButtons[1].click();
   await removed;
   document.getElementById("device-close-button").click();
 
   info("Ensure device 2 is no longer in device selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
-    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item exists");
     ok(!deviceItem2, "Test device 2 menu item removed");
   });
@@ -94,15 +116,23 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const { store, document } = toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 
   const deviceSelector = document.getElementById("device-selector");
 
   info("Ensure device 1 is still in device selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
-    const deviceItem1 = menuItems.find(i => i.getAttribute("label") === device1.name);
-    const deviceItem2 = menuItems.find(i => i.getAttribute("label") === device2.name);
+    const deviceItem1 = menuItems.find(
+      i => i.getAttribute("label") === device1.name
+    );
+    const deviceItem2 = menuItems.find(
+      i => i.getAttribute("label") === device2.name
+    );
     ok(deviceItem1, "Test device 1 menu item exists");
     ok(!deviceItem2, "Test device 2 option removed");
   });
@@ -110,14 +140,17 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await openDeviceModal(ui);
 
   info("Ensure device 1 is still in device modal");
-  const deviceCbs =
-    [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
+  const deviceCbs = [
+    ...document.querySelectorAll(".device-type-custom .device-input-checkbox"),
+  ];
   is(deviceCbs.length, 1, "Only 1 custom present in modal");
   const deviceCb1 = deviceCbs.find(cb => cb.value == device1.name);
-  ok(deviceCb1 && deviceCb1.checked, "Test device 1 checkbox exists and enabled");
+  ok(
+    deviceCb1 && deviceCb1.checked,
+    "Test device 1 checkbox exists and enabled"
+  );
 
   info("Ensure device 2 is no longer in device modal");
   const deviceCb2 = deviceCbs.find(cb => cb.value == device2.name);
   ok(!deviceCb2, "Test device 2 checkbox does not exist");
 });
-

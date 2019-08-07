@@ -26,7 +26,6 @@ const INITIAL_DEVICES = {
 };
 
 const reducers = {
-
   [ADD_DEVICE](devices, { device, deviceType }) {
     return {
       ...devices,
@@ -114,7 +113,6 @@ const reducers = {
       modalOpenedFromViewport,
     };
   },
-
 };
 
 module.exports = function(devices = INITIAL_DEVICES, action) {

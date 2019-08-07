@@ -27,15 +27,21 @@ add_task(async function() {
 
   // Get the initial zoom level.
   const initialOuterZoom = getZoomForBrowser(browser);
-  is(initialOuterZoom, INITIAL_ZOOM_LEVEL, "Initial outer zoom should be " +
-      INITIAL_ZOOM_LEVEL + ".");
+  is(
+    initialOuterZoom,
+    INITIAL_ZOOM_LEVEL,
+    "Initial outer zoom should be " + INITIAL_ZOOM_LEVEL + "."
+  );
 
   // Change the zoom level before we open RDM.
   setZoomForBrowser(browser, PRE_RDM_ZOOM_LEVEL);
 
   const preRDMOuterZoom = getZoomForBrowser(browser);
-  is(preRDMOuterZoom, PRE_RDM_ZOOM_LEVEL, "Pre-RDM outer zoom should be " +
-      PRE_RDM_ZOOM_LEVEL + ".");
+  is(
+    preRDMOuterZoom,
+    PRE_RDM_ZOOM_LEVEL,
+    "Pre-RDM outer zoom should be " + PRE_RDM_ZOOM_LEVEL + "."
+  );
 
   // Start RDM on the tab. This will fundamentally change the way that browser behaves.
   // It will now pass all of its messages through to the RDM docshell, meaning that when
@@ -50,8 +56,11 @@ add_task(async function() {
   // RDM pane not useful.
 
   const preZoomUIZoom = uiDocShell.contentViewer.fullZoom;
-  is(preZoomUIZoom, INITIAL_ZOOM_LEVEL,
-      "Pre-zoom UI zoom should be " + INITIAL_ZOOM_LEVEL + ".");
+  is(
+    preZoomUIZoom,
+    INITIAL_ZOOM_LEVEL,
+    "Pre-zoom UI zoom should be " + INITIAL_ZOOM_LEVEL + "."
+  );
 
   // Set the zoom level. This should tunnel to the inner browser and leave the UI alone.
   setZoomForBrowser(browser, MID_RDM_ZOOM_LEVEL);
@@ -62,12 +71,20 @@ add_task(async function() {
 
   // The RDM zoom should be changed.
   const finalRDMZoom = getZoomForBrowser(browser);
-  is(finalRDMZoom, MID_RDM_ZOOM_LEVEL, "RDM zoom should be " + MID_RDM_ZOOM_LEVEL + ".");
+  is(
+    finalRDMZoom,
+    MID_RDM_ZOOM_LEVEL,
+    "RDM zoom should be " + MID_RDM_ZOOM_LEVEL + "."
+  );
 
   // Leave RDM. This should cause the outer pane to take on the full zoom of the RDM pane.
   await closeRDM(tab);
 
   // Bug 1541692: the following todo_is check will become an is check when this bug lands.
   const finalOuterZoom = getZoomForBrowser(browser);
-  todo_is(finalOuterZoom, finalRDMZoom, "Final outer zoom should match last RDM zoom.");
+  todo_is(
+    finalOuterZoom,
+    finalRDMZoom,
+    "Final outer zoom should match last RDM zoom."
+  );
 });

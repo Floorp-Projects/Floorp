@@ -11,15 +11,15 @@ const VIEWPORT_DPPX = DEFAULT_DPPX + 1;
 const Types = require("devtools/client/responsive/types");
 
 const testDevice = {
-  "name": "Fake Phone RDM Test",
-  "width": 320,
-  "height": 470,
-  "pixelRatio": 5.5,
-  "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
-  "touch": true,
-  "firefoxOS": true,
-  "os": "custom",
-  "featured": true,
+  name: "Fake Phone RDM Test",
+  width: 320,
+  height: 470,
+  pixelRatio: 5.5,
+  userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+  touch: true,
+  firefoxOS: true,
+  os: "custom",
+  featured: true,
 };
 
 // Add the new device to the list
@@ -38,8 +38,12 @@ async function waitStartup(ui) {
   const { store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 }
 
 async function testDefaults(ui) {
@@ -72,8 +76,14 @@ async function testResetWhenResizingViewport(ui) {
   info("Test reset when resizing the viewport");
 
   const deviceRemoved = once(ui, "device-association-removed");
-  await testViewportResize(ui, ".viewport-vertical-resize-handle",
-    [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
+  await testViewportResize(
+    ui,
+    ".viewport-vertical-resize-handle",
+    [-10, -10],
+    [testDevice.width, testDevice.height - 10],
+    [0, -10],
+    ui
+  );
   await deviceRemoved;
 
   const dppx = await waitForDevicePixelRatio(ui, DEFAULT_DPPX);
@@ -102,19 +112,35 @@ async function testChangingDevicePixelRatio(ui) {
 function testViewportDevicePixelRatioSelect(ui, expected) {
   info("Test viewport's DevicePixelRatio Select");
 
-  const button = ui.toolWindow.document.getElementById("device-pixel-ratio-menu");
-  const title = ui.toolWindow.document.querySelector("#device-pixel-ratio-menu .title");
-  is(title.textContent, `DPR: ${expected.value}`,
-     `DevicePixelRatio Select value should be: ${expected.value}`);
-  is(button.disabled, expected.disabled,
-    `DevicePixelRatio Select should be ${expected.disabled ? "disabled" : "enabled"}.`);
+  const button = ui.toolWindow.document.getElementById(
+    "device-pixel-ratio-menu"
+  );
+  const title = ui.toolWindow.document.querySelector(
+    "#device-pixel-ratio-menu .title"
+  );
+  is(
+    title.textContent,
+    `DPR: ${expected.value}`,
+    `DevicePixelRatio Select value should be: ${expected.value}`
+  );
+  is(
+    button.disabled,
+    expected.disabled,
+    `DevicePixelRatio Select should be ${
+      expected.disabled ? "disabled" : "enabled"
+    }.`
+  );
 }
 
 function waitForDevicePixelRatio(ui, expected) {
-  return ContentTask.spawn(ui.getViewportBrowser(), { expected }, function(args) {
+  return ContentTask.spawn(ui.getViewportBrowser(), { expected }, function(
+    args
+  ) {
     const initial = content.devicePixelRatio;
-    info(`Listening for pixel ratio change ` +
-         `(current: ${initial}, expected: ${args.expected})`);
+    info(
+      `Listening for pixel ratio change ` +
+        `(current: ${initial}, expected: ${args.expected})`
+    );
     return new Promise(resolve => {
       const mql = content.matchMedia(`(resolution: ${args.expected}dppx)`);
       if (mql.matches) {

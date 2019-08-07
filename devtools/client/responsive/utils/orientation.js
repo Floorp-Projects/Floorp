@@ -30,14 +30,12 @@ function getOrientation(device, viewport, angleToRotateTo = null) {
   const { width: viewportWidth, height: viewportHeight } = viewport;
 
   // Determine the primary orientation of the device screen.
-  const primaryOrientation = deviceHeight >= deviceWidth ?
-    PORTRAIT_PRIMARY :
-    LANDSCAPE_PRIMARY;
+  const primaryOrientation =
+    deviceHeight >= deviceWidth ? PORTRAIT_PRIMARY : LANDSCAPE_PRIMARY;
 
   // Determine the current orientation of the device screen.
-  const currentOrientation = viewportHeight >= viewportWidth ?
-    PORTRAIT_PRIMARY :
-    LANDSCAPE_PRIMARY;
+  const currentOrientation =
+    viewportHeight >= viewportWidth ? PORTRAIT_PRIMARY : LANDSCAPE_PRIMARY;
 
   // Calculate the orientation angle of the device.
   let angle;

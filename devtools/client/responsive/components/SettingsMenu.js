@@ -11,7 +11,12 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const { getStr } = require("../utils/l10n");
 
-loader.lazyRequireGetter(this, "showMenu", "devtools/client/shared/components/menu/utils", true);
+loader.lazyRequireGetter(
+  this,
+  "showMenu",
+  "devtools/client/shared/components/menu/utils",
+  true
+);
 
 class SettingsMenu extends PureComponent {
   static get propTypes() {
@@ -91,13 +96,11 @@ class SettingsMenu extends PureComponent {
   }
 
   render() {
-    return (
-      dom.button({
-        id: "settings-button",
-        className: "devtools-button",
-        onClick: this.onToggleSettingMenu,
-      })
-    );
+    return dom.button({
+      id: "settings-button",
+      className: "devtools-button",
+      onClick: this.onToggleSettingMenu,
+    });
   }
 }
 

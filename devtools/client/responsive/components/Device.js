@@ -48,30 +48,30 @@ class Device extends PureComponent {
   render() {
     const { children, device } = this.props;
     const details = getFormatStr(
-      "responsive.deviceDetails", device.width, device.height,
-      device.pixelRatio, device.userAgent, device.touch
+      "responsive.deviceDetails",
+      device.width,
+      device.height,
+      device.pixelRatio,
+      device.userAgent,
+      device.touch
     );
 
-    return (
-      dom.label(
-        {
-          className: "device-label",
-          key: device.name,
-          title: details,
-        },
-        dom.input({
-          className: "device-input-checkbox",
-          name: device.name,
-          type: "checkbox",
-          value: device.name,
-          checked: device.isChecked,
-          onChange: this.onCheckboxChanged,
-        }),
-        dom.span({ className: "device-name" },
-          device.name
-        ),
-        children
-      )
+    return dom.label(
+      {
+        className: "device-label",
+        key: device.name,
+        title: details,
+      },
+      dom.input({
+        className: "device-input-checkbox",
+        name: device.name,
+        type: "checkbox",
+        value: device.name,
+        checked: device.isChecked,
+        onChange: this.onCheckboxChanged,
+      }),
+      dom.span({ className: "device-name" }, device.name),
+      children
     );
   }
 }

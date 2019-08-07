@@ -8,15 +8,15 @@ const TEST_URL = "data:text/html;charset=utf-8,touch simulation test";
 const Types = require("devtools/client/responsive/types");
 
 const testDevice = {
-  "name": "Fake Phone RDM Test",
-  "width": 320,
-  "height": 470,
-  "pixelRatio": 5.5,
-  "userAgent": "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
-  "touch": true,
-  "firefoxOS": true,
-  "os": "custom",
-  "featured": true,
+  name: "Fake Phone RDM Test",
+  width: 320,
+  height: 470,
+  pixelRatio: 5.5,
+  userAgent: "Mozilla/5.0 (Mobile; rv:39.0) Gecko/39.0 Firefox/39.0",
+  touch: true,
+  firefoxOS: true,
+  os: "custom",
+  featured: true,
 };
 
 // Add the new device to the list
@@ -41,8 +41,12 @@ async function waitStartup(ui) {
   const { store } = ui.toolWindow;
 
   // Wait until the viewport has been added and the device list has been loaded
-  await waitUntilState(store, state => state.viewports.length == 1
-    && state.devices.listState == Types.loadableState.LOADED);
+  await waitUntilState(
+    store,
+    state =>
+      state.viewports.length == 1 &&
+      state.devices.listState == Types.loadableState.LOADED
+  );
 }
 
 async function testDefaults(ui) {
@@ -68,8 +72,14 @@ async function testResizingViewport(ui, device, touch) {
   if (device) {
     deviceRemoved = once(ui, "device-association-removed");
   }
-  await testViewportResize(ui, ".viewport-vertical-resize-handle",
-    [-10, -10], [testDevice.width, testDevice.height - 10], [0, -10], ui);
+  await testViewportResize(
+    ui,
+    ".viewport-vertical-resize-handle",
+    [-10, -10],
+    [testDevice.width, testDevice.height - 10],
+    [0, -10],
+    ui
+  );
   if (device) {
     await deviceRemoved;
   }

@@ -13,15 +13,22 @@ add_task(async function() {
   const store = Store();
   const { getState, dispatch } = store;
 
-  ok(!getState().networkThrottling.enabled,
-    "Network throttling is disabled by default.");
-  equal(getState().networkThrottling.profile, "",
-    "Network throttling profile is empty by default.");
+  ok(
+    !getState().networkThrottling.enabled,
+    "Network throttling is disabled by default."
+  );
+  equal(
+    getState().networkThrottling.profile,
+    "",
+    "Network throttling profile is empty by default."
+  );
 
   dispatch(changeNetworkThrottling(true, "Bob"));
 
-  ok(getState().networkThrottling.enabled,
-    "Network throttling is enabled.");
-  equal(getState().networkThrottling.profile, "Bob",
-    "Network throttling profile is set.");
+  ok(getState().networkThrottling.enabled, "Network throttling is enabled.");
+  equal(
+    getState().networkThrottling.profile,
+    "Bob",
+    "Network throttling profile is set."
+  );
 });

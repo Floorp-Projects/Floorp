@@ -46,7 +46,7 @@ class UserAgentInput extends PureComponent {
   onChange({ target }) {
     const value = target.value;
 
-    this.setState((prevState) => {
+    this.setState(prevState => {
       return {
         ...prevState,
         value,
@@ -71,19 +71,18 @@ class UserAgentInput extends PureComponent {
   }
 
   render() {
-    return (
-      dom.label({ id: "user-agent-label" },
-        "UA:",
-        dom.input({
-          id: "user-agent-input",
-          class: "text-input",
-          onChange: this.onChange,
-          onKeyUp: this.onKeyUp,
-          placeholder: getStr("responsive.customUserAgent"),
-          type: "text",
-          value: this.state.value,
-        })
-      )
+    return dom.label(
+      { id: "user-agent-label" },
+      "UA:",
+      dom.input({
+        id: "user-agent-input",
+        class: "text-input",
+        onChange: this.onChange,
+        onKeyUp: this.onKeyUp,
+        placeholder: getStr("responsive.customUserAgent"),
+        type: "text",
+        value: this.state.value,
+      })
     );
   }
 }

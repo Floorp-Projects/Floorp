@@ -5,10 +5,11 @@
 
 // Test viewport resizing, with and without meta viewport support.
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-  "<head><meta name=\"viewport\" content=\"initial-scale=1.0, " +
-  "minimum-scale=1.0, width=device-width\"></head>" +
-  "<div style=\"width:100%;background-color:green\">test</div>" +
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  '<head><meta name="viewport" content="initial-scale=1.0, ' +
+  'minimum-scale=1.0, width=device-width"></head>' +
+  '<div style="width:100%;background-color:green">test</div>' +
   "</body>";
 addRDMTask(TEST_URL, async function({ ui, manager }) {
   // Turn on the pref that allows meta viewport support.
@@ -56,18 +57,30 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
     await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
     await testViewportZoomWidthAndHeight(
       message + " before resize",
-      ui, b.zoom, b.width, b.height);
+      ui,
+      b.zoom,
+      b.width,
+      b.height
+    );
 
     // Move to the smaller size.
     await setViewportSizeAndAwaitReflow(ui, manager, 600, 300);
     await testViewportZoomWidthAndHeight(
       message + " after resize",
-      ui, a.zoom, a.width, a.height);
+      ui,
+      a.zoom,
+      a.width,
+      a.height
+    );
 
     // Go back to the initial size and check again.
     await setViewportSizeAndAwaitReflow(ui, manager, 300, 600);
     await testViewportZoomWidthAndHeight(
       message + " return to initial size",
-      ui, b.zoom, b.width, b.height);
+      ui,
+      b.zoom,
+      b.width,
+      b.height
+    );
   }
 });

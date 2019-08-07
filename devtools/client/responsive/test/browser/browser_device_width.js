@@ -32,12 +32,15 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 });
 
 async function setViewportSizeWithInputKeys(ui) {
-  const width = 320, height = 500;
+  const width = 320,
+    height = 500;
   let resized = waitForViewportResizeTo(ui, width, height);
   ui.setViewportSize({ width, height });
   await resized;
 
-  const dimensions = ui.toolWindow.document.querySelectorAll(".viewport-dimension-input");
+  const dimensions = ui.toolWindow.document.querySelectorAll(
+    ".viewport-dimension-input"
+  );
 
   // Increase width value to 420 by using the Up arrow key
   resized = waitForViewportResizeTo(ui, 420, height);
@@ -51,40 +54,54 @@ async function setViewportSizeWithInputKeys(ui) {
   resized = waitForViewportResizeTo(ui, width, height);
   dimensions[0].focus();
   for (let i = 1; i <= 10; i++) {
-    EventUtils.synthesizeKey("KEY_ArrowDown", {shiftKey: true});
+    EventUtils.synthesizeKey("KEY_ArrowDown", { shiftKey: true });
   }
   await resized;
 
   // Increase height value to 600 by using `PageUp + Shift` key
   resized = waitForViewportResizeTo(ui, width, 600);
   dimensions[1].focus();
-  EventUtils.synthesizeKey("KEY_PageUp", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_PageUp", { shiftKey: true });
   await resized;
 
   // Resetting height value back to 500 by using `PageDown + Shift` key
   resized = waitForViewportResizeTo(ui, width, height);
   dimensions[1].focus();
-  EventUtils.synthesizeKey("KEY_PageDown", {shiftKey: true});
+  EventUtils.synthesizeKey("KEY_PageDown", { shiftKey: true });
   await resized;
 }
 
 async function doInitialChecks(ui) {
-  const { innerWidth, matchesMedia, outerHeight, outerWidth } = await grabContentInfo(ui);
+  const {
+    innerWidth,
+    matchesMedia,
+    outerHeight,
+    outerWidth,
+  } = await grabContentInfo(ui);
   is(innerWidth, 110, "initial width should be 110px");
   is(outerWidth, 110, "device's outerWidth should be 110px");
   is(outerHeight, 500, "device's outerHeight should be 500px");
-  isnot(window.outerHeight, outerHeight,
-    "window.outerHeight should not be the size of the device's outerHeight");
-  isnot(window.outerWidth, outerWidth,
-    "window.outerWidth should not be the size of the device's outerWidth");
+  isnot(
+    window.outerHeight,
+    outerHeight,
+    "window.outerHeight should not be the size of the device's outerHeight"
+  );
+  isnot(
+    window.outerWidth,
+    outerWidth,
+    "window.outerWidth should not be the size of the device's outerWidth"
+  );
   ok(!matchesMedia, "media query shouldn't match.");
 }
 
 async function checkScreenProps(ui) {
   const { matchesMedia, screen } = await grabContentInfo(ui);
   ok(matchesMedia, "media query should match");
-  isnot(window.screen.width, screen.width,
-        "screen.width should not be the size of the screen.");
+  isnot(
+    window.screen.width,
+    screen.width,
+    "screen.width should not be the size of the screen."
+  );
   is(screen.width, 90, "screen.width should be the page width");
   is(screen.height, 500, "screen.height should be the page height");
 }
@@ -92,8 +109,11 @@ async function checkScreenProps(ui) {
 async function checkScreenProps2(ui) {
   const { matchesMedia, screen } = await grabContentInfo(ui);
   ok(!matchesMedia, "media query should be re-evaluated.");
-  is(window.screen.width, screen.width,
-     "screen.width should be the size of the screen.");
+  is(
+    window.screen.width,
+    screen.width,
+    "screen.width should be the size of the screen."
+  );
 }
 
 function grabContentInfo(ui) {

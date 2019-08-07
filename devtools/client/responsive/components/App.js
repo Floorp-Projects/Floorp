@@ -7,7 +7,10 @@
 "use strict";
 
 const Services = require("Services");
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -15,10 +18,13 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const Toolbar = createFactory(require("./Toolbar"));
 const Viewports = createFactory(require("./Viewports"));
 
-loader.lazyGetter(this, "DeviceModal",
-  () => createFactory(require("./DeviceModal")));
+loader.lazyGetter(this, "DeviceModal", () =>
+  createFactory(require("./DeviceModal"))
+);
 
-const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
+const {
+  changeNetworkThrottling,
+} = require("devtools/client/shared/components/throttling/actions");
 const {
   addCustomDevice,
   editCustomDevice,
@@ -70,7 +76,9 @@ class App extends PureComponent {
     this.onChangePixelRatio = this.onChangePixelRatio.bind(this);
     this.onChangeTouchSimulation = this.onChangeTouchSimulation.bind(this);
     this.onChangeUserAgent = this.onChangeUserAgent.bind(this);
-    this.onChangeViewportOrientation = this.onChangeViewportOrientation.bind(this);
+    this.onChangeViewportOrientation = this.onChangeViewportOrientation.bind(
+      this
+    );
     this.onContentResize = this.onContentResize.bind(this);
     this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
     this.onEditCustomDevice = this.onEditCustomDevice.bind(this);
@@ -82,8 +90,9 @@ class App extends PureComponent {
     this.onRotateViewport = this.onRotateViewport.bind(this);
     this.onScreenshot = this.onScreenshot.bind(this);
     this.onToggleLeftAlignment = this.onToggleLeftAlignment.bind(this);
-    this.onToggleReloadOnTouchSimulation =
-      this.onToggleReloadOnTouchSimulation.bind(this);
+    this.onToggleReloadOnTouchSimulation = this.onToggleReloadOnTouchSimulation.bind(
+      this
+    );
     this.onToggleReloadOnUserAgent = this.onToggleReloadOnUserAgent.bind(this);
     this.onToggleUserAgentInput = this.onToggleUserAgentInput.bind(this);
     this.onUpdateDeviceDisplayed = this.onUpdateDeviceDisplayed.bind(this);
@@ -115,11 +124,14 @@ class App extends PureComponent {
     // TODO: Bug 1332754: Move messaging and logic into the action creator so that the
     // message is sent from the action creator and device property changes are sent from
     // there instead of this function.
-    window.postMessage({
-      type: "change-device",
-      device,
-      viewport: this.props.viewports[id],
-    }, "*");
+    window.postMessage(
+      {
+        type: "change-device",
+        device,
+        viewport: this.props.viewports[id],
+      },
+      "*"
+    );
 
     const orientation = getOrientation(device, this.props.viewports[0]);
 
@@ -131,45 +143,60 @@ class App extends PureComponent {
   }
 
   onChangeNetworkThrottling(enabled, profile) {
-    window.postMessage({
-      type: "change-network-throttling",
-      enabled,
-      profile,
-    }, "*");
+    window.postMessage(
+      {
+        type: "change-network-throttling",
+        enabled,
+        profile,
+      },
+      "*"
+    );
     this.props.dispatch(changeNetworkThrottling(enabled, profile));
   }
 
   onChangePixelRatio(pixelRatio) {
-    window.postMessage({
-      type: "change-pixel-ratio",
-      pixelRatio,
-    }, "*");
+    window.postMessage(
+      {
+        type: "change-pixel-ratio",
+        pixelRatio,
+      },
+      "*"
+    );
     this.props.dispatch(changePixelRatio(0, pixelRatio));
   }
 
   onChangeTouchSimulation(enabled) {
-    window.postMessage({
-      type: "change-touch-simulation",
-      enabled,
-    }, "*");
+    window.postMessage(
+      {
+        type: "change-touch-simulation",
+        enabled,
+      },
+      "*"
+    );
     this.props.dispatch(toggleTouchSimulation(enabled));
   }
 
   onChangeUserAgent(userAgent) {
-    window.postMessage({
-      type: "change-user-agent",
-      userAgent,
-    }, "*");
+    window.postMessage(
+      {
+        type: "change-user-agent",
+        userAgent,
+      },
+      "*"
+    );
     this.props.dispatch(changeUserAgent(userAgent));
   }
 
   onChangeViewportOrientation(id, type, angle, isViewportRotated = false) {
-    window.postMessage({
-      type: "viewport-orientation-change",
-      orientationType: type,
-      angle,
-      isViewportRotated,
-    }, "*");
+    window.postMessage(
+      {
+        type: "viewport-orientation-change",
+        orientationType: type,
+        angle,
+        isViewportRotated,
+      },
+      "*"
+    );
 
     if (isViewportRotated) {
       this.props.dispatch(changeViewportAngle(id, angle));
@@ -177,11 +204,14 @@ class App extends PureComponent {
   }
 
   onContentResize({ width, height }) {
-    window.postMessage({
-      type: "content-resize",
-      width,
-      height,
-    }, "*");
+    window.postMessage(
+      {
+        type: "content-resize",
+        width,
+        height,
+      },
+      "*"
+    );
   }
 
   onDeviceListUpdate(devices) {
@@ -191,7 +221,9 @@ class App extends PureComponent {
   onEditCustomDevice(oldDevice, newDevice) {
     // If the edited device is currently selected, then update its original association
     // and reset UI state.
-    let viewport = this.props.viewports.find(({ device }) => device === oldDevice.name);
+    let viewport = this.props.viewports.find(
+      ({ device }) => device === oldDevice.name
+    );
 
     if (viewport) {
       viewport = {
@@ -243,11 +275,14 @@ class App extends PureComponent {
   onResizeViewport({ width, height }) {
     // This is the response function that listens to changes to the size
     // and sends out a "viewport-resize" message with the new size.
-    window.postMessage({
-      type: "viewport-resize",
-      width,
-      height,
-    }, "*");
+    window.postMessage(
+      {
+        type: "viewport-resize",
+        width,
+        height,
+      },
+      "*"
+    );
   }
 
   /**
@@ -278,9 +313,15 @@ class App extends PureComponent {
       };
     }
 
-    const currentAngle = Services.prefs.getIntPref("devtools.responsive.viewport.angle");
+    const currentAngle = Services.prefs.getIntPref(
+      "devtools.responsive.viewport.angle"
+    );
     const angleToRotateTo = currentAngle === 90 ? 0 : 90;
-    const { type, angle } = getOrientation(currentDevice, viewport, angleToRotateTo);
+    const { type, angle } = getOrientation(
+      currentDevice,
+      viewport,
+      angleToRotateTo
+    );
 
     this.onChangeViewportOrientation(id, type, angle, true);
     this.props.dispatch(rotateViewport(id));
@@ -315,12 +356,7 @@ class App extends PureComponent {
   }
 
   render() {
-    const {
-      devices,
-      networkThrottling,
-      screenshot,
-      viewports,
-    } = this.props;
+    const { devices, networkThrottling, screenshot, viewports } = this.props;
 
     const {
       onAddCustomDevice,
@@ -361,43 +397,43 @@ class App extends PureComponent {
       deviceAdderViewportTemplate = viewports[devices.modalOpenedFromViewport];
     }
 
-    return (
-      dom.div({ id: "app" },
-        Toolbar({
-          devices,
-          networkThrottling,
-          screenshot,
-          selectedDevice,
-          selectedPixelRatio,
-          viewport: viewports[0],
-          onChangeDevice,
-          onChangeNetworkThrottling,
-          onChangePixelRatio,
-          onChangeTouchSimulation,
-          onChangeUserAgent,
-          onExit,
-          onRemoveDeviceAssociation,
-          doResizeViewport,
-          onRotateViewport,
-          onScreenshot,
-          onToggleLeftAlignment,
-          onToggleReloadOnTouchSimulation,
-          onToggleReloadOnUserAgent,
-          onToggleUserAgentInput,
-          onUpdateDeviceModal,
-        }),
-        Viewports({
-          screenshot,
-          viewports,
-          onBrowserMounted,
-          onChangeViewportOrientation,
-          onContentResize,
-          onRemoveDeviceAssociation,
-          doResizeViewport,
-          onResizeViewport,
-        }),
-        devices.isModalOpen ?
-          DeviceModal({
+    return dom.div(
+      { id: "app" },
+      Toolbar({
+        devices,
+        networkThrottling,
+        screenshot,
+        selectedDevice,
+        selectedPixelRatio,
+        viewport: viewports[0],
+        onChangeDevice,
+        onChangeNetworkThrottling,
+        onChangePixelRatio,
+        onChangeTouchSimulation,
+        onChangeUserAgent,
+        onExit,
+        onRemoveDeviceAssociation,
+        doResizeViewport,
+        onRotateViewport,
+        onScreenshot,
+        onToggleLeftAlignment,
+        onToggleReloadOnTouchSimulation,
+        onToggleReloadOnUserAgent,
+        onToggleUserAgentInput,
+        onUpdateDeviceModal,
+      }),
+      Viewports({
+        screenshot,
+        viewports,
+        onBrowserMounted,
+        onChangeViewportOrientation,
+        onContentResize,
+        onRemoveDeviceAssociation,
+        doResizeViewport,
+        onResizeViewport,
+      }),
+      devices.isModalOpen
+        ? DeviceModal({
             deviceAdderViewportTemplate,
             devices,
             onAddCustomDevice,
@@ -407,9 +443,7 @@ class App extends PureComponent {
             onUpdateDeviceDisplayed,
             onUpdateDeviceModal,
           })
-          :
-          null
-      )
+        : null
     );
   }
 }

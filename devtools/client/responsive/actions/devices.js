@@ -20,9 +20,18 @@ const {
 } = require("./index");
 const { post } = require("../utils/message");
 
-const { addDevice, editDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
+const {
+  addDevice,
+  editDevice,
+  getDevices,
+  removeDevice,
+} = require("devtools/client/shared/devices");
 const { changeUserAgent, toggleTouchSimulation } = require("./ui");
-const { changeDevice, changePixelRatio, changeViewportAngle } = require("./viewports");
+const {
+  changeDevice,
+  changePixelRatio,
+  changeViewportAngle,
+} = require("./viewports");
 
 const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
 
@@ -35,8 +44,8 @@ const DISPLAYED_DEVICES_PREF = "devtools.responsive.html.displayedDeviceList";
  */
 function loadPreferredDevices() {
   const preferredDevices = {
-    "added": new Set(),
-    "removed": new Set(),
+    added: new Set(),
+    removed: new Set(),
   };
 
   if (Services.prefs.prefHasUserValue(DISPLAYED_DEVICES_PREF)) {
@@ -72,7 +81,6 @@ function updatePreferredDevices(devices) {
 }
 
 module.exports = {
-
   // This function is only exported for testing purposes
   _loadPreferredDevices: loadPreferredDevices,
 
@@ -175,8 +183,9 @@ module.exports = {
           }
 
           const newDevice = Object.assign({}, device, {
-            displayed: preferredDevices.added.has(device.name) ||
-              (device.featured && !(preferredDevices.removed.has(device.name))),
+            displayed:
+              preferredDevices.added.has(device.name) ||
+              (device.featured && !preferredDevices.removed.has(device.name)),
           });
 
           dispatch(module.exports.addDevice(newDevice, type));
@@ -194,7 +203,9 @@ module.exports = {
 
   restoreDeviceState() {
     return async function(dispatch, getState) {
-      const deviceState = await asyncStorage.getItem("devtools.responsive.deviceState");
+      const deviceState = await asyncStorage.getItem(
+        "devtools.responsive.deviceState"
+      );
       if (!deviceState) {
         return;
       }
@@ -235,5 +246,4 @@ module.exports = {
       modalOpenedFromViewport,
     };
   },
-
 };

@@ -21,8 +21,9 @@
  *    characters.
  */
 
-const TEST_URL = "data:text/html;charset=utf-8," +
-  "<body id=\"body\"><input id=\"input\" type=\"text\"/><p>text</body>";
+const TEST_URL =
+  "data:text/html;charset=utf-8," +
+  '<body id="body"><input id="input" type="text"/><p>text</body>';
 
 addRDMTask(TEST_URL, async function({ ui, manager }) {
   // Turn on the pref that allows meta viewport support.
@@ -62,9 +63,16 @@ addRDMTask(TEST_URL, async function({ ui, manager }) {
 
     const findBar = await gBrowser.getFindBar();
 
-    const findIsTriggered = (findBar._findField.value == "t");
-    is(findIsTriggered, e.findTriggered, "Text input with focused element " + e.id +
-      " should " + (e.findTriggered ? "" : "not ") + "trigger find.");
+    const findIsTriggered = findBar._findField.value == "t";
+    is(
+      findIsTriggered,
+      e.findTriggered,
+      "Text input with focused element " +
+        e.id +
+        " should " +
+        (e.findTriggered ? "" : "not ") +
+        "trigger find."
+    );
     findBar._findField.value = "";
 
     await ContentTask.spawn(browser, {}, async function() {

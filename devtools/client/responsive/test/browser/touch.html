@@ -16,10 +16,10 @@
 
 <script type="text/javascript">
   "use strict";
-  let div = document.querySelector("div");
+  const div = document.querySelector("div");
   let initX, initY;
   let previousEvent = "", touchendTime = 0;
-  let updatePreviousEvent = function (e) {
+  const updatePreviousEvent = function (e) {
     previousEvent = e.type;
   };
 
@@ -27,16 +27,16 @@
   div.style.backgroundColor = "";
 
   div.addEventListener("touchstart", function (evt) {
-    let touch = evt.changedTouches[0];
+    const touch = evt.changedTouches[0];
     initX = touch.pageX;
     initY = touch.pageY;
     updatePreviousEvent(evt);
   }, true);
 
   div.addEventListener("touchmove", function (evt) {
-    let touch = evt.changedTouches[0];
-    let deltaX = touch.pageX - initX;
-    let deltaY = touch.pageY - initY;
+    const touch = evt.changedTouches[0];
+    const deltaX = touch.pageX - initX;
+    const deltaY = touch.pageY - initY;
     div.style.transform = "translate(" + deltaX + "px, " + deltaY + "px)";
     updatePreviousEvent(evt);
   }, true);
@@ -70,7 +70,7 @@
 
   div.addEventListener("mousedown", function (evt) {
     if (previousEvent === "touchend" && touchendTime !== 0) {
-      let now = performance.now();
+      const now = performance.now();
       // Do to time spent processing events our measurement might
       // be fractionally short of the actual delay.  Round up any
       // microsecond changes in case we get something like 299.9.

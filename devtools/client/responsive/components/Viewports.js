@@ -4,7 +4,10 @@
 
 "use strict";
 
-const { createFactory, PureComponent } = require("devtools/client/shared/vendor/react");
+const {
+  createFactory,
+  PureComponent,
+} = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
@@ -50,40 +53,40 @@ class Viewports extends PureComponent {
     // justify-content to start so that the left-most viewport is visible when there's
     // horizontal overflow. That is when the horizontal space become smaller than the
     // viewports and a scrollbar appears, then the first viewport will still be visible.
-    if (leftAlignmentEnabled ||
-        (viewportSize && viewportSize.width > window.innerWidth)) {
+    if (
+      leftAlignmentEnabled ||
+      (viewportSize && viewportSize.width > window.innerWidth)
+    ) {
       justifyContent = "start";
     }
 
-    return (
+    return dom.div(
+      {
+        id: "viewports-container",
+        style: {
+          justifyContent,
+        },
+      },
       dom.div(
         {
-          id: "viewports-container",
-          style: {
-            justifyContent,
-          },
+          id: "viewports",
+          className: leftAlignmentEnabled ? "left-aligned" : "",
         },
-        dom.div(
-          {
-            id: "viewports",
-            className: leftAlignmentEnabled ? "left-aligned" : "",
-          },
-          viewports.map((viewport, i) => {
-            return ResizableViewport({
-              key: viewport.id,
-              leftAlignmentEnabled,
-              onBrowserMounted,
-              onChangeViewportOrientation,
-              onContentResize,
-              onRemoveDeviceAssociation,
-              doResizeViewport,
-              onResizeViewport,
-              screenshot,
-              swapAfterMount: i == 0,
-              viewport,
-            });
-          })
-        )
+        viewports.map((viewport, i) => {
+          return ResizableViewport({
+            key: viewport.id,
+            leftAlignmentEnabled,
+            onBrowserMounted,
+            onChangeViewportOrientation,
+            onContentResize,
+            onRemoveDeviceAssociation,
+            doResizeViewport,
+            onResizeViewport,
+            screenshot,
+            swapAfterMount: i == 0,
+            viewport,
+          });
+        })
       )
     );
   }

@@ -143,8 +143,9 @@ class Browser extends PureComponent {
     await ready;
 
     const browserWindow = getTopLevelWindow(window);
-    const requiresFloatingScrollbars =
-      !browserWindow.matchMedia("(-moz-overlay-scrollbars)").matches;
+    const requiresFloatingScrollbars = !browserWindow.matchMedia(
+      "(-moz-overlay-scrollbars)"
+    ).matches;
 
     await e10s.request(mm, "Start", {
       requiresFloatingScrollbars,
@@ -170,9 +171,7 @@ class Browser extends PureComponent {
   }
 
   render() {
-    const {
-      userContextId,
-    } = this.props;
+    const { userContextId } = this.props;
 
     // In the case of @remote and @remoteType, the attribute must be set before the
     // element is added to the DOM to have any effect, which we are able to do with this
@@ -181,25 +180,21 @@ class Browser extends PureComponent {
     // @noisolation and @allowfullscreen are needed so that these frames have the same
     // access to browser features as regular browser tabs. The `swapFrameLoaders` platform
     // API we use compares such features before allowing the swap to proceed.
-    return (
-      dom.iframe(
-        {
-          allowFullScreen: "true",
-          className: "browser",
-          height: "100%",
-          mozbrowser: "true",
-          noisolation: "true",
-          remote: "true",
-          remoteType: "web",
-          src: "about:blank",
-          usercontextid: userContextId,
-          width: "100%",
-          ref: browser => {
-            this.browser = browser;
-          },
-        }
-      )
-    );
+    return dom.iframe({
+      allowFullScreen: "true",
+      className: "browser",
+      height: "100%",
+      mozbrowser: "true",
+      noisolation: "true",
+      remote: "true",
+      remoteType: "web",
+      src: "about:blank",
+      usercontextid: userContextId,
+      width: "100%",
+      ref: browser => {
+        this.browser = browser;
+      },
+    });
   }
 }
 
