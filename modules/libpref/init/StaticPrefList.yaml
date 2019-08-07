@@ -5797,7 +5797,7 @@
 # Consider socialtracking annotation as trackers (see ETP)
 - name: privacy.socialtracking.block_cookies.enabled
   type: bool
-  value: true
+  value: false
   mirror: always
 
 
