@@ -1,6 +1,6 @@
 /* import-globals-from partitionedstorage_head.js */
 
-PartitionedStorageHelper.runTest(
+PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "HTTP Cookies",
   async (win3rdParty, win1stParty, allowed) => {
     await win3rdParty.fetch("cookies.sjs?3rd").then(r => r.text());
@@ -48,7 +48,7 @@ PartitionedStorageHelper.runTest(
   }
 );
 
-PartitionedStorageHelper.runTest(
+PartitionedStorageHelper.runTestInNormalAndPrivateMode(
   "DOM Cookies",
   async (win3rdParty, win1stParty, allowed) => {
     win3rdParty.document.cookie = "foo=3rd";
@@ -81,7 +81,7 @@ PartitionedStorageHelper.runTest(
   }
 );
 
-PartitionedStorageHelper.runPartitioningTest(
+PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
   "Partitioned tabs - DOM Cookies",
 
   // getDataCallback
@@ -105,7 +105,7 @@ PartitionedStorageHelper.runPartitioningTest(
   }
 );
 
-PartitionedStorageHelper.runPartitioningTest(
+PartitionedStorageHelper.runPartitioningTestInNormalAndPrivateMode(
   "Partitioned tabs - Network Cookies",
 
   // getDataCallback
