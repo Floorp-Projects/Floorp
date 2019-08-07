@@ -11,6 +11,8 @@ use super::Device;
 use crate::context::QuirksMode;
 #[cfg(feature = "gecko")]
 use crate::gecko::media_features::MEDIA_FEATURES;
+#[cfg(feature = "gecko")]
+use crate::gecko_bindings::structs;
 use crate::parser::{Parse, ParserContext};
 #[cfg(feature = "servo")]
 use crate::servo::media_queries::MEDIA_FEATURES;
@@ -299,7 +301,9 @@ impl MediaFeatureExpression {
                     if starts_with_ignore_ascii_case(feature_name, "-webkit-") {
                         feature_name = &feature_name[8..];
                         requirements.insert(ParsingRequirements::WEBKIT_PREFIX);
-                        if static_prefs::pref!("layout.css.prefixes.device-pixel-ratio-webkit") {
+                        if unsafe {
+                            structs::StaticPrefs::sVarCache_layout_css_prefixes_device_pixel_ratio_webkit
+                        } {
                             requirements.insert(
                                 ParsingRequirements::WEBKIT_DEVICE_PIXEL_RATIO_PREF_ENABLED,
                             );

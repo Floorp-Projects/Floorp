@@ -323,7 +323,9 @@ impl RawSelector {
     pub fn eval(&self, context: &ParserContext, namespaces: &Namespaces) -> bool {
         #[cfg(feature = "gecko")]
         {
-            if !static_prefs::pref!("layout.css.supports-selector.enabled") {
+            if unsafe {
+                !crate::gecko_bindings::structs::StaticPrefs::sVarCache_layout_css_supports_selector_enabled
+            } {
                 return false;
             }
         }
