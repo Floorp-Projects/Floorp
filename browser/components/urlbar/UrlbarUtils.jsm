@@ -128,6 +128,17 @@ var UrlbarUtils = {
   // much time building text runs.
   MAX_TEXT_LENGTH: 255,
 
+  // Search results with keywords and empty queries are called "keyword offers".
+  // When the user selects a keyword offer, the keyword followed by a space is
+  // put in the input as a hint that the user can search using the keyword.
+  // Depending on the use case, keyword-offer results can show or not show the
+  // keyword itself.
+  KEYWORD_OFFER: {
+    NONE: 0,
+    SHOW: 1,
+    HIDE: 2,
+  },
+
   // UnifiedComplete's autocomplete results store their titles and tags together
   // in their comments.  This separator is used to separate them.  When we
   // rewrite UnifiedComplete for quantumbar, we should stop using this old hack
