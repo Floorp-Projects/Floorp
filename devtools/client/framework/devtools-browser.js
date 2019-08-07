@@ -293,7 +293,9 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
         toolDefinition.preventClosingOnKey ||
         toolbox.hostType == Toolbox.HostType.WINDOW
       ) {
-        toolbox.raise();
+        if (!toolDefinition.preventRaisingOnKey) {
+          toolbox.raise();
+        }
       } else {
         toolbox.destroy();
       }
