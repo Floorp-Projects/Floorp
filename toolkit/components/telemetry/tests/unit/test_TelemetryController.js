@@ -698,6 +698,10 @@ add_task(async function test_sendNewProfile() {
     "startup",
     "The new-profile ping generated after startup must have the correct reason"
   );
+  Assert.ok(
+    "parent" in ping.payload.processes,
+    "The new-profile ping generated after startup must have processes.parent data"
+  );
 
   // Check that is not sent with the pingsender during startup.
   Assert.throws(
@@ -721,6 +725,10 @@ add_task(async function test_sendNewProfile() {
     ping.payload.reason,
     "shutdown",
     "The new-profile ping generated at shutdown must have the correct reason"
+  );
+  Assert.ok(
+    "parent" in ping.payload.processes,
+    "The new-profile ping generated at shutdown must have processes.parent data"
   );
 
   // Check that the new-profile ping is sent at shutdown using the pingsender.
