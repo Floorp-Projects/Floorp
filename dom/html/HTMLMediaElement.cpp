@@ -4670,6 +4670,14 @@ nsresult HTMLMediaElement::FinishDecoderSetup(MediaDecoder* aDecoder) {
   // This will also do an AddRemoveSelfReference.
   NotifyOwnerDocumentActivityChanged();
 
+  if (!mDecoder) {
+    // NotifyOwnerDocumentActivityChanged may shutdown the decoder if the
+    // owning document is inactive and we're in the EME case. We could try and
+    // handle this, but at the time of writing it's a pretty niche case, so just
+    // bail.
+    return NS_ERROR_FAILURE;
+  }
+
   if (mPausedForInactiveDocumentOrChannel) {
     mDecoder->Suspend();
   }

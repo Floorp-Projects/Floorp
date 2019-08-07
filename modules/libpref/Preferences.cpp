@@ -5605,3 +5605,7 @@ namespace mozilla {
 void UnloadPrefsModule() { Preferences::Shutdown(); }
 
 }  // namespace mozilla
+
+// This file contains the C wrappers for the C++ static pref getters, as used
+// by Rust code.
+#include "init/StaticPrefsCGetters.cpp"

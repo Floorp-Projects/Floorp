@@ -67,10 +67,6 @@ function TargetMixin(parentClass) {
       // Cache of already created targed-scoped fronts
       // [typeName:string => Front instance]
       this.fronts = new Map();
-      // Temporary fix for bug #1493131 - inspector has a different life cycle
-      // than most other fronts because it is closely related to the toolbox.
-      // TODO: remove once inspector is separated from the toolbox
-      this._inspector = null;
 
       this._setupRemoteListeners();
     }
@@ -189,24 +185,6 @@ function TargetMixin(parentClass) {
     // Get a promise of the RootActor's form
     get root() {
       return this.client.mainRoot.rootForm;
-    }
-
-    // Temporary fix for bug #1493131 - inspector has a different life cycle
-    // than most other fronts because it is closely related to the toolbox.
-    // TODO: remove once inspector is separated from the toolbox
-    async getInspector() {
-      // the front might have been destroyed and no longer have an actor ID
-      if (this._inspector && this._inspector.actorID) {
-        return this._inspector;
-      }
-      this._inspector = await getFront(
-        this.client,
-        "inspector",
-        this.targetForm,
-        this
-      );
-      this.emit("inspector", this._inspector);
-      return this._inspector;
     }
 
     // Run callback on every front of this type that currently exists, and on every

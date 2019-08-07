@@ -16,7 +16,6 @@ class FrameListColumnTime extends Component {
   static get propTypes() {
     return {
       item: PropTypes.object.isRequired,
-      index: PropTypes.number.isRequired,
     };
   }
 
@@ -52,7 +51,6 @@ class FrameListColumnTime extends Component {
 
     return dom.td(
       {
-        key: this.props.index,
         className: "ws-frames-list-column ws-frames-list-time",
         title: label,
       },

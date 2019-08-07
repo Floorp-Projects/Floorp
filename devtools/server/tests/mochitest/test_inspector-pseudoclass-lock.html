@@ -29,7 +29,7 @@ async function setup(callback) {
   const url = document.getElementById("inspectorContent").href;
   const { target, doc } = await attachURL(url);
   gInspectee = doc;
-  const inspector = await target.getInspector();
+  const inspector = await target.getFront("inspector");
   ok(inspector.walker, "getWalker() should return an actor.");
   gWalker = inspector.walker;
   runNextTest();
