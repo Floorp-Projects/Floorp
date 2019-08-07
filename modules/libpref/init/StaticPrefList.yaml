@@ -5382,11 +5382,6 @@
   value: false
   mirror: always
 
-- name: media.audioFocus.management
-  type: bool
-  value: false
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "mousewheel."
 #---------------------------------------------------------------------------
