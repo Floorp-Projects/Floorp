@@ -923,10 +923,10 @@ nsColumnSetFrame::ColumnBalanceData nsColumnSetFrame::ReflowChildren(
 
     if (computedSize.BSize(wm) != NS_UNCONSTRAINEDSIZE &&
         !GetProperty(nsIFrame::HasColumnSpanSiblings())) {
-      MOZ_ASSERT(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
-                 "Available block-size should be constrained because it's "
-                 "restricted by the computed block-size when our reflow input "
-                 "is created in nsBlockFrame::ReflowBlockFrame()!");
+      NS_ASSERTION(aReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE,
+                   "Available block-size should be constrained because it's "
+                   "restricted by the computed block-size when our reflow "
+                   "input is created in nsBlockFrame::ReflowBlockFrame()!");
 
       // If a) our parent ColumnSetWrapper has constrained block-size
       // (nsBlockFrame::ReflowBlockFrame() applies the block-size constraint
