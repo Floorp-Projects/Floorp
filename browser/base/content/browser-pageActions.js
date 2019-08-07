@@ -363,6 +363,13 @@ var BrowserPageActions = {
         { once: true }
       );
       panelNode.addEventListener(
+        "popupshown",
+        () => {
+          iframeNode.focus();
+        },
+        { once: true }
+      );
+      panelNode.addEventListener(
         "popuphiding",
         () => {
           action.onIframeHiding(iframeNode, panelNode);
