@@ -15,11 +15,11 @@ permalink: /changelog/
 
 # 7.0.0
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v7.0.0...master)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.2...v7.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/66?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v7.0.0/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/v7.0.0/buildSrc/src/main/java/Gecko.kt)
-* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v7.0.0/buildSrc/buildSrc/src/main/java/Config.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v7.0.0/buildSrc/src/main/java/Config.kt)
 
 * **browser-menu**
   * ⚠️ **This is a breaking change**: `BrowserMenuHighlightableItem` now has a ripple effect and includes an example of how to pass in a drawable properly to also include a ripple when highlighted
