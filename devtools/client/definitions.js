@@ -160,6 +160,9 @@ Tools.inspector = {
   inMenu: true,
 
   preventClosingOnKey: true,
+  // preventRaisingOnKey is used to keep the focus on the content window for shortcuts
+  // that trigger the element picker.
+  preventRaisingOnKey: true,
   onkey: function(panel, toolbox) {
     toolbox.inspectorFront.nodePicker.togglePicker();
   },
