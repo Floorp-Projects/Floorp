@@ -35,8 +35,10 @@ var Fingerprinting = {
       this,
       "enabled",
       this.PREF_ENABLED,
-      false
+      false,
+      this.updateCategoryItem.bind(this)
     );
+    this.updateCategoryItem();
   },
 
   get categoryItem() {
@@ -44,6 +46,10 @@ var Fingerprinting = {
     return (this.categoryItem = document.getElementById(
       "protections-popup-category-fingerprinters"
     ));
+  },
+
+  updateCategoryItem() {
+    this.categoryItem.classList.toggle("blocked", this.enabled);
   },
 
   get subViewList() {
@@ -147,8 +153,10 @@ var Cryptomining = {
       this,
       "enabled",
       this.PREF_ENABLED,
-      false
+      false,
+      this.updateCategoryItem.bind(this)
     );
+    this.updateCategoryItem();
   },
 
   get categoryItem() {
@@ -156,6 +164,10 @@ var Cryptomining = {
     return (this.categoryItem = document.getElementById(
       "protections-popup-category-cryptominers"
     ));
+  },
+
+  updateCategoryItem() {
+    this.categoryItem.classList.toggle("blocked", this.enabled);
   },
 
   get subViewList() {
@@ -322,6 +334,7 @@ var TrackingProtection = {
     this.enabledInPrivateWindows = Services.prefs.getBoolPref(
       this.PREF_ENABLED_IN_PRIVATE_WINDOWS
     );
+    this.categoryItem.classList.toggle("blocked", this.enabled);
   },
 
   isBlocking(state) {
@@ -534,9 +547,9 @@ var ThirdPartyCookies = {
       "behaviorPref",
       this.PREF_ENABLED,
       Ci.nsICookieService.BEHAVIOR_ACCEPT,
-      this.updateCategoryLabel.bind(this)
+      this.updateCategoryItem.bind(this)
     );
-    this.updateCategoryLabel();
+    this.updateCategoryItem();
   },
 
   get disabledCategoryLabel() {
@@ -553,7 +566,9 @@ var ThirdPartyCookies = {
     ));
   },
 
-  updateCategoryLabel() {
+  updateCategoryItem() {
+    this.categoryItem.classList.toggle("blocked", this.enabled);
+
     if (!this.enabled) {
       this.disabledCategoryLabel.hidden = false;
       this.enabledCategoryLabel.hidden = true;
@@ -1540,7 +1555,6 @@ var gProtectionsHandler = {
       // dialog should only be able to open in the currently selected tab and onSecurityChange
       // runs on tab switch, so we can avoid associating the data with the document directly.
       blocker.activated = blocker.isBlocking(event);
-      blocker.categoryItem.classList.toggle("blocked", blocker.enabled);
       let detected = blocker.isDetected(event);
       blocker.categoryItem.hidden = !detected;
       if (detected) {
