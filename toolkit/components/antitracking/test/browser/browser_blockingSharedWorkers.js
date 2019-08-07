@@ -2,7 +2,7 @@
 
 requestLongerTimeout(2);
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "SharedWorkers",
   async _ => {
     try {

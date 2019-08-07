@@ -10,6 +10,53 @@
 var gFeatures = undefined;
 
 this.AntiTracking = {
+  runTestInNormalAndPrivateMode(
+    name,
+    callbackTracking,
+    callbackNonTracking,
+    cleanupFunction,
+    extraPrefs,
+    windowOpenTest = true,
+    userInteractionTest = true,
+    expectedBlockingNotifications = Ci.nsIWebProgressListener
+      .STATE_COOKIES_BLOCKED_TRACKER,
+    iframeSandbox = null,
+    accessRemoval = null,
+    callbackAfterRemoval = null
+  ) {
+    // Normal mode
+    this.runTest(
+      name,
+      callbackTracking,
+      callbackNonTracking,
+      cleanupFunction,
+      extraPrefs,
+      windowOpenTest,
+      userInteractionTest,
+      expectedBlockingNotifications,
+      false,
+      iframeSandbox,
+      accessRemoval,
+      callbackAfterRemoval
+    );
+
+    // Private mode
+    this.runTest(
+      name,
+      callbackTracking,
+      callbackNonTracking,
+      cleanupFunction,
+      extraPrefs,
+      windowOpenTest,
+      userInteractionTest,
+      expectedBlockingNotifications,
+      true,
+      iframeSandbox,
+      accessRemoval,
+      callbackAfterRemoval
+    );
+  },
+
   runTest(
     name,
     callbackTracking,
