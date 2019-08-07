@@ -2161,9 +2161,9 @@ JSFunction* AllocNewFunction(JSContext* cx,
   }
   RootedFunction fun(cx);
 
-
-  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr, data.getAtom(cx), proto,
-                             data.allocKind, TenuredObject);
+  fun = NewFunctionWithProto(cx, nullptr, 0, data.flags, nullptr,
+                             data.getAtom(cx), proto, data.allocKind,
+                             TenuredObject);
   if (!fun) {
     return nullptr;
   }

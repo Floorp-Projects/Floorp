@@ -40,7 +40,6 @@ struct FunctionCreationData {
   }
 };
 
-
 } /* namespace frontend */
 } /* namespace js */
 
