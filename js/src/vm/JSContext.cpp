@@ -1520,4 +1520,3 @@ AutoUnsafeCallWithABI::~AutoUnsafeCallWithABI() {
   MOZ_ASSERT_IF(checkForPendingException_, !JS_IsExceptionPending(cx_));
 }
 #endif
-

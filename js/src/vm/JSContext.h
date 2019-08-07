@@ -661,6 +661,7 @@ struct JSContext : public JS::RootingContext,
  public:
   js::LifoAlloc& tempLifoAlloc() { return tempLifoAlloc_.ref(); }
   const js::LifoAlloc& tempLifoAlloc() const { return tempLifoAlloc_.ref(); }
+  js::LifoAlloc& tempLifoAllocNoCheck() { return tempLifoAlloc_.refNoCheck(); }
 
   js::ContextData<uint32_t> debuggerMutations;
 
