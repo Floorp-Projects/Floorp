@@ -17,8 +17,8 @@ menu-select-all =
     .label = Select All
     .accesskey = A
 
-close-window =
-    .key = A
+close-dialog =
+    .key = w
 
 general-tab =
     .label = General
