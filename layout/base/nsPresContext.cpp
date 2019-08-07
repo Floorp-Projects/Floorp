@@ -1169,10 +1169,6 @@ void nsPresContext::SetBidi(uint32_t aSource) {
 
 uint32_t nsPresContext::GetBidi() const { return Document()->GetBidiOptions(); }
 
-bool nsPresContext::IsTopLevelWindowInactive() {
-  return Document()->IsTopLevelWindowInactive();
-}
-
 void nsPresContext::RecordInteractionTime(InteractionType aType,
                                           const TimeStamp& aTimeStamp) {
   if (!mInteractionTimeEnabled || aTimeStamp.IsNull()) {
