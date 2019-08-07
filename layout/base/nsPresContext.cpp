@@ -687,12 +687,7 @@ void nsPresContext::AttachPresShell(mozilla::PresShell* aPresShell) {
   nsIURI* docURI = doc->GetDocumentURI();
 
   if (IsDynamic() && docURI) {
-    bool isChrome = false;
-    bool isRes = false;
-    docURI->SchemeIs("chrome", &isChrome);
-    docURI->SchemeIs("resource", &isRes);
-
-    if (!isChrome && !isRes)
+    if (!docURI->SchemeIs("chrome") && !docURI->SchemeIs("resource"))
       mImageAnimationMode = mImageAnimationModePref;
     else
       mImageAnimationMode = imgIContainer::kNormalAnimMode;
