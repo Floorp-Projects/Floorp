@@ -134,6 +134,10 @@ class GeckoViewNavigation extends GeckoViewModule {
           navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_FORCE_ALLOW_DATA_URI;
         }
 
+        if (flags & (1 << 6)) {
+          navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_REPLACE_HISTORY;
+        }
+
         if (this.settings.useMultiprocess) {
           this.moduleManager.updateRemoteTypeForURI(uri);
         }
