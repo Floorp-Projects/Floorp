@@ -443,7 +443,7 @@ SRGBOverrideObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
 static const char* kObservedPrefs[] = {"gfx.downloadable_fonts.",
                                        "gfx.font_rendering.", BIDI_NUMERAL_PREF,
-                                       nullptr};
+                                       "gfx.font_ahem_antialias_none", nullptr};
 
 static void FontPrefChanged(const char* aPref, void* aData) {
   MOZ_ASSERT(aPref);
@@ -2237,8 +2237,7 @@ int32_t gfxPlatform::GetBidiNumeralOption() {
 void gfxPlatform::FlushFontAndWordCaches() {
   gfxFontCache* fontCache = gfxFontCache::GetCache();
   if (fontCache) {
-    fontCache->AgeAllGenerations();
-    fontCache->FlushShapedWordCaches();
+    fontCache->Flush();
   }
 
   gfxPlatform::PurgeSkiaFontCache();
@@ -2278,10 +2277,12 @@ void gfxPlatform::FontsPrefsChanged(const char* aPref) {
   } else if (!strcmp(GFX_PREF_GRAPHITE_SHAPING, aPref)) {
     mGraphiteShapingEnabled = UNINITIALIZED_VALUE;
     FlushFontAndWordCaches();
+  } else if (
 #if defined(XP_MACOSX)
-  } else if (!strcmp(GFX_PREF_CORETEXT_SHAPING, aPref)) {
-    FlushFontAndWordCaches();
+      !strcmp(GFX_PREF_CORETEXT_SHAPING, aPref) ||
 #endif
+      !strcmp("gfx.font_ahem_antialias_none", aPref)) {
+    FlushFontAndWordCaches();
   } else if (!strcmp(BIDI_NUMERAL_PREF, aPref)) {
     mBidiNumeralOption = UNINITIALIZED_VALUE;
   } else if (!strcmp(GFX_PREF_OPENTYPE_SVG, aPref)) {
