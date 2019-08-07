@@ -3599,7 +3599,7 @@ nsIContent* EditorBase::FindNode(nsINode* aCurrentNode, bool aGoForward,
 }
 
 nsIContent* EditorBase::GetRightmostChild(nsINode* aCurrentNode,
-                                          bool bNoBlockCrossing) {
+                                          bool bNoBlockCrossing) const {
   NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsIContent* cur = aCurrentNode->GetLastChild();
   if (!cur) {
@@ -3621,7 +3621,7 @@ nsIContent* EditorBase::GetRightmostChild(nsINode* aCurrentNode,
 }
 
 nsIContent* EditorBase::GetLeftmostChild(nsINode* aCurrentNode,
-                                         bool bNoBlockCrossing) {
+                                         bool bNoBlockCrossing) const {
   NS_ENSURE_TRUE(aCurrentNode, nullptr);
   nsIContent* cur = aCurrentNode->GetFirstChild();
   if (!cur) {
@@ -3642,7 +3642,7 @@ nsIContent* EditorBase::GetLeftmostChild(nsINode* aCurrentNode,
   return nullptr;
 }
 
-bool EditorBase::IsBlockNode(nsINode* aNode) {
+bool EditorBase::IsBlockNode(nsINode* aNode) const {
   // stub to be overridden in HTMLEditor.
   // screwing around with the class hierarchy here in order
   // to not duplicate the code in GetNextNode/GetPrevNode
@@ -3722,7 +3722,9 @@ bool EditorBase::IsDescendantOfEditorRoot(nsINode* aNode) const {
   return aNode->IsInclusiveDescendantOf(root);
 }
 
-bool EditorBase::IsContainer(nsINode* aNode) { return aNode ? true : false; }
+bool EditorBase::IsContainer(nsINode* aNode) const {
+  return aNode ? true : false;
+}
 
 uint32_t EditorBase::CountEditableChildren(nsINode* aNode) {
   MOZ_ASSERT(aNode);
