@@ -29,7 +29,7 @@ class FlexboxFront extends FrontClassWithSpec(flexboxSpec) {
       return null;
     }
 
-    return this.conn.getActor(this._form.containerNodeActorID);
+    return this.conn.getFrontByID(this._form.containerNodeActorID);
   }
 
   /**
@@ -61,7 +61,7 @@ class FlexItemFront extends FrontClassWithSpec(flexItemSpec) {
       return null;
     }
 
-    return this.conn.getActor(this._form.nodeActorID);
+    return this.conn.getFrontByID(this._form.nodeActorID);
   }
 
   /**
@@ -93,7 +93,7 @@ class GridFront extends FrontClassWithSpec(gridSpec) {
       return null;
     }
 
-    return this.conn.getActor(this._form.containerNodeActorID);
+    return this.conn.getFrontByID(this._form.containerNodeActorID);
   }
 
   /**
