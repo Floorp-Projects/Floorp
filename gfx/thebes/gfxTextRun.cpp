@@ -56,15 +56,15 @@ extern uint32_t gGlyphExtentsSetupFallBackToTight;
 #endif
 
 bool gfxTextRun::GlyphRunIterator::NextRun() {
-  uint32_t glyphRunCount;
+  int32_t glyphRunCount;
   if (mTextRun->mHasGlyphRunArray) {
     glyphRunCount = mTextRun->mGlyphRunArray.Length();
-    if (mNextIndex >= glyphRunCount) {
+    if (mNextIndex >= glyphRunCount || mNextIndex < 0) {
       return false;
     }
     mGlyphRun = &mTextRun->mGlyphRunArray[mNextIndex];
   } else {
-    if (mNextIndex > 0 || !mTextRun->mSingleGlyphRun.mFont) {
+    if (mNextIndex != 0 || !mTextRun->mSingleGlyphRun.mFont) {
       return false;
     }
     glyphRunCount = 1;
@@ -75,14 +75,18 @@ bool gfxTextRun::GlyphRunIterator::NextRun() {
     return false;
   }
 
-  mStringStart = std::max(mStartOffset, mGlyphRun->mCharacterOffset);
-  uint32_t last =
-      mNextIndex + 1 < glyphRunCount
+  uint32_t glyphRunEndOffset =
+      mNextIndex + 1 < (int32_t)glyphRunCount
           ? mTextRun->mGlyphRunArray[mNextIndex + 1].mCharacterOffset
           : mTextRun->GetLength();
-  mStringEnd = std::min(mEndOffset, last);
 
-  ++mNextIndex;
+  if (glyphRunEndOffset <= mStartOffset) {
+    return false;
+  }
+
+  mStringEnd = std::min(mEndOffset, glyphRunEndOffset);
+  mStringStart = std::max(mStartOffset, mGlyphRun->mCharacterOffset);
+  mNextIndex += mDirection;
   return true;
 }
 

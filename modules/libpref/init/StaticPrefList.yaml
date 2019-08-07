@@ -705,18 +705,6 @@
   value: 2
   mirror: always
 
-# Whether Content Blocking allow list is respected for ETP interventions.
-- name: browser.contentblocking.allowlist.storage.enabled
-  type: bool
-  value: true
-  mirror: always
-
-# Whether Content Blocking allow list is respected for tracking annotations.
-- name: browser.contentblocking.allowlist.annotations.enabled
-  type: bool
-  value: true
-  mirror: always
-
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
@@ -3342,12 +3330,6 @@
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
 
-# BigInt API
-- name: javascript.options.bigint
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
@@ -5797,7 +5779,7 @@
 # Consider socialtracking annotation as trackers (see ETP)
 - name: privacy.socialtracking.block_cookies.enabled
   type: bool
-  value: false
+  value: true
   mirror: always
 
 

@@ -473,7 +473,8 @@ class MOZ_TRIVIAL_CTOR_DTOR MMPolicyInProcess : public MMPolicyBase {
     auto reserveWithinRangeFn =
         [](HANDLE aProcess, uint32_t aSize, const uint8_t* aRangeMin,
            const uint8_t* aRangeMaxExcl) -> Maybe<PVOID> {
-      static const DynamicallyLinkedFunctionPtr<decltype(&::VirtualAlloc2)>
+      static const StaticDynamicallyLinkedFunctionPtr<decltype(
+          &::VirtualAlloc2)>
           pVirtualAlloc2(L"kernelbase.dll", "VirtualAlloc2");
       if (!pVirtualAlloc2) {
         return Nothing();
@@ -722,7 +723,8 @@ class MMPolicyOutOfProcess : public MMPolicyBase {
         [mapping = mMapping](HANDLE aProcess, uint32_t aSize,
                              const uint8_t* aRangeMin,
                              const uint8_t* aRangeMaxExcl) -> Maybe<PVOID> {
-      static const DynamicallyLinkedFunctionPtr<decltype(&::MapViewOfFile3)>
+      static const StaticDynamicallyLinkedFunctionPtr<decltype(
+          &::MapViewOfFile3)>
           pMapViewOfFile3(L"kernelbase.dll", "MapViewOfFile3");
       if (!pMapViewOfFile3) {
         return Nothing();

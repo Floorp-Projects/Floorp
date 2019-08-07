@@ -5049,8 +5049,9 @@ ssl3_SendClientHello(sslSocket *ss, sslClientHelloType type)
         PR_RWLock_Rlock(sid->u.ssl3.lock);
     }
 
-    /* Generate a new random if this is the first attempt. */
-    if (type == client_hello_initial) {
+    /* Generate a new random if this is the first attempt or renegotiation. */
+    if (type == client_hello_initial ||
+        type == client_hello_renegotiation) {
         rv = ssl3_GetNewRandom(ss->ssl3.hs.client_random);
         if (rv != SECSuccess) {
             goto loser; /* err set by GetNewRandom. */

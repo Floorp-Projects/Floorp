@@ -10,7 +10,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
 const { propertiesEqual } = require("../utils/request-utils");
 
-const { div } = dom;
+const { div, img } = dom;
 
 const UPDATED_STATUS_PROPS = [
   "fromCache",
@@ -62,8 +62,13 @@ class StatusCode extends Component {
     }
 
     if (blockedReason) {
-      statusContent = L10N.getStr("networkMenu.blocked");
-      code = "blocked";
+      statusContent = img({
+        src:
+          "chrome://devtools/content/netmonitor/src/assets/icons/blocked.svg",
+        alt: L10N.getStr("networkMenu.blocked"),
+        title: L10N.getStr("networkMenu.blocked"),
+        className: "blocked",
+      });
     }
 
     // `data-code` refers to the status-code

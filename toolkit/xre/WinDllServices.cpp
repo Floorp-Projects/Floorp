@@ -14,6 +14,8 @@
 #include "mozilla/mozalloc.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticLocalPtr.h"
+#include "mozilla/SystemGroup.h"
 #include "mozilla/Unused.h"
 #include "nsCOMPtr.h"
 #include "nsIObserverService.h"
@@ -106,15 +108,6 @@ class UntrustedModulesManager {
   // WARNING: This is called within the loader; only trivial calls are allowed.
   void OnNewEvents(
       const Vector<glue::ModuleLoadEvent, 0, InfallibleAllocPolicy>& aEvents) {
-    // Hold a reference to DllServices to ensure the object doesn't get deleted
-    // during this call.
-    RefPtr<DllServices> dllSvcRef(DllServices::Get());
-    if (!dllSvcRef) {
-      return;
-    }
-    // Prevent static analysis build warnings about unused "kungFuDeathGrip"
-    Unused << dllSvcRef;
-
     // Because we can only get the thread name from the current thread, this
     // is the last chance to fill in thread name.
     const char* thisThreadName = PR_GetThreadName(PR_GetCurrentThread());
@@ -390,25 +383,29 @@ const char* DllServices::kTopicDllLoadedMainThread = "dll-loaded-main-thread";
 const char* DllServices::kTopicDllLoadedNonMainThread =
     "dll-loaded-non-main-thread";
 
-// In order to prevent sInstance from being "woken back up" after it's been
-// cleared on shutdown, this will let us know if sInstance is empty because
-// it's not initialized yet, or because it's been cleared on shutdown.
-static Atomic<bool> sDllServicesHasBeenSet;
-static StaticRefPtr<DllServices> sInstance;
-
 DllServices* DllServices::Get() {
-  if (sDllServicesHasBeenSet) {
-    return sInstance;
-  }
+  static StaticLocalRefPtr<DllServices> sInstance(
+      []() -> already_AddRefed<DllServices> {
+        RefPtr<DllServices> dllSvc(new DllServices());
+        dllSvc->EnableFull();
 
-  sInstance = new DllServices();
-  sDllServicesHasBeenSet = true;
+        auto setClearOnShutdown = [ptr = &sInstance]() -> void {
+          ClearOnShutdown(ptr);
+        };
 
-  // EnableFull() winds up calling NotifyUntrustedModuleLoads which requires
-  // sInstance to be valid. So we must call EnableFull() here rather than the
-  // DllServices constructor.
-  sInstance->EnableFull();
-  ClearOnShutdown(&sInstance);
+        if (NS_IsMainThread()) {
+          setClearOnShutdown();
+          return dllSvc.forget();
+        }
+
+        SystemGroup::Dispatch(
+            TaskCategory::Other,
+            NS_NewRunnableFunction("mozilla::DllServices::Get",
+                                   std::move(setClearOnShutdown)));
+
+        return dllSvc.forget();
+      }());
+
   return sInstance;
 }
 

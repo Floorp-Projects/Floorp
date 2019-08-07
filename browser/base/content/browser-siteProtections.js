@@ -1773,6 +1773,23 @@ var gProtectionsHandler = {
       !currentlyEnabled
     );
 
+    // Give the button an accessible label for screen readers.
+    if (currentlyEnabled) {
+      this._protectionsPopupTPSwitch.setAttribute(
+        "aria-label",
+        gNavigatorBundle.getFormattedString("protections.disableAriaLabel", [
+          host,
+        ])
+      );
+    } else {
+      this._protectionsPopupTPSwitch.setAttribute(
+        "aria-label",
+        gNavigatorBundle.getFormattedString("protections.enableAriaLabel", [
+          host,
+        ])
+      );
+    }
+
     // Update the tooltip of the blocked tracker counter.
     this.maybeUpdateEarliestRecordedDateTooltip();
   },

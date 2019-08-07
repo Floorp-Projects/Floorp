@@ -665,10 +665,34 @@ var gIdentityHandler = {
   },
 
   /**
+   * Returns whether the current URI results in an "invalid"
+   * URL bar state, which effectively means hidden security
+   * indicators.
+   */
+  _hasInvalidPageProxyState() {
+    return (
+      !this._uriHasHost &&
+      this._uri &&
+      isBlankPageURL(this._uri.spec) &&
+      !this._uri.schemeIs("moz-extension")
+    );
+  },
+
+  /**
    * Updates the identity block user interface with the data from this object.
    */
   refreshIdentityBlock() {
     if (!this._identityBox) {
+      return;
+    }
+
+    // If this condition is true, the URL bar will have an "invalid"
+    // pageproxystate, which will hide the security indicators. Thus, we can
+    // safely avoid updating the security UI.
+    //
+    // This will also filter out intermediate about:blank loads to avoid
+    // flickering the identity block and doing unnecessary work.
+    if (this._hasInvalidPageProxyState()) {
       return;
     }
 

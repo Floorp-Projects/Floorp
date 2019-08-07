@@ -14,7 +14,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/MruCache.h"
 #include "mozilla/Pair.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_extensions.h"
 #include "mozilla/StaticPrefs_privacy.h"
 #include "mozIThirdPartyUtil.h"
@@ -314,8 +313,7 @@ bool CheckContentBlockingAllowList(nsIURI* aTopWinURI,
                                    bool aIsPrivateBrowsing) {
   bool isAllowed = false;
   nsresult rv = AntiTrackingCommon::IsOnContentBlockingAllowList(
-      aTopWinURI, aIsPrivateBrowsing, AntiTrackingCommon::eStorageChecks,
-      isAllowed);
+      aTopWinURI, aIsPrivateBrowsing, isAllowed);
   if (NS_SUCCEEDED(rv) && isAllowed) {
     LOG_SPEC(
         ("The top-level window (%s) is on the content blocking allow list, "
@@ -1770,29 +1768,8 @@ bool AntiTrackingCommon::MaybeIsFirstPartyStorageAccessGrantedFor(
 }
 
 nsresult AntiTrackingCommon::IsOnContentBlockingAllowList(
-    nsIURI* aTopWinURI, bool aIsPrivateBrowsing,
-    AntiTrackingCommon::ContentBlockingAllowListPurpose aPurpose,
-    bool& aIsAllowListed) {
+    nsIURI* aTopWinURI, bool aIsPrivateBrowsing, bool& aIsAllowListed) {
   aIsAllowListed = false;
-
-  // For storage checks, check the storage pref, and for annotations checks,
-  // check the corresponding pref as well.  This allows each set of checks to
-  // be disabled individually if needed.
-  if ((aPurpose == eStorageChecks &&
-       !StaticPrefs::browser_contentblocking_allowlist_storage_enabled()) ||
-      (aPurpose == eTrackingAnnotations &&
-       !StaticPrefs::browser_contentblocking_allowlist_annotations_enabled()) ||
-      (aPurpose == eFingerprinting &&
-       !StaticPrefs::privacy_trackingprotection_fingerprinting_enabled()) ||
-      (aPurpose == eCryptomining &&
-       !StaticPrefs::privacy_trackingprotection_cryptomining_enabled()) ||
-      (aPurpose == eSocialTracking &&
-       !StaticPrefs::privacy_trackingprotection_socialtracking_enabled())) {
-    LOG(
-        ("Attempting to check the content blocking allow list aborted because "
-         "the third-party cookies UI has been disabled."));
-    return NS_OK;
-  }
 
   LOG_SPEC(("Deciding whether the user has overridden content blocking for %s",
             _spec),

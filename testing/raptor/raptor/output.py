@@ -322,19 +322,20 @@ class Output(object):
             return
 
         self.summarized_supporting_data = []
+        support_data_by_type = {}
 
         for data_set in self.supporting_data:
 
-            suites = []
-            test_results = {
-                'framework': {
-                    'name': 'raptor',
-                },
-                'suites': suites,
-            }
-
             data_type = data_set['type']
             LOG.info("summarizing %s data" % data_type)
+
+            if data_type not in support_data_by_type:
+                support_data_by_type[data_type] = {
+                    'framework': {
+                        'name': 'raptor',
+                    },
+                    'suites': [],
+                }
 
             # suite name will be name of the actual raptor test that ran, plus the type of
             # supporting data i.e. 'raptor-speedometer-geckoview-power'
@@ -349,14 +350,16 @@ class Output(object):
                 'alertThreshold': 2.0
             }
 
-            suites.append(suite)
+            support_data_by_type[data_type]['suites'].append(suite)
 
             # each supporting data measurement becomes a subtest, with the measurement type
-            # used for the subtest name. i.e. 'raptor-speedometer-geckoview-power-cpu'
-            # the overall 'suite' value for supporting data will be the sum of all measurements
+            # used for the subtest name. i.e. 'power-cpu'
+            # the overall 'suite' value for supporting data is dependent on
+            # the unit of the values, by default the sum of all measurements
+            # is taken.
             for measurement_name, value in data_set['values'].iteritems():
                 new_subtest = {}
-                new_subtest['name'] = data_set['test'] + "-" + data_type + "-" + measurement_name
+                new_subtest['name'] = data_type + "-" + measurement_name
                 new_subtest['value'] = value
                 new_subtest['lowerIsBetter'] = True
                 new_subtest['alertThreshold'] = 2.0
@@ -364,10 +367,17 @@ class Output(object):
                 subtests.append(new_subtest)
                 vals.append([new_subtest['value'], new_subtest['name']])
 
-            if len(subtests) > 1:
-                suite['value'] = self.construct_summary(vals, testname="supporting_data")
+            if len(subtests) >= 1:
+                suite['value'] = self.construct_summary(
+                    vals,
+                    testname="supporting_data",
+                    unit=data_set['unit']
+                )
 
-            self.summarized_supporting_data.append(test_results)
+        # split the supporting data by type, there will be one
+        # perfherder output per type
+        for data_type in support_data_by_type:
+            self.summarized_supporting_data.append(support_data_by_type[data_type])
 
         return
 
@@ -1154,7 +1164,12 @@ class Output(object):
         results = [i for i, j in val_list]
         return sum(results)
 
-    def construct_summary(self, vals, testname):
+    @classmethod
+    def supporting_data_average(cls, val_list):
+        results = [i for i, j in val_list]
+        return sum(results)/len(results)
+
+    def construct_summary(self, vals, testname, unit=None):
         if testname.startswith('raptor-v8_7'):
             return self.v8_Metric(vals)
         elif testname.startswith('raptor-kraken'):
@@ -1180,7 +1195,10 @@ class Output(object):
         elif testname.startswith('raptor-youtube-playback'):
             return self.youtube_playback_performance_score(vals)
         elif testname.startswith('supporting_data'):
-            return self.supporting_data_total(vals)
+            if unit and unit in ('%',):
+                return self.supporting_data_average(vals)
+            else:
+                return self.supporting_data_total(vals)
         elif len(vals) > 1:
             return round(filters.geometric_mean([i for i, j in vals]), 2)
         else:

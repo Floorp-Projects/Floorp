@@ -5,6 +5,7 @@
 DevToolsModules(
     'index.js',
     'requests.js',
+    'search.js',
     'timing-markers.js',
     'ui.js',
     'web-sockets.js',

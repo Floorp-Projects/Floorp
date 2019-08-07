@@ -532,7 +532,7 @@ function isSelectedFrameSelected(dbg, state) {
 /**
  * Clear all the debugger related preferences.
  */
-async function clearDebuggerPreferences() {
+async function clearDebuggerPreferences(prefs = []) {
   resetSchemaVersion();
   asyncStorage.clear();
   Services.prefs.clearUserPref("devtools.recordreplay.enabled");
@@ -546,6 +546,9 @@ async function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
   Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
   await pushPref("devtools.debugger.log-actions", true);
+  for (const pref of prefs) {
+    await pushPref(...pref);
+  }
 }
 
 /**
@@ -565,8 +568,8 @@ async function initDebugger(url, ...sources) {
   return dbg;
 }
 
-async function initPane(url, pane) {
-  await clearDebuggerPreferences();
+async function initPane(url, pane, prefs) {
+  await clearDebuggerPreferences(prefs);
   return openNewTabAndToolbox(EXAMPLE_URL + url, pane);
 }
 
@@ -1775,15 +1778,15 @@ async function checkEvaluateInTopFrame(target, text, expected) {
   ok(rval == expected, `Eval returned ${expected}`);
 }
 
-async function findConsoleMessage(dbg, query) {
-  const [message] = await findConsoleMessages(dbg, query);
+async function findConsoleMessage({toolbox}, query) {
+  const [message] = await findConsoleMessages(toolbox, query);
   const value = message.querySelector(".message-body").innerText;
   const link = message.querySelector(".frame-link-source-inner").innerText;
   return { value, link };
 }
 
-async function findConsoleMessages(dbg, query) {
-  const webConsole = await dbg.toolbox.getPanel("webconsole");
+async function findConsoleMessages(toolbox, query) {
+  const webConsole = await toolbox.getPanel("webconsole");
   const win = webConsole._frameWindow;
   return Array.prototype.filter.call(
     win.document.querySelectorAll(".message"),
@@ -1791,9 +1794,9 @@ async function findConsoleMessages(dbg, query) {
   );
 }
 
-async function hasConsoleMessage(dbg, msg) {
+async function hasConsoleMessage({toolbox}, msg) {
   return waitFor(async () => {
-    const messages = await findConsoleMessages(dbg, msg);
+    const messages = await findConsoleMessages(toolbox, msg);
     return messages.length > 0;
   });
 }

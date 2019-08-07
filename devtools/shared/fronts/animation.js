@@ -34,7 +34,7 @@ class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
       return null;
     }
 
-    return this.conn.getActor(this._form.animationTargetNodeActorID);
+    return this.conn.getFrontByID(this._form.animationTargetNodeActorID);
   }
 
   /**

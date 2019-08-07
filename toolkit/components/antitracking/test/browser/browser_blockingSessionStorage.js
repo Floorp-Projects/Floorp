@@ -1,6 +1,6 @@
 /* import-globals-from antitracking_head.js */
 
-AntiTracking.runTest(
+AntiTracking.runTestInNormalAndPrivateMode(
   "sessionStorage",
   async _ => {
     let shouldThrow =

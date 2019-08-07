@@ -18,6 +18,7 @@
 #include "mozilla/dom/MessageEventBinding.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SerializedStackHolder.h"
 #include "mozilla/dom/WorkerPrivate.h"
@@ -1611,7 +1612,9 @@ nsresult WebSocketImpl::Init(JSContext* aCx, nsIPrincipal* aLoadingPrincipal,
   // Don't allow https:// to open ws://
   if (!mIsServerSide && !mSecure &&
       !Preferences::GetBool("network.websocket.allowInsecureFromHTTPS",
-                            false)) {
+                            false) &&
+      !nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(
+          mAsciiHost)) {
     nsCOMPtr<nsIURI> originURI;
     if (aLoadingPrincipal) {
       aLoadingPrincipal->GetURI(getter_AddRefs(originURI));

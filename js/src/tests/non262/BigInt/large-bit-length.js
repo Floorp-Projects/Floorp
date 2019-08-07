@@ -1,4 +1,3 @@
-// |reftest| skip-if(!this.hasOwnProperty("BigInt"))
 // Any copyright is dedicated to the Public Domain.
 // https://creativecommons.org/licenses/publicdomain/
 

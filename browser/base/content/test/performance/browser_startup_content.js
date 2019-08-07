@@ -207,12 +207,12 @@ add_task(async function() {
     );
 
     for (let script of loadedList[scriptType]) {
-      ok(
+      record(
         false,
-        `Unexpected ${scriptType} loaded during content process startup: ${script}`
+        `Unexpected ${scriptType} loaded during content process startup: ${script}`,
+        undefined,
+        loadedInfo[scriptType][script]
       );
-      info(`Stack that loaded ${script}:\n`);
-      info(loadedInfo[scriptType][script]);
     }
 
     is(
@@ -246,14 +246,12 @@ add_task(async function() {
     for (let script of blacklist[scriptType]) {
       let loaded = script in loadedInfo[scriptType];
       if (loaded) {
-        ok(
+        record(
           false,
-          `Unexpected ${scriptType} loaded during content process startup: ${script}`
+          `Unexpected ${scriptType} loaded during content process startup: ${script}`,
+          undefined,
+          loadedInfo[scriptType][script]
         );
-        if (loadedInfo[scriptType][script]) {
-          info(`Stack that loaded ${script}:\n`);
-          info(loadedInfo[scriptType][script]);
-        }
       }
     }
   }

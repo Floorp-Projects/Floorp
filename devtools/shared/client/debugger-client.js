@@ -588,7 +588,7 @@ DebuggerClient.prototype = {
 
     // If we have a registered Front for this actor, let it handle the packet
     // and skip all the rest of this unpleasantness.
-    const front = this.getActor(packet.from);
+    const front = this.getFrontByID(packet.from);
     if (front) {
       front.onPacket(packet);
       return;
@@ -635,7 +635,7 @@ DebuggerClient.prototype = {
   // The code duplication here is intentional until we drop support for
   // these versions. Once that happens this code can be deleted.
   sendToDeprecatedThreadClient(packet) {
-    const deprecatedThreadClient = this.getActor(packet.from);
+    const deprecatedThreadClient = this.getFrontByID(packet.from);
     if (deprecatedThreadClient && packet.type) {
       const type = packet.type;
       if (deprecatedThreadClient.events.includes(type)) {
@@ -923,7 +923,13 @@ DebuggerClient.prototype = {
   removeActorPool: function(pool) {
     this._pools.delete(pool);
   },
-  getActor: function(actorID) {
+
+  /**
+   * Return the Front for the Actor whose ID is the one passed in argument.
+   *
+   * @param {String} actorID: The actor ID to look for.
+   */
+  getFrontByID: function(actorID) {
     const pool = this.poolFor(actorID);
     return pool ? pool.get(actorID) : null;
   },

@@ -118,7 +118,7 @@ loader.lazyRequireGetter(
 loader.lazyRequireGetter(
   this,
   "ResponsiveUIManager",
-  "devtools/client/responsive.html/manager",
+  "devtools/client/responsive/manager",
   true
 );
 loader.lazyRequireGetter(
@@ -574,7 +574,7 @@ Toolbox.prototype = {
   },
 
   _attachAndResumeThread: async function() {
-    const threadOptions = {
+    const [, threadFront] = await this._target.attachThread({
       autoBlackBox: false,
       ignoreFrameEnvironment: true,
       pauseOnExceptions: Services.prefs.getBoolPref(
@@ -586,8 +586,10 @@ Toolbox.prototype = {
       showOverlayStepButtons: Services.prefs.getBoolPref(
         "devtools.debugger.features.overlay-step-buttons"
       ),
-    };
-    const [, threadFront] = await this._target.attachThread(threadOptions);
+      skipBreakpoints: Services.prefs.getBoolPref(
+        "devtools.debugger.skip-pausing"
+      ),
+    });
 
     try {
       await threadFront.resume();
@@ -924,6 +926,20 @@ Toolbox.prototype = {
     // Add zoom-related shortcuts.
     if (!this._hostOptions || this._hostOptions.zoom === true) {
       ZoomKeys.register(this.win, this.shortcuts);
+    }
+
+    // Monitor shortcuts that are not supported by DevTools, but might be used
+    // by users because they are widely implemented in other developer tools
+    // (example: the command palette triggered via ctrl+P)
+    const wrongShortcuts = ["CmdOrCtrl+P", "CmdOrCtrl+Shift+P"];
+    for (const shortcut of wrongShortcuts) {
+      this.shortcuts.on(shortcut, event => {
+        this.telemetry.recordEvent("wrong_shortcut", "tools", null, {
+          shortcut,
+          tool_id: this.currentToolId,
+          session_id: this.sessionId,
+        });
+      });
     }
   },
 

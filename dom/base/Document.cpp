@@ -15530,8 +15530,7 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       MOZ_ASSERT_IF(parent, !nsContentUtils::IsInPrivateBrowsing(parent));
       MOZ_ASSERT_IF(
           NS_SUCCEEDED(AntiTrackingCommon::IsOnContentBlockingAllowList(
-              parent->GetDocumentURI(), false,
-              AntiTrackingCommon::eStorageChecks, isOnAllowList)),
+              parent->GetDocumentURI(), false, isOnAllowList)),
           !isOnAllowList);
 
       auto performFinalChecks = [inner]()

@@ -9,8 +9,6 @@ add_task(async function() {
   await SpecialPowers.flushPrefEnv();
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.contentblocking.allowlist.annotations.enabled", true],
-      ["browser.contentblocking.allowlist.storage.enabled", true],
       ["dom.storage_access.auto_grants", true],
       ["dom.storage_access.auto_grants.delayed", false],
       ["dom.storage_access.enabled", true],
