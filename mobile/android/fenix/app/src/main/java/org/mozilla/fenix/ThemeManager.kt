@@ -13,17 +13,50 @@ import android.os.Build.VERSION.SDK_INT
 import android.util.TypedValue
 import android.view.View
 import android.view.Window
-import androidx.core.content.ContextCompat
+import androidx.annotation.StyleRes
+import org.mozilla.fenix.ext.getColorFromAttr
 
-interface ThemeManager {
-    enum class Theme {
-        Normal, Private;
+abstract class ThemeManager {
 
-        fun isPrivate(): Boolean = this == Private
+    abstract var currentTheme: BrowsingMode
+
+    /**
+     * Returns the style resource corresponding to the [currentTheme].
+     */
+    @get:StyleRes
+    val currentThemeResource get() = when (currentTheme) {
+        BrowsingMode.Normal -> R.style.NormalTheme
+        BrowsingMode.Private -> R.style.PrivateTheme
     }
 
-    val currentTheme: Theme
-    fun setTheme(theme: Theme)
+    /**
+     * Handles status bar theme change since the window does not dynamically recreate
+     */
+    fun applyStatusBarTheme(activity: Activity) = applyStatusBarTheme(activity.window, activity)
+    fun applyStatusBarTheme(window: Window, context: Context) {
+        when (currentTheme) {
+            BrowsingMode.Normal -> {
+                when (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+                    Configuration.UI_MODE_NIGHT_UNDEFINED, // We assume light here per Android doc's recommendation
+                    Configuration.UI_MODE_NIGHT_NO -> {
+                        updateLightSystemBars(window, context)
+                    }
+                    Configuration.UI_MODE_NIGHT_YES -> {
+                        clearLightSystemBars(window)
+                        updateNavigationBar(window, context)
+                    }
+                }
+            }
+            BrowsingMode.Private -> {
+                clearLightSystemBars(window)
+                updateNavigationBar(window, context)
+            }
+        }
+    }
+
+    fun setActivityTheme(activity: Activity) {
+        activity.setTheme(currentThemeResource)
+    }
 
     companion object {
         fun resolveAttribute(attribute: Int, context: Context): Int {
@@ -34,53 +67,12 @@ interface ThemeManager {
             return typedValue.resourceId
         }
 
-        // Handles status bar theme change since the window does not dynamically recreate
-        fun applyStatusBarTheme(
-            window: Window,
-            themeManager: ThemeManager,
-            context: Context
-        ) {
-            when (themeManager.currentTheme) {
-                ThemeManager.Theme.Normal -> {
-                    when (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
-                        Configuration.UI_MODE_NIGHT_NO -> {
-                            updateLightSystemBars(window, context)
-                        }
-                        Configuration.UI_MODE_NIGHT_YES -> {
-                            window.decorView.systemUiVisibility =
-                                window.decorView.systemUiVisibility and
-                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
-                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                            updateNavigationBar(window, context)
-                        }
-                        Configuration.UI_MODE_NIGHT_UNDEFINED -> {
-                            // We assume light here per Android doc's recommendation
-                            updateLightSystemBars(window, context)
-                        }
-                    }
-                }
-                ThemeManager.Theme.Private -> {
-                    window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
-                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
-                            View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
-                    updateNavigationBar(window, context)
-                }
-            }
-        }
-
-        private fun updateLightSystemBars(
-            window: Window,
-            context: Context
-        ) {
+        private fun updateLightSystemBars(window: Window, context: Context) {
             if (SDK_INT >= Build.VERSION_CODES.M) {
-                window.statusBarColor = ContextCompat
-                    .getColor(
-                        context, resolveAttribute(android.R.attr.statusBarColor, context)
-                    )
+                window.statusBarColor = context.getColorFromAttr(android.R.attr.statusBarColor)
 
                 window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or
-                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+                    window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             } else {
                 window.statusBarColor = Color.BLACK
             }
@@ -88,54 +80,40 @@ interface ThemeManager {
             if (SDK_INT >= Build.VERSION_CODES.O) {
                 // API level can display handle light navigation bar color
                 window.decorView.systemUiVisibility =
-                    window.decorView.systemUiVisibility or
-                            View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+                    window.decorView.systemUiVisibility or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
                 updateNavigationBar(window, context)
             }
         }
 
-        private fun updateNavigationBar(
-            window: Window,
-            context: Context
-        ) {
-            window.navigationBarColor = ContextCompat
-                .getColor(
-                    context, resolveAttribute(R.attr.foundation, context)
-                )
+        private fun clearLightSystemBars(window: Window) {
+            if (SDK_INT >= Build.VERSION_CODES.M) {
+                window.decorView.systemUiVisibility = window.decorView.systemUiVisibility and
+                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv() and
+                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
+            }
+        }
+
+        private fun updateNavigationBar(window: Window, context: Context) {
+            window.navigationBarColor = context.getColorFromAttr(R.attr.foundation)
         }
     }
 }
 
-val ThemeManager.currentThemeResource: Int
-    get() = when (currentTheme) {
-        ThemeManager.Theme.Normal -> R.style.NormalTheme
-        ThemeManager.Theme.Private -> R.style.PrivateTheme
-    }
-
-fun Activity.setTheme(theme: ThemeManager.Theme) {
-    val themeCode = when (theme) {
-        ThemeManager.Theme.Normal -> R.style.NormalTheme
-        ThemeManager.Theme.Private -> R.style.PrivateTheme
-    }
-
-    setTheme(themeCode)
-}
-
 class DefaultThemeManager(
-    private var _currentTheme: ThemeManager.Theme,
-    private val onThemeChanged: (ThemeManager.Theme) -> Unit
-) : ThemeManager {
-    override val currentTheme: ThemeManager.Theme
-        get() = _currentTheme
-
-    override fun setTheme(theme: ThemeManager.Theme) {
-        if (theme == _currentTheme) return
-        _currentTheme = theme
-        onThemeChanged(theme)
-    }
+    currentTheme: BrowsingMode,
+    private val onThemeChanged: (BrowsingMode) -> Unit
+) : ThemeManager() {
+    override var currentTheme: BrowsingMode = currentTheme
+        set(value) {
+            if (currentTheme != value) {
+                field = value
+                onThemeChanged(value)
+            }
+        }
 }
 
-class CustomTabThemeManager : ThemeManager {
-    override val currentTheme = ThemeManager.Theme.Normal
-    override fun setTheme(theme: ThemeManager.Theme) { /* noop */ }
+class CustomTabThemeManager : ThemeManager() {
+    override var currentTheme
+        get() = BrowsingMode.Normal
+        set(_) { /* noop */ }
 }

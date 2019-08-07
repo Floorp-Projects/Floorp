@@ -14,8 +14,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.browser.session.Session
 import mozilla.components.concept.engine.EngineView
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.BrowsingModeManager
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
 import org.mozilla.fenix.browser.BrowserFragmentDirections
@@ -38,6 +38,7 @@ interface BrowserToolbarController {
 class DefaultBrowserToolbarController(
     private val context: Context,
     private val navController: NavController,
+    private val browsingModeManager: BrowsingModeManager,
     private val findInPageLauncher: () -> Unit,
     private val nestedScrollQuickActionView: NestedScrollView,
     private val engineView: EngineView,
@@ -91,11 +92,15 @@ class DefaultBrowserToolbarController(
                     navController.nav(R.id.browserFragment, directions)
                 }
             }
-            ToolbarMenu.Item.NewPrivateTab -> {
-                val directions = BrowserFragmentDirections
-                    .actionBrowserFragmentToSearchFragment(null)
+            ToolbarMenu.Item.NewTab -> {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null)
                 navController.nav(R.id.browserFragment, directions)
-                (context as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                browsingModeManager.mode = BrowsingMode.Normal
+            }
+            ToolbarMenu.Item.NewPrivateTab -> {
+                val directions = BrowserFragmentDirections.actionBrowserFragmentToSearchFragment(null)
+                navController.nav(R.id.browserFragment, directions)
+                browsingModeManager.mode = BrowsingMode.Private
             }
             ToolbarMenu.Item.FindInPage -> {
                 bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
@@ -110,13 +115,6 @@ class DefaultBrowserToolbarController(
             }
             ToolbarMenu.Item.Help -> {
                 context.components.useCases.tabsUseCases.addTab.invoke(getSupportUrl())
-            }
-            ToolbarMenu.Item.NewTab -> {
-                val directions = BrowserFragmentDirections
-                    .actionBrowserFragmentToSearchFragment(null)
-                navController.nav(R.id.browserFragment, directions)
-                (context as HomeActivity).browsingModeManager.mode =
-                    BrowsingModeManager.Mode.Normal
             }
             ToolbarMenu.Item.SaveToCollection -> {
                 context.components.analytics.metrics

@@ -6,7 +6,7 @@ package org.mozilla.fenix.library
 
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
@@ -29,11 +29,7 @@ abstract class LibraryPageFragment<T> : Fragment() {
                 }
         }
 
-        (activity as HomeActivity).browsingModeManager.mode = if (private) {
-            BrowsingModeManager.Mode.Private
-        } else {
-            BrowsingModeManager.Mode.Normal
-        }
+        (activity as HomeActivity).browsingModeManager.mode = BrowsingMode.fromBoolean(private)
         (activity as HomeActivity).supportActionBar?.hide()
     }
 }

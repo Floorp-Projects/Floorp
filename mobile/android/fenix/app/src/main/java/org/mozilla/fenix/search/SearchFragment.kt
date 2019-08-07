@@ -105,7 +105,7 @@ class SearchFragment : Fragment(), BackHandler {
             view.toolbar_component_wrapper,
             searchInteractor,
             historyStorageProvider(),
-            (activity as HomeActivity).browsingModeManager.isPrivate
+            (activity as HomeActivity).browsingModeManager.mode.isPrivate
         )
 
         startPostponedEnterTransition()

@@ -6,54 +6,45 @@ package org.mozilla.fenix
 
 import org.mozilla.fenix.utils.Settings
 
+/**
+ * Enum that represents whether or not private browsing is active.
+ */
+enum class BrowsingMode {
+    Normal, Private;
+
+    /**
+     * Returns true if the [BrowsingMode] is [Private]
+     */
+    val isPrivate get() = this == Private
+
+    companion object {
+
+        /**
+         * Convert a boolean into a [BrowsingMode].
+         * True corresponds to [Private] and false corresponds to [Normal].
+         */
+        fun fromBoolean(isPrivate: Boolean) = if (isPrivate) Private else Normal
+    }
+}
+
 interface BrowsingModeManager {
-    enum class Mode {
-        Normal, Private;
-
-        fun isPrivate(): Boolean = this == Private
-    }
-
-    val isPrivate: Boolean
-    var mode: Mode
-}
-
-interface BrowserModeStorage {
-    fun setMode(mode: BrowsingModeManager.Mode)
-    fun currentMode(): BrowsingModeManager.Mode
-}
-
-fun Settings.createBrowserModeStorage(): BrowserModeStorage = object : BrowserModeStorage {
-    override fun currentMode(): BrowsingModeManager.Mode {
-        return if (this@createBrowserModeStorage.usePrivateMode) {
-            BrowsingModeManager.Mode.Private
-        } else {
-            BrowsingModeManager.Mode.Normal
-        }
-    }
-
-    override fun setMode(mode: BrowsingModeManager.Mode) {
-        this@createBrowserModeStorage.setPrivateMode(mode == BrowsingModeManager.Mode.Private)
-    }
+    var mode: BrowsingMode
 }
 
 class DefaultBrowsingModeManager(
-    private val storage: BrowserModeStorage,
-    private val modeDidChange: (BrowsingModeManager.Mode) -> Unit
+    private val settings: Settings,
+    private val modeDidChange: (BrowsingMode) -> Unit
 ) : BrowsingModeManager {
-    override val isPrivate: Boolean
-        get() = mode == BrowsingModeManager.Mode.Private
-
-    override var mode: BrowsingModeManager.Mode
-        get() = storage.currentMode()
+    override var mode: BrowsingMode
+        get() = BrowsingMode.fromBoolean(settings.usePrivateMode)
         set(value) {
-            storage.setMode(value)
-            modeDidChange(mode)
+            settings.setPrivateMode(value.isPrivate)
+            modeDidChange(value)
         }
 }
 
 class CustomTabBrowsingModeManager : BrowsingModeManager {
-    override val isPrivate = false
-    override var mode: BrowsingModeManager.Mode
-        get() = BrowsingModeManager.Mode.Normal
-        set(_) { return }
+    override var mode
+        get() = BrowsingMode.Normal
+        set(_) { /* no-op */ }
 }

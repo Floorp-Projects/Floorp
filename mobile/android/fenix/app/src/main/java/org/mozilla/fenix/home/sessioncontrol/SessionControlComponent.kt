@@ -14,16 +14,17 @@ import io.reactivex.Observer
 import kotlinx.android.parcel.Parcelize
 import mozilla.components.browser.session.Session
 import mozilla.components.service.fxa.sharing.ShareableAccount
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.mvi.ViewState
-import org.mozilla.fenix.mvi.Change
-import mozilla.components.feature.tab.collections.TabCollection as ACTabCollection
-import mozilla.components.feature.tab.collections.Tab as ComponentTab
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
+import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIComponentViewModelBase
 import org.mozilla.fenix.mvi.UIComponentViewModelProvider
+import org.mozilla.fenix.mvi.ViewState
+import mozilla.components.feature.tab.collections.Tab as ComponentTab
+import mozilla.components.feature.tab.collections.TabCollection as ACTabCollection
 
 class SessionControlComponent(
     private val container: ViewGroup,
@@ -83,6 +84,13 @@ sealed class Mode {
     object Normal : Mode()
     object Private : Mode()
     data class Onboarding(val state: OnboardingState) : Mode()
+
+    companion object {
+        fun fromBrowsingMode(browsingMode: BrowsingMode) = when (browsingMode) {
+            BrowsingMode.Normal -> Normal
+            BrowsingMode.Private -> Private
+        }
+    }
 }
 
 data class SessionControlState(

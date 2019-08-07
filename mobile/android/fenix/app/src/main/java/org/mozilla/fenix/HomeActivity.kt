@@ -76,7 +76,8 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         super.onCreate(savedInstanceState)
 
         components.publicSuffixList.prefetch()
-        setupThemeAndBrowsingMode()
+        browsingModeManager = createBrowsingModeManager()
+        themeManager = createThemeManager(browsingModeManager.mode)
 
         setContentView(R.layout.activity_home)
 
@@ -99,18 +100,6 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
             ?.also { components.analytics.metrics.track(Event.OpenedApp(it)) }
 
         handleOpenedFromExternalSourceIfNecessary(intent)
-    }
-
-    private fun setupThemeAndBrowsingMode() {
-        browsingModeManager = createBrowsingModeManager()
-        themeManager = createThemeManager(
-            when (browsingModeManager.isPrivate) {
-                true -> ThemeManager.Theme.Private
-                false -> ThemeManager.Theme.Normal
-            }
-        )
-        setTheme(themeManager.currentTheme)
-        ThemeManager.applyStatusBarTheme(window, themeManager, this)
     }
 
     private fun setupToolbarAndNavigation() {
@@ -288,13 +277,12 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         engine: SearchEngine?,
         forceSearch: Boolean
     ) {
-        val isPrivate = this.browsingModeManager.isPrivate
+        val mode = browsingModeManager.mode
 
         val loadUrlUseCase = if (newTab) {
-            if (isPrivate) {
-                components.useCases.tabsUseCases.addPrivateTab
-            } else {
-                components.useCases.tabsUseCases.addTab
+            when (mode) {
+                BrowsingMode.Private -> components.useCases.tabsUseCases.addPrivateTab
+                BrowsingMode.Normal -> components.useCases.tabsUseCases.addTab
             }
         } else components.useCases.sessionUseCases.loadUrl
 
@@ -305,7 +293,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
                         searchTerms,
                         Session.Source.USER_ENTERED,
                         true,
-                        isPrivate,
+                        mode.isPrivate,
                         searchEngine = engine
                     )
             } else components.useCases.searchUseCases.defaultSearch.invoke(searchTerms, engine)
@@ -331,10 +319,9 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
     }
 
     fun updateThemeForSession(session: Session) {
-        if (session.private && !themeManager.currentTheme.isPrivate()) {
-            browsingModeManager.mode = BrowsingModeManager.Mode.Private
-        } else if (!session.private && themeManager.currentTheme.isPrivate()) {
-            browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+        val sessionMode = BrowsingMode.fromBoolean(session.private)
+        if (sessionMode != browsingModeManager.mode) {
+            browsingModeManager.mode = sessionMode
         }
     }
 
@@ -342,26 +329,24 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         return if (isCustomTab) {
             CustomTabBrowsingModeManager()
         } else {
-            DefaultBrowsingModeManager(Settings.getInstance(this).createBrowserModeStorage()) {
-                themeManager.setTheme(
-                    when (it.isPrivate()) {
-                        true -> ThemeManager.Theme.Private
-                        false -> ThemeManager.Theme.Normal
-                    }
-                )
+            DefaultBrowsingModeManager(Settings.getInstance(this)) { mode ->
+                themeManager.currentTheme = mode
             }
         }
     }
 
-    private fun createThemeManager(currentTheme: ThemeManager.Theme): ThemeManager {
-        return if (isCustomTab) {
+    private fun createThemeManager(currentTheme: BrowsingMode): ThemeManager {
+        val themeManager = if (isCustomTab) {
             CustomTabThemeManager()
         } else {
             DefaultThemeManager(currentTheme) {
-                setTheme(it)
+                themeManager.setActivityTheme(this)
                 recreate()
             }
         }
+        themeManager.setActivityTheme(this)
+        themeManager.applyStatusBarTheme(this)
+        return themeManager
     }
 
     private fun subscribeToSessions(): SessionManager.Observer {

@@ -36,7 +36,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragment
-import org.mozilla.fenix.currentThemeResource
 import org.mozilla.fenix.exceptions.ExceptionDomains
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents

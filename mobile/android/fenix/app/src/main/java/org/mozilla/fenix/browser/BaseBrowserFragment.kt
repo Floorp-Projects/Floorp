@@ -115,7 +115,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
         val view = inflater.inflate(R.layout.fragment_browser, container, false)
 
         val activity = activity as HomeActivity
-        ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
+        activity.themeManager.applyStatusBarTheme(activity)
 
         val appLink = requireComponents.useCases.appLinksUseCases.appLinkRedirect
         browserStore = StoreProvider.get(this) {
@@ -151,6 +151,7 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
             val browserToolbarController = DefaultBrowserToolbarController(
                 context!!,
                 findNavController(),
+                (activity as HomeActivity).browsingModeManager,
                 findInPageLauncher = { findInPageIntegration.withFeature { it.launch() } },
                 nestedScrollQuickActionView = nestedScrollQuickAction,
                 engineView = engineView,
@@ -302,12 +303,8 @@ abstract class BaseBrowserFragment : Fragment(), BackHandler, SessionManager.Obs
                     } else {
                         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_USER
                         activity?.exitImmersiveModeIfNeeded()
-                        (activity as HomeActivity).let { activity: HomeActivity ->
-                            ThemeManager.applyStatusBarTheme(
-                                activity.window,
-                                activity.themeManager,
-                                activity
-                            )
+                        (activity as? HomeActivity)?.let { activity ->
+                            activity.themeManager.applyStatusBarTheme(activity)
                         }
                         toolbar.visibility = View.VISIBLE
                         nestedScrollQuickAction.visibility = View.VISIBLE

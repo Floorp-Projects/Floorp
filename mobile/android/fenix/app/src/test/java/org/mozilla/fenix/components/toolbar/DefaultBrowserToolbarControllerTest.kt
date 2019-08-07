@@ -22,6 +22,7 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -33,7 +34,6 @@ import org.mozilla.fenix.components.Analytics
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.home.sessioncontrol.Tab
 import org.mozilla.fenix.home.sessioncontrol.TabCollection
@@ -44,6 +44,7 @@ class DefaultBrowserToolbarControllerTest {
 
     private var context: HomeActivity = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
+    private val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
     private var navController: NavController = mockk(relaxed = true)
     private var findInPageLauncher: () -> Unit = mockk(relaxed = true)
     private val nestedScrollQuickActionView: NestedScrollView = mockk(relaxed = true)
@@ -64,6 +65,7 @@ class DefaultBrowserToolbarControllerTest {
         controller = DefaultBrowserToolbarController(
             context = context,
             navController = navController,
+            browsingModeManager = browsingModeManager,
             findInPageLauncher = findInPageLauncher,
             nestedScrollQuickActionView = nestedScrollQuickActionView,
             engineView = engineView,
@@ -213,11 +215,9 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarNewPrivateTabPress() {
-        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
         val item = ToolbarMenu.Item.NewPrivateTab
 
-        every { context.browsingModeManager } returns browsingModeManager
-        every { browsingModeManager.mode } returns BrowsingModeManager.Mode.Normal
+        every { browsingModeManager.mode } returns BrowsingMode.Normal
 
         controller.handleToolbarItemInteraction(item)
 
@@ -227,7 +227,7 @@ class DefaultBrowserToolbarControllerTest {
                 .actionBrowserFragmentToSearchFragment(null)
             navController.nav(R.id.browserFragment, directions)
         }
-        verify { browsingModeManager.mode = BrowsingModeManager.Mode.Private }
+        verify { browsingModeManager.mode = BrowsingMode.Private }
     }
 
     @Test
@@ -281,11 +281,9 @@ class DefaultBrowserToolbarControllerTest {
 
     @Test
     fun handleToolbarNewTabPress() {
-        val browsingModeManager: BrowsingModeManager = mockk(relaxed = true)
         val item = ToolbarMenu.Item.NewTab
 
-        every { context.browsingModeManager } returns browsingModeManager
-        every { browsingModeManager.mode } returns BrowsingModeManager.Mode.Private
+        every { browsingModeManager.mode } returns BrowsingMode.Private
 
         controller.handleToolbarItemInteraction(item)
 
@@ -295,7 +293,7 @@ class DefaultBrowserToolbarControllerTest {
                 .actionBrowserFragmentToSearchFragment(null)
             navController.nav(R.id.browserFragment, directions)
         }
-        verify { browsingModeManager.mode = BrowsingModeManager.Mode.Normal }
+        verify { browsingModeManager.mode = BrowsingMode.Normal }
     }
 
     @Test

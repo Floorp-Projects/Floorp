@@ -11,6 +11,7 @@ import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.BrowserMenuSwitch
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ThemeManager
@@ -178,7 +179,7 @@ class DefaultToolbarMenu(
             }
         )
 
-        if ((context.asActivity() as? HomeActivity)?.browsingModeManager?.isPrivate == false) {
+        if ((context.asActivity() as? HomeActivity)?.browsingModeManager?.mode == BrowsingMode.Normal) {
             items.add(
                 BrowserMenuImageText(
                     context.getString(R.string.browser_menu_save_to_collection),

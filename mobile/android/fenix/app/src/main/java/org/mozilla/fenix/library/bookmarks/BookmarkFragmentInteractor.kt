@@ -9,7 +9,7 @@ import androidx.navigation.NavController
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbarPresenter
@@ -125,8 +125,7 @@ class BookmarkFragmentInteractor(
     override fun openInNewTab(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let { url ->
-            activity?.browsingModeManager?.mode =
-                BrowsingModeManager.Mode.Normal
+            activity?.browsingModeManager?.mode = BrowsingMode.Normal
             activity?.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = true,
@@ -139,8 +138,7 @@ class BookmarkFragmentInteractor(
     override fun openInPrivateTab(item: BookmarkNode) {
         require(item.type == BookmarkNodeType.ITEM)
         item.url?.let { url ->
-            activity?.browsingModeManager?.mode =
-                BrowsingModeManager.Mode.Private
+            activity?.browsingModeManager?.mode = BrowsingMode.Private
             activity?.openToBrowserAndLoad(
                 searchTermOrURL = url,
                 newTab = true,

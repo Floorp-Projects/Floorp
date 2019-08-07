@@ -51,11 +51,10 @@ import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.START
 import org.jetbrains.anko.constraint.layout.ConstraintSetBuilder.Side.TOP
 import org.jetbrains.anko.constraint.layout.applyConstraintSet
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.FenixViewModelProvider
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ThemeManager
 import org.mozilla.fenix.collections.CreateCollectionViewModel
 import org.mozilla.fenix.collections.SaveCollectionStep
 import org.mozilla.fenix.components.FenixSnackbar
@@ -88,7 +87,10 @@ import kotlin.math.roundToInt
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class HomeFragment : Fragment(), AccountObserver {
+
     private val bus = ActionBusFactory.get(this)
+
+    private val browsingModeManager get() = (activity as HomeActivity).browsingModeManager
 
     private val singleSessionObserver = object : Session.Observer {
         override fun onTitleChanged(session: Session, title: String) {
@@ -195,7 +197,7 @@ class HomeFragment : Fragment(), AccountObserver {
 
         ActionBusFactory.get(this).logMergedObservables()
         val activity = activity as HomeActivity
-        ThemeManager.applyStatusBarTheme(activity.window, activity.themeManager, activity)
+        activity.themeManager.applyStatusBarTheme(activity)
 
         postponeEnterTransition()
         sessionControlComponent.view.viewTreeObserver.addOnPreDrawListener(preDrawListener)
@@ -251,30 +253,22 @@ class HomeFragment : Fragment(), AccountObserver {
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
 
-        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
+        val isPrivate = browsingModeManager.mode.isPrivate
 
         privateBrowsingButton.contentDescription =
             contentDescriptionForPrivateBrowsingButton(isPrivate)
 
         privateBrowsingButton.setOnClickListener {
             invokePendingDeleteJobs()
-            val browsingModeManager = (activity as HomeActivity).browsingModeManager
-            val newMode = when (browsingModeManager.mode) {
-                BrowsingModeManager.Mode.Normal -> BrowsingModeManager.Mode.Private
-                BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
-            }
+            val invertedMode = BrowsingMode.fromBoolean(!browsingModeManager.mode.isPrivate)
 
             if (onboarding.userHasBeenOnboarded()) {
-                val mode =
-                    if (newMode == BrowsingModeManager.Mode.Private) Mode.Private else Mode.Normal
                 getManagedEmitter<SessionControlChange>().onNext(
-                    SessionControlChange.ModeChange(
-                        mode
-                    )
+                    SessionControlChange.ModeChange(Mode.fromBrowsingMode(invertedMode))
                 )
             }
 
-            browsingModeManager.mode = newMode
+            browsingModeManager.mode = invertedMode
         }
 
         // We need the shadow to be above the components.
@@ -339,9 +333,7 @@ class HomeFragment : Fragment(), AccountObserver {
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
             is TabAction.SaveTabGroup -> {
-                if ((activity as HomeActivity).browsingModeManager.isPrivate) {
-                    return
-                }
+                if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) return
                 invokePendingDeleteJobs()
                 showCollectionCreationFragment(action.selectedTabSessionId)
             }
@@ -671,9 +663,8 @@ class HomeFragment : Fragment(), AccountObserver {
     }
 
     private fun getListOfSessions(): List<Session> {
-        val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
-        val notPendingDeletion: (Session) -> Boolean =
-            { it.id != pendingSessionDeletion?.sessionId }
+        val isPrivate = browsingModeManager.mode.isPrivate
+        val notPendingDeletion = { session: Session -> session.id != pendingSessionDeletion?.sessionId }
         return sessionManager.filteredSessions(isPrivate, notPendingDeletion)
     }
 
@@ -730,10 +721,8 @@ class HomeFragment : Fragment(), AccountObserver {
                 Mode.Onboarding(OnboardingState.SignedOutCanAutoSignIn(availableAccounts[0]))
             }
         }
-    } else if ((activity as HomeActivity).browsingModeManager.isPrivate) {
-        Mode.Private
     } else {
-        Mode.Normal
+        Mode.fromBrowsingMode(browsingModeManager.mode)
     }
 
     private fun emitAccountChanges() {

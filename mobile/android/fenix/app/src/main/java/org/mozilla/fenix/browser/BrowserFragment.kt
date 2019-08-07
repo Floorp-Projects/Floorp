@@ -18,7 +18,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
-import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
@@ -148,7 +147,7 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
                 view = view
             )
 
-            if ((activity as HomeActivity).browsingModeManager.isPrivate) {
+            if ((activity as HomeActivity).browsingModeManager.mode.isPrivate) {
                 // We need to update styles for private mode programmatically for now:
                 // https://github.com/mozilla-mobile/android-components/issues/3400
                 themeReaderViewControlsForPrivateMode(view.readerViewControlsBar)

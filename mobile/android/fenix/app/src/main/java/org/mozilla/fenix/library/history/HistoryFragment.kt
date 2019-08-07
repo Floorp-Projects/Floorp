@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
-import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.BrowsingMode
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.Components
@@ -194,7 +194,7 @@ class HistoryFragment : LibraryPageFragment<HistoryItem>(), BackHandler {
             }
 
             (activity as HomeActivity).apply {
-                browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                browsingModeManager.mode = BrowsingMode.Private
                 supportActionBar?.hide()
             }
             nav(
