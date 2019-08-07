@@ -167,7 +167,8 @@ class WindowsError final {
   }
 
   static DWORD NtStatusToWin32Error(NTSTATUS aNtStatus) {
-    static const DynamicallyLinkedFunctionPtr<decltype(&RtlNtStatusToDosError)>
+    static const StaticDynamicallyLinkedFunctionPtr<decltype(
+        &RtlNtStatusToDosError)>
         pRtlNtStatusToDosError(L"ntdll.dll", "RtlNtStatusToDosError");
 
     MOZ_ASSERT(!!pRtlNtStatusToDosError);
