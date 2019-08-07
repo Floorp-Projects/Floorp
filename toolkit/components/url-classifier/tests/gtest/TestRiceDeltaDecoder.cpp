@@ -1,12 +1,13 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gtest/gtest.h"
-#include "RiceDeltaDecoder.h"
 #include "mozilla/ArrayUtils.h"
+#include "RiceDeltaDecoder.h"
 
-using namespace mozilla;
-using namespace mozilla::safebrowsing;
+namespace {
 
 struct TestingData {
   std::vector<uint32_t> mExpectedDecoded;
@@ -14,7 +15,21 @@ struct TestingData {
   uint32_t mRiceParameter;
 };
 
-static bool runOneTest(TestingData& aData);
+}  // namespace
+
+static bool runOneTest(TestingData& aData) {
+  RiceDeltaDecoder decoder(&aData.mEncoded[0], aData.mEncoded.size());
+
+  std::vector<uint32_t> decoded(aData.mExpectedDecoded.size());
+
+  uint32_t firstValue = aData.mExpectedDecoded[0];
+  bool rv = decoder.Decode(
+      aData.mRiceParameter, firstValue,
+      decoded.size() - 1,  // # of entries (first value not included).
+      &decoded[0]);
+
+  return rv && decoded == aData.mExpectedDecoded;
+}
 
 TEST(UrlClassifierRiceDeltaDecoder, SingleEncodedValue)
 {
@@ -154,18 +169,4 @@ TEST(UrlClassifierRiceDeltaDecoder, Empty)
 
     ASSERT_TRUE(runOneTest(d));
   }
-}
-
-static bool runOneTest(TestingData& aData) {
-  RiceDeltaDecoder decoder(&aData.mEncoded[0], aData.mEncoded.size());
-
-  std::vector<uint32_t> decoded(aData.mExpectedDecoded.size());
-
-  uint32_t firstValue = aData.mExpectedDecoded[0];
-  bool rv = decoder.Decode(
-      aData.mRiceParameter, firstValue,
-      decoded.size() - 1,  // # of entries (first value not included).
-      &decoded[0]);
-
-  return rv && decoded == aData.mExpectedDecoded;
 }
