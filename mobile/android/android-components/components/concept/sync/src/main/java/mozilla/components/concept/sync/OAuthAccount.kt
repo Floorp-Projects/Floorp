@@ -36,6 +36,7 @@ interface OAuthAccount : AutoCloseable {
     fun registerPersistenceCallback(callback: StatePersistenceCallback)
     fun migrateFromSessionTokenAsync(sessionToken: String, kSync: String, kXCS: String): Deferred<Boolean>
     fun deviceConstellation(): DeviceConstellation
+    fun disconnectAsync(): Deferred<Boolean>
     fun toJSONString(): String
 }
 

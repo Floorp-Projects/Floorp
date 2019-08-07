@@ -490,8 +490,12 @@ open class FxaAccountManager(
             AccountState.NotAuthenticated -> {
                 when (via) {
                     Event.Logout -> {
-                        // Destroy the current device record.
-                        account.deviceConstellation().destroyCurrentDeviceAsync().await()
+                        // Clean up internal account state and destroy the current FxA device record.
+                        if (account.disconnectAsync().await()) {
+                            logger.info("Disconnected FxA account")
+                        } else {
+                            logger.warn("Failed to fully disconnect the FxA account")
+                        }
                         // Clean up resources.
                         profile = null
                         account.close()

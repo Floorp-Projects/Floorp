@@ -774,6 +774,11 @@ class FxaAccountManagerTest {
             return constellation
         }
 
+        override fun disconnectAsync(): Deferred<Boolean> {
+            fail()
+            return CompletableDeferred(false)
+        }
+
         override fun toJSONString(): String {
             fail()
             return ""
@@ -891,14 +896,14 @@ class FxaAccountManagerTest {
         // Make sure 'logoutAsync' clears out state and fires correct observers.
         reset(accountObserver)
         reset(accountStorage)
-        `when`(constellation.destroyCurrentDeviceAsync()).thenReturn(CompletableDeferred(true))
-        verify(constellation, never()).destroyCurrentDeviceAsync()
+        `when`(mockAccount.disconnectAsync()).thenReturn(CompletableDeferred(true))
+        verify(mockAccount, never()).disconnectAsync()
         manager.logoutAsync().await()
 
         verify(accountObserver, never()).onAuthenticated(any(), anyBoolean())
         verify(accountObserver, never()).onProfileUpdated(any())
         verify(accountObserver, times(1)).onLoggedOut()
-        verify(constellation, times(1)).destroyCurrentDeviceAsync()
+        verify(mockAccount, times(1)).disconnectAsync()
 
         verify(accountStorage, never()).read()
         verify(accountStorage, never()).write(any())

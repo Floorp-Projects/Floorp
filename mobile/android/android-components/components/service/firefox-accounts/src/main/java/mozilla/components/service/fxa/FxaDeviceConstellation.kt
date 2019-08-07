@@ -5,7 +5,6 @@
 package mozilla.components.service.fxa
 
 import androidx.lifecycle.LifecycleOwner
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -65,25 +64,6 @@ class FxaDeviceConstellation(
                 account.initializeDevice(name, type.into(), capabilities.map { it.into() }.toSet())
             }
         }
-    }
-
-    override fun destroyCurrentDeviceAsync(): Deferred<Boolean> {
-        val state = state()
-        state?.currentDevice?.let {
-            return scope.async {
-                handleFxaExceptions(logger, "destroying current device") {
-                    account.disconnect() // Not sure if this is right!
-                }
-            }
-        }
-
-        if (state == null) {
-            logger.warn("Asked to destroy device record, but constellation state is not available")
-        } else {
-            logger.warn("Asked to destroy device record, but current device record is not available")
-        }
-
-        return CompletableDeferred(false)
     }
 
     override fun ensureCapabilitiesAsync(capabilities: Set<DeviceCapability>): Deferred<Boolean> {

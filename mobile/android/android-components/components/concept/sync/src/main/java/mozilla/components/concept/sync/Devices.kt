@@ -27,15 +27,6 @@ interface DeviceConstellation : Observable<DeviceEventsObserver> {
     ): Deferred<Boolean>
 
     /**
-     * Destroy current device record.
-     * Use this when device record is no longer relevant, e.g. while logging out. On success, other
-     * devices will no longer see the current device in their device lists.
-     *
-     * @return A [Deferred] that will be resolved with a success flag once operation is complete.
-     */
-    fun destroyCurrentDeviceAsync(): Deferred<Boolean>
-
-    /**
      * Ensure that all passed in [capabilities] are configured.
      * This may involve backend service registration, or other work involving network/disc access.
      * @param capabilities A list of capabilities to configure. This is expected to be the same or

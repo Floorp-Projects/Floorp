@@ -70,6 +70,9 @@ permalink: /changelog/
 * **service-firefox-accounts**
   * ⚠️ **This is a breaking change**: `AccountObserver.onAuthenticated` now helps observers distinguish when an account is a new authenticated account one with a second `newAccount` boolean parameter.
 
+* **concept-sync**, **service-firefox-accounts**:
+  * ⚠️ **This is a breaking change**: Added `OAuthAccount@disconnectAsync`, which replaced `DeviceConstellation@destroyCurrentDeviceAsync`.
+
 # 6.0.2
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v6.0.1...v6.0.2)
