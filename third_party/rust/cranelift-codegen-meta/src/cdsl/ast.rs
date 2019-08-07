@@ -376,10 +376,16 @@ pub struct Apply {
 
 impl Apply {
     pub fn new(target: InstSpec, args: Vec<Expr>) -> Self {
-        let (inst, value_types) = match target.into() {
+        let (inst, value_types) = match target {
             InstSpec::Inst(inst) => (inst, Vec::new()),
             InstSpec::Bound(bound_inst) => (bound_inst.inst, bound_inst.value_types),
         };
+
+        // Apply should only operate on concrete value types, not "any".
+        let value_types = value_types
+            .into_iter()
+            .map(|vt| vt.expect("shouldn't be Any"))
+            .collect();
 
         // Basic check on number of arguments.
         assert!(
@@ -434,7 +440,7 @@ impl Apply {
         format!("{}({})", self.inst.name, args)
     }
 
-    fn inst_predicate(
+    pub fn inst_predicate(
         &self,
         format_registry: &FormatRegistry,
         var_pool: &VarPool,
@@ -448,7 +454,8 @@ impl Apply {
                 // Ignore free variables for now.
                 continue;
             }
-            pred = pred.and(InstructionPredicate::new_is_field_equal(
+            pred = pred.and(InstructionPredicate::new_is_field_equal_ast(
+                iform,
                 &format_field,
                 arg.to_rust_code(var_pool),
             ));

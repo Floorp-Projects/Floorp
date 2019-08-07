@@ -41,11 +41,21 @@ pub struct FunctionBuilder<'a> {
 
 #[derive(Clone, Default)]
 struct EbbData {
-    filled: bool,
+    /// An Ebb is "pristine" iff no instructions have been added since the last
+    /// call to `switch_to_block()`.
     pristine: bool,
+
+    /// An Ebb is "filled" iff a terminator instruction has been inserted since
+    /// the last call to `switch_to_block()`.
+    ///
+    /// A filled block cannot be pristine.
+    filled: bool,
+
+    /// Count of parameters not supplied implicitly by the SSABuilder.
     user_param_count: usize,
 }
 
+#[derive(Default)]
 struct Position {
     ebb: PackedOption<Ebb>,
     basic_block: PackedOption<Block>,
@@ -56,13 +66,6 @@ impl Position {
         Self {
             ebb: PackedOption::from(ebb),
             basic_block: PackedOption::from(basic_block),
-        }
-    }
-
-    fn default() -> Self {
-        Self {
-            ebb: PackedOption::default(),
-            basic_block: PackedOption::default(),
         }
     }
 
@@ -476,6 +479,19 @@ impl<'a> FunctionBuilder<'a> {
             "all blocks should be filled before dropping a FunctionBuilder"
         );
 
+        // In debug mode, check that all blocks are valid basic blocks.
+        #[cfg(feature = "basic-blocks")]
+        #[cfg(debug_assertions)]
+        {
+            // Iterate manually to provide more helpful error messages.
+            for ebb in self.func_ctx.ebbs.keys() {
+                if let Err((inst, _msg)) = self.func.is_ebb_basic(ebb) {
+                    let inst_str = self.func.dfg.display_inst(inst, None);
+                    panic!("{} failed basic block invariants on {}", ebb, inst_str);
+                }
+            }
+        }
+
         // Clear the state (but preserve the allocated buffers) in preparation
         // for translation another function.
         self.func_ctx.clear();
@@ -846,6 +862,7 @@ impl<'a> FunctionBuilder<'a> {
         );
     }
 
+    /// An Ebb is 'filled' when a terminator instruction is present.
     fn fill_current_block(&mut self) {
         self.func_ctx.ebbs[self.position.ebb.unwrap()].filled = true;
     }
