@@ -85,14 +85,11 @@ class ThumbnailHelper final
     // Deny storage if we're viewing a HTTPS page with a 'Cache-Control'
     // header having a value that is not 'public', unless enabled by user.
     nsCOMPtr<nsIURI> uri;
-    bool isHttps = false;
-
-    if (NS_FAILED(channel->GetURI(getter_AddRefs(uri))) || !uri ||
-        NS_FAILED(uri->SchemeIs("https", &isHttps))) {
+    if (NS_FAILED(channel->GetURI(getter_AddRefs(uri))) || !uri) {
       return false;
     }
 
-    if (!isHttps ||
+    if (!uri->SchemeIs("https") ||
         Preferences::GetBool("browser.cache.disk_cache_ssl", false)) {
       // Allow storing non-HTTPS thumbnails, and HTTPS ones if enabled by
       // user.

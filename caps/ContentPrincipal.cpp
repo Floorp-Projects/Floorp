@@ -143,10 +143,8 @@ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
   // These constraints can generally be achieved by restricting .origin to
   // nsIStandardURL-based URIs, but there are a few other URI schemes that we
   // need to handle.
-  bool isBehaved;
-  if ((NS_SUCCEEDED(origin->SchemeIs("about", &isBehaved)) && isBehaved) ||
-      (NS_SUCCEEDED(origin->SchemeIs("moz-safe-about", &isBehaved)) &&
-       isBehaved &&
+  if (origin->SchemeIs("about") ||
+      (origin->SchemeIs("moz-safe-about") &&
        // We generally consider two about:foo origins to be same-origin, but
        // about:blank is special since it can be generated from different
        // sources. We check for moz-safe-about:blank since origin is an
@@ -198,10 +196,7 @@ nsresult ContentPrincipal::GenerateOriginNoSuffixFromURI(
 
   // See whether we have a useful hostPort. If we do, use that.
   nsAutoCString hostPort;
-  bool isChrome = false;
-  rv = origin->SchemeIs("chrome", &isChrome);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!isChrome) {
+  if (!origin->SchemeIs("chrome")) {
     rv = origin->GetAsciiHostPort(hostPort);
     NS_ENSURE_SUCCESS(rv, rv);
   }
@@ -408,8 +403,7 @@ static nsresult GetSpecialBaseDomain(const nsCOMPtr<nsIURI>& aURI,
     return aURI->GetSpec(aBaseDomain);
   }
 
-  bool isBehaved;
-  if (NS_SUCCEEDED(aURI->SchemeIs("indexeddb", &isBehaved)) && isBehaved) {
+  if (aURI->SchemeIs("indexeddb")) {
     *aHandled = true;
     return aURI->GetSpec(aBaseDomain);
   }
@@ -520,8 +514,7 @@ WebExtensionPolicy* ContentPrincipal::AddonPolicy() {
   if (!mAddon.isSome()) {
     NS_ENSURE_TRUE(mURI, nullptr);
 
-    bool isMozExt;
-    if (NS_SUCCEEDED(mURI->SchemeIs("moz-extension", &isMozExt)) && isMozExt) {
+    if (mURI->SchemeIs("moz-extension")) {
       mAddon.emplace(EPS().GetByURL(mURI.get()));
     } else {
       mAddon.emplace(nullptr);
@@ -554,8 +547,7 @@ ContentPrincipal::Read(nsIObjectInputStream* aStream) {
   principalURI = do_QueryInterface(supports);
   // Enforce re-parsing about: URIs so that if they change, we continue to use
   // their new principals correctly.
-  bool isAbout = false;
-  if (NS_SUCCEEDED(principalURI->SchemeIs("about", &isAbout)) && isAbout) {
+  if (principalURI->SchemeIs("about")) {
     nsAutoCString spec;
     principalURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(NS_NewURI(getter_AddRefs(principalURI), spec),
@@ -677,10 +669,7 @@ already_AddRefed<BasePrincipal> ContentPrincipal::FromProperties(
         {
           // Enforce re-parsing about: URIs so that if they change, we
           // continue to use their new principals correctly.
-          bool isAbout =
-              NS_SUCCEEDED(principalURI->SchemeIs("about", &isAbout)) &&
-              isAbout;
-          if (isAbout) {
+          if (principalURI->SchemeIs("about")) {
             nsAutoCString spec;
             principalURI->GetSpec(spec);
             if (NS_FAILED(NS_NewURI(getter_AddRefs(principalURI), spec))) {
