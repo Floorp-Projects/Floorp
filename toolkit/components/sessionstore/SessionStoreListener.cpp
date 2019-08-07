@@ -416,8 +416,8 @@ void ContentSessionStore::GetScrollPositions(
     aPositionDescendants.AppendElement(0);
     aPositions.AppendElement(EmptyCString());
   } else {
-    CollectPositions(nsDocShell::Cast(mDocShell)->GetBrowsingContext(),
-                     aPositions, aPositionDescendants);
+    CollectPositions(mDocShell->GetBrowsingContext(), aPositions,
+                     aPositionDescendants);
   }
   mScrollChanged = NO_CHANGE;
 }

@@ -7842,7 +7842,7 @@ nsresult nsDocShell::RestoreFromHistory() {
     // child inherits our mIsActive mPrivateBrowsingId, which is what we want.
     AddChild(childItem);
 
-    contexts.AppendElement(nsDocShell::Cast(childShell)->GetBrowsingContext());
+    contexts.AppendElement(childShell->GetBrowsingContext());
 
     childShell->SetAllowPlugins(allowPlugins);
     childShell->SetAllowJavascript(allowJavascript);
@@ -7861,7 +7861,7 @@ nsresult nsDocShell::RestoreFromHistory() {
   }
 
   if (!contexts.IsEmpty()) {
-    GetBrowsingContext()->RestoreChildren(std::move(contexts));
+    mBrowsingContext->RestoreChildren(std::move(contexts));
   }
 
   // Make sure to restore the window state after adding the child shells back
@@ -13552,10 +13552,12 @@ nsDocShell::GetColorMatrix(nsTArray<float>& aMatrix) {
 bool nsDocShell::IsForceReloading() { return IsForceReloadType(mLoadType); }
 
 NS_IMETHODIMP
-nsDocShell::GetBrowsingContext(BrowsingContext** aBrowsingContext) {
+nsDocShell::GetBrowsingContextXPCOM(BrowsingContext** aBrowsingContext) {
   *aBrowsingContext = do_AddRef(mBrowsingContext).take();
   return NS_OK;
 }
+
+BrowsingContext* nsDocShell::GetBrowsingContext() { return mBrowsingContext; }
 
 bool nsDocShell::GetIsAttemptingToNavigate() {
   // XXXbz the document.open spec says to abort even if there's just a

@@ -1054,7 +1054,7 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
   }
 
   if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
-    BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
+    BrowsingContext* bc = docShell->GetBrowsingContext();
     bool embedderFrameIsHidden = true;
     if (Element* embedderElement = bc->GetEmbedderElement()) {
       if (auto embedderFrame = embedderElement->GetPrimaryFrame()) {
@@ -10910,7 +10910,7 @@ void PresShell::SetIsUnderHiddenEmbedderElement(
   mUnderHiddenEmbedderElement = aUnderHiddenEmbedderElement;
 
   if (nsCOMPtr<nsIDocShell> docShell = mPresContext->GetDocShell()) {
-    BrowsingContext* bc = nsDocShell::Cast(docShell)->GetBrowsingContext();
+    BrowsingContext* bc = docShell->GetBrowsingContext();
 
     // Propagate to children.
     for (BrowsingContext* child : bc->GetChildren()) {
