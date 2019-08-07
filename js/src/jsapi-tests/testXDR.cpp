@@ -9,7 +9,6 @@
 
 #include "jsfriendapi.h"
 
-#include "builtin/String.h"
 #include "js/BuildId.h"  // JS::BuildIdCharVector, JS::SetProcessBuildIdOp
 #include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}

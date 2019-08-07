@@ -16,7 +16,6 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "builtin/String.h"
 #include "gc/Barrier.h"
 #include "gc/Cell.h"
 #include "gc/Heap.h"

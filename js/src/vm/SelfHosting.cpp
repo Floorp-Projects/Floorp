@@ -35,6 +35,7 @@
 #include "builtin/Reflect.h"
 #include "builtin/RegExp.h"
 #include "builtin/SelfHostingDefines.h"
+#include "builtin/String.h"
 #include "builtin/TypedObject.h"
 #include "builtin/WeakMapObject.h"
 #include "frontend/BytecodeCompiler.h"  // js::frontend::CreateScriptSourceObject

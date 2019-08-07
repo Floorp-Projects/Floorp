@@ -8,8 +8,6 @@
 #include <limits>
 #include <string.h>
 
-#include "builtin/String.h"
-
 #include "js/JSON.h"
 #include "js/MemoryFunctions.h"
 #include "js/Printf.h"

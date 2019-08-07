@@ -33,7 +33,6 @@
 #include "jsmath.h"
 #include "jsutil.h"
 
-#include "builtin/String.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
 #include "gc/Policy.h"

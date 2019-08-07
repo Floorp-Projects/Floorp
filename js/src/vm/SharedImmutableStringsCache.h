@@ -14,8 +14,7 @@
 #include <new>      // for placement new
 #include <utility>  // std::move
 
-#include "builtin/String.h"
-
+#include "js/AllocPolicy.h"
 #include "js/HashTable.h"
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
