@@ -5,6 +5,7 @@
 #type {
   -moz-box-flex: 1;
   background-color: transparent;
+  color: inherit;
 }
 
 #from {
