@@ -21,12 +21,9 @@ else
   exit 1;
 fi
 
-WORKSPACE=$HOME/workspace
-
-TOOLCHAIN_DIR=$WORKSPACE/moz-toolchain
+TOOLCHAIN_DIR=$MOZ_FETCHES_DIR/llvm-project
 INSTALL_DIR=$TOOLCHAIN_DIR/build/stage3/clang
 CROSS_PREFIX_DIR=$INSTALL_DIR/$machine-w64-mingw32
-SRC_DIR=$TOOLCHAIN_DIR/src
 
 make_flags="-j$(nproc)"
 
@@ -36,13 +33,9 @@ default_win32_winnt=0x601
 
 cd $GECKO_PATH
 
-. taskcluster/scripts/misc/tooltool-download.sh
 patch_file="$(pwd)/taskcluster/scripts/misc/mingw-winrt.patch"
 
 prepare() {
-  mkdir -p $TOOLCHAIN_DIR
-  touch $TOOLCHAIN_DIR/.build-clang
-
   pushd $MOZ_FETCHES_DIR/mingw-w64
   patch -p1 <$patch_file
   popd
@@ -122,7 +115,7 @@ build_compiler_rt() {
       -DCMAKE_C_COMPILER_WORKS=1 \
       -DCMAKE_C_COMPILER_TARGET=$compiler_rt_machine-windows-gnu \
       -DCOMPILER_RT_DEFAULT_TARGET_ONLY=TRUE \
-      $SRC_DIR/compiler-rt/lib/builtins
+      $TOOLCHAIN_DIR/compiler-rt/lib/builtins
   make $make_flags
   mkdir -p $INSTALL_DIR/lib/clang/$CLANG_VERSION/lib/windows
   cp lib/windows/libclang_rt.builtins-$compiler_rt_machine.a $INSTALL_DIR/lib/clang/$CLANG_VERSION/lib/windows/
@@ -170,7 +163,7 @@ build_libcxx() {
       -DLIBUNWIND_ENABLE_THREADS=TRUE \
       -DLIBUNWIND_ENABLE_SHARED=FALSE \
       -DLIBUNWIND_ENABLE_CROSS_UNWINDING=FALSE \
-      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$SRC_DIR/libcxx/include -DPSAPI_VERSION=2" \
+      -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -Wno-dll-attribute-on-redeclaration -nostdinc++ -I$TOOLCHAIN_DIR/libcxx/include -DPSAPI_VERSION=2" \
       -DCMAKE_C_FLAGS="-Wno-dll-attribute-on-redeclaration" \
       $MOZ_FETCHES_DIR/libunwind
   make $make_flags
@@ -197,12 +190,12 @@ build_libcxx() {
       -DLIBCXXABI_ENABLE_THREADS=ON \
       -DLIBCXXABI_TARGET_TRIPLE=$machine-w64-mingw32 \
       -DLIBCXXABI_ENABLE_SHARED=OFF \
-      -DLIBCXXABI_LIBCXX_INCLUDES=$SRC_DIR/libcxx/include \
+      -DLIBCXXABI_LIBCXX_INCLUDES=$TOOLCHAIN_DIR/libcxx/include \
       -DLLVM_NO_OLD_LIBSTDCXX=TRUE \
       -DCXX_SUPPORTS_CXX11=TRUE \
       -DCXX_SUPPORTS_CXX_STD=TRUE \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCPP_DISABLE_VISIBILITY_ANNOTATIONS -D_LIBCPP_HAS_THREAD_API_WIN32" \
-      $SRC_DIR/libcxxabi
+      $TOOLCHAIN_DIR/libcxxabi
   make $make_flags VERBOSE=1
   popd
 
@@ -233,10 +226,10 @@ build_libcxx() {
       -DLIBCXX_ENABLE_FILESYSTEM=OFF \
       -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=TRUE \
       -DLIBCXX_CXX_ABI=libcxxabi \
-      -DLIBCXX_CXX_ABI_INCLUDE_PATHS=$SRC_DIR/libcxxabi/include \
+      -DLIBCXX_CXX_ABI_INCLUDE_PATHS=$TOOLCHAIN_DIR/libcxxabi/include \
       -DLIBCXX_CXX_ABI_LIBRARY_PATH=../libcxxabi/lib \
       -DCMAKE_CXX_FLAGS="${DEBUG_FLAGS} -D_LIBCXXABI_DISABLE_VISIBILITY_ANNOTATIONS" \
-      $SRC_DIR/libcxx
+      $TOOLCHAIN_DIR/libcxx
   make $make_flags VERBOSE=1
   make $make_flags install
 
@@ -265,7 +258,8 @@ prepare
 # gets a bit too verbose here
 set +x
 
-python3 build/build-clang/build-clang.py -c $2 --skip-tar
+cd $TOOLCHAIN_DIR
+python3 $GECKO_PATH/build/build-clang/build-clang.py -c $GECKO_PATH/$2 --skip-tar
 
 set -x
 

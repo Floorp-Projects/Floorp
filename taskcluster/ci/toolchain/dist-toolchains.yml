@@ -11,8 +11,6 @@ job-defaults:
     run:
         using: toolchain-script
         script: build-dist-toolchains.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
 
 clang-dist-toolchain:
     treeherder:
@@ -22,9 +20,10 @@ clang-dist-toolchain:
     run:
         arguments: ['clang']
         toolchain-artifact: public/build/clang-dist-toolchain.tar.xz
-    toolchains:
-        - linux64-clang-8
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-clang-8
+            - linux64-sccache
 
 rustc-dist-toolchain:
     treeherder:
@@ -34,6 +33,7 @@ rustc-dist-toolchain:
     run:
         arguments: ['rustc']
         toolchain-artifact: public/build/rustc-dist-toolchain.tar.xz
-    toolchains:
-        - linux64-rust-macos-1.36
-        - linux64-sccache
+    fetches:
+        toolchain:
+            - linux64-rust-macos-1.36
+            - linux64-sccache

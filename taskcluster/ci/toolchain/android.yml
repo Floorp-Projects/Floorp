@@ -51,7 +51,6 @@ linux64-android-gradle-dependencies:
         script: android-gradle-dependencies.sh
         sparse-profile: null
         resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
             - 'taskcluster/scripts/misc/android-gradle-dependencies/**'
             - '*.gradle'
             - 'mobile/android/**/*.gradle'
@@ -60,7 +59,8 @@ linux64-android-gradle-dependencies:
             - 'mobile/android/gradle.configure'
         toolchain-artifact: public/build/android-gradle-dependencies.tar.xz
         toolchain-alias: android-gradle-dependencies
-    toolchains:
-        # Aliases aren't allowed for toolchains depending on toolchains.
-        - linux64-android-sdk-linux-repack
-        - linux64-node
+    fetches:
+        toolchain:
+            # Aliases aren't allowed for toolchains depending on toolchains.
+            - linux64-android-sdk-linux-repack
+            - linux64-node
