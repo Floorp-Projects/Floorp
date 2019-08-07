@@ -96,10 +96,6 @@ class RaptorResultsHandler():
                 if data_type == 'scenario':
                     return None
 
-        if self.config.get('power_test', None):
-            # Add one for OS baseline, and one for %change
-            # measurement
-            expected_perfherder += 2
         if self.config.get('memory_test', None):
             expected_perfherder += 1
         if self.config.get('cpu_test', None):
