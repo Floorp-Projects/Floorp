@@ -5,6 +5,7 @@
 package org.mozilla.fenix.utils
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
@@ -19,6 +20,7 @@ import org.mozilla.fenix.TestApplication
 import org.mozilla.fenix.ext.clearAndCommit
 import org.robolectric.annotation.Config
 
+@ObsoleteCoroutinesApi
 @RunWith(AndroidJUnit4::class)
 @Config(application = TestApplication::class)
 class SettingsTest {

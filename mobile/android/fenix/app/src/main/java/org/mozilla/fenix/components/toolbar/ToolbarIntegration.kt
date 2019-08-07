@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
-import android.view.ViewGroup
 import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
@@ -28,7 +27,6 @@ import org.mozilla.fenix.utils.Settings
 class ToolbarIntegration(
     context: Context,
     toolbar: BrowserToolbar,
-    browserLayout: ViewGroup,
     toolbarMenu: ToolbarMenu,
     domainAutocompleteProvider: DomainAutocompleteProvider,
     historyStorage: HistoryStorage,

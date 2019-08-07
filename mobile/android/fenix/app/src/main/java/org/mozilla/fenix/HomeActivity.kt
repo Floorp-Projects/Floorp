@@ -25,8 +25,8 @@ import kotlinx.coroutines.launch
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.session.intent.EXTRA_SESSION_ID
 import mozilla.components.concept.engine.EngineView
-import mozilla.components.feature.intent.IntentProcessor
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -206,7 +206,7 @@ open class HomeActivity : AppCompatActivity(), ShareFragment.TabsSharedCallback 
         var customTabSessionId: String? = null
 
         if (isCustomTab) {
-            customTabSessionId = SafeIntent(intent).getStringExtra(IntentProcessor.ACTIVE_SESSION_ID)
+            customTabSessionId = SafeIntent(intent).getStringExtra(EXTRA_SESSION_ID)
         }
 
         openToBrowser(BrowserDirection.FromGlobal, customTabSessionId)

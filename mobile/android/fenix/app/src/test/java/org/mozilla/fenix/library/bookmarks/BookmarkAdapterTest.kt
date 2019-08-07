@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verifyOrder
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.junit.Before
@@ -16,6 +17,7 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 internal class BookmarkAdapterTest {

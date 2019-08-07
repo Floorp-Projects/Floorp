@@ -35,6 +35,10 @@ allprojects {
         }
         jcenter()
     }
+    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+        kotlinOptions.allWarningsAsErrors = true
+        kotlinOptions.freeCompilerArgs += ["-Xuse-experimental=kotlin.Experimental", "-Xskip-runtime-version-check"]
+    }
 }
 
 task clean(type: Delete) {

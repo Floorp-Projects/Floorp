@@ -21,7 +21,9 @@ import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mozilla.appservices.places.BookmarkRoot
@@ -29,7 +31,6 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.ThumbnailsFeature
-import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
@@ -46,6 +47,7 @@ import org.mozilla.fenix.customtabs.CustomTabsIntegration
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
+import org.mozilla.fenix.home.sessioncontrol.TabCollection
 import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.quickactionsheet.DefaultQuickActionSheetController
 import org.mozilla.fenix.quickactionsheet.QuickActionSheetView
@@ -85,12 +87,15 @@ class BrowserFragment : BaseBrowserFragment(), BackHandler {
         return view
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
+    @ObsoleteCoroutinesApi
+    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         val sessionManager = requireComponents.core.sessionManager
 
-        getSessionById()?.let { session ->
+        getSessionById()?.let {
             quickActionSheetView = QuickActionSheetView(view.nestedScrollQuickAction, browserInteractor)
 
             customTabSessionId?.let { customTabSessionId ->

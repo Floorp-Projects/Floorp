@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.testing.launchFragmentInContainer
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
@@ -18,6 +19,7 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class StoreProviderTest {

@@ -5,10 +5,11 @@
 package org.mozilla.fenix.ext
 
 import androidx.core.content.ContextCompat
-import junit.framework.Assert.assertEquals
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -18,6 +19,7 @@ import org.mozilla.fenix.TestApplication
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@ObsoleteCoroutinesApi
 @RunWith(RobolectricTestRunner::class)
 @Config(application = TestApplication::class)
 class TabCollectionTest {

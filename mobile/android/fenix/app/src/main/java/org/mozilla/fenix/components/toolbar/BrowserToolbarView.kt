@@ -39,9 +39,6 @@ class BrowserToolbarView(
     val toolbarIntegration: ToolbarIntegration
 
     init {
-        // We need access to the customSessionId. We don't directly have access since we aren't passing session id in
-        // So we need to access it through the store...?
-
         with(container.context) {
             val sessionManager = components.core.sessionManager
             val isCustomTabSession = currentSession.isCustomTabSession()
@@ -100,7 +97,6 @@ class BrowserToolbarView(
             toolbarIntegration = ToolbarIntegration(
                 this,
                 view,
-                container,
                 menuToolbar,
                 ShippedDomainsProvider().also { it.initialize(this) },
                 components.core.historyStorage,
@@ -111,8 +107,9 @@ class BrowserToolbarView(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun update(state: BrowserState) {
-        // TODO Leaving this as a stub for now since we don't actually have anything to update ever...?
+        // Intentionally leaving this as a stub for now since we don't actually want to update currently
     }
 
     companion object {
