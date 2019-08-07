@@ -253,6 +253,17 @@ var gSync = {
   },
 
   showSendToDeviceViewFromFxaMenu(anchor) {
+    const { status } = UIState.get();
+    if (status === UIState.STATUS_NOT_CONFIGURED) {
+      PanelUI.showSubView("PanelUI-fxa-menu-sendtab-not-configured", anchor);
+      return;
+    }
+
+    if (this.sendTabConfiguredAndLoading || this.sendTabTargets.length <= 0) {
+      PanelUI.showSubView("PanelUI-fxa-menu-sendtab-no-devices", anchor);
+      return;
+    }
+
     this.showSendToDeviceView(anchor);
     this.emitFxaToolbarTelemetry("send_tab", anchor);
   },
