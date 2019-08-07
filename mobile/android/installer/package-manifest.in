@@ -108,6 +108,8 @@
 
 @BINPATH@/components/extensions.manifest
 
+@BINPATH@/components/antitracking.manifest
+
 #ifndef MOZ_GECKOVIEW_JAR
 @BINPATH@/components/amContentHandler.js
 @BINPATH@/components/amWebAPI.js
