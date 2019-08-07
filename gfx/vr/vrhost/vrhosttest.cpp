@@ -65,8 +65,8 @@ void TestTheManager() {
   );
 
   printf("\n01 mgr: create mgr\n");
-  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-  shmem.CreateShMem(true /*aCreateOnSharedMemory*/);
+  mozilla::gfx::VRShMem shmem(nullptr, true, true);
+  shmem.CreateShMem();
 
   printf("02 mgr: wait for signal\n");
   ::WaitForSingleObject(hEvent, s_dwWFSO_WAIT);
@@ -150,7 +150,7 @@ void TestTheService() {
   );
 
   printf("\n03 svc: create svc\n");
-  mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+  mozilla::gfx::VRShMem shmem(nullptr, true, false);
   shmem.JoinShMem();
 
   printf("04 svc: send signal\n");
