@@ -469,13 +469,34 @@ class BlocksRingBuffer {
   // Created through `EntryReserver`, lives within a lock guard lifetime.
   class EntryWriter : public BufferWriter {
    public:
+    // Allow move-construction.
 #ifdef DEBUG
+    EntryWriter(EntryWriter&& aOther)
+        : BufferWriter(std::move(aOther)),
+          mRing(aOther.mRing),
+          mEntryBytes(aOther.mEntryBytes),
+          mEntryStart(aOther.mEntryStart) {
+      // No EntryWriter should live outside of a mutexed call.
+      mRing.mMutex.AssertCurrentThreadOwns();
+      // In DEBUG, we need to move the moved-from EntryWriter to the end of the
+      // entry, so as not to trip the MOZ_ASSERT() in the destructor below.
+      aOther += aOther.RemainingBytes();
+    }
+
     ~EntryWriter() {
+      // We expect the caller to completely fill the entry.
+      // (Or at least pretend to, by moving this iterator to the end.)
       MOZ_ASSERT(RemainingBytes() == 0);
       // No EntryWriter should live outside of a mutexed call.
-      mRing->mMutex.AssertCurrentThreadOwns();
+      mRing.mMutex.AssertCurrentThreadOwns();
     }
-#endif  // DEBUG
+#else   // DEBUG
+    EntryWriter(EntryWriter&& aOther) = default;
+#endif  // DEBUG else
+    // Disallow copying and assignments.
+    EntryWriter(const EntryWriter& aOther) = delete;
+    EntryWriter& operator=(const EntryWriter& aOther) = delete;
+    EntryWriter& operator=(EntryWriter&& aOther) = delete;
 
     // All BufferWriter (aka ModuloBuffer<uint32_t, Index>::Writer) APIs are
     // available to read/write data from/to this entry.
@@ -507,10 +528,10 @@ class BlocksRingBuffer {
     }
 
     // Index of the first block in the whole buffer.
-    BlockIndex BufferRangeStart() const { return mRing->mFirstReadIndex; }
+    BlockIndex BufferRangeStart() const { return mRing.mFirstReadIndex; }
 
     // Index past the last block in the whole buffer.
-    BlockIndex BufferRangeEnd() const { return mRing->mNextWriteIndex; }
+    BlockIndex BufferRangeEnd() const { return mRing.mNextWriteIndex; }
 
     // Get another entry based on a {Current,Next}BlockIndex(). This may fail if
     // the buffer has already looped around and destroyed that block.
@@ -519,8 +540,8 @@ class BlocksRingBuffer {
       MOZ_RELEASE_ASSERT(aBlockIndex < BufferRangeEnd());
       if (aBlockIndex >= BufferRangeStart()) {
         // Block is still alive -> Return reader for it.
-        mRing->AssertBlockIndexIsValid(aBlockIndex);
-        return Some(EntryReader(*mRing, aBlockIndex));
+        mRing.AssertBlockIndexIsValid(aBlockIndex);
+        return Some(EntryReader(mRing, aBlockIndex));
       }
       // Block has been overwritten/cleared.
       return Nothing();
@@ -540,7 +561,7 @@ class BlocksRingBuffer {
     EntryWriter(BlocksRingBuffer& aRing, BlockIndex aBlockIndex,
                 Length aEntryBytes)
         : BufferWriter(aRing.mBuffer.WriterAt(Index(aBlockIndex))),
-          mRing(WrapNotNull(&aRing)),
+          mRing(aRing),
           mEntryBytes(aEntryBytes),
           mEntryStart([&]() {
             // BufferWriter is at `aBlockIndex`. Write the entry size...
@@ -549,15 +570,14 @@ class BlocksRingBuffer {
             return CurrentIndex();
           }()) {
       // No EntryWriter should live outside of a mutexed call.
-      mRing->mMutex.AssertCurrentThreadOwns();
+      mRing.mMutex.AssertCurrentThreadOwns();
     }
 
-    // Using a non-null pointer instead of a reference, to allow copying.
     // This EntryWriter should only live inside one of the thread-safe
     // BlocksRingBuffer functions, for this reference to stay valid.
-    NotNull<BlocksRingBuffer*> mRing;
-    Length mEntryBytes;
-    Index mEntryStart;
+    BlocksRingBuffer& mRing;
+    const Length mEntryBytes;
+    const Index mEntryStart;
   };
 
   // Class used to reserve space for new blocks, and to create `EntryWriter`s
