@@ -980,7 +980,9 @@ bool js::intl_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
 
 #else
 
-bool js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
+// When the Intl API is not exposed, String.prototype.toLowerCase is implemented
+// in C++.
+static bool str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
@@ -1390,12 +1392,14 @@ bool js::intl_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
 
 #if EXPOSE_INTL_API
 
-// String.prototype.toLocaleLowerCase is self-hosted when Intl is exposed,
+// String.prototype.toLocaleUpperCase is self-hosted when Intl is exposed,
 // with core functionality performed by the intrinsic above.
 
 #else
 
-bool js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
+// When the Intl API is not exposed, String.prototype.toUpperCase is implemented
+// in C++.
+static bool str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
@@ -1436,11 +1440,15 @@ bool js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp) {
 
 #if EXPOSE_INTL_API
 
-// String.prototype.localeCompare is self-hosted when Intl is exposed.
+// String.prototype.localeCompare is self-hosted when Intl functionality is
+// exposed, and the only intrinsics it requires are provided in the
+// implementation of Intl.Collator.
 
 #else
 
-bool js::str_localeCompare(JSContext* cx, unsigned argc, Value* vp) {
+// String.prototype.localeCompare is implemented in C++ (delegating to
+// JSLocaleCallbacks) when Intl functionality is not exposed.
+static bool str_localeCompare(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
   if (!str) {
@@ -1479,7 +1487,10 @@ bool js::str_localeCompare(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2017 draft rev 45e890512fd77add72cc0ee742785f9f6f6482de
 // 21.1.3.12 String.prototype.normalize ( [ form ] )
-bool js::str_normalize(JSContext* cx, unsigned argc, Value* vp) {
+//
+// String.prototype.normalize is only implementable if ICU's normalization
+// functionality is available.
+static bool str_normalize(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   // Steps 1-2.
@@ -1610,7 +1621,7 @@ bool js::str_normalize(JSContext* cx, unsigned argc, Value* vp) {
 
 #endif  // EXPOSE_INTL_API
 
-bool js::str_charAt(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_charAt(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   RootedString str(cx);
@@ -2587,17 +2598,17 @@ static bool TrimString(JSContext* cx, const CallArgs& args, bool trimStart,
   return true;
 }
 
-bool js::str_trim(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_trim(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return TrimString(cx, args, true, true);
 }
 
-bool js::str_trimStart(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_trimStart(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return TrimString(cx, args, true, false);
 }
 
-bool js::str_trimEnd(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_trimEnd(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   return TrimString(cx, args, false, true);
 }
@@ -3312,7 +3323,7 @@ ArrayObject* js::StringSplitString(JSContext* cx, HandleObjectGroup group,
 /*
  * Python-esque sequence operations.
  */
-bool js::str_concat(JSContext* cx, unsigned argc, Value* vp) {
+static bool str_concat(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   JSString* str = ToStringForStringFunction(cx, args.thisv());
   if (!str) {
