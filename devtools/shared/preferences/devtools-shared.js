@@ -45,6 +45,9 @@ pref("devtools.debugger.force-local", true);
 pref("devtools.netmonitor.responseBodyLimit", 1048576);
 pref("devtools.netmonitor.requestBodyLimit", 1048576);
 
+// Limit for WebSocket frames (100 KB)
+pref("devtools.netmonitor.ws.messageDataLimit", 100000);
+
 // DevTools default color unit
 pref("devtools.defaultColorUnit", "authored");
 

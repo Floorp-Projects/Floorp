@@ -9,7 +9,7 @@ const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 
 /**
- * Shows raw payload of a WebSocket frame.
+ * Shows raw data of a WebSocket frame.
  */
 class RawData extends Component {
   static get propTypes() {
