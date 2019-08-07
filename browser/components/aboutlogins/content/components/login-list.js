@@ -102,7 +102,10 @@ export default class LoginList extends HTMLElement {
 
       listItem.hidden = !visibleLoginGuids.has(listItem.dataset.guid);
     }
-    this._blankLoginListItem.hidden = this._selectedGuid != null;
+    this.classList.toggle(
+      "create-login-selected",
+      this._selectedGuid == null && Object.keys(this._logins).length > 0
+    );
 
     // Re-arrange the login-list-items according to their sort
     for (let i = this._loginGuidsSortedOrder.length - 1; i >= 0; i--) {
@@ -471,7 +474,7 @@ export default class LoginList extends HTMLElement {
       oldSelectedItem.classList.remove("selected");
       oldSelectedItem.removeAttribute("aria-selected");
     }
-    this._blankLoginListItem.hidden = !!listItem.dataset.guid;
+    this.classList.toggle("create-login-selected", !listItem.dataset.guid);
     listItem.classList.add("selected");
     listItem.setAttribute("aria-selected", "true");
     this._list.setAttribute("aria-activedescendant", listItem.id);

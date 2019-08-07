@@ -47,11 +47,23 @@ add_task(async function test_create_login() {
     );
 
     await ContentTask.spawn(browser, originTuple, async aOriginTuple => {
-      let createButton = content.document
-        .querySelector("login-list")
-        .shadowRoot.querySelector(".create-login-button");
+      let loginList = Cu.waiveXrays(
+        content.document.querySelector("login-list")
+      );
+      let createButton = loginList.shadowRoot.querySelector(
+        ".create-login-button"
+      );
+      is(
+        content.getComputedStyle(loginList._blankLoginListItem).display,
+        "none",
+        "the blank login list item should be hidden initially"
+      );
       createButton.click();
-      await Promise.resolve();
+      isnot(
+        content.getComputedStyle(loginList._blankLoginListItem).display,
+        "none",
+        "the blank login list item should be visible after clicking on the create button"
+      );
 
       let loginItem = Cu.waiveXrays(
         content.document.querySelector("login-item")
@@ -100,6 +112,11 @@ add_task(async function test_create_login() {
         ok(
           !loginList.classList.contains("no-logins"),
           "login-list should no longer be in no logins view"
+        );
+        is(
+          content.getComputedStyle(loginList._blankLoginListItem).display,
+          "none",
+          "the blank login list item should be hidden after adding new login"
         );
         let loginGuid = await ContentTaskUtils.waitForCondition(() => {
           return loginList._loginGuidsSortedOrder.find(
@@ -191,8 +208,9 @@ add_task(async function test_cancel_create_login() {
       loginList._selectedGuid,
       "there should be a selected guid before create mode"
     );
-    ok(
-      loginList._blankLoginListItem.hidden,
+    is(
+      content.getComputedStyle(loginList._blankLoginListItem).display,
+      "none",
       "the blank login list item should be hidden before create mode"
     );
 
@@ -205,8 +223,9 @@ add_task(async function test_cancel_create_login() {
       !loginList._selectedGuid,
       "there should be no selected guid when in create mode"
     );
-    ok(
-      !loginList._blankLoginListItem.hidden,
+    isnot(
+      content.getComputedStyle(loginList._blankLoginListItem).display,
+      "none",
       "the blank login list item should be visible in create mode"
     );
 
@@ -218,8 +237,9 @@ add_task(async function test_cancel_create_login() {
       loginList._selectedGuid,
       "there should be a selected guid after canceling create mode"
     );
-    ok(
-      loginList._blankLoginListItem.hidden,
+    is(
+      content.getComputedStyle(loginList._blankLoginListItem).display,
+      "none",
       "the blank login list item should be hidden after canceling create mode"
     );
   });
