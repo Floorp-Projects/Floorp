@@ -28,7 +28,7 @@
 
     dbg.memory.onGarbageCollection = function (data) {
       // Don't keep calling this hook after we finish.
-      dbg.enabled = false;
+      dbg.removeAllDebuggees();
 
       ok(data, "The onGarbageCollection hook was fired.");
       SimpleTest.finish();
