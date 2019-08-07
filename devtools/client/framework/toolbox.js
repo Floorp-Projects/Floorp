@@ -2268,7 +2268,7 @@ Toolbox.prototype = {
           // can happen in unit tests where the tests are rapidly opening and closing the
           // toolbox and we encounter the scenario where the toolbox is closing as
           // the inspector is still loading.
-          if (this._destroyingInspector) {
+          if (!this._inspector || !iframe.contentWindow) {
             return;
           }
         }
@@ -3281,7 +3281,7 @@ Toolbox.prototype = {
         // than most other fronts because it is closely related to the toolbox.
         // TODO: replace with getFront once inspector is separated from the toolbox
         // TODO: remove these bindings
-        this._inspector = await this.target.getInspector();
+        this._inspector = await this.target.getFront("inspector");
         this._walker = this.inspectorFront.walker;
         this._highlighter = this.inspectorFront.highlighter;
         this._selection = this.inspectorFront.selection;

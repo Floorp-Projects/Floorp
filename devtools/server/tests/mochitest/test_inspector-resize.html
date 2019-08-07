@@ -25,7 +25,7 @@ window.onload = function() {
     const url = document.getElementById("inspectorContent").href;
 
     const { target, doc } = await attachURL(url);
-    inspector = await target.getInspector();
+    inspector = await target.getFront("inspector");
     win = doc.defaultView;
     runNextTest();
   });
