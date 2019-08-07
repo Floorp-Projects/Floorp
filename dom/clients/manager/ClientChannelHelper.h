@@ -27,6 +27,9 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
                                 Maybe<ClientInfo>&& aInitialClientInfo,
                                 nsISerialEventTarget* aEventTarget);
 
+nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
+                                        nsISerialEventTarget* aEventTarget);
+
 }  // namespace dom
 }  // namespace mozilla
 

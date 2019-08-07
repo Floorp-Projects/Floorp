@@ -255,5 +255,23 @@ nsresult AddClientChannelHelper(nsIChannel* aChannel,
   return NS_OK;
 }
 
+nsresult AddClientChannelHelperInParent(nsIChannel* aChannel,
+                                        nsISerialEventTarget* aEventTarget) {
+  nsCOMPtr<nsIInterfaceRequestor> outerCallbacks;
+  nsresult rv =
+      aChannel->GetNotificationCallbacks(getter_AddRefs(outerCallbacks));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<ClientChannelHelper> helper =
+      new ClientChannelHelper(outerCallbacks, aEventTarget);
+
+  // Only set the callbacks helper if we are able to reserve the client
+  // successfully.
+  rv = aChannel->SetNotificationCallbacks(helper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
 }  // namespace dom
 }  // namespace mozilla
