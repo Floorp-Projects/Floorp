@@ -27,8 +27,15 @@ XPCOMUtils.defineLazyGlobalGetters(this, ["fetch", "btoa"]);
 
 var { ExtensionError } = ExtensionUtils;
 
-async function getDataURI(resourceURI) {
-  let response = await fetch(resourceURI);
+async function getDataURI(localIconUrl) {
+  let response;
+  try {
+    response = await fetch(localIconUrl);
+  } catch (e) {
+    // Failed to fetch, ignore engine's favicon.
+    Cu.reportError(e);
+    return;
+  }
   let buffer = await response.arrayBuffer();
   let contentType = response.headers.get("content-type");
   let bytes = new Uint8Array(buffer);
@@ -48,11 +55,14 @@ this.search = class extends ExtensionAPI {
             visibleEngines.map(async engine => {
               let favIconUrl;
               if (engine.iconURI) {
+                // Convert moz-extension:-URLs to data:-URLs to make sure that
+                // extensions can see icons from other extensions, even if they
+                // are not web-accessible.
+                // Also prevents leakage of extension UUIDs to other extensions..
                 if (
-                  engine.iconURI.schemeIs("resource") ||
-                  engine.iconURI.schemeIs("chrome")
+                  engine.iconURI.schemeIs("moz-extension") &&
+                  engine.iconURI.host !== context.extension.uuid
                 ) {
-                  // Convert internal URLs to data URLs
                   favIconUrl = await getDataURI(engine.iconURI.spec);
                 } else {
                   favIconUrl = engine.iconURI.spec;
