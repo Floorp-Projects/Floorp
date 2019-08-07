@@ -602,6 +602,7 @@ class nsIFrame : public nsQueryFrame {
         mAllDescendantsAreInvisible(false),
         mHasBSizeChange(false),
         mInScrollAnchorChain(false),
+        mHasColumnSpanSiblings(false),
         mDescendantMayDependOnItsStaticPosition(false) {
     MOZ_ASSERT(mComputedStyle);
     MOZ_ASSERT(mPresContext);
@@ -1252,13 +1253,6 @@ class nsIFrame : public nsQueryFrame {
 
   NS_DECLARE_FRAME_PROPERTY_WITHOUT_DTOR(PlaceholderFrameProperty,
                                          nsPlaceholderFrame)
-
-  // HasColumnSpanSiblings property stores whether the frame has any
-  // column-span siblings under the same multi-column ancestor. That is, the
-  // frame's element has column-span descendants without an intervening
-  // multi-column container element in between them. If the frame having
-  // this bit set is removed, we need to reframe the multi-column container
-  NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(HasColumnSpanSiblings, bool)
 
   mozilla::FrameBidiData GetBidiData() const {
     bool exists;
@@ -4195,10 +4189,14 @@ class nsIFrame : public nsQueryFrame {
     mHasBSizeChange = aHasBSizeChange;
   }
 
+  bool HasColumnSpanSiblings() const { return mHasColumnSpanSiblings; }
+  void SetHasColumnSpanSiblings(bool aHasColumnSpanSiblings) {
+    mHasColumnSpanSiblings = aHasColumnSpanSiblings;
+  }
+
   bool DescendantMayDependOnItsStaticPosition() const {
     return mDescendantMayDependOnItsStaticPosition;
   }
-
   void SetDescendantMayDependOnItsStaticPosition(bool aValue) {
     mDescendantMayDependOnItsStaticPosition = aValue;
   }
@@ -4428,6 +4426,20 @@ class nsIFrame : public nsQueryFrame {
    * True if we are or contain the scroll anchor for a scrollable frame.
    */
   bool mInScrollAnchorChain : 1;
+
+  /**
+   * Suppose a frame was split into multiple parts to separate parts containing
+   * column-spans from parts not containing column-spans. This bit is set on all
+   * continuations *not* containing column-spans except for the those after the
+   * last column-span/non-column-span boundary (i.e., the bit really means it
+   * has a *later* sibling across a split). Note that the last part is always
+   * created to containing no columns-spans even if it has no children. See
+   * nsCSSFrameConstructor::CreateColumnSpanSiblings() for the implementation.
+   *
+   * If the frame having this bit set is removed, we need to reframe the
+   * multi-column container.
+   */
+  bool mHasColumnSpanSiblings : 1;
 
   /**
    * True if we may have any descendant whose positioning may depend on its
