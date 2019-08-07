@@ -257,8 +257,8 @@ extern void CheckDebuggeeThing(JSObject* obj, bool invisibleOk);
  * because they are not deleted when a compartment is no longer a debuggee: the
  * values need to maintain object identity across add/remove/add
  * transitions. (Frames are an exception to the rule. Existing Debugger.Frame
- * objects are killed when debugging is disabled for their compartment, and if
- * it's re-enabled later, new Frame objects are created.)
+ * objects are killed if their realm is removed as a debugger; if the realm
+ * beacomes a debuggee again later, new Frame objects are created.)
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk = false>
 class DebuggerWeakMap
@@ -465,8 +465,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
     return observedGCs.put(majorGCNumber);
   }
 
-  bool isEnabled() const { return enabled; }
-
   static SavedFrame* getObjectAllocationSite(JSObject& obj);
 
   struct AllocationsLogEntry {
@@ -512,7 +510,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
       debuggees; /* Debuggee globals. Cross-compartment weak references. */
   JS::ZoneSet debuggeeZones; /* Set of zones that we have debuggees in. */
   js::GCPtrObject uncaughtExceptionHook; /* Strong reference. */
-  bool enabled;
   bool allowUnobservedAsmJS;
 
   // Whether to enable code coverage on the Debuggee.
@@ -566,7 +563,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   /*
    * Add allocations tracking for objects allocated within the given
    * debuggee's compartment. The given debuggee global must be observed by at
-   * least one Debugger that is enabled and tracking allocations.
+   * least one Debugger that is tracking allocations.
    */
   static MOZ_MUST_USE bool addAllocationsTracking(
       JSContext* cx, Handle<GlobalObject*> debuggee);
@@ -585,7 +582,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   void removeAllocationsTrackingForAllDebuggees();
 
   /*
-   * If this Debugger is enabled, and has a onNewGlobalObject handler, then
+   * If this Debugger has a onNewGlobalObject handler, then
    * this link is inserted into the list headed by
    * JSRuntime::onNewGlobalObjectWatchers.
    */
@@ -622,9 +619,10 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
    * onEnterFrame handler on resume, and to retain onStep and onPop hooks.
    *
    * An entry is present in this table when:
-   * -   both the debuggee generator object and the Debugger.Frame object exist
-   * -   the Debugger.Frame's owner is still an enabled debugger of
-   *     the debuggee compartment
+   *  - both the debuggee generator object and the Debugger.Frame object exists
+   *  - the debuggee generator object belongs to a relam that is a debuggee of
+   *    the Debugger.Frame's owner.
+   *
    * regardless of whether the frame is currently suspended. (This list is
    * meant to explain why we update the table in the particular places where
    * we do so.)
@@ -795,8 +793,6 @@ class Debugger : private mozilla::LinkedListElement<Debugger> {
   static MOZ_MUST_USE bool setHookImpl(JSContext* cx, CallArgs& args,
                                        Debugger& dbg, Hook which);
 
-  static bool getEnabled(JSContext* cx, unsigned argc, Value* vp);
-  static bool setEnabled(JSContext* cx, unsigned argc, Value* vp);
   static bool getOnDebuggerStatement(JSContext* cx, unsigned argc, Value* vp);
   static bool setOnDebuggerStatement(JSContext* cx, unsigned argc, Value* vp);
   static bool getOnExceptionUnwind(JSContext* cx, unsigned argc, Value* vp);
@@ -1252,7 +1248,7 @@ class BreakpointSite {
  * site's list.
  *
  * GC rules:
- *   - script is live, breakpoint exists, and debugger is enabled
+ *   - script is live and breakpoint exists
  *      ==> debugger is live
  *   - script is live, breakpoint exists, and debugger is live
  *      ==> retain the breakpoint and the handler object is live
@@ -1371,16 +1367,12 @@ js::GCPtrNativeObject& Debugger::toJSObjectRef() {
   return object;
 }
 
-bool Debugger::observesEnterFrame() const {
-  return enabled && getHook(OnEnterFrame);
-}
+bool Debugger::observesEnterFrame() const { return getHook(OnEnterFrame); }
 
-bool Debugger::observesNewScript() const {
-  return enabled && getHook(OnNewScript);
-}
+bool Debugger::observesNewScript() const { return getHook(OnNewScript); }
 
 bool Debugger::observesNewGlobalObject() const {
-  return enabled && getHook(OnNewGlobalObject);
+  return getHook(OnNewGlobalObject);
 }
 
 bool Debugger::observesGlobal(GlobalObject* global) const {
