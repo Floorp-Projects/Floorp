@@ -255,6 +255,10 @@
   max-width: calc(var(--popup-width) - 2em);
 }
 
+#protections-popup[toast] #protections-popup-info-button {
+  display: none;
+}
+
 #identity-popup-permissions-content > description,
 #protections-popup-content > description {
   color: var(--panel-disabled-color);

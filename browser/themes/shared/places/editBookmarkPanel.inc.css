@@ -8,24 +8,24 @@
   margin-inline-start: 32px;
 }
 
-#editBookmarkPanelInfoButton {
+.panel-info-button {
   border-radius: var(--toolbarbutton-border-radius);
   margin-right: 4px;
 }
 
-#editBookmarkPanelInfoButton[disabled=true] {
+.panel-info-button[disabled=true] {
   visibility: hidden;
 }
 
-#editBookmarkPanelInfoButton[checked] {
+.panel-info-button[checked] {
   background-color: var(--toolbarbutton-active-background);
 }
 
-#editBookmarkPanelInfoButton:hover {
+.panel-info-button:hover {
   background-color: var(--toolbarbutton-hover-background);
 }
 
-#editBookmarkPanelInfoButton > image {
+.panel-info-button > image {
   list-style-image: url(chrome://browser/skin/identity-icon.svg);
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;

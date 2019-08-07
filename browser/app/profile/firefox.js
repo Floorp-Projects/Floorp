@@ -1614,6 +1614,7 @@ pref("browser.contentblocking.report.monitor.enabled", true);
 // Enables the new Protections Panel.
 #ifdef NIGHTLY_BUILD
 pref("browser.protections_panel.enabled", true);
+pref("browser.protections_panel.infoMessage.seen", false);
 #endif
 
 // Always enable newtab segregation using containers
