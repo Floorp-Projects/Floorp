@@ -1,4 +1,3 @@
-#include ../../security/manager/ssl/security-prefs.js
 #include init/all.js
 #include ../../devtools/shared/preferences/devtools-shared.js
 #ifdef MOZ_DATA_REPORTING

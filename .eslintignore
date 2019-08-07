@@ -261,9 +261,6 @@ remote/server/Stream.jsm
 remote/test/browser/chrome-remote-interface.js
 remote/test/demo.js
 
-# security/ exclusions (pref files).
-security/manager/ssl/security-prefs.js
-
 # NSS / taskcluster only.
 security/nss/**
 
