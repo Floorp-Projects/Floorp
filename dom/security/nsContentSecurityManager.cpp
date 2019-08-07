@@ -488,8 +488,7 @@ void nsContentSecurityManager::AssertEvalNotRestricted(
   }
   if (!sTelemetryEventEnabled.exchange(true)) {
     sTelemetryEventEnabled = true;
-    Telemetry::SetEventRecordingEnabled(
-        NS_LITERAL_CSTRING("security.evalUsage"), true);
+    Telemetry::SetEventRecordingEnabled(NS_LITERAL_CSTRING("security"), true);
   }
   Telemetry::RecordEvent(eventType, mozilla::Some(fileNameType.first()), extra);
 
