@@ -630,6 +630,9 @@ void nsFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                   NS_FRAME_MAY_BE_TRANSFORMED |
                   NS_FRAME_HAS_MULTI_COLUMN_ANCESTOR));
     // clang-format on
+
+    // Copy other bits in nsIFrame from prev-in-flow.
+    mHasColumnSpanSiblings = aPrevInFlow->HasColumnSpanSiblings();
   } else {
     PresContext()->ConstructedFrame();
   }
