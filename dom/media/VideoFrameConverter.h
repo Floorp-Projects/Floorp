@@ -225,6 +225,8 @@ class VideoFrameConverter {
       return;
     }
 
+    self->mLastFrameConverted->set_timestamp_us(
+        webrtc::Clock::GetRealTimeClock()->TimeInMicroseconds());
     for (RefPtr<VideoConverterListener>& listener : self->mListeners) {
       listener->OnVideoFrameConverted(*self->mLastFrameConverted);
     }

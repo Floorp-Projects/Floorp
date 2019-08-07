@@ -55,6 +55,7 @@ class VideoFrameConverterTest : public ::testing::Test {
  public:
   void OnVideoFrameConverted(const webrtc::VideoFrame& aVideoFrame) {
     MonitorAutoLock lock(mMonitor);
+    EXPECT_NE(aVideoFrame.timestamp_us(), 0);
     mConvertedFrames.push_back(MakePair(aVideoFrame, TimeStamp::Now()));
     mMonitor.Notify();
   }
@@ -139,6 +140,10 @@ TEST_F(VideoFrameConverterTest, Duplication) {
   EXPECT_EQ(frames[1].first().width(), 640);
   EXPECT_EQ(frames[1].first().height(), 480);
   EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
+  // Check that the second frame comes between 1s and 2s after the first.
+  EXPECT_NEAR(frames[1].first().timestamp_us(),
+              frames[0].first().timestamp_us() + ((PR_USEC_PER_SEC * 3) / 2),
+              PR_USEC_PER_SEC / 2);
 }
 
 TEST_F(VideoFrameConverterTest, DropsOld) {
@@ -178,6 +183,10 @@ TEST_F(VideoFrameConverterTest, BlackOnDisable) {
   EXPECT_EQ(frames[1].first().width(), 640);
   EXPECT_EQ(frames[1].first().height(), 480);
   EXPECT_GT(frames[1].second(), now + TimeDuration::FromMilliseconds(1100));
+  // Check that the second frame comes between 1s and 2s after the first.
+  EXPECT_NEAR(frames[1].first().timestamp_us(),
+              frames[0].first().timestamp_us() + ((PR_USEC_PER_SEC * 3) / 2),
+              PR_USEC_PER_SEC / 2);
 }
 
 TEST_F(VideoFrameConverterTest, ClearFutureFramesOnJumpingBack) {
