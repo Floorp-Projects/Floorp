@@ -9,8 +9,6 @@ job-defaults:
     run:
         using: toolchain-script
         script: build-sccache.sh
-        resources:
-            - 'taskcluster/scripts/misc/tooltool-download.sh'
     fetches:
         fetch:
             - sccache
@@ -23,12 +21,12 @@ linux64-sccache:
         max-run-time: 1800
     run:
         toolchain-artifact: public/build/sccache.tar.xz
-    toolchains:
-        - linux64-rust-1.34
-        - linux64-binutils
     fetches:
         fetch:
             - openssl-1.1.0g
+        toolchain:
+            - linux64-rust-1.34
+            - linux64-binutils
 
 macosx64-sccache:
     treeherder:
@@ -43,14 +41,17 @@ macosx64-sccache:
         - try
     run:
         arguments: ['x86_64-apple-darwin']
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
         tooltool-downloads: internal
         toolchain-artifact: public/build/sccache.tar.xz
-    toolchains:
-        - linux64-rust-macos-1.34
-        - linux64-clang-8
-        - linux64-cctools-port
-        - linux64-llvm-dsymutil
-        - linux64-binutils
+    fetches:
+        toolchain:
+            - linux64-rust-macos-1.34
+            - linux64-clang-8
+            - linux64-cctools-port
+            - linux64-llvm-dsymutil
+            - linux64-binutils
 
 win64-sccache:
     treeherder:
@@ -59,8 +60,11 @@ win64-sccache:
     worker:
         max-run-time: 3600
         env:
-            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/sccache-build.manifest"
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/vs2017.manifest"
     run:
         toolchain-artifact: public/build/sccache.tar.bz2
-    toolchains:
-        - win64-rust-1.34
+        resources:
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+    fetches:
+        toolchain:
+            - win64-rust-1.34

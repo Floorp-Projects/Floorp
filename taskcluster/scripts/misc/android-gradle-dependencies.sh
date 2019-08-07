@@ -8,9 +8,6 @@ set -v
 
 cd $GECKO_PATH
 
-# Download toolchain artifacts.
-. taskcluster/scripts/misc/tooltool-download.sh
-
 . taskcluster/scripts/misc/android-gradle-dependencies/before.sh
 
 export MOZCONFIG=mobile/android/config/mozconfigs/android-api-16-gradle-dependencies/nightly

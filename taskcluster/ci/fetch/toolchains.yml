@@ -12,6 +12,9 @@ binutils-2.27:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/EAF1C276A747E9ED86210CBAC3126D3B4AE55E93.key
+        artifact-name: binutils-source.tar.zst
+        strip-components: 1
+        add-prefix: binutils-source/
 
 binutils-2.31.1:
     description: binutils 2.31.1 source code
@@ -23,6 +26,9 @@ binutils-2.31.1:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-binutils/3A24BC1E8FB409FA9F14371813FCEF89DD9E3C4F.key
+        artifact-name: binutils-source.tar.zst
+        strip-components: 1
+        add-prefix: binutils-source/
 
 gcc-6.4.0:
     description: GCC 6.4.0 source code
@@ -34,6 +40,9 @@ gcc-6.4.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
 
 gcc-7.4.0:
     description: GCC 7.4.0 source code
@@ -45,6 +54,9 @@ gcc-7.4.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/13975A70E63C361C73AE69EF6EEB81F8981C74C7.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
 
 gcc-8.3.0:
     description: GCC 8.3.0 source code
@@ -56,6 +68,9 @@ gcc-8.3.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/33C235A34C46AA3FFB293709A328C3A2C3C45C06.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
 
 gcc-9.1.0:
     description: GCC 9.1.0 source code
@@ -67,6 +82,9 @@ gcc-9.1.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/33C235A34C46AA3FFB293709A328C3A2C3C45C06.key
+        artifact-name: gcc-source.tar.zst
+        strip-components: 1
+        add-prefix: gcc-source/
 
 gmp-5.1.3:
     description: GMP 5.1.3 source code
@@ -78,6 +96,9 @@ gmp-5.1.3:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
+        artifact-name: gmp-source.tar.zst
+        strip-components: 1
+        add-prefix: gmp-source/
 
 gmp-6.1.0:
     description: GMP 6.1.0 source code
@@ -89,6 +110,9 @@ gmp-6.1.0:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/343C2FF0FBEE5EC2EDBEF399F3599FF828C67298.key
+        artifact-name: gmp-source.tar.zst
+        strip-components: 1
+        add-prefix: gmp-source/
 
 isl-0.15:
     description: ISL 0.15 source code
@@ -97,6 +121,9 @@ isl-0.15:
         url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.15.tar.bz2
         sha256: 8ceebbf4d9a81afa2b4449113cee4b7cb14a687d7a549a963deb5e2a41458b6b
         size: 1574964
+        artifact-name: isl-source.tar.zst
+        strip-components: 1
+        add-prefix: isl-source/
 
 isl-0.16.1:
     description: ISL 0.16.1 source code
@@ -105,6 +132,9 @@ isl-0.16.1:
         url: ftp://gcc.gnu.org/pub/gcc/infrastructure/isl-0.16.1.tar.bz2
         sha256: 412538bb65c799ac98e17e8cfcdacbb257a57362acfaaff254b0fcae970126d2
         size: 1626446
+        artifact-name: isl-source.tar.zst
+        strip-components: 1
+        add-prefix: isl-source/
 
 mpc-0.8.2:
     description: mpc 0.8.2 source code
@@ -116,6 +146,9 @@ mpc-0.8.2:
         gpg-signature:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
+        artifact-name: mpc-source.tar.zst
+        strip-components: 1
+        add-prefix: mpc-source/
 
 mpc-1.0.3:
     description: mpc 1.0.3 source code
@@ -127,6 +160,9 @@ mpc-1.0.3:
         gpg-signature:
             sig-url: "{url}.sig"
             key-path: build/unix/build-gcc/AD17A21EF8AED8F1CC02DBD9F7D5C9BF765C61E3.key
+        artifact-name: mpc-source.tar.zst
+        strip-components: 1
+        add-prefix: mpc-source/
 
 mpfr-3.1.4:
     description: mpfr 3.1.4 source code
@@ -138,6 +174,9 @@ mpfr-3.1.4:
         gpg-signature:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
+        artifact-name: mpfr-source.tar.zst
+        strip-components: 1
+        add-prefix: mpfr-source/
 
 mpfr-3.1.5:
     description: mpfr 3.1.5 source code
@@ -149,6 +188,9 @@ mpfr-3.1.5:
         gpg-signature:
             sig-url: "{url}.asc"
             key-path: build/unix/build-gcc/07F3DBBECC1A39605078094D980C197698C3739D.key
+        artifact-name: mpfr-source.tar.zst
+        strip-components: 1
+        add-prefix: mpfr-source/
 
 nasm-2.14.02:
     description: nasm 2.14.02 source code
@@ -336,3 +378,45 @@ android-rs-glue:
         type: git
         repo: https://github.com/staktrace/android-rs-glue
         revision: 486491e81819c3346d364a93fc1f3c0206d3ece0
+
+clang-4.0:
+    description: clang 4.0 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: 449c3ef93afc7a668eb35e67a83717453e28b25a
+
+clang-7:
+    description: clang 7 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: d0d8eb2e5415b8be29343e3c17a18e49e67b5551
+
+clang-8:
+    description: clang 8 source code
+    fetch:
+        type: git
+        repo: https://github.com/llvm/llvm-project
+        revision: d2298e74235598f15594fe2c99bbac870a507c59
+
+ninja:
+    description: ninja 1.9.0
+    fetch:
+        type: static-url
+        url: https://github.com/ninja-build/ninja/releases/download/v1.9.0/ninja-win.zip
+        sha256: 2d70010633ddaacc3af4ffbd21e22fae90d158674a09e132e06424ba3ab036e9
+        size: 254497
+        artifact-name: ninja.tar.zst
+        add-prefix: ninja/bin/
+
+cmake:
+    description: cmake 3.15.1
+    fetch:
+        type: static-url
+        url: https://github.com/Kitware/CMake/releases/download/v3.15.1/cmake-3.15.1-win64-x64.zip
+        sha256: 82a0edfed4cb0b45b25d2f99e621d3ed4014f66191d8f3c7eadf1d9ccf9c461b
+        size: 32214192
+        artifact-name: cmake.tar.zst
+        strip-components: 1
+        add-prefix: cmake/
