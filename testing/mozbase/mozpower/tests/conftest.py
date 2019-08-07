@@ -6,6 +6,7 @@ import pytest
 import tempfile
 import time
 
+from mozpower import MozPower
 from mozpower.macintelpower import MacIntelPower
 from mozpower.powerbase import PowerBase
 from mozpower.intel_power_gadget import (
@@ -81,3 +82,23 @@ def macintelpower_obj():
             os_mock.side_effect = os_side_effect
 
             yield MacIntelPower(ipg_measure_duration=2)
+
+
+@pytest.fixture(scope='function')
+def mozpower_obj():
+    """Returns a MozPower object with subprocess.check_output
+    and os.path.exists calls patched with side effects.
+    """
+    with mock.patch.object(MozPower, '_get_os', return_value='Darwin') as _, \
+            mock.patch.object(
+                MozPower, '_get_processor_info', return_value='GenuineIntel'
+            ) as _, \
+            mock.patch.object(
+                MacIntelPower, 'get_ipg_path', return_value='/'
+            ) as _, \
+            mock.patch('subprocess.check_output') as subprocess_mock, \
+            mock.patch('os.path.exists') as os_mock:
+        subprocess_mock.side_effect = subprocess_side_effect
+        os_mock.side_effect = os_side_effect
+
+        yield MozPower(ipg_measure_duration=2)

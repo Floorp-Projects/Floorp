@@ -22,3 +22,21 @@ def get_logger(logger_name):
         logging.basicConfig()
         logger = logging.getLogger(logger_name)
     return logger
+
+
+def average_summary(values):
+    """Averages all given values.
+
+    :param list values: list of values to average.
+    :returns: float
+    """
+    return sum([float(v) for v in values])/len(values)
+
+
+def sum_summary(values):
+    """Adds all values together.
+
+    :param list values: list of values to sum.
+    :returns: float
+    """
+    return sum([float(v) for v in values])
