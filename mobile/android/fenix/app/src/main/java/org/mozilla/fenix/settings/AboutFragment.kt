@@ -36,7 +36,7 @@ class AboutFragment : Fragment() {
         val aboutText = try {
             val packageInfo = requireContext().packageManager.getPackageInfo(requireContext().packageName, 0)
             val versionCode = PackageInfoCompat.getLongVersionCode(packageInfo).toString()
-            val componentsVersion = mozilla.components.Build.version
+            val componentsVersion = mozilla.components.Build.version + ", " + mozilla.components.Build.gitHash
             val maybeGecko = if (SDK_INT >= Build.VERSION_CODES.N) GECKO_EMOJI else "GV"
             val geckoVersion = GeckoViewBuildConfig.MOZ_APP_VERSION + "-" + GeckoViewBuildConfig.MOZ_APP_BUILDID
 
