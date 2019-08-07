@@ -24,7 +24,6 @@ headers = [
     "mozilla/dom/ChildIterator.h",
     "mozilla/dom/NameSpaceConstants.h",
     "mozilla/LookAndFeel.h",
-    "mozilla/StaticPrefsAll.h",
     "mozilla/GeckoBindings.h",
     "mozilla/ServoBindings.h",
     "mozilla/ComputedStyle.h",
@@ -161,7 +160,6 @@ whitelist-vars = [
     "mozilla::detail::gGkAtoms",
     "mozilla::detail::kGkAtomsArrayOffset",
     "mozilla::profiler::detail::RacyFeatures::sActiveAndFeatures",
-    "mozilla::StaticPrefs::.*",
 ]
 # TODO(emilio): A bunch of types here can go away once we generate bindings and
 # structs together.
@@ -202,7 +200,6 @@ whitelist-types = [
     "mozilla::OriginFlags",
     "mozilla::PropertyStyleAnimationValuePair",
     "mozilla::ServoTraversalFlags",
-    "mozilla::StaticPrefs",
     "mozilla::StyleShapeRadius",
     "mozilla::StyleGrid.*",
     "mozilla::UpdateAnimationsTasks",
