@@ -116,10 +116,6 @@ using namespace mozilla::widget;
 using namespace mozilla;
 using base::Thread;
 
-// Global user preference for disabling native theme. Used
-// in NativeWindowTheme.
-bool gDisableNativeTheme = false;
-
 // Async pump timer during injected long touch taps
 #define TOUCH_INJECT_PUMP_TIMER_MSEC 50
 #define TOUCH_INJECT_LONG_TAP_DEFAULT_MSEC 1500
@@ -386,14 +382,6 @@ nsBaseWidget::~nsBaseWidget() {
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::BaseCreate(nsIWidget* aParent, nsWidgetInitData* aInitData) {
-  static bool gDisableNativeThemeCached = false;
-  if (!gDisableNativeThemeCached) {
-    Preferences::AddBoolVarCache(&gDisableNativeTheme,
-                                 "mozilla.widget.disable-native-theme",
-                                 gDisableNativeTheme);
-    gDisableNativeThemeCached = true;
-  }
-
   // keep a reference to the device context
   if (nullptr != aInitData) {
     mWindowType = aInitData->mWindowType;
