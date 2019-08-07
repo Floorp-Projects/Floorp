@@ -6,6 +6,8 @@
 
 EXPORTS.mozilla.net += [
     'ChannelEventQueue.h',
+    'DocumentChannelChild.h',
+    'DocumentChannelParent.h',
     'NeckoChild.h',
     'NeckoCommon.h',
     'NeckoMessageUtils.h',
@@ -21,6 +23,8 @@ EXPORTS.mozilla.net += [
 
 UNIFIED_SOURCES += [
     'ChannelEventQueue.cpp',
+    'DocumentChannelChild.cpp',
+    'DocumentChannelParent.cpp',
     'NeckoChild.cpp',
     'NeckoCommon.cpp',
     'NeckoParent.cpp',
@@ -37,6 +41,7 @@ IPDL_SOURCES = [
     'NeckoChannelParams.ipdlh',
     'PChannelDiverter.ipdl',
     'PDataChannel.ipdl',
+    'PDocumentChannel.ipdl',
     'PFileChannel.ipdl',
     'PNecko.ipdl',
     'PSimpleChannel.ipdl',

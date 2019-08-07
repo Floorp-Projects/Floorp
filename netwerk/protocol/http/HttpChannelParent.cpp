@@ -753,8 +753,14 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId,
   nsCOMPtr<nsINetworkInterceptController> controller;
   NS_QueryNotificationCallbacks(channel, controller);
   RefPtr<ParentChannelListener> parentListener = do_QueryObject(controller);
-  MOZ_ASSERT(parentListener);
-  parentListener->SetupInterceptionAfterRedirect(shouldIntercept);
+  if (parentListener) {
+    // It's possible with DocumentChannel redirects that we failed to Suspend
+    // the nsHttpChannel, so it has delivered OnDataAvailable/OnStopRequest
+    // to the DocumentChannelParent, and then cleared the listener pointer.
+    // In that case the DocumentChannelParent will handle forwarding
+    // those messages to us so we don't need to add the listener again.
+    parentListener->SetupInterceptionAfterRedirect(shouldIntercept);
+  }
 
   if (mPBOverride != kPBOverride_Unset) {
     // redirected-to channel may not support PB

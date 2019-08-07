@@ -70,6 +70,7 @@
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
 
+#include "mozilla/net/DocumentChannelChild.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "ReferrerInfo.h"
 
@@ -9760,12 +9761,27 @@ static bool IsConsideredSameOriginForUIR(nsIPrincipal* aTriggeringPrincipal,
   return aTriggeringPrincipal->Equals(tmpResultPrincipal);
 }
 
+static bool HasHttpScheme(nsIURI* aURI) {
+  return aURI && (aURI->SchemeIs("http") || aURI->SchemeIs("https"));
+}
+
 /* static */ bool nsDocShell::CreateChannelForLoadState(
     nsDocShellLoadState* aLoadState, LoadInfo* aLoadInfo,
     nsIInterfaceRequestor* aCallbacks, nsDocShell* aDocShell,
     const nsString* aInitiatorType, nsLoadFlags aLoadFlags, uint32_t aLoadType,
     uint32_t aCacheKey, bool aIsActive, bool aIsTopLevelDoc, nsresult& aRv,
     nsIChannel** aChannel) {
+  if (StaticPrefs::browser_tabs_documentchannel() && XRE_IsContentProcess() &&
+      HasHttpScheme(aLoadState->URI())) {
+    RefPtr<DocumentChannelChild> child = new DocumentChannelChild(
+        aLoadState, aLoadInfo, aInitiatorType, aLoadFlags, aLoadType, aCacheKey,
+        aIsActive, aIsTopLevelDoc);
+    child->SetNotificationCallbacks(aCallbacks);
+    child.forget(aChannel);
+    aRv = NS_OK;
+    return true;
+  }
+
   nsCOMPtr<nsIChannel> channel;
   nsAutoString srcdoc;
   bool isSrcdoc = aLoadState->HasLoadFlags(INTERNAL_LOAD_FLAGS_IS_SRCDOC);
